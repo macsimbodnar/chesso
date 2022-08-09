@@ -1,4 +1,3 @@
 [submodule "pixello"]
 	path = pixello
 	url = git@github.com:macsimbodnar/pixello.git
-	
