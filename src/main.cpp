@@ -24,9 +24,9 @@ private:
     for (int y = 0; y < 8; ++y) {
       for (int x = 0; x < 8; ++x) {
         if (black) {
-          p.r = 89;
-          p.g = 44;
-          p.b = 4;
+          p.r = 109;
+          p.g = 64;
+          p.b = 24;
         } else {
           p.r = 232;
           p.g = 235;
