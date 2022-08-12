@@ -1,22 +1,113 @@
 #include <iostream>
 #include <map>
+#include "exceptions.hpp"
 #include "pixello.hpp"
 
 texture_t background;
 std::map<char, texture_t> pieces;
 constexpr int32_t size = 60;
 
+class FAN_exception : public pixello_exception
+{
+public:
+  FAN_exception(std::string msg) : pixello_exception(std::move(msg)) {}
+};
+
+struct game_t
+{
+  char board[8][8];
+  bool flipped = true;
+};
+
+game_t game;
+
+void load_board_from_FEN(game_t& game, const std::string& FEN)
+{
+  /**
+   * pawn = "P"
+   * knight = "N"
+   * bishop = "B"
+   * rook = "R"
+   * queen = "Q"
+   * and king = "K
+   *
+   * White ("PNBRQK")
+   * Black ("pnbrqk")
+   */
+
+  // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+
+  int x = 0;
+  int y = 0;
+
+  for (const char c : FEN) {
+    switch (c) {
+      case '/':
+        x = 0;
+        ++y;
+        break;
+
+      case '1':
+        x += 1;
+        break;
+      case '2':
+        x += 2;
+        break;
+      case '3':
+        x += 3;
+        break;
+      case '4':
+        x += 4;
+        break;
+      case '5':
+        x += 5;
+        break;
+      case '6':
+        x += 6;
+        break;
+      case '7':
+        x += 7;
+        break;
+      case '8':
+        x += 8;
+        break;
+
+      case 'P':
+      case 'N':
+      case 'B':
+      case 'R':
+      case 'Q':
+      case 'K':
+      case 'p':
+      case 'n':
+      case 'b':
+      case 'r':
+      case 'q':
+      case 'k':
+        game.board[y][x] = c;
+        ++x;
+        break;
+
+      case ' ':
+      default:
+        // In this case we just stop
+        return;
+    }
+  }
+}
+
 class pixel : public pixello
 {
 public:
   pixel()
-      : pixello({size, size, 800, 500, "Test pixello", 60,
-                 "assets/font/PressStart2P.ttf", 10})
+      : pixello({size, size, 800, 500, "Chesso", 60,
+                 "assets/font/PressStart2P.ttf", 8})
   {}
 
 private:
-  void draw_board()
+  void draw_board(game_t& game)
   {
+    // Draw background
     pixel_t p;
     p.a = 255;
 
@@ -39,77 +130,19 @@ private:
 
       black = !black;
     }
-  }
 
-  void draw_FEN(const std::string& FEN)
-  {
-    /**
-     * pawn = "P"
-     * knight = "N"
-     * bishop = "B"
-     * rook = "R"
-     * queen = "Q"
-     * and king = "K
-     *
-     * White ("PNBRQK")
-     * Black ("pnbrqk")
-     */
+    // Draw pieces
 
-    int x = 0;
-    int y = 0;
+    for (int i = 0; i < 8; ++i) {
+      for (int j = 0; j < 8; ++j) {
+        char c;
+        if (game.flipped) {
+          c = game.board[7 - i][7 - j];
+        } else {
+          c = game.board[i][j];
+        }
 
-    for (const char c : FEN) {
-      switch (c) {
-        case '/':
-          x = 0;
-          y += size;
-          break;
-
-        case '1':
-          x += size * 1;
-          break;
-        case '2':
-          x += size * 2;
-          break;
-        case '3':
-          x += size * 3;
-          break;
-        case '4':
-          x += size * 4;
-          break;
-        case '5':
-          x += size * 5;
-          break;
-        case '6':
-          x += size * 6;
-          break;
-        case '7':
-          x += size * 7;
-          break;
-        case '8':
-          x += size * 8;
-          break;
-
-        case 'P':
-        case 'N':
-        case 'B':
-        case 'R':
-        case 'Q':
-        case 'K':
-        case 'p':
-        case 'n':
-        case 'b':
-        case 'r':
-        case 'q':
-        case 'k':
-          draw_texture(pieces[c], x, y, size, size);
-          x += size;
-          break;
-
-        case ' ':
-        default:
-          // In this case we just stop
-          return;
+        if (c > 0) { draw_texture(pieces[c], j * size, i * size, size, size); }
       }
     }
   }
@@ -144,6 +177,10 @@ private:
     pieces['k'] = load_image("assets/Chess_kdt60.png");
 
     background = load_image("assets/background_l.jpg");
+
+    game.flipped = true;
+    load_board_from_FEN(game,
+                        "rnb1kbnr/p1qppppp/1p6/2p5/4P3/5P2/PPPPQ1PP/RNB1KBNR");
   }
 
   void on_update() override
@@ -168,14 +205,12 @@ private:
      * MAIN BOARD
      **************************************************************************/
     set_current_viewport(10, 10, 480, 480);
-
-    draw_board();
-    // Draw the pieces
-    draw_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    draw_board(game);
   }
 };
 
-int main()
+
+int main(int argc, char** argv)
 {
   pixel p;
 
