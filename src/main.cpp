@@ -1,7 +1,15 @@
+#include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 #include "exceptions.hpp"
 #include "pixello.hpp"
+
+#define BLACK 0
+#define WHITE 1
 
 texture_t background;
 std::map<char, texture_t> pieces;
@@ -15,15 +23,33 @@ public:
 
 struct game_t
 {
-  char board[8][8];
+  char board[8][8] = {0};
   bool flipped = true;
+  int active_color = WHITE;
 };
 
 game_t game;
 
+std::vector<std::string> split_string(const std::string& str)
+{
+  std::stringstream ss(str);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> tokens(begin, end);
+
+  return tokens;
+}
+
 void load_board_from_FEN(game_t& game, const std::string& FEN)
 {
-  /**
+  // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+  auto sections = split_string(FEN);
+
+  if (sections.size() != 6) { throw FAN_exception("Bad FEN string: " + FEN); }
+
+  /*****************************************************************************
+   * 0. Piece placement data
+   *
    * pawn = "P"
    * knight = "N"
    * bishop = "B"
@@ -33,14 +59,12 @@ void load_board_from_FEN(game_t& game, const std::string& FEN)
    *
    * White ("PNBRQK")
    * Black ("pnbrqk")
-   */
-
-  // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+   ****************************************************************************/
 
   int x = 0;
   int y = 0;
 
-  for (const char c : FEN) {
+  for (const char c : sections[0]) {
     switch (c) {
       case '/':
         x = 0;
@@ -88,11 +112,42 @@ void load_board_from_FEN(game_t& game, const std::string& FEN)
         ++x;
         break;
 
-      case ' ':
       default:
-        // In this case we just stop
-        return;
+        // We get a non valid string
+        throw FAN_exception("Invalid char in FEN string [" + STR(c) +
+                            "]. FEN: " + FEN);
     }
+
+    /***************************************************************************
+     * 1. Active color
+     **************************************************************************/
+    if (sections[1].size() != 1) {
+      throw FAN_exception("invalid active color section. FEN: " + FEN);
+    }
+
+    char color = sections[1][0];
+    switch (color) {
+      case 'w':
+        game.active_color = WHITE;
+        break;
+      case 'b':
+        game.active_color = BLACK;
+        break;
+      default:
+        throw FAN_exception("Invalid color char in FEN string [" +
+                            std::string(1, color) + "]. FEN: " + FEN);
+    }
+
+    /***************************************************************************
+     * 2. Castling availability
+     *
+     * "-" No castling available
+     * "K" if White can castle kingside
+     * "Q" if White can castle queenside
+     * "k" if Black can castle kingside
+     * "q" if Black can castle queenside
+     **************************************************************************/
+    // for ()
   }
 }
 
@@ -179,8 +234,8 @@ private:
     background = load_image("assets/background_l.jpg");
 
     game.flipped = true;
-    load_board_from_FEN(game,
-                        "rnb1kbnr/p1qppppp/1p6/2p5/4P3/5P2/PPPPQ1PP/RNB1KBNR");
+    load_board_from_FEN(
+        game, "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
   }
 
   void on_update() override
@@ -200,6 +255,20 @@ private:
     uint32_t fps = FPS();
     texture_t fps_texture = create_text("FPS: " + STR(fps), {0xFF000000});
     draw_texture(fps_texture, 290 - 77, 480 - 20);
+
+    // Draw turn
+    std::string turn = "Turn: ";
+    switch (game.active_color) {
+      case BLACK:
+        turn += "B";
+        break;
+
+      case WHITE:
+        turn += "W";
+        break;
+    }
+    texture_t turn_texture = create_text(turn, {0xFF000000});
+    draw_texture(turn_texture, 10, 10);
 
     /***************************************************************************
      * MAIN BOARD
