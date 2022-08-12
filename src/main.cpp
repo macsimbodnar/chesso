@@ -11,6 +11,12 @@
 #define BLACK 0
 #define WHITE 1
 
+constexpr uint8_t WQ = 0b0000001;
+constexpr uint8_t WK = 0b0000010;
+constexpr uint8_t BQ = 0b0000100;
+constexpr uint8_t BK = 0b0001000;
+
+
 texture_t background;
 std::map<char, texture_t> pieces;
 constexpr int32_t size = 60;
@@ -26,6 +32,7 @@ struct game_t
   char board[8][8] = {0};
   bool flipped = true;
   int active_color = WHITE;
+  uint8_t available_castling = WQ | WK | BQ | BK;
 };
 
 game_t game;
@@ -147,7 +154,41 @@ void load_board_from_FEN(game_t& game, const std::string& FEN)
      * "k" if Black can castle kingside
      * "q" if Black can castle queenside
      **************************************************************************/
-    // for ()
+    if (sections[2].size() < 1 || sections[2].size() > 4) {
+      throw FAN_exception("Invalid castling availability section size. FEN: " +
+                          FEN);
+    }
+
+    game.available_castling = 0x00;
+    for (const char c : sections[2]) {
+      switch (c) {
+        case '-':
+          game.available_castling = 0x00;
+          if (sections[2].size() != 1) {
+            throw FAN_exception(
+                "Invalid castling availability section size. No castling "
+                "available char is set but the section size is too big. FEN: " +
+                FEN);
+          }
+          break;
+        case 'K':
+          game.available_castling |= WK;
+          break;
+        case 'Q':
+          game.available_castling |= WQ;
+          break;
+        case 'k':
+          game.available_castling |= BK;
+          break;
+        case 'q':
+          game.available_castling |= BQ;
+          break;
+
+        default:
+          throw FAN_exception("Invalid castling availability character [" +
+                              std::string(1, c) + "]. FEN: " + FEN);
+      }
+    }
   }
 }
 
@@ -236,6 +277,9 @@ private:
     game.flipped = true;
     load_board_from_FEN(
         game, "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+
+    // Starting pos
+    // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
   }
 
   void on_update() override
@@ -243,17 +287,19 @@ private:
     /***************************************************************************
      * FULL SCREEN
      **************************************************************************/
-    clear_screen({0xFF000000});
+    clear_screen({0x000000FF});
     draw_texture(background, 0, 0, 800, 500);
 
     /***************************************************************************
      * RIGHT PANNEl
      **************************************************************************/
-    set_current_viewport(500, 10, 290, 480);
+    set_current_viewport(500, 10, 290, 480, {0xEEEEEEFF});
+
+    pixel_t text_color = {0x000000FF};
 
     // Print FPS
     uint32_t fps = FPS();
-    texture_t fps_texture = create_text("FPS: " + STR(fps), {0xFF000000});
+    texture_t fps_texture = create_text("FPS: " + STR(fps), text_color);
     draw_texture(fps_texture, 290 - 77, 480 - 20);
 
     // Draw turn
@@ -267,8 +313,18 @@ private:
         turn += "W";
         break;
     }
-    texture_t turn_texture = create_text(turn, {0xFF000000});
+    texture_t turn_texture = create_text(turn, text_color);
     draw_texture(turn_texture, 10, 10);
+
+    // Draw castling situation
+    std::string castling = "Castling: ";
+    if (game.available_castling & WK) { castling += "K"; }
+    if (game.available_castling & WQ) { castling += "Q"; }
+    if (game.available_castling & BK) { castling += "k"; }
+    if (game.available_castling & BQ) { castling += "q"; }
+    if (game.available_castling == 0x00) { castling += "-"; }
+    texture_t castling_texture = create_text(castling, text_color);
+    draw_texture(castling_texture, 10, turn_texture.h + 20);
 
     /***************************************************************************
      * MAIN BOARD
