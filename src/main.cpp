@@ -21,6 +21,15 @@ texture_t background;
 std::map<char, texture_t> pieces;
 constexpr int32_t size = 60;
 
+bool is_uint(const std::string& str)
+{
+  for (const char c : str) {
+    if (!isdigit(c)) { return false; }
+  }
+
+  return true;
+}
+
 class FAN_exception : public pixello_exception
 {
 public:
@@ -33,6 +42,8 @@ struct game_t
   bool flipped = true;
   int active_color = WHITE;
   uint8_t available_castling = WQ | WK | BQ | BK;
+  int halfmove_clock = 0;
+  int full_move = 0;
 };
 
 game_t game;
@@ -189,6 +200,68 @@ void load_board_from_FEN(game_t& game, const std::string& FEN)
                               std::string(1, c) + "]. FEN: " + FEN);
       }
     }
+
+    /***************************************************************************
+     * 3. En passant target square
+     *
+     * "-" None
+     **************************************************************************/
+    if (sections[3].size() < 1 || sections[3].size() > 2) {
+      throw FAN_exception("Invalid en passant section size. FEN: " + FEN);
+    }
+
+    // TODO(max): Do this at some point
+
+    /***************************************************************************
+     * 4. Halfmove clock
+     *
+     * The number of halfmoves since the last capture or pawn advance, used for
+     * the fifty-move rule.
+     **************************************************************************/
+    const std::string& half_move = sections[4];
+    if (half_move.size() < 1) {
+      throw FAN_exception("Invalid Halfmove clock section size. FEN: " + FEN);
+    }
+
+    if (!is_uint(half_move)) {
+      throw FAN_exception(
+          "Invalid Halfmove clock section is not a number. FEN: " + FEN);
+    }
+
+    try {
+      game.halfmove_clock = static_cast<int>(std::stoul(half_move));
+    } catch (std::exception& e) {
+      throw FAN_exception("Can't convert Halfmove clock to integer.What: " +
+                          std::string(e.what()) + " FEN: " + FEN);
+    }
+
+    /***************************************************************************
+     * 5. Fullmove number
+     *
+     * The number of the full moves. It starts at 1 and is incremented after
+     * Black's move.
+     **************************************************************************/
+    const std::string& full_move = sections[5];
+    if (full_move.size() < 1) {
+      throw FAN_exception("Invalid Fullmove number section size. FEN: " + FEN);
+    }
+
+    if (!is_uint(full_move)) {
+      throw FAN_exception(
+          "Invalid Fullmove number section is not a number. FEN: " + FEN);
+    }
+
+    try {
+      game.full_move = static_cast<int>(std::stoul(full_move));
+    } catch (std::exception& e) {
+      throw FAN_exception("Can't convert Fullmove number to integer. What: " +
+                          std::string(e.what()) + " FEN: " + FEN);
+    }
+
+    if (game.full_move < 1) {
+      throw FAN_exception("Fullmove number can't be less then 1 but it is " +
+                          std::string(STR(game.full_move)) + " FEN: " + FEN);
+    }
   }
 }
 
@@ -325,6 +398,19 @@ private:
     if (game.available_castling == 0x00) { castling += "-"; }
     texture_t castling_texture = create_text(castling, text_color);
     draw_texture(castling_texture, 10, turn_texture.h + 20);
+
+    // Draw the halfmove clock
+    std::string half_clock = "HMC: " + STR(game.halfmove_clock);
+    texture_t half_clock_texture = create_text(half_clock, text_color);
+    draw_texture(half_clock_texture, 10,
+                 +turn_texture.h + castling_texture.h + 30);
+
+    // Draw the fullmove counter
+    std::string full_clock = "FMC: " + STR(game.full_move);
+    texture_t full_clock_texture = create_text(full_clock, text_color);
+    draw_texture(
+        full_clock_texture, 10,
+        +turn_texture.h + castling_texture.h + half_clock_texture.h + 40);
 
     /***************************************************************************
      * MAIN BOARD
