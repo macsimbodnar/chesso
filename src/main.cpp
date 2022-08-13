@@ -42,6 +42,7 @@ struct game_t
   bool flipped = true;
   int active_color = WHITE;
   uint8_t available_castling = WQ | WK | BQ | BK;
+  std::string en_passant_target_square = "-";
   int halfmove_clock = 0;
   int full_move = 0;
 };
@@ -210,7 +211,20 @@ void load_board_from_FEN(game_t& game, const std::string& FEN)
       throw FAN_exception("Invalid en passant section size. FEN: " + FEN);
     }
 
-    // TODO(max): Do this at some point
+    if (sections[3].size() == 1 && sections[3][0] != '-') {
+      throw FAN_exception("Invalid en passant section char [ " +
+                          std::string(1, sections[3][0]) + "]. FEN: " + FEN);
+    }
+
+    if (sections[3].size() == 2) {
+      if (!isalpha(sections[3][0]) || !isdigit(sections[3][1])) {
+        throw FAN_exception(
+            "Invalid en passant section. Wrong algebraic notation [" +
+            sections[3] + "]. FEN: " + FEN);
+      }
+    }
+
+    game.en_passant_target_square = sections[3];
 
     /***************************************************************************
      * 4. Halfmove clock
@@ -399,18 +413,25 @@ private:
     texture_t castling_texture = create_text(castling, text_color);
     draw_texture(castling_texture, 10, turn_texture.h + 20);
 
+    // Draw en passant target square
+    std::string en_passant = "En passant: " + game.en_passant_target_square;
+    texture_t en_passant_texture = create_text(en_passant, text_color);
+    draw_texture(en_passant_texture, 10,
+                 +turn_texture.h + castling_texture.h + 30);
+
     // Draw the halfmove clock
     std::string half_clock = "HMC: " + STR(game.halfmove_clock);
     texture_t half_clock_texture = create_text(half_clock, text_color);
-    draw_texture(half_clock_texture, 10,
-                 +turn_texture.h + castling_texture.h + 30);
+    draw_texture(
+        half_clock_texture, 10,
+        +turn_texture.h + castling_texture.h + en_passant_texture.h + 40);
 
     // Draw the fullmove counter
     std::string full_clock = "FMC: " + STR(game.full_move);
     texture_t full_clock_texture = create_text(full_clock, text_color);
-    draw_texture(
-        full_clock_texture, 10,
-        +turn_texture.h + castling_texture.h + half_clock_texture.h + 40);
+    draw_texture(full_clock_texture, 10,
+                 +turn_texture.h + castling_texture.h + en_passant_texture.h +
+                     half_clock_texture.h + 50);
 
     /***************************************************************************
      * MAIN BOARD
