@@ -1,6 +1,5 @@
 #pragma once
 #include <exceptions.hpp>
-#include <string>
 
 constexpr uint8_t WQ = 0b0000001;
 constexpr uint8_t WK = 0b0000010;

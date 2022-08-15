@@ -1,7 +1,6 @@
 #pragma once
-#include <sstream>
-#include <string>
 #include <vector>
+#include <sstream>
 
 
 inline std::vector<std::string> split_string(const std::string& str)
@@ -15,7 +14,7 @@ inline std::vector<std::string> split_string(const std::string& str)
 }
 
 
-bool is_uint(const std::string& str)
+inline bool is_uint(const std::string& str)
 {
   for (const char c : str) {
     if (!isdigit(c)) { return false; }
@@ -25,7 +24,7 @@ bool is_uint(const std::string& str)
 }
 
 
-game_t load_board_from_FEN(const std::string& FEN)
+inline game_t load_board_from_FEN(const std::string& FEN)
 {
   game_t game;
   game.flipped = false;
