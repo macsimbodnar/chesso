@@ -1,6 +1,6 @@
 #pragma once
-#include <vector>
 #include <sstream>
+#include <vector>
 
 
 inline std::vector<std::string> split_string(const std::string& str)
@@ -94,7 +94,7 @@ inline game_t load_board_from_FEN(const std::string& FEN)
       case 'r':
       case 'q':
       case 'k':
-        game.board[y][x] = c;
+        game.board[y][x] = new piece_t(c);
         ++x;
         break;
 

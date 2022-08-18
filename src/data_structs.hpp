@@ -6,6 +6,13 @@ constexpr uint8_t WK = 0b0000010;
 constexpr uint8_t BQ = 0b0000100;
 constexpr uint8_t BK = 0b0001000;
 
+struct piece_t {
+  char piece = 0;
+  bool is_selected = false;
+
+  piece_t(char c) : piece(c), is_selected(false) {}
+};
+
 struct game_t
 {
   enum player_t
@@ -14,7 +21,7 @@ struct game_t
     WHITE
   };
 
-  char board[8][8] = {0};
+  piece_t* board[8][8] = {0};
   bool flipped = true;
   int active_color = WHITE;
   uint8_t available_castling = WQ | WK | BQ | BK;
