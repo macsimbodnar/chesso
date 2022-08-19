@@ -13,6 +13,7 @@ private:
   std::map<char, texture_t> piece_textures;
   int32_t square_size = 60;
   game_t game;
+  piece_holding_t mouse_holding;
 
 public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}

@@ -1,17 +1,27 @@
 #pragma once
 #include <exceptions.hpp>
 
-constexpr uint8_t WQ = 0b0000001;
-constexpr uint8_t WK = 0b0000010;
-constexpr uint8_t BQ = 0b0000100;
-constexpr uint8_t BK = 0b0001000;
+static constexpr uint8_t WQ = 0b0000001;
+static constexpr uint8_t WK = 0b0000010;
+static constexpr uint8_t BQ = 0b0000100;
+static constexpr uint8_t BK = 0b0001000;
 
-struct piece_t {
+
+struct piece_t
+{
   char piece = 0;
-  bool is_selected = false;
 
-  piece_t(char c) : piece(c), is_selected(false) {}
+  piece_t(char c) : piece(c) {}
 };
+
+
+struct piece_holding_t
+{
+  int32_t offset_x = 0;
+  int32_t offset_y = 0;
+  piece_t* selected = nullptr;
+};
+
 
 struct game_t
 {

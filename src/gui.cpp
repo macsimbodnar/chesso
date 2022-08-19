@@ -1,8 +1,5 @@
 #include "gui.hpp"
 
-static int holding_offset_x = 0;
-static int holding_offset_y = 0;
-
 
 void gui::draw_board()
 {
@@ -36,10 +33,11 @@ void gui::draw_board()
     for (int j = 0; j < 8; ++j) {
       if (game.board[i][j] != nullptr && game.board[i][j]->piece > 0) {
         rect_t r;
-        if (game.board[i][j]->is_selected) {
+        if (game.board[i][j] == mouse_holding.selected) {
           // Case we are moving a piece
-          r = {mouse_state().x - holding_offset_x,
-               mouse_state().y - holding_offset_y, square_size, square_size};
+          r = {mouse_state().x - mouse_holding.offset_x,
+               mouse_state().y - mouse_holding.offset_y, square_size,
+               square_size};
         } else {
           // The pice is in place
           r = {j * square_size, i * square_size, square_size, square_size};
@@ -90,9 +88,10 @@ void gui::on_update(void*)
 {
   static const rect_t board_rect = {10, 10, 480, 480};
 
-
-  // Update the positions
   {
+    /***************************************************************************
+     * MOUSE CLICK
+     **************************************************************************/
     const auto mouse = mouse_state();
 
     if (is_mouse_in(board_rect)) {
@@ -102,119 +101,106 @@ void gui::on_update(void*)
       auto piece = game.board[y][x];
 
       if (piece != nullptr) {
-        if (mouse.left_button.state == button_t::DOWN) {
-          if (piece->is_selected == false) {
-            holding_offset_x = mouse.x - (x * square_size);
-            holding_offset_y = mouse.y - (y * square_size);
-          }
-          piece->is_selected = true;
-        }
+        if (mouse.left_button.state == button_t::DOWN &&
+            mouse_holding.selected == nullptr) {
+          mouse_holding.offset_x = mouse.x - (x * square_size);
+          mouse_holding.offset_y = mouse.y - (y * square_size);
 
-        if (mouse.left_button.state == button_t::UP) {
-          piece->is_selected = false;
-          holding_offset_x = 0;
-          holding_offset_y = 0;
+
+          mouse_holding.selected = piece;
         }
+      }
+
+      if (mouse.left_button.state == button_t::UP) {
+        mouse_holding.selected = nullptr;
+        mouse_holding.offset_x = 0;
+        mouse_holding.offset_y = 0;
       }
     }
   }
 
+  {
+    /***************************************************************************
+     * FULL SCREEN
+     **************************************************************************/
 
-  /***************************************************************************
-   * FULL SCREEN
-   **************************************************************************/
-  clear_screen({0x000000FF});
-  draw_texture(background, {0, 0, 800, 500});
-
-  /***************************************************************************
-   * RIGHT PANNEl
-   **************************************************************************/
-  set_current_viewport({500, 10, 290, 480}, {0xEEEEEEFF});
-
-  pixel_t text_color = {0x000000FF};
-
-  // Print FPS
-  uint32_t fps = FPS();
-  texture_t fps_texture = create_text("FPS: " + STR(fps), text_color);
-  draw_texture(fps_texture, 290 - 77, 480 - 20);
-
-  // Draw turn
-  std::string turn = "Turn: ";
-  switch (game.active_color) {
-    case game_t::BLACK:
-      turn += "B";
-      break;
-
-    case game_t::WHITE:
-      turn += "W";
-      break;
+    clear_screen({0x000000FF});
+    draw_texture(background, {0, 0, 800, 500});
   }
 
-  texture_t turn_texture = create_text(turn, text_color);
-  draw_texture(turn_texture, 10, 10);
+  {
+    /***************************************************************************
+     * RIGHT PANNEl
+     **************************************************************************/
+    set_current_viewport({500, 10, 290, 480}, {0xEEEEEEFF});
 
-  // Draw castling situation
-  std::string castling = "Castling: ";
-  if (game.available_castling & WK) { castling += "K"; }
-  if (game.available_castling & WQ) { castling += "Q"; }
-  if (game.available_castling & BK) { castling += "k"; }
-  if (game.available_castling & BQ) { castling += "q"; }
-  if (game.available_castling == 0x00) { castling += "-"; }
-  texture_t castling_texture = create_text(castling, text_color);
-  draw_texture(castling_texture, 10, turn_texture.h + 20);
+    pixel_t text_color = {0x000000FF};
 
-  // Draw en passant target square
-  std::string en_passant = "En passant: " + game.en_passant_target_square;
-  texture_t en_passant_texture = create_text(en_passant, text_color);
-  draw_texture(en_passant_texture, 10,
-               +turn_texture.h + castling_texture.h + 30);
+    // Print FPS
+    uint32_t fps = FPS();
+    texture_t fps_texture = create_text("FPS: " + STR(fps), text_color);
+    draw_texture(fps_texture, 290 - 77, 480 - 20);
 
-  // Draw the halfmove clock
-  std::string half_clock = "HMC: " + STR(game.halfmove_clock);
-  texture_t half_clock_texture = create_text(half_clock, text_color);
-  draw_texture(
-      half_clock_texture, 10,
-      +turn_texture.h + castling_texture.h + en_passant_texture.h + 40);
+    // Draw turn
+    std::string turn = "Turn: ";
+    switch (game.active_color) {
+      case game_t::BLACK:
+        turn += "B";
+        break;
 
-  // Draw the fullmove counter
-  std::string full_clock = "FMC: " + STR(game.full_move);
-  texture_t full_clock_texture = create_text(full_clock, text_color);
-  draw_texture(full_clock_texture, 10,
-               +turn_texture.h + castling_texture.h + en_passant_texture.h +
-                   half_clock_texture.h + 50);
+      case game_t::WHITE:
+        turn += "W";
+        break;
+    }
 
-  /***************************************************************************
-   * MAIN BOARD
-   **************************************************************************/
-  set_current_viewport(board_rect);
-  draw_board();
+    texture_t turn_texture = create_text(turn, text_color);
+    draw_texture(turn_texture, 10, 10);
 
-  // Check if we are in the rect
-  if (is_mouse_in(board_rect)) {
-    int x = ((mouse_state().x - board_rect.x) / square_size);
-    int y = ((mouse_state().y - board_rect.y) / square_size);
+    // Draw castling situation
+    std::string castling = "Castling: ";
+    if (game.available_castling & WK) { castling += "K"; }
+    if (game.available_castling & WQ) { castling += "Q"; }
+    if (game.available_castling & BK) { castling += "k"; }
+    if (game.available_castling & BQ) { castling += "q"; }
+    if (game.available_castling == 0x00) { castling += "-"; }
+    texture_t castling_texture = create_text(castling, text_color);
+    draw_texture(castling_texture, 10, turn_texture.h + 20);
 
-    draw_rect({x * square_size, y * square_size, square_size, square_size},
-              0xAA00FF55);
+    // Draw en passant target square
+    std::string en_passant = "En passant: " + game.en_passant_target_square;
+    texture_t en_passant_texture = create_text(en_passant, text_color);
+    draw_texture(en_passant_texture, 10,
+                 +turn_texture.h + castling_texture.h + 30);
+
+    // Draw the halfmove clock
+    std::string half_clock = "HMC: " + STR(game.halfmove_clock);
+    texture_t half_clock_texture = create_text(half_clock, text_color);
+    draw_texture(
+        half_clock_texture, 10,
+        +turn_texture.h + castling_texture.h + en_passant_texture.h + 40);
+
+    // Draw the fullmove counter
+    std::string full_clock = "FMC: " + STR(game.full_move);
+    texture_t full_clock_texture = create_text(full_clock, text_color);
+    draw_texture(full_clock_texture, 10,
+                 +turn_texture.h + castling_texture.h + en_passant_texture.h +
+                     half_clock_texture.h + 50);
   }
-  // const rect_t r = {media2_x, media2_y, media2.w, media2.h};
-  // if (is_mouse_in(r) && (mouse_state().left_button.state == button_t::DOWN))
-  // {
-  //   if (!holding_icon) {
-  //     holding_offset_x = mouse_state().x - media2_x;
-  //     holding_offset_y = mouse_state().y - media2_y;
-  //   }
-  //   holding_icon = true;
-  // }
 
-  // if (mouse_state().left_button.state == button_t::UP) {
-  //   holding_icon = false;
-  //   holding_offset_x = 0;
-  //   holding_offset_y = 0;
-  // }
+  {
+    /***************************************************************************
+     * MAIN BOARD
+     **************************************************************************/
+    set_current_viewport(board_rect);
+    draw_board();
 
-  // if (holding_icon) {
-  //   media2_x = mouse_state().x - holding_offset_x;
-  //   media2_y = mouse_state().y - holding_offset_y;
-  // }
+    // Check if we are in the rect
+    if (is_mouse_in(board_rect)) {
+      int x = ((mouse_state().x - board_rect.x) / square_size);
+      int y = ((mouse_state().y - board_rect.y) / square_size);
+
+      draw_rect({x * square_size, y * square_size, square_size, square_size},
+                0xAA00FF55);
+    }
+  }
 }
