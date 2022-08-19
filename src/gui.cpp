@@ -1,6 +1,25 @@
 #include "gui.hpp"
 
 
+static const rect_t board_rect = {10, 10, 480, 480};
+
+
+void gui::move_piece(const uint32_t Y, const uint32_t X, piece_t* piece)
+{
+  if (X > 8 || Y > 8 || piece == nullptr) {
+    throw input_exception(
+        "One of the inputs to move_piece is illegal. X: " + STR(X) +
+        " Y: " + STR(Y) + " piece*: " + PTR2STR(piece));
+  }
+
+  // Unset the current piece postion
+  game.board[piece->y][piece->x] = nullptr;
+  game.board[Y][X] = piece;
+  piece->x = X;
+  piece->y = Y;
+}
+
+
 void gui::draw_board()
 {
   // Draw background
@@ -28,24 +47,36 @@ void gui::draw_board()
     black = !black;
   }
 
+  // Draw the current square
+  if (is_mouse_in(board_rect)) {
+    int x = ((mouse_state().x - board_rect.x) / square_size);
+    int y = ((mouse_state().y - board_rect.y) / square_size);
+
+    draw_rect({x * square_size, y * square_size, square_size, square_size},
+              0xAA00FF55);
+  }
+
   // Draw pieces
   for (int i = 0; i < 8; ++i) {
     for (int j = 0; j < 8; ++j) {
       if (game.board[i][j] != nullptr && game.board[i][j]->piece > 0) {
-        rect_t r;
-        if (game.board[i][j] == mouse_holding.selected) {
-          // Case we are moving a piece
-          r = {mouse_state().x - mouse_holding.offset_x,
-               mouse_state().y - mouse_holding.offset_y, square_size,
-               square_size};
-        } else {
+        if (game.board[i][j] != mouse_holding.selected) {
           // The pice is in place
-          r = {j * square_size, i * square_size, square_size, square_size};
+          rect_t r = {j * square_size, i * square_size, square_size,
+                      square_size};
+          draw_texture(piece_textures[game.board[i][j]->piece], r);
         }
-
-        draw_texture(piece_textures[game.board[i][j]->piece], r);
       }
     }
+  }
+
+  //  For last draw the selected piece
+  // Case we are moving a piece
+  if (mouse_holding.selected) {
+    rect_t r = {mouse_state().x - mouse_holding.offset_x,
+                mouse_state().y - mouse_holding.offset_y, square_size,
+                square_size};
+    draw_texture(piece_textures[mouse_holding.selected->piece], r);
   }
 }
 
@@ -86,8 +117,6 @@ void gui::on_init(void*)
 
 void gui::on_update(void*)
 {
-  static const rect_t board_rect = {10, 10, 480, 480};
-
   {
     /***************************************************************************
      * MOUSE CLICK
@@ -111,7 +140,11 @@ void gui::on_update(void*)
         }
       }
 
-      if (mouse.left_button.state == button_t::UP) {
+      if (mouse.left_button.state == button_t::UP &&
+          mouse_holding.selected != nullptr) {
+        // Set the piece to the destination column when release
+        move_piece(y, x, mouse_holding.selected);
+
         mouse_holding.selected = nullptr;
         mouse_holding.offset_x = 0;
         mouse_holding.offset_y = 0;
@@ -193,14 +226,5 @@ void gui::on_update(void*)
      **************************************************************************/
     set_current_viewport(board_rect);
     draw_board();
-
-    // Check if we are in the rect
-    if (is_mouse_in(board_rect)) {
-      int x = ((mouse_state().x - board_rect.x) / square_size);
-      int y = ((mouse_state().y - board_rect.y) / square_size);
-
-      draw_rect({x * square_size, y * square_size, square_size, square_size},
-                0xAA00FF55);
-    }
   }
 }

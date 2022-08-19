@@ -1,6 +1,19 @@
 #pragma once
 #include <sstream>
+#include <string>
 #include <vector>
+
+namespace
+{
+
+template <typename T>
+inline std::string PTR2STR(T* ptr)
+{
+  const void* address = static_cast<const void*>(ptr);
+  std::stringstream ss;
+  ss << address;
+  return ss.str();
+}
 
 
 inline std::vector<std::string> split_string(const std::string& str)
@@ -94,7 +107,7 @@ inline game_t load_board_from_FEN(const std::string& FEN)
       case 'r':
       case 'q':
       case 'k':
-        game.board[y][x] = new piece_t(c);
+        game.board[y][x] = new piece_t(c, y, x);
         ++x;
         break;
 
@@ -247,3 +260,4 @@ inline game_t load_board_from_FEN(const std::string& FEN)
 
   return game;
 }
+}  // namespace

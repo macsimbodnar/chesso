@@ -8,7 +8,6 @@
 class gui : public pixello
 {
 private:
-
   texture_t background;
   std::map<char, texture_t> piece_textures;
   int32_t square_size = 60;
@@ -19,7 +18,7 @@ public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}
 
 private:
-  // void update_board();
+  void move_piece(const uint32_t X, const uint32_t Y, piece_t* piece);
   void draw_board();
 
   void on_init(void*) override;

@@ -10,8 +10,9 @@ static constexpr uint8_t BK = 0b0001000;
 struct piece_t
 {
   char piece = 0;
-
-  piece_t(char c) : piece(c) {}
+  uint32_t x = 0;
+  uint32_t y = 0;
+  piece_t(char c, uint32_t Y, uint32_t X) : piece(c), y(Y), x(X) {}
 };
 
 
@@ -45,4 +46,11 @@ class FAN_exception : public pixello_exception
 {
 public:
   FAN_exception(std::string msg) : pixello_exception(std::move(msg)) {}
+};
+
+
+class input_exception : public pixello_exception
+{
+public:
+  input_exception(std::string msg) : pixello_exception(std::move(msg)) {}
 };
