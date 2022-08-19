@@ -8,6 +8,7 @@
 class gui : public pixello
 {
 private:
+  static constexpr rect_t board_rect = {10, 10, 480, 480};
   texture_t background;
   std::map<char, texture_t> piece_textures;
   int32_t square_size = 60;

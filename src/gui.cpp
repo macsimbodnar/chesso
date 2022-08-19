@@ -1,9 +1,6 @@
 #include "gui.hpp"
 
 
-static const rect_t board_rect = {10, 10, 480, 480};
-
-
 void gui::move_piece(const uint32_t Y, const uint32_t X, piece_t* piece)
 {
   if (X > 8 || Y > 8 || piece == nullptr) {
