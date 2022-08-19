@@ -121,7 +121,6 @@ void gui::on_update(void*)
      * MOUSE
      **************************************************************************/
     const auto mouse = mouse_state();
-    bool skip_select = false;
 
     if (is_mouse_in(board_rect)) {
       int x = ((mouse.x - board_rect.x) / square_size);
@@ -136,12 +135,22 @@ void gui::on_update(void*)
           mouse_holding.offset_x = mouse.x - (x * square_size);
           mouse_holding.offset_y = mouse.y - (y * square_size);
           mouse_holding.selected = piece;
+
         }
       }
 
       // Reset the selected state
       if (mouse.left_button.state == button_t::UP &&
           mouse_holding.selected != nullptr) {
+
+        if (x != mouse_holding.selected->x || y != mouse_holding.selected->y ) {
+          // In this case we want to unselect the square
+          selected_square.selected = false;
+          selected_square.x = 0;
+          selected_square.y = 0;
+          selected_square.rect = {0};
+        }
+
         // Set the piece to the destination column when release
         move_piece(y, x, mouse_holding.selected);
 
@@ -150,12 +159,8 @@ void gui::on_update(void*)
         mouse_holding.offset_y = 0;
       }
 
-      // if (mouse_holding.selected) {
-      //   skip_select = true;
-      // }
-
       // Click on the square
-      if (mouse.left_button.click && !skip_select) {
+      if (mouse.left_button.click) {
         if (selected_square.selected && selected_square.x == x &&
             selected_square.y == y) {
           selected_square.selected = false;
