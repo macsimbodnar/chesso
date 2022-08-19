@@ -14,6 +14,7 @@ private:
   int32_t square_size = 60;
   game_t game;
   piece_holding_t mouse_holding;
+  selected_square_t selected_square; 
 
 public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}

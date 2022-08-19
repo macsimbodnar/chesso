@@ -44,6 +44,9 @@ void gui::draw_board()
     black = !black;
   }
 
+  // Draw selected square
+  if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
+
   // Draw the current square
   if (is_mouse_in(board_rect)) {
     int x = ((mouse_state().x - board_rect.x) / square_size);
@@ -67,8 +70,7 @@ void gui::draw_board()
     }
   }
 
-  //  For last draw the selected piece
-  // Case we are moving a piece
+  // For last draw the selected piece
   if (mouse_holding.selected) {
     rect_t r = {mouse_state().x - mouse_holding.offset_x,
                 mouse_state().y - mouse_holding.offset_y, square_size,
@@ -116,9 +118,10 @@ void gui::on_update(void*)
 {
   {
     /***************************************************************************
-     * MOUSE CLICK
+     * MOUSE
      **************************************************************************/
     const auto mouse = mouse_state();
+    bool skip_select = false;
 
     if (is_mouse_in(board_rect)) {
       int x = ((mouse.x - board_rect.x) / square_size);
@@ -126,17 +129,17 @@ void gui::on_update(void*)
 
       auto piece = game.board[y][x];
 
+      // Piece holding
       if (piece != nullptr) {
         if (mouse.left_button.state == button_t::DOWN &&
             mouse_holding.selected == nullptr) {
           mouse_holding.offset_x = mouse.x - (x * square_size);
           mouse_holding.offset_y = mouse.y - (y * square_size);
-
-
           mouse_holding.selected = piece;
         }
       }
 
+      // Reset the selected state
       if (mouse.left_button.state == button_t::UP &&
           mouse_holding.selected != nullptr) {
         // Set the piece to the destination column when release
@@ -145,6 +148,27 @@ void gui::on_update(void*)
         mouse_holding.selected = nullptr;
         mouse_holding.offset_x = 0;
         mouse_holding.offset_y = 0;
+      }
+
+      // if (mouse_holding.selected) {
+      //   skip_select = true;
+      // }
+
+      // Click on the square
+      if (mouse.left_button.click && !skip_select) {
+        if (selected_square.selected && selected_square.x == x &&
+            selected_square.y == y) {
+          selected_square.selected = false;
+          selected_square.x = 0;
+          selected_square.y = 0;
+          selected_square.rect = {0};
+        } else {
+          selected_square.x = x;
+          selected_square.y = y;
+          selected_square.selected = true;
+          selected_square.rect = {x * square_size, y * square_size, square_size,
+                                  square_size};
+        }
       }
     }
   }
