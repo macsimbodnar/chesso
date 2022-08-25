@@ -9,12 +9,14 @@ class gui : public pixello
 {
 private:
   static constexpr rect_t board_rect = {10, 10, 480, 480};
+  static constexpr rect_t right_panel_rect = {500, 10, 290, 480};
   texture_t background;
   std::map<char, texture_t> piece_textures;
+  std::map<char, sound_t> sound_fx;
   int32_t square_size = 60;
   game_t game;
   piece_holding_t mouse_holding;
-  selected_square_t selected_square; 
+  selected_square_t selected_square;
 
 public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}

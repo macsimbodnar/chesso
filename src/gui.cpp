@@ -109,6 +109,12 @@ void gui::on_init(void*)
 
   background = load_image("assets/background_l.jpg");
 
+  sound_fx[0] = load_sound("assets/sound/tick_1.wav");
+  sound_fx[1] = load_sound("assets/sound/tick_2.wav");
+  sound_fx[2] = load_sound("assets/sound/tick_3.wav");
+  sound_fx[3] = load_sound("assets/sound/tick_4.wav");
+  sound_fx[4] = load_sound("assets/sound/tick_5.wav");
+
   game = load_board_from_FEN(
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
@@ -121,6 +127,12 @@ void gui::on_update(void*)
      * MOUSE
      **************************************************************************/
     const auto mouse = mouse_state();
+
+    // Reset the board if click on the right panel
+    if (is_mouse_in(right_panel_rect) && mouse.left_button.click) {
+      game = load_board_from_FEN(
+          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    }
 
     if (is_mouse_in(board_rect)) {
       int x = ((mouse.x - board_rect.x) / square_size);
@@ -136,14 +148,15 @@ void gui::on_update(void*)
           mouse_holding.offset_y = mouse.y - (y * square_size);
           mouse_holding.selected = piece;
 
+          // Play the soft sound
+          play_sound(sound_fx[1]);
         }
       }
 
       // Reset the selected state
       if (mouse.left_button.state == button_t::UP &&
           mouse_holding.selected != nullptr) {
-
-        if (x != mouse_holding.selected->x || y != mouse_holding.selected->y ) {
+        if (x != mouse_holding.selected->x || y != mouse_holding.selected->y) {
           // In this case we want to unselect the square
           selected_square.selected = false;
           selected_square.x = 0;
@@ -157,6 +170,9 @@ void gui::on_update(void*)
         mouse_holding.selected = nullptr;
         mouse_holding.offset_x = 0;
         mouse_holding.offset_y = 0;
+
+        // Play sound
+        play_sound(sound_fx[3]);
       }
 
       // Click on the square
@@ -189,9 +205,9 @@ void gui::on_update(void*)
 
   {
     /***************************************************************************
-     * RIGHT PANNEl
+     * RIGHT PANEL
      **************************************************************************/
-    set_current_viewport({500, 10, 290, 480}, {0xEEEEEEFF});
+    set_current_viewport(right_panel_rect, {0xEEEEEEFF});
 
     pixel_t text_color = {0x000000FF};
 
