@@ -22,7 +22,8 @@ void gui::draw_coordinates()
     const char c = 'A' + i;
     const texture_t& t = files_and_ranks_textures[c];
 
-    const int32_t y = BOARD_RECT.h + ((SCREEN_H - BOARD_RECT.h + BOARD_RECT.y - t.h) / 2);
+    const int32_t y =
+        BOARD_RECT.h + ((SCREEN_H - BOARD_RECT.h + BOARD_RECT.y - t.h) / 2);
     const int32_t file = flipped_board ? 7 - i : i;
     const int32_t x =
         BOARD_RECT.x + ((SQUARE_SIZE * file) + ((SQUARE_SIZE - t.w) / 2));
@@ -236,6 +237,8 @@ void gui::on_update(void*)
     }
   }
 
+  const pixel_t text_color = {0x000000FF};
+
   {
     /***************************************************************************
      * FULL SCREEN
@@ -243,6 +246,18 @@ void gui::on_update(void*)
     clear_screen({0x000000FF});
     draw_texture(background, {0, 0, SCREEN_W, SCREEN_H});
     draw_coordinates();
+
+    // Print FPS
+    uint32_t fps = FPS();
+    texture_t fps_texture = create_text("FPS: " + STR(fps), text_color);
+
+    const int32_t x = SCREEN_W - 10 - fps_texture.w;
+    const int32_t y =
+        RIGHT_PANEL_RECT.h +
+        ((SCREEN_H - RIGHT_PANEL_RECT.h + RIGHT_PANEL_RECT.y - fps_texture.h) /
+         2);
+
+    draw_texture(fps_texture, x, y);
   }
 
   {
@@ -250,13 +265,6 @@ void gui::on_update(void*)
      * RIGHT PANEL
      **************************************************************************/
     set_current_viewport(RIGHT_PANEL_RECT, {0xEEEEEEFF});
-
-    pixel_t text_color = {0x000000FF};
-
-    // Print FPS
-    uint32_t fps = FPS();
-    texture_t fps_texture = create_text("FPS: " + STR(fps), text_color);
-    draw_texture(fps_texture, 290 - 77, 480 - 20);
 
     // Draw turn
     std::string turn = "Turn: ";
