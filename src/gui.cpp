@@ -2,6 +2,36 @@
 #include "exceptions.hpp"
 
 
+void gui::draw_coordinates()
+{
+  // Draw ranks  1 - 8
+  for (int i = 0; i < 8; ++i) {
+    const char c = '1' + i;
+    const texture_t& t = files_and_ranks_textures[c];
+
+    const int32_t x = (BOARD_RECT.x - t.w) / 2;
+    const int32_t rank = flipped_board ? i : 7 - i;
+    const int32_t y =
+        BOARD_RECT.y + ((SQUARE_SIZE * rank) + ((SQUARE_SIZE - t.h) / 2));
+
+    draw_texture(t, x, y);
+  }
+
+  // Draw files  A - H
+  for (int i = 0; i < 8; ++i) {
+    const char c = 'A' + i;
+    const texture_t& t = files_and_ranks_textures[c];
+
+    const int32_t y = BOARD_RECT.h + ((SCREEN_H - BOARD_RECT.h + BOARD_RECT.y - t.h) / 2);
+    const int32_t file = flipped_board ? 7 - i : i;
+    const int32_t x =
+        BOARD_RECT.x + ((SQUARE_SIZE * file) + ((SQUARE_SIZE - t.w) / 2));
+
+    draw_texture(t, x, y);
+  }
+}
+
+
 void gui::draw_board()
 {
   // Draw background
@@ -21,7 +51,7 @@ void gui::draw_board()
         p.b = 239;
       }
 
-      draw_rect({x * square_size, y * square_size, square_size, square_size},
+      draw_rect({x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE},
                 p);
       black = !black;
     }
@@ -33,11 +63,11 @@ void gui::draw_board()
   if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
 
   // Draw the current square
-  if (is_mouse_in(board_rect)) {
-    int x = ((mouse_state().x - board_rect.x) / square_size);
-    int y = ((mouse_state().y - board_rect.y) / square_size);
+  if (is_mouse_in(BOARD_RECT)) {
+    int x = ((mouse_state().x - BOARD_RECT.x) / SQUARE_SIZE);
+    int y = ((mouse_state().y - BOARD_RECT.y) / SQUARE_SIZE);
 
-    draw_rect({x * square_size, y * square_size, square_size, square_size},
+    draw_rect({x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE},
               0xAA00FF55);
   }
 
@@ -55,15 +85,15 @@ void gui::draw_board()
     if (mouse_holding.selected.get() == I.get()) { continue; }
 
     // The pice is in place
-    rect_t r = {x * square_size, y * square_size, square_size, square_size};
+    rect_t r = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE};
     draw_texture(piece_textures[c], r);
   }
 
   // For last draw the selected piece
   if (mouse_holding.selected) {
     rect_t r = {mouse_state().x - mouse_holding.offset_x,
-                mouse_state().y - mouse_holding.offset_y, square_size,
-                square_size};
+                mouse_state().y - mouse_holding.offset_y, SQUARE_SIZE,
+                SQUARE_SIZE};
     draw_texture(piece_textures[mouse_holding.selected.get()->c()], r);
   }
 }
@@ -103,6 +133,15 @@ void gui::on_init(void*)
   sound_fx[2] = load_sound("assets/sound/tick_3.wav");
   sound_fx[3] = load_sound("assets/sound/tick_4.wav");
   sound_fx[4] = load_sound("assets/sound/tick_5.wav");
+
+  // Generate the files and ranks text textures
+  for (char i = 'A'; i < 'I'; ++i) {
+    files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
+  }
+
+  for (char i = '1'; i < '9'; ++i) {
+    files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
+  }
 }
 
 
@@ -115,18 +154,18 @@ void gui::on_update(void*)
     const auto mouse = mouse_state();
 
     // Reset the board if click on the right panel
-    if (is_mouse_in(right_panel_rect) && mouse.left_button.click) {
+    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.left_button.click) {
       _board.load(FEN_INIT_POS);
     }
 
     // Flip the board if click on the right panel with the right button
-    if (is_mouse_in(right_panel_rect) && mouse.right_button.click) {
+    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.right_button.click) {
       flipped_board = !flipped_board;
     }
 
-    if (is_mouse_in(board_rect)) {
-      const uint8_t x = ((mouse.x - board_rect.x) / square_size);
-      const uint8_t y = ((mouse.y - board_rect.y) / square_size);
+    if (is_mouse_in(BOARD_RECT)) {
+      const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
+      const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
 
       const uint8_t target_file = flipped_board ? 7 - x : x;
       const uint8_t target_rank = flipped_board ? y : 7 - y;
@@ -136,8 +175,8 @@ void gui::on_update(void*)
       if (piece != nullptr) {
         if (mouse.left_button.state == button_t::DOWN &&
             !mouse_holding.selected) {
-          mouse_holding.offset_x = mouse.x - (x * square_size);
-          mouse_holding.offset_y = mouse.y - (y * square_size);
+          mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
+          mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
           mouse_holding.selected = piece;
 
           // Play the soft sound
@@ -190,8 +229,8 @@ void gui::on_update(void*)
           selected_square.x = x;
           selected_square.y = y;
           selected_square.selected = true;
-          selected_square.rect = {x * square_size, y * square_size, square_size,
-                                  square_size};
+          selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
+                                  SQUARE_SIZE};
         }
       }
     }
@@ -202,14 +241,15 @@ void gui::on_update(void*)
      * FULL SCREEN
      **************************************************************************/
     clear_screen({0x000000FF});
-    draw_texture(background, {0, 0, 800, 500});
+    draw_texture(background, {0, 0, SCREEN_W, SCREEN_H});
+    draw_coordinates();
   }
 
   {
     /***************************************************************************
      * RIGHT PANEL
      **************************************************************************/
-    set_current_viewport(right_panel_rect, {0xEEEEEEFF});
+    set_current_viewport(RIGHT_PANEL_RECT, {0xEEEEEEFF});
 
     pixel_t text_color = {0x000000FF};
 
@@ -269,7 +309,7 @@ void gui::on_update(void*)
     /***************************************************************************
      * MAIN BOARD
      **************************************************************************/
-    set_current_viewport(board_rect);
+    set_current_viewport(BOARD_RECT);
     draw_board();
   }
 }

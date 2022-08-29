@@ -5,6 +5,12 @@
 #include "log.hpp"
 
 
+static constexpr uint32_t SCREEN_W = 810;
+static constexpr uint32_t SCREEN_H = 510;
+static constexpr rect_t BOARD_RECT = {20, 10, 480, 480};
+static constexpr rect_t RIGHT_PANEL_RECT = {510, 10, 290, 480};
+static constexpr int32_t SQUARE_SIZE = 60;
+
 struct piece_holding_t
 {
   int32_t offset_x = 0;
@@ -24,22 +30,28 @@ struct selected_square_t
 class gui : public pixello
 {
 private:
-  static constexpr rect_t board_rect = {10, 10, 480, 480};
-  static constexpr rect_t right_panel_rect = {500, 10, 290, 480};
   texture_t background;
   std::map<char, texture_t> piece_textures;
   std::map<char, sound_t> sound_fx;
-  int32_t square_size = 60;
   board _board;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
   bool flipped_board = false;
+  std::map<char, texture_t> files_and_ranks_textures;
 
 public:
-  gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}
+  gui()
+      : pixello(SCREEN_W,
+                SCREEN_H,
+                "Chesso",
+                60,
+                "assets/font/PressStart2P.ttf",
+                8)
+  {}
 
 private:
   void draw_board();
+  void draw_coordinates();
 
   void on_init(void*) override;
   void on_update(void*) override;
