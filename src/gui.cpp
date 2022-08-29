@@ -1,19 +1,34 @@
 #include "gui.hpp"
+#include "exceptions.hpp"
 
 
-void gui::move_piece(const uint32_t Y, const uint32_t X, piece_t* piece)
+void gui::draw_coordinates()
 {
-  if (X > 8 || Y > 8 || piece == nullptr) {
-    throw input_exception(
-        "One of the inputs to move_piece is illegal. X: " + STR(X) +
-        " Y: " + STR(Y) + " piece*: " + PTR2STR(piece));
+  // Draw ranks  1 - 8
+  for (int i = 0; i < 8; ++i) {
+    const char c = '1' + i;
+    const texture_t& t = files_and_ranks_textures[c];
+
+    const int32_t x = (BOARD_RECT.x - t.w) / 2;
+    const int32_t rank = flipped_board ? i : 7 - i;
+    const int32_t y =
+        BOARD_RECT.y + ((SQUARE_SIZE * rank) + ((SQUARE_SIZE - t.h) / 2));
+
+    draw_texture(t, x, y);
   }
 
-  // Unset the current piece postion
-  game.board[piece->y][piece->x] = nullptr;
-  game.board[Y][X] = piece;
-  piece->x = X;
-  piece->y = Y;
+  // Draw files  A - H
+  for (int i = 0; i < 8; ++i) {
+    const char c = 'A' + i;
+    const texture_t& t = files_and_ranks_textures[c];
+
+    const int32_t y = BOARD_RECT.h + ((SCREEN_H - BOARD_RECT.h + BOARD_RECT.y - t.h) / 2);
+    const int32_t file = flipped_board ? 7 - i : i;
+    const int32_t x =
+        BOARD_RECT.x + ((SQUARE_SIZE * file) + ((SQUARE_SIZE - t.w) / 2));
+
+    draw_texture(t, x, y);
+  }
 }
 
 
@@ -36,7 +51,7 @@ void gui::draw_board()
         p.b = 239;
       }
 
-      draw_rect({x * square_size, y * square_size, square_size, square_size},
+      draw_rect({x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE},
                 p);
       black = !black;
     }
@@ -48,34 +63,38 @@ void gui::draw_board()
   if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
 
   // Draw the current square
-  if (is_mouse_in(board_rect)) {
-    int x = ((mouse_state().x - board_rect.x) / square_size);
-    int y = ((mouse_state().y - board_rect.y) / square_size);
+  if (is_mouse_in(BOARD_RECT)) {
+    int x = ((mouse_state().x - BOARD_RECT.x) / SQUARE_SIZE);
+    int y = ((mouse_state().y - BOARD_RECT.y) / SQUARE_SIZE);
 
-    draw_rect({x * square_size, y * square_size, square_size, square_size},
+    draw_rect({x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE},
               0xAA00FF55);
   }
 
   // Draw pieces
-  for (int i = 0; i < 8; ++i) {
-    for (int j = 0; j < 8; ++j) {
-      if (game.board[i][j] != nullptr && game.board[i][j]->piece > 0) {
-        if (game.board[i][j] != mouse_holding.selected) {
-          // The pice is in place
-          rect_t r = {j * square_size, i * square_size, square_size,
-                      square_size};
-          draw_texture(piece_textures[game.board[i][j]->piece], r);
-        }
-      }
-    }
+  const auto pieces = _board.pieces();
+  for (const auto& I : pieces) {
+    const uint8_t file = I.get()->file();
+    const uint8_t rank = I.get()->rank();
+
+    const uint8_t x = flipped_board ? 7 - file : file;
+    const uint8_t y = flipped_board ? rank : 7 - rank;
+    const char c = I.get()->c();
+
+    // Don't draw the selected piece
+    if (mouse_holding.selected.get() == I.get()) { continue; }
+
+    // The pice is in place
+    rect_t r = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE};
+    draw_texture(piece_textures[c], r);
   }
 
   // For last draw the selected piece
   if (mouse_holding.selected) {
     rect_t r = {mouse_state().x - mouse_holding.offset_x,
-                mouse_state().y - mouse_holding.offset_y, square_size,
-                square_size};
-    draw_texture(piece_textures[mouse_holding.selected->piece], r);
+                mouse_state().y - mouse_holding.offset_y, SQUARE_SIZE,
+                SQUARE_SIZE};
+    draw_texture(piece_textures[mouse_holding.selected.get()->c()], r);
   }
 }
 
@@ -115,8 +134,14 @@ void gui::on_init(void*)
   sound_fx[3] = load_sound("assets/sound/tick_4.wav");
   sound_fx[4] = load_sound("assets/sound/tick_5.wav");
 
-  game = load_board_from_FEN(
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  // Generate the files and ranks text textures
+  for (char i = 'A'; i < 'I'; ++i) {
+    files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
+  }
+
+  for (char i = '1'; i < '9'; ++i) {
+    files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
+  }
 }
 
 
@@ -129,23 +154,29 @@ void gui::on_update(void*)
     const auto mouse = mouse_state();
 
     // Reset the board if click on the right panel
-    if (is_mouse_in(right_panel_rect) && mouse.left_button.click) {
-      game = load_board_from_FEN(
-          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.left_button.click) {
+      _board.load(FEN_INIT_POS);
     }
 
-    if (is_mouse_in(board_rect)) {
-      int x = ((mouse.x - board_rect.x) / square_size);
-      int y = ((mouse.y - board_rect.y) / square_size);
+    // Flip the board if click on the right panel with the right button
+    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.right_button.click) {
+      flipped_board = !flipped_board;
+    }
 
-      auto piece = game.board[y][x];
+    if (is_mouse_in(BOARD_RECT)) {
+      const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
+      const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
+
+      const uint8_t target_file = flipped_board ? 7 - x : x;
+      const uint8_t target_rank = flipped_board ? y : 7 - y;
+      auto piece = _board.get_piece(target_file, target_rank);
 
       // Piece holding
       if (piece != nullptr) {
         if (mouse.left_button.state == button_t::DOWN &&
-            mouse_holding.selected == nullptr) {
-          mouse_holding.offset_x = mouse.x - (x * square_size);
-          mouse_holding.offset_y = mouse.y - (y * square_size);
+            !mouse_holding.selected) {
+          mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
+          mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
           mouse_holding.selected = piece;
 
           // Play the soft sound
@@ -154,9 +185,13 @@ void gui::on_update(void*)
       }
 
       // Reset the selected state
-      if (mouse.left_button.state == button_t::UP &&
-          mouse_holding.selected != nullptr) {
-        if (x != mouse_holding.selected->x || y != mouse_holding.selected->y) {
+      if (mouse.left_button.state == button_t::UP && mouse_holding.selected) {
+        const uint8_t f = mouse_holding.selected.get()->file();
+        const uint8_t r = mouse_holding.selected.get()->rank();
+        const uint8_t selected_x = flipped_board ? 7 - f : f;
+        const uint8_t selected_y = flipped_board ? r : 7 - r;
+
+        if (x != selected_x || y != selected_y) {
           // In this case we want to unselect the square
           selected_square.selected = false;
           selected_square.x = 0;
@@ -165,7 +200,14 @@ void gui::on_update(void*)
         }
 
         // Set the piece to the destination column when release
-        move_piece(y, x, mouse_holding.selected);
+        const uint8_t dest_file = flipped_board ? 7 - x : x;
+        const uint8_t dest_rank = flipped_board ? y : 7 - y;
+        if (dest_file != mouse_holding.selected.get()->file() ||
+            dest_rank != mouse_holding.selected.get()->rank()) {
+          _board.move(mouse_holding.selected.get()->file(),
+                      mouse_holding.selected.get()->rank(), dest_file,
+                      dest_rank);
+        }
 
         mouse_holding.selected = nullptr;
         mouse_holding.offset_x = 0;
@@ -187,8 +229,8 @@ void gui::on_update(void*)
           selected_square.x = x;
           selected_square.y = y;
           selected_square.selected = true;
-          selected_square.rect = {x * square_size, y * square_size, square_size,
-                                  square_size};
+          selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
+                                  SQUARE_SIZE};
         }
       }
     }
@@ -198,16 +240,16 @@ void gui::on_update(void*)
     /***************************************************************************
      * FULL SCREEN
      **************************************************************************/
-
     clear_screen({0x000000FF});
-    draw_texture(background, {0, 0, 800, 500});
+    draw_texture(background, {0, 0, SCREEN_W, SCREEN_H});
+    draw_coordinates();
   }
 
   {
     /***************************************************************************
      * RIGHT PANEL
      **************************************************************************/
-    set_current_viewport(right_panel_rect, {0xEEEEEEFF});
+    set_current_viewport(RIGHT_PANEL_RECT, {0xEEEEEEFF});
 
     pixel_t text_color = {0x000000FF};
 
@@ -218,12 +260,12 @@ void gui::on_update(void*)
 
     // Draw turn
     std::string turn = "Turn: ";
-    switch (game.active_color) {
-      case game_t::BLACK:
+    switch (_board.active_color()) {
+      case color_t::BLACK:
         turn += "B";
         break;
 
-      case game_t::WHITE:
+      case color_t::WHITE:
         turn += "W";
         break;
     }
@@ -233,29 +275,30 @@ void gui::on_update(void*)
 
     // Draw castling situation
     std::string castling = "Castling: ";
-    if (game.available_castling & WK) { castling += "K"; }
-    if (game.available_castling & WQ) { castling += "Q"; }
-    if (game.available_castling & BK) { castling += "k"; }
-    if (game.available_castling & BQ) { castling += "q"; }
-    if (game.available_castling == 0x00) { castling += "-"; }
+    const uint8_t available_castling = _board.available_castling();
+    if (available_castling & WK) { castling += "K"; }
+    if (available_castling & WQ) { castling += "Q"; }
+    if (available_castling & BK) { castling += "k"; }
+    if (available_castling & BQ) { castling += "q"; }
+    if (available_castling == 0x00) { castling += "-"; }
     texture_t castling_texture = create_text(castling, text_color);
     draw_texture(castling_texture, 10, turn_texture.h + 20);
 
     // Draw en passant target square
-    std::string en_passant = "En passant: " + game.en_passant_target_square;
+    std::string en_passant = "En passant: " + _board.en_passant_target_square();
     texture_t en_passant_texture = create_text(en_passant, text_color);
     draw_texture(en_passant_texture, 10,
                  +turn_texture.h + castling_texture.h + 30);
 
     // Draw the halfmove clock
-    std::string half_clock = "HMC: " + STR(game.halfmove_clock);
+    std::string half_clock = "HMC: " + STR(_board.halfmove_clock());
     texture_t half_clock_texture = create_text(half_clock, text_color);
     draw_texture(
         half_clock_texture, 10,
         +turn_texture.h + castling_texture.h + en_passant_texture.h + 40);
 
     // Draw the fullmove counter
-    std::string full_clock = "FMC: " + STR(game.full_move);
+    std::string full_clock = "FMC: " + STR(_board.full_move());
     texture_t full_clock_texture = create_text(full_clock, text_color);
     draw_texture(full_clock_texture, 10,
                  +turn_texture.h + castling_texture.h + en_passant_texture.h +
@@ -266,7 +309,7 @@ void gui::on_update(void*)
     /***************************************************************************
      * MAIN BOARD
      **************************************************************************/
-    set_current_viewport(board_rect);
+    set_current_viewport(BOARD_RECT);
     draw_board();
   }
 }
