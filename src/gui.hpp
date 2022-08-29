@@ -2,6 +2,7 @@
 #include <map>
 #include <pixello.hpp>
 #include "board.hpp"
+#include "log.hpp"
 
 
 struct piece_holding_t
@@ -32,6 +33,7 @@ private:
   board _board;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
+  bool flipped_board = false;
 
 public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}
@@ -41,4 +43,6 @@ private:
 
   void on_init(void*) override;
   void on_update(void*) override;
+
+  inline void log(const std::string& msg) override { LOG_E << msg << END_E; }
 };

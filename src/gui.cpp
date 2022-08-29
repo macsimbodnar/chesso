@@ -46,8 +46,9 @@ void gui::draw_board()
   for (const auto& I : pieces) {
     const uint8_t file = I.get()->file();
     const uint8_t rank = I.get()->rank();
-    const uint8_t x = file;
-    const uint8_t y = 7 - rank;
+
+    const uint8_t x = flipped_board ? 7 - file : file;
+    const uint8_t y = flipped_board ? rank : 7 - rank;
     const char c = I.get()->c();
 
     // Don't draw the selected piece
@@ -118,12 +119,17 @@ void gui::on_update(void*)
       _board.load(FEN_INIT_POS);
     }
 
+    // Flip the board if click on the right panel with the right button
+    if (is_mouse_in(right_panel_rect) && mouse.right_button.click) {
+      flipped_board = !flipped_board;
+    }
+
     if (is_mouse_in(board_rect)) {
       const uint8_t x = ((mouse.x - board_rect.x) / square_size);
       const uint8_t y = ((mouse.y - board_rect.y) / square_size);
 
-      const uint8_t target_file = x;
-      const uint8_t target_rank = 7 - y;
+      const uint8_t target_file = flipped_board ? 7 - x : x;
+      const uint8_t target_rank = flipped_board ? y : 7 - y;
       auto piece = _board.get_piece(target_file, target_rank);
 
       // Piece holding
@@ -141,8 +147,10 @@ void gui::on_update(void*)
 
       // Reset the selected state
       if (mouse.left_button.state == button_t::UP && mouse_holding.selected) {
-        const uint8_t selected_x = mouse_holding.selected.get()->file();
-        const uint8_t selected_y = 7 - mouse_holding.selected.get()->rank();
+        const uint8_t f = mouse_holding.selected.get()->file();
+        const uint8_t r = mouse_holding.selected.get()->rank();
+        const uint8_t selected_x = flipped_board ? 7 - f : f;
+        const uint8_t selected_y = flipped_board ? r : 7 - r;
 
         if (x != selected_x || y != selected_y) {
           // In this case we want to unselect the square
@@ -153,11 +161,14 @@ void gui::on_update(void*)
         }
 
         // Set the piece to the destination column when release
-        const uint8_t dest_file = x;
-        const uint8_t dest_rank = 7 - y;
-        _board.move(mouse_holding.selected.get()->file(),
-                    mouse_holding.selected.get()->rank(), dest_file, dest_rank);
-
+        const uint8_t dest_file = flipped_board ? 7 - x : x;
+        const uint8_t dest_rank = flipped_board ? y : 7 - y;
+        if (dest_file != mouse_holding.selected.get()->file() ||
+            dest_rank != mouse_holding.selected.get()->rank()) {
+          _board.move(mouse_holding.selected.get()->file(),
+                      mouse_holding.selected.get()->rank(), dest_file,
+                      dest_rank);
+        }
 
         mouse_holding.selected = nullptr;
         mouse_holding.offset_x = 0;

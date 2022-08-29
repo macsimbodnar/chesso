@@ -1,12 +1,13 @@
 #pragma once
 #include <array>
 #include <cassert>
-#include <iostream>
 #include <memory>
 #include <pixello.hpp>
 #include <string>
 #include <vector>
+#include "log.hpp"
 #include "piece.hpp"
+
 
 // clang-format off
 /**
@@ -87,17 +88,14 @@ public:
                    const uint8_t to_file,
                    const uint8_t to_rank)
   {
-    std::cout << (int)from_file << ":" << (int)from_rank << "  ->  "
-              << (int)to_file << ":" << (int)to_rank << std::endl;
-
+    LOG_I << (int)from_file << ":" << (int)from_rank << "  ->  " << (int)to_file
+          << ":" << (int)to_rank << END_I;
 
     assert(from_file >= 0 && from_file < 8);
     assert(from_rank >= 0 && from_rank < 8);
     assert(to_file >= 0 && to_file < 8);
     assert(to_rank >= 0 && to_rank < 8);
-    // assert(from_rank != to_rank && from_file != to_file);
-
-    if (from_rank == to_rank && from_file == to_file) { return; }
+    assert(from_rank != to_rank || from_file != to_file);
 
     const uint8_t from_index = (from_rank << 4) + from_file;
     const uint8_t to_index = (to_rank << 4) + to_file;
@@ -126,6 +124,7 @@ public:
     return res;
   }
 
+
   inline std::shared_ptr<piece> get_piece(const uint8_t file,
                                           const uint8_t rank)
   {
@@ -137,6 +136,7 @@ public:
 
     return _board[index];
   }
+
 
   inline color_t active_color() const { return _active_color; }
 
