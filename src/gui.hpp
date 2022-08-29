@@ -1,9 +1,24 @@
 #pragma once
 #include <map>
 #include <pixello.hpp>
-#include "data_structs.hpp"
-#include "utils.hpp"
+#include "board.hpp"
 
+
+struct piece_holding_t
+{
+  int32_t offset_x = 0;
+  int32_t offset_y = 0;
+  std::shared_ptr<piece> selected;
+};
+
+
+struct selected_square_t
+{
+  bool selected = false;
+  int32_t x = 0;
+  int32_t y = 0;
+  rect_t rect;
+};
 
 class gui : public pixello
 {
@@ -14,7 +29,7 @@ private:
   std::map<char, texture_t> piece_textures;
   std::map<char, sound_t> sound_fx;
   int32_t square_size = 60;
-  game_t game;
+  board _board;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
 
@@ -22,7 +37,6 @@ public:
   gui() : pixello(800, 500, "Chesso", 60, "assets/font/PressStart2P.ttf", 8) {}
 
 private:
-  void move_piece(const uint32_t X, const uint32_t Y, piece_t* piece);
   void draw_board();
 
   void on_init(void*) override;

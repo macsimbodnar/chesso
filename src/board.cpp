@@ -1,8 +1,32 @@
 #include "board.hpp"
+#include <iterator>
+#include <sstream>
+#include <string>
+#include <vector>
+#include "exceptions.hpp"
 #include "utils.hpp"
-#include "data_structs.hpp"
 
-void board::load(const std::string& FEN) {
+
+board::board()
+{
+  load(FEN_INIT_POS);
+}
+
+
+void board::cleanup()
+{
+  for (auto& I : _board) {
+    I = nullptr;
+  }
+}
+
+
+void board::load(const std::string& FEN)
+{
+  // Clean the board first
+  cleanup();
+
+  // Start parsing
   auto sections = split_string(FEN);
 
   if (sections.size() != 6) { throw FAN_exception("Bad FEN string: " + FEN); }
@@ -21,39 +45,39 @@ void board::load(const std::string& FEN) {
    * Black ("pnbrqk")
    ****************************************************************************/
 
-  int x = 0;
-  int y = 0;
+  int file = 0;
+  int rank = 7;
 
   for (const char c : sections[0]) {
     switch (c) {
       case '/':
-        x = 0;
-        ++y;
+        file = 0;
+        --rank;
         break;
 
       case '1':
-        x += 1;
+        file += 1;
         break;
       case '2':
-        x += 2;
+        file += 2;
         break;
       case '3':
-        x += 3;
+        file += 3;
         break;
       case '4':
-        x += 4;
+        file += 4;
         break;
       case '5':
-        x += 5;
+        file += 5;
         break;
       case '6':
-        x += 6;
+        file += 6;
         break;
       case '7':
-        x += 7;
+        file += 7;
         break;
       case '8':
-        x += 8;
+        file += 8;
         break;
 
       case 'P':
@@ -68,14 +92,21 @@ void board::load(const std::string& FEN) {
       case 'r':
       case 'q':
       case 'k':
-        game.board[y][x] = new piece_t(c, y, x);
-        ++x;
+        set(file, rank, c);
+        ++file;
         break;
 
       default:
         // We get a non valid string
         throw FAN_exception("Invalid char in FEN string [" + STR(c) +
                             "]. FEN: " + FEN);
+    }
+  }
+
+  for (const auto& I : _board) {
+    if (I) {
+      std::cout << I.get()->c() << " f:" << (int)I.get()->file()
+                << " r:" << (int)I.get()->rank() << std::endl;
     }
   }
 
@@ -89,10 +120,10 @@ void board::load(const std::string& FEN) {
   char color = sections[1][0];
   switch (color) {
     case 'w':
-      game.active_color = game_t::WHITE;
+      _active_color = color_t::WHITE;
       break;
     case 'b':
-      game.active_color = game_t::BLACK;
+      _active_color = color_t::BLACK;
       break;
     default:
       throw FAN_exception("Invalid color char in FEN string [" +
@@ -113,11 +144,11 @@ void board::load(const std::string& FEN) {
                         FEN);
   }
 
-  game.available_castling = 0x00;
+  _available_castling = 0x00;
   for (const char c : sections[2]) {
     switch (c) {
       case '-':
-        game.available_castling = 0x00;
+        _available_castling = 0x00;
         if (sections[2].size() != 1) {
           throw FAN_exception(
               "Invalid castling availability section size. No castling "
@@ -126,16 +157,16 @@ void board::load(const std::string& FEN) {
         }
         break;
       case 'K':
-        game.available_castling |= WK;
+        _available_castling |= WK;
         break;
       case 'Q':
-        game.available_castling |= WQ;
+        _available_castling |= WQ;
         break;
       case 'k':
-        game.available_castling |= BK;
+        _available_castling |= BK;
         break;
       case 'q':
-        game.available_castling |= BQ;
+        _available_castling |= BQ;
         break;
 
       default:
@@ -166,7 +197,7 @@ void board::load(const std::string& FEN) {
     }
   }
 
-  game.en_passant_target_square = sections[3];
+  _en_passant_target_square = sections[3];
 
   /***************************************************************************
    * 4. Halfmove clock
@@ -185,7 +216,7 @@ void board::load(const std::string& FEN) {
   }
 
   try {
-    game.halfmove_clock = static_cast<int>(std::stoul(half_move));
+    _halfmove_clock = static_cast<int>(std::stoul(half_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Halfmove clock to integer.What: " +
                         std::string(e.what()) + " FEN: " + FEN);
@@ -208,16 +239,14 @@ void board::load(const std::string& FEN) {
   }
 
   try {
-    game.full_move = static_cast<int>(std::stoul(full_move));
+    _full_move = static_cast<int>(std::stoul(full_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Fullmove number to integer. What: " +
                         std::string(e.what()) + " FEN: " + FEN);
   }
 
-  if (game.full_move < 1) {
+  if (_full_move < 1) {
     throw FAN_exception("Fullmove number can't be less then 1 but it is " +
-                        std::string(STR(game.full_move)) + " FEN: " + FEN);
+                        std::string(STR(_full_move)) + " FEN: " + FEN);
   }
-
-  return game;
 }
