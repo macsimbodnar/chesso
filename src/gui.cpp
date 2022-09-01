@@ -60,8 +60,18 @@ void gui::draw_board()
     black = !black;
   }
 
-  // Draw selected square
-  if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
+  // Draw selected square and suggestions if any
+  if (selected_square.selected) {
+    draw_rect(selected_square.rect, 0x33333390);
+
+    // Draw suggestions
+    for (const auto& I : suggested_positions) {
+      const coordinates_t coord = position_to_coordinates(I.file, I.rank);
+      draw_rect({coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
+                 SQUARE_SIZE},
+                0x00FF0055);
+    }
+  }
 
   // Draw the current square
   if (is_mouse_in(BOARD_RECT)) {
@@ -78,15 +88,16 @@ void gui::draw_board()
     const uint8_t file = I.get()->file();
     const uint8_t rank = I.get()->rank();
 
-    const uint8_t x = flipped_board ? 7 - file : file;
-    const uint8_t y = flipped_board ? rank : 7 - rank;
+    const coordinates_t coord = position_to_coordinates(file, rank);
     const char c = I.get()->c();
 
     // Don't draw the selected piece
     if (mouse_holding.selected.get() == I.get()) { continue; }
 
     // The pice is in place
-    rect_t r = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE};
+    rect_t r = {coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
+                SQUARE_SIZE};
+
     draw_texture(piece_textures[c], r);
   }
 
@@ -168,9 +179,8 @@ void gui::on_update(void*)
       const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
       const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
 
-      const uint8_t target_file = flipped_board ? 7 - x : x;
-      const uint8_t target_rank = flipped_board ? y : 7 - y;
-      auto piece = _board.get_piece(target_file, target_rank);
+      const position_t target_pos = coordinates_to_postion(x, y);
+      auto piece = _board.get_piece(target_pos.file, target_pos.rank);
 
       // Piece holding
       if (piece != nullptr) {
@@ -189,25 +199,25 @@ void gui::on_update(void*)
       if (mouse.left_button.state == button_t::UP && mouse_holding.selected) {
         const uint8_t f = mouse_holding.selected.get()->file();
         const uint8_t r = mouse_holding.selected.get()->rank();
-        const uint8_t selected_x = flipped_board ? 7 - f : f;
-        const uint8_t selected_y = flipped_board ? r : 7 - r;
+        const coordinates_t selected = position_to_coordinates(f, r);
 
-        if (x != selected_x || y != selected_y) {
+        if (x != selected.x || y != selected.y) {
           // In this case we want to unselect the square
           selected_square.selected = false;
           selected_square.x = 0;
           selected_square.y = 0;
           selected_square.rect = {0};
+          suggested_positions.clear();
         }
 
         // Set the piece to the destination column when release
-        const uint8_t dest_file = flipped_board ? 7 - x : x;
-        const uint8_t dest_rank = flipped_board ? y : 7 - y;
-        if (dest_file != mouse_holding.selected.get()->file() ||
-            dest_rank != mouse_holding.selected.get()->rank()) {
+        const position_t dest = coordinates_to_postion(x, y);
+
+        if (dest.file != mouse_holding.selected.get()->file() ||
+            dest.rank != mouse_holding.selected.get()->rank()) {
           _board.move(mouse_holding.selected.get()->file(),
-                      mouse_holding.selected.get()->rank(), dest_file,
-                      dest_rank);
+                      mouse_holding.selected.get()->rank(), dest.file,
+                      dest.rank);
         }
 
         mouse_holding.selected = nullptr;
@@ -226,12 +236,18 @@ void gui::on_update(void*)
           selected_square.x = 0;
           selected_square.y = 0;
           selected_square.rect = {0};
+          suggested_positions.clear();
         } else {
           selected_square.x = x;
           selected_square.y = y;
           selected_square.selected = true;
           selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
                                   SQUARE_SIZE};
+
+          // Get the available moves
+          const position_t selected_pos = coordinates_to_postion(x, y);
+          suggested_positions =
+              _board.get_valid_moves(selected_pos.file, selected_pos.rank);
         }
       }
     }

@@ -7,7 +7,7 @@
 #include <vector>
 #include "log.hpp"
 #include "piece.hpp"
-
+#include "utils.hpp"
 
 // clang-format off
 /**
@@ -59,12 +59,8 @@ private:
 
   void cleanup();
 
-public:
-  board();
 
-  void load(const std::string& FEN);
-
-  inline void set(const uint8_t file, const uint8_t rank, const char p)
+  inline uint8_t to_index(const uint8_t file, const uint8_t rank)
   {
     assert(file >= 0 && file < 8);
     assert(rank >= 0 && rank < 8);
@@ -72,43 +68,71 @@ public:
     const uint8_t index = (rank << 4) + file;
     assert(index < BOARD_ARRAY_SIZE);
 
-    _board[index] = std::make_shared<piece>(file, rank, p);
-
-    /**
-     * Reverse:
-     *
-     * file = index & 7;
-     * rank = index >> 4;
-     */
+    return index;
   }
 
+
+  inline position_t to_position(const uint8_t index)
+  {
+    position_t result;
+    result.file = index & 7;
+    result.rank = index >> 4;
+
+    return result;
+  }
+
+
+public:
+  board();
+
+  void load(const std::string& FEN);
+
+  inline void set(const uint8_t file, const uint8_t rank, const char p)
+  {
+    const uint8_t index = to_index(file, rank);
+    _board[index] = std::make_shared<piece>(file, rank, p);
+  }
 
   inline void move(const uint8_t from_file,
                    const uint8_t from_rank,
                    const uint8_t to_file,
                    const uint8_t to_rank)
   {
-    LOG_I << (int)from_file << ":" << (int)from_rank << "  ->  " << (int)to_file
-          << ":" << (int)to_rank << END_I;
+    print_move(from_file, from_rank, to_file, to_rank);
 
-    assert(from_file >= 0 && from_file < 8);
-    assert(from_rank >= 0 && from_rank < 8);
-    assert(to_file >= 0 && to_file < 8);
-    assert(to_rank >= 0 && to_rank < 8);
     assert(from_rank != to_rank || from_file != to_file);
 
-    const uint8_t from_index = (from_rank << 4) + from_file;
-    const uint8_t to_index = (to_rank << 4) + to_file;
+    const uint8_t from_index = to_index(from_file, from_rank);
+    const uint8_t dest_index = to_index(to_file, to_rank);
 
-    assert(from_index < BOARD_ARRAY_SIZE);
-    assert(to_index < BOARD_ARRAY_SIZE);
     assert(_board[from_index]);
 
     // Unset the current piece
-    _board[to_index] = _board[from_index];
+    _board[dest_index] = _board[from_index];
     _board[from_index] = nullptr;
-    _board[to_index].get()->set_file(to_file);
-    _board[to_index].get()->set_rank(to_rank);
+    _board[dest_index].get()->set_index(dest_index);
+    _board[dest_index].get()->set_file(to_file);
+    _board[dest_index].get()->set_rank(to_rank);
+  }
+
+
+  inline std::vector<position_t> get_valid_moves(const uint8_t file,
+                                                 const uint8_t rank)
+  {
+    std::vector<position_t> result;
+
+    const uint8_t index = to_index(file, rank);
+
+    if (_board[index]) {
+      const auto all_moves = _board[index]->get_all_moves();
+
+      result.reserve(all_moves.size());
+      for (const auto I : all_moves) {
+        result.push_back(to_position(I));
+      }
+    }
+
+    return result;
   }
 
 
@@ -128,12 +152,7 @@ public:
   inline std::shared_ptr<piece> get_piece(const uint8_t file,
                                           const uint8_t rank)
   {
-    assert(file >= 0 && file < 8);
-    assert(rank >= 0 && rank < 8);
-
-    const uint8_t index = (rank << 4) + file;
-    assert(index < BOARD_ARRAY_SIZE);
-
+    const uint8_t index = to_index(file, rank);
     return _board[index];
   }
 
