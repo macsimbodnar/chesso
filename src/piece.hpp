@@ -6,7 +6,7 @@
 static const std::array<uint8_t, 2> offsets_p = {0x10, 0x20};
 
 
-class piece
+class piece_t
 {
 private:
   char _p = 0;
@@ -15,7 +15,7 @@ private:
   uint8_t _rank = 0;
 
 public:
-  piece(const uint8_t file, const uint8_t rank, const char c)
+  piece_t(const uint8_t file, const uint8_t rank, const char c)
       : _file(file), _rank(rank), _p(c), _index((rank << 4) + file)
   {}
 

@@ -2,9 +2,9 @@
 
 int main(int argc, char** argv)
 {
-  gui p;
+  gui_t gui;
 
-  if (!p.run()) { return EXIT_FAILURE; }
+  if (!gui.run()) { return EXIT_FAILURE; }
 
   return EXIT_SUCCESS;
 }

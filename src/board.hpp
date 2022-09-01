@@ -31,6 +31,7 @@
  ***********************************************************************************/
 // clang-format on
 
+
 static constexpr char FEN_INIT_POS[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 static constexpr size_t BOARD_ARRAY_SIZE = 128;
@@ -47,10 +48,10 @@ enum class color_t
 };
 
 
-class board
+class board_t
 {
 private:
-  std::array<std::shared_ptr<piece>, BOARD_ARRAY_SIZE> _board = {0};
+  std::array<std::shared_ptr<piece_t>, BOARD_ARRAY_SIZE> _board = {0};
   color_t _active_color = color_t::WHITE;
   uint8_t _available_castling = WQ | WK | BQ | BK;
   std::string _en_passant_target_square = "-";
@@ -83,14 +84,14 @@ private:
 
 
 public:
-  board();
+  board_t();
 
   void load(const std::string& FEN);
 
   inline void set(const uint8_t file, const uint8_t rank, const char p)
   {
     const uint8_t index = to_index(file, rank);
-    _board[index] = std::make_shared<piece>(file, rank, p);
+    _board[index] = std::make_shared<piece_t>(file, rank, p);
   }
 
   inline void move(const uint8_t from_file,
@@ -136,9 +137,9 @@ public:
   }
 
 
-  inline std::vector<std::shared_ptr<piece>> pieces() const
+  inline std::vector<std::shared_ptr<piece_t>> pieces() const
   {
-    std::vector<std::shared_ptr<piece>> res;
+    std::vector<std::shared_ptr<piece_t>> res;
     res.reserve(32);
 
     for (const auto& I : _board) {
@@ -149,7 +150,7 @@ public:
   }
 
 
-  inline std::shared_ptr<piece> get_piece(const uint8_t file,
+  inline std::shared_ptr<piece_t> get_piece(const uint8_t file,
                                           const uint8_t rank)
   {
     const uint8_t index = to_index(file, rank);

@@ -7,13 +7,13 @@
 #include "utils.hpp"
 
 
-board::board()
+board_t::board_t()
 {
   load(FEN_INIT_POS);
 }
 
 
-void board::cleanup()
+void board_t::cleanup()
 {
   for (auto& I : _board) {
     I = nullptr;
@@ -21,7 +21,7 @@ void board::cleanup()
 }
 
 
-void board::load(const std::string& FEN)
+void board_t::load(const std::string& FEN)
 {
   // Clean the board first
   cleanup();

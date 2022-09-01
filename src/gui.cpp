@@ -2,7 +2,7 @@
 #include "exceptions.hpp"
 
 
-void gui::draw_coordinates()
+void gui_t::draw_coordinates()
 {
   // Draw ranks  1 - 8
   for (int i = 0; i < 8; ++i) {
@@ -33,7 +33,7 @@ void gui::draw_coordinates()
 }
 
 
-void gui::draw_board()
+void gui_t::draw_board()
 {
   // Draw background
   pixel_t p;
@@ -111,7 +111,7 @@ void gui::draw_board()
 }
 
 
-void gui::on_init(void*)
+void gui_t::on_init(void*)
 {
   /**
    * pawn = "P"
@@ -157,7 +157,7 @@ void gui::on_init(void*)
 }
 
 
-void gui::on_update(void*)
+void gui_t::on_update(void*)
 {
   {
     /***************************************************************************

@@ -5,6 +5,7 @@
 #include "log.hpp"
 #include "utils.hpp"
 
+
 static constexpr uint32_t SCREEN_W = 810;
 static constexpr uint32_t SCREEN_H = 510;
 static constexpr rect_t BOARD_RECT = {20, 10, 480, 480};
@@ -15,7 +16,7 @@ struct piece_holding_t
 {
   int32_t offset_x = 0;
   int32_t offset_y = 0;
-  std::shared_ptr<piece> selected;
+  std::shared_ptr<piece_t> selected;
 };
 
 
@@ -27,13 +28,13 @@ struct selected_square_t
   rect_t rect;
 };
 
-class gui : public pixello
+class gui_t : public pixello
 {
 private:
   texture_t background;
   std::map<char, texture_t> piece_textures;
   std::map<char, sound_t> sound_fx;
-  board _board;
+  board_t _board;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
   std::vector<position_t> suggested_positions;
@@ -41,7 +42,7 @@ private:
   std::map<char, texture_t> files_and_ranks_textures;
 
 public:
-  gui()
+  gui_t()
       : pixello(SCREEN_W,
                 SCREEN_H,
                 "Chesso",
