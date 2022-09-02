@@ -6,9 +6,6 @@
 #include "log.hpp"
 
 
-namespace
-{
-
 struct position_t
 {
   uint8_t file;
@@ -68,6 +65,3 @@ inline bool is_uint(const std::string& str)
 
   return true;
 }
-
-
-}  // namespace
