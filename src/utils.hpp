@@ -145,7 +145,7 @@ inline piece_t c_to_piece(const char p)
       piece = piece_t::B_QUEEN;
       break;
     case 'k':
-      piece = piece_t::B_KNIGHT;
+      piece = piece_t::B_KING;
       break;
     default:
       throw input_exception("Invalid piece: " + std::string(1, p));

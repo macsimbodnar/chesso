@@ -6,9 +6,10 @@ static const std::array<uint8_t, 2> offsets_p = {0x10, 0x20};
 static const std::array<uint8_t, 14> offsets_r = {0x10, 0x20, 0x30, 0x40, 0x50,
                                                   0x60, 0x70, 0x01, 0x02, 0x03,
                                                   0x04, 0x05, 0x06, 0x07};
-static const std::array<uint8_t, 8> offsets_n = {
-    0x21, 0x1F, 0x0E, 0xEE, 0xDF, 0xE1, 0xF2, 0x12,
-};
+static const std::array<uint8_t, 8> offsets_n = {0x21, 0x1F, 0x0E, 0xEE,
+                                                 0xDF, 0xE1, 0xF2, 0x12};
+static const std::array<uint8_t, 8> offsets_k = {0xFF, 0x0F, 0x10, 0x11,
+                                                 0x01, 0xF1, 0xF0, 0xEF};
 
 
 inline std::vector<uint8_t> generate_b_pawn(
@@ -152,6 +153,43 @@ inline std::vector<uint8_t> generate_bishop(
 }
 
 
+inline std::vector<uint8_t> generate_queen(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result;
+  std::vector<uint8_t> h_and_v_moves = generate_rook(board, index);
+  std::vector<uint8_t> diagonal_moves = generate_bishop(board, index);
+
+  result.insert(result.end(), std::make_move_iterator(h_and_v_moves.begin()),
+                std::make_move_iterator(h_and_v_moves.end()));
+
+  result.insert(result.end(), std::make_move_iterator(diagonal_moves.begin()),
+                std::make_move_iterator(diagonal_moves.end()));
+
+  return result;
+}
+
+
+inline std::vector<uint8_t> generate_king(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result;
+  result.reserve(offsets_k.size());
+
+  for (const auto I : offsets_k) {
+    const uint8_t candidate = index + I;
+
+    if (candidate & 0x88) { continue; }
+
+    result.push_back(candidate);
+  }
+
+  return result;
+}
+
+
 inline std::vector<uint8_t> generate_valid_moves(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
@@ -185,6 +223,16 @@ inline std::vector<uint8_t> generate_valid_moves(
     case piece_t::B_BISHOP:
     case piece_t::W_BISHOP:
       result = generate_bishop(board, index);
+      break;
+
+    case piece_t::B_QUEEN:
+    case piece_t::W_QUEEN:
+      result = generate_queen(board, index);
+      break;
+
+    case piece_t::B_KING:
+    case piece_t::W_KING:
+      result = generate_king(board, index);
       break;
 
     default:
