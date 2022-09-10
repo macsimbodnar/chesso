@@ -6,6 +6,11 @@
 #include "exceptions.hpp"
 #include "log.hpp"
 
+#ifdef I
+static_assert(false);
+#endif
+
+#define U32(x) static_cast<uint32_t>(x)
 
 static constexpr size_t BOARD_ARRAY_SIZE = 128;
 
@@ -15,6 +20,9 @@ enum class color_t
   BLACK = 0x01000000,
   WHITE = 0x10000000
 };
+
+static constexpr uint32_t COLOR_MASK =
+    U32(color_t::BLACK) | U32(color_t::WHITE);
 
 
 enum class piece_t

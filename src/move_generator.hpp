@@ -2,14 +2,24 @@
 #include <array>
 #include "utils.hpp"
 
-static const std::array<uint8_t, 14> offsets_r = {0x10, 0x20, 0x30, 0x40, 0x50,
-                                                  0x60, 0x70, 0x01, 0x02, 0x03,
-                                                  0x04, 0x05, 0x06, 0x07};
+
 static const std::array<uint8_t, 8> offsets_n = {0x21, 0x1F, 0x0E, 0xEE,
                                                  0xDF, 0xE1, 0xF2, 0x12};
 static const std::array<uint8_t, 8> offsets_k = {0xFF, 0x0F, 0x10, 0x11,
                                                  0x01, 0xF1, 0xF0, 0xEF};
 
+static const std::array<uint8_t, 4> directions_rook = {0x10, 0xF0, 0x01, 0xFF};
+
+
+inline color_t get_color(const piece_t p)
+{
+  assert(p != piece_t::EMPTY);
+  assert(p != piece_t::INVALID);
+
+  color_t color = static_cast<color_t>(U32(p) & COLOR_MASK);
+
+  return color;
+}
 
 inline std::vector<uint8_t> generate_b_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
@@ -41,8 +51,7 @@ inline std::vector<uint8_t> generate_b_pawn(
     // Check for attack right
     const uint8_t candidate = index - 0x11;
     bool condition =
-        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
-                                static_cast<uint32_t>(color_t::WHITE));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE));
 
     if (condition) { result.push_back(candidate); }
   }
@@ -51,8 +60,7 @@ inline std::vector<uint8_t> generate_b_pawn(
     // Check for attack left
     const uint8_t candidate = index - 0x0F;
     bool condition =
-        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
-                                static_cast<uint32_t>(color_t::WHITE));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE));
 
     if (condition) { result.push_back(candidate); }
   }
@@ -91,8 +99,7 @@ inline std::vector<uint8_t> generate_w_pawn(
     // Check for attack right
     const uint8_t candidate = index + 0x11;
     bool condition =
-        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
-                                static_cast<uint32_t>(color_t::BLACK));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK));
 
     if (condition) { result.push_back(candidate); }
   }
@@ -101,8 +108,7 @@ inline std::vector<uint8_t> generate_w_pawn(
     // Check for attack left
     const uint8_t candidate = index + 0x0F;
     bool condition =
-        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
-                                static_cast<uint32_t>(color_t::BLACK));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK));
 
     if (condition) { result.push_back(candidate); }
   }
@@ -115,28 +121,36 @@ inline std::vector<uint8_t> generate_rook(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
 {
-  std::vector<uint8_t> candidates;
-  candidates.reserve(offsets_r.size() * 2);
-
-  // Loop on up and right
-  for (const auto I : offsets_r) {
-    candidates.push_back(index + I);
-  }
-
-  // Loop on down and left
-  for (const auto I : offsets_r) {
-    candidates.push_back(index - I);
-  }
-
   std::vector<uint8_t> result;
-  result.reserve(candidates.size());
+  result.reserve(14);
 
-  for (const auto& I : candidates) {
-    // Check if out of board
-    if (I & 0x88) { continue; }
+  color_t color = get_color(board[index]);
 
-    result.push_back(I);
+  for (const auto I : directions_rook) {
+    uint8_t candidate = index;
+    while (true) {
+      candidate += I;
+
+      // If we are off board exit
+      if (candidate & 0x88) { break; }
+      assert(board[candidate] != piece_t::INVALID);
+
+      // Also break if same color piece block the ray
+      piece_t p = board[candidate];
+      if (p == piece_t::EMPTY) {
+        result.push_back(candidate);
+      } else {
+        color_t candidate_color = get_color(p);
+        // If the are attacking add the position
+        if (candidate_color != color) { result.push_back(candidate); }
+
+        break;
+      }
+
+    }
   }
+
+  assert(result.size() <= 14);
 
   return result;
 }
@@ -207,6 +221,8 @@ inline std::vector<uint8_t> generate_bishop(
       result.push_back(candidate);
     }
   }
+
+  assert(result.size() <= 16);
 
   return result;
 }

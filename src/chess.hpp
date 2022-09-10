@@ -118,6 +118,10 @@ public:
     std::vector<position_t> result;
 
     const uint8_t index = to_index(file, rank);
+
+    // Skip if empty
+    if (_board[index] == piece_t::EMPTY) { return result; }
+
     const std::vector<uint8_t> moves = generate_valid_moves(_board, index);
 
     LOG_I << "****************************************************" << END_I;
