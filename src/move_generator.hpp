@@ -101,6 +101,57 @@ inline std::vector<uint8_t> generate_knight(
 }
 
 
+inline std::vector<uint8_t> generate_bishop(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result;
+  result.reserve(16);  // Worst case
+
+  {  // top - right
+    uint8_t candidate = index;
+    while (true) {
+      candidate += 0x11;
+
+      if (candidate & 0x88) { break; }
+      result.push_back(candidate);
+    }
+  }
+
+  {  // top - left
+    uint8_t candidate = index;
+    while (true) {
+      candidate += 0x0F;
+
+      if (candidate & 0x88) { break; }
+      result.push_back(candidate);
+    }
+  }
+
+  {  // bottom - right
+    uint8_t candidate = index;
+    while (true) {
+      candidate -= 0x0F;
+
+      if (candidate & 0x88) { break; }
+      result.push_back(candidate);
+    }
+  }
+
+  {  // bottom - left
+    uint8_t candidate = index;
+    while (true) {
+      candidate -= 0x11;
+
+      if (candidate & 0x88) { break; }
+      result.push_back(candidate);
+    }
+  }
+
+  return result;
+}
+
+
 inline std::vector<uint8_t> generate_valid_moves(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
@@ -129,6 +180,11 @@ inline std::vector<uint8_t> generate_valid_moves(
     case piece_t::B_KNIGHT:
     case piece_t::W_KNIGHT:
       result = generate_knight(board, index);
+      break;
+
+    case piece_t::B_BISHOP:
+    case piece_t::W_BISHOP:
+      result = generate_bishop(board, index);
       break;
 
     default:
