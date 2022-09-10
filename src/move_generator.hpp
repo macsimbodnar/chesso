@@ -146,7 +146,6 @@ inline std::vector<uint8_t> generate_rook(
 
         break;
       }
-
     }
   }
 
@@ -163,13 +162,22 @@ inline std::vector<uint8_t> generate_knight(
   std::vector<uint8_t> result;
   result.reserve(offsets_n.size());
 
+  color_t color = get_color(board[index]);
+
   for (const auto I : offsets_n) {
     const uint8_t candidate = index + I;
 
     if (candidate & 0x88) { continue; }
+    piece_t p = board[candidate];
+    assert(p != piece_t::INVALID);
+
+    // Check if attacking his own color
+    if (p != piece_t::EMPTY && (get_color(p) == color)) { continue; }
 
     result.push_back(candidate);
   }
+
+  assert(result.size() <= offsets_n.size());
 
   return result;
 }
