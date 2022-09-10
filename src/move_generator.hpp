@@ -2,7 +2,6 @@
 #include <array>
 #include "utils.hpp"
 
-static const std::array<uint8_t, 2> offsets_p = {0x10, 0x20};
 static const std::array<uint8_t, 14> offsets_r = {0x10, 0x20, 0x30, 0x40, 0x50,
                                                   0x60, 0x70, 0x01, 0x02, 0x03,
                                                   0x04, 0x05, 0x06, 0x07};
@@ -18,14 +17,44 @@ inline std::vector<uint8_t> generate_b_pawn(
 
 {
   std::vector<uint8_t> result;
-  result.reserve(offsets_p.size());
+  result.reserve(4);
 
-  for (const auto I : offsets_p) {
-    const uint8_t candidate = index - I;
+  {
+    // Check fo the move in front
+    const uint8_t candidate = index - 0x10;
+    if (!(candidate & 0x88) && board[candidate] == piece_t::EMPTY) {
+      result.push_back(candidate);
+    }
+  }
 
-    if (candidate & 0x88) { continue; }
+  {
+    // Check fo the move 2 in front
+    const uint8_t candidate = index - 0x20;
+    bool condition = !(candidate & 0x88) && (index > 0x5F) && (index < 0x68) &&
+                     (board[candidate] == piece_t::EMPTY) &&
+                     (board[candidate + 0x10] == piece_t::EMPTY);
 
-    result.push_back(candidate);
+    if (condition) { result.push_back(candidate); }
+  }
+
+  {
+    // Check for attack right
+    const uint8_t candidate = index - 0x11;
+    bool condition =
+        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
+                                static_cast<uint32_t>(color_t::WHITE));
+
+    if (condition) { result.push_back(candidate); }
+  }
+
+  {
+    // Check for attack left
+    const uint8_t candidate = index - 0x0F;
+    bool condition =
+        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
+                                static_cast<uint32_t>(color_t::WHITE));
+
+    if (condition) { result.push_back(candidate); }
   }
 
   return result;
@@ -38,14 +67,44 @@ inline std::vector<uint8_t> generate_w_pawn(
 
 {
   std::vector<uint8_t> result;
-  result.reserve(offsets_p.size());
+  result.reserve(4);
 
-  for (const auto I : offsets_p) {
-    const uint8_t candidate = index + I;
+  {
+    // Check fo the move in front
+    const uint8_t candidate = index + 0x10;
+    if (!(candidate & 0x88) && board[candidate] == piece_t::EMPTY) {
+      result.push_back(candidate);
+    }
+  }
 
-    if (candidate & 0x88) { continue; }
+  {
+    // Check fo the move 2 in front
+    const uint8_t candidate = index + 0x20;
+    bool condition = !(candidate & 0x88) && (index > 0x0F) && (index < 0x20) &&
+                     (board[candidate] == piece_t::EMPTY) &&
+                     (board[candidate - 0x10] == piece_t::EMPTY);
 
-    result.push_back(candidate);
+    if (condition) { result.push_back(candidate); }
+  }
+
+  {
+    // Check for attack right
+    const uint8_t candidate = index + 0x11;
+    bool condition =
+        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
+                                static_cast<uint32_t>(color_t::BLACK));
+
+    if (condition) { result.push_back(candidate); }
+  }
+
+  {
+    // Check for attack left
+    const uint8_t candidate = index + 0x0F;
+    bool condition =
+        !(candidate & 0x88) && (static_cast<uint32_t>(board[candidate]) &
+                                static_cast<uint32_t>(color_t::BLACK));
+
+    if (condition) { result.push_back(candidate); }
   }
 
   return result;
@@ -238,6 +297,8 @@ inline std::vector<uint8_t> generate_valid_moves(
     default:
       break;
   }
+
+  // Refine moves
 
   return result;
 }

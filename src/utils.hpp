@@ -12,22 +12,24 @@ static constexpr size_t BOARD_ARRAY_SIZE = 128;
 
 enum class color_t
 {
-  BLACK,
-  WHITE
+  BLACK = 0x01000000,
+  WHITE = 0x10000000
 };
 
 
 enum class piece_t
 {
-  INVALID,
+  INVALID = 0x00000000,
   EMPTY,
-  B_KING,
+  // Black pieces can be checked with B_KING & BLACK
+  B_KING = 0x01000000,
   B_QUEEN,
   B_KNIGHT,
   B_BISHOP,
   B_ROOK,
   B_PAWN,
-  W_KING,
+  // Black pieces can be checked with W_KING & WHITE
+  W_KING = 0x10000000,
   W_QUEEN,
   W_KNIGHT,
   W_BISHOP,
