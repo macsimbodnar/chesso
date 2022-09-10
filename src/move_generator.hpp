@@ -6,6 +6,9 @@ static const std::array<uint8_t, 2> offsets_p = {0x10, 0x20};
 static const std::array<uint8_t, 14> offsets_r = {0x10, 0x20, 0x30, 0x40, 0x50,
                                                   0x60, 0x70, 0x01, 0x02, 0x03,
                                                   0x04, 0x05, 0x06, 0x07};
+static const std::array<uint8_t, 8> offsets_n = {
+    0x21, 0x1F, 0x0E, 0xEE, 0xDF, 0xE1, 0xF2, 0x12,
+};
 
 
 inline std::vector<uint8_t> generate_b_pawn(
@@ -79,6 +82,25 @@ inline std::vector<uint8_t> generate_rook(
 }
 
 
+inline std::vector<uint8_t> generate_knight(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result;
+  result.reserve(offsets_n.size());
+
+  for (const auto I : offsets_n) {
+    const uint8_t candidate = index + I;
+
+    if (candidate & 0x88) { continue; }
+
+    result.push_back(candidate);
+  }
+
+  return result;
+}
+
+
 inline std::vector<uint8_t> generate_valid_moves(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
@@ -102,6 +124,11 @@ inline std::vector<uint8_t> generate_valid_moves(
     case piece_t::B_ROOK:
     case piece_t::W_ROOK:
       result = generate_rook(board, index);
+      break;
+
+    case piece_t::B_KNIGHT:
+    case piece_t::W_KNIGHT:
+      result = generate_knight(board, index);
       break;
 
     default:
