@@ -164,3 +164,14 @@ inline piece_t c_to_piece(const char p)
 
   return piece;
 }
+
+
+inline color_t get_color(const piece_t p)
+{
+  assert(p != piece_t::EMPTY);
+  assert(p != piece_t::INVALID);
+
+  color_t color = static_cast<color_t>(U32(p) & COLOR_MASK);
+
+  return color;
+}

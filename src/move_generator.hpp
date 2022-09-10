@@ -13,16 +13,6 @@ static const std::array<uint8_t, 4> directions_bishop = {0x11, 0x0F, 0xF1,
                                                          0xEF};
 
 
-inline color_t get_color(const piece_t p)
-{
-  assert(p != piece_t::EMPTY);
-  assert(p != piece_t::INVALID);
-
-  color_t color = static_cast<color_t>(U32(p) & COLOR_MASK);
-
-  return color;
-}
-
 inline std::vector<uint8_t> generate_b_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
@@ -157,6 +147,37 @@ inline std::vector<uint8_t> generate_sliding(
 }
 
 
+inline std::vector<uint8_t> generate_jumping(
+    const std::array<uint8_t, 8>& offsets,
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result;
+  result.reserve(offsets_k.size());
+
+  color_t color = get_color(board[index]);
+
+  for (const auto I : offsets) {
+    const uint8_t candidate = index + I;
+
+    if (candidate & 0x88) { continue; }
+
+    piece_t p = board[candidate];
+    assert(p != piece_t::INVALID);
+
+    // Check if attacking his own color
+    if (p != piece_t::EMPTY && (get_color(p) == color)) { continue; }
+
+
+    result.push_back(candidate);
+  }
+
+  assert(result.size() <= offsets_k.size());
+
+  return result;
+}
+
+
 inline std::vector<uint8_t> generate_rook(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
@@ -185,25 +206,17 @@ inline std::vector<uint8_t> generate_knight(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
 {
-  std::vector<uint8_t> result;
-  result.reserve(offsets_n.size());
+  std::vector<uint8_t> result = generate_jumping(offsets_n, board, index);
 
-  color_t color = get_color(board[index]);
+  return result;
+}
 
-  for (const auto I : offsets_n) {
-    const uint8_t candidate = index + I;
 
-    if (candidate & 0x88) { continue; }
-    piece_t p = board[candidate];
-    assert(p != piece_t::INVALID);
-
-    // Check if attacking his own color
-    if (p != piece_t::EMPTY && (get_color(p) == color)) { continue; }
-
-    result.push_back(candidate);
-  }
-
-  assert(result.size() <= offsets_n.size());
+inline std::vector<uint8_t> generate_king(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result = generate_jumping(offsets_k, board, index);
 
   return result;
 }
@@ -222,25 +235,6 @@ inline std::vector<uint8_t> generate_queen(
 
   result.insert(result.end(), std::make_move_iterator(diagonal_moves.begin()),
                 std::make_move_iterator(diagonal_moves.end()));
-
-  return result;
-}
-
-
-inline std::vector<uint8_t> generate_king(
-    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-    const uint8_t index)
-{
-  std::vector<uint8_t> result;
-  result.reserve(offsets_k.size());
-
-  for (const auto I : offsets_k) {
-    const uint8_t candidate = index + I;
-
-    if (candidate & 0x88) { continue; }
-
-    result.push_back(candidate);
-  }
 
   return result;
 }
