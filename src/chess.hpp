@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "log.hpp"
+#include "move_generator.hpp"
 #include "utils.hpp"
 
 // clang-format off
@@ -32,7 +33,6 @@
 
 static constexpr char FEN_INIT_POS[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-static constexpr size_t BOARD_ARRAY_SIZE = 128;
 static constexpr uint8_t WQ = 0b0000001;
 static constexpr uint8_t WK = 0b0000010;
 static constexpr uint8_t BQ = 0b0000100;
@@ -98,7 +98,8 @@ public:
     const uint8_t from_index = to_index(from_file, from_rank);
     const uint8_t dest_index = to_index(to_file, to_rank);
 
-    assert(_board[from_index]);
+    assert(_board[from_index] != piece_t::INVALID);
+    assert(_board[from_index] != piece_t::EMPTY);
 
     // Unset the current piece
     _board[dest_index] = _board[from_index];
@@ -107,21 +108,17 @@ public:
 
 
   inline std::vector<position_t> get_valid_moves(const uint8_t file,
-                                                 const uint8_t rank)
+                                                 const uint8_t rank) const
   {
     std::vector<position_t> result;
 
     const uint8_t index = to_index(file, rank);
+    const std::vector<uint8_t> moves = generate_valid_moves(_board, index);
+    result.reserve(moves.size());
 
-    // TODO
-    // if (_board[index]) {
-    //   const auto all_moves = _board[index]->get_all_moves();
-
-    //   result.reserve(all_moves.size());
-    //   for (const auto I : all_moves) {
-    //     result.push_back(to_position(I));
-    //   }
-    // }
+    for (const auto I : moves) {
+      result.push_back(to_position(I));
+    }
 
     return result;
   }

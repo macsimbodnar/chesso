@@ -3,8 +3,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "log.hpp"
 #include "exceptions.hpp"
+#include "log.hpp"
+
+
+static constexpr size_t BOARD_ARRAY_SIZE = 128;
 
 
 enum class color_t
