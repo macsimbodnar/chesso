@@ -59,6 +59,7 @@ private:
 
     const uint8_t index = (rank << 4) + file;
     assert(index < BOARD_ARRAY_SIZE);
+    assert(!(index & 0x88));
 
     return index;
   }
@@ -66,6 +67,10 @@ private:
 
   inline position_t to_position(const uint8_t index) const
   {
+    // Check if we are inside the board
+    assert(!(index & 0x88));
+    assert(index < BOARD_ARRAY_SIZE);
+
     position_t result;
     result.file = index & 7;
     result.rank = index >> 4;
@@ -114,6 +119,14 @@ public:
 
     const uint8_t index = to_index(file, rank);
     const std::vector<uint8_t> moves = generate_valid_moves(_board, index);
+
+    LOG_I << "****************************************************" << END_I;
+    LOG_I << std::hex << static_cast<int>(index) << std::dec << " -> ";
+    for (const auto& I : moves) {
+      LOG_I << std::hex << static_cast<int>(I) << std::dec << " ";
+    }
+    LOG_I << END_I;
+
     result.reserve(moves.size());
 
     for (const auto I : moves) {
