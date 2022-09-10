@@ -85,20 +85,22 @@ void gui_t::draw_board()
   // Draw pieces
   const auto pieces = _board.pieces();
   for (const auto& I : pieces) {
-    const uint8_t file = I.get()->file();
-    const uint8_t rank = I.get()->rank();
+    const uint8_t file = I.position.file;
+    const uint8_t rank = I.position.rank;
 
     const coordinates_t coord = position_to_coordinates(file, rank);
-    const char c = I.get()->c();
+    const piece_t p = I.piece;
 
     // Don't draw the selected piece
-    if (mouse_holding.selected.get() == I.get()) { continue; }
+    if (mouse_holding.selected && mouse_holding.info.index == I.index) {
+      continue;
+    }
 
     // The pice is in place
     rect_t r = {coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
                 SQUARE_SIZE};
 
-    draw_texture(piece_textures[c], r);
+    draw_texture(piece_textures[p], r);
   }
 
   // For last draw the selected piece
@@ -106,7 +108,7 @@ void gui_t::draw_board()
     rect_t r = {mouse_state().x - mouse_holding.offset_x,
                 mouse_state().y - mouse_holding.offset_y, SQUARE_SIZE,
                 SQUARE_SIZE};
-    draw_texture(piece_textures[mouse_holding.selected.get()->c()], r);
+    draw_texture(piece_textures[mouse_holding.info.piece], r);
   }
 }
 
@@ -125,18 +127,18 @@ void gui_t::on_init(void*)
    * Black ("pnbrqk")
    */
 
-  piece_textures['P'] = load_image("assets/Chess_plt60.png");
-  piece_textures['N'] = load_image("assets/Chess_nlt60.png");
-  piece_textures['B'] = load_image("assets/Chess_blt60.png");
-  piece_textures['R'] = load_image("assets/Chess_rlt60.png");
-  piece_textures['Q'] = load_image("assets/Chess_qlt60.png");
-  piece_textures['K'] = load_image("assets/Chess_klt60.png");
-  piece_textures['p'] = load_image("assets/Chess_pdt60.png");
-  piece_textures['n'] = load_image("assets/Chess_ndt60.png");
-  piece_textures['b'] = load_image("assets/Chess_bdt60.png");
-  piece_textures['r'] = load_image("assets/Chess_rdt60.png");
-  piece_textures['q'] = load_image("assets/Chess_qdt60.png");
-  piece_textures['k'] = load_image("assets/Chess_kdt60.png");
+  piece_textures[piece_t::W_PAWN] = load_image("assets/Chess_plt60.png");
+  piece_textures[piece_t::W_KNIGHT] = load_image("assets/Chess_nlt60.png");
+  piece_textures[piece_t::W_BISHOP] = load_image("assets/Chess_blt60.png");
+  piece_textures[piece_t::W_ROOK] = load_image("assets/Chess_rlt60.png");
+  piece_textures[piece_t::W_QUEEN] = load_image("assets/Chess_qlt60.png");
+  piece_textures[piece_t::W_KING] = load_image("assets/Chess_klt60.png");
+  piece_textures[piece_t::B_PAWN] = load_image("assets/Chess_pdt60.png");
+  piece_textures[piece_t::B_KNIGHT] = load_image("assets/Chess_ndt60.png");
+  piece_textures[piece_t::B_BISHOP] = load_image("assets/Chess_bdt60.png");
+  piece_textures[piece_t::B_ROOK] = load_image("assets/Chess_rdt60.png");
+  piece_textures[piece_t::B_QUEEN] = load_image("assets/Chess_qdt60.png");
+  piece_textures[piece_t::B_KING] = load_image("assets/Chess_kdt60.png");
 
   background = load_image("assets/background_l.jpg");
 
@@ -180,15 +182,17 @@ void gui_t::on_update(void*)
       const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
 
       const position_t target_pos = coordinates_to_postion(x, y);
-      auto piece = _board.get_piece(target_pos.file, target_pos.rank);
+      const piece_info_t piece_i =
+          _board.get_piece_info(target_pos.file, target_pos.rank);
 
       // Piece holding
-      if (piece != nullptr) {
+      if (piece_i.piece != piece_t::EMPTY) {
         if (mouse.left_button.state == button_t::DOWN &&
             !mouse_holding.selected) {
           mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
           mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
-          mouse_holding.selected = piece;
+          mouse_holding.selected = true;
+          mouse_holding.info = piece_i;
 
           // Play the soft sound
           play_sound(sound_fx[1]);
@@ -197,9 +201,9 @@ void gui_t::on_update(void*)
 
       // Reset the selected state
       if (mouse.left_button.state == button_t::UP && mouse_holding.selected) {
-        const uint8_t f = mouse_holding.selected.get()->file();
-        const uint8_t r = mouse_holding.selected.get()->rank();
-        const coordinates_t selected = position_to_coordinates(f, r);
+        const uint8_t sel_f = mouse_holding.info.position.file;
+        const uint8_t sel_r = mouse_holding.info.position.rank;
+        const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
 
         if (x != selected.x || y != selected.y) {
           // In this case we want to unselect the square
@@ -213,14 +217,11 @@ void gui_t::on_update(void*)
         // Set the piece to the destination column when release
         const position_t dest = coordinates_to_postion(x, y);
 
-        if (dest.file != mouse_holding.selected.get()->file() ||
-            dest.rank != mouse_holding.selected.get()->rank()) {
-          _board.move(mouse_holding.selected.get()->file(),
-                      mouse_holding.selected.get()->rank(), dest.file,
-                      dest.rank);
+        if (dest.file != sel_f || dest.rank != sel_r) {
+          _board.move(sel_f, sel_r, dest.file, dest.rank);
         }
 
-        mouse_holding.selected = nullptr;
+        mouse_holding.selected = false;
         mouse_holding.offset_x = 0;
         mouse_holding.offset_y = 0;
 

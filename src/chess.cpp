@@ -1,4 +1,4 @@
-#include "board.hpp"
+#include "chess.hpp"
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -7,21 +7,21 @@
 #include "utils.hpp"
 
 
-board_t::board_t()
+chess_t::chess_t()
 {
   load(FEN_INIT_POS);
 }
 
 
-void board_t::cleanup()
+void chess_t::cleanup()
 {
-  for (auto& I : _board) {
-    I = nullptr;
+  for (uint32_t i = 0; i < BOARD_ARRAY_SIZE; ++i) {
+    _board[i] = (i & 0x88) ? piece_t::INVALID : piece_t::EMPTY;
   }
 }
 
 
-void board_t::load(const std::string& FEN)
+void chess_t::load(const std::string& FEN)
 {
   // Clean the board first
   cleanup();
@@ -92,7 +92,7 @@ void board_t::load(const std::string& FEN)
       case 'r':
       case 'q':
       case 'k':
-        set(file, rank, c);
+        set(file, rank, c_to_piece(c));
         ++file;
         break;
 
@@ -100,6 +100,7 @@ void board_t::load(const std::string& FEN)
         // We get a non valid string
         throw FAN_exception("Invalid char in FEN string [" + STR(c) +
                             "]. FEN: " + FEN);
+        break;
     }
   }
 

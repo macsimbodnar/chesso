@@ -1,12 +1,10 @@
 #pragma once
 #include <array>
 #include <cassert>
-#include <memory>
 #include <pixello.hpp>
 #include <string>
 #include <vector>
 #include "log.hpp"
-#include "piece.hpp"
 #include "utils.hpp"
 
 // clang-format off
@@ -41,17 +39,10 @@ static constexpr uint8_t BQ = 0b0000100;
 static constexpr uint8_t BK = 0b0001000;
 
 
-enum class color_t
-{
-  BLACK,
-  WHITE
-};
-
-
-class board_t
+class chess_t
 {
 private:
-  std::array<std::shared_ptr<piece_t>, BOARD_ARRAY_SIZE> _board = {0};
+  std::array<piece_t, BOARD_ARRAY_SIZE> _board = {piece_t::INVALID};
   color_t _active_color = color_t::WHITE;
   uint8_t _available_castling = WQ | WK | BQ | BK;
   std::string _en_passant_target_square = "-";
@@ -61,7 +52,7 @@ private:
   void cleanup();
 
 
-  inline uint8_t to_index(const uint8_t file, const uint8_t rank)
+  inline uint8_t to_index(const uint8_t file, const uint8_t rank) const
   {
     assert(file >= 0 && file < 8);
     assert(rank >= 0 && rank < 8);
@@ -73,7 +64,7 @@ private:
   }
 
 
-  inline position_t to_position(const uint8_t index)
+  inline position_t to_position(const uint8_t index) const
   {
     position_t result;
     result.file = index & 7;
@@ -84,14 +75,15 @@ private:
 
 
 public:
-  board_t();
+  chess_t();
 
   void load(const std::string& FEN);
 
-  inline void set(const uint8_t file, const uint8_t rank, const char p)
+
+  inline void set(const uint8_t file, const uint8_t rank, const piece_t piece)
   {
     const uint8_t index = to_index(file, rank);
-    _board[index] = std::make_shared<piece_t>(file, rank, p);
+    _board[index] = piece;
   }
 
   inline void move(const uint8_t from_file,
@@ -110,10 +102,7 @@ public:
 
     // Unset the current piece
     _board[dest_index] = _board[from_index];
-    _board[from_index] = nullptr;
-    _board[dest_index].get()->set_index(dest_index);
-    _board[dest_index].get()->set_file(to_file);
-    _board[dest_index].get()->set_rank(to_rank);
+    _board[from_index] = piece_t::EMPTY;
   }
 
 
@@ -124,37 +113,55 @@ public:
 
     const uint8_t index = to_index(file, rank);
 
-    if (_board[index]) {
-      const auto all_moves = _board[index]->get_all_moves();
+    // TODO
+    // if (_board[index]) {
+    //   const auto all_moves = _board[index]->get_all_moves();
 
-      result.reserve(all_moves.size());
-      for (const auto I : all_moves) {
-        result.push_back(to_position(I));
-      }
-    }
+    //   result.reserve(all_moves.size());
+    //   for (const auto I : all_moves) {
+    //     result.push_back(to_position(I));
+    //   }
+    // }
 
     return result;
   }
 
 
-  inline std::vector<std::shared_ptr<piece_t>> pieces() const
+  inline std::vector<piece_info_t> pieces() const
   {
-    std::vector<std::shared_ptr<piece_t>> res;
+    std::vector<piece_info_t> res;
     res.reserve(32);
 
-    for (const auto& I : _board) {
-      if (I) { res.push_back(I); }
+    for (uint8_t i = 0; i < BOARD_ARRAY_SIZE; ++i) {
+      piece_t p = _board[i];
+
+      if (p != piece_t::INVALID && p != piece_t::EMPTY) {
+        piece_info_t info;
+        info.piece = p;
+        info.position = to_position(i);
+        info.index = i;
+
+        res.push_back(std::move(info));
+      }
     }
 
     return res;
   }
 
 
-  inline std::shared_ptr<piece_t> get_piece(const uint8_t file,
-                                          const uint8_t rank)
+  inline piece_info_t get_piece_info(const uint8_t file,
+                                     const uint8_t rank) const
   {
     const uint8_t index = to_index(file, rank);
-    return _board[index];
+
+    piece_info_t info;
+    info.piece = _board[index];
+    info.position = to_position(index);
+    info.index = index;
+
+    assert(info.piece != piece_t::INVALID);
+
+    return info;
   }
 
 

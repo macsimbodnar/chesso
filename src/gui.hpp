@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <pixello.hpp>
-#include "board.hpp"
+#include "chess.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 
@@ -16,7 +16,8 @@ struct piece_holding_t
 {
   int32_t offset_x = 0;
   int32_t offset_y = 0;
-  std::shared_ptr<piece_t> selected;
+  bool selected = false;
+  piece_info_t info;
 };
 
 
@@ -32,9 +33,9 @@ class gui_t : public pixello
 {
 private:
   texture_t background;
-  std::map<char, texture_t> piece_textures;
+  std::map<piece_t, texture_t> piece_textures;
   std::map<char, sound_t> sound_fx;
-  board_t _board;
+  chess_t _board;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
   std::vector<position_t> suggested_positions;
