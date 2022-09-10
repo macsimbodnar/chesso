@@ -9,6 +9,8 @@ static const std::array<uint8_t, 8> offsets_k = {0xFF, 0x0F, 0x10, 0x11,
                                                  0x01, 0xF1, 0xF0, 0xEF};
 
 static const std::array<uint8_t, 4> directions_rook = {0x10, 0xF0, 0x01, 0xFF};
+static const std::array<uint8_t, 4> directions_bishop = {0x11, 0x0F, 0xF1,
+                                                         0xEF};
 
 
 inline color_t get_color(const piece_t p)
@@ -117,16 +119,17 @@ inline std::vector<uint8_t> generate_w_pawn(
 }
 
 
-inline std::vector<uint8_t> generate_rook(
+inline std::vector<uint8_t> generate_sliding(
+    const std::array<uint8_t, 4>& directions,
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
 {
   std::vector<uint8_t> result;
-  result.reserve(14);
+  result.reserve(16);  // Worst case
 
   color_t color = get_color(board[index]);
 
-  for (const auto I : directions_rook) {
+  for (const auto I : directions) {
     uint8_t candidate = index;
     while (true) {
       candidate += I;
@@ -150,8 +153,31 @@ inline std::vector<uint8_t> generate_rook(
   }
 
   assert(result.size() <= 14);
+  return result;
+}
+
+
+inline std::vector<uint8_t> generate_rook(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> result = generate_sliding(directions_rook, board, index);
+
+  assert(result.size() <= 14);
 
   return result;
+}
+
+
+inline std::vector<uint8_t> generate_bishop(
+    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const uint8_t index)
+{
+  std::vector<uint8_t> res = generate_sliding(directions_bishop, board, index);
+
+  assert(res.size() <= 16);
+
+  return res;
 }
 
 
@@ -178,59 +204,6 @@ inline std::vector<uint8_t> generate_knight(
   }
 
   assert(result.size() <= offsets_n.size());
-
-  return result;
-}
-
-
-inline std::vector<uint8_t> generate_bishop(
-    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-    const uint8_t index)
-{
-  std::vector<uint8_t> result;
-  result.reserve(16);  // Worst case
-
-  {  // top - right
-    uint8_t candidate = index;
-    while (true) {
-      candidate += 0x11;
-
-      if (candidate & 0x88) { break; }
-      result.push_back(candidate);
-    }
-  }
-
-  {  // top - left
-    uint8_t candidate = index;
-    while (true) {
-      candidate += 0x0F;
-
-      if (candidate & 0x88) { break; }
-      result.push_back(candidate);
-    }
-  }
-
-  {  // bottom - right
-    uint8_t candidate = index;
-    while (true) {
-      candidate -= 0x0F;
-
-      if (candidate & 0x88) { break; }
-      result.push_back(candidate);
-    }
-  }
-
-  {  // bottom - left
-    uint8_t candidate = index;
-    while (true) {
-      candidate -= 0x11;
-
-      if (candidate & 0x88) { break; }
-      result.push_back(candidate);
-    }
-  }
-
-  assert(result.size() <= 16);
 
   return result;
 }
