@@ -60,18 +60,8 @@ void gui_t::draw_board()
     black = !black;
   }
 
-  // Draw selected square and suggestions if any
-  if (selected_square.selected) {
-    draw_rect(selected_square.rect, 0x33333390);
-
-    // Draw suggestions
-    for (const auto& I : suggested_positions) {
-      const coordinates_t coord = position_to_coordinates(I.file, I.rank);
-      draw_rect({coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
-                 SQUARE_SIZE},
-                0x00FF0055);
-    }
-  }
+  // Draw selected square
+  if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
 
   // Draw the current square
   if (is_mouse_in(BOARD_RECT)) {
@@ -102,6 +92,19 @@ void gui_t::draw_board()
 
     draw_texture(piece_textures[p], r);
   }
+
+  // Draw suggestions
+  if (selected_square.selected) {
+    for (const auto& I : suggested_positions) {
+      const coordinates_t coord = position_to_coordinates(I.file, I.rank);
+      const int32_t s = SQUARE_SIZE / 6;
+      const int32_t offset = (SQUARE_SIZE - s) / 2;
+      draw_rect({coord.x * SQUARE_SIZE + offset, coord.y * SQUARE_SIZE + offset,
+                 s, s},
+                0xFF0000FF);
+    }
+  }
+
 
   // For last draw the selected piece
   if (mouse_holding.selected) {
