@@ -35,7 +35,7 @@ private:
   texture_t background;
   std::map<piece_t, texture_t> piece_textures;
   std::map<char, sound_t> sound_fx;
-  chess_t _board;
+  chess_t chess;
   piece_holding_t mouse_holding;
   selected_square_t selected_square;
   std::vector<position_t> suggested_positions;

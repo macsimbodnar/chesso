@@ -73,7 +73,7 @@ void gui_t::draw_board()
   }
 
   // Draw pieces
-  const auto pieces = _board.pieces();
+  const auto pieces = chess.pieces();
   for (const auto& I : pieces) {
     const uint8_t file = I.position.file;
     const uint8_t rank = I.position.rank;
@@ -97,14 +97,11 @@ void gui_t::draw_board()
   if (selected_square.selected) {
     for (const auto& I : suggested_positions) {
       const coordinates_t coord = position_to_coordinates(I.file, I.rank);
-      const int32_t s = SQUARE_SIZE / 6;
-      const int32_t offset = (SQUARE_SIZE - s) / 2;
-      draw_rect({coord.x * SQUARE_SIZE + offset, coord.y * SQUARE_SIZE + offset,
-                 s, s},
-                0xFF0000FF);
+      const int32_t x = (coord.x * SQUARE_SIZE) + SQUARE_SIZE / 2;
+      const int32_t y = (coord.y * SQUARE_SIZE) + SQUARE_SIZE / 2;
+      draw_circle(x, y, SQUARE_SIZE / 6, 0xFF0000FF);
     }
   }
-
 
   // For last draw the selected piece
   if (mouse_holding.selected) {
@@ -172,7 +169,10 @@ void gui_t::on_update(void*)
 
     // Reset the board if click on the right panel
     if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.left_button.click) {
-      _board.load(FEN_INIT_POS);
+      chess.load(FEN_INIT_POS);
+      mouse_holding.selected = false;
+      selected_square.selected = false;
+      suggested_positions.clear();
     }
 
     // Flip the board if click on the right panel with the right button
@@ -186,7 +186,7 @@ void gui_t::on_update(void*)
 
       const position_t target_pos = coordinates_to_postion(x, y);
       const piece_info_t piece_i =
-          _board.get_piece_info(target_pos.file, target_pos.rank);
+          chess.get_piece_info(target_pos.file, target_pos.rank);
 
       // Piece holding
       if (piece_i.piece != piece_t::EMPTY) {
@@ -221,7 +221,7 @@ void gui_t::on_update(void*)
         const position_t dest = coordinates_to_postion(x, y);
 
         if (dest.file != sel_f || dest.rank != sel_r) {
-          _board.move(sel_f, sel_r, dest.file, dest.rank);
+          chess.move(sel_f, sel_r, dest.file, dest.rank);
         }
 
         mouse_holding.selected = false;
@@ -251,7 +251,7 @@ void gui_t::on_update(void*)
           // Get the available moves
           const position_t selected_pos = coordinates_to_postion(x, y);
           suggested_positions =
-              _board.get_valid_moves(selected_pos.file, selected_pos.rank);
+              chess.get_valid_moves(selected_pos.file, selected_pos.rank);
         }
       }
     }
@@ -288,7 +288,7 @@ void gui_t::on_update(void*)
 
     // Draw turn
     std::string turn = "Turn: ";
-    switch (_board.active_color()) {
+    switch (chess.active_color()) {
       case color_t::BLACK:
         turn += "B";
         break;
@@ -303,7 +303,7 @@ void gui_t::on_update(void*)
 
     // Draw castling situation
     std::string castling = "Castling: ";
-    const uint8_t available_castling = _board.available_castling();
+    const uint8_t available_castling = chess.available_castling();
     if (available_castling & WK) { castling += "K"; }
     if (available_castling & WQ) { castling += "Q"; }
     if (available_castling & BK) { castling += "k"; }
@@ -313,20 +313,20 @@ void gui_t::on_update(void*)
     draw_texture(castling_texture, 10, turn_texture.h + 20);
 
     // Draw en passant target square
-    std::string en_passant = "En passant: " + _board.en_passant_target_square();
+    std::string en_passant = "En passant: " + chess.en_passant_target_square();
     texture_t en_passant_texture = create_text(en_passant, text_color);
     draw_texture(en_passant_texture, 10,
                  +turn_texture.h + castling_texture.h + 30);
 
     // Draw the halfmove clock
-    std::string half_clock = "HMC: " + STR(_board.halfmove_clock());
+    std::string half_clock = "HMC: " + STR(chess.halfmove_clock());
     texture_t half_clock_texture = create_text(half_clock, text_color);
     draw_texture(
         half_clock_texture, 10,
         +turn_texture.h + castling_texture.h + en_passant_texture.h + 40);
 
     // Draw the fullmove counter
-    std::string full_clock = "FMC: " + STR(_board.full_move());
+    std::string full_clock = "FMC: " + STR(chess.full_move());
     texture_t full_clock_texture = create_text(full_clock, text_color);
     draw_texture(full_clock_texture, 10,
                  +turn_texture.h + castling_texture.h + en_passant_texture.h +
