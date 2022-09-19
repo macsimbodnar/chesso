@@ -13,10 +13,52 @@ static const std::array<uint8_t, 4> directions_bishop = {0x11, 0x0F, 0xF1,
                                                          0xEF};
 
 
+// inline std::vector<uint8_t> generate_pawn(
+//     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+//     const uint8_t index)
+// {
+//   std::vector<uint8_t> move_candidates;
+//   move_candidates.reserve(2);
+//   std::vector<uint8_t> attack_candidates;
+//   attack_candidates.reserve(2);
+
+//   const color_t color = get_color(board[index]);
+//   switch (color) {
+//     case color_t::BLACK:
+//       move_candidates.push_back(index + 0xF0);
+//       break;
+//     case color_t::WHITE:
+//       move_candidates.push_back(0x10);
+//       break;
+
+//     default:
+//       throw input_exception("Unexpected color: " + STR(INT(color)));
+//       break;
+//   }
+
+//   std::vector<uint8_t> result;
+//   result.reserve(4);  // Worst case
+
+//   // Check
+//   {
+//     const uint8_t candidate = move_candidates[0];
+//     if (!(candidate & 0x88) && board[candidate] != piece_t::EMPTY) {
+//       result.push_back(candidate);
+//     }
+//   }
+
+//   {
+
+//     const uint8_t candidate = move_candidates[1];
+//     if ()
+//   }
+
+//   return result;
+// }
+
 inline std::vector<uint8_t> generate_b_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
-
 {
   std::vector<uint8_t> result;
   result.reserve(4);
@@ -290,6 +332,31 @@ inline std::vector<uint8_t> generate_valid_moves(
   }
 
   // Refine moves
+
+  return result;
+}
+
+
+inline std::vector<move_t> generate_valid_moves(
+    const board_state_t& board_state)
+{
+  std::vector<move_t> result;
+
+  for (uint8_t i = 0; i < board_state.board.size(); ++i) {
+    const piece_t p = board_state.board[i];
+
+    if (p != piece_t::INVALID && p != piece_t::EMPTY &&
+        board_state.active_color == get_color(p)) {
+      const auto moves = generate_valid_moves(board_state.board, i);
+
+      move_t move;
+      move.from = i;
+      for (const auto& M : moves) {
+        move.to = M;
+        result.push_back(move);
+      }
+    }
+  }
 
   return result;
 }

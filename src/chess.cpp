@@ -16,8 +16,12 @@ chess_t::chess_t()
 void chess_t::cleanup()
 {
   for (uint32_t i = 0; i < BOARD_ARRAY_SIZE; ++i) {
-    _board[i] = (i & 0x88) ? piece_t::INVALID : piece_t::EMPTY;
+    board_state.board[i] = (i & 0x88) ? piece_t::INVALID : piece_t::EMPTY;
   }
+
+  board_state.active_color = color_t::WHITE;
+  board_state.available_castling = WQ | WK | BQ | BK;
+  board_state.en_passant_target_square = "-";
 }
 
 
@@ -114,10 +118,10 @@ void chess_t::load(const std::string& FEN)
   char color = sections[1][0];
   switch (color) {
     case 'w':
-      _active_color = color_t::WHITE;
+      board_state.active_color = color_t::WHITE;
       break;
     case 'b':
-      _active_color = color_t::BLACK;
+      board_state.active_color = color_t::BLACK;
       break;
     default:
       throw FAN_exception("Invalid color char in FEN string [" +
@@ -138,11 +142,11 @@ void chess_t::load(const std::string& FEN)
                         FEN);
   }
 
-  _available_castling = 0x00;
+  board_state.available_castling = 0x00;
   for (const char c : sections[2]) {
     switch (c) {
       case '-':
-        _available_castling = 0x00;
+        board_state.available_castling = 0x00;
         if (sections[2].size() != 1) {
           throw FAN_exception(
               "Invalid castling availability section size. No castling "
@@ -151,16 +155,16 @@ void chess_t::load(const std::string& FEN)
         }
         break;
       case 'K':
-        _available_castling |= WK;
+        board_state.available_castling |= WK;
         break;
       case 'Q':
-        _available_castling |= WQ;
+        board_state.available_castling |= WQ;
         break;
       case 'k':
-        _available_castling |= BK;
+        board_state.available_castling |= BK;
         break;
       case 'q':
-        _available_castling |= BQ;
+        board_state.available_castling |= BQ;
         break;
 
       default:
@@ -191,7 +195,7 @@ void chess_t::load(const std::string& FEN)
     }
   }
 
-  _en_passant_target_square = sections[3];
+  board_state.en_passant_target_square = sections[3];
 
   /***************************************************************************
    * 4. Halfmove clock

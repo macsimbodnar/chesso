@@ -42,10 +42,7 @@ static constexpr uint8_t BK = 0b0001000;
 class chess_t
 {
 private:
-  std::array<piece_t, BOARD_ARRAY_SIZE> _board = {piece_t::INVALID};
-  color_t _active_color = color_t::WHITE;
-  uint8_t _available_castling = WQ | WK | BQ | BK;
-  std::string _en_passant_target_square = "-";
+  board_state_t board_state;
   int _halfmove_clock = 0;
   int _full_move = 0;
 
@@ -88,7 +85,7 @@ public:
   inline void set(const uint8_t file, const uint8_t rank, const piece_t piece)
   {
     const uint8_t index = to_index(file, rank);
-    _board[index] = piece;
+    board_state.board[index] = piece;
   }
 
   inline void move(const uint8_t from_file,
@@ -103,12 +100,12 @@ public:
     const uint8_t from_index = to_index(from_file, from_rank);
     const uint8_t dest_index = to_index(to_file, to_rank);
 
-    assert(_board[from_index] != piece_t::INVALID);
-    assert(_board[from_index] != piece_t::EMPTY);
+    assert(board_state.board[from_index] != piece_t::INVALID);
+    assert(board_state.board[from_index] != piece_t::EMPTY);
 
     // Unset the current piece
-    _board[dest_index] = _board[from_index];
-    _board[from_index] = piece_t::EMPTY;
+    board_state.board[dest_index] = board_state.board[from_index];
+    board_state.board[from_index] = piece_t::EMPTY;
   }
 
 
@@ -120,9 +117,31 @@ public:
     const uint8_t index = to_index(file, rank);
 
     // Skip if empty
-    if (_board[index] == piece_t::EMPTY) { return result; }
+    if (board_state.board[index] == piece_t::EMPTY) { return result; }
 
-    const std::vector<uint8_t> moves = generate_valid_moves(_board, index);
+    /**************************************************************************
+     *       TMP CODE THAT EXTRACT FROM ALL MOVES THE ONE THAT WE WANT
+     **************************************************************************/
+    board_state_t tmp_state = board_state;
+
+    // Get first all white moves
+    tmp_state.active_color = color_t::WHITE;
+    const std::vector<move_t> all_w_moves = generate_valid_moves(tmp_state);
+
+    // Get then all black moves
+    tmp_state.active_color = color_t::BLACK;
+    const std::vector<move_t> all_b_moves = generate_valid_moves(tmp_state);
+
+    std::vector<uint8_t> moves;
+    for (const auto& I : all_w_moves) {
+      if (I.from == index) { moves.push_back(I.to); }
+    }
+    for (const auto& I : all_b_moves) {
+      if (I.from == index) { moves.push_back(I.to); }
+    }
+
+    // const auto moves = generate_valid_moves(board_state.board, index);
+    /**************************************************************************/
 
     LOG_I << "****************************************************" << END_I;
     LOG_I << std::hex << static_cast<int>(index) << std::dec << " -> ";
@@ -147,7 +166,7 @@ public:
     res.reserve(32);
 
     for (uint8_t i = 0; i < BOARD_ARRAY_SIZE; ++i) {
-      piece_t p = _board[i];
+      piece_t p = board_state.board[i];
 
       if (p != piece_t::INVALID && p != piece_t::EMPTY) {
         piece_info_t info;
@@ -169,7 +188,7 @@ public:
     const uint8_t index = to_index(file, rank);
 
     piece_info_t info;
-    info.piece = _board[index];
+    info.piece = board_state.board[index];
     info.position = to_position(index);
     info.index = index;
 
@@ -179,12 +198,15 @@ public:
   }
 
 
-  inline color_t active_color() const { return _active_color; }
+  inline color_t active_color() const { return board_state.active_color; }
 
-  inline uint8_t available_castling() const { return _available_castling; }
+  inline uint8_t available_castling() const
+  {
+    return board_state.available_castling;
+  }
   inline std::string en_passant_target_square() const
   {
-    return _en_passant_target_square;
+    return board_state.en_passant_target_square;
   }
   inline int halfmove_clock() const { return _halfmove_clock; }
   inline int full_move() const { return _full_move; }

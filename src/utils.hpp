@@ -10,7 +10,12 @@
 static_assert(false);
 #endif
 
+#ifndef STR
+#define STR(_N_) std::to_string(_N_)
+#endif
+
 #define U32(x) static_cast<uint32_t>(x)
+#define INT(x) static_cast<int>(x)
 
 static constexpr size_t BOARD_ARRAY_SIZE = 128;
 
@@ -60,11 +65,27 @@ struct coordinates_t
 };
 
 
+struct move_t
+{
+  uint8_t from;
+  uint8_t to;
+};
+
+
 struct piece_info_t
 {
   piece_t piece;
   position_t position;
   uint8_t index;
+};
+
+
+struct board_state_t
+{
+  std::array<piece_t, BOARD_ARRAY_SIZE> board;
+  color_t active_color;
+  uint8_t available_castling;
+  std::string en_passant_target_square;
 };
 
 
