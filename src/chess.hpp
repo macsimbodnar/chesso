@@ -109,11 +109,11 @@ public:
 
     // Get first all white moves
     tmp_state.active_color = color_t::WHITE;
-    const std::vector<move_t> all_w_moves = generate_valid_moves(tmp_state);
+    const std::vector<move_t> all_w_moves = generate_legal_moves(tmp_state);
 
     // Get then all black moves
     tmp_state.active_color = color_t::BLACK;
-    const std::vector<move_t> all_b_moves = generate_valid_moves(tmp_state);
+    const std::vector<move_t> all_b_moves = generate_legal_moves(tmp_state);
 
     std::vector<uint8_t> moves;
     for (const auto& I : all_w_moves) {
@@ -123,7 +123,7 @@ public:
       if (I.from == index) { moves.push_back(I.to); }
     }
 
-    // moves = generate_valid_moves(board_state.board, index);
+    moves = generate_pseudo_legal_moves(board_state, index);
     /**************************************************************************/
 
     LOG_I << "****************************************************" << END_I;

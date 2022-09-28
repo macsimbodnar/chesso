@@ -58,7 +58,8 @@ static const std::array<uint8_t, 4> directions_bishop = {0x11, 0x0F, 0xF1,
 
 inline std::vector<uint8_t> generate_b_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-    const uint8_t index)
+    const uint8_t index,
+    const uint8_t en_passant)
 {
   std::vector<uint8_t> result;
   result.reserve(4);
@@ -85,7 +86,8 @@ inline std::vector<uint8_t> generate_b_pawn(
     // Check for attack right
     const uint8_t candidate = index - 0x11;
     bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE)) ||
+        (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -94,7 +96,8 @@ inline std::vector<uint8_t> generate_b_pawn(
     // Check for attack left
     const uint8_t candidate = index - 0x0F;
     bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE)) ||
+        (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -105,7 +108,8 @@ inline std::vector<uint8_t> generate_b_pawn(
 
 inline std::vector<uint8_t> generate_w_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-    const uint8_t index)
+    const uint8_t index,
+    const uint8_t en_passant)
 {
   std::vector<uint8_t> result;
   result.reserve(4);
@@ -132,7 +136,8 @@ inline std::vector<uint8_t> generate_w_pawn(
     // Check for attack right
     const uint8_t candidate = index + 0x11;
     bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK)) ||
+        (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -141,7 +146,8 @@ inline std::vector<uint8_t> generate_w_pawn(
     // Check for attack left
     const uint8_t candidate = index + 0x0F;
     bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK));
+        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK)) ||
+        (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -281,10 +287,11 @@ inline std::vector<uint8_t> generate_queen(
 }
 
 
-inline std::vector<uint8_t> generate_valid_moves(
-    const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+inline std::vector<uint8_t> generate_pseudo_legal_moves(
+    const board_state_t& board_state,
     const uint8_t index)
 {
+  const std::array<piece_t, BOARD_ARRAY_SIZE>& board = board_state.board;
   const piece_t piece = board[index];
 
   assert(piece != piece_t::INVALID);
@@ -294,11 +301,13 @@ inline std::vector<uint8_t> generate_valid_moves(
 
   switch (piece) {
     case piece_t::B_PAWN:
-      result = generate_b_pawn(board, index);
+      result =
+          generate_b_pawn(board, index, board_state.en_passant_target_square);
       break;
 
     case piece_t::W_PAWN:
-      result = generate_w_pawn(board, index);
+      result =
+          generate_w_pawn(board, index, board_state.en_passant_target_square);
       break;
 
     case piece_t::B_ROOK:
@@ -336,7 +345,7 @@ inline std::vector<uint8_t> generate_valid_moves(
 }
 
 
-inline std::vector<move_t> generate_valid_moves(
+inline std::vector<move_t> generate_legal_moves(
     const board_state_t& board_state)
 {
   std::vector<move_t> result;
@@ -353,7 +362,7 @@ inline std::vector<move_t> generate_valid_moves(
     // Iterate over opposite color pieces
     if (p != piece_t::INVALID && p != piece_t::EMPTY &&
         board_state.active_color != get_color(p)) {
-      const auto moves = generate_valid_moves(board_state.board, i);
+      const auto moves = generate_pseudo_legal_moves(board_state, i);
 
       for (const auto& M : moves) {
         bool found = false;
