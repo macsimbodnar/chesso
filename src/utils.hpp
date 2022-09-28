@@ -18,7 +18,7 @@ static_assert(false);
 #define INT(x) static_cast<int>(x)
 
 static constexpr size_t BOARD_ARRAY_SIZE = 128;
-
+static constexpr uint8_t INVALID_BOARD_POS = 127;
 
 enum class color_t
 {
@@ -85,7 +85,7 @@ struct board_state_t
   std::array<piece_t, BOARD_ARRAY_SIZE> board;
   color_t active_color;
   uint8_t available_castling;
-  std::string en_passant_target_square;
+  uint8_t en_passant_target_square;
 };
 
 
@@ -113,6 +113,33 @@ inline std::string PTR2STR(T* ptr)
   std::stringstream ss;
   ss << address;
   return ss.str();
+}
+
+
+inline uint8_t to_index(const uint8_t file, const uint8_t rank)
+{
+  assert(file >= 0 && file < 8);
+  assert(rank >= 0 && rank < 8);
+
+  const uint8_t index = (rank << 4) + file;
+  assert(index < BOARD_ARRAY_SIZE);
+  assert(!(index & 0x88));
+
+  return index;
+}
+
+
+inline position_t to_position(const uint8_t index)
+{
+  // Check if we are inside the board
+  assert(!(index & 0x88));
+  assert(index < BOARD_ARRAY_SIZE);
+
+  position_t result;
+  result.file = index & 7;
+  result.rank = index >> 4;
+
+  return result;
 }
 
 
@@ -184,6 +211,45 @@ inline piece_t c_to_piece(const char p)
   }
 
   return piece;
+}
+
+
+inline uint8_t algebraic_to_index(const std::string& p)
+{
+  uint8_t result = INVALID_BOARD_POS;
+
+  if (p.size() != 2) { return INVALID_BOARD_POS; }
+
+  char file = p[0];
+  char rank = p[1];
+
+  assert(file >= 'a');
+  assert(file <= 'h');
+  assert(rank >= '1');
+  assert(rank <= '8');
+
+  position_t pos;
+  pos.file = file - 'a';
+  pos.rank = rank - '1';
+
+  result = to_index(pos.file, pos.rank);
+
+  return result;
+}
+
+
+inline std::string index_to_algebraic(const uint8_t i)
+{
+  if (i == INVALID_BOARD_POS) { return "-"; }
+
+  position_t p = to_position(i);
+  std::string result;
+  result.reserve(2);
+
+  result.push_back('a' + p.file);
+  result.push_back('1' + p.rank);
+
+  return result;
 }
 
 

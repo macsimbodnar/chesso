@@ -106,7 +106,6 @@ inline std::vector<uint8_t> generate_b_pawn(
 inline std::vector<uint8_t> generate_w_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index)
-
 {
   std::vector<uint8_t> result;
   result.reserve(4);
@@ -342,21 +341,53 @@ inline std::vector<move_t> generate_valid_moves(
 {
   std::vector<move_t> result;
 
+  /*****************************************************************************
+   * Generate enemy attacks vector
+   ****************************************************************************/
+  std::vector<uint8_t> attacks;
+  attacks.reserve(64);  // worst case
+
   for (uint8_t i = 0; i < board_state.board.size(); ++i) {
     const piece_t p = board_state.board[i];
 
+    // Iterate over opposite color pieces
     if (p != piece_t::INVALID && p != piece_t::EMPTY &&
-        board_state.active_color == get_color(p)) {
+        board_state.active_color != get_color(p)) {
       const auto moves = generate_valid_moves(board_state.board, i);
 
-      move_t move;
-      move.from = i;
       for (const auto& M : moves) {
-        move.to = M;
-        result.push_back(move);
+        bool found = false;
+        for (const auto A : attacks) {
+          if (A == M) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) { attacks.push_back(M); }
       }
     }
   }
+
+  /*****************************************************************************
+   * Check if king is under attack
+   ****************************************************************************/
+
+  // Get king position
+  uint8_t king_pos = 0x08;  // Assign an invalid position!
+  for (uint8_t i = 0; i < board_state.board.size(); ++i) {
+    const piece_t p = board_state.board[i];
+
+    if ((p == piece_t::B_KING || p == piece_t::W_KING) &&
+        board_state.active_color == get_color(p)) {
+      king_pos = i;
+    }
+  }
+
+  // Check if the position is valid
+  assert(!(king_pos & 0x88));
+
+  // Search if any of this attack the king
 
   return result;
 }

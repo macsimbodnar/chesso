@@ -48,34 +48,6 @@ private:
 
   void cleanup();
 
-
-  inline uint8_t to_index(const uint8_t file, const uint8_t rank) const
-  {
-    assert(file >= 0 && file < 8);
-    assert(rank >= 0 && rank < 8);
-
-    const uint8_t index = (rank << 4) + file;
-    assert(index < BOARD_ARRAY_SIZE);
-    assert(!(index & 0x88));
-
-    return index;
-  }
-
-
-  inline position_t to_position(const uint8_t index) const
-  {
-    // Check if we are inside the board
-    assert(!(index & 0x88));
-    assert(index < BOARD_ARRAY_SIZE);
-
-    position_t result;
-    result.file = index & 7;
-    result.rank = index >> 4;
-
-    return result;
-  }
-
-
 public:
   chess_t();
 
@@ -102,6 +74,17 @@ public:
 
     assert(board_state.board[from_index] != piece_t::INVALID);
     assert(board_state.board[from_index] != piece_t::EMPTY);
+
+    // Set the en passant
+    uint8_t en_passant = INVALID_BOARD_POS;
+    if (board_state.board[from_index] == piece_t::W_PAWN) {
+      if ((dest_index - from_index) == 0x20) { en_passant = from_index + 0x10; }
+    }
+    if (board_state.board[from_index] == piece_t::B_PAWN) {
+      if ((from_index - dest_index) == 0x20) { en_passant = from_index - 0x10; }
+    }
+
+    board_state.en_passant_target_square = en_passant;
 
     // Unset the current piece
     board_state.board[dest_index] = board_state.board[from_index];
@@ -140,7 +123,7 @@ public:
       if (I.from == index) { moves.push_back(I.to); }
     }
 
-    // const auto moves = generate_valid_moves(board_state.board, index);
+    // moves = generate_valid_moves(board_state.board, index);
     /**************************************************************************/
 
     LOG_I << "****************************************************" << END_I;
@@ -206,7 +189,7 @@ public:
   }
   inline std::string en_passant_target_square() const
   {
-    return board_state.en_passant_target_square;
+    return index_to_algebraic(board_state.en_passant_target_square);
   }
   inline int halfmove_clock() const { return _halfmove_clock; }
   inline int full_move() const { return _full_move; }

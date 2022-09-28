@@ -21,7 +21,7 @@ void chess_t::cleanup()
 
   board_state.active_color = color_t::WHITE;
   board_state.available_castling = WQ | WK | BQ | BK;
-  board_state.en_passant_target_square = "-";
+  board_state.en_passant_target_square = INVALID_BOARD_POS;
 }
 
 
@@ -195,7 +195,8 @@ void chess_t::load(const std::string& FEN)
     }
   }
 
-  board_state.en_passant_target_square = sections[3];
+
+  board_state.en_passant_target_square = algebraic_to_index(sections[3]);
 
   /***************************************************************************
    * 4. Halfmove clock
