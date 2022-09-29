@@ -159,12 +159,11 @@ inline std::vector<uint8_t> generate_w_pawn(
 inline std::vector<uint8_t> generate_sliding(
     const std::array<uint8_t, 4>& directions,
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t color,
     const uint8_t index)
 {
   std::vector<uint8_t> result;
   result.reserve(16);  // Worst case
-
-  color_t color = get_color(board[index]);
 
   for (const auto I : directions) {
     uint8_t candidate = index;
@@ -180,7 +179,7 @@ inline std::vector<uint8_t> generate_sliding(
       if (p == piece_t::EMPTY) {
         result.push_back(candidate);
       } else {
-        color_t candidate_color = get_color(p);
+        const color_t candidate_color = get_color(p);
         // If the are attacking add the position
         if (candidate_color != color) { result.push_back(candidate); }
 
@@ -197,12 +196,11 @@ inline std::vector<uint8_t> generate_sliding(
 inline std::vector<uint8_t> generate_jumping(
     const std::array<uint8_t, 8>& offsets,
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t color,
     const uint8_t index)
 {
   std::vector<uint8_t> result;
-  result.reserve(offsets_k.size());
-
-  color_t color = get_color(board[index]);
+  result.reserve(offsets_k.size() + 4);  // NOTE(max): +4 is for the castling
 
   for (const auto I : offsets) {
     const uint8_t candidate = index + I;
@@ -227,9 +225,11 @@ inline std::vector<uint8_t> generate_jumping(
 
 inline std::vector<uint8_t> generate_rook(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t color,
     const uint8_t index)
 {
-  std::vector<uint8_t> result = generate_sliding(directions_rook, board, index);
+  std::vector<uint8_t> result =
+      generate_sliding(directions_rook, board, color, index);
 
   assert(result.size() <= 14);
 
@@ -239,9 +239,11 @@ inline std::vector<uint8_t> generate_rook(
 
 inline std::vector<uint8_t> generate_bishop(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t color,
     const uint8_t index)
 {
-  std::vector<uint8_t> res = generate_sliding(directions_bishop, board, index);
+  std::vector<uint8_t> res =
+      generate_sliding(directions_bishop, board, color, index);
 
   assert(res.size() <= 16);
 
@@ -251,9 +253,10 @@ inline std::vector<uint8_t> generate_bishop(
 
 inline std::vector<uint8_t> generate_knight(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t c,
     const uint8_t index)
 {
-  std::vector<uint8_t> result = generate_jumping(offsets_n, board, index);
+  std::vector<uint8_t> result = generate_jumping(offsets_n, board, c, index);
 
   return result;
 }
@@ -261,21 +264,57 @@ inline std::vector<uint8_t> generate_knight(
 
 inline std::vector<uint8_t> generate_king(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-    const uint8_t index)
+    const uint8_t index,
+    const color_t color,
+    const uint8_t castling)
 {
-  std::vector<uint8_t> result = generate_jumping(offsets_k, board, index);
+  std::vector<uint8_t> res = generate_jumping(offsets_k, board, color, index);
 
-  return result;
+  switch (color) {
+    case color_t::WHITE:
+      if ((castling & WQ) && board[0x01] == piece_t::EMPTY &&
+          board[0x02] == piece_t::EMPTY && board[0x03] == piece_t::EMPTY) {
+        // Queen side available
+        res.push_back(0x02);
+      }
+
+      if ((castling & WK) && board[0x05] == piece_t::EMPTY &&
+          board[0x06] == piece_t::EMPTY) {
+        // King side available
+        res.push_back(0x06);
+      }
+      break;
+    case color_t::BLACK:
+      if ((castling & BQ) && board[0x71] == piece_t::EMPTY &&
+          board[0x72] == piece_t::EMPTY && board[0x73] == piece_t::EMPTY) {
+        // Queen side available
+        res.push_back(0x72);
+      }
+
+      if ((castling & BK) && board[0x75] == piece_t::EMPTY &&
+          board[0x76] == piece_t::EMPTY) {
+        // King side available
+        res.push_back(0x76);
+      }
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  return res;
 }
 
 
 inline std::vector<uint8_t> generate_queen(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
+    const color_t color,
     const uint8_t index)
 {
   std::vector<uint8_t> result;
-  std::vector<uint8_t> h_and_v_moves = generate_rook(board, index);
-  std::vector<uint8_t> diagonal_moves = generate_bishop(board, index);
+  std::vector<uint8_t> h_and_v_moves = generate_rook(board, color, index);
+  std::vector<uint8_t> diagonal_moves = generate_bishop(board, color, index);
 
   result.insert(result.end(), std::make_move_iterator(h_and_v_moves.begin()),
                 std::make_move_iterator(h_and_v_moves.end()));
@@ -304,35 +343,46 @@ inline std::vector<uint8_t> generate_pseudo_legal_moves(
       result =
           generate_b_pawn(board, index, board_state.en_passant_target_square);
       break;
-
     case piece_t::W_PAWN:
       result =
           generate_w_pawn(board, index, board_state.en_passant_target_square);
       break;
 
     case piece_t::B_ROOK:
+      result = generate_rook(board, color_t::BLACK, index);
+      break;
     case piece_t::W_ROOK:
-      result = generate_rook(board, index);
+      result = generate_rook(board, color_t::WHITE, index);
       break;
 
     case piece_t::B_KNIGHT:
+      result = generate_knight(board, color_t::BLACK, index);
+      break;
     case piece_t::W_KNIGHT:
-      result = generate_knight(board, index);
+      result = generate_knight(board, color_t::WHITE, index);
       break;
 
     case piece_t::B_BISHOP:
+      result = generate_bishop(board, color_t::BLACK, index);
+      break;
     case piece_t::W_BISHOP:
-      result = generate_bishop(board, index);
+      result = generate_bishop(board, color_t::WHITE, index);
       break;
 
     case piece_t::B_QUEEN:
+      result = generate_queen(board, color_t::BLACK, index);
+      break;
     case piece_t::W_QUEEN:
-      result = generate_queen(board, index);
+      result = generate_queen(board, color_t::WHITE, index);
       break;
 
     case piece_t::B_KING:
+      result = generate_king(board, index, color_t::BLACK,
+                             board_state.available_castling);
+      break;
     case piece_t::W_KING:
-      result = generate_king(board, index);
+      result = generate_king(board, index, color_t::WHITE,
+                             board_state.available_castling);
       break;
 
     default:

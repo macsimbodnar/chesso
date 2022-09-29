@@ -20,6 +20,12 @@ static_assert(false);
 static constexpr size_t BOARD_ARRAY_SIZE = 128;
 static constexpr uint8_t INVALID_BOARD_POS = 127;
 
+// Castling rights
+static constexpr uint8_t WQ = 0b0000001;
+static constexpr uint8_t WK = 0b0000010;
+static constexpr uint8_t BQ = 0b0000100;
+static constexpr uint8_t BK = 0b0001000;
+
 enum class color_t
 {
   BLACK = 0x01000000,

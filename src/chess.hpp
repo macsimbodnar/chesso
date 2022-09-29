@@ -33,11 +33,6 @@
 
 static constexpr char FEN_INIT_POS[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-static constexpr uint8_t WQ = 0b0000001;
-static constexpr uint8_t WK = 0b0000010;
-static constexpr uint8_t BQ = 0b0000100;
-static constexpr uint8_t BK = 0b0001000;
-
 
 class chess_t
 {
@@ -75,13 +70,69 @@ public:
     assert(board_state.board[from_index] != piece_t::INVALID);
     assert(board_state.board[from_index] != piece_t::EMPTY);
 
-    // Set the en passant
+
+    const piece_t piece = board_state.board[from_index];
     uint8_t en_passant = INVALID_BOARD_POS;
-    if (board_state.board[from_index] == piece_t::W_PAWN) {
-      if ((dest_index - from_index) == 0x20) { en_passant = from_index + 0x10; }
-    }
-    if (board_state.board[from_index] == piece_t::B_PAWN) {
-      if ((from_index - dest_index) == 0x20) { en_passant = from_index - 0x10; }
+
+    switch (piece) {
+      case piece_t::W_PAWN:
+        if ((dest_index - from_index) == 0x20) {
+          // Set the en passant
+          en_passant = from_index + 0x10;
+        }
+        break;
+      case piece_t::B_PAWN:
+        if ((from_index - dest_index) == 0x20) {
+          // Set the en passant
+          en_passant = from_index - 0x10;
+        }
+        break;
+
+      case piece_t::B_KING:
+        // Remove the castling right
+        board_state.available_castling &= ~(BQ | BK);
+        break;
+
+      case piece_t::W_KING:
+        // Remove the castling right
+        board_state.available_castling &= ~(WQ | WK);
+        break;
+
+      case piece_t::B_ROOK:
+        if (from_index == 0x70) {
+          // Remove the castling right
+          board_state.available_castling &= ~BQ;
+        }
+
+        if (from_index == 0x77) {
+          // Remove the castling right
+          board_state.available_castling &= ~BK;
+        }
+        break;
+
+      case piece_t::W_ROOK:
+        if (from_index == 0x00) {
+          // Remove the castling right
+          board_state.available_castling &= ~WQ;
+        }
+
+        if (from_index == 0x07) {
+          // Remove the castling right
+          board_state.available_castling &= ~WK;
+        }
+        break;
+
+      case piece_t::B_KNIGHT:
+      case piece_t::W_KNIGHT:
+      case piece_t::B_BISHOP:
+      case piece_t::W_BISHOP:
+      case piece_t::B_QUEEN:
+      case piece_t::W_QUEEN:
+        break;
+
+      default:
+        assert(false);
+        break;
     }
 
     board_state.en_passant_target_square = en_passant;
