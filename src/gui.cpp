@@ -190,99 +190,103 @@ void gui_t::on_init(void*)
 }
 
 
-void gui_t::on_update(void*)
+void gui_t::update()
 {
-  {
-    /***************************************************************************
-     * MOUSE
-     **************************************************************************/
-    const auto mouse = mouse_state();
+  const auto mouse = mouse_state();
 
-    if (is_mouse_in(BOARD_RECT)) {
-      const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
-      const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
-
-      const position_t target_pos = coordinates_to_postion(x, y);
-      const piece_info_t piece_i =
-          chess.get_piece_info(target_pos.file, target_pos.rank);
-
-      // Piece holding
-      if (piece_i.piece != piece_t::EMPTY) {
-        if (mouse.left_button.state == button_key_t::DOWN &&
-            !mouse_holding.selected) {
-          mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
-          mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
-          mouse_holding.selected = true;
-          mouse_holding.info = piece_i;
-
-          // Play the soft sound
-          play_sound(sound_fx[1]);
-        }
-      }
-
-      // Reset the selected state
-      if (mouse.left_button.state == button_key_t::UP &&
-          mouse_holding.selected) {
-        const uint8_t sel_f = mouse_holding.info.position.file;
-        const uint8_t sel_r = mouse_holding.info.position.rank;
-        const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
-
-        if (x != selected.x || y != selected.y) {
-          // In this case we want to unselect the square
-          selected_square.selected = false;
-          selected_square.x = 0;
-          selected_square.y = 0;
-          selected_square.rect = {0};
-          suggested_positions.clear();
-        }
-
-        // Set the piece to the destination column when release
-        const position_t dest = coordinates_to_postion(x, y);
-
-        if (dest.file != sel_f || dest.rank != sel_r) {
-          chess.move(sel_f, sel_r, dest.file, dest.rank);
-        }
-
-        mouse_holding.selected = false;
-        mouse_holding.offset_x = 0;
-        mouse_holding.offset_y = 0;
-
-        // Play sound
-        play_sound(sound_fx[3]);
-      }
-
-      // Click on the square
-      if (mouse.left_button.click) {
-        if (selected_square.selected && selected_square.x == x &&
-            selected_square.y == y) {
-          selected_square.selected = false;
-          selected_square.x = 0;
-          selected_square.y = 0;
-          selected_square.rect = {0};
-          suggested_positions.clear();
-        } else {
-          selected_square.x = x;
-          selected_square.y = y;
-          selected_square.selected = true;
-          selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
-                                  SQUARE_SIZE};
-
-          // Get the available moves
-          const position_t selected_pos = coordinates_to_postion(x, y);
-          suggested_positions =
-              chess.get_valid_moves(selected_pos.file, selected_pos.rank);
-        }
-      }
-    }
-
-    {
-      // BUTTONS CHECK FOR CLICK
-      for (auto& B : buttons) {
-        on_click_button(B);
-      }
+  /***************************************************************************
+   * RIGHT PANEL
+   **************************************************************************/
+  if (is_mouse_in(RIGHT_PANEL_RECT)) {
+    // BUTTONS CHECK FOR CLICK
+    for (auto& B : buttons) {
+      on_click_button(B);
     }
   }
 
+  /***************************************************************************
+   * MAIN BOARD
+   **************************************************************************/
+  if (is_mouse_in(BOARD_RECT)) {
+    const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
+    const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
+
+    const position_t target_pos = coordinates_to_postion(x, y);
+    const piece_info_t piece_i =
+        chess.get_piece_info(target_pos.file, target_pos.rank);
+
+    // Piece holding
+    if (piece_i.piece != piece_t::EMPTY) {
+      if (mouse.left_button.state == button_key_t::DOWN &&
+          !mouse_holding.selected) {
+        mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
+        mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
+        mouse_holding.selected = true;
+        mouse_holding.info = piece_i;
+
+        // Play the soft sound
+        play_sound(sound_fx[1]);
+      }
+    }
+
+    // Reset the selected state
+    if (mouse.left_button.state == button_key_t::UP && mouse_holding.selected) {
+      const uint8_t sel_f = mouse_holding.info.position.file;
+      const uint8_t sel_r = mouse_holding.info.position.rank;
+      const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
+
+      if (x != selected.x || y != selected.y) {
+        // In this case we want to unselect the square
+        selected_square.selected = false;
+        selected_square.x = 0;
+        selected_square.y = 0;
+        selected_square.rect = {0};
+        suggested_positions.clear();
+      }
+
+      // Set the piece to the destination column when release
+      const position_t dest = coordinates_to_postion(x, y);
+
+      if (dest.file != sel_f || dest.rank != sel_r) {
+        chess.move(sel_f, sel_r, dest.file, dest.rank);
+      }
+
+      mouse_holding.selected = false;
+      mouse_holding.offset_x = 0;
+      mouse_holding.offset_y = 0;
+
+      // Play sound
+      play_sound(sound_fx[3]);
+    }
+
+    // Click on the square
+    if (mouse.left_button.click) {
+      if (selected_square.selected && selected_square.x == x &&
+          selected_square.y == y) {
+        selected_square.selected = false;
+        selected_square.x = 0;
+        selected_square.y = 0;
+        selected_square.rect = {0};
+        suggested_positions.clear();
+      } else {
+        selected_square.x = x;
+        selected_square.y = y;
+        selected_square.selected = true;
+        selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
+                                SQUARE_SIZE};
+
+        // Get the available moves
+        const position_t selected_pos = coordinates_to_postion(x, y);
+        suggested_positions =
+            chess.get_valid_moves(selected_pos.file, selected_pos.rank);
+      }
+    }
+  }
+}
+
+
+void gui_t::draw()
+{
   const pixel_t text_color = {0x000000FF};
 
   {
@@ -371,4 +375,11 @@ void gui_t::on_update(void*)
     set_current_viewport(BOARD_RECT);
     draw_board();
   }
+}
+
+
+void gui_t::on_update(void*)
+{
+  update();
+  draw();
 }

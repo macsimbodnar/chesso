@@ -56,6 +56,8 @@ public:
 private:
   void draw_board();
   void draw_coordinates();
+  void update();
+  void draw();
 
   void on_init(void*) override;
   void on_update(void*) override;
