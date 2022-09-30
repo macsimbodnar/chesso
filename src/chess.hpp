@@ -56,6 +56,42 @@ public:
     board_state.board[index] = piece;
   }
 
+  inline uint8_t check_en_passant(const uint8_t from_index,
+                                  const uint8_t to_index,
+                                  const piece_t piece) const
+  {
+    uint8_t en_passant = INVALID_BOARD_POS;
+
+    const color_t color = get_color(piece);
+    const piece_t lp = board_state.board[to_index - 0x01];
+    const piece_t rp = board_state.board[to_index + 0x01];
+
+
+    switch (color) {
+      case color_t::WHITE:
+
+        if (((to_index - from_index) == 0x20) &&
+            (lp == piece_t::B_PAWN || rp == piece_t::B_PAWN)) {
+          en_passant = from_index + 0x10;
+        }
+        break;
+
+      case color_t::BLACK:
+        if (((from_index - to_index) == 0x20) &&
+            (lp == piece_t::W_PAWN || rp == piece_t::W_PAWN)) {
+          en_passant = from_index - 0x10;
+        }
+        break;
+
+      default:
+        assert(false);
+        break;
+    }
+
+
+    return en_passant;
+  }
+
   inline void move(const position_t& from, const position_t& to)
   {
     print_move(from, to);
@@ -74,16 +110,8 @@ public:
 
     switch (piece) {
       case piece_t::W_PAWN:
-        if ((dest_index - from_index) == 0x20) {
-          // Set the en passant
-          en_passant = from_index + 0x10;
-        }
-        break;
       case piece_t::B_PAWN:
-        if ((from_index - dest_index) == 0x20) {
-          // Set the en passant
-          en_passant = from_index - 0x10;
-        }
+        en_passant = check_en_passant(from_index, dest_index, piece);
         break;
 
       case piece_t::B_KING:
