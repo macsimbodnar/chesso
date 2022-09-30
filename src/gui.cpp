@@ -168,7 +168,7 @@ void gui_t::on_init(void*)
   const int32_t border = 5;
   const pixel_t button_color = {109, 64, 24, 255};
 
-  // Reset
+  // Flip
   rect_t reset_b;
   reset_b.w = (RIGHT_PANEL_RECT.w / 2) - border * 2;
   reset_b.h = 30;
@@ -176,24 +176,24 @@ void gui_t::on_init(void*)
   reset_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
 
   buttons.push_back(
-      create_button(RIGHT_PANEL_RECT, reset_b, button_color, "Reset", [&]() {
-        // Reset lambda
-        chess.load(FEN_INIT_POS);
-        mouse_holding.selected = false;
-        selected_square.selected = false;
-        suggested_positions.clear();
+      create_button(RIGHT_PANEL_RECT, reset_b, button_color, "Flip", [&]() {
+        // Flip callback
+        flipped_board = !flipped_board;
       }));
 
-  // Flip
+  // Reset
   rect_t flip_b;
   flip_b.w = reset_b.w;
   flip_b.h = 30;
   flip_b.x = RIGHT_PANEL_RECT.w - border - flip_b.w;
   flip_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
   buttons.push_back(
-      create_button(RIGHT_PANEL_RECT, flip_b, button_color, "Flip", [&]() {
-        // Flip callback
-        flipped_board = !flipped_board;
+      create_button(RIGHT_PANEL_RECT, flip_b, button_color, "Reset", [&]() {
+        // Reset lambda
+        chess.load(FEN_INIT_POS);
+        mouse_holding.selected = false;
+        selected_square.selected = false;
+        suggested_positions.clear();
       }));
 }
 
