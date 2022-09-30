@@ -120,13 +120,11 @@ struct board_state_t
 };
 
 
-inline void print_move(const uint8_t from_file,
-                       const uint8_t from_rank,
-                       const uint8_t to_file,
-                       const uint8_t to_rank)
+inline void print_move(const position_t &from,
+                       const position_t& to)
 {
-  LOG_I << std::string(1, 'a' + from_file) << from_rank + 1 << " -> "
-        << std::string(1, 'a' + to_file) << to_rank + 1 << END_I;
+  LOG_I << std::string(1, 'a' + from.file) << from.rank + 1 << " -> "
+        << std::string(1, 'a' + to.file) << to.rank + 1 << END_I;
 }
 
 inline void print_index(const uint8_t index)
@@ -147,12 +145,12 @@ inline std::string PTR2STR(T* ptr)
 }
 
 
-inline uint8_t to_index(const uint8_t file, const uint8_t rank)
+inline uint8_t to_index(const position_t& position)
 {
-  assert(file >= 0 && file < 8);
-  assert(rank >= 0 && rank < 8);
+  assert(position.file >= 0 && position.file < 8);
+  assert(position.rank >= 0 && position.rank < 8);
 
-  const uint8_t index = (rank << 4) + file;
+  const uint8_t index = (position.rank << 4) + position.file;
   assert(index < BOARD_ARRAY_SIZE);
   assert(!(index & 0x88));
 
@@ -263,7 +261,7 @@ inline uint8_t algebraic_to_index(const std::string& p)
   pos.file = file - 'a';
   pos.rank = rank - '1';
 
-  result = to_index(pos.file, pos.rank);
+  result = to_index(pos);
 
   return result;
 }

@@ -210,8 +210,8 @@ void gui_t::update()
   if (is_mouse_in(BOARD_RECT)) {
     // Calculate the mouse current tail
     const coordinates_t mouse_tail_coord = {
-        ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE),
-        ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE)};
+        uint8_t((mouse.x - BOARD_RECT.x) / SQUARE_SIZE),
+        uint8_t((mouse.y - BOARD_RECT.y) / SQUARE_SIZE)};
 
     // Get the file and rank
     const position_t mouse_board_position =
@@ -222,6 +222,7 @@ void gui_t::update()
 
     // Piece holding
     if (piece_i.piece != piece_t::EMPTY) {
+      // If we pointing to a non selected piece
       if (mouse.left_button.state == button_key_t::DOWN &&
           !mouse_holding.selected) {
         mouse_holding.offset_x = mouse.x - (mouse_tail_coord.x * SQUARE_SIZE);
@@ -236,12 +237,10 @@ void gui_t::update()
 
     // Reset the selected state
     if (mouse.left_button.state == button_key_t::UP && mouse_holding.selected) {
-      const uint8_t sel_f = mouse_holding.info.position.file;
-      const uint8_t sel_r = mouse_holding.info.position.rank;
-      const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
+      const coordinates_t selected_coord =
+          position_to_coordinates(mouse_holding.info.position);
 
-      if (mouse_tail_coord.x != selected.x ||
-          mouse_tail_coord.y != selected.y) {
+      if (mouse_tail_coord != selected_coord) {
         // In this case we want to unselect the square
         selected_square.selected = false;
         selected_square.x = 0;
@@ -251,10 +250,9 @@ void gui_t::update()
       }
 
       // Set the piece to the destination column when release
-      const position_t dest = coordinates_to_postion(mouse_tail_coord);
-
-      if (dest.file != sel_f || dest.rank != sel_r) {
-        chess.move(sel_f, sel_r, dest.file, dest.rank);
+      if (mouse_tail_coord != selected_coord) {
+        const position_t dest = coordinates_to_postion(mouse_tail_coord);
+        chess.move(mouse_holding.info.position, dest);
       }
 
       mouse_holding.selected = false;
@@ -285,8 +283,7 @@ void gui_t::update()
         // Get the available moves
         const position_t selected_pos =
             coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
-        suggested_positions =
-            chess.get_valid_moves(selected_pos.file, selected_pos.rank);
+        suggested_positions = chess.get_valid_moves(selected_pos);
       }
     }
   }

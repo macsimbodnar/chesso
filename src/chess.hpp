@@ -50,23 +50,20 @@ public:
   void load(const std::string& FEN);
 
 
-  inline void set(const uint8_t file, const uint8_t rank, const piece_t piece)
+  inline void set(const position_t& position, const piece_t piece)
   {
-    const uint8_t index = to_index(file, rank);
+    const uint8_t index = to_index(position);
     board_state.board[index] = piece;
   }
 
-  inline void move(const uint8_t from_file,
-                   const uint8_t from_rank,
-                   const uint8_t to_file,
-                   const uint8_t to_rank)
+  inline void move(const position_t& from, const position_t& to)
   {
-    print_move(from_file, from_rank, to_file, to_rank);
+    print_move(from, to);
 
-    assert(from_rank != to_rank || from_file != to_file);
+    assert(from.rank != to.rank || from.file != to.file);
 
-    const uint8_t from_index = to_index(from_file, from_rank);
-    const uint8_t dest_index = to_index(to_file, to_rank);
+    const uint8_t from_index = to_index(from);
+    const uint8_t dest_index = to_index(to);
 
     assert(board_state.board[from_index] != piece_t::INVALID);
     assert(board_state.board[from_index] != piece_t::EMPTY);
@@ -144,12 +141,11 @@ public:
   }
 
 
-  inline std::vector<position_t> get_valid_moves(const uint8_t file,
-                                                 const uint8_t rank) const
+  inline std::vector<position_t> get_valid_moves(const position_t& pos) const
   {
     std::vector<position_t> result;
 
-    const uint8_t index = to_index(file, rank);
+    const uint8_t index = to_index(pos);
 
     // Skip if empty
     if (board_state.board[index] == piece_t::EMPTY) { return result; }
@@ -237,7 +233,7 @@ public:
 
   inline piece_info_t get_piece_info(const position_t& position) const
   {
-    const uint8_t index = to_index(position.file, position.rank);
+    const uint8_t index = to_index(position);
 
     piece_info_t info;
     info.piece = board_state.board[index];

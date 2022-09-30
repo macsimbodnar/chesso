@@ -95,10 +95,13 @@ void chess_t::load(const std::string& FEN)
       case 'b':
       case 'r':
       case 'q':
-      case 'k':
-        set(file, rank, c_to_piece(c));
+      case 'k': {
+        position_t pos;
+        pos.file = file;
+        pos.rank = rank;
+        set(pos, c_to_piece(c));
         ++file;
-        break;
+      } break;
 
       default:
         // We get a non valid string
