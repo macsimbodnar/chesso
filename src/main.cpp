@@ -1,6 +1,6 @@
 #include "gui.hpp"
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
   gui_t gui;
 

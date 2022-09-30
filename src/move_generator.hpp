@@ -85,9 +85,9 @@ inline std::vector<uint8_t> generate_b_pawn(
   {
     // Check for attack right
     const uint8_t candidate = index - 0x11;
-    bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE)) ||
-        (candidate == en_passant);
+    bool condition = (!(candidate & 0x88) &&
+                      (U32(board[candidate]) & U32(color_t::WHITE))) ||
+                     (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -95,9 +95,9 @@ inline std::vector<uint8_t> generate_b_pawn(
   {
     // Check for attack left
     const uint8_t candidate = index - 0x0F;
-    bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::WHITE)) ||
-        (candidate == en_passant);
+    bool condition = (!(candidate & 0x88) &&
+                      (U32(board[candidate]) & U32(color_t::WHITE))) ||
+                     (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -135,9 +135,9 @@ inline std::vector<uint8_t> generate_w_pawn(
   {
     // Check for attack right
     const uint8_t candidate = index + 0x11;
-    bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK)) ||
-        (candidate == en_passant);
+    bool condition = (!(candidate & 0x88) &&
+                      (U32(board[candidate]) & U32(color_t::BLACK))) ||
+                     (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -145,9 +145,9 @@ inline std::vector<uint8_t> generate_w_pawn(
   {
     // Check for attack left
     const uint8_t candidate = index + 0x0F;
-    bool condition =
-        !(candidate & 0x88) && (U32(board[candidate]) & U32(color_t::BLACK)) ||
-        (candidate == en_passant);
+    bool condition = (!(candidate & 0x88) &&
+                      (U32(board[candidate]) & U32(color_t::BLACK))) ||
+                     (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
   }
@@ -443,7 +443,7 @@ inline std::vector<uint8_t> generate_attack_vector(board_state_t& board_state,
       }
     }
   }
-  
+
   // Reset the king to the board
   board_state.board[king_pos] = king;
 

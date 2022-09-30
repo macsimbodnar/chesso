@@ -6,6 +6,6 @@ target_link_libraries(Chesso pixello)
 target_include_directories(Chesso PRIVATE ../pixello/src)
 
 # Add the binary as test so we can run it with ctest --verbose
-add_test(NAME Chesso 
-         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/Chesso 
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..)
+add_test(NAME Chesso
+  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/Chesso
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..)
