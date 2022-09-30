@@ -112,11 +112,6 @@ void gui_t::draw_board()
   }
 }
 
-void tmp()
-{
-  LOG_I << "CIAO" << END_I;
-}
-
 void gui_t::on_init(void*)
 {
   /**
@@ -161,7 +156,37 @@ void gui_t::on_init(void*)
     files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
   }
 
-  // buttons.push_back(create_button({0, 0, 100, 50}, 0xFFFF00FF, "CIAO", tmp));
+  // Buttons
+  const int32_t border = 5;
+  const pixel_t button_color = {109, 64, 24, 255};
+
+  // Reset
+  rect_t reset_b;
+  reset_b.w = (RIGHT_PANEL_RECT.w / 2) - border * 2;
+  reset_b.h = 30;
+  reset_b.x = border;
+  reset_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
+
+  buttons.push_back(
+      create_button(RIGHT_PANEL_RECT, reset_b, button_color, "Reset", [&]() {
+        // Reset lambda
+        chess.load(FEN_INIT_POS);
+        mouse_holding.selected = false;
+        selected_square.selected = false;
+        suggested_positions.clear();
+      }));
+
+  // Flip
+  rect_t flip_b;
+  flip_b.w = reset_b.w;
+  flip_b.h = 30;
+  flip_b.x = RIGHT_PANEL_RECT.w - border - flip_b.w;
+  flip_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
+  buttons.push_back(
+      create_button(RIGHT_PANEL_RECT, flip_b, button_color, "Flip", [&]() {
+        // Flip callback
+        flipped_board = !flipped_board;
+      }));
 }
 
 
@@ -172,19 +197,6 @@ void gui_t::on_update(void*)
      * MOUSE
      **************************************************************************/
     const auto mouse = mouse_state();
-
-    // Reset the board if click on the right panel
-    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.left_button.click) {
-      chess.load(FEN_INIT_POS);
-      mouse_holding.selected = false;
-      selected_square.selected = false;
-      suggested_positions.clear();
-    }
-
-    // Flip the board if click on the right panel with the right button
-    if (is_mouse_in(RIGHT_PANEL_RECT) && mouse.right_button.click) {
-      flipped_board = !flipped_board;
-    }
 
     if (is_mouse_in(BOARD_RECT)) {
       const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
@@ -209,7 +221,8 @@ void gui_t::on_update(void*)
       }
 
       // Reset the selected state
-      if (mouse.left_button.state == button_key_t::UP && mouse_holding.selected) {
+      if (mouse.left_button.state == button_key_t::UP &&
+          mouse_holding.selected) {
         const uint8_t sel_f = mouse_holding.info.position.file;
         const uint8_t sel_r = mouse_holding.info.position.rank;
         const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
@@ -264,9 +277,9 @@ void gui_t::on_update(void*)
 
     {
       // BUTTONS CHECK FOR CLICK
-      // for (auto& B : buttons) {
-      //   on_click_button(B);
-      // }
+      for (auto& B : buttons) {
+        on_click_button(B);
+      }
     }
   }
 
@@ -346,9 +359,9 @@ void gui_t::on_update(void*)
                      half_clock_texture.h + 50);
 
 
-    // for (const auto& B : buttons) {
-    //   draw_button(B);
-    // }
+    for (const auto& B : buttons) {
+      draw_button(B);
+    }
   }
 
   {

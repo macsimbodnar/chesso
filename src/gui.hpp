@@ -44,7 +44,7 @@ private:
   std::vector<position_t> suggested_positions;
   bool flipped_board = false;
   std::map<char, texture_t> files_and_ranks_textures;
-  // std::vector<button_t> buttons;
+  std::vector<button_t> buttons;
 
 public:
   gui_t()
