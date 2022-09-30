@@ -29,9 +29,6 @@ struct selected_square_t
 };
 
 
-
-
-
 class gui_t : public pixello
 {
 private:
@@ -75,6 +72,12 @@ private:
     return result;
   }
 
+  inline position_t coordinates_to_postion(const coordinates_t& c)
+  {
+    return coordinates_to_postion(c.x, c.y);
+  }
+
+
   inline coordinates_t position_to_coordinates(const uint8_t file,
                                                const uint8_t rank)
   {
@@ -85,5 +88,8 @@ private:
     return result;
   }
 
-
+  inline coordinates_t position_to_coordinates(const position_t& p)
+  {
+    return position_to_coordinates(p.file, p.rank);
+  }
 };

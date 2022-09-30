@@ -63,12 +63,37 @@ struct position_t
   uint8_t rank;
 };
 
+inline bool operator==(const position_t& lhs, const position_t& rhs)
+{
+  bool result = false;
+  if (lhs.file == rhs.file && lhs.rank == rhs.rank) { result = true; }
+  return result;
+}
+
+inline bool operator!=(const position_t& lhs, const position_t& rhs)
+{
+  bool result = !(lhs == rhs);
+  return result;
+}
 
 struct coordinates_t
 {
   uint8_t x;
   uint8_t y;
 };
+
+inline bool operator==(const coordinates_t& lhs, const coordinates_t& rhs)
+{
+  bool result = false;
+  if (lhs.x == rhs.x && lhs.y == rhs.y) { result = true; }
+  return result;
+}
+
+inline bool operator!=(const coordinates_t& lhs, const coordinates_t& rhs)
+{
+  bool result = !(lhs == rhs);
+  return result;
+}
 
 
 struct move_t
