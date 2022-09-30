@@ -8,6 +8,7 @@
 #include "move_generator.hpp"
 #include "utils.hpp"
 
+
 // clang-format off
 /**
  * 
@@ -187,6 +188,24 @@ public:
     result.reserve(moves.size());
 
     for (const auto I : moves) {
+      result.push_back(to_position(I));
+    }
+
+    return result;
+  }
+
+
+  inline std::vector<position_t> get_attacks()
+  {
+    color_t c = board_state.active_color == color_t::WHITE ? color_t::BLACK
+                                                           : color_t::WHITE;
+
+    const auto attacks = generate_attack_vector(board_state, c);
+
+    std::vector<position_t> result;
+    result.reserve(attacks.size());
+
+    for (const auto I : attacks) {
       result.push_back(to_position(I));
     }
 

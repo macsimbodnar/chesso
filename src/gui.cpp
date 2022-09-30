@@ -112,6 +112,10 @@ void gui_t::draw_board()
   }
 }
 
+void tmp()
+{
+  LOG_I << "CIAO" << END_I;
+}
 
 void gui_t::on_init(void*)
 {
@@ -156,6 +160,8 @@ void gui_t::on_init(void*)
   for (char i = '1'; i < '9'; ++i) {
     files_and_ranks_textures[i] = create_text(std::string(1, i), 0x000000FF);
   }
+
+  // buttons.push_back(create_button({0, 0, 100, 50}, 0xFFFF00FF, "CIAO", tmp));
 }
 
 
@@ -190,7 +196,7 @@ void gui_t::on_update(void*)
 
       // Piece holding
       if (piece_i.piece != piece_t::EMPTY) {
-        if (mouse.left_button.state == button_t::DOWN &&
+        if (mouse.left_button.state == button_key_t::DOWN &&
             !mouse_holding.selected) {
           mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
           mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
@@ -203,7 +209,7 @@ void gui_t::on_update(void*)
       }
 
       // Reset the selected state
-      if (mouse.left_button.state == button_t::UP && mouse_holding.selected) {
+      if (mouse.left_button.state == button_key_t::UP && mouse_holding.selected) {
         const uint8_t sel_f = mouse_holding.info.position.file;
         const uint8_t sel_r = mouse_holding.info.position.rank;
         const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
@@ -254,6 +260,13 @@ void gui_t::on_update(void*)
               chess.get_valid_moves(selected_pos.file, selected_pos.rank);
         }
       }
+    }
+
+    {
+      // BUTTONS CHECK FOR CLICK
+      // for (auto& B : buttons) {
+      //   on_click_button(B);
+      // }
     }
   }
 
@@ -331,6 +344,11 @@ void gui_t::on_update(void*)
     draw_texture(full_clock_texture, 10,
                  +turn_texture.h + castling_texture.h + en_passant_texture.h +
                      half_clock_texture.h + 50);
+
+
+    // for (const auto& B : buttons) {
+    //   draw_button(B);
+    // }
   }
 
   {

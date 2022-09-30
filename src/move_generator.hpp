@@ -395,23 +395,39 @@ inline std::vector<uint8_t> generate_pseudo_legal_moves(
 }
 
 
-inline std::vector<move_t> generate_legal_moves(
-    const board_state_t& board_state)
+inline std::vector<uint8_t> generate_attack_vector(board_state_t& board_state,
+                                                   const color_t target_color)
 {
-  std::vector<move_t> result;
-
-  /*****************************************************************************
-   * Generate enemy attacks vector
-   ****************************************************************************/
   std::vector<uint8_t> attacks;
   attacks.reserve(64);  // worst case
+
+  // Removing the king from the board.
+  uint8_t king_pos = 0x7F;
+  piece_t king = piece_t::EMPTY;
+  for (uint8_t i = 0; i < board_state.board.size(); ++i) {
+    const piece_t p = board_state.board[i];
+    if ((p == piece_t::B_KING || p == piece_t::W_KING) &&
+        (board_state.active_color != target_color)) {
+      // Store the pos
+      king_pos = i;
+      king = board_state.board[i];
+
+      // Unset the king
+      board_state.board[i] = piece_t::EMPTY;
+      break;
+    }
+  }
+
+  // Check we set correct king pos
+  assert(!(king_pos & 0x88));
+  assert(king == piece_t::B_KING || king == piece_t::W_KING);
 
   for (uint8_t i = 0; i < board_state.board.size(); ++i) {
     const piece_t p = board_state.board[i];
 
     // Iterate over opposite color pieces
     if (p != piece_t::INVALID && p != piece_t::EMPTY &&
-        board_state.active_color != get_color(p)) {
+        target_color != get_color(p)) {
       const auto moves = generate_pseudo_legal_moves(board_state, i);
 
       for (const auto& M : moves) {
@@ -427,6 +443,23 @@ inline std::vector<move_t> generate_legal_moves(
       }
     }
   }
+  
+  // Reset the king to the board
+  board_state.board[king_pos] = king;
+
+  return attacks;
+}
+
+
+inline std::vector<move_t> generate_legal_moves(
+    const board_state_t& board_state)
+{
+  std::vector<move_t> result;
+
+  /*****************************************************************************
+   * Generate enemy attacks vector
+   ****************************************************************************/
+
 
   /*****************************************************************************
    * Check if king is under attack

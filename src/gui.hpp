@@ -5,7 +5,6 @@
 #include "log.hpp"
 #include "utils.hpp"
 
-
 static constexpr uint32_t SCREEN_W = 810;
 static constexpr uint32_t SCREEN_H = 510;
 static constexpr rect_t BOARD_RECT = {20, 10, 480, 480};
@@ -29,6 +28,10 @@ struct selected_square_t
   rect_t rect;
 };
 
+
+
+
+
 class gui_t : public pixello
 {
 private:
@@ -41,6 +44,7 @@ private:
   std::vector<position_t> suggested_positions;
   bool flipped_board = false;
   std::map<char, texture_t> files_and_ranks_textures;
+  // std::vector<button_t> buttons;
 
 public:
   gui_t()
@@ -80,4 +84,6 @@ private:
 
     return result;
   }
+
+
 };
