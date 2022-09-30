@@ -61,7 +61,15 @@ void gui_t::draw_board()
   }
 
   // Draw selected square
-  if (selected_square.selected) { draw_rect(selected_square.rect, 0x33333390); }
+  if (selected_square.selected) {
+    const coordinates_t square =
+        position_to_coordinates(selected_square.position);
+
+    rect_t rect = {square.x * SQUARE_SIZE, square.y * SQUARE_SIZE, SQUARE_SIZE,
+                   SQUARE_SIZE};
+
+    draw_rect(rect, 0x33333390);
+  }
 
   // Draw the current square
   if (is_mouse_in(BOARD_RECT)) {
@@ -243,9 +251,6 @@ void gui_t::update()
       if (mouse_tail_coord != selected_coord) {
         // In this case we want to unselect the square
         selected_square.selected = false;
-        selected_square.x = 0;
-        selected_square.y = 0;
-        selected_square.rect = {0};
         suggested_positions.clear();
       }
 
@@ -265,20 +270,14 @@ void gui_t::update()
 
     // Click on the square
     if (mouse.left_button.click) {
-      if (selected_square.selected && selected_square.x == mouse_tail_coord.x &&
-          selected_square.y == mouse_tail_coord.y) {
+      if (selected_square.selected &&
+          selected_square.position == mouse_board_position) {
+        // If click selected then unselect
         selected_square.selected = false;
-        selected_square.x = 0;
-        selected_square.y = 0;
-        selected_square.rect = {0};
         suggested_positions.clear();
       } else {
-        selected_square.x = mouse_tail_coord.x;
-        selected_square.y = mouse_tail_coord.y;
+        selected_square.position = mouse_board_position;
         selected_square.selected = true;
-        selected_square.rect = {mouse_tail_coord.x * SQUARE_SIZE,
-                                mouse_tail_coord.y * SQUARE_SIZE, SQUARE_SIZE,
-                                SQUARE_SIZE};
 
         // Get the available moves
         const position_t selected_pos =

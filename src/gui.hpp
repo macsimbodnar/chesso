@@ -23,9 +23,7 @@ struct piece_holding_t
 struct selected_square_t
 {
   bool selected = false;
-  int32_t x = 0;
-  int32_t y = 0;
-  rect_t rect;
+  position_t position;
 };
 
 
