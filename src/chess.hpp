@@ -235,10 +235,9 @@ public:
   }
 
 
-  inline piece_info_t get_piece_info(const uint8_t file,
-                                     const uint8_t rank) const
+  inline piece_info_t get_piece_info(const position_t& position) const
   {
-    const uint8_t index = to_index(file, rank);
+    const uint8_t index = to_index(position.file, position.rank);
 
     piece_info_t info;
     info.piece = board_state.board[index];

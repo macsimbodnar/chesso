@@ -192,7 +192,7 @@ void gui_t::on_init(void*)
 
 void gui_t::update()
 {
-  const auto mouse = mouse_state();
+  const mouse_t mouse = mouse_state();
 
   /***************************************************************************
    * RIGHT PANEL
@@ -208,19 +208,24 @@ void gui_t::update()
    * MAIN BOARD
    **************************************************************************/
   if (is_mouse_in(BOARD_RECT)) {
-    const uint8_t x = ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE);
-    const uint8_t y = ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE);
+    // Calculate the mouse current tail
+    const coordinates_t mouse_tail_coord = {
+        ((mouse.x - BOARD_RECT.x) / SQUARE_SIZE),
+        ((mouse.y - BOARD_RECT.y) / SQUARE_SIZE)};
 
-    const position_t target_pos = coordinates_to_postion(x, y);
-    const piece_info_t piece_i =
-        chess.get_piece_info(target_pos.file, target_pos.rank);
+    // Get the file and rank
+    const position_t mouse_board_position =
+        coordinates_to_postion(mouse_tail_coord);
+
+
+    const piece_info_t piece_i = chess.get_piece_info(mouse_board_position);
 
     // Piece holding
     if (piece_i.piece != piece_t::EMPTY) {
       if (mouse.left_button.state == button_key_t::DOWN &&
           !mouse_holding.selected) {
-        mouse_holding.offset_x = mouse.x - (x * SQUARE_SIZE);
-        mouse_holding.offset_y = mouse.y - (y * SQUARE_SIZE);
+        mouse_holding.offset_x = mouse.x - (mouse_tail_coord.x * SQUARE_SIZE);
+        mouse_holding.offset_y = mouse.y - (mouse_tail_coord.y * SQUARE_SIZE);
         mouse_holding.selected = true;
         mouse_holding.info = piece_i;
 
@@ -235,7 +240,8 @@ void gui_t::update()
       const uint8_t sel_r = mouse_holding.info.position.rank;
       const coordinates_t selected = position_to_coordinates(sel_f, sel_r);
 
-      if (x != selected.x || y != selected.y) {
+      if (mouse_tail_coord.x != selected.x ||
+          mouse_tail_coord.y != selected.y) {
         // In this case we want to unselect the square
         selected_square.selected = false;
         selected_square.x = 0;
@@ -245,7 +251,7 @@ void gui_t::update()
       }
 
       // Set the piece to the destination column when release
-      const position_t dest = coordinates_to_postion(x, y);
+      const position_t dest = coordinates_to_postion(mouse_tail_coord);
 
       if (dest.file != sel_f || dest.rank != sel_r) {
         chess.move(sel_f, sel_r, dest.file, dest.rank);
@@ -261,22 +267,24 @@ void gui_t::update()
 
     // Click on the square
     if (mouse.left_button.click) {
-      if (selected_square.selected && selected_square.x == x &&
-          selected_square.y == y) {
+      if (selected_square.selected && selected_square.x == mouse_tail_coord.x &&
+          selected_square.y == mouse_tail_coord.y) {
         selected_square.selected = false;
         selected_square.x = 0;
         selected_square.y = 0;
         selected_square.rect = {0};
         suggested_positions.clear();
       } else {
-        selected_square.x = x;
-        selected_square.y = y;
+        selected_square.x = mouse_tail_coord.x;
+        selected_square.y = mouse_tail_coord.y;
         selected_square.selected = true;
-        selected_square.rect = {x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE,
+        selected_square.rect = {mouse_tail_coord.x * SQUARE_SIZE,
+                                mouse_tail_coord.y * SQUARE_SIZE, SQUARE_SIZE,
                                 SQUARE_SIZE};
 
         // Get the available moves
-        const position_t selected_pos = coordinates_to_postion(x, y);
+        const position_t selected_pos =
+            coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
         suggested_positions =
             chess.get_valid_moves(selected_pos.file, selected_pos.rank);
       }
