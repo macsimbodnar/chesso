@@ -38,6 +38,8 @@ private:
   selected_square_t selected_square;
   std::vector<position_t> suggested_positions;
   bool flipped_board = false;
+  bool show_attack_vector = false;
+  std::vector<position_t> attack_vector;
   std::map<char, texture_t> files_and_ranks_textures;
   std::vector<button_t> buttons;
 

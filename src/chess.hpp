@@ -221,8 +221,9 @@ public:
 
   inline std::vector<position_t> get_attacks()
   {
-    color_t c = board_state.active_color == color_t::WHITE ? color_t::BLACK
-                                                           : color_t::WHITE;
+    const color_t c = (board_state.active_color == color_t::WHITE)
+                          ? color_t::BLACK
+                          : color_t::WHITE;
 
     const auto attacks = generate_attack_vector(board_state, c);
 

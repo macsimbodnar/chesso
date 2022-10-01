@@ -104,7 +104,17 @@ void gui_t::draw_board()
   // Draw suggestions
   if (selected_square.selected) {
     for (const auto& I : suggested_positions) {
-      const coordinates_t coord = position_to_coordinates(I.file, I.rank);
+      const coordinates_t coord = position_to_coordinates(I);
+      const int32_t x = (coord.x * SQUARE_SIZE) + SQUARE_SIZE / 2;
+      const int32_t y = (coord.y * SQUARE_SIZE) + SQUARE_SIZE / 2;
+      draw_circle(x, y, SQUARE_SIZE / 5, 0xFFAA10FF);
+    }
+  }
+
+  // Draw attack vector if enabled
+  if (show_attack_vector) {
+    for (const auto& I : attack_vector) {
+      const coordinates_t coord = position_to_coordinates(I);
       const int32_t x = (coord.x * SQUARE_SIZE) + SQUARE_SIZE / 2;
       const int32_t y = (coord.y * SQUARE_SIZE) + SQUARE_SIZE / 2;
       draw_circle(x, y, SQUARE_SIZE / 6, 0xFF0000FF);
@@ -154,6 +164,7 @@ void gui_t::on_init(void*)
   sound_fx[2] = load_sound("assets/sound/tick_3.wav");
   sound_fx[3] = load_sound("assets/sound/tick_4.wav");
   sound_fx[4] = load_sound("assets/sound/tick_5.wav");
+  sound_fx[5] = load_sound("assets/sound/click.wav");
 
   // Generate the files and ranks text textures
   for (char i = 'A'; i < 'I'; ++i) {
@@ -167,34 +178,51 @@ void gui_t::on_init(void*)
   // Buttons
   const int32_t border = 5;
   const pixel_t button_color = {109, 64, 24, 255};
+  const int32_t button_w = (RIGHT_PANEL_RECT.w / 2) - border - (border / 2);
+  const int32_t button_h = 30;
 
-  // Flip
+  // Flip button
   rect_t reset_b;
-  reset_b.w = (RIGHT_PANEL_RECT.w / 2) - border * 2;
-  reset_b.h = 30;
+  reset_b.w = button_w;
+  reset_b.h = button_h;
   reset_b.x = border;
   reset_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
 
   buttons.push_back(
       create_button(RIGHT_PANEL_RECT, reset_b, button_color, "Flip", [&]() {
         // Flip callback
+        play_sound(sound_fx[5]);
         flipped_board = !flipped_board;
       }));
 
-  // Reset
+  // Reset button
   rect_t flip_b;
-  flip_b.w = reset_b.w;
-  flip_b.h = 30;
+  flip_b.w = button_w;
+  flip_b.h = button_h;
   flip_b.x = RIGHT_PANEL_RECT.w - border - flip_b.w;
   flip_b.y = RIGHT_PANEL_RECT.h - reset_b.h - border;
   buttons.push_back(
       create_button(RIGHT_PANEL_RECT, flip_b, button_color, "Reset", [&]() {
         // Reset lambda
+        play_sound(sound_fx[5]);
         chess.load(FEN_INIT_POS);
         mouse_holding.selected = false;
         selected_square.selected = false;
         suggested_positions.clear();
       }));
+
+  // Show attack vector button
+  rect_t attack_v_b;
+  attack_v_b.w = button_w;
+  attack_v_b.h = button_h;
+  attack_v_b.x = border;
+  attack_v_b.y = flip_b.y - button_h - border;
+  buttons.push_back(create_button(RIGHT_PANEL_RECT, attack_v_b, button_color,
+                                  "Show Attack", [&]() {
+                                    play_sound(sound_fx[5]);
+                                    // show attack vector lambda
+                                    show_attack_vector = !show_attack_vector;
+                                  }));
 }
 
 
@@ -284,6 +312,11 @@ void gui_t::update()
             coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
         suggested_positions = chess.get_valid_moves(selected_pos);
       }
+    }
+
+    // Get the attack vector if enabled
+    if (show_attack_vector) {
+      attack_vector = chess.get_attacks();
     }
   }
 }
