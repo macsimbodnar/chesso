@@ -186,24 +186,24 @@ public:
      *       TMP CODE THAT EXTRACT FROM ALL MOVES THE ONE THAT WE WANT
      **************************************************************************/
     std::vector<uint8_t> moves;
-    // board_state_t tmp_state = board_state;
+    board_state_t tmp_state = board_state;
 
-    // // Get first all white moves
-    // tmp_state.active_color = color_t::WHITE;
-    // const std::vector<move_t> all_w_moves = generate_legal_moves(tmp_state);
+    // Get first all white moves
+    tmp_state.active_color = color_t::WHITE;
+    const std::vector<move_t> all_w_moves = generate_legal_moves(tmp_state);
 
-    // // Get then all black moves
-    // tmp_state.active_color = color_t::BLACK;
-    // const std::vector<move_t> all_b_moves = generate_legal_moves(tmp_state);
+    // Get then all black moves
+    tmp_state.active_color = color_t::BLACK;
+    const std::vector<move_t> all_b_moves = generate_legal_moves(tmp_state);
 
-    // for (const auto& I : all_w_moves) {
-    //   if (I.from == index) { moves.push_back(I.to); }
-    // }
-    // for (const auto& I : all_b_moves) {
-    //   if (I.from == index) { moves.push_back(I.to); }
-    // }
+    for (const auto& I : all_w_moves) {
+      if (I.from == index) { moves.push_back(I.to); }
+    }
+    for (const auto& I : all_b_moves) {
+      if (I.from == index) { moves.push_back(I.to); }
+    }
 
-    moves = generate_pseudo_legal_moves(board_state, index);
+    // moves = generate_pseudo_legal_moves(board_state, index);
     /**************************************************************************/
 
     LOG_I << "****************************************************" << END_I;

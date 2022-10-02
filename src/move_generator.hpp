@@ -268,33 +268,34 @@ inline std::vector<uint8_t> generate_king(
     const color_t color,
     const uint8_t castling)
 {
-  std::vector<uint8_t> res = generate_jumping(offsets_k, board, color, index);
+  std::vector<uint8_t> result =
+      generate_jumping(offsets_k, board, color, index);
 
   switch (color) {
     case color_t::WHITE:
       if ((castling & WQ) && board[0x01] == piece_t::EMPTY &&
           board[0x02] == piece_t::EMPTY && board[0x03] == piece_t::EMPTY) {
         // Queen side available
-        res.push_back(0x02);
+        result.push_back(0x02);
       }
 
       if ((castling & WK) && board[0x05] == piece_t::EMPTY &&
           board[0x06] == piece_t::EMPTY) {
         // King side available
-        res.push_back(0x06);
+        result.push_back(0x06);
       }
       break;
     case color_t::BLACK:
       if ((castling & BQ) && board[0x71] == piece_t::EMPTY &&
           board[0x72] == piece_t::EMPTY && board[0x73] == piece_t::EMPTY) {
         // Queen side available
-        res.push_back(0x72);
+        result.push_back(0x72);
       }
 
       if ((castling & BK) && board[0x75] == piece_t::EMPTY &&
           board[0x76] == piece_t::EMPTY) {
         // King side available
-        res.push_back(0x76);
+        result.push_back(0x76);
       }
       break;
 
@@ -303,7 +304,7 @@ inline std::vector<uint8_t> generate_king(
       break;
   }
 
-  return res;
+  return result;
 }
 
 
@@ -458,31 +459,63 @@ inline std::vector<move_t> generate_legal_moves(
     const board_state_t& board_state)
 {
   std::vector<move_t> result;
+  result.reserve(100);
 
   /*****************************************************************************
    * Generate enemy attacks vector
    ****************************************************************************/
-
+  auto tmp_board_state = board_state;
+  const color_t attack_color = !board_state.active_color;
+  const std::vector<uint8_t> attack_vector =
+      generate_attack_vector(tmp_board_state, attack_color);
 
   /*****************************************************************************
-   * Check if king is under attack
+   * Generate moves
    ****************************************************************************/
-
-  // Get king position
-  uint8_t king_pos = 0x08;  // Assign an invalid position!
   for (uint8_t i = 0; i < board_state.board.size(); ++i) {
-    const piece_t p = board_state.board[i];
+    const piece_t P = board_state.board[i];
 
-    if ((p == piece_t::B_KING || p == piece_t::W_KING) &&
-        board_state.active_color == get_color(p)) {
-      king_pos = i;
+    if (P != piece_t::INVALID && P != piece_t::EMPTY &&
+        board_state.active_color == get_color(P)) {
+      // generate moves
+      const auto moves = generate_pseudo_legal_moves(board_state, i);
+
+      switch (P) {
+        case piece_t::B_KING:
+        case piece_t::W_KING: {
+          // Get king pseudo legal moves
+
+
+          // Remove the moves that put the king under attack
+          for (const auto& M : moves) {
+            bool found = false;
+
+            for (const auto& A : attack_vector) {
+              if (M == A) {
+                found = true;
+                break;
+              }
+            }
+
+            if (!found) {
+              const move_t move = {i, M};
+              result.push_back(move);
+            }
+          }
+        } break;
+
+        default: {
+          // Generate others pieces moves
+          for (const auto& M : moves) {
+            const move_t move = {i, M};
+            result.push_back(move);
+          }
+        }
+
+        break;
+      }
     }
   }
-
-  // Check if the position is valid
-  assert(!(king_pos & 0x88));
-
-  // Search if any of this attack the king
 
   return result;
 }
