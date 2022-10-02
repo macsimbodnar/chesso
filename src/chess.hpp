@@ -166,6 +166,10 @@ public:
     // Unset the current piece
     board_state.board[dest_index] = board_state.board[from_index];
     board_state.board[from_index] = piece_t::EMPTY;
+
+    // Change the color
+    board_state.active_color = !board_state.active_color;
+    // LOG_I << board_state.active_color << END_I;
   }
 
 
@@ -181,23 +185,23 @@ public:
     /**************************************************************************
      *       TMP CODE THAT EXTRACT FROM ALL MOVES THE ONE THAT WE WANT
      **************************************************************************/
-    board_state_t tmp_state = board_state;
-
-    // Get first all white moves
-    tmp_state.active_color = color_t::WHITE;
-    const std::vector<move_t> all_w_moves = generate_legal_moves(tmp_state);
-
-    // Get then all black moves
-    tmp_state.active_color = color_t::BLACK;
-    const std::vector<move_t> all_b_moves = generate_legal_moves(tmp_state);
-
     std::vector<uint8_t> moves;
-    for (const auto& I : all_w_moves) {
-      if (I.from == index) { moves.push_back(I.to); }
-    }
-    for (const auto& I : all_b_moves) {
-      if (I.from == index) { moves.push_back(I.to); }
-    }
+    // board_state_t tmp_state = board_state;
+
+    // // Get first all white moves
+    // tmp_state.active_color = color_t::WHITE;
+    // const std::vector<move_t> all_w_moves = generate_legal_moves(tmp_state);
+
+    // // Get then all black moves
+    // tmp_state.active_color = color_t::BLACK;
+    // const std::vector<move_t> all_b_moves = generate_legal_moves(tmp_state);
+
+    // for (const auto& I : all_w_moves) {
+    //   if (I.from == index) { moves.push_back(I.to); }
+    // }
+    // for (const auto& I : all_b_moves) {
+    //   if (I.from == index) { moves.push_back(I.to); }
+    // }
 
     moves = generate_pseudo_legal_moves(board_state, index);
     /**************************************************************************/
@@ -221,10 +225,7 @@ public:
 
   inline std::vector<position_t> get_attacks()
   {
-    const color_t c = (board_state.active_color == color_t::WHITE)
-                          ? color_t::BLACK
-                          : color_t::WHITE;
-
+    const color_t c = !board_state.active_color;
     const auto attacks = generate_attack_vector(board_state, c);
 
     std::vector<position_t> result;

@@ -42,6 +42,7 @@ private:
   std::vector<position_t> attack_vector;
   std::map<char, texture_t> files_and_ranks_textures;
   std::vector<button_t> buttons;
+  bool reset = false;
 
 public:
   gui_t()

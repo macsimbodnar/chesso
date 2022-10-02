@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -31,6 +32,31 @@ enum class color_t
   BLACK = 0x01000000,
   WHITE = 0x10000000
 };
+
+inline color_t operator!(const color_t& c)
+{
+  color_t res = (c == color_t::WHITE) ? color_t::BLACK : color_t::WHITE;
+  return res;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const color_t& dt)
+{
+  switch (dt) {
+    case color_t::WHITE:
+      os << "WHITE";
+      break;
+
+    case color_t::BLACK:
+      os << "BLACK";
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  return os;
+}
 
 static constexpr uint32_t COLOR_MASK =
     U32(color_t::BLACK) | U32(color_t::WHITE);
@@ -120,8 +146,7 @@ struct board_state_t
 };
 
 
-inline void print_move(const position_t &from,
-                       const position_t& to)
+inline void print_move(const position_t& from, const position_t& to)
 {
   LOG_I << std::string(1, 'a' + from.file) << from.rank + 1 << " -> "
         << std::string(1, 'a' + to.file) << to.rank + 1 << END_I;

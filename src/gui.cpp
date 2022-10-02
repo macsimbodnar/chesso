@@ -205,10 +205,7 @@ void gui_t::on_init(void*)
       create_button(RIGHT_PANEL_RECT, flip_b, button_color, "Reset", [&]() {
         // Reset lambda
         play_sound(sound_fx[5]);
-        chess.load(FEN_INIT_POS);
-        mouse_holding.selected = false;
-        selected_square.selected = false;
-        suggested_positions.clear();
+        reset = true;
       }));
 
   // Show attack vector button
@@ -241,7 +238,20 @@ void gui_t::update()
   }
 
   /***************************************************************************
-   * MAIN BOARD
+   * EXECUTE ACTIONS
+   **************************************************************************/
+  if (reset) {
+    // RESET
+    chess.load(FEN_INIT_POS);
+    mouse_holding.selected = false;
+    selected_square.selected = false;
+    suggested_positions.clear();
+    attack_vector = chess.get_attacks();
+    reset = false;
+  }
+
+  /***************************************************************************
+   * MAIN BOARD MOUSE ACTIVITIES
    **************************************************************************/
   if (is_mouse_in(BOARD_RECT)) {
     // Calculate the mouse current tail
@@ -286,6 +296,9 @@ void gui_t::update()
       if (mouse_tail_coord != selected_coord) {
         const position_t dest = coordinates_to_postion(mouse_tail_coord);
         chess.move(mouse_holding.info.position, dest);
+
+        // Generate attack vector after move
+        attack_vector = chess.get_attacks();
       }
 
       mouse_holding.selected = false;
@@ -312,11 +325,6 @@ void gui_t::update()
             coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
         suggested_positions = chess.get_valid_moves(selected_pos);
       }
-    }
-
-    // Get the attack vector if enabled
-    if (show_attack_vector) {
-      attack_vector = chess.get_attacks();
     }
   }
 }
