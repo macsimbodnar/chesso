@@ -40,6 +40,7 @@ private:
   bool flipped_board = false;
   bool show_attack_vector = false;
   std::vector<position_t> attack_vector;
+  std::vector<position_t> checkers;
   std::map<char, texture_t> files_and_ranks_textures;
   std::vector<button_t> buttons;
   bool reset = false;

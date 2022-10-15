@@ -143,6 +143,19 @@ struct board_state_t
   color_t active_color;
   uint8_t available_castling;
   uint8_t en_passant_target_square;
+
+  inline uint8_t get_piece_index(const piece_t piece) const {
+    uint8_t result = INVALID_BOARD_POS;
+
+    for (uint8_t i = 0; i < board.size(); ++i) {
+      if (piece == board[i]) {
+        result = i;
+        break;
+      }
+    }
+
+    return result;
+  }
 };
 
 

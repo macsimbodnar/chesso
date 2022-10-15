@@ -12,50 +12,6 @@ static const std::array<uint8_t, 4> directions_rook = {0x10, 0xF0, 0x01, 0xFF};
 static const std::array<uint8_t, 4> directions_bishop = {0x11, 0x0F, 0xF1,
                                                          0xEF};
 
-
-// inline std::vector<uint8_t> generate_pawn(
-//     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
-//     const uint8_t index)
-// {
-//   std::vector<uint8_t> move_candidates;
-//   move_candidates.reserve(2);
-//   std::vector<uint8_t> attack_candidates;
-//   attack_candidates.reserve(2);
-
-//   const color_t color = get_color(board[index]);
-//   switch (color) {
-//     case color_t::BLACK:
-//       move_candidates.push_back(index + 0xF0);
-//       break;
-//     case color_t::WHITE:
-//       move_candidates.push_back(0x10);
-//       break;
-
-//     default:
-//       throw input_exception("Unexpected color: " + STR(INT(color)));
-//       break;
-//   }
-
-//   std::vector<uint8_t> result;
-//   result.reserve(4);  // Worst case
-
-//   // Check
-//   {
-//     const uint8_t candidate = move_candidates[0];
-//     if (!(candidate & 0x88) && board[candidate] != piece_t::EMPTY) {
-//       result.push_back(candidate);
-//     }
-//   }
-
-//   {
-
-//     const uint8_t candidate = move_candidates[1];
-//     if ()
-//   }
-
-//   return result;
-// }
-
 inline std::vector<uint8_t> generate_b_pawn(
     const std::array<piece_t, BOARD_ARRAY_SIZE>& board,
     const uint8_t index,
@@ -207,7 +163,7 @@ inline std::vector<uint8_t> generate_jumping(
 
     if (candidate & 0x88) { continue; }
 
-    piece_t p = board[candidate];
+    const piece_t p = board[candidate];
     assert(p != piece_t::INVALID);
 
     // Check if attacking his own color
@@ -405,20 +361,13 @@ inline std::vector<uint8_t> generate_attack_vector(board_state_t& board_state,
   // Removing the king from the board.
   const piece_t king_to_remove =
       (target_color == color_t::WHITE) ? piece_t::B_KING : piece_t::W_KING;
-  uint8_t king_pos = 0x7F;
-  piece_t king = piece_t::EMPTY;
-  for (uint8_t i = 0; i < board_state.board.size(); ++i) {
-    const piece_t p = board_state.board[i];
-    if (p == king_to_remove) {
-      // Store the pos
-      king_pos = i;
-      king = board_state.board[i];
 
-      // Unset the king
-      board_state.board[i] = piece_t::EMPTY;
-      break;
-    }
-  }
+  // Store the king pos
+  const uint8_t king_pos = board_state.get_piece_index(king_to_remove);
+  const piece_t king = king_to_remove;
+
+  // Unset the king
+  board_state.board[king_pos] = piece_t::EMPTY;
 
   // Check we set correct king pos
   assert(!(king_pos & 0x88));
@@ -455,6 +404,52 @@ inline std::vector<uint8_t> generate_attack_vector(board_state_t& board_state,
 }
 
 
+inline std::vector<move_t> king_checks(const board_state_t& board_state)
+{
+  std::vector<move_t> result;
+  result.reserve(2);  // We can have at maximum double check
+
+  piece_t king = piece_t::INVALID;
+  piece_t knight = piece_t::INVALID;
+
+  switch (board_state.active_color) {
+    case color_t::WHITE:
+      king = piece_t::W_KING;
+      knight = piece_t::B_KNIGHT;
+      break;
+    case color_t::BLACK:
+      king = piece_t::B_KING;
+      knight = piece_t::W_KNIGHT;
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  assert(king != piece_t::INVALID);
+  assert(knight != piece_t::INVALID);
+
+  const uint8_t king_pos = board_state.get_piece_index(king);
+
+  // Search for knight
+  for (const auto I : offsets_n) {
+    const uint8_t candidate_pos = king_pos + I;
+    const piece_t candidate_piece = board_state.board[candidate_pos];
+
+    if (candidate_piece == knight) {
+      const move_t move = {candidate_pos, king_pos};
+      result.push_back(move);
+    }
+  }
+
+  // TODO(max): To finish
+
+  assert(result.size() < 3);
+  return result;
+}
+
+
 inline std::vector<move_t> generate_legal_moves(
     const board_state_t& board_state)
 {
@@ -468,6 +463,11 @@ inline std::vector<move_t> generate_legal_moves(
   const color_t attack_color = !board_state.active_color;
   const std::vector<uint8_t> attack_vector =
       generate_attack_vector(tmp_board_state, attack_color);
+
+  /*****************************************************************************
+   * Calculate if under check
+   ****************************************************************************/
+
 
   /*****************************************************************************
    * Generate moves

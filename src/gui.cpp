@@ -60,6 +60,16 @@ void gui_t::draw_board()
     black = !black;
   }
 
+  // Draw checkers
+  for (const auto& I : checkers) {
+    const coordinates_t square = position_to_coordinates(I);
+
+    rect_t rect = {square.x * SQUARE_SIZE, square.y * SQUARE_SIZE, SQUARE_SIZE,
+                   SQUARE_SIZE};
+
+    draw_rect(rect, 0xFF000011);
+  }
+
   // Draw selected square
   if (selected_square.selected) {
     const coordinates_t square =
@@ -95,8 +105,8 @@ void gui_t::draw_board()
     }
 
     // The pice is in place
-    rect_t r = {coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
-                SQUARE_SIZE};
+    const rect_t r = {coord.x * SQUARE_SIZE, coord.y * SQUARE_SIZE, SQUARE_SIZE,
+                      SQUARE_SIZE};
 
     draw_texture(piece_textures[p], r);
   }
@@ -117,15 +127,15 @@ void gui_t::draw_board()
       const coordinates_t coord = position_to_coordinates(I);
       const int32_t x = (coord.x * SQUARE_SIZE) + SQUARE_SIZE / 2;
       const int32_t y = (coord.y * SQUARE_SIZE) + SQUARE_SIZE / 2;
-      draw_circle(x, y, SQUARE_SIZE / 6, 0xFF0000FF);
+      draw_circle(x, y, SQUARE_SIZE / 8, 0xFF0000FF);
     }
   }
 
   // For last draw the selected piece
   if (mouse_holding.selected) {
-    rect_t r = {mouse_state().x - mouse_holding.offset_x,
-                mouse_state().y - mouse_holding.offset_y, SQUARE_SIZE,
-                SQUARE_SIZE};
+    const rect_t r = {mouse_state().x - mouse_holding.offset_x,
+                      mouse_state().y - mouse_holding.offset_y, SQUARE_SIZE,
+                      SQUARE_SIZE};
     draw_texture(piece_textures[mouse_holding.info.piece], r);
   }
 }
@@ -247,6 +257,7 @@ void gui_t::update()
     selected_square.selected = false;
     suggested_positions.clear();
     attack_vector = chess.get_attacks();
+    checkers = chess.get_checks();
     reset = false;
   }
 
@@ -299,6 +310,7 @@ void gui_t::update()
 
         // Generate attack vector after move
         attack_vector = chess.get_attacks();
+        checkers = chess.get_checks();
       }
 
       mouse_holding.selected = false;

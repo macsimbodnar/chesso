@@ -239,6 +239,24 @@ public:
   }
 
 
+  inline std::vector<position_t> get_checks() const
+  {
+    std::vector<position_t> result;
+    const auto checks = king_checks(board_state);
+
+    result.reserve(checks.size());
+
+    for (const auto I : checks) {
+      result.push_back(to_position(I.from));
+      LOG_I << "CHECK: " << std::hex << static_cast<int>(I.from) << std::dec
+            << " -> " << std::hex << static_cast<int>(I.to) << std::dec
+            << END_I;
+    }
+
+    return result;
+  }
+
+
   inline std::vector<piece_info_t> pieces() const
   {
     std::vector<piece_info_t> res;
