@@ -444,6 +444,10 @@ inline std::vector<move_t> king_checks(const board_state_t& board_state)
   }
 
   // TODO(max): To finish
+  // Search for rook
+  // Search for bishop
+  // Search for queen
+  // Search for pawn
 
   assert(result.size() < 3);
   return result;
