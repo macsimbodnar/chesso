@@ -339,6 +339,9 @@ void gui_t::update()
       }
     }
   }
+
+  // Check if quit
+  if (is_key_pressed(keycap_t::ESC)) { stop(); }
 }
 
 
@@ -350,7 +353,6 @@ void gui_t::draw()
     /***************************************************************************
      * FULL SCREEN
      **************************************************************************/
-    clear_screen({0x000000FF});
     draw_texture(background, {0, 0, SCREEN_W, SCREEN_H});
     draw_coordinates();
 
