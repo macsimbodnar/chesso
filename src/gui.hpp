@@ -1,99 +1,121 @@
 #pragma once
+#include <cassert>
+#include <cmath>
 #include <map>
 #include <pixello.hpp>
-#include "chess.hpp"
+#include "gui_data_struct.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 
-static constexpr uint32_t SCREEN_W = 810;
-static constexpr uint32_t SCREEN_H = 510;
-static constexpr rect_t BOARD_RECT = {20, 10, 480, 480};
-static constexpr rect_t RIGHT_PANEL_RECT = {510, 10, 290, 480};
-static constexpr int32_t SQUARE_SIZE = 60;
 
-struct piece_holding_t
+struct chessboard_conf
 {
-  int32_t offset_x = 0;
-  int32_t offset_y = 0;
-  bool selected = false;
-  piece_info_t info;
+  constexpr static float paddings_percentage = 0.05f;
+  int padding;
+  rect_t rect;
+  int square_size;
+  pixel_t black_color = {109, 64, 24, 255};
+  pixel_t white_color = {232, 235, 239, 255};
+  bool flipped = false;
+
+  chessboard_conf(const int screen_w, const int screen_h)
+  {
+    assert(screen_w != 0);
+    assert(screen_h != 0);
+
+    const int full_size = (screen_w > screen_h) ? screen_h : screen_w;
+    padding = std::round(static_cast<float>(full_size) * paddings_percentage);
+    rect = {padding, padding, full_size - (padding * 2),
+            full_size - (padding * 2)};
+    square_size = rect.w / 8;
+  }
 };
 
-
-struct selected_square_t
+struct control_panel_conf
 {
-  bool selected = false;
-  position_t position;
+  rect_t rect;
+  pixel_t background_color = 0x000000FF;
+  pixel_t text_color = 0xFFFFFFFF;
+  pixel_t text_off_color = 0XFF0000FF;
+  constexpr static int text_padding = 5;
+  constexpr static int font_size = 11;
+
+  control_panel_conf(const int screen_w,
+                     const int screen_h,
+                     const chessboard_conf& board_conf)
+  {
+    if (screen_w > screen_h) {
+      rect.x = board_conf.rect.x + board_conf.rect.w + board_conf.padding;
+      rect.w = screen_w - rect.x;
+
+      rect.y = 0;
+      rect.h = screen_h;
+    } else {
+      rect.x = 0;
+      rect.w = screen_w;
+
+      rect.y = board_conf.rect.y + board_conf.rect.h + board_conf.padding;
+      rect.h = screen_h - rect.h;
+    }
+  }
+
+  inline point_t get_text_pos(const int n) const
+  {
+    point_t res;
+
+    res.x = rect.x + text_padding;
+    res.y = rect.y + (n * (font_size + text_padding)) + text_padding;
+
+    return res;
+  }
 };
 
 
 class gui_t : public pixello
 {
 private:
-  texture_t background;
-  std::map<piece_t, texture_t> piece_textures;
-  std::map<char, sound_t> sound_fx;
-  chess_t chess;
-  piece_holding_t mouse_holding;
-  selected_square_t selected_square;
-  std::vector<position_t> suggested_positions;
-  bool flipped_board = false;
-  bool show_attack_vector = false;
-  std::vector<position_t> attack_vector;
-  std::vector<position_t> checkers;
+  const rect_t screen;
+  const bool is_screen_horizontal;
+  const chessboard_conf board_conf;
+  const control_panel_conf panel_conf;
+
+  std::map<std::string, texture_t> textures;
+  std::map<gui::piece_t, texture_t> piece_textures;
+  std::map<std::string, sound_t> sound_fx;
   std::map<char, texture_t> files_and_ranks_textures;
-  std::vector<button_t> buttons;
-  bool reset = false;
+  std::map<int, font_t> fonts;
+
+  gui::state_t state;
 
 public:
-  gui_t()
-      : pixello(SCREEN_W,
-                SCREEN_H,
-                "Chesso",
-                60,
-                "assets/font/PressStart2P.ttf",
-                8)
+  gui_t(const int w, const int h)
+      : pixello(w, h, "Chesso", 60),
+        screen{0, 0, w, h},
+        is_screen_horizontal(w > h),
+        board_conf(w, h),
+        panel_conf(w, h, board_conf)
   {}
 
 private:
-  void draw_board();
-  void draw_coordinates();
-  void update();
-  void draw();
-
   void on_init(void*) override;
   void on_update(void*) override;
 
   inline void log(const std::string& msg) override { LOG_E << msg << END_E; }
 
-  inline position_t coordinates_to_postion(const uint8_t x, const uint8_t y)
-  {
-    position_t result;
+private:
+  void handle_events();
 
-    result.file = flipped_board ? 7 - x : x;
-    result.rank = flipped_board ? y : 7 - y;
+private:
+  void draw_background();
 
-    return result;
-  }
+  void draw_chessboard();
+  void draw_coordinates();
+  void draw_pieces();
+  void draw_piece(const gui::piece_t piece, const gui::position_t& pos);
 
-  inline position_t coordinates_to_postion(const coordinates_t& c)
-  {
-    return coordinates_to_postion(c.x, c.y);
-  }
+  void draw_panel();
 
-
-  inline coordinates_t position_to_coordinates(const uint8_t file,
-                                               const uint8_t rank)
-  {
-    coordinates_t result;
-    result.x = flipped_board ? 7 - file : file;
-    result.y = flipped_board ? rank : 7 - rank;
-
-    return result;
-  }
-
-  inline coordinates_t position_to_coordinates(const position_t& p)
-  {
-    return position_to_coordinates(p.file, p.rank);
-  }
+private:
+  rect_t get_square_rect(const int x, const int y);
+  point_t piece_pos_to_screen_pos(const gui::position_t& pos);
 };
