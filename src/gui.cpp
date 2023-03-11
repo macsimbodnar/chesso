@@ -36,6 +36,7 @@ void gui_t::on_init(void*)
   piece_textures[gui::piece_t::B_KING] = load_image("assets/Chess_kdt60.png");
 
   textures["background"] = load_image("assets/background_l.jpg");
+  textures["flip"] = load_image("assets/flip_icon.png");
 
   sound_fx["tick_1"] = load_sound("assets/sound/tick_1.wav");
   sound_fx["tick_2"] = load_sound("assets/sound/tick_2.wav");
@@ -61,6 +62,17 @@ void gui_t::on_init(void*)
 
   // Load default state
   state = gui::load_FEN(FEN_INIT_POS);
+
+  {  // Buttons
+    const int32_t button_h = 42;
+    const int32_t button_w = 50;
+    const int32_t x = panel_conf.rect.x + panel_conf.text_padding;
+    const int32_t y = panel_conf.rect.y + panel_conf.rect.h - button_h -
+                      panel_conf.text_padding;
+
+    buttons["flip"] = create_button({x, y, button_w, button_h}, 0xFFFFFFFF,
+                                    textures["flip"], 0x333333FF);
+  }
 }
 
 
@@ -184,115 +196,138 @@ void gui_t::draw_background()
 
 void gui_t::draw_panel()
 {
-  draw_rect(panel_conf.rect, panel_conf.background_color);
-
   const font_t& font = fonts[panel_conf.font_size];
 
-  // Active color
-  const std::string active_text =
-      "Turn: " + ((state.active_color == gui::color_t::WHITE)
-                      ? std::string("WHITE")
-                      : std::string("BLACK"));
+  draw_rect(panel_conf.rect, panel_conf.background_color);
 
-  const texture_t active_color =
-      create_text(active_text, panel_conf.text_color, font);
+  {  // Active color
+    const std::string active_text =
+        "Turn: " + ((state.active_color == gui::color_t::WHITE)
+                        ? std::string("WHITE")
+                        : std::string("BLACK"));
 
-  const point_t active_color_pos = panel_conf.get_text_pos(0);
-  draw_texture(active_color, active_color_pos.x, active_color_pos.y);
+    const texture_t active_color =
+        create_text(active_text, panel_conf.text_color, font);
 
-  // Castling rights
-  const texture_t castling_rights_texture =
-      create_text("Castling rights:", panel_conf.text_color, font);
-
-  const texture_t wq =
-      create_text("WQ",
-                  ((state.castling_rights & gui::castling_rights_t::WQ)
-                       ? panel_conf.text_color
-                       : panel_conf.text_off_color),
-                  font);
-  const texture_t wk =
-      create_text("WK",
-                  ((state.castling_rights & gui::castling_rights_t::WK)
-                       ? panel_conf.text_color
-                       : panel_conf.text_off_color),
-                  font);
-  const texture_t bq =
-      create_text("BQ",
-                  ((state.castling_rights & gui::castling_rights_t::BQ)
-                       ? panel_conf.text_color
-                       : panel_conf.text_off_color),
-                  font);
-  const texture_t bk =
-      create_text("BK",
-                  ((state.castling_rights & gui::castling_rights_t::BK)
-                       ? panel_conf.text_color
-                       : panel_conf.text_off_color),
-                  font);
-
-  const point_t castling_pos = panel_conf.get_text_pos(1);
-  draw_texture(castling_rights_texture, castling_pos.x, castling_pos.y);
-  draw_texture(
-      wq, castling_rights_texture.w + castling_pos.x + panel_conf.text_padding,
-      castling_pos.y);
-  draw_texture(wk,
-               castling_rights_texture.w + castling_pos.x + wq.w +
-                   (panel_conf.text_padding * 2),
-               castling_pos.y);
-  draw_texture(bq,
-               castling_rights_texture.w + castling_pos.x + wq.w + wk.w +
-                   (panel_conf.text_padding * 3),
-               castling_pos.y);
-  draw_texture(bk,
-               castling_rights_texture.w + castling_pos.x + wq.w + wk.w + bq.w +
-                   (panel_conf.text_padding * 4),
-               castling_pos.y);
-
-  // En passant
-  const point_t en_passant_pos = panel_conf.get_text_pos(2);
-  const texture_t en_passant =
-      create_text("En passant: ", panel_conf.text_color, font);
-  draw_texture(en_passant, en_passant_pos.x, en_passant_pos.y);
-
-  if (state.is_en_passant) {
-    const texture_t en_passant_target_square =
-        create_text(gui::pos_to_algebraic(state.en_passant_target_square),
-                    panel_conf.text_color, font);
-
-    draw_texture(en_passant_target_square,
-                 en_passant_pos.x + en_passant.w + panel_conf.text_padding,
-                 en_passant_pos.y);
+    const point_t active_color_pos = panel_conf.get_text_pos(0);
+    draw_texture(active_color, active_color_pos.x, active_color_pos.y);
   }
 
-  // Half move clock
-  const texture_t half_move_clock =
-      create_text("Half move clock: " + STR(state.half_move_clock),
-                  panel_conf.text_color, font);
-  const point_t half_move_clock_pos = panel_conf.get_text_pos(3);
-  draw_texture(half_move_clock, half_move_clock_pos.x, half_move_clock_pos.y);
+  {  // Castling rights
+    const texture_t castling_rights_texture =
+        create_text("Castling rights:", panel_conf.text_color, font);
 
-  // Full move clock
-  const texture_t full_move_clock =
-      create_text("Full move clock: " + STR(state.full_move_clock),
-                  panel_conf.text_color, font);
-  const point_t full_move_clock_pos = panel_conf.get_text_pos(4);
-  draw_texture(full_move_clock, full_move_clock_pos.x, full_move_clock_pos.y);
+    const texture_t wq =
+        create_text("WQ",
+                    ((state.castling_rights & gui::castling_rights_t::WQ)
+                         ? panel_conf.text_color
+                         : panel_conf.text_off_color),
+                    font);
+    const texture_t wk =
+        create_text("WK",
+                    ((state.castling_rights & gui::castling_rights_t::WK)
+                         ? panel_conf.text_color
+                         : panel_conf.text_off_color),
+                    font);
+    const texture_t bq =
+        create_text("BQ",
+                    ((state.castling_rights & gui::castling_rights_t::BQ)
+                         ? panel_conf.text_color
+                         : panel_conf.text_off_color),
+                    font);
+    const texture_t bk =
+        create_text("BK",
+                    ((state.castling_rights & gui::castling_rights_t::BK)
+                         ? panel_conf.text_color
+                         : panel_conf.text_off_color),
+                    font);
 
-  // FPS
-  const texture_t fps_texture =
-      create_text("FPS: " + STR(FPS()), panel_conf.text_color, font);
+    const point_t castling_pos = panel_conf.get_text_pos(1);
+    draw_texture(castling_rights_texture, castling_pos.x, castling_pos.y);
+    draw_texture(
+        wq,
+        castling_rights_texture.w + castling_pos.x + panel_conf.text_padding,
+        castling_pos.y);
+    draw_texture(wk,
+                 castling_rights_texture.w + castling_pos.x + wq.w +
+                     (panel_conf.text_padding * 2),
+                 castling_pos.y);
+    draw_texture(bq,
+                 castling_rights_texture.w + castling_pos.x + wq.w + wk.w +
+                     (panel_conf.text_padding * 3),
+                 castling_pos.y);
+    draw_texture(bk,
+                 castling_rights_texture.w + castling_pos.x + wq.w + wk.w +
+                     bq.w + (panel_conf.text_padding * 4),
+                 castling_pos.y);
+  }
 
-  const int32_t x = panel_conf.rect.x + panel_conf.rect.w - fps_texture.w -
-                    panel_conf.text_padding;
-  const int32_t y = panel_conf.rect.y + panel_conf.rect.h - fps_texture.h -
-                    panel_conf.text_padding;
+  {  // En passant
+    const point_t en_passant_pos = panel_conf.get_text_pos(2);
+    const texture_t en_passant =
+        create_text("En passant: ", panel_conf.text_color, font);
+    draw_texture(en_passant, en_passant_pos.x, en_passant_pos.y);
 
-  draw_texture(fps_texture, x, y);
+    if (state.is_en_passant) {
+      const texture_t en_passant_target_square =
+          create_text(gui::pos_to_algebraic(state.en_passant_target_square),
+                      panel_conf.text_color, font);
+
+      draw_texture(en_passant_target_square,
+                   en_passant_pos.x + en_passant.w + panel_conf.text_padding,
+                   en_passant_pos.y);
+    }
+  }
+
+  {  // Half move clock
+    const texture_t half_move_clock =
+        create_text("Half move clock: " + STR(state.half_move_clock),
+                    panel_conf.text_color, font);
+    const point_t half_move_clock_pos = panel_conf.get_text_pos(3);
+    draw_texture(half_move_clock, half_move_clock_pos.x, half_move_clock_pos.y);
+  }
+
+  {  // Full move clock
+    const texture_t full_move_clock =
+        create_text("Full move clock: " + STR(state.full_move_clock),
+                    panel_conf.text_color, font);
+    const point_t full_move_clock_pos = panel_conf.get_text_pos(4);
+    draw_texture(full_move_clock, full_move_clock_pos.x, full_move_clock_pos.y);
+  }
+
+  {  // FPS
+
+    const texture_t fps_texture =
+        create_text("FPS: " + STR(FPS()), panel_conf.text_color, font);
+
+    const int32_t x = panel_conf.rect.x + panel_conf.rect.w - fps_texture.w -
+                      panel_conf.text_padding;
+    const int32_t y = panel_conf.rect.y + panel_conf.rect.h - fps_texture.h -
+                      panel_conf.text_padding;
+
+    draw_texture(fps_texture, x, y);
+  }
+
+  {  // Flip button
+    const button_t& button = buttons["flip"];
+
+
+    draw_button_with_icon(button);
+  }
 }
 
 
 void gui_t::handle_events()
 {
+  const mouse_t& mouse = mouse_state();
+  // Close key
   if (is_key_pressed(keycap_t::ESC)) { stop(); }
+
+  // Flip button
+  if (is_mouse_in(buttons["flip"].rect) && mouse.left_button.click) {
+    play_sound(sound_fx["click"]);
+    board_conf.flipped = !board_conf.flipped;
+  }
 }
 
 

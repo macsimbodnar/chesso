@@ -76,7 +76,7 @@ class gui_t : public pixello
 private:
   const rect_t screen;
   const bool is_screen_horizontal;
-  const chessboard_conf board_conf;
+  chessboard_conf board_conf;
   const control_panel_conf panel_conf;
 
   std::map<std::string, texture_t> textures;
@@ -84,6 +84,7 @@ private:
   std::map<std::string, sound_t> sound_fx;
   std::map<char, texture_t> files_and_ranks_textures;
   std::map<int, font_t> fonts;
+  std::map<std::string, button_t> buttons;
 
   gui::state_t state;
 
