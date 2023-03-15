@@ -4,6 +4,9 @@
 static constexpr char FEN_INIT_POS[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+static constexpr char PICK_SOUND[] = "tick_2";
+static constexpr char RELEASE_SOUND[] = "tick_4";
+
 void gui_t::on_init(void*)
 {
   fonts[20] = load_font("assets/font/PressStart2P.ttf", 20);
@@ -86,6 +89,18 @@ point_t gui_t::piece_pos_to_matrix_pos(const gui::position_t& pos)
 }
 
 
+point_t gui_t::piece_pos_to_screen_pixel_pos(const gui::position_t& pos)
+{
+  const point_t matrix_pos = piece_pos_to_matrix_pos(pos);
+
+  const point_t result = {
+      board_conf.rect.x + (matrix_pos.x * board_conf.square_size),
+      board_conf.rect.y + (matrix_pos.y * board_conf.square_size)};
+
+  return result;
+}
+
+
 gui::position_t gui_t::screen_pos_to_position(const point_t& pos)
 {
   gui::position_t res;
@@ -118,14 +133,86 @@ rect_t gui_t::get_square_rect(const int x, const int y)
 }
 
 
+void gui_t::start_animation(const gui::position_t& from,
+                            const gui::position_t& to)
+{
+  // If the piece is empty we skip the animation
+  const gui::piece_t piece = gui::get_piece(state, from);
+
+  assert(piece != gui::piece_t::EMPTY);
+
+  if (piece == gui::piece_t::EMPTY) {
+    LOG_W << "Starting an animation with an empty piece. WTF" << END_W;
+    return;
+  }
+
+  animation.state = piece_animation_t::RUNNING;
+  animation.start_tick = get_ticks();
+  animation.piece_from = from;
+  animation.piece_to = to;
+  animation.piece = piece;
+
+  // Get the animation values in pixels
+  animation.start_pos = piece_pos_to_screen_pixel_pos(from);
+  animation.end_pos = piece_pos_to_screen_pixel_pos(to);
+
+  // Calculate the total distance to move in both X and Y directions
+  animation.total_distance = {animation.end_pos.x - animation.start_pos.x,
+                              animation.end_pos.y - animation.start_pos.y};
+
+  play_sound(sound_fx[PICK_SOUND]);
+}
+
+
+point_t gui_t::get_next_animation_pos()
+{
+  // The animation is moving on the straight line
+
+  if (animation.state != piece_animation_t::RUNNING) {
+    throw runtime_exception(
+        "trying to get an animation postion when animation is not anymore "
+        "running");
+  }
+
+  // Get the current time
+  const uint64_t current_tick = get_ticks();
+
+  // Calculate the elapsed time since the animation started
+  uint64_t elapsed_time = current_tick - animation.start_tick;
+
+  // Calculate the percentage of the animation completed
+  const float percentage_complete =
+      elapsed_time / static_cast<float>(animation.duration_ms);
+
+  // Calculate the current position of the animation based on the percentage
+  // complete
+  const point_t result = {
+      animation.start_pos.x +
+          INT(animation.total_distance.x * percentage_complete),
+      animation.start_pos.y +
+          INT(animation.total_distance.y * percentage_complete),
+  };
+
+  // In case of animation done
+  if (animation.end_pos.x >= result.x && animation.end_pos.y >= result.y) {
+    animation.state = piece_animation_t::DONE;
+    LOG_I << "Animation duration: " << elapsed_time << END_I;
+    return animation.end_pos;
+  }
+
+  // Return the current position
+  return result;
+}
+
+
 void gui_t::draw_chessboard()
 {
   // Draw the black boundary box
   const rect_t black_box = {
-      board_conf.rect.x - 5,
-      board_conf.rect.y - 5,
-      board_conf.rect.w + 10,
-      board_conf.rect.h + 10,
+      board_conf.rect.x - board_conf.black_boundary_size_px,
+      board_conf.rect.y - board_conf.black_boundary_size_px,
+      board_conf.rect.w + board_conf.black_boundary_size_px * 2,
+      board_conf.rect.h + board_conf.black_boundary_size_px * 2,
   };
 
   draw_rect(black_box, 0x000000FF);
@@ -176,21 +263,38 @@ void gui_t::draw_pieces()
           continue;
         }
 
+        // We also should skip the piece in animation
+        if (animation.state == piece_animation_t::RUNNING &&
+            animation.piece_from == pos) {
+          continue;
+        }
+
         draw_piece(piece, pos);
       }
     }
   }
 
+  // Draw the selected piece
   if (held_piece.selected) {
     const mouse_t& mouse = mouse_state();
-    const rect_t r = {mouse.x - held_piece.offset_x,
-                      mouse.y - held_piece.offset_y, board_conf.square_size,
+    const rect_t r = {mouse.x - held_piece.offset.x,
+                      mouse.y - held_piece.offset.y, board_conf.square_size,
                       board_conf.square_size};
 
     const gui::piece_t p =
         gui::get_piece(state, held_piece.piece_board_position);
 
     draw_texture(piece_textures[p], r);
+  }
+
+  // Draw the animated piece
+  if (animation.state == piece_animation_t::RUNNING) {
+    const point_t next_animation_pos = get_next_animation_pos();
+
+    const rect_t r = {next_animation_pos.x, next_animation_pos.y,
+                      board_conf.square_size, board_conf.square_size};
+
+    draw_texture(piece_textures[animation.piece], r);
   }
 }
 
@@ -364,8 +468,14 @@ void gui_t::draw_panel()
   }
 }
 
-
-void gui_t::handle_events() {}
+static float a = false;
+void gui_t::handle_events()
+{
+  if (is_key_pressed(keycap_t::A) && !a) {
+    start_animation({1, 2}, {3, 2});
+    a = true;
+  }
+}
 
 
 void gui_t::update_state()
@@ -379,6 +489,19 @@ void gui_t::update_state()
   if (is_mouse_in(buttons["flip"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
     board_conf.flipped = !board_conf.flipped;
+  }
+
+  // Check animation
+  if (animation.state == piece_animation_t::DONE) {
+    // Stop animation
+    animation.state = piece_animation_t::OFF;
+
+    // Sound
+    play_sound(sound_fx[RELEASE_SOUND]);
+
+    // Set the piece
+    gui::set_piece(state, animation.piece_to, animation.piece);
+    gui::set_piece(state, animation.piece_from, gui::piece_t::EMPTY);
   }
 }
 
@@ -396,57 +519,51 @@ void gui_t::update_mouse_in_chessboard()
   const mouse_t& mouse = mouse_state();
   const point_t mouse_pos = {mouse.x, mouse.y};
   const gui::position_t mouse_board_pos = screen_pos_to_position(mouse_pos);
+  const point_t mouse_tail = piece_pos_to_matrix_pos(mouse_board_pos);
 
-  const gui::piece_t piece = gui::get_piece(state, mouse_board_pos);
+  const gui::piece_t pointed_piece = gui::get_piece(state, mouse_board_pos);
 
   // Check if we should start holding the piece
-  if (piece != gui::piece_t::EMPTY) {
-    // If we pointing to a non selected piece
-    if (mouse.left_button.state == button_key_t::DOWN && !held_piece.selected) {
-      const point_t mouse_tail = piece_pos_to_matrix_pos(mouse_board_pos);
-      held_piece.offset_x = mouse.x - (board_conf.padding +
-                                       (mouse_tail.x * board_conf.square_size));
-      held_piece.offset_y = mouse.y - (board_conf.padding +
-                                       (mouse_tail.y * board_conf.square_size));
+  if (pointed_piece != gui::piece_t::EMPTY &&
+      (mouse.left_button.state == button_key_t::DOWN && !held_piece.selected)) {
+    // Calculate the texture offset
+    held_piece.offset = {mouse.x - (board_conf.padding +
+                                    (mouse_tail.x * board_conf.square_size)),
+                         mouse.y - (board_conf.padding +
+                                    (mouse_tail.y * board_conf.square_size))};
 
-      held_piece.selected = true;
-      held_piece.piece_board_position = mouse_board_pos;
+    held_piece.selected = true;
+    held_piece.piece_board_position = mouse_board_pos;
 
-      // Play the soft sound
-      play_sound(sound_fx["tick_2"]);
-    }
+    // Play the soft sound
+    play_sound(sound_fx[PICK_SOUND]);
   }
 
   // Reset the selected state
   if (mouse.left_button.state == button_key_t::UP && held_piece.selected) {
-    const gui::position_t mouse_tail =
-        screen_pos_to_position({mouse.x, mouse.y});
-
-    const gui::position_t selected_piece = held_piece.piece_board_position;
-
     // if (mouse_tail != selected_piece) {
     // TODO: In this case we want to unselect the square
     // asm("nop");
     // }
 
     // Set the piece to the destination column when release
-    if (mouse_tail != selected_piece) {
+    if (mouse_board_pos != held_piece.piece_board_position) {
       const gui::piece_t piece =
           gui::get_piece(state, held_piece.piece_board_position);
 
-      gui::set_piece(state, mouse_tail, piece);
+      gui::set_piece(state, mouse_board_pos, piece);
       gui::set_piece(state, held_piece.piece_board_position,
                      gui::piece_t::EMPTY);
 
-      // TODO: Move the piece
+      // TODO: Move the piece with the engine
     }
 
     held_piece.selected = false;
-    held_piece.offset_x = 0;
-    held_piece.offset_y = 0;
+    held_piece.offset.x = 0;
+    held_piece.offset.y = 0;
 
     // Play sound
-    play_sound(sound_fx["tick_4"]);
+    play_sound(sound_fx[RELEASE_SOUND]);
   }
 
   // // Click on the square

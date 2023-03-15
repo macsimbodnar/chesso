@@ -11,6 +11,7 @@
 struct chessboard_conf
 {
   constexpr static float paddings_percentage = 0.04f;
+  constexpr static int black_boundary_size_px = 2;
   int padding;
   rect_t rect;
   int square_size;
@@ -25,9 +26,14 @@ struct chessboard_conf
 
     const int full_size = (screen_w > screen_h) ? screen_h : screen_w;
     padding = std::round(static_cast<float>(full_size) * paddings_percentage);
-    rect = {padding, padding, full_size - (padding * 2),
-            full_size - (padding * 2)};
-    square_size = rect.w / 8;
+
+    const int board_size = full_size - (padding * 2);
+    square_size = board_size / 8;
+
+    // This way we remove the additional pixels in case the the `board_size` is
+    // not divisible by 8
+    rect = {padding, padding, square_size * 8, square_size * 8};
+
 
     LOG_I << "Board width: " << rect.w << END_I;
     LOG_I << "Board padding: " << padding << END_I;
@@ -78,10 +84,30 @@ struct control_panel_conf
 
 struct held_piece_t
 {
-  int32_t offset_x = 0;
-  int32_t offset_y = 0;
+  point_t offset;
   bool selected = false;
   gui::position_t piece_board_position;
+};
+
+
+struct piece_animation_t
+{
+  enum state_t {
+    OFF, 
+    RUNNING,
+    DONE,
+  };
+
+  state_t state = OFF;
+  int duration_ms = 200;
+  uint64_t start_tick;
+  gui::position_t piece_from;
+  gui::position_t piece_to;
+  gui::piece_t piece;
+
+  point_t start_pos;
+  point_t end_pos;
+  point_t total_distance;
 };
 
 
@@ -102,6 +128,7 @@ private:
 
   gui::state_t state;
   held_piece_t held_piece;
+  piece_animation_t animation;
 
 public:
   gui_t(const int w, const int h)
@@ -139,5 +166,8 @@ private:  // DRAW
 private:  // UTILS
   rect_t get_square_rect(const int x, const int y);
   point_t piece_pos_to_matrix_pos(const gui::position_t& pos);
+  point_t piece_pos_to_screen_pixel_pos(const gui::position_t& pos);
   gui::position_t screen_pos_to_position(const point_t& pos);
+  void start_animation(const gui::position_t& from, const gui::position_t& to);
+  point_t get_next_animation_pos();
 };
