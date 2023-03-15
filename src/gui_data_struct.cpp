@@ -340,4 +340,18 @@ state_t load_FEN(const std::string& FEN)
 
   return state;
 }
+
+piece_t get_piece(const state_t& state, const position_t& pos)
+{
+  const piece_t result = state.board[pos.rank][pos.file];
+  return result;
+}
+
+
+void set_piece(state_t& state, const position_t& pos, const piece_t piece)
+{
+  state.board[pos.rank][pos.file] = piece;
+}
+
+
 }  // namespace gui

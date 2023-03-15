@@ -76,11 +76,29 @@ void gui_t::on_init(void*)
 }
 
 
-point_t gui_t::piece_pos_to_screen_pos(const gui::position_t& pos)
+point_t gui_t::piece_pos_to_matrix_pos(const gui::position_t& pos)
 {
   point_t res;
   res.x = board_conf.flipped ? 7 - pos.file : pos.file;
   res.y = board_conf.flipped ? pos.rank : 7 - pos.rank;
+
+  return res;
+}
+
+
+gui::position_t gui_t::screen_pos_to_position(const point_t& pos)
+{
+  gui::position_t res;
+
+  int x = (pos.x - board_conf.rect.x) / board_conf.square_size;
+  int y = (pos.y - board_conf.rect.y) / board_conf.square_size;
+
+  // Compensate for possible non even square size
+  if (x > 7) { x = 7; }
+  if (y > 7) { y = 7; }
+
+  res.rank = board_conf.flipped ? y : 7 - y;
+  res.file = board_conf.flipped ? 7 - x : x;
 
   return res;
 }
@@ -102,6 +120,17 @@ rect_t gui_t::get_square_rect(const int x, const int y)
 
 void gui_t::draw_chessboard()
 {
+  // Draw the black boundary box
+  const rect_t black_box = {
+      board_conf.rect.x - 5,
+      board_conf.rect.y - 5,
+      board_conf.rect.w + 10,
+      board_conf.rect.h + 10,
+  };
+
+  draw_rect(black_box, 0x000000FF);
+
+  // Draw the tails
   bool black = false;
   for (int y = 0; y < 8; ++y) {
     for (int x = 0; x < 8; ++x) {
@@ -111,6 +140,7 @@ void gui_t::draw_chessboard()
       const rect_t rect = get_square_rect(x, y);
 
       draw_rect(rect, color);
+      draw_rect_outline(rect, 0x000000FF);
 
       black = !black;
     }
@@ -124,7 +154,7 @@ void gui_t::draw_piece(const gui::piece_t p, const gui::position_t& pos)
 {
   if (p == gui::piece_t::EMPTY) { return; }
 
-  point_t board_coord = piece_pos_to_screen_pos(pos);
+  point_t board_coord = piece_pos_to_matrix_pos(pos);
   const rect_t rect = get_square_rect(board_coord.x, board_coord.y);
   const texture_t& piece_texture = piece_textures[p];
   draw_texture(piece_texture, rect);
@@ -140,9 +170,27 @@ void gui_t::draw_pieces()
 
       if (piece != gui::piece_t::EMPTY) {
         const gui::position_t pos = {i, j};  // rank, files
+
+        // Skip the selected piece
+        if (held_piece.selected && held_piece.piece_board_position == pos) {
+          continue;
+        }
+
         draw_piece(piece, pos);
       }
     }
+  }
+
+  if (held_piece.selected) {
+    const mouse_t& mouse = mouse_state();
+    const rect_t r = {mouse.x - held_piece.offset_x,
+                      mouse.y - held_piece.offset_y, board_conf.square_size,
+                      board_conf.square_size};
+
+    const gui::piece_t p =
+        gui::get_piece(state, held_piece.piece_board_position);
+
+    draw_texture(piece_textures[p], r);
   }
 }
 
@@ -317,13 +365,17 @@ void gui_t::draw_panel()
 }
 
 
-void gui_t::handle_events()
+void gui_t::handle_events() {}
+
+
+void gui_t::update_state()
 {
   const mouse_t& mouse = mouse_state();
-  // Close key
+
+  // Check if quit the app
   if (is_key_pressed(keycap_t::ESC)) { stop(); }
 
-  // Flip button
+  // Check if flip the board
   if (is_mouse_in(buttons["flip"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
     board_conf.flipped = !board_conf.flipped;
@@ -331,10 +383,102 @@ void gui_t::handle_events()
 }
 
 
+void gui_t::update_mouse_in_chessboard()
+{
+  {  // If we are not in the chessboard we return
+    const rect_t board_safe_rect = {
+        board_conf.rect.x + 1, board_conf.rect.y + 1, board_conf.rect.w - 1,
+        board_conf.rect.h - 1};
+
+    if (!is_mouse_in(board_safe_rect)) { return; }
+  }
+
+  const mouse_t& mouse = mouse_state();
+  const point_t mouse_pos = {mouse.x, mouse.y};
+  const gui::position_t mouse_board_pos = screen_pos_to_position(mouse_pos);
+
+  const gui::piece_t piece = gui::get_piece(state, mouse_board_pos);
+
+  // Check if we should start holding the piece
+  if (piece != gui::piece_t::EMPTY) {
+    // If we pointing to a non selected piece
+    if (mouse.left_button.state == button_key_t::DOWN && !held_piece.selected) {
+      const point_t mouse_tail = piece_pos_to_matrix_pos(mouse_board_pos);
+      held_piece.offset_x = mouse.x - (board_conf.padding +
+                                       (mouse_tail.x * board_conf.square_size));
+      held_piece.offset_y = mouse.y - (board_conf.padding +
+                                       (mouse_tail.y * board_conf.square_size));
+
+      held_piece.selected = true;
+      held_piece.piece_board_position = mouse_board_pos;
+
+      // Play the soft sound
+      play_sound(sound_fx["tick_2"]);
+    }
+  }
+
+  // Reset the selected state
+  if (mouse.left_button.state == button_key_t::UP && held_piece.selected) {
+    const gui::position_t mouse_tail =
+        screen_pos_to_position({mouse.x, mouse.y});
+
+    const gui::position_t selected_piece = held_piece.piece_board_position;
+
+    // if (mouse_tail != selected_piece) {
+    // TODO: In this case we want to unselect the square
+    // asm("nop");
+    // }
+
+    // Set the piece to the destination column when release
+    if (mouse_tail != selected_piece) {
+      const gui::piece_t piece =
+          gui::get_piece(state, held_piece.piece_board_position);
+
+      gui::set_piece(state, mouse_tail, piece);
+      gui::set_piece(state, held_piece.piece_board_position,
+                     gui::piece_t::EMPTY);
+
+      // TODO: Move the piece
+    }
+
+    held_piece.selected = false;
+    held_piece.offset_x = 0;
+    held_piece.offset_y = 0;
+
+    // Play sound
+    play_sound(sound_fx["tick_4"]);
+  }
+
+  // // Click on the square
+  // if (mouse.left_button.click) {
+  //   if (selected_square.selected &&
+  //       selected_square.position == mouse_board_position) {
+  //     // If click selected then unselect
+  //     selected_square.selected = false;
+  //     suggested_positions.clear();
+  //   } else {
+  //     selected_square.position = mouse_board_position;
+  //     selected_square.selected = true;
+
+  //     // Get the available moves
+  //     const position_t selected_pos =
+  //         coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
+  //     suggested_positions = chess.get_valid_moves(selected_pos);
+  //   }
+  // }
+}
+
+
 void gui_t::on_update(void*)
 {
+  // EVENTS
   handle_events();
 
+  // UPDATE
+  update_state();
+  update_mouse_in_chessboard();
+
+  // DRAW
   draw_background();
   draw_chessboard();
   draw_coordinates();

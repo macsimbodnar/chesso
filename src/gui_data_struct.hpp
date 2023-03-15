@@ -9,8 +9,8 @@ namespace gui
 
 struct position_t
 {
-  uint8_t rank;  // rows
-  uint8_t file;  // columns
+  uint8_t rank;  // rows y    [1-8]
+  uint8_t file;  // columns x [A-H]
 };
 
 inline bool operator==(const position_t& lhs, const position_t& rhs)
@@ -22,6 +22,17 @@ inline bool operator!=(const position_t& lhs, const position_t& rhs)
 {
   return !(lhs == rhs);
 }
+
+inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
+{
+  const char file = 'a' + static_cast<char>(pos.file);
+  const char rank = '1' + static_cast<char>(pos.rank);
+
+  os << file << rank;
+
+  return os;
+}
+
 
 namespace castling_rights_t
 {
@@ -70,6 +81,8 @@ struct state_t
   int full_move_clock = 1;
 };
 
+piece_t get_piece(const state_t& state, const position_t& pos);
+void set_piece(state_t& state, const position_t& pos, const piece_t piece);
 piece_t c_to_piece(const char p);
 color_t get_piece_color(const piece_t t);
 state_t load_FEN(const std::string& fen);

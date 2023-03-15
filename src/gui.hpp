@@ -10,7 +10,7 @@
 
 struct chessboard_conf
 {
-  constexpr static float paddings_percentage = 0.05f;
+  constexpr static float paddings_percentage = 0.04f;
   int padding;
   rect_t rect;
   int square_size;
@@ -28,6 +28,11 @@ struct chessboard_conf
     rect = {padding, padding, full_size - (padding * 2),
             full_size - (padding * 2)};
     square_size = rect.w / 8;
+
+    LOG_I << "Board width: " << rect.w << END_I;
+    LOG_I << "Board padding: " << padding << END_I;
+    LOG_I << "Board square size: " << square_size << END_I;
+    LOG_I << "Board width/size: " << rect.w / (float)square_size << END_I;
   }
 };
 
@@ -71,6 +76,15 @@ struct control_panel_conf
 };
 
 
+struct held_piece_t
+{
+  int32_t offset_x = 0;
+  int32_t offset_y = 0;
+  bool selected = false;
+  gui::position_t piece_board_position;
+};
+
+
 class gui_t : public pixello
 {
 private:
@@ -87,6 +101,7 @@ private:
   std::map<std::string, button_t> buttons;
 
   gui::state_t state;
+  held_piece_t held_piece;
 
 public:
   gui_t(const int w, const int h)
@@ -97,16 +112,21 @@ public:
         panel_conf(w, h, board_conf)
   {}
 
-private:
+private:  // OVERRIDE
   void on_init(void*) override;
   void on_update(void*) override;
 
   inline void log(const std::string& msg) override { LOG_E << msg << END_E; }
 
-private:
+private:  // EVENTS
   void handle_events();
 
-private:
+private:  // UPDATE
+  void update_state();
+
+  void update_mouse_in_chessboard();
+
+private:  // DRAW
   void draw_background();
 
   void draw_chessboard();
@@ -116,7 +136,8 @@ private:
 
   void draw_panel();
 
-private:
+private:  // UTILS
   rect_t get_square_rect(const int x, const int y);
-  point_t piece_pos_to_screen_pos(const gui::position_t& pos);
+  point_t piece_pos_to_matrix_pos(const gui::position_t& pos);
+  gui::position_t screen_pos_to_position(const point_t& pos);
 };
