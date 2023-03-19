@@ -338,9 +338,6 @@ state_t load_FEN(const std::string& FEN)
                         " FEN: " + FEN);
   }
 
-  // Set the fen string at the end
-  state.FEN = FEN;
-
   return state;
 }
 
@@ -354,6 +351,127 @@ piece_t get_piece(const state_t& state, const position_t& pos)
 void set_piece(state_t& state, const position_t& pos, const piece_t piece)
 {
   state.board[pos.rank][pos.file] = piece;
+}
+
+#include <sstream>
+
+std::string state_to_FEN(const state_t& state)
+{
+  std::stringstream ss;
+
+  // Step 1: Board representation
+  int empty_count = 0;
+
+  for (int rank = 7; rank >= 0; --rank) {
+    for (int file = 0; file < 8; ++file) {
+      const auto piece = state.board[rank][file];
+
+      if (piece == piece_t::EMPTY) {
+        ++empty_count;
+      } else {
+        if (empty_count > 0) {
+          ss << empty_count;
+          empty_count = 0;
+        }
+
+        switch (piece) {
+          case piece_t::B_KING:
+            ss << 'k';
+            break;
+          case piece_t::B_QUEEN:
+            ss << 'q';
+            break;
+          case piece_t::B_ROOK:
+            ss << 'r';
+            break;
+          case piece_t::B_BISHOP:
+            ss << 'b';
+            break;
+          case piece_t::B_KNIGHT:
+            ss << 'n';
+            break;
+          case piece_t::B_PAWN:
+            ss << 'p';
+            break;
+          case piece_t::W_KING:
+            ss << 'K';
+            break;
+          case piece_t::W_QUEEN:
+            ss << 'Q';
+            break;
+          case piece_t::W_ROOK:
+            ss << 'R';
+            break;
+          case piece_t::W_BISHOP:
+            ss << 'B';
+            break;
+          case piece_t::W_KNIGHT:
+            ss << 'N';
+            break;
+          case piece_t::W_PAWN:
+            ss << 'P';
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+
+    if (empty_count > 0) {
+      ss << empty_count;
+      empty_count = 0;
+    }
+
+    if (rank > 0) { ss << '/'; }
+  }
+
+  // Step 2: Active color
+  ss << (state.active_color == color_t::WHITE ? " w " : " b ");
+
+  // Step 3: Castling rights
+  bool has_castling_rights = false;
+
+  if (state.castling_rights & castling_rights_t::WK) {
+    ss << 'K';
+    has_castling_rights = true;
+  }
+
+  if (state.castling_rights & castling_rights_t::WQ) {
+    ss << 'Q';
+    has_castling_rights = true;
+  }
+
+  if (state.castling_rights & castling_rights_t::BK) {
+    ss << 'k';
+    has_castling_rights = true;
+  }
+
+  if (state.castling_rights & castling_rights_t::BQ) {
+    ss << 'q';
+    has_castling_rights = true;
+  }
+
+  if (!has_castling_rights) { ss << '-'; }
+
+  ss << ' ';
+
+  // Step 4: En passant target square
+  if (state.is_en_passant) {
+    ss << state.en_passant_target_square;
+  } else {
+    ss << '-';
+  }
+
+  ss << ' ';
+
+  // Step 5: Halfmove clock
+  ss << state.half_move_clock << ' ';
+
+  // Step 6: Fullmove number
+  ss << state.full_move_clock;
+
+  return ss.str();
 }
 
 

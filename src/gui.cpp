@@ -539,7 +539,8 @@ void gui_t::update_state()
   // Check copy FEN to clipboard button
   if (is_mouse_in(buttons["to_clipboard"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
-    set_to_clipboard(state.FEN);
+    const std::string FEN = gui::state_to_FEN(state);
+    set_to_clipboard(FEN);
   }
 
   // Check input text

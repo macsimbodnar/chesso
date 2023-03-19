@@ -72,7 +72,6 @@ enum class piece_t
 
 struct state_t
 {
-  std::string FEN;
   std::array<std::array<piece_t, 8>, 8> board;
   color_t active_color = color_t::WHITE;
   uint8_t castling_rights = castling_rights_t::ALL;
@@ -87,6 +86,7 @@ void set_piece(state_t& state, const position_t& pos, const piece_t piece);
 piece_t c_to_piece(const char p);
 color_t get_piece_color(const piece_t t);
 state_t load_FEN(const std::string& fen);
+std::string state_to_FEN(const state_t &state);
 position_t algebraic_to_pos(const std::string& p);
 std::string pos_to_algebraic(const position_t& p);
 
