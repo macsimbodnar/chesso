@@ -49,6 +49,9 @@ struct control_panel_conf
   pixel_t text_off_color = 0XFF0000FF;
   constexpr static int text_padding = 5;
   constexpr static int font_size = 11;
+  bool is_FEN_input_selected = false;
+  texture_t FEN_input_texture;
+  rect_t FEN_rect;
 
   control_panel_conf(const int screen_w,
                      const int screen_h,
@@ -67,6 +70,11 @@ struct control_panel_conf
       rect.y = board_conf.rect.y + board_conf.rect.h + board_conf.padding;
       rect.h = screen_h - rect.h;
     }
+
+    // Get fen rect
+    const point_t pos = get_text_pos(6);
+    FEN_rect = {pos.x, pos.y, rect.w - (text_padding * 2),
+                font_size + (text_padding * 2)};
   }
 
   inline point_t get_text_pos(const int n) const
@@ -91,8 +99,9 @@ struct held_piece_t
 
 struct piece_animation_t
 {
-  enum state_t {
-    OFF, 
+  enum state_t
+  {
+    OFF,
     RUNNING,
     DONE,
   };
@@ -116,7 +125,7 @@ private:
   const rect_t screen;
   const bool is_screen_horizontal;
   chessboard_conf board_conf;
-  const control_panel_conf panel_conf;
+  control_panel_conf panel_conf;
 
   std::map<std::string, texture_t> textures;
   std::map<gui::piece_t, texture_t> piece_textures;

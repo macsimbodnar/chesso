@@ -72,6 +72,7 @@ enum class piece_t
 
 struct state_t
 {
+  std::string FEN;
   std::array<std::array<piece_t, 8>, 8> board;
   color_t active_color = color_t::WHITE;
   uint8_t castling_rights = castling_rights_t::ALL;

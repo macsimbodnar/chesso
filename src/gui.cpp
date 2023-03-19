@@ -66,7 +66,10 @@ void gui_t::on_init(void*)
   // Load default state
   state = gui::load_FEN(FEN_INIT_POS);
 
-  {  // Buttons
+  // Buttons
+  {  // Flip board button
+
+
     const int32_t button_h = 42;
     const int32_t button_w = 50;
     const int32_t x = panel_conf.rect.x + panel_conf.text_padding;
@@ -74,7 +77,18 @@ void gui_t::on_init(void*)
                       panel_conf.text_padding;
 
     buttons["flip"] = create_button({x, y, button_w, button_h}, 0xFFFFFFFF,
-                                    textures["flip"], 0x333333FF);
+                                    textures["flip"], 0xAAAAAAFF);
+  }
+
+  {  // Copy FEN to clipboard button
+
+    const texture_t text =
+        create_text("Copy FEN", 0x000000FF, fonts[panel_conf.font_size]);
+
+    const point_t p = panel_conf.get_text_pos(8);
+
+    buttons["to_clipboard"] = create_button(
+        {p.x, p.y, text.w + 10, text.h + 10}, 0xFFFFFFFF, text, 0xAAAAAAFF);
   }
 }
 
@@ -454,6 +468,27 @@ void gui_t::draw_panel()
     draw_texture(full_move_clock, full_move_clock_pos.x, full_move_clock_pos.y);
   }
 
+  {  // FEN Input text
+
+    const texture_t fen_texture =
+        create_text("Insert FEN: ", panel_conf.text_color, font);
+    const point_t fen_pos = panel_conf.get_text_pos(5);
+    draw_texture(fen_texture, fen_pos.x, fen_pos.y);
+
+    pixel_t rect_color = 0xAAAAAAFF;
+    if (panel_conf.is_FEN_input_selected) { rect_color = 0xFFFFFFFF; }
+    draw_rect(panel_conf.FEN_rect, rect_color);
+
+    if (panel_conf.FEN_input_texture.is_valid()) {
+      const point_t pos = {
+          panel_conf.FEN_rect.x + 2,
+          panel_conf.FEN_rect.y +
+              (panel_conf.FEN_rect.h - panel_conf.FEN_input_texture.h) / 2};
+
+      draw_texture(panel_conf.FEN_input_texture, pos.x, pos.y);
+    }
+  }
+
   {  // FPS
 
     const texture_t fps_texture =
@@ -469,19 +504,22 @@ void gui_t::draw_panel()
 
   {  // Flip button
     const button_t& button = buttons["flip"];
-
-
     draw_button_with_icon(button);
+  }
+
+  {  // Copy to flip button
+    const button_t& button = buttons["to_clipboard"];
+    draw_button(button);
   }
 }
 
 static float a = false;
 void gui_t::handle_events()
 {
-  if (is_key_pressed(keycap_t::A) && !a) {
-    start_animation({1, 2}, {1, 3});
-    a = true;
-  }
+  // if (is_key_pressed(keycap_t::A) && !a) {
+  //   start_animation({1, 2}, {1, 3});
+  //   a = true;
+  // }
 }
 
 
@@ -496,6 +534,44 @@ void gui_t::update_state()
   if (is_mouse_in(buttons["flip"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
     board_conf.flipped = !board_conf.flipped;
+  }
+
+  // Check copy FEN to clipboard button
+  if (is_mouse_in(buttons["to_clipboard"].rect) && mouse.left_button.click) {
+    play_sound(sound_fx["click"]);
+    set_to_clipboard(state.FEN);
+  }
+
+  // Check input text
+  if (is_mouse_in(panel_conf.FEN_rect) && mouse.left_button.click) {
+    panel_conf.is_FEN_input_selected = true;
+    start_text_input();
+  } else if (mouse.left_button.click) {
+    panel_conf.is_FEN_input_selected = false;
+    stop_text_input();
+  }
+
+  // Update input text texture in case
+  if (panel_conf.is_FEN_input_selected && should_render_text()) {
+    const std::string& FEN = get_input_text();
+    const font_t& font = fonts[panel_conf.font_size];
+    panel_conf.FEN_input_texture = create_text(FEN, 0x000000FF, font);
+  }
+
+  // Check if enter is pressed in the FEN field
+  if (panel_conf.is_FEN_input_selected && is_key_pressed(keycap_t::ENTER)) {
+    const std::string& FEN = get_input_text();
+
+    try {
+      state = gui::load_FEN(FEN);
+      panel_conf.is_FEN_input_selected = false;
+      stop_text_input();
+
+    } catch (const std::exception& e) {
+      LOG_W << "Error loading FEN string. " + std::string(e.what()) << END_W;
+    }
+
+    clear_input_text_buffer();
   }
 
   // Check animation

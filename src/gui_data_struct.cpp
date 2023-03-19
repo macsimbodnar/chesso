@@ -338,6 +338,9 @@ state_t load_FEN(const std::string& FEN)
                         " FEN: " + FEN);
   }
 
+  // Set the fen string at the end
+  state.FEN = FEN;
+
   return state;
 }
 
