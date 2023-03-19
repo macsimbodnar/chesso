@@ -136,6 +136,11 @@ rect_t gui_t::get_square_rect(const int x, const int y)
 void gui_t::start_animation(const gui::position_t& from,
                             const gui::position_t& to)
 {
+  if (from == to) {
+    LOG_I << "Looks like from and to is the same: " << from << END_I;
+    return;
+  }
+
   // If the piece is empty we skip the animation
   const gui::piece_t piece = gui::get_piece(state, from);
 
@@ -157,8 +162,8 @@ void gui_t::start_animation(const gui::position_t& from,
   animation.end_pos = piece_pos_to_screen_pixel_pos(to);
 
   // Calculate the total distance to move in both X and Y directions
-  animation.total_distance = {animation.end_pos.x - animation.start_pos.x,
-                              animation.end_pos.y - animation.start_pos.y};
+  animation.total_distance = {(animation.end_pos.x - animation.start_pos.x),
+                              (animation.end_pos.y - animation.start_pos.y)};
 
   play_sound(sound_fx[PICK_SOUND]);
 }
@@ -178,11 +183,14 @@ point_t gui_t::get_next_animation_pos()
   const uint64_t current_tick = get_ticks();
 
   // Calculate the elapsed time since the animation started
-  uint64_t elapsed_time = current_tick - animation.start_tick;
+  const uint64_t elapsed_time = current_tick - animation.start_tick;
 
   // Calculate the percentage of the animation completed
-  const float percentage_complete =
+  float percentage_complete =
       elapsed_time / static_cast<float>(animation.duration_ms);
+
+
+  if (percentage_complete > 1.0f) { percentage_complete = 1.0f; }
 
   // Calculate the current position of the animation based on the percentage
   // complete
@@ -194,9 +202,8 @@ point_t gui_t::get_next_animation_pos()
   };
 
   // In case of animation done
-  if (animation.end_pos.x >= result.x && animation.end_pos.y >= result.y) {
+  if (animation.end_pos.x == result.x && animation.end_pos.y == result.y) {
     animation.state = piece_animation_t::DONE;
-    LOG_I << "Animation duration: " << elapsed_time << END_I;
     return animation.end_pos;
   }
 
@@ -472,7 +479,7 @@ static float a = false;
 void gui_t::handle_events()
 {
   if (is_key_pressed(keycap_t::A) && !a) {
-    start_animation({1, 2}, {3, 2});
+    start_animation({1, 2}, {1, 3});
     a = true;
   }
 }

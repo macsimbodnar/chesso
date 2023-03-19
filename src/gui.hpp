@@ -34,7 +34,6 @@ struct chessboard_conf
     // not divisible by 8
     rect = {padding, padding, square_size * 8, square_size * 8};
 
-
     LOG_I << "Board width: " << rect.w << END_I;
     LOG_I << "Board padding: " << padding << END_I;
     LOG_I << "Board square size: " << square_size << END_I;
