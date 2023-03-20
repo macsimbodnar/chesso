@@ -72,19 +72,22 @@ struct control_panel_conf
     }
 
     // Get fen rect
-    const point_t pos = get_text_pos(6);
-    FEN_rect = {pos.x, pos.y, rect.w - (text_padding * 2),
-                font_size + (text_padding * 2)};
+    const rect_t pos = get_grid_rect(6, 0, 1);
+    FEN_rect = {pos.x, pos.y, pos.w, pos.h + 10};
   }
 
-  inline point_t get_text_pos(const int n) const
+  inline rect_t get_grid_rect(const int line,
+                              const int col,
+                              const int tot_col) const
   {
-    point_t res;
+    const int w = (rect.w / tot_col) - 10;
+    const int h = font_size + text_padding;
+    const int x = rect.x + (w * col) + 5;
+    const int y = rect.y + (h * line);
 
-    res.x = rect.x + text_padding;
-    res.y = rect.y + (n * (font_size + text_padding)) + text_padding;
+    const rect_t result = {x, y, w, h};
 
-    return res;
+    return result;
   }
 };
 
@@ -137,6 +140,8 @@ private:
   gui::state_t state;
   held_piece_t held_piece;
   piece_animation_t animation;
+
+  bool enter_key_pressed = false;
 
 public:
   gui_t(const int w, const int h)
