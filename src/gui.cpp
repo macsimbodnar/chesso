@@ -47,6 +47,7 @@ void gui_t::on_init(void*)
   sound_fx["tick_4"] = load_sound("assets/sound/tick_4.wav");
   sound_fx["tick_5"] = load_sound("assets/sound/tick_5.wav");
   sound_fx["click"] = load_sound("assets/sound/click.wav");
+  sound_fx["wow"] = load_sound("assets/sound/anime-wow-sound-effect.mp3");
 
   {  // Generate the files and ranks text textures
     const font_t coordinates_font = load_font(
@@ -69,8 +70,8 @@ void gui_t::on_init(void*)
   // Buttons
   {  // Flip board button
 
-    const int32_t button_h = 42;
-    const int32_t button_w = 50;
+    const int32_t button_h = 18;
+    const int32_t button_w = 20;
     const int32_t x = panel_conf.rect.x + panel_conf.text_padding;
     const int32_t y = panel_conf.rect.y + panel_conf.rect.h - button_h -
                       panel_conf.text_padding;
@@ -99,6 +100,8 @@ void gui_t::on_init(void*)
     buttons["reset"] = create_button({p.x, p.y, text.w + 10, text.h + 10},
                                      0xFFFFFFFF, text, 0xAAAAAAFF);
   }
+
+  play_sound(sound_fx["wow"]);
 }
 
 
