@@ -4,14 +4,17 @@
 static constexpr char FEN_INIT_POS[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+static constexpr char FONT_PATH[] = "assets/font/PressStart2P.ttf";
+
 static constexpr char PICK_SOUND[] = "tick_2";
 static constexpr char RELEASE_SOUND[] = "tick_4";
 
 void gui_t::on_init(void*)
 {
-  fonts[20] = load_font("assets/font/PressStart2P.ttf", 20);
-  fonts[panel_conf.font_size] =
-      load_font("assets/font/PressStart2P.ttf", panel_conf.font_size);
+  fonts[20] = load_font(FONT_PATH, 20);
+  fonts[panel_conf.font_size] = load_font(FONT_PATH, panel_conf.font_size);
+  fonts[fen_panel_conf.font_size] =
+      load_font(FONT_PATH, fen_panel_conf.font_size);
 
   /**
    * pawn = "P"
@@ -358,7 +361,9 @@ void gui_t::draw_coordinates()
 
     const int32_t y =
         is_screen_horizontal
-            ? (board.h + ((screen.h - board.h + board.y - t.h) / 2))
+            ? (board.h +
+               ((screen.h - fen_panel_conf.rect.h - board.h + board.y - t.h) /
+                2))
             : ((board.y - t.h) / 2);
 
     const int32_t file = flipped ? 7 - i : i;
@@ -528,6 +533,22 @@ void gui_t::draw_panel()
     const button_t& button = buttons["reset"];
     draw_button(button);
   }
+}
+
+
+void gui_t::draw_fen_panel()
+{
+  draw_rect(fen_panel_conf.rect, fen_panel_conf.bg_color);
+
+  const std::string fen = gui::state_to_FEN(state);
+  const font_t& font = fonts[fen_panel_conf.font_size];
+  const texture_t t = create_text(fen, fen_panel_conf.text_color, font);
+  const point_t p = {
+      fen_panel_conf.rect.x + fen_panel_conf.text_padding,
+      fen_panel_conf.rect.y + ((fen_panel_conf.rect.h - t.h) / 2)};
+
+  LOG_I << fen << END_I;
+  draw_texture(t, p.x, p.y);
 }
 
 
@@ -718,4 +739,5 @@ void gui_t::on_update(void*)
   draw_pieces();
 
   draw_panel();
+  draw_fen_panel();
 }

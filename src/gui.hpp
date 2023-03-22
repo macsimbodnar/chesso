@@ -8,6 +8,22 @@
 #include "utils.hpp"
 
 
+struct fen_panel_conf
+{
+  int text_padding = 5;
+  int font_size = 10;
+  rect_t rect;
+  pixel_t bg_color = 0x000000FF;
+  pixel_t text_color = 0xFFFFFFFF;
+
+  fen_panel_conf(const int screen_w, const int screen_h)
+  {
+    const int h = font_size + (text_padding * 2);
+    rect = {0, screen_h - h, screen_w, h};
+  }
+};
+
+
 struct chessboard_conf
 {
   constexpr static float paddings_percentage = 0.04f;
@@ -19,12 +35,15 @@ struct chessboard_conf
   pixel_t white_color = {232, 235, 239, 255};
   bool flipped = false;
 
-  chessboard_conf(const int screen_w, const int screen_h)
+  chessboard_conf(const int screen_w,
+                  const int screen_h,
+                  const fen_panel_conf& fen_panel_conf)
   {
     assert(screen_w != 0);
     assert(screen_h != 0);
 
-    const int full_size = (screen_w > screen_h) ? screen_h : screen_w;
+    const int full_size =
+        (screen_w > screen_h) ? (screen_h - fen_panel_conf.rect.h) : screen_w;
     padding = std::round(static_cast<float>(full_size) * paddings_percentage);
 
     const int board_size = full_size - (padding * 2);
@@ -55,6 +74,7 @@ struct control_panel_conf
 
   control_panel_conf(const int screen_w,
                      const int screen_h,
+                     const fen_panel_conf& fen_panel_conf,
                      const chessboard_conf& board_conf)
   {
     if (screen_w > screen_h) {
@@ -62,13 +82,13 @@ struct control_panel_conf
       rect.w = screen_w - rect.x;
 
       rect.y = 0;
-      rect.h = screen_h;
+      rect.h = screen_h - fen_panel_conf.rect.h;
     } else {
       rect.x = 0;
-      rect.w = screen_w;
-
       rect.y = board_conf.rect.y + board_conf.rect.h + board_conf.padding;
-      rect.h = screen_h - rect.h;
+
+      rect.w = screen_w;
+      rect.h = screen_h - rect.y - fen_panel_conf.rect.h;
     }
 
     // Get fen rect
@@ -82,8 +102,8 @@ struct control_panel_conf
   {
     const int w = (rect.w / tot_col) - 10;
     const int h = font_size + text_padding;
-    const int x = rect.x + (w * col) + 5;
-    const int y = rect.y + (h * line);
+    const int x = rect.x + (w * col) + text_padding;
+    const int y = rect.y + (h * line) + text_padding;
 
     const rect_t result = {x, y, w, h};
 
@@ -127,6 +147,7 @@ class gui_t : public pixello
 private:
   const rect_t screen;
   const bool is_screen_horizontal;
+  fen_panel_conf fen_panel_conf;
   chessboard_conf board_conf;
   control_panel_conf panel_conf;
 
@@ -148,8 +169,9 @@ public:
       : pixello(w, h, "Chesso", 60),
         screen{0, 0, w, h},
         is_screen_horizontal(w > h),
-        board_conf(w, h),
-        panel_conf(w, h, board_conf)
+        fen_panel_conf(w, h),
+        board_conf(w, h, fen_panel_conf),
+        panel_conf(w, h, fen_panel_conf, board_conf)
   {}
 
 private:  // OVERRIDE
@@ -175,6 +197,7 @@ private:  // DRAW
   void draw_piece(const gui::piece_t piece, const gui::position_t& pos);
 
   void draw_panel();
+  void draw_fen_panel();
 
 private:  // UTILS
   rect_t get_square_rect(const int x, const int y);
