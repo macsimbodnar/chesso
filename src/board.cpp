@@ -211,6 +211,26 @@ u64 rook_attacks(const square_t square, const u64 blocks)
 }
 
 
+u64 set_occupancy(const int index, const int mask_bit_count, u64 attack_mask)
+{
+  u64 occupancy = EMPTY_BB;
+
+  for (int count = 0; count < mask_bit_count; ++count) {
+    const int square = get_lsb_index(attack_mask);
+
+    assert(square >= A8);
+    assert(square <= H1);
+
+    pop_bit(attack_mask, square);
+
+    // Check if on board
+    if (index & (ONE_BIT << count)) { occupancy |= ONE_BIT << square; }
+  }
+
+  return occupancy;
+}
+
+
 void print_board(const u64 board)
 {
   LOG_I << std::endl;

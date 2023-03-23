@@ -1,6 +1,8 @@
 #include "board.hpp"
 #include "chesso.hpp"
 #include "gui.hpp"
+#include "log.hpp"
+
 
 int main(int, char**)
 {
@@ -13,19 +15,15 @@ int main(int, char**)
 
   chesso::init_attack_vectors();
 
-  u64 blocks = EMPTY_BB;
+  u64 attack_mask = chesso::generate_mask_bishop_attacks(chesso::D4);
 
-  set_bit(blocks, chesso::F4);
-  set_bit(blocks, chesso::D2);
-  set_bit(blocks, chesso::D5);
-  set_bit(blocks, chesso::A4);
+  for (int i = 0; i < 4095; ++i) {
+    u64 o = chesso::set_occupancy(i, count_bits(attack_mask), attack_mask);
 
-  chesso::print_board(blocks);
+    chesso::print_board(o);
 
-
-  u64 a = chesso::rook_attacks(chesso::D4, blocks);
-  chesso::print_board(a);
-
+    // getchar();
+  }
 
   return EXIT_SUCCESS;
 }
