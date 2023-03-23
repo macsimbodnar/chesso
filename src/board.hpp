@@ -5,6 +5,7 @@
 #define u64 uint64_t
 #define glob static
 #define EMPTY_BB 0ULL
+#define ONE_BIT 1ULL
 #define get_bit(bboard, square) (bboard & (1ULL << square))
 #define set_bit(bboard, square) (bboard |= (1ULL << square))
 #define pop_bit(bboard, square) ((bboard) &= ~(1ULL << square))
@@ -50,9 +51,9 @@ enum color_t { WHITE, BLACK };
 // Attack vectors
 struct attack_vectors_t
 {
-  u64 pawn[2][64]; // [color][square]
-  u64 knight[64]; // [square]
-  u64 king[64]; // [square]
+  u64 pawn[2][64];  // [color][square]
+  u64 knight[64];   // [square]
+  u64 king[64];     // [square]
 };
 
 glob attack_vectors_t attack_vectors;
@@ -62,6 +63,12 @@ void init_attack_vectors();
 u64 generate_mask_pawn_attacks(const color_t color, const square_t square);
 u64 generate_mask_knight_attacks(const square_t square);
 u64 generate_mask_king_attacks(const square_t square);
+
+u64 generate_mask_bishop_attacks(const square_t square);
+u64 generate_mask_rook_attacks(const square_t square);
+
+u64 bishop_attacks(const square_t square, const u64 blocks);
+u64 rook_attacks(const square_t square, const u64 blocks);
 
 
 // Utils

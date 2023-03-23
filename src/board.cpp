@@ -93,6 +93,124 @@ u64 generate_mask_king_attacks(const square_t square)
 }
 
 
+u64 generate_mask_bishop_attacks(const square_t square)
+{
+  u64 attacks = EMPTY_BB;
+
+  const int tr = square / 8;  // Target rank
+  const int tf = square % 8;  // Target file
+
+  int r, f;  // Current rank and file
+  for (r = tr + 1, f = tf + 1; r < 7 && f < 7; ++r, ++f) {
+    attacks |= (ONE_BIT << ((r * 8) + f));
+  }
+  for (r = tr - 1, f = tf + 1; r > 0 && f < 7; --r, ++f) {
+    attacks |= (ONE_BIT << ((r * 8) + f));
+  }
+  for (r = tr + 1, f = tf - 1; r < 7 && f > 0; ++r, --f) {
+    attacks |= (ONE_BIT << ((r * 8) + f));
+  }
+  for (r = tr - 1, f = tf - 1; r > 0 && f > 0; --r, --f) {
+    attacks |= (ONE_BIT << ((r * 8) + f));
+  }
+
+  return attacks;
+}
+
+
+u64 generate_mask_rook_attacks(const square_t square)
+{
+  u64 attacks = EMPTY_BB;
+
+  const int tr = square / 8;  // Target rank
+  const int tf = square % 8;  // Target file
+
+  int r, f;  // Current rank and file
+  for (r = tr + 1; r < 7; ++r) {
+    attacks |= (ONE_BIT << ((r * 8) + tf));
+  }
+  for (r = tr - 1; r > 0; --r) {
+    attacks |= (ONE_BIT << ((r * 8) + tf));
+  }
+  for (f = tf + 1; f < 7; ++f) {
+    attacks |= (ONE_BIT << ((tr * 8) + f));
+  }
+  for (f = tf - 1; f > 0; --f) {
+    attacks |= (ONE_BIT << ((tr * 8) + f));
+  }
+
+  return attacks;
+}
+
+
+u64 bishop_attacks(const square_t square, const u64 blocks)
+{
+  u64 attacks = EMPTY_BB;
+
+  (void)blocks;
+
+  const int tr = square / 8;  // Target rank
+  const int tf = square % 8;  // Target file
+
+  int r, f;  // Current rank and file
+  for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; ++r, ++f) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (r = tr - 1, f = tf + 1; r >= 0 && f <= 7; --r, ++f) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (r = tr + 1, f = tf - 1; r <= 7 && f >= 0; ++r, --f) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (r = tr - 1, f = tf - 1; r >= 0 && f >= 0; --r, --f) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+
+  return attacks;
+}
+
+
+u64 rook_attacks(const square_t square, const u64 blocks)
+{
+  u64 attacks = EMPTY_BB;
+
+  const int tr = square / 8;  // Target rank
+  const int tf = square % 8;  // Target file
+
+  int r, f;  // Current rank and file
+  for (r = tr + 1; r <= 7; ++r) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + tf));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (r = tr - 1; r >= 0; --r) {
+    const u64 candidate = (ONE_BIT << ((r * 8) + tf));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (f = tf + 1; f <= 7; ++f) {
+    const u64 candidate = (ONE_BIT << ((tr * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+  for (f = tf - 1; f >= 0; --f) {
+    const u64 candidate = (ONE_BIT << ((tr * 8) + f));
+    attacks |= candidate;
+    if (candidate & blocks) { break; }
+  }
+
+  return attacks;
+}
+
+
 void print_board(const u64 board)
 {
   LOG_I << std::endl;

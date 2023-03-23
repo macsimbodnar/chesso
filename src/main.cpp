@@ -13,8 +13,18 @@ int main(int, char**)
 
   chesso::init_attack_vectors();
 
-  // u64 a = chesso::generate_mask_king_attacks(chesso::A4);
-  // chesso::print_board(a);
+  u64 blocks = EMPTY_BB;
+
+  set_bit(blocks, chesso::F4);
+  set_bit(blocks, chesso::D2);
+  set_bit(blocks, chesso::D5);
+  set_bit(blocks, chesso::A4);
+
+  chesso::print_board(blocks);
+
+
+  u64 a = chesso::rook_attacks(chesso::D4, blocks);
+  chesso::print_board(a);
 
 
   return EXIT_SUCCESS;
