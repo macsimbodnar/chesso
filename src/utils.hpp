@@ -21,6 +21,7 @@ inline std::vector<std::string> split_string(const std::string& str)
   return tokens;
 }
 
+
 inline bool is_uint(const std::string& str)
 {
   for (const char c : str) {
@@ -29,4 +30,3 @@ inline bool is_uint(const std::string& str)
 
   return true;
 }
-
