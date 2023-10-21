@@ -199,6 +199,7 @@ private:  // DRAW
   void draw_panel();
   void draw_fen_panel();
 
+
 private:  // UTILS
   rect_t get_square_rect(const int x, const int y);
   point_t piece_pos_to_matrix_pos(const gui::position_t& pos);
@@ -206,4 +207,5 @@ private:  // UTILS
   gui::position_t screen_pos_to_position(const point_t& pos);
   void start_animation(const gui::position_t& from, const gui::position_t& to);
   point_t get_next_animation_pos();
+  void draw_static_board(const rect_t &rect, const gui::board_t &board_state);
 };

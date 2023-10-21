@@ -69,10 +69,11 @@ enum class piece_t
   W_PAWN
 };
 
+typedef std::array<std::array<piece_t, 8>, 8> board_t;
 
 struct state_t
 {
-  std::array<std::array<piece_t, 8>, 8> board;
+  board_t board;
   color_t active_color = color_t::WHITE;
   uint8_t castling_rights = castling_rights_t::ALL;
   bool is_en_passant = false;
