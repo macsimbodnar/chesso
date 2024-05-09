@@ -151,7 +151,45 @@ void init_attack_vectors()
 
     // Init king attacks
     attack_vectors.king[i] = generate_mask_king_attacks(square);
+
+    // Init masks for bishop and rooks
+    attack_vectors.bishop_masks[square] = generate_mask_bishop_attacks(square);
+    attack_vectors.rook_masks[square] = generate_mask_rook_attacks(square);
+
+    {  // Init bishop and rook attack vector
+      const u64 bishop_attack_mask = attack_vectors.bishop_masks[square];
+      const u64 rook_attack_mask = attack_vectors.rook_masks[square];
+
+      const int bishop_num_relevant_bits = bishop_relevant_bits_count[square];
+      const int rook_num_relevant_bits = rook_relevant_bits_count[square];
+
+      const int bishop_occupancy_indicies = (1 << bishop_num_relevant_bits);
+      const int rook_occupancy_indicies = (1 << rook_num_relevant_bits);
+
+      for (int index = 0; index < bishop_occupancy_indicies; ++index) {
+        const u64 occupancy =
+            set_occupancy(index, bishop_num_relevant_bits, bishop_attack_mask);
+
+        const int magic_index = (occupancy * bishop_magic_numbers[square]) >>
+                                (64 - bishop_num_relevant_bits);
+
+        attack_vectors.bishop_attacks[square][magic_index] =
+            bishop_attacks(square, occupancy);
+      }
+
+      for (int index = 0; index < rook_occupancy_indicies; ++index) {
+        const u64 occupancy =
+            set_occupancy(index, rook_num_relevant_bits, rook_attack_mask);
+
+        const int magic_index = (occupancy * rook_magic_numbers[square]) >>
+                                (64 - rook_num_relevant_bits);
+
+        attack_vectors.rook_attacks[square][magic_index] =
+            rook_attacks(square, occupancy);
+      }
+    }
   }
+
 
   LOG_S << "Attack vectors generated!" << END_S;
 }
@@ -447,5 +485,26 @@ void print_NOT_GH_FILE()
 
   print_board(not_gh_file);
 }
+
+
+u64 get_bishop_attacks(const square_t square, u64 occupancy)
+{
+  occupancy &= attack_vectors.bishop_masks[square];
+  occupancy *= bishop_magic_numbers[square];
+  occupancy >>= 64 - bishop_relevant_bits_count[square];
+
+  return attack_vectors.bishop_attacks[square][occupancy];
+}
+
+
+u64 get_rook_attacks(const square_t square, u64 occupancy)
+{
+  occupancy &= attack_vectors.rook_masks[square];
+  occupancy *= rook_magic_numbers[square];
+  occupancy >>= 64 - rook_relevant_bits_count[square];
+
+  return attack_vectors.rook_attacks[square][occupancy];
+}
+
 
 }  // namespace chesso

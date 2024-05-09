@@ -5,9 +5,10 @@
 #define u64 uint64_t
 #define EMPTY_BB 0ULL
 #define ONE_BIT 1ULL
-#define get_bit(bboard, square) (bboard & (1ULL << square))
-#define set_bit(bboard, square) (bboard |= (1ULL << square))
-#define pop_bit(bboard, square) ((bboard) &= ~(1ULL << square))
+
+#define get_bit(bboard, square) ((bboard) & (1ULL << (square)))
+#define set_bit(bboard, square) ((bboard) |= (1ULL << (square)))
+#define pop_bit(bboard, square) ((bboard) &= ~(1ULL << (square)))
 
 static inline int count_bits(u64 board)
 {
@@ -65,7 +66,7 @@ enum square_t {
   A4, B4, C4, D4, E4, F4, G4, H4,
   A3, B3, C3, D3, E3, F3, G3, H3,
   A2, B2, C2, D2, E2, F2, G2, H2,
-  A1, B1, C1, D1, E1, F1, G1, H1
+  A1, B1, C1, D1, E1, F1, G1, H1, NO_SQ
 };
 
 
@@ -108,7 +109,20 @@ static inline constexpr u64 rook_magic_numbers[64] = { 0x8a80104000800020ULL, 0x
 static inline constexpr u64 bishop_magic_numbers[64] = { 0x40040844404084ULL, 0x2004208a004208ULL, 0x10190041080202ULL, 0x108060845042010ULL, 0x581104180800210ULL, 0x2112080446200010ULL, 0x1080820820060210ULL, 0x3c0808410220200ULL, 0x4050404440404ULL, 0x21001420088ULL, 0x24d0080801082102ULL, 0x1020a0a020400ULL, 0x40308200402ULL, 0x4011002100800ULL, 0x401484104104005ULL, 0x801010402020200ULL, 0x400210c3880100ULL, 0x404022024108200ULL, 0x810018200204102ULL, 0x4002801a02003ULL, 0x85040820080400ULL, 0x810102c808880400ULL, 0xe900410884800ULL, 0x8002020480840102ULL, 0x220200865090201ULL, 0x2010100a02021202ULL, 0x152048408022401ULL, 0x20080002081110ULL, 0x4001001021004000ULL, 0x800040400a011002ULL, 0xe4004081011002ULL, 0x1c004001012080ULL, 0x8004200962a00220ULL, 0x8422100208500202ULL, 0x2000402200300c08ULL, 0x8646020080080080ULL, 0x80020a0200100808ULL, 0x2010004880111000ULL, 0x623000a080011400ULL, 0x42008c0340209202ULL, 0x209188240001000ULL, 0x400408a884001800ULL, 0x110400a6080400ULL, 0x1840060a44020800ULL, 0x90080104000041ULL, 0x201011000808101ULL, 0x1a2208080504f080ULL, 0x8012020600211212ULL, 0x500861011240000ULL, 0x180806108200800ULL, 0x4000020e01040044ULL, 0x300000261044000aULL, 0x802241102020002ULL, 0x20906061210001ULL, 0x5a84841004010310ULL, 0x4010801011c04ULL, 0xa010109502200ULL, 0x4a02012000ULL, 0x500201010098b028ULL, 0x8040002811040900ULL, 0x28000010020204ULL, 0x6000020202d0240ULL, 0x8918844842082200ULL, 0x4010011029020020ULL };
 
 enum sliding_piece_t { ROOK, BISHOP };
-enum color_t { WHITE, BLACK };
+enum color_t { WHITE, BLACK, BOTH };
+
+/**
+ * bin   dec 
+ * 0001  1     white king can castle to king side
+ * 0010  2     white king can castle to queen side
+ * 0100  4     black king can castle to king side
+ * 1000  8     black king can castle to queen side
+ */
+enum castling_t { WK = 1, WQ = 2, BK = 4, BQ = 8 };
+
+// Piece representation. UPPER CASE is for WHITE
+enum { P, N, B, R, Q, K, p, n, b, r, q, k};
+
 // clang-format on
 
 
@@ -118,10 +132,19 @@ struct attack_vectors_t
   u64 pawn[2][64];  // [color][square]
   u64 knight[64];   // [square]
   u64 king[64];     // [square]
+
+  u64 bishop_masks[64];         // [square]
+  u64 rook_masks[64];           // [square]
+  u64 bishop_attacks[64][512];  // [square][occupancies]
+  u64 rook_attacks[64][4096];   // [square][occupancies]
 };
 
-static attack_vectors_t attack_vectors;
+inline static attack_vectors_t attack_vectors;
 void init_attack_vectors();
+u64 get_bishop_attacks(const square_t square, u64 occupancy);
+u64 get_rook_attacks(const square_t square, u64 occupancy);
+
+// Constant generation utils
 
 u64 generate_mask_pawn_attacks(const color_t color, const square_t square);
 u64 generate_mask_knight_attacks(const square_t square);

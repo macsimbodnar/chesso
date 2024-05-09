@@ -8,7 +8,7 @@
 #include "utils.hpp"
 
 
-struct fen_panel_conf
+struct fen_panel_conf_t
 {
   int text_padding = 5;
   int font_size = 10;
@@ -16,7 +16,7 @@ struct fen_panel_conf
   pixel_t bg_color = 0x000000FF;
   pixel_t text_color = 0xFFFFFFFF;
 
-  fen_panel_conf(const int screen_w, const int screen_h)
+  fen_panel_conf_t(const int screen_w, const int screen_h)
   {
     const int h = font_size + (text_padding * 2);
     rect = {0, screen_h - h, screen_w, h};
@@ -24,7 +24,7 @@ struct fen_panel_conf
 };
 
 
-struct chessboard_conf
+struct chessboard_conf_t
 {
   constexpr static float paddings_percentage = 0.04f;
   constexpr static int black_boundary_size_px = 2;
@@ -35,9 +35,9 @@ struct chessboard_conf
   pixel_t white_color = {232, 235, 239, 255};
   bool flipped = false;
 
-  chessboard_conf(const int screen_w,
+  chessboard_conf_t(const int screen_w,
                   const int screen_h,
-                  const fen_panel_conf& fen_panel_conf)
+                  const fen_panel_conf_t& fen_panel_conf)
   {
     assert(screen_w != 0);
     assert(screen_h != 0);
@@ -74,8 +74,8 @@ struct control_panel_conf
 
   control_panel_conf(const int screen_w,
                      const int screen_h,
-                     const fen_panel_conf& fen_panel_conf,
-                     const chessboard_conf& board_conf)
+                     const fen_panel_conf_t& fen_panel_conf,
+                     const chessboard_conf_t& board_conf)
   {
     if (screen_w > screen_h) {
       rect.x = board_conf.rect.x + board_conf.rect.w + board_conf.padding;
@@ -147,8 +147,8 @@ class gui_t : public pixello
 private:
   const rect_t screen;
   const bool is_screen_horizontal;
-  fen_panel_conf fen_panel_conf;
-  chessboard_conf board_conf;
+  fen_panel_conf_t fen_panel_conf;
+  chessboard_conf_t board_conf;
   control_panel_conf panel_conf;
 
   std::map<std::string, texture_t> textures;
