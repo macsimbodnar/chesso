@@ -375,14 +375,70 @@ void gui_t::draw_coordinates()
 }
 
 
+void gui_t::draw_static_board(const rect_t& rect, const gui::board_t& board)
+{
+  // Check if the size makes sense
+  assert(rect.w == rect.h);
+  assert(rect.w % 8 == 0);
+  assert(rect.h % 8 == 0);
+
+  const int square_size = rect.w / 8;
+  const int x_offset = rect.x;
+  const int y_offset = rect.y;
+
+  {  // Draw tiles
+
+    bool black = false;
+    for (int y = 0; y < 8; ++y) {
+      for (int x = 0; x < 8; ++x) {
+        const pixel_t& color =
+            black ? board_conf.black_color : board_conf.white_color;
+
+
+        const rect_t rect = {(x * square_size) + x_offset,
+                             (y * square_size) + y_offset, square_size,
+                             square_size};
+
+        draw_rect(rect, color);
+        // draw_rect_outline(rect, 0x000000FF);
+
+        black = !black;
+      }
+
+      black = !black;
+    }
+  }
+
+  {  // Draw pieces
+    for (uint8_t i = 0; i < 8; ++i) {
+      for (uint8_t j = 0; j < 8; ++j) {
+        const auto& piece = board[i][j];
+
+        if (piece != gui::piece_t::EMPTY) {
+          const gui::position_t pos = {i, j};  // rank, files
+
+          if (piece == gui::piece_t::EMPTY) { continue; }
+
+          point_t board_coord = piece_pos_to_matrix_pos(pos);
+
+          const rect_t rect = {(board_coord.x * square_size) + x_offset,
+                                 (board_coord.y * square_size) + y_offset, square_size,
+                                 square_size};
+
+          const texture_t& piece_texture = piece_textures[piece];
+          draw_texture(piece_texture, rect);
+        }
+      }
+    }
+  }
+}
+
+
 void gui_t::draw_background()
 {
   draw_texture(textures["background"], {0, 0, screen.w, screen.h});
 }
 
-
-#include <bitset>
-#include <iostream>
 
 void gui_t::draw_panel()
 {
@@ -740,4 +796,8 @@ void gui_t::on_update(void*)
 
   draw_panel();
   draw_fen_panel();
+
+  // Test draw mini board
+  const gui::board_t& b = state.board;
+  draw_static_board({panel_conf.rect.x, panel_conf.rect.y + 200, 160, 160}, b);
 }
