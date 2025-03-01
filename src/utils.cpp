@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <bitset>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -6,7 +7,6 @@
 #include <random>
 #include <sstream>
 #include <unordered_map>
-#include <bitset>
 #include "exceptions.hpp"
 
 
@@ -548,4 +548,23 @@ void load_FEN(const std::string& FEN, board_t* board)
    **************************************************************************/
   // const std::string full_FEN = generate_FEN();
   // assert(FEN == full_FEN);
+}
+
+
+std::string color_to_string(color_t color)
+{
+  if (color == WHITE) { return "White"; }
+
+  return "Black";
+}
+
+
+color_t get_index_color(uint8_t index) {
+  position_t pos = index_to_position(index);
+  
+  if (((pos.file + pos.rank) % 2) == 0) {
+    return BLACK;
+  }
+
+  return WHITE;
 }

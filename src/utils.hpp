@@ -17,6 +17,8 @@ uint8_t algebraic_to_index(const std::string& p);
 std::string index_to_algebraic(const uint8_t i);
 char piece_to_char(const piece_t piece);
 piece_t char_to_piece(const char c);
+std::string color_to_string(color_t color);
+color_t get_index_color(uint8_t index);
 
 
 bool is_uint(const std::string& str);

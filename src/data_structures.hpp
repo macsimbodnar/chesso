@@ -4,6 +4,7 @@
 #include <list>
 #include <optional>
 #include <stack>
+#include <string>
 
 
 //-#############################  DEFINES  ##################################-//
@@ -56,6 +57,23 @@ struct position_t
 {
   uint8_t file;  // From 0 to 7
   uint8_t rank;  // From 0 to 7
+
+  bool operator==(const position_t& other) const
+  {
+    return file == other.file && rank == other.rank;
+  }
+
+  position_t()
+  {
+    file = 0;
+    rank = 0;
+  }
+
+  position_t(uint8_t file, uint8_t rank)
+  {
+    this->file = file;
+    this->rank = rank;
+  }
 };
 
 
@@ -90,4 +108,5 @@ struct board_t
   game_state_t game_state;
   history_t history;
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
+  std::string initial_fen;
 };
