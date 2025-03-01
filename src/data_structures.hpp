@@ -45,6 +45,14 @@ enum piece_t
 
 
 //-#############################  STRUCTS  ##################################-//
+struct zobrist_randoms_t
+{
+  std::array<uint64_t, 768> piece_randoms;
+  std::array<uint64_t, 16> castling_randoms;
+  std::array<uint64_t, 2> side_randoms;
+  std::array<uint64_t, 17> ep_randoms;  // en-passant randoms
+};
+
 struct move_t
 {};
 
@@ -67,6 +75,5 @@ struct board_t
   std::array<piece_t, BOARD_SIZE> board;
   game_state_t game_state;
   history_t history;
-  std::list<piece_t> piece_list;
-  // Zobrist random;
+  zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
 };

@@ -12,7 +12,7 @@ else()
      add_compile_options(-Wall -Wextra -Werror)
 
      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-          add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable)
+          add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter)
      endif()
 endif()
 
