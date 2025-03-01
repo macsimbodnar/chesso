@@ -8,7 +8,14 @@
 
 //-#############################  DEFINES  ##################################-//
 #define BOARD_SIZE 128
+#define DEFAULT_POSITION \
+  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+#ifndef STR
+#define STR(_N_) std::to_string(_N_)
+#endif
+
+static constexpr uint8_t INVALID_BOARD_INDEX = 127;
 
 //-#############################   ENUMS   ##################################-//
 enum castling_t
@@ -27,30 +34,37 @@ enum color_t
 
 enum piece_t
 {
-  B_PAWN = 'p',
-  B_KNIGHT = 'n',
-  B_BISHOP = 'b',
-  B_ROOK = 'r',
-  B_QUEEN = 'q',
-  B_KING = 'k',
-  W_PAWN = 'P',
-  W_KNIGHT = 'N',
-  W_BISHOP = 'B',
-  W_ROOK = 'R',
-  W_QUEEN = 'Q',
-  W_KING = 'K',
-  INVALID = '*',
-  EMPTY = ' '
+  B_PAWN = 0,
+  B_KNIGHT,
+  B_BISHOP,
+  B_ROOK,
+  B_QUEEN,
+  B_KING,
+  W_PAWN,
+  W_KNIGHT,
+  W_BISHOP,
+  W_ROOK,
+  W_QUEEN,
+  W_KING,
+  INVALID,
+  EMPTY
 };
 
 
 //-#############################  STRUCTS  ##################################-//
+struct position_t
+{
+  uint8_t file;  // From 0 to 7
+  uint8_t rank;  // From 0 to 7
+};
+
+
 struct zobrist_randoms_t
 {
-  std::array<uint64_t, 768> piece_randoms;
+  std::array<std::array<uint64_t, 64>, 6> piece_randoms;  // 12 pis * 64 squares
   std::array<uint64_t, 16> castling_randoms;
   std::array<uint64_t, 2> side_randoms;
-  std::array<uint64_t, 17> ep_randoms;  // en-passant randoms
+  std::array<uint64_t, 65> ep_randoms;  // en-passant randoms.
 };
 
 struct move_t
@@ -58,14 +72,14 @@ struct move_t
 
 struct game_state_t
 {
-  color_t active_color;               // Side to move
-  uint8_t castling;                   // Castling permissions
-  uint8_t half_move_clock;            // Half moves played
-  std::optional<uint8_t> en_passant;  // Active en-passant square, if any
-  uint16_t full_move_number;          // Total number of full moves played
-  uint64_t zobrist_key;               // Zobrist Key
-  int16_t phase_value;                // Evaluation Phase Value
-  move_t next_move;                   // The move played in this position
+  color_t active_color;       // Side to move
+  uint8_t castling;           // Castling permissions
+  uint8_t half_move_clock;    // Half moves played
+  uint8_t en_passant;         // Active en-passant square, if any
+  uint16_t full_move_number;  // Total number of full moves played
+  uint64_t zobrist_key;       // Zobrist Key
+  int16_t phase_value;        // Evaluation Phase Value
+  move_t next_move;           // The move played in this position
 };
 
 typedef std::stack<game_state_t> history_t;

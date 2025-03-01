@@ -2,7 +2,23 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <random>
+#include <sstream>
+#include <unordered_map>
+#include <bitset>
+#include "exceptions.hpp"
+
+
+std::vector<std::string> split_string(const std::string& str)
+{
+  std::stringstream ss(str);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> tokens(begin, end);
+
+  return tokens;
+}
 
 
 void init_zobrist(zobrist_randoms_t* zobrist)
@@ -14,8 +30,10 @@ void init_zobrist(zobrist_randoms_t* zobrist)
   std::mt19937_64 gen(rd());
   std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);
 
-  for (uint64_t& random : zobrist->piece_randoms) {
-    random = dist(gen);
+  for (auto& piece_array : zobrist->piece_randoms) {
+    for (uint64_t& random : piece_array) {
+      random = dist(gen);
+    }
   }
 
   for (uint64_t& random : zobrist->castling_randoms) {
@@ -32,24 +50,502 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 }
 
 
-uint64_t init_zobrist_key()
+uint64_t init_zobrist_key(const board_t* board)
 {
   uint64_t key = 0;
-  // TODO: implement
+
+  // Xor pieces on the board
+  for (int rank = 0; rank < 8; ++rank) {
+    for (int file = 0; file < 8; ++file) {
+      uint8_t index = position_to_index(file, rank);
+      piece_t piece = board->board[index];
+
+      if (piece != EMPTY && piece != INVALID) {
+        key ^= board->zobrist_randoms.piece_randoms[piece][index];
+      }
+    }
+  }
+
+  // Xor side to move
+  key ^= board->zobrist_randoms.side_randoms[board->game_state.active_color];
+
+  // Xor castling
+  key ^= board->zobrist_randoms.castling_randoms[board->game_state.castling];
+
+  // Xor en-passant
+  if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
+    key ^= board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+  }
+
   return key;
 }
 
 
-void init_game_state(game_state_t* gs)
+void cleanup_game_state(game_state_t* gs)
 {
   assert(gs != nullptr);
 
   gs->active_color = WHITE;
   gs->castling = WQ | WK | BQ | BK;
   gs->half_move_clock = 0;
-  gs->en_passant = std::optional<uint8_t>(std::nullopt);
+  gs->en_passant = INVALID_BOARD_INDEX;
   gs->full_move_number = 0;
   gs->zobrist_key = 0;
   gs->phase_value = 0;
   gs->next_move = move_t();
+}
+
+
+uint8_t position_to_index(const uint8_t file, const uint8_t rank)
+{
+  assert(file >= 0 && file < 8);
+  assert(rank >= 0 && rank < 8);
+
+  const uint8_t index = (rank << 4) + file;
+  assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
+
+  return index;
+}
+
+
+position_t index_to_position(uint8_t index)
+{
+  assert(!(index & 0x88));
+  assert(index < BOARD_SIZE);
+
+  position_t result;
+  result.file = index & 7;
+  result.rank = index >> 4;
+
+  return result;
+}
+
+
+uint8_t algebraic_to_index(const std::string& p)
+{
+  uint8_t result = INVALID_BOARD_INDEX;
+
+  if (p.size() != 2) { return INVALID_BOARD_INDEX; }
+
+  uint8_t file = p[0];
+  uint8_t rank = p[1];
+
+  assert(file >= 'a');
+  assert(file <= 'h');
+  assert(rank >= '1');
+  assert(rank <= '8');
+
+  file = file - 'a';
+  rank = rank - '1';
+
+  result = position_to_index(file, rank);
+
+  return result;
+}
+
+
+std::string index_to_algebraic(const uint8_t i)
+{
+  if (i == INVALID_BOARD_INDEX) { return "-"; }
+
+  const position_t p = index_to_position(i);
+  std::string result;
+  result.reserve(2);
+
+  result.push_back('a' + p.file);
+  result.push_back('1' + p.rank);
+
+  return result;
+}
+
+
+bool is_uint(const std::string& str)
+{
+  for (const char c : str) {
+    if (!isdigit(c)) { return false; }
+  }
+
+  return true;
+}
+
+
+char piece_to_char(const piece_t piece)
+{
+  static const std::unordered_map<piece_t, char> piece_to_char_map = {
+      {B_PAWN, 'p'},   {B_KNIGHT, 'n'}, {B_BISHOP, 'b'}, {B_ROOK, 'r'},
+      {B_QUEEN, 'q'},  {B_KING, 'k'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
+      {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
+      {INVALID, '*'},  {EMPTY, ' '}};
+
+  return piece_to_char_map.at(piece);
+}
+
+
+piece_t char_to_piece(const char c)
+{
+  static const std::unordered_map<char, piece_t> char_to_piece_map = {
+      {'p', B_PAWN},   {'n', B_KNIGHT}, {'b', B_BISHOP}, {'r', B_ROOK},
+      {'q', B_QUEEN},  {'k', B_KING},   {'P', W_PAWN},   {'N', W_KNIGHT},
+      {'B', W_BISHOP}, {'R', W_ROOK},   {'Q', W_QUEEN},  {'K', W_KING},
+      {'*', INVALID},  {' ', EMPTY}};
+
+  return char_to_piece_map.at(c);
+}
+
+
+std::string print_board(const board_t* board)
+{
+  std::stringstream ss;
+
+  for (size_t i = 8; i > 0; --i) {
+    for (size_t j = 0; j < 16; ++j) {
+      ss << piece_to_char(board->board[((i - 1) * 16) + j]);
+    }
+
+    ss << "\n";
+  }
+
+  return ss.str();
+}
+
+std::string print_nice_board(const board_t* board)
+{
+  /**
+   *
+   * 8  ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜
+   * 7  ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟
+   * 6
+   * 5
+   * 4
+   * 3
+   * 2  ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙
+   * 1  ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
+   *
+   *    A B C D E F G H
+   */
+
+  // clang-format off
+  static const std::unordered_map<char, std::string> sprite_map = {
+    {W_PAWN, "♟︎"},
+    {W_KNIGHT, "♞"},
+    {W_BISHOP, "♝"},
+    {W_ROOK, "♜"},
+    {W_QUEEN, "♛"},
+    {W_KING, "♚"},
+    {B_PAWN, "♙"},
+    {B_KNIGHT, "♘"},
+    {B_BISHOP, "♗"},
+    {B_ROOK, "♖"},
+    {B_QUEEN, "♕"},
+    {B_KING, "♔"},
+    {EMPTY, " "},
+    {INVALID, " "},
+  };
+  // clang-format on
+
+  std::stringstream ss;
+
+  ss << "##################\n";
+
+  for (size_t i = 8; i > 0; --i) {
+    ss << i << "  ";
+
+    for (size_t j = 0; j < 16; ++j) {
+      const uint8_t index = ((i - 1) * 16) + j;
+      const char piece = board->board[index];
+
+      if (index & 0x88) { continue; }
+
+      if (piece == EMPTY) {
+        const uint8_t file = index & 7;
+        const uint8_t rank = index >> 4;
+
+
+        if ((file + rank) % 2) {
+          // WHITE EMPTY SQUARE
+          ss << "  ";
+        } else {
+          // BLACK EMPTY SQUARE
+          ss << "* ";
+        }
+      } else {
+        ss << sprite_map.at(piece) << " ";
+      }
+
+
+      // if (file + rank) % 2 == 0:
+      //         square.color = Piece.PieceColor.WHITE
+      //     else:
+      //         square.color = Piece.PieceColor.BLACK
+    }
+
+    ss << "\n";
+  }
+
+  ss << "   A B C D E F G H";
+  ss << "\n------------------";
+
+  ss << "\nactive_color:      " << board->game_state.active_color;
+  ss << "\ncastling:          " << std::bitset<4>(board->game_state.castling);
+  ss << "\nhalf_move_clock:   " << int(board->game_state.half_move_clock);
+  ss << "\nen_passant:        " << int(board->game_state.en_passant);
+  ss << "\nfull_move_number:  " << int(board->game_state.full_move_number);
+  ss << "\nzobrist_key:       " << board->game_state.zobrist_key;
+  ss << "\nphase_value:       " << int(board->game_state.phase_value);
+  // ss << "next_move:         " << board->game_state.next_move;
+
+  ss << "\n##################";
+
+  return ss.str();
+}
+
+
+void load_FEN(const std::string& FEN, board_t* board)
+{
+  bool b_king_set = false;
+  bool w_king_set = false;
+
+  // Start parsing
+  auto sections = split_string(FEN);
+
+  if (sections.size() != 6) { throw FAN_exception("Bad FEN string: " + FEN); }
+
+  /*****************************************************************************
+   * 0. Piece placement data
+   *
+   * pawn = "P"
+   * knight = "N"
+   * bishop = "B"
+   * rook = "R"
+   * queen = "Q"
+   * and king = "K
+   *
+   * White ("PNBRQK")
+   * Black ("pnbrqk")
+   ****************************************************************************/
+
+  uint8_t file = 0;
+  uint8_t rank = 7;
+
+  for (const char c : sections[0]) {
+    switch (c) {
+      case '/':
+        file = 0;
+        --rank;
+        break;
+
+      case '1':
+        file += 1;
+        break;
+      case '2':
+        file += 2;
+        break;
+      case '3':
+        file += 3;
+        break;
+      case '4':
+        file += 4;
+        break;
+      case '5':
+        file += 5;
+        break;
+      case '6':
+        file += 6;
+        break;
+      case '7':
+        file += 7;
+        break;
+      case '8':
+        file += 8;
+        break;
+
+      case 'P':
+      case 'N':
+      case 'B':
+      case 'R':
+      case 'Q':
+      case 'K':
+      case 'p':
+      case 'n':
+      case 'b':
+      case 'r':
+      case 'q':
+      case 'k': {
+        const uint8_t index = position_to_index(file, rank);
+        board->board[index] = char_to_piece(c);
+        ++file;
+      } break;
+
+      default:
+        // We get a non valid string
+        throw FAN_exception("Invalid char in FEN string [" + STR(c) +
+                            "]. FEN: " + FEN);
+        break;
+    }
+  }
+
+  /***************************************************************************
+   * 1. Active color
+   **************************************************************************/
+  if (sections[1].size() != 1) {
+    throw FAN_exception("invalid active color section. FEN: " + FEN);
+  }
+
+  char color = sections[1][0];
+  switch (color) {
+    case 'w':
+      board->game_state.active_color = WHITE;
+      break;
+    case 'b':
+      board->game_state.active_color = color_t::BLACK;
+      break;
+    default:
+      throw FAN_exception("Invalid color char in FEN string [" +
+                          std::string(1, color) + "]. FEN: " + FEN);
+  }
+
+  /***************************************************************************
+   * 2. Castling availability
+   *
+   * "-" No castling available
+   * "K" if White can castle kingside
+   * "Q" if White can castle queenside
+   * "k" if Black can castle kingside
+   * "q" if Black can castle queenside
+   **************************************************************************/
+  if (sections[2].size() < 1 || sections[2].size() > 4) {
+    throw FAN_exception("Invalid castling availability section size. FEN: " +
+                        FEN);
+  }
+
+  board->game_state.castling = 0x00;
+  for (const char c : sections[2]) {
+    switch (c) {
+      case '-':
+        board->game_state.castling = 0x00;
+        if (sections[2].size() != 1) {
+          throw FAN_exception(
+              "Invalid castling availability section size. No castling "
+              "available char is set but the section size is too big. FEN: " +
+              FEN);
+        }
+        break;
+      case 'K':
+        board->game_state.castling |= WK;
+        break;
+      case 'Q':
+        board->game_state.castling |= WQ;
+        break;
+      case 'k':
+        board->game_state.castling |= BK;
+        break;
+      case 'q':
+        board->game_state.castling |= BQ;
+        break;
+
+      default:
+        throw FAN_exception("Invalid castling availability character [" +
+                            std::string(1, c) + "]. FEN: " + FEN);
+    }
+  }
+
+  /***************************************************************************
+   * 3. En passant target square
+   *
+   * "-" None
+   **************************************************************************/
+  if (sections[3].size() < 1 || sections[3].size() > 2) {
+    throw FAN_exception("Invalid en passant section size. FEN: " + FEN);
+  }
+
+  if (sections[3].size() == 1 && sections[3][0] != '-') {
+    throw FAN_exception("Invalid en passant section char [ " +
+                        std::string(1, sections[3][0]) + "]. FEN: " + FEN);
+  }
+
+  if (sections[3].size() == 2) {
+    if (!isalpha(sections[3][0]) || !isdigit(sections[3][1])) {
+      throw FAN_exception(
+          "Invalid en passant section. Wrong algebraic notation [" +
+          sections[3] + "]. FEN: " + FEN);
+    }
+  }
+
+  board->game_state.en_passant = algebraic_to_index(sections[3]);
+
+  /***************************************************************************
+   * 4. Halfmove clock
+   *
+   * The number of halfmoves since the last capture or pawn advance, used for
+   * the fifty-move rule.
+   **************************************************************************/
+  const std::string& half_move = sections[4];
+  if (half_move.size() < 1) {
+    throw FAN_exception("Invalid Halfmove clock section size. FEN: " + FEN);
+  }
+
+  if (!is_uint(half_move)) {
+    throw FAN_exception(
+        "Invalid Halfmove clock section is not a number. FEN: " + FEN);
+  }
+
+  try {
+    board->game_state.half_move_clock = static_cast<int>(std::stoul(half_move));
+  } catch (std::exception& e) {
+    throw FAN_exception("Can't convert Halfmove clock to integer.What: " +
+                        std::string(e.what()) + " FEN: " + FEN);
+  }
+
+  /***************************************************************************
+   * 5. Fullmove number
+   *
+   * The number of the full moves. It starts at 1 and is incremented after
+   * Black's move.
+   **************************************************************************/
+  const std::string& full_move = sections[5];
+  if (full_move.size() < 1) {
+    throw FAN_exception("Invalid Fullmove number section size. FEN: " + FEN);
+  }
+
+  if (!is_uint(full_move)) {
+    throw FAN_exception(
+        "Invalid Fullmove number section is not a number. FEN: " + FEN);
+  }
+
+  try {
+    board->game_state.full_move_number =
+        static_cast<int>(std::stoul(full_move));
+  } catch (std::exception& e) {
+    throw FAN_exception("Can't convert Fullmove number to integer. What: " +
+                        std::string(e.what()) + " FEN: " + FEN);
+  }
+
+  if (board->game_state.full_move_number < 1) {
+    throw FAN_exception("Fullmove number can't be less then 1 but it is " +
+                        std::string(STR(board->game_state.full_move_number)) +
+                        " FEN: " + FEN);
+  }
+
+  // TODO(Max): deal with this
+  /***************************************************************************
+   * Update headers
+  //
+  **************************************************************************/
+  // if (FEN != std::string(DEFAULT_POSITION)) {
+  //   header["SetUp"] = "1";
+  //   header["FEN"] = FEN;
+  // }
+
+  /***************************************************************************
+   * Set repetition
+   **************************************************************************/
+  // const std::string short_fen = generate_FEN(true);
+  // repetition_position_count[short_fen] = 1;
+
+  /***************************************************************************
+   * Sanity check with FEN generation
+   **************************************************************************/
+  // const std::string full_FEN = generate_FEN();
+  // assert(FEN == full_FEN);
 }
