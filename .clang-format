@@ -1,0 +1,32 @@
+---
+BasedOnStyle: Chromium
+AccessModifierOffset: -2
+ColumnLimit: 80
+IndentWidth: 2
+AllowShortBlocksOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+DerivePointerAlignment: false
+MaxEmptyLinesToKeep: 2
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: false
+  BeforeElse: false
+  # This one?
+  BeforeLambdaBody: false 
+  #
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
