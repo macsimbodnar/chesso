@@ -16,9 +16,7 @@ color_t us(const board_t* board)
 
 color_t opponent(const board_t* board)
 {
-  if (board->game_state.active_color == WHITE) { return BLACK; }
-
-  return WHITE;
+  return !board->game_state.active_color;
 }
 
 
@@ -102,7 +100,7 @@ bool has_bishop_pair(color_t color, const board_t* board)
 
   for (uint8_t index = 0; index < BOARD_SIZE; ++index) {
     if (board->board[index] == bishop_to_search) {
-      color_t c = get_color_at_index(index);
+      color_t c = get_square_color(index);
       found[c] = true;
     }
   }

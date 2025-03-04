@@ -31,9 +31,17 @@ enum castling_t
 
 enum color_t
 {
-  WHITE,
-  BLACK
+  BLACK,
+  WHITE
 };
+
+
+inline color_t operator!(const color_t& c)
+{
+  const color_t res = (c == color_t::WHITE) ? color_t::BLACK : color_t::WHITE;
+  return res;
+}
+
 
 enum piece_t
 {

@@ -19,7 +19,8 @@ std::string index_to_algebraic(const index_t i);
 char piece_to_char(const piece_t piece);
 piece_t char_to_piece(const char c);
 std::string color_to_string(color_t color);
-color_t get_color_at_index(index_t index);
+color_t get_square_color(index_t index);
+color_t get_piece_color(piece_t piece);
 
 
 bool is_uint(const std::string& str);

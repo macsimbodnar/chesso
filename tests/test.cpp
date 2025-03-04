@@ -30,9 +30,9 @@ int main()
   assert(king_square(WHITE, &board) == position_t(4, 0));
   assert(king_square(BLACK, &board) == position_t(4, 7));
 
-  assert(get_color_at_index(0) == BLACK);
-  assert(get_color_at_index(position_to_index(2, 2)) == BLACK);
-  assert(get_color_at_index(position_to_index(2, 5)) == WHITE);
+  assert(get_square_color(0) == BLACK);
+  assert(get_square_color(position_to_index(2, 2)) == BLACK);
+  assert(get_square_color(position_to_index(2, 5)) == WHITE);
 
   assert(has_bishop_pair(BLACK, &board));
   assert(has_bishop_pair(WHITE, &board));

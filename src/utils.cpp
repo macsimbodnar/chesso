@@ -52,6 +52,8 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 
 uint64_t init_zobrist_key(const board_t* board)
 {
+  assert(board != nullptr);
+
   uint64_t key = 0;
 
   // Xor pieces on the board
@@ -681,7 +683,7 @@ std::string color_to_string(color_t color)
 }
 
 
-color_t get_color_at_index(index_t index)
+color_t get_square_color(index_t index)
 {
   position_t pos = index_to_position(index);
 
@@ -806,4 +808,36 @@ void update_castling_permissions(castling_t new_castling, board_t* board)
 
   board->game_state.zobrist_key ^=
       board->zobrist_randoms.castling_randoms[board->game_state.castling];
+}
+
+
+color_t get_piece_color(piece_t piece)
+{
+  assert(piece != EMPTY && piece != INVALID);
+
+  switch (piece)
+  {
+    case B_KING:
+    case B_QUEEN:
+    case B_KNIGHT:
+    case B_BISHOP:
+    case B_ROOK:
+    case B_PAWN:
+      return BLACK;
+    case W_KING:
+    case W_QUEEN:
+    case W_KNIGHT:
+    case W_BISHOP:
+    case W_ROOK:
+    case W_PAWN:
+      return WHITE;
+    case EMPTY:
+    case INVALID:
+    default:
+      assert(false);
+      break;
+  }
+
+  assert(false);
+  return BLACK;
 }
