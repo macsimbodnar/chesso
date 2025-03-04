@@ -1,6 +1,6 @@
 #pragma once
-#include "data_structures.hpp"
 #include <string>
+#include "data_structures.hpp"
 
 
 void init_board(const std::string& fen, board_t* board);

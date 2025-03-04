@@ -106,7 +106,7 @@ bool has_bishop_pair(color_t color, const board_t* board)
       found[c] = true;
     }
   }
-  
+
 
   return (found[0] && found[1]);
 }
