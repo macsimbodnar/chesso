@@ -1,4 +1,4 @@
-#include "board.hpp"
+#include "chess.hpp"
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -7,21 +7,25 @@
 #include "utils.hpp"
 
 
-board_t::board_t()
+chess_t::chess_t()
 {
   load(FEN_INIT_POS);
 }
 
 
-void board_t::cleanup()
+void chess_t::cleanup()
 {
-  for (auto& I : _board) {
-    I = nullptr;
+  for (uint32_t i = 0; i < BOARD_ARRAY_SIZE; ++i) {
+    board_state.board[i] = (i & 0x88) ? piece_t::INVALID : piece_t::EMPTY;
   }
+
+  board_state.active_color = color_t::WHITE;
+  board_state.available_castling = WQ | WK | BQ | BK;
+  board_state.en_passant_target_square = INVALID_BOARD_POS;
 }
 
 
-void board_t::load(const std::string& FEN)
+void chess_t::load(const std::string& FEN)
 {
   // Clean the board first
   cleanup();
@@ -91,15 +95,19 @@ void board_t::load(const std::string& FEN)
       case 'b':
       case 'r':
       case 'q':
-      case 'k':
-        set(file, rank, c);
+      case 'k': {
+        position_t pos;
+        pos.file = file;
+        pos.rank = rank;
+        set(pos, c_to_piece(c));
         ++file;
-        break;
+      } break;
 
       default:
         // We get a non valid string
         throw FAN_exception("Invalid char in FEN string [" + STR(c) +
                             "]. FEN: " + FEN);
+        break;
     }
   }
 
@@ -113,10 +121,10 @@ void board_t::load(const std::string& FEN)
   char color = sections[1][0];
   switch (color) {
     case 'w':
-      _active_color = color_t::WHITE;
+      board_state.active_color = color_t::WHITE;
       break;
     case 'b':
-      _active_color = color_t::BLACK;
+      board_state.active_color = color_t::BLACK;
       break;
     default:
       throw FAN_exception("Invalid color char in FEN string [" +
@@ -137,11 +145,11 @@ void board_t::load(const std::string& FEN)
                         FEN);
   }
 
-  _available_castling = 0x00;
+  board_state.available_castling = 0x00;
   for (const char c : sections[2]) {
     switch (c) {
       case '-':
-        _available_castling = 0x00;
+        board_state.available_castling = 0x00;
         if (sections[2].size() != 1) {
           throw FAN_exception(
               "Invalid castling availability section size. No castling "
@@ -150,16 +158,16 @@ void board_t::load(const std::string& FEN)
         }
         break;
       case 'K':
-        _available_castling |= WK;
+        board_state.available_castling |= WK;
         break;
       case 'Q':
-        _available_castling |= WQ;
+        board_state.available_castling |= WQ;
         break;
       case 'k':
-        _available_castling |= BK;
+        board_state.available_castling |= BK;
         break;
       case 'q':
-        _available_castling |= BQ;
+        board_state.available_castling |= BQ;
         break;
 
       default:
@@ -190,7 +198,8 @@ void board_t::load(const std::string& FEN)
     }
   }
 
-  _en_passant_target_square = sections[3];
+
+  board_state.en_passant_target_square = algebraic_to_index(sections[3]);
 
   /***************************************************************************
    * 4. Halfmove clock
