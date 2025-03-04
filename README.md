@@ -27,4 +27,7 @@ ninja && ctest -R BB_Chesso --verbose
 
 # Run only Chesso tests
 ninja && ctest -R Chesso
+
+# Run old Chesso implementation
+ninja && ctest -R OLD_Chesso
 ```
