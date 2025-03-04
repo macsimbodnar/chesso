@@ -93,7 +93,7 @@ struct game_state_t
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t half_move_clock;    // Half moves played
-  uint8_t en_passant;         // Active en-passant square, if any
+  uint8_t en_passant;         // Active en-passant square index, if any
   uint16_t full_move_number;  // Total number of full moves played
   uint64_t zobrist_key;       // Zobrist Key
   int16_t phase_value;        // Evaluation Phase Value

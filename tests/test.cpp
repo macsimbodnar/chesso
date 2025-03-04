@@ -14,6 +14,10 @@ int main()
   std::cout << print_board(&board) << "\n";
   std::cout << print_nice_board(&board) << "\n";
 
+  std::string current_fan = generate_FEN(&board);
+
+  assert(current_fan == DEFAULT_POSITION);
+
   assert(WHITE == us(&board));
 
   reset(&board);

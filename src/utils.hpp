@@ -1,15 +1,16 @@
 #pragma once
-#include "data_structures.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "data_structures.hpp"
 
 
 void init_zobrist(zobrist_randoms_t* board);
 uint64_t init_zobrist_key(const board_t* board);
-void cleanup_game_state(game_state_t *game_state);
+void cleanup_game_state(game_state_t* game_state);
 
 void load_FEN(const std::string& FEN, board_t* board);
+std::string generate_FEN(const board_t* board);
 
 uint8_t position_to_index(const uint8_t file, const uint8_t rank);
 position_t index_to_position(uint8_t index);
