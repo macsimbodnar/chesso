@@ -212,6 +212,10 @@ u64 generate_mask_pawn_attacks(const color_t color, const square_t square)
       if ((board << 7) & NOT_H_FILE) { attacks |= (board << 7); }
       if ((board << 9) & NOT_A_FILE) { attacks |= (board << 9); }
       break;
+
+    case BOTH:
+      LOG_E << "Should never be both" << END_E;
+      assert(false);
   }
 
   return attacks;
