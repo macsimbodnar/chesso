@@ -16,7 +16,9 @@
 #define STR(_N_) std::to_string(_N_)
 #endif
 
-static constexpr uint8_t INVALID_BOARD_INDEX = 127;
+typedef uint8_t index_t;
+
+static constexpr index_t INVALID_BOARD_INDEX = 127;
 
 //-#############################   ENUMS   ##################################-//
 enum castling_t
@@ -93,7 +95,7 @@ struct game_state_t
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t half_move_clock;    // Half moves played
-  uint8_t en_passant;         // Active en-passant square index, if any
+  index_t en_passant;         // Active en-passant square index, if any
   uint16_t full_move_number;  // Total number of full moves played
   uint64_t zobrist_key;       // Zobrist Key
   int16_t phase_value;        // Evaluation Phase Value

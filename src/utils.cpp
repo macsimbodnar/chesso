@@ -57,7 +57,7 @@ uint64_t init_zobrist_key(const board_t* board)
   // Xor pieces on the board
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
-      uint8_t index = position_to_index(file, rank);
+      index_t index = position_to_index(file, rank);
       piece_t piece = board->board[index];
 
       if (piece != EMPTY && piece != INVALID) {
@@ -73,9 +73,8 @@ uint64_t init_zobrist_key(const board_t* board)
   key ^= board->zobrist_randoms.castling_randoms[board->game_state.castling];
 
   // Xor en-passant
-  if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
-    key ^= board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
-  }
+  key ^= board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+
 
   return key;
 }
@@ -96,12 +95,12 @@ void cleanup_game_state(game_state_t* gs)
 }
 
 
-uint8_t position_to_index(const uint8_t file, const uint8_t rank)
+index_t position_to_index(const uint8_t file, const uint8_t rank)
 {
   assert(file >= 0 && file < 8);
   assert(rank >= 0 && rank < 8);
 
-  const uint8_t index = (rank << 4) + file;
+  const index_t index = (rank << 4) + file;
   assert(index < BOARD_SIZE);
   assert(!(index & 0x88));
 
@@ -109,7 +108,7 @@ uint8_t position_to_index(const uint8_t file, const uint8_t rank)
 }
 
 
-position_t index_to_position(uint8_t index)
+position_t index_to_position(index_t index)
 {
   assert(!(index & 0x88));
   assert(index < BOARD_SIZE);
@@ -122,9 +121,9 @@ position_t index_to_position(uint8_t index)
 }
 
 
-uint8_t algebraic_to_index(const std::string& p)
+index_t algebraic_to_index(const std::string& p)
 {
-  uint8_t result = INVALID_BOARD_INDEX;
+  index_t result = INVALID_BOARD_INDEX;
 
   if (p.size() != 2) { return INVALID_BOARD_INDEX; }
 
@@ -145,7 +144,7 @@ uint8_t algebraic_to_index(const std::string& p)
 }
 
 
-std::string index_to_algebraic(const uint8_t i)
+std::string index_to_algebraic(const index_t i)
 {
   if (i == INVALID_BOARD_INDEX) { return "-"; }
 
@@ -252,7 +251,7 @@ std::string print_nice_board(const board_t* board)
     ss << i << "  ";
 
     for (size_t j = 0; j < 16; ++j) {
-      const uint8_t index = ((i - 1) * 16) + j;
+      const index_t index = ((i - 1) * 16) + j;
       const char piece = board->board[index];
 
       if (index & 0x88) { continue; }
@@ -372,7 +371,7 @@ void load_FEN(const std::string& FEN, board_t* board)
       case 'r':
       case 'q':
       case 'k': {
-        const uint8_t index = position_to_index(file, rank);
+        const index_t index = position_to_index(file, rank);
         board->board[index] = char_to_piece(c);
         ++file;
       } break;
@@ -682,11 +681,129 @@ std::string color_to_string(color_t color)
 }
 
 
-color_t get_index_color(uint8_t index)
+color_t get_color_at_index(index_t index)
 {
   position_t pos = index_to_position(index);
 
   if (((pos.file + pos.rank) % 2) == 0) { return BLACK; }
 
   return WHITE;
+}
+
+
+piece_t remove_piece(index_t remove_at, board_t* board)
+{
+  assert(board != nullptr);
+  assert(remove_at < BOARD_SIZE);
+  assert(index_to_position(remove_at).file < 8);
+  assert(index_to_position(remove_at).rank < 8);
+
+  const piece_t removed = board->board[remove_at];
+  if (removed != INVALID && removed != EMPTY) {
+    // Remove the piece from the board
+    board->board[remove_at] = EMPTY;
+
+    // Update the Zobrist
+    board->game_state.zobrist_key ^=
+        board->zobrist_randoms.piece_randoms[removed][remove_at];
+
+    // TODO: Update phase_value
+  }
+
+  return removed;
+}
+
+
+void put_piece(index_t put_at, piece_t piece, board_t* board)
+{
+  assert(board != nullptr);
+  assert(put_at < BOARD_SIZE);
+  assert(piece != INVALID && piece != EMPTY);
+  assert(index_to_position(put_at).file < 8);
+  assert(index_to_position(put_at).rank < 8);
+
+  board->board[put_at] = piece;
+
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.piece_randoms[piece][put_at];
+}
+
+
+piece_t move_piece(index_t from, index_t to, board_t* board)
+{
+  assert(board != nullptr);
+  assert(from != to);
+  assert(from < BOARD_SIZE);
+  assert(index_to_position(from).file < 8);
+  assert(index_to_position(from).rank < 8);
+  assert(to < BOARD_SIZE);
+  assert(index_to_position(to).file < 8);
+  assert(index_to_position(to).rank < 8);
+
+  const piece_t piece = remove_piece(from, board);
+  put_piece(to, piece, board);
+
+  return piece;
+}
+
+
+void set_en_passant(index_t index, board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+  assert(index_to_position(index).file < 8);
+  assert(index_to_position(index).rank < 8);
+
+  if (index != INVALID_BOARD_INDEX) {
+    // Remove the old en passant from hash
+    board->game_state.zobrist_key ^=
+        board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+
+    // Set teh en passant target
+    board->game_state.en_passant = index;
+    void swap_side(board_t * board);
+    // Set the new en passant to the hash
+    board->game_state.zobrist_key ^=
+        board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+  }
+}
+
+
+void clear_ep_square(board_t* board)
+{
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+
+  board->game_state.en_passant = INVALID_BOARD_INDEX;
+
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+}
+
+
+void swap_side(board_t* board)
+{
+  // Remove the side to move from hash
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.side_randoms[board->game_state.active_color];
+
+  // Change color
+  board->game_state.active_color =
+      board->game_state.active_color == WHITE ? BLACK : WHITE;
+
+  // Hash the new color
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.side_randoms[board->game_state.active_color];
+}
+
+
+void update_castling_permissions(castling_t new_castling, board_t* board)
+{
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.castling_randoms[board->game_state.castling];
+
+  board->game_state.castling = new_castling;
+
+  board->game_state.zobrist_key ^=
+      board->zobrist_randoms.castling_randoms[board->game_state.castling];
 }

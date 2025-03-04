@@ -102,7 +102,7 @@ bool has_bishop_pair(color_t color, const board_t* board)
 
   for (uint8_t index = 0; index < BOARD_SIZE; ++index) {
     if (board->board[index] == bishop_to_search) {
-      color_t c = get_index_color(index);
+      color_t c = get_color_at_index(index);
       found[c] = true;
     }
   }
