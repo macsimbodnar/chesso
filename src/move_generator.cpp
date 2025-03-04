@@ -32,7 +32,7 @@ std::vector<index_t> generate_b_pawn(index_t index, const board_t* board)
     // Check for attack right
     const index_t candidate = index - 0x11;
     bool condition =
-        (!(candidate & 0x88) && (get_piece_color(b[candidate]) == WHITE)) ||
+        (!(candidate & 0x88) && contains_opponent(candidate, WHITE, board)) ||
         (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }
@@ -42,7 +42,7 @@ std::vector<index_t> generate_b_pawn(index_t index, const board_t* board)
     // Check for attack left
     const index_t candidate = index - 0x0F;
     bool condition =
-        (!(candidate & 0x88) && (get_piece_color(b[candidate]) == WHITE)) ||
+        (!(candidate & 0x88) && contains_opponent(candidate, WHITE, board)) ||
         (candidate == en_passant);
 
     if (condition) { result.push_back(candidate); }

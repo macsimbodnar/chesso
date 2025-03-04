@@ -1,3 +1,5 @@
+include_directories(SYSTEM ../doctest/doctest)
+
 add_executable(chesso_board_test test.cpp)
 
 target_include_directories(chesso_board_test SYSTEM PRIVATE ../src)

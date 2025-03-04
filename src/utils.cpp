@@ -815,8 +815,7 @@ color_t get_piece_color(piece_t piece)
 {
   assert(piece != EMPTY && piece != INVALID);
 
-  switch (piece)
-  {
+  switch (piece) {
     case B_KING:
     case B_QUEEN:
     case B_KNIGHT:
@@ -840,4 +839,22 @@ color_t get_piece_color(piece_t piece)
 
   assert(false);
   return BLACK;
+}
+
+
+bool contains_opponent(index_t i, color_t opponent_color, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(i < BOARD_SIZE);
+  assert(index_to_position(i).file < 8);
+  assert(index_to_position(i).rank < 8);
+
+  const piece_t piece = board->board[i];
+
+  if (piece != EMPTY && piece != INVALID &&
+      get_piece_color(piece) == opponent_color) {
+    return true;
+  }
+
+  return false;
 }
