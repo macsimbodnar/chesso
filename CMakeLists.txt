@@ -22,4 +22,5 @@ endif()
 
 enable_testing()
 add_subdirectory(src)
+add_subdirectory(bitboard_chess_engine)
 add_subdirectory(pixello)

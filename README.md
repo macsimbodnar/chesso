@@ -1,6 +1,6 @@
 # Chesso
 
-```
+```txt
                                                        .::.
                                             _()_       _::_
                                   _O      _/____\_   _/____\_
@@ -13,4 +13,18 @@
   _|_|_    |___|_|   _|____|_   (_____)   (______)   (______)
  (_____)  (_______) (________) (_______) (________) (________)
  /_____\  /_______\ /________\ /_______\ /________\ /________\
+
  ```
+
+## Hom to run tests
+
+```bash
+# Run all tests
+ninja && ctest
+
+# Run only Bitboard engine tests
+ninja && ctest -R BB_Chesso --verbose
+
+# Run only Chesso tests
+ninja && ctest -R Chesso
+```
