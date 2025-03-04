@@ -8,7 +8,7 @@
 #include "utils.hpp"
 
 
-struct fen_panel_conf
+struct fen_panel_conf_t
 {
   int text_padding = 5;
   int font_size = 10;
@@ -16,7 +16,7 @@ struct fen_panel_conf
   pixel_t bg_color = 0x000000FF;
   pixel_t text_color = 0xFFFFFFFF;
 
-  fen_panel_conf(const int screen_w, const int screen_h)
+  fen_panel_conf_t(const int screen_w, const int screen_h)
   {
     const int h = font_size + (text_padding * 2);
     rect = {0, screen_h - h, screen_w, h};
@@ -37,7 +37,7 @@ struct chessboard_conf
 
   chessboard_conf(const int screen_w,
                   const int screen_h,
-                  const fen_panel_conf& fen_panel_conf)
+                  const fen_panel_conf_t& fen_panel_conf)
   {
     assert(screen_w != 0);
     assert(screen_h != 0);
@@ -74,7 +74,7 @@ struct control_panel_conf
 
   control_panel_conf(const int screen_w,
                      const int screen_h,
-                     const fen_panel_conf& fen_panel_conf,
+                     const fen_panel_conf_t& fen_panel_conf,
                      const chessboard_conf& board_conf)
   {
     if (screen_w > screen_h) {
@@ -147,7 +147,7 @@ class gui_t : public pixello
 private:
   const rect_t screen;
   const bool is_screen_horizontal;
-  fen_panel_conf fen_panel_conf;
+  fen_panel_conf_t fen_panel_conf;
   chessboard_conf board_conf;
   control_panel_conf panel_conf;
 
