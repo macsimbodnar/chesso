@@ -92,7 +92,6 @@ void cleanup_game_state(game_state_t* gs)
   gs->en_passant = INVALID_BOARD_INDEX;
   gs->full_move_number = 0;
   gs->zobrist_key = 0;
-  gs->phase_value = 0;
   gs->next_move = move_t();
 }
 
@@ -293,7 +292,7 @@ std::string print_nice_board(const board_t* board)
   ss << "\nen_passant:        " << int(board->game_state.en_passant);
   ss << "\nfull_move_number:  " << int(board->game_state.full_move_number);
   ss << "\nzobrist_key:       " << board->game_state.zobrist_key;
-  ss << "\nphase_value:       " << int(board->game_state.phase_value);
+  // ss << "\nphase_value:       " << int(board->game_state.phase_value);
   // ss << "next_move:         " << board->game_state.next_move;
 
   ss << "\n##################";

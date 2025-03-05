@@ -108,3 +108,10 @@ bool has_bishop_pair(color_t color, const board_t* board)
 
   return (found[0] && found[1]);
 }
+
+
+bool make_move(const move_t* move, board_t* board)
+{
+  // TODO
+  return false;
+}

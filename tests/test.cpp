@@ -29,10 +29,11 @@ json load_json(const std::string& filename)
 }
 
 
-bool vector_contains(index_t i, std::vector<index_t>& v)
+bool contain_move(const move_t& move, std::vector<move_t>& moves)
 {
-  for (const auto I : v) {
-    if (I == i) { return true; }
+  for (const auto& I : moves) {
+    if (I == move) { return true; }
+    if (I == move) { return true; }
   }
 
   return false;
@@ -65,11 +66,12 @@ TEST_SUITE("Test pseudo legal move generator")
 
     REQUIRE_EQ(moves.size(), 2);
 
-    index_t pos_1 = position_to_index(0, 5);
-    REQUIRE(vector_contains(pos_1, moves));
+    move_t pos_1 = {index, position_to_index(0, 5)};
+    REQUIRE(contain_move(pos_1, moves));
 
-    index_t pos_2 = position_to_index(0, 4);
-    REQUIRE(vector_contains(pos_2, moves));
+    move_t pos_2 = {index, position_to_index(0, 4)};
+    pos_2.double_pawn_move = true;
+    REQUIRE(contain_move(pos_2, moves));
   }
 
 
@@ -83,11 +85,12 @@ TEST_SUITE("Test pseudo legal move generator")
 
     REQUIRE_EQ(moves.size(), 2);
 
-    index_t pos_1 = position_to_index(0, 2);
-    REQUIRE(vector_contains(pos_1, moves));
+    move_t pos_1 = {index, position_to_index(0, 2)};
+    REQUIRE(contain_move(pos_1, moves));
 
-    index_t pos_2 = position_to_index(0, 3);
-    REQUIRE(vector_contains(pos_2, moves));
+    move_t pos_2 = {index, position_to_index(0, 3)};
+    pos_2.double_pawn_move = true;
+    REQUIRE(contain_move(pos_2, moves));
   }
 
 
@@ -154,29 +157,29 @@ TEST_SUITE("Test pseudo legal move generator")
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(vector_contains(position_to_index(0, 2), moves));
-    REQUIRE(vector_contains(position_to_index(2, 2), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 2)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 2)), moves));
 
     index = position_to_index(6, 0);
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(vector_contains(position_to_index(5, 2), moves));
-    REQUIRE(vector_contains(position_to_index(7, 2), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 2)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 2)), moves));
 
     index = position_to_index(1, 7);
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(vector_contains(position_to_index(0, 5), moves));
-    REQUIRE(vector_contains(position_to_index(2, 5), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 5)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 5)), moves));
 
     index = position_to_index(6, 7);
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(vector_contains(position_to_index(7, 5), moves));
-    REQUIRE(vector_contains(position_to_index(5, 5), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 5)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 5)), moves));
   }
 
 
@@ -214,8 +217,23 @@ TEST_SUITE("Test pseudo legal move generator")
   }
 }
 
+
 TEST_SUITE("Test legal move generator")
 {
+  // clang-format off
+  const static std::vector<std::string> test_files = {
+      // "assets/castling.json",
+      // "assets/checkmates.json",
+      // "assets/famous.json",
+      // "assets/pawns.json",
+      // "assets/promotions.json",
+      // "assets/stalemates.json",
+      "assets/standard.json",
+      // "assets/taxing.json",
+  };
+  // clang-format on
+
+
   TEST_CASE("Basic test")
   {
     board_t board;
@@ -225,24 +243,26 @@ TEST_SUITE("Test legal move generator")
     REQUIRE_EQ(moves.size(), 20);
   }
 
-  TEST_CASE("Test standard.json")
+  TEST_CASE("Test against generated jsons")
   {
-    json test_cases = load_json("assets/standard.json");
+    for (const auto& test_json_file : test_files) {
+      json test_cases = load_json(test_json_file);
 
-    for (const json& test_case : test_cases["testCases"]) {
-      std::string starting_pos = test_case["start"]["fen"];
+      for (const json& test_case : test_cases["testCases"]) {
+        std::string starting_pos = test_case["start"]["fen"];
 
-      board_t board;
-      init_board(starting_pos, &board);
+        board_t board;
+        init_board(starting_pos, &board);
 
-      auto moves = generate_legal_moves(&board);
+        auto moves = generate_legal_moves(&board);
+        REQUIRE_MESSAGE(moves.size() == test_case["expected"].size(),
+                        std::string("Running " + test_json_file + " File"));
 
-      REQUIRE_EQ(moves.size(), test_case["expected"].size());
-
-      // for (const json& expected : test_case["expected"]) {
-      //   std::string move = expected["move"];
-      //   std::string fen = expected["fen"];
-      // }
+        // for (const json& expected : test_case["expected"]) {
+        //   std::string move = expected["move"];
+        //   std::string fen = expected["fen"];
+        // }
+      }
     }
   }
 }

@@ -86,6 +86,16 @@ enum piece_t
 };
 
 
+enum promotion_t
+{
+  TO_NONE,
+  TO_QUEEN,
+  TO_KNIGHT,
+  TO_ROOK,
+  TO_BISHOP
+};
+
+
 //-#############################  STRUCTS  ##################################-//
 struct position_t
 {
@@ -121,13 +131,37 @@ struct zobrist_randoms_t
 
 struct move_t
 {
-  index_t from;
-  index_t to;
+  index_t from;             // Source square
+  index_t to;               // Destination square
+  piece_t piece;            // Moved piece
+  promotion_t promoted_to;  // Eventual promotion
+  piece_t captured;         // If capture happened then the captured piece
+  bool double_pawn_move;    // Double pawn move. Eventually set en-passant
+  bool en_passant_capture;  // Set if this is en-passant capture happened
+  bool castling_move;       // Set if castling happened
+
 
   bool operator==(const move_t& other) const
   {
-    return from == other.from && to == other.to;
+    return (from == other.from && to == other.to && piece == other.piece &&
+            promoted_to == other.promoted_to && captured == other.captured &&
+            double_pawn_move == other.double_pawn_move &&
+            en_passant_capture == other.en_passant_capture &&
+            castling_move == other.castling_move);
   }
+
+  move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX) {}
+
+  move_t(index_t from, index_t to)
+      : from(from),
+        to(to),
+        piece(INVALID),
+        promoted_to(TO_NONE),
+        captured(INVALID),
+        double_pawn_move(false),
+        en_passant_capture(false),
+        castling_move(false)
+  {}
 };
 
 struct game_state_t
@@ -138,7 +172,6 @@ struct game_state_t
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t full_move_number;  // Total number of full moves played
   uint64_t zobrist_key;       // Zobrist Key
-  int16_t phase_value;        // Evaluation Phase Value
   move_t next_move;           // The move played in this position
 };
 
