@@ -632,22 +632,22 @@ std::string generate_FEN(const board_t* board)
   // Step 3: Castling rights
   bool has_castling_rights = false;
 
-  if (board->game_state.castling & castling_t::WK) {
+  if (board->game_state.castling & WK) {
     ss << 'K';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & castling_t::WQ) {
+  if (board->game_state.castling & WQ) {
     ss << 'Q';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & castling_t::BK) {
+  if (board->game_state.castling & BK) {
     ss << 'k';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & castling_t::BQ) {
+  if (board->game_state.castling & BQ) {
     ss << 'q';
     has_castling_rights = true;
   }
@@ -857,4 +857,19 @@ bool contains_opponent(index_t i, color_t opponent_color, const board_t* board)
   }
 
   return false;
+}
+
+
+index_t get_king_index(color_t color, const board_t* board)
+{
+  assert(board != nullptr);
+
+  const piece_t king = color == WHITE ? W_KING : B_KING;
+
+  for (index_t i = 0; i < BOARD_SIZE; ++i) {
+    if (board->board[i] == king) { return i; }
+  }
+
+  assert(false);  // King should be always on the board
+  return INVALID_BOARD_INDEX;
 }

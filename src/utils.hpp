@@ -38,3 +38,5 @@ void set_en_passant(index_t index, board_t* board);
 void clear_ep_square(board_t* board);
 void swap_side(board_t* board);
 void update_castling_permissions(castling_t new_castling, board_t* board);
+
+index_t get_king_index(color_t color, const board_t* board);

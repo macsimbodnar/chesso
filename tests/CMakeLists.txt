@@ -1,3 +1,6 @@
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 include_directories(SYSTEM ../doctest/doctest)
 
 add_executable(chesso_board_test test.cpp)

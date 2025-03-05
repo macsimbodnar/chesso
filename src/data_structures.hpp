@@ -40,11 +40,12 @@
 #endif
 
 typedef uint8_t index_t;
+typedef uint8_t castling_t;
 
 static constexpr index_t INVALID_BOARD_INDEX = 127;
 
 //-#############################   ENUMS   ##################################-//
-enum castling_t
+enum castling_rights_t
 {
   WQ = 0b0000001,
   WK = 0b0000010,
@@ -119,7 +120,15 @@ struct zobrist_randoms_t
 };
 
 struct move_t
-{};
+{
+  index_t from;
+  index_t to;
+
+  bool operator==(const move_t& other) const
+  {
+    return from == other.from && to == other.to;
+  }
+};
 
 struct game_state_t
 {
