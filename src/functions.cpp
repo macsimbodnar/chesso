@@ -1,4 +1,5 @@
 #include "functions.hpp"
+#include <array>
 #include <cassert>
 #include <map>
 #include <string>
@@ -111,8 +112,20 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
+bool is_ambiguous_move(const move_t* move, const std::vector<move_t>* moves)
+{
+  for (const move_t& I : *moves) {
+    if (move->piece == I.piece && move->to == I.to && move->from != I.from) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 std::string move_to_algebraic(const move_t* move,
-                              const std::vector<move_t>& moves,
+                              const std::vector<move_t>* moves,
                               const board_t* board)
 {
   assert(move != nullptr);
@@ -128,6 +141,9 @@ std::string move_to_algebraic(const move_t* move,
       {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
       {INVALID, '*'},  {EMPTY, ' '}};
 
+  static const std::array<char, 8> file_to_char_map = {'a', 'b', 'c', 'd',
+                                                       'e', 'f', 'g', 'h'};
+
   std::string notation;
 
   // Handle castling
@@ -141,8 +157,10 @@ std::string move_to_algebraic(const move_t* move,
   if (move->piece != W_PAWN && move->piece != B_PAWN) {
     notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
 
-    // TODO: Check if the same piece can attack on same location. In that case insert
-    // the file letter after the piece letter
+    // If ambiguous move the add the from file
+    if (is_ambiguous_move(move, moves)) {
+      notation += file_to_char_map[index_to_position(move->from).file];
+    }
   }
 
   // Capture notation

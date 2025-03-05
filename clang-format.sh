@@ -10,7 +10,7 @@ if [ ! -f CMakeLists.txt ]; then
     exit 1
 fi
 
-FILES=$(git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$' | grep -E -v '3rd_parties')
+FILES=$(git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$' | grep -E -v 'nlohmann_json.hpp')
 
 TOOL=clang-format-15
 if [ ! -x "$(command -v $TOOL)" ]; then
@@ -21,14 +21,6 @@ if [ ! -x "$(command -v $TOOL)" ]; then
         echo "Please install clang-format (preferred version: 15)"
         echo "On ubuntu run apt install clang-format-15"
         exit 1
-    fi
-
-    VERSION=$($TOOL --version | grep -E -o "version [0-9\.]+")
-
-    if [ "$VERSION" != "version 15.0.7" ]; then
-        echo "Warning: using clang-format $VERSION."
-        echo "Circle CI uses version 15.0.7."
-        echo "This may lead to formatting errors."
     fi
 fi
 

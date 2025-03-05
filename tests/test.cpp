@@ -45,7 +45,9 @@ std::string moves_to_string(const std::vector<move_t>& moves,
   std::string result;
 
   for (const auto& move : moves) {
-    result += move_to_algebraic(&move, &board);
+    result +=
+        index_to_algebraic(move.from) + " -> " + index_to_algebraic(move.to);
+    result += "    " + move_to_algebraic(&move, &moves, &board);
     result += "\n";
   }
 
@@ -58,7 +60,7 @@ bool contain_move_algebraic(const std::string& move,
                             const board_t& board)
 {
   for (const auto& I : moves) {
-    if (move == move_to_algebraic(&I, &board)) { return true; }
+    if (move == move_to_algebraic(&I, &moves, &board)) { return true; }
   }
 
   return false;
