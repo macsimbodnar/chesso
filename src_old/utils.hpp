@@ -6,6 +6,7 @@
 #include <vector>
 #include "exceptions.hpp"
 #include "log.hpp"
+#include <cassert>
 
 #ifdef I
 static_assert(false);

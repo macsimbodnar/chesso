@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include "utils.hpp"
+#include <cassert>
 
 
 static const std::array<uint8_t, 8> offsets_n = {0x21, 0x1F, 0x0E, 0xEE,
