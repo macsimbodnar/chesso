@@ -2,6 +2,7 @@
 #include <cassert>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "data_structures.hpp"
 #include "exceptions.hpp"
@@ -110,8 +111,85 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
+std::string move_to_algebraic(const move_t* move,
+                              const std::vector<move_t>& moves,
+                              const board_t* board)
+{
+  assert(move != nullptr);
+  assert(board != nullptr);
+  assert(move->piece != INVALID);
+  assert(move->piece != EMPTY);
+
+  // Not using the piece_to_char function because the piece moved in always
+  // upper case
+  static const std::unordered_map<piece_t, char> piece_to_char_map = {
+      {B_PAWN, 'P'},   {B_KNIGHT, 'N'}, {B_BISHOP, 'B'}, {B_ROOK, 'R'},
+      {B_QUEEN, 'Q'},  {B_KING, 'K'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
+      {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
+      {INVALID, '*'},  {EMPTY, ' '}};
+
+  std::string notation;
+
+  // Handle castling
+  if (move->castling_move) {
+    if (move->to == 0x06 || move->to == 0x76)
+      return "O-O";  // King-side castling
+    if (move->to == 0x02 || move->to == 0x72)
+      return "O-O-O";  // Queen-side castling
+  }
+
+  if (move->piece != W_PAWN && move->piece != B_PAWN) {
+    notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
+
+    // TODO: Check if the same piece can attack on same location. In that case insert
+    // the file letter after the piece letter
+  }
+
+  // Capture notation
+  if (move->captured != INVALID && move->piece != W_PAWN &&
+      move->piece != B_PAWN) {
+    notation += 'x';
+  }
+
+  // Destination square
+  notation += index_to_algebraic(move->to);
+
+  // Pawn captures (ex: exd5)
+  if ((move->piece == W_PAWN || move->piece == B_PAWN) &&
+      move->captured != INVALID) {
+    notation = index_to_algebraic(move->from)[0] + std::string("x") +
+               index_to_algebraic(move->to);
+  }
+
+  // Pawn promotion
+  if (move->promoted_to != TO_NONE) {
+    notation += "=";
+    switch (move->promoted_to) {
+      case TO_QUEEN:
+        notation += 'Q';
+        break;
+      case TO_ROOK:
+        notation += 'R';
+        break;
+      case TO_BISHOP:
+        notation += 'B';
+        break;
+      case TO_KNIGHT:
+        notation += 'N';
+        break;
+      default:
+        break;
+    }
+  }
+
+  return notation;
+}
+
+
 bool make_move(const move_t* move, board_t* board)
 {
+  assert(move != nullptr);
+  assert(board != nullptr);
   // TODO
   return false;
 }

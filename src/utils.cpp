@@ -283,19 +283,21 @@ std::string print_nice_board(const board_t* board)
     ss << "\n";
   }
 
+  // clang-format off
   ss << "   A B C D E F G H";
   ss << "\n------------------";
 
-  ss << "\nactive_color:      " << board->game_state.active_color;
+  ss << "\nactive_color:      " << color_to_string(board->game_state.active_color);
   ss << "\ncastling:          " << std::bitset<4>(board->game_state.castling);
   ss << "\nhalf_move_clock:   " << int(board->game_state.half_move_clock);
-  ss << "\nen_passant:        " << int(board->game_state.en_passant);
+  ss << "\nen_passant:        " << index_to_algebraic(board->game_state.en_passant);
   ss << "\nfull_move_number:  " << int(board->game_state.full_move_number);
   ss << "\nzobrist_key:       " << board->game_state.zobrist_key;
   // ss << "\nphase_value:       " << int(board->game_state.phase_value);
   // ss << "next_move:         " << board->game_state.next_move;
 
   ss << "\n##################";
+  // clang-format on
 
   return ss.str();
 }
@@ -398,7 +400,7 @@ void load_FEN(const std::string& FEN, board_t* board)
       board->game_state.active_color = WHITE;
       break;
     case 'b':
-      board->game_state.active_color = color_t::BLACK;
+      board->game_state.active_color = BLACK;
       break;
     default:
       throw FAN_exception("Invalid color char in FEN string [" +
@@ -789,8 +791,7 @@ void swap_side(board_t* board)
       board->zobrist_randoms.side_randoms[board->game_state.active_color];
 
   // Change color
-  board->game_state.active_color =
-      board->game_state.active_color == WHITE ? BLACK : WHITE;
+  board->game_state.active_color = !board->game_state.active_color;
 
   // Hash the new color
   board->game_state.zobrist_key ^=

@@ -16,17 +16,35 @@ static const std::array<index_t, 4> DIRECTIONS_BISHOP = {0x11, 0x0F, 0xF1,
 std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
 {
   std::vector<move_t> result;
-  result.reserve(4);
+  result.reserve(8);
 
   const auto b = board->board;
   const auto en_passant = board->game_state.en_passant;
+  const piece_t piece = board->board[index];
 
   {
     // Check fo the move in front
     const index_t candidate = index - 0x10;
     if (!(candidate & 0x88) && b[candidate] == piece_t::EMPTY) {
-      const move_t move = {index, candidate};
-      result.push_back(move);
+      move_t move = {index, candidate, piece};
+
+      if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
+        //  Promotion case
+        move.promoted_to = TO_QUEEN;
+        result.push_back(move);
+
+        move.promoted_to = TO_ROOK;
+        result.push_back(move);
+
+        move.promoted_to = TO_BISHOP;
+        result.push_back(move);
+
+        move.promoted_to = TO_KNIGHT;
+        result.push_back(move);
+      } else {
+        // Normal pawn push
+        result.push_back(move);
+      }
     }
   }
 
@@ -37,27 +55,44 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
                      (b[candidate] == EMPTY) && (b[candidate + 0x10] == EMPTY);
 
     if (condition) {
-      move_t move = {index, candidate};
+      move_t move = {index, candidate, piece};
       move.double_pawn_move = true;
       result.push_back(move);
     }
   }
 
   {
-    // Check for attack left (white point of view of teh chessboard)
+    // Check for attack left (from white point of view of the chessboard)
     const index_t candidate = index - 0x11;
     if (!(candidate & 0x88)) {
       // If candidate on board
 
       if (contains_opponent(candidate, WHITE, board)) {
         //  Check normal attack
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.captured = b[candidate];
-        result.push_back(move);
+
+        if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
+          // Attack and promotion
+          move.promoted_to = TO_QUEEN;
+          result.push_back(move);
+
+          move.promoted_to = TO_ROOK;
+          result.push_back(move);
+
+          move.promoted_to = TO_BISHOP;
+          result.push_back(move);
+
+          move.promoted_to = TO_KNIGHT;
+          result.push_back(move);
+        } else {
+          // Normal pawn attack
+          result.push_back(move);
+        }
 
       } else if (en_passant == candidate) {
         // Check if we attack en-passant
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.en_passant_capture = true;
         move.captured = W_PAWN;
 
@@ -69,7 +104,7 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
   }
 
   {
-    // Check for attack right (white point of view of teh chessboard)
+    // Check for attack right (from white point of view of teh chessboard)
     const index_t candidate = index - 0x0F;
 
     if (!(candidate & 0x88)) {
@@ -77,12 +112,30 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
 
       if (contains_opponent(candidate, WHITE, board)) {
         // Normal capture
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.captured = b[candidate];
-        result.push_back(move);
+
+        if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
+          // Attack and promotion
+          move.promoted_to = TO_QUEEN;
+          result.push_back(move);
+
+          move.promoted_to = TO_ROOK;
+          result.push_back(move);
+
+          move.promoted_to = TO_BISHOP;
+          result.push_back(move);
+
+          move.promoted_to = TO_KNIGHT;
+          result.push_back(move);
+        } else {
+          // Normal pawn attack
+          result.push_back(move);
+        }
+
       } else if (candidate == en_passant) {
         // En passant capture
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.en_passant_capture = true;
         move.captured = W_PAWN;
 
@@ -92,8 +145,6 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
       }
     }
   }
-
-  // TODO: handle promotions
 
   return result;
 }
@@ -106,13 +157,31 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
 
   const auto b = board->board;
   const auto en_passant = board->game_state.en_passant;
+  const piece_t piece = board->board[index];
 
   {
     // Check fo the move in front
     const index_t candidate = index + 0x10;
     if (!(candidate & 0x88) && b[candidate] == EMPTY) {
-      const move_t move = {index, candidate};
-      result.push_back(move);
+      move_t move = {index, candidate, piece};
+
+      if (candidate > 0x6F && candidate < 0x78) {
+        //  Promotion case
+        move.promoted_to = TO_QUEEN;
+        result.push_back(move);
+
+        move.promoted_to = TO_ROOK;
+        result.push_back(move);
+
+        move.promoted_to = TO_BISHOP;
+        result.push_back(move);
+
+        move.promoted_to = TO_KNIGHT;
+        result.push_back(move);
+      } else {
+        // Normal pawn push
+        result.push_back(move);
+      }
     }
   }
 
@@ -123,7 +192,7 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
                      (b[candidate] == EMPTY) && (b[candidate - 0x10] == EMPTY);
 
     if (condition) {
-      move_t move = {index, candidate};
+      move_t move = {index, candidate, piece};
       move.double_pawn_move = true;
       result.push_back(move);
     }
@@ -138,13 +207,30 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
 
       if (contains_opponent(candidate, BLACK, board)) {
         //  Check normal attack
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.captured = b[candidate];
-        result.push_back(move);
+
+        if (candidate > 0x6F && candidate < 0x78) {
+          //  Promotion case
+          move.promoted_to = TO_QUEEN;
+          result.push_back(move);
+
+          move.promoted_to = TO_ROOK;
+          result.push_back(move);
+
+          move.promoted_to = TO_BISHOP;
+          result.push_back(move);
+
+          move.promoted_to = TO_KNIGHT;
+          result.push_back(move);
+        } else {
+          // Normal pawn attack
+          result.push_back(move);
+        }
 
       } else if (en_passant == candidate) {
         // Check if we attack en-passant
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.en_passant_capture = true;
         move.captured = B_PAWN;
 
@@ -164,12 +250,30 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
 
       if (contains_opponent(candidate, BLACK, board)) {
         // Normal capture
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.captured = b[candidate];
-        result.push_back(move);
+
+        if (candidate > 0x6F && candidate < 0x78) {
+          //  Promotion case
+          move.promoted_to = TO_QUEEN;
+          result.push_back(move);
+
+          move.promoted_to = TO_ROOK;
+          result.push_back(move);
+
+          move.promoted_to = TO_BISHOP;
+          result.push_back(move);
+
+          move.promoted_to = TO_KNIGHT;
+          result.push_back(move);
+        } else {
+          // Normal pawn attack
+          result.push_back(move);
+        }
+
       } else if (candidate == en_passant) {
         // En passant capture
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.en_passant_capture = true;
         move.captured = B_PAWN;
 
@@ -180,7 +284,6 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
     }
   }
 
-  // TODO: handle promotions
   return result;
 }
 
@@ -194,6 +297,7 @@ std::vector<move_t> generate_sliding(index_t index,
   result.reserve(16);  // Worst case
 
   const auto b = board->board;
+  const piece_t piece = board->board[index];
 
   for (const auto I : directions) {
     index_t candidate = index;
@@ -207,13 +311,13 @@ std::vector<move_t> generate_sliding(index_t index,
       // Also break if same color piece block the ray
       const piece_t p = b[candidate];
       if (p == EMPTY) {
-        const move_t move = {index, candidate};
+        const move_t move = {index, candidate, piece};
         result.push_back(move);
       } else {
         const color_t candidate_color = get_piece_color(p);
         // If the are attacking add the position
         if (candidate_color != color) {
-          move_t move = {index, candidate};
+          move_t move = {index, candidate, piece};
           move.captured = p;
           result.push_back(move);
         }
@@ -237,6 +341,7 @@ std::vector<move_t> generate_jumping(index_t index,
   result.reserve(offsets.size() + 4);  // NOTE(max): +4 is for the castling
 
   const auto b = board->board;
+  const piece_t piece = board->board[index];
 
   for (const auto I : offsets) {
     const index_t candidate = index + I;
@@ -249,7 +354,7 @@ std::vector<move_t> generate_jumping(index_t index,
     const piece_t p = b[candidate];
     assert(p != piece_t::INVALID);
 
-    move_t move_candidate = {index, candidate};
+    move_t move_candidate = {index, candidate, piece};
 
     // Check if attacking his own color
     if (p != piece_t::EMPTY) {
@@ -338,6 +443,7 @@ std::vector<move_t> generate_king(index_t index,
   // TODO: Check if castling is under attack
   const auto b = board->board;
   const castling_t castling = board->game_state.castling;
+  const piece_t piece = board->board[index];
 
   switch (color) {
     case WHITE:
@@ -345,7 +451,7 @@ std::vector<move_t> generate_king(index_t index,
           b[0x03] == EMPTY) {
         // Queen side available
         const index_t candidate = 0x02;
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.castling_move = true;
         result.push_back(move);
       }
@@ -353,7 +459,7 @@ std::vector<move_t> generate_king(index_t index,
       if ((castling & WK) && b[0x05] == EMPTY && b[0x06] == EMPTY) {
         // King side available
         const index_t candidate = 0x06;
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.castling_move = true;
         result.push_back(move);
       }
@@ -363,7 +469,7 @@ std::vector<move_t> generate_king(index_t index,
           b[0x73] == EMPTY) {
         // Queen side available
         const index_t candidate = 0x72;
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.castling_move = true;
         result.push_back(move);
       }
@@ -371,7 +477,7 @@ std::vector<move_t> generate_king(index_t index,
       if ((castling & BK) && b[0x75] == EMPTY && b[0x76] == EMPTY) {
         // King side available
         const index_t candidate = 0x76;
-        move_t move = {index, candidate};
+        move_t move = {index, candidate, piece};
         move.castling_move = true;
         result.push_back(move);
       }
@@ -393,6 +499,8 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
   assert(index < BOARD_SIZE);
   assert(index_to_position(index).file < 8);
   assert(index_to_position(index).rank < 8);
+  assert(board->board[index] != INVALID);
+  assert(board->board[index] != EMPTY);
 
   const piece_t piece = board->board[index];
   assert(piece != INVALID && piece != EMPTY);
@@ -451,8 +559,11 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
 }
 
 
-std::vector<move_t> generate_attack_vector(color_t target_color, board_t* board)
+std::vector<move_t> generate_attack_vector(color_t target_color,
+                                           const board_t* board)
 {
+  board_t tmp_board = *board;
+
   std::vector<move_t> attacks;
   attacks.reserve(64);  // worst case
 
@@ -461,19 +572,19 @@ std::vector<move_t> generate_attack_vector(color_t target_color, board_t* board)
 
   // Store the king pos
   const index_t king_index =
-      get_king_index(get_piece_color(king_to_remove), board);
+      get_king_index(get_piece_color(king_to_remove), &tmp_board);
 
   // Unset the king
-  (void)remove_piece(king_index, board);
+  (void)remove_piece(king_index, &tmp_board);
 
   // Generate the moves
   for (index_t i = 0; i < BOARD_SIZE; ++i) {
-    const piece_t p = board->board[i];
+    const piece_t p = tmp_board.board[i];
 
     // Iterate over opposite color pieces
     if (p != INVALID && p != EMPTY && target_color == get_piece_color(p)) {
       const auto moves_for_index =
-          generate_pseudo_legal_moves_from_index(i, board);
+          generate_pseudo_legal_moves_from_index(i, &tmp_board);
 
       for (const move_t& move : moves_for_index) {
         bool found = false;
@@ -489,7 +600,7 @@ std::vector<move_t> generate_attack_vector(color_t target_color, board_t* board)
   }
 
   // Reset the king to the board
-  put_piece(king_index, king_to_remove, board);
+  put_piece(king_index, king_to_remove, &tmp_board);
 
   return attacks;
 }
@@ -505,10 +616,9 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
   /*****************************************************************************
    * Generate enemy attacks vector
    ****************************************************************************/
-  board_t tmp_board = *board;
   const color_t attack_color = !board->game_state.active_color;
   const std::vector<move_t> attack_vector =
-      generate_attack_vector(attack_color, &tmp_board);
+      generate_attack_vector(attack_color, board);
 
   /*****************************************************************************
    * Calculate if under check

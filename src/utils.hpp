@@ -23,7 +23,6 @@ color_t get_square_color(index_t index);
 color_t get_piece_color(piece_t piece);
 bool contains_opponent(index_t i, color_t opponent_color, const board_t* board);
 
-
 bool is_uint(const std::string& str);
 std::vector<std::string> split_string(const std::string& str);
 

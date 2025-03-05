@@ -150,12 +150,12 @@ struct move_t
             castling_move == other.castling_move);
   }
 
-  move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX) {}
+  move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX, INVALID) {}
 
-  move_t(index_t from, index_t to)
+  move_t(index_t from, index_t to, piece_t piece)
       : from(from),
         to(to),
-        piece(INVALID),
+        piece(piece),
         promoted_to(TO_NONE),
         captured(INVALID),
         double_pawn_move(false),

@@ -29,11 +29,36 @@ json load_json(const std::string& filename)
 }
 
 
-bool contain_move(const move_t& move, std::vector<move_t>& moves)
+bool contain_move(const move_t& move, const std::vector<move_t>& moves)
 {
   for (const auto& I : moves) {
     if (I == move) { return true; }
-    if (I == move) { return true; }
+  }
+
+  return false;
+}
+
+
+std::string moves_to_string(const std::vector<move_t>& moves,
+                            const board_t& board)
+{
+  std::string result;
+
+  for (const auto& move : moves) {
+    result += move_to_algebraic(&move, &board);
+    result += "\n";
+  }
+
+  return result;
+}
+
+
+bool contain_move_algebraic(const std::string& move,
+                            std::vector<move_t>& moves,
+                            const board_t& board)
+{
+  for (const auto& I : moves) {
+    if (move == move_to_algebraic(&I, &board)) { return true; }
   }
 
   return false;
@@ -62,14 +87,15 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board);
 
     index_t index = position_to_index(0, 6);
+    piece_t piece = board.board[index];
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
 
-    move_t pos_1 = {index, position_to_index(0, 5)};
+    move_t pos_1 = {index, position_to_index(0, 5), piece};
     REQUIRE(contain_move(pos_1, moves));
 
-    move_t pos_2 = {index, position_to_index(0, 4)};
+    move_t pos_2 = {index, position_to_index(0, 4), piece};
     pos_2.double_pawn_move = true;
     REQUIRE(contain_move(pos_2, moves));
   }
@@ -81,14 +107,15 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board);
 
     index_t index = position_to_index(0, 1);
+    piece_t piece = board.board[index];
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
 
-    move_t pos_1 = {index, position_to_index(0, 2)};
+    move_t pos_1 = {index, position_to_index(0, 2), piece};
     REQUIRE(contain_move(pos_1, moves));
 
-    move_t pos_2 = {index, position_to_index(0, 3)};
+    move_t pos_2 = {index, position_to_index(0, 3), piece};
     pos_2.double_pawn_move = true;
     REQUIRE(contain_move(pos_2, moves));
   }
@@ -154,32 +181,36 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board);
 
     index_t index = position_to_index(1, 0);
+    piece_t piece = board.board[index];
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(0, 2)), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(2, 2)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 2), piece), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 2), piece), moves));
 
     index = position_to_index(6, 0);
+    piece = board.board[index];
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(5, 2)), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(7, 2)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 2), piece), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 2), piece), moves));
 
     index = position_to_index(1, 7);
+    piece = board.board[index];
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(0, 5)), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(2, 5)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 5), piece), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 5), piece), moves));
 
     index = position_to_index(6, 7);
+    piece = board.board[index];
     moves = generate_pseudo_legal_moves_from_index(index, &board);
 
     REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(7, 5)), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(5, 5)), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 5), piece), moves));
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 5), piece), moves));
   }
 
 
@@ -255,13 +286,23 @@ TEST_SUITE("Test legal move generator")
         init_board(starting_pos, &board);
 
         auto moves = generate_legal_moves(&board);
-        REQUIRE_MESSAGE(moves.size() == test_case["expected"].size(),
-                        std::string("Running " + test_json_file + " File"));
 
-        // for (const json& expected : test_case["expected"]) {
-        //   std::string move = expected["move"];
-        //   std::string fen = expected["fen"];
-        // }
+        // Check size
+        REQUIRE_MESSAGE(moves.size() == test_case["expected"].size(),
+                        ("Running " + test_json_file + " File"));
+
+        // Check if move is in by Algebraic notation
+        for (const json& expected : test_case["expected"]) {
+          const std::string move = expected["move"];
+          // std::string fen = expected["fen"];
+
+          bool found = contain_move_algebraic(move, moves, board);
+
+          REQUIRE_MESSAGE(found, ("\nStarting FEN: " + starting_pos +
+                                  "\nExpect move: " + move + " in:\n" +
+                                  moves_to_string(moves, board) +
+                                  print_nice_board(&board)));
+        }
       }
     }
   }
