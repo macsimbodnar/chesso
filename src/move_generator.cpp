@@ -704,6 +704,7 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
           // Get king pseudo legal moves
 
 
+          // TODO: handle the king moves into check! It does not work
           // Remove the moves that put the king under attack
           for (const move_t& move : moves) {
             bool found = false;
