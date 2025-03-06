@@ -12,6 +12,62 @@ static const std::array<index_t, 4> DIRECTIONS_ROOK = {0x10, 0xF0, 0x01, 0xFF};
 static const std::array<index_t, 4> DIRECTIONS_BISHOP = {0x11, 0x0F, 0xF1,
                                                          0xEF};
 
+std::vector<move_t> generate_pawn_attacks(index_t index,
+                                          color_t color,
+                                          const board_t* board)
+{
+  std::vector<move_t> result;
+  result.reserve(2);
+
+  if (color == WHITE) {
+    {
+      // Attack right
+      const index_t candidate = index + 0x11;
+
+      if (!(candidate & 0x88)) {
+        // If candidate on board
+        move_t move = {index, candidate, W_PAWN};
+        result.push_back(move);
+      }
+    }
+
+    {
+      // Attack left
+      const index_t candidate = index + 0x0F;
+
+      if (!(candidate & 0x88)) {
+        // If candidate on board
+        move_t move = {index, candidate, W_PAWN};
+        result.push_back(move);
+      }
+    }
+  } else {
+    {
+      // Attack left (from white point of view of the chessboard)
+      const index_t candidate = index - 0x11;
+
+      if (!(candidate & 0x88)) {
+        // If candidate on board
+        move_t move = {index, candidate, B_PAWN};
+        result.push_back(move);
+      }
+    }
+
+    {
+      // Attack right (from white point of view of teh chessboard)
+      const index_t candidate = index - 0x0F;
+
+      if (!(candidate & 0x88)) {
+        // If candidate on board
+        move_t move = {index, candidate, B_PAWN};
+        result.push_back(move);
+      }
+    }
+  }
+
+  return result;
+}
+
 
 std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
 {
@@ -440,7 +496,6 @@ std::vector<move_t> generate_king(index_t index,
   std::vector<move_t> result = generate_jumping(index, color, OFFSETS_K, board);
 
   // Handle castling
-  // TODO: Check if castling is under attack
   const auto b = board->board;
   const castling_t castling = board->game_state.castling;
   const piece_t piece = board->board[index];
@@ -583,9 +638,17 @@ std::vector<move_t> generate_attack_vector(color_t target_color,
 
     // Iterate over opposite color pieces
     if (p != INVALID && p != EMPTY && target_color == get_piece_color(p)) {
-      const auto moves_for_index =
-          generate_pseudo_legal_moves_from_index(i, &tmp_board);
+      // Handle Pawn move separately
+      std::vector<move_t> moves_for_index;
 
+      if (p == W_PAWN || p == B_PAWN) {
+        moves_for_index = generate_pawn_attacks(i, target_color, &tmp_board);
+      } else {
+        moves_for_index = generate_pseudo_legal_moves_from_index(i, &tmp_board);
+      }
+
+
+      // Remove duplicates
       for (const move_t& move : moves_for_index) {
         bool found = false;
 
@@ -685,7 +748,7 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
   /*****************************************************************************
    * Calculate if under check
    ****************************************************************************/
-  // TODO
+  // TODO: Handle check
 
   /*****************************************************************************
    * Generate moves
@@ -701,23 +764,21 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
       switch (P) {
         case B_KING:
         case W_KING: {
-          // Get king pseudo legal moves
+          // Handle king moves.
 
-
-          // TODO: handle the king moves into check! It does not work
-          // Remove the moves that put the king under attack
           for (const move_t& move : moves) {
             bool found = false;
 
+            // Remove all the KING moves that move him under attack
             for (const auto& A : attack_vector) {
-              if (move == A) {
+              if (move.to == A.to) {
                 found = true;
                 break;
               }
             }
 
             if (!found) {
-              // This does not put te king under check. So we can proceed
+              // This does not put te king under attack. So we can proceed
 
               if (move.castling_move) {
                 // Check if the castling move is legal.

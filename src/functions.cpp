@@ -7,6 +7,7 @@
 #include <vector>
 #include "data_structures.hpp"
 #include "exceptions.hpp"
+#include "move_generator.hpp"
 #include "utils.hpp"
 
 
@@ -200,6 +201,27 @@ std::string move_to_algebraic(const move_t* move,
     }
   }
 
+  // Handle check
+  const index_t opponent_king_index = get_king_index(opponent(board), board);
+
+  board_t tmp_board = *board;
+  bool move_happened = make_move(move, &tmp_board);
+  assert(move_happened == true);
+
+  // Generate moves for my color but after the current move is done
+  const auto pseudo_legal_moves =
+      generate_pseudo_legal_moves_from_index(move->to, &tmp_board);
+
+  // Check if one of this moves put under check the opponent ing
+
+  for (const auto& pseudo_move : pseudo_legal_moves) {
+    if (pseudo_move.to == opponent_king_index) {
+      // Append a '+' to the notation
+      notation += '+';
+      break;
+    }
+  }
+
   return notation;
 }
 
@@ -208,6 +230,30 @@ bool make_move(const move_t* move, board_t* board)
 {
   assert(move != nullptr);
   assert(board != nullptr);
-  // TODO
-  return false;
+  assert(move->captured != EMPTY);
+
+  // Remove en-passant
+  clear_ep_square(board);
+
+  // Check move type
+  if (move->captured != INVALID) {
+    // In case of attack remove the piece from the board
+    const piece_t removed = remove_piece(move->to, board);
+    assert(removed == move->captured);
+  }
+
+  // Move the moving piece
+  const piece_t moved_piece = move_piece(move->from, move->to, board);
+  assert(moved_piece == move->piece);
+
+  // TODO: handle promotion
+  // TODO: handle en-passant set in case of double_pawn_move
+  // TODO: handle en-passant capture
+  // TODO: handle castling move
+  // TODO: handle updating castling rights in case of rook or king move
+
+  // Swap side
+  swap_side(board);
+
+  return true;
 }
