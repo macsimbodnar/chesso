@@ -305,9 +305,6 @@ std::string print_nice_board(const board_t* board)
 
 void load_FEN(const std::string& FEN, board_t* board)
 {
-  bool b_king_set = false;
-  bool w_king_set = false;
-
   // Start parsing
   auto sections = split_string(FEN);
 

@@ -606,6 +606,68 @@ std::vector<move_t> generate_attack_vector(color_t target_color,
 }
 
 
+bool is_index_attacked(index_t index, const std::vector<move_t>* attacks)
+{
+  for (const move_t& attack : *attacks) {
+    if (attack.to == index) { return true; }
+  }
+
+  return false;
+}
+
+
+bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
+{
+  assert(move->castling_move);
+
+  // TODO: Make it more professional! We can generalize those cases
+  switch (move->to) {
+    case 0x02:
+      assert(move->from == 0x04);
+      // White long castling. Target squares 0x04 0x03 0x02
+      if (is_index_attacked(0x04, attacks) ||
+          is_index_attacked(0x03, attacks) ||
+          is_index_attacked(0x02, attacks)) {
+        return false;
+      }
+      break;
+    case 0x06:
+      assert(move->from == 0x04);
+      // White short castling. Target squares 0x04 0x05 0x06
+      if (is_index_attacked(0x04, attacks) ||
+          is_index_attacked(0x05, attacks) ||
+          is_index_attacked(0x06, attacks)) {
+        return false;
+      }
+      break;
+    case 0x72:
+      assert(move->from == 0x74);
+      // Black long castling. Target squares 0x74 0x73 0x72
+      if (is_index_attacked(0x74, attacks) ||
+          is_index_attacked(0x73, attacks) ||
+          is_index_attacked(0x72, attacks)) {
+        return false;
+      }
+      break;
+    case 0x76:
+      assert(move->from == 0x74);
+      // White short castling. Target squares 0x74 0x75 0x76
+      if (is_index_attacked(0x74, attacks) ||
+          is_index_attacked(0x75, attacks) ||
+          is_index_attacked(0x76, attacks)) {
+        return false;
+      }
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  return true;
+}
+
+
 std::vector<move_t> generate_legal_moves(const board_t* board)
 {
   assert(board != nullptr);
@@ -623,7 +685,7 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
   /*****************************************************************************
    * Calculate if under check
    ****************************************************************************/
-
+  // TODO
 
   /*****************************************************************************
    * Generate moves
@@ -653,7 +715,19 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
               }
             }
 
-            if (!found) { result.push_back(move); }
+            if (!found) {
+              // This does not put te king under check. So we can proceed
+
+              if (move.castling_move) {
+                // Check if the castling move is legal.
+                if (!is_castling_valid(&move, &attack_vector)) {
+                  // If not valid castling then skip to the next one
+                  continue;
+                }
+              }
+
+              result.push_back(move);
+            }
           }
         } break;
 

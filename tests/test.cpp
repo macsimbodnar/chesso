@@ -67,6 +67,63 @@ bool contain_move_algebraic(const std::string& move,
 }
 
 
+std::string difference_to_string(const json& expected_moves,
+                                 const std::vector<move_t>& generated_moves,
+                                 const board_t& board)
+{
+  std::string result = "";
+
+  std::vector<std::string> missing;
+  std::vector<std::string> extra;
+
+  // Search for missing
+  for (const json& expected : expected_moves) {
+    bool found = false;
+
+    for (const move_t& move : generated_moves) {
+      std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
+
+      if (move_str == expected["move"]) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) { missing.push_back(expected["move"]); }
+  }
+
+  // Search for extra
+  for (const move_t& move : generated_moves) {
+    bool found = false;
+
+    std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
+
+    for (const json& expected : expected_moves) {
+      if (move_str == expected["move"]) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) { extra.push_back(move_str); }
+  }
+
+
+  // Compose output
+  result += "  Missing:\n";
+  for (const auto& I : missing) {
+    result += "    " + I + "\n";
+  }
+
+  result += "\n  Extra:\n";
+  for (const auto& I : extra) {
+    result += "    " + I + "\n";
+  }
+
+  return result;
+}
+
+
 TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
@@ -255,7 +312,7 @@ TEST_SUITE("Test legal move generator")
 {
   // clang-format off
   const static std::vector<std::string> test_files = {
-      // "assets/castling.json",
+      "assets/castling.json",
       // "assets/checkmates.json",
       // "assets/famous.json",
       // "assets/pawns.json",
@@ -290,8 +347,13 @@ TEST_SUITE("Test legal move generator")
         auto moves = generate_legal_moves(&board);
 
         // Check size
-        REQUIRE_MESSAGE(moves.size() == test_case["expected"].size(),
-                        ("Running " + test_json_file + " File"));
+        REQUIRE_MESSAGE(
+            moves.size() == test_case["expected"].size(),
+            ("\nRunning " + test_json_file + " File\n" +
+             "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
+             moves_to_string(moves, board) + "Difference:\n" +
+             difference_to_string(test_case["expected"], moves, board) +
+             print_nice_board(&board)));
 
         // Check if move is in by Algebraic notation
         for (const json& expected : test_case["expected"]) {
