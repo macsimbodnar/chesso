@@ -614,8 +614,8 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
 }
 
 
-std::vector<move_t> generate_attack_vector(color_t target_color,
-                                           const board_t* board)
+std::vector<move_t> generate_attacks_vector(color_t target_color,
+                                            const board_t* board)
 {
   board_t tmp_board = *board;
 
@@ -736,6 +736,26 @@ bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
 }
 
 
+bool is_pin(const move_t* move, index_t king_index, const board_t* board)
+{
+  // Make the move and see if this leaves the king under check.
+  // TODO: Use make_move function
+  board_t tmp_board = *board;
+  tmp_board.board[move->to] = tmp_board.board[move->from];
+  tmp_board.board[move->from] = EMPTY;
+
+  // TODO: Make this more efficient. Here we copy twice the board
+  const auto& attacks_vector =
+      generate_attacks_vector(!board->game_state.active_color, &tmp_board);
+
+  for (const auto& attack_move : attacks_vector) {
+    if (attack_move.to == king_index) { return true; }
+  }
+
+  return false;
+}
+
+
 std::vector<move_t> generate_legal_moves(const board_t* board)
 {
   // TODO: Reimplement this function. It contains a lot of duplicated code and
@@ -750,7 +770,7 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
    ****************************************************************************/
   const color_t attack_color = !board->game_state.active_color;
   const std::vector<move_t> attacks_vector =
-      generate_attack_vector(attack_color, board);
+      generate_attacks_vector(attack_color, board);
 
   /*****************************************************************************
    * Calculate if under check
@@ -855,7 +875,11 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
                 }
               }
 
-              if (!should_discard) { result.push_back(move); }
+              if (!should_discard) {
+                if (!is_pin(&move, king_index, board)) {
+                  result.push_back(move);
+                }
+              }
             }
           }
         }
@@ -910,7 +934,7 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
                   remove_piece(move.to, &tmp_board);
 
                   const auto tmp_attacks =
-                      generate_attack_vector(attack_color, &tmp_board);
+                      generate_attacks_vector(attack_color, &tmp_board);
 
                   // Check if the new attacks prevent this capture
                   bool should_skip_move = false;
@@ -933,7 +957,10 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
           default: {
             // Generate others pieces moves
             for (const move_t& move : moves) {
-              result.push_back(move);
+              if (!is_pin(&move, king_index, board)) {
+                // If not pin then ok
+                result.push_back(move);
+              }
             }
           }
 

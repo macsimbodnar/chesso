@@ -315,7 +315,7 @@ TEST_SUITE("Test legal move generator")
       "assets/castling.json",
       // "assets/checkmates.json",
       // "assets/famous.json",
-      // "assets/pawns.json",
+      "assets/pawns.json",
       // "assets/promotions.json",
       // "assets/stalemates.json",
       "assets/standard.json",

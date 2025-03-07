@@ -230,18 +230,49 @@ bool make_move(const move_t* move, board_t* board)
 
   // Check move type
   if (move->captured != INVALID) {
-    // In case of attack remove the piece from the board
-    const piece_t removed = remove_piece(move->to, board);
-    assert(removed == move->captured);
+    // In case of attack remove the piece from the board.
+    if (move->en_passant_capture) {
+      // In case of capture by en-passant we take the correct pawn
+      index_t index_to_remove = move->to;
+      switch (board->game_state.active_color) {
+        case BLACK:
+          index_to_remove += 0x10;
+          break;
+        case WHITE:
+          index_to_remove -= 0x10;
+          break;
+        default:
+          assert(false);
+          break;
+      }
+
+      // Assert if the index is on board
+      assert(!(index_to_remove & 0x88));
+      assert(index_to_remove != INVALID_BOARD_INDEX);
+      // Assert the target contains a PAWN of the opposite color
+      assert(board->board[index_to_remove] ==
+             (board->game_state.active_color == WHITE ? B_PAWN : W_PAWN));
+
+      const piece_t removed = remove_piece(index_to_remove, board);
+      assert(removed == move->captured);
+    } else {
+      const piece_t removed = remove_piece(move->to, board);
+      assert(removed == move->captured);
+    }
   }
 
   // Move the moving piece
   const piece_t moved_piece = move_piece(move->from, move->to, board);
   assert(moved_piece == move->piece);
 
+  // Set the en-passant if necessary
+  if (move->double_pawn_move) {
+    // TODO: Check if there is a opposite color pawn near the moved pawn. If so
+    // set en-passant flag
+  }
+
   // TODO: handle promotion
   // TODO: handle en-passant set in case of double_pawn_move
-  // TODO: handle en-passant capture
   // TODO: handle castling move
   // TODO: handle updating castling rights in case of rook or king move
 
