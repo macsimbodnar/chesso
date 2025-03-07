@@ -649,15 +649,20 @@ std::vector<move_t> generate_attack_vector(color_t target_color,
 
 
       // Remove duplicates
+      // for (const move_t& move : moves_for_index) {
+      //   bool found = false;
+
+      //   for (const move_t& attack : attacks) {
+      //     if (attack == move) { found = true; }
+      //     break;
+      //   }
+
+      //   if (!found) { attacks.push_back(move); }
+      // }
+
+      // We keep duplicates for easy double check detection.
       for (const move_t& move : moves_for_index) {
-        bool found = false;
-
-        for (const move_t& attack : attacks) {
-          if (attack == move) { found = true; }
-          break;
-        }
-
-        if (!found) { attacks.push_back(move); }
+        attacks.push_back(move);
       }
     }
   }
@@ -733,6 +738,8 @@ bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
 
 std::vector<move_t> generate_legal_moves(const board_t* board)
 {
+  // TODO: Reimplement this function. It contains a lot of duplicated code and
+  // inefficient calls
   assert(board != nullptr);
 
   std::vector<move_t> result;
@@ -742,65 +749,196 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
    * Generate enemy attacks vector
    ****************************************************************************/
   const color_t attack_color = !board->game_state.active_color;
-  const std::vector<move_t> attack_vector =
+  const std::vector<move_t> attacks_vector =
       generate_attack_vector(attack_color, board);
 
   /*****************************************************************************
    * Calculate if under check
    ****************************************************************************/
-  // TODO: Handle check
+  bool under_check = false;
+  bool under_double_check = false;
+  const index_t king_index =
+      get_king_index(board->game_state.active_color, board);
+
+  for (const move_t& attack : attacks_vector) {
+    if (attack.to == king_index) {
+      if (!under_check) {
+        under_check = true;
+      } else {
+        under_double_check = true;
+      }
+    }
+  }
 
   /*****************************************************************************
    * Generate moves
    ****************************************************************************/
-  for (index_t i = 0; i < BOARD_SIZE; ++i) {
-    const piece_t P = board->board[i];
+  if (under_check) {
+    // UNDER CHECK
 
-    if (P != INVALID && P != EMPTY &&
-        board->game_state.active_color == get_piece_color(P)) {
-      // generate moves
-      const auto moves = generate_pseudo_legal_moves_from_index(i, board);
+    if (under_double_check) {  // DOUBLE CHECK
+      // In the case of double check we consider only king moves
+      const auto king_moves = generate_king(king_index, BLACK, board);
 
-      switch (P) {
-        case B_KING:
-        case W_KING: {
-          // Handle king moves.
-
-          for (const move_t& move : moves) {
-            bool found = false;
-
-            // Remove all the KING moves that move him under attack
-            for (const auto& A : attack_vector) {
-              if (move.to == A.to) {
-                found = true;
-                break;
-              }
-            }
-
-            if (!found) {
-              // This does not put te king under attack. So we can proceed
-
-              if (move.castling_move) {
-                // Check if the castling move is legal.
-                if (!is_castling_valid(&move, &attack_vector)) {
-                  // If not valid castling then skip to the next one
-                  continue;
-                }
-              }
-
-              result.push_back(move);
-            }
-          }
-        } break;
-
-        default: {
-          // Generate others pieces moves
-          for (const move_t& move : moves) {
-            result.push_back(move);
+      for (const move_t& king_move : king_moves) {
+        // Remove king moves that put him back in check
+        bool should_discard = false;
+        for (const auto& enemy_attack_move : attacks_vector) {
+          if (king_move.to == enemy_attack_move.to) {
+            should_discard = true;
+            break;
           }
         }
 
-        break;
+        // Check if this move is castling, if so remove it
+        if (king_move.castling_move) { should_discard = true; }
+
+        // Insert only valid
+        if (!should_discard) { result.push_back(king_move); }
+      }
+    } else {  // SINGE CHECK
+      // King moves away from check
+      {
+        const auto king_moves = generate_king(king_index, BLACK, board);
+
+        for (const move_t& king_move : king_moves) {
+          // Remove king moves that put him back in check
+          bool should_discard = false;
+          for (const auto& enemy_attack_move : attacks_vector) {
+            if (king_move.to == enemy_attack_move.to) {
+              should_discard = true;
+              break;
+            }
+          }
+
+          // Check if this move is castling, if so remove it
+          if (king_move.castling_move) { should_discard = true; }
+
+          // Insert only valid
+          if (!should_discard) { result.push_back(king_move); }
+        }
+      }
+
+      // Handle: Remove the attacker moves and block attacks in rays attack
+      {
+        for (index_t i = 0; i < BOARD_SIZE; ++i) {
+          const piece_t P = board->board[i];
+
+          if (P != INVALID && P != EMPTY && i != king_index &&
+              board->game_state.active_color == get_piece_color(P)) {
+            // generate moves except for King
+            const auto moves = generate_pseudo_legal_moves_from_index(i, board);
+
+            for (const move_t& move : moves) {
+              bool should_discard = true;
+
+              for (const move_t& attack : attacks_vector) {
+                // Check if the move remove the attacker
+                if (attack.to == king_index && move.captured != INVALID &&
+                    move.to == attack.from) {
+                  should_discard = false;
+                }
+
+                // Check if the move block the ray attack
+                switch (attack.piece) {
+                  case W_QUEEN:
+                  case B_QUEEN:
+                  case W_BISHOP:
+                  case B_BISHOP:
+                  case W_ROOK:
+                  case B_ROOK:
+                    // TODO: Implement the blocking ray attacks
+                    break;
+
+                  default:
+                    break;
+                }
+              }
+
+              if (!should_discard) { result.push_back(move); }
+            }
+          }
+        }
+      }
+    }
+  } else {
+    // NOT UNDER CHECK
+    // TODO: handle moves that put the king under attack if he attack but put
+    // himself under attack.
+    // Example: FEN [r3k2r/R3P2R/8/8/8/8/8/4K3 b kq - 0 1] move [Kxe7]
+
+    for (index_t i = 0; i < BOARD_SIZE; ++i) {
+      const piece_t P = board->board[i];
+
+      if (P != INVALID && P != EMPTY &&
+          board->game_state.active_color == get_piece_color(P)) {
+        // generate moves
+        const auto moves = generate_pseudo_legal_moves_from_index(i, board);
+
+        switch (P) {
+          case B_KING:
+          case W_KING: {
+            // Handle king moves.
+
+            for (const move_t& move : moves) {
+              bool found = false;
+
+              // Remove all the KING moves that move him under attack
+              for (const auto& A : attacks_vector) {
+                if (move.to == A.to) {
+                  found = true;
+                  break;
+                }
+              }
+
+              if (!found) {
+                // This does not put te king under attack. So we can proceed
+
+                if (move.castling_move) {  // Handling castling
+                  // Check if the castling move is legal.
+                  if (!is_castling_valid(&move, &attacks_vector)) {
+                    // If not valid castling then skip to the next one
+                    continue;
+                  }
+                }
+
+                if (move.captured != INVALID) {
+                  // Handling king attack that put him under check
+
+                  // Remove the target piece
+                  board_t tmp_board = *board;
+                  remove_piece(move.to, &tmp_board);
+
+                  const auto tmp_attacks =
+                      generate_attack_vector(attack_color, &tmp_board);
+
+                  // Check if the new attacks prevent this capture
+                  bool should_skip_move = false;
+                  for (const auto& tmp_attack_move : tmp_attacks) {
+                    if (tmp_attack_move.to == move.to) {
+                      // Then skip this move
+                      should_skip_move = true;
+                      break;
+                    }
+                  }
+
+                  if (should_skip_move) { continue; }
+                }
+
+                result.push_back(move);
+              }
+            }
+          } break;
+
+          default: {
+            // Generate others pieces moves
+            for (const move_t& move : moves) {
+              result.push_back(move);
+            }
+          }
+
+          break;
+        }
       }
     }
   }

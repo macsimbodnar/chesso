@@ -74,16 +74,9 @@ std::array<piece_t, BOARD_SIZE> get_chess_board(const board_t* board)
 
 position_t king_square(color_t color, const board_t* board)
 {
-  piece_t king_to_search = W_KING;
-  if (color == BLACK) { king_to_search = B_KING; }
+  assert(board != nullptr);
 
-  uint8_t king_index = INVALID_BOARD_INDEX;
-  for (uint8_t i = 0; i < BOARD_SIZE; ++i) {
-    if (board->board[i] == king_to_search) {
-      king_index = i;
-      break;
-    }
-  }
+  index_t king_index = get_king_index(color, board);
 
   if (king_index == INVALID_BOARD_INDEX) {
     throw kin_not_on_board_exception(color_to_string(color) +
