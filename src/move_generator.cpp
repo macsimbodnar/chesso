@@ -756,6 +756,32 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
 }
 
 
+bool is_blocking_ray(index_t index, const move_t* move)
+{
+  // Find the ray direction
+  // Generate the ray
+  // Check if index is on the ray
+
+  const position_t start = index_to_position(move->from);
+  const position_t end = index_to_position(move->to);
+  const position_t point = index_to_position(index);
+
+  const int cross_product =
+      (point.rank - start.rank) * (end.file - start.file) -
+      (point.file - start.file) * (end.rank - start.rank);
+
+  if (std::abs(cross_product) != 0) { return false; }
+
+  // TODO: Check if this is necessary
+  bool within_x_bounds = (std::min(start.file, end.file) <= point.file) &&
+                         (point.file <= std::max(start.file, end.file));
+  bool within_y_bounds = (std::min(start.rank, end.rank) <= point.rank) &&
+                         (point.rank <= std::max(start.rank, end.rank));
+
+  return within_x_bounds && within_y_bounds;
+}
+
+
 std::vector<move_t> generate_legal_moves(const board_t* board)
 {
   // TODO: Reimplement this function. It contains a lot of duplicated code and
@@ -798,7 +824,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
 
     if (under_double_check) {  // DOUBLE CHECK
       // In the case of double check we consider only king moves
-      const auto king_moves = generate_king(king_index, BLACK, board);
+      const auto king_moves =
+          generate_king(king_index, board->game_state.active_color, board);
 
       for (const move_t& king_move : king_moves) {
         // Remove king moves that put him back in check
@@ -819,7 +846,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
     } else {  // SINGE CHECK
       // King moves away from check
       {
-        const auto king_moves = generate_king(king_index, BLACK, board);
+        const auto king_moves =
+            generate_king(king_index, board->game_state.active_color, board);
 
         for (const move_t& king_move : king_moves) {
           // Remove king moves that put him back in check
@@ -867,7 +895,9 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
                   case B_BISHOP:
                   case W_ROOK:
                   case B_ROOK:
-                    // TODO: Implement the blocking ray attacks
+                    if (is_blocking_ray(move.to, &attack)) {
+                      should_discard = false;
+                    }
                     break;
 
                   default:

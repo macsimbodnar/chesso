@@ -265,13 +265,49 @@ bool make_move(const move_t* move, board_t* board)
   const piece_t moved_piece = move_piece(move->from, move->to, board);
   assert(moved_piece == move->piece);
 
+  // Handle promotion
+  if (move->promoted_to != TO_NONE) {
+    const piece_t removed = remove_piece(move->to, board);
+    assert(removed ==
+           (board->game_state.active_color == WHITE ? W_PAWN : B_PAWN));
+
+    switch (move->promoted_to) {
+      case TO_QUEEN:
+        put_piece(move->to,
+                  (board->game_state.active_color == WHITE ? W_QUEEN : B_QUEEN),
+                  board);
+        break;
+      case TO_KNIGHT:
+        put_piece(
+            move->to,
+            (board->game_state.active_color == WHITE ? W_KNIGHT : B_KNIGHT),
+            board);
+        break;
+      case TO_ROOK:
+        put_piece(move->to,
+                  (board->game_state.active_color == WHITE ? W_ROOK : B_ROOK),
+                  board);
+        break;
+      case TO_BISHOP:
+        put_piece(
+            move->to,
+            (board->game_state.active_color == WHITE ? W_BISHOP : B_BISHOP),
+            board);
+        break;
+      case TO_NONE:
+      default:
+        assert(false);
+        break;
+    }
+  }
+
+
   // Set the en-passant if necessary
   if (move->double_pawn_move) {
     // TODO: Check if there is a opposite color pawn near the moved pawn. If so
     // set en-passant flag
   }
 
-  // TODO: handle promotion
   // TODO: handle en-passant set in case of double_pawn_move
   // TODO: handle castling move
   // TODO: handle updating castling rights in case of rook or king move

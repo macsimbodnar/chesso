@@ -124,6 +124,32 @@ std::string difference_to_string(const json& expected_moves,
 }
 
 
+TEST_SUITE("DEBUG TEST") {
+  // TEST_CASE("DEBUG") {
+  //   std::string FEN = "BRK2q1N/1PPP2k1/8/3P4/8/8/PPP3P1/8 w - - 12 7";
+  //   size_t expected_size = 4;
+
+  //   board_t board;
+  //   init_board(FEN, &board);
+
+  //   auto moves = generate_legal_moves(&board);
+
+  //   REQUIRE_EQ(moves.size(), expected_size);
+  // }
+
+  // TEST_CASE("test is blocking rays") {
+  //   index_t from = 0x25;
+  //   index_t to = 0x07;
+  //   index_t point = 0x16;
+
+  //   move_t move = {from, to, INVALID};
+  //   bool result = is_blocking_ray(point, &move);
+
+  //   REQUIRE_EQ(result, true);
+  // }
+}
+
+
 TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
@@ -316,7 +342,7 @@ TEST_SUITE("Test legal move generator")
       // "assets/checkmates.json",
       // "assets/famous.json",
       "assets/pawns.json",
-      // "assets/promotions.json",
+      "assets/promotions.json",
       // "assets/stalemates.json",
       "assets/standard.json",
       // "assets/taxing.json",
@@ -371,3 +397,11 @@ TEST_SUITE("Test legal move generator")
     }
   }
 }
+
+
+/**
+ * TODO:
+ * - Test FEN generation: load all FENs in the json files and compare them with
+ * the generated ones
+ *
+ */
