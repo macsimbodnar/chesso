@@ -11,6 +11,20 @@
 
 using json = nlohmann::json;
 
+// clang-format off
+const static std::vector<std::string> test_files = {
+  "assets/castling.json",
+  "assets/checkmates.json",
+  "assets/famous.json",
+  "assets/pawns.json",
+  "assets/promotions.json",
+  "assets/stalemates.json",
+  "assets/standard.json",
+  "assets/taxing.json",
+};
+// clang-format on
+
+
 json load_json(const std::string& filename)
 {
   std::ifstream file(filename);
@@ -161,6 +175,33 @@ TEST_SUITE("Test utils")
     std::string fen_result = generate_FEN(&board);
 
     REQUIRE_EQ(fen_result, std::string(DEFAULT_POSITION));
+  }
+
+  TEST_CASE("Test fen generation - generation")
+  {
+    for (const auto& test_file : test_files) {
+      const json test_cases = load_json(test_file);
+
+      for (const json& test_case : test_cases["testCases"]) {
+        {
+          const std::string expected_FEN = test_case["start"]["fen"];
+          board_t board;
+          init_board(expected_FEN, &board);
+
+          const std::string result_FEN = generate_FEN(&board);
+          REQUIRE_EQ(result_FEN, expected_FEN);
+        }
+
+        for (const json& expected : test_case["expected"]) {
+          const std::string expected_FEN = expected["fen"];
+          board_t board;
+          init_board(expected_FEN, &board);
+
+          const std::string result_FEN = generate_FEN(&board);
+          REQUIRE_EQ(result_FEN, expected_FEN);
+        }
+      }
+    }
   }
 }
 
@@ -337,20 +378,6 @@ TEST_SUITE("Test pseudo legal move generator")
 
 TEST_SUITE("Test legal move generator")
 {
-  // clang-format off
-  const static std::vector<std::string> test_files = {
-      "assets/castling.json",
-      "assets/checkmates.json",
-      "assets/famous.json",
-      "assets/pawns.json",
-      "assets/promotions.json",
-      "assets/stalemates.json",
-      "assets/standard.json",
-      "assets/taxing.json",
-  };
-  // clang-format on
-
-
   TEST_CASE("Basic test")
   {
     board_t board;
@@ -367,6 +394,7 @@ TEST_SUITE("Test legal move generator")
 
       for (const json& test_case : test_cases["testCases"]) {
         std::string starting_pos = test_case["start"]["fen"];
+        json expected_moves = test_case["expected"];
 
         board_t board;
         init_board(starting_pos, &board);
@@ -375,27 +403,35 @@ TEST_SUITE("Test legal move generator")
 
         // Check size
         REQUIRE_MESSAGE(
-            moves.size() == test_case["expected"].size(),
+            moves.size() == expected_moves.size(),
             ("\nRunning " + test_json_file + " File\n" +
              "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
              moves_to_string(moves, board) + "Difference:\n" +
-             difference_to_string(test_case["expected"], moves, board) +
+             difference_to_string(expected_moves, moves, board) +
              print_nice_board(&board)));
 
         // Check if move is in by Algebraic notation
-        for (const json& expected : test_case["expected"]) {
+        for (const json& expected : expected_moves) {
           const std::string move = expected["move"];
-          // std::string fen = expected["fen"];
+          std::string fen = expected["fen"];
 
-          bool found = contain_move_algebraic(move, moves, board);
+          {  // Check by algebraic notation
+            bool found = contain_move_algebraic(move, moves, board);
 
-          REQUIRE_MESSAGE(
-              found,
-              ("\nStarting FEN: " + starting_pos + "\nExpect move: " + move +
-               " in:\n" + moves_to_string(moves, board) + "Difference:\n" +
-               difference_to_string(test_case["expected"], moves, board) +
-               print_nice_board(&board)));
+            REQUIRE_MESSAGE(
+                found,
+                ("\nStarting FEN: " + starting_pos + "\nExpect move: " + move +
+                 " in:\n" + moves_to_string(moves, board) + "Difference:\n" +
+                 difference_to_string(expected_moves, moves, board) +
+                 print_nice_board(&board)));
+          }
+
+          {  // Check by make_move and compare FEN
+             // TODO: Implement algebraic to move_t function
+          }
         }
+
+        // Test the make move
       }
     }
   }
@@ -404,7 +440,7 @@ TEST_SUITE("Test legal move generator")
 
 /**
  * TODO:
- * - Test FEN generation: load all FENs in the json files and compare them with
- * the generated ones
+ * - Test FEN generation: load all FENs in the json files and compare them
+ * with the generated ones
  *
  */
