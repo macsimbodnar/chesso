@@ -127,8 +127,8 @@ std::string difference_to_string(const json& expected_moves,
 TEST_SUITE("DEBUG TEST")
 {
   // TEST_CASE("DEBUG") {
-  //   std::string FEN = "BRK2q1N/1PPP2k1/8/3P4/8/8/PPP3P1/8 w - - 12 7";
-  //   size_t expected_size = 4;
+  //   std::string FEN = "4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1";
+  //   size_t expected_size = 8;
 
   //   board_t board;
   //   init_board(FEN, &board);

@@ -742,6 +742,23 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
   // TODO: Use make_move function
   board_t tmp_board = *board;
   tmp_board.board[move->to] = tmp_board.board[move->from];
+
+  if (move->en_passant_capture) {
+    index_t index_to_remove = move->to;
+    switch (board->game_state.active_color) {
+      case BLACK:
+        index_to_remove += 0x10;
+        break;
+      case WHITE:
+        index_to_remove -= 0x10;
+        break;
+      default:
+        assert(false);
+        break;
+    }
+    tmp_board.board[index_to_remove] = EMPTY;
+  }
+
   tmp_board.board[move->from] = EMPTY;
 
   // TODO: Make this more efficient. Here we copy twice the board
