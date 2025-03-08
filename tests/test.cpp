@@ -124,7 +124,8 @@ std::string difference_to_string(const json& expected_moves,
 }
 
 
-TEST_SUITE("DEBUG TEST") {
+TEST_SUITE("DEBUG TEST")
+{
   // TEST_CASE("DEBUG") {
   //   std::string FEN = "BRK2q1N/1PPP2k1/8/3P4/8/8/PPP3P1/8 w - - 12 7";
   //   size_t expected_size = 4;
@@ -345,7 +346,7 @@ TEST_SUITE("Test legal move generator")
       "assets/promotions.json",
       // "assets/stalemates.json",
       "assets/standard.json",
-      // "assets/taxing.json",
+      "assets/taxing.json",
   };
   // clang-format on
 
@@ -388,10 +389,12 @@ TEST_SUITE("Test legal move generator")
 
           bool found = contain_move_algebraic(move, moves, board);
 
-          REQUIRE_MESSAGE(found, ("\nStarting FEN: " + starting_pos +
-                                  "\nExpect move: " + move + " in:\n" +
-                                  moves_to_string(moves, board) +
-                                  print_nice_board(&board)));
+          REQUIRE_MESSAGE(
+              found,
+              ("\nStarting FEN: " + starting_pos + "\nExpect move: " + move +
+               " in:\n" + moves_to_string(moves, board) + "Difference:\n" +
+               difference_to_string(test_case["expected"], moves, board) +
+               print_nice_board(&board)));
         }
       }
     }

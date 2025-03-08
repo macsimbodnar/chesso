@@ -106,15 +106,25 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
-bool is_ambiguous_move(const move_t* move, const std::vector<move_t>* moves)
+/**
+ * @brief Returns the indexes of the ambiguous moves.
+ */
+std::vector<size_t> get_ambiguous_move(const move_t* move,
+                                       const std::vector<move_t>* moves)
 {
-  for (const move_t& I : *moves) {
+  assert(moves != nullptr);
+
+  std::vector<size_t> result;
+  for (size_t i = 0; i < moves->size(); ++i) {
+    const auto& I = moves->at(i);
+
+    // If same piece, same destination and different source
     if (move->piece == I.piece && move->to == I.to && move->from != I.from) {
-      return true;
+      result.push_back(i);
     }
   }
 
-  return false;
+  return result;
 }
 
 
@@ -137,6 +147,9 @@ std::string move_to_algebraic(const move_t* move,
 
   static const std::array<char, 8> file_to_char_map = {'a', 'b', 'c', 'd',
                                                        'e', 'f', 'g', 'h'};
+  static const std::array<char, 8> rank_to_char_map = {'1', '2', '3', '4',
+                                                       '5', '6', '7', '8'};
+
 
   std::string notation;
 
@@ -152,8 +165,36 @@ std::string move_to_algebraic(const move_t* move,
     notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
 
     // If ambiguous move the add the from file
-    if (is_ambiguous_move(move, moves)) {
-      notation += file_to_char_map[index_to_position(move->from).file];
+    const auto ambiguous_moves = get_ambiguous_move(move, moves);
+    if (ambiguous_moves.size() > 0) {
+      const position_t move_from_pos = index_to_position(move->from);
+      bool is_file_unique = true;
+      bool is_rank_unique = true;
+
+      // Check if file or rank are unique for the move->from
+      for (size_t i : ambiguous_moves) {
+        const position_t i_pos = index_to_position(moves->at(i).from);
+
+        if (move_from_pos.file == i_pos.file) { is_file_unique = false; }
+
+        if (move_from_pos.rank == i_pos.rank) { is_rank_unique = false; }
+
+        // Exit from the loop in case both are non unique. No make sense to
+        // search for more
+        if (!is_file_unique && !is_rank_unique) { break; }
+      }
+
+      if (is_file_unique) {
+        // Check if file unique
+        notation += file_to_char_map[move_from_pos.file];
+      } else if (is_rank_unique) {
+        // Check if rank unique
+        notation += rank_to_char_map[move_from_pos.rank];
+      } else {
+        // In case none is unique use both
+        notation += file_to_char_map[move_from_pos.file];
+        notation += rank_to_char_map[move_from_pos.rank];
+      }
     }
   }
 
@@ -205,13 +246,27 @@ std::string move_to_algebraic(const move_t* move,
   const auto pseudo_legal_moves =
       generate_pseudo_legal_moves_from_index(move->to, &tmp_board);
 
-  // Check if one of this moves put under check the opponent ing
+  // Check if one of this moves put under check the opponent king
 
   for (const auto& pseudo_move : pseudo_legal_moves) {
     if (pseudo_move.to == opponent_king_index) {
-      // Append a '+' to the notation
-      notation += '+';
-      break;
+      // Now let's check if this is check mate
+
+      if (move->from == 0x02 && move->to == 0x21 && move->piece == W_KNIGHT) {
+        asm("nop");
+      }
+
+      // Generate legal moves after the make move to see if any available.
+      const auto moves = generate_legal_moves(&tmp_board);
+      if (moves.size() == 0) {
+        // Check mate
+        notation += '#';
+        break;
+      } else {
+        // Append a '+' to the notation
+        notation += '+';
+        break;
+      }
     }
   }
 

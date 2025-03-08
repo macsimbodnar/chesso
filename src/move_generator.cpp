@@ -859,6 +859,24 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
             }
           }
 
+          // Remove the captures that put him back in check
+          if (king_move.captured != INVALID) {
+            // Remove the piece from the board and see if that square is under
+            // attack
+            board_t tmp_board = *board;
+            tmp_board.board[king_move.to] = EMPTY;
+            const auto tmp_attacks = generate_attacks_vector(
+                !tmp_board.game_state.active_color, &tmp_board);
+
+            for (const auto& tmp_attack : tmp_attacks) {
+              if (tmp_attack.to == king_move.to) {
+                // Discard that move
+                should_discard = true;
+                break;
+              }
+            }
+          }
+
           // Check if this move is castling, if so remove it
           if (king_move.castling_move) { should_discard = true; }
 
