@@ -340,11 +340,11 @@ TEST_SUITE("Test legal move generator")
   // clang-format off
   const static std::vector<std::string> test_files = {
       "assets/castling.json",
-      // "assets/checkmates.json",
-      // "assets/famous.json",
+      "assets/checkmates.json",
+      "assets/famous.json",
       "assets/pawns.json",
       "assets/promotions.json",
-      // "assets/stalemates.json",
+      "assets/stalemates.json",
       "assets/standard.json",
       "assets/taxing.json",
   };
