@@ -203,6 +203,23 @@ TEST_SUITE("Test utils")
       }
     }
   }
+
+  TEST_CASE("Test algebraic parsing")
+  {
+    board_t board;
+    init_board(DEFAULT_POSITION, &board);
+
+    auto moves = generate_legal_moves(&board);
+
+    for (const auto& move : moves) {
+      const std::string generated_algebraic =
+          move_to_algebraic(&move, &moves, &board);
+      const move_t generated_move =
+          algebraic_to_move(generated_algebraic, &board);
+
+      REQUIRE(generated_move == move);
+    }
+  }
 }
 
 
@@ -412,22 +429,35 @@ TEST_SUITE("Test legal move generator")
 
         // Check if move is in by Algebraic notation
         for (const json& expected : expected_moves) {
-          const std::string move = expected["move"];
+          const std::string move_str = expected["move"];
           std::string fen = expected["fen"];
 
           {  // Check by algebraic notation
-            bool found = contain_move_algebraic(move, moves, board);
+            bool found = contain_move_algebraic(move_str, moves, board);
 
             REQUIRE_MESSAGE(
-                found,
-                ("\nStarting FEN: " + starting_pos + "\nExpect move: " + move +
-                 " in:\n" + moves_to_string(moves, board) + "Difference:\n" +
-                 difference_to_string(expected_moves, moves, board) +
-                 print_nice_board(&board)));
+                found, ("\nStarting FEN: " + starting_pos +
+                        "\nExpect move: " + move_str + " in:\n" +
+                        moves_to_string(moves, board) + "Difference:\n" +
+                        difference_to_string(expected_moves, moves, board) +
+                        print_nice_board(&board)));
           }
 
           {  // Check by make_move and compare FEN
-             // TODO: Implement algebraic to move_t function
+            // const move_t move_to_make = algebraic_to_move(move_str, &board);
+            // bool move_happened = make_move(&move_to_make, &board);
+
+            // REQUIRE(move_happened);
+
+            // std::string new_fen = generate_FEN(&board);
+
+            // REQUIRE_MESSAGE(
+            //     new_fen == fen,
+            //     ("\nStarting FEN: " + starting_pos +
+            //      "\nExpect move: " + move_str + " in:\n" +
+            //      moves_to_string(moves, board) + "Difference:\n" +
+            //      difference_to_string(expected_moves, moves, board) +
+            //      print_nice_board(&board)));
           }
         }
 

@@ -274,6 +274,231 @@ std::string move_to_algebraic(const move_t* move,
 }
 
 
+// Main function: parse a SAN move into move_t
+move_t algebraic_to_move(std::string notation, const board_t* board)
+{
+  assert(board != nullptr);
+
+  const std::string original_notation = notation;
+
+  move_t result;
+  const color_t color = board->game_state.active_color;
+
+  // Make a working copy of the move string.
+  bool is_check = false;
+  bool is_mate = false;
+  bool is_capture = false;
+
+  if (notation.back() == '+') { is_check = true; }
+
+  if (notation.back() == '#') { is_mate = true; }
+
+  // Remove any trailing check ('+') or checkmate ('#') symbols.
+  while (!notation.empty() &&
+         (notation.back() == '+' || notation.back() == '#')) {
+    notation.pop_back();
+  }
+
+  // Parse castling
+  if (notation == "O-O") {
+    result.castling_move = true;
+    switch (color) {
+      case BLACK:
+        result.from = 0x74;
+        result.to = 0x72;
+        result.piece = B_KING;
+        break;
+      case WHITE:
+        result.from = 0x04;
+        result.to = 0x02;
+        result.piece = W_KING;
+        break;
+      default:
+        assert(false);
+        break;
+    }
+
+    return result;
+  }
+
+  if (notation == "O-O") {
+    result.castling_move = true;
+
+    switch (color) {
+      case BLACK:
+        result.from = 0x74;
+        result.to = 0x76;
+        result.piece = B_KING;
+        break;
+      case WHITE:
+        result.from = 0x04;
+        result.to = 0x06;
+        result.piece = W_KING;
+        break;
+      default:
+        assert(false);
+        break;
+    }
+
+    return result;
+  }
+
+
+  // Parse non-castling moves
+  size_t pos = 0;
+  piece_t moving_piece;
+
+  // If the move begins with a piece letter (K, Q, R, B, N), then use it.
+  if (pos < notation.size() && std::isupper(notation[pos])) {
+    char piece_char = notation[pos];
+    switch (piece_char) {
+      case 'K':
+        moving_piece =
+            (board->game_state.active_color == WHITE) ? W_KING : B_KING;
+        break;
+      case 'Q':
+        moving_piece =
+            (board->game_state.active_color == WHITE) ? W_QUEEN : B_QUEEN;
+        break;
+      case 'R':
+        moving_piece =
+            (board->game_state.active_color == WHITE) ? W_ROOK : B_ROOK;
+        break;
+      case 'B':
+        moving_piece =
+            (board->game_state.active_color == WHITE) ? W_BISHOP : B_BISHOP;
+        break;
+      case 'N':
+        moving_piece =
+            (board->game_state.active_color == WHITE) ? W_KNIGHT : B_KNIGHT;
+        break;
+      default:
+        moving_piece = INVALID;
+        break;
+    }
+    ++pos;
+  } else {
+    // If no piece letter then it's a pawn move.
+    moving_piece = (board->game_state.active_color == WHITE) ? W_PAWN : B_PAWN;
+  }
+  result.piece = moving_piece;
+
+  // We now extract any disambiguation info.
+  // This may be a file letter, a rank digit, or both.
+  std::optional<char> disambiguous_file;
+  std::optional<char> disambiguous_rank;
+
+  // Look ahead for an 'x' (capture marker) or destination square.
+  // We will also later remove any 'x' from the string.
+  size_t temp_pos = pos;
+  while (temp_pos < notation.size() && notation[temp_pos] != 'x' &&
+         !(notation[temp_pos] >= 'a' && notation[temp_pos] <= 'h' &&
+           (temp_pos + 1 < notation.size() && notation[temp_pos + 1] >= '1' &&
+            notation[temp_pos + 1] <= '8'))) {
+    // Assume any character here is part of disambiguation.
+    char d = notation[temp_pos];
+    if (d >= 'a' && d <= 'h')
+      disambiguous_file = d;
+    else if (d >= '1' && d <= '8')
+      disambiguous_rank = d;
+    ++temp_pos;
+  }
+
+  // Remove capture marker(s) from the string.
+  std::string cleaned;
+  for (char ch : notation.substr(pos)) {
+    if (ch != 'x') {
+      cleaned.push_back(ch);
+    } else {
+      is_capture = true;
+    }
+  }
+
+  // Look for promotion: if there is an '=' then the following char is the
+  // promotion piece.
+  promotion_t promo = TO_NONE;
+  size_t promo_pos = cleaned.find('=');
+  if (promo_pos != std::string::npos && promo_pos + 1 < cleaned.size()) {
+    char promo_char = cleaned[promo_pos + 1];
+    switch (promo_char) {
+      case 'Q':
+        promo = TO_QUEEN;
+        break;
+      case 'R':
+        promo = TO_ROOK;
+        break;
+      case 'B':
+        promo = TO_BISHOP;
+        break;
+      case 'N':
+        promo = TO_KNIGHT;
+        break;
+      default:
+        promo = TO_NONE;
+        break;
+    }
+    cleaned = cleaned.substr(0, promo_pos);
+  }
+  result.promoted_to = promo;
+
+  // The destination square is the last two characters of the cleaned string.
+  if (cleaned.size() < 2) {
+    // Error: not enough characters to form a square.
+    throw algebraic_exception("Wrong formatting. Invalid Algebraic notation: " +
+                              original_notation);
+  }
+
+  std::string dest_square = cleaned.substr(cleaned.size() - 2, 2);
+  index_t to_index = algebraic_to_index(dest_square);
+  result.to = to_index;
+
+  if (result.to >= INVALID_BOARD_INDEX) {
+    throw algebraic_exception(
+        "Invalid destination square. Invalid Algebraic notation: " +
+        original_notation);
+  }
+
+  if (is_capture) {
+    result.captured = board->board[result.to];
+
+    if (result.captured == INVALID || result.captured == EMPTY) {
+      throw algebraic_exception(
+          "No capture found on the board. Invalid Algebraic notation: " +
+          original_notation);
+    }
+  }
+
+  // Any remaining characters between our initial pos and the destination
+  // have been interpreted as disambiguation.
+  // (In many SAN moves the disambiguation is omitted if unneeded.)
+  // Here we already extracted potential disambiguation earlier.
+
+  // Generate legal moves and search the compatible one
+  const auto& legal_moves = generate_legal_moves(board);
+
+  bool found = false;
+  for (const auto& legal_move : legal_moves) {
+    if (legal_move.to == result.to && legal_move.piece == result.piece &&
+        legal_move.promoted_to == result.promoted_to &&
+        legal_move.captured == result.captured &&
+        legal_move.castling_move == result.castling_move) {
+      // We found the move
+      found = true;
+      result = legal_move;
+      break;
+    }
+  }
+
+  if (!found) {
+    throw algebraic_exception(
+        "No legal move found. Invalid Algebraic notation: " +
+        original_notation);
+  }
+
+  return result;
+}
+
+
 bool make_move(const move_t* move, board_t* board)
 {
   assert(move != nullptr);

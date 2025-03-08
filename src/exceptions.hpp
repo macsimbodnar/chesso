@@ -10,6 +10,13 @@ public:
 };
 
 
+class algebraic_exception : public std::runtime_error
+{
+public:
+  algebraic_exception(std::string msg) : std::runtime_error(std::move(msg)) {}
+};
+
+
 class kin_not_on_board_exception : public std::runtime_error
 {
 public:

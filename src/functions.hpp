@@ -17,4 +17,7 @@ std::string move_to_algebraic(const move_t* move,
                               const std::vector<move_t>* moves,
                               const board_t* board);
 
+move_t algebraic_to_move(std::string notation, const board_t* board);
+
+
 bool make_move(const move_t* move, board_t* board);
