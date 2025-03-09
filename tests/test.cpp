@@ -6,7 +6,7 @@
 #include "doctest.h"
 #include "functions.hpp"
 #include "move_generator.hpp"
-#include "nlohmann_json.hpp"
+#include <json.hpp>
 #include "utils.hpp"
 
 using json = nlohmann::json;
