@@ -13,14 +13,14 @@ using json = nlohmann::json;
 
 // clang-format off
 const static std::vector<std::string> test_files = {
-  "assets/castling.json",
-  "assets/checkmates.json",
-  "assets/famous.json",
-  "assets/pawns.json",
-  "assets/promotions.json",
-  "assets/stalemates.json",
-  "assets/standard.json",
-  "assets/taxing.json",
+  "assets/test_jsons/castling.json",
+  "assets/test_jsons/checkmates.json",
+  "assets/test_jsons/famous.json",
+  "assets/test_jsons/pawns.json",
+  "assets/test_jsons/promotions.json",
+  "assets/test_jsons/stalemates.json",
+  "assets/test_jsons/standard.json",
+  "assets/test_jsons/taxing.json",
 };
 // clang-format on
 
