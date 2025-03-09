@@ -451,6 +451,7 @@ TEST_SUITE("Test legal move generator")
             bool move_happened = make_move(&move_to_make, &tmp_board);
 
             REQUIRE(move_happened);
+            REQUIRE_EQ(tmp_board.history.size(), 1);
 
             std::string new_fen = generate_FEN(&tmp_board);
 

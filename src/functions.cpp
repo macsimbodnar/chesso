@@ -534,6 +534,12 @@ bool make_move(const move_t* move, board_t* board)
   assert(board != nullptr);
   assert(move->captured != EMPTY);
 
+  // TODO: This function works only with legal moves. Should return false with
+  // illegal
+
+  game_state_t state_to_history = board->game_state;
+  state_to_history.next_move = *move;
+
   // Remove en-passant
   clear_ep_square(board);
 
@@ -745,6 +751,9 @@ bool make_move(const move_t* move, board_t* board)
 
   // Swap side
   swap_side(board);
+
+  // Store the history
+  board->history.push(state_to_history);
 
   return true;
 }
