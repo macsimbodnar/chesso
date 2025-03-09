@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <list>
 #include <optional>
+#include <ostream>
 #include <stack>
 #include <string>
 
@@ -107,6 +108,8 @@ struct position_t
     return file == other.file && rank == other.rank;
   }
 
+  bool operator!=(const position_t& other) const { return !(*this == other); }
+
   position_t()
   {
     file = 0;
@@ -119,6 +122,17 @@ struct position_t
     this->rank = rank;
   }
 };
+
+
+inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
+{
+  const char file = 'a' + static_cast<char>(pos.file);
+  const char rank = '1' + static_cast<char>(pos.rank);
+
+  os << file << rank;
+
+  return os;
+}
 
 
 struct zobrist_randoms_t

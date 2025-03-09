@@ -5,7 +5,6 @@
 
 
 void init_board(const std::string& fen, board_t* board);
-void reset(board_t* board);
 
 color_t us(const board_t* board);
 color_t opponent(const board_t* board);

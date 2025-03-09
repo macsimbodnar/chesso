@@ -16,5 +16,7 @@ add_test(NAME test_chesso_board COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso_
 set(PIXELLO_ENABLE_TESTS OFF) # Disable pixello tests
 add_subdirectory(pixello)
 add_executable(test_gui test_gui.cpp)
-target_link_libraries(test_gui pixello)
 target_include_directories(test_gui PRIVATE pixello/src)
+target_link_libraries(test_gui pixello)
+target_include_directories(test_gui SYSTEM PRIVATE ../src)
+target_link_libraries(test_gui chesso)

@@ -9,6 +9,8 @@ void init_zobrist(zobrist_randoms_t* board);
 uint64_t init_zobrist_key(const board_t* board);
 void cleanup_game_state(game_state_t* game_state);
 
+void reset(board_t* board);
+
 void load_FEN(const std::string& FEN, board_t* board);
 std::string generate_FEN(const board_t* board);
 

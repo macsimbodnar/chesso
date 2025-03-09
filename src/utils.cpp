@@ -305,6 +305,8 @@ std::string print_nice_board(const board_t* board)
 
 void load_FEN(const std::string& FEN, board_t* board)
 {
+  reset(board);
+
   // Start parsing
   auto sections = split_string(FEN);
 
@@ -869,4 +871,21 @@ index_t get_king_index(color_t color, const board_t* board)
 
   assert(false);  // King should be always on the board
   return INVALID_BOARD_INDEX;
+}
+
+
+void reset(board_t* board)
+{
+  assert(board != nullptr);
+
+  // Cleanup
+  board->board.fill(EMPTY);
+  board->history = history_t();
+  cleanup_game_state(&board->game_state);
+
+  // Load FEN
+  // load_FEN(board->initial_fen, board);
+
+  // Init Zobrist
+  board->game_state.zobrist_key = init_zobrist_key(board);
 }
