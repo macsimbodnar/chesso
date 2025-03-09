@@ -10,7 +10,7 @@ if [ ! -f CMakeLists.txt ]; then
     exit 1
 fi
 
-FILES=$(git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$' | grep -E -v 'nlohmann_json.hpp')
+FILES=$(git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$')
 
 TOOL=clang-format-15
 if [ ! -x "$(command -v $TOOL)" ]; then

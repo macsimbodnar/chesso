@@ -1,12 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <json.hpp>
 #include <string>
-#include "doctest.h"
 #include "functions.hpp"
 #include "move_generator.hpp"
-#include <json.hpp>
 #include "utils.hpp"
 
 using json = nlohmann::json;
