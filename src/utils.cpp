@@ -88,9 +88,9 @@ void cleanup_game_state(game_state_t* gs)
 
   gs->active_color = WHITE;
   gs->castling = WQ | WK | BQ | BK;
-  gs->half_move_clock = 0;
+  gs->halfmove_clock = 0;
   gs->en_passant = INVALID_BOARD_INDEX;
-  gs->full_move_number = 0;
+  gs->fullmove_counter = 1;
   gs->zobrist_key = 0;
   gs->next_move = move_t();
 }
@@ -289,9 +289,9 @@ std::string print_nice_board(const board_t* board)
 
   ss << "\nactive_color:      " << color_to_string(board->game_state.active_color);
   ss << "\ncastling:          " << std::bitset<4>(board->game_state.castling);
-  ss << "\nhalf_move_clock:   " << int(board->game_state.half_move_clock);
+  ss << "\nhalf_move_clock:   " << int(board->game_state.halfmove_clock);
   ss << "\nen_passant:        " << index_to_algebraic(board->game_state.en_passant);
-  ss << "\nfull_move_number:  " << int(board->game_state.full_move_number);
+  ss << "\nfull_move_number:  " << int(board->game_state.fullmove_counter);
   ss << "\nzobrist_key:       " << board->game_state.zobrist_key;
   // ss << "\nphase_value:       " << int(board->game_state.phase_value);
   // ss << "next_move:         " << board->game_state.next_move;
@@ -490,7 +490,7 @@ void load_FEN(const std::string& FEN, board_t* board)
   }
 
   try {
-    board->game_state.half_move_clock = static_cast<int>(std::stoul(half_move));
+    board->game_state.halfmove_clock = static_cast<int>(std::stoul(half_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Halfmove clock to integer.What: " +
                         std::string(e.what()) + " FEN: " + FEN);
@@ -513,16 +513,16 @@ void load_FEN(const std::string& FEN, board_t* board)
   }
 
   try {
-    board->game_state.full_move_number =
+    board->game_state.fullmove_counter =
         static_cast<int>(std::stoul(full_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Fullmove number to integer. What: " +
                         std::string(e.what()) + " FEN: " + FEN);
   }
 
-  if (board->game_state.full_move_number < 1) {
+  if (board->game_state.fullmove_counter < 1) {
     throw FAN_exception("Fullmove number can't be less then 1 but it is " +
-                        std::string(STR(board->game_state.full_move_number)) +
+                        std::string(STR(board->game_state.fullmove_counter)) +
                         " FEN: " + FEN);
   }
 
@@ -664,10 +664,10 @@ std::string generate_FEN(const board_t* board)
   ss << ' ';
 
   // Step 5: Halfmove clock
-  ss << int(board->game_state.half_move_clock) << ' ';
+  ss << int(board->game_state.halfmove_clock) << ' ';
 
   // Step 6: Fullmove number
-  ss << int(board->game_state.full_move_number);
+  ss << int(board->game_state.fullmove_counter);
 
   return ss.str();
 }

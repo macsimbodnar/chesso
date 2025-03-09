@@ -252,10 +252,6 @@ std::string move_to_algebraic(const move_t* move,
     if (pseudo_move.to == opponent_king_index) {
       // Now let's check if this is check mate
 
-      if (move->from == 0x02 && move->to == 0x21 && move->piece == W_KNIGHT) {
-        asm("nop");
-      }
-
       // Generate legal moves after the make move to see if any available.
       const auto moves = generate_legal_moves(&tmp_board);
       if (moves.size() == 0) {
@@ -279,6 +275,13 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 {
   assert(board != nullptr);
 
+  static const std::map<char, uint8_t> char_to_file_map = {
+      {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3},
+      {'e', 4}, {'f', 5}, {'g', 6}, {'h', 7}};
+  static const std::map<char, uint8_t> char_to_rank_map = {
+      {'1', 0}, {'2', 1}, {'3', 2}, {'4', 3},
+      {'5', 4}, {'6', 5}, {'7', 6}, {'8', 7}};
+
   const std::string original_notation = notation;
 
   move_t result;
@@ -300,7 +303,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   }
 
   // Parse castling
-  if (notation == "O-O") {
+  if (notation == "O-O-O") {
     result.castling_move = true;
     switch (color) {
       case BLACK:
@@ -353,24 +356,19 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
     char piece_char = notation[pos];
     switch (piece_char) {
       case 'K':
-        moving_piece =
-            (board->game_state.active_color == WHITE) ? W_KING : B_KING;
+        moving_piece = (color == WHITE) ? W_KING : B_KING;
         break;
       case 'Q':
-        moving_piece =
-            (board->game_state.active_color == WHITE) ? W_QUEEN : B_QUEEN;
+        moving_piece = (color == WHITE) ? W_QUEEN : B_QUEEN;
         break;
       case 'R':
-        moving_piece =
-            (board->game_state.active_color == WHITE) ? W_ROOK : B_ROOK;
+        moving_piece = (color == WHITE) ? W_ROOK : B_ROOK;
         break;
       case 'B':
-        moving_piece =
-            (board->game_state.active_color == WHITE) ? W_BISHOP : B_BISHOP;
+        moving_piece = (color == WHITE) ? W_BISHOP : B_BISHOP;
         break;
       case 'N':
-        moving_piece =
-            (board->game_state.active_color == WHITE) ? W_KNIGHT : B_KNIGHT;
+        moving_piece = (color == WHITE) ? W_KNIGHT : B_KNIGHT;
         break;
       default:
         moving_piece = INVALID;
@@ -379,7 +377,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
     ++pos;
   } else {
     // If no piece letter then it's a pawn move.
-    moving_piece = (board->game_state.active_color == WHITE) ? W_PAWN : B_PAWN;
+    moving_piece = (color == WHITE) ? W_PAWN : B_PAWN;
   }
   result.piece = moving_piece;
 
@@ -459,7 +457,23 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   }
 
   if (is_capture) {
+    // Attempt to use the destination as capture piece
     result.captured = board->board[result.to];
+
+    // In case of en-passant override the capture
+    if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
+      if (color == WHITE) {
+        if (board->board[result.to] == EMPTY &&
+            board->board[result.to - 0x10] == B_PAWN) {
+          result.captured = B_PAWN;
+        }
+      } else {
+        if (board->board[result.to] == EMPTY &&
+            board->board[result.to + 0x10] == W_PAWN) {
+          result.captured = W_PAWN;
+        }
+      }
+    }
 
     if (result.captured == INVALID || result.captured == EMPTY) {
       throw algebraic_exception(
@@ -482,6 +496,21 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
         legal_move.promoted_to == result.promoted_to &&
         legal_move.captured == result.captured &&
         legal_move.castling_move == result.castling_move) {
+      // Check for disambiguous
+      const position_t legal_from_pos = index_to_position(legal_move.from);
+
+      if (disambiguous_file.has_value()) {
+        const uint8_t file = char_to_file_map.at(disambiguous_file.value());
+
+        if (file != legal_from_pos.file) { continue; }
+      }
+
+      if (disambiguous_rank.has_value()) {
+        const uint8_t rank = char_to_rank_map.at(disambiguous_rank.value());
+
+        if (rank != legal_from_pos.rank) { continue; }
+      }
+
       // We found the move
       found = true;
       result = legal_move;
@@ -584,13 +613,135 @@ bool make_move(const move_t* move, board_t* board)
 
   // Set the en-passant if necessary
   if (move->double_pawn_move) {
-    // TODO: Check if there is a opposite color pawn near the moved pawn. If so
-    // set en-passant flag
+    // NOTE: The commented code set en-passant only if real.
+    // The uncommented code sed the en-passand at each pawn double push
+
+    // const index_t on_left = move->to - 0x01;
+    // const index_t on_right = move->to + 0x01;
+
+    // if (board->game_state.active_color == WHITE) {
+    //   // Handle white double push
+    //   if (on_left == B_PAWN || on_right == B_PAWN) {
+    //     const index_t en_passant_index = move->to - 0x10;
+    //     assert(!(en_passant_index & 0x88));
+    //     set_en_passant(en_passant_index, board);
+    //   } else {
+    //     // Handle black double push
+    //     if (on_left == W_PAWN || on_right == W_PAWN) {
+    //       const index_t en_passant_index = move->to + 0x10;
+    //       assert(!(en_passant_index & 0x88));
+    //       set_en_passant(en_passant_index, board);
+    //     }
+    //   }
+    // }
+
+    if (board->game_state.active_color == WHITE) {
+      const index_t en_passant_index = move->to - 0x10;
+      assert(!(en_passant_index & 0x88));
+      set_en_passant(en_passant_index, board);
+    } else {
+      const index_t en_passant_index = move->to + 0x10;
+      assert(!(en_passant_index & 0x88));
+      set_en_passant(en_passant_index, board);
+    }
   }
 
-  // TODO: handle en-passant set in case of double_pawn_move
-  // TODO: handle castling move
-  // TODO: handle updating castling rights in case of rook or king move
+  // Handle castling move. The king was already moved, we need only to move the
+  // rook
+  if (move->castling_move) {
+    if (move->piece == W_KING) {
+      assert(move->from == 0x04);
+
+      if (move->to == 0x02) {
+        // White queen side castling
+        assert(board->board[0x00] == W_ROOK);
+        assert(board->board[0x03] == EMPTY);
+        move_piece(0x00, 0x03, board);
+      } else if (move->to == 0x06) {
+        // White king side castling
+        assert(board->board[0x07] == W_ROOK);
+        assert(board->board[0x05] == EMPTY);
+        move_piece(0x07, 0x05, board);
+      }
+
+    } else if (move->piece == B_KING) {
+      assert(move->from == 0x74);
+
+      if (move->to == 0x72) {
+        // Black queen side castling
+        assert(board->board[0x70] == B_ROOK);
+        assert(board->board[0x73] == EMPTY);
+        move_piece(0x70, 0x73, board);
+      } else if (move->to == 0x76) {
+        // Black king side castling
+        assert(board->board[0x77] == B_ROOK);
+        assert(board->board[0x75] == EMPTY);
+        move_piece(0x77, 0x75, board);
+      }
+    }
+  }
+
+
+  // Clear castling rights in case of king or rook move from initial square
+  if (move->piece == W_KING && move->from == 0x04) {
+    const castling_t new_castling_rights =
+        board->game_state.castling & ~(WQ | WK);
+    update_castling_permissions(new_castling_rights, board);
+  } else if (move->piece == B_KING && move->from == 0x74) {
+    const castling_t new_castling_rights =
+        board->game_state.castling & ~(BQ | BK);
+    update_castling_permissions(new_castling_rights, board);
+  } else if (move->piece == W_ROOK) {
+    if (move->from == 0x00) {
+      const castling_t new_castling_rights = board->game_state.castling & ~WQ;
+      update_castling_permissions(new_castling_rights, board);
+    } else if (move->from == 0x07) {
+      const castling_t new_castling_rights = board->game_state.castling & ~WK;
+      update_castling_permissions(new_castling_rights, board);
+    }
+  } else if (move->piece == B_ROOK) {
+    if (move->from == 0x70) {
+      const castling_t new_castling_rights = board->game_state.castling & ~BQ;
+      update_castling_permissions(new_castling_rights, board);
+    } else if (move->from == 0x77) {
+      const castling_t new_castling_rights = board->game_state.castling & ~BK;
+      update_castling_permissions(new_castling_rights, board);
+    }
+  }
+
+  // Clear castling rights for the opponent if capture rook
+  if (move->captured == W_ROOK) {
+    if (move->to == 0x00) {
+      const castling_t new_castling_rights = board->game_state.castling & ~WQ;
+      update_castling_permissions(new_castling_rights, board);
+    } else if (move->to == 0x07) {
+      const castling_t new_castling_rights = board->game_state.castling & ~WK;
+      update_castling_permissions(new_castling_rights, board);
+    }
+  } else if (move->captured == B_ROOK) {
+    if (move->to == 0x70) {
+      const castling_t new_castling_rights = board->game_state.castling & ~BQ;
+      update_castling_permissions(new_castling_rights, board);
+    } else if (move->to == 0x77) {
+      const castling_t new_castling_rights = board->game_state.castling & ~BK;
+      update_castling_permissions(new_castling_rights, board);
+    }
+  }
+
+  // Update half move. Is reset after captures or pawn moves, incremented in
+  // all other moves
+  if (move->captured != INVALID || move->piece == W_PAWN ||
+      move->piece == B_PAWN) {
+    board->game_state.halfmove_clock = 0;
+  } else {
+    board->game_state.halfmove_clock += 1;
+  }
+
+  // Update fullmove counter
+  if (board->game_state.active_color == BLACK) {
+    // The fullmove counter is incremented after block move
+    board->game_state.fullmove_counter += 1;
+  }
 
   // Swap side
   swap_side(board);

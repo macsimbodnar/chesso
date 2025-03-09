@@ -505,6 +505,7 @@ std::vector<move_t> generate_king(index_t index,
       if ((castling & WQ) && b[0x01] == EMPTY && b[0x02] == EMPTY &&
           b[0x03] == EMPTY) {
         // Queen side available
+        assert(index == 0x04);
         const index_t candidate = 0x02;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
@@ -513,6 +514,7 @@ std::vector<move_t> generate_king(index_t index,
 
       if ((castling & WK) && b[0x05] == EMPTY && b[0x06] == EMPTY) {
         // King side available
+        assert(index == 0x04);
         const index_t candidate = 0x06;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
@@ -523,6 +525,7 @@ std::vector<move_t> generate_king(index_t index,
       if ((castling & BQ) && b[0x71] == EMPTY && b[0x72] == EMPTY &&
           b[0x73] == EMPTY) {
         // Queen side available
+        assert(index == 0x74);
         const index_t candidate = 0x72;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
@@ -531,6 +534,7 @@ std::vector<move_t> generate_king(index_t index,
 
       if ((castling & BK) && b[0x75] == EMPTY && b[0x76] == EMPTY) {
         // King side available
+        assert(index == 0x74);
         const index_t candidate = 0x76;
         move_t move = {index, candidate, piece};
         move.castling_move = true;

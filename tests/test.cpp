@@ -141,7 +141,7 @@ std::string difference_to_string(const json& expected_moves,
 TEST_SUITE("DEBUG TEST")
 {
   // TEST_CASE("DEBUG") {
-  //   std::string FEN = "4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1";
+  //   std::string FEN = "8/4k3/8/8/8/8/r6r/R3K2R w KQ - 0 1";
   //   size_t expected_size = 8;
 
   //   board_t board;
@@ -177,7 +177,7 @@ TEST_SUITE("Test utils")
     REQUIRE_EQ(fen_result, std::string(DEFAULT_POSITION));
   }
 
-  TEST_CASE("Test fen generation - generation")
+  TEST_CASE("Test fen parsing - generation")
   {
     for (const auto& test_file : test_files) {
       const json test_cases = load_json(test_file);
@@ -444,33 +444,26 @@ TEST_SUITE("Test legal move generator")
           }
 
           {  // Check by make_move and compare FEN
-            // const move_t move_to_make = algebraic_to_move(move_str, &board);
-            // bool move_happened = make_move(&move_to_make, &board);
+            const move_t move_to_make = algebraic_to_move(move_str, &board);
 
-            // REQUIRE(move_happened);
+            // Make the move on a temporary board
+            board_t tmp_board = board;
+            bool move_happened = make_move(&move_to_make, &tmp_board);
 
-            // std::string new_fen = generate_FEN(&board);
+            REQUIRE(move_happened);
 
-            // REQUIRE_MESSAGE(
-            //     new_fen == fen,
-            //     ("\nStarting FEN: " + starting_pos +
-            //      "\nExpect move: " + move_str + " in:\n" +
-            //      moves_to_string(moves, board) + "Difference:\n" +
-            //      difference_to_string(expected_moves, moves, board) +
-            //      print_nice_board(&board)));
+            std::string new_fen = generate_FEN(&tmp_board);
+
+            REQUIRE_MESSAGE(
+                new_fen == fen,
+                ("\nStarting FEN: " + starting_pos +
+                 "\nExpect move: " + move_str + " in:\n" +
+                 moves_to_string(moves, tmp_board) + "Difference:\n" +
+                 difference_to_string(expected_moves, moves, tmp_board) +
+                 print_nice_board(&tmp_board)));
           }
         }
-
-        // Test the make move
       }
     }
   }
 }
-
-
-/**
- * TODO:
- * - Test FEN generation: load all FENs in the json files and compare them
- * with the generated ones
- *
- */

@@ -168,9 +168,9 @@ struct game_state_t
 {
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
-  uint8_t half_move_clock;    // Half moves played
+  uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
   index_t en_passant;         // Active en-passant square index, if any
-  uint16_t full_move_number;  // Total number of full moves played
+  uint16_t fullmove_counter;  // Total number of full moves played
   uint64_t zobrist_key;       // Zobrist Key
   move_t next_move;           // The move played in this position
 };
