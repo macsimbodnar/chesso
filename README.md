@@ -1,4 +1,4 @@
-# Chesso Board
+# Chesso
 
 ```bash
                                                        .::.
@@ -14,3 +14,56 @@
  (_____)  (_______) (________) (_______) (________) (________)
  /_____\  /_______\ /________\ /_______\ /________\ /________\
  ```
+
+## How to
+
+### Clone the repo
+
+```bash
+git clone git@github.com:macsimbodnar/chesso.git
+cd chesso
+git submodule update --init --recursive
+```
+
+### Install dependencies for the tests
+
+```bash
+sudo apt install build-essential
+
+# SDL2 is required for the test gui application
+sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev libsdl2-gfx-dev
+
+# Optional: Install ninja build system
+sudo apt install ninja-build
+```
+
+### Build
+
+```bash
+# From the project root directory
+mkdir build
+cd build
+
+# If you use Ninja
+cmake ..  -GNinja -DCMAKE_BUILD_TYPE=Release
+ninja
+
+# If you use make
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j
+```
+
+### Run the tests
+
+```bash
+# After you build the repo. From the build directory
+ctest --verbose
+```
+
+### Run the test gui application
+
+```bash
+# After you build the repo. From the build directory
+cd tests
+./test_gui
+```
