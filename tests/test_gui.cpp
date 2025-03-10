@@ -981,7 +981,7 @@ void gui_t::update_mouse_in_chessboard()
 
     // Set the piece to the destination column when release
     if (mouse_board_pos != held_piece.piece_board_position) {
-      const piece_t piece = get_piece(held_piece.piece_board_position);
+      // const piece_t piece = get_piece(held_piece.piece_board_position);
 
       const move_t move = {
           position_to_index(held_piece.piece_board_position.file,

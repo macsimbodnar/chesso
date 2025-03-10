@@ -220,8 +220,10 @@ std::string move_to_algebraic(const move_t* move,
   const index_t opponent_king_index = get_king_index(opponent(board), board);
 
   board_t tmp_board = *board;
+
   bool move_happened = make_move(move, &tmp_board);
   assert(move_happened == true);
+  (void)move_happened;  // Supress the unused var log
 
   // Generate moves for my color but after the current move is done
   const auto pseudo_legal_moves =
@@ -269,13 +271,13 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   const color_t color = board->game_state.active_color;
 
   // Make a working copy of the move string.
-  bool is_check = false;
-  bool is_mate = false;
   bool is_capture = false;
 
-  if (notation.back() == '+') { is_check = true; }
-
-  if (notation.back() == '#') { is_mate = true; }
+  // TODO: Use this
+  // bool is_check = false;
+  // bool is_mate = false;
+  // if (notation.back() == '+') { is_check = true; }
+  // if (notation.back() == '#') { is_mate = true; }
 
   // Remove any trailing check ('+') or checkmate ('#') symbols.
   while (!notation.empty() &&
@@ -551,21 +553,25 @@ bool make_move(const move_t* move, board_t* board)
 
       const piece_t removed = remove_piece(index_to_remove, board);
       assert(removed == move->captured);
+      (void)removed;
     } else {
       const piece_t removed = remove_piece(move->to, board);
       assert(removed == move->captured);
+      (void)removed;
     }
   }
 
   // Move the moving piece
   const piece_t moved_piece = move_piece(move->from, move->to, board);
   assert(moved_piece == move->piece);
+  (void)moved_piece;
 
   // Handle promotion
   if (move->promoted_to != TO_NONE) {
     const piece_t removed = remove_piece(move->to, board);
     assert(removed ==
            (board->game_state.active_color == WHITE ? W_PAWN : B_PAWN));
+    (void)removed;
 
     switch (move->promoted_to) {
       case TO_QUEEN:

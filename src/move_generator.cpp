@@ -12,9 +12,7 @@ static const std::array<index_t, 4> DIRECTIONS_ROOK = {0x10, 0xF0, 0x01, 0xFF};
 static const std::array<index_t, 4> DIRECTIONS_BISHOP = {0x11, 0x0F, 0xF1,
                                                          0xEF};
 
-std::vector<move_t> generate_pawn_attacks(index_t index,
-                                          color_t color,
-                                          const board_t* board)
+std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
 {
   std::vector<move_t> result;
   result.reserve(2);
@@ -646,7 +644,7 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
       std::vector<move_t> moves_for_index;
 
       if (p == W_PAWN || p == B_PAWN) {
-        moves_for_index = generate_pawn_attacks(i, target_color, &tmp_board);
+        moves_for_index = generate_pawn_attacks(i, target_color);
       } else {
         moves_for_index = generate_pseudo_legal_moves_from_index(i, &tmp_board);
       }
