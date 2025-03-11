@@ -153,6 +153,10 @@ struct move_t
   bool double_pawn_move;    // Double pawn move. Eventually set en-passant
   bool en_passant_capture;  // Set if this is en-passant capture happened
   bool castling_move;       // Set if castling happened
+  // TODO: add if check
+  // TODO: add ifdiscovery check
+  // TODO: add if double check
+  // TODO: add if checkmate
 
 
   bool operator==(const move_t& other) const
