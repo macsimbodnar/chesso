@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 
   std::queue<mini_move_t> moves_to_apply;
 
-  if (argc > 4) {
+  if (argc > 3) {
     std::string moves_str = std::string(argv[3]);
     const auto tokens = split(moves_str, " ");
 
