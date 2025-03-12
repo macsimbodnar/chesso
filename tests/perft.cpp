@@ -15,6 +15,14 @@
 
 using json = nlohmann::json;
 
+// clang-format off
+const static std::vector<std::string> test_files = {
+  "assets/perft_json/talkchess_perft.json",
+  "assets/perft_json/perft.json"
+};
+// clang-format on
+
+
 // ANSI escape codes for colors
 #define RESET "\033[0m"
 #define RED "\033[31m"
@@ -70,14 +78,34 @@ std::string print_stats_headline()
   // clang-format off
   ss << std::left
      << std::setw(30) << "|nodes"
-     << std::setw(width) << "|captures"
+     << std::setw(30) << "|captures"
      << std::setw(width) << "|en_passant"
      << std::setw(width) << "|castles"
-     << std::setw(width) << "|promotions"
-     << std::setw(width) << "|checks"
-     << std::setw(width) << "|discovery_checks"
-     << std::setw(width) << "|double_checks"
-     << std::setw(width) << "|checkmates";
+     << std::setw(width) << "|promotions";
+    //  << std::setw(width) << "|checks"
+    //  << std::setw(width) << "|discovery_checks"
+    //  << std::setw(width) << "|double_checks"
+    //  << std::setw(width) << "|checkmates";
+  // clang-format on
+  return ss.str();
+}
+
+std::string print_stats_headline_second_line()
+{
+  const int width = 20;
+  std::stringstream ss;
+
+  // clang-format off
+  ss << std::left
+     << std::setw(30) << "|expected      real"
+     << std::setw(30) << "|expected      real"
+     << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real";
+    //  << std::setw(width) << "|expected real"
+    //  << std::setw(width) << "|expected real"
+    //  << std::setw(width) << "|expected real"
+    //  << std::setw(width) << "|expected real";
   // clang-format on
   return ss.str();
 }
@@ -180,7 +208,11 @@ stats_t perft(int depth, const board_t* board)
   for (const auto& move : moves) {
     board_t tmp_board = *board;
     make_move(&move, &tmp_board);
-    node_stats += get_move_stats(move);
+    if (depth == 1) {
+      node_stats += get_move_stats(move);
+    } else {
+      node_stats.nodes += 1;
+    }
     node_stats.nodes -= 1;
     node_stats += perft(depth - 1, &tmp_board);
   }
@@ -195,14 +227,14 @@ std::string print_stats(const stats_t& expected, const stats_t real)
   // clang-format off
   ss << std::left
      << ((expected.nodes == real.nodes) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.nodes) << std::setw(15) << real.nodes << RESET
-     << ((expected.captures == real.captures) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.captures) << std::setw(width) << real.captures << RESET
+     << ((expected.captures == real.captures) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.captures) << std::setw(15) << real.captures << RESET
      << ((expected.en_passants == real.en_passants) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.en_passants) << std::setw(width) << real.en_passants << RESET
      << ((expected.castles == real.castles) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.castles) << std::setw(width) << real.castles << RESET
-     << ((expected.promotions == real.promotions) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.promotions) << std::setw(width) << real.promotions << RESET
-     << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checks) << std::setw(width) << real.checks << RESET
-     << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
-     << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.double_checks) << std::setw(width) << real.double_checks << RESET
-     << ((expected.checkmates == real.checkmates) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checkmates) << std::setw(width) << real.checkmates << RESET;
+     << ((expected.promotions == real.promotions) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.promotions) << std::setw(width) << real.promotions << RESET;
+    //  << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checks) << std::setw(width) << real.checks << RESET
+    //  << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
+    //  << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.double_checks) << std::setw(width) << real.double_checks << RESET
+    //  << ((expected.checkmates == real.checkmates) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checkmates) << std::setw(width) << real.checkmates << RESET;
   // clang-format on
   return ss.str();
 }
@@ -210,91 +242,96 @@ std::string print_stats(const stats_t& expected, const stats_t real)
 
 int main()
 {
-  const json test_cases = load_json("assets/perft_json/perft.json");
   bool passed = true;
 
-  for (const auto& test_case : test_cases) {
-    const std::string fen = test_case["start_fen"];
-    const bool enabled = test_case["enable"];
-    const int depth_limit = test_case["depth_limit"];
+  for (const auto& test_file : test_files) {
+    const json test_cases = load_json(test_file);
 
-    std::cout << YELLOW << "Starting position: " << fen << RESET << "\nEnabled "
-              << enabled << "\nDepth limit " << depth_limit << "\n"
-              << std::endl;
+    for (const auto& test_case : test_cases) {
+      const std::string fen = test_case["start_fen"];
+      const bool enabled = test_case["enable"];
+      const int depth_limit = test_case["depth_limit"];
+      const std::string comments = test_case["comments"];
 
-    // If this test is disabled skip it
-    if (!enabled) { continue; }
+      std::cout << YELLOW << "Starting position: " << fen << RESET
+                << "\nEnabled " << enabled << "\nDepth limit " << depth_limit
+                << "\nComments: " << comments << "\n"
+                << std::endl;
 
-    const int width = 10;
+      // If this test is disabled skip it
+      if (!enabled) { continue; }
 
-    // clang-format off
+      const int width = 10;
+
+      // clang-format off
     std::cout << std::left
               << std::setw(width - 2) << "|depth"
               << std::setw(width / 2) << "|min"
               << std::setw(width / 2) << "sec"
               << std::setw(width / 2) << "msec"
-               << print_stats_headline()
+              << print_stats_headline() << std::setw(24) << "\n"
+              << print_stats_headline_second_line()
               << std::endl;
-    // clang-format on
+      // clang-format on
 
-    for (const auto& layer : test_case["depth_layers"]) {
-      const int depth = layer["depth"];
-      const stats_t expected_stats = load_expected_stats(layer);
+      for (const auto& layer : test_case["depth_layers"]) {
+        const int depth = layer["depth"];
+        const stats_t expected_stats = load_expected_stats(layer);
 
-      if (depth > depth_limit) { continue; }
+        if (depth > depth_limit) { continue; }
 
-      auto start_time = std::chrono::high_resolution_clock::now();
+        auto start_time = std::chrono::high_resolution_clock::now();
 
-      board_t board;
-      init_board(fen, &board);
-      stats_t stats;
-      stats.nodes = 1;
+        board_t board;
+        init_board(fen, &board);
+        stats_t stats;
+        stats.nodes = 1;
 
-      if (depth > 0) {
-        stats = stats_t();
-        const auto& moves = generate_legal_moves(&board);
+        if (depth > 0) {
+          stats = stats_t();
+          const auto& moves = generate_legal_moves(&board);
 
-        if (depth > 1) {
-          std::vector<std::future<stats_t>> results;
-          for (const auto& move : moves) {
-            results.push_back(std::async(std::launch::async, [&]() {
-              board_t tmp_board = board;
-              move_t tmp_move = move;
-              make_move(&tmp_move, &tmp_board);
-              return perft(depth - 1, &tmp_board);
-            }));
+          if (depth > 1) {
+            std::vector<std::future<stats_t>> results;
+            for (const auto& move : moves) {
+              results.push_back(std::async(std::launch::async, [&]() {
+                board_t tmp_board = board;
+                move_t tmp_move = move;
+                make_move(&tmp_move, &tmp_board);
+                return perft(depth - 1, &tmp_board);
+              }));
+            }
+
+            for (auto& res : results) {
+              stats += res.get();
+            }
+          } else {
+            stats += get_moves_stats(moves);
           }
-
-          for (auto& res : results) {
-            stats += res.get();
-          }
-        } else {
-          stats += get_moves_stats(moves);
         }
-      }
 
-      const auto end_time = std::chrono::high_resolution_clock::now();
+        const auto end_time = std::chrono::high_resolution_clock::now();
 
-      const int64_t difference = expected_stats.nodes - stats.nodes;
+        const int64_t difference = expected_stats.nodes - stats.nodes;
 
-      if (difference != 0) { passed = false; }
+        if (difference != 0) { passed = false; }
 
-      const auto duration_ns =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(end_time -
-                                                               start_time);
+        const auto duration_ns =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(end_time -
+                                                                 start_time);
 
-      // Convert to minutes, seconds, and milliseconds
-      const auto minutes =
-          std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
-      const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
-          duration_ns - minutes);
-      const auto milliseconds =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              duration_ns - minutes - seconds);
+        // Convert to minutes, seconds, and milliseconds
+        const auto minutes =
+            std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
+        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
+            duration_ns - minutes);
+        const auto milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                duration_ns - minutes - seconds);
 
 
-      std::cout << std::fixed << std::setprecision(10);
-      // clang-format off
+        std::cout << std::fixed << std::setprecision(10);
+        // clang-format off
       std::cout << std::left
                 << std::setw(width - 2) << "|" + std::to_string(depth)
                 << std::setw(width / 2) << "|" + std::to_string(minutes.count())
@@ -303,10 +340,12 @@ int main()
                 << print_stats(expected_stats, stats)
                 << std::endl;
 
-      // clang-format on
-    }
+        // clang-format on
+      }
 
-    std::cout << "----------------------------------------------" << std::endl;
+      std::cout << "----------------------------------------------"
+                << std::endl;
+    }
   }
 
   return (passed ? 0 : 1);
