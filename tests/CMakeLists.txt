@@ -29,3 +29,8 @@ target_include_directories(test_gui PRIVATE ../src)
 
 target_link_libraries(test_gui pixello)
 target_link_libraries(test_gui chesso)
+
+# Perft generation program
+add_executable(chesso_perft_generator chesso_perft_generator.cpp)
+target_include_directories(chesso_perft_generator PRIVATE ../src)
+target_link_libraries(chesso_perft_generator chesso)

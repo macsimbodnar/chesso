@@ -1,5 +1,6 @@
 #include "move_generator.hpp"
 #include <cassert>
+#include "functions.hpp"
 #include "utils.hpp"
 
 
@@ -741,27 +742,30 @@ bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
 bool is_pin(const move_t* move, index_t king_index, const board_t* board)
 {
   // Make the move and see if this leaves the king under check.
-  // TODO: Use make_move function
+  // TODO: Decide if use the make move here or the fastest custom one
   board_t tmp_board = *board;
-  tmp_board.board[move->to] = tmp_board.board[move->from];
+  // tmp_board.board[move->to] = tmp_board.board[move->from];
 
-  if (move->en_passant_capture) {
-    index_t index_to_remove = move->to;
-    switch (board->game_state.active_color) {
-      case BLACK:
-        index_to_remove += 0x10;
-        break;
-      case WHITE:
-        index_to_remove -= 0x10;
-        break;
-      default:
-        assert(false);
-        break;
-    }
-    tmp_board.board[index_to_remove] = EMPTY;
-  }
+  // if (move->en_passant_capture) {
+  //   index_t index_to_remove = move->to;
+  //   switch (board->game_state.active_color) {
+  //     case BLACK:
+  //       index_to_remove += 0x10;
+  //       break;
+  //     case WHITE:
+  //       index_to_remove -= 0x10;
+  //       break;
+  //     default:
+  //       assert(false);
+  //       break;
+  //   }
+  //   tmp_board.board[index_to_remove] = EMPTY;
+  // }
+  // tmp_board.board[move->from] = EMPTY;
 
-  tmp_board.board[move->from] = EMPTY;
+  bool happened = make_move(move, &tmp_board);
+  assert(happened);
+  (void)happened;
 
   // TODO: Make this more efficient. Here we copy twice the board
   const auto& attacks_vector =
