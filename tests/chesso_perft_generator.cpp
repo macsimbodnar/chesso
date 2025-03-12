@@ -1,3 +1,15 @@
+/**
+ * @file chesso_perft_generator.cpp
+ * @author Max (macsimbodnar@gmail.com)
+ * @brief
+ * This program is created to be used with the perftree tool.
+ * https://github.com/agausmann/perftree
+ * @version 0.1
+ * @date 2025-03-12
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include <cassert>
 #include <iostream>
 #include <queue>
@@ -70,15 +82,19 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
     // Handle promotion
     switch (p[4]) {
       case 'Q':
+      case 'q':
         move.promotion = TO_QUEEN;
         break;
       case 'N':
+      case 'n':
         move.promotion = TO_KNIGHT;
         break;
       case 'R':
+      case 'r':
         move.promotion = TO_ROOK;
         break;
       case 'B':
+      case 'b':
         move.promotion = TO_BISHOP;
         break;
 
@@ -89,6 +105,32 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
   }
 
   return move;
+}
+
+
+std::string capture_to_string(const move_t& move)
+{
+  switch (move.promoted_to) {
+    case TO_QUEEN:
+      return "q";
+      break;
+    case TO_KNIGHT:
+      return "n";
+      break;
+    case TO_ROOK:
+      return "r";
+      break;
+    case TO_BISHOP:
+      return "b";
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  assert(false);
+  return "ERROR";
 }
 
 
@@ -156,7 +198,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    (void) found;
+    (void)found;
     assert(found);
   }
 
@@ -173,11 +215,20 @@ int main(int argc, char* argv[])
         tot_nodes += num_of_nodes;
 
         std::cout << index_to_algebraic(move.from)
-                  << index_to_algebraic(move.to) << " " << num_of_nodes
-                  << std::endl;
+                  << index_to_algebraic(move.to)
+                  << (move.promoted_to != TO_NONE ? capture_to_string(move)
+                                                  : "")
+                  << " " << num_of_nodes << std::endl;
       }
     } else {
       tot_nodes = moves.size();
+      for (const auto& move : moves) {
+        std::cout << index_to_algebraic(move.from)
+                  << index_to_algebraic(move.to)
+                  << (move.promoted_to != TO_NONE ? capture_to_string(move)
+                                                  : "")
+                  << " " << 1 << std::endl;
+      }
     }
   }
 

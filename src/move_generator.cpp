@@ -845,6 +845,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
   if (under_check) {
     // UNDER CHECK
 
+    // TODO: Double check case and single check case looks the same
+
     if (under_double_check) {  // DOUBLE CHECK
       // In the case of double check we consider only king moves
       const auto king_moves =
@@ -857,6 +859,24 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
           if (king_move.to == enemy_attack_move.to) {
             should_discard = true;
             break;
+          }
+        }
+
+        // Remove the captures that put him back in check
+        if (king_move.captured != INVALID) {
+          // Remove the piece from the board and see if that square is under
+          // attack
+          board_t tmp_board = *board;
+          tmp_board.board[king_move.to] = EMPTY;
+          const auto tmp_attacks = generate_attacks_vector(
+              !tmp_board.game_state.active_color, &tmp_board);
+
+          for (const auto& tmp_attack : tmp_attacks) {
+            if (tmp_attack.to == king_move.to) {
+              // Discard that move
+              should_discard = true;
+              break;
+            }
           }
         }
 
@@ -922,10 +942,27 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
               bool should_discard = true;
 
               for (const move_t& attack : attacks_vector) {
-                // Check if the move remove the attacker
+                // Check if the move remove the attacker.
                 if (attack.to == king_index && move.captured != INVALID &&
                     move.to == attack.from) {
                   should_discard = false;
+                }
+
+                // Consider en-passant remove the attacker
+                if (attack.to == king_index && move.en_passant_capture) {
+                  if (board->game_state.active_color == WHITE) {
+                    if (board->board[move.to] == EMPTY &&
+                        board->board[move.to - 0x10] == B_PAWN &&
+                        (move.to - 0x10) == attack.from) {
+                      should_discard = false;
+                    }
+                  } else {
+                    if (board->board[move.to] == EMPTY &&
+                        board->board[move.to + 0x10] == W_PAWN &&
+                        (move.to + 0x10) == attack.from) {
+                      should_discard = false;
+                    }
+                  }
                 }
 
                 // Check if the move block the ray attack
