@@ -4,6 +4,7 @@
 #include <future>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <ostream>
 #include <thread>
 #include "board.hpp"
@@ -29,6 +30,19 @@ const static std::vector<std::string> test_files = {
 #define GREEN "\033[32m"
 #define YELLOW "\033[33m"
 #define CYAN "\033[36m"
+
+struct expected_stats_t
+{
+  std::optional<uint64_t> nodes;
+  std::optional<uint64_t> captures;
+  std::optional<uint32_t> en_passants;
+  std::optional<uint32_t> castles;
+  std::optional<uint32_t> promotions;
+  std::optional<uint64_t> checks;
+  std::optional<uint64_t> discovery_checks;
+  std::optional<uint64_t> double_checks;
+  std::optional<uint32_t> checkmates;
+};
 
 struct stats_t
 {
@@ -129,18 +143,31 @@ inline std::ostream& operator<<(std::ostream& os, const stats_t& pos)
 }
 
 
-stats_t load_expected_stats(const json& stats_dict)
+expected_stats_t load_expected_stats(const json& stats_dict)
 {
-  stats_t result;
+  expected_stats_t result;
 
   // clang-format off
   result.nodes = stats_dict["nodes"];
-  result.captures = (stats_dict["captures"].is_null() ? 0 : stats_dict["captures"].get<uint64_t>());
-  result.en_passants = (stats_dict["en_passant"].is_null() ? 0 : stats_dict["en_passant"].get<uint64_t>());
-  result.castles = (stats_dict["castles"].is_null() ? 0 : stats_dict["castles"].get<uint64_t>());
-  result.promotions = (stats_dict["promotions"].is_null() ? 0 : stats_dict["promotions"].get<uint64_t>());
-  result.checks = (stats_dict["checks"].is_null() ? 0 : stats_dict["checks"].get<uint64_t>());
-  result.checkmates = (stats_dict["checkmates"].is_null() ? 0 : stats_dict["checkmates"].get<uint64_t>());
+  
+  if (!stats_dict["captures"].is_null()) {
+    result.captures = stats_dict["captures"].get<uint64_t>();
+  }
+  if (!stats_dict["en_passant"].is_null()) {
+    result.en_passants = stats_dict["en_passant"].get<uint64_t>();
+  }
+  if (!stats_dict["castles"].is_null()) {
+    result.castles = stats_dict["castles"].get<uint64_t>();
+  }
+  if (!stats_dict["promotions"].is_null()) {
+    result.promotions = stats_dict["promotions"].get<uint64_t>();
+  }
+  if (!stats_dict["checks"].is_null()) {
+    result.checks = stats_dict["checks"].get<uint64_t>();
+  }
+  if (!stats_dict["checkmates"].is_null()) {
+    result.checkmates = stats_dict["checkmates"].get<uint64_t>();
+  }
   // clang-format on
 
   return result;
@@ -220,17 +247,43 @@ stats_t perft(int depth, const board_t* board)
   return node_stats;
 }
 
-std::string print_stats(const stats_t& expected, const stats_t real)
+std::string print_stats(const expected_stats_t& expected, const stats_t real)
 {
   std::stringstream ss;
   const int width = 10;
   // clang-format off
-  ss << std::left
-     << ((expected.nodes == real.nodes) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.nodes) << std::setw(15) << real.nodes << RESET
-     << ((expected.captures == real.captures) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.captures) << std::setw(15) << real.captures << RESET
-     << ((expected.en_passants == real.en_passants) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.en_passants) << std::setw(width) << real.en_passants << RESET
-     << ((expected.castles == real.castles) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.castles) << std::setw(width) << real.castles << RESET
-     << ((expected.promotions == real.promotions) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.promotions) << std::setw(width) << real.promotions << RESET;
+  ss << std::left;
+
+  if (expected.nodes.has_value()) { 
+    ss << ((expected.nodes.value() == real.nodes) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.nodes.value()) << std::setw(15) << real.nodes << RESET;
+  } else {
+    ss << std::setw(15) << "| - " << std::setw(15) << real.nodes;
+  }
+
+  if (expected.captures.has_value()) { 
+    ss << ((expected.captures.value() == real.captures) ? GREEN : RED) << std::setw(15) << "|" + std::to_string(expected.captures.value()) << std::setw(15) << real.captures << RESET;
+  } else {
+    ss << std::setw(15) << "| - " << std::setw(15) << real.captures;
+  }
+
+  if (expected.en_passants.has_value()) { 
+    ss << ((expected.en_passants.value() == real.en_passants) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.en_passants.value()) << std::setw(width) << real.en_passants << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.en_passants;
+  }
+
+  if (expected.castles.has_value()) { 
+    ss << ((expected.castles.value() == real.castles) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.castles.value()) << std::setw(width) << real.castles << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.castles;
+  }
+
+  if (expected.promotions.has_value()) { 
+    ss << ((expected.promotions.value() == real.promotions) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.promotions.value()) << std::setw(width) << real.promotions << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.promotions;
+  }
+
     //  << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checks) << std::setw(width) << real.checks << RESET
     //  << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
     //  << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.double_checks) << std::setw(width) << real.double_checks << RESET
@@ -276,7 +329,7 @@ int main()
 
       for (const auto& layer : test_case["depth_layers"]) {
         const int depth = layer["depth"];
-        const stats_t expected_stats = load_expected_stats(layer);
+        const expected_stats_t expected_stats = load_expected_stats(layer);
 
         if (depth > depth_limit) { continue; }
 
@@ -312,7 +365,7 @@ int main()
 
         const auto end_time = std::chrono::high_resolution_clock::now();
 
-        const int64_t difference = expected_stats.nodes - stats.nodes;
+        const int64_t difference = expected_stats.nodes.value() - stats.nodes;
 
         if (difference != 0) { passed = false; }
 
