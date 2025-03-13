@@ -3,9 +3,11 @@
 #include <cassert>
 #include <cmath>
 #include <map>
+#include <optional>
 #include <pixello.hpp>
 #include "board.hpp"
 #include "data_structures.hpp"
+#include "move_generator.hpp"
 #include "utils.hpp"
 
 
@@ -20,9 +22,6 @@
 
 #define LOG_E LOG_I << "\033[31m"  // Error red log
 #define END_E "\033[37m" << END_I  // End Error red log
-
-static constexpr char FEN_INIT_POS[] =
-    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 static constexpr char FONT_PATH[] = "assets/gui/font/PressStart2P.ttf";
 
@@ -170,6 +169,108 @@ struct piece_animation_t
 };
 
 
+struct game_piece_t
+{
+  piece_t piece;
+  position_t position;
+};
+
+
+struct game_move_t
+{
+  piece_t piece;
+  position_t from;
+  position_t to;
+};
+
+class game_t
+{
+private:
+  board_t board;
+
+public:
+  game_t()
+  {
+    // Initialize the board to default
+    init_board(DEFAULT_POSITION, &board);
+  }
+
+
+  std::vector<game_piece_t> get_pieces() const
+  {
+    std::vector<game_piece_t> result;
+    for (index_t index = 0; index < BOARD_SIZE; ++index) {
+      const piece_t piece = board.board[index];
+
+      if (piece != EMPTY && piece != INVALID) {
+        result.push_back({piece, index_to_position(index)});
+      }
+    }
+
+    return result;
+  }
+
+
+  piece_t get_piece_at_position(const position_t& pos) const
+  {
+    piece_t piece = EMPTY;
+
+    const index_t index = position_to_index(pos.file, pos.rank);
+    assert(index < INVALID_BOARD_INDEX);
+
+    piece = board.board[index];
+
+    return piece;
+  }
+
+
+  color_t get_active_color() const { return board.game_state.active_color; }
+
+
+  bool is_castling_available(const castling_rights_t castling) const
+  {
+    return (board.game_state.castling & castling);
+  }
+
+
+  std::optional<position_t> get_en_passant() const
+  {
+    if (board.game_state.en_passant != INVALID_BOARD_INDEX) {
+      return index_to_position(board.game_state.en_passant);
+    }
+
+    return std::nullopt;
+  }
+
+
+  int get_halfmove() const { return board.game_state.halfmove_clock; }
+  int get_fullmove() const { return board.game_state.fullmove_counter; }
+  std::string get_fen() const { return generate_FEN(&board); }
+  void set_fen(const std::string& fen) { load_FEN(fen, &board); }
+  void reset() { load_FEN(DEFAULT_POSITION, &board); }
+
+  bool make_move(const game_move_t& move)
+  {
+    const auto& legal_moves = generate_legal_moves(&board);
+
+    const index_t from = position_to_index(move.from.file, move.from.rank);
+    const index_t to = position_to_index(move.to.file, move.to.rank);
+    const piece_t piece = move.piece;
+
+    if (piece == INVALID || piece == EMPTY) { return false; }
+
+    for (const auto& legal_move : legal_moves) {
+      if (legal_move.from == from && legal_move.to == to &&
+          legal_move.piece == piece) {
+        return ::make_move(&legal_move, &board);
+      }
+    }
+
+    return false;
+  }
+};
+
+
 class gui_t : public pixello
 {
 private:
@@ -186,7 +287,7 @@ private:
   std::map<int, font_t> fonts;
   std::map<std::string, button_t> buttons;
 
-  board_t game_board;
+  game_t game;
   held_piece_t held_piece;
   piece_animation_t animation;
 
@@ -222,7 +323,7 @@ private:  // DRAW
   void draw_chessboard();
   void draw_coordinates();
   void draw_pieces();
-  void draw_piece(const piece_t piece, const position_t& pos);
+  void draw_piece(const game_piece_t& p);
 
   void draw_panel();
   void draw_fen_panel();
@@ -233,19 +334,13 @@ private:  // UTILS
   point_t piece_pos_to_matrix_pos(const position_t& pos);
   point_t piece_pos_to_screen_pixel_pos(const position_t& pos);
   position_t screen_pos_to_position(const point_t& pos);
-  void start_animation(const position_t& from, const position_t& to);
+  void start_animation(const position_t& from,
+                       const position_t& to,
+                       const piece_t& piece);
   point_t get_next_animation_pos();
-  void draw_static_board(const rect_t& rect, const board_t& board_state);
-  piece_t get_piece(const position_t& pos);
+  void draw_static_board(const rect_t& rect,
+                         const std::vector<game_piece_t>& pieces);
 };
-
-
-piece_t gui_t::get_piece(const position_t& pos)
-{
-  const index_t index = position_to_index(pos.file, pos.rank);
-  const piece_t result = game_board.board[index];
-  return result;
-}
 
 
 void gui_t::on_init(void*)
@@ -306,9 +401,6 @@ void gui_t::on_init(void*)
     }
   }
 
-  // Load default state
-  init_board(FEN_INIT_POS, &game_board);
-
   // Buttons
   {  // Flip board button
 
@@ -343,7 +435,7 @@ void gui_t::on_init(void*)
                                      0xFFFFFFFF, text, 0xAAAAAAFF);
   }
 
-  play_sound(sound_fx["wow"]);
+  // play_sound(sound_fx["wow"]);
 }
 
 
@@ -401,15 +493,14 @@ rect_t gui_t::get_square_rect(const int x, const int y)
 }
 
 
-void gui_t::start_animation(const position_t& from, const position_t& to)
+void gui_t::start_animation(const position_t& from,
+                            const position_t& to,
+                            const piece_t& piece)
 {
   if (from == to) {
     LOG_I << "Looks like from and to is the same: " << from << END_I;
     return;
   }
-
-  // If the piece is empty we skip the animation
-  const piece_t piece = get_piece(from);
 
   assert(piece != piece_t::EMPTY);
 
@@ -511,43 +602,35 @@ void gui_t::draw_chessboard()
 }
 
 
-void gui_t::draw_piece(const piece_t p, const position_t& pos)
+void gui_t::draw_piece(const game_piece_t& p)
 {
-  if (p == piece_t::EMPTY) { return; }
+  if (p.piece == piece_t::EMPTY) { return; }
 
-  point_t board_coord = piece_pos_to_matrix_pos(pos);
+  point_t board_coord = piece_pos_to_matrix_pos(p.position);
   const rect_t rect = get_square_rect(board_coord.x, board_coord.y);
-  const texture_t& piece_texture = piece_textures[p];
+  const texture_t& piece_texture = piece_textures[p.piece];
   draw_texture(piece_texture, rect);
 }
 
 
 void gui_t::draw_pieces()
 {
-  const auto& board = game_board.board;
-  for (uint8_t rank = 0; rank < 8; ++rank) {
-    for (uint8_t file = 0; file < 8; ++file) {
-      const index_t index = position_to_index(file, rank);
+  const auto& pieces = game.get_pieces();
 
-      const auto& piece = board[index];
-
-      if (piece != piece_t::EMPTY) {
-        const position_t pos = {file, rank};
-
-        // Skip the selected piece
-        if (held_piece.selected && held_piece.piece_board_position == pos) {
-          continue;
-        }
-
-        // We also should skip the piece in animation
-        if (animation.state == piece_animation_t::RUNNING &&
-            animation.piece_from == pos) {
-          continue;
-        }
-
-        draw_piece(piece, pos);
-      }
+  for (const auto& piece : pieces) {
+    // Skip the selected piece
+    if (held_piece.selected &&
+        held_piece.piece_board_position == piece.position) {
+      continue;
     }
+
+    // We also should skip the piece in animation
+    if (animation.state == piece_animation_t::RUNNING &&
+        animation.piece_from == piece.position) {
+      continue;
+    }
+
+    draw_piece(piece);
   }
 
   // Draw the selected piece
@@ -557,7 +640,8 @@ void gui_t::draw_pieces()
                       mouse.y - held_piece.offset.y, board_conf.square_size,
                       board_conf.square_size};
 
-    const piece_t p = get_piece(held_piece.piece_board_position);
+    const piece_t p =
+        game.get_piece_at_position(held_piece.piece_board_position);
 
     draw_texture(piece_textures[p], r);
   }
@@ -614,7 +698,8 @@ void gui_t::draw_coordinates()
 }
 
 
-void gui_t::draw_static_board(const rect_t& rect, const board_t& board)
+void gui_t::draw_static_board(const rect_t& rect,
+                              const std::vector<game_piece_t>& pieces)
 {
   // Check if the size makes sense
   assert(rect.w == rect.h);
@@ -649,26 +734,15 @@ void gui_t::draw_static_board(const rect_t& rect, const board_t& board)
   }
 
   {  // Draw pieces
-    for (uint8_t rank = 0; rank < 8; ++rank) {
-      for (uint8_t file = 0; file < 8; ++file) {
-        const index_t index = position_to_index(file, rank);
-        const auto& piece = board.board[index];
+    for (const auto& piece : pieces) {
+      const point_t board_coord = piece_pos_to_matrix_pos(piece.position);
 
-        if (piece != piece_t::EMPTY) {
-          const position_t pos = {file, rank};
+      const rect_t rect = {(board_coord.x * square_size) + x_offset,
+                           (board_coord.y * square_size) + y_offset,
+                           square_size, square_size};
 
-          if (piece == piece_t::EMPTY) { continue; }
-
-          point_t board_coord = piece_pos_to_matrix_pos(pos);
-
-          const rect_t rect = {(board_coord.x * square_size) + x_offset,
-                               (board_coord.y * square_size) + y_offset,
-                               square_size, square_size};
-
-          const texture_t& piece_texture = piece_textures[piece];
-          draw_texture(piece_texture, rect);
-        }
-      }
+      const texture_t& piece_texture = piece_textures[piece.piece];
+      draw_texture(piece_texture, rect);
     }
   }
 }
@@ -688,9 +762,8 @@ void gui_t::draw_panel()
 
   {  // Active color
     const std::string active_text =
-        "Turn: " + ((game_board.game_state.active_color == WHITE)
-                        ? std::string("WHITE")
-                        : std::string("BLACK"));
+        "Turn: " + ((game.get_active_color() == WHITE) ? std::string("WHITE")
+                                                       : std::string("BLACK"));
 
     const texture_t active_color =
         create_text(active_text, panel_conf.text_color, font);
@@ -705,23 +778,23 @@ void gui_t::draw_panel()
 
     const texture_t wq = create_text(
         "WQ",
-        ((game_board.game_state.castling & WQ) ? panel_conf.text_color
-                                               : panel_conf.text_off_color),
+        (game.is_castling_available(WQ) ? panel_conf.text_color
+                                        : panel_conf.text_off_color),
         font);
     const texture_t wk = create_text(
         "WK",
-        ((game_board.game_state.castling & WK) ? panel_conf.text_color
-                                               : panel_conf.text_off_color),
+        (game.is_castling_available(WK) ? panel_conf.text_color
+                                        : panel_conf.text_off_color),
         font);
     const texture_t bq = create_text(
         "BQ",
-        ((game_board.game_state.castling & BQ) ? panel_conf.text_color
-                                               : panel_conf.text_off_color),
+        (game.is_castling_available(BQ) ? panel_conf.text_color
+                                        : panel_conf.text_off_color),
         font);
     const texture_t bk = create_text(
         "BK",
-        ((game_board.game_state.castling & BK) ? panel_conf.text_color
-                                               : panel_conf.text_off_color),
+        (game.is_castling_available(BK) ? panel_conf.text_color
+                                        : panel_conf.text_off_color),
         font);
 
     const rect_t castling_pos = panel_conf.get_grid_rect(1, 0, 1);
@@ -750,9 +823,10 @@ void gui_t::draw_panel()
         create_text("En passant: ", panel_conf.text_color, font);
     draw_texture(en_passant, en_passant_pos.x, en_passant_pos.y);
 
-    if (game_board.game_state.en_passant != INVALID_BOARD_INDEX) {
+    if (game.get_en_passant().has_value()) {
+      const position_t pos = game.get_en_passant().value();
       const texture_t en_passant_target_square = create_text(
-          index_to_string_coordinates(game_board.game_state.en_passant),
+          index_to_string_coordinates(position_to_index(pos.file, pos.rank)),
           panel_conf.text_color, font);
 
       draw_texture(en_passant_target_square,
@@ -762,17 +836,17 @@ void gui_t::draw_panel()
   }
 
   {  // Half move clock
-    const texture_t half_move_clock = create_text(
-        "Half move clock: " + STR(game_board.game_state.halfmove_clock),
-        panel_conf.text_color, font);
+    const texture_t half_move_clock =
+        create_text("Half move clock: " + STR(game.get_halfmove()),
+                    panel_conf.text_color, font);
     const rect_t half_move_clock_pos = panel_conf.get_grid_rect(3, 0, 1);
     draw_texture(half_move_clock, half_move_clock_pos.x, half_move_clock_pos.y);
   }
 
   {  // Full move clock
-    const texture_t full_move_clock = create_text(
-        "Full move clock: " + STR(game_board.game_state.fullmove_counter),
-        panel_conf.text_color, font);
+    const texture_t full_move_clock =
+        create_text("Full move clock: " + STR(game.get_fullmove()),
+                    panel_conf.text_color, font);
     const rect_t full_move_clock_pos = panel_conf.get_grid_rect(4, 0, 1);
     draw_texture(full_move_clock, full_move_clock_pos.x, full_move_clock_pos.y);
   }
@@ -832,14 +906,13 @@ void gui_t::draw_fen_panel()
 {
   draw_rect(fen_panel_conf.rect, fen_panel_conf.bg_color);
 
-  const std::string fen = generate_FEN(&game_board);
+  const std::string fen = game.get_fen();
   const font_t& font = fonts[fen_panel_conf.font_size];
   const texture_t t = create_text(fen, fen_panel_conf.text_color, font);
   const point_t p = {
       fen_panel_conf.rect.x + fen_panel_conf.text_padding,
       fen_panel_conf.rect.y + ((fen_panel_conf.rect.h - t.h) / 2)};
 
-  LOG_I << fen << END_I;
   draw_texture(t, p.x, p.y);
 }
 
@@ -869,14 +942,14 @@ void gui_t::update_state()
   // Check copy FEN to clipboard button
   if (is_mouse_in(buttons["to_clipboard"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
-    const std::string FEN = generate_FEN(&game_board);
+    const std::string FEN = game.get_fen();
     set_to_clipboard(FEN);
   }
 
-  // Check copy FEN to clipboard button
+  // Reset game
   if (is_mouse_in(buttons["reset"].rect) && mouse.left_button.click) {
     play_sound(sound_fx["click"]);
-    load_FEN(FEN_INIT_POS, &game_board);
+    game.reset();
   }
 
   // Check input text
@@ -904,7 +977,7 @@ void gui_t::update_state()
     const std::string& FEN = get_input_text();
 
     try {
-      load_FEN(FEN, &game_board);
+      game.set_fen(FEN);
       panel_conf.is_FEN_input_selected = false;
       stop_text_input();
 
@@ -929,12 +1002,11 @@ void gui_t::update_state()
     play_sound(sound_fx[RELEASE_SOUND]);
 
     // Set the piece
-    const move_t move = {
-        position_to_index(animation.piece_from.file, animation.piece_from.rank),
-        position_to_index(animation.piece_to.file, animation.piece_to.rank),
-        animation.piece};
+    const game_move_t move = {animation.piece, animation.piece_from,
+                              animation.piece_to};
 
-    make_move(&move, &game_board);
+
+    game.make_move(move);
   }
 }
 
@@ -954,7 +1026,7 @@ void gui_t::update_mouse_in_chessboard()
   const position_t mouse_board_pos = screen_pos_to_position(mouse_pos);
   const point_t mouse_tail = piece_pos_to_matrix_pos(mouse_board_pos);
 
-  const piece_t pointed_piece = get_piece(mouse_board_pos);
+  const piece_t pointed_piece = game.get_piece_at_position(mouse_board_pos);
 
   // Check if we should start holding the piece
   if (pointed_piece != piece_t::EMPTY &&
@@ -983,13 +1055,11 @@ void gui_t::update_mouse_in_chessboard()
     if (mouse_board_pos != held_piece.piece_board_position) {
       // const piece_t piece = get_piece(held_piece.piece_board_position);
 
-      const move_t move = {
-          position_to_index(held_piece.piece_board_position.file,
-                            held_piece.piece_board_position.rank),
-          position_to_index(mouse_board_pos.file, mouse_board_pos.rank),
-          animation.piece};
+      const game_move_t move = {
+          game.get_piece_at_position(held_piece.piece_board_position),
+          held_piece.piece_board_position, mouse_board_pos};
 
-      make_move(&move, &game_board);
+      game.make_move(move);
 
       // TODO: Move the piece with the engine
     }
@@ -1042,7 +1112,7 @@ void gui_t::on_update(void*)
 
   // Test draw mini board
   draw_static_board({panel_conf.rect.x, panel_conf.rect.y + 200, 160, 160},
-                    game_board);
+                    game.get_pieces());
 }
 
 
