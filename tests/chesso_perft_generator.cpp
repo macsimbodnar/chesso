@@ -14,8 +14,8 @@
 #include <iostream>
 #include <queue>
 #include <string>
+#include "board.hpp"
 #include "data_structures.hpp"
-#include "functions.hpp"
 #include "move_generator.hpp"
 #include "utils.hpp"
 
@@ -214,8 +214,8 @@ int main(int argc, char* argv[])
         uint64_t num_of_nodes = perft(depth - 1, &tmp_board);
         tot_nodes += num_of_nodes;
 
-        std::cout << index_to_algebraic(move.from)
-                  << index_to_algebraic(move.to)
+        std::cout << index_to_string_coordinates(move.from)
+                  << index_to_string_coordinates(move.to)
                   << (move.promoted_to != TO_NONE ? capture_to_string(move)
                                                   : "")
                   << " " << num_of_nodes << std::endl;
@@ -223,8 +223,8 @@ int main(int argc, char* argv[])
     } else {
       tot_nodes = moves.size();
       for (const auto& move : moves) {
-        std::cout << index_to_algebraic(move.from)
-                  << index_to_algebraic(move.to)
+        std::cout << index_to_string_coordinates(move.from)
+                  << index_to_string_coordinates(move.to)
                   << (move.promoted_to != TO_NONE ? capture_to_string(move)
                                                   : "")
                   << " " << 1 << std::endl;

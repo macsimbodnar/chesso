@@ -5,7 +5,7 @@
 #include <iostream>
 #include <json.hpp>
 #include <string>
-#include "functions.hpp"
+#include "board.hpp"
 #include "move_generator.hpp"
 #include "utils.hpp"
 
@@ -59,8 +59,8 @@ std::string moves_to_string(const std::vector<move_t>& moves,
   std::string result;
 
   for (const auto& move : moves) {
-    result +=
-        index_to_algebraic(move.from) + " -> " + index_to_algebraic(move.to);
+    result += index_to_string_coordinates(move.from) + " -> " +
+              index_to_string_coordinates(move.to);
     result += "    " + move_to_algebraic(&move, &moves, &board);
     result += "\n";
   }

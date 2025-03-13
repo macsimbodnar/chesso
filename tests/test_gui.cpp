@@ -4,8 +4,8 @@
 #include <cmath>
 #include <map>
 #include <pixello.hpp>
+#include "board.hpp"
 #include "data_structures.hpp"
-#include "functions.hpp"
 #include "utils.hpp"
 
 
@@ -751,9 +751,9 @@ void gui_t::draw_panel()
     draw_texture(en_passant, en_passant_pos.x, en_passant_pos.y);
 
     if (game_board.game_state.en_passant != INVALID_BOARD_INDEX) {
-      const texture_t en_passant_target_square =
-          create_text(index_to_algebraic(game_board.game_state.en_passant),
-                      panel_conf.text_color, font);
+      const texture_t en_passant_target_square = create_text(
+          index_to_string_coordinates(game_board.game_state.en_passant),
+          panel_conf.text_color, font);
 
       draw_texture(en_passant_target_square,
                    en_passant_pos.x + en_passant.w + panel_conf.text_padding,

@@ -6,8 +6,8 @@
 #include <iostream>
 #include <ostream>
 #include <thread>
+#include "board.hpp"
 #include "data_structures.hpp"
-#include "functions.hpp"
 #include "json.hpp"
 #include "move_generator.hpp"
 #include "unordered_map"
