@@ -30,6 +30,9 @@ target_include_directories(debug_gui PRIVATE ../src)
 target_link_libraries(debug_gui pixello)
 target_link_libraries(debug_gui chesso)
 
+add_test(NAME debug_gui COMMAND ${CMAKE_CURRENT_BINARY_DIR}/debug_gui)
+
+
 # Perft generation program
 add_executable(debug_perft_app debug_perft_app.cpp)
 target_include_directories(debug_perft_app PRIVATE ../src)

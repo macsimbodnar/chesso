@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <pixello.hpp>
+#include <random>
 #include "board.hpp"
 #include "data_structures.hpp"
 #include "move_generator.hpp"
@@ -183,6 +184,12 @@ struct game_move_t
   position_t to;
 };
 
+struct selected_square_t
+{
+  bool selected = false;
+  position_t position;
+};
+
 class game_t
 {
 private:
@@ -268,6 +275,19 @@ public:
 
     return false;
   }
+
+  std::vector<game_move_t> get_available_moves()
+  {
+    std::vector<game_move_t> result;
+    const auto moves = generate_legal_moves(&board);
+
+    for (const auto& move : moves) {
+      result.push_back({move.piece, index_to_position(move.from),
+                        index_to_position(move.to)});
+    }
+
+    return result;
+  }
 };
 
 
@@ -290,8 +310,13 @@ private:
   game_t game;
   held_piece_t held_piece;
   piece_animation_t animation;
+  selected_square_t selected_square;
 
   bool enter_key_pressed = false;
+  bool ai_is_moving = false;
+
+  std::random_device rd;
+  std::mt19937 gen;
 
 public:
   gui_t(const int w, const int h)
@@ -301,7 +326,13 @@ public:
         fen_panel_conf(w, h),
         board_conf(w, h, fen_panel_conf),
         panel_conf(w, h, fen_panel_conf, board_conf)
-  {}
+  {
+    // Initialise random number generator
+    gen = std::mt19937(rd());  // Mersenne Twister PRNG
+
+    // Set sprites scaling for better look
+    set_render_scaling_quality(scaling_quality_t::LINEAR);
+  }
 
 private:  // OVERRIDE
   void on_init(void*) override;
@@ -321,6 +352,7 @@ private:  // DRAW
   void draw_background();
 
   void draw_chessboard();
+  void draw_squares_of_interest();
   void draw_coordinates();
   void draw_pieces();
   void draw_piece(const game_piece_t& p);
@@ -340,6 +372,9 @@ private:  // UTILS
   point_t get_next_animation_pos();
   void draw_static_board(const rect_t& rect,
                          const std::vector<game_piece_t>& pieces);
+
+private:  // AI
+  void ai_move();
 };
 
 
@@ -493,6 +528,29 @@ rect_t gui_t::get_square_rect(const int x, const int y)
 }
 
 
+void gui_t::ai_move()
+{
+  // Lock the actions
+  ai_is_moving = true;
+
+  // Get list of moves for the current color
+  const auto moves = game.get_available_moves();
+
+  if (moves.size() < 1) {
+    LOG_I << "NO moves found" << END_I;
+    return;
+  }
+
+  // Pick a random one
+  std::uniform_int_distribution<size_t> dist(0, moves.size() - 1);
+  const size_t random_index = dist(gen);
+  const auto& move_to_make = moves[random_index];
+
+  // Start the animation
+  start_animation(move_to_make.from, move_to_make.to, move_to_make.piece);
+}
+
+
 void gui_t::start_animation(const position_t& from,
                             const position_t& to,
                             const piece_t& piece)
@@ -598,6 +656,23 @@ void gui_t::draw_chessboard()
     }
 
     black = !black;
+  }
+}
+
+
+void gui_t::draw_squares_of_interest()
+{
+  // Draw selected square
+  if (selected_square.selected) {
+    // Draw the selected square
+    const point_t board_coord =
+        piece_pos_to_matrix_pos(selected_square.position);
+    const rect_t rect = get_square_rect(board_coord.x, board_coord.y);
+
+    draw_rect(rect, 0xFFEE8CFF);
+    draw_rect_outline(rect, 0x000000FF);
+
+    // TODO Draw the available moves
   }
 }
 
@@ -919,10 +994,7 @@ void gui_t::draw_fen_panel()
 
 void gui_t::handle_events()
 {
-  // if (is_key_pressed(keycap_t::A) && !a) {
-  //   start_animation({1, 2}, {1, 3});
-  //   a = true;
-  // }
+  if (is_key_pressed(keycap_t::M) && !ai_is_moving) { ai_move(); }
 }
 
 
@@ -1005,8 +1077,10 @@ void gui_t::update_state()
     const game_move_t move = {animation.piece, animation.piece_from,
                               animation.piece_to};
 
-
     game.make_move(move);
+
+    // Unlock the ai move
+    ai_is_moving = false;
   }
 }
 
@@ -1060,8 +1134,6 @@ void gui_t::update_mouse_in_chessboard()
           held_piece.piece_board_position, mouse_board_pos};
 
       game.make_move(move);
-
-      // TODO: Move the piece with the engine
     }
 
     held_piece.selected = false;
@@ -1072,23 +1144,17 @@ void gui_t::update_mouse_in_chessboard()
     play_sound(sound_fx[RELEASE_SOUND]);
   }
 
-  // // Click on the square
-  // if (mouse.left_button.click) {
-  //   if (selected_square.selected &&
-  //       selected_square.position == mouse_board_position) {
-  //     // If click selected then unselect
-  //     selected_square.selected = false;
-  //     suggested_positions.clear();
-  //   } else {
-  //     selected_square.position = mouse_board_position;
-  //     selected_square.selected = true;
-
-  //     // Get the available moves
-  //     const position_t selected_pos =
-  //         coordinates_to_postion(mouse_tail_coord.x, mouse_tail_coord.y);
-  //     suggested_positions = chess.get_valid_moves(selected_pos);
-  //   }
-  // }
+  // Click on the square
+  if (mouse.left_button.click) {
+    if (selected_square.selected &&
+        selected_square.position == mouse_board_pos) {
+      // If click selected then unselect
+      selected_square.selected = false;
+    } else {
+      selected_square.position = mouse_board_pos;
+      selected_square.selected = true;
+    }
+  }
 }
 
 
@@ -1104,6 +1170,7 @@ void gui_t::on_update(void*)
   // DRAW
   draw_background();
   draw_chessboard();
+  draw_squares_of_interest();
   draw_coordinates();
   draw_pieces();
 
