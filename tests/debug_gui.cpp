@@ -311,6 +311,7 @@ private:
   held_piece_t held_piece;
   piece_animation_t animation;
   selected_square_t selected_square;
+  std::vector<position_t> current_piece_available_moves;
 
   bool enter_key_pressed = false;
   bool ai_is_moving = false;
@@ -673,6 +674,15 @@ void gui_t::draw_squares_of_interest()
     draw_rect_outline(rect, 0x000000FF);
 
     // TODO Draw the available moves
+    for (const auto& square : current_piece_available_moves) {
+      const point_t board_coord = piece_pos_to_matrix_pos(square);
+      const rect_t rect = get_square_rect(board_coord.x, board_coord.y);
+
+      // draw_circle(rect.x + (rect.w / 2), rect.y + (rect.h / 2), 10,
+      // 0xFF0000FF);
+      draw_rect(rect, 0x88E788FF);
+      draw_rect_outline(rect, 0x000000FF);
+    }
   }
 }
 
@@ -1120,20 +1130,17 @@ void gui_t::update_mouse_in_chessboard()
 
   // Reset the selected state
   if (mouse.left_button.state == button_key_t::UP && held_piece.selected) {
-    // if (mouse_tail != selected_piece) {
-    // TODO: In this case we want to unselect the square
-    // asm("nop");
-    // }
-
     // Set the piece to the destination column when release
     if (mouse_board_pos != held_piece.piece_board_position) {
-      // const piece_t piece = get_piece(held_piece.piece_board_position);
-
       const game_move_t move = {
           game.get_piece_at_position(held_piece.piece_board_position),
           held_piece.piece_board_position, mouse_board_pos};
 
-      game.make_move(move);
+      // Make the move. In case the move happened then clear the selected square
+      if (game.make_move(move)) {
+        // Unselect the selected square
+        selected_square.selected = false;
+      }
     }
 
     held_piece.selected = false;
@@ -1150,9 +1157,26 @@ void gui_t::update_mouse_in_chessboard()
         selected_square.position == mouse_board_pos) {
       // If click selected then unselect
       selected_square.selected = false;
+
+      // Clear the available moves as well
+      current_piece_available_moves.clear();
     } else {
       selected_square.position = mouse_board_pos;
       selected_square.selected = true;
+
+      // If click on piece get the suggested moves
+      const piece_t piece =
+          game.get_piece_at_position(selected_square.position);
+      if (piece != EMPTY && piece != INVALID) {
+        // Get moves
+        const auto& all_moves = game.get_available_moves();
+        current_piece_available_moves.clear();
+        for (const auto& move : all_moves) {
+          if (move.piece == piece && move.from == selected_square.position) {
+            current_piece_available_moves.push_back(move.to);
+          }
+        }
+      }
     }
   }
 }
