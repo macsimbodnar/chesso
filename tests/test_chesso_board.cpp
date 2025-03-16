@@ -97,7 +97,7 @@ std::string difference_to_string(const json& expected_moves,
     for (const move_t& move : generated_moves) {
       std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
 
-      if (move_str == expected["move"]) {
+      if (move_str == expected["move"].get<std::string>()) {
         found = true;
         break;
       }
@@ -113,7 +113,7 @@ std::string difference_to_string(const json& expected_moves,
     std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
 
     for (const json& expected : expected_moves) {
-      if (move_str == expected["move"]) {
+      if (move_str == expected["move"].get<std::string>()) {
         found = true;
         break;
       }

@@ -137,10 +137,12 @@ inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
 
 struct zobrist_randoms_t
 {
-  std::array<std::array<uint64_t, 64>, 6> piece_randoms;  // 12 pis * 64 squares
+  // Here we will use 128 instead 64 squares in order to include
+  // INVALID_BOARD_INDEX
+  std::array<std::array<uint64_t, 128>, 12> piece_randoms;  // 12 pieces
   std::array<uint64_t, 16> castling_randoms;
   std::array<uint64_t, 2> side_randoms;
-  std::array<uint64_t, 65> ep_randoms;  // en-passant randoms.
+  std::array<uint64_t, 128> ep_randoms;  // en-passant randoms.
 };
 
 struct move_t
