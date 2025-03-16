@@ -637,6 +637,8 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
   // NOTE(max): Removing the const attribute. We want this function to be const
   // on the board since we know that there is no way we return without resetting
   // the king on the board!!! Pay attention to this!
+  // TODO: Lock the board variable here since it's afake const. In order to make
+  // it safe for multithread computation
   board_t* non_const_board = const_cast<board_t*>(board);
   const piece_t removed_piece = remove_piece(king_index, non_const_board);
   assert(removed_piece == king_to_remove);
