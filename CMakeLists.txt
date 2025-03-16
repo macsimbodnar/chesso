@@ -14,6 +14,9 @@ else()
      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
           add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter)
      endif()
+
+     # TODO: Check if this will speed it up. We don't use floating points anyway
+     # string(REPLACE "-O3" "-Ofast" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
 enable_testing()

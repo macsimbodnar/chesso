@@ -16,6 +16,9 @@
 
 using json = nlohmann::json;
 
+#define RUN_THREADS
+
+
 // clang-format off
 const static std::vector<std::string> test_files = {
   "assets/perft_json/talkchess_perft.json",
@@ -345,6 +348,7 @@ int main()
           const auto& moves = generate_legal_moves(&board);
 
           if (depth > 1) {
+#ifdef RUN_THREADS
             std::vector<std::future<stats_t>> results;
             for (const auto& move : moves) {
               results.push_back(std::async(std::launch::async, [&]() {
@@ -358,6 +362,16 @@ int main()
             for (auto& res : results) {
               stats += res.get();
             }
+#else
+            for (const auto& move : moves) {
+              board_t tmp_board = board;
+              move_t tmp_move = move;
+              make_move(&tmp_move, &tmp_board);
+              const auto res = perft(depth - 1, &tmp_board);
+              stats += res;
+            }
+#endif
+
           } else {
             stats += get_moves_stats(moves);
           }
