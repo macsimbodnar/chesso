@@ -4,12 +4,17 @@
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
+#include <random>
 #include <string>
 #include "board.hpp"
 #include "move_generator.hpp"
 #include "utils.hpp"
 
+
 using json = nlohmann::json;
+std::random_device rd;
+std::mt19937 gen(rd());
+
 
 // clang-format off
 const static std::vector<std::string> test_files = {
@@ -135,6 +140,52 @@ std::string difference_to_string(const json& expected_moves,
   }
 
   return result;
+}
+
+
+move_t pick_random_move(const std::vector<move_t>& moves)
+{
+  std::uniform_int_distribution<size_t> dist(0, moves.size() - 1);
+  const size_t random_index = dist(gen);
+  return moves[random_index];
+}
+
+
+int make_random_move(int depth, board_t* board)
+{
+  if (depth == 0) { return 0; }
+
+  const std::string fen_before = generate_FEN(board);
+  const uint64_t zobrist_before = board->game_state.zobrist_key;
+
+  const auto moves = generate_legal_moves(board);
+
+  if (moves.size() == 0) { return depth; }
+
+  const move_t move_to_make = pick_random_move(moves);
+  bool move_happened = make_move(&move_to_make, board);
+  REQUIRE(move_happened);
+
+  const std::string fen_after_make_move = generate_FEN(board);
+  REQUIRE_NE(fen_after_make_move, fen_before);
+
+  const uint64_t zobrist_make = board->game_state.zobrist_key;
+  REQUIRE_NE(zobrist_make, zobrist_before);
+
+  // Recursively go deeper
+  int depth_reached = make_random_move(depth - 1, board);
+
+  // Unmake the move
+  const bool move_reverted = unmake_move(board);
+  REQUIRE(move_reverted);
+
+  const std::string fen_after_unmake_move = generate_FEN(board);
+  REQUIRE_EQ(fen_after_unmake_move, fen_before);
+
+  const uint64_t zobrist_unmake = board->game_state.zobrist_key;
+  REQUIRE_EQ(zobrist_unmake, zobrist_before);
+
+  return depth_reached;
 }
 
 
@@ -469,10 +520,65 @@ TEST_SUITE("Test legal move generator")
   }
 }
 
+
 TEST_SUITE("Test make_move and unmake_move")
 {
   TEST_CASE("Test make move with jsons")
   {
-    // TODO
+    for (const auto& test_json_file : test_files) {
+      json test_cases = load_json(test_json_file);
+
+      for (const json& test_case : test_cases["testCases"]) {
+        std::string starting_pos = test_case["start"]["fen"];
+        json expected_moves = test_case["expected"];
+
+        board_t board;
+        init_board(starting_pos, &board);
+
+        const auto moves = generate_legal_moves(&board);
+
+        // Apply the move
+        for (const auto& move : moves) {
+          const std::string fen_before_move = generate_FEN(&board);
+          const uint64_t zobrist_key_before = board.game_state.zobrist_key;
+
+          const bool result = make_move(&move, &board);
+          REQUIRE(result);
+
+          // Test the fen and zobrist keys changed
+          const std::string fen_after_make_move = generate_FEN(&board);
+          REQUIRE_NE(fen_after_make_move, fen_before_move);
+
+          const uint64_t zobrist_key_after_make_move =
+              board.game_state.zobrist_key;
+          REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
+
+          // Unmake the move
+          const bool un_result = unmake_move(&board);
+          REQUIRE(un_result);
+
+          // Test fen and zobrist key is restored as before
+          const std::string fen_after_unmake = generate_FEN(&board);
+          REQUIRE_EQ(fen_after_unmake, fen_before_move);
+
+          const uint64_t zobrist_key_after_unmake_move =
+              board.game_state.zobrist_key;
+          REQUIRE_EQ(zobrist_key_after_unmake_move, zobrist_key_before);
+        }
+      }
+    }
+  }
+
+  TEST_CASE("Test random moves")
+  {
+    board_t board;
+    init_board(DEFAULT_POSITION, &board);
+
+    const int max_depth = 10000;
+
+    const int depth_reached = make_random_move(max_depth, &board);
+
+    std::cout << "Test random moves depth reached: "
+              << (max_depth - depth_reached) << std::endl;
   }
 }
