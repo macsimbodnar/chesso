@@ -623,8 +623,6 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
 std::vector<move_t> generate_attacks_vector(color_t target_color,
                                             const board_t* board)
 {
-  board_t tmp_board = *board;
-
   std::vector<move_t> attacks;
   attacks.reserve(64);  // worst case
 
@@ -633,14 +631,20 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
 
   // Store the king pos
   const index_t king_index =
-      get_king_index(get_piece_color(king_to_remove), &tmp_board);
+      get_king_index(get_piece_color(king_to_remove), board);
 
-  // Unset the king
-  (void)remove_piece(king_index, &tmp_board);
+  // Unset the king.
+  // NOTE(max): Removing the const attribute. We want this function to be const
+  // on the board since we know that there is no way we return without resetting
+  // the king on the board!!! Pay attention to this!
+  board_t* non_const_board = const_cast<board_t*>(board);
+  const piece_t removed_piece = remove_piece(king_index, non_const_board);
+  assert(removed_piece == king_to_remove);
+  (void)removed_piece;
 
   // Generate the moves
   for (index_t i = 0; i < BOARD_SIZE; ++i) {
-    const piece_t p = tmp_board.board[i];
+    const piece_t p = board->board[i];
 
     // Iterate over opposite color pieces
     if (p != INVALID && p != EMPTY && target_color == get_piece_color(p)) {
@@ -650,21 +654,8 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
       if (p == W_PAWN || p == B_PAWN) {
         moves_for_index = generate_pawn_attacks(i, target_color);
       } else {
-        moves_for_index = generate_pseudo_legal_moves_from_index(i, &tmp_board);
+        moves_for_index = generate_pseudo_legal_moves_from_index(i, board);
       }
-
-
-      // Remove duplicates
-      // for (const move_t& move : moves_for_index) {
-      //   bool found = false;
-
-      //   for (const move_t& attack : attacks) {
-      //     if (attack == move) { found = true; }
-      //     break;
-      //   }
-
-      //   if (!found) { attacks.push_back(move); }
-      // }
 
       // We keep duplicates for easy double check detection.
       for (const move_t& move : moves_for_index) {
@@ -674,7 +665,9 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
   }
 
   // Reset the king to the board
-  put_piece(king_index, king_to_remove, &tmp_board);
+  put_piece(king_index, king_to_remove, non_const_board);
+
+  assert(board->board[king_index] == king_to_remove);
 
   return attacks;
 }
@@ -770,7 +763,6 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
   assert(happened);
   (void)happened;
 
-  // TODO: Make this more efficient. Here we copy twice the board
   const auto& attacks_vector =
       generate_attacks_vector(!board->game_state.active_color, &tmp_board);
 

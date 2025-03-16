@@ -220,7 +220,7 @@ stats_t get_moves_stats(const std::vector<move_t>& moves)
 }
 
 
-stats_t perft(int depth, const board_t* board)
+stats_t perft(int depth, board_t* board)
 {
   stats_t node_stats;
 
@@ -233,15 +233,15 @@ stats_t perft(int depth, const board_t* board)
   // node_stats += get_moves_stats(moves);
 
   for (const auto& move : moves) {
-    board_t tmp_board = *board;
-    make_move(&move, &tmp_board);
+    make_move(&move, board);
     if (depth == 1) {
       node_stats += get_move_stats(move);
     } else {
       node_stats.nodes += 1;
     }
     node_stats.nodes -= 1;
-    node_stats += perft(depth - 1, &tmp_board);
+    node_stats += perft(depth - 1, board);
+    unmake_move(board);
   }
 
   return node_stats;

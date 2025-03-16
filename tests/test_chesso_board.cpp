@@ -468,3 +468,11 @@ TEST_SUITE("Test legal move generator")
     }
   }
 }
+
+TEST_SUITE("Test make_move and unmake_move")
+{
+  TEST_CASE("Test make move with jsons")
+  {
+    // TODO
+  }
+}

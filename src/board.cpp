@@ -397,6 +397,127 @@ bool make_move(const move_t* move, board_t* board)
 }
 
 
+bool unmake_move(board_t* board)
+{
+  assert(board != nullptr);
+
+  // In case no move was made return false
+  if (board->history.empty()) { return false; }
+
+  const game_state_t& previous_game_state = board->history.top();
+  const move_t& move_to_unmake = previous_game_state.next_move;
+
+  assert(move_to_unmake.from != INVALID_BOARD_INDEX);
+  assert(move_to_unmake.to != INVALID_BOARD_INDEX);
+  assert(move_to_unmake.piece != INVALID);
+  assert(move_to_unmake.piece != EMPTY);
+  assert(board->board[move_to_unmake.from] == EMPTY);
+
+  assert(move_to_unmake.captured != EMPTY);
+
+  // Handle castling
+  if (move_to_unmake.castling_move) {
+    if (move_to_unmake.piece == W_KING) {
+      assert(move_to_unmake.from == 0x04);
+      assert(move_to_unmake.piece == W_KING);
+      assert(previous_game_state.active_color == WHITE);
+
+      if (move_to_unmake.to == 0x02) {
+        // White queen side castling
+        assert(board->board[0x03] == W_ROOK);
+        assert(board->board[0x02] == W_KING);
+        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
+        assert(board->board[0x00] == EMPTY);
+        assert(board->board[0x01] == EMPTY);
+
+        // Reset the pieces
+        board->board[move_to_unmake.from] = W_KING;
+        board->board[0x00] = W_ROOK;
+        board->board[0x02] = EMPTY;
+        board->board[0x03] = EMPTY;
+
+      } else if (move_to_unmake.to == 0x06) {
+        // White king side castling
+        assert(board->board[0x05] == W_ROOK);
+        assert(board->board[0x06] == W_KING);
+        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
+        assert(board->board[0x07] == EMPTY);
+
+        // Reset the pieces
+        board->board[move_to_unmake.from] = W_KING;
+        board->board[0x07] = W_ROOK;
+        board->board[0x05] = EMPTY;
+        board->board[0x06] = EMPTY;
+      }
+
+    } else if (move_to_unmake.piece == B_KING) {
+      assert(move_to_unmake.from == 0x74);
+      assert(move_to_unmake.piece == B_KING);
+      assert(previous_game_state.active_color == BLACK);
+
+      if (move_to_unmake.to == 0x72) {
+        // Black queen side castling
+        assert(board->board[0x73] == B_ROOK);
+        assert(board->board[0x72] == B_KING);
+        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
+        assert(board->board[0x70] == EMPTY);
+        assert(board->board[0x71] == EMPTY);
+
+        // Reset the pieces
+        board->board[move_to_unmake.from] = B_KING;
+        board->board[0x70] = B_ROOK;
+        board->board[0x72] = EMPTY;
+        board->board[0x73] = EMPTY;
+      } else if (move_to_unmake.to == 0x76) {
+        // Black king side castling
+        assert(board->board[0x75] == B_ROOK);
+        assert(board->board[0x76] == B_KING);
+        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
+        assert(board->board[0x77] == EMPTY);
+
+        // Reset the pieces
+        board->board[move_to_unmake.from] = B_KING;
+        board->board[0x77] = B_ROOK;
+        board->board[0x75] = EMPTY;
+        board->board[0x76] = EMPTY;
+      }
+    }
+
+  } else if (move_to_unmake.en_passant_capture) {
+    // Handling en-passant
+    assert(previous_game_state.en_passant != INVALID_BOARD_INDEX);
+    assert(board->board[previous_game_state.en_passant] == W_PAWN ||
+           board->board[previous_game_state.en_passant] == B_PAWN);
+    assert(previous_game_state.en_passant == move_to_unmake.to);
+
+
+    if (previous_game_state.active_color == WHITE) {
+      board->board[move_to_unmake.to] = EMPTY;
+      board->board[move_to_unmake.from] = W_PAWN;
+      board->board[move_to_unmake.to - 0x10] = B_PAWN;
+    } else {
+      board->board[move_to_unmake.to] = EMPTY;
+      board->board[move_to_unmake.from] = B_PAWN;
+      board->board[move_to_unmake.to + 0x10] = W_PAWN;
+    }
+  } else {
+    // Normal move, normal capture, promotion and promotion with capture are
+    // handled all in the same way
+    const piece_t removed_piece =
+        (move_to_unmake.captured == INVALID) ? EMPTY : move_to_unmake.captured;
+
+
+    board->board[move_to_unmake.to] = removed_piece;
+    board->board[move_to_unmake.from] = move_to_unmake.piece;
+  }
+
+  // Restore state
+  board->game_state = previous_game_state;
+  board->history.pop();
+  return true;
+}
+
+
 void reset(board_t* board)
 {
   assert(board != nullptr);
