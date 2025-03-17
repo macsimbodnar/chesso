@@ -67,3 +67,16 @@ ctest --verbose
 cd tests
 ./test_gui
 ```
+
+### Build for profiler
+
+```bash
+cmake ..  -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg
+ninja
+
+# Execute the program in order to generate the gmon.out file
+
+#if we want to profile a test:
+cd tests
+gprof test_chesso_board gmon.out > analysis.txt
+```

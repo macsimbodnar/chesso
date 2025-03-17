@@ -3,6 +3,8 @@
     "bboard",
     "bitboard",
     "Fullmove",
+    "gmon",
+    "gprof",
     "halfmove",
     "passants",
     "PNBRQK",
