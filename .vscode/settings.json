@@ -13,7 +13,8 @@
     "readyok",
     "RNBQKBNR",
     "talkchess",
-    "ucinewgame"
+    "ucinewgame",
+    "uciok"
   ],
   "files.associations": {
     "cctype": "cpp",

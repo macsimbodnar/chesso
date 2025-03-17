@@ -256,6 +256,11 @@ void uci_reply(const std::string& response)
 bool command_uci(std::queue<std::string>& args)
 {
   LOG_I << "Command [uci]. Args: " << args << END_I;
+
+  uci_reply("id name Chesso");
+  uci_reply("id author MazerFaker");
+  uci_reply("uciok");
+
   return true;
 }
 
@@ -320,7 +325,10 @@ bool command_register(std::queue<std::string>& args)
 bool command_ucinewgame(std::queue<std::string>& args)
 {
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
-  // TODO
+
+  engine.set_default_position();
+
+  LOG_I << engine.get_nice_board() << END_I;
 
   return true;
 }
@@ -395,6 +403,8 @@ bool command_position(std::queue<std::string>& args)
     }
   }
 
+  LOG_I << engine.get_nice_board() << END_I;
+
   return true;
 }
 
@@ -403,9 +413,7 @@ bool command_go(std::queue<std::string>& args)
 {
   LOG_I << "Command [go]. Args: " << args << END_I;
 
-  if (args.size() == 0) { return false; }
-
-  // TODO
+  uci_reply("bestmove d2d4");
 
   return true;
 }
