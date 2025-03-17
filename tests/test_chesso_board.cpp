@@ -7,6 +7,7 @@
 #include <random>
 #include <string>
 #include "board.hpp"
+#include "evaluation.hpp"
 #include "move_generator.hpp"
 #include "utils.hpp"
 
@@ -191,28 +192,19 @@ int make_random_move(int depth, board_t* board)
 
 TEST_SUITE("DEBUG TEST")
 {
-  // TEST_CASE("DEBUG") {
-  //   std::string FEN = "8/4k3/8/8/8/8/r6r/R3K2R w KQ - 0 1";
-  //   size_t expected_size = 8;
+  TEST_CASE("DEBUG")
+  {
+    board_t board;
+    init_board("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",
+               &board);
+    int evaluation = evaluate(&board);
 
-  //   board_t board;
-  //   init_board(FEN, &board);
+    std::cout << print_nice_board(&board) << std::endl;
+    std::cout << "Evaluation: " << evaluation << std::endl;
 
-  //   auto moves = generate_legal_moves(&board);
-
-  //   REQUIRE_EQ(moves.size(), expected_size);
-  // }
-
-  // TEST_CASE("test is blocking rays") {
-  //   index_t from = 0x25;
-  //   index_t to = 0x07;
-  //   index_t point = 0x16;
-
-  //   move_t move = {from, to, INVALID};
-  //   bool result = is_blocking_ray(point, &move);
-
-  //   REQUIRE_EQ(result, true);
-  // }
+    // std::cout << "debug: " << debug_evaluation(W_PAWN, 0x10) << std::endl;
+    // std::cout << "debug: " << debug_evaluation(B_PAWN, 0x60) << std::endl;
+  }
 }
 
 
