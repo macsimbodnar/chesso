@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <optional>
+#include <queue>
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
@@ -8,9 +10,10 @@
 #include "move_generator.hpp"
 #include "utils.hpp"
 
+
 //-##############################   DATA TYPES  #############################-//
 
-typedef bool (*process_func)(const std::vector<std::string>&);
+typedef bool (*process_func)(std::queue<std::string>&);
 
 struct uci_move_t
 {
@@ -21,21 +24,22 @@ struct uci_move_t
 
 
 //-###########################  COMMAND DECLARATIONS  #######################-//
-bool command_debug(const std::vector<std::string>& args);
-bool command_isready(const std::vector<std::string>& args);
-bool command_setoption(const std::vector<std::string>& args);
-bool command_register(const std::vector<std::string>& args);
-bool command_ucinewgame(const std::vector<std::string>& args);
-bool command_position(const std::vector<std::string>& args);
-bool command_go(const std::vector<std::string>& args);
-bool command_stop(const std::vector<std::string>& args);
-bool command_ponderhit(const std::vector<std::string>& args);
-bool command_quit(const std::vector<std::string>& args);
+bool command_debug(std::queue<std::string>& args);
+bool command_isready(std::queue<std::string>& args);
+bool command_setoption(std::queue<std::string>& args);
+bool command_register(std::queue<std::string>& args);
+bool command_ucinewgame(std::queue<std::string>& args);
+bool command_position(std::queue<std::string>& args);
+bool command_go(std::queue<std::string>& args);
+bool command_stop(std::queue<std::string>& args);
+bool command_ponderhit(std::queue<std::string>& args);
+bool command_quit(std::queue<std::string>& args);
 
 //-##############################  GLOBAL VARS  #############################-//
 
-board_t board;
+static board_t board;
 static bool is_debug = false;
+static bool running = true;
 
 static const std::unordered_map<std::string, process_func> commands = {
     {"debug", command_debug},
@@ -66,22 +70,24 @@ std::string trim_whitespace(const std::string& str)
 }
 
 
-std::vector<std::string> split_str(const std::string string,
-                                   const std::string delimiter)
+std::queue<std::string> tokenize_input(const std::string string,
+                                       const std::string delimiter)
 {
   const std::string s = trim_whitespace(string);
   size_t pos_start = 0, pos_end, delim_len = delimiter.length();
   std::string token;
-  std::vector<std::string> res;
+  std::queue<std::string> res;
 
   while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
     token = s.substr(pos_start, pos_end - pos_start);
     pos_start = pos_end + delim_len;
 
-    if (token.size() > 0) { res.push_back((token)); }
+    if (token.size() > 0) { res.push((token)); }
   }
 
-  res.push_back(s.substr(pos_start));
+  const std::string remaining = s.substr(pos_start);
+  if (remaining.length() > 0) { res.push(remaining); }
+
   return res;
 }
 
@@ -94,16 +100,81 @@ bool is_command(const std::string& command)
 }
 
 
-//-################################  COMMANDS  ##############################-//
-bool command_debug(const std::vector<std::string>& args)
+std::optional<uci_move_t> algebraic_to_uci_move(const std::string& p)
 {
-  assert(args.size() > 0);
-  assert(args[0] == "debug");
+  if (p.length() < 4 || p.length() > 5) { return {}; }
 
-  for (const auto& arg : args) {
-    if (arg == "on") {
+  uint8_t from_file = p[0];
+  uint8_t from_rank = p[1];
+  uint8_t to_file = p[2];
+  uint8_t to_rank = p[3];
+
+  if (from_file < 'a' || from_file > 'h' || from_rank < '1' ||
+      from_rank > '8') {
+    return {};
+  }
+
+  if (to_file < 'a' || to_file > 'h' || to_rank < '1' || to_rank > '8') {
+    return {};
+  }
+
+
+  from_file = from_file - 'a';
+  from_rank = from_rank - '1';
+
+  to_file = to_file - 'a';
+  to_rank = to_rank - '1';
+
+  const index_t from = position_to_index(from_file, from_rank);
+  const index_t to = position_to_index(to_file, to_rank);
+
+  uci_move_t move;
+  move.from = from;
+  move.to = to;
+  move.promotion = TO_NONE;
+
+  if (p.length() == 5) {
+    // Handle promotion
+    switch (p[4]) {
+      case 'Q':
+      case 'q':
+        move.promotion = TO_QUEEN;
+        break;
+      case 'N':
+      case 'n':
+        move.promotion = TO_KNIGHT;
+        break;
+      case 'R':
+      case 'r':
+        move.promotion = TO_ROOK;
+        break;
+      case 'B':
+      case 'b':
+        move.promotion = TO_BISHOP;
+        break;
+
+      default:
+        return {};
+        break;
+    }
+  }
+
+  return move;
+}
+
+
+//-################################  COMMANDS  ##############################-//
+bool command_debug(std::queue<std::string>& args)
+{
+  if (args.size() == 0) { return false; }
+
+  while (!args.empty()) {
+    const std::string token = args.front();
+    args.pop();
+
+    if (token == "on") {
       is_debug = true;
-    } else if (arg == "off") {
+    } else if (token == "off") {
       is_debug = false;
     }
   }
@@ -112,21 +183,17 @@ bool command_debug(const std::vector<std::string>& args)
 }
 
 
-bool command_isready(const std::vector<std::string>& args)
+bool command_isready(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
-  assert(args[0] == "isready");
-
   std::cout << "readyok" << std::endl;
 
   return true;
 }
 
 
-bool command_setoption(const std::vector<std::string>& args)
+bool command_setoption(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "setoption");
 
   // setoption name <id> [value <x>]
 
@@ -136,10 +203,9 @@ bool command_setoption(const std::vector<std::string>& args)
 }
 
 
-bool command_register(const std::vector<std::string>& args)
+bool command_register(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "register");
 
   // TODO
 
@@ -147,10 +213,9 @@ bool command_register(const std::vector<std::string>& args)
 }
 
 
-bool command_ucinewgame(const std::vector<std::string>& args)
+bool command_ucinewgame(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "ucinewgame");
 
   // TODO
 
@@ -158,25 +223,83 @@ bool command_ucinewgame(const std::vector<std::string>& args)
 }
 
 
-bool command_position(const std::vector<std::string>& args)
+bool command_position(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
-  assert(args[0] == "position");
+  if (args.size() == 0) { return false; }
 
-  for (const auto& arg : args) {
-    if (arg == "startpos") { init_board(DEFAULT_POSITION, &board); }
-    // TODO
+  while (!args.empty()) {
+    const std::string token = args.front();
+    args.pop();
+
+    if (token == "startpos") {
+      // Initialize the board to the default starting position
+      init_board(DEFAULT_POSITION, &board);
+
+      // std::cout << print_nice_board(&board) << std::endl;
+    }
+
+    if (token == "fen") {
+      // Reading the fen string. Fen string contains 6 portions
+      if (args.size() < 6) {
+        // The fen string is not complete
+        return false;
+      }
+
+      std::string fen;
+
+      for (int i = 0; i < 6; ++i) {
+        fen += args.front() + " ";
+        args.pop();
+      }
+
+      fen = trim_whitespace(fen);
+
+      // Initialize the board with the fen
+      init_board(fen, &board);
+
+      // std::cout << print_nice_board(&board) << std::endl;
+    }
+
+    if (token == "moves") {
+      // Assuming all the next tokens are moves to execute. Skip the one that
+      // are not valid. Doing best effort
+
+      while (!args.empty()) {
+        const std::string move_str = args.front();
+        args.pop();
+
+        const auto parsing_result = algebraic_to_uci_move(move_str);
+
+        if (parsing_result.has_value()) {
+          // Apply the move
+          const uci_move_t candidate_move = parsing_result.value();
+
+          std::vector<move_t> legal_moves = generate_legal_moves(&board);
+
+          // Search the move in the list of legal moves
+          for (const auto& move : legal_moves) {
+            if (move.from == candidate_move.from &&
+                move.to == candidate_move.to &&
+                move.promoted_to == candidate_move.promotion) {
+              // Apply the found move
+              (void)make_move(&move, &board);
+              break;
+            }
+          }
+        }
+
+        // In case the move is not found we move to the next one
+      }
+    }
   }
 
-
   return true;
 }
 
 
-bool command_go(const std::vector<std::string>& args)
+bool command_go(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "go");
 
   // TODO
 
@@ -184,10 +307,9 @@ bool command_go(const std::vector<std::string>& args)
 }
 
 
-bool command_stop(const std::vector<std::string>& args)
+bool command_stop(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "stop");
 
   // TODO
 
@@ -195,10 +317,9 @@ bool command_stop(const std::vector<std::string>& args)
 }
 
 
-bool command_ponderhit(const std::vector<std::string>& args)
+bool command_ponderhit(std::queue<std::string>& args)
 {
   assert(args.size() > 0);
-  assert(args[0] == "ponderhit");
 
   // TODO
 
@@ -206,18 +327,15 @@ bool command_ponderhit(const std::vector<std::string>& args)
 }
 
 
-bool command_quit(const std::vector<std::string>& args)
+bool command_quit(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
-  assert(args[0] == "quit");
-
-  // TODO
-
+  running = false;
   return true;
 }
 
 
-//-##################################  MAIN  ################################-//
+//-##################################  MAIN
+//################################-//
 
 // int main(int argc, char* argv[])
 int main()
@@ -232,25 +350,21 @@ int main()
     if (input == "uci") { break; }
   }
 
-  bool running = true;
-
   while (running) {
     std::string input;
     std::getline(std::cin, input);
 
-    const auto& tokens = split_str(input, " ");
+    std::queue<std::string> tokens = tokenize_input(input, " ");
 
     if (tokens.size() == 0) { continue; }
 
     // Try to find the command
-    for (size_t i = 0; i < tokens.size(); ++i) {
-      const auto& current_token = tokens[i];
+    while (!tokens.empty()) {
+      const std::string current_token = tokens.front();
+      tokens.pop();
 
       if (is_command(current_token)) {
-        const std::vector<std::string> remaining_tokens = {tokens.begin() + i,
-                                                           tokens.end()};
-
-        const bool result = commands.at(current_token)(remaining_tokens);
+        const bool result = commands.at(current_token)(tokens);
 
         if (!result) { return 1; }
 
