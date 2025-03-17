@@ -185,6 +185,7 @@ bool command_debug(std::queue<std::string>& args)
 
 bool command_isready(std::queue<std::string>& args)
 {
+  (void)args;
   std::cout << "readyok" << std::endl;
 
   return true;
@@ -193,7 +194,7 @@ bool command_isready(std::queue<std::string>& args)
 
 bool command_setoption(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
+  if (args.size() == 0) { return false; }
 
   // setoption name <id> [value <x>]
 
@@ -205,7 +206,7 @@ bool command_setoption(std::queue<std::string>& args)
 
 bool command_register(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
+  if (args.size() == 0) { return false; }
 
   // TODO
 
@@ -215,8 +216,7 @@ bool command_register(std::queue<std::string>& args)
 
 bool command_ucinewgame(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
-
+  (void)args;
   // TODO
 
   return true;
@@ -299,7 +299,7 @@ bool command_position(std::queue<std::string>& args)
 
 bool command_go(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
+  if (args.size() == 0) { return false; }
 
   // TODO
 
@@ -309,8 +309,7 @@ bool command_go(std::queue<std::string>& args)
 
 bool command_stop(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
-
+  (void)args;
   // TODO
 
   return true;
@@ -319,7 +318,7 @@ bool command_stop(std::queue<std::string>& args)
 
 bool command_ponderhit(std::queue<std::string>& args)
 {
-  assert(args.size() > 0);
+  (void)args;
 
   // TODO
 
@@ -329,6 +328,7 @@ bool command_ponderhit(std::queue<std::string>& args)
 
 bool command_quit(std::queue<std::string>& args)
 {
+  (void)args;
   running = false;
   return true;
 }
