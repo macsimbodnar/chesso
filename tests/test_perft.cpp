@@ -17,6 +17,7 @@
 using json = nlohmann::json;
 
 #define RUN_THREADS
+#define MAXIMUM_DEPTH 5
 
 
 // clang-format off
@@ -306,11 +307,16 @@ int main()
     for (const auto& test_case : test_cases) {
       const std::string fen = test_case["start_fen"];
       const bool enabled = test_case["enable"];
-      const int depth_limit = test_case["depth_limit"];
+      const int depth_limit_candidate = test_case["depth_limit"];
       const std::string comments = test_case["comments"];
+
+      const int depth_limit = (depth_limit_candidate > MAXIMUM_DEPTH)
+                                  ? MAXIMUM_DEPTH
+                                  : depth_limit_candidate;
 
       std::cout << YELLOW << "Starting position: " << fen << RESET
                 << "\nEnabled " << enabled << "\nDepth limit " << depth_limit
+                << "\nDepth hard limit " << MAXIMUM_DEPTH
                 << "\nComments: " << comments << "\n"
                 << std::endl;
 

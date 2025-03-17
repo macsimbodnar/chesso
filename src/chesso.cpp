@@ -23,6 +23,52 @@ struct uci_move_t
 };
 
 
+class engine_handler_t
+{
+private:
+  board_t board;
+  std::string initial_position = DEFAULT_POSITION;
+
+public:
+  engine_handler_t() { set_default_position(); }
+
+  bool set_position(const std::string& fen)
+  {
+    init_board(fen, &board);
+    initial_position = fen;
+    return true;
+  }
+
+  bool set_default_position()
+  {
+    initial_position = DEFAULT_POSITION;
+    return set_position(DEFAULT_POSITION);
+  }
+
+  bool reset_to_initial_position() { return set_position(initial_position); }
+
+  bool try_move(const uci_move_t& move_candidate)
+  {
+    const std::vector<move_t> legal_moves = generate_legal_moves(&board);
+
+    // Search the move in the list of legal moves
+    for (const auto& move : legal_moves) {
+      if (move.from == move_candidate.from && move.to == move_candidate.to &&
+          move.promoted_to == move_candidate.promotion) {
+        // Apply the found move
+        bool move_result = make_move(&move, &board);
+
+        if (move_result) { return true; }
+
+        break;
+      }
+    }
+
+    return false;
+  }
+};
+
+
 //-###########################  COMMAND DECLARATIONS  #######################-//
 bool command_debug(std::queue<std::string>& args);
 bool command_isready(std::queue<std::string>& args);
@@ -37,7 +83,7 @@ bool command_quit(std::queue<std::string>& args);
 
 //-##############################  GLOBAL VARS  #############################-//
 
-static board_t board;
+static engine_handler_t engine;
 static bool is_debug = false;
 static bool running = true;
 
@@ -233,7 +279,7 @@ bool command_position(std::queue<std::string>& args)
 
     if (token == "startpos") {
       // Initialize the board to the default starting position
-      init_board(DEFAULT_POSITION, &board);
+      engine.set_default_position();
 
       // std::cout << print_nice_board(&board) << std::endl;
     }
@@ -255,7 +301,7 @@ bool command_position(std::queue<std::string>& args)
       fen = trim_whitespace(fen);
 
       // Initialize the board with the fen
-      init_board(fen, &board);
+      engine.set_position(fen);
 
       // std::cout << print_nice_board(&board) << std::endl;
     }
@@ -272,23 +318,11 @@ bool command_position(std::queue<std::string>& args)
 
         if (parsing_result.has_value()) {
           // Apply the move
-          const uci_move_t candidate_move = parsing_result.value();
+          const uci_move_t move_candidate = parsing_result.value();
 
-          std::vector<move_t> legal_moves = generate_legal_moves(&board);
-
-          // Search the move in the list of legal moves
-          for (const auto& move : legal_moves) {
-            if (move.from == candidate_move.from &&
-                move.to == candidate_move.to &&
-                move.promoted_to == candidate_move.promotion) {
-              // Apply the found move
-              (void)make_move(&move, &board);
-              break;
-            }
-          }
+          // Attempt the move. We ignore if move happened or not
+          (void)engine.try_move(move_candidate);
         }
-
-        // In case the move is not found we move to the next one
       }
     }
   }
@@ -334,14 +368,9 @@ bool command_quit(std::queue<std::string>& args)
 }
 
 
-//-##################################  MAIN
-//################################-//
-
-// int main(int argc, char* argv[])
+//-##################################  MAIN  ################################-//
 int main()
 {
-  init_board(DEFAULT_POSITION, &board);
-
   // For now we just support UCI
   while (true) {
     std::string input;
