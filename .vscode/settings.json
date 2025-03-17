@@ -92,6 +92,8 @@
     "ranges": "cpp",
     "span": "cpp",
     "valarray": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "charconv": "cpp",
+    "format": "cpp"
   }
 }

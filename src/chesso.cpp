@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <queue>
@@ -10,10 +11,36 @@
 #include "move_generator.hpp"
 #include "utils.hpp"
 
+static std::ofstream log_file("chesso_engine.log", std::ios::app);
+
+#define LOG_I log_file   // Start log
+#define END_I std::endl  // End log
+
+#define LOG_S LOG_I << "\033[92m"  // Success green log
+#define END_S "\033[37m" << END_I  // End success green log
+
+#define LOG_W LOG_I << "\033[33m"  // Warning orange log
+#define END_W "\033[37m" << END_I  // End warning orange log
+
+#define LOG_E LOG_I << "\033[31m"  // Error red log
+#define END_E "\033[37m" << END_I  // End Error red log
+
 
 //-##############################   DATA TYPES  #############################-//
 
 typedef bool (*process_func)(std::queue<std::string>&);
+
+std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
+{
+  os << "[";
+  while (!q.empty()) {
+    os << "\"" << q.front() << "\"";
+    q.pop();
+    if (!q.empty()) { os << ", "; }
+  }
+  os << "]";
+  return os;
+}
 
 struct uci_move_t
 {
@@ -66,10 +93,13 @@ public:
 
     return false;
   }
+
+  std::string get_nice_board() { return print_nice_board(&board); }
 };
 
 
 //-###########################  COMMAND DECLARATIONS  #######################-//
+bool command_uci(std::queue<std::string>& args);
 bool command_debug(std::queue<std::string>& args);
 bool command_isready(std::queue<std::string>& args);
 bool command_setoption(std::queue<std::string>& args);
@@ -81,13 +111,18 @@ bool command_stop(std::queue<std::string>& args);
 bool command_ponderhit(std::queue<std::string>& args);
 bool command_quit(std::queue<std::string>& args);
 
+bool command_print_board(std::queue<std::string>& args);
+
+
 //-##############################  GLOBAL VARS  #############################-//
 
 static engine_handler_t engine;
 static bool is_debug = false;
 static bool running = true;
 
+// clang-format off
 static const std::unordered_map<std::string, process_func> commands = {
+    {"uci", command_uci},
     {"debug", command_debug},
     {"isready", command_isready},
     {"setoption", command_setoption},
@@ -98,8 +133,10 @@ static const std::unordered_map<std::string, process_func> commands = {
     {"stop", command_stop},
     {"ponderhit", command_ponderhit},
     {"quit", command_quit},
-
+    // custom commands
+    {"print_board", command_print_board},
 };
+// clang-format on
 
 
 //-############################  UTILS FUNCTIONS  ###########################-//
@@ -209,9 +246,24 @@ std::optional<uci_move_t> algebraic_to_uci_move(const std::string& p)
 }
 
 
+void uci_reply(const std::string& response)
+{
+  std::cout << response << std::endl;
+}
+
+
 //-################################  COMMANDS  ##############################-//
+bool command_uci(std::queue<std::string>& args)
+{
+  LOG_I << "Command [uci]. Args: " << args << END_I;
+  return true;
+}
+
+
 bool command_debug(std::queue<std::string>& args)
 {
+  LOG_I << "Command [debug]. Args: " << args << END_I;
+
   if (args.size() == 0) { return false; }
 
   while (!args.empty()) {
@@ -219,8 +271,10 @@ bool command_debug(std::queue<std::string>& args)
     args.pop();
 
     if (token == "on") {
+      LOG_I << "Debug mode ON" << END_I;
       is_debug = true;
     } else if (token == "off") {
+      LOG_I << "Debug mode OFF" << END_I;
       is_debug = false;
     }
   }
@@ -231,8 +285,9 @@ bool command_debug(std::queue<std::string>& args)
 
 bool command_isready(std::queue<std::string>& args)
 {
-  (void)args;
-  std::cout << "readyok" << std::endl;
+  LOG_I << "Command [is_ready]. Args: " << args << END_I;
+
+  uci_reply("readyok");
 
   return true;
 }
@@ -240,6 +295,7 @@ bool command_isready(std::queue<std::string>& args)
 
 bool command_setoption(std::queue<std::string>& args)
 {
+  LOG_I << "Command [setoption]. Args: " << args << END_I;
   if (args.size() == 0) { return false; }
 
   // setoption name <id> [value <x>]
@@ -252,6 +308,7 @@ bool command_setoption(std::queue<std::string>& args)
 
 bool command_register(std::queue<std::string>& args)
 {
+  LOG_I << "Command [register]. Args: " << args << END_I;
   if (args.size() == 0) { return false; }
 
   // TODO
@@ -262,7 +319,7 @@ bool command_register(std::queue<std::string>& args)
 
 bool command_ucinewgame(std::queue<std::string>& args)
 {
-  (void)args;
+  LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
   // TODO
 
   return true;
@@ -271,6 +328,8 @@ bool command_ucinewgame(std::queue<std::string>& args)
 
 bool command_position(std::queue<std::string>& args)
 {
+  LOG_I << "Command [position]. Args: " << args << END_I;
+
   if (args.size() == 0) { return false; }
 
   while (!args.empty()) {
@@ -280,8 +339,7 @@ bool command_position(std::queue<std::string>& args)
     if (token == "startpos") {
       // Initialize the board to the default starting position
       engine.set_default_position();
-
-      // std::cout << print_nice_board(&board) << std::endl;
+      LOG_I << "Set default position" << END_I;
     }
 
     if (token == "fen") {
@@ -301,9 +359,13 @@ bool command_position(std::queue<std::string>& args)
       fen = trim_whitespace(fen);
 
       // Initialize the board with the fen
-      engine.set_position(fen);
+      bool res = engine.set_position(fen);
 
-      // std::cout << print_nice_board(&board) << std::endl;
+      if (res) {
+        LOG_I << "Set fen " << fen << END_I;
+      } else {
+        LOG_W << "Failed to set fen " << fen << END_W;
+      }
     }
 
     if (token == "moves") {
@@ -321,7 +383,13 @@ bool command_position(std::queue<std::string>& args)
           const uci_move_t move_candidate = parsing_result.value();
 
           // Attempt the move. We ignore if move happened or not
-          (void)engine.try_move(move_candidate);
+          bool res = engine.try_move(move_candidate);
+
+          if (res) {
+            LOG_I << "Applied move [" << move_str << "]" << END_I;
+          } else {
+            LOG_W << "Failed move [" << move_str << "]" << END_W;
+          }
         }
       }
     }
@@ -333,6 +401,8 @@ bool command_position(std::queue<std::string>& args)
 
 bool command_go(std::queue<std::string>& args)
 {
+  LOG_I << "Command [go]. Args: " << args << END_I;
+
   if (args.size() == 0) { return false; }
 
   // TODO
@@ -343,7 +413,8 @@ bool command_go(std::queue<std::string>& args)
 
 bool command_stop(std::queue<std::string>& args)
 {
-  (void)args;
+  LOG_I << "Command [stop]. Args: " << args << END_I;
+
   // TODO
 
   return true;
@@ -352,7 +423,7 @@ bool command_stop(std::queue<std::string>& args)
 
 bool command_ponderhit(std::queue<std::string>& args)
 {
-  (void)args;
+  LOG_I << "Command [ponderhit]. Args: " << args << END_I;
 
   // TODO
 
@@ -362,8 +433,18 @@ bool command_ponderhit(std::queue<std::string>& args)
 
 bool command_quit(std::queue<std::string>& args)
 {
-  (void)args;
+  LOG_I << "Command [quit]. Args: " << args << END_I;
+
   running = false;
+  return true;
+}
+
+
+bool command_print_board(std::queue<std::string>& args)
+{
+  LOG_I << "Command [print_board]. Args: " << args << END_I;
+  LOG_I << engine.get_nice_board() << END_I;
+
   return true;
 }
 
@@ -371,13 +452,7 @@ bool command_quit(std::queue<std::string>& args)
 //-##################################  MAIN  ################################-//
 int main()
 {
-  // For now we just support UCI
-  while (true) {
-    std::string input;
-    std::getline(std::cin, input);
-
-    if (input == "uci") { break; }
-  }
+  LOG_I << "Engine started" << END_I;
 
   while (running) {
     std::string input;
@@ -385,7 +460,10 @@ int main()
 
     std::queue<std::string> tokens = tokenize_input(input, " ");
 
-    if (tokens.size() == 0) { continue; }
+    if (tokens.size() == 0) {
+      LOG_W << "No tokens in string" << END_W;
+      continue;
+    }
 
     // Try to find the command
     while (!tokens.empty()) {
@@ -395,13 +473,18 @@ int main()
       if (is_command(current_token)) {
         const bool result = commands.at(current_token)(tokens);
 
-        if (!result) { return 1; }
+        if (!result) {
+          LOG_W << "Command [" << current_token << "] error" << END_W;
+          return 1;
+        }
 
         // We found and executed the command for this input. So jump to next
         break;
       }
     }
   }
+
+  LOG_I << "Engine closed gracefully" << END_I;
 
   return 0;
 }
