@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -8,8 +9,11 @@
 #include <vector>
 #include "board.hpp"
 #include "data_structures.hpp"
+#include "evaluation.hpp"
 #include "move_generator.hpp"
+#include "search.hpp"
 #include "utils.hpp"
+
 
 static std::ofstream log_file("chesso_engine.log", std::ios::app);
 
@@ -95,6 +99,16 @@ public:
   }
 
   std::string get_nice_board() { return print_nice_board(&board); }
+
+  uci_move_t get_best_move(int depth)
+  {
+    move_t best_move = search_best_move(depth, &board);
+
+    const uci_move_t result = {best_move.from, best_move.to,
+                               best_move.promoted_to};
+
+    return result;
+  }
 };
 
 
@@ -243,6 +257,47 @@ std::optional<uci_move_t> algebraic_to_uci_move(const std::string& p)
   }
 
   return move;
+}
+
+
+std::string promotion_to_string(const promotion_t promotion)
+{
+  switch (promotion) {
+    case TO_QUEEN:
+      return "q";
+      break;
+    case TO_KNIGHT:
+      return "n";
+      break;
+    case TO_ROOK:
+      return "r";
+      break;
+    case TO_BISHOP:
+      return "b";
+      break;
+
+    default:
+      assert(false);
+      break;
+  }
+
+  assert(false);
+  return "ERROR";
+}
+
+
+std::string uci_move_to_algebraic(const uci_move_t* move)
+{
+  assert(move != nullptr);
+  std::string result;
+  result += index_to_string_coordinates(move->from);
+  result += index_to_string_coordinates(move->to);
+
+  if (move->promotion != TO_NONE) {
+    result + promotion_to_string(move->promotion);
+  }
+
+  return result;
 }
 
 
@@ -413,7 +468,29 @@ bool command_go(std::queue<std::string>& args)
 {
   LOG_I << "Command [go]. Args: " << args << END_I;
 
-  uci_reply("bestmove d2d4");
+  auto start_time = std::chrono::high_resolution_clock::now();
+  const int depth = 2;
+  const uci_move_t best_move = engine.get_best_move(depth);
+
+  const auto end_time = std::chrono::high_resolution_clock::now();
+  const auto duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      end_time - start_time);
+
+  const auto minutes =
+      std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
+  const auto seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(duration_ns - minutes);
+  const auto milliseconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration_ns -
+                                                            minutes - seconds);
+
+  const std::string best_move_str = uci_move_to_algebraic(&best_move);
+
+  uci_reply("bestmove " + best_move_str);
+
+  LOG_I << "Best move computed at depth " << depth << " in ["
+        << std::to_string(minutes.count()) << " min " << seconds.count()
+        << " sec " << milliseconds.count() << " msec]" << END_I;
 
   return true;
 }

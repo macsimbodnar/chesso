@@ -6,6 +6,7 @@
     "gmon",
     "gprof",
     "halfmove",
+    "negamax",
     "passants",
     "PNBRQK",
     "ponderhit",
@@ -14,7 +15,8 @@
     "RNBQKBNR",
     "talkchess",
     "ucinewgame",
-    "uciok"
+    "uciok",
+    "unmaked"
   ],
   "files.associations": {
     "cctype": "cpp",
@@ -95,6 +97,7 @@
     "valarray": "cpp",
     "regex": "cpp",
     "charconv": "cpp",
-    "format": "cpp"
+    "format": "cpp",
+    "strstream": "cpp"
   }
 }

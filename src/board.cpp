@@ -167,6 +167,8 @@ bool make_move(const move_t* move, board_t* board)
   assert(move != nullptr);
   assert(board != nullptr);
   assert(move->captured != EMPTY);
+  assert(board->board[move->from] != EMPTY &&
+         board->board[move->from] != INVALID);
 
   // TODO: This function works only with legal moves. Should return false with
   // illegal

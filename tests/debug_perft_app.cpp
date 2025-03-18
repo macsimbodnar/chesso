@@ -108,7 +108,7 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
 }
 
 
-std::string capture_to_string(const move_t& move)
+std::string promotion_to_string(const move_t& move)
 {
   switch (move.promoted_to) {
     case TO_QUEEN:
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 
         std::cout << index_to_string_coordinates(move.from)
                   << index_to_string_coordinates(move.to)
-                  << (move.promoted_to != TO_NONE ? capture_to_string(move)
+                  << (move.promoted_to != TO_NONE ? promotion_to_string(move)
                                                   : "")
                   << " " << num_of_nodes << std::endl;
       }
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
       for (const auto& move : moves) {
         std::cout << index_to_string_coordinates(move.from)
                   << index_to_string_coordinates(move.to)
-                  << (move.promoted_to != TO_NONE ? capture_to_string(move)
+                  << (move.promoted_to != TO_NONE ? promotion_to_string(move)
                                                   : "")
                   << " " << 1 << std::endl;
       }
