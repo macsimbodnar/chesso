@@ -10,6 +10,39 @@
 #define RUN_THREADS
 
 
+int alpha_beta_negamax(int alpha, int beta, int depth, const board_t* board)
+{
+  if (depth == 0) {
+    const int evaluation = evaluate(board);
+    return evaluation;
+  }
+
+  int best_val = std::numeric_limits<int>::min();
+
+  const auto moves = generate_legal_moves(board);
+
+  for (const auto& move : moves) {
+    board_t tmp_board = *board;
+
+    (void)make_move(&move, &tmp_board);
+
+    const int score = -alpha_beta_negamax(-beta, -alpha, depth - 1, &tmp_board);
+
+    if (score > best_val) {
+      best_val = score;
+      if (score > alpha) alpha = score;  // alpha acts like max in MiniMax
+    }
+
+    if (score >= beta) {
+      //  fail soft beta-cutoff, existing the loop here is also fine
+      return best_val;
+    }
+  }
+
+  return best_val;
+}
+
+
 int negamax(int depth, const board_t* board)
 {
   if (depth == 0) {
@@ -67,8 +100,13 @@ move_t search_best_move(int depth, const board_t* board)
       board_t tmp_board = *board;
       move_t tmp_move = move;
       (void)make_move(&tmp_move, &tmp_board);
-      const int negamax_score = negamax(depth, &tmp_board);
-      res_t res = {i, negamax_score};
+      // const int negamax_score = negamax(depth, &tmp_board);
+
+      const int alpha_beta_score = alpha_beta_negamax(
+          std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+          depth - 1, &tmp_board);
+
+      res_t res = {i, alpha_beta_score};
       return res;
     }));
   }
