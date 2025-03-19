@@ -224,7 +224,7 @@ stats_t get_moves_stats(const std::vector<move_t>& moves)
 }
 
 
-stats_t perft(int depth, board_t* board)
+stats_t perft(int depth, const board_t* board, history_t* history)
 {
   stats_t node_stats;
 
@@ -235,17 +235,19 @@ stats_t perft(int depth, board_t* board)
 
   const auto& moves = generate_legal_moves(board);
   // node_stats += get_moves_stats(moves);
+  (void)history;
 
   for (const auto& move : moves) {
-    make_move(&move, board);
+    board_t tmp_board = *board;
+    make_move(&move, &tmp_board, nullptr);
     if (depth == 1) {
       node_stats += get_move_stats(move);
     } else {
       node_stats.nodes += 1;
     }
     node_stats.nodes -= 1;
-    node_stats += perft(depth - 1, board);
-    unmake_move(board);
+    node_stats += perft(depth - 1, &tmp_board, history);
+    // unmake_move(board, history);
   }
 
   return node_stats;
@@ -343,9 +345,9 @@ int main()
         if (depth > depth_limit) { continue; }
 
         auto start_time = std::chrono::high_resolution_clock::now();
-
+        history_t history;
         board_t board;
-        init_board(fen, &board);
+        init_board(fen, &board, &history);
         stats_t stats;
         stats.nodes = 1;
 
@@ -358,10 +360,11 @@ int main()
             std::vector<std::future<stats_t>> results;
             for (const auto& move : moves) {
               results.push_back(std::async(std::launch::async, [&]() {
+                history_t history;
                 board_t tmp_board = board;
                 move_t tmp_move = move;
-                make_move(&tmp_move, &tmp_board);
-                return perft(depth - 1, &tmp_board);
+                make_move(&tmp_move, &tmp_board, nullptr);
+                return perft(depth - 1, &tmp_board, &history);
               }));
             }
 
@@ -370,10 +373,11 @@ int main()
             }
 #else
             for (const auto& move : moves) {
+              history_t history;
               board_t tmp_board = board;
               move_t tmp_move = move;
-              make_move(&tmp_move, &tmp_board);
-              const auto res = perft(depth - 1, &tmp_board);
+              make_move(&tmp_move, &tmp_board, nullptr);
+              const auto res = perft(depth - 1, &tmp_board, &history);
               stats += res;
             }
 #endif

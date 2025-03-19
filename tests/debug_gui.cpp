@@ -193,13 +193,14 @@ struct selected_square_t
 class game_t
 {
 private:
+  history_t history;
   board_t board;
 
 public:
   game_t()
   {
     // Initialize the board to default
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
   }
 
 
@@ -253,8 +254,8 @@ public:
   int get_halfmove() const { return board.game_state.halfmove_clock; }
   int get_fullmove() const { return board.game_state.fullmove_counter; }
   std::string get_fen() const { return generate_FEN(&board); }
-  void set_fen(const std::string& fen) { load_FEN(fen, &board); }
-  void reset() { load_FEN(DEFAULT_POSITION, &board); }
+  void set_fen(const std::string& fen) { load_FEN(fen, &board, &history); }
+  void reset() { load_FEN(DEFAULT_POSITION, &board, &history); }
 
   bool make_move(const game_move_t& move)
   {
@@ -269,7 +270,7 @@ public:
     for (const auto& legal_move : legal_moves) {
       if (legal_move.from == from && legal_move.to == to &&
           legal_move.piece == piece) {
-        return ::make_move(&legal_move, &board);
+        return ::make_move(&legal_move, &board, &history);
       }
     }
 

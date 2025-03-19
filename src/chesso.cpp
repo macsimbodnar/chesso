@@ -57,6 +57,7 @@ struct uci_move_t
 class engine_handler_t
 {
 private:
+  history_t history;
   board_t board;
   std::string initial_position = DEFAULT_POSITION;
 
@@ -65,7 +66,7 @@ public:
 
   bool set_position(const std::string& fen)
   {
-    init_board(fen, &board);
+    init_board(fen, &board, &history);
     initial_position = fen;
     return true;
   }
@@ -87,7 +88,7 @@ public:
       if (move.from == move_candidate.from && move.to == move_candidate.to &&
           move.promoted_to == move_candidate.promotion) {
         // Apply the found move
-        bool move_result = make_move(&move, &board);
+        bool move_result = make_move(&move, &board, &history);
 
         if (move_result) { return true; }
 

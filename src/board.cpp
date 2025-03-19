@@ -71,7 +71,7 @@ void cleanup_game_state(game_state_t* gs)
   gs->en_passant = INVALID_BOARD_INDEX;
   gs->fullmove_counter = 1;
   gs->zobrist_key = 0;
-  gs->next_move = move_t();
+  // gs->next_move = move_t();
 }
 
 
@@ -119,22 +119,29 @@ color_t opponent(const board_t* board)
 }
 
 
-void init_board(const std::string& fen, board_t* board)
+void init_board(const std::string& fen, board_t* board, history_t* history)
 {
   assert(board != nullptr);
+  assert(history != nullptr);
 
   // Cleanup
-  board->board.fill(EMPTY);
-  history_t empty_history = history_t();
-  board->history.swap(empty_history);
+  for (index_t i = 0; i < BOARD_SIZE; ++i) {
+    if (i & 0x88) {
+      board->board[i] = INVALID;
+    } else {
+      board->board[i] = EMPTY;
+    }
+  }
+
+  // history_t empty_history = history_t();
+  // board->history.swap(empty_history);
   cleanup_game_state(&board->game_state);
 
   // Init random numbers
   init_zobrist(&board->zobrist_randoms);
 
   // Load FEN
-  load_FEN(fen, board);
-  board->initial_fen = fen;
+  load_FEN(fen, board, history);
 
   // Init Zobrist
   board->game_state.zobrist_key = init_zobrist_key(board);
@@ -162,7 +169,7 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
-bool make_move(const move_t* move, board_t* board)
+bool make_move(const move_t* move, board_t* board, history_t* history)
 {
   assert(move != nullptr);
   assert(board != nullptr);
@@ -173,8 +180,11 @@ bool make_move(const move_t* move, board_t* board)
   // TODO: This function works only with legal moves. Should return false with
   // illegal
 
-  game_state_t state_to_history = board->game_state;
-  state_to_history.next_move = *move;
+  // OLD history
+  // const history_entry_t history_entry = {board->game_state, *move};
+
+  // Store the history
+  if (history != nullptr) { history->push({*board, *move}); }
 
   // Remove en-passant
   clear_ep_square(board);
@@ -392,22 +402,39 @@ bool make_move(const move_t* move, board_t* board)
   // Swap side
   swap_side(board);
 
+  // OLD
   // Store the history
-  board->history.push(state_to_history);
+  // if (history != nullptr) { history->push(history_entry); }
 
   return true;
 }
 
 
-bool unmake_move(board_t* board)
+bool unmake_move(board_t* board, history_t* history)
 {
   assert(board != nullptr);
+  assert(history != nullptr);
 
   // In case no move was made return false
-  if (board->history.empty()) { return false; }
+  if (history->empty()) { return false; }
 
-  const game_state_t& previous_game_state = board->history.top();
-  const move_t& move_to_unmake = previous_game_state.next_move;
+  // Restore state
+  *board = history->top().board;
+
+  // Remove from stack
+  history->pop();
+
+  return true;
+
+  /** OLD WAY
+
+  // In case no move was made return false
+  if (history->empty()) { return false; }
+
+  const history_entry_t& history_entry = history->top();
+
+  const game_state_t& previous_game_state = history_entry.game_state;
+  const move_t& move_to_unmake = history_entry.move_applied;
 
   assert(move_to_unmake.from != INVALID_BOARD_INDEX);
   assert(move_to_unmake.to != INVALID_BOARD_INDEX);
@@ -515,18 +542,28 @@ bool unmake_move(board_t* board)
 
   // Restore state
   board->game_state = previous_game_state;
-  board->history.pop();
+  history->pop();
+
   return true;
+  */
 }
 
 
-void reset(board_t* board)
+void reset(board_t* board, history_t* history)
 {
   assert(board != nullptr);
+  assert(history != nullptr);
 
   // Cleanup
-  board->board.fill(EMPTY);
-  board->history = history_t();
+  for (index_t i = 0; i < BOARD_SIZE; ++i) {
+    if (i & 0x88) {
+      board->board[i] = INVALID;
+    } else {
+      board->board[i] = EMPTY;
+    }
+  }
+
+  *history = history_t();
   cleanup_game_state(&board->game_state);
 
   // Load FEN
@@ -537,9 +574,11 @@ void reset(board_t* board)
 }
 
 
-void load_FEN(const std::string& FEN, board_t* board)
+void load_FEN(const std::string& FEN, board_t* board, history_t* history)
 {
-  reset(board);
+  assert(board != nullptr);
+  assert(history != nullptr);
+  reset(board, history);
 
   // Start parsing
   auto sections = split_string(FEN);

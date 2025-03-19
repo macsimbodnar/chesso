@@ -24,7 +24,7 @@ int alpha_beta_negamax(int alpha, int beta, int depth, const board_t* board)
   for (const auto& move : moves) {
     board_t tmp_board = *board;
 
-    (void)make_move(&move, &tmp_board);
+    (void)make_move(&move, &tmp_board, nullptr);
 
     const int score = -alpha_beta_negamax(-beta, -alpha, depth - 1, &tmp_board);
 
@@ -57,7 +57,7 @@ int negamax(int depth, const board_t* board)
 
   for (const auto& move : moves) {
     board_t tmp_board = *board;
-    const bool move_happened = make_move(&move, &tmp_board);
+    const bool move_happened = make_move(&move, &tmp_board, nullptr);
     (void)move_happened;
     assert(move_happened);
 
@@ -130,7 +130,7 @@ move_t search_best_move(int depth, const board_t* board)
   for (size_t i = 0; i < moves.size(); ++i) {
     board_t tmp_board = *board;
     const move_t& move = moves[i];
-    const bool done = make_move(&move, &tmp_board);
+    const bool done = make_move(&move, &tmp_board, nullptr);
     (void)done;
     assert(done);
 

@@ -4,10 +4,10 @@
 #include "data_structures.hpp"
 
 
-void init_board(const std::string& fen, board_t* board);
-void reset(board_t* board);
+void init_board(const std::string& fen, board_t* board, history_t* history);
+void reset(board_t* board, history_t* history);
 
-void load_FEN(const std::string& FEN, board_t* board);
+void load_FEN(const std::string& FEN, board_t* board, history_t* history);
 std::string generate_FEN(const board_t* board);
 
 color_t us(const board_t* board);
@@ -25,5 +25,5 @@ void clear_ep_square(board_t* board);
 void swap_side(board_t* board);
 void update_castling_permissions(castling_t new_castling, board_t* board);
 
-bool make_move(const move_t* move, board_t* board);
-bool unmake_move(board_t* board);
+bool make_move(const move_t* move, board_t* board, history_t* history);
+bool unmake_move(board_t* board, history_t* history);

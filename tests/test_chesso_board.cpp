@@ -152,7 +152,7 @@ move_t pick_random_move(const std::vector<move_t>& moves)
 }
 
 
-int make_random_move(int depth, board_t* board)
+int make_random_move(int depth, board_t* board, history_t* history)
 {
   if (depth == 0) { return 0; }
 
@@ -164,7 +164,7 @@ int make_random_move(int depth, board_t* board)
   if (moves.size() == 0) { return depth; }
 
   const move_t move_to_make = pick_random_move(moves);
-  bool move_happened = make_move(&move_to_make, board);
+  bool move_happened = make_move(&move_to_make, board, history);
   REQUIRE(move_happened);
 
   const std::string fen_after_make_move = generate_FEN(board);
@@ -174,10 +174,10 @@ int make_random_move(int depth, board_t* board)
   REQUIRE_NE(zobrist_make, zobrist_before);
 
   // Recursively go deeper
-  int depth_reached = make_random_move(depth - 1, board);
+  int depth_reached = make_random_move(depth - 1, board, history);
 
   // Unmake the move
-  const bool move_reverted = unmake_move(board);
+  const bool move_reverted = unmake_move(board, history);
   REQUIRE(move_reverted);
 
   const std::string fen_after_unmake_move = generate_FEN(board);
@@ -194,12 +194,13 @@ TEST_SUITE("DEBUG TEST")
 {
   TEST_CASE("DEBUG")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
     // board.game_state.active_color = BLACK;
     move_t move(23, 55, W_PAWN);
 
-    make_move(&move, &board);
+    make_move(&move, &board, nullptr);
 
     int evaluation = evaluate(&board);
 
@@ -216,8 +217,9 @@ TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     std::string fen_result = generate_FEN(&board);
 
@@ -232,8 +234,9 @@ TEST_SUITE("Test utils")
       for (const json& test_case : test_cases["testCases"]) {
         {
           const std::string expected_FEN = test_case["start"]["fen"];
+          history_t history;
           board_t board;
-          init_board(expected_FEN, &board);
+          init_board(expected_FEN, &board, &history);
 
           const std::string result_FEN = generate_FEN(&board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -241,8 +244,9 @@ TEST_SUITE("Test utils")
 
         for (const json& expected : test_case["expected"]) {
           const std::string expected_FEN = expected["fen"];
+          history_t history;
           board_t board;
-          init_board(expected_FEN, &board);
+          init_board(expected_FEN, &board, &history);
 
           const std::string result_FEN = generate_FEN(&board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -253,8 +257,9 @@ TEST_SUITE("Test utils")
 
   TEST_CASE("Test algebraic parsing")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     auto moves = generate_legal_moves(&board);
 
@@ -274,8 +279,9 @@ TEST_SUITE("Test pseudo legal move generator")
 {
   TEST_CASE("Test pseudo legal black pawn")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(0, 6);
     piece_t piece = board.board[index];
@@ -294,8 +300,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal white pawn")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(0, 1);
     piece_t piece = board.board[index];
@@ -314,8 +321,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal rooks")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(7, 7);
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
@@ -341,8 +349,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal bishops")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(2, 0);
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
@@ -368,8 +377,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal knight")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(1, 0);
     piece_t piece = board.board[index];
@@ -407,8 +417,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal queen")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(3, 0);
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
@@ -424,8 +435,9 @@ TEST_SUITE("Test pseudo legal move generator")
 
   TEST_CASE("Test pseudo legal king")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(4, 0);
     auto moves = generate_pseudo_legal_moves_from_index(index, &board);
@@ -444,8 +456,9 @@ TEST_SUITE("Test legal move generator")
 {
   TEST_CASE("Basic test")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     auto moves = generate_legal_moves(&board);
     REQUIRE_EQ(moves.size(), 20);
@@ -460,8 +473,9 @@ TEST_SUITE("Test legal move generator")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
+        history_t history;
         board_t board;
-        init_board(starting_pos, &board);
+        init_board(starting_pos, &board, &history);
 
         auto moves = generate_legal_moves(&board);
 
@@ -495,10 +509,9 @@ TEST_SUITE("Test legal move generator")
 
             // Make the move on a temporary board
             board_t tmp_board = board;
-            bool move_happened = make_move(&move_to_make, &tmp_board);
+            bool move_happened = make_move(&move_to_make, &tmp_board, nullptr);
 
             REQUIRE(move_happened);
-            REQUIRE_EQ(tmp_board.history.size(), 1);
 
             std::string new_fen = generate_FEN(&tmp_board);
 
@@ -528,8 +541,9 @@ TEST_SUITE("Test make_move and unmake_move")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
+        history_t history;
         board_t board;
-        init_board(starting_pos, &board);
+        init_board(starting_pos, &board, &history);
 
         const auto moves = generate_legal_moves(&board);
 
@@ -538,7 +552,7 @@ TEST_SUITE("Test make_move and unmake_move")
           const std::string fen_before_move = generate_FEN(&board);
           const uint64_t zobrist_key_before = board.game_state.zobrist_key;
 
-          const bool result = make_move(&move, &board);
+          const bool result = make_move(&move, &board, &history);
           REQUIRE(result);
 
           // Test the fen and zobrist keys changed
@@ -550,7 +564,7 @@ TEST_SUITE("Test make_move and unmake_move")
           REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
 
           // Unmake the move
-          const bool un_result = unmake_move(&board);
+          const bool un_result = unmake_move(&board, &history);
           REQUIRE(un_result);
 
           // Test fen and zobrist key is restored as before
@@ -567,12 +581,13 @@ TEST_SUITE("Test make_move and unmake_move")
 
   TEST_CASE("Test random moves")
   {
+    history_t history;
     board_t board;
-    init_board(DEFAULT_POSITION, &board);
+    init_board(DEFAULT_POSITION, &board, &history);
 
     const int max_depth = 10000;
 
-    const int depth_reached = make_random_move(max_depth, &board);
+    const int depth_reached = make_random_move(max_depth, &board, &history);
 
     std::cout << "Test random moves depth reached: "
               << (max_depth - depth_reached) << std::endl;

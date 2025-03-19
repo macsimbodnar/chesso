@@ -761,7 +761,7 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
   // }
   // tmp_board.board[move->from] = EMPTY;
 
-  bool happened = make_move(move, &tmp_board);
+  bool happened = make_move(move, &tmp_board, nullptr);
   assert(happened);
   (void)happened;
 
@@ -1212,7 +1212,7 @@ std::string move_to_algebraic(const move_t* move,
 
   board_t tmp_board = *board;
 
-  bool move_happened = make_move(move, &tmp_board);
+  bool move_happened = make_move(move, &tmp_board, nullptr);
   assert(move_happened == true);
   (void)move_happened;  // Supress the unused var log
 

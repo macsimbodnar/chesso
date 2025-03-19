@@ -145,7 +145,7 @@ uint64_t perft(int depth, const board_t* board)
 
   for (const auto& move : moves) {
     board_t tmp_board = *board;
-    make_move(&move, &tmp_board);
+    make_move(&move, &tmp_board, nullptr);
     nodes += perft(depth - 1, &tmp_board);
   }
 
@@ -177,7 +177,8 @@ int main(int argc, char* argv[])
   }
 
   board_t board;
-  init_board(fen, &board);
+  history_t history;
+  init_board(fen, &board, &history);
   std::vector<move_t> moves = generate_legal_moves(&board);
 
   // Navigate the moves
@@ -190,7 +191,7 @@ int main(int argc, char* argv[])
       if (move.from == mini_move.from && move.to == mini_move.to &&
           move.promoted_to == mini_move.promotion) {
         found = true;
-        bool move_happened = make_move(&move, &board);
+        bool move_happened = make_move(&move, &board, nullptr);
         (void)move_happened;
         assert(move_happened);
         moves = generate_legal_moves(&board);
@@ -210,7 +211,7 @@ int main(int argc, char* argv[])
       for (const auto& move : moves) {
         board_t tmp_board = board;
         move_t tmp_move = move;
-        make_move(&tmp_move, &tmp_board);
+        make_move(&tmp_move, &tmp_board, nullptr);
         uint64_t num_of_nodes = perft(depth - 1, &tmp_board);
         tot_nodes += num_of_nodes;
 

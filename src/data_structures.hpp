@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <list>
 #include <optional>
 #include <ostream>
@@ -152,10 +153,10 @@ struct zobrist_randoms_t
 {
   // Here we will use 128 instead 64 squares in order to include
   // INVALID_BOARD_INDEX
-  std::array<std::array<uint64_t, 128>, 12> piece_randoms;  // 12 pieces
-  std::array<uint64_t, 16> castling_randoms;
-  std::array<uint64_t, 2> side_randoms;
-  std::array<uint64_t, 128> ep_randoms;  // en-passant randoms.
+  uint64_t piece_randoms[12][BOARD_SIZE];  // 12 pieces
+  uint64_t castling_randoms[16];
+  uint64_t side_randoms[2];
+  uint64_t ep_randoms[BOARD_SIZE];  // en-passant randoms.
 };
 
 struct move_t
@@ -205,16 +206,29 @@ struct game_state_t
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
   uint64_t zobrist_key;       // Zobrist Key
-  move_t next_move;           // The move played in this position
 };
-
-typedef std::stack<game_state_t> history_t;
 
 struct board_t
 {
-  std::array<piece_t, BOARD_SIZE> board;
+  piece_t board[BOARD_SIZE];
   game_state_t game_state;
-  history_t history;
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
-  std::string initial_fen;
+
+  board_t() {}
+  board_t(const board_t& other) { std::memcpy(this, &other, sizeof(board_t)); }
+
+  board_t& operator=(const board_t& other)
+  {
+    if (this != &other) { std::memcpy(this, &other, sizeof(board_t)); }
+    return *this;
+  }
 };
+
+struct history_entry_t
+{
+  // game_state_t game_state;
+  board_t board;
+  move_t move_applied;
+};
+
+typedef std::stack<history_entry_t> history_t;
