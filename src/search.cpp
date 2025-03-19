@@ -7,7 +7,7 @@
 #include "evaluation.hpp"
 #include "move_generator.hpp"
 
-#define RUN_THREADS
+// #define RUN_THREADS
 
 
 int alpha_beta_negamax(int alpha, int beta, int depth, const board_t* board)
@@ -129,15 +129,12 @@ move_t search_best_move(int depth, const board_t* board)
 
   for (size_t i = 0; i < moves.size(); ++i) {
     board_t tmp_board = *board;
-    const bool done = make_move(&moves[i], &tmp_board);
+    const move_t& move = moves[i];
+    const bool done = make_move(&move, &tmp_board);
     (void)done;
     assert(done);
 
     const int negamax_score = negamax(depth, board);
-
-    // const bool undone = unmake_move(board);
-    // (void)undone;
-    // assert(undone);
 
     if (board->game_state.active_color == WHITE) {
       if (negamax_score > best_score) {

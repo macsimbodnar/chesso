@@ -195,8 +195,12 @@ TEST_SUITE("DEBUG TEST")
   TEST_CASE("DEBUG")
   {
     board_t board;
-    init_board("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",
-               &board);
+    init_board(DEFAULT_POSITION, &board);
+    // board.game_state.active_color = BLACK;
+    move_t move(23, 55, W_PAWN);
+
+    make_move(&move, &board);
+
     int evaluation = evaluate(&board);
 
     std::cout << print_nice_board(&board) << std::endl;

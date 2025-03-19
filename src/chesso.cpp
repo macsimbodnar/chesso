@@ -469,7 +469,7 @@ bool command_go(std::queue<std::string>& args)
   LOG_I << "Command [go]. Args: " << args << END_I;
 
   auto start_time = std::chrono::high_resolution_clock::now();
-  const int depth = 6;
+  const int depth = 2;
   const uci_move_t best_move = engine.get_best_move(depth);
 
   const auto end_time = std::chrono::high_resolution_clock::now();
