@@ -14,3 +14,5 @@ std::string move_to_algebraic(const move_t* move,
                               const board_t* board);
 
 move_t algebraic_to_move(std::string notation, const board_t* board);
+
+bool is_checkmate(const board_t* board);

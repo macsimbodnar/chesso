@@ -7,6 +7,8 @@
 #include "evaluation.hpp"
 #include "move_generator.hpp"
 
+#define MATE_SCORE 10000000
+#define MAX_MATE_DEPTH 10000
 #define RUN_THREADS
 
 
@@ -31,10 +33,13 @@ int alpha_beta_negamax(int alpha,
 
   if (moves_count == 0) {
     // Checkmate or stalemate handling
-    // Optional: use mate/stalemate evaluation here
-
-    const int score = evaluate(board);
-    return score;
+    if (is_checkmate(board)) {
+      // Checkmate. Use the depth in order to prefer the fastest mates
+      return -MATE_SCORE + (MAX_MATE_DEPTH - depth);
+    } else {
+      // Stalemate
+      return 0;
+    }
   }
 
   for (size_t i = 0; i < moves_count; ++i) {
