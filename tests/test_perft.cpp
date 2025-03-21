@@ -17,7 +17,7 @@
 using json = nlohmann::json;
 
 #define RUN_THREADS
-#define MAXIMUM_DEPTH 7
+#define MAXIMUM_DEPTH 20
 
 
 // clang-format off

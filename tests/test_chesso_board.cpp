@@ -168,6 +168,7 @@ move_t pick_random_move(const move_t moves[], size_t moves_size)
 }
 
 
+static move_t moves[270];
 int make_random_move(int depth, board_t* board, history_t* history)
 {
   if (depth == 0) { return 0; }
@@ -175,7 +176,6 @@ int make_random_move(int depth, board_t* board, history_t* history)
   const std::string fen_before = generate_FEN(board);
   const uint64_t zobrist_before = board->game_state.zobrist_key;
 
-  move_t moves[270];
   const size_t moves_count = generate_legal_moves(board, moves);
 
   if (moves_count == 0) { return depth; }
