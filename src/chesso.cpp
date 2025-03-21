@@ -17,6 +17,13 @@
 
 static std::ofstream log_file("chesso_engine.log", std::ios::app);
 
+
+void uci_reply(const std::string& response)
+{
+  std::cout << response << std::endl;
+}
+
+
 #define LOG_I log_file   // Start log
 #define END_I std::endl  // End log
 
@@ -106,10 +113,15 @@ public:
 
   uci_move_t get_best_move(int depth)
   {
-    move_t best_move = search_best_move(depth, &board);
+    const search_t search_result = search_best_move(depth, &board);
 
-    const uci_move_t result = {best_move.from, best_move.to,
-                               best_move.promoted_to};
+    uci_reply("info score cp " + std::to_string(search_result.score) +
+              " depth " + std::to_string(depth) + " nodes " +
+              std::to_string(search_result.explored_nodes));
+
+    const uci_move_t result = {search_result.best_move.from,
+                               search_result.best_move.to,
+                               search_result.best_move.promoted_to};
 
     return result;
   }
@@ -305,12 +317,6 @@ std::string uci_move_to_algebraic(const uci_move_t* move)
 }
 
 
-void uci_reply(const std::string& response)
-{
-  std::cout << response << std::endl;
-}
-
-
 //-################################  COMMANDS  ##############################-//
 bool command_uci(std::queue<std::string>& args)
 {
@@ -472,8 +478,27 @@ bool command_go(std::queue<std::string>& args)
 {
   LOG_I << "Command [go]. Args: " << args << END_I;
 
+  int depth = 3;
+
+  while (!args.empty()) {
+    const std::string token = args.front();
+    args.pop();
+
+    if (token == "depth") {
+      while (!args.empty()) {
+        const std::string depth_token = args.front();
+        args.pop();
+
+        try {
+          depth = std::stoi(depth_token);
+        } catch (...) {
+          LOG_W << "Depth is not a number: " << depth_token << END_W;
+        }
+      }
+    }
+  }
+
   auto start_time = std::chrono::high_resolution_clock::now();
-  const int depth = 6;
   const uci_move_t best_move = engine.get_best_move(depth);
 
   const auto end_time = std::chrono::high_resolution_clock::now();

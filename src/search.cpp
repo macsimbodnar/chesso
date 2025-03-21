@@ -10,171 +10,120 @@
 #define RUN_THREADS
 
 
-int alpha_beta_minimax(int alpha, int beta, int depth, const board_t* board)
+int alpha_beta_negamax(int alpha,
+                       int beta,
+                       int depth,
+                       const board_t* board,
+                       uint64_t* num_of_nodes_explored)
 {
-  const int current_eval = evaluate(board);
+  if (depth == 0) {
+    const int score =
+        (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
 
-  if (depth == 0) { return current_eval; }
-
-  move_t moves[270];
-  const size_t moves_count = generate_legal_moves(board, moves);
-
-  if (moves_count == 0) { return current_eval; }
+    *num_of_nodes_explored += 1;
+    return score;
+  }
 
   int max_eval = std::numeric_limits<int>::min();
 
-  if (board->game_state.active_color == WHITE) {  // Maximizing
-    for (size_t i = 0; i < moves_count; ++i) {
-      board_t tmp_board = *board;
-      (void)make_move(&moves[i], &tmp_board, nullptr);
-      const int eval = alpha_beta_minimax(alpha, beta, depth - 1, board);
-      max_eval = (eval > max_eval) ? eval : max_eval;
-      alpha = (eval > alpha) ? eval : alpha;
-
-      if (beta <= alpha) { break; }
-    }
-
-    return max_eval;
-
-  } else {  // Minimizing
-    int min_eval = std::numeric_limits<int>::max();
-
-    for (size_t i = 0; i < moves_count; ++i) {
-      board_t tmp_board = *board;
-      (void)make_move(&moves[i], &tmp_board, nullptr);
-      const int eval = alpha_beta_minimax(alpha, beta, depth - 1, board);
-      min_eval = (eval < min_eval) ? eval : min_eval;
-      beta = (eval < beta) ? eval : beta;
-
-      if (beta <= alpha) { break; }
-    }
-
-    return min_eval;
-  }
-}
-
-
-int minimax(int depth, const board_t* board)
-{
-  const int current_eval = evaluate(board);
-
-  if (depth == 0) { return current_eval; }
-
   move_t moves[270];
   const size_t moves_count = generate_legal_moves(board, moves);
 
-  if (moves_count == 0) { return current_eval; }
+  if (moves_count == 0) {
+    // Checkmate or stalemate handling
+    // Optional: use mate/stalemate evaluation here
 
-  if (board->game_state.active_color == WHITE) {  // Maximizing
-    int max_eval = std::numeric_limits<int>::min();
-
-    for (size_t i = 0; i < moves_count; ++i) {
-      board_t tmp_board = *board;
-      (void)make_move(&moves[i], &tmp_board, nullptr);
-      const int eval = minimax(depth - 1, &tmp_board);
-      max_eval = (eval > max_eval) ? eval : max_eval;
-    }
-
-    return max_eval;
-
-  } else {  // Minimizing
-    int min_eval = std::numeric_limits<int>::max();
-
-    for (size_t i = 0; i < moves_count; ++i) {
-      board_t tmp_board = *board;
-      (void)make_move(&moves[i], &tmp_board, nullptr);
-      const int eval = minimax(depth - 1, &tmp_board);
-      min_eval = (eval < min_eval) ? eval : min_eval;
-    }
-
-    return min_eval;
+    const int score = evaluate(board);
+    return score;
   }
 
-  return current_eval;
+  for (size_t i = 0; i < moves_count; ++i) {
+    board_t tmp_board = *board;
+
+    const bool done = make_move(&moves[i], &tmp_board, nullptr);
+    (void)done;
+    assert(done);
+
+    int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, &tmp_board,
+                                   num_of_nodes_explored);
+
+
+    if (eval > max_eval) { max_eval = eval; }
+
+    alpha = std::max(alpha, eval);
+    if (alpha >= beta) {
+      // Beta cut-off
+      break;
+    }
+  }
+
+  return max_eval;
 }
 
 
-move_t search_best_move(int depth, const board_t* board)
+search_t search_best_move(int depth, const board_t* board)
 {
-  const color_t side = board->game_state.active_color;
+  int best_eval = std::numeric_limits<int>::min();
+  move_t best_move;
+  uint64_t num_of_nodes_explored = 0;
+
   move_t moves[270];
   const size_t moves_count = generate_legal_moves(board, moves);
-  assert(moves_count > 0);
-
-  int best_score = (side == WHITE) ? std::numeric_limits<int>::min()
-                                   : std::numeric_limits<int>::max();
-  size_t best_move_index = 1;
 
 #ifdef RUN_THREADS
-
   struct res_t
   {
     size_t move_index;
     int score;
   };
 
+  std::vector<std::future<res_t>> results_futures;
 
-  std::vector<std::future<res_t>> results;
   for (size_t i = 0; i < moves_count; ++i) {
-    move_t move = moves[i];
-    results.push_back(std::async(std::launch::async, [i, board, move, depth]() {
-      board_t tmp_board = *board;
-      move_t tmp_move = move;
-      (void)make_move(&tmp_move, &tmp_board, nullptr);
+    results_futures.push_back(std::async(
+        std::launch::async, [moves, i, depth, board, &num_of_nodes_explored]() {
+          board_t tmp_board = *board;
 
-      // const int current_score = minimax(depth, &tmp_board);
+          const bool done = make_move(&moves[i], &tmp_board, nullptr);
+          (void)done;
+          assert(done);
 
-      const int current_score = alpha_beta_minimax(
-          std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-          depth, &tmp_board);
+          const int eval = -alpha_beta_negamax(
+              std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+              depth - 1, &tmp_board, &num_of_nodes_explored);
 
-      res_t res = {i, current_score};
-      return res;
-    }));
+          res_t result = {i, eval};
+          return result;
+        }));
   }
 
-  for (auto& res : results) {
-    const res_t& result = res.get();
-    if (side == WHITE) {
-      if (result.score > best_score) {
-        best_score = result.score;
-        best_move_index = result.move_index;
-      }
-    } else {
-      if (result.score < best_score) {
-        best_score = result.score;
-        best_move_index = result.move_index;
-      }
+  for (auto& future : results_futures) {
+    const res_t& result = future.get();
+
+    if (result.score > best_eval) {
+      best_eval = result.score;
+      best_move = moves[result.move_index];
     }
   }
-#else
 
+#else
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
-    const move_t& move = moves[i];
-    const bool done = make_move(&move, &tmp_board, nullptr);
+
+    const bool done = make_move(&moves[i], &tmp_board, nullptr);
     (void)done;
     assert(done);
 
-    // const int current_score = minimax(depth, &tmp_board);
+    const int eval = -alpha_beta_negamax(
+        std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+        depth - 1, &tmp_board, &num_of_nodes_explored);
 
-    const int current_score =
-        alpha_beta_minimax(std::numeric_limits<int>::min(),
-                           std::numeric_limits<int>::max(), depth, &tmp_board);
-
-    if (tmp_board.game_state.active_color == WHITE) {
-      if (current_score > best_score) {
-        best_score = current_score;
-        best_move_index = i;
-      }
-    } else {
-      if (current_score < best_score) {
-        best_score = current_score;
-        best_move_index = i;
-      }
+    if (eval > best_eval) {
+      best_eval = eval;
+      best_move = moves[i];
     }
   }
 #endif
 
-  return moves[best_move_index];
+  return {best_move, best_eval, num_of_nodes_explored};
 }
