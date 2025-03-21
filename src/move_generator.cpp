@@ -1247,33 +1247,39 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
 /**
  * @brief Returns the indexes of the ambiguous moves.
  */
-std::vector<size_t> get_ambiguous_move(const move_t* move,
-                                       const std::vector<move_t>* moves)
+size_t get_ambiguous_move(const move_t* move,
+                          const move_t moves[],
+                          size_t moves_size,
+                          index_t result[])
 {
   assert(moves != nullptr);
+  assert(result != nullptr);
 
-  std::vector<size_t> result;
-  for (size_t i = 0; i < moves->size(); ++i) {
-    const auto& I = moves->at(i);
+  size_t result_count = 0;
+  for (size_t i = 0; i < moves_size; ++i) {
+    const move_t& I = moves[i];
 
     // If same piece, same destination and different source
     if (move->piece == I.piece && move->to == I.to && move->from != I.from) {
-      result.push_back(i);
+      result[result_count] = i;
+      ++result_count;
     }
   }
 
-  return result;
+  return result_count;
 }
 
 
 std::string move_to_algebraic(const move_t* move,
-                              const std::vector<move_t>* moves,
+                              const move_t moves[],
+                              size_t moves_size,
                               const board_t* board)
 {
   assert(move != nullptr);
   assert(board != nullptr);
   assert(move->piece != INVALID);
   assert(move->piece != EMPTY);
+  assert(moves != nullptr);
 
   // Not using the piece_to_char function because the piece moved in
   // always upper case
@@ -1302,15 +1308,19 @@ std::string move_to_algebraic(const move_t* move,
     notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
 
     // If ambiguous move the add the from file
-    const auto ambiguous_moves = get_ambiguous_move(move, moves);
-    if (ambiguous_moves.size() > 0) {
+    index_t ambiguous_moves[270];
+    const size_t ambiguous_moves_count =
+        get_ambiguous_move(move, moves, moves_size, ambiguous_moves);
+
+    if (ambiguous_moves_count > 0) {
       const position_t move_from_pos = index_to_position(move->from);
       bool is_file_unique = true;
       bool is_rank_unique = true;
 
       // Check if file or rank are unique for the move->from
-      for (size_t i : ambiguous_moves) {
-        const position_t i_pos = index_to_position(moves->at(i).from);
+      for (size_t i = 0; i < ambiguous_moves_count; ++i) {
+        const index_t index = ambiguous_moves[i];
+        const position_t i_pos = index_to_position(moves[index].from);
 
         if (move_from_pos.file == i_pos.file) { is_file_unique = false; }
 

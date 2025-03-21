@@ -65,18 +65,12 @@ std::string moves_to_string(move_t moves[],
 {
   std::string result;
 
-  std::vector<move_t> moves_v;
-  for (size_t i = 0; i < move_size; ++i) {
-    moves_v.push_back(moves[i]);
-  }
-
-
   for (size_t i = 0; i < move_size; ++i) {
     const move_t& move = moves[i];
 
     result += index_to_string_coordinates(move.from) + " -> " +
               index_to_string_coordinates(move.to);
-    result += "    " + move_to_algebraic(&move, &moves_v, &board);
+    result += "    " + move_to_algebraic(&move, moves, move_size, &board);
     result += "\n";
   }
 
@@ -89,14 +83,10 @@ bool contain_move_algebraic(const std::string& move,
                             size_t moves_size,
                             const board_t& board)
 {
-  std::vector<move_t> moves_v;
   for (size_t i = 0; i < moves_size; ++i) {
-    moves_v.push_back(moves[i]);
-  }
-
-
-  for (size_t i = 0; i < moves_size; ++i) {
-    if (move == move_to_algebraic(&moves[i], &moves_v, &board)) { return true; }
+    if (move == move_to_algebraic(&moves[i], moves, moves_size, &board)) {
+      return true;
+    }
   }
 
   return false;
@@ -104,7 +94,8 @@ bool contain_move_algebraic(const std::string& move,
 
 
 std::string difference_to_string(const json& expected_moves,
-                                 const std::vector<move_t>& generated_moves,
+                                 const move_t generated_moves[],
+                                 size_t generated_moves_size,
                                  const board_t& board)
 {
   std::string result = "";
@@ -116,8 +107,10 @@ std::string difference_to_string(const json& expected_moves,
   for (const json& expected : expected_moves) {
     bool found = false;
 
-    for (const move_t& move : generated_moves) {
-      std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
+    for (size_t i = 0; i < generated_moves_size; ++i) {
+      const move_t& move = generated_moves[i];
+      std::string move_str = move_to_algebraic(&move, generated_moves,
+                                               generated_moves_size, &board);
 
       if (move_str == expected["move"].get<std::string>()) {
         found = true;
@@ -129,10 +122,12 @@ std::string difference_to_string(const json& expected_moves,
   }
 
   // Search for extra
-  for (const move_t& move : generated_moves) {
+  for (size_t i = 0; i < generated_moves_size; ++i) {
+    const move_t& move = generated_moves[i];
     bool found = false;
 
-    std::string move_str = move_to_algebraic(&move, &generated_moves, &board);
+    std::string move_str =
+        move_to_algebraic(&move, generated_moves, generated_moves_size, &board);
 
     for (const json& expected : expected_moves) {
       if (move_str == expected["move"].get<std::string>()) {
