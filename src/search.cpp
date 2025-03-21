@@ -75,30 +75,34 @@ search_t search_best_move(int depth, const board_t* board)
   {
     size_t move_index;
     int score;
+    uint64_t nodes_explored;
   };
 
   std::vector<std::future<res_t>> results_futures;
 
   for (size_t i = 0; i < moves_count; ++i) {
-    results_futures.push_back(std::async(
-        std::launch::async, [moves, i, depth, board, &num_of_nodes_explored]() {
+    results_futures.push_back(
+        std::async(std::launch::async, [moves, i, depth, board]() {
           board_t tmp_board = *board;
 
+          uint64_t nodes_explored = 0;
           const bool done = make_move(&moves[i], &tmp_board, nullptr);
           (void)done;
           assert(done);
 
           const int eval = -alpha_beta_negamax(
               std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-              depth - 1, &tmp_board, &num_of_nodes_explored);
+              depth - 1, &tmp_board, &nodes_explored);
 
-          res_t result = {i, eval};
+          res_t result = {i, eval, nodes_explored};
           return result;
         }));
   }
 
   for (auto& future : results_futures) {
     const res_t& result = future.get();
+
+    num_of_nodes_explored += result.nodes_explored;
 
     if (result.score > best_eval) {
       best_eval = result.score;
