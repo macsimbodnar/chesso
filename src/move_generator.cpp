@@ -1,6 +1,5 @@
 #include "move_generator.hpp"
 #include <cassert>
-#include <map>
 #include <unordered_map>
 #include "board.hpp"
 #include "exceptions.hpp"
@@ -960,105 +959,53 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
 
     // TODO: Double check case and single check case looks the same
 
-    if (under_double_check) {  // DOUBLE CHECK
-      // In the case of double check we consider only king moves
-      move_t king_moves[8];
-      const size_t king_moves_count = generate_king(
-          king_index, board->game_state.active_color, board, king_moves);
-      assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
+    move_t king_moves[8];
+    const size_t king_moves_count = generate_king(
+        king_index, board->game_state.active_color, board, king_moves);
+    assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
 
-      for (size_t i = 0; i < king_moves_count; ++i) {
-        // Remove king moves that put him back in check
-        bool should_discard = false;
-        for (size_t attack_index = 0; attack_index < attacks_vector_count;
-             ++attack_index) {
-          if (king_moves[i].to == attacks_vector[attack_index].to) {
+    for (size_t i = 0; i < king_moves_count; ++i) {
+      // Remove king moves that put him back in check
+      bool should_discard = false;
+      for (size_t attack_index = 0; attack_index < attacks_vector_count;
+           ++attack_index) {
+        if (king_moves[i].to == attacks_vector[attack_index].to) {
+          should_discard = true;
+          break;
+        }
+      }
+
+      // Remove the captures that put him back in check
+      if (king_moves[i].captured != INVALID) {
+        // Remove the piece from the board and see if that square is
+        // under attack
+        board_t tmp_board = *board;
+        tmp_board.board[king_moves[i].to] = EMPTY;
+
+        move_t tmp_attacks[270];
+        const size_t tmp_attacks_count = generate_attacks_vector(
+            !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
+
+        for (size_t tmp_index = 0; tmp_index < tmp_attacks_count; ++tmp_index) {
+          if (tmp_attacks[tmp_index].to == king_moves[i].to) {
+            // Discard that move
             should_discard = true;
             break;
           }
         }
-
-        // Remove the captures that put him back in check
-        if (king_moves[i].captured != INVALID) {
-          // Remove the piece from the board and see if that square is
-          // under attack
-          board_t tmp_board = *board;
-          tmp_board.board[king_moves[i].to] = EMPTY;
-
-          move_t tmp_attacks[270];
-          const size_t tmp_attacks_count = generate_attacks_vector(
-              !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
-
-          for (size_t tmp_index = 0; tmp_index < tmp_attacks_count;
-               ++tmp_index) {
-            if (tmp_attacks[tmp_index].to == king_moves[i].to) {
-              // Discard that move
-              should_discard = true;
-              break;
-            }
-          }
-        }
-
-        // Check if this move is castling, if so remove it
-        if (king_moves[i].castling_move) { should_discard = true; }
-
-        // Insert only valid
-        if (!should_discard) {
-          result[result_count] = king_moves[i];
-          ++result_count;
-        }
-      }
-    } else {  // SINGE CHECK
-      // King moves away from check
-      {
-        move_t king_moves[8];
-        const size_t king_moves_count = generate_king(
-            king_index, board->game_state.active_color, board, king_moves);
-        assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
-
-        for (size_t i = 0; i < king_moves_count; ++i) {
-          // Remove king moves that put him back in check
-          bool should_discard = false;
-          for (size_t attack_index = 0; attack_index < attacks_vector_count;
-               ++attack_index) {
-            if (king_moves[i].to == attacks_vector[attack_index].to) {
-              should_discard = true;
-              break;
-            }
-          }
-
-          // Remove the captures that put him back in check
-          if (king_moves[i].captured != INVALID) {
-            // Remove the piece from the board and see if that square is
-            // under attack
-            board_t tmp_board = *board;
-            tmp_board.board[king_moves[i].to] = EMPTY;
-
-            move_t tmp_attacks[270];
-            size_t tmp_attacks_count = generate_attacks_vector(
-                !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
-
-            for (size_t tmp_index = 0; tmp_index < tmp_attacks_count;
-                 ++tmp_index) {
-              if (tmp_attacks[tmp_index].to == king_moves[i].to) {
-                // Discard that move
-                should_discard = true;
-                break;
-              }
-            }
-          }
-
-          // Check if this move is castling, if so remove it
-          if (king_moves[i].castling_move) { should_discard = true; }
-
-          // Insert only valid
-          if (!should_discard) {
-            result[result_count] = king_moves[i];
-            ++result_count;
-          }
-        }
       }
 
+      // Check if this move is castling, if so remove it
+      if (king_moves[i].castling_move) { should_discard = true; }
+
+      // Insert only valid
+      if (!should_discard) {
+        result[result_count] = king_moves[i];
+        ++result_count;
+      }
+    }
+
+    if (!under_double_check) {  // SINGE CHECK
       // Handle: Remove the attacker moves and block attacks in rays
       // attack
       {
@@ -1289,10 +1236,10 @@ std::string move_to_algebraic(const move_t* move,
       {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
       {INVALID, '*'},  {EMPTY, ' '}};
 
-  static const std::array<char, 8> file_to_char_map = {'a', 'b', 'c', 'd',
-                                                       'e', 'f', 'g', 'h'};
-  static const std::array<char, 8> rank_to_char_map = {'1', '2', '3', '4',
-                                                       '5', '6', '7', '8'};
+  static const char file_to_char_map[8] = {'a', 'b', 'c', 'd',
+                                           'e', 'f', 'g', 'h'};
+  static const char rank_to_char_map[8] = {'1', '2', '3', '4',
+                                           '5', '6', '7', '8'};
 
   std::string notation;
 
@@ -1433,10 +1380,10 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 {
   assert(board != nullptr);
 
-  static const std::map<char, uint8_t> char_to_file_map = {
+  static const std::unordered_map<char, uint8_t> char_to_file_map = {
       {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3},
       {'e', 4}, {'f', 5}, {'g', 6}, {'h', 7}};
-  static const std::map<char, uint8_t> char_to_rank_map = {
+  static const std::unordered_map<char, uint8_t> char_to_rank_map = {
       {'1', 0}, {'2', 1}, {'3', 2}, {'4', 3},
       {'5', 4}, {'6', 5}, {'7', 6}, {'8', 7}};
 
