@@ -16,16 +16,17 @@ int alpha_beta_minimax(int alpha, int beta, int depth, const board_t* board)
 
   if (depth == 0) { return current_eval; }
 
-  const auto moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
-  if (moves.size() == 0) { return current_eval; }
+  if (moves_count == 0) { return current_eval; }
 
   int max_eval = std::numeric_limits<int>::min();
 
   if (board->game_state.active_color == WHITE) {  // Maximizing
-    for (const auto& move : moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
       board_t tmp_board = *board;
-      (void)make_move(&move, &tmp_board, nullptr);
+      (void)make_move(&moves[i], &tmp_board, nullptr);
       const int eval = alpha_beta_minimax(alpha, beta, depth - 1, board);
       max_eval = (eval > max_eval) ? eval : max_eval;
       alpha = (eval > alpha) ? eval : alpha;
@@ -38,9 +39,9 @@ int alpha_beta_minimax(int alpha, int beta, int depth, const board_t* board)
   } else {  // Minimizing
     int min_eval = std::numeric_limits<int>::max();
 
-    for (const auto& move : moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
       board_t tmp_board = *board;
-      (void)make_move(&move, &tmp_board, nullptr);
+      (void)make_move(&moves[i], &tmp_board, nullptr);
       const int eval = alpha_beta_minimax(alpha, beta, depth - 1, board);
       min_eval = (eval < min_eval) ? eval : min_eval;
       beta = (eval < beta) ? eval : beta;
@@ -59,16 +60,17 @@ int minimax(int depth, const board_t* board)
 
   if (depth == 0) { return current_eval; }
 
-  const auto moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
-  if (moves.size() == 0) { return current_eval; }
+  if (moves_count == 0) { return current_eval; }
 
   if (board->game_state.active_color == WHITE) {  // Maximizing
     int max_eval = std::numeric_limits<int>::min();
 
-    for (const auto& move : moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
       board_t tmp_board = *board;
-      (void)make_move(&move, &tmp_board, nullptr);
+      (void)make_move(&moves[i], &tmp_board, nullptr);
       const int eval = minimax(depth - 1, &tmp_board);
       max_eval = (eval > max_eval) ? eval : max_eval;
     }
@@ -78,9 +80,9 @@ int minimax(int depth, const board_t* board)
   } else {  // Minimizing
     int min_eval = std::numeric_limits<int>::max();
 
-    for (const auto& move : moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
       board_t tmp_board = *board;
-      (void)make_move(&move, &tmp_board, nullptr);
+      (void)make_move(&moves[i], &tmp_board, nullptr);
       const int eval = minimax(depth - 1, &tmp_board);
       min_eval = (eval < min_eval) ? eval : min_eval;
     }
@@ -95,8 +97,9 @@ int minimax(int depth, const board_t* board)
 move_t search_best_move(int depth, const board_t* board)
 {
   const color_t side = board->game_state.active_color;
-  const auto moves = generate_legal_moves(board);
-  assert(moves.size() > 0);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
+  assert(moves_count > 0);
 
   int best_score = (side == WHITE) ? std::numeric_limits<int>::min()
                                    : std::numeric_limits<int>::max();
@@ -112,7 +115,7 @@ move_t search_best_move(int depth, const board_t* board)
 
 
   std::vector<std::future<res_t>> results;
-  for (size_t i = 0; i < moves.size(); ++i) {
+  for (size_t i = 0; i < moves_count; ++i) {
     move_t move = moves[i];
     results.push_back(std::async(std::launch::async, [i, board, move, depth]() {
       board_t tmp_board = *board;
@@ -146,7 +149,7 @@ move_t search_best_move(int depth, const board_t* board)
   }
 #else
 
-  for (size_t i = 0; i < moves.size(); ++i) {
+  for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
     const move_t& move = moves[i];
     const bool done = make_move(&move, &tmp_board, nullptr);

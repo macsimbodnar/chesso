@@ -81,10 +81,13 @@ public:
 
   bool try_move(const uci_move_t& move_candidate)
   {
-    const std::vector<move_t> legal_moves = generate_legal_moves(&board);
+    move_t moves[270];
+    const size_t moves_count = generate_legal_moves(&board, moves);
 
     // Search the move in the list of legal moves
-    for (const auto& move : legal_moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t& move = moves[i];
+
       if (move.from == move_candidate.from && move.to == move_candidate.to &&
           move.promoted_to == move_candidate.promotion) {
         // Apply the found move

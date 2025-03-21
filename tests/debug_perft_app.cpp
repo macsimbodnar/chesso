@@ -140,12 +140,14 @@ uint64_t perft(int depth, const board_t* board)
 
   if (depth == 0) { return 1; }
 
-  const auto& moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
+  assert(moves_count <= 270);
   // node_stats += get_moves_stats(moves);
 
-  for (const auto& move : moves) {
+  for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
-    make_move(&move, &tmp_board, nullptr);
+    make_move(&moves[i], &tmp_board, nullptr);
     nodes += perft(depth - 1, &tmp_board);
   }
 
@@ -179,7 +181,9 @@ int main(int argc, char* argv[])
   board_t board;
   history_t history;
   init_board(fen, &board, &history);
-  std::vector<move_t> moves = generate_legal_moves(&board);
+
+  move_t moves[270];
+  size_t moves_count = generate_legal_moves(&board, moves);
 
   // Navigate the moves
   while (!moves_to_apply.empty()) {
@@ -187,14 +191,16 @@ int main(int argc, char* argv[])
     moves_to_apply.pop();
 
     bool found = false;
-    for (const auto& move : moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t& move = moves[i];
+
       if (move.from == mini_move.from && move.to == mini_move.to &&
           move.promoted_to == mini_move.promotion) {
         found = true;
         bool move_happened = make_move(&move, &board, nullptr);
         (void)move_happened;
         assert(move_happened);
-        moves = generate_legal_moves(&board);
+        moves_count = generate_legal_moves(&board, moves);
         break;
       }
     }
@@ -208,7 +214,9 @@ int main(int argc, char* argv[])
   if (depth > 0) {
     if (depth > 1) {
       tot_nodes = 0;
-      for (const auto& move : moves) {
+      for (size_t i = 0; i < moves_count; ++i) {
+        const move_t& move = moves[i];
+
         board_t tmp_board = board;
         move_t tmp_move = move;
         make_move(&tmp_move, &tmp_board, nullptr);
@@ -222,8 +230,9 @@ int main(int argc, char* argv[])
                   << " " << num_of_nodes << std::endl;
       }
     } else {
-      tot_nodes = moves.size();
-      for (const auto& move : moves) {
+      tot_nodes = moves_count;
+      for (size_t i = 0; i < moves_count; ++i) {
+        const move_t& move = moves[i];
         std::cout << index_to_string_coordinates(move.from)
                   << index_to_string_coordinates(move.to)
                   << (move.promoted_to != TO_NONE ? promotion_to_string(move)

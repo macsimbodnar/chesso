@@ -259,7 +259,8 @@ public:
 
   bool make_move(const game_move_t& move)
   {
-    const auto& legal_moves = generate_legal_moves(&board);
+    move_t moves[270];
+    const size_t moves_count = generate_legal_moves(&board, moves);
 
     const index_t from = position_to_index(move.from.file, move.from.rank);
     const index_t to = position_to_index(move.to.file, move.to.rank);
@@ -267,7 +268,8 @@ public:
 
     if (piece == INVALID || piece == EMPTY) { return false; }
 
-    for (const auto& legal_move : legal_moves) {
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t& legal_move = moves[i];
       if (legal_move.from == from && legal_move.to == to &&
           legal_move.piece == piece) {
         return ::make_move(&legal_move, &board, &history);
@@ -279,10 +281,12 @@ public:
 
   std::vector<game_move_t> get_available_moves()
   {
-    std::vector<game_move_t> result;
-    const auto moves = generate_legal_moves(&board);
+    move_t moves[270];
+    const size_t moves_count = generate_legal_moves(&board, moves);
 
-    for (const auto& move : moves) {
+    std::vector<game_move_t> result;
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t& move = moves[i];
       result.push_back({move.piece, index_to_position(move.from),
                         index_to_position(move.to)});
     }

@@ -231,4 +231,5 @@ struct history_entry_t
   move_t move_applied;
 };
 
+// TODO: Make heep allocation during initialization
 typedef std::stack<history_entry_t> history_t;

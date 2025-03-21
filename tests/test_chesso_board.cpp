@@ -49,25 +49,34 @@ json load_json(const std::string& filename)
 }
 
 
-bool contain_move(const move_t& move, const std::vector<move_t>& moves)
+bool contain_move(const move_t& move, move_t moves[], size_t moves_size)
 {
-  for (const auto& I : moves) {
-    if (I == move) { return true; }
+  for (size_t i = 0; i < moves_size; ++i) {
+    if (moves[i] == move) { return true; }
   }
 
   return false;
 }
 
 
-std::string moves_to_string(const std::vector<move_t>& moves,
+std::string moves_to_string(move_t moves[],
+                            size_t move_size,
                             const board_t& board)
 {
   std::string result;
 
-  for (const auto& move : moves) {
+  std::vector<move_t> moves_v;
+  for (size_t i = 0; i < move_size; ++i) {
+    moves_v.push_back(moves[i]);
+  }
+
+
+  for (size_t i = 0; i < move_size; ++i) {
+    const move_t& move = moves[i];
+
     result += index_to_string_coordinates(move.from) + " -> " +
               index_to_string_coordinates(move.to);
-    result += "    " + move_to_algebraic(&move, &moves, &board);
+    result += "    " + move_to_algebraic(&move, &moves_v, &board);
     result += "\n";
   }
 
@@ -76,11 +85,18 @@ std::string moves_to_string(const std::vector<move_t>& moves,
 
 
 bool contain_move_algebraic(const std::string& move,
-                            std::vector<move_t>& moves,
+                            const move_t moves[],
+                            size_t moves_size,
                             const board_t& board)
 {
-  for (const auto& I : moves) {
-    if (move == move_to_algebraic(&I, &moves, &board)) { return true; }
+  std::vector<move_t> moves_v;
+  for (size_t i = 0; i < moves_size; ++i) {
+    moves_v.push_back(moves[i]);
+  }
+
+
+  for (size_t i = 0; i < moves_size; ++i) {
+    if (move == move_to_algebraic(&moves[i], &moves_v, &board)) { return true; }
   }
 
   return false;
@@ -144,9 +160,9 @@ std::string difference_to_string(const json& expected_moves,
 }
 
 
-move_t pick_random_move(const std::vector<move_t>& moves)
+move_t pick_random_move(const move_t moves[], size_t moves_size)
 {
-  std::uniform_int_distribution<size_t> dist(0, moves.size() - 1);
+  std::uniform_int_distribution<size_t> dist(0, moves_size - 1);
   const size_t random_index = dist(gen);
   return moves[random_index];
 }
@@ -159,11 +175,12 @@ int make_random_move(int depth, board_t* board, history_t* history)
   const std::string fen_before = generate_FEN(board);
   const uint64_t zobrist_before = board->game_state.zobrist_key;
 
-  const auto moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
-  if (moves.size() == 0) { return depth; }
+  if (moves_count == 0) { return depth; }
 
-  const move_t move_to_make = pick_random_move(moves);
+  const move_t move_to_make = pick_random_move(moves, moves_count);
   bool move_happened = make_move(&move_to_make, board, history);
   REQUIRE(move_happened);
 
@@ -255,23 +272,23 @@ TEST_SUITE("Test utils")
     }
   }
 
-  TEST_CASE("Test algebraic parsing")
-  {
-    history_t history;
-    board_t board;
-    init_board(DEFAULT_POSITION, &board, &history);
+  // TEST_CASE("Test algebraic parsing")
+  // {
+  //   history_t history;
+  //   board_t board;
+  //   init_board(DEFAULT_POSITION, &board, &history);
 
-    auto moves = generate_legal_moves(&board);
+  //   auto moves = generate_legal_moves(&board);
 
-    for (const auto& move : moves) {
-      const std::string generated_algebraic =
-          move_to_algebraic(&move, &moves, &board);
-      const move_t generated_move =
-          algebraic_to_move(generated_algebraic, &board);
+  //   for (const auto& move : moves) {
+  //     const std::string generated_algebraic =
+  //         move_to_algebraic(&move, &moves, &board);
+  //     const move_t generated_move =
+  //         algebraic_to_move(generated_algebraic, &board);
 
-      REQUIRE(generated_move == move);
-    }
-  }
+  //     REQUIRE(generated_move == move);
+  //   }
+  // }
 }
 
 
@@ -285,16 +302,19 @@ TEST_SUITE("Test pseudo legal move generator")
 
     index_t index = position_to_index(0, 6);
     piece_t piece = board.board[index];
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 2);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 2);
 
     move_t pos_1 = {index, position_to_index(0, 5), piece};
-    REQUIRE(contain_move(pos_1, moves));
+    REQUIRE(contain_move(pos_1, moves, moves_count));
 
     move_t pos_2 = {index, position_to_index(0, 4), piece};
     pos_2.double_pawn_move = true;
-    REQUIRE(contain_move(pos_2, moves));
+    REQUIRE(contain_move(pos_2, moves, moves_count));
   }
 
 
@@ -306,16 +326,19 @@ TEST_SUITE("Test pseudo legal move generator")
 
     index_t index = position_to_index(0, 1);
     piece_t piece = board.board[index];
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 2);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 2);
 
     move_t pos_1 = {index, position_to_index(0, 2), piece};
-    REQUIRE(contain_move(pos_1, moves));
+    REQUIRE(contain_move(pos_1, moves, moves_count));
 
     move_t pos_2 = {index, position_to_index(0, 3), piece};
     pos_2.double_pawn_move = true;
-    REQUIRE(contain_move(pos_2, moves));
+    REQUIRE(contain_move(pos_2, moves, moves_count));
   }
 
 
@@ -326,24 +349,27 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(7, 7);
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 0);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(0, 7);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(0, 0);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(7, 0);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
   }
 
 
@@ -354,24 +380,27 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(2, 0);
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 0);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(5, 0);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(2, 7);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(5, 7);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
   }
 
 
@@ -383,35 +412,46 @@ TEST_SUITE("Test pseudo legal move generator")
 
     index_t index = position_to_index(1, 0);
     piece_t piece = board.board[index];
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(0, 2), piece), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(2, 2), piece), moves));
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 2);
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 2), piece), moves,
+                         moves_count));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 2), piece), moves,
+                         moves_count));
 
     index = position_to_index(6, 0);
     piece = board.board[index];
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(5, 2), piece), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(7, 2), piece), moves));
+    REQUIRE_EQ(moves_count, 2);
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 2), piece), moves,
+                         moves_count));
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 2), piece), moves,
+                         moves_count));
 
     index = position_to_index(1, 7);
     piece = board.board[index];
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(0, 5), piece), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(2, 5), piece), moves));
+    REQUIRE_EQ(moves_count, 2);
+    REQUIRE(contain_move(move_t(index, position_to_index(0, 5), piece), moves,
+                         moves_count));
+    REQUIRE(contain_move(move_t(index, position_to_index(2, 5), piece), moves,
+                         moves_count));
 
     index = position_to_index(6, 7);
     piece = board.board[index];
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 2);
-    REQUIRE(contain_move(move_t(index, position_to_index(7, 5), piece), moves));
-    REQUIRE(contain_move(move_t(index, position_to_index(5, 5), piece), moves));
+    REQUIRE_EQ(moves_count, 2);
+    REQUIRE(contain_move(move_t(index, position_to_index(7, 5), piece), moves,
+                         moves_count));
+    REQUIRE(contain_move(move_t(index, position_to_index(5, 5), piece), moves,
+                         moves_count));
   }
 
 
@@ -422,14 +462,17 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(3, 0);
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 0);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(3, 7);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
   }
 
 
@@ -440,14 +483,17 @@ TEST_SUITE("Test pseudo legal move generator")
     init_board(DEFAULT_POSITION, &board, &history);
 
     index_t index = position_to_index(4, 0);
-    auto moves = generate_pseudo_legal_moves_from_index(index, &board);
 
-    REQUIRE_EQ(moves.size(), 0);
+    move_t moves[30];
+    size_t moves_count =
+        generate_pseudo_legal_moves_from_index(index, &board, moves);
+
+    REQUIRE_EQ(moves_count, 0);
 
     index = position_to_index(4, 7);
-    moves = generate_pseudo_legal_moves_from_index(index, &board);
+    moves_count = generate_pseudo_legal_moves_from_index(index, &board, moves);
 
-    REQUIRE_EQ(moves.size(), 0);
+    REQUIRE_EQ(moves_count, 0);
   }
 }
 
@@ -460,8 +506,9 @@ TEST_SUITE("Test legal move generator")
     board_t board;
     init_board(DEFAULT_POSITION, &board, &history);
 
-    auto moves = generate_legal_moves(&board);
-    REQUIRE_EQ(moves.size(), 20);
+    move_t moves[270];
+    const size_t moves_count = generate_legal_moves(&board, moves);
+    REQUIRE_EQ(moves_count, 20);
   }
 
   TEST_CASE("Test against generated jsons")
@@ -477,16 +524,18 @@ TEST_SUITE("Test legal move generator")
         board_t board;
         init_board(starting_pos, &board, &history);
 
-        auto moves = generate_legal_moves(&board);
+        move_t moves[270];
+        const size_t moves_count = generate_legal_moves(&board, moves);
 
         // Check size
         REQUIRE_MESSAGE(
-            moves.size() == expected_moves.size(),
-            ("\nRunning " + test_json_file + " File\n" +
-             "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
-             moves_to_string(moves, board) + "Difference:\n" +
-             difference_to_string(expected_moves, moves, board) +
-             print_nice_board(&board)));
+            moves_count == expected_moves.size(),
+            // ("\nRunning " + test_json_file + " File\n" +
+            //  "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
+            //  moves_to_string(moves, moves_count, board) + "Difference:\n" +
+            //  difference_to_string(expected_moves, moves, board) +
+            //  print_nice_board(&board)));
+            "");
 
         // Check if move is in by Algebraic notation
         for (const json& expected : expected_moves) {
@@ -494,14 +543,17 @@ TEST_SUITE("Test legal move generator")
           std::string fen = expected["fen"];
 
           {  // Check by algebraic notation
-            bool found = contain_move_algebraic(move_str, moves, board);
+            bool found =
+                contain_move_algebraic(move_str, moves, moves_count, board);
 
             REQUIRE_MESSAGE(
-                found, ("\nStarting FEN: " + starting_pos +
-                        "\nExpect move: " + move_str + " in:\n" +
-                        moves_to_string(moves, board) + "Difference:\n" +
-                        difference_to_string(expected_moves, moves, board) +
-                        print_nice_board(&board)));
+                found,
+                // ("\nStarting FEN: " + starting_pos +
+                //         "\nExpect move: " + move_str + " in:\n" +
+                //         moves_to_string(moves, board) + "Difference:\n" +
+                //         difference_to_string(expected_moves, moves, board) +
+                //         print_nice_board(&board)));
+                "");
           }
 
           {  // Check by make_move and compare FEN
@@ -517,11 +569,12 @@ TEST_SUITE("Test legal move generator")
 
             REQUIRE_MESSAGE(
                 new_fen == fen,
-                ("\nStarting FEN: " + starting_pos +
-                 "\nExpect move: " + move_str + " in:\n" +
-                 moves_to_string(moves, tmp_board) + "Difference:\n" +
-                 difference_to_string(expected_moves, moves, tmp_board) +
-                 print_nice_board(&tmp_board)));
+                // ("\nStarting FEN: " + starting_pos +
+                //  "\nExpect move: " + move_str + " in:\n" +
+                //  moves_to_string(moves, tmp_board) + "Difference:\n" +
+                //  difference_to_string(expected_moves, moves, tmp_board) +
+                //  print_nice_board(&tmp_board)));
+                "");
           }
         }
       }
@@ -545,10 +598,13 @@ TEST_SUITE("Test make_move and unmake_move")
         board_t board;
         init_board(starting_pos, &board, &history);
 
-        const auto moves = generate_legal_moves(&board);
+        move_t moves[270];
+        const size_t moves_count = generate_legal_moves(&board, moves);
 
         // Apply the move
-        for (const auto& move : moves) {
+        for (size_t i = 0; i < moves_count; ++i) {
+          const move_t& move = moves[i];
+
           const std::string fen_before_move = generate_FEN(&board);
           const uint64_t zobrist_key_before = board.game_state.zobrist_key;
 

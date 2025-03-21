@@ -6,20 +6,20 @@
 #include "exceptions.hpp"
 #include "utils.hpp"
 
+#define OFFSETS_SIZE 8
+static const index_t OFFSETS_N[OFFSETS_SIZE] = {0x21, 0x1F, 0x0E, 0xEE,
+                                                0xDF, 0xE1, 0xF2, 0x12};
+static const index_t OFFSETS_K[OFFSETS_SIZE] = {0xFF, 0x0F, 0x10, 0x11,
+                                                0x01, 0xF1, 0xF0, 0xEF};
 
-static const std::array<index_t, 8> OFFSETS_N = {0x21, 0x1F, 0x0E, 0xEE,
-                                                 0xDF, 0xE1, 0xF2, 0x12};
-static const std::array<index_t, 8> OFFSETS_K = {0xFF, 0x0F, 0x10, 0x11,
-                                                 0x01, 0xF1, 0xF0, 0xEF};
+#define SLIDING_SIZE 4
+static const index_t DIRECTIONS_ROOK[SLIDING_SIZE] = {0x10, 0xF0, 0x01, 0xFF};
+static const index_t DIRECTIONS_BISHOP[SLIDING_SIZE] = {0x11, 0x0F, 0xF1, 0xEF};
 
-static const std::array<index_t, 4> DIRECTIONS_ROOK = {0x10, 0xF0, 0x01, 0xFF};
-static const std::array<index_t, 4> DIRECTIONS_BISHOP = {0x11, 0x0F, 0xF1,
-                                                         0xEF};
-
-std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
+size_t generate_pawn_attacks(index_t index, color_t color, move_t result[])
 {
-  std::vector<move_t> result;
-  result.reserve(2);
+  // Max 2
+  size_t moves_count = 0;
 
   if (color == WHITE) {
     {
@@ -28,8 +28,9 @@ std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
 
       if (!(candidate & 0x88)) {
         // If candidate on board
-        move_t move = {index, candidate, W_PAWN};
-        result.push_back(move);
+        const move_t move = {index, candidate, W_PAWN};
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
 
@@ -39,8 +40,9 @@ std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
 
       if (!(candidate & 0x88)) {
         // If candidate on board
-        move_t move = {index, candidate, W_PAWN};
-        result.push_back(move);
+        const move_t move = {index, candidate, W_PAWN};
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   } else {
@@ -50,8 +52,9 @@ std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
 
       if (!(candidate & 0x88)) {
         // If candidate on board
-        move_t move = {index, candidate, B_PAWN};
-        result.push_back(move);
+        const move_t move = {index, candidate, B_PAWN};
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
 
@@ -61,23 +64,27 @@ std::vector<move_t> generate_pawn_attacks(index_t index, color_t color)
 
       if (!(candidate & 0x88)) {
         // If candidate on board
-        move_t move = {index, candidate, B_PAWN};
-        result.push_back(move);
+        const move_t move = {index, candidate, B_PAWN};
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
 
-  return result;
+  assert(moves_count <= 2);
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
+size_t generate_b_pawn(index_t index, const board_t* board, move_t result[])
 {
-  std::vector<move_t> result;
-  result.reserve(8);
+  assert(result != nullptr);
 
-  const auto b = board->board;
-  const auto en_passant = board->game_state.en_passant;
+  // Max 4 + 4 promotions
+  size_t moves_count = 0;
+
+  const piece_t* b = board->board;
+  const index_t en_passant = board->game_state.en_passant;
   const piece_t piece = board->board[index];
 
   {
@@ -89,19 +96,24 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
       if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
         //  Promotion case
         move.promoted_to = TO_QUEEN;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_ROOK;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_BISHOP;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_KNIGHT;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       } else {
         // Normal pawn push
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
@@ -115,7 +127,8 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
     if (condition) {
       move_t move = {index, candidate, piece};
       move.double_pawn_move = true;
-      result.push_back(move);
+      result[moves_count] = move;
+      ++moves_count;
     }
   }
 
@@ -133,19 +146,24 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
         if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
           // Attack and promotion
           move.promoted_to = TO_QUEEN;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_ROOK;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_BISHOP;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_KNIGHT;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         } else {
           // Normal pawn attack
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         }
 
       } else if (en_passant == candidate) {
@@ -156,7 +174,8 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
 
         assert(move.captured == b[index - 0x01]);
 
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
@@ -176,19 +195,24 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
         if (candidate < 0x08) {  // The candidate >= 0x00 is superfluous
           // Attack and promotion
           move.promoted_to = TO_QUEEN;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_ROOK;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_BISHOP;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_KNIGHT;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         } else {
           // Normal pawn attack
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         }
 
       } else if (candidate == en_passant) {
@@ -199,22 +223,26 @@ std::vector<move_t> generate_b_pawn(index_t index, const board_t* board)
 
         assert(move.captured == b[index + 0x01]);
 
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
 
-  return result;
+  assert(moves_count <= 12);
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
+size_t generate_w_pawn(index_t index, const board_t* board, move_t result[])
 {
-  std::vector<move_t> result;
-  result.reserve(4);
+  assert(result != nullptr);
 
-  const auto b = board->board;
-  const auto en_passant = board->game_state.en_passant;
+  // Max 4
+  size_t moves_count = 0;
+
+  const piece_t* b = board->board;
+  const index_t en_passant = board->game_state.en_passant;
   const piece_t piece = board->board[index];
 
   {
@@ -226,19 +254,24 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
       if (candidate > 0x6F && candidate < 0x78) {
         //  Promotion case
         move.promoted_to = TO_QUEEN;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_ROOK;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_BISHOP;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
 
         move.promoted_to = TO_KNIGHT;
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       } else {
         // Normal pawn push
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
@@ -252,7 +285,8 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
     if (condition) {
       move_t move = {index, candidate, piece};
       move.double_pawn_move = true;
-      result.push_back(move);
+      result[moves_count] = move;
+      ++moves_count;
     }
   }
 
@@ -271,19 +305,24 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
         if (candidate > 0x6F && candidate < 0x78) {
           //  Promotion case
           move.promoted_to = TO_QUEEN;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_ROOK;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_BISHOP;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_KNIGHT;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         } else {
           // Normal pawn attack
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         }
 
       } else if (en_passant == candidate) {
@@ -294,7 +333,8 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
 
         assert(move.captured == b[index + 0x01]);
 
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
@@ -314,19 +354,24 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
         if (candidate > 0x6F && candidate < 0x78) {
           //  Promotion case
           move.promoted_to = TO_QUEEN;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_ROOK;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_BISHOP;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
 
           move.promoted_to = TO_KNIGHT;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         } else {
           // Normal pawn attack
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         }
 
       } else if (candidate == en_passant) {
@@ -337,30 +382,36 @@ std::vector<move_t> generate_w_pawn(index_t index, const board_t* board)
 
         assert(move.captured == b[index - 0x01]);
 
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       }
     }
   }
 
-  return result;
+  assert(moves_count <= 12);
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_sliding(index_t index,
-                                     color_t color,
-                                     const std::array<index_t, 4>& directions,
-                                     const board_t* board)
+size_t generate_sliding(index_t index,
+                        color_t color,
+                        const index_t directions[SLIDING_SIZE],
+                        const board_t* board,
+                        move_t result[])
 {
-  std::vector<move_t> result;
-  result.reserve(16);  // Worst case
+  assert(directions != nullptr);
+  assert(result != nullptr);
 
-  const auto b = board->board;
+  // Max 14
+  size_t moves_count = 0;
+
+  const piece_t* b = board->board;
   const piece_t piece = board->board[index];
 
-  for (const auto I : directions) {
+  for (size_t i = 0; i < SLIDING_SIZE; ++i) {
     index_t candidate = index;
     while (true) {
-      candidate += I;
+      candidate += directions[i];
 
       // If we are off board exit
       if (candidate & 0x88) { break; }
@@ -370,14 +421,16 @@ std::vector<move_t> generate_sliding(index_t index,
       const piece_t p = b[candidate];
       if (p == EMPTY) {
         const move_t move = {index, candidate, piece};
-        result.push_back(move);
+        result[moves_count] = move;
+        ++moves_count;
       } else {
         const color_t candidate_color = get_piece_color(p);
         // If the are attacking add the position
         if (candidate_color != color) {
           move_t move = {index, candidate, piece};
           move.captured = p;
-          result.push_back(move);
+          result[moves_count] = move;
+          ++moves_count;
         }
 
         break;
@@ -385,24 +438,28 @@ std::vector<move_t> generate_sliding(index_t index,
     }
   }
 
-  assert(result.size() <= 14);
-  return result;
+  assert(moves_count <= 14);
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_jumping(index_t index,
-                                     color_t color,
-                                     const std::array<index_t, 8>& offsets,
-                                     const board_t* board)
+size_t generate_jumping(index_t index,
+                        color_t color,
+                        const index_t offsets[OFFSETS_SIZE],
+                        const board_t* board,
+                        move_t result[])
 {
-  std::vector<move_t> result;
-  result.reserve(offsets.size() + 4);  // NOTE(max): +4 is for the castling
+  assert(offsets != nullptr);
+  assert(result != nullptr);
 
-  const auto b = board->board;
+  // Max offsets_size
+  size_t moves_count = 0;
+
+  const piece_t* b = board->board;
   const piece_t piece = board->board[index];
 
-  for (const auto I : offsets) {
-    const index_t candidate = index + I;
+  for (size_t i = 0; i < OFFSETS_SIZE; ++i) {
+    const index_t candidate = index + offsets[i];
 
     if (candidate & 0x88) {
       // Check if out of the board
@@ -426,79 +483,100 @@ std::vector<move_t> generate_jumping(index_t index,
     }
 
 
-    result.push_back(move_candidate);
+    result[moves_count] = move_candidate;
+    ++moves_count;
   }
 
-  assert(result.size() <= offsets.size());
+  assert(moves_count <= OFFSETS_SIZE);
 
-  return result;
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_rook(index_t index,
-                                  color_t color,
-                                  const board_t* board)
+size_t generate_rook(index_t index,
+                     color_t color,
+                     const board_t* board,
+                     move_t result[])
 {
-  const std::vector<move_t> result =
-      generate_sliding(index, color, DIRECTIONS_ROOK, board);
+  assert(board != nullptr);
+  assert(result != nullptr);
 
-  assert(result.size() <= 14);
+  const size_t moves_count =
+      generate_sliding(index, color, DIRECTIONS_ROOK, board, result);
 
-  return result;
+  assert(moves_count <= 14);
+
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_bishop(index_t index,
-                                    color_t color,
-                                    const board_t* board)
+size_t generate_bishop(index_t index,
+                       color_t color,
+                       const board_t* board,
+                       move_t result[])
 {
-  const std::vector<move_t> res =
-      generate_sliding(index, color, DIRECTIONS_BISHOP, board);
+  assert(board != nullptr);
+  assert(result != nullptr);
 
-  assert(res.size() <= 16);
+  const size_t moves_count =
+      generate_sliding(index, color, DIRECTIONS_BISHOP, board, result);
 
-  return res;
+  assert(moves_count <= 16);
+
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_knight(index_t index,
-                                    color_t color,
-                                    const board_t* board)
+size_t generate_knight(index_t index,
+                       color_t color,
+                       const board_t* board,
+                       move_t result[])
 {
-  const std::vector<move_t> result =
-      generate_jumping(index, color, OFFSETS_N, board);
+  assert(board != nullptr);
+  assert(result != nullptr);
 
-  return result;
+  const size_t moves_count =
+      generate_jumping(index, color, OFFSETS_N, board, result);
+
+
+  assert(moves_count <= 8);
+
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_queen(index_t index,
-                                   color_t color,
-                                   const board_t* board)
+size_t generate_queen(index_t index,
+                      color_t color,
+                      const board_t* board,
+                      move_t result[])
 {
-  std::vector<move_t> result;
-  const std::vector<move_t> h_and_v_moves = generate_rook(index, color, board);
-  const std::vector<move_t> diagonal_moves =
-      generate_bishop(index, color, board);
+  assert(board != nullptr);
+  assert(result != nullptr);
 
-  result.insert(result.end(), std::make_move_iterator(h_and_v_moves.begin()),
-                std::make_move_iterator(h_and_v_moves.end()));
+  size_t moves_count = 0;
 
-  result.insert(result.end(), std::make_move_iterator(diagonal_moves.begin()),
-                std::make_move_iterator(diagonal_moves.end()));
+  moves_count += generate_rook(index, color, board, result);
+  moves_count += generate_bishop(index, color, board, result + moves_count);
 
-  return result;
+  assert(moves_count <= 30);
+  return moves_count;
 }
 
 
-std::vector<move_t> generate_king(index_t index,
-                                  color_t color,
-                                  const board_t* board)
+size_t generate_king(index_t index,
+                     color_t color,
+                     const board_t* board,
+                     move_t result[])
 {
-  std::vector<move_t> result = generate_jumping(index, color, OFFSETS_K, board);
+  assert(board != nullptr);
+  assert(result != nullptr);
+  size_t result_count = 0;
+
+  result_count += generate_jumping(index, color, OFFSETS_K, board, result);
+  assert(result_count <= 8);
 
   // Handle castling
-  const auto b = board->board;
+  const piece_t* b = board->board;
   const castling_t castling = board->game_state.castling;
   const piece_t piece = board->board[index];
 
@@ -511,7 +589,8 @@ std::vector<move_t> generate_king(index_t index,
         const index_t candidate = 0x02;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
-        result.push_back(move);
+        result[result_count] = move;
+        ++result_count;
       }
 
       if ((castling & WK) && b[0x05] == EMPTY && b[0x06] == EMPTY) {
@@ -520,7 +599,8 @@ std::vector<move_t> generate_king(index_t index,
         const index_t candidate = 0x06;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
-        result.push_back(move);
+        result[result_count] = move;
+        ++result_count;
       }
       break;
     case BLACK:
@@ -531,7 +611,8 @@ std::vector<move_t> generate_king(index_t index,
         const index_t candidate = 0x72;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
-        result.push_back(move);
+        result[result_count] = move;
+        ++result_count;
       }
 
       if ((castling & BK) && b[0x75] == EMPTY && b[0x76] == EMPTY) {
@@ -540,7 +621,8 @@ std::vector<move_t> generate_king(index_t index,
         const index_t candidate = 0x76;
         move_t move = {index, candidate, piece};
         move.castling_move = true;
-        result.push_back(move);
+        result[result_count] = move;
+        ++result_count;
       }
       break;
 
@@ -549,12 +631,14 @@ std::vector<move_t> generate_king(index_t index,
       break;
   }
 
-  return result;
+  assert(result_count <= 8);
+  return result_count;
 }
 
 
-std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
-                                                           const board_t* board)
+size_t generate_pseudo_legal_moves_from_index(index_t index,
+                                              const board_t* board,
+                                              move_t result[])
 {
   assert(board != nullptr);
   assert(index < BOARD_SIZE);
@@ -562,53 +646,67 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
   assert(index_to_position(index).rank < 8);
   assert(board->board[index] != INVALID);
   assert(board->board[index] != EMPTY);
+  assert(result != nullptr);
 
   const piece_t piece = board->board[index];
   assert(piece != INVALID && piece != EMPTY);
 
-  std::vector<move_t> result;
+  size_t result_count = 0;
 
   switch (piece) {
     case piece_t::B_PAWN:
-      result = generate_b_pawn(index, board);
+      result_count = generate_b_pawn(index, board, result);
+      assert(result_count <= 12);
+
       break;
     case piece_t::W_PAWN:
-      result = generate_w_pawn(index, board);
+      result_count = generate_w_pawn(index, board, result);
+      assert(result_count <= 12);
       break;
 
     case piece_t::B_ROOK:
-      result = generate_rook(index, BLACK, board);
+      result_count = generate_rook(index, BLACK, board, result);
+      assert(result_count <= 14);
       break;
     case piece_t::W_ROOK:
-      result = generate_rook(index, WHITE, board);
+      result_count = generate_rook(index, WHITE, board, result);
+      assert(result_count <= 14);
       break;
 
     case piece_t::B_KNIGHT:
-      result = generate_knight(index, BLACK, board);
+      result_count = generate_knight(index, BLACK, board, result);
+      assert(result_count <= 8);
       break;
     case piece_t::W_KNIGHT:
-      result = generate_knight(index, WHITE, board);
+      result_count = generate_knight(index, WHITE, board, result);
+      assert(result_count <= 8);
       break;
 
     case piece_t::B_BISHOP:
-      result = generate_bishop(index, BLACK, board);
+      result_count = generate_bishop(index, BLACK, board, result);
+      assert(result_count <= 16);
       break;
     case piece_t::W_BISHOP:
-      result = generate_bishop(index, WHITE, board);
+      result_count = generate_bishop(index, WHITE, board, result);
+      assert(result_count <= 16);
       break;
 
     case piece_t::B_QUEEN:
-      result = generate_queen(index, BLACK, board);
+      result_count = generate_queen(index, BLACK, board, result);
+      assert(result_count <= 30);
       break;
     case piece_t::W_QUEEN:
-      result = generate_queen(index, WHITE, board);
+      result_count = generate_queen(index, WHITE, board, result);
+      assert(result_count <= 30);
       break;
 
     case piece_t::B_KING:
-      result = generate_king(index, BLACK, board);
+      result_count = generate_king(index, BLACK, board, result);
+      assert(result_count <= 8);
       break;
     case piece_t::W_KING:
-      result = generate_king(index, WHITE, board);
+      result_count = generate_king(index, WHITE, board, result);
+      assert(result_count <= 8);
       break;
 
     default:
@@ -616,15 +714,18 @@ std::vector<move_t> generate_pseudo_legal_moves_from_index(index_t index,
       break;
   }
 
-  return result;
+  assert(result_count <= 30);
+  return result_count;
 }
 
 
-std::vector<move_t> generate_attacks_vector(color_t target_color,
-                                            const board_t* board)
+size_t generate_attacks_vector(color_t target_color,
+                               const board_t* board,
+                               move_t result[])
 {
-  std::vector<move_t> attacks;
-  attacks.reserve(64);  // worst case
+  assert(result != nullptr);
+
+  size_t result_count = 0;
 
   // Removing the king from the board.
   const piece_t king_to_remove = (target_color == WHITE) ? B_KING : W_KING;
@@ -634,11 +735,11 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
       get_king_index(get_piece_color(king_to_remove), board);
 
   // Unset the king.
-  // NOTE(max): Removing the const attribute. We want this function to be const
-  // on the board since we know that there is no way we return without resetting
-  // the king on the board!!! Pay attention to this!
-  // TODO: Lock the board variable here since it's afake const. In order to make
-  // it safe for multithread computation
+  // NOTE(max): Removing the const attribute. We want this function to be
+  // const on the board since we know that there is no way we return
+  // without resetting the king on the board!!! Pay attention to this!
+  // TODO: Lock the board variable here since it's afake const. In order
+  // to make it safe for multithread computation
   board_t* non_const_board = const_cast<board_t*>(board);
   const piece_t removed_piece = remove_piece(king_index, non_const_board);
   assert(removed_piece == king_to_remove);
@@ -651,17 +752,18 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
     // Iterate over opposite color pieces
     if (p != INVALID && p != EMPTY && target_color == get_piece_color(p)) {
       // Handle Pawn move separately
-      std::vector<move_t> moves_for_index;
 
       if (p == W_PAWN || p == B_PAWN) {
-        moves_for_index = generate_pawn_attacks(i, target_color);
-      } else {
-        moves_for_index = generate_pseudo_legal_moves_from_index(i, board);
-      }
+        const size_t pawn_attacks_count =
+            generate_pawn_attacks(i, target_color, result + result_count);
 
-      // We keep duplicates for easy double check detection.
-      for (const move_t& move : moves_for_index) {
-        attacks.push_back(move);
+        assert(pawn_attacks_count <= 2);
+
+        result_count += pawn_attacks_count;
+
+      } else {
+        result_count += generate_pseudo_legal_moves_from_index(
+            i, board, result + result_count);
       }
     }
   }
@@ -671,59 +773,68 @@ std::vector<move_t> generate_attacks_vector(color_t target_color,
 
   assert(board->board[king_index] == king_to_remove);
 
-  return attacks;
+  // assert(result_count <= 64); If not duplicates
+  assert(result_count <= 270);
+  return result_count;
 }
 
 
-bool is_index_attacked(index_t index, const std::vector<move_t>* attacks)
+bool is_index_attacked(index_t index,
+                       const move_t attacks[],
+                       size_t attack_count)
 {
-  for (const move_t& attack : *attacks) {
-    if (attack.to == index) { return true; }
+  assert(attacks != nullptr);
+
+  for (size_t i = 0; i < attack_count; ++i) {
+    if (attacks[i].to == index) { return true; }
   }
 
   return false;
 }
 
 
-bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
+bool is_castling_valid(const move_t* move,
+                       const move_t attacks[],
+                       size_t attacks_size)
 {
   assert(move->castling_move);
+  assert(attacks != nullptr);
 
   // TODO: Make it more professional! We can generalize those cases
   switch (move->to) {
     case 0x02:
       assert(move->from == 0x04);
       // White long castling. Target squares 0x04 0x03 0x02
-      if (is_index_attacked(0x04, attacks) ||
-          is_index_attacked(0x03, attacks) ||
-          is_index_attacked(0x02, attacks)) {
+      if (is_index_attacked(0x04, attacks, attacks_size) ||
+          is_index_attacked(0x03, attacks, attacks_size) ||
+          is_index_attacked(0x02, attacks, attacks_size)) {
         return false;
       }
       break;
     case 0x06:
       assert(move->from == 0x04);
       // White short castling. Target squares 0x04 0x05 0x06
-      if (is_index_attacked(0x04, attacks) ||
-          is_index_attacked(0x05, attacks) ||
-          is_index_attacked(0x06, attacks)) {
+      if (is_index_attacked(0x04, attacks, attacks_size) ||
+          is_index_attacked(0x05, attacks, attacks_size) ||
+          is_index_attacked(0x06, attacks, attacks_size)) {
         return false;
       }
       break;
     case 0x72:
       assert(move->from == 0x74);
       // Black long castling. Target squares 0x74 0x73 0x72
-      if (is_index_attacked(0x74, attacks) ||
-          is_index_attacked(0x73, attacks) ||
-          is_index_attacked(0x72, attacks)) {
+      if (is_index_attacked(0x74, attacks, attacks_size) ||
+          is_index_attacked(0x73, attacks, attacks_size) ||
+          is_index_attacked(0x72, attacks, attacks_size)) {
         return false;
       }
       break;
     case 0x76:
       assert(move->from == 0x74);
       // White short castling. Target squares 0x74 0x75 0x76
-      if (is_index_attacked(0x74, attacks) ||
-          is_index_attacked(0x75, attacks) ||
-          is_index_attacked(0x76, attacks)) {
+      if (is_index_attacked(0x74, attacks, attacks_size) ||
+          is_index_attacked(0x75, attacks, attacks_size) ||
+          is_index_attacked(0x76, attacks, attacks_size)) {
         return false;
       }
       break;
@@ -739,6 +850,7 @@ bool is_castling_valid(const move_t* move, const std::vector<move_t>* attacks)
 
 bool is_pin(const move_t* move, index_t king_index, const board_t* board)
 {
+  assert(board != nullptr);
   // Make the move and see if this leaves the king under check.
   // TODO: Decide if use the make move here or the fastest custom one
   board_t tmp_board = *board;
@@ -765,11 +877,14 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
   assert(happened);
   (void)happened;
 
-  const auto& attacks_vector =
-      generate_attacks_vector(!board->game_state.active_color, &tmp_board);
+  move_t attacks[270];
+  const size_t attacks_count = generate_attacks_vector(
+      !board->game_state.active_color, &tmp_board, attacks);
 
-  for (const auto& attack_move : attacks_vector) {
-    if (attack_move.to == king_index) { return true; }
+  assert(attacks_count <= sizeof(attacks) / sizeof(attacks[0]));
+
+  for (size_t i = 0; i < attacks_count; ++i) {
+    if (attacks[i].to == king_index) { return true; }
   }
 
   return false;
@@ -802,21 +917,22 @@ bool is_blocking_ray(index_t index, const move_t* move)
 }
 
 
-std::vector<move_t> generate_legal_moves(const board_t* board)
+size_t generate_legal_moves(const board_t* board, move_t result[])
 {
-  // TODO: Reimplement this function. It contains a lot of duplicated code and
-  // inefficient calls
+  // TODO: Reimplement this function. It contains a lot of duplicated code
+  // and inefficient calls
   assert(board != nullptr);
+  assert(result != nullptr);
 
-  std::vector<move_t> result;
-  result.reserve(100);
+  size_t result_count = 0;
 
   /*****************************************************************************
    * Generate enemy attacks vector
    ****************************************************************************/
   const color_t attack_color = !board->game_state.active_color;
-  const std::vector<move_t> attacks_vector =
-      generate_attacks_vector(attack_color, board);
+  move_t attacks_vector[270];
+  size_t attacks_vector_count =
+      generate_attacks_vector(attack_color, board, attacks_vector);
 
   /*****************************************************************************
    * Calculate if under check
@@ -826,8 +942,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
   const index_t king_index =
       get_king_index(board->game_state.active_color, board);
 
-  for (const move_t& attack : attacks_vector) {
-    if (attack.to == king_index) {
+  for (size_t i = 0; i < attacks_vector_count; ++i) {
+    if (attacks_vector[i].to == king_index) {
       if (!under_check) {
         under_check = true;
       } else {
@@ -846,30 +962,36 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
 
     if (under_double_check) {  // DOUBLE CHECK
       // In the case of double check we consider only king moves
-      const auto king_moves =
-          generate_king(king_index, board->game_state.active_color, board);
+      move_t king_moves[8];
+      const size_t king_moves_count = generate_king(
+          king_index, board->game_state.active_color, board, king_moves);
+      assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
 
-      for (const move_t& king_move : king_moves) {
+      for (size_t i = 0; i < king_moves_count; ++i) {
         // Remove king moves that put him back in check
         bool should_discard = false;
-        for (const auto& enemy_attack_move : attacks_vector) {
-          if (king_move.to == enemy_attack_move.to) {
+        for (size_t attack_index = 0; attack_index < attacks_vector_count;
+             ++attack_index) {
+          if (king_moves[i].to == attacks_vector[attack_index].to) {
             should_discard = true;
             break;
           }
         }
 
         // Remove the captures that put him back in check
-        if (king_move.captured != INVALID) {
-          // Remove the piece from the board and see if that square is under
-          // attack
+        if (king_moves[i].captured != INVALID) {
+          // Remove the piece from the board and see if that square is
+          // under attack
           board_t tmp_board = *board;
-          tmp_board.board[king_move.to] = EMPTY;
-          const auto tmp_attacks = generate_attacks_vector(
-              !tmp_board.game_state.active_color, &tmp_board);
+          tmp_board.board[king_moves[i].to] = EMPTY;
 
-          for (const auto& tmp_attack : tmp_attacks) {
-            if (tmp_attack.to == king_move.to) {
+          move_t tmp_attacks[270];
+          const size_t tmp_attacks_count = generate_attacks_vector(
+              !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
+
+          for (size_t tmp_index = 0; tmp_index < tmp_attacks_count;
+               ++tmp_index) {
+            if (tmp_attacks[tmp_index].to == king_moves[i].to) {
               // Discard that move
               should_discard = true;
               break;
@@ -878,38 +1000,47 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
         }
 
         // Check if this move is castling, if so remove it
-        if (king_move.castling_move) { should_discard = true; }
+        if (king_moves[i].castling_move) { should_discard = true; }
 
         // Insert only valid
-        if (!should_discard) { result.push_back(king_move); }
+        if (!should_discard) {
+          result[result_count] = king_moves[i];
+          ++result_count;
+        }
       }
     } else {  // SINGE CHECK
       // King moves away from check
       {
-        const auto king_moves =
-            generate_king(king_index, board->game_state.active_color, board);
+        move_t king_moves[8];
+        const size_t king_moves_count = generate_king(
+            king_index, board->game_state.active_color, board, king_moves);
+        assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
 
-        for (const move_t& king_move : king_moves) {
+        for (size_t i = 0; i < king_moves_count; ++i) {
           // Remove king moves that put him back in check
           bool should_discard = false;
-          for (const auto& enemy_attack_move : attacks_vector) {
-            if (king_move.to == enemy_attack_move.to) {
+          for (size_t attack_index = 0; attack_index < attacks_vector_count;
+               ++attack_index) {
+            if (king_moves[i].to == attacks_vector[attack_index].to) {
               should_discard = true;
               break;
             }
           }
 
           // Remove the captures that put him back in check
-          if (king_move.captured != INVALID) {
-            // Remove the piece from the board and see if that square is under
-            // attack
+          if (king_moves[i].captured != INVALID) {
+            // Remove the piece from the board and see if that square is
+            // under attack
             board_t tmp_board = *board;
-            tmp_board.board[king_move.to] = EMPTY;
-            const auto tmp_attacks = generate_attacks_vector(
-                !tmp_board.game_state.active_color, &tmp_board);
+            tmp_board.board[king_moves[i].to] = EMPTY;
 
-            for (const auto& tmp_attack : tmp_attacks) {
-              if (tmp_attack.to == king_move.to) {
+            move_t tmp_attacks[270];
+            size_t tmp_attacks_count = generate_attacks_vector(
+                !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
+
+            for (size_t tmp_index = 0; tmp_index < tmp_attacks_count;
+                 ++tmp_index) {
+              if (tmp_attacks[tmp_index].to == king_moves[i].to) {
                 // Discard that move
                 should_discard = true;
                 break;
@@ -918,14 +1049,18 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
           }
 
           // Check if this move is castling, if so remove it
-          if (king_move.castling_move) { should_discard = true; }
+          if (king_moves[i].castling_move) { should_discard = true; }
 
           // Insert only valid
-          if (!should_discard) { result.push_back(king_move); }
+          if (!should_discard) {
+            result[result_count] = king_moves[i];
+            ++result_count;
+          }
         }
       }
 
-      // Handle: Remove the attacker moves and block attacks in rays attack
+      // Handle: Remove the attacker moves and block attacks in rays
+      // attack
       {
         for (index_t i = 0; i < BOARD_SIZE; ++i) {
           const piece_t P = board->board[i];
@@ -933,12 +1068,23 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
           if (P != INVALID && P != EMPTY && i != king_index &&
               board->game_state.active_color == get_piece_color(P)) {
             // generate moves except for King
-            const auto moves = generate_pseudo_legal_moves_from_index(i, board);
+            move_t moves_no_king[30];
+            const size_t moves_no_king_count =
+                generate_pseudo_legal_moves_from_index(i, board, moves_no_king);
 
-            for (const move_t& move : moves) {
+            assert(moves_no_king_count <=
+                   sizeof(moves_no_king) / sizeof(moves_no_king[0]));
+
+            for (size_t no_king_index = 0; no_king_index < moves_no_king_count;
+                 ++no_king_index) {
+              const move_t& move = moves_no_king[no_king_index];
               bool should_discard = true;
 
-              for (const move_t& attack : attacks_vector) {
+
+              for (size_t attack_index = 0; attack_index < attacks_vector_count;
+                   ++attack_index) {
+                const move_t& attack = attacks_vector[attack_index];
+
                 // Check if the move remove the attacker.
                 if (attack.to == king_index && move.captured != INVALID &&
                     move.to == attack.from) {
@@ -982,7 +1128,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
 
               if (!should_discard) {
                 if (!is_pin(&move, king_index, board)) {
-                  result.push_back(move);
+                  result[result_count] = move;
+                  ++result_count;
                 }
               }
             }
@@ -992,9 +1139,9 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
     }
   } else {
     // NOT UNDER CHECK
-    // TODO: handle moves that put the king under attack if he attack but put
-    // himself under attack.
-    // Example: FEN [r3k2r/R3P2R/8/8/8/8/8/4K3 b kq - 0 1] move [Kxe7]
+    // TODO: handle moves that put the king under attack if he attack but
+    // put himself under attack. Example: FEN [r3k2r/R3P2R/8/8/8/8/8/4K3 b
+    // kq - 0 1] move [Kxe7]
 
     for (index_t i = 0; i < BOARD_SIZE; ++i) {
       const piece_t P = board->board[i];
@@ -1002,30 +1149,39 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
       if (P != INVALID && P != EMPTY &&
           board->game_state.active_color == get_piece_color(P)) {
         // generate moves
-        const auto moves = generate_pseudo_legal_moves_from_index(i, board);
+        move_t all_moves[30];
+        const size_t all_moves_count =
+            generate_pseudo_legal_moves_from_index(i, board, all_moves);
+
+        assert(all_moves_count <= sizeof(all_moves) / sizeof(all_moves[0]));
 
         switch (P) {
           case B_KING:
           case W_KING: {
             // Handle king moves.
 
-            for (const move_t& move : moves) {
+            for (size_t move_index = 0; move_index < all_moves_count;
+                 ++move_index) {
+              const move_t& move = all_moves[move_index];
               bool found = false;
 
               // Remove all the KING moves that move him under attack
-              for (const auto& A : attacks_vector) {
-                if (move.to == A.to) {
+              for (size_t attack_index = 0; attack_index < attacks_vector_count;
+                   ++attack_index) {
+                if (move.to == attacks_vector[attack_index].to) {
                   found = true;
                   break;
                 }
               }
 
               if (!found) {
-                // This does not put te king under attack. So we can proceed
+                // This does not put te king under attack. So we can
+                // proceed
 
                 if (move.castling_move) {  // Handling castling
                   // Check if the castling move is legal.
-                  if (!is_castling_valid(&move, &attacks_vector)) {
+                  if (!is_castling_valid(&move, attacks_vector,
+                                         attacks_vector_count)) {
                     // If not valid castling then skip to the next one
                     continue;
                   }
@@ -1038,13 +1194,15 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
                   board_t tmp_board = *board;
                   remove_piece(move.to, &tmp_board);
 
-                  const auto tmp_attacks =
-                      generate_attacks_vector(attack_color, &tmp_board);
+                  move_t tmp_attacks[270];
+                  size_t tmp_attacks_count = generate_attacks_vector(
+                      attack_color, &tmp_board, tmp_attacks);
 
                   // Check if the new attacks prevent this capture
                   bool should_skip_move = false;
-                  for (const auto& tmp_attack_move : tmp_attacks) {
-                    if (tmp_attack_move.to == move.to) {
+                  for (size_t tmp_index = 0; tmp_index < tmp_attacks_count;
+                       ++tmp_index) {
+                    if (tmp_attacks[tmp_index].to == move.to) {
                       // Then skip this move
                       should_skip_move = true;
                       break;
@@ -1054,17 +1212,23 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
                   if (should_skip_move) { continue; }
                 }
 
-                result.push_back(move);
+                result[result_count] = move;
+                ++result_count;
               }
             }
           } break;
 
           default: {
             // Generate others pieces moves
-            for (const move_t& move : moves) {
+            for (size_t move_index = 0; move_index < all_moves_count;
+                 ++move_index) {
+              const move_t& move = all_moves[move_index];
+
               if (!is_pin(&move, king_index, board)) {
                 // If not pin then ok
-                result.push_back(move);
+
+                result[result_count] = move;
+                ++result_count;
               }
             }
           }
@@ -1075,7 +1239,8 @@ std::vector<move_t> generate_legal_moves(const board_t* board)
     }
   }
 
-  return result;
+  assert(result_count <= 270);
+  return result_count;
 }
 
 
@@ -1110,8 +1275,8 @@ std::string move_to_algebraic(const move_t* move,
   assert(move->piece != INVALID);
   assert(move->piece != EMPTY);
 
-  // Not using the piece_to_char function because the piece moved in always
-  // upper case
+  // Not using the piece_to_char function because the piece moved in
+  // always upper case
   static const std::unordered_map<piece_t, char> piece_to_char_map = {
       {B_PAWN, 'P'},   {B_KNIGHT, 'N'}, {B_BISHOP, 'B'}, {B_ROOK, 'R'},
       {B_QUEEN, 'Q'},  {B_KING, 'K'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
@@ -1151,8 +1316,8 @@ std::string move_to_algebraic(const move_t* move,
 
         if (move_from_pos.rank == i_pos.rank) { is_rank_unique = false; }
 
-        // Exit from the loop in case both are non unique. No make sense to
-        // search for more
+        // Exit from the loop in case both are non unique. No make sense
+        // to search for more
         if (!is_file_unique && !is_rank_unique) { break; }
       }
 
@@ -1217,18 +1382,27 @@ std::string move_to_algebraic(const move_t* move,
   (void)move_happened;  // Supress the unused var log
 
   // Generate moves for my color but after the current move is done
-  const auto pseudo_legal_moves =
-      generate_pseudo_legal_moves_from_index(move->to, &tmp_board);
+  move_t pseudo_legal_moves[30];
+  const size_t pseudo_legal_moves_count =
+      generate_pseudo_legal_moves_from_index(move->to, &tmp_board,
+                                             pseudo_legal_moves);
+
+  assert(pseudo_legal_moves_count <=
+         sizeof(pseudo_legal_moves) / sizeof(pseudo_legal_moves[0]));
 
   // Check if one of this moves put under check the opponent king
 
-  for (const auto& pseudo_move : pseudo_legal_moves) {
+  for (size_t pseudo_index = 0; pseudo_index < pseudo_legal_moves_count;
+       ++pseudo_index) {
+    const move_t& pseudo_move = pseudo_legal_moves[pseudo_index];
     if (pseudo_move.to == opponent_king_index) {
       // Now let's check if this is check mate
 
       // Generate legal moves after the make move to see if any available.
-      const auto moves = generate_legal_moves(&tmp_board);
-      if (moves.size() == 0) {
+      move_t moves[270];
+      const size_t moves_count = generate_legal_moves(&tmp_board, moves);
+
+      if (moves_count == 0) {
         // Check mate
         notation += '#';
         break;
@@ -1413,7 +1587,8 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   }
   result.promoted_to = promo;
 
-  // The destination square is the last two characters of the cleaned string.
+  // The destination square is the last two characters of the cleaned
+  // string.
   if (cleaned.size() < 2) {
     // Error: not enough characters to form a square.
     throw algebraic_exception("Wrong formatting. Invalid Algebraic notation: " +
@@ -1462,10 +1637,13 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   // Here we already extracted potential disambiguation earlier.
 
   // Generate legal moves and search the compatible one
-  const auto& legal_moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
   bool found = false;
-  for (const auto& legal_move : legal_moves) {
+  for (size_t i = 0; i < moves_count; ++i) {
+    const move_t& legal_move = moves[i];
+
     if (legal_move.to == result.to && legal_move.piece == result.piece &&
         legal_move.promoted_to == result.promoted_to &&
         legal_move.captured == result.captured &&

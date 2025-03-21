@@ -17,7 +17,7 @@
 using json = nlohmann::json;
 
 #define RUN_THREADS
-#define MAXIMUM_DEPTH 5
+#define MAXIMUM_DEPTH 7
 
 
 // clang-format off
@@ -213,11 +213,11 @@ stats_t get_move_stats(const move_t& move)
 }
 
 
-stats_t get_moves_stats(const std::vector<move_t>& moves)
+stats_t get_moves_stats(const move_t moves[], size_t moves_count)
 {
   stats_t result;
-  for (const auto& move : moves) {
-    result += get_move_stats(move);
+  for (size_t i = 0; i < moves_count; ++i) {
+    result += get_move_stats(moves[i]);
   }
 
   return result;
@@ -233,15 +233,17 @@ stats_t perft(int depth, const board_t* board, history_t* history)
     return node_stats;
   }
 
-  const auto& moves = generate_legal_moves(board);
+  move_t moves[270];
+  const size_t moves_count = generate_legal_moves(board, moves);
+
   // node_stats += get_moves_stats(moves);
   (void)history;
 
-  for (const auto& move : moves) {
+  for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
-    make_move(&move, &tmp_board, nullptr);
+    make_move(&moves[i], &tmp_board, nullptr);
     if (depth == 1) {
-      node_stats += get_move_stats(move);
+      node_stats += get_move_stats(moves[i]);
     } else {
       node_stats.nodes += 1;
     }
@@ -353,29 +355,33 @@ int main()
 
         if (depth > 0) {
           stats = stats_t();
-          const auto& moves = generate_legal_moves(&board);
+
+          move_t moves[270];
+          const size_t moves_count = generate_legal_moves(&board, moves);
 
           if (depth > 1) {
 #ifdef RUN_THREADS
             std::vector<std::future<stats_t>> results;
-            for (const auto& move : moves) {
-              results.push_back(std::async(std::launch::async, [&]() {
-                history_t history;
-                board_t tmp_board = board;
-                move_t tmp_move = move;
-                make_move(&tmp_move, &tmp_board, nullptr);
-                return perft(depth - 1, &tmp_board, &history);
-              }));
+
+            for (size_t i = 0; i < moves_count; ++i) {
+              results.push_back(
+                  std::async(std::launch::async, [moves, i, depth, board]() {
+                    history_t history;
+                    board_t tmp_board = board;
+                    move_t tmp_move = moves[i];
+                    make_move(&tmp_move, &tmp_board, nullptr);
+                    return perft(depth - 1, &tmp_board, &history);
+                  }));
             }
 
             for (auto& res : results) {
               stats += res.get();
             }
 #else
-            for (const auto& move : moves) {
+            for (size_t i = 0; i < moves_count; ++i) {
               history_t history;
               board_t tmp_board = board;
-              move_t tmp_move = move;
+              move_t tmp_move = moves[i];
               make_move(&tmp_move, &tmp_board, nullptr);
               const auto res = perft(depth - 1, &tmp_board, &history);
               stats += res;
@@ -383,7 +389,7 @@ int main()
 #endif
 
           } else {
-            stats += get_moves_stats(moves);
+            stats += get_moves_stats(moves, moves_count);
           }
         }
 
