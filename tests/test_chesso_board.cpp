@@ -202,26 +202,6 @@ int make_random_move(int depth, board_t* board, history_t* history)
 }
 
 
-TEST_SUITE("DEBUG TEST")
-{
-  TEST_CASE("DEBUG")
-  {
-    history_t history;
-    board_t board;
-    init_board(DEFAULT_POSITION, &board, &history);
-    // board.game_state.active_color = BLACK;
-    move_t move(23, 55, W_PAWN);
-
-    make_move(&move, &board, nullptr);
-
-    int evaluation = evaluate(&board);
-
-    std::cout << print_nice_board(&board) << std::endl;
-    std::cout << "Evaluation: " << evaluation << std::endl;
-  }
-}
-
-
 TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
@@ -264,23 +244,26 @@ TEST_SUITE("Test utils")
     }
   }
 
-  // TEST_CASE("Test algebraic parsing")
-  // {
-  //   history_t history;
-  //   board_t board;
-  //   init_board(DEFAULT_POSITION, &board, &history);
+  TEST_CASE("Test algebraic parsing")
+  {
+    history_t history;
+    board_t board;
+    init_board(DEFAULT_POSITION, &board, &history);
 
-  //   auto moves = generate_legal_moves(&board);
+    move_t moves[MAX_MOVES];
+    size_t moves_count = generate_legal_moves(&board, moves);
 
-  //   for (const auto& move : moves) {
-  //     const std::string generated_algebraic =
-  //         move_to_algebraic(&move, &moves, &board);
-  //     const move_t generated_move =
-  //         algebraic_to_move(generated_algebraic, &board);
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t move = moves[i];
 
-  //     REQUIRE(generated_move == move);
-  //   }
-  // }
+      const std::string generated_algebraic =
+          move_to_algebraic(&move, moves, moves_count, &board);
+      const move_t generated_move =
+          algebraic_to_move(generated_algebraic, &board);
+
+      REQUIRE(generated_move == move);
+    }
+  }
 }
 
 
@@ -522,12 +505,11 @@ TEST_SUITE("Test legal move generator")
         // Check size
         REQUIRE_MESSAGE(
             moves_count == expected_moves.size(),
-            // ("\nRunning " + test_json_file + " File\n" +
-            //  "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
-            //  moves_to_string(moves, moves_count, board) + "Difference:\n" +
-            //  difference_to_string(expected_moves, moves, board) +
-            //  print_nice_board(&board)));
-            "");
+            ("\nRunning " + test_json_file + " File\n" +
+             "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
+             moves_to_string(moves, moves_count, board) + "Difference:\n" +
+             difference_to_string(expected_moves, moves, moves_count, board) +
+             print_nice_board(&board)));
 
         // Check if move is in by Algebraic notation
         for (const json& expected : expected_moves) {
@@ -538,14 +520,13 @@ TEST_SUITE("Test legal move generator")
             bool found =
                 contain_move_algebraic(move_str, moves, moves_count, board);
 
-            REQUIRE_MESSAGE(
-                found,
-                // ("\nStarting FEN: " + starting_pos +
-                //         "\nExpect move: " + move_str + " in:\n" +
-                //         moves_to_string(moves, board) + "Difference:\n" +
-                //         difference_to_string(expected_moves, moves, board) +
-                //         print_nice_board(&board)));
-                "");
+            REQUIRE_MESSAGE(found, ("\nStarting FEN: " + starting_pos +
+                                    "\nExpect move: " + move_str + " in:\n" +
+                                    moves_to_string(moves, moves_count, board) +
+                                    "Difference:\n" +
+                                    difference_to_string(expected_moves, moves,
+                                                         moves_count, board) +
+                                    print_nice_board(&board)));
           }
 
           {  // Check by make_move and compare FEN
@@ -559,14 +540,14 @@ TEST_SUITE("Test legal move generator")
 
             std::string new_fen = generate_FEN(&tmp_board);
 
-            REQUIRE_MESSAGE(
-                new_fen == fen,
-                // ("\nStarting FEN: " + starting_pos +
-                //  "\nExpect move: " + move_str + " in:\n" +
-                //  moves_to_string(moves, tmp_board) + "Difference:\n" +
-                //  difference_to_string(expected_moves, moves, tmp_board) +
-                //  print_nice_board(&tmp_board)));
-                "");
+            REQUIRE_MESSAGE(new_fen == fen,
+                            ("\nStarting FEN: " + starting_pos +
+                             "\nExpect move: " + move_str + " in:\n" +
+                             moves_to_string(moves, moves_count, tmp_board) +
+                             "Difference:\n" +
+                             difference_to_string(expected_moves, moves,
+                                                  moves_count, tmp_board) +
+                             print_nice_board(&tmp_board)));
           }
         }
       }

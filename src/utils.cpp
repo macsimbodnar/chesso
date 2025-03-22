@@ -149,7 +149,7 @@ std::string print_nice_board(const board_t* board)
 
   std::stringstream ss;
 
-  ss << "##################\n";
+  ss << "#######################################\n";
 
   for (size_t i = 8; i > 0; --i) {
     ss << i << "  ";
@@ -199,7 +199,7 @@ std::string print_nice_board(const board_t* board)
   // ss << "\nphase_value:       " << int(board->game_state.phase_value);
   // ss << "next_move:         " << board->game_state.next_move;
 
-  ss << "\n##################";
+  ss << "\n#######################################";
   // clang-format on
 
   return ss.str();

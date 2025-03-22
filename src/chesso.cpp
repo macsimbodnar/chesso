@@ -110,6 +110,7 @@ public:
   }
 
   std::string get_nice_board() { return print_nice_board(&board); }
+  std::string get_fen() { return generate_FEN(&board); }
 
   uci_move_t get_best_move(int depth)
   {
@@ -142,6 +143,8 @@ bool command_ponderhit(std::queue<std::string>& args);
 bool command_quit(std::queue<std::string>& args);
 
 bool command_print_board(std::queue<std::string>& args);
+bool command_fen(std::queue<std::string>& args);
+bool command_help(std::queue<std::string>& args);
 
 
 //-##############################  GLOBAL VARS  #############################-//
@@ -164,7 +167,9 @@ static const std::unordered_map<std::string, process_func> commands = {
     {"ponderhit", command_ponderhit},
     {"quit", command_quit},
     // custom commands
-    {"print_board", command_print_board},
+    {"pb", command_print_board},
+    {"fen", command_fen},
+    {"help", command_help},
 };
 // clang-format on
 
@@ -558,6 +563,32 @@ bool command_print_board(std::queue<std::string>& args)
 {
   LOG_I << "Command [print_board]. Args: " << args << END_I;
   LOG_I << engine.get_nice_board() << END_I;
+  uci_reply(engine.get_nice_board());
+
+  return true;
+}
+
+
+bool command_fen(std::queue<std::string>& args)
+{
+  LOG_I << "Command [command_fen]. Args: " << args << END_I;
+  LOG_I << engine.get_fen() << END_I;
+  uci_reply(engine.get_fen());
+
+  return true;
+}
+
+
+bool command_help(std::queue<std::string>& args)
+{
+  LOG_I << "Command [command_help]. Args: " << args << END_I;
+
+  uci_reply("--- Help: available commands ---");
+  for (const auto& pair : commands) {
+    const std::string& key = pair.first;
+    uci_reply(key);
+  }
+  uci_reply("--------------------------------");
 
   return true;
 }
@@ -568,11 +599,15 @@ int main()
 {
   LOG_I << "Engine started" << END_I;
 
+  // Print the engine info
+  std::queue<std::string> tokens;
+  (void)command_uci(tokens);
+
   while (running) {
     std::string input;
     std::getline(std::cin, input);
 
-    std::queue<std::string> tokens = tokenize_input(input, " ");
+    tokens = tokenize_input(input, " ");
 
     if (tokens.size() == 0) {
       LOG_W << "No tokens in string" << END_W;

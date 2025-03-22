@@ -87,18 +87,18 @@ inline color_t operator!(const color_t& c)
 
 enum piece_t
 {
-  B_PAWN = 0,
-  B_KNIGHT,
-  B_BISHOP,
-  B_ROOK,
-  B_QUEEN,
-  B_KING,
-  W_PAWN,
-  W_KNIGHT,
-  W_BISHOP,
-  W_ROOK,
-  W_QUEEN,
-  W_KING,
+  B_PAWN = 0,  // 'p'
+  B_KNIGHT,    // 'n'
+  B_BISHOP,    // 'b'
+  B_ROOK,      // 'r'
+  B_QUEEN,     // 'q'
+  B_KING,      // 'k'
+  W_PAWN,      // 'P'
+  W_KNIGHT,    // 'N'
+  W_BISHOP,    // 'B'
+  W_ROOK,      // 'R'
+  W_QUEEN,     // 'Q'
+  W_KING,      // 'K'
   INVALID,
   EMPTY
 };

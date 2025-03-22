@@ -37,3 +37,9 @@ target_link_libraries(debug_gui chesso)
 add_executable(debug_perft_app debug_perft_app.cpp)
 target_include_directories(debug_perft_app PRIVATE ../src)
 target_link_libraries(debug_perft_app chesso)
+
+
+# Debug main
+add_executable(debug_main debug_main.cpp)
+target_include_directories(debug_main PRIVATE ../src)
+target_link_libraries(debug_main chesso)
