@@ -12,6 +12,44 @@
 #define RUN_THREADS
 
 
+int quiescence_search(int alpha,
+                      int beta,
+                      const board_t* board,
+                      uint64_t* num_of_nodes_explored)
+{
+  *num_of_nodes_explored += 1;
+
+  const int eval =
+      (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+
+  if (eval >= beta) { return beta; }
+  if (eval > alpha) { alpha = eval; }
+
+  move_t moves[270];
+  const size_t move_count = generate_legal_moves(board, moves);
+
+  for (size_t i = 0; i < move_count; ++i) {
+    if (moves[i].captured == INVALID || moves[i].promoted_to == TO_NONE) {
+      // Skip
+      continue;
+    }
+
+    board_t tmp_board = *board;
+    const bool done = make_move(&moves[i], &tmp_board, nullptr);
+    (void)done;
+    assert(done);
+
+    const int score =
+        -quiescence_search(-beta, -alpha, &tmp_board, num_of_nodes_explored);
+
+    if (score >= beta) { return beta; }
+    if (score >= alpha) { alpha = score; }
+  }
+
+  return alpha;
+}
+
+
 int alpha_beta_negamax(int alpha,
                        int beta,
                        int depth,
@@ -19,11 +57,9 @@ int alpha_beta_negamax(int alpha,
                        uint64_t* num_of_nodes_explored)
 {
   if (depth == 0) {
-    const int score =
-        (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
-
-    *num_of_nodes_explored += 1;
-    return score;
+    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
+    // return (board->game_state.active_color == WHITE ? 1 : -1) *
+    // evaluate(board);
   }
 
   int max_eval = std::numeric_limits<int>::min();
@@ -34,7 +70,8 @@ int alpha_beta_negamax(int alpha,
   if (moves_count == 0) {
     // Checkmate or stalemate handling
     if (is_checkmate(board)) {
-      // Checkmate. Use the depth in order to prefer the fastest mates
+      // Checkmate. Use the depth in order to prefer the fastest mate
+      // Test pos: 4k3/8/5K2/8/1Q6/8/8/8 w - - 10 1
       return -MATE_SCORE + (MAX_MATE_DEPTH - depth);
     } else {
       // Stalemate
@@ -109,7 +146,7 @@ search_t search_best_move(int depth, const board_t* board)
 
     num_of_nodes_explored += result.nodes_explored;
 
-    if (result.score > best_eval) {
+    if (result.score >= best_eval) {
       best_eval = result.score;
       best_move = moves[result.move_index];
     }
@@ -127,7 +164,7 @@ search_t search_best_move(int depth, const board_t* board)
         std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
         depth - 1, &tmp_board, &num_of_nodes_explored);
 
-    if (eval > best_eval) {
+    if (eval >= best_eval) {
       best_eval = eval;
       best_move = moves[i];
     }
