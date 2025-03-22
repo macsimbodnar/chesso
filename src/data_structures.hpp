@@ -127,17 +127,8 @@ struct position_t
 
   bool operator!=(const position_t& other) const { return !(*this == other); }
 
-  position_t()
-  {
-    file = 0;
-    rank = 0;
-  }
-
-  position_t(uint8_t file, uint8_t rank)
-  {
-    this->file = file;
-    this->rank = rank;
-  }
+  position_t() : file(0), rank(0) {}
+  position_t(uint8_t file, uint8_t rank) : file(file), rank(rank) {}
 };
 
 
@@ -200,6 +191,23 @@ struct move_t
         castling_move(false)
   {}
 };
+
+
+inline std::ostream& operator<<(std::ostream& os, const move_t& move)
+{
+  const position_t from(move.from & 7, move.from >> 4);
+  const position_t to(move.to & 7, move.to >> 4);
+
+  const char from_file = 'a' + static_cast<char>(from.file);
+  const char from_rank = '1' + static_cast<char>(from.rank);
+  const char to_file = 'a' + static_cast<char>(to.file);
+  const char to_rank = '1' + static_cast<char>(to.rank);
+
+  os << from_file << from_rank << to_file << to_rank;
+
+  return os;
+}
+
 
 struct game_state_t
 {

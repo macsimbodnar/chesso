@@ -1650,9 +1650,6 @@ bool is_checkmate(const board_t* board)
   for (size_t i = 0; i < attacks_vector_count; ++i) {
     const move_t& attack = attacks_vector[i];
     if (attack.to == king_index) {
-      assert(attack.captured ==
-             (board->game_state.active_color == WHITE ? W_KING : B_KING));
-
       return true;
     }
   }

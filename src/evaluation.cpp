@@ -1,21 +1,22 @@
 #include "evaluation.hpp"
 #include <cassert>
+#include <iostream>
 #include <unordered_map>
 
 
 // clang-format off
-#define VALUE_B_PAWN   -100
-#define VALUE_B_KNIGHT -350
-#define VALUE_B_BISHOP -350
-#define VALUE_B_ROOK   -525
-#define VALUE_B_QUEEN  -1000
-#define VALUE_B_KING   -1000000
 #define VALUE_W_PAWN    100
-#define VALUE_W_KNIGHT  350
+#define VALUE_W_KNIGHT  300
 #define VALUE_W_BISHOP  350
 #define VALUE_W_ROOK    525
 #define VALUE_W_QUEEN   1000
-#define VALUE_W_KING    1000000
+#define VALUE_W_KING    10000
+#define VALUE_B_PAWN    -VALUE_W_PAWN
+#define VALUE_B_KNIGHT  -VALUE_W_KNIGHT
+#define VALUE_B_BISHOP  -VALUE_W_BISHOP
+#define VALUE_B_ROOK    -VALUE_W_ROOK
+#define VALUE_B_QUEEN   -VALUE_W_QUEEN
+#define VALUE_B_KING    -VALUE_W_KING
 
 
 // static const std::array<int, BOARD_SIZE> debug_postion_value_table = {
@@ -30,7 +31,7 @@
 // };
 
 static const int pawn_postion_value_table[BOARD_SIZE] = {
-   0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  90, 90, 90, 90, 90, 90, 90, 90,         0,  0,  0,  0,  0,  0,  0,  0,
   50, 50, 50, 50, 50, 50, 50, 50,         0,  0,  0,  0,  0,  0,  0,  0,
   10, 10, 20, 30, 30, 20, 10, 10,         0,  0,  0,  0,  0,  0,  0,  0,
    5,  5, 10, 25, 25, 10,  5,  5,         0,  0,  0,  0,  0,  0,  0,  0,
@@ -105,6 +106,37 @@ static const int white_indexes[BOARD_SIZE] = {
   0x10,  0x11,  0x12,  0x13,  0x14,  0x15,  0x16,  0x17,  0x18,  0x19,  0x1A,  0x1B,  0x1C,  0x1D,  0x1E,  0x1F,
   0x00,  0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07,  0x08,  0x09,  0x0A,  0x0B,  0x0C,  0x0D,  0x0E,  0x0F,
 };
+
+
+// Most valuable victim & less valuable attacker
+/**
+ *   (Victims) Pawn Knight Bishop   Rook  Queen   King
+ * (Attackers)
+ *       Pawn   105    205    305    405    505    605
+ *     Knight   104    204    304    404    504    604
+ *     Bishop   103    203    303    403    503    603
+ *       Rook   102    202    302    402    502    602
+ *      Queen   101    201    301    401    501    601
+ *       King   100    200    300    400    500    600
+*/
+
+// [attacker][victim]
+static const int mvv_lva[12][12] = {
+ 105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+ 104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+ 103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+ 102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+ 101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+ 100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+
+ 105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+ 104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+ 103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+ 102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+ 101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+ 100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
+};
+
 // clang-format on
 
 
@@ -183,7 +215,30 @@ int evaluate(const board_t* board)
 }
 
 
+int evaluate_move(const move_t* move)
+{
+  assert(move != nullptr);
+  if (move->captured != INVALID) {
+    const piece_t attacker = move->piece;
+    const piece_t victim = move->captured;
+
+    assert(attacker != INVALID);
+    assert(attacker != EMPTY);
+    assert(victim != INVALID);
+    assert(victim != EMPTY);
+
+    const int score = mvv_lva[attacker][victim];
+    return score;
+  }
+
+  return 0;
+}
+
+
 void order_moves(move_t moves[], size_t moves_size)
 {
-  move_t ordered_moves[MAX_MOVES];
+  assert(moves != nullptr);
+
+  (void)moves;
+  (void)moves_size;
 }

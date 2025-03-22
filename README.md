@@ -71,7 +71,7 @@ cd tests
 ### Build for profiler
 
 ```bash
-cmake ..  -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg
+cmake ..  -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_LINKER_FLAGS=-pg -DCMAKE_SHARED_LINKER_FLAGS=-pg
 ninja
 
 # Execute the program in order to generate the gmon.out file
