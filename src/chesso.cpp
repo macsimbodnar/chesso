@@ -88,7 +88,7 @@ public:
 
   bool try_move(const uci_move_t& move_candidate)
   {
-    move_t moves[270];
+    move_t moves[MAX_MOVES];
     const size_t moves_count = generate_legal_moves(&board, moves);
 
     // Search the move in the list of legal moves

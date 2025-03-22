@@ -773,7 +773,7 @@ size_t generate_attacks_vector(color_t target_color,
   assert(board->board[king_index] == king_to_remove);
 
   // assert(result_count <= 64); If not duplicates
-  assert(result_count <= 270);
+  assert(result_count <= MAX_MOVES);
   return result_count;
 }
 
@@ -876,7 +876,7 @@ bool is_pin(const move_t* move, index_t king_index, const board_t* board)
   assert(happened);
   (void)happened;
 
-  move_t attacks[270];
+  move_t attacks[MAX_MOVES];
   const size_t attacks_count = generate_attacks_vector(
       !board->game_state.active_color, &tmp_board, attacks);
 
@@ -929,7 +929,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
    * Generate enemy attacks vector
    ****************************************************************************/
   const color_t attack_color = !board->game_state.active_color;
-  move_t attacks_vector[270];
+  move_t attacks_vector[MAX_MOVES];
   size_t attacks_vector_count =
       generate_attacks_vector(attack_color, board, attacks_vector);
 
@@ -982,7 +982,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
         board_t tmp_board = *board;
         tmp_board.board[king_moves[i].to] = EMPTY;
 
-        move_t tmp_attacks[270];
+        move_t tmp_attacks[MAX_MOVES];
         const size_t tmp_attacks_count = generate_attacks_vector(
             !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
 
@@ -1141,7 +1141,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
                   board_t tmp_board = *board;
                   remove_piece(move.to, &tmp_board);
 
-                  move_t tmp_attacks[270];
+                  move_t tmp_attacks[MAX_MOVES];
                   size_t tmp_attacks_count = generate_attacks_vector(
                       attack_color, &tmp_board, tmp_attacks);
 
@@ -1186,7 +1186,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
     }
   }
 
-  assert(result_count <= 270);
+  assert(result_count <= MAX_MOVES);
   return result_count;
 }
 
@@ -1255,7 +1255,7 @@ std::string move_to_algebraic(const move_t* move,
     notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
 
     // If ambiguous move the add the from file
-    index_t ambiguous_moves[270];
+    index_t ambiguous_moves[MAX_MOVES];
     const size_t ambiguous_moves_count =
         get_ambiguous_move(move, moves, moves_size, ambiguous_moves);
 
@@ -1356,7 +1356,7 @@ std::string move_to_algebraic(const move_t* move,
       // Now let's check if this is check mate
 
       // Generate legal moves after the make move to see if any available.
-      move_t moves[270];
+      move_t moves[MAX_MOVES];
       const size_t moves_count = generate_legal_moves(&tmp_board, moves);
 
       if (moves_count == 0) {
@@ -1594,7 +1594,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   // Here we already extracted potential disambiguation earlier.
 
   // Generate legal moves and search the compatible one
-  move_t moves[270];
+  move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
 
   bool found = false;
@@ -1640,7 +1640,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 bool is_checkmate(const board_t* board)
 {
   const color_t attack_color = !board->game_state.active_color;
-  move_t attacks_vector[270];
+  move_t attacks_vector[MAX_MOVES];
   const size_t attacks_vector_count =
       generate_attacks_vector(attack_color, board, attacks_vector);
 

@@ -218,9 +218,6 @@ TEST_SUITE("DEBUG TEST")
 
     std::cout << print_nice_board(&board) << std::endl;
     std::cout << "Evaluation: " << evaluation << std::endl;
-
-    // std::cout << "debug: " << debug_evaluation(W_PAWN, 0x10) << std::endl;
-    // std::cout << "debug: " << debug_evaluation(B_PAWN, 0x60) << std::endl;
   }
 }
 

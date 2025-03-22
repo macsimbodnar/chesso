@@ -183,54 +183,7 @@ int evaluate(const board_t* board)
 }
 
 
-int debug_evaluation(piece_t piece, index_t index)
+void order_moves(move_t moves[], size_t moves_size)
 {
-  assert(index < INVALID_BOARD_INDEX);
-  int value = 9999999;
-
-  switch (piece) {
-    case B_PAWN:
-      value = -pawn_postion_value_table[index];
-      break;
-    case B_KNIGHT:
-      value = -knight_postion_value_table[index];
-      break;
-    case B_BISHOP:
-      value = -bishop_postion_value_table[index];
-      break;
-    case B_ROOK:
-      value = -rook_postion_value_table[index];
-      break;
-    case B_QUEEN:
-      value = -queen_postion_value_table[index];
-      break;
-    case B_KING:
-      value = -king_postion_value_table[index];
-      break;
-    case W_PAWN:
-      value = pawn_postion_value_table[white_indexes[index]];
-      break;
-    case W_KNIGHT:
-      value = knight_postion_value_table[white_indexes[index]];
-      break;
-    case W_BISHOP:
-      value = bishop_postion_value_table[white_indexes[index]];
-      break;
-    case W_ROOK:
-      value = rook_postion_value_table[white_indexes[index]];
-      break;
-    case W_QUEEN:
-      value = queen_postion_value_table[white_indexes[index]];
-      break;
-    case W_KING:
-      value = king_postion_value_table[white_indexes[index]];
-      break;
-    case INVALID:
-    case EMPTY:
-    default:
-      assert(false);
-      break;
-  }
-
-  return value;
+  move_t ordered_moves[MAX_MOVES];
 }

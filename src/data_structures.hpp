@@ -59,6 +59,9 @@ typedef uint8_t castling_t;
 
 static constexpr index_t INVALID_BOARD_INDEX = 127;
 
+// The maximum number of legal moves that is possible to generate
+#define MAX_MOVES 270
+
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
 {

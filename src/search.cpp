@@ -25,7 +25,7 @@ int quiescence_search(int alpha,
   if (eval >= beta) { return beta; }
   if (eval > alpha) { alpha = eval; }
 
-  move_t moves[270];
+  move_t moves[MAX_MOVES];
   const size_t move_count = generate_legal_moves(board, moves);
 
   for (size_t i = 0; i < move_count; ++i) {
@@ -64,7 +64,7 @@ int alpha_beta_negamax(int alpha,
 
   int max_eval = std::numeric_limits<int>::min();
 
-  move_t moves[270];
+  move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
 
   if (moves_count == 0) {
@@ -109,7 +109,7 @@ search_t search_best_move(int depth, const board_t* board)
   move_t best_move;
   uint64_t num_of_nodes_explored = 0;
 
-  move_t moves[270];
+  move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
 
 #ifdef RUN_THREADS
