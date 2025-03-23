@@ -29,9 +29,12 @@ int quiescence_search(int alpha,
   if (eval > alpha) { alpha = eval; }
 
   move_t moves[MAX_MOVES];
-  const size_t move_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, moves);
 
-  for (size_t i = 0; i < move_count; ++i) {
+  // Sort moves
+  order_moves(moves, moves_count);
+
+  for (size_t i = 0; i < moves_count; ++i) {
     if (moves[i].captured == INVALID || moves[i].promoted_to == TO_NONE) {
       // Skip
       continue;
@@ -64,6 +67,7 @@ int alpha_beta_negamax(int alpha,
 
   if (depth == 0) {
     return quiescence_search(alpha, beta, board, num_of_nodes_explored);
+    // *num_of_nodes_explored += 1;
     // return (board->game_state.active_color == WHITE ? 1 : -1) *
     // evaluate(board);
   }
@@ -72,10 +76,16 @@ int alpha_beta_negamax(int alpha,
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
+  const bool is_in_check = is_check(board);
+
+  if (is_in_check) {
+    // if we are in check we want to search deeper
+    ++depth;
+  }
 
   if (moves_count == 0) {
     // Checkmate or stalemate handling
-    if (is_checkmate(board)) {
+    if (is_in_check) {
       // Checkmate. Use the depth in order to prefer the fastest mate
       // Test pos: 4k3/8/5K2/8/1Q6/8/8/8 w - - 10 1
       return -MATE_SCORE + (MAX_MATE_DEPTH - depth);
@@ -84,6 +94,9 @@ int alpha_beta_negamax(int alpha,
       return 0;
     }
   }
+
+  // Sort moves
+  order_moves(moves, moves_count);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;

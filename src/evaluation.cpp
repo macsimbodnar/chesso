@@ -238,7 +238,48 @@ int evaluate_move(const move_t* move)
 void order_moves(move_t moves[], size_t moves_size)
 {
   assert(moves != nullptr);
-
+  assert(moves_size <= MAX_MOVES);
   (void)moves;
   (void)moves_size;
+
+  int scores[MAX_MOVES];
+  for (size_t i = 0; i < moves_size; ++i) {
+    scores[i] = evaluate_move(&moves[i]);
+  }
+
+  // Insertion sort
+  for (size_t i = 1; i < moves_size; ++i) {
+    const int value = scores[i];
+    const move_t move = moves[i];
+    int j = i;
+
+    while (j != 0 && scores[j - 1] < value) {
+      scores[j] = scores[j - 1];
+      moves[j] = moves[j - 1];
+      --j;
+    }
+
+    scores[j] = value;
+    moves[j] = move;
+  }
+
+
+  // Selection Sort
+  // for (size_t i = 0; i < moves_size; ++i) {
+  //   size_t best_index = i;
+
+  //   for (size_t candidate = i; candidate < moves_size; ++candidate) {
+  //     if (scores[candidate] > scores[best_index]) { best_index = candidate; }
+  //   }
+
+  //   // Swapping elements
+  //   const int old_score = scores[i];
+  //   const move_t old_move = moves[i];
+
+  //   scores[i] = scores[best_index];
+  //   moves[i] = moves[best_index];
+
+  //   scores[best_index] = old_score;
+  //   moves[best_index] = old_move;
+  // }
 }
