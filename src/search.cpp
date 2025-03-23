@@ -35,7 +35,7 @@ int quiescence_search(int alpha,
   order_moves(moves, moves_count);
 
   for (size_t i = 0; i < moves_count; ++i) {
-    if (moves[i].captured == INVALID || moves[i].promoted_to == TO_NONE) {
+    if (moves[i].captured == INVALID && moves[i].promoted_to == TO_NONE) {
       // Skip
       continue;
     }
@@ -66,10 +66,9 @@ int alpha_beta_negamax(int alpha,
   assert(num_of_nodes_explored != nullptr);
 
   if (depth == 0) {
-    // return quiescence_search(alpha, beta, board, num_of_nodes_explored);
-    *num_of_nodes_explored += 1;
-    return (board->game_state.active_color == WHITE ? 1 : -1) *
-    evaluate(board);
+    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
+    // *num_of_nodes_explored += 1;
+    // return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
   int max_eval = std::numeric_limits<int>::min();
