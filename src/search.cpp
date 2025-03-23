@@ -9,7 +9,7 @@
 
 #define MATE_SCORE 10000000
 #define MAX_MATE_DEPTH 10000
-// #define RUN_THREADS
+#define RUN_THREADS
 
 
 int quiescence_search(int alpha,
@@ -66,10 +66,10 @@ int alpha_beta_negamax(int alpha,
   assert(num_of_nodes_explored != nullptr);
 
   if (depth == 0) {
-    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
-    // *num_of_nodes_explored += 1;
-    // return (board->game_state.active_color == WHITE ? 1 : -1) *
-    // evaluate(board);
+    // return quiescence_search(alpha, beta, board, num_of_nodes_explored);
+    *num_of_nodes_explored += 1;
+    return (board->game_state.active_color == WHITE ? 1 : -1) *
+    evaluate(board);
   }
 
   int max_eval = std::numeric_limits<int>::min();
