@@ -1,15 +1,26 @@
 #include "search.hpp"
 #include <cassert>
 #include <future>
+#include <iostream>
 #include <limits>
 #include <thread>
 #include "board.hpp"
 #include "evaluation.hpp"
 #include "move_generator.hpp"
 
-#define MATE_SCORE 10000000
-#define MAX_MATE_DEPTH 10000
+
 #define RUN_THREADS
+
+#define MATE_SCORE 1000000
+#define MAX_MATE_DEPTH 10000
+
+static constexpr int MIN = std::numeric_limits<int>::min() + 100;
+static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+
+void debug_print_move(const move_t* move, int score)
+{
+  std::cout << *move << "        " << score << "\n";
+}
 
 
 int quiescence_search(int alpha,
@@ -59,19 +70,14 @@ int quiescence_search(int alpha,
 int alpha_beta_negamax(int alpha,
                        int beta,
                        int depth,
+                       int ply,
                        const board_t* board,
                        uint64_t* num_of_nodes_explored)
 {
   assert(board != nullptr);
   assert(num_of_nodes_explored != nullptr);
 
-  if (depth == 0) {
-    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
-    // *num_of_nodes_explored += 1;
-    // return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
-  }
-
-  int max_eval = std::numeric_limits<int>::min();
+  int max_eval = MIN;
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
@@ -87,11 +93,15 @@ int alpha_beta_negamax(int alpha,
     if (is_in_check) {
       // Checkmate. Use the depth in order to prefer the fastest mate
       // Test pos: 4k3/8/5K2/8/1Q6/8/8/8 w - - 10 1
-      return -MATE_SCORE + (MAX_MATE_DEPTH - depth);
+      return -(MATE_SCORE - ply);
     } else {
       // Stalemate
       return 0;
     }
+  }
+
+  if (depth == 0) {
+    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
   }
 
   // Sort moves
@@ -104,9 +114,8 @@ int alpha_beta_negamax(int alpha,
     (void)done;
     assert(done);
 
-    int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, &tmp_board,
-                                   num_of_nodes_explored);
-
+    int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+                                   &tmp_board, num_of_nodes_explored);
 
     if (eval > max_eval) { max_eval = eval; }
 
@@ -125,7 +134,7 @@ search_t search_best_move(int depth, const board_t* board)
 {
   assert(board != nullptr);
 
-  int best_eval = std::numeric_limits<int>::min();
+  int best_eval = MIN;
   move_t best_move;
   uint64_t num_of_nodes_explored = 0;
 
@@ -152,9 +161,8 @@ search_t search_best_move(int depth, const board_t* board)
           (void)done;
           assert(done);
 
-          const int eval = -alpha_beta_negamax(
-              std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-              depth - 1, &tmp_board, &nodes_explored);
+          const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1,
+                                               &tmp_board, &nodes_explored);
 
           res_t result = {i, eval, nodes_explored};
           return result;
@@ -165,6 +173,8 @@ search_t search_best_move(int depth, const board_t* board)
     const res_t& result = future.get();
 
     num_of_nodes_explored += result.nodes_explored;
+
+    // debug_print_move(&moves[result.move_index], result.score);
 
     if (result.score >= best_eval) {
       best_eval = result.score;
@@ -180,9 +190,10 @@ search_t search_best_move(int depth, const board_t* board)
     (void)done;
     assert(done);
 
-    const int eval = -alpha_beta_negamax(
-        std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
-        depth - 1, &tmp_board, &num_of_nodes_explored);
+    const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1, &tmp_board,
+                                         &num_of_nodes_explored);
+
+    debug_print_move(&moves[i], eval);
 
     if (eval >= best_eval) {
       best_eval = eval;
@@ -191,5 +202,9 @@ search_t search_best_move(int depth, const board_t* board)
   }
 #endif
 
-  return {best_move, best_eval, num_of_nodes_explored};
+  // NOTE: The output sign needs to be adjusted to be shown always from the
+  // white point of view
+  return {best_move,
+          (board->game_state.active_color == WHITE ? 1 : -1) * best_eval,
+          num_of_nodes_explored};
 }
