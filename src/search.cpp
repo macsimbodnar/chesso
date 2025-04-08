@@ -126,18 +126,21 @@ int alpha_beta_negamax(int alpha,
       // Found better move
       max_eval = eval;
 
-      // Update the history move
-      assert(moves[i].piece != INVALID);
-      assert(moves[i].piece != EMPTY);
-      assert(moves[i].to != INVALID_BOARD_INDEX);
-      history_moves[moves[i].piece][moves[i].to] += depth;
+      // Only on quite moves
+      if (moves[i].captured == INVALID) {
+        // Update the history move
+        assert(moves[i].piece != INVALID);
+        assert(moves[i].piece != EMPTY);
+        assert(moves[i].to != INVALID_BOARD_INDEX);
+        history_moves[moves[i].piece][moves[i].to] += depth;
+      }
     }
 
     alpha = std::max(alpha, eval);
     if (alpha >= beta) {
       // Beta cut-off
 
-      // On not capture moves
+      // Only on quite moves
       if (moves[i].captured == INVALID) {
         // Store the killer move
         killer_moves[1][ply] = killer_moves[0][ply];
