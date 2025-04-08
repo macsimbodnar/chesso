@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <queue>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
@@ -40,6 +41,10 @@ void uci_reply(const std::string& response)
 //-##############################   DATA TYPES  #############################-//
 
 typedef bool (*process_func)(std::queue<std::string>&);
+
+
+std::string pv_to_string(const pv_t* pv);
+
 
 std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
 {
@@ -118,7 +123,8 @@ public:
 
     uci_reply("info score cp " + std::to_string(search_result.score) +
               " depth " + std::to_string(depth) + " nodes " +
-              std::to_string(search_result.explored_nodes));
+              std::to_string(search_result.explored_nodes) + " pv " +
+              pv_to_string(&search_result.pv));
 
     const uci_move_t result = {search_result.best_move.from,
                                search_result.best_move.to,
@@ -319,6 +325,23 @@ std::string uci_move_to_algebraic(const uci_move_t* move)
   }
 
   return result;
+}
+
+
+std::string pv_to_string(const pv_t* pv)
+{
+  assert(pv != nullptr);
+
+  std::stringstream ss;
+
+  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
+    const uci_move_t move = {pv->pv_table[0][i].from, pv->pv_table[0][i].to,
+                             pv->pv_table[0][i].promoted_to};
+
+    ss << uci_move_to_algebraic(&move) << " ";
+  }
+
+  return ss.str();
 }
 
 
