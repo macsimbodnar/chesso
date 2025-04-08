@@ -137,9 +137,12 @@ int alpha_beta_negamax(int alpha,
     if (alpha >= beta) {
       // Beta cut-off
 
-      // Store the killer move
-      killer_moves[1][ply] = killer_moves[0][ply];
-      killer_moves[0][ply] = moves[i];
+      // On not capture moves
+      if (moves[i].captured == INVALID) {
+        // Store the killer move
+        killer_moves[1][ply] = killer_moves[0][ply];
+        killer_moves[0][ply] = moves[i];
+      }
 
       break;
     }
