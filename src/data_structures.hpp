@@ -61,6 +61,7 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
+#define MAX_PLY 100
 
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
@@ -168,14 +169,14 @@ struct move_t
   // TODO: add if double check
   // TODO: add if checkmate
 
-
   bool operator==(const move_t& other) const
   {
-    return (from == other.from && to == other.to && piece == other.piece &&
-            promoted_to == other.promoted_to && captured == other.captured &&
-            double_pawn_move == other.double_pawn_move &&
-            en_passant_capture == other.en_passant_capture &&
-            castling_move == other.castling_move);
+    return (from == other.from && to == other.to && piece == other.piece);
+    // return (from == other.from && to == other.to && piece == other.piece &&
+    //         promoted_to == other.promoted_to && captured == other.captured &&
+    //         double_pawn_move == other.double_pawn_move &&
+    //         en_passant_capture == other.en_passant_capture &&
+    //         castling_move == other.castling_move);
   }
 
   move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX, INVALID) {}

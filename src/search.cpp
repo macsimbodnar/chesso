@@ -43,7 +43,7 @@ int quiescence_search(int alpha,
   const size_t moves_count = generate_legal_moves(board, moves);
 
   // Sort moves
-  order_moves(moves, moves_count);
+  // order_moves(moves, moves_count);
 
   for (size_t i = 0; i < moves_count; ++i) {
     if (moves[i].captured == INVALID && moves[i].promoted_to == TO_NONE) {
@@ -72,10 +72,14 @@ int alpha_beta_negamax(int alpha,
                        int depth,
                        int ply,
                        const board_t* board,
-                       uint64_t* num_of_nodes_explored)
+                       uint64_t* num_of_nodes_explored,
+                       move_t killer_moves[2][MAX_PLY],
+                       int history_moves[piece_t::EMPTY + 1][BOARD_SIZE])
 {
   assert(board != nullptr);
   assert(num_of_nodes_explored != nullptr);
+  assert(killer_moves != nullptr);
+  assert(history_moves != nullptr);
 
   int max_eval = MIN;
 
@@ -105,7 +109,7 @@ int alpha_beta_negamax(int alpha,
   }
 
   // Sort moves
-  order_moves(moves, moves_count);
+  order_moves(moves, moves_count, ply, killer_moves, history_moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -114,14 +118,29 @@ int alpha_beta_negamax(int alpha,
     (void)done;
     assert(done);
 
-    int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                   &tmp_board, num_of_nodes_explored);
+    int eval =
+        -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
+                            num_of_nodes_explored, killer_moves, history_moves);
 
-    if (eval > max_eval) { max_eval = eval; }
+    if (eval > max_eval) {
+      // Found better move
+      max_eval = eval;
+
+      // Update the history move
+      assert(moves[i].piece != INVALID);
+      assert(moves[i].piece != EMPTY);
+      assert(moves[i].to != INVALID_BOARD_INDEX);
+      history_moves[moves[i].piece][moves[i].to] += depth;
+    }
 
     alpha = std::max(alpha, eval);
     if (alpha >= beta) {
       // Beta cut-off
+
+      // Store the killer move
+      killer_moves[1][ply] = killer_moves[0][ply];
+      killer_moves[0][ply] = moves[i];
+
       break;
     }
   }
@@ -161,8 +180,14 @@ search_t search_best_move(int depth, const board_t* board)
           (void)done;
           assert(done);
 
-          const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1,
-                                               &tmp_board, &nodes_explored);
+          // killer_moves[id][ply]
+          move_t killer_moves[2][MAX_PLY];
+          // history_moves[pieces][squares]
+          int history_moves[piece_t::EMPTY + 1][BOARD_SIZE] = {};
+
+          const int eval =
+              -alpha_beta_negamax(MIN, MAX, depth - 1, 1, &tmp_board,
+                                  &nodes_explored, killer_moves, history_moves);
 
           res_t result = {i, eval, nodes_explored};
           return result;
@@ -183,6 +208,11 @@ search_t search_best_move(int depth, const board_t* board)
   }
 
 #else
+  // killer_moves[id][ply]
+  move_t killer_moves[2][MAX_PLY];
+  // history_moves[pieces][squares]
+  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE] = {};
+
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
 
@@ -190,10 +220,12 @@ search_t search_best_move(int depth, const board_t* board)
     (void)done;
     assert(done);
 
-    const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1, &tmp_board,
-                                         &num_of_nodes_explored);
 
-    debug_print_move(&moves[i], eval);
+    const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1, &tmp_board,
+                                         &num_of_nodes_explored, killer_moves,
+                                         history_moves);
+
+    // debug_print_move(&moves[i], eval);
 
     if (eval >= best_eval) {
       best_eval = eval;
