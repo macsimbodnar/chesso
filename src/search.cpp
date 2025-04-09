@@ -9,8 +9,6 @@
 #include "move_generator.hpp"
 
 
-#define RUN_THREADS
-
 #define MATE_SCORE 1000000
 #define MAX_MATE_DEPTH 10000
 
@@ -25,16 +23,20 @@ void debug_print_move(const move_t* move, int score)
 
 int quiescence_search(int alpha,
                       int beta,
+                      size_t qs_ply,
                       const board_t* board,
                       uint64_t* num_of_nodes_explored)
 {
   assert(board != nullptr);
   assert(num_of_nodes_explored != nullptr);
 
+
   *num_of_nodes_explored += 1;
 
   const int eval =
       (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+
+  if (qs_ply > 4) { return eval; }
 
   if (eval >= beta) { return beta; }
   if (eval > alpha) { alpha = eval; }
@@ -56,8 +58,8 @@ int quiescence_search(int alpha,
     (void)done;
     assert(done);
 
-    const int score =
-        -quiescence_search(-beta, -alpha, &tmp_board, num_of_nodes_explored);
+    const int score = -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board,
+                                         num_of_nodes_explored);
 
     if (score >= beta) { return beta; }
     if (score >= alpha) { alpha = score; }
@@ -72,21 +74,18 @@ int alpha_beta_negamax(int alpha,
                        int depth,
                        size_t ply,
                        const board_t* board,
-                       uint64_t* num_of_nodes_explored,
-                       move_t killer_moves[2][MAX_PLY],
-                       int history_moves[piece_t::EMPTY + 1][BOARD_SIZE],
-                       pv_t* pv)
+                       search_state_t* state)
 {
   assert(board != nullptr);
-  assert(num_of_nodes_explored != nullptr);
-  assert(killer_moves != nullptr);
-  assert(history_moves != nullptr);
-  assert(pv != nullptr);
+  assert(state != nullptr);
+
+  // We just return in case we overrun the max ply
+  if (ply >= MAX_PLY) { return evaluate(board); }
 
   int max_eval = MIN;
 
   // Init the PV length
-  pv->pv_length[ply] = ply;
+  state->pv.pv_length[ply] = ply;
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
@@ -110,12 +109,14 @@ int alpha_beta_negamax(int alpha,
   }
 
   if (depth == 0) {
-    return quiescence_search(alpha, beta, board, num_of_nodes_explored);
+    return quiescence_search(alpha, beta, 0, board, &state->explored_nodes);
+    // state->explored_nodes++;
+    // return evaluate(board);
   }
 
   // Sort moves
-  order_moves(moves, moves_count, ply, killer_moves, history_moves);
-
+  order_moves(moves, moves_count, ply, state->killer_moves,
+              state->history_moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -125,8 +126,7 @@ int alpha_beta_negamax(int alpha,
     assert(done);
 
     int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                   &tmp_board, num_of_nodes_explored,
-                                   killer_moves, history_moves, pv);
+                                   &tmp_board, state);
 
     if (eval > max_eval) {
       // Found better move
@@ -138,19 +138,20 @@ int alpha_beta_negamax(int alpha,
         assert(moves[i].piece != INVALID);
         assert(moves[i].piece != EMPTY);
         assert(moves[i].to != INVALID_BOARD_INDEX);
-        history_moves[moves[i].piece][moves[i].to] += depth;
+        state->history_moves[moves[i].piece][moves[i].to] += depth;
       }
 
       // Write PV move
-      pv->pv_table[ply][ply] = moves[i];
+      state->pv.pv_table[ply][ply] = moves[i];
 
       // Copy the moves from deeper ply into the current ply's line
-      for (size_t next_ply = ply + 1; next_ply < pv->pv_length[ply + 1];
+      for (size_t next_ply = ply + 1; next_ply < state->pv.pv_length[ply + 1];
            ++next_ply) {
-        pv->pv_table[ply][next_ply] = pv->pv_table[ply + 1][next_ply];
+        state->pv.pv_table[ply][next_ply] =
+            state->pv.pv_table[ply + 1][next_ply];
       }
 
-      pv->pv_length[ply] = pv->pv_length[ply + 1];
+      state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
     }
 
     alpha = std::max(alpha, eval);
@@ -160,138 +161,37 @@ int alpha_beta_negamax(int alpha,
       // Only on quite moves
       if (moves[i].captured == INVALID) {
         // Store the killer move
-        killer_moves[1][ply] = killer_moves[0][ply];
-        killer_moves[0][ply] = moves[i];
+        state->killer_moves[1][ply] = state->killer_moves[0][ply];
+        state->killer_moves[0][ply] = moves[i];
       }
 
       break;
     }
   }
 
+
   return max_eval;
 }
 
 
-search_t search_best_move(int depth, const board_t* board)
+search_t search_best_move(int depth,
+                          const board_t* board,
+                          search_state_t* state)
 {
   assert(board != nullptr);
+  assert(state != nullptr);
 
   search_t search_result = {};
-  search_result.score = MIN;
-  search_result.explored_nodes = 0;
-  search_result.pv = {};
 
-  move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const int eval = -alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
-#ifdef RUN_THREADS
-  struct res_t
-  {
-    size_t move_index;
-    int score;
-    uint64_t nodes_explored;
-    pv_t pv;
-  };
-
-  std::vector<std::future<res_t>> results_futures;
-
-  for (size_t i = 0; i < moves_count; ++i) {
-    results_futures.push_back(
-        std::async(std::launch::async, [moves, i, depth, board]() {
-          board_t tmp_board = *board;
-
-          uint64_t nodes_explored = 0;
-          const bool done = make_move(&moves[i], &tmp_board, nullptr);
-          (void)done;
-          assert(done);
-
-          // killer_moves[id][ply]
-          move_t killer_moves[2][MAX_PLY];
-          // history_moves[pieces][squares]
-          int history_moves[piece_t::EMPTY + 1][BOARD_SIZE] = {};
-
-          res_t result = {};
-          result.pv = {};
-
-          const int eval = -alpha_beta_negamax(
-              MIN, MAX, depth - 1, 1, &tmp_board, &nodes_explored, killer_moves,
-              history_moves, &result.pv);
-
-          result.move_index = i;
-          result.score = eval;
-          result.nodes_explored = nodes_explored;
-
-          return result;
-        }));
-  }
-
-  for (auto& future : results_futures) {
-    const res_t& result = future.get();
-
-    search_result.explored_nodes += result.nodes_explored;
-
-    // debug_print_move(&moves[result.move_index], result.score);
-
-    if (result.score >= search_result.score) {
-      search_result.score = result.score;
-      search_result.best_move = moves[result.move_index];
-      search_result.pv = result.pv;
-
-      // Update the PV with the best move at ply 0
-      search_result.pv.pv_table[0][0] = moves[result.move_index];
-      // Copy the moves from deeper ply into the current ply's line
-      for (size_t next_ply = 1; next_ply < search_result.pv.pv_length[1];
-           ++next_ply) {
-        search_result.pv.pv_table[0][next_ply] =
-            search_result.pv.pv_table[1][next_ply];
-      }
-      search_result.pv.pv_length[0] = search_result.pv.pv_length[1];
-    }
-  }
-
-#else
-  // killer_moves[id][ply]
-  move_t killer_moves[2][MAX_PLY];
-  // history_moves[pieces][squares]
-  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE] = {};
-  pv_t pv = {};
-
-  for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
-    (void)done;
-    assert(done);
-
-
-    const int eval = -alpha_beta_negamax(MIN, MAX, depth - 1, 1, &tmp_board,
-                                         &search_result.explored_nodes,
-                                         killer_moves, history_moves, &pv);
-
-    // debug_print_move(&moves[i], eval);
-
-    if (eval >= search_result.score) {
-      search_result.score = eval;
-      search_result.best_move = moves[i];
-      search_result.pv = pv;
-
-      // Update the PV with the best move at ply 0
-      search_result.pv.pv_table[0][0] = moves[i];
-      // Copy the moves from deeper ply into the current ply's line
-      for (size_t next_ply = 1; next_ply < search_result.pv.pv_length[1];
-           ++next_ply) {
-        search_result.pv.pv_table[0][next_ply] =
-            search_result.pv.pv_table[1][next_ply];
-      }
-      search_result.pv.pv_length[0] = search_result.pv.pv_length[1];
-    }
-  }
-#endif
-
+  search_result.best_move = state->pv.pv_table[0][0];
+  search_result.explored_nodes = state->explored_nodes;
+  search_result.pv = state->pv;
   // NOTE: The output sign needs to be adjusted to be shown always from the
   // white point of view
   search_result.score =
-      (board->game_state.active_color == WHITE ? 1 : -1) * search_result.score;
+      (board->game_state.active_color == WHITE ? 1 : -1) * eval;
 
   return search_result;
 }

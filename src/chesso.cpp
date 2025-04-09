@@ -119,16 +119,28 @@ public:
 
   uci_move_t get_best_move(int depth)
   {
-    const search_t search_result = search_best_move(depth, &board);
+    search_state_t state = {};
+    uci_move_t result;
 
-    uci_reply("info score cp " + std::to_string(search_result.score) +
-              " depth " + std::to_string(depth) + " nodes " +
-              std::to_string(search_result.explored_nodes) + " pv " +
-              pv_to_string(&search_result.pv));
+    for (int current_depth = 1; current_depth <= depth; ++current_depth) {
+      // Iterative deepening
+      auto start_time = std::chrono::high_resolution_clock::now();
+      const search_t search_result =
+          search_best_move(current_depth, &board, &state);
+      const auto end_time = std::chrono::high_resolution_clock::now();
+      const auto duration_ms =
+          std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
+                                                                start_time);
 
-    const uci_move_t result = {search_result.best_move.from,
-                               search_result.best_move.to,
-                               search_result.best_move.promoted_to};
+      uci_reply("info score cp " + std::to_string(search_result.score) +
+                " time " + std::to_string(duration_ms.count()) + " depth " +
+                std::to_string(current_depth) + " nodes " +
+                std::to_string(search_result.explored_nodes) + " pv " +
+                pv_to_string(&search_result.pv));
+
+      result = {search_result.best_move.from, search_result.best_move.to,
+                search_result.best_move.promoted_to};
+    }
 
     return result;
   }
@@ -441,6 +453,25 @@ bool command_position(std::queue<std::string>& args)
       // Initialize the board to the default starting position
       engine.set_default_position();
       LOG_I << "Set default position" << END_I;
+    }
+
+    if (token == "empty") {
+      engine.set_position("8/8/8/8/8/8/8/8 b - -");
+      LOG_I << "Set empty position" << END_I;
+    }
+
+    if (token == "tricky") {
+      // clang-format off
+      engine.set_position("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+      // clang-format on
+      LOG_I << "Set tricky position" << END_I;
+    }
+
+    if (token == "killer") {
+      // clang-format off
+      engine.set_position("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
+      // clang-format on
+      LOG_I << "Set killer position" << END_I;
     }
 
     if (token == "fen") {
