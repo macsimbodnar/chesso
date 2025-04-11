@@ -75,8 +75,9 @@ cmake ..  -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-pg -DCMAKE_EXE_L
 ninja
 
 # Execute the program in order to generate the gmon.out file
+cd test
+./debug_main
 
-#if we want to profile a test:
-cd tests
-gprof test_chesso_board gmon.out > analysis.txt
+# Get profiler results
+gprof debug_main gmon.out > analysis.txt
 ```

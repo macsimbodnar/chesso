@@ -171,7 +171,8 @@ struct move_t
 
   bool operator==(const move_t& other) const
   {
-    return (from == other.from && to == other.to && piece == other.piece);
+    return (from == other.from && to == other.to && piece == other.piece &&
+            promoted_to == other.promoted_to);
     // return (from == other.from && to == other.to && piece == other.piece &&
     //         promoted_to == other.promoted_to && captured == other.captured &&
     //         double_pawn_move == other.double_pawn_move &&
@@ -245,3 +246,26 @@ struct history_entry_t
 
 // TODO: Make heep allocation during initialization
 typedef std::stack<history_entry_t> history_t;
+
+struct pv_t
+{
+  size_t pv_length[MAX_PLY];
+  move_t pv_table[MAX_PLY][MAX_PLY];
+};
+
+struct search_t
+{
+  move_t best_move;
+  int score;
+  uint64_t explored_nodes;
+  pv_t pv;
+};
+
+
+struct search_state_t
+{
+  uint64_t explored_nodes;
+  move_t killer_moves[2][MAX_PLY];
+  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];
+  pv_t pv;
+};

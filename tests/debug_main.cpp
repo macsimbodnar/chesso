@@ -37,40 +37,15 @@ int main(int argc, char* argv[])
   // LOG_W << "Debug" << END_W;
   // LOG_E << "Debug" << END_E;
 
-  // killer_moves[id][ply]
-  move_t killer_moves[2][MAX_PLY];
-  // history_moves[pieces][squares]
-  int history_moves[12][BOARD_SIZE];
-
   board_t board;
   history_t history;
-  init_board("r2q1r1k/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R w KQ - 1 2",
-             &board, &history);
+  init_board(KILLER_POS, &board, &history);
 
-  move_t moves[MAX_MOVES];
-  size_t count = generate_legal_moves(&board, moves);
+  search_state_t state = {};
 
-  killer_moves[0][0] = moves[1];
-  killer_moves[1][0] = moves[2];
+  const search_t search_result = search_best_move(6, &board, &state);
 
-  history_moves[moves[3].piece][moves[3].to] = 35;
-
-  for (size_t i = 0; i < count; ++i) {
-    const move_t& move = moves[i];
-    int score = evaluate_move(&move, 0, killer_moves, history_moves);
-    LOG_I << move << "    " << score << std::endl;
-  }
-
-  // Sort moves
-  order_moves(moves, count, 0, killer_moves, history_moves);
-
-
-  LOG_I << "ORDERED" << END_I;
-  for (size_t i = 0; i < count; ++i) {
-    const move_t& move = moves[i];
-    int score = evaluate_move(&move, 0, killer_moves, history_moves);
-    LOG_I << move << "    " << score << std::endl;
-  }
+  LOG_I << search_result.best_move << " " << search_result.score << std::endl;
 
   return 0;
 }

@@ -2,10 +2,6 @@
 
 ## Roadmap
 
-* UCI protocol
-* Board evaluation
-* Move search
-
 ## Other
 
 * Solve the `is_pin` and `generate_attacks_vector` const board but it's modified

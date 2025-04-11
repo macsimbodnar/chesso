@@ -215,16 +215,10 @@ int evaluate(const board_t* board)
 }
 
 
-int evaluate_move(const move_t* move,
-                  size_t ply,
-                  move_t killer_moves[2][MAX_PLY],
-                  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE])
+int evaluate_move(const move_t* move, size_t ply, search_state_t* state)
 {
-  assert(killer_moves != nullptr);
-  assert(killer_moves[0] != nullptr);
-  assert(killer_moves[1] != nullptr);
   assert(move != nullptr);
-  assert(history_moves != nullptr);
+  assert(state != nullptr);
 
   if (move->captured != INVALID) {
     const piece_t attacker = move->piece;
@@ -238,12 +232,12 @@ int evaluate_move(const move_t* move,
     const int score = mvv_lva[attacker][victim];
     return 10000 + score;
   } else {
-    if (*move == killer_moves[0][ply]) {
+    if (*move == state->killer_moves[0][ply]) {
       return 10000 - 1000;
-    } else if (*move == killer_moves[1][ply]) {
+    } else if (*move == state->killer_moves[1][ply]) {
       return 10000 - 2000;
     } else {
-      return history_moves[move->piece][move->to];
+      return state->history_moves[move->piece][move->to];
     }
   }
 
@@ -254,18 +248,17 @@ int evaluate_move(const move_t* move,
 void order_moves(move_t moves[],
                  size_t moves_size,
                  size_t ply,
-                 move_t killer_moves[2][MAX_PLY],
-                 int history_moves[piece_t::EMPTY + 1][BOARD_SIZE])
+                 search_state_t* state)
 {
   assert(moves != nullptr);
   assert(moves_size <= MAX_MOVES);
-  assert(killer_moves != nullptr);
-  assert(killer_moves[0] != nullptr);
-  assert(killer_moves[1] != nullptr);
+  assert(state != nullptr);
+  assert(state->killer_moves[0] != nullptr);
+  assert(state->killer_moves[1] != nullptr);
 
   int scores[MAX_MOVES];
   for (size_t i = 0; i < moves_size; ++i) {
-    scores[i] = evaluate_move(&moves[i], ply, killer_moves, history_moves);
+    scores[i] = evaluate_move(&moves[i], ply, state);
   }
 
   // Insertion sort

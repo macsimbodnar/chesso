@@ -115,8 +115,7 @@ int alpha_beta_negamax(int alpha,
   }
 
   // Sort moves
-  order_moves(moves, moves_count, ply, state->killer_moves,
-              state->history_moves);
+  order_moves(moves, moves_count, ply, state);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -169,7 +168,6 @@ int alpha_beta_negamax(int alpha,
     }
   }
 
-
   return max_eval;
 }
 
@@ -183,7 +181,7 @@ search_t search_best_move(int depth,
 
   search_t search_result = {};
 
-  const int eval = -alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  const int eval = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
