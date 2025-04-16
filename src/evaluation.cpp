@@ -231,6 +231,20 @@ int evaluate_move(const move_t* move, size_t ply, search_state_t* state)
 
     const int score = mvv_lva[attacker][victim];
     return 10000 + score;
+  } else if (move->promoted_to != TO_NONE) {
+    switch (move->promoted_to) {
+      case TO_QUEEN:
+        return 10000 + 500;
+      case TO_ROOK:
+        return 10000 + 350;
+      case TO_KNIGHT:
+      case TO_BISHOP:
+        return 10000 + 100;
+
+      case TO_NONE:
+      default:
+        return 0;
+    }
   } else {
     if (*move == state->killer_moves[0][ply]) {
       return 10000 - 1000;

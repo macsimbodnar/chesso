@@ -333,7 +333,7 @@ std::string uci_move_to_algebraic(const uci_move_t* move)
   result += index_to_string_coordinates(move->to);
 
   if (move->promotion != TO_NONE) {
-    result + promotion_to_string(move->promotion);
+    result += promotion_to_string(move->promotion);
   }
 
   return result;
@@ -655,7 +655,7 @@ int main()
 
   // Print the engine info
   std::queue<std::string> tokens;
-  (void)command_uci(tokens);
+  // (void)command_uci(tokens);
 
   while (running) {
     std::string input;
