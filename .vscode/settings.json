@@ -100,6 +100,7 @@
     "regex": "cpp",
     "charconv": "cpp",
     "format": "cpp",
-    "strstream": "cpp"
+    "strstream": "cpp",
+    "*.ipp": "cpp"
   }
 }

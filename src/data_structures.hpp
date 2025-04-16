@@ -108,10 +108,10 @@ enum piece_t
 enum promotion_t
 {
   TO_NONE,
-  TO_QUEEN,
   TO_KNIGHT,
+  TO_BISHOP,
   TO_ROOK,
-  TO_BISHOP
+  TO_QUEEN
 };
 
 

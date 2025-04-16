@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <queue>
+#include <random>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "data_structures.hpp"
 #include "evaluation.hpp"
 #include "move_generator.hpp"
+#include "openings.hpp"
 #include "search.hpp"
 #include "utils.hpp"
 
@@ -73,8 +75,29 @@ private:
   board_t board;
   std::string initial_position = DEFAULT_POSITION;
 
+  bool opening_book_loaded = false;
+  bool opening_book_enabled = true;
+  book_t opening_book;
+
+  std::random_device rd;
+  std::mt19937_64 gen;
+
 public:
-  engine_handler_t() { set_default_position(); }
+  engine_handler_t() : gen(rd()) { set_default_position(); }
+
+  bool try_load_opening_book()
+  {
+    opening_book_loaded = load_book_embedded(&opening_book);
+
+    if (opening_book_loaded) {
+      LOG_I << "Opening book loaded correctly! "
+            << opening_book.num_of_positions << " entries." << END_I;
+    } else {
+      LOG_E << "Failed to load the opening book." << END_E;
+    }
+
+    return opening_book_loaded;
+  }
 
   bool set_position(const std::string& fen)
   {
@@ -119,9 +142,30 @@ public:
 
   uci_move_t get_best_move(int depth)
   {
-    search_state_t state = {};
     uci_move_t result;
 
+    // Firs search move in book if enabled
+    if (opening_book_loaded && opening_book_enabled) {
+      move_t moves[MAX_MOVES];
+      const size_t moves_cout =
+          get_book_moves_for_key(&opening_book, &board, moves);
+
+      if (moves_cout > 0) {
+        // Extreme included
+        std::uniform_int_distribution<size_t> dist(0, moves_cout - 1);
+
+        const size_t index = dist(gen);
+        assert(index < moves_cout);
+        const move_t& move = moves[index];
+
+        // Move found and selected
+        result = {move.from, move.to, move.promoted_to};
+        return result;
+      }
+    }
+
+    // If no move found in the book search by engine
+    search_state_t state = {};
     for (int current_depth = 1; current_depth <= depth; ++current_depth) {
       // Iterative deepening
       auto start_time = std::chrono::high_resolution_clock::now();
@@ -656,6 +700,10 @@ int main()
   // Print the engine info
   std::queue<std::string> tokens;
   // (void)command_uci(tokens);
+
+  // Try loading opening book
+  (void)engine.try_load_opening_book();
+
 
   while (running) {
     std::string input;

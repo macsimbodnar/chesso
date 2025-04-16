@@ -270,7 +270,7 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   // Set the en-passant if necessary
   if (move->double_pawn_move) {
     // NOTE: The commented code set en-passant only if real.
-    // The uncommented code sed the en-passand at each pawn double push
+    // The uncommented code set the en-passand at each pawn double push
 
     // const index_t on_left = move->to - 0x01;
     // const index_t on_right = move->to + 0x01;
