@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <cstring>
 #include <list>
@@ -264,6 +265,7 @@ struct search_t
 
 struct search_state_t
 {
+  std::atomic_bool* stop = nullptr;
   uint64_t explored_nodes;
   move_t killer_moves[2][MAX_PLY];
   int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];

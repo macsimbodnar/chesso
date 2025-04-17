@@ -1,12 +1,15 @@
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <optional>
 #include <queue>
 #include <random>
 #include <sstream>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
@@ -60,12 +63,60 @@ std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
   return os;
 }
 
+struct uci_search_options_t
+{
+  // Modifiers
+  std::vector<move_t> searchmoves;
+  bool ponder = false;
+
+  // Exclusive fixed Limit Options
+  int depth = 0;
+  int nodes = 0;
+  int movetime_ms = 0;
+  int mate_in_n_moves = 0;
+  bool infinite = false;
+
+  // Time control options
+  int wtime_ms = 0;
+  int btime_ms = 0;
+  int winc_ms = 0;
+  int binc_ms = 0;
+  int movestogo = 1;
+};
+
 struct uci_move_t
 {
   index_t from;
   index_t to;
   promotion_t promotion;
 };
+
+struct uci_search_result_t
+{
+  uci_move_t best_move;
+  bool is_ponder_move = false;
+  uci_move_t ponder_move;
+};
+
+
+static std::atomic_bool stop_signal = false;
+static std::atomic_uint64_t session_id = 0;
+
+void send_stop_signal_after_ms(uint64_t ms)
+{
+  const uint64_t my_session_id = session_id;
+
+  std::thread job([ms, my_session_id]() {
+    std::chrono::milliseconds time_to_sleep(ms);
+    std::this_thread::sleep_for(time_to_sleep);
+
+    // Send stop signal only if the session is not changed meanwhile
+    if (session_id == my_session_id) { stop_signal = true; }
+  });
+
+  // Left the timer be, we return! Adios
+  job.detach();
+}
 
 
 class engine_handler_t
@@ -81,6 +132,9 @@ private:
 
   std::random_device rd;
   std::mt19937_64 gen;
+
+  bool is_ponder = false;
+  move_t ponder_move;
 
 public:
   engine_handler_t() : gen(rd()) { set_default_position(); }
@@ -140,9 +194,9 @@ public:
   std::string get_nice_board() { return print_nice_board(&board); }
   std::string get_fen() { return generate_FEN(&board); }
 
-  uci_move_t get_best_move(int depth)
+  uci_search_result_t get_best_move(const uci_search_options_t& search_options)
   {
-    uci_move_t result;
+    uci_search_result_t result = {};
 
     // Firs search move in book if enabled
     if (opening_book_loaded && opening_book_enabled) {
@@ -159,22 +213,36 @@ public:
         const move_t& move = moves[index];
 
         // Move found and selected
-        result = {move.from, move.to, move.promoted_to};
+        result.best_move = {move.from, move.to, move.promoted_to};
+        result.is_ponder_move = false;
+
+        LOG_I << "Found position in the opening book." << END_I;
+
         return result;
       }
     }
 
     // If no move found in the book search by engine
     search_state_t state = {};
-    for (int current_depth = 1; current_depth <= depth; ++current_depth) {
+    state.stop = &stop_signal;
+    stop_signal = false;
+
+
+    for (int current_depth = 1; current_depth <= search_options.depth;
+         ++current_depth) {
       // Iterative deepening
       auto start_time = std::chrono::high_resolution_clock::now();
+
       const search_t search_result =
           search_best_move(current_depth, &board, &state);
+
       const auto end_time = std::chrono::high_resolution_clock::now();
       const auto duration_ms =
           std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
                                                                 start_time);
+
+      // If we interupted the current search we use the previous result
+      if (stop_signal) { break; }
 
       uci_reply("info score cp " + std::to_string(search_result.score) +
                 " time " + std::to_string(duration_ms.count()) + " depth " +
@@ -182,8 +250,19 @@ public:
                 std::to_string(search_result.explored_nodes) + " pv " +
                 pv_to_string(&search_result.pv));
 
-      result = {search_result.best_move.from, search_result.best_move.to,
-                search_result.best_move.promoted_to};
+      result.best_move = {search_result.best_move.from,
+                          search_result.best_move.to,
+                          search_result.best_move.promoted_to};
+
+      if (search_result.pv.pv_length[0] > 1) {
+        result.is_ponder_move = true;
+        result.ponder_move = {search_result.pv.pv_table[0][1].from,
+                              search_result.pv.pv_table[0][1].to,
+                              search_result.pv.pv_table[0][1].promoted_to};
+
+        is_ponder = true;
+        ponder_move = search_result.pv.pv_table[0][1];
+      }
     }
 
     return result;
@@ -581,48 +660,78 @@ bool command_go(std::queue<std::string>& args)
 {
   LOG_I << "Command [go]. Args: " << args << END_I;
 
-  int depth = 3;
+  uci_search_options_t search_options = {};
+  search_options.infinite = true;
 
   while (!args.empty()) {
     const std::string token = args.front();
     args.pop();
 
     if (token == "depth") {
-      while (!args.empty()) {
-        const std::string depth_token = args.front();
-        args.pop();
+      const std::string depth_token = args.front();
+      args.pop();
 
-        try {
-          depth = std::stoi(depth_token);
-        } catch (...) {
-          LOG_W << "Depth is not a number: " << depth_token << END_W;
-        }
+      try {
+        search_options.depth = std::stoi(depth_token);
+      } catch (...) {
+        LOG_W << "Depth is not a number: " << depth_token << END_W;
+        return false;
       }
+
+    } else if (token == "movetime") {
+      const std::string movetime_ms_token = args.front();
+      args.pop();
+
+      search_options.movetime_ms = std::stoi(movetime_ms_token);
+    } else if (token == "nodes") {
+      // TODO
+    } else if (token == "mate") {
+      // TODO
+    } else if (token == "infinite") {
+      // TODO
     }
   }
 
-  auto start_time = std::chrono::high_resolution_clock::now();
-  const uci_move_t best_move = engine.get_best_move(depth);
+  // Start search in a thread
+  std::thread search_thread([search_options]() {
+    auto start_time = std::chrono::high_resolution_clock::now();
 
-  const auto end_time = std::chrono::high_resolution_clock::now();
-  const auto duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      end_time - start_time);
+    const uci_search_result_t result = engine.get_best_move(search_options);
 
-  const auto minutes =
-      std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
-  const auto seconds =
-      std::chrono::duration_cast<std::chrono::seconds>(duration_ns - minutes);
-  const auto milliseconds =
-      std::chrono::duration_cast<std::chrono::milliseconds>(duration_ns -
-                                                            minutes - seconds);
+    const auto end_time = std::chrono::high_resolution_clock::now();
+    const auto duration_ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(end_time -
+                                                             start_time);
 
-  const std::string best_move_str = uci_move_to_algebraic(&best_move);
+    const auto minutes =
+        std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
+    const auto seconds =
+        std::chrono::duration_cast<std::chrono::seconds>(duration_ns - minutes);
+    const auto milliseconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            duration_ns - minutes - seconds);
 
-  uci_reply("bestmove " + best_move_str);
+    const std::string best_move_str = uci_move_to_algebraic(&result.best_move);
 
-  LOG_I << "Best move computed at depth " << depth << " in ["
-        << std::to_string(minutes.count()) << " min " << seconds.count()
-        << " sec " << milliseconds.count() << " msec]" << END_I;
+    std::string ponder_move;
+    if (result.is_ponder_move) {
+      ponder_move = " ponder " + uci_move_to_algebraic(&result.ponder_move);
+    }
+
+    uci_reply("bestmove " + best_move_str + ponder_move);
+
+    LOG_I << "Best move computed at depth " << search_options.depth << " in ["
+          << std::to_string(minutes.count()) << " min " << seconds.count()
+          << " sec " << milliseconds.count() << " msec]" << END_I;
+  });
+
+  if (search_options.movetime_ms > 0) {
+    send_stop_signal_after_ms(search_options.movetime_ms);
+  }
+
+  search_thread.detach();
+  // End thread
+
 
   return true;
 }
@@ -632,8 +741,8 @@ bool command_stop(std::queue<std::string>& args)
 {
   LOG_I << "Command [stop]. Args: " << args << END_I;
 
-  // TODO
-
+  // stop_signal = true;
+  send_stop_signal_after_ms(5000);
   return true;
 }
 
@@ -712,6 +821,7 @@ int main()
     tokens = tokenize_input(input, " ");
 
     if (tokens.size() == 0) {
+      // TODO: There is a bug. This is spammed. Understand why and how
       LOG_W << "No tokens in string" << END_W;
       continue;
     }

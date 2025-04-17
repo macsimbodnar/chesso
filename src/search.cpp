@@ -25,16 +25,21 @@ int quiescence_search(int alpha,
                       int beta,
                       size_t qs_ply,
                       const board_t* board,
-                      uint64_t* num_of_nodes_explored)
+                      search_state_t* state)
 {
   assert(board != nullptr);
-  assert(num_of_nodes_explored != nullptr);
+  assert(state != nullptr);
+  assert(state->stop != nullptr);
 
-
-  *num_of_nodes_explored += 1;
+  state->explored_nodes += 1;
 
   const int eval =
       (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+
+  // Time management
+  if ((state->explored_nodes % 1000) && *state->stop) {
+    return evaluate(board);
+  }
 
   if (qs_ply > 4) { return eval; }
 
@@ -58,8 +63,8 @@ int quiescence_search(int alpha,
     (void)done;
     assert(done);
 
-    const int score = -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board,
-                                         num_of_nodes_explored);
+    const int score =
+        -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
 
     if (score >= beta) { return beta; }
     if (score >= alpha) { alpha = score; }
@@ -78,6 +83,12 @@ int alpha_beta_negamax(int alpha,
 {
   assert(board != nullptr);
   assert(state != nullptr);
+  assert(state->stop != nullptr);
+
+  // Time management
+  if ((state->explored_nodes % 1000) && *state->stop) {
+    return evaluate(board);
+  }
 
   // We just return in case we overrun the max ply
   if (ply >= MAX_PLY) { return evaluate(board); }
@@ -109,7 +120,7 @@ int alpha_beta_negamax(int alpha,
   }
 
   if (depth == 0) {
-    return quiescence_search(alpha, beta, 0, board, &state->explored_nodes);
+    return quiescence_search(alpha, beta, 0, board, state);
     // state->explored_nodes++;
     // return evaluate(board);
   }
