@@ -90,8 +90,6 @@ int alpha_beta_negamax(int alpha,
   // We just return in case we overrun the max ply
   if (ply >= MAX_PLY) { return evaluate(board); }
 
-  int max_eval = MIN;
-
   // Init the PV length
   state->pv.pv_length[ply] = ply;
 
@@ -107,8 +105,6 @@ int alpha_beta_negamax(int alpha,
   if (moves_count == 0) {
     // Checkmate or stalemate handling
     if (is_in_check) {
-      // Checkmate. Use the depth in order to prefer the fastest mate
-      // Test pos: 4k3/8/5K2/8/1Q6/8/8/8 w - - 10 1
       return -(MATE_SCORE - ply);
     } else {
       // Stalemate
@@ -116,11 +112,7 @@ int alpha_beta_negamax(int alpha,
     }
   }
 
-  if (depth == 0) {
-    return quiescence_search(alpha, beta, 0, board, state);
-    // state->explored_nodes++;
-    // return evaluate(board);
-  }
+  if (depth == 0) { return quiescence_search(alpha, beta, 0, board, state); }
 
   // Sort moves
   order_moves(moves, moves_count, ply, state);
@@ -135,9 +127,24 @@ int alpha_beta_negamax(int alpha,
     int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
                                    &tmp_board, state);
 
-    if (eval > max_eval) {
+
+    if (eval >= beta) {
+      // Beta cut-off
+
+      // Only on quite moves
+      if (moves[i].captured == INVALID) {
+        // Store the killer move
+        state->killer_moves[1][ply] = state->killer_moves[0][ply];
+        state->killer_moves[0][ply] = moves[i];
+      }
+
+      return beta;
+    }
+
+    if (eval > alpha) {
       // Found better move
-      max_eval = eval;
+
+      alpha = eval;
 
       // Only on quite moves
       if (moves[i].captured == INVALID) {
@@ -160,23 +167,9 @@ int alpha_beta_negamax(int alpha,
 
       state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
     }
-
-    alpha = std::max(alpha, eval);
-    if (alpha >= beta) {
-      // Beta cut-off
-
-      // Only on quite moves
-      if (moves[i].captured == INVALID) {
-        // Store the killer move
-        state->killer_moves[1][ply] = state->killer_moves[0][ply];
-        state->killer_moves[0][ply] = moves[i];
-      }
-
-      break;
-    }
   }
 
-  return max_eval;
+  return alpha;
 }
 
 
@@ -189,7 +182,7 @@ search_t search_best_move(int depth,
 
   search_t search_result = {};
 
-  const int eval = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  const int eval = -alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
