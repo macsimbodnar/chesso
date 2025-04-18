@@ -432,7 +432,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     }
 
     // Check if run out of nodes
-    if (search_result.explored_nodes > conf.nodes) { break; }
+    if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
   }
 
   return result;
@@ -628,9 +628,12 @@ bool command_go(std::queue<std::string>& args)
   LOG_I << "Command [go]. Args: " << args << END_I;
 
   uci_search_options_t search_options = {};
-  search_options.infinite = true;
+  search_options.infinite = false;
   search_options.depth = MAX_DEPTH;
-  search_options.nodes = std::numeric_limits<uint64_t>::max() - 1000;
+  search_options.nodes = 0;
+  search_options.movestogo = 1;
+  search_options.winc_ms = 0;
+  search_options.binc_ms = 0;
 
   while (!args.empty()) {
     const std::string token = args.front();
@@ -668,25 +671,101 @@ bool command_go(std::queue<std::string>& args)
         return false;
       }
     } else if (token == "mate") {
-      // TODO
+      // TODO: To implement
+      LOG_W << "Not implemented" << END_W;
+      return false;
     } else if (token == "infinite") {
-      // TODO
+      search_options.infinite = true;
+    }
+
+    if (token == "searchmoves") {
+      // TODO: To implement
+      LOG_W << "Not implemented" << END_W;
+      return false;
+    }
+
+    if (token == "ponder") {
+      // TODO: To implement
+      LOG_W << "Not implemented" << END_W;
+      return false;
+    }
+
+    if (token == "wtime") {
+      const std::string wtime_token = args.front();
+      args.pop();
+
+      try {
+        search_options.wtime_ms = std::stoi(wtime_token);
+      } catch (...) {
+        LOG_W << "Wtime is not a number: " << wtime_token << END_W;
+        return false;
+      }
+    }
+
+    if (token == "btime") {
+      const std::string btime_token = args.front();
+      args.pop();
+
+      try {
+        search_options.btime_ms = std::stoi(btime_token);
+      } catch (...) {
+        LOG_W << "Btime is not a number: " << btime_token << END_W;
+        return false;
+      }
+    }
+
+    if (token == "winc") {
+      const std::string winc_token = args.front();
+      args.pop();
+
+      try {
+        search_options.winc_ms = std::stoi(winc_token);
+      } catch (...) {
+        LOG_W << "Winc is not a number: " << winc_token << END_W;
+        return false;
+      }
+    }
+
+    if (token == "binc") {
+      const std::string binc_token = args.front();
+      args.pop();
+
+      try {
+        search_options.binc_ms = std::stoi(binc_token);
+      } catch (...) {
+        LOG_W << "Binc is not a number: " << binc_token << END_W;
+        return false;
+      }
+    }
+
+    if (token == "movestogo") {
+      const std::string movestogo_token = args.front();
+      args.pop();
+
+      try {
+        search_options.movestogo = std::stoi(movestogo_token);
+      } catch (...) {
+        LOG_W << "Movestogo is not a number: " << movestogo_token << END_W;
+        return false;
+      }
     }
   }
 
-  const move_t book_move = search_random_move_in_book();
+  // Book is searched only if the command make sense
+  if (!search_options.infinite && search_options.nodes == 0) {
+    const move_t book_move = search_random_move_in_book();
 
-  if (book_move) {
-    // We got book move, print and return straight away
-    const uci_move_t uci_book_move = {book_move.from, book_move.to,
-                                      book_move.promoted_to};
+    if (book_move) {
+      // We got book move, print and return straight away
+      const uci_move_t uci_book_move = {book_move.from, book_move.to,
+                                        book_move.promoted_to};
 
-    const std::string best_move_str = uci_move_to_algebraic(&uci_book_move);
-    uci_reply("bestmove " + best_move_str);
+      const std::string best_move_str = uci_move_to_algebraic(&uci_book_move);
+      uci_reply("bestmove " + best_move_str);
 
-    return true;
+      return true;
+    }
   }
-
 
   // Start search in a thread
   std::thread search_thread([search_options]() {
@@ -709,6 +788,33 @@ bool command_go(std::queue<std::string>& args)
   // Start the move timer if necessary
   if (search_options.movetime_ms > 0) {
     stop_search_after_ms(search_options.movetime_ms);
+
+    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
+          << "ms" << END_I;
+  }
+
+  // Calculate the time to play for white if set
+  if (search_options.wtime_ms > 0 && board.game_state.active_color == WHITE) {
+    const int time_to_play =
+        (search_options.wtime_ms / search_options.movestogo) +
+        search_options.winc_ms;
+
+    stop_search_after_ms(time_to_play);
+
+    LOG_I << "Time to play for white calculated. Search will stop in "
+          << time_to_play << "ms" << END_I;
+  }
+
+  // Calculate the time to play for black if set
+  if (search_options.btime_ms > 0 && board.game_state.active_color == BLACK) {
+    const int time_to_play =
+        (search_options.btime_ms / search_options.movestogo) +
+        search_options.binc_ms;
+
+    stop_search_after_ms(time_to_play);
+
+    LOG_I << "Time to play for black calculated. Search will stop in "
+          << time_to_play << "ms" << END_I;
   }
 
 
