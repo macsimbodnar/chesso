@@ -339,7 +339,7 @@ bool is_command(const std::string& command)
 }
 
 
-bool try_move(const move_t& move_candidate)
+bool try_move(move_t move_candidate)
 {
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(&board, moves);
@@ -347,6 +347,9 @@ bool try_move(const move_t& move_candidate)
   // Search the move in the list of legal moves
   for (size_t i = 0; i < moves_count; ++i) {
     const move_t& move = moves[i];
+
+    // Set this so we can perform the comparison
+    move_candidate.piece = move.piece;
 
     if (move == move_candidate) {
       // Apply the found move
@@ -631,7 +634,7 @@ bool command_go(std::queue<std::string>& args)
   search_options.infinite = false;
   search_options.depth = MAX_DEPTH;
   search_options.nodes = 0;
-  search_options.movestogo = 1;
+  search_options.movestogo = 20;  // Assume by default we have 10 moves to go
   search_options.winc_ms = 0;
   search_options.binc_ms = 0;
 

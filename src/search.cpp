@@ -194,10 +194,7 @@ search_t search_best_move(int depth,
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
-  // NOTE: The output sign needs to be adjusted to be shown always from the
-  // white point of view
-  search_result.score =
-      (board->game_state.active_color == WHITE ? 1 : -1) * eval;
+  search_result.score = eval;
 
   return search_result;
 }
