@@ -63,6 +63,7 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
 #define MAX_PLY 100
+#define MAX_DEPTH MAX_PLY
 
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t

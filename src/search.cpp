@@ -10,7 +10,6 @@
 
 
 #define MATE_SCORE 1000000
-#define MAX_MATE_DEPTH 10000
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
