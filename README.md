@@ -81,3 +81,7 @@ cd test
 # Get profiler results
 gprof debug_main gmon.out > analysis.txt
 ```
+
+## Mentions
+
+[Principal Variation Search](https://web.archive.org/web/20071030220825/http://www.brucemo.com/compchess/programming/pvs.htm)

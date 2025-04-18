@@ -32,26 +32,26 @@ int quiescence_search(int alpha,
 
   state->explored_nodes += 1;
 
-  const int eval =
+  const int stand_pat =
       (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
 
+  int best_value = stand_pat;
+
   // Time management
-  if ((state->explored_nodes % 1000) && *state->stop) { return eval; }
+  if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
 
-  if (qs_ply > 4) { return eval; }
+  if (qs_ply > 3) { return stand_pat; }
 
-  if (eval >= beta) { return beta; }
-  if (eval > alpha) { alpha = eval; }
+  if (stand_pat >= beta) { return stand_pat; }
+  if (alpha < stand_pat) { alpha = stand_pat; }
+
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
 
-  // Sort moves
-  // order_moves(moves, moves_count);
-
   for (size_t i = 0; i < moves_count; ++i) {
+    // We process only captures and promotions
     if (moves[i].captured == INVALID && moves[i].promoted_to == TO_NONE) {
-      // Skip
       continue;
     }
 
@@ -63,11 +63,12 @@ int quiescence_search(int alpha,
     const int score =
         -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
 
-    if (score >= beta) { return beta; }
-    if (score >= alpha) { alpha = score; }
+    if (score >= beta) { return score; }
+    if (score > best_value) { best_value = score; }
+    if (score > alpha) { alpha = score; }
   }
 
-  return alpha;
+  return best_value;
 }
 
 
@@ -81,6 +82,8 @@ int alpha_beta_negamax(int alpha,
   assert(board != nullptr);
   assert(state != nullptr);
   assert(state->stop != nullptr);
+
+  bool follow_pv = false;
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
@@ -124,9 +127,18 @@ int alpha_beta_negamax(int alpha,
     (void)done;
     assert(done);
 
-    int eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                   &tmp_board, state);
+    int eval;
+    if (follow_pv) {
+      // PV Sorting
+      eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
+                                 &tmp_board, state);
+    }
 
+    if (!follow_pv || (eval > alpha && eval < beta)) {
+      // In case we don't follow PV yet or PV following failed
+      eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
+                                 state);
+    }
 
     if (eval >= beta) {
       // Beta cut-off
@@ -154,6 +166,8 @@ int alpha_beta_negamax(int alpha,
         assert(moves[i].to != INVALID_BOARD_INDEX);
         state->history_moves[moves[i].piece][moves[i].to] += depth;
       }
+
+      follow_pv = true;
 
       // Write PV move
       state->pv.pv_table[ply][ply] = moves[i];
