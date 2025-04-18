@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <chrono>
-#include <fstream>
 #include <future>
 #include <iostream>
 #include <optional>
@@ -13,56 +11,33 @@
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
-#include "data_structures.hpp"
-#include "evaluation.hpp"
+#include "log.hpp"
 #include "move_generator.hpp"
 #include "openings.hpp"
 #include "search.hpp"
 #include "utils.hpp"
 
 
-static std::ofstream log_file("chesso_engine.log", std::ios::app);
+//-##############################    GLOBALS    #############################-//
+static history_t history;
+static board_t board;
+static std::string initial_position = DEFAULT_POSITION;
+static bool opening_book_loaded = false;
+static bool opening_book_enabled = true;  // User cna disable the book
+static bool still_in_opening = true;      // Finish the opening line
+static book_t opening_book;
 
+static std::atomic_bool stop_search_signal = false;
+static std::atomic_uint64_t session_id = 0;
 
-void uci_reply(const std::string& response)
-{
-  std::cout << response << std::endl;
-}
+static std::random_device rd;
+static std::mt19937_64 gen(rd());
 
-
-#define LOG_I log_file   // Start log
-#define END_I std::endl  // End log
-
-#define LOG_S LOG_I << "\033[92m"  // Success green log
-#define END_S "\033[37m" << END_I  // End success green log
-
-#define LOG_W LOG_I << "\033[33m"  // Warning orange log
-#define END_W "\033[37m" << END_I  // End warning orange log
-
-#define LOG_E LOG_I << "\033[31m"  // Error red log
-#define END_E "\033[37m" << END_I  // End Error red log
+static bool is_debug = false;
+static bool running = true;
 
 
 //-##############################   DATA TYPES  #############################-//
-
-typedef bool (*process_func)(std::queue<std::string>&);
-
-
-std::string pv_to_string(const pv_t* pv);
-
-
-std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
-{
-  os << "[";
-  while (!q.empty()) {
-    os << "\"" << q.front() << "\"";
-    q.pop();
-    if (!q.empty()) { os << ", "; }
-  }
-  os << "]";
-  return os;
-}
-
 struct uci_search_options_t
 {
   // Modifiers
@@ -99,175 +74,15 @@ struct uci_search_result_t
 };
 
 
-static std::atomic_bool stop_signal = false;
-static std::atomic_uint64_t session_id = 0;
+//-#############################   DECLARATIONS  ############################-//
+typedef bool (*process_func)(std::queue<std::string>&);
+std::string pv_to_string(const pv_t* pv);
 
-void send_stop_signal_after_ms(uint64_t ms)
+
+void uci_reply(const std::string& response)
 {
-  const uint64_t my_session_id = session_id;
-
-  std::thread job([ms, my_session_id]() {
-    std::chrono::milliseconds time_to_sleep(ms);
-    std::this_thread::sleep_for(time_to_sleep);
-
-    // Send stop signal only if the session is not changed meanwhile
-    if (session_id == my_session_id) { stop_signal = true; }
-  });
-
-  // Left the timer be, we return! Adios
-  job.detach();
+  std::cout << response << std::endl;
 }
-
-
-class engine_handler_t
-{
-private:
-  history_t history;
-  board_t board;
-  std::string initial_position = DEFAULT_POSITION;
-
-  bool opening_book_loaded = false;
-  bool opening_book_enabled = true;
-  book_t opening_book;
-
-  std::random_device rd;
-  std::mt19937_64 gen;
-
-  bool is_ponder = false;
-  move_t ponder_move;
-
-public:
-  engine_handler_t() : gen(rd()) { set_default_position(); }
-
-  bool try_load_opening_book()
-  {
-    opening_book_loaded = load_book_embedded(&opening_book);
-
-    if (opening_book_loaded) {
-      LOG_I << "Opening book loaded correctly! "
-            << opening_book.num_of_positions << " entries." << END_I;
-    } else {
-      LOG_E << "Failed to load the opening book." << END_E;
-    }
-
-    return opening_book_loaded;
-  }
-
-  bool set_position(const std::string& fen)
-  {
-    init_board(fen, &board, &history);
-    initial_position = fen;
-    return true;
-  }
-
-  bool set_default_position()
-  {
-    initial_position = DEFAULT_POSITION;
-    return set_position(DEFAULT_POSITION);
-  }
-
-  bool reset_to_initial_position() { return set_position(initial_position); }
-
-  bool try_move(const uci_move_t& move_candidate)
-  {
-    move_t moves[MAX_MOVES];
-    const size_t moves_count = generate_legal_moves(&board, moves);
-
-    // Search the move in the list of legal moves
-    for (size_t i = 0; i < moves_count; ++i) {
-      const move_t& move = moves[i];
-
-      if (move.from == move_candidate.from && move.to == move_candidate.to &&
-          move.promoted_to == move_candidate.promotion) {
-        // Apply the found move
-        bool move_result = make_move(&move, &board, &history);
-
-        if (move_result) { return true; }
-
-        break;
-      }
-    }
-
-    return false;
-  }
-
-  std::string get_nice_board() { return print_nice_board(&board); }
-  std::string get_fen() { return generate_FEN(&board); }
-
-  uci_search_result_t get_best_move(const uci_search_options_t& search_options)
-  {
-    uci_search_result_t result = {};
-
-    // Firs search move in book if enabled
-    if (opening_book_loaded && opening_book_enabled) {
-      move_t moves[MAX_MOVES];
-      const size_t moves_cout =
-          get_book_moves_for_key(&opening_book, &board, moves);
-
-      if (moves_cout > 0) {
-        // Extreme included
-        std::uniform_int_distribution<size_t> dist(0, moves_cout - 1);
-
-        const size_t index = dist(gen);
-        assert(index < moves_cout);
-        const move_t& move = moves[index];
-
-        // Move found and selected
-        result.best_move = {move.from, move.to, move.promoted_to};
-        result.is_ponder_move = false;
-
-        LOG_I << "Found position in the opening book." << END_I;
-
-        return result;
-      }
-    }
-
-    // If no move found in the book search by engine
-    search_state_t state = {};
-    state.stop = &stop_signal;
-    stop_signal = false;
-
-
-    for (int current_depth = 1; current_depth <= search_options.depth;
-         ++current_depth) {
-      // Iterative deepening
-      auto start_time = std::chrono::high_resolution_clock::now();
-
-      const search_t search_result =
-          search_best_move(current_depth, &board, &state);
-
-      const auto end_time = std::chrono::high_resolution_clock::now();
-      const auto duration_ms =
-          std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
-                                                                start_time);
-
-      // If we interupted the current search we use the previous result
-      if (stop_signal) { break; }
-
-      uci_reply("info score cp " + std::to_string(search_result.score) +
-                " time " + std::to_string(duration_ms.count()) + " depth " +
-                std::to_string(current_depth) + " nodes " +
-                std::to_string(search_result.explored_nodes) + " pv " +
-                pv_to_string(&search_result.pv));
-
-      result.best_move = {search_result.best_move.from,
-                          search_result.best_move.to,
-                          search_result.best_move.promoted_to};
-
-      if (search_result.pv.pv_length[0] > 1) {
-        result.is_ponder_move = true;
-        result.ponder_move = {search_result.pv.pv_table[0][1].from,
-                              search_result.pv.pv_table[0][1].to,
-                              search_result.pv.pv_table[0][1].promoted_to};
-
-        is_ponder = true;
-        ponder_move = search_result.pv.pv_table[0][1];
-      }
-    }
-
-    return result;
-  }
-};
 
 
 //-###########################  COMMAND DECLARATIONS  #######################-//
@@ -287,35 +102,40 @@ bool command_print_board(std::queue<std::string>& args);
 bool command_fen(std::queue<std::string>& args);
 bool command_help(std::queue<std::string>& args);
 
-
-//-##############################  GLOBAL VARS  #############################-//
-
-static engine_handler_t engine;
-static bool is_debug = false;
-static bool running = true;
-
 // clang-format off
 static const std::unordered_map<std::string, process_func> commands = {
-    {"uci", command_uci},
-    {"debug", command_debug},
-    {"isready", command_isready},
-    {"setoption", command_setoption},
-    {"register", command_register},
-    {"ucinewgame", command_ucinewgame},
-    {"position", command_position},
-    {"go", command_go},
-    {"stop", command_stop},
-    {"ponderhit", command_ponderhit},
-    {"quit", command_quit},
-    // custom commands
-    {"pb", command_print_board},
-    {"fen", command_fen},
-    {"help", command_help},
+  {"uci", command_uci},
+  {"debug", command_debug},
+  {"isready", command_isready},
+  {"setoption", command_setoption},
+  {"register", command_register},
+  {"ucinewgame", command_ucinewgame},
+  {"position", command_position},
+  {"go", command_go},
+  {"stop", command_stop},
+  {"ponderhit", command_ponderhit},
+  {"quit", command_quit},
+  // custom commands
+  {"pb", command_print_board},
+  {"fen", command_fen},
+  {"help", command_help},
 };
 // clang-format on
 
 
 //-############################  UTILS FUNCTIONS  ###########################-//
+std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
+{
+  os << "[";
+  while (!q.empty()) {
+    os << "\"" << q.front() << "\"";
+    q.pop();
+    if (!q.empty()) { os << ", "; }
+  }
+  os << "]";
+  return os;
+}
+
 
 std::string trim_whitespace(const std::string& str)
 {
@@ -326,36 +146,6 @@ std::string trim_whitespace(const std::string& str)
 
   // If the string is all whitespace, return an empty string
   return (start < end) ? std::string(start, end) : std::string();
-}
-
-
-std::queue<std::string> tokenize_input(const std::string string,
-                                       const std::string delimiter)
-{
-  const std::string s = trim_whitespace(string);
-  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-  std::string token;
-  std::queue<std::string> res;
-
-  while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-
-    if (token.size() > 0) { res.push((token)); }
-  }
-
-  const std::string remaining = s.substr(pos_start);
-  if (remaining.length() > 0) { res.push(remaining); }
-
-  return res;
-}
-
-
-bool is_command(const std::string& command)
-{
-  auto it = commands.find(command);
-  if (it != commands.end()) { return true; }
-  return false;
 }
 
 
@@ -480,6 +270,176 @@ std::string pv_to_string(const pv_t* pv)
 }
 
 
+//-#############################    FUNCTIONS    ############################-//
+bool set_position(const std::string& fen)
+{
+  init_board(fen, &board, &history);
+  initial_position = fen;
+  still_in_opening = false;
+  return true;
+}
+
+
+bool try_load_opening_book()
+{
+  opening_book_loaded = load_book_embedded(&opening_book);
+
+  if (opening_book_loaded) {
+    LOG_I << "Opening book loaded correctly! " << opening_book.num_of_positions
+          << " entries." << END_I;
+  } else {
+    LOG_E << "Failed to load the opening book." << END_E;
+  }
+
+  return opening_book_loaded;
+}
+
+
+std::queue<std::string> tokenize_input(const std::string string,
+                                       const std::string delimiter)
+{
+  const std::string s = trim_whitespace(string);
+  size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+  std::string token;
+  std::queue<std::string> res;
+
+  while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
+    token = s.substr(pos_start, pos_end - pos_start);
+    pos_start = pos_end + delim_len;
+
+    if (token.size() > 0) { res.push((token)); }
+  }
+
+  const std::string remaining = s.substr(pos_start);
+  if (remaining.length() > 0) { res.push(remaining); }
+
+  return res;
+}
+
+
+void stop_search_after_ms(uint64_t ms)
+{
+  const uint64_t my_session_id = session_id;
+
+  std::thread job([ms, my_session_id]() {
+    std::chrono::milliseconds time_to_sleep(ms);
+    std::this_thread::sleep_for(time_to_sleep);
+
+    // Send stop signal only if the session is not changed meanwhile
+    if (session_id == my_session_id) { stop_search_signal = true; }
+  });
+
+  // Left the timer be, we return! Adios
+  job.detach();
+}
+
+
+bool is_command(const std::string& command)
+{
+  auto it = commands.find(command);
+  if (it != commands.end()) { return true; }
+  return false;
+}
+
+
+bool try_move(const move_t& move_candidate)
+{
+  move_t moves[MAX_MOVES];
+  const size_t moves_count = generate_legal_moves(&board, moves);
+
+  // Search the move in the list of legal moves
+  for (size_t i = 0; i < moves_count; ++i) {
+    const move_t& move = moves[i];
+
+    if (move == move_candidate) {
+      // Apply the found move
+      bool move_result = make_move(&move, &board, &history);
+
+      if (move_result) { return true; }
+
+      break;
+    }
+  }
+
+  return false;
+}
+
+
+move_t search_random_move_in_book()
+{
+  move_t result = {};
+
+  if (opening_book_loaded && opening_book_enabled && still_in_opening) {
+    move_t moves[MAX_MOVES];
+    const size_t moves_cout =
+        get_book_moves_for_key(&opening_book, &board, moves);
+
+    if (moves_cout > 0) {
+      // Extreme included
+      std::uniform_int_distribution<size_t> dist(0, moves_cout - 1);
+
+      const size_t index = dist(gen);
+      assert(index < moves_cout);
+      result = moves[index];
+
+      LOG_I << "Found position in the opening book." << END_I;
+    } else {
+      // We finish the move lines or move not found, disabling it
+      still_in_opening = false;
+    }
+  }
+
+  return result;
+}
+
+
+uci_search_result_t iterative_deepening_search(const uci_search_options_t conf)
+{
+  uci_search_result_t result = {};
+
+  // If no move found in the book search by engine
+  search_state_t state = {};
+  state.stop = &stop_search_signal;
+  ++session_id;
+  stop_search_signal = false;
+
+  for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
+    // Iterative deepening
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    const search_t search_result =
+        search_best_move(current_depth, &board, &state);
+
+    const auto end_time = std::chrono::high_resolution_clock::now();
+    const auto duration_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
+                                                              start_time);
+
+    // If we interupted the current search we use the previous result
+    if (stop_search_signal) { break; }
+
+    uci_reply("info score cp " + std::to_string(search_result.score) +
+              " time " + std::to_string(duration_ms.count()) + " depth " +
+              std::to_string(current_depth) + " nodes " +
+              std::to_string(search_result.explored_nodes) + " pv " +
+              pv_to_string(&search_result.pv));
+
+    result.best_move = {search_result.best_move.from,
+                        search_result.best_move.to,
+                        search_result.best_move.promoted_to};
+
+    if (search_result.pv.pv_length[0] > 1) {
+      result.is_ponder_move = true;
+      result.ponder_move = {search_result.pv.pv_table[0][1].from,
+                            search_result.pv.pv_table[0][1].to,
+                            search_result.pv.pv_table[0][1].promoted_to};
+    }
+  }
+
+  return result;
+}
+
+
 //-################################  COMMANDS  ##############################-//
 bool command_uci(std::queue<std::string>& args)
 {
@@ -554,9 +514,10 @@ bool command_ucinewgame(std::queue<std::string>& args)
 {
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
 
-  engine.set_default_position();
+  set_position(DEFAULT_POSITION);
+  still_in_opening = true;
 
-  LOG_I << engine.get_nice_board() << END_I;
+  LOG_I << print_nice_board(&board) << END_I;
 
   return true;
 }
@@ -574,25 +535,25 @@ bool command_position(std::queue<std::string>& args)
 
     if (token == "startpos") {
       // Initialize the board to the default starting position
-      engine.set_default_position();
+      set_position(DEFAULT_POSITION);
       LOG_I << "Set default position" << END_I;
     }
 
     if (token == "empty") {
-      engine.set_position("8/8/8/8/8/8/8/8 b - -");
+      set_position("8/8/8/8/8/8/8/8 b - -");
       LOG_I << "Set empty position" << END_I;
     }
 
     if (token == "tricky") {
       // clang-format off
-      engine.set_position("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+      set_position("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
       // clang-format on
       LOG_I << "Set tricky position" << END_I;
     }
 
     if (token == "killer") {
       // clang-format off
-      engine.set_position("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
+      set_position("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
       // clang-format on
       LOG_I << "Set killer position" << END_I;
     }
@@ -614,7 +575,7 @@ bool command_position(std::queue<std::string>& args)
       fen = trim_whitespace(fen);
 
       // Initialize the board with the fen
-      bool res = engine.set_position(fen);
+      bool res = set_position(fen);
 
       if (res) {
         LOG_I << "Set fen " << fen << END_I;
@@ -637,8 +598,13 @@ bool command_position(std::queue<std::string>& args)
           // Apply the move
           const uci_move_t move_candidate = parsing_result.value();
 
+          move_t move = {};
+          move.from = move_candidate.from;
+          move.to = move_candidate.to;
+          move.promoted_to = move_candidate.promotion;
+
           // Attempt the move. We ignore if move happened or not
-          bool res = engine.try_move(move_candidate);
+          bool res = try_move(move);
 
           if (res) {
             LOG_I << "Applied move [" << move_str << "]" << END_I;
@@ -650,7 +616,9 @@ bool command_position(std::queue<std::string>& args)
     }
   }
 
-  LOG_I << engine.get_nice_board() << END_I;
+  still_in_opening = true;
+
+  LOG_I << print_nice_board(&board) << END_I;
 
   return true;
 }
@@ -692,46 +660,39 @@ bool command_go(std::queue<std::string>& args)
     }
   }
 
-  // Start search in a thread
-  std::thread search_thread([search_options]() {
-    auto start_time = std::chrono::high_resolution_clock::now();
+  const move_t book_move = search_random_move_in_book();
 
-    const uci_search_result_t result = engine.get_best_move(search_options);
+  if (book_move) {
+    const uci_move_t uci_book_move = {book_move.from, book_move.to,
+                                      book_move.promoted_to};
 
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    const auto duration_ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end_time -
-                                                             start_time);
+    const std::string best_move_str = uci_move_to_algebraic(&uci_book_move);
+    uci_reply("bestmove " + best_move_str);
 
-    const auto minutes =
-        std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
-    const auto seconds =
-        std::chrono::duration_cast<std::chrono::seconds>(duration_ns - minutes);
-    const auto milliseconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            duration_ns - minutes - seconds);
+  } else {
+    // Start search in a thread
+    std::thread search_thread([search_options]() {
+      stopwatch_t timer;
+      const uci_search_result_t res =
+          iterative_deepening_search(search_options);
 
-    const std::string best_move_str = uci_move_to_algebraic(&result.best_move);
+      const std::string best_move_str = uci_move_to_algebraic(&res.best_move);
 
-    std::string ponder_move;
-    if (result.is_ponder_move) {
-      ponder_move = " ponder " + uci_move_to_algebraic(&result.ponder_move);
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    });
+
+    if (search_options.movetime_ms > 0) {
+      stop_search_after_ms(search_options.movetime_ms);
     }
 
-    uci_reply("bestmove " + best_move_str + ponder_move);
-
-    LOG_I << "Best move computed at depth " << search_options.depth << " in ["
-          << std::to_string(minutes.count()) << " min " << seconds.count()
-          << " sec " << milliseconds.count() << " msec]" << END_I;
-  });
-
-  if (search_options.movetime_ms > 0) {
-    send_stop_signal_after_ms(search_options.movetime_ms);
+    search_thread.detach();
+    // End thread
   }
-
-  search_thread.detach();
-  // End thread
-
 
   return true;
 }
@@ -741,8 +702,8 @@ bool command_stop(std::queue<std::string>& args)
 {
   LOG_I << "Command [stop]. Args: " << args << END_I;
 
-  // stop_signal = true;
-  send_stop_signal_after_ms(5000);
+  stop_search_signal = true;
+
   return true;
 }
 
@@ -769,8 +730,9 @@ bool command_quit(std::queue<std::string>& args)
 bool command_print_board(std::queue<std::string>& args)
 {
   LOG_I << "Command [print_board]. Args: " << args << END_I;
-  LOG_I << engine.get_nice_board() << END_I;
-  uci_reply(engine.get_nice_board());
+  LOG_I << print_nice_board(&board) << END_I;
+
+  uci_reply(print_nice_board(&board));
 
   return true;
 }
@@ -779,8 +741,9 @@ bool command_print_board(std::queue<std::string>& args)
 bool command_fen(std::queue<std::string>& args)
 {
   LOG_I << "Command [command_fen]. Args: " << args << END_I;
-  LOG_I << engine.get_fen() << END_I;
-  uci_reply(engine.get_fen());
+  LOG_I << generate_FEN(&board) << END_I;
+
+  uci_reply(generate_FEN(&board));
 
   return true;
 }
@@ -810,9 +773,10 @@ int main()
   std::queue<std::string> tokens;
   // (void)command_uci(tokens);
 
-  // Try loading opening book
-  (void)engine.try_load_opening_book();
-
+  // Initialization
+  init_board(DEFAULT_POSITION, &board, &history);
+  (void)try_load_opening_book();
+  still_in_opening = true;
 
   while (running) {
     std::string input;

@@ -170,6 +170,7 @@ struct move_t
   // TODO: add if double check
   // TODO: add if checkmate
 
+  // Comparison operator
   bool operator==(const move_t& other) const
   {
     return (from == other.from && to == other.to && piece == other.piece &&
@@ -179,6 +180,12 @@ struct move_t
     //         double_pawn_move == other.double_pawn_move &&
     //         en_passant_capture == other.en_passant_capture &&
     //         castling_move == other.castling_move);
+  }
+
+  // Boolean conversion operator. Is required to use inside if statements
+  explicit operator bool() const
+  {
+    return (from != INVALID_BOARD_INDEX && to != INVALID_BOARD_INDEX);
   }
 
   move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX, INVALID) {}
