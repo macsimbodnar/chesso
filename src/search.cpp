@@ -35,10 +35,11 @@ int quiescence_search(int alpha,
   const int eval =
       (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
 
+  // Return if we are searching fix number of nodes
+  if (state->explored_nodes > state->max_num_of_nodes) { return eval; }
+
   // Time management
-  if ((state->explored_nodes % 1000) && *state->stop) {
-    return evaluate(board);
-  }
+  if ((state->explored_nodes % 1000) && *state->stop) { return eval; }
 
   if (qs_ply > 4) { return eval; }
 
@@ -90,7 +91,9 @@ int alpha_beta_negamax(int alpha,
   }
 
   // We just return in case we overrun the max ply
-  if (ply >= MAX_PLY) { return evaluate(board); }
+  if (ply >= MAX_PLY || state->explored_nodes > state->max_num_of_nodes) {
+    return evaluate(board);
+  }
 
   int max_eval = MIN;
 

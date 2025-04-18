@@ -3,6 +3,7 @@
 #include <cassert>
 #include <future>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <queue>
 #include <random>
@@ -28,7 +29,6 @@ static bool still_in_opening = true;      // Finish the opening line
 static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
-static std::atomic_uint64_t session_id = 0;
 
 static std::random_device rd;
 static std::mt19937_64 gen(rd());
@@ -46,7 +46,7 @@ struct uci_search_options_t
 
   // Exclusive fixed Limit Options
   int depth = 0;
-  int nodes = 0;
+  uint64_t nodes = 0;
   int movetime_ms = 0;
   int mate_in_n_moves = 0;
   bool infinite = false;
@@ -319,14 +319,11 @@ std::queue<std::string> tokenize_input(const std::string string,
 
 void stop_search_after_ms(uint64_t ms)
 {
-  const uint64_t my_session_id = session_id;
-
-  std::thread job([ms, my_session_id]() {
+  std::thread job([ms]() {
     std::chrono::milliseconds time_to_sleep(ms);
     std::this_thread::sleep_for(time_to_sleep);
 
-    // Send stop signal only if the session is not changed meanwhile
-    if (session_id == my_session_id) { stop_search_signal = true; }
+    stop_search_signal = true;
   });
 
   // Left the timer be, we return! Adios
@@ -393,15 +390,15 @@ move_t search_random_move_in_book()
 }
 
 
-uci_search_result_t iterative_deepening_search(const uci_search_options_t conf)
+uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 {
   uci_search_result_t result = {};
 
   // If no move found in the book search by engine
   search_state_t state = {};
   state.stop = &stop_search_signal;
-  ++session_id;
   stop_search_signal = false;
+  state.max_num_of_nodes = conf.nodes;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -630,6 +627,8 @@ bool command_go(std::queue<std::string>& args)
 
   uci_search_options_t search_options = {};
   search_options.infinite = true;
+  search_options.depth = MAX_DEPTH;
+  search_options.nodes = std::numeric_limits<uint64_t>::max() - 1000;
 
   while (!args.empty()) {
     const std::string token = args.front();
@@ -650,9 +649,25 @@ bool command_go(std::queue<std::string>& args)
       const std::string movetime_ms_token = args.front();
       args.pop();
 
-      search_options.movetime_ms = std::stoi(movetime_ms_token);
+      try {
+        search_options.movetime_ms = std::stoi(movetime_ms_token);
+      } catch (...) {
+        LOG_W << "Movetime is not a number: " << movetime_ms_token << END_W;
+        return false;
+      }
     } else if (token == "nodes") {
-      // TODO
+      const std::string nodes_token = args.front();
+      args.pop();
+
+      try {
+        search_options.nodes = std::stoi(nodes_token);
+      } catch (...) {
+        LOG_W << "Nodes is not a number: " << nodes_token << END_W;
+        return false;
+      }
+
+      search_options.depth = 1;
+
     } else if (token == "mate") {
       // TODO
     } else if (token == "infinite") {
@@ -663,36 +678,40 @@ bool command_go(std::queue<std::string>& args)
   const move_t book_move = search_random_move_in_book();
 
   if (book_move) {
+    // We got book move, print and return straight away
     const uci_move_t uci_book_move = {book_move.from, book_move.to,
                                       book_move.promoted_to};
 
     const std::string best_move_str = uci_move_to_algebraic(&uci_book_move);
     uci_reply("bestmove " + best_move_str);
 
-  } else {
-    // Start search in a thread
-    std::thread search_thread([search_options]() {
-      stopwatch_t timer;
-      const uci_search_result_t res =
-          iterative_deepening_search(search_options);
+    return true;
+  }
 
-      const std::string best_move_str = uci_move_to_algebraic(&res.best_move);
 
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
+  // Start search in a thread
+  std::thread search_thread([search_options]() {
+    stopwatch_t timer;
+    const uci_search_result_t res = iterative_deepening_search(search_options);
 
-      uci_reply("bestmove " + best_move_str + ponder_move);
-    });
+    const std::string best_move_str = uci_move_to_algebraic(&res.best_move);
 
-    if (search_options.movetime_ms > 0) {
-      stop_search_after_ms(search_options.movetime_ms);
+    std::string ponder_move;
+    if (res.is_ponder_move) {
+      ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
     }
 
-    search_thread.detach();
-    // End thread
+    uci_reply("bestmove " + best_move_str + ponder_move);
+  });
+
+  // Let the thread go his way
+  search_thread.detach();
+
+  // Start the move timer if necessary
+  if (search_options.movetime_ms > 0) {
+    stop_search_after_ms(search_options.movetime_ms);
   }
+
 
   return true;
 }
