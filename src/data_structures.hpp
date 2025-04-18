@@ -3,7 +3,6 @@
 #include <atomic>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 #include <list>
 #include <optional>
 #include <ostream>
@@ -275,7 +274,6 @@ struct search_t
 struct search_state_t
 {
   std::atomic_bool* stop = nullptr;
-  uint64_t max_num_of_nodes = std::numeric_limits<uint64_t>::max() - 1000;
   uint64_t explored_nodes;
   move_t killer_moves[2][MAX_PLY];
   int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];

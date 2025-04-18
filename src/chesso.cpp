@@ -398,7 +398,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   search_state_t state = {};
   state.stop = &stop_search_signal;
   stop_search_signal = false;
-  state.max_num_of_nodes = conf.nodes;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -431,6 +430,9 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                             search_result.pv.pv_table[0][1].to,
                             search_result.pv.pv_table[0][1].promoted_to};
     }
+
+    // Check if run out of nodes
+    if (search_result.explored_nodes > conf.nodes) { break; }
   }
 
   return result;
@@ -665,9 +667,6 @@ bool command_go(std::queue<std::string>& args)
         LOG_W << "Nodes is not a number: " << nodes_token << END_W;
         return false;
       }
-
-      search_options.depth = 1;
-
     } else if (token == "mate") {
       // TODO
     } else if (token == "infinite") {
