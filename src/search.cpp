@@ -17,6 +17,10 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 #define FULL_DEPTH_MOVES 4
 #define REDUCTION_LIMIT 3
 
+// NOTE: This is used for null move pruning. The null move pruning should not be
+// used in late game. It can make bad things happen
+#define REDUCTION_FACTOR 2
+
 
 void debug_print_move(const move_t* move, int score)
 {
@@ -44,7 +48,7 @@ int quiescence_search(int alpha,
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
 
-  if (qs_ply > 3) { return stand_pat; }
+  if (qs_ply > 4) { return stand_pat; }
 
   if (stand_pat >= beta) { return stand_pat; }
   if (alpha < stand_pat) { alpha = stand_pat; }
@@ -100,14 +104,33 @@ int alpha_beta_negamax(int alpha,
   // Init the PV length
   state->pv.pv_length[ply] = ply;
 
-  move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
   const bool is_in_check = is_check(board);
 
   if (is_in_check) {
     // if we are in check we want to search deeper
     ++depth;
   }
+
+  // Null-move forward pruning.
+  // TODO: Disable in late game
+  if (depth > REDUCTION_FACTOR && !is_in_check) {
+    // The null move is just the current position with switched side
+    board_t swapped_board = *board;
+    swap_side(&swapped_board);
+    clear_ep_square(&swapped_board);
+
+    const int eval =
+        -alpha_beta_negamax(-beta, -beta + 1, depth - 1 - REDUCTION_FACTOR,
+                            ply + 1, &swapped_board, state);
+
+    if (eval >= beta) {
+      // Beta cut-off
+      return beta;
+    }
+  }
+
+  move_t moves[MAX_MOVES];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
   if (moves_count == 0) {
     // Checkmate or stalemate handling
