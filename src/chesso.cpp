@@ -546,7 +546,12 @@ bool command_position(std::queue<std::string>& args)
     }
 
     if (token == "empty") {
-      set_position("8/8/8/8/8/8/8/8 b - -");
+      set_position("8/8/8/8/8/8/8/8 b - - 0 1");
+      LOG_I << "Set empty position" << END_I;
+    }
+
+    if (token == "mate2") {
+      set_position("4k3/Q7/8/4K3/8/8/8/8 w - - 0 1");
       LOG_I << "Set empty position" << END_I;
     }
 
