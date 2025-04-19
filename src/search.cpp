@@ -14,6 +14,10 @@
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 
+#define FULL_DEPTH_MOVES 4
+#define REDUCTION_LIMIT 3
+
+
 void debug_print_move(const move_t* move, int score)
 {
   std::cout << *move << "        " << score << "\n";
@@ -115,7 +119,9 @@ int alpha_beta_negamax(int alpha,
     }
   }
 
-  if (depth == 0) { return quiescence_search(alpha, beta, 0, board, state); }
+  // NOTE: Check if < 1 instead of == 0 because some time we subtract
+  // 2 to the depth in recursive calls during LMR
+  if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
 
   // Sort moves
   order_moves(moves, moves_count, ply, state);
@@ -129,15 +135,42 @@ int alpha_beta_negamax(int alpha,
 
     int eval;
     if (follow_pv) {
-      // PV Sorting
+      // PV Sorting. We follow the principal variation
       eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
                                  &tmp_board, state);
     }
 
     if (!follow_pv || (eval > alpha && eval < beta)) {
       // In case we don't follow PV yet or PV following failed
-      eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
-                                 state);
+
+      if (i == 0) {
+        // In case of first move we perform the full depth search based on LMR
+        eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+                                   &tmp_board, state);
+      } else {
+        // Here we are in the logic of Late Move Reduction
+        if (i >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT &&
+            should_reduce_move(&moves[i]) && !is_in_check) {
+          // Search with reduced depth
+          eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
+                                     &tmp_board, state);
+        } else {
+          // Hack to ensure that full-depth search is done.
+          eval = alpha + 1;
+        }
+
+        // If good good move found in the reduced depth
+        if (eval > alpha) {
+          // Search deeper but with narrow window
+          eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
+                                     &tmp_board, state);
+
+          // Search deeper in normal window
+          if (eval > alpha && eval < beta)
+            eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+                                       &tmp_board, state);
+        }
+      }
     }
 
     if (eval >= beta) {
@@ -173,10 +206,10 @@ int alpha_beta_negamax(int alpha,
       state->pv.pv_table[ply][ply] = moves[i];
 
       // Copy the moves from deeper ply into the current ply's line
-      for (size_t next_ply = ply + 1; next_ply < state->pv.pv_length[ply + 1];
-           ++next_ply) {
-        state->pv.pv_table[ply][next_ply] =
-            state->pv.pv_table[ply + 1][next_ply];
+      for (size_t i = ply + 1; i < state->pv.pv_length[ply + 1]; ++i) {
+        assert(ply < MAX_PLY);
+        assert(i < MAX_PLY);
+        state->pv.pv_table[ply][i] = state->pv.pv_table[ply + 1][i];
       }
 
       state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];

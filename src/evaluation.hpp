@@ -7,3 +7,5 @@ void order_moves(move_t moves[],
                  size_t moves_size,
                  size_t ply,
                  search_state_t* state);
+
+bool should_reduce_move(const move_t* move);

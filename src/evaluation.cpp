@@ -311,3 +311,16 @@ void order_moves(move_t moves[],
   //   moves[best_index] = old_move;
   // }
 }
+
+
+bool should_reduce_move(const move_t* move)
+{
+  assert(move != nullptr);
+
+  if (move->promoted_to != TO_NONE ||
+      (move->captured != INVALID && move->captured != EMPTY)) {
+    return false;
+  }
+
+  return true;
+}
