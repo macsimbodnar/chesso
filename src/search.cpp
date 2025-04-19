@@ -161,11 +161,13 @@ int alpha_beta_negamax(int alpha,
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
-    return evaluate(board);
+    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
   // We just return in case we overrun the max ply
-  if (ply >= MAX_PLY) { return evaluate(board); }
+  if (ply >= MAX_PLY) {
+    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+  }
 
   // Init the PV length
   state->pv.pv_length[ply] = ply;
@@ -318,8 +320,7 @@ search_t search_best_move(int depth,
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
-  search_result.score =
-      (board->game_state.active_color == WHITE) ? score : -score;
+  search_result.score = score;
 
   return search_result;
 }
