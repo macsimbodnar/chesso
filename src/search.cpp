@@ -6,6 +6,7 @@
 #include <thread>
 #include "board.hpp"
 #include "evaluation.hpp"
+#include "log.hpp"
 #include "move_generator.hpp"
 
 
@@ -24,7 +25,7 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 
 void debug_print_move(const move_t* move, int score)
 {
-  std::cout << *move << "        " << score << "\n";
+  LOG_I << *move << "        " << score << END_I;
 }
 
 
@@ -48,7 +49,7 @@ int quiescence_search(int alpha,
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
 
-  if (qs_ply > 4) { return stand_pat; }
+  if (qs_ply > 3) { return stand_pat; }
 
   if (stand_pat >= beta) { return stand_pat; }
   if (alpha < stand_pat) { alpha = stand_pat; }
@@ -252,12 +253,12 @@ search_t search_best_move(int depth,
 
   search_t search_result = {};
 
-  const int eval = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  const int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
-  search_result.score = eval;
+  search_result.score = score;
 
   return search_result;
 }
