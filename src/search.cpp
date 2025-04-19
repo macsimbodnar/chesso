@@ -252,7 +252,7 @@ search_t search_best_move(int depth,
 
   search_t search_result = {};
 
-  const int eval = -alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  const int eval = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
