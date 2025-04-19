@@ -173,16 +173,17 @@ int alpha_beta_negamax(int alpha,
         eval = alpha + 1;
       }
 
-      // If good good move found in the reduced depth
+      // Here we search PV
       if (eval > alpha) {
         // Search deeper but with narrow window
         eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
                                    &tmp_board, state);
 
         // Search deeper in normal window
-        if (eval > alpha && eval < beta)
+        if (eval > alpha && eval < beta) {
           eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
                                      &tmp_board, state);
+        }
       }
     }
 
