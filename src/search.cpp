@@ -14,6 +14,8 @@
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+static constexpr int NO_SCORE = MAX + 42;
+
 
 #define FULL_DEPTH_MOVES 4
 #define REDUCTION_LIMIT 3
@@ -26,6 +28,58 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 void debug_print_move(const move_t* move, int score)
 {
   LOG_I << *move << "        " << score << END_I;
+}
+
+
+inline void store_to_tt(const board_t* board,
+                        search_state_t* state,
+                        int depth,
+                        hash_flag_t flag,
+                        int score)
+{
+  assert(board != nullptr);
+  assert(state != nullptr);
+
+  const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
+  tt_hash_t* elem = &state->tt[index];
+  assert(elem != nullptr);
+
+  elem->key = board->game_state.zobrist_key;
+  elem->depth = depth;
+  elem->flag = flag;
+  elem->score = score;
+}
+
+
+inline int get_from_tt(const board_t* board,
+                       const search_state_t* state,
+                       int depth,
+                       int alpha,
+                       int beta)
+{
+  assert(board != nullptr);
+  assert(state != nullptr);
+
+  const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
+  const tt_hash_t* elem = &state->tt[index];
+
+  assert(elem != nullptr);
+
+  if (elem->key == board->game_state.zobrist_key) {
+    if (elem->depth >= depth) {
+      if (elem->flag == TT_TYPE_EXACT) { return elem->score; }
+
+      if ((elem->flag == TT_TYPE_ALPHA) && (elem->score <= alpha)) {
+        return alpha;
+      }
+
+      if ((elem->flag == TT_TYPE_BETA) && (elem->score >= beta)) {
+        return beta;
+      }
+    }
+  }
+
+  return NO_SCORE;
 }
 
 
@@ -92,6 +146,19 @@ int alpha_beta_negamax(int alpha,
   assert(state != nullptr);
   assert(state->stop != nullptr);
 
+  hash_flag_t hash_flag = TT_TYPE_ALPHA;
+
+  // Check the TT
+  int score = get_from_tt(board, state, depth, alpha, beta);
+
+  if (score != NO_SCORE) {
+    // If the move is found in the TT then we return the set score
+    return score;
+  }
+
+  // Reset the score just in case
+  score = 0;
+
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
     return evaluate(board);
@@ -118,11 +185,10 @@ int alpha_beta_negamax(int alpha,
     swap_side(&swapped_board);
     clear_ep_square(&swapped_board);
 
-    const int eval =
-        -alpha_beta_negamax(-beta, -beta + 1, depth - 1 - REDUCTION_FACTOR,
-                            ply + 1, &swapped_board, state);
+    score = -alpha_beta_negamax(-beta, -beta + 1, depth - 1 - REDUCTION_FACTOR,
+                                ply + 1, &swapped_board, state);
 
-    if (eval >= beta) {
+    if (score >= beta) {
       // Beta cut-off
       return beta;
     }
@@ -155,40 +221,41 @@ int alpha_beta_negamax(int alpha,
     (void)done;
     assert(done);
 
-    int eval;
-
     if (i == 0) {
       // In case of first move we perform the full depth search based on LMR
-      eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
-                                 state);
+      score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
+                                  state);
     } else {
       // Here we are in the logic of Late Move Reduction
       if (i >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT &&
           should_reduce_move(&moves[i]) && !is_in_check) {
         // Search with reduced depth
-        eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
-                                   &tmp_board, state);
+        score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
+                                    &tmp_board, state);
       } else {
         // Hack to ensure that full-depth search is done.
-        eval = alpha + 1;
+        score = alpha + 1;
       }
 
       // Here we search PV
-      if (eval > alpha) {
+      if (score > alpha) {
         // Search deeper but with narrow window
-        eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
-                                   &tmp_board, state);
+        score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
+                                    &tmp_board, state);
 
         // Search deeper in normal window
-        if (eval > alpha && eval < beta) {
-          eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                     &tmp_board, state);
+        if (score > alpha && score < beta) {
+          score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+                                      &tmp_board, state);
         }
       }
     }
 
-    if (eval >= beta) {
+    if (score >= beta) {
       // Beta cut-off
+
+      // Update TT
+      store_to_tt(board, state, depth, TT_TYPE_BETA, beta);
 
       // Only on quite moves
       if (moves[i].captured == INVALID) {
@@ -200,10 +267,13 @@ int alpha_beta_negamax(int alpha,
       return beta;
     }
 
-    if (eval > alpha) {
+    if (score > alpha) {
       // Found better move
 
-      alpha = eval;
+      alpha = score;
+
+      // Update TT flag
+      hash_flag = TT_TYPE_EXACT;
 
       // Only on quite moves
       if (moves[i].captured == INVALID) {
@@ -228,6 +298,8 @@ int alpha_beta_negamax(int alpha,
     }
   }
 
+  // Update TT
+  store_to_tt(board, state, depth, hash_flag, alpha);
   return alpha;
 }
 
@@ -246,7 +318,8 @@ search_t search_best_move(int depth,
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
-  search_result.score = score;
+  search_result.score =
+      (board->game_state.active_color == WHITE) ? score : -score;
 
   return search_result;
 }

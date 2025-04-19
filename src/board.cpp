@@ -143,8 +143,8 @@ void init_board(const std::string& fen, board_t* board, history_t* history)
   // Load FEN
   load_FEN(fen, board, history);
 
-  // Init Zobrist
-  board->game_state.zobrist_key = init_zobrist_key(board);
+  // Init Zobrist. This is done already in the load_FEN function
+  // board->game_state.zobrist_key = init_zobrist_key(board);
 
   // TODO: Init phase_value
 }
@@ -822,6 +822,9 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
    **************************************************************************/
   // const std::string full_FEN = generate_FEN();
   // assert(FEN == full_FEN);
+
+  // Update Zobrist keys
+  board->game_state.zobrist_key = init_zobrist_key(board);
 }
 
 

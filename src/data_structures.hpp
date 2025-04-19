@@ -65,6 +65,10 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 #define MAX_PLY 100
 #define MAX_DEPTH MAX_PLY
 
+// Transposition table size
+// #define TT_SIZE 8388608
+#define TT_SIZE 4194304
+
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
 {
@@ -262,6 +266,24 @@ struct pv_t
   move_t pv_table[MAX_PLY][MAX_PLY];
 };
 
+
+enum hash_flag_t
+{
+  TT_TYPE_EXACT,  // The stored score is EXACTLY that
+  TT_TYPE_ALPHA,  // The stored score was at most that
+  TT_TYPE_BETA    // The stored score was at least that
+};
+
+
+struct tt_hash_t
+{
+  uint64_t key = 0;
+  hash_flag_t flag;
+  int depth = 0;
+  int score = 0;
+};
+
+
 struct search_t
 {
   move_t best_move;
@@ -278,4 +300,5 @@ struct search_state_t
   move_t killer_moves[2][MAX_PLY];
   int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];
   pv_t pv;
+  tt_hash_t* tt;  // Too big to keep on the stack
 };

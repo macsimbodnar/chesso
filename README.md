@@ -88,3 +88,4 @@ gprof debug_main gmon.out > analysis.txt
 [Late Move Reduction](https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html)
 [Null-Move Forward Pruning](https://web.archive.org/web/20071031095933/http://www.brucemo.com/compchess/programming/nullmove.htm)
 [Aspiration windows](https://web.archive.org/web/20071031095918/http://www.brucemo.com/compchess/programming/aspiration.htm)
+[Transposition Table](https://web.archive.org/web/20071031100051/http://www.brucemo.com/compchess/programming/hashing.htm)

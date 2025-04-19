@@ -401,6 +401,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   search_state_t state = {};
   state.stop = &stop_search_signal;
   stop_search_signal = false;
+  state.tt = new tt_hash_t[TT_SIZE]{};
+  assert(state.tt != nullptr);
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -437,6 +439,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // Check if run out of nodes
     if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
   }
+
+  delete[] state.tt;
 
   return result;
 }
