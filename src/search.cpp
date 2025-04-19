@@ -92,8 +92,6 @@ int alpha_beta_negamax(int alpha,
   assert(state != nullptr);
   assert(state->stop != nullptr);
 
-  bool follow_pv = false;
-
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
     return evaluate(board);
@@ -158,42 +156,33 @@ int alpha_beta_negamax(int alpha,
     assert(done);
 
     int eval;
-    if (follow_pv) {
-      // PV Sorting. We follow the principal variation
-      eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
-                                 &tmp_board, state);
-    }
 
-    if (!follow_pv || (eval > alpha && eval < beta)) {
-      // In case we don't follow PV yet or PV following failed
-
-      if (i == 0) {
-        // In case of first move we perform the full depth search based on LMR
-        eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+    if (i == 0) {
+      // In case of first move we perform the full depth search based on LMR
+      eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
+                                 state);
+    } else {
+      // Here we are in the logic of Late Move Reduction
+      if (i >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT &&
+          should_reduce_move(&moves[i]) && !is_in_check) {
+        // Search with reduced depth
+        eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
                                    &tmp_board, state);
       } else {
-        // Here we are in the logic of Late Move Reduction
-        if (i >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT &&
-            should_reduce_move(&moves[i]) && !is_in_check) {
-          // Search with reduced depth
-          eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
-                                     &tmp_board, state);
-        } else {
-          // Hack to ensure that full-depth search is done.
-          eval = alpha + 1;
-        }
+        // Hack to ensure that full-depth search is done.
+        eval = alpha + 1;
+      }
 
-        // If good good move found in the reduced depth
-        if (eval > alpha) {
-          // Search deeper but with narrow window
-          eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
-                                     &tmp_board, state);
+      // If good good move found in the reduced depth
+      if (eval > alpha) {
+        // Search deeper but with narrow window
+        eval = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
+                                   &tmp_board, state);
 
-          // Search deeper in normal window
-          if (eval > alpha && eval < beta)
-            eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                       &tmp_board, state);
-        }
+        // Search deeper in normal window
+        if (eval > alpha && eval < beta)
+          eval = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
+                                     &tmp_board, state);
       }
     }
 
@@ -223,8 +212,6 @@ int alpha_beta_negamax(int alpha,
         assert(moves[i].to != INVALID_BOARD_INDEX);
         state->history_moves[moves[i].piece][moves[i].to] += depth;
       }
-
-      follow_pv = true;
 
       // Write PV move
       state->pv.pv_table[ply][ply] = moves[i];

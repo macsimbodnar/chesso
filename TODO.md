@@ -1,5 +1,7 @@
 # Todo list for chesso
 
+* Try again to integrate the Aspiration windows
+* Implement TT
 * Move repetition draw
 * Perpetual checks
 * Insufficient material draw
