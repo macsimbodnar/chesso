@@ -558,36 +558,34 @@ bool command_position(std::queue<std::string>& args)
     if (token == "startpos") {
       // Initialize the board to the default starting position
       set_position(DEFAULT_POSITION);
-      LOG_I << "Set default position" << END_I;
     }
 
     if (token == "empty") {
       set_position("8/8/8/8/8/8/8/8 b - - 0 1");
-      LOG_I << "Set empty position" << END_I;
     }
 
     if (token == "mate2w") {
       set_position("4k3/Q7/8/4K3/8/8/8/8 w - - 0 1");
-      LOG_I << "Set empty position" << END_I;
     }
 
     if (token == "mate2b") {
       set_position("4K3/q7/8/4k3/8/8/8/8 b - - 0 1");
-      LOG_I << "Set empty position" << END_I;
+    }
+
+    if (token == "3frep") {// three fold repetition position
+      set_position("2r3k1/R7/8/1R6/8/8/P4KPP/8 w - - 0 1");
     }
 
     if (token == "tricky") {
       // clang-format off
       set_position("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
       // clang-format on
-      LOG_I << "Set tricky position" << END_I;
     }
 
     if (token == "killer") {
       // clang-format off
       set_position("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
       // clang-format on
-      LOG_I << "Set killer position" << END_I;
     }
 
     if (token == "fen") {
