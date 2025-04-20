@@ -9,8 +9,8 @@
 #include "log.hpp"
 #include "move_generator.hpp"
 
-
-#define MATE_SCORE 1000000
+#define MATE_VALUE 49000
+#define MATE_SCORE 48000
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
@@ -36,7 +36,8 @@ inline void store_to_tt(const board_t* board,
                         search_state_t* state,
                         int depth,
                         hash_flag_t flag,
-                        int score)
+                        int score,
+                        int ply)
 {
   assert(board != nullptr);
   assert(state != nullptr);
@@ -44,6 +45,11 @@ inline void store_to_tt(const board_t* board,
   const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
   tt_hash_t* elem = &state->tt[index];
   assert(elem != nullptr);
+
+  // Handle mate score. It needs to be independent from the path so we remove
+  // the ply
+  if (score < -MATE_SCORE) { score -= ply; }
+  if (score > MATE_SCORE) { score += ply; }
 
   elem->key = board->game_state.zobrist_key;
   elem->depth = depth;
@@ -56,7 +62,8 @@ inline int get_from_tt(const board_t* board,
                        const search_state_t* state,
                        int depth,
                        int alpha,
-                       int beta)
+                       int beta,
+                       int ply)
 {
   assert(board != nullptr);
   assert(state != nullptr);
@@ -68,15 +75,16 @@ inline int get_from_tt(const board_t* board,
 
   if (elem->key == board->game_state.zobrist_key) {
     if (elem->depth >= depth) {
-      if (elem->flag == TT_TYPE_EXACT) { return elem->score; }
+      int score = elem->score;
 
-      if ((elem->flag == TT_TYPE_ALPHA) && (elem->score <= alpha)) {
-        return alpha;
-      }
+      // Adjust the mate score to the ply we are in now
+      if (score < -MATE_SCORE) { score += ply; }
+      if (score > MATE_SCORE) { score -= ply; }
 
-      if ((elem->flag == TT_TYPE_BETA) && (elem->score >= beta)) {
-        return beta;
-      }
+      // Return the score
+      if (elem->flag == TT_TYPE_EXACT) { return score; }
+      if ((elem->flag == TT_TYPE_ALPHA) && (score <= alpha)) { return alpha; }
+      if ((elem->flag == TT_TYPE_BETA) && (score >= beta)) { return beta; }
     }
   }
 
@@ -157,7 +165,7 @@ int alpha_beta_negamax(int alpha,
 
   // Check the TT
   if (ply > 0) {
-    score = get_from_tt(board, state, depth, alpha, beta);
+    score = get_from_tt(board, state, depth, alpha, beta, ply);
 
     if (score != NO_SCORE) {
       // If the move is found in the TT then we return the set score
@@ -211,7 +219,7 @@ int alpha_beta_negamax(int alpha,
   if (moves_count == 0) {
     // Checkmate or stalemate handling
     if (is_in_check) {
-      return -(MATE_SCORE - ply);
+      return -(MATE_VALUE - ply);
     } else {
       // Stalemate
       return 0;
@@ -295,7 +303,7 @@ int alpha_beta_negamax(int alpha,
         // Beta cut-off
 
         // Update TT
-        store_to_tt(board, state, depth, TT_TYPE_BETA, beta);
+        store_to_tt(board, state, depth, TT_TYPE_BETA, beta, ply);
 
         // Only on quite moves
         if (moves[i].captured == INVALID) {
@@ -310,7 +318,7 @@ int alpha_beta_negamax(int alpha,
   }
 
   // Update TT
-  store_to_tt(board, state, depth, hash_flag, alpha);
+  store_to_tt(board, state, depth, hash_flag, alpha, ply);
   return alpha;
 }
 

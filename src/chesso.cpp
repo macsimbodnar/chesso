@@ -887,7 +887,7 @@ bool command_print_board(std::queue<std::string>& args)
 bool command_fen(std::queue<std::string>& args)
 {
   LOG_I << "Command [command_fen]. Args: " << args << END_I;
-  LOG_I << generate_FEN(&board) << END_I;
+  LOG_I << "position fen " << generate_FEN(&board) << END_I;
 
   uci_reply(generate_FEN(&board));
 
@@ -923,7 +923,6 @@ int main()
   init_board(DEFAULT_POSITION, &board, &history);
   (void)try_load_opening_book();
   still_in_opening = true;
-  tt_reset();
 
   while (running) {
     std::string input;

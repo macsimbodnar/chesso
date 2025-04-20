@@ -3,20 +3,19 @@
 #include <iostream>
 #include <unordered_map>
 
-
 // clang-format off
-#define VALUE_W_PAWN    100
-#define VALUE_W_KNIGHT  300
-#define VALUE_W_BISHOP  350
-#define VALUE_W_ROOK    525
-#define VALUE_W_QUEEN   1000
-#define VALUE_W_KING    10000
+#define VALUE_W_PAWN    71
+#define VALUE_W_KNIGHT  293
+#define VALUE_W_BISHOP  300
+#define VALUE_W_ROOK    456
+#define VALUE_W_QUEEN   905
+// #define VALUE_W_KING    1000
 #define VALUE_B_PAWN    -VALUE_W_PAWN
 #define VALUE_B_KNIGHT  -VALUE_W_KNIGHT
 #define VALUE_B_BISHOP  -VALUE_W_BISHOP
 #define VALUE_B_ROOK    -VALUE_W_ROOK
 #define VALUE_B_QUEEN   -VALUE_W_QUEEN
-#define VALUE_B_KING    -VALUE_W_KING
+// #define VALUE_B_KING    -VALUE_W_KING
 
 
 // static const std::array<int, BOARD_SIZE> debug_postion_value_table = {
@@ -173,8 +172,9 @@ int evaluate(const board_t* board)
           evaluation -= queen_postion_value_table[index];
           break;
         case B_KING:
-          evaluation += VALUE_B_KING;
-          evaluation -= king_postion_value_table[index];
+          (void)king_postion_value_table;
+          // evaluation += VALUE_B_KING;
+          // evaluation -= king_postion_value_table[index];
           break;
         case W_PAWN:
           evaluation += VALUE_W_PAWN;
@@ -199,8 +199,8 @@ int evaluate(const board_t* board)
           evaluation += queen_postion_value_table[white_indexes[index]];
           break;
         case W_KING:
-          evaluation += VALUE_W_KING;
-          evaluation += king_postion_value_table[white_indexes[index]];
+          // evaluation += VALUE_W_KING;
+          // evaluation += king_postion_value_table[white_indexes[index]];
           break;
         case INVALID:
         case EMPTY:
