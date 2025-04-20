@@ -23,6 +23,7 @@ static constexpr int NO_SCORE = MAX + 42;
 // NOTE: This is used for null move pruning. The null move pruning should not be
 // used in late game. It can make bad things happen
 #define REDUCTION_FACTOR 2
+#define NMP_DEPTH_LIMIT 2
 
 
 void debug_print_move(const move_t* move, int score)
@@ -105,9 +106,11 @@ int quiescence_search(int alpha,
 
   if (qs_ply > 3) { return stand_pat; }
 
-  if (stand_pat >= beta) { return stand_pat; }
-  if (alpha < stand_pat) { alpha = stand_pat; }
+  if (alpha < stand_pat) {
+    alpha = stand_pat;
 
+    if (stand_pat >= beta) { return stand_pat; }
+  }
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
@@ -126,9 +129,12 @@ int quiescence_search(int alpha,
     const int score =
         -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
 
-    if (score >= beta) { return score; }
+
     if (score > best_value) { best_value = score; }
-    if (score > alpha) { alpha = score; }
+    if (score > alpha) {
+      alpha = score;
+      if (score >= beta) { return score; }
+    }
   }
 
   return best_value;
@@ -146,14 +152,17 @@ int alpha_beta_negamax(int alpha,
   assert(state != nullptr);
   assert(state->stop != nullptr);
 
+  int score = 0;
   hash_flag_t hash_flag = TT_TYPE_ALPHA;
 
   // Check the TT
-  int score = get_from_tt(board, state, depth, alpha, beta);
+  if (ply > 0) {
+    score = get_from_tt(board, state, depth, alpha, beta);
 
-  if (score != NO_SCORE) {
-    // If the move is found in the TT then we return the set score
-    return score;
+    if (score != NO_SCORE) {
+      // If the move is found in the TT then we return the set score
+      return score;
+    }
   }
 
   // Reset the score just in case
@@ -181,7 +190,7 @@ int alpha_beta_negamax(int alpha,
 
   // Null-move forward pruning.
   // TODO: Disable in late game
-  if (depth > REDUCTION_FACTOR && !is_in_check) {
+  if (depth > NMP_DEPTH_LIMIT && !is_in_check && ply > 0) {
     // The null move is just the current position with switched side
     board_t swapped_board = *board;
     swap_side(&swapped_board);
@@ -253,22 +262,6 @@ int alpha_beta_negamax(int alpha,
       }
     }
 
-    if (score >= beta) {
-      // Beta cut-off
-
-      // Update TT
-      store_to_tt(board, state, depth, TT_TYPE_BETA, beta);
-
-      // Only on quite moves
-      if (moves[i].captured == INVALID) {
-        // Store the killer move
-        state->killer_moves[1][ply] = state->killer_moves[0][ply];
-        state->killer_moves[0][ply] = moves[i];
-      }
-
-      return beta;
-    }
-
     if (score > alpha) {
       // Found better move
 
@@ -297,6 +290,22 @@ int alpha_beta_negamax(int alpha,
       }
 
       state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
+
+      if (score >= beta) {
+        // Beta cut-off
+
+        // Update TT
+        store_to_tt(board, state, depth, TT_TYPE_BETA, beta);
+
+        // Only on quite moves
+        if (moves[i].captured == INVALID) {
+          // Store the killer move
+          state->killer_moves[1][ply] = state->killer_moves[0][ply];
+          state->killer_moves[0][ply] = moves[i];
+        }
+
+        return beta;
+      }
     }
   }
 
@@ -317,6 +326,7 @@ search_t search_best_move(int depth,
 
   const int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
+  assert(state->pv.pv_length[0] > 0);
   search_result.best_move = state->pv.pv_table[0][0];
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;

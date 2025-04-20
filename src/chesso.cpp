@@ -29,6 +29,7 @@ static bool still_in_opening = true;      // Finish the opening line
 static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
+static tt_hash_t tt[TT_SIZE] = {};
 
 static std::random_device rd;
 static std::mt19937_64 gen(rd());
@@ -280,6 +281,12 @@ bool set_position(const std::string& fen)
 }
 
 
+void tt_reset()
+{
+  memset(tt, 0, sizeof(tt));
+}
+
+
 bool try_load_opening_book()
 {
   opening_book_loaded = load_book_embedded(&opening_book);
@@ -397,12 +404,16 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 {
   uci_search_result_t result = {};
 
+  // TODO(max): fix the pv when using the TT. For now the work around is to
+  // cleanup teh TT before each search
+  tt_reset();
+
   // If no move found in the book search by engine
   search_state_t state = {};
   state.stop = &stop_search_signal;
-  stop_search_signal = false;
-  state.tt = new tt_hash_t[TT_SIZE]{};
+  state.tt = tt;
   assert(state.tt != nullptr);
+  stop_search_signal = false;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -439,8 +450,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // Check if run out of nodes
     if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
   }
-
-  delete[] state.tt;
 
   return result;
 }
@@ -521,6 +530,7 @@ bool command_ucinewgame(std::queue<std::string>& args)
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
 
   set_position(DEFAULT_POSITION);
+  tt_reset();
   still_in_opening = true;
 
   LOG_I << print_nice_board(&board) << END_I;
@@ -913,6 +923,7 @@ int main()
   init_board(DEFAULT_POSITION, &board, &history);
   (void)try_load_opening_book();
   still_in_opening = true;
+  tt_reset();
 
   while (running) {
     std::string input;
