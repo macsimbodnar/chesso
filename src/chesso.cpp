@@ -430,8 +430,13 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // If we interupted the current search we use the previous result
     if (stop_search_signal) { break; }
 
-    uci_reply("info score cp " + std::to_string(search_result.score) +
-              " time " + std::to_string(duration_ms.count()) + " depth " +
+    const std::string score =
+        search_result.mate_found
+            ? ("mate " + std::to_string(search_result.mate_in))
+            : ("cp " + std::to_string(search_result.score));
+
+    uci_reply("info score " + score + " time " +
+              std::to_string(duration_ms.count()) + " depth " +
               std::to_string(current_depth) + " nodes " +
               std::to_string(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
@@ -561,8 +566,13 @@ bool command_position(std::queue<std::string>& args)
       LOG_I << "Set empty position" << END_I;
     }
 
-    if (token == "mate2") {
+    if (token == "mate2w") {
       set_position("4k3/Q7/8/4K3/8/8/8/8 w - - 0 1");
+      LOG_I << "Set empty position" << END_I;
+    }
+
+    if (token == "mate2b") {
+      set_position("4K3/q7/8/4k3/8/8/8/8 b - - 0 1");
       LOG_I << "Set empty position" << END_I;
     }
 

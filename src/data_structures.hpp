@@ -290,6 +290,8 @@ struct search_t
   int score;
   uint64_t explored_nodes;
   pv_t pv;
+  bool mate_found;
+  int mate_in;
 };
 
 

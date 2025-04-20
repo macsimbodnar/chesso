@@ -9,8 +9,8 @@
 #include "log.hpp"
 #include "move_generator.hpp"
 
-#define MATE_VALUE 49000
-#define MATE_SCORE 48000
+#define MATE_MAX 49000
+#define MATE_MIN 48000
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
@@ -48,8 +48,8 @@ inline void store_to_tt(const board_t* board,
 
   // Handle mate score. It needs to be independent from the path so we remove
   // the ply
-  if (score < -MATE_SCORE) { score -= ply; }
-  if (score > MATE_SCORE) { score += ply; }
+  if (score < -MATE_MIN) { score -= ply; }
+  if (score > MATE_MIN) { score += ply; }
 
   elem->key = board->game_state.zobrist_key;
   elem->depth = depth;
@@ -78,8 +78,8 @@ inline int get_from_tt(const board_t* board,
       int score = elem->score;
 
       // Adjust the mate score to the ply we are in now
-      if (score < -MATE_SCORE) { score += ply; }
-      if (score > MATE_SCORE) { score -= ply; }
+      if (score < -MATE_MIN) { score += ply; }
+      if (score > MATE_MIN) { score -= ply; }
 
       // Return the score
       if (elem->flag == TT_TYPE_EXACT) { return score; }
@@ -221,7 +221,7 @@ int alpha_beta_negamax(int alpha,
   if (moves_count == 0) {
     // Checkmate or stalemate handling
     if (is_in_check) {
-      return -(MATE_VALUE - ply);
+      return -(MATE_MAX - ply);
     } else {
       // Stalemate
       return 0;
@@ -349,6 +349,19 @@ search_t search_best_move(int depth,
     assert(state->pv.pv_length[0] > 0);
 
     search_result.best_move = state->pv.pv_table[0][0];
+  }
+
+  // Handle mate score
+  search_result.mate_found = false;
+
+  if (score > -MATE_MAX && score < -MATE_MIN) {
+    search_result.mate_found = true;
+    search_result.mate_in = -(score + MATE_MAX) / 2 - 1;
+  }
+
+  if (score > MATE_MIN && score < MATE_MAX) {
+    search_result.mate_found = true;
+    search_result.mate_in = (MATE_MAX - score) / 2 + 1;
   }
 
   search_result.explored_nodes = state->explored_nodes;
