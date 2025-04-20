@@ -401,6 +401,11 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   board->repetitions[board->repetition_size] = old_hash;
   ++board->repetition_size;
 
+  // TODO: Deal with overflow. Or stop writing repetitions but not crash or
+  // implement some swapping logic. Like forgot old moves
+  assert(board->repetition_size <
+         sizeof(board->repetitions) / sizeof(board->repetitions[0]));
+
   return true;
 }
 

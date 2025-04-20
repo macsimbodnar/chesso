@@ -97,7 +97,7 @@ enum color_t
 
 inline color_t operator!(const color_t& c)
 {
-  const color_t res = (c == color_t::WHITE) ? color_t::BLACK : color_t::WHITE;
+  const color_t res = (c == WHITE) ? BLACK : WHITE;
   return res;
 }
 
@@ -250,7 +250,7 @@ struct board_t
   game_state_t game_state;
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
   size_t repetition_size;
-  uint64_t repetitions[MAX_PLY];
+  uint64_t repetitions[MAX_PLY * 2];
 
   board_t() {}
   board_t(const board_t& other) { std::memcpy(this, &other, sizeof(board_t)); }
