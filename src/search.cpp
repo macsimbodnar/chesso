@@ -11,6 +11,7 @@
 
 #define MATE_MAX 49000
 #define MATE_MIN 48000
+#define DRAW_SCORE 0
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
@@ -160,6 +161,9 @@ int alpha_beta_negamax(int alpha,
   assert(state != nullptr);
   assert(state->stop != nullptr);
 
+  // Check for repetitions
+  if (is_position_repeated(board)) { return DRAW_SCORE; }
+
   int score = 0;
   hash_flag_t hash_flag = TT_TYPE_ALPHA;
 
@@ -224,7 +228,7 @@ int alpha_beta_negamax(int alpha,
       return -(MATE_MAX - ply);
     } else {
       // Stalemate
-      return 0;
+      return DRAW_SCORE;
     }
   }
 
@@ -334,10 +338,9 @@ search_t search_best_move(int depth,
   assert(state->stop != nullptr);
   assert(state->tt != nullptr);
 
-  state->search_in_tt = true;
-
   search_t search_result = {};
 
+  state->search_in_tt = true;
   int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
   if (state->pv.pv_length[0] > 0) {

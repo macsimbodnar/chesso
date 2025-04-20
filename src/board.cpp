@@ -143,10 +143,9 @@ void init_board(const std::string& fen, board_t* board, history_t* history)
   // Load FEN
   load_FEN(fen, board, history);
 
-  // Init Zobrist. This is done already in the load_FEN function
-  // board->game_state.zobrist_key = init_zobrist_key(board);
-
-  // TODO: Init phase_value
+  // Cleanup repetition table
+  board->repetition_size = 0;
+  memset(board->repetitions, 0, sizeof(board->repetitions));
 }
 
 
@@ -177,11 +176,7 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   assert(board->board[move->from] != EMPTY &&
          board->board[move->from] != INVALID);
 
-  // TODO: This function works only with legal moves. Should return false with
-  // illegal
-
-  // OLD history
-  // const history_entry_t history_entry = {board->game_state, *move};
+  const uint64_t old_hash = board->game_state.zobrist_key;
 
   // Store the history
   if (history != nullptr) { history->push({*board, *move}); }
@@ -402,9 +397,9 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   // Swap side
   swap_side(board);
 
-  // OLD
-  // Store the history
-  // if (history != nullptr) { history->push(history_entry); }
+  // Store teh old position
+  board->repetitions[board->repetition_size] = old_hash;
+  ++board->repetition_size;
 
   return true;
 }
@@ -1098,4 +1093,16 @@ index_t get_king_index(color_t color, const board_t* board)
 
   assert(false);  // King should be always on the board
   return INVALID_BOARD_INDEX;
+}
+
+
+bool is_position_repeated(const board_t* board)
+{
+  assert(board != nullptr);
+
+  for (size_t i = 0; i < board->repetition_size; ++i) {
+    if (board->game_state.zobrist_key == board->repetitions[i]) { return true; }
+  }
+
+  return false;
 }

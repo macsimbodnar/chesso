@@ -272,18 +272,25 @@ std::string pv_to_string(const pv_t* pv)
 
 
 //-#############################    FUNCTIONS    ############################-//
-bool set_position(const std::string& fen)
-{
-  init_board(fen, &board, &history);
-  initial_position = fen;
-  still_in_opening = false;
-  return true;
-}
-
 
 void tt_reset()
 {
   memset(tt, 0, sizeof(tt));
+}
+
+
+bool set_position(const std::string& fen)
+{
+  init_board(fen, &board, &history);
+
+  if (initial_position != fen) {
+    initial_position = fen;
+
+    // We changed game, reset TT
+    tt_reset();
+  }
+  still_in_opening = false;
+  return true;
 }
 
 
@@ -403,10 +410,6 @@ move_t search_random_move_in_book()
 uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 {
   uci_search_result_t result = {};
-
-  // TODO(max): fix the pv when using the TT. For now the work around is to
-  // cleanup teh TT before each search
-  // tt_reset();
 
   // If no move found in the book search by engine
   search_state_t state = {};

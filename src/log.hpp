@@ -8,7 +8,7 @@
 
 
 #define LOG_I std::clog  // Start log
-#define END_I "\n"  // End log
+#define END_I "\n"       // End log
 
 #define LOG_S LOG_I << "\033[92m"  // Success green log
 #define END_S "\033[37m" << END_I  // End success green log
@@ -79,7 +79,7 @@ public:
           std::chrono::duration_cast<std::chrono::milliseconds>(
               duration_ns - minutes - seconds);
 
-      LOG_I << "Exec time: " << std::to_string(minutes.count()) << " min "
+      LOG_I << "Search time: " << std::to_string(minutes.count()) << " min "
             << seconds.count() << " sec " << milliseconds.count() << " msec"
             << END_I;
     }

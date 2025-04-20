@@ -58,7 +58,6 @@
 // clang-format on
 
 
-
 //-#############################  DEFINES  ##################################-//
 #define BOARD_SIZE 128
 
@@ -250,6 +249,8 @@ struct board_t
   piece_t board[BOARD_SIZE];
   game_state_t game_state;
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
+  size_t repetition_size;
+  uint64_t repetitions[MAX_PLY];
 
   board_t() {}
   board_t(const board_t& other) { std::memcpy(this, &other, sizeof(board_t)); }

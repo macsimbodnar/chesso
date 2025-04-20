@@ -27,3 +27,5 @@ void update_castling_permissions(castling_t new_castling, board_t* board);
 
 bool make_move(const move_t* move, board_t* board, history_t* history);
 bool unmake_move(board_t* board, history_t* history);
+
+bool is_position_repeated(const board_t* board);
