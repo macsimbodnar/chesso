@@ -163,8 +163,10 @@ int alpha_beta_negamax(int alpha,
   int score = 0;
   hash_flag_t hash_flag = TT_TYPE_ALPHA;
 
+  const bool pv_node = (beta - alpha) > 1;
+
   // Check the TT
-  if (ply > 0) {
+  if (ply > 0 && !pv_node && state->search_in_tt) {
     score = get_from_tt(board, state, depth, alpha, beta, ply);
 
     if (score != NO_SCORE) {
@@ -329,13 +331,26 @@ search_t search_best_move(int depth,
 {
   assert(board != nullptr);
   assert(state != nullptr);
+  assert(state->stop != nullptr);
+  assert(state->tt != nullptr);
+
+  state->search_in_tt = true;
 
   search_t search_result = {};
 
-  const int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
-  assert(state->pv.pv_length[0] > 0);
-  search_result.best_move = state->pv.pv_table[0][0];
+  if (state->pv.pv_length[0] > 0) {
+    search_result.best_move = state->pv.pv_table[0][0];
+  } else {
+    state->search_in_tt = false;
+    // No move found, run the search with no TT
+    score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+    assert(state->pv.pv_length[0] > 0);
+
+    search_result.best_move = state->pv.pv_table[0][0];
+  }
+
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
   search_result.score = score;

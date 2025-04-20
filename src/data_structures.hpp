@@ -300,5 +300,6 @@ struct search_state_t
   move_t killer_moves[2][MAX_PLY];
   int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];
   pv_t pv;
+  bool search_in_tt = true;
   tt_hash_t* tt;  // Too big to keep on the stack
 };

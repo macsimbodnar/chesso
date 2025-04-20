@@ -406,7 +406,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
   // TODO(max): fix the pv when using the TT. For now the work around is to
   // cleanup teh TT before each search
-  tt_reset();
+  // tt_reset();
 
   // If no move found in the book search by engine
   search_state_t state = {};
@@ -440,6 +440,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                         search_result.best_move.to,
                         search_result.best_move.promoted_to};
 
+    result.is_ponder_move = false;
     if (search_result.pv.pv_length[0] > 1) {
       result.is_ponder_move = true;
       result.ponder_move = {search_result.pv.pv_table[0][1].from,
@@ -838,7 +839,6 @@ bool command_go(std::queue<std::string>& args)
     LOG_I << "Time to play for black calculated. Search will stop in "
           << time_to_play << "ms" << END_I;
   }
-
 
   return true;
 }
