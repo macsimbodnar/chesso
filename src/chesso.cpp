@@ -555,38 +555,14 @@ bool command_position(std::queue<std::string>& args)
     const std::string token = args.front();
     args.pop();
 
-    if (token == "startpos") {
-      // Initialize the board to the default starting position
-      set_position(DEFAULT_POSITION);
-    }
-
-    if (token == "empty") {
-      set_position("8/8/8/8/8/8/8/8 b - - 0 1");
-    }
-
-    if (token == "mate2w") {
-      set_position("4k3/Q7/8/4K3/8/8/8/8 w - - 0 1");
-    }
-
-    if (token == "mate2b") {
-      set_position("4K3/q7/8/4k3/8/8/8/8 b - - 0 1");
-    }
-
-    if (token == "3frep") {// three fold repetition position
-      set_position("2r3k1/R7/8/1R6/8/8/P4KPP/8 w - - 0 1");
-    }
-
-    if (token == "tricky") {
-      // clang-format off
-      set_position("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-      // clang-format on
-    }
-
-    if (token == "killer") {
-      // clang-format off
-      set_position("rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1");
-      // clang-format on
-    }
+    if (token == "startpos") { set_position(DEFAULT_POSITION); }
+    if (token == "empty") { set_position(EMPTY_POS); }
+    if (token == "mate2w") { set_position(MATE_IN_2_W_POS); }
+    if (token == "mate2b") { set_position(MATE_IN_2_B_POS); }
+    if (token == "3frep") { set_position(THREE_FOLD_REP_POS); }
+    if (token == "tricky") { set_position(TRICKY_POS); }
+    if (token == "killer") { set_position(KILLER_POS); }
+    if (token == "cmk") { set_position(CMK_POS); }
 
     if (token == "fen") {
       // Reading the fen string. Fen string contains 6 portions
