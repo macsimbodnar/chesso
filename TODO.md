@@ -12,3 +12,5 @@
 ## Bugs
 
 * "8/3P4/8/8/6k1/8/8/3K4 w - - 0 1" position produce different moves in case of different depth
+
+* "r1b1kbnr/pp1p1ppp/4p3/4P3/3pq3/6P1/PPP1B2P/RNBQK2R b KQkq - 1 8" this position with TT enabled generates illegal moves: bestmove e4h1 ponder d1c2

@@ -93,6 +93,45 @@ inline int get_from_tt(const board_t* board,
 }
 
 
+bool is_pv_legal(const board_t* board, const pv_t* pv)
+{
+  assert(board != nullptr);
+  assert(pv != nullptr);
+
+  // Empty pv is illegal
+  if (pv->pv_length[0] < 1) {
+    LOG_W << "Empty PV" << END_W;
+    return false;
+  }
+
+  board_t tmp_board = *board;
+
+  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
+    const move_t* move_to_test = &pv->pv_table[0][i];
+
+    move_t moves[MAX_MOVES];
+    const size_t moves_count = generate_legal_moves(&tmp_board, moves);
+
+    bool found = false;
+    for (size_t move_index = 0; move_index < moves_count; ++move_index) {
+      if (*move_to_test == moves[move_index]) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      LOG_W << "PV with illegal moves" << END_W;
+      return false;
+    }
+
+    make_move(move_to_test, &tmp_board, nullptr);
+  }
+
+  return true;
+}
+
+
 int quiescence_search(int alpha,
                       int beta,
                       size_t qs_ply,
@@ -343,12 +382,16 @@ search_t search_best_move(int depth,
   state->search_in_tt = true;
   int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 
-  if (state->pv.pv_length[0] > 0) {
+  const bool pv_legal = is_pv_legal(board, &state->pv);
+  if (pv_legal) {
     search_result.best_move = state->pv.pv_table[0][0];
   } else {
+    // NOTE: This is a workaround until find a way to deal with PV and TT
+    LOG_W << "Invalid PV. Researching with no TT at depth " << depth << END_W;
+
     state->search_in_tt = false;
-    // No move found, run the search with no TT
     score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+
     assert(state->pv.pv_length[0] > 0);
 
     search_result.best_move = state->pv.pv_table[0][0];
