@@ -75,6 +75,7 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 #define MAX_MOVES 270
 #define MAX_PLY 100
 #define MAX_DEPTH MAX_PLY
+#define REPETITION_MAX_SIZE 500
 
 // Transposition table size
 // #define TT_SIZE 8388608
@@ -251,7 +252,7 @@ struct board_t
   game_state_t game_state;
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
   size_t repetition_size;
-  uint64_t repetitions[MAX_PLY * 2];
+  uint64_t repetitions[REPETITION_MAX_SIZE];
 
   board_t() {}
   board_t(const board_t& other) { std::memcpy(this, &other, sizeof(board_t)); }

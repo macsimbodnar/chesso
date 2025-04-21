@@ -2,6 +2,9 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include "board.hpp"
+#include "utils.hpp"
+
 
 // clang-format off
 #define VALUE_W_PAWN    71
@@ -17,6 +20,10 @@
 #define VALUE_B_QUEEN   -VALUE_W_QUEEN
 // #define VALUE_B_KING    -VALUE_W_KING
 
+#define DOUBLE_PAWN_PENALTY -10
+#define ISOLATED_PAWN_PENALTY -10
+#define PASSED_PAWN_REWARD 10
+#define BISHOP_PAIR_BONUS 50
 
 // static const std::array<int, BOARD_SIZE> debug_postion_value_table = {
 //    0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
@@ -146,7 +153,10 @@ int evaluate(const board_t* board)
   int evaluation = 0;
 
   for (index_t index = 0; index < BOARD_SIZE; ++index) {
+    if (index & 0x88) { continue; }
+
     const piece_t piece = board->board[index];
+    const position_t pos = index_to_position(index);
 
     if (piece != INVALID && piece != EMPTY) {
       switch (piece) {
@@ -154,6 +164,15 @@ int evaluate(const board_t* board)
           evaluation += VALUE_B_PAWN;
           evaluation -= pawn_postion_value_table[index];
           // evaluation -= debug_postion_value_table[index];
+          if (is_double_pawn(index, board)) {
+            evaluation -= DOUBLE_PAWN_PENALTY;
+          }
+          if (is_isolated_pawn(index, board)) {
+            evaluation -= ISOLATED_PAWN_PENALTY;
+          }
+          if (is_passed_pawn(index, board)) {
+            evaluation -= (PASSED_PAWN_REWARD * (7 - pos.rank));
+          }
           break;
         case B_KNIGHT:
           evaluation += VALUE_B_KNIGHT;
@@ -181,6 +200,15 @@ int evaluate(const board_t* board)
           evaluation += pawn_postion_value_table[white_indexes[index]];
           // index_t mapping = white_indexes[index];
           // evaluation += debug_postion_value_table[mapping];
+          if (is_double_pawn(index, board)) {
+            evaluation += DOUBLE_PAWN_PENALTY;
+          }
+          if (is_isolated_pawn(index, board)) {
+            evaluation += ISOLATED_PAWN_PENALTY;
+          }
+          if (is_passed_pawn(index, board)) {
+            evaluation += (PASSED_PAWN_REWARD * pos.rank);
+          }
           break;
         case W_KNIGHT:
           evaluation += VALUE_W_KNIGHT;
@@ -210,6 +238,9 @@ int evaluate(const board_t* board)
       }
     }
   }
+
+  if (has_bishop_pair(WHITE, board)) { evaluation += BISHOP_PAIR_BONUS; }
+  if (has_bishop_pair(BLACK, board)) { evaluation -= BISHOP_PAIR_BONUS; }
 
   return evaluation;
 }

@@ -614,11 +614,152 @@ TEST_SUITE("Test make_move and unmake_move")
     board_t board;
     init_board(DEFAULT_POSITION, &board, &history);
 
-    const int max_depth = 10000;
+    // We limit the depth to the maximum number of repetitions we can store in
+    // order to avoid a crash
+    const int max_depth =
+        (sizeof(board.repetitions) / sizeof(board.repetitions[0])) - 1;
 
     const int depth_reached = make_random_move(max_depth, &board, &history);
 
     std::cout << "Test random moves depth reached: "
               << (max_depth - depth_reached) << std::endl;
+  }
+
+
+  TEST_CASE("Test double pawns detection")
+  {
+    history_t history;
+    board_t board;
+
+    // White
+    init_board("4P3/pppppppP/1p5P/1p6/1p6/1P3P2/1P1P4/4P1K1 w - - 0 1", &board,
+               &history);
+
+    REQUIRE(is_double_pawn(string_coordinates_to_index("b2"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("b3"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("e1"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("e8"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("h6"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("h7"), &board));
+
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("d2"), &board));
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("f3"), &board));
+
+    // Black
+    init_board("8/pkp3pp/1p2p3/2p1p3/2p5/3PPP2/PPP3PP/6K1 b - - 0 1", &board,
+               &history);
+
+    REQUIRE(is_double_pawn(string_coordinates_to_index("e6"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("e5"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("c7"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("c5"), &board));
+    REQUIRE(is_double_pawn(string_coordinates_to_index("c4"), &board));
+
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("h7"), &board));
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("g7"), &board));
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b6"), &board));
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("a7"), &board));
+    REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b7"), &board));
+  }
+
+
+  TEST_CASE("Test passed pawns detection")
+  {
+    history_t history;
+    board_t board;
+    init_board("4k3/8/7p/1P2Pp1P/2Pp1PP1/8/8/4K3 w - - 0 1", &board, &history);
+
+    REQUIRE(is_passed_pawn(string_coordinates_to_index("b5"), &board));
+    REQUIRE(is_passed_pawn(string_coordinates_to_index("c4"), &board));
+    REQUIRE(is_passed_pawn(string_coordinates_to_index("e5"), &board));
+    REQUIRE(is_passed_pawn(string_coordinates_to_index("d4"), &board));
+
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f4"), &board));
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f5"), &board));
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("g4"), &board));
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h5"), &board));
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h6"), &board));
+    REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("a2"), &board));
+  }
+
+
+  TEST_CASE("Test isolated pawns detection")
+  {
+    history_t history;
+    board_t board;
+    init_board("4k3/pp6/7p/1P2Pp1P/3p1PP1/8/2p5/4K3 w - - 0 1", &board,
+               &history);
+
+    REQUIRE(is_isolated_pawn(string_coordinates_to_index("b5"), &board));
+    REQUIRE(is_isolated_pawn(string_coordinates_to_index("f5"), &board));
+    REQUIRE(is_isolated_pawn(string_coordinates_to_index("h6"), &board));
+
+
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("a7"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("b7"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("c2"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("d4"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("e5"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("f4"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("g4"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("h5"), &board));
+    REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("e1"), &board));
+  }
+
+  TEST_CASE("Test double pawns evaluation")
+  {
+    history_t history;
+    board_t board;
+    init_board("3k4/pp4pp/8/8/8/7P/PP5P/3K4 w - - 0 1", &board, &history);
+
+    int score = evaluate(&board);
+    REQUIRE_EQ(score, -45);
+
+    init_board("3k4/pp5p/7p/8/8/8/PP4PP/3K4 w - - 0 1", &board, &history);
+
+    score = evaluate(&board);
+    REQUIRE_EQ(score, 45);
+  }
+
+
+  TEST_CASE("Test isolated pawns evaluation")
+  {
+    history_t history;
+    board_t board;
+    init_board("3k4/ppp2ppp/8/4P3/8/8/PPP3PP/3K4 w - - 0 1", &board, &history);
+
+    int score = evaluate(&board);
+    REQUIRE_EQ(score, 5);
+
+    init_board("3k4/ppp3pp/8/8/4p3/8/PPP2PPP/3K4 w - - 0 1", &board, &history);
+
+    score = evaluate(&board);
+    REQUIRE_EQ(score, -5);
+
+    init_board("3k4/pp4pp/8/3p4/3P4/8/PP4PP/3K4 w - - 0 1", &board, &history);
+
+    score = evaluate(&board);
+    REQUIRE_EQ(score, 0);
+  }
+
+  TEST_CASE("Test passed pawns evaluation")
+  {
+    history_t history;
+    board_t board;
+    init_board("3k4/8/8/p4ppp/1PP3PP/8/8/3K4 w - - 0 1", &board, &history);
+
+    int score = evaluate(&board);
+    REQUIRE_EQ(score, 40);
+
+    init_board("3k4/8/8/1pp2pp1/PPP4P/8/8/3K4 w - - 0 1", &board, &history);
+
+    score = evaluate(&board);
+    REQUIRE_EQ(score, -40);
+
+
+    init_board("3k4/8/8/5ppp/PPP5/8/8/3K4 w - - 0 1", &board, &history);
+
+    score = evaluate(&board);
+    REQUIRE_EQ(score, 0);
   }
 }

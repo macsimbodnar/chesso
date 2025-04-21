@@ -12,7 +12,6 @@ std::string generate_FEN(const board_t* board);
 
 color_t us(const board_t* board);
 color_t opponent(const board_t* board);
-bool has_bishop_pair(color_t color, const board_t* board);
 bool contains_opponent(index_t i, color_t opponent_color, const board_t* board);
 
 index_t get_king_index(color_t color, const board_t* board);
@@ -29,3 +28,8 @@ bool make_move(const move_t* move, board_t* board, history_t* history);
 bool unmake_move(board_t* board, history_t* history);
 
 bool is_position_repeated(const board_t* board);
+
+bool has_bishop_pair(color_t color, const board_t* board);
+bool is_double_pawn(index_t index, const board_t* board);
+bool is_passed_pawn(index_t index, const board_t* board);
+bool is_isolated_pawn(index_t index, const board_t* board);

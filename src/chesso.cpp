@@ -275,7 +275,7 @@ std::string pv_to_string(const pv_t* pv)
 
 void tt_reset()
 {
-  memset(tt, 0, sizeof(tt));
+  memset(&tt, 0, sizeof(tt));
 }
 
 

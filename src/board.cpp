@@ -397,12 +397,20 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   // Swap side
   swap_side(board);
 
+
+  // TODO: Deal with overflow. Or stop writing repetitions but not crash or
+  // implement some swapping logic. Like forgot old moves
+  if (board->repetition_size >=
+      (sizeof(board->repetitions) / sizeof(board->repetitions[0])) - 1) {
+    // Reset the size to 0. This way we cut off the old repetitions but that's
+    // better then crash
+    board->repetition_size = 0;
+  }
+
   // Store teh old position
   board->repetitions[board->repetition_size] = old_hash;
   ++board->repetition_size;
 
-  // TODO: Deal with overflow. Or stop writing repetitions but not crash or
-  // implement some swapping logic. Like forgot old moves
   assert(board->repetition_size <
          sizeof(board->repetitions) / sizeof(board->repetitions[0]));
 
@@ -1110,4 +1118,80 @@ bool is_position_repeated(const board_t* board)
   }
 
   return false;
+}
+
+
+bool is_double_pawn(index_t index, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+
+  const piece_t to_check = board->board[index];
+  if (to_check != W_PAWN && to_check != B_PAWN) { return false; }
+
+  // Set rank to zero
+  const position_t pos = index_to_position(index);
+  const index_t start_index = position_to_index(pos.file, 0);
+
+  for (index_t i = start_index; !(i & 0x88) && i <= start_index + 0x70;
+       i += 0x10) {
+    if (i != index && board->board[i] == to_check && !(i & 0x88)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+bool is_passed_pawn(index_t index, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+
+  switch (board->board[index]) {
+    case W_PAWN:
+      for (index_t i = index + 0x10; !(i & 0x88) && i < BOARD_SIZE; i += 0x10) {
+        if (board->board[i] == B_PAWN && !(i & 0x88)) { return false; }
+        if (board->board[i + 0x01] == B_PAWN && !(i & 0x88)) { return false; }
+        if (board->board[i - 0x01] == B_PAWN && !(i & 0x88)) { return false; }
+      }
+      break;
+    case B_PAWN:
+      for (index_t i = index - 0x10; !(i & 0x88) && i < BOARD_SIZE; i -= 0x10) {
+        if (board->board[i] == W_PAWN && !(i & 0x88)) { return false; }
+        if (board->board[i + 0x01] == W_PAWN && !(i & 0x88)) { return false; }
+        if (board->board[i - 0x01] == W_PAWN && !(i & 0x88)) { return false; }
+      }
+      break;
+
+    default:
+      return false;
+      break;
+  }
+
+  return true;
+}
+
+
+bool is_isolated_pawn(index_t index, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+
+  const piece_t to_check = board->board[index];
+  if (to_check != W_PAWN && to_check != B_PAWN) { return false; }
+
+
+  // Set rank to zero
+  const position_t pos = index_to_position(index);
+  const index_t start_index = position_to_index(pos.file, 0);
+
+  for (index_t i = start_index; !(i & 0x88) && i <= start_index + 0x70;
+       i += 0x10) {
+    if (board->board[i + 0x01] == to_check && !(i & 0x88)) { return false; }
+    if (board->board[i - 0x01] == to_check && !(i & 0x88)) { return false; }
+  }
+
+  return true;
 }

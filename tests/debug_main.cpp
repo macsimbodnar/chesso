@@ -20,6 +20,8 @@
 #define LOG_E LOG_I << "\033[31m"  // Error red log
 #define END_E "\033[37m" << END_I  // End Error red log
 
+static tt_hash_t tt[TT_SIZE] = {};
+
 int main(int argc, char* argv[])
 {
   (void)argc;
@@ -34,7 +36,10 @@ int main(int argc, char* argv[])
   history_t history;
   init_board(KILLER_POS, &board, &history);
 
+  std::atomic_bool stop_search_signal = false;
   search_state_t state = {};
+  state.stop = &stop_search_signal;
+  state.tt = tt;
 
   const search_t search_result = search_best_move(6, &board, &state);
 
