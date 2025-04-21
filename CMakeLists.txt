@@ -5,6 +5,8 @@ project(Chesso)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(CHESSO_BUILD_GUI "Build the debug gui. Requires SDL2" OFF)
+
 # Add extra compiler checks
 if(MSVC)
      add_compile_options(/W4 /WX)

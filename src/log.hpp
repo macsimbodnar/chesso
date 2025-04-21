@@ -4,7 +4,7 @@
 
 
 // #include <fstream>
-// static std::ofstream log_file("chesso_engine.log", std::ios::app);
+// static std::ofstream log_file("chesso.log", std::ios::app);
 
 
 #define LOG_I std::clog  // Start log
