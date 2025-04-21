@@ -5,10 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "chesso_engine",
+      "name": "chesso",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/chesso_engine",
+      "program": "${workspaceFolder}/build/src/chesso",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build/src",

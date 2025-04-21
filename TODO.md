@@ -24,3 +24,7 @@
   PV: Rb2 g3h4
   Illegal PV move g3h4 from chesso_engine (8)
   PV: Rb2 g3h4
+
+* Soe time can make an illegal move (--). Make sure to always have a backup move, even if random.
+
+* Change the == move_t overload operator to check ALL the parameters, and use a function to soft compare.

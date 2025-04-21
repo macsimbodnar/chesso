@@ -6,8 +6,10 @@
 #include <thread>
 #include "board.hpp"
 #include "evaluation.hpp"
+#include "experimental_search.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
+
 
 #define MATE_MAX 49000
 #define MATE_MIN 48000
@@ -114,7 +116,8 @@ bool is_pv_legal(const board_t* board, const pv_t* pv)
 
     bool found = false;
     for (size_t move_index = 0; move_index < moves_count; ++move_index) {
-      if (*move_to_test == moves[move_index]) {
+      if (*move_to_test == moves[move_index] &&
+          move_to_test->captured == moves[move_index].captured) {
         found = true;
         break;
       }
@@ -276,7 +279,8 @@ int alpha_beta_negamax(int alpha,
   if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
 
   // Sort moves
-  order_moves(moves, moves_count, ply, state);
+  // order_moves(moves, moves_count, ply, state);
+  experimental_order_moves(moves, moves_count, board);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -379,6 +383,14 @@ search_t search_best_move(int depth,
 
   search_t search_result = {};
 
+  // Set backup move just in case the PV is empty
+  move_t moves[MAX_MOVES];
+  const size_t moves_size = generate_legal_moves(board, moves);
+  experimental_order_moves(moves, moves_size, board);
+  assert(moves_size > 0);
+  search_result.best_move = moves[0];
+
+  // Here comes the search
   state->search_in_tt = true;
   int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
 

@@ -295,7 +295,7 @@ int evaluate(const board_t* board)
 }
 
 
-int evaluate_move(const move_t* move, size_t ply, search_state_t* state)
+int evaluate_move(const move_t* move, size_t ply, const search_state_t* state)
 {
   assert(move != nullptr);
   assert(state != nullptr);
@@ -342,7 +342,7 @@ int evaluate_move(const move_t* move, size_t ply, search_state_t* state)
 void order_moves(move_t moves[],
                  size_t moves_size,
                  size_t ply,
-                 search_state_t* state)
+                 const search_state_t* state)
 {
   assert(moves != nullptr);
   assert(moves_size <= MAX_MOVES);
