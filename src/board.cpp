@@ -1222,3 +1222,71 @@ piece_count_t count_pieces_on_file(index_t index, const board_t* board)
 
   return result;
 }
+
+
+bool is_king_shielded(index_t index, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
+
+  const piece_t king = board->board[index];
+
+  if (king == W_KING) {
+    // index + 0x0F
+    {
+      if ((index + 0x0F) & 0x88) { return false; }
+      const piece_t p = board->board[index + 0x0F];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == BLACK) {
+        return false;
+      }
+    }
+    // index + 0x10
+    {
+      if ((index + 0x10) & 0x88) { return false; }
+      const piece_t p = board->board[index + 0x10];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == BLACK) {
+        return false;
+      }
+    }
+    // index + 0x11
+    {
+      if ((index + 0x11) & 0x88) { return false; }
+      const piece_t p = board->board[index + 0x11];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == BLACK) {
+        return false;
+      }
+    }
+
+    return true;
+  } else if (king == B_KING) {
+    // index - 0x0F
+    {
+      if ((index - 0x0F) & 0x88) { return false; }
+      const piece_t p = board->board[index - 0x0F];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == WHITE) {
+        return false;
+      }
+    }
+    // index - 0x10
+    {
+      if ((index - 0x10) & 0x88) { return false; }
+      const piece_t p = board->board[index - 0x10];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == WHITE) {
+        return false;
+      }
+    }
+    // index - 0x11
+    {
+      if ((index - 0x11) & 0x88) { return false; }
+      const piece_t p = board->board[index - 0x11];
+      if (p == INVALID || p == EMPTY || get_piece_color(p) == WHITE) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}

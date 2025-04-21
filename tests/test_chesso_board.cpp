@@ -804,4 +804,26 @@ TEST_SUITE("Test make_move and unmake_move")
     REQUIRE_EQ(count.white, 0);
     REQUIRE_EQ(count.black, 0);
   }
+
+  TEST_CASE("Test king shield")
+  {
+    history_t history;
+    board_t board;
+    init_board("2k5/1pp5/8/8/8/8/5PPP/6K1 w - - 0 1", &board, &history);
+    bool res;
+
+    res = is_king_shielded(string_coordinates_to_index("g1"), &board);
+    REQUIRE(res);
+
+    res = is_king_shielded(string_coordinates_to_index("c8"), &board);
+    REQUIRE_FALSE(res);
+
+    init_board("2k5/1ppp4/8/8/8/8/5P1P/6K1 w - - 0 1", &board, &history);
+
+    res = is_king_shielded(string_coordinates_to_index("g1"), &board);
+    REQUIRE_FALSE(res);
+
+    res = is_king_shielded(string_coordinates_to_index("c8"), &board);
+    REQUIRE(res);
+  }
 }

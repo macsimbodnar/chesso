@@ -3,22 +3,18 @@
 #include <iostream>
 #include <unordered_map>
 #include "board.hpp"
+#include "move_generator.hpp"
 #include "utils.hpp"
 
 
 // clang-format off
-#define VALUE_W_PAWN    71
-#define VALUE_W_KNIGHT  293
-#define VALUE_W_BISHOP  300
-#define VALUE_W_ROOK    456
-#define VALUE_W_QUEEN   905
-// #define VALUE_W_KING    1000
-#define VALUE_B_PAWN    -VALUE_W_PAWN
-#define VALUE_B_KNIGHT  -VALUE_W_KNIGHT
-#define VALUE_B_BISHOP  -VALUE_W_BISHOP
-#define VALUE_B_ROOK    -VALUE_W_ROOK
-#define VALUE_B_QUEEN   -VALUE_W_QUEEN
-// #define VALUE_B_KING    -VALUE_W_KING
+#define VALUE_PAWN    71
+#define VALUE_KNIGHT  293
+#define VALUE_BISHOP  300
+#define VALUE_ROOK    456
+#define VALUE_QUEEN   905
+// #define VALUE_KING    1000
+
 
 #define DOUBLE_PAWN_PENALTY -10
 #define ISOLATED_PAWN_PENALTY -10
@@ -27,6 +23,11 @@
 
 #define SEMI_OPEN_FILE_BONUS 10
 #define OPEN_FILE_BONUS 15
+
+#define BISHOP_MOBILITY_BONUS 1
+#define QUEEN_MOBILITY_BONUS 1
+
+#define KING_SHIELD_BONUS 5
 
 
 // static const std::array<int, BOARD_SIZE> debug_postion_value_table = {
@@ -95,16 +96,16 @@ static const int queen_postion_value_table[BOARD_SIZE] = {
  -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
-static const int king_postion_value_table[BOARD_SIZE] = {
- -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -20,-30,-30,-40,-40,-30,-30,-20,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,-20,-20,-20,-20,-20,-20,-10,         0,  0,  0,  0,  0,  0,  0,  0,
-  20, 20,  0,  0,  0,  0, 20, 20,         0,  0,  0,  0,  0,  0,  0,  0,
-  20, 30, 10,  0,  0, 10, 30, 20,         0,  0,  0,  0,  0,  0,  0,  0
- };
+// static const int king_postion_value_table[BOARD_SIZE] = {
+//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -20,-30,-30,-40,-40,-30,-30,-20,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -10,-20,-20,-20,-20,-20,-20,-10,         0,  0,  0,  0,  0,  0,  0,  0,
+//   20, 20,  0,  0,  0,  0, 20, 20,         0,  0,  0,  0,  0,  0,  0,  0,
+//   20, 30, 10,  0,  0, 10, 30, 20,         0,  0,  0,  0,  0,  0,  0,  0
+//  };
 
 static const int white_indexes[BOARD_SIZE] = {
   0x70,  0x71,  0x72,  0x73,  0x74,  0x75,  0x76,  0x77,  0x78,  0x79,  0x7A,  0x7B,  0x7C,  0x7D,  0x7E,  0x7F,
@@ -155,6 +156,7 @@ int evaluate(const board_t* board)
   assert(board != nullptr);
 
   int evaluation = 0;
+  move_t moves[MAX_MOVES];
 
   for (index_t index = 0; index < BOARD_SIZE; ++index) {
     if (index & 0x88) { continue; }
@@ -164,8 +166,9 @@ int evaluate(const board_t* board)
 
     if (piece != INVALID && piece != EMPTY) {
       switch (piece) {
+        // ################################# BLACK PIECES
         case B_PAWN:
-          evaluation += VALUE_B_PAWN;
+          evaluation -= VALUE_PAWN;
           evaluation -= pawn_postion_value_table[index];
           // evaluation -= debug_postion_value_table[index];
           if (is_double_pawn(index, board)) {
@@ -179,15 +182,20 @@ int evaluate(const board_t* board)
           }
           break;
         case B_KNIGHT:
-          evaluation += VALUE_B_KNIGHT;
+          evaluation -= VALUE_KNIGHT;
           evaluation -= knight_postion_value_table[index];
           break;
-        case B_BISHOP:
-          evaluation += VALUE_B_BISHOP;
+        case B_BISHOP: {
+          evaluation -= VALUE_BISHOP;
           evaluation -= bishop_postion_value_table[index];
-          break;
+
+          // Evaluate mobility
+          const size_t moves_num =
+              generate_pseudo_legal_moves_from_index(index, board, moves);
+          evaluation -= moves_num * BISHOP_MOBILITY_BONUS;
+        } break;
         case B_ROOK: {
-          evaluation += VALUE_B_ROOK;
+          evaluation -= VALUE_ROOK;
           evaluation -= rook_postion_value_table[index];
 
           // Check for open and semi open files for rook
@@ -197,17 +205,27 @@ int evaluate(const board_t* board)
             if (count.white == 0) { evaluation -= OPEN_FILE_BONUS; }
           }
         } break;
-        case B_QUEEN:
-          evaluation += VALUE_B_QUEEN;
+        case B_QUEEN: {
+          evaluation -= VALUE_QUEEN;
           evaluation -= queen_postion_value_table[index];
-          break;
+
+          // Evaluate mobility
+          const size_t moves_num =
+              generate_pseudo_legal_moves_from_index(index, board, moves);
+          evaluation -= moves_num * QUEEN_MOBILITY_BONUS;
+        } break;
         case B_KING:
-          (void)king_postion_value_table;
-          // evaluation += VALUE_B_KING;
+          if (is_king_shielded(index, board)) {
+            evaluation -= KING_SHIELD_BONUS;
+          }
+          // evaluation -= VALUE_KING;
           // evaluation -= king_postion_value_table[index];
           break;
+
+          // ################################# WHITE PIECES
+
         case W_PAWN:
-          evaluation += VALUE_W_PAWN;
+          evaluation += VALUE_PAWN;
           evaluation += pawn_postion_value_table[white_indexes[index]];
           // index_t mapping = white_indexes[index];
           // evaluation += debug_postion_value_table[mapping];
@@ -221,16 +239,21 @@ int evaluate(const board_t* board)
             evaluation += (PASSED_PAWN_REWARD * pos.rank);
           }
           break;
-        case W_KNIGHT:
-          evaluation += VALUE_W_KNIGHT;
+        case W_KNIGHT: {
+          evaluation += VALUE_KNIGHT;
           evaluation += knight_postion_value_table[white_indexes[index]];
-          break;
+
+          // Evaluate mobility
+          const size_t moves_num =
+              generate_pseudo_legal_moves_from_index(index, board, moves);
+          evaluation += moves_num * BISHOP_MOBILITY_BONUS;
+        } break;
         case W_BISHOP:
-          evaluation += VALUE_W_BISHOP;
+          evaluation += VALUE_BISHOP;
           evaluation += bishop_postion_value_table[white_indexes[index]];
           break;
         case W_ROOK: {
-          evaluation += VALUE_W_ROOK;
+          evaluation += VALUE_ROOK;
           evaluation += rook_postion_value_table[white_indexes[index]];
 
           // Check for open and semi open files for rook
@@ -240,12 +263,20 @@ int evaluate(const board_t* board)
             if (count.black == 0) { evaluation += OPEN_FILE_BONUS; }
           }
         } break;
-        case W_QUEEN:
-          evaluation += VALUE_W_QUEEN;
+        case W_QUEEN: {
+          evaluation += VALUE_QUEEN;
           evaluation += queen_postion_value_table[white_indexes[index]];
-          break;
+
+          // Evaluate mobility
+          const size_t moves_num =
+              generate_pseudo_legal_moves_from_index(index, board, moves);
+          evaluation += moves_num * QUEEN_MOBILITY_BONUS;
+        } break;
         case W_KING:
-          // evaluation += VALUE_W_KING;
+          if (is_king_shielded(index, board)) {
+            evaluation += KING_SHIELD_BONUS;
+          }
+          // evaluation += VALUE_KING;
           // evaluation += king_postion_value_table[white_indexes[index]];
           break;
         case INVALID:
