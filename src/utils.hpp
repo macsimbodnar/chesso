@@ -20,3 +20,5 @@ color_t get_piece_color(piece_t piece);
 
 std::string print_board(const board_t* board);
 std::string print_nice_board(const board_t* board);
+
+void fix_weirdo_castling(const board_t* board, move_t* move);

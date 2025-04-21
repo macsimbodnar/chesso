@@ -557,6 +557,12 @@ size_t get_book_moves_for_key(const book_t* book,
       assert(to_file < 8);
       assert(to_rank < 8);
 
+      // Check if castling and adjust the move
+      // white short      e1h1
+      // black short      e8h8
+      // black long       e8a8
+      // white long       e1a1
+
       // Handle movement
       found_moves[moves_count].from = position_to_index(from_file, from_rank);
       found_moves[moves_count].to = position_to_index(to_file, to_rank);
@@ -573,6 +579,9 @@ size_t get_book_moves_for_key(const book_t* book,
       assert(promotion < 5);
       found_moves[moves_count].promoted_to =
           static_cast<promotion_t>(promotion);
+
+      // Fix weirdo castling notation
+      fix_weirdo_castling(board, &found_moves[moves_count]);
 
       ++moves_count;
     }

@@ -358,6 +358,9 @@ bool try_move(move_t move_candidate)
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(&board, moves);
 
+  // Fix the possible weirdo move notation for castling
+  fix_weirdo_castling(&board, &move_candidate);
+
   // Search the move in the list of legal moves
   for (size_t i = 0; i < moves_count; ++i) {
     const move_t& move = moves[i];

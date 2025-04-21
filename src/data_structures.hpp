@@ -12,9 +12,9 @@
 
 // clang-format off
 /**
- * 
+ *
  * Mailbox 0x88
- * 
+ *
  * 128 byte array
  * Files A - H        X
  * Ranks 1 - 8        7 - Y
@@ -55,7 +55,7 @@
 #define MATE_IN_2_W_POS "4k3/Q7/8/4K3/8/8/8/8 w - - 0 1"
 #define MATE_IN_2_B_POS "4K3/q7/8/4k3/8/8/8/8 b - - 0 1"
 #define THREE_FOLD_REP_POS "2r3k1/R7/8/1R6/8/8/P4KPP/8 w - - 0 1"
-#define THREE_FOLD_REP_2_POS"1r3rk1/R2PR3/1nB2p2/5P2/8/PP5P/2K5/8 w - - 3 55"
+#define THREE_FOLD_REP_2_POS "1r3rk1/R2PR3/1nB2p2/5P2/8/PP5P/2K5/8 w - - 3 55"
 // clang-format on
 
 

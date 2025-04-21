@@ -253,3 +253,42 @@ color_t get_piece_color(piece_t piece)
   assert(false);
   return BLACK;
 }
+
+/**
+ * This function fixes the weirdo castling move that can be found in Polyglot
+ * book format and some times the UCI can send that as well! (Looking at you
+ * Cutechess!)
+ *
+ * We just need the move
+ * white short      e1h1 -> e1g1
+ * white long       e1a1 -> e1c1
+ * black short      e8h8 -> e8g8
+ * black long       e8a8 -> e8c8
+ */
+void fix_weirdo_castling(const board_t* board, move_t* move)
+{
+  assert(board != nullptr);
+  assert(move != nullptr);
+
+  if (move->from == 0x04 && move->to == 0x07 &&
+      board->board[move->from] == W_KING) {
+    // white short
+    move->to = 0x06;
+    move->castling_move = true;
+  } else if (move->from == 0x04 && move->to == 0x00 &&
+             board->board[move->from] == W_KING) {
+    // white long
+    move->to = 0x02;
+    move->castling_move = true;
+  } else if (move->from == 0x74 && move->to == 0x77 &&
+             board->board[move->from] == B_KING) {
+    // black short
+    move->to = 0x76;
+    move->castling_move = true;
+  } else if (move->from == 0x74 && move->to == 0x70 &&
+             board->board[move->from] == B_KING) {
+    // black short
+    move->to = 0x72;
+    move->castling_move = true;
+  }
+}
