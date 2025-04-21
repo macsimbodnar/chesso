@@ -16,3 +16,11 @@
 * "r1b1kbnr/pp1p1ppp/4p3/4P3/3pq3/6P1/PPP1B2P/RNBQK2R b KQkq - 1 8" this position with TT enabled generates illegal moves: bestmove e4h1 ponder d1c2
 
 * Still draw in 3 fold repetition some times
+
+* Still issues with illegal PV:
+  Illegal PV move g3f2 from chesso_engine (8)
+  PV: Kg6 Kh3 Kh5 Kg3 Kg6 g3f2
+  Illegal PV move g3h4 from chesso_engine (8)
+  PV: Rb2 g3h4
+  Illegal PV move g3h4 from chesso_engine (8)
+  PV: Rb2 g3h4
