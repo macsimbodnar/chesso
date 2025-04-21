@@ -762,4 +762,46 @@ TEST_SUITE("Test make_move and unmake_move")
     score = evaluate(&board);
     REQUIRE_EQ(score, 0);
   }
+
+  TEST_CASE("Test count pieces on file")
+  {
+    history_t history;
+    board_t board;
+    init_board("3k4/1p4p1/2p1pp2/4p3/1Q1BBB2/B4PP1/2B2P2/3K4 w - - 0 1", &board,
+               &history);
+
+    piece_count_t count;
+
+    count = count_pieces_on_file(string_coordinates_to_index("a3"), &board);
+    REQUIRE_EQ(count.white, 0);
+    REQUIRE_EQ(count.black, 0);
+
+    count = count_pieces_on_file(string_coordinates_to_index("b7"), &board);
+    REQUIRE_EQ(count.white, 1);
+    REQUIRE_EQ(count.black, 0);
+
+    count = count_pieces_on_file(string_coordinates_to_index("c2"), &board);
+    REQUIRE_EQ(count.white, 0);
+    REQUIRE_EQ(count.black, 1);
+
+    count = count_pieces_on_file(string_coordinates_to_index("d1"), &board);
+    REQUIRE_EQ(count.white, 1);
+    REQUIRE_EQ(count.black, 1);
+
+    count = count_pieces_on_file(string_coordinates_to_index("e1"), &board);
+    REQUIRE_EQ(count.white, 1);
+    REQUIRE_EQ(count.black, 2);
+
+    count = count_pieces_on_file(string_coordinates_to_index("f4"), &board);
+    REQUIRE_EQ(count.white, 2);
+    REQUIRE_EQ(count.black, 1);
+
+    count = count_pieces_on_file(string_coordinates_to_index("g7"), &board);
+    REQUIRE_EQ(count.white, 1);
+    REQUIRE_EQ(count.black, 0);
+
+    count = count_pieces_on_file(string_coordinates_to_index("h1"), &board);
+    REQUIRE_EQ(count.white, 0);
+    REQUIRE_EQ(count.black, 0);
+  }
 }

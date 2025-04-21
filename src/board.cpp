@@ -1125,6 +1125,7 @@ bool is_double_pawn(index_t index, const board_t* board)
 {
   assert(board != nullptr);
   assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
 
   const piece_t to_check = board->board[index];
   if (to_check != W_PAWN && to_check != B_PAWN) { return false; }
@@ -1148,6 +1149,7 @@ bool is_passed_pawn(index_t index, const board_t* board)
 {
   assert(board != nullptr);
   assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
 
   switch (board->board[index]) {
     case W_PAWN:
@@ -1178,10 +1180,10 @@ bool is_isolated_pawn(index_t index, const board_t* board)
 {
   assert(board != nullptr);
   assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
 
   const piece_t to_check = board->board[index];
   if (to_check != W_PAWN && to_check != B_PAWN) { return false; }
-
 
   // Set rank to zero
   const position_t pos = index_to_position(index);
@@ -1194,4 +1196,29 @@ bool is_isolated_pawn(index_t index, const board_t* board)
   }
 
   return true;
+}
+
+
+piece_count_t count_pieces_on_file(index_t index, const board_t* board)
+{
+  assert(board != nullptr);
+  assert(index < BOARD_SIZE);
+  assert(!(index & 0x88));
+
+  piece_count_t result = {};
+  const position_t pos = index_to_position(index);
+  const index_t start_index = position_to_index(pos.file, 0);
+
+  for (index_t i = start_index; !(i & 0x88) && i <= start_index + 0x70;
+       i += 0x10) {
+    if (i != index && board->board[i] != INVALID && board->board[i] != EMPTY) {
+      if (get_piece_color(board->board[i]) == WHITE) {
+        result.white += 1;
+      } else {
+        result.black += 1;
+      }
+    }
+  }
+
+  return result;
 }

@@ -25,6 +25,10 @@
 #define PASSED_PAWN_REWARD 10
 #define BISHOP_PAIR_BONUS 50
 
+#define SEMI_OPEN_FILE_BONUS 10
+#define OPEN_FILE_BONUS 15
+
+
 // static const std::array<int, BOARD_SIZE> debug_postion_value_table = {
 //    0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
 //    0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
@@ -182,10 +186,17 @@ int evaluate(const board_t* board)
           evaluation += VALUE_B_BISHOP;
           evaluation -= bishop_postion_value_table[index];
           break;
-        case B_ROOK:
+        case B_ROOK: {
           evaluation += VALUE_B_ROOK;
           evaluation -= rook_postion_value_table[index];
-          break;
+
+          // Check for open and semi open files for rook
+          const piece_count_t count = count_pieces_on_file(index, board);
+          if (count.black == 0) {
+            evaluation -= SEMI_OPEN_FILE_BONUS;
+            if (count.white == 0) { evaluation -= OPEN_FILE_BONUS; }
+          }
+        } break;
         case B_QUEEN:
           evaluation += VALUE_B_QUEEN;
           evaluation -= queen_postion_value_table[index];
@@ -218,10 +229,17 @@ int evaluate(const board_t* board)
           evaluation += VALUE_W_BISHOP;
           evaluation += bishop_postion_value_table[white_indexes[index]];
           break;
-        case W_ROOK:
+        case W_ROOK: {
           evaluation += VALUE_W_ROOK;
           evaluation += rook_postion_value_table[white_indexes[index]];
-          break;
+
+          // Check for open and semi open files for rook
+          const piece_count_t count = count_pieces_on_file(index, board);
+          if (count.white == 0) {
+            evaluation += SEMI_OPEN_FILE_BONUS;
+            if (count.black == 0) { evaluation += OPEN_FILE_BONUS; }
+          }
+        } break;
         case W_QUEEN:
           evaluation += VALUE_W_QUEEN;
           evaluation += queen_postion_value_table[white_indexes[index]];
@@ -321,26 +339,6 @@ void order_moves(move_t moves[],
     scores[j] = value;
     moves[j] = move;
   }
-
-
-  // Selection Sort
-  // for (size_t i = 0; i < moves_size; ++i) {
-  //   size_t best_index = i;
-
-  //   for (size_t candidate = i; candidate < moves_size; ++candidate) {
-  //     if (scores[candidate] > scores[best_index]) { best_index = candidate; }
-  //   }
-
-  //   // Swapping elements
-  //   const int old_score = scores[i];
-  //   const move_t old_move = moves[i];
-
-  //   scores[i] = scores[best_index];
-  //   moves[i] = moves[best_index];
-
-  //   scores[best_index] = old_score;
-  //   moves[best_index] = old_move;
-  // }
 }
 
 

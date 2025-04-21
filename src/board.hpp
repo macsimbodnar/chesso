@@ -3,6 +3,12 @@
 #include <vector>
 #include "data_structures.hpp"
 
+struct piece_count_t
+{
+  int white = 0;
+  int black = 0;
+};
+
 
 void init_board(const std::string& fen, board_t* board, history_t* history);
 void reset(board_t* board, history_t* history);
@@ -33,3 +39,4 @@ bool has_bishop_pair(color_t color, const board_t* board);
 bool is_double_pawn(index_t index, const board_t* board);
 bool is_passed_pawn(index_t index, const board_t* board);
 bool is_isolated_pawn(index_t index, const board_t* board);
+piece_count_t count_pieces_on_file(index_t index, const board_t *board);
