@@ -114,6 +114,8 @@ bool is_pv_legal(const board_t* board, const pv_t* pv)
     move_t moves[MAX_MOVES];
     const size_t moves_count = generate_legal_moves(&tmp_board, moves);
 
+    if (moves_count < 1) { return false; }
+
     bool found = false;
     for (size_t move_index = 0; move_index < moves_count; ++move_index) {
       if (*move_to_test == moves[move_index] &&
@@ -397,7 +399,7 @@ search_t search_best_move(int depth,
   const bool pv_legal = is_pv_legal(board, &state->pv);
   if (pv_legal) {
     search_result.best_move = state->pv.pv_table[0][0];
-  } else {
+  } else if (!*state->stop) {
     // NOTE: This is a workaround until find a way to deal with PV and TT
     LOG_W << "Invalid PV. Researching with no TT at depth " << depth << END_W;
 
@@ -408,6 +410,9 @@ search_t search_best_move(int depth,
 
     search_result.best_move = state->pv.pv_table[0][0];
   }
+
+  // Just ot be sure assign again the fallback move
+  if (!search_result.best_move) { search_result.best_move = moves[0]; }
 
   // Handle mate score
   search_result.mate_found = false;

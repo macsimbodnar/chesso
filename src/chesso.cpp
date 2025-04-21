@@ -757,6 +757,8 @@ bool command_go(std::queue<std::string>& args)
 
       try {
         search_options.movestogo = std::stoi(movestogo_token);
+        if (search_options.movestogo == 0) { search_options.movestogo = 1; }
+
       } catch (...) {
         LOG_W << "Movestogo is not a number: " << movestogo_token << END_W;
         return false;
@@ -808,9 +810,10 @@ bool command_go(std::queue<std::string>& args)
 
   // Calculate the time to play for white if set
   if (search_options.wtime_ms > 0 && board.game_state.active_color == WHITE) {
-    const int time_to_play =
-        (search_options.wtime_ms / search_options.movestogo) +
-        search_options.winc_ms;
+    int time_to_play = (search_options.wtime_ms / search_options.movestogo) +
+                       search_options.winc_ms - 10;
+
+    if (time_to_play < 100) { time_to_play = 100; }
 
     stop_search_after_ms(time_to_play);
 
@@ -820,9 +823,10 @@ bool command_go(std::queue<std::string>& args)
 
   // Calculate the time to play for black if set
   if (search_options.btime_ms > 0 && board.game_state.active_color == BLACK) {
-    const int time_to_play =
-        (search_options.btime_ms / search_options.movestogo) +
-        search_options.binc_ms;
+    int time_to_play = (search_options.btime_ms / search_options.movestogo) +
+                       search_options.binc_ms - 10;
+
+    if (time_to_play < 100) { time_to_play = 100; }
 
     stop_search_after_ms(time_to_play);
 
