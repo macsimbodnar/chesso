@@ -3,7 +3,6 @@
 #include <future>
 #include <iostream>
 #include <limits>
-#include <thread>
 #include "board.hpp"
 #include "evaluation.hpp"
 #include "experimental_search.hpp"

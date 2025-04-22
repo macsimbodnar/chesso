@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
+#include "experimental_search.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
 #include "openings.hpp"
@@ -69,9 +70,10 @@ struct uci_move_t
 
 struct uci_search_result_t
 {
-  uci_move_t best_move;
+  uci_move_t uci_best_move;
   bool is_ponder_move = false;
   uci_move_t ponder_move;
+  move_t best_move;
 };
 
 
@@ -102,6 +104,7 @@ bool command_quit(std::queue<std::string>& args);
 bool command_print_board(std::queue<std::string>& args);
 bool command_fen(std::queue<std::string>& args);
 bool command_help(std::queue<std::string>& args);
+bool command_test(std::queue<std::string>& args);
 
 // clang-format off
 static const std::unordered_map<std::string, process_func> commands = {
@@ -120,6 +123,7 @@ static const std::unordered_map<std::string, process_func> commands = {
   {"pb", command_print_board},
   {"fen", command_fen},
   {"help", command_help},
+  {"test", command_test},
 };
 // clang-format on
 
@@ -268,6 +272,42 @@ std::string pv_to_string(const pv_t* pv)
   }
 
   return ss.str();
+}
+
+
+bool check_move_legality(const move_t* move)
+{
+  move_t moves[MAX_MOVES];
+  const size_t moves_size = generate_legal_moves(&board, moves);
+
+  if (moves_size < 1) {
+    LOG_E << *move << " ILLEGAL. No move available in this position" << END_E;
+    return false;
+  }
+
+  bool found = false;
+  for (size_t i = 0; i < moves_size; ++i) {
+    if (*move == moves[i]) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    LOG_E << *move << " ILLEGAL. Is not in the legal move list" << END_E;
+    return false;
+  }
+
+  // Attempt to make the move
+  board_t tmp_board = board;
+  const bool res = make_move(move, &tmp_board, nullptr);
+
+  if (!res) {
+    LOG_E << *move << " ILLEGAL. Failed to make the move" << END_E;
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -425,8 +465,10 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // Iterative deepening
     auto start_time = std::chrono::high_resolution_clock::now();
 
+    // const search_t search_result =
+    //     search_best_move(current_depth, &board, &state);
     const search_t search_result =
-        search_best_move(current_depth, &board, &state);
+        experimental_search(current_depth, &board, &state);
 
     const auto end_time = std::chrono::high_resolution_clock::now();
     const auto duration_ms =
@@ -447,9 +489,10 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
               std::to_string(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
 
-    result.best_move = {search_result.best_move.from,
-                        search_result.best_move.to,
-                        search_result.best_move.promoted_to};
+    result.best_move = search_result.best_move;
+    result.uci_best_move = {search_result.best_move.from,
+                            search_result.best_move.to,
+                            search_result.best_move.promoted_to};
 
     result.is_ponder_move = false;
     if (search_result.pv.pv_length[0] > 1) {
@@ -782,32 +825,6 @@ bool command_go(std::queue<std::string>& args)
     }
   }
 
-  // Start search in a thread
-  std::thread search_thread([search_options]() {
-    stopwatch_t timer;
-    const uci_search_result_t res = iterative_deepening_search(search_options);
-
-    const std::string best_move_str = uci_move_to_algebraic(&res.best_move);
-
-    std::string ponder_move;
-    if (res.is_ponder_move) {
-      ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-    }
-
-    uci_reply("bestmove " + best_move_str + ponder_move);
-  });
-
-  // Let the thread go his way
-  search_thread.detach();
-
-  // Start the move timer if necessary
-  if (search_options.movetime_ms > 0) {
-    stop_search_after_ms(search_options.movetime_ms);
-
-    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
-          << "ms" << END_I;
-  }
-
   // Calculate the time to play for white if set
   if (search_options.wtime_ms > 0 && board.game_state.active_color == WHITE) {
     int time_to_play = (search_options.wtime_ms / search_options.movestogo) +
@@ -832,6 +849,32 @@ bool command_go(std::queue<std::string>& args)
 
     LOG_I << "Time to play for black calculated. Search will stop in "
           << time_to_play << "ms" << END_I;
+  }
+
+  // Start search in a thread
+  std::thread search_thread([search_options]() {
+    stopwatch_t timer;
+    const uci_search_result_t res = iterative_deepening_search(search_options);
+
+    const std::string best_move_str = uci_move_to_algebraic(&res.uci_best_move);
+
+    std::string ponder_move;
+    if (res.is_ponder_move) {
+      ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+    }
+
+    uci_reply("bestmove " + best_move_str + ponder_move);
+  });
+
+  // Let the thread go his way
+  search_thread.detach();
+
+  // Start the move timer if necessary
+  if (search_options.movetime_ms > 0) {
+    stop_search_after_ms(search_options.movetime_ms);
+
+    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
+          << "ms" << END_I;
   }
 
   return true;
@@ -899,6 +942,199 @@ bool command_help(std::queue<std::string>& args)
     uci_reply(key);
   }
   uci_reply("--------------------------------");
+
+  return true;
+}
+
+
+bool command_test(std::queue<std::string>& args)
+{
+  // LOG_I << "Command [command_help]. Args: " << args << END_I;
+
+  uci_search_options_t search_options = {};
+  search_options.infinite = false;
+  search_options.depth = 6;
+
+  if (!args.empty()) {
+    const std::string depth_token = args.front();
+    args.pop();
+
+    try {
+      search_options.depth = std::stoi(depth_token);
+    } catch (...) {
+      LOG_W << "Depth is not a number: " << depth_token << END_W;
+    }
+  }
+
+#ifdef NDEBUG
+  std::string build_type = "Release";
+#else
+  std::string build_type = "Debug  ";
+#endif
+
+
+  uci_reply("\nTESTS START ----------------------\nDepth: " +
+            std::to_string(search_options.depth) +
+            "\nBuild type: " + build_type + "\nDescription:");
+
+  uci_reply("");
+  stopwatch_t total_timer;
+  {
+    set_position(DEFAULT_POSITION);
+    uci_reply("DEFAULT_POSITION   " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(TRICKY_POS);
+    uci_reply("TRICKY_POS         " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(KILLER_POS);
+    uci_reply("KILLER_POS         " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(CMK_POS);
+    uci_reply("CMK_POS            " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(MATE_IN_2_W_POS);
+    uci_reply("MATE_IN_2_W_POS    " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(MATE_IN_2_B_POS);
+    uci_reply("MATE_IN_2_B_POS    " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("\nTESTS END ------------------------");
 
   return true;
 }

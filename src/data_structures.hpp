@@ -318,4 +318,5 @@ struct search_state_t
   pv_t pv;
   bool search_in_tt = true;
   tt_hash_t* tt;  // Too big to keep on the stack
+  move_t best_move;
 };

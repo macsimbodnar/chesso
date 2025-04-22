@@ -96,16 +96,16 @@ static const int queen_postion_value_table[BOARD_SIZE] = {
  -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
-// static const int king_postion_value_table[BOARD_SIZE] = {
-//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
-//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
-//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
-//  -30,-40,-40,-50,-50,-40,-40,-30,         0,  0,  0,  0,  0,  0,  0,  0,
-//  -20,-30,-30,-40,-40,-30,-30,-20,         0,  0,  0,  0,  0,  0,  0,  0,
-//  -10,-20,-20,-20,-20,-20,-20,-10,         0,  0,  0,  0,  0,  0,  0,  0,
-//   20, 20,  0,  0,  0,  0, 20, 20,         0,  0,  0,  0,  0,  0,  0,  0,
-//   20, 30, 10,  0,  0, 10, 30, 20,         0,  0,  0,  0,  0,  0,  0,  0
-//  };
+static const int king_postion_value_table[BOARD_SIZE] = {
+  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0, 10, 10,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0, 10, 10,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  0, 15,  0,  0,  0, 20,  0,         0,  0,  0,  0,  0,  0,  0,  0
+ };
 
 static const int white_indexes[BOARD_SIZE] = {
   0x70,  0x71,  0x72,  0x73,  0x74,  0x75,  0x76,  0x77,  0x78,  0x79,  0x7A,  0x7B,  0x7C,  0x7D,  0x7E,  0x7F,
@@ -170,7 +170,6 @@ int evaluate(const board_t* board)
         case B_PAWN:
           evaluation -= VALUE_PAWN;
           evaluation -= pawn_postion_value_table[index];
-          // evaluation -= debug_postion_value_table[index];
           if (is_double_pawn(index, board)) {
             evaluation -= DOUBLE_PAWN_PENALTY;
           }
@@ -219,7 +218,7 @@ int evaluate(const board_t* board)
             evaluation -= KING_SHIELD_BONUS;
           }
           // evaluation -= VALUE_KING;
-          // evaluation -= king_postion_value_table[index];
+          evaluation -= king_postion_value_table[index];
           break;
 
           // ################################# WHITE PIECES
@@ -227,8 +226,6 @@ int evaluate(const board_t* board)
         case W_PAWN:
           evaluation += VALUE_PAWN;
           evaluation += pawn_postion_value_table[white_indexes[index]];
-          // index_t mapping = white_indexes[index];
-          // evaluation += debug_postion_value_table[mapping];
           if (is_double_pawn(index, board)) {
             evaluation += DOUBLE_PAWN_PENALTY;
           }
@@ -277,7 +274,7 @@ int evaluate(const board_t* board)
             evaluation += KING_SHIELD_BONUS;
           }
           // evaluation += VALUE_KING;
-          // evaluation += king_postion_value_table[white_indexes[index]];
+          evaluation += king_postion_value_table[white_indexes[index]];
           break;
         case INVALID:
         case EMPTY:

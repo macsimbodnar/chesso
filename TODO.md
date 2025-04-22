@@ -28,3 +28,4 @@
 * Soe time can make an illegal move (--). Make sure to always have a backup move, even if random.
 
 * Change the == move_t overload operator to check ALL the parameters, and use a function to soft compare.
+* Connected rooks score
