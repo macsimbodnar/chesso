@@ -201,6 +201,8 @@ int negamax(int alpha,
     }
   }
 
+  move_t best_move = moves[0];
+
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
 
@@ -212,12 +214,13 @@ int negamax(int alpha,
 
     if (score >= alpha) {
       alpha = score;
-      state->best_move = moves[i];
+      best_move = moves[i];
     }
 
     if (alpha >= beta) break;
   }
 
+  state->best_move = best_move;
   return alpha;
 }
 
