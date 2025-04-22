@@ -16,7 +16,7 @@
 
 using json = nlohmann::json;
 
-#define RUN_THREADS
+// #define RUN_THREADS
 #define MAXIMUM_DEPTH 20
 
 
@@ -87,6 +87,50 @@ struct stats_t
     return *this;
   }
 };
+
+
+/**
+ *  Transposition table element
+ *
+ * I use the Transposition Table in perft to check if the hash key has no bugs
+ */
+struct tt_elem_t
+{
+  uint64_t key = 0;
+  stats_t stats;
+  int depth;
+};
+
+static tt_elem_t tt[TT_SIZE] = {};
+
+
+inline void cleanup_tt()
+{
+  std::cout << "Cleanup TT\n";
+  memset(&tt, 0, sizeof(tt));
+}
+
+
+inline const stats_t* get_from_tt(const board_t* board, int depth)
+{
+  const tt_elem_t* entry = &tt[board->game_state.zobrist_key % TT_SIZE];
+
+  if (entry->key == board->game_state.zobrist_key && entry->depth == depth) {
+    return &entry->stats;
+  }
+
+  return nullptr;
+}
+
+
+inline void store_to_tt(const board_t* board, int depth, const stats_t* stats)
+{
+  tt_elem_t* elem = &tt[board->game_state.zobrist_key % TT_SIZE];
+  elem->depth = depth;
+  elem->stats = *stats;
+  elem->key = board->game_state.zobrist_key;
+}
+
 
 std::string print_stats_headline()
 {
@@ -233,6 +277,10 @@ stats_t perft(int depth, const board_t* board, history_t* history)
     return node_stats;
   }
 
+  // Check if this position is in tt table
+  const stats_t* stats_in_tt = get_from_tt(board, depth);
+  if (stats_in_tt != nullptr) { return *stats_in_tt; }
+
   move_t moves[270];
   const size_t moves_count = generate_legal_moves(board, moves);
 
@@ -252,6 +300,7 @@ stats_t perft(int depth, const board_t* board, history_t* history)
     // unmake_move(board, history);
   }
 
+  store_to_tt(board, depth, &node_stats);
   return node_stats;
 }
 
@@ -305,6 +354,7 @@ int main()
 {
   bool passed = true;
 
+  board_t board;
   for (const auto& test_file : test_files) {
     const json test_cases = load_json(test_file);
 
@@ -329,16 +379,20 @@ int main()
 
       const int width = 10;
 
+      // Reset the Transposition Table for new position
+      cleanup_tt();
+
       // clang-format off
-    std::cout << std::left
-              << std::setw(width - 2) << "|depth"
-              << std::setw(width / 2) << "|min"
-              << std::setw(width / 2) << "sec"
-              << std::setw(width / 2) << "msec"
-              << print_stats_headline() << std::setw(24) << "\n"
-              << print_stats_headline_second_line()
-              << std::endl;
+      std::cout << std::left
+                << std::setw(width - 2) << "|depth"
+                << std::setw(width / 2) << "|min"
+                << std::setw(width / 2) << "sec"
+                << std::setw(width / 2) << "msec"
+                << print_stats_headline() << std::setw(24) << "\n"
+                << print_stats_headline_second_line()
+                << std::endl;
       // clang-format on
+
 
       for (const auto& layer : test_case["depth_layers"]) {
         const int depth = layer["depth"];
@@ -348,7 +402,6 @@ int main()
 
         auto start_time = std::chrono::high_resolution_clock::now();
         history_t history;
-        board_t board;
         init_board(fen, &board, &history);
         stats_t stats;
         stats.nodes = 1;

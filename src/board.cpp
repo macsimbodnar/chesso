@@ -58,6 +58,8 @@ void init_zobrist(zobrist_randoms_t* zobrist)
   for (uint64_t& random : zobrist->ep_randoms) {
     random = dist(gen);
   }
+
+  zobrist->initialized = true;
 }
 
 
@@ -138,7 +140,9 @@ void init_board(const std::string& fen, board_t* board, history_t* history)
   cleanup_game_state(&board->game_state);
 
   // Init random numbers
-  init_zobrist(&board->zobrist_randoms);
+  if (!board->zobrist_randoms.initialized) {
+    init_zobrist(&board->zobrist_randoms);
+  }
 
   // Load FEN
   load_FEN(fen, board, history);

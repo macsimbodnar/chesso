@@ -612,6 +612,7 @@ bool command_position(std::queue<std::string>& args)
     if (token == "tricky") { set_position(TRICKY_POS); }
     if (token == "killer") { set_position(KILLER_POS); }
     if (token == "cmk") { set_position(CMK_POS); }
+    if (token == "fine70") { set_position(FINE_70_POS); }
 
     if (token == "fen") {
       // Reading the fen string. Fen string contains 6 portions
@@ -1060,6 +1061,32 @@ bool command_test(std::queue<std::string>& args)
   {
     set_position(CMK_POS);
     uci_reply("CMK_POS            " + generate_FEN(&board));
+
+    uci_search_result_t res;
+    {
+      stopwatch_t timer;
+      res = iterative_deepening_search(search_options);
+
+      const std::string best_move_str =
+          uci_move_to_algebraic(&res.uci_best_move);
+
+      std::string ponder_move;
+      if (res.is_ponder_move) {
+        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
+      }
+
+      uci_reply("bestmove " + best_move_str + ponder_move);
+    }
+
+    if (!check_move_legality(&res.best_move)) {
+      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    }
+  }
+
+  uci_reply("");
+  {
+    set_position(FINE_70_POS);
+    uci_reply("FINE_70_POS        " + generate_FEN(&board));
 
     uci_search_result_t res;
     {
