@@ -180,7 +180,7 @@ int negamax(int alpha,
             const board_t* board,
             search_state_t* state)
 {
-  int score = MIN;
+  int best_so_far = MIN;
 
   if (depth < 1) {
     ++(state->explored_nodes);
@@ -210,18 +210,21 @@ int negamax(int alpha,
     (void)done;
     assert(done);
 
-    score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state);
+    const int score =
+        -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state);
 
-    if (score >= alpha) {
-      alpha = score;
+    if (score >= best_so_far) {
+      best_so_far = score;
       best_move = moves[i];
-    }
 
-    if (alpha >= beta) break;
+      if (score >= alpha) { alpha = score; }
+      if (score >= beta) { break; }
+    }
   }
 
   state->best_move = best_move;
-  return alpha;
+
+  return best_so_far;
 }
 
 
