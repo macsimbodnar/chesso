@@ -80,7 +80,8 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 
 // Transposition table size
 // #define TT_SIZE 8388608
-#define TT_SIZE 4194304
+// #define TT_SIZE 4194304
+#define TT_SIZE 4194301
 
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
@@ -285,6 +286,7 @@ struct pv_t
 
 enum node_type_t
 {
+  TT_EMPTY_NODE,
   TT_PV_NODE,     // The stored score is EXACTLY that
   TT_ALPHA_NODE,  // The stored score was at most that. Upperbound
   TT_BETA_NODE    // The stored score was at least that. Lowerbound
@@ -294,18 +296,16 @@ enum node_type_t
 struct tt_entry_t
 {
   uint64_t key = 0;
-  node_type_t type;
+  node_type_t type = TT_EMPTY_NODE;
   int depth = 0;
   int score = 0;
   move_t best_move;
-  int generation;
 };
 
 
 struct transposition_table_t
 {
   tt_entry_t entries[TT_SIZE];
-  int current_generation = 0;
 };
 
 

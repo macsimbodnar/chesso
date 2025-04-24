@@ -27,10 +27,10 @@ int main(int argc, char* argv[])
   (void)argc;
   (void)argv;
 
-  // LOG_I << "Debug" << END_I;
-  // LOG_S << "Debug" << END_S;
-  // LOG_W << "Debug" << END_W;
-  // LOG_E << "Debug" << END_E;
+  LOG_I << "Debug" << END_I;
+  LOG_S << "Debug" << END_S;
+  LOG_W << "Debug" << END_W;
+  LOG_E << "Debug" << END_E;
 
   board_t board;
   history_t history;

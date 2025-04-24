@@ -74,6 +74,7 @@ struct uci_search_result_t
   bool is_ponder_move = false;
   uci_move_t ponder_move;
   move_t best_move;
+  uint64_t total_node_explored;
 };
 
 
@@ -316,7 +317,6 @@ bool check_move_legality(const move_t* move)
 void tt_reset()
 {
   memset(&tt, 0, sizeof(tt));
-  tt.current_generation = 0;
 }
 
 
@@ -454,17 +454,21 @@ move_t search_random_move_in_book()
 uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 {
   uci_search_result_t result = {};
+  result.total_node_explored = 0;
 
   // If no move found in the book search by engine
   search_state_t state = {};
   state.stop = &stop_search_signal;
   state.tt = &tt;
   assert(state.tt != nullptr);
-  state.tt->current_generation++;
   stop_search_signal = false;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
+
+    // Reset the explored nodes in the previous iteration
+    state.explored_nodes = 0;
+
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // const search_t search_result =
@@ -503,6 +507,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                             search_result.pv.pv_table[0][1].to,
                             search_result.pv.pv_table[0][1].promoted_to};
     }
+
+    result.total_node_explored += search_result.explored_nodes;
 
     // Check if run out of nodes
     if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
@@ -954,6 +960,7 @@ bool command_test(std::queue<std::string>& args)
 {
   // LOG_I << "Command [command_help]. Args: " << args << END_I;
 
+  uint64_t total_nodes = 0;
   uci_search_options_t search_options = {};
   search_options.infinite = false;
   search_options.depth = 6;
@@ -1000,6 +1007,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1027,6 +1035,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1054,6 +1063,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1081,6 +1091,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1108,6 +1119,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1135,6 +1147,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1162,6 +1175,7 @@ bool command_test(std::queue<std::string>& args)
       }
 
       uci_reply("bestmove " + best_move_str + ponder_move);
+      total_nodes += res.total_node_explored;
     }
 
     if (!check_move_legality(&res.best_move)) {
@@ -1170,6 +1184,7 @@ bool command_test(std::queue<std::string>& args)
   }
 
   uci_reply("\nTESTS END ------------------------");
+  uci_reply("Total explored nodes: " + std::to_string(total_nodes));
 
   return true;
 }
@@ -1188,6 +1203,8 @@ int main()
   init_board(DEFAULT_POSITION, &board, &history);
   (void)try_load_opening_book();
   still_in_opening = true;
+
+  tt_reset();
 
   while (running) {
     std::string input;

@@ -6,6 +6,8 @@
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
+#include "transposition_table.hpp"
+
 
 #define MATE_MAX 49000
 #define MATE_MIN 48000
@@ -16,115 +18,6 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 // static constexpr int NO_SCORE = MAX + 42;
 
 
-inline const tt_entry_t* get_entry_from_tt(const transposition_table_t* tt,
-                                           const board_t* board,
-                                           int depth)
-{
-  assert(tt != nullptr);
-  assert(board != nullptr);
-  assert(depth >= 0);
-
-  const uint64_t hash = board->game_state.zobrist_key;
-  const tt_entry_t* res = &tt->entries[hash % TT_SIZE];
-
-  assert(res != nullptr);
-
-  if (res->key == hash && res->depth >= depth) { return res; }
-  // if (res->key == hash) { return res; }
-
-  return nullptr;
-}
-
-
-void store_entry_to_tt(transposition_table_t* tt,
-                       const board_t* board,
-                       int depth,  // This is not the search depth but the ply
-                       int score,
-                       node_type_t type,
-                       const move_t* best_move)
-{
-  const uint64_t hash = board->game_state.zobrist_key;
-  tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
-
-  // // only apply replacement policy if same generation AND same key
-  // if (entry->key == hash && entry->generation == tt->current_generation) {
-  //   if (type == TT_ALPHA_NODE) {
-  //     // new is an upperbound → only overwrite an existing upperbound
-  //     // at lesser‐or‐equal depth
-  //     if (entry->type != TT_ALPHA_NODE || depth < entry->depth) { return; }
-  //   } else {
-  //     // new is lowerbound or exact → only skip if:
-  //     //   - it's shallower, AND
-  //     //   - existing is NOT an upperbound
-  //     if (depth < entry->depth && entry->type != TT_ALPHA_NODE) { return; }
-  //   }
-  // }
-
-  entry->key = hash;
-  entry->type = type;
-  entry->depth = depth;
-  entry->score = score;
-  entry->best_move = *best_move;
-  entry->generation = tt->current_generation;
-}
-
-
-int quiescence_search(int alpha,
-                      int beta,
-                      size_t qs_ply,
-                      const board_t* board,
-                      search_state_t* state)
-{
-  assert(board != nullptr);
-  assert(state != nullptr);
-  assert(state->stop != nullptr);
-
-
-  const int stand_pat =
-      (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
-  int best_value = stand_pat;
-
-  state->explored_nodes += 1;
-
-  if (qs_ply > 3) { return best_value; }
-
-
-  if (alpha < stand_pat) {
-    alpha = stand_pat;
-
-    if (stand_pat >= beta) { return stand_pat; }
-  }
-
-  move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
-
-  for (size_t i = 0; i < moves_count; ++i) {
-    if ((moves[i].captured == INVALID || moves[i].captured == EMPTY) &&
-        moves[i].promoted_to == TO_NONE) {
-      continue;
-    }
-
-    board_t tmp_board = *board;
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
-    (void)done;
-    assert(done);
-
-
-    const int score =
-        -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
-
-
-    if (score > best_value) { best_value = score; }
-    if (score > alpha) {
-      alpha = score;
-      if (score >= beta) { return score; }
-    }
-  }
-
-  return best_value;
-}
-
-
 int negamax(int alpha,
             int beta,
             int depth,
@@ -133,11 +26,11 @@ int negamax(int alpha,
             search_state_t* state)
 {
   int best_so_far = MIN;
-  int alpha0 = alpha;
+  const int alpha0 = alpha;
 
   // Reuse TT entry if found
-  const tt_entry_t* tt_entry = get_entry_from_tt(state->tt, board, depth);
-  if (ply > 0 && tt_entry != nullptr) {
+  const tt_entry_t* tt_entry = get_entry_from_tt(state->tt, board);
+  if (ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
     if (tt_entry->type == TT_PV_NODE) {
       state->best_move = tt_entry->best_move;
       return tt_entry->score;
@@ -148,10 +41,12 @@ int negamax(int alpha,
     }
   }
 
-  // Leaf node
-  if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
-
   state->explored_nodes += 1;
+
+  // Leaf node
+  if (depth < 1) {
+    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+  }
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
@@ -198,37 +93,8 @@ int negamax(int alpha,
   }
   store_entry_to_tt(state->tt, board, depth, best_so_far, type, &best_move);
 
-
   state->best_move = best_move;
   return best_so_far;
-}
-
-
-void generate_pv(const board_t* board, search_state_t* state, int depth)
-{
-  assert(board != nullptr);
-  assert(state != nullptr);
-  board_t tmp_board = *board;
-  state->pv.pv_length[0] = 0;
-
-  const move_t* next_move = &state->best_move;
-  while (next_move != nullptr && depth > 0) {
-    state->pv.pv_table[0][state->pv.pv_length[0]] = *next_move;
-    state->pv.pv_length[0]++;
-
-    make_move(next_move, &tmp_board, nullptr);
-    const tt_entry_t* next_entry =
-        &state->tt->entries[tmp_board.game_state.zobrist_key % TT_SIZE];
-
-    if (next_entry == nullptr ||
-        next_entry->key != tmp_board.game_state.zobrist_key ||
-        next_entry->type == TT_ALPHA_NODE) {
-      return;
-    }
-
-    next_move = &next_entry->best_move;
-    --depth;
-  }
 }
 
 
@@ -244,8 +110,6 @@ search_t experimental_search(int depth,
   search_t search_result = {};
 
   const int score = negamax(MIN, MAX, depth, 0, board, state);
-
-  // generate_pv(board, state, depth);
 
   search_result.best_move = state->best_move;
 
