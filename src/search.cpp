@@ -37,7 +37,7 @@ void debug_print_move(const move_t* move, int score)
 inline void store_to_tt(const board_t* board,
                         search_state_t* state,
                         int depth,
-                        hash_flag_t flag,
+                        node_type_t type,
                         int score,
                         int ply)
 {
@@ -45,7 +45,7 @@ inline void store_to_tt(const board_t* board,
   assert(state != nullptr);
 
   const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
-  tt_hash_t* elem = &state->tt[index];
+  tt_entry_t* elem = &state->tt->entries[index];
   assert(elem != nullptr);
 
   // Handle mate score. It needs to be independent from the path so we remove
@@ -55,7 +55,7 @@ inline void store_to_tt(const board_t* board,
 
   elem->key = board->game_state.zobrist_key;
   elem->depth = depth;
-  elem->flag = flag;
+  elem->type = type;
   elem->score = score;
 }
 
@@ -71,7 +71,7 @@ inline int get_from_tt(const board_t* board,
   assert(state != nullptr);
 
   const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
-  const tt_hash_t* elem = &state->tt[index];
+  const tt_entry_t* elem = &state->tt->entries[index];
 
   assert(elem != nullptr);
 
@@ -84,9 +84,9 @@ inline int get_from_tt(const board_t* board,
       if (score > MATE_MIN) { score -= ply; }
 
       // Return the score
-      if (elem->flag == TT_TYPE_EXACT) { return score; }
-      if ((elem->flag == TT_TYPE_ALPHA) && (score <= alpha)) { return alpha; }
-      if ((elem->flag == TT_TYPE_BETA) && (score >= beta)) { return beta; }
+      if (elem->type == TT_PV_NODE) { return score; }
+      if ((elem->type == TT_ALPHA_NODE) && (score <= alpha)) { return alpha; }
+      if ((elem->type == TT_BETA_NODE) && (score >= beta)) { return beta; }
     }
   }
 
@@ -208,7 +208,7 @@ int alpha_beta_negamax(int alpha,
   if (is_position_repeated(board)) { return DRAW_SCORE; }
 
   int score = 0;
-  hash_flag_t hash_flag = TT_TYPE_ALPHA;
+  node_type_t hash_flag = TT_ALPHA_NODE;
 
   const bool pv_node = (beta - alpha) > 1;
 
@@ -280,8 +280,7 @@ int alpha_beta_negamax(int alpha,
   if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
 
   // Sort moves
-  // order_moves(moves, moves_count, ply, state);
-  experimental_order_moves(moves, moves_count, board);
+  order_moves(moves, moves_count, ply, state);
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -326,7 +325,7 @@ int alpha_beta_negamax(int alpha,
       alpha = score;
 
       // Update TT flag
-      hash_flag = TT_TYPE_EXACT;
+      hash_flag = TT_PV_NODE;
 
       // Only on quite moves
       if (moves[i].captured == INVALID) {
@@ -353,7 +352,7 @@ int alpha_beta_negamax(int alpha,
         // Beta cut-off
 
         // Update TT
-        store_to_tt(board, state, depth, TT_TYPE_BETA, beta, ply);
+        store_to_tt(board, state, depth, TT_BETA_NODE, beta, ply);
 
         // Only on quite moves
         if (moves[i].captured == INVALID) {
@@ -387,7 +386,7 @@ search_t search_best_move(int depth,
   // Set backup move just in case the PV is empty
   move_t moves[MAX_MOVES];
   const size_t moves_size = generate_legal_moves(board, moves);
-  experimental_order_moves(moves, moves_size, board);
+  order_moves(moves, moves_size, 0, state);
   assert(moves_size > 0);
   search_result.best_move = moves[0];
 

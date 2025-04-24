@@ -283,20 +283,29 @@ struct pv_t
 };
 
 
-enum hash_flag_t
+enum node_type_t
 {
-  TT_TYPE_EXACT,  // The stored score is EXACTLY that
-  TT_TYPE_ALPHA,  // The stored score was at most that
-  TT_TYPE_BETA    // The stored score was at least that
+  TT_PV_NODE,     // The stored score is EXACTLY that
+  TT_ALPHA_NODE,  // The stored score was at most that. Upperbound
+  TT_BETA_NODE    // The stored score was at least that. Lowerbound
 };
 
 
-struct tt_hash_t
+struct tt_entry_t
 {
   uint64_t key = 0;
-  hash_flag_t flag;
+  node_type_t type;
   int depth = 0;
   int score = 0;
+  move_t best_move;
+  int generation;
+};
+
+
+struct transposition_table_t
+{
+  tt_entry_t entries[TT_SIZE];
+  int current_generation = 0;
 };
 
 
@@ -319,6 +328,6 @@ struct search_state_t
   int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];
   pv_t pv;
   bool search_in_tt = true;
-  tt_hash_t* tt;  // Too big to keep on the stack
+  transposition_table_t* tt;  // Too big to keep on the stack
   move_t best_move;
 };

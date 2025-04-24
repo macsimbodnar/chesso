@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <fstream>
@@ -16,7 +17,7 @@
 
 using json = nlohmann::json;
 
-// #define RUN_THREADS
+#define RUN_THREADS
 #define MAXIMUM_DEPTH 20
 
 
@@ -89,6 +90,21 @@ struct stats_t
 };
 
 
+class spin_lock
+{
+  std::atomic_flag locked;
+
+public:
+  void lock()
+  {
+    while (locked.test_and_set(std::memory_order_acquire)) {
+      std::this_thread::yield();
+    }
+  }
+  void unlock() { locked.clear(std::memory_order_release); }
+};
+
+
 /**
  *  Transposition table element
  *
@@ -101,34 +117,42 @@ struct tt_elem_t
   int depth;
 };
 
+static spin_lock tt_spin_lock;
 static tt_elem_t tt[TT_SIZE] = {};
 
 
 inline void cleanup_tt()
 {
-  std::cout << "Cleanup TT\n";
+  // std::cout << "Cleanup TT\n";
   memset(&tt, 0, sizeof(tt));
 }
 
 
 inline const stats_t* get_from_tt(const board_t* board, int depth)
 {
+  const stats_t* res = nullptr;
+
   const tt_elem_t* entry = &tt[board->game_state.zobrist_key % TT_SIZE];
 
+  tt_spin_lock.lock();
   if (entry->key == board->game_state.zobrist_key && entry->depth == depth) {
-    return &entry->stats;
+    res = &entry->stats;
   }
+  tt_spin_lock.unlock();
 
-  return nullptr;
+  return res;
 }
 
 
 inline void store_to_tt(const board_t* board, int depth, const stats_t* stats)
 {
   tt_elem_t* elem = &tt[board->game_state.zobrist_key % TT_SIZE];
+
+  tt_spin_lock.lock();
   elem->depth = depth;
   elem->stats = *stats;
   elem->key = board->game_state.zobrist_key;
+  tt_spin_lock.unlock();
 }
 
 

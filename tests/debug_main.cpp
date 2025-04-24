@@ -20,7 +20,7 @@
 #define LOG_E LOG_I << "\033[31m"  // Error red log
 #define END_E "\033[37m" << END_I  // End Error red log
 
-static tt_hash_t tt[TT_SIZE] = {};
+static transposition_table_t tt = {};
 
 int main(int argc, char* argv[])
 {
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   std::atomic_bool stop_search_signal = false;
   search_state_t state = {};
   state.stop = &stop_search_signal;
-  state.tt = tt;
+  state.tt = &tt;
 
   const search_t search_result = search_best_move(6, &board, &state);
 

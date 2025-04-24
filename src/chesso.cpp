@@ -30,7 +30,7 @@ static bool still_in_opening = true;      // Finish the opening line
 static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
-static tt_hash_t tt[TT_SIZE] = {};
+static transposition_table_t tt = {};
 
 static std::random_device rd;
 static std::mt19937_64 gen(rd());
@@ -316,6 +316,7 @@ bool check_move_legality(const move_t* move)
 void tt_reset()
 {
   memset(&tt, 0, sizeof(tt));
+  tt.current_generation = 0;
 }
 
 
@@ -457,8 +458,9 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // If no move found in the book search by engine
   search_state_t state = {};
   state.stop = &stop_search_signal;
-  state.tt = tt;
+  state.tt = &tt;
   assert(state.tt != nullptr);
+  state.tt->current_generation++;
   stop_search_signal = false;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
@@ -982,7 +984,7 @@ bool command_test(std::queue<std::string>& args)
   stopwatch_t total_timer;
   {
     set_position(DEFAULT_POSITION);
-    uci_reply("DEFAULT_POSITION   " + generate_FEN(&board));
+    uci_reply("DEFAULT_POSITION   \n" + generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1008,7 +1010,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(TRICKY_POS);
-    uci_reply("TRICKY_POS         " + generate_FEN(&board));
+    uci_reply("TRICKY_POS         bestmove e2a6 ponder b4c3\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1034,7 +1037,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(KILLER_POS);
-    uci_reply("KILLER_POS         " + generate_FEN(&board));
+    uci_reply("KILLER_POS         bestmove g7h8q ponder d8h4\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1060,7 +1064,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(CMK_POS);
-    uci_reply("CMK_POS            " + generate_FEN(&board));
+    uci_reply("CMK_POS            bestmove h7h6 ponder c2c3\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1086,7 +1091,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(FINE_70_POS);
-    uci_reply("FINE_70_POS        " + generate_FEN(&board));
+    uci_reply("FINE_70_POS        bestmove a1b2 ponder a7b7\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1112,7 +1118,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(MATE_IN_2_W_POS);
-    uci_reply("MATE_IN_2_W_POS    " + generate_FEN(&board));
+    uci_reply("MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {
@@ -1138,7 +1145,8 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("");
   {
     set_position(MATE_IN_2_B_POS);
-    uci_reply("MATE_IN_2_B_POS    " + generate_FEN(&board));
+    uci_reply("MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8\n" +
+              generate_FEN(&board));
 
     uci_search_result_t res;
     {

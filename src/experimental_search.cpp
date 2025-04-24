@@ -13,74 +13,145 @@
 
 static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
-static constexpr int NO_SCORE = MAX + 42;
+// static constexpr int NO_SCORE = MAX + 42;
 
 
-int evaluate_move(const move_t* move, const board_t* board)
+inline const tt_entry_t* get_entry_from_tt(const transposition_table_t* tt,
+                                           const board_t* board,
+                                           int depth)
 {
-  assert(move != nullptr);
+  assert(tt != nullptr);
   assert(board != nullptr);
+  assert(depth >= 0);
 
-  board_t tmp_board = *board;
-  const color_t color = board->game_state.active_color;
+  const uint64_t hash = board->game_state.zobrist_key;
+  const tt_entry_t* res = &tt->entries[hash % TT_SIZE];
 
-  (void)make_move(move, &tmp_board, nullptr);
-  const int score = evaluate(&tmp_board);
+  assert(res != nullptr);
 
-  return (color == WHITE) ? score : -score;
+  if (res->key == hash && res->depth >= depth) { return res; }
+  // if (res->key == hash) { return res; }
+
+  return nullptr;
 }
 
 
-void experimental_order_moves(move_t moves[],
-                              size_t moves_size,
-                              const board_t* board)
+void store_entry_to_tt(transposition_table_t* tt,
+                       const board_t* board,
+                       int depth,  // This is not the search depth but the ply
+                       int score,
+                       node_type_t type,
+                       const move_t* best_move)
 {
-  assert(moves != nullptr);
-  assert(moves_size <= MAX_MOVES);
-  assert(board != nullptr);
+  const uint64_t hash = board->game_state.zobrist_key;
+  tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
 
-  int scores[MAX_MOVES];
-  for (size_t i = 0; i < moves_size; ++i) {
-    scores[i] = evaluate_move(&moves[i], board);
+  // // only apply replacement policy if same generation AND same key
+  // if (entry->key == hash && entry->generation == tt->current_generation) {
+  //   if (type == TT_ALPHA_NODE) {
+  //     // new is an upperbound → only overwrite an existing upperbound
+  //     // at lesser‐or‐equal depth
+  //     if (entry->type != TT_ALPHA_NODE || depth < entry->depth) { return; }
+  //   } else {
+  //     // new is lowerbound or exact → only skip if:
+  //     //   - it's shallower, AND
+  //     //   - existing is NOT an upperbound
+  //     if (depth < entry->depth && entry->type != TT_ALPHA_NODE) { return; }
+  //   }
+  // }
+
+  entry->key = hash;
+  entry->type = type;
+  entry->depth = depth;
+  entry->score = score;
+  entry->best_move = *best_move;
+  entry->generation = tt->current_generation;
+}
+
+
+int quiescence_search(int alpha,
+                      int beta,
+                      size_t qs_ply,
+                      const board_t* board,
+                      search_state_t* state)
+{
+  assert(board != nullptr);
+  assert(state != nullptr);
+  assert(state->stop != nullptr);
+
+
+  const int stand_pat =
+      (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+  int best_value = stand_pat;
+
+  state->explored_nodes += 1;
+
+  if (qs_ply > 3) { return best_value; }
+
+
+  if (alpha < stand_pat) {
+    alpha = stand_pat;
+
+    if (stand_pat >= beta) { return stand_pat; }
   }
 
-  // Insertion sort
-  for (size_t i = 1; i < moves_size; ++i) {
-    const int value = scores[i];
-    const move_t move = moves[i];
-    int j = i;
+  move_t moves[MAX_MOVES];
+  const size_t moves_count = generate_legal_moves(board, moves);
 
-    while (j != 0 && scores[j - 1] < value) {
-      scores[j] = scores[j - 1];
-      moves[j] = moves[j - 1];
-      --j;
+  for (size_t i = 0; i < moves_count; ++i) {
+    if ((moves[i].captured == INVALID || moves[i].captured == EMPTY) &&
+        moves[i].promoted_to == TO_NONE) {
+      continue;
     }
 
-    scores[j] = value;
-    moves[j] = move;
+    board_t tmp_board = *board;
+    const bool done = make_move(&moves[i], &tmp_board, nullptr);
+    (void)done;
+    assert(done);
+
+
+    const int score =
+        -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
+
+
+    if (score > best_value) { best_value = score; }
+    if (score > alpha) {
+      alpha = score;
+      if (score >= beta) { return score; }
+    }
   }
+
+  return best_value;
 }
 
 
-int search(int alpha0,
-           int beta,
-           bool zero_window,
-           int depth,
-           size_t ply,
-           const board_t* board,
-           search_state_t* state)
+int negamax(int alpha,
+            int beta,
+            int depth,
+            size_t ply,
+            const board_t* board,
+            search_state_t* state)
 {
-  if (depth < 1) {
-    ++(state->explored_nodes);
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+  int best_so_far = MIN;
+  int alpha0 = alpha;
+
+  // Reuse TT entry if found
+  const tt_entry_t* tt_entry = get_entry_from_tt(state->tt, board, depth);
+  if (ply > 0 && tt_entry != nullptr) {
+    if (tt_entry->type == TT_PV_NODE) {
+      state->best_move = tt_entry->best_move;
+      return tt_entry->score;
+    } else if (tt_entry->type == TT_BETA_NODE && tt_entry->score >= beta) {
+      return tt_entry->score;
+    } else if (tt_entry->type == TT_ALPHA_NODE && tt_entry->score <= alpha) {
+      return tt_entry->score;
+    }
   }
 
-  int score = MIN;
-  int best_score = NO_SCORE;
-  move_t best_move;
-  int alpha = alpha0;
+  // Leaf node
+  if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
 
-  state->pv.pv_length[ply] = ply;
+  state->explored_nodes += 1;
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
@@ -98,118 +169,12 @@ int search(int alpha0,
 
   order_moves(moves, moves_count, ply, state);
 
-  for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
-    (void)done;
-    assert(done);
-
-    if (!zero_window && i > 0) {
-      score =
-          -search(-alpha, -alpha, true, depth - 1, ply + 1, &tmp_board, state);
-
-      if (score < alpha) { continue; }
-
-      if (score > alpha) {
-        score = -search(-beta, -alpha, false, depth - 1, ply + 1, &tmp_board,
-                        state);
-      }
-    } else {
-      score = -search(-beta, -alpha, zero_window, depth - 1, ply + 1,
-                      &tmp_board, state);
-    }
-
-    if (i == 0) {
-      best_score = score;
-      best_move = moves[i];
-    } else {
-      if (score > best_score) {
-        best_score = score;
-        best_move = moves[i];
-        state->pv.pv_table[ply][ply] = moves[i];
-
-        // Copy the moves from deeper ply into the current ply's line
-        for (size_t i = ply + 1; i < state->pv.pv_length[ply + 1]; ++i) {
-          assert(ply < MAX_PLY);
-          assert(i < MAX_PLY);
-          state->pv.pv_table[ply][i] = state->pv.pv_table[ply + 1][i];
-        }
-
-        state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
-
-        // Only on quite moves
-        if (moves[i].captured == INVALID) {
-          // Update the history move
-          assert(moves[i].piece != INVALID);
-          assert(moves[i].piece != EMPTY);
-          assert(moves[i].to != INVALID_BOARD_INDEX);
-          state->history_moves[moves[i].piece][moves[i].to] += depth;
-        }
-      }
-    }
-
-    if (beta < best_score) {
-      // Only on quite moves
-      if (moves[i].captured == INVALID) {
-        // Store the killer move
-        state->killer_moves[1][ply] = state->killer_moves[0][ply];
-        state->killer_moves[0][ply] = moves[i];
-      }
-      break;
-    }
-
-    alpha = std::max(alpha, score);
-  }
-
-  if (best_score == NO_SCORE) {
-    best_score = alpha0 - 1;
-    assert(moves_count > 0);
-    best_move = moves[0];
-  }
-
-  state->best_move = best_move;
-  return best_score;
-}
-
-
-int negamax(int alpha,
-            int beta,
-            int depth,
-            size_t ply,
-            const board_t* board,
-            search_state_t* state)
-{
-  int best_so_far = MIN;
-
-  if (depth < 1) {
-    ++(state->explored_nodes);
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
-  }
-
-  move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
-
-  const bool is_in_check = is_check(board);
-  if (moves_count == 0) {
-    // Checkmate or stalemate handling
-    if (is_in_check) {
-      return -(MATE_MAX - ply);
-    } else {
-      // Stalemate
-      return DRAW_SCORE;
-    }
-  }
-
   move_t best_move = moves[0];
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
 
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
-    (void)done;
-    assert(done);
-
+    make_move(&moves[i], &tmp_board, nullptr);
     const int score =
         -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state);
 
@@ -222,9 +187,48 @@ int negamax(int alpha,
     }
   }
 
-  state->best_move = best_move;
+  // Store the node in TT
+  node_type_t type = TT_ALPHA_NODE;
+  if (best_so_far <= alpha0) {
+    type = TT_ALPHA_NODE;
+  } else if (best_so_far >= beta) {
+    type = TT_BETA_NODE;
+  } else {
+    type = TT_PV_NODE;
+  }
+  store_entry_to_tt(state->tt, board, depth, best_so_far, type, &best_move);
 
+
+  state->best_move = best_move;
   return best_so_far;
+}
+
+
+void generate_pv(const board_t* board, search_state_t* state, int depth)
+{
+  assert(board != nullptr);
+  assert(state != nullptr);
+  board_t tmp_board = *board;
+  state->pv.pv_length[0] = 0;
+
+  const move_t* next_move = &state->best_move;
+  while (next_move != nullptr && depth > 0) {
+    state->pv.pv_table[0][state->pv.pv_length[0]] = *next_move;
+    state->pv.pv_length[0]++;
+
+    make_move(next_move, &tmp_board, nullptr);
+    const tt_entry_t* next_entry =
+        &state->tt->entries[tmp_board.game_state.zobrist_key % TT_SIZE];
+
+    if (next_entry == nullptr ||
+        next_entry->key != tmp_board.game_state.zobrist_key ||
+        next_entry->type == TT_ALPHA_NODE) {
+      return;
+    }
+
+    next_move = &next_entry->best_move;
+    --depth;
+  }
 }
 
 
@@ -239,8 +243,9 @@ search_t experimental_search(int depth,
 
   search_t search_result = {};
 
-  // const int score = search(MIN, MAX, false, depth, 0, board, state);
   const int score = negamax(MIN, MAX, depth, 0, board, state);
+
+  // generate_pv(board, state, depth);
 
   search_result.best_move = state->best_move;
 
