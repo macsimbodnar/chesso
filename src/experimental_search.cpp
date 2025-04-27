@@ -139,12 +139,12 @@ search_t experimental_search(int depth,
   // Handle mate score
   search_result.mate_found = false;
 
-  if (score > -MATE_MAX && score < -MATE_MIN) {
+  if (score >= -MATE_MAX && score <= -MATE_MIN) {
     search_result.mate_found = true;
     search_result.mate_in = -(score + MATE_MAX) / 2 - 1;
   }
 
-  if (score > MATE_MIN && score < MATE_MAX) {
+  if (score >= MATE_MIN && score <= MATE_MAX) {
     search_result.mate_found = true;
     search_result.mate_in = (MATE_MAX - score) / 2 + 1;
   }
