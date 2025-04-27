@@ -125,7 +125,7 @@ bool is_pv_legal(const board_t* board, const pv_t* pv)
     }
 
     if (!found) {
-      LOG_W << "PV with illegal moves" << END_W;
+      LOG_W << "PV with illegal move: " << *move_to_test << END_W;
       return false;
     }
 

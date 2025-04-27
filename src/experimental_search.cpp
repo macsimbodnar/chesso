@@ -6,6 +6,7 @@
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
+#include "search.hpp"
 #include "transposition_table.hpp"
 
 
@@ -28,8 +29,9 @@ int negamax(int alpha,
   int best_so_far = MIN;
   const int alpha0 = alpha;
 
+
   // Reuse TT entry if found
-  const tt_entry_t* tt_entry = get_entry_from_tt(state->tt, board);
+  const tt_entry_t* tt_entry = tt_get_entry(state->tt, board);
   if (ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
     if (tt_entry->type == TT_PV_NODE) {
       state->best_move = tt_entry->best_move;
@@ -42,6 +44,7 @@ int negamax(int alpha,
   }
 
   state->explored_nodes += 1;
+  state->pv.pv_length[ply] = ply;
 
   // Leaf node
   if (depth < 1) {
@@ -52,15 +55,7 @@ int negamax(int alpha,
   const size_t moves_count = generate_legal_moves(board, moves);
 
   const bool is_in_check = is_check(board);
-  if (moves_count == 0) {
-    // Checkmate or stalemate handling
-    if (is_in_check) {
-      return -(MATE_MAX - ply);
-    } else {
-      // Stalemate
-      return DRAW_SCORE;
-    }
-  }
+  if (moves_count == 0) { return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE; }
 
   order_moves(moves, moves_count, ply, state);
 
@@ -68,6 +63,9 @@ int negamax(int alpha,
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
+
+    // Reset the pv length
+    state->pv.pv_length[ply + 1] = ply + 1;
 
     make_move(&moves[i], &tmp_board, nullptr);
     const int score =
@@ -77,7 +75,20 @@ int negamax(int alpha,
       best_so_far = score;
       best_move = moves[i];
 
-      if (score >= alpha) { alpha = score; }
+      if (score >= alpha) {
+        alpha = score;
+
+        // Save principal variation
+        state->pv.pv_table[ply][ply] = best_move;
+
+        memcpy(&state->pv.pv_table[ply][ply + 1],
+               &state->pv.pv_table[ply + 1][ply + 1],
+               (state->pv.pv_length[ply + 1] - (ply + 1)) *
+                   sizeof(state->pv.pv_table[0][0]));
+
+        state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
+      }
+
       if (score >= beta) { break; }
     }
   }
@@ -91,7 +102,7 @@ int negamax(int alpha,
   } else {
     type = TT_PV_NODE;
   }
-  store_entry_to_tt(state->tt, board, depth, best_so_far, type, &best_move);
+  tt_store_entry(state->tt, board, depth, best_so_far, type, &best_move);
 
   state->best_move = best_move;
   return best_so_far;
@@ -129,6 +140,13 @@ search_t experimental_search(int depth,
   search_result.explored_nodes = state->explored_nodes;
   search_result.pv = state->pv;
   search_result.score = score;
+
+
+#ifndef NDEBUG
+  is_pv_legal(board, &search_result.pv);
+#endif
+
+  assert(search_result.best_move == search_result.pv.pv_table[0][0]);
 
   return search_result;
 }

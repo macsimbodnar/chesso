@@ -27,27 +27,6 @@ private:
   std::chrono::nanoseconds tot = std::chrono::nanoseconds::zero();
   bool running = false;
 
-  inline void start()
-  {
-    assert(!running);
-    running = true;
-
-    // Keep this as last instruction
-    begin = std::chrono::steady_clock::now();
-  }
-
-  inline void stop()
-  {
-    // keep `now` as first instruction
-    const auto now = std::chrono::steady_clock::now();
-
-    assert(running);
-    if (running) {
-      tot += now - begin;
-      begin = now;
-      running = false;
-    }
-  }
 
   inline void reset()
   {
@@ -64,24 +43,40 @@ public:
 
   ~stopwatch_t()
   {
+    if (running) { stop(); }
+
+
+    const auto duration_ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(tot);
+
+    const auto minutes =
+        std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
+    const auto seconds =
+        std::chrono::duration_cast<std::chrono::seconds>(duration_ns - minutes);
+    const auto milliseconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            duration_ns - minutes - seconds);
+
+    LOG_I << "Search time: " << std::to_string(minutes.count()) << " min "
+          << seconds.count() << " sec " << milliseconds.count() << " msec"
+          << END_I;
+  }
+
+  inline void start()
+  {
+    assert(!running);
+    running = true;
+    begin = std::chrono::steady_clock::now();
+  }
+
+  inline void stop()
+  {
+    const auto now = std::chrono::steady_clock::now();
+
     if (running) {
-      stop();
-
-
-      const auto duration_ns =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(tot);
-
-      const auto minutes =
-          std::chrono::duration_cast<std::chrono::minutes>(duration_ns);
-      const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
-          duration_ns - minutes);
-      const auto milliseconds =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              duration_ns - minutes - seconds);
-
-      LOG_I << "Search time: " << std::to_string(minutes.count()) << " min "
-            << seconds.count() << " sec " << milliseconds.count() << " msec"
-            << END_I;
+      tot += now - begin;
+      begin = now;
+      running = false;
     }
   }
 };

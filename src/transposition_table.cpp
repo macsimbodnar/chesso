@@ -3,7 +3,13 @@
 #include "log.hpp"
 
 
-const tt_entry_t* get_entry_from_tt(const transposition_table_t* tt,
+void tt_reset(const transposition_table_t* tt)
+{
+  memset(&tt, 0, sizeof(tt));
+}
+
+
+const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
                                     const board_t* board)
 {
   assert(tt != nullptr);
@@ -20,7 +26,7 @@ const tt_entry_t* get_entry_from_tt(const transposition_table_t* tt,
 }
 
 
-void store_entry_to_tt(transposition_table_t* tt,
+void tt_store_entry(transposition_table_t* tt,
                        const board_t* board,
                        int depth,
                        int score,

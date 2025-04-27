@@ -17,6 +17,7 @@
 #include "move_generator.hpp"
 #include "openings.hpp"
 #include "search.hpp"
+#include "transposition_table.hpp"
 #include "utils.hpp"
 
 
@@ -75,6 +76,7 @@ struct uci_search_result_t
   uci_move_t ponder_move;
   move_t best_move;
   uint64_t total_node_explored;
+  pv_t pv;
 };
 
 
@@ -314,12 +316,6 @@ bool check_move_legality(const move_t* move)
 
 //-#############################    FUNCTIONS    ############################-//
 
-void tt_reset()
-{
-  memset(&tt, 0, sizeof(tt));
-}
-
-
 bool set_position(const std::string& fen)
 {
   init_board(fen, &board, &history);
@@ -328,7 +324,7 @@ bool set_position(const std::string& fen)
     initial_position = fen;
 
     // We changed game, reset TT
-    tt_reset();
+    tt_reset(&tt);
   }
   still_in_opening = false;
   return true;
@@ -508,6 +504,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                             search_result.pv.pv_table[0][1].promoted_to};
     }
 
+    result.pv = search_result.pv;
+
     result.total_node_explored += search_result.explored_nodes;
 
     // Check if run out of nodes
@@ -593,7 +591,7 @@ bool command_ucinewgame(std::queue<std::string>& args)
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
 
   set_position(DEFAULT_POSITION);
-  tt_reset();
+  tt_reset(&tt);
   still_in_opening = true;
 
   LOG_I << print_nice_board(&board) << END_I;
@@ -960,6 +958,24 @@ bool command_test(std::queue<std::string>& args)
 {
   // LOG_I << "Command [command_help]. Args: " << args << END_I;
 
+  struct test_entry_t
+  {
+    std::string FEN;
+    std::string title;
+  };
+
+  // clang-format off
+  std::array<test_entry_t, 7> entries = {{
+      {DEFAULT_POSITION,  "DEFAULT_POSITION"},
+      {TRICKY_POS,        "TRICKY_POS         bestmove e2a6 ponder b4c3"},
+      {KILLER_POS,        "KILLER_POS         bestmove g7h8q ponder d8h4"},
+      {CMK_POS,           "CMK_POS            bestmove h7h6 ponder c2c3"},
+      {FINE_70_POS,       "FINE_70_POS        bestmove a1b2 ponder a7b7"},
+      {MATE_IN_2_W_POS,   "MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8"},
+      {MATE_IN_2_B_POS,   "MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8"}
+    }};
+  // clang-format on
+
   uint64_t total_nodes = 0;
   uci_search_options_t search_options = {};
   search_options.infinite = false;
@@ -987,199 +1003,39 @@ bool command_test(std::queue<std::string>& args)
             std::to_string(search_options.depth) +
             "\nBuild type: " + build_type + "\nDescription:");
 
-  uci_reply("");
   stopwatch_t total_timer;
-  {
-    set_position(DEFAULT_POSITION);
-    uci_reply("DEFAULT_POSITION   \n" + generate_FEN(&board));
+  total_timer.stop();
+
+  for (auto const& entry : entries) {
+    uci_reply("");
+
+    set_position(entry.FEN);
+    uci_reply(entry.title + "\n" + generate_FEN(&board));
 
     uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
 
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
+    total_timer.start();
+    stopwatch_t timer;
+    res = iterative_deepening_search(search_options);
+    timer.stop();
+    total_timer.stop();
 
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
+    const std::string best_move_str = uci_move_to_algebraic(&res.uci_best_move);
 
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
+    std::string ponder_move;
+    if (res.is_ponder_move) {
+      ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
     }
+
+    uci_reply("bestmove " + best_move_str + ponder_move);
+    total_nodes += res.total_node_explored;
 
     if (!check_move_legality(&res.best_move)) {
       uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
     }
-  }
 
-  uci_reply("");
-  {
-    set_position(TRICKY_POS);
-    uci_reply("TRICKY_POS         bestmove e2a6 ponder b4c3\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
-    }
-  }
-
-  uci_reply("");
-  {
-    set_position(KILLER_POS);
-    uci_reply("KILLER_POS         bestmove g7h8q ponder d8h4\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
-    }
-  }
-
-  uci_reply("");
-  {
-    set_position(CMK_POS);
-    uci_reply("CMK_POS            bestmove h7h6 ponder c2c3\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
-    }
-  }
-
-  uci_reply("");
-  {
-    set_position(FINE_70_POS);
-    uci_reply("FINE_70_POS        bestmove a1b2 ponder a7b7\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
-    }
-  }
-
-  uci_reply("");
-  {
-    set_position(MATE_IN_2_W_POS);
-    uci_reply("MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
-    }
-  }
-
-  uci_reply("");
-  {
-    set_position(MATE_IN_2_B_POS);
-    uci_reply("MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8\n" +
-              generate_FEN(&board));
-
-    uci_search_result_t res;
-    {
-      stopwatch_t timer;
-      res = iterative_deepening_search(search_options);
-
-      const std::string best_move_str =
-          uci_move_to_algebraic(&res.uci_best_move);
-
-      std::string ponder_move;
-      if (res.is_ponder_move) {
-        ponder_move = " ponder " + uci_move_to_algebraic(&res.ponder_move);
-      }
-
-      uci_reply("bestmove " + best_move_str + ponder_move);
-      total_nodes += res.total_node_explored;
-    }
-
-    if (!check_move_legality(&res.best_move)) {
-      uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
+    if (!is_pv_legal(&board, &res.pv)) {
+      uci_reply("!!! ----- PV move is ILLEGAL   ----- !!!");
     }
   }
 
@@ -1204,7 +1060,7 @@ int main()
   (void)try_load_opening_book();
   still_in_opening = true;
 
-  tt_reset();
+  tt_reset(&tt);
 
   while (running) {
     std::string input;
