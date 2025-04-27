@@ -19,15 +19,16 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 // static constexpr int NO_SCORE = MAX + 42;
 
 
-int negamax(int alpha,
+int negamax(int alpha0,
             int beta,
             int depth,
             size_t ply,
             const board_t* board,
-            search_state_t* state)
+            search_state_t* state,
+            bool zero_window)
 {
   int best_so_far = MIN;
-  const int alpha0 = alpha;
+  int alpha = alpha0;
 
 
   // Reuse TT entry if found
@@ -45,6 +46,7 @@ int negamax(int alpha,
 
   state->explored_nodes += 1;
   state->pv.pv_length[ply] = ply;
+  node_type_t type = TT_ALPHA_NODE;
 
   // Leaf node
   if (depth < 1) {
@@ -59,7 +61,7 @@ int negamax(int alpha,
 
   order_moves(moves, moves_count, ply, state);
 
-  move_t best_move = moves[0];
+  move_t* best_move = &moves[0];
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
@@ -68,44 +70,54 @@ int negamax(int alpha,
     state->pv.pv_length[ply + 1] = ply + 1;
 
     make_move(&moves[i], &tmp_board, nullptr);
-    const int score =
-        -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state);
 
-    if (score >= best_so_far) {
-      best_so_far = score;
-      best_move = moves[i];
+    int score = MIN;
 
-      if (score >= alpha) {
-        alpha = score;
+    if (!zero_window && i > 0) {
+      score = -negamax(-(alpha + 1), -alpha, depth - 1, ply + 1, &tmp_board,
+                       state, true);
 
-        // Save principal variation
-        state->pv.pv_table[ply][ply] = best_move;
+      if (score < alpha) { continue; }
 
-        memcpy(&state->pv.pv_table[ply][ply + 1],
-               &state->pv.pv_table[ply + 1][ply + 1],
-               (state->pv.pv_length[ply + 1] - (ply + 1)) *
-                   sizeof(state->pv.pv_table[0][0]));
+      score =
+          -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state, false);
 
-        state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
-      }
+    } else {
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+                       zero_window);
+    }
 
-      if (score >= beta) { break; }
+    if (score >= best_so_far) { best_so_far = score; }
+
+    if (score >= beta) {
+      // Fail-high
+      type = TT_BETA_NODE;
+      break;
+    }
+
+    if (score > alpha) {
+      alpha = score;
+      best_move = &moves[i];
+
+      // Save principal variation
+      state->pv.pv_table[ply][ply] = *best_move;
+
+      memcpy(&state->pv.pv_table[ply][ply + 1],
+             &state->pv.pv_table[ply + 1][ply + 1],
+             (state->pv.pv_length[ply + 1] - (ply + 1)) *
+                 sizeof(state->pv.pv_table[0][0]));
+
+      state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
+
+      type = TT_PV_NODE;
     }
   }
 
   // Store the node in TT
-  node_type_t type = TT_ALPHA_NODE;
-  if (best_so_far <= alpha0) {
-    type = TT_ALPHA_NODE;
-  } else if (best_so_far >= beta) {
-    type = TT_BETA_NODE;
-  } else {
-    type = TT_PV_NODE;
-  }
-  tt_store_entry(state->tt, board, depth, best_so_far, type, &best_move);
+  tt_store_entry(state->tt, board, depth, best_so_far, type, best_move);
 
-  state->best_move = best_move;
-  return best_so_far;
+  state->best_move = *best_move;
+  return (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
 }
 
 
@@ -120,7 +132,7 @@ search_t experimental_search(int depth,
 
   search_t search_result = {};
 
-  const int score = negamax(MIN, MAX, depth, 0, board, state);
+  const int score = negamax(MIN, MAX, depth, 0, board, state, false);
 
   search_result.best_move = state->best_move;
 

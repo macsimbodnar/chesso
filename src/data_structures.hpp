@@ -288,8 +288,8 @@ enum node_type_t
 {
   TT_EMPTY_NODE,
   TT_PV_NODE,     // The stored score is EXACTLY that
-  TT_ALPHA_NODE,  // The stored score was at most that. Upperbound
-  TT_BETA_NODE    // The stored score was at least that. Lowerbound
+  TT_ALPHA_NODE,  // The stored score was at most that. Upperbound. Fail-low
+  TT_BETA_NODE    // The stored score was at least that. Lowerbound. Fail-high
 };
 
 
