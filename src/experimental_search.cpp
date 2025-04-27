@@ -18,6 +18,7 @@ static constexpr int MIN = std::numeric_limits<int>::min() + 100;
 static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 // static constexpr int NO_SCORE = MAX + 42;
 
+#define NULL_MOVE_REDUCTION 2
 
 int negamax(int alpha0,
             int beta,
@@ -62,6 +63,29 @@ int negamax(int alpha0,
   order_moves(moves, moves_count, ply, state);
 
   move_t* best_move = &moves[0];
+
+  // Null move pruning
+  if (depth > NULL_MOVE_REDUCTION + 1 && !is_in_check && !zero_window) {
+    board_t swapped_board = *board;
+    swap_side(&swapped_board);
+    clear_ep_square(&swapped_board);
+
+    const int probe_score =
+        -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION - 1, ply + 1,
+                 &swapped_board, state, true);
+
+    if (probe_score >= beta) {
+      // Verified null move pruning. Going 1 ply deeper
+      const int verify_score =
+          -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION, ply + 1,
+                   &swapped_board, state, true);
+
+      if (verify_score >= beta) {
+        //  Now it's safe to cut off
+        return beta;
+      }
+    }
+  }
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
