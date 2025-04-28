@@ -89,11 +89,13 @@ int negamax(int alpha0,
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
-
     // Reset the pv length
     state->pv.pv_length[ply + 1] = ply + 1;
-
     make_move(&moves[i], &tmp_board, nullptr);
+
+    const bool move_gives_check = is_check(&tmp_board);
+    const bool is_capture =
+        (moves[i].captured != INVALID && moves[i].captured != EMPTY);
 
     int score = MIN;
 
@@ -116,6 +118,13 @@ int negamax(int alpha0,
     if (score >= beta) {
       // Fail-high
       type = TT_BETA_NODE;
+
+      // Store killing move
+      if (!is_capture && !move_gives_check) {
+        state->killer_moves[1][ply] = state->killer_moves[0][ply];
+        state->killer_moves[0][ply] = moves[i];
+      }
+
       break;
     }
 
