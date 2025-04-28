@@ -119,10 +119,13 @@ int negamax(int alpha0,
       // Fail-high
       type = TT_BETA_NODE;
 
-      // Store killing move
+      // Store killing move and history
       if (!is_capture && !move_gives_check) {
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
+
+        const int bonus = depth * depth;
+        state->history_moves[moves[i].piece][moves[i].to] += bonus;
       }
 
       break;

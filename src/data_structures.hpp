@@ -318,7 +318,7 @@ struct search_state_t
   std::atomic_bool* stop = nullptr;
   uint64_t explored_nodes;
   move_t killer_moves[2][MAX_PLY];
-  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];
+  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];  // [piece][destination]
   pv_t pv;
   bool search_in_tt = true;
   transposition_table_t* tt;  // Too big to keep on the stack
