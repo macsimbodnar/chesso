@@ -19,6 +19,9 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 // static constexpr int NO_SCORE = MAX + 42;
 
 #define NULL_MOVE_REDUCTION 2
+#define LMR_WHEN_START_IN_THE_LIST 4
+#define LMR_START_AT_DEPTH 3
+
 
 int negamax(int alpha0,
             int beta,
@@ -99,18 +102,36 @@ int negamax(int alpha0,
 
     int score = MIN;
 
-    if (!zero_window && i > 0) {
-      score = -negamax(-(alpha + 1), -alpha, depth - 1, ply + 1, &tmp_board,
-                       state, true);
+    const bool do_LMR =
+        (!zero_window && !is_capture && !move_gives_check &&
+         i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH);
 
-      if (score < alpha) { continue; }
+    if (do_LMR) {  // LMR Logic
+      const int reduction_factor = 1;
 
-      score =
-          -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state, false);
+      // Shallow null window search at reduced depth
+      score = -negamax(-alpha - 1, -alpha, depth - reduction_factor - 1,
+                       ply + 1, &tmp_board, state, true);
 
-    } else {
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
-                       zero_window);
+      if (score > alpha) {
+        // Full re-search if it looks promising
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+                         false);
+      }
+    } else {  // PVS Logic
+      if (!zero_window && i > 0) {
+        score = -negamax(-(alpha + 1), -alpha, depth - 1, ply + 1, &tmp_board,
+                         state, true);
+
+        if (score < alpha) { continue; }
+
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+                         false);
+
+      } else {
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+                         zero_window);
+      }
     }
 
     if (score >= best_so_far) { best_so_far = score; }
