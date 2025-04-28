@@ -430,3 +430,9 @@ int get_max_gain()
 {
   return VALUE_QUEEN;
 }
+
+
+int get_margin_value()
+{
+  return VALUE_PAWN;
+}

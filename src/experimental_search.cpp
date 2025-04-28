@@ -99,12 +99,27 @@ int negamax(int alpha0,
   // Check for repetitions
   if (is_position_repeated(board)) { return DRAW_SCORE; }
 
+  const bool is_in_check = is_check(board);
+
+  if (is_in_check) { ++depth; }
+
+  // Razoring
+  if (!is_in_check && depth == 1) {
+    int stand_pat =
+        (board->game_state.active_color == WHITE ? +1 : -1) * evaluate(board);
+    const int razor_margin = get_margin_value();
+
+    if (stand_pat + razor_margin < alpha) {
+      // No quiet move can possibly raise the score above alpha
+      return stand_pat;
+    }
+  }
+
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
     return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
-  // Leaf node
   if (depth < 1) { return quiescence(alpha, beta, ply, board, state, last_to); }
 
   state->explored_nodes += 1;
@@ -114,7 +129,6 @@ int negamax(int alpha0,
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
 
-  const bool is_in_check = is_check(board);
   if (moves_count == 0) { return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE; }
 
   order_moves(moves, moves_count, ply, state);
@@ -146,6 +160,16 @@ int negamax(int alpha0,
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
+
+    if (moves[i].captured ==
+        (board->game_state.active_color == WHITE ? B_KING : W_KING)) {
+      state->best_move = moves[i];
+
+      state->pv.pv_table[ply][ply] = moves[i];
+      state->pv.pv_length[ply] = ply + 1;
+
+      return MATE_MAX - ply;
+    }
 
     state->pv.pv_length[ply + 1] = ply + 1;
 
