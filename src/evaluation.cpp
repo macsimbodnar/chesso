@@ -297,6 +297,12 @@ int evaluate_move(const move_t* move, size_t ply, const search_state_t* state)
   assert(move != nullptr);
   assert(state != nullptr);
 
+  // PV move
+  if (state->pv.pv_length[ply] > ply) {
+    const move_t* pv_move = &state->pv.pv_table[ply][ply];
+    if (*move == *pv_move) { return 1000000; }
+  }
+
   if (move->captured != INVALID) {
     const piece_t attacker = move->piece;
     const piece_t victim = move->captured;
