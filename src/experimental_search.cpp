@@ -27,12 +27,14 @@ int quiescence(int alpha,
                int beta,
                size_t ply,
                const board_t* board,
-               search_state_t* state)
+               search_state_t* state,
+               index_t last_to)
 {
   const int stand_pat =
       (board->game_state.active_color == WHITE ? +1 : -1) * evaluate(board);
 
   state->explored_nodes++;
+
 
   // DELTA PRUNE:
   if (stand_pat + get_max_gain() <= alpha) {
@@ -43,16 +45,23 @@ int quiescence(int alpha,
   if (stand_pat >= beta) { return beta; }
   if (alpha < stand_pat) { alpha = stand_pat; }
 
+  // Time management
+  if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
+
   move_t moves[MAX_MOVES];
   const size_t n = generate_captures(board, moves);
 
   order_captures(moves, n);
 
   for (size_t i = 0; i < n; ++i) {
+    // We consider only the captures that recapture the last capture
+    if (last_to != INVALID_BOARD_INDEX && moves[i].to != last_to) { continue; }
+
     board_t tmp_board = *board;
     make_move(&moves[i], &tmp_board, nullptr);
 
-    const int s = -quiescence(-beta, -alpha, ply + 1, &tmp_board, state);
+    const int s =
+        -quiescence(-beta, -alpha, ply + 1, &tmp_board, state, moves[i].to);
 
     if (s >= beta) return beta;
     if (s > alpha) alpha = s;
@@ -68,7 +77,8 @@ int negamax(int alpha0,
             size_t ply,
             const board_t* board,
             search_state_t* state,
-            bool zero_window)
+            bool zero_window,
+            index_t last_to)
 {
   int best_so_far = MIN;
   int alpha = alpha0;
@@ -89,8 +99,13 @@ int negamax(int alpha0,
   // Check for repetitions
   if (is_position_repeated(board)) { return DRAW_SCORE; }
 
+  // Time management
+  if ((state->explored_nodes % 1000) && *state->stop) {
+    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+  }
+
   // Leaf node
-  if (depth < 1) { return quiescence(alpha, beta, ply, board, state); }
+  if (depth < 1) { return quiescence(alpha, beta, ply, board, state, last_to); }
 
   state->explored_nodes += 1;
   state->pv.pv_length[ply] = ply;
@@ -114,13 +129,13 @@ int negamax(int alpha0,
 
     const int probe_score =
         -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION - 1, ply + 1,
-                 &swapped_board, state, true);
+                 &swapped_board, state, true, INVALID_BOARD_INDEX);
 
     if (probe_score >= beta) {
       // Verified null move pruning. Going 1 ply deeper
       const int verify_score =
           -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION, ply + 1,
-                   &swapped_board, state, true);
+                   &swapped_board, state, true, INVALID_BOARD_INDEX);
 
       if (verify_score >= beta) {
         //  Now it's safe to cut off
@@ -157,7 +172,8 @@ int negamax(int alpha0,
     const bool zw = R > 0 || pvs;
 
     // Probe search
-    int score = -negamax(low, high, new_depth, ply + 1, &tmp_board, state, zw);
+    int score = -negamax(low, high, new_depth, ply + 1, &tmp_board, state, zw,
+                         moves[i].to);
 
     // If the probe suggests it might raise alpha, do a full‐window re‐search
     const bool LMR_probe_beat_alpha = (R > 0 && score > alpha);
@@ -166,8 +182,8 @@ int negamax(int alpha0,
 
 
     if (LMR_probe_beat_alpha || PVS_in_ab_interval) {
-      score =
-          -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state, false);
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+                       false, moves[i].to);
     }
 
     // Found better scores
@@ -226,7 +242,8 @@ search_t experimental_search(int depth,
 
   search_t search_result = {};
 
-  const int score = negamax(MIN, MAX, depth, 0, board, state, false);
+  const int score =
+      negamax(MIN, MAX, depth, 0, board, state, false, INVALID_BOARD_INDEX);
 
   search_result.best_move = state->best_move;
 
