@@ -256,15 +256,6 @@ struct board_t
   zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
   size_t repetition_size;
   uint64_t repetitions[REPETITION_MAX_SIZE];
-
-  board_t() {}
-  board_t(const board_t& other) { std::memcpy(this, &other, sizeof(board_t)); }
-
-  board_t& operator=(const board_t& other)
-  {
-    if (this != &other) { std::memcpy(this, &other, sizeof(board_t)); }
-    return *this;
-  }
 };
 
 struct history_entry_t
