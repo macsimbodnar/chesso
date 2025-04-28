@@ -338,7 +338,7 @@ void hex_string_to_vector(const char* hex_string,
   assert(size % 2 == 0);
 
   out.clear();
-  out.resize(size / 2);
+  out.resize(size / 2, 0);
 
   for (size_t i = 0, c = 0; i < out.size(); ++i) {
     const uint8_t c1 = hex_string[c++];
