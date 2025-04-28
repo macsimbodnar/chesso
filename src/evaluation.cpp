@@ -97,14 +97,14 @@ static const int queen_postion_value_table[BOARD_SIZE] = {
 };
 
 static const int king_postion_value_table[BOARD_SIZE] = {
-  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0, 10, 10,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0, 10, 10,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0, 15,  0,  0,  0, 20,  0,         0,  0,  0,  0,  0,  0,  0,  0
+   0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  5,  5,  5,  5,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  5,  5, 10, 10,  5,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  5, 10, 20, 20, 10,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  5, 10, 20, 20, 10,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  5, 10, 10,  5,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  5,  5, -5, -5,  0,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  5,  0, 15,  0, 10,  0,         0,  0,  0,  0,  0,  0,  0,  0
  };
 
 static const int white_indexes[BOARD_SIZE] = {
@@ -386,4 +386,47 @@ bool should_reduce_move(const move_t* move)
   }
 
   return true;
+}
+
+
+void order_captures(move_t moves[], size_t moves_size)
+{
+  assert(moves != nullptr);
+  assert(moves_size <= MAX_MOVES);
+
+  int scores[MAX_MOVES];
+  for (size_t i = 0; i < moves_size; ++i) {
+    // Evaluate captures by MVV/LVA
+    const piece_t attacker = moves[i].piece;
+    const piece_t victim = moves[i].captured;
+
+    assert(attacker != INVALID);
+    assert(attacker != EMPTY);
+    assert(victim != INVALID);
+    assert(victim != EMPTY);
+
+    scores[i] = mvv_lva[attacker][victim];
+  }
+
+  // Insertion sort
+  for (size_t i = 1; i < moves_size; ++i) {
+    const int value = scores[i];
+    const move_t move = moves[i];
+    int j = i;
+
+    while (j != 0 && scores[j - 1] < value) {
+      scores[j] = scores[j - 1];
+      moves[j] = moves[j - 1];
+      --j;
+    }
+
+    scores[j] = value;
+    moves[j] = move;
+  }
+}
+
+
+int get_max_gain()
+{
+  return VALUE_QUEEN;
 }

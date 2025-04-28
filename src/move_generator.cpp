@@ -1639,9 +1639,31 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 
 bool is_check(const board_t* board)
 {
+  assert(board != nullptr);
+
   const bool is_in_check =
       is_square_attacked(get_king_index(board->game_state.active_color, board),
                          !board->game_state.active_color, board);
 
   return is_in_check;
+}
+
+
+size_t generate_captures(const board_t* board, move_t result[])
+{
+  assert(result != nullptr);
+  assert(board != nullptr);
+
+  size_t capture_count = 0;
+  move_t moves[MAX_MOVES];
+  const size_t count = generate_legal_moves(board, moves);
+
+  for (size_t i = 0; i < count; ++i) {
+    if (moves[i].captured != INVALID && moves[i].captured != EMPTY) {
+      result[capture_count] = moves[i];
+      ++capture_count;
+    }
+  }
+
+  return capture_count;
 }

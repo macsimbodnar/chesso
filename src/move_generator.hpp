@@ -16,3 +16,5 @@ std::string move_to_algebraic(const move_t* move,
 move_t algebraic_to_move(std::string notation, const board_t* board);
 
 bool is_check(const board_t* board);
+
+size_t generate_captures(const board_t* board, move_t result[]);

@@ -9,3 +9,7 @@ void order_moves(move_t moves[],
                  const search_state_t* state);
 
 bool should_reduce_move(const move_t* move);
+
+void order_captures(move_t moves[], size_t moves_size);
+
+int get_max_gain();

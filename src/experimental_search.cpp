@@ -23,6 +23,45 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 #define LMR_START_AT_DEPTH 3
 
 
+int quiescence(int alpha,
+               int beta,
+               size_t ply,
+               const board_t* board,
+               search_state_t* state)
+{
+  const int stand_pat =
+      (board->game_state.active_color == WHITE ? +1 : -1) * evaluate(board);
+
+  state->explored_nodes++;
+
+  // DELTA PRUNE:
+  if (stand_pat + get_max_gain() <= alpha) {
+    // At this point no capture can improve te score so we just return
+    return alpha;
+  }
+
+  if (stand_pat >= beta) { return beta; }
+  if (alpha < stand_pat) { alpha = stand_pat; }
+
+  move_t moves[MAX_MOVES];
+  const size_t n = generate_captures(board, moves);
+
+  order_captures(moves, n);
+
+  for (size_t i = 0; i < n; ++i) {
+    board_t tmp_board = *board;
+    make_move(&moves[i], &tmp_board, nullptr);
+
+    const int s = -quiescence(-beta, -alpha, ply + 1, &tmp_board, state);
+
+    if (s >= beta) return beta;
+    if (s > alpha) alpha = s;
+  }
+
+  return alpha;
+}
+
+
 int negamax(int alpha0,
             int beta,
             int depth,
@@ -33,7 +72,6 @@ int negamax(int alpha0,
 {
   int best_so_far = MIN;
   int alpha = alpha0;
-
 
   // Reuse TT entry if found
   const tt_entry_t* tt_entry = tt_get_entry(state->tt, board);
@@ -51,14 +89,12 @@ int negamax(int alpha0,
   // Check for repetitions
   if (is_position_repeated(board)) { return DRAW_SCORE; }
 
+  // Leaf node
+  if (depth < 1) { return quiescence(alpha, beta, ply, board, state); }
+
   state->explored_nodes += 1;
   state->pv.pv_length[ply] = ply;
   node_type_t type = TT_ALPHA_NODE;
-
-  // Leaf node
-  if (depth < 1) {
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
-  }
 
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_legal_moves(board, moves);
