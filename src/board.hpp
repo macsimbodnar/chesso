@@ -41,3 +41,5 @@ bool is_passed_pawn(index_t index, const board_t* board);
 bool is_isolated_pawn(index_t index, const board_t* board);
 piece_count_t count_pieces_on_file(index_t index, const board_t* board);
 bool is_king_shielded(index_t index, const board_t* board);
+
+bool is_square_attacked(index_t index, color_t color, const board_t* board);

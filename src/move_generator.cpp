@@ -1639,18 +1639,9 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 
 bool is_check(const board_t* board)
 {
-  const color_t attack_color = !board->game_state.active_color;
-  move_t attacks_vector[MAX_MOVES];
-  const size_t attacks_vector_count =
-      generate_attacks_vector(attack_color, board, attacks_vector);
+  const bool is_in_check =
+      is_square_attacked(get_king_index(board->game_state.active_color, board),
+                         !board->game_state.active_color, board);
 
-  const index_t king_index =
-      get_king_index(board->game_state.active_color, board);
-
-  for (size_t i = 0; i < attacks_vector_count; ++i) {
-    const move_t& attack = attacks_vector[i];
-    if (attack.to == king_index) { return true; }
-  }
-
-  return false;
+  return is_in_check;
 }

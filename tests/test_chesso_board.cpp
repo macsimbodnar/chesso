@@ -826,4 +826,30 @@ TEST_SUITE("Test make_move and unmake_move")
     res = is_king_shielded(string_coordinates_to_index("c8"), &board);
     REQUIRE(res);
   }
+
+  TEST_CASE("Test is in check")
+  {
+    struct test_case_t
+    {
+      std::string FEN;
+      bool is_in_check;
+    };
+
+    // clang-format off
+    const std::array<test_case_t, 4> test_cases = {{
+      {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 b - - 0 1", true},
+      {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1", false},
+      {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r w - - 0 1", true},
+      {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1", false},
+    }};
+    // clang-format on
+
+    for (const auto& test_case : test_cases) {
+      history_t history;
+      board_t board;
+      init_board(test_case.FEN, &board, &history);
+      const bool res = is_check(&board);
+      REQUIRE_EQ(res, test_case.is_in_check);
+    }
+  }
 }
