@@ -48,6 +48,9 @@ int negamax(int alpha0,
     }
   }
 
+  // Check for repetitions
+  if (is_position_repeated(board)) { return DRAW_SCORE; }
+
   state->explored_nodes += 1;
   state->pv.pv_length[ply] = ply;
   node_type_t type = TT_ALPHA_NODE;
@@ -92,48 +95,46 @@ int negamax(int alpha0,
 
   for (size_t i = 0; i < moves_count; ++i) {
     board_t tmp_board = *board;
-    // Reset the pv length
+
     state->pv.pv_length[ply + 1] = ply + 1;
+
     make_move(&moves[i], &tmp_board, nullptr);
 
-    const bool move_gives_check = is_check(&tmp_board);
     const bool is_capture =
         (moves[i].captured != INVALID && moves[i].captured != EMPTY);
+    const bool is_check_move = is_check(&tmp_board);
 
-    int score = MIN;
-
-    const bool do_LMR =
-        (!zero_window && !is_capture && !move_gives_check &&
-         i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH);
-
-    if (do_LMR) {  // LMR Logic
-      const int reduction_factor = 1;
-
-      // Shallow null window search at reduced depth
-      score = -negamax(-alpha - 1, -alpha, depth - reduction_factor - 1,
-                       ply + 1, &tmp_board, state, true);
-
-      if (score > alpha) {
-        // Full re-search if it looks promising
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
-                         false);
-      }
-    } else {  // PVS Logic
-      if (!zero_window && i > 0) {
-        score = -negamax(-(alpha + 1), -alpha, depth - 1, ply + 1, &tmp_board,
-                         state, true);
-
-        if (score < alpha) { continue; }
-
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
-                         false);
-
-      } else {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
-                         zero_window);
-      }
+    // Decide depth reduction R
+    int R = 0;
+    if (!zero_window && !is_capture && !is_check_move &&
+        i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH) {
+      R = 1;  // TODO: Compute dynamically
     }
 
+    // Decide if this is “first full” move in PVS
+    const bool pvs = (!zero_window && i > 0);
+
+    // Compute the search window
+    const int low = pvs ? -(alpha + 1) : -beta;
+    const int high = pvs ? -alpha : -alpha;
+    const int new_depth = depth - 1 - R;
+    const bool zw = R > 0 || pvs;
+
+    // Probe search
+    int score = -negamax(low, high, new_depth, ply + 1, &tmp_board, state, zw);
+
+    // If the probe suggests it might raise alpha, do a full‐window re‐search
+    const bool LMR_probe_beat_alpha = (R > 0 && score > alpha);
+    const bool PVS_in_ab_interval =
+        (R == 0 && pvs && score > alpha && score < beta);
+
+
+    if (LMR_probe_beat_alpha || PVS_in_ab_interval) {
+      score =
+          -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state, false);
+    }
+
+    // Found better scores
     if (score >= best_so_far) { best_so_far = score; }
 
     if (score >= beta) {
@@ -141,7 +142,7 @@ int negamax(int alpha0,
       type = TT_BETA_NODE;
 
       // Store killing move and history
-      if (!is_capture && !move_gives_check) {
+      if (!is_capture && !is_check_move) {
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 
