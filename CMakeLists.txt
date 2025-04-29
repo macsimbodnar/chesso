@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(CHESSO_BUILD_GUI "Build the debug gui. Requires SDL2" OFF)
+option(SANITIZER "Enable address and undefined behavior sanitizer" OFF)
 
 # Add extra compiler checks
 if(MSVC)
@@ -19,6 +20,17 @@ else()
 
      # TODO: Check if this will speed it up. We don't use floating points anyway
      # string(REPLACE "-O3" "-Ofast" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+endif()
+
+if(SANITIZER)
+     message("-- Sanitizer ON")
+     add_compile_options(-fsanitize=address)
+     add_compile_options(-fsanitize=undefined)
+     
+     add_link_options(-fsanitize=address)
+     add_link_options(-fsanitize=undefined)
+else()
+     message("-- Sanitizer OFF")
 endif()
 
 enable_testing()

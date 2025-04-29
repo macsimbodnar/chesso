@@ -1219,16 +1219,32 @@ bool is_passed_pawn(index_t index, const board_t* board)
   switch (board->board[index]) {
     case W_PAWN:
       for (index_t i = index + 0x10; !(i & 0x88) && i < BOARD_SIZE; i += 0x10) {
-        if (board->board[i] == B_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i + 0x01] == B_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i - 0x01] == B_PAWN && !(i & 0x88)) { return false; }
+        
+        if (!(i & 0x88) && board->board[i] == B_PAWN) { return false; }
+
+        if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == B_PAWN) {
+          return false;
+        }
+
+        if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == B_PAWN) {
+          return false;
+        }
+
       }
       break;
     case B_PAWN:
       for (index_t i = index - 0x10; !(i & 0x88) && i < BOARD_SIZE; i -= 0x10) {
-        if (board->board[i] == W_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i + 0x01] == W_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i - 0x01] == W_PAWN && !(i & 0x88)) { return false; }
+        
+        if (!(i & 0x88) && board->board[i] == W_PAWN) { return false; }
+
+        if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == W_PAWN) {
+          return false;
+        }
+
+        if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == W_PAWN) {
+          return false;
+        }
+
       }
       break;
 
@@ -1256,8 +1272,13 @@ bool is_isolated_pawn(index_t index, const board_t* board)
 
   for (index_t i = start_index; !(i & 0x88) && i <= start_index + 0x70;
        i += 0x10) {
-    if (board->board[i + 0x01] == to_check && !(i & 0x88)) { return false; }
-    if (board->board[i - 0x01] == to_check && !(i & 0x88)) { return false; }
+    if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == to_check) {
+      return false;
+    }
+
+    if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == to_check) {
+      return false;
+    }
   }
 
   return true;
