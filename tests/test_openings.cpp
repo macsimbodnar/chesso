@@ -7,6 +7,10 @@
 #include "openings.hpp"
 
 
+static board_t board;
+static global_state_t globals;
+
+
 TEST_SUITE("Test openings")
 {
   TEST_CASE("Test key generation")
@@ -29,9 +33,7 @@ TEST_SUITE("Test openings")
       const std::string& pos = test_case.first;
       const uint64_t expected_key = test_case.second;
 
-      board_t board;
-      history_t history;
-      init_board(pos, &board, &history);
+      init_board(pos, &board, &globals);
 
       const uint64_t key = get_key(&board);
       REQUIRE_EQ(key, expected_key);
@@ -40,9 +42,7 @@ TEST_SUITE("Test openings")
 
   TEST_CASE("Test get moves")
   {
-    board_t board;
-    history_t history;
-    init_board(DEFAULT_POSITION, &board, &history);
+    init_board(DEFAULT_POSITION, &board, &globals);
     book_t book;
     load_book_embedded(&book);
 

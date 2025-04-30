@@ -134,25 +134,28 @@ std::string promotion_to_string(const move_t& move)
 }
 
 
-uint64_t perft(int depth, const board_t* board)
+uint64_t perft(int depth, board_t* board, global_state_t* globals)
 {
   uint64_t nodes = 0;
 
   if (depth == 0) { return 1; }
 
   move_t moves[270];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, globals, moves);
   assert(moves_count <= 270);
   // node_stats += get_moves_stats(moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-    make_move(&moves[i], &tmp_board, nullptr);
-    nodes += perft(depth - 1, &tmp_board);
+    make_move(&moves[i], board, globals);
+    nodes += perft(depth - 1, board, globals);
+    unmake_move(board, globals);
   }
 
   return nodes;
 }
+
+static board_t board = {};
+static global_state_t globals = {};
 
 
 // "$depth" "$fen" "$moves"
@@ -178,12 +181,10 @@ int main(int argc, char* argv[])
     }
   }
 
-  board_t board;
-  history_t history;
-  init_board(fen, &board, &history);
+  init_board(fen, &board, &globals);
 
   move_t moves[270];
-  size_t moves_count = generate_legal_moves(&board, moves);
+  size_t moves_count = generate_legal_moves(&board, &globals, moves);
 
   // Navigate the moves
   while (!moves_to_apply.empty()) {
@@ -197,10 +198,10 @@ int main(int argc, char* argv[])
       if (move.from == mini_move.from && move.to == mini_move.to &&
           move.promoted_to == mini_move.promotion) {
         found = true;
-        bool move_happened = make_move(&move, &board, nullptr);
+        bool move_happened = make_move(&move, &board, &globals);
         (void)move_happened;
         assert(move_happened);
-        moves_count = generate_legal_moves(&board, moves);
+        moves_count = generate_legal_moves(&board, &globals, moves);
         break;
       }
     }
@@ -217,10 +218,9 @@ int main(int argc, char* argv[])
       for (size_t i = 0; i < moves_count; ++i) {
         const move_t& move = moves[i];
 
-        board_t tmp_board = board;
-        move_t tmp_move = move;
-        make_move(&tmp_move, &tmp_board, nullptr);
-        uint64_t num_of_nodes = perft(depth - 1, &tmp_board);
+        make_move(&move, &board, &globals);
+        uint64_t num_of_nodes = perft(depth - 1, &board, &globals);
+        unmake_move(&board, &globals);
         tot_nodes += num_of_nodes;
 
         std::cout << index_to_string_coordinates(move.from)

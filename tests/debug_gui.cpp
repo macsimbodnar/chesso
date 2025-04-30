@@ -29,6 +29,7 @@ static constexpr char FONT_PATH[] = "assets/gui/font/PressStart2P.ttf";
 static constexpr char PICK_SOUND[] = "tick_2";
 static constexpr char RELEASE_SOUND[] = "tick_4";
 
+
 #ifndef STR
 #define STR(_N_) std::to_string(_N_)
 #endif
@@ -193,14 +194,14 @@ struct selected_square_t
 class game_t
 {
 private:
-  history_t history;
+  global_state_t globals;
   board_t board;
 
 public:
   game_t()
   {
     // Initialize the board to default
-    init_board(DEFAULT_POSITION, &board, &history);
+    init_board(DEFAULT_POSITION, &board, &globals);
   }
 
 
@@ -232,35 +233,35 @@ public:
   }
 
 
-  color_t get_active_color() const { return board.game_state.active_color; }
+  color_t get_active_color() const { return board.active_color; }
 
 
   bool is_castling_available(const castling_rights_t castling) const
   {
-    return (board.game_state.castling & castling);
+    return (board.castling & castling);
   }
 
 
   std::optional<position_t> get_en_passant() const
   {
-    if (board.game_state.en_passant != INVALID_BOARD_INDEX) {
-      return index_to_position(board.game_state.en_passant);
+    if (board.en_passant != INVALID_BOARD_INDEX) {
+      return index_to_position(board.en_passant);
     }
 
     return std::nullopt;
   }
 
 
-  int get_halfmove() const { return board.game_state.halfmove_clock; }
-  int get_fullmove() const { return board.game_state.fullmove_counter; }
+  int get_halfmove() const { return board.halfmove_clock; }
+  int get_fullmove() const { return board.fullmove_counter; }
   std::string get_fen() const { return generate_FEN(&board); }
-  void set_fen(const std::string& fen) { load_FEN(fen, &board, &history); }
-  void reset() { load_FEN(DEFAULT_POSITION, &board, &history); }
+  void set_fen(const std::string& fen) { load_FEN(fen, &board, &globals); }
+  void reset() { load_FEN(DEFAULT_POSITION, &board, &globals); }
 
   bool make_move(const game_move_t& move)
   {
     move_t moves[270];
-    const size_t moves_count = generate_legal_moves(&board, moves);
+    const size_t moves_count = generate_legal_moves(&board, &globals, moves);
 
     const index_t from = position_to_index(move.from.file, move.from.rank);
     const index_t to = position_to_index(move.to.file, move.to.rank);
@@ -272,7 +273,7 @@ public:
       const move_t& legal_move = moves[i];
       if (legal_move.from == from && legal_move.to == to &&
           legal_move.piece == piece) {
-        return ::make_move(&legal_move, &board, &history);
+        return ::make_move(&legal_move, &board, &globals);
       }
     }
 
@@ -282,7 +283,7 @@ public:
   std::vector<game_move_t> get_available_moves()
   {
     move_t moves[270];
-    const size_t moves_count = generate_legal_moves(&board, moves);
+    const size_t moves_count = generate_legal_moves(&board, &globals, moves);
 
     std::vector<game_move_t> result;
     for (size_t i = 0; i < moves_count; ++i) {
@@ -294,6 +295,9 @@ public:
     return result;
   }
 };
+
+
+static game_t game;
 
 
 class gui_t : public pixello
@@ -311,8 +315,6 @@ private:
   std::map<char, texture_t> files_and_ranks_textures;
   std::map<int, font_t> fonts;
   std::map<std::string, button_t> buttons;
-
-  game_t game;
   held_piece_t held_piece;
   piece_animation_t animation;
   selected_square_t selected_square;

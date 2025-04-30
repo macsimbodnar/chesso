@@ -464,16 +464,16 @@ uint64_t get_key(const board_t* board)
   // white can castle long      1
   // black can castle short     2
   // black can castle long      3
-  if (board->game_state.castling & WK) {
+  if (board->castling & WK) {
     key ^= polyglot_randoms[CASTLING_OFFSET + 0];
   }
-  if (board->game_state.castling & WQ) {
+  if (board->castling & WQ) {
     key ^= polyglot_randoms[CASTLING_OFFSET + 1];
   }
-  if (board->game_state.castling & BK) {
+  if (board->castling & BK) {
     key ^= polyglot_randoms[CASTLING_OFFSET + 2];
   }
-  if (board->game_state.castling & BQ) {
+  if (board->castling & BQ) {
     key ^= polyglot_randoms[CASTLING_OFFSET + 3];
   }
 
@@ -492,25 +492,25 @@ uint64_t get_key(const board_t* board)
   // check).
   // NOTE: Our make move set the en-passant always, even if not pawn to capture,
   // because of this we need to check if there is a pawn
-  if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
-    if (board->game_state.active_color == WHITE) {
+  if (board->en_passant != INVALID_BOARD_INDEX) {
+    if (board->active_color == WHITE) {
       // WHITE case
-      const index_t on_left = board->game_state.en_passant - 0x11;
-      const index_t on_right = board->game_state.en_passant - 0x0F;
+      const index_t on_left = board->en_passant - 0x11;
+      const index_t on_right = board->en_passant - 0x0F;
 
       if (board->board[on_left] == W_PAWN || board->board[on_right] == W_PAWN) {
         // Valid en-passant, we take the file of the square
-        const position_t pos = index_to_position(board->game_state.en_passant);
+        const position_t pos = index_to_position(board->en_passant);
         assert(pos.file < EP_SIZE);
         key ^= polyglot_randoms[EP_OFFSET + pos.file];
       }
     } else {
       // BLACK case
-      const index_t on_left = board->game_state.en_passant + 0x0F;
-      const index_t on_right = board->game_state.en_passant + 0x11;
+      const index_t on_left = board->en_passant + 0x0F;
+      const index_t on_right = board->en_passant + 0x11;
 
       if (board->board[on_left] == B_PAWN || board->board[on_right] == B_PAWN) {
-        const position_t pos = index_to_position(board->game_state.en_passant);
+        const position_t pos = index_to_position(board->en_passant);
         assert(pos.file < EP_SIZE);
         key ^= polyglot_randoms[EP_OFFSET + pos.file];
       }
@@ -518,7 +518,7 @@ uint64_t get_key(const board_t* board)
   }
 
   // Active color. Insert only if white
-  if (board->game_state.active_color == WHITE) {
+  if (board->active_color == WHITE) {
     key ^= polyglot_randoms[TURN_OFFSET + 0];
   }
 

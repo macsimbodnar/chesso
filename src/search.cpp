@@ -44,7 +44,7 @@ inline void store_to_tt(const board_t* board,
   assert(board != nullptr);
   assert(state != nullptr);
 
-  const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
+  const uint64_t index = board->zobrist_key % TT_SIZE;
   tt_entry_t* elem = &state->tt->entries[index];
   assert(elem != nullptr);
 
@@ -53,7 +53,7 @@ inline void store_to_tt(const board_t* board,
   if (score < -MATE_MIN) { score -= ply; }
   if (score > MATE_MIN) { score += ply; }
 
-  elem->key = board->game_state.zobrist_key;
+  elem->key = board->zobrist_key;
   elem->depth = depth;
   elem->type = type;
   elem->score = score;
@@ -70,12 +70,12 @@ inline int get_from_tt(const board_t* board,
   assert(board != nullptr);
   assert(state != nullptr);
 
-  const uint64_t index = board->game_state.zobrist_key % TT_SIZE;
+  const uint64_t index = board->zobrist_key % TT_SIZE;
   const tt_entry_t* elem = &state->tt->entries[index];
 
   assert(elem != nullptr);
 
-  if (elem->key == board->game_state.zobrist_key) {
+  if (elem->key == board->zobrist_key) {
     if (elem->depth >= depth) {
       int score = elem->score;
 
@@ -94,10 +94,13 @@ inline int get_from_tt(const board_t* board,
 }
 
 
-bool is_pv_legal(const board_t* board, const pv_t* pv)
+bool is_pv_legal(board_t* board, global_state_t* globals, const pv_t* pv)
 {
   assert(board != nullptr);
   assert(pv != nullptr);
+
+  bool is_pv_ok = true;
+  size_t make_move_counter = 0;
 
   // Empty pv is illegal
   if (pv->pv_length[0] < 1) {
@@ -105,15 +108,16 @@ bool is_pv_legal(const board_t* board, const pv_t* pv)
     return false;
   }
 
-  board_t tmp_board = *board;
-
   for (size_t i = 0; i < pv->pv_length[0]; ++i) {
     const move_t* move_to_test = &pv->pv_table[0][i];
 
     move_t moves[MAX_MOVES];
-    const size_t moves_count = generate_legal_moves(&tmp_board, moves);
+    const size_t moves_count = generate_legal_moves(board, globals, moves);
 
-    if (moves_count < 1) { return false; }
+    if (moves_count < 1) {
+      is_pv_ok = false;
+      break;
+    }
 
     bool found = false;
     for (size_t move_index = 0; move_index < moves_count; ++move_index) {
@@ -126,20 +130,27 @@ bool is_pv_legal(const board_t* board, const pv_t* pv)
 
     if (!found) {
       LOG_W << "PV with illegal move: " << *move_to_test << END_W;
-      return false;
+      is_pv_ok = false;
+      break;
     }
 
-    make_move(move_to_test, &tmp_board, nullptr);
+    make_move(move_to_test, board, globals);
+    make_move_counter++;
   }
 
-  return true;
+  for (size_t i = 0; i < make_move_counter; ++i) {
+    unmake_move(board, globals);
+  }
+
+  return is_pv_ok;
 }
 
 
 int quiescence_search(int alpha,
                       int beta,
                       size_t qs_ply,
-                      const board_t* board,
+                      board_t* board,
+                      global_state_t* globals,
                       search_state_t* state)
 {
   assert(board != nullptr);
@@ -149,7 +160,7 @@ int quiescence_search(int alpha,
   state->explored_nodes += 1;
 
   const int stand_pat =
-      (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+      (board->active_color == WHITE ? 1 : -1) * evaluate(board);
 
   int best_value = stand_pat;
 
@@ -165,7 +176,7 @@ int quiescence_search(int alpha,
   }
 
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, globals, moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
     // We process only captures and promotions
@@ -178,8 +189,8 @@ int quiescence_search(int alpha,
     (void)done;
     assert(done);
 
-    const int score =
-        -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board, state);
+    const int score = -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board,
+                                         globals, state);
 
 
     if (score > best_value) { best_value = score; }
@@ -197,7 +208,8 @@ int alpha_beta_negamax(int alpha,
                        int beta,
                        int depth,
                        size_t ply,
-                       const board_t* board,
+                       board_t* board,
+                       global_state_t* globals,
                        search_state_t* state)
 {
   assert(board != nullptr);
@@ -205,7 +217,7 @@ int alpha_beta_negamax(int alpha,
   assert(state->stop != nullptr);
 
   // Check for repetitions
-  if (is_position_repeated(board)) { return DRAW_SCORE; }
+  if (is_position_repeated(board, globals)) { return DRAW_SCORE; }
 
   int score = 0;
   node_type_t hash_flag = TT_ALPHA_NODE;
@@ -227,12 +239,12 @@ int alpha_beta_negamax(int alpha,
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+    return (board->active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
   // We just return in case we overrun the max ply
   if (ply >= MAX_PLY) {
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+    return (board->active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
   // Init the PV length
@@ -250,11 +262,11 @@ int alpha_beta_negamax(int alpha,
   if (depth > NMP_DEPTH_LIMIT && !is_in_check && ply > 0) {
     // The null move is just the current position with switched side
     board_t swapped_board = *board;
-    swap_side(&swapped_board);
-    clear_ep_square(&swapped_board);
+    swap_side(&swapped_board, globals);
+    clear_ep_square(&swapped_board, globals);
 
     score = -alpha_beta_negamax(-beta, -beta + 1, depth - 1 - REDUCTION_FACTOR,
-                                ply + 1, &swapped_board, state);
+                                ply + 1, &swapped_board, globals, state);
 
     if (score >= beta) {
       // Beta cut-off
@@ -263,7 +275,7 @@ int alpha_beta_negamax(int alpha,
   }
 
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, globals, moves);
 
   if (moves_count == 0) {
     // Checkmate or stalemate handling
@@ -277,7 +289,9 @@ int alpha_beta_negamax(int alpha,
 
   // NOTE: Check if < 1 instead of == 0 because some time we subtract
   // 2 to the depth in recursive calls during LMR
-  if (depth < 1) { return quiescence_search(alpha, beta, 0, board, state); }
+  if (depth < 1) {
+    return quiescence_search(alpha, beta, 0, board, globals, state);
+  }
 
   // Sort moves
   order_moves(moves, moves_count, ply, state);
@@ -292,14 +306,14 @@ int alpha_beta_negamax(int alpha,
     if (i == 0) {
       // In case of first move we perform the full depth search based on LMR
       score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
-                                  state);
+                                  globals, state);
     } else {
       // Here we are in the logic of Late Move Reduction
       if (i >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT &&
           should_reduce_move(&moves[i]) && !is_in_check) {
         // Search with reduced depth
         score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
-                                    &tmp_board, state);
+                                    &tmp_board, globals, state);
       } else {
         // Hack to ensure that full-depth search is done.
         score = alpha + 1;
@@ -309,12 +323,12 @@ int alpha_beta_negamax(int alpha,
       if (score > alpha) {
         // Search deeper but with narrow window
         score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
-                                    &tmp_board, state);
+                                    &tmp_board, globals, state);
 
         // Search deeper in normal window
         if (score > alpha && score < beta) {
           score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                      &tmp_board, state);
+                                      &tmp_board, globals, state);
         }
       }
     }
@@ -373,7 +387,8 @@ int alpha_beta_negamax(int alpha,
 
 
 search_t search_best_move(int depth,
-                          const board_t* board,
+                          board_t* board,
+                          global_state_t* globals,
                           search_state_t* state)
 {
   assert(board != nullptr);
@@ -385,16 +400,16 @@ search_t search_best_move(int depth,
 
   // Set backup move just in case the PV is empty
   move_t moves[MAX_MOVES];
-  const size_t moves_size = generate_legal_moves(board, moves);
+  const size_t moves_size = generate_legal_moves(board, globals, moves);
   order_moves(moves, moves_size, 0, state);
   assert(moves_size > 0);
   search_result.best_move = moves[0];
 
   // Here comes the search
   state->search_in_tt = true;
-  int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+  int score = alpha_beta_negamax(MIN, MAX, depth, 0, board, globals, state);
 
-  const bool pv_legal = is_pv_legal(board, &state->pv);
+  const bool pv_legal = is_pv_legal(board, globals, &state->pv);
   if (pv_legal) {
     search_result.best_move = state->pv.pv_table[0][0];
   } else if (!*state->stop) {
@@ -402,7 +417,7 @@ search_t search_best_move(int depth,
     LOG_W << "Invalid PV. Researching with no TT at depth " << depth << END_W;
 
     state->search_in_tt = false;
-    score = alpha_beta_negamax(MIN, MAX, depth, 0, board, state);
+    score = alpha_beta_negamax(MIN, MAX, depth, 0, board, globals, state);
 
     assert(state->pv.pv_length[0] > 0);
 
