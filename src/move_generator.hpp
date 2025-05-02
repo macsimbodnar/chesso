@@ -20,7 +20,7 @@ move_t algebraic_to_move(std::string notation,
                          board_t* board,
                          global_state_t* state);
 
-bool is_check(const board_t* board);
+bool is_check(board_t* board, const zobrist_randoms_t* rands);
 
 size_t generate_captures(board_t* board,
                          global_state_t* state,

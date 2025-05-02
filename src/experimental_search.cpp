@@ -102,7 +102,7 @@ int negamax(int alpha0,
   // Check for repetitions
   if (is_position_repeated(board, globals)) { return DRAW_SCORE; }
 
-  const bool is_in_check = is_check(board);
+  const bool is_in_check = is_check(board, &globals->zobrist_randoms);
 
   if (is_in_check) { ++depth; }
 
@@ -143,7 +143,8 @@ int negamax(int alpha0,
   if (depth > NULL_MOVE_REDUCTION + 1 && !is_in_check && !zero_window) {
     swap_side(board, globals);
     const index_t en_passant = board->en_passant;
-    clear_ep_square(board, globals);
+
+    if (en_passant != INVALID_BOARD_INDEX) { clear_ep_square(board, globals); }
 
     const int probe_score =
         -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION - 1, ply + 1,
@@ -157,14 +158,21 @@ int negamax(int alpha0,
 
       if (verify_score >= beta) {
         swap_side(board, globals);
-        set_en_passant(en_passant, board, globals);
+
+        if (en_passant != INVALID_BOARD_INDEX) {
+          set_en_passant(en_passant, board, globals);
+        }
+
         //  Now it's safe to cut off
         return beta;
       }
     }
 
     swap_side(board, globals);
-    set_en_passant(en_passant, board, globals);
+
+    if (en_passant != INVALID_BOARD_INDEX) {
+      set_en_passant(en_passant, board, globals);
+    }
   }
 
   for (size_t i = 0; i < moves_count; ++i) {
@@ -183,7 +191,7 @@ int negamax(int alpha0,
 
     const bool is_capture =
         (moves[i].captured != INVALID && moves[i].captured != EMPTY);
-    const bool is_check_move = is_check(board);
+    const bool is_check_move = is_check(board, &globals->zobrist_randoms);
 
     // Decide depth reduction R
     int R = 0;

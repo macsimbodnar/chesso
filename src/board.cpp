@@ -168,71 +168,6 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
-// TODO: Test this one
-bool is_square_attacked(index_t sq, color_t by_color, const board_t* b)
-{
-  static constexpr int KNIGHT_OFFSETS[8] = {+0x21, +0x1F, +0x0E, +0xEE,
-                                            +0xDF, +0xE1, +0xF2, +0x12};
-  static constexpr int PAWN_OFFSETS_WHITE[2] = {+0x0F,
-                                                +0x11};  // from pawn to king
-  static constexpr int PAWN_OFFSETS_BLACK[2] = {-0x0F, -0x11};
-  static constexpr int SLIDE_DIRS[8] = {+0x10, -0x10, +0x01, -0x01,
-                                        +0x11, +0x0F, -0x0F, -0x11};
-
-  // Pawn attacks
-  int const* pawn_off =
-      (by_color == WHITE ? PAWN_OFFSETS_WHITE : PAWN_OFFSETS_BLACK);
-  for (int i = 0; i < 2; ++i) {
-    const index_t t = sq + pawn_off[i];
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_PAWN : B_PAWN))
-      return true;
-  }
-
-  // Knight attacks
-  for (int off : KNIGHT_OFFSETS) {
-    const index_t t = sq + off;
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_KNIGHT : B_KNIGHT))
-      return true;
-  }
-
-  // King adjacency (rarely needed except double-check detection)
-  for (int off : SLIDE_DIRS) {
-    const index_t t = sq + off;
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_KING : B_KING))
-      return true;
-  }
-
-  // Sliding attacks
-  for (int d = 0; d < 8; ++d) {
-    const int dir = SLIDE_DIRS[d];
-    index_t t = sq;
-
-    while (true) {
-      t += dir;
-
-      if (t & 0x88) { break; }
-
-      const piece_t p = b->board[t];
-      if (p != EMPTY) {
-        if (get_piece_color(p) == by_color) {
-          bool is_rook_dir = (d < 4);
-          bool is_bishop_dir = (d >= 4);
-
-          if ((is_rook_dir &&
-               (p == W_ROOK || p == B_ROOK || p == W_QUEEN || p == B_QUEEN)) ||
-              (is_bishop_dir && (p == W_BISHOP || p == B_BISHOP ||
-                                 p == W_QUEEN || p == B_QUEEN)))
-            return true;
-        }
-        break;
-      }
-    }
-  }
-
-  return false;
-}
-
-
 bool make_move(const move_t* move, board_t* board, global_state_t* state)
 {
   assert(move != nullptr);
@@ -241,6 +176,8 @@ bool make_move(const move_t* move, board_t* board, global_state_t* state)
   assert(board->board[move->from] != EMPTY &&
          board->board[move->from] != INVALID);
   assert(state != nullptr);
+  assert(move->captured != W_KING);
+  assert(move->captured != B_KING);
 
   const uint64_t old_hash = board->zobrist_key;
 

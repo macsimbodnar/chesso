@@ -184,13 +184,14 @@ int quiescence_search(int alpha,
       continue;
     }
 
-    board_t tmp_board = *board;
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
+    const bool done = make_move(&moves[i], board, globals);
     (void)done;
     assert(done);
 
-    const int score = -quiescence_search(-beta, -alpha, qs_ply + 1, &tmp_board,
-                                         globals, state);
+    const int score =
+        -quiescence_search(-beta, -alpha, qs_ply + 1, board, globals, state);
+
+    unmake_move(board, globals);
 
 
     if (score > best_value) { best_value = score; }
@@ -250,7 +251,7 @@ int alpha_beta_negamax(int alpha,
   // Init the PV length
   state->pv.pv_length[ply] = ply;
 
-  const bool is_in_check = is_check(board);
+  const bool is_in_check = is_check(board, &globals->zobrist_randoms);
 
   if (is_in_check) {
     // if we are in check we want to search deeper
@@ -261,12 +262,21 @@ int alpha_beta_negamax(int alpha,
   // TODO: Disable in late game
   if (depth > NMP_DEPTH_LIMIT && !is_in_check && ply > 0) {
     // The null move is just the current position with switched side
-    board_t swapped_board = *board;
-    swap_side(&swapped_board, globals);
-    clear_ep_square(&swapped_board, globals);
+    swap_side(board, globals);
+
+    const index_t old_en_index = board->en_passant;
+    if (old_en_index != INVALID_BOARD_INDEX) {
+      clear_ep_square(board, globals);
+    }
 
     score = -alpha_beta_negamax(-beta, -beta + 1, depth - 1 - REDUCTION_FACTOR,
-                                ply + 1, &swapped_board, globals, state);
+                                ply + 1, board, globals, state);
+
+    swap_side(board, globals);
+
+    if (old_en_index != INVALID_BOARD_INDEX) {
+      set_en_passant(old_en_index, board, globals);
+    }
 
     if (score >= beta) {
       // Beta cut-off
@@ -297,15 +307,13 @@ int alpha_beta_negamax(int alpha,
   order_moves(moves, moves_count, ply, state);
 
   for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-
-    const bool done = make_move(&moves[i], &tmp_board, nullptr);
+    const bool done = make_move(&moves[i], board, globals);
     (void)done;
     assert(done);
 
     if (i == 0) {
       // In case of first move we perform the full depth search based on LMR
-      score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board,
+      score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, board,
                                   globals, state);
     } else {
       // Here we are in the logic of Late Move Reduction
@@ -313,7 +321,7 @@ int alpha_beta_negamax(int alpha,
           should_reduce_move(&moves[i]) && !is_in_check) {
         // Search with reduced depth
         score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 2, ply + 1,
-                                    &tmp_board, globals, state);
+                                    board, globals, state);
       } else {
         // Hack to ensure that full-depth search is done.
         score = alpha + 1;
@@ -323,15 +331,17 @@ int alpha_beta_negamax(int alpha,
       if (score > alpha) {
         // Search deeper but with narrow window
         score = -alpha_beta_negamax(-alpha - 1, -alpha, depth - 1, ply + 1,
-                                    &tmp_board, globals, state);
+                                    board, globals, state);
 
         // Search deeper in normal window
         if (score > alpha && score < beta) {
-          score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1,
-                                      &tmp_board, globals, state);
+          score = -alpha_beta_negamax(-beta, -alpha, depth - 1, ply + 1, board,
+                                      globals, state);
         }
       }
     }
+
+    unmake_move(board, globals);
 
     if (score > alpha) {
       // Found better move

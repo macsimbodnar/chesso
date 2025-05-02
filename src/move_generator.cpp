@@ -725,6 +725,7 @@ size_t generate_attacks_vector(color_t target_color,
                                move_t result[])
 {
   assert(result != nullptr);
+  assert(randoms != nullptr);
 
   size_t result_count = 0;
 
@@ -849,6 +850,7 @@ bool is_pin(const move_t* move,
             board_t* board,
             global_state_t* state)
 {
+  assert(move != nullptr);
   assert(board != nullptr);
 
   const bool happened = make_move(move, board, state);
@@ -1633,14 +1635,21 @@ move_t algebraic_to_move(std::string notation,
 }
 
 
-bool is_check(const board_t* board)
+bool is_check(board_t* board, const zobrist_randoms_t* rands)
 {
-  assert(board != nullptr);
+  const color_t attack_color = !board->active_color;
+  move_t attacks_vector[MAX_MOVES];
+  const size_t attacks_vector_count =
+      generate_attacks_vector(attack_color, board, rands, attacks_vector);
 
-  const bool is_in_check = is_square_attacked(
-      get_king_index(board->active_color, board), !board->active_color, board);
+  const index_t king_index = get_king_index(board->active_color, board);
 
-  return is_in_check;
+  for (size_t i = 0; i < attacks_vector_count; ++i) {
+    const move_t& attack = attacks_vector[i];
+    if (attack.to == king_index) { return true; }
+  }
+
+  return false;
 }
 
 

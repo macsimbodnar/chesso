@@ -814,7 +814,7 @@ TEST_SUITE("Test make_move and unmake_move")
 
     for (const auto& test_case : test_cases) {
       init_board(test_case.FEN, &board, &globals);
-      const bool res = is_check(&board);
+      const bool res = is_check(&board, &globals.zobrist_randoms);
       REQUIRE_EQ(res, test_case.is_in_check);
     }
   }

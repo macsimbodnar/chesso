@@ -469,7 +469,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // const search_t search_result =
-    //     search_best_move(current_depth, &board, &state);
+    //     search_best_move(current_depth, &board, &globals, &state);
     const search_t search_result =
         experimental_search(current_depth, &board, &globals, &state);
 
