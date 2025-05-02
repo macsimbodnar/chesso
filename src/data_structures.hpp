@@ -78,7 +78,8 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 #define MAX_MOVES 270
 #define MAX_PLY 100
 #define MAX_DEPTH MAX_PLY
-#define REPETITION_MAX_SIZE 500
+#define REPETITION_MAX_SIZE 5000
+#define HISTORY_MAX_SIZE 1000000
 
 // Transposition table size
 // #define TT_SIZE 8388608
@@ -240,9 +241,9 @@ inline std::ostream& operator<<(std::ostream& os, const move_t& move)
   return os;
 }
 
-
-struct game_state_t
+struct board_t
 {
+  piece_t board[BOARD_SIZE];
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
@@ -251,24 +252,24 @@ struct game_state_t
   uint64_t zobrist_key;       // Zobrist Key
 };
 
-struct board_t
-{
-  piece_t board[BOARD_SIZE];
-  game_state_t game_state;
-  zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
-  size_t repetition_size;
-  uint64_t repetitions[REPETITION_MAX_SIZE];
-};
 
 struct history_entry_t
 {
-  // game_state_t game_state;
   board_t board;
-  move_t move_applied;
+  size_t repetition_size;
 };
 
-// TODO: Make heep allocation during initialization
-typedef std::stack<history_entry_t> history_t;
+
+struct global_state_t
+{
+  zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
+
+  size_t repetition_size;
+  uint64_t repetitions[REPETITION_MAX_SIZE];
+
+  size_t history_size;
+  history_entry_t history[HISTORY_MAX_SIZE];
+};
 
 struct pv_t
 {

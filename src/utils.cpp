@@ -190,14 +190,14 @@ std::string print_nice_board(const board_t* board)
   ss << "   A B C D E F G H";
   ss << "\n------------------";
 
-  ss << "\nactive_color:      " << color_to_string(board->game_state.active_color);
-  ss << "\ncastling:          " << std::bitset<4>(board->game_state.castling);
-  ss << "\nhalf_move_clock:   " << int(board->game_state.halfmove_clock);
-  ss << "\nen_passant:        " << index_to_string_coordinates(board->game_state.en_passant);
-  ss << "\nfull_move_number:  " << int(board->game_state.fullmove_counter);
-  ss << "\nzobrist_key:       " << board->game_state.zobrist_key;
-  // ss << "\nphase_value:       " << int(board->game_state.phase_value);
-  // ss << "next_move:         " << board->game_state.next_move;
+  ss << "\nactive_color:      " << color_to_string(board->active_color);
+  ss << "\ncastling:          " << std::bitset<4>(board->castling);
+  ss << "\nhalf_move_clock:   " << int(board->halfmove_clock);
+  ss << "\nen_passant:        " << index_to_string_coordinates(board->en_passant);
+  ss << "\nfull_move_number:  " << int(board->fullmove_counter);
+  ss << "\nzobrist_key:       " << board->zobrist_key;
+  // ss << "\nphase_value:       " << int(board->phase_value);
+  // ss << "next_move:         " << board->next_move;
 
   ss << "\n#######################################";
   // clang-format on

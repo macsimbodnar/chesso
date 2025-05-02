@@ -3,7 +3,10 @@
 
 
 search_t search_best_move(int depth,
-                          const board_t* board,
+                          board_t* board,
+                          global_state_t* globals,
                           search_state_t* state);
 
-bool is_pv_legal(const board_t* board, const pv_t* pv);
+bool is_pv_legal(board_t* board,
+                 global_state_t* globals,
+                 const pv_t* pv);

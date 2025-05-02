@@ -63,21 +63,30 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 }
 
 
-void cleanup_game_state(game_state_t* gs)
+void cleanup_game_state(board_t* board)
 {
-  assert(gs != nullptr);
+  assert(board != nullptr);
 
-  gs->active_color = WHITE;
-  gs->castling = WQ | WK | BQ | BK;
-  gs->halfmove_clock = 0;
-  gs->en_passant = INVALID_BOARD_INDEX;
-  gs->fullmove_counter = 1;
-  gs->zobrist_key = 0;
+  board->active_color = WHITE;
+  board->castling = WQ | WK | BQ | BK;
+  board->halfmove_clock = 0;
+  board->en_passant = INVALID_BOARD_INDEX;
+  board->fullmove_counter = 1;
+  board->zobrist_key = 0;
+
+  for (size_t i = 0; i < BOARD_SIZE; ++i) {
+    if (i & 0x88) {
+      board->board[i] = INVALID;
+    } else {
+      board->board[i] = EMPTY;
+    }
+  }
 }
 
 
-uint64_t init_zobrist_key(const board_t* board)
+uint64_t init_zobrist_key(const global_state_t* state, const board_t* board)
 {
+  assert(state != nullptr);
   assert(board != nullptr);
 
   uint64_t key = 0;
@@ -89,41 +98,29 @@ uint64_t init_zobrist_key(const board_t* board)
       piece_t piece = board->board[index];
 
       if (piece != EMPTY && piece != INVALID) {
-        key ^= board->zobrist_randoms.piece_randoms[piece][index];
+        key ^= state->zobrist_randoms.piece_randoms[piece][index];
       }
     }
   }
 
   // Xor side to move
-  key ^= board->zobrist_randoms.side_randoms[board->game_state.active_color];
+  key ^= state->zobrist_randoms.side_randoms[board->active_color];
 
   // Xor castling
-  key ^= board->zobrist_randoms.castling_randoms[board->game_state.castling];
+  key ^= state->zobrist_randoms.castling_randoms[board->castling];
 
   // Xor en-passant
-  key ^= board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+  key ^= state->zobrist_randoms.ep_randoms[board->en_passant];
 
 
   return key;
 }
 
 
-color_t us(const board_t* board)
-{
-  return board->game_state.active_color;
-}
-
-
-color_t opponent(const board_t* board)
-{
-  return !board->game_state.active_color;
-}
-
-
-void init_board(const std::string& fen, board_t* board, history_t* history)
+void init_board(const std::string& fen, board_t* board, global_state_t* state)
 {
   assert(board != nullptr);
-  assert(history != nullptr);
+  assert(state != nullptr);
 
   // Cleanup
   for (index_t i = 0; i < BOARD_SIZE; ++i) {
@@ -136,19 +133,19 @@ void init_board(const std::string& fen, board_t* board, history_t* history)
 
   // history_t empty_history = history_t();
   // board->history.swap(empty_history);
-  cleanup_game_state(&board->game_state);
+  cleanup_game_state(board);
 
   // Init random numbers
-  if (!board->zobrist_randoms.initialized) {
-    init_zobrist(&board->zobrist_randoms);
+  if (!state->zobrist_randoms.initialized) {
+    init_zobrist(&state->zobrist_randoms);
   }
 
   // Load FEN
-  load_FEN(fen, board, history);
+  load_FEN(fen, board, state);
 
   // Cleanup repetition table
-  board->repetition_size = 0;
-  memset(board->repetitions, 0, sizeof(board->repetitions));
+  state->repetition_size = 0;
+  state->history_size = 0;
 }
 
 
@@ -171,86 +168,25 @@ bool has_bishop_pair(color_t color, const board_t* board)
 }
 
 
-// TODO: Test this one
-bool is_square_attacked(index_t sq, color_t by_color, const board_t* b)
-{
-  static constexpr int KNIGHT_OFFSETS[8] = {+0x21, +0x1F, +0x0E, +0xEE,
-                                            +0xDF, +0xE1, +0xF2, +0x12};
-  static constexpr int PAWN_OFFSETS_WHITE[2] = {+0x0F,
-                                                +0x11};  // from pawn to king
-  static constexpr int PAWN_OFFSETS_BLACK[2] = {-0x0F, -0x11};
-  static constexpr int SLIDE_DIRS[8] = {+0x10, -0x10, +0x01, -0x01,
-                                        +0x11, +0x0F, -0x0F, -0x11};
-
-  // Pawn attacks
-  int const* pawn_off =
-      (by_color == WHITE ? PAWN_OFFSETS_WHITE : PAWN_OFFSETS_BLACK);
-  for (int i = 0; i < 2; ++i) {
-    const index_t t = sq + pawn_off[i];
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_PAWN : B_PAWN))
-      return true;
-  }
-
-  // Knight attacks
-  for (int off : KNIGHT_OFFSETS) {
-    const index_t t = sq + off;
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_KNIGHT : B_KNIGHT))
-      return true;
-  }
-
-  // King adjacency (rarely needed except double-check detection)
-  for (int off : SLIDE_DIRS) {
-    const index_t t = sq + off;
-    if (!(t & 0x88) && b->board[t] == (by_color == WHITE ? W_KING : B_KING))
-      return true;
-  }
-
-  // Sliding attacks
-  for (int d = 0; d < 8; ++d) {
-    const int dir = SLIDE_DIRS[d];
-    index_t t = sq;
-
-    while (true) {
-      t += dir;
-
-      if (t & 0x88) { break; }
-
-      const piece_t p = b->board[t];
-      if (p != EMPTY) {
-        if (get_piece_color(p) == by_color) {
-          bool is_rook_dir = (d < 4);
-          bool is_bishop_dir = (d >= 4);
-
-          if ((is_rook_dir &&
-               (p == W_ROOK || p == B_ROOK || p == W_QUEEN || p == B_QUEEN)) ||
-              (is_bishop_dir && (p == W_BISHOP || p == B_BISHOP ||
-                                 p == W_QUEEN || p == B_QUEEN)))
-            return true;
-        }
-        break;
-      }
-    }
-  }
-
-  return false;
-}
-
-
-bool make_move(const move_t* move, board_t* board, history_t* history)
+bool make_move(const move_t* move, board_t* board, global_state_t* state)
 {
   assert(move != nullptr);
   assert(board != nullptr);
   assert(move->captured != EMPTY);
   assert(board->board[move->from] != EMPTY &&
          board->board[move->from] != INVALID);
+  assert(state != nullptr);
+  assert(move->captured != W_KING);
+  assert(move->captured != B_KING);
 
-  const uint64_t old_hash = board->game_state.zobrist_key;
+  const uint64_t old_hash = board->zobrist_key;
 
   // Store the history
-  if (history != nullptr) { history->push({*board, *move}); }
+  state->history[state->history_size] = {*board, state->repetition_size};
+  state->history_size++;
 
   // Remove en-passant
-  clear_ep_square(board);
+  clear_ep_square(board, state);
 
   // Check move type
   if (move->captured != INVALID) {
@@ -258,7 +194,7 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
     if (move->en_passant_capture) {
       // In case of capture by en-passant we take the correct pawn
       index_t index_to_remove = move->to;
-      switch (board->game_state.active_color) {
+      switch (board->active_color) {
         case BLACK:
           index_to_remove += 0x10;
           break;
@@ -275,52 +211,51 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
       assert(index_to_remove != INVALID_BOARD_INDEX);
       // Assert the target contains a PAWN of the opposite color
       assert(board->board[index_to_remove] ==
-             (board->game_state.active_color == WHITE ? B_PAWN : W_PAWN));
+             (board->active_color == WHITE ? B_PAWN : W_PAWN));
 
-      const piece_t removed = remove_piece(index_to_remove, board);
+      const piece_t removed =
+          remove_piece(index_to_remove, board, &state->zobrist_randoms);
       assert(removed == move->captured);
       (void)removed;
     } else {
-      const piece_t removed = remove_piece(move->to, board);
+      const piece_t removed =
+          remove_piece(move->to, board, &state->zobrist_randoms);
       assert(removed == move->captured);
       (void)removed;
     }
   }
 
   // Move the moving piece
-  const piece_t moved_piece = move_piece(move->from, move->to, board);
+  const piece_t moved_piece =
+      move_piece(move->from, move->to, board, &state->zobrist_randoms);
   assert(moved_piece == move->piece);
   (void)moved_piece;
 
   // Handle promotion
   if (move->promoted_to != TO_NONE) {
-    const piece_t removed = remove_piece(move->to, board);
-    assert(removed ==
-           (board->game_state.active_color == WHITE ? W_PAWN : B_PAWN));
+    const piece_t removed =
+        remove_piece(move->to, board, &state->zobrist_randoms);
+    assert(removed == (board->active_color == WHITE ? W_PAWN : B_PAWN));
     (void)removed;
 
     switch (move->promoted_to) {
       case TO_QUEEN:
-        put_piece(move->to,
-                  (board->game_state.active_color == WHITE ? W_QUEEN : B_QUEEN),
-                  board);
+        put_piece(move->to, (board->active_color == WHITE ? W_QUEEN : B_QUEEN),
+                  board, &state->zobrist_randoms);
         break;
       case TO_KNIGHT:
-        put_piece(
-            move->to,
-            (board->game_state.active_color == WHITE ? W_KNIGHT : B_KNIGHT),
-            board);
+        put_piece(move->to,
+                  (board->active_color == WHITE ? W_KNIGHT : B_KNIGHT), board,
+                  &state->zobrist_randoms);
         break;
       case TO_ROOK:
-        put_piece(move->to,
-                  (board->game_state.active_color == WHITE ? W_ROOK : B_ROOK),
-                  board);
+        put_piece(move->to, (board->active_color == WHITE ? W_ROOK : B_ROOK),
+                  board, &state->zobrist_randoms);
         break;
       case TO_BISHOP:
-        put_piece(
-            move->to,
-            (board->game_state.active_color == WHITE ? W_BISHOP : B_BISHOP),
-            board);
+        put_piece(move->to,
+                  (board->active_color == WHITE ? W_BISHOP : B_BISHOP), board,
+                  &state->zobrist_randoms);
         break;
       case TO_NONE:
       default:
@@ -337,7 +272,7 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
     // const index_t on_left = move->to - 0x01;
     // const index_t on_right = move->to + 0x01;
 
-    // if (board->game_state.active_color == WHITE) {
+    // if (board->active_color == WHITE) {
     //   // Handle white double push
     //   if (on_left == B_PAWN || on_right == B_PAWN) {
     //     const index_t en_passant_index = move->to - 0x10;
@@ -353,14 +288,14 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
     //   }
     // }
 
-    if (board->game_state.active_color == WHITE) {
+    if (board->active_color == WHITE) {
       const index_t en_passant_index = move->to - 0x10;
       assert(!(en_passant_index & 0x88));
-      set_en_passant(en_passant_index, board);
+      set_en_passant(en_passant_index, board, state);
     } else {
       const index_t en_passant_index = move->to + 0x10;
       assert(!(en_passant_index & 0x88));
-      set_en_passant(en_passant_index, board);
+      set_en_passant(en_passant_index, board, state);
     }
   }
 
@@ -374,12 +309,12 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
         // White queen side castling
         assert(board->board[0x00] == W_ROOK);
         assert(board->board[0x03] == EMPTY);
-        move_piece(0x00, 0x03, board);
+        move_piece(0x00, 0x03, board, &state->zobrist_randoms);
       } else if (move->to == 0x06) {
         // White king side castling
         assert(board->board[0x07] == W_ROOK);
         assert(board->board[0x05] == EMPTY);
-        move_piece(0x07, 0x05, board);
+        move_piece(0x07, 0x05, board, &state->zobrist_randoms);
       }
 
     } else if (move->piece == B_KING) {
@@ -389,59 +324,57 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
         // Black queen side castling
         assert(board->board[0x70] == B_ROOK);
         assert(board->board[0x73] == EMPTY);
-        move_piece(0x70, 0x73, board);
+        move_piece(0x70, 0x73, board, &state->zobrist_randoms);
       } else if (move->to == 0x76) {
         // Black king side castling
         assert(board->board[0x77] == B_ROOK);
         assert(board->board[0x75] == EMPTY);
-        move_piece(0x77, 0x75, board);
+        move_piece(0x77, 0x75, board, &state->zobrist_randoms);
       }
     }
   }
 
   // Clear castling rights in case of king or rook move from initial square
   if (move->piece == W_KING && move->from == 0x04) {
-    const castling_t new_castling_rights =
-        board->game_state.castling & ~(WQ | WK);
-    update_castling_permissions(new_castling_rights, board);
+    const castling_t new_castling_rights = board->castling & ~(WQ | WK);
+    update_castling_permissions(new_castling_rights, board, state);
   } else if (move->piece == B_KING && move->from == 0x74) {
-    const castling_t new_castling_rights =
-        board->game_state.castling & ~(BQ | BK);
-    update_castling_permissions(new_castling_rights, board);
+    const castling_t new_castling_rights = board->castling & ~(BQ | BK);
+    update_castling_permissions(new_castling_rights, board, state);
   } else if (move->piece == W_ROOK) {
     if (move->from == 0x00) {
-      const castling_t new_castling_rights = board->game_state.castling & ~WQ;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~WQ;
+      update_castling_permissions(new_castling_rights, board, state);
     } else if (move->from == 0x07) {
-      const castling_t new_castling_rights = board->game_state.castling & ~WK;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~WK;
+      update_castling_permissions(new_castling_rights, board, state);
     }
   } else if (move->piece == B_ROOK) {
     if (move->from == 0x70) {
-      const castling_t new_castling_rights = board->game_state.castling & ~BQ;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~BQ;
+      update_castling_permissions(new_castling_rights, board, state);
     } else if (move->from == 0x77) {
-      const castling_t new_castling_rights = board->game_state.castling & ~BK;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~BK;
+      update_castling_permissions(new_castling_rights, board, state);
     }
   }
 
   // Clear castling rights for the opponent if capture rook
   if (move->captured == W_ROOK) {
     if (move->to == 0x00) {
-      const castling_t new_castling_rights = board->game_state.castling & ~WQ;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~WQ;
+      update_castling_permissions(new_castling_rights, board, state);
     } else if (move->to == 0x07) {
-      const castling_t new_castling_rights = board->game_state.castling & ~WK;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~WK;
+      update_castling_permissions(new_castling_rights, board, state);
     }
   } else if (move->captured == B_ROOK) {
     if (move->to == 0x70) {
-      const castling_t new_castling_rights = board->game_state.castling & ~BQ;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~BQ;
+      update_castling_permissions(new_castling_rights, board, state);
     } else if (move->to == 0x77) {
-      const castling_t new_castling_rights = board->game_state.castling & ~BK;
-      update_castling_permissions(new_castling_rights, board);
+      const castling_t new_castling_rights = board->castling & ~BK;
+      update_castling_permissions(new_castling_rights, board, state);
     }
   }
 
@@ -449,209 +382,81 @@ bool make_move(const move_t* move, board_t* board, history_t* history)
   // all other moves
   if (move->captured != INVALID || move->piece == W_PAWN ||
       move->piece == B_PAWN) {
-    board->game_state.halfmove_clock = 0;
+    board->halfmove_clock = 0;
   } else {
-    board->game_state.halfmove_clock += 1;
+    board->halfmove_clock += 1;
   }
 
   // Update fullmove counter
-  if (board->game_state.active_color == BLACK) {
+  if (board->active_color == BLACK) {
     // The fullmove counter is incremented after block move
-    board->game_state.fullmove_counter += 1;
+    board->fullmove_counter += 1;
   }
 
   // Swap side
-  swap_side(board);
+  swap_side(board, state);
+
+  // Store the old position
+  state->repetitions[state->repetition_size] = old_hash;
+  state->repetition_size++;
+
+  assert(state->repetition_size <
+         sizeof(state->repetitions) / sizeof(state->repetitions[0]));
 
   // TODO: Deal with overflow. Or stop writing repetitions but not crash or
   // implement some swapping logic. Like forgot old moves
-  if (board->repetition_size >=
-      (sizeof(board->repetitions) / sizeof(board->repetitions[0])) - 1) {
+  if (state->repetition_size >=
+      (sizeof(state->repetitions) / sizeof(state->repetitions[0])) - 1) {
     // Reset the size to 0. This way we cut off the old repetitions but that's
     // better then crash
-    board->repetition_size = 0;
+    state->repetition_size = 0;
   }
-
-  // Store the old position
-  board->repetitions[board->repetition_size] = old_hash;
-  ++board->repetition_size;
-
-  assert(board->repetition_size <
-         sizeof(board->repetitions) / sizeof(board->repetitions[0]));
 
   return true;
 }
 
 
-bool unmake_move(board_t* board, history_t* history)
+bool unmake_move(board_t* board, global_state_t* state)
 {
   assert(board != nullptr);
-  assert(history != nullptr);
+  assert(state != nullptr);
 
   // In case no move was made return false
-  if (history->empty()) { return false; }
+  if (state->history_size == 0) { return false; }
+
+  // Decrement counter
+  state->history_size--;
 
   // Restore state
-  *board = history->top().board;
-
-  // Remove from stack
-  history->pop();
+  *board = state->history[state->history_size].board;
+  state->repetition_size = state->history[state->history_size].repetition_size;
 
   return true;
-
-  /** OLD WAY
-
-  // In case no move was made return false
-  if (history->empty()) { return false; }
-
-  const history_entry_t& history_entry = history->top();
-
-  const game_state_t& previous_game_state = history_entry.game_state;
-  const move_t& move_to_unmake = history_entry.move_applied;
-
-  assert(move_to_unmake.from != INVALID_BOARD_INDEX);
-  assert(move_to_unmake.to != INVALID_BOARD_INDEX);
-  assert(move_to_unmake.piece != INVALID);
-  assert(move_to_unmake.piece != EMPTY);
-  assert(board->board[move_to_unmake.from] == EMPTY);
-
-  assert(move_to_unmake.captured != EMPTY);
-
-  // Handle castling
-  if (move_to_unmake.castling_move) {
-    if (move_to_unmake.piece == W_KING) {
-      assert(move_to_unmake.from == 0x04);
-      assert(move_to_unmake.piece == W_KING);
-      assert(previous_game_state.active_color == WHITE);
-
-      if (move_to_unmake.to == 0x02) {
-        // White queen side castling
-        assert(board->board[0x03] == W_ROOK);
-        assert(board->board[0x02] == W_KING);
-        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
-        assert(board->board[0x00] == EMPTY);
-        assert(board->board[0x01] == EMPTY);
-
-        // Reset the pieces
-        board->board[move_to_unmake.from] = W_KING;
-        board->board[0x00] = W_ROOK;
-        board->board[0x02] = EMPTY;
-        board->board[0x03] = EMPTY;
-
-      } else if (move_to_unmake.to == 0x06) {
-        // White king side castling
-        assert(board->board[0x05] == W_ROOK);
-        assert(board->board[0x06] == W_KING);
-        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
-        assert(board->board[0x07] == EMPTY);
-
-        // Reset the pieces
-        board->board[move_to_unmake.from] = W_KING;
-        board->board[0x07] = W_ROOK;
-        board->board[0x05] = EMPTY;
-        board->board[0x06] = EMPTY;
-      }
-
-    } else if (move_to_unmake.piece == B_KING) {
-      assert(move_to_unmake.from == 0x74);
-      assert(move_to_unmake.piece == B_KING);
-      assert(previous_game_state.active_color == BLACK);
-
-      if (move_to_unmake.to == 0x72) {
-        // Black queen side castling
-        assert(board->board[0x73] == B_ROOK);
-        assert(board->board[0x72] == B_KING);
-        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
-        assert(board->board[0x70] == EMPTY);
-        assert(board->board[0x71] == EMPTY);
-
-        // Reset the pieces
-        board->board[move_to_unmake.from] = B_KING;
-        board->board[0x70] = B_ROOK;
-        board->board[0x72] = EMPTY;
-        board->board[0x73] = EMPTY;
-      } else if (move_to_unmake.to == 0x76) {
-        // Black king side castling
-        assert(board->board[0x75] == B_ROOK);
-        assert(board->board[0x76] == B_KING);
-        assert(board->board[board->board[move_to_unmake.from]] == EMPTY);
-        assert(board->board[0x77] == EMPTY);
-
-        // Reset the pieces
-        board->board[move_to_unmake.from] = B_KING;
-        board->board[0x77] = B_ROOK;
-        board->board[0x75] = EMPTY;
-        board->board[0x76] = EMPTY;
-      }
-    }
-
-  } else if (move_to_unmake.en_passant_capture) {
-    // Handling en-passant
-    assert(previous_game_state.en_passant != INVALID_BOARD_INDEX);
-    assert(board->board[previous_game_state.en_passant] == W_PAWN ||
-           board->board[previous_game_state.en_passant] == B_PAWN);
-    assert(previous_game_state.en_passant == move_to_unmake.to);
-
-
-    if (previous_game_state.active_color == WHITE) {
-      board->board[move_to_unmake.to] = EMPTY;
-      board->board[move_to_unmake.from] = W_PAWN;
-      board->board[move_to_unmake.to - 0x10] = B_PAWN;
-    } else {
-      board->board[move_to_unmake.to] = EMPTY;
-      board->board[move_to_unmake.from] = B_PAWN;
-      board->board[move_to_unmake.to + 0x10] = W_PAWN;
-    }
-  } else {
-    // Normal move, normal capture, promotion and promotion with capture are
-    // handled all in the same way
-    const piece_t removed_piece =
-        (move_to_unmake.captured == INVALID) ? EMPTY : move_to_unmake.captured;
-
-
-    board->board[move_to_unmake.to] = removed_piece;
-    board->board[move_to_unmake.from] = move_to_unmake.piece;
-  }
-
-  // Restore state
-  board->game_state = previous_game_state;
-  history->pop();
-
-  return true;
-  */
 }
 
 
-void reset(board_t* board, history_t* history)
+void reset(board_t* board, global_state_t* state)
 {
   assert(board != nullptr);
-  assert(history != nullptr);
+  assert(state != nullptr);
 
-  // Cleanup
-  for (index_t i = 0; i < BOARD_SIZE; ++i) {
-    if (i & 0x88) {
-      board->board[i] = INVALID;
-    } else {
-      board->board[i] = EMPTY;
-    }
-  }
-
-  *history = history_t();
-  cleanup_game_state(&board->game_state);
+  cleanup_game_state(board);
+  state->repetition_size = 0;
+  state->history_size = 0;
 
   // Load FEN
   // load_FEN(board->initial_fen, board);
 
   // Init Zobrist
-  board->game_state.zobrist_key = init_zobrist_key(board);
+  board->zobrist_key = init_zobrist_key(state, board);
 }
 
 
-void load_FEN(const std::string& FEN, board_t* board, history_t* history)
+void load_FEN(const std::string& FEN, board_t* board, global_state_t* state)
 {
   assert(board != nullptr);
-  assert(history != nullptr);
-  reset(board, history);
+  assert(state != nullptr);
+  reset(board, state);
 
   // Start parsing
   auto sections = split_string(FEN);
@@ -742,10 +547,10 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
   char color = sections[1][0];
   switch (color) {
     case 'w':
-      board->game_state.active_color = WHITE;
+      board->active_color = WHITE;
       break;
     case 'b':
-      board->game_state.active_color = BLACK;
+      board->active_color = BLACK;
       break;
     default:
       throw FAN_exception("Invalid color char in FEN string [" +
@@ -766,11 +571,11 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
                         FEN);
   }
 
-  board->game_state.castling = 0x00;
+  board->castling = 0x00;
   for (const char c : sections[2]) {
     switch (c) {
       case '-':
-        board->game_state.castling = 0x00;
+        board->castling = 0x00;
         if (sections[2].size() != 1) {
           throw FAN_exception(
               "Invalid castling availability section size. No castling "
@@ -779,16 +584,16 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
         }
         break;
       case 'K':
-        board->game_state.castling |= WK;
+        board->castling |= WK;
         break;
       case 'Q':
-        board->game_state.castling |= WQ;
+        board->castling |= WQ;
         break;
       case 'k':
-        board->game_state.castling |= BK;
+        board->castling |= BK;
         break;
       case 'q':
-        board->game_state.castling |= BQ;
+        board->castling |= BQ;
         break;
 
       default:
@@ -819,7 +624,7 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
     }
   }
 
-  board->game_state.en_passant = string_coordinates_to_index(sections[3]);
+  board->en_passant = string_coordinates_to_index(sections[3]);
 
   /***************************************************************************
    * 4. Halfmove clock
@@ -838,7 +643,7 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
   }
 
   try {
-    board->game_state.halfmove_clock = static_cast<int>(std::stoul(half_move));
+    board->halfmove_clock = static_cast<int>(std::stoul(half_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Halfmove clock to integer.What: " +
                         std::string(e.what()) + " FEN: " + FEN);
@@ -861,16 +666,15 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
   }
 
   try {
-    board->game_state.fullmove_counter =
-        static_cast<int>(std::stoul(full_move));
+    board->fullmove_counter = static_cast<int>(std::stoul(full_move));
   } catch (std::exception& e) {
     throw FAN_exception("Can't convert Fullmove number to integer. What: " +
                         std::string(e.what()) + " FEN: " + FEN);
   }
 
-  if (board->game_state.fullmove_counter < 1) {
+  if (board->fullmove_counter < 1) {
     throw FAN_exception("Fullmove number can't be less then 1 but it is " +
-                        std::string(STR(board->game_state.fullmove_counter)) +
+                        std::string(STR(board->fullmove_counter)) +
                         " FEN: " + FEN);
   }
 
@@ -897,7 +701,7 @@ void load_FEN(const std::string& FEN, board_t* board, history_t* history)
   // assert(FEN == full_FEN);
 
   // Update Zobrist keys
-  board->game_state.zobrist_key = init_zobrist_key(board);
+  board->zobrist_key = init_zobrist_key(state, board);
 }
 
 
@@ -976,27 +780,27 @@ std::string generate_FEN(const board_t* board)
   }
 
   // Step 2: Active color
-  ss << (board->game_state.active_color == color_t::WHITE ? " w " : " b ");
+  ss << (board->active_color == color_t::WHITE ? " w " : " b ");
 
   // Step 3: Castling rights
   bool has_castling_rights = false;
 
-  if (board->game_state.castling & WK) {
+  if (board->castling & WK) {
     ss << 'K';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & WQ) {
+  if (board->castling & WQ) {
     ss << 'Q';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & BK) {
+  if (board->castling & BK) {
     ss << 'k';
     has_castling_rights = true;
   }
 
-  if (board->game_state.castling & BQ) {
+  if (board->castling & BQ) {
     ss << 'q';
     has_castling_rights = true;
   }
@@ -1006,8 +810,8 @@ std::string generate_FEN(const board_t* board)
   ss << ' ';
 
   // Step 4: En passant target square
-  if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
-    ss << index_to_string_coordinates(board->game_state.en_passant);
+  if (board->en_passant != INVALID_BOARD_INDEX) {
+    ss << index_to_string_coordinates(board->en_passant);
   } else {
     ss << '-';
   }
@@ -1015,10 +819,10 @@ std::string generate_FEN(const board_t* board)
   ss << ' ';
 
   // Step 5: Halfmove clock
-  ss << int(board->game_state.halfmove_clock) << ' ';
+  ss << int(board->halfmove_clock) << ' ';
 
   // Step 6: Fullmove number
-  ss << int(board->game_state.fullmove_counter);
+  ss << int(board->fullmove_counter);
 
   return ss.str();
 }
@@ -1042,9 +846,12 @@ bool contains_opponent(index_t i, color_t opponent_color, const board_t* board)
 }
 
 
-piece_t remove_piece(index_t remove_at, board_t* board)
+piece_t remove_piece(index_t remove_at,
+                     board_t* board,
+                     const zobrist_randoms_t* randoms)
 {
   assert(board != nullptr);
+  assert(randoms != nullptr);
   assert(remove_at < BOARD_SIZE);
   assert(index_to_position(remove_at).file < 8);
   assert(index_to_position(remove_at).rank < 8);
@@ -1055,18 +862,19 @@ piece_t remove_piece(index_t remove_at, board_t* board)
     board->board[remove_at] = EMPTY;
 
     // Update the Zobrist
-    board->game_state.zobrist_key ^=
-        board->zobrist_randoms.piece_randoms[removed][remove_at];
-
-    // TODO: Update phase_value
+    board->zobrist_key ^= randoms->piece_randoms[removed][remove_at];
   }
 
   return removed;
 }
 
 
-void put_piece(index_t put_at, piece_t piece, board_t* board)
+void put_piece(index_t put_at,
+               piece_t piece,
+               board_t* board,
+               const zobrist_randoms_t* randoms)
 {
+  assert(randoms != nullptr);
   assert(board != nullptr);
   assert(put_at < BOARD_SIZE);
   assert(piece != INVALID && piece != EMPTY);
@@ -1075,14 +883,17 @@ void put_piece(index_t put_at, piece_t piece, board_t* board)
 
   board->board[put_at] = piece;
 
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.piece_randoms[piece][put_at];
+  board->zobrist_key ^= randoms->piece_randoms[piece][put_at];
 }
 
 
-piece_t move_piece(index_t from, index_t to, board_t* board)
+piece_t move_piece(index_t from,
+                   index_t to,
+                   board_t* board,
+                   const zobrist_randoms_t* randoms)
 {
   assert(board != nullptr);
+  assert(randoms != nullptr);
   assert(from != to);
   assert(from < BOARD_SIZE);
   assert(index_to_position(from).file < 8);
@@ -1091,71 +902,79 @@ piece_t move_piece(index_t from, index_t to, board_t* board)
   assert(index_to_position(to).file < 8);
   assert(index_to_position(to).rank < 8);
 
-  const piece_t piece = remove_piece(from, board);
-  put_piece(to, piece, board);
+  const piece_t piece = remove_piece(from, board, randoms);
+  put_piece(to, piece, board, randoms);
 
   return piece;
 }
 
 
-void set_en_passant(index_t index, board_t* board)
+void set_en_passant(index_t index, board_t* board, const global_state_t* state)
 {
   assert(board != nullptr);
+  assert(state != nullptr);
   assert(index < BOARD_SIZE);
   assert(index_to_position(index).file < 8);
   assert(index_to_position(index).rank < 8);
 
   if (index != INVALID_BOARD_INDEX) {
     // Remove the old en passant from hash
-    board->game_state.zobrist_key ^=
-        board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+    board->zobrist_key ^= state->zobrist_randoms.ep_randoms[board->en_passant];
 
     // Set teh en passant target
-    board->game_state.en_passant = index;
+    board->en_passant = index;
     void swap_side(board_t * board);
     // Set the new en passant to the hash
-    board->game_state.zobrist_key ^=
-        board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+    board->zobrist_key ^= state->zobrist_randoms.ep_randoms[board->en_passant];
   }
 }
 
 
-void clear_ep_square(board_t* board)
+void clear_ep_square(board_t* board, const global_state_t* state)
 {
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+  assert(board != nullptr);
+  assert(state != nullptr);
 
-  board->game_state.en_passant = INVALID_BOARD_INDEX;
+  board->zobrist_key ^= state->zobrist_randoms.ep_randoms[board->en_passant];
 
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.ep_randoms[board->game_state.en_passant];
+  board->en_passant = INVALID_BOARD_INDEX;
+
+  board->zobrist_key ^= state->zobrist_randoms.ep_randoms[board->en_passant];
 }
 
 
-void swap_side(board_t* board)
+void swap_side(board_t* board, const global_state_t* state)
 {
+  assert(board != nullptr);
+  assert(state != nullptr);
+
   // Remove the side to move from hash
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.side_randoms[board->game_state.active_color];
+  board->zobrist_key ^=
+      state->zobrist_randoms.side_randoms[board->active_color];
 
   // Change color
-  board->game_state.active_color = !board->game_state.active_color;
+  board->active_color = !board->active_color;
 
   // Hash the new color
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.side_randoms[board->game_state.active_color];
+  board->zobrist_key ^=
+      state->zobrist_randoms.side_randoms[board->active_color];
 }
 
 
-void update_castling_permissions(castling_t new_castling, board_t* board)
+void update_castling_permissions(castling_t new_castling,
+                                 board_t* board,
+                                 const global_state_t* state)
 {
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.castling_randoms[board->game_state.castling];
+  assert(board != nullptr);
+  assert(state != nullptr);
 
-  board->game_state.castling = new_castling;
+  board->zobrist_key ^=
+      state->zobrist_randoms.castling_randoms[board->castling];
 
-  board->game_state.zobrist_key ^=
-      board->zobrist_randoms.castling_randoms[board->game_state.castling];
+  board->castling = new_castling;
+
+  board->zobrist_key ^=
+      state->zobrist_randoms.castling_randoms[board->castling];
 }
 
 
@@ -1174,12 +993,13 @@ index_t get_king_index(color_t color, const board_t* board)
 }
 
 
-bool is_position_repeated(const board_t* board)
+bool is_position_repeated(const board_t* board, const global_state_t* state)
 {
   assert(board != nullptr);
+  assert(state != nullptr);
 
-  for (size_t i = 0; i < board->repetition_size; ++i) {
-    if (board->game_state.zobrist_key == board->repetitions[i]) { return true; }
+  for (size_t i = 0; i < state->repetition_size; ++i) {
+    if (board->zobrist_key == state->repetitions[i]) { return true; }
   }
 
   return false;
@@ -1219,16 +1039,28 @@ bool is_passed_pawn(index_t index, const board_t* board)
   switch (board->board[index]) {
     case W_PAWN:
       for (index_t i = index + 0x10; !(i & 0x88) && i < BOARD_SIZE; i += 0x10) {
-        if (board->board[i] == B_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i + 0x01] == B_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i - 0x01] == B_PAWN && !(i & 0x88)) { return false; }
+        if (!(i & 0x88) && board->board[i] == B_PAWN) { return false; }
+
+        if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == B_PAWN) {
+          return false;
+        }
+
+        if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == B_PAWN) {
+          return false;
+        }
       }
       break;
     case B_PAWN:
       for (index_t i = index - 0x10; !(i & 0x88) && i < BOARD_SIZE; i -= 0x10) {
-        if (board->board[i] == W_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i + 0x01] == W_PAWN && !(i & 0x88)) { return false; }
-        if (board->board[i - 0x01] == W_PAWN && !(i & 0x88)) { return false; }
+        if (!(i & 0x88) && board->board[i] == W_PAWN) { return false; }
+
+        if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == W_PAWN) {
+          return false;
+        }
+
+        if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == W_PAWN) {
+          return false;
+        }
       }
       break;
 
@@ -1256,8 +1088,13 @@ bool is_isolated_pawn(index_t index, const board_t* board)
 
   for (index_t i = start_index; !(i & 0x88) && i <= start_index + 0x70;
        i += 0x10) {
-    if (board->board[i + 0x01] == to_check && !(i & 0x88)) { return false; }
-    if (board->board[i - 0x01] == to_check && !(i & 0x88)) { return false; }
+    if (!((i + 0x01) & 0x88) && board->board[i + 0x01] == to_check) {
+      return false;
+    }
+
+    if (!((i - 0x01) & 0x88) && board->board[i - 0x01] == to_check) {
+      return false;
+    }
   }
 
   return true;

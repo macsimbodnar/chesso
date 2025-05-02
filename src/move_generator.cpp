@@ -78,12 +78,13 @@ size_t generate_pawn_attacks(index_t index, color_t color, move_t result[])
 size_t generate_b_pawn(index_t index, const board_t* board, move_t result[])
 {
   assert(result != nullptr);
+  assert(board != nullptr);
 
   // Max 4 + 4 promotions
   size_t moves_count = 0;
 
   const piece_t* b = board->board;
-  const index_t en_passant = board->game_state.en_passant;
+  const index_t en_passant = board->en_passant;
   const piece_t piece = board->board[index];
 
   {
@@ -241,7 +242,7 @@ size_t generate_w_pawn(index_t index, const board_t* board, move_t result[])
   size_t moves_count = 0;
 
   const piece_t* b = board->board;
-  const index_t en_passant = board->game_state.en_passant;
+  const index_t en_passant = board->en_passant;
   const piece_t piece = board->board[index];
 
   {
@@ -576,7 +577,7 @@ size_t generate_king(index_t index,
 
   // Handle castling
   const piece_t* b = board->board;
-  const castling_t castling = board->game_state.castling;
+  const castling_t castling = board->castling;
   const piece_t piece = board->board[index];
 
   switch (color) {
@@ -719,10 +720,12 @@ size_t generate_pseudo_legal_moves_from_index(index_t index,
 
 
 size_t generate_attacks_vector(color_t target_color,
-                               const board_t* board,
+                               board_t* board,
+                               const zobrist_randoms_t* randoms,
                                move_t result[])
 {
   assert(result != nullptr);
+  assert(randoms != nullptr);
 
   size_t result_count = 0;
 
@@ -734,13 +737,8 @@ size_t generate_attacks_vector(color_t target_color,
       get_king_index(get_piece_color(king_to_remove), board);
 
   // Unset the king.
-  // NOTE(max): Removing the const attribute. We want this function to be
-  // const on the board since we know that there is no way we return
-  // without resetting the king on the board!!! Pay attention to this!
-  // TODO: Lock the board variable here since it's afake const. In order
-  // to make it safe for multithread computation
-  board_t* non_const_board = const_cast<board_t*>(board);
-  const piece_t removed_piece = remove_piece(king_index, non_const_board);
+  const piece_t removed_piece = remove_piece(king_index, board, randoms);
+
   assert(removed_piece == king_to_remove);
   (void)removed_piece;
 
@@ -768,7 +766,7 @@ size_t generate_attacks_vector(color_t target_color,
   }
 
   // Reset the king to the board
-  put_piece(king_index, king_to_remove, non_const_board);
+  put_piece(king_index, king_to_remove, board, randoms);
 
   assert(board->board[king_index] == king_to_remove);
 
@@ -847,38 +845,25 @@ bool is_castling_valid(const move_t* move,
 }
 
 
-bool is_pin(const move_t* move, index_t king_index, const board_t* board)
+bool is_pin(const move_t* move,
+            index_t king_index,
+            board_t* board,
+            global_state_t* state)
 {
+  assert(move != nullptr);
   assert(board != nullptr);
-  // Make the move and see if this leaves the king under check.
-  // TODO: Decide if use the make move here or the fastest custom one
-  board_t tmp_board = *board;
-  // tmp_board.board[move->to] = tmp_board.board[move->from];
 
-  // if (move->en_passant_capture) {
-  //   index_t index_to_remove = move->to;
-  //   switch (board->game_state.active_color) {
-  //     case BLACK:
-  //       index_to_remove += 0x10;
-  //       break;
-  //     case WHITE:
-  //       index_to_remove -= 0x10;
-  //       break;
-  //     default:
-  //       assert(false);
-  //       break;
-  //   }
-  //   tmp_board.board[index_to_remove] = EMPTY;
-  // }
-  // tmp_board.board[move->from] = EMPTY;
-
-  bool happened = make_move(move, &tmp_board, nullptr);
+  const bool happened = make_move(move, board, state);
   assert(happened);
   (void)happened;
 
   move_t attacks[MAX_MOVES];
   const size_t attacks_count = generate_attacks_vector(
-      !board->game_state.active_color, &tmp_board, attacks);
+      board->active_color, board, &state->zobrist_randoms, attacks);
+
+  const bool un_happened = unmake_move(board, state);
+  assert(un_happened);
+  (void)un_happened;
 
   assert(attacks_count <= sizeof(attacks) / sizeof(attacks[0]));
 
@@ -916,7 +901,9 @@ bool is_blocking_ray(index_t index, const move_t* move)
 }
 
 
-size_t generate_legal_moves(const board_t* board, move_t result[])
+size_t generate_legal_moves(board_t* board,
+                            global_state_t* state,
+                            move_t result[])
 {
   // TODO: Reimplement this function. It contains a lot of duplicated code
   // and inefficient calls
@@ -928,18 +915,17 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
   /*****************************************************************************
    * Generate enemy attacks vector
    ****************************************************************************/
-  const color_t attack_color = !board->game_state.active_color;
+  const color_t attack_color = !board->active_color;
   move_t attacks_vector[MAX_MOVES];
-  size_t attacks_vector_count =
-      generate_attacks_vector(attack_color, board, attacks_vector);
+  size_t attacks_vector_count = generate_attacks_vector(
+      attack_color, board, &state->zobrist_randoms, attacks_vector);
 
   /*****************************************************************************
    * Calculate if under check
    ****************************************************************************/
   bool under_check = false;
   bool under_double_check = false;
-  const index_t king_index =
-      get_king_index(board->game_state.active_color, board);
+  const index_t king_index = get_king_index(board->active_color, board);
 
   for (size_t i = 0; i < attacks_vector_count; ++i) {
     if (attacks_vector[i].to == king_index) {
@@ -960,8 +946,8 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
     // TODO: Double check case and single check case looks the same
 
     move_t king_moves[8];
-    const size_t king_moves_count = generate_king(
-        king_index, board->game_state.active_color, board, king_moves);
+    const size_t king_moves_count =
+        generate_king(king_index, board->active_color, board, king_moves);
     assert(king_moves_count <= sizeof(king_moves) / sizeof(king_moves[0]));
 
     for (size_t i = 0; i < king_moves_count; ++i) {
@@ -979,12 +965,15 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
       if (king_moves[i].captured != INVALID) {
         // Remove the piece from the board and see if that square is
         // under attack
-        board_t tmp_board = *board;
-        tmp_board.board[king_moves[i].to] = EMPTY;
+
+        const piece_t removed =
+            remove_piece(king_moves[i].to, board, &state->zobrist_randoms);
 
         move_t tmp_attacks[MAX_MOVES];
         const size_t tmp_attacks_count = generate_attacks_vector(
-            !tmp_board.game_state.active_color, &tmp_board, tmp_attacks);
+            !board->active_color, board, &state->zobrist_randoms, tmp_attacks);
+
+        put_piece(king_moves[i].to, removed, board, &state->zobrist_randoms);
 
         for (size_t tmp_index = 0; tmp_index < tmp_attacks_count; ++tmp_index) {
           if (tmp_attacks[tmp_index].to == king_moves[i].to) {
@@ -1013,7 +1002,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
           const piece_t P = board->board[i];
 
           if (P != INVALID && P != EMPTY && i != king_index &&
-              board->game_state.active_color == get_piece_color(P)) {
+              board->active_color == get_piece_color(P)) {
             // generate moves except for King
             move_t moves_no_king[30];
             const size_t moves_no_king_count =
@@ -1040,7 +1029,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
 
                 // Consider en-passant remove the attacker
                 if (attack.to == king_index && move.en_passant_capture) {
-                  if (board->game_state.active_color == WHITE) {
+                  if (board->active_color == WHITE) {
                     if (board->board[move.to] == EMPTY &&
                         board->board[move.to - 0x10] == B_PAWN &&
                         (move.to - 0x10) == attack.from) {
@@ -1074,7 +1063,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
               }
 
               if (!should_discard) {
-                if (!is_pin(&move, king_index, board)) {
+                if (!is_pin(&move, king_index, board, state)) {
                   result[result_count] = move;
                   ++result_count;
                 }
@@ -1094,7 +1083,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
       const piece_t P = board->board[i];
 
       if (P != INVALID && P != EMPTY &&
-          board->game_state.active_color == get_piece_color(P)) {
+          board->active_color == get_piece_color(P)) {
         // generate moves
         move_t all_moves[30];
         const size_t all_moves_count =
@@ -1138,12 +1127,14 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
                   // Handling king attack that put him under check
 
                   // Remove the target piece
-                  board_t tmp_board = *board;
-                  remove_piece(move.to, &tmp_board);
+                  const piece_t removed =
+                      remove_piece(move.to, board, &state->zobrist_randoms);
 
                   move_t tmp_attacks[MAX_MOVES];
                   size_t tmp_attacks_count = generate_attacks_vector(
-                      attack_color, &tmp_board, tmp_attacks);
+                      attack_color, board, &state->zobrist_randoms,
+                      tmp_attacks);
+                  put_piece(move.to, removed, board, &state->zobrist_randoms);
 
                   // Check if the new attacks prevent this capture
                   bool should_skip_move = false;
@@ -1171,7 +1162,7 @@ size_t generate_legal_moves(const board_t* board, move_t result[])
                  ++move_index) {
               const move_t& move = all_moves[move_index];
 
-              if (!is_pin(&move, king_index, board)) {
+              if (!is_pin(&move, king_index, board, state)) {
                 // If not pin then ok
 
                 result[result_count] = move;
@@ -1220,7 +1211,8 @@ size_t get_ambiguous_move(const move_t* move,
 std::string move_to_algebraic(const move_t* move,
                               const move_t moves[],
                               size_t moves_size,
-                              const board_t* board)
+                              board_t* board,
+                              global_state_t* state)
 {
   assert(move != nullptr);
   assert(board != nullptr);
@@ -1330,18 +1322,17 @@ std::string move_to_algebraic(const move_t* move,
   }
 
   // Handle check
-  const index_t opponent_king_index = get_king_index(opponent(board), board);
+  const index_t opponent_king_index =
+      get_king_index(!board->active_color, board);
 
-  board_t tmp_board = *board;
-
-  bool move_happened = make_move(move, &tmp_board, nullptr);
-  assert(move_happened == true);
+  const bool move_happened = make_move(move, board, state);
+  assert(move_happened);
   (void)move_happened;  // Supress the unused var log
 
   // Generate moves for my color but after the current move is done
   move_t pseudo_legal_moves[30];
   const size_t pseudo_legal_moves_count =
-      generate_pseudo_legal_moves_from_index(move->to, &tmp_board,
+      generate_pseudo_legal_moves_from_index(move->to, board,
                                              pseudo_legal_moves);
 
   assert(pseudo_legal_moves_count <=
@@ -1357,7 +1348,7 @@ std::string move_to_algebraic(const move_t* move,
 
       // Generate legal moves after the make move to see if any available.
       move_t moves[MAX_MOVES];
-      const size_t moves_count = generate_legal_moves(&tmp_board, moves);
+      const size_t moves_count = generate_legal_moves(board, state, moves);
 
       if (moves_count == 0) {
         // Check mate
@@ -1371,14 +1362,21 @@ std::string move_to_algebraic(const move_t* move,
     }
   }
 
+  const bool move_un_happened = unmake_move(board, state);
+  assert(move_un_happened);
+  (void)move_un_happened;
+
   return notation;
 }
 
 
 // Main function: parse a SAN move into move_t
-move_t algebraic_to_move(std::string notation, const board_t* board)
+move_t algebraic_to_move(std::string notation,
+                         board_t* board,
+                         global_state_t* state)
 {
   assert(board != nullptr);
+  assert(state != nullptr);
 
   static const std::unordered_map<char, uint8_t> char_to_file_map = {
       {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3},
@@ -1390,7 +1388,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
   const std::string original_notation = notation;
 
   move_t result;
-  const color_t color = board->game_state.active_color;
+  const color_t color = board->active_color;
 
   // Make a working copy of the move string.
   bool is_capture = false;
@@ -1567,7 +1565,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
     result.captured = board->board[result.to];
 
     // In case of en-passant override the capture
-    if (board->game_state.en_passant != INVALID_BOARD_INDEX) {
+    if (board->en_passant != INVALID_BOARD_INDEX) {
       if (color == WHITE) {
         if (board->board[result.to] == EMPTY &&
             board->board[result.to - 0x10] == B_PAWN) {
@@ -1595,7 +1593,7 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 
   // Generate legal moves and search the compatible one
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, state, moves);
 
   bool found = false;
   for (size_t i = 0; i < moves_count; ++i) {
@@ -1637,26 +1635,32 @@ move_t algebraic_to_move(std::string notation, const board_t* board)
 }
 
 
-bool is_check(const board_t* board)
+bool is_check(board_t* board, const zobrist_randoms_t* rands)
 {
-  assert(board != nullptr);
+  const color_t attack_color = !board->active_color;
+  move_t attacks_vector[MAX_MOVES];
+  const size_t attacks_vector_count =
+      generate_attacks_vector(attack_color, board, rands, attacks_vector);
 
-  const bool is_in_check =
-      is_square_attacked(get_king_index(board->game_state.active_color, board),
-                         !board->game_state.active_color, board);
+  const index_t king_index = get_king_index(board->active_color, board);
 
-  return is_in_check;
+  for (size_t i = 0; i < attacks_vector_count; ++i) {
+    const move_t& attack = attacks_vector[i];
+    if (attack.to == king_index) { return true; }
+  }
+
+  return false;
 }
 
 
-size_t generate_captures(const board_t* board, move_t result[])
+size_t generate_captures(board_t* board, global_state_t* state, move_t result[])
 {
   assert(result != nullptr);
   assert(board != nullptr);
 
   size_t capture_count = 0;
   move_t moves[MAX_MOVES];
-  const size_t count = generate_legal_moves(board, moves);
+  const size_t count = generate_legal_moves(board, state, moves);
 
   for (size_t i = 0; i < count; ++i) {
     if (moves[i].captured != INVALID && moves[i].captured != EMPTY) {

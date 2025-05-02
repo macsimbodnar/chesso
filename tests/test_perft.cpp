@@ -17,16 +17,20 @@
 
 using json = nlohmann::json;
 
-#define RUN_THREADS
+// #define RUN_THREADS
 #define MAXIMUM_DEPTH 20
 
 
 // clang-format off
 const static std::vector<std::string> test_files = {
+  // "assets/perft_json/debug_perft.json",
   "assets/perft_json/talkchess_perft.json",
   "assets/perft_json/perft.json"
 };
 // clang-format on
+
+static board_t g_board;
+static global_state_t g_globals;
 
 
 // ANSI escape codes for colors
@@ -132,10 +136,10 @@ inline const stats_t* get_from_tt(const board_t* board, int depth)
 {
   const stats_t* res = nullptr;
 
-  const tt_elem_t* entry = &tt[board->game_state.zobrist_key % TT_SIZE];
+  const tt_elem_t* entry = &tt[board->zobrist_key % TT_SIZE];
 
   tt_spin_lock.lock();
-  if (entry->key == board->game_state.zobrist_key && entry->depth == depth) {
+  if (entry->key == board->zobrist_key && entry->depth == depth) {
     res = &entry->stats;
   }
   tt_spin_lock.unlock();
@@ -146,12 +150,12 @@ inline const stats_t* get_from_tt(const board_t* board, int depth)
 
 inline void store_to_tt(const board_t* board, int depth, const stats_t* stats)
 {
-  tt_elem_t* elem = &tt[board->game_state.zobrist_key % TT_SIZE];
+  tt_elem_t* elem = &tt[board->zobrist_key % TT_SIZE];
 
   tt_spin_lock.lock();
   elem->depth = depth;
   elem->stats = *stats;
-  elem->key = board->game_state.zobrist_key;
+  elem->key = board->zobrist_key;
   tt_spin_lock.unlock();
 }
 
@@ -292,7 +296,7 @@ stats_t get_moves_stats(const move_t moves[], size_t moves_count)
 }
 
 
-stats_t perft(int depth, const board_t* board, history_t* history)
+stats_t perft(int depth, board_t* board, global_state_t* globals)
 {
   stats_t node_stats;
 
@@ -306,22 +310,18 @@ stats_t perft(int depth, const board_t* board, history_t* history)
   if (stats_in_tt != nullptr) { return *stats_in_tt; }
 
   move_t moves[270];
-  const size_t moves_count = generate_legal_moves(board, moves);
-
-  // node_stats += get_moves_stats(moves);
-  (void)history;
+  const size_t moves_count = generate_legal_moves(board, globals, moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-    make_move(&moves[i], &tmp_board, nullptr);
+    make_move(&moves[i], board, globals);
     if (depth == 1) {
       node_stats += get_move_stats(moves[i]);
     } else {
       node_stats.nodes += 1;
     }
     node_stats.nodes -= 1;
-    node_stats += perft(depth - 1, &tmp_board, history);
-    // unmake_move(board, history);
+    node_stats += perft(depth - 1, board, globals);
+    unmake_move(board, globals);
   }
 
   store_to_tt(board, depth, &node_stats);
@@ -378,7 +378,6 @@ int main()
 {
   bool passed = true;
 
-  board_t board;
   for (const auto& test_file : test_files) {
     const json test_cases = load_json(test_file);
 
@@ -425,8 +424,7 @@ int main()
         if (depth > depth_limit) { continue; }
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        history_t history;
-        init_board(fen, &board, &history);
+        init_board(fen, &g_board, &g_globals);
         stats_t stats;
         stats.nodes = 1;
 
@@ -434,21 +432,30 @@ int main()
           stats = stats_t();
 
           move_t moves[270];
-          const size_t moves_count = generate_legal_moves(&board, moves);
+          const size_t moves_count =
+              generate_legal_moves(&g_board, &g_globals, moves);
 
           if (depth > 1) {
 #ifdef RUN_THREADS
             std::vector<std::future<stats_t>> results;
 
             for (size_t i = 0; i < moves_count; ++i) {
-              results.push_back(
-                  std::async(std::launch::async, [moves, i, depth, board]() {
-                    history_t history;
-                    board_t tmp_board = board;
-                    move_t tmp_move = moves[i];
-                    make_move(&tmp_move, &tmp_board, nullptr);
-                    return perft(depth - 1, &tmp_board, &history);
-                  }));
+              results.push_back(std::async(std::launch::async, [moves, i,
+                                                                depth]() {
+                const move_t tmp_move = moves[i];
+                board_t tmp_board = g_board;
+
+                global_state_t* globals = new global_state_t;
+                *globals = g_globals;
+
+                make_move(&tmp_move, &tmp_board, globals);
+                const stats_t result = perft(depth - 1, &tmp_board, globals);
+                unmake_move(&tmp_board, globals);
+
+                delete globals;
+
+                return result;
+              }));
             }
 
             for (auto& res : results) {
@@ -456,11 +463,9 @@ int main()
             }
 #else
             for (size_t i = 0; i < moves_count; ++i) {
-              history_t history;
-              board_t tmp_board = board;
-              move_t tmp_move = moves[i];
-              make_move(&tmp_move, &tmp_board, nullptr);
-              const auto res = perft(depth - 1, &tmp_board, &history);
+              make_move(&moves[i], &g_board, &g_globals);
+              const auto res = perft(depth - 1, &g_board, &g_globals);
+              unmake_move(&g_board, &g_globals);
               stats += res;
             }
 #endif

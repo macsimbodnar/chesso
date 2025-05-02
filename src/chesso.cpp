@@ -22,8 +22,8 @@
 
 
 //-##############################    GLOBALS    #############################-//
-static history_t history;
-static board_t board;
+static board_t board = {};
+static global_state_t globals = {};
 static std::string initial_position = DEFAULT_POSITION;
 static bool opening_book_loaded = false;
 static bool opening_book_enabled = true;  // User cna disable the book
@@ -281,7 +281,7 @@ std::string pv_to_string(const pv_t* pv)
 bool check_move_legality(const move_t* move)
 {
   move_t moves[MAX_MOVES];
-  const size_t moves_size = generate_legal_moves(&board, moves);
+  const size_t moves_size = generate_legal_moves(&board, &globals, moves);
 
   if (moves_size < 1) {
     LOG_E << *move << " ILLEGAL. No move available in this position" << END_E;
@@ -302,13 +302,14 @@ bool check_move_legality(const move_t* move)
   }
 
   // Attempt to make the move
-  board_t tmp_board = board;
-  const bool res = make_move(move, &tmp_board, nullptr);
+  const bool res = make_move(move, &board, &globals);
+  unmake_move(&board, &globals);
 
   if (!res) {
     LOG_E << *move << " ILLEGAL. Failed to make the move" << END_E;
     return false;
   }
+
 
   return true;
 }
@@ -318,7 +319,7 @@ bool check_move_legality(const move_t* move)
 
 bool set_position(const std::string& fen)
 {
-  init_board(fen, &board, &history);
+  init_board(fen, &board, &globals);
 
   if (initial_position != fen) {
     initial_position = fen;
@@ -393,7 +394,7 @@ bool is_command(const std::string& command)
 bool try_move(move_t move_candidate)
 {
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(&board, moves);
+  const size_t moves_count = generate_legal_moves(&board, &globals, moves);
 
   // Fix the possible weirdo move notation for castling
   fix_weirdo_castling(&board, &move_candidate);
@@ -407,7 +408,7 @@ bool try_move(move_t move_candidate)
 
     if (move == move_candidate) {
       // Apply the found move
-      bool move_result = make_move(&move, &board, &history);
+      bool move_result = make_move(&move, &board, &globals);
 
       if (move_result) { return true; }
 
@@ -468,9 +469,9 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // const search_t search_result =
-    //     search_best_move(current_depth, &board, &state);
+    //     search_best_move(current_depth, &board, &globals, &state);
     const search_t search_result =
-        experimental_search(current_depth, &board, &state);
+        experimental_search(current_depth, &board, &globals, &state);
 
     const auto end_time = std::chrono::high_resolution_clock::now();
     const auto duration_ms =
@@ -833,7 +834,7 @@ bool command_go(std::queue<std::string>& args)
   }
 
   // Calculate the time to play for white if set
-  if (search_options.wtime_ms > 0 && board.game_state.active_color == WHITE) {
+  if (search_options.wtime_ms > 0 && board.active_color == WHITE) {
     int time_to_play = (search_options.wtime_ms / search_options.movestogo) +
                        search_options.winc_ms - 10;
 
@@ -846,7 +847,7 @@ bool command_go(std::queue<std::string>& args)
   }
 
   // Calculate the time to play for black if set
-  if (search_options.btime_ms > 0 && board.game_state.active_color == BLACK) {
+  if (search_options.btime_ms > 0 && board.active_color == BLACK) {
     int time_to_play = (search_options.btime_ms / search_options.movestogo) +
                        search_options.binc_ms - 10;
 
@@ -1034,7 +1035,7 @@ bool command_test(std::queue<std::string>& args)
       uci_reply("!!! ----- Best move is ILLEGAL ----- !!!");
     }
 
-    if (!is_pv_legal(&board, &res.pv)) {
+    if (!is_pv_legal(&board, &globals, &res.pv)) {
       uci_reply("!!! ----- PV move is ILLEGAL   ----- !!!");
     }
   }
@@ -1056,7 +1057,7 @@ int main()
   // (void)command_uci(tokens);
 
   // Initialization
-  init_board(DEFAULT_POSITION, &board, &history);
+  init_board(DEFAULT_POSITION, &board, &globals);
   (void)try_load_opening_book();
   still_in_opening = true;
 

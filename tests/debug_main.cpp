@@ -20,6 +20,8 @@
 #define LOG_E LOG_I << "\033[31m"  // Error red log
 #define END_E "\033[37m" << END_I  // End Error red log
 
+static board_t board = {};
+static global_state_t globals = {};
 static transposition_table_t tt = {};
 
 int main(int argc, char* argv[])
@@ -32,16 +34,14 @@ int main(int argc, char* argv[])
   LOG_W << "Debug" << END_W;
   LOG_E << "Debug" << END_E;
 
-  board_t board;
-  history_t history;
-  init_board(KILLER_POS, &board, &history);
+  init_board(KILLER_POS, &board, &globals);
 
   std::atomic_bool stop_search_signal = false;
   search_state_t state = {};
   state.stop = &stop_search_signal;
   state.tt = &tt;
 
-  const search_t search_result = search_best_move(6, &board, &state);
+  const search_t search_result = search_best_move(6, &board, &globals, &state);
 
   LOG_I << search_result.best_move << " " << search_result.score << std::endl;
 

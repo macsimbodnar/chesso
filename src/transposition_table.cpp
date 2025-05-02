@@ -15,7 +15,7 @@ const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
   assert(tt != nullptr);
   assert(board != nullptr);
 
-  const uint64_t hash = board->game_state.zobrist_key;
+  const uint64_t hash = board->zobrist_key;
   const tt_entry_t* res = &tt->entries[hash % TT_SIZE];
 
   assert(res != nullptr);
@@ -37,7 +37,7 @@ void tt_store_entry(transposition_table_t* tt,
   assert(board != nullptr);
   assert(best_move != nullptr);
 
-  const uint64_t hash = board->game_state.zobrist_key;
+  const uint64_t hash = board->zobrist_key;
   tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
 
   entry->key = hash;

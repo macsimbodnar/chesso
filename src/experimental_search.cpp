@@ -26,15 +26,15 @@ static constexpr int MAX = std::numeric_limits<int>::max() - 100;
 int quiescence(int alpha,
                int beta,
                size_t ply,
-               const board_t* board,
+               board_t* board,
+               global_state_t* globals,
                search_state_t* state,
                index_t last_to)
 {
   const int stand_pat =
-      (board->game_state.active_color == WHITE ? +1 : -1) * evaluate(board);
+      (board->active_color == WHITE ? +1 : -1) * evaluate(board);
 
   state->explored_nodes++;
-
 
   // DELTA PRUNE:
   if (stand_pat + get_max_gain() <= alpha) {
@@ -47,9 +47,10 @@ int quiescence(int alpha,
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
+  if (ply > (MAX_PLY - 2)) { return stand_pat; }
 
   move_t moves[MAX_MOVES];
-  const size_t n = generate_captures(board, moves);
+  const size_t n = generate_captures(board, globals, moves);
 
   order_captures(moves, n);
 
@@ -57,11 +58,12 @@ int quiescence(int alpha,
     // We consider only the captures that recapture the last capture
     if (last_to != INVALID_BOARD_INDEX && moves[i].to != last_to) { continue; }
 
-    board_t tmp_board = *board;
-    make_move(&moves[i], &tmp_board, nullptr);
+    make_move(&moves[i], board, globals);
 
     const int s =
-        -quiescence(-beta, -alpha, ply + 1, &tmp_board, state, moves[i].to);
+        -quiescence(-beta, -alpha, ply + 1, board, globals, state, moves[i].to);
+
+    unmake_move(board, globals);
 
     if (s >= beta) return beta;
     if (s > alpha) alpha = s;
@@ -75,7 +77,8 @@ int negamax(int alpha0,
             int beta,
             int depth,
             size_t ply,
-            const board_t* board,
+            board_t* board,
+            global_state_t* globals,
             search_state_t* state,
             bool zero_window,
             index_t last_to)
@@ -97,16 +100,15 @@ int negamax(int alpha0,
   }
 
   // Check for repetitions
-  if (is_position_repeated(board)) { return DRAW_SCORE; }
+  if (is_position_repeated(board, globals)) { return DRAW_SCORE; }
 
-  const bool is_in_check = is_check(board);
+  const bool is_in_check = is_check(board, &globals->zobrist_randoms);
 
   if (is_in_check) { ++depth; }
 
   // Razoring
   if (!is_in_check && depth == 1) {
-    int stand_pat =
-        (board->game_state.active_color == WHITE ? +1 : -1) * evaluate(board);
+    int stand_pat = (board->active_color == WHITE ? +1 : -1) * evaluate(board);
     const int razor_margin = get_margin_value();
 
     if (stand_pat + razor_margin < alpha) {
@@ -117,17 +119,19 @@ int negamax(int alpha0,
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
-    return (board->game_state.active_color == WHITE ? 1 : -1) * evaluate(board);
+    return (board->active_color == WHITE ? 1 : -1) * evaluate(board);
   }
 
-  if (depth < 1) { return quiescence(alpha, beta, ply, board, state, last_to); }
+  if (depth < 1 || ply > (MAX_PLY - 2)) {
+    return quiescence(alpha, beta, ply, board, globals, state, last_to);
+  }
 
   state->explored_nodes += 1;
   state->pv.pv_length[ply] = ply;
   node_type_t type = TT_ALPHA_NODE;
 
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_legal_moves(board, moves);
+  const size_t moves_count = generate_legal_moves(board, globals, moves);
 
   if (moves_count == 0) { return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE; }
 
@@ -137,32 +141,42 @@ int negamax(int alpha0,
 
   // Null move pruning
   if (depth > NULL_MOVE_REDUCTION + 1 && !is_in_check && !zero_window) {
-    board_t swapped_board = *board;
-    swap_side(&swapped_board);
-    clear_ep_square(&swapped_board);
+    swap_side(board, globals);
+    const index_t en_passant = board->en_passant;
+
+    if (en_passant != INVALID_BOARD_INDEX) { clear_ep_square(board, globals); }
 
     const int probe_score =
         -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION - 1, ply + 1,
-                 &swapped_board, state, true, INVALID_BOARD_INDEX);
+                 board, globals, state, true, INVALID_BOARD_INDEX);
 
     if (probe_score >= beta) {
       // Verified null move pruning. Going 1 ply deeper
       const int verify_score =
           -negamax(-beta, -beta + 1, depth - NULL_MOVE_REDUCTION, ply + 1,
-                   &swapped_board, state, true, INVALID_BOARD_INDEX);
+                   board, globals, state, true, INVALID_BOARD_INDEX);
 
       if (verify_score >= beta) {
+        swap_side(board, globals);
+
+        if (en_passant != INVALID_BOARD_INDEX) {
+          set_en_passant(en_passant, board, globals);
+        }
+
         //  Now it's safe to cut off
         return beta;
       }
     }
+
+    swap_side(board, globals);
+
+    if (en_passant != INVALID_BOARD_INDEX) {
+      set_en_passant(en_passant, board, globals);
+    }
   }
 
   for (size_t i = 0; i < moves_count; ++i) {
-    board_t tmp_board = *board;
-
-    if (moves[i].captured ==
-        (board->game_state.active_color == WHITE ? B_KING : W_KING)) {
+    if (moves[i].captured == (board->active_color == WHITE ? B_KING : W_KING)) {
       state->best_move = moves[i];
 
       state->pv.pv_table[ply][ply] = moves[i];
@@ -173,11 +187,11 @@ int negamax(int alpha0,
 
     state->pv.pv_length[ply + 1] = ply + 1;
 
-    make_move(&moves[i], &tmp_board, nullptr);
+    make_move(&moves[i], board, globals);
 
     const bool is_capture =
         (moves[i].captured != INVALID && moves[i].captured != EMPTY);
-    const bool is_check_move = is_check(&tmp_board);
+    const bool is_check_move = is_check(board, &globals->zobrist_randoms);
 
     // Decide depth reduction R
     int R = 0;
@@ -196,8 +210,8 @@ int negamax(int alpha0,
     const bool zw = R > 0 || pvs;
 
     // Probe search
-    int score = -negamax(low, high, new_depth, ply + 1, &tmp_board, state, zw,
-                         moves[i].to);
+    int score = -negamax(low, high, new_depth, ply + 1, board, globals, state,
+                         zw, moves[i].to);
 
     // If the probe suggests it might raise alpha, do a full‐window re‐search
     const bool LMR_probe_beat_alpha = (R > 0 && score > alpha);
@@ -206,9 +220,11 @@ int negamax(int alpha0,
 
 
     if (LMR_probe_beat_alpha || PVS_in_ab_interval) {
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, &tmp_board, state,
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, board, globals, state,
                        false, moves[i].to);
     }
+
+    unmake_move(board, globals);
 
     // Found better scores
     if (score >= best_so_far) { best_so_far = score; }
@@ -256,7 +272,8 @@ int negamax(int alpha0,
 
 
 search_t experimental_search(int depth,
-                             const board_t* board,
+                             board_t* board,
+                             global_state_t* globals,
                              search_state_t* state)
 {
   assert(board != nullptr);
@@ -266,8 +283,8 @@ search_t experimental_search(int depth,
 
   search_t search_result = {};
 
-  const int score =
-      negamax(MIN, MAX, depth, 0, board, state, false, INVALID_BOARD_INDEX);
+  const int score = negamax(MIN, MAX, depth, 0, board, globals, state, false,
+                            INVALID_BOARD_INDEX);
 
   search_result.best_move = state->best_move;
 
@@ -290,7 +307,7 @@ search_t experimental_search(int depth,
 
 
 #ifndef NDEBUG
-  is_pv_legal(board, &search_result.pv);
+  is_pv_legal(board, globals, &search_result.pv);
 #endif
 
   assert(search_result.best_move == search_result.pv.pv_table[0][0]);
