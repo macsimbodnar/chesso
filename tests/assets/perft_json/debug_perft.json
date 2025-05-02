@@ -1,0 +1,82 @@
+[
+  {
+    "start_fen": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+    "comments": "Tested at depth 5",
+    "enable": true,
+    "depth_limit": 5,
+    "depth_layers": [
+      {
+        "depth": 1,
+        "nodes": 48,
+        "captures": 8,
+        "en_passant": 0,
+        "castles": 2,
+        "promotions": 0,
+        "checks": 0,
+        "discovery_checks": 0,
+        "double_checks": 0,
+        "checkmates": 0
+      },
+      {
+        "depth": 2,
+        "nodes": 2039,
+        "captures": 351,
+        "en_passant": 1,
+        "castles": 91,
+        "promotions": 0,
+        "checks": 3,
+        "discovery_checks": 0,
+        "double_checks": 0,
+        "checkmates": 0
+      },
+      {
+        "depth": 3,
+        "nodes": 97862,
+        "captures": 17102,
+        "en_passant": 45,
+        "castles": 3162,
+        "promotions": 0,
+        "checks": 993,
+        "discovery_checks": 0,
+        "double_checks": 0,
+        "checkmates": 1
+      },
+      {
+        "depth": 4,
+        "nodes": 4085603,
+        "captures": 757163,
+        "en_passant": 1929,
+        "castles": 128013,
+        "promotions": 15172,
+        "checks": 25523,
+        "discovery_checks": 42,
+        "double_checks": 6,
+        "checkmates": 43
+      },
+      {
+        "depth": 5,
+        "nodes": 193690690,
+        "captures": 35043416,
+        "en_passant": 73365,
+        "castles": 4993637,
+        "promotions": 8392,
+        "checks": 3309887,
+        "discovery_checks": 19883,
+        "double_checks": 2637,
+        "checkmates": 30171
+      },
+      {
+        "depth": 6,
+        "nodes": 8031647685,
+        "captures": 1558445089,
+        "en_passant": 3577504,
+        "castles": 184513607,
+        "promotions": 56627920,
+        "checks": 92238050,
+        "discovery_checks": 568417,
+        "double_checks": 54948,
+        "checkmates": 360003
+      }
+    ]
+  }
+]

@@ -17,12 +17,13 @@
 
 using json = nlohmann::json;
 
-#define RUN_THREADS
+// #define RUN_THREADS
 #define MAXIMUM_DEPTH 20
 
 
 // clang-format off
 const static std::vector<std::string> test_files = {
+  // "assets/perft_json/debug_perft.json",
   "assets/perft_json/talkchess_perft.json",
   "assets/perft_json/perft.json"
 };
