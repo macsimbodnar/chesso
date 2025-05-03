@@ -37,7 +37,8 @@ int quiescence(int alpha,
   state->explored_nodes++;
 
   // DELTA PRUNE:
-  if (stand_pat + get_max_gain() <= alpha) {
+  // if (stand_pat + get_max_gain() <= alpha) {
+  if (stand_pat + 200 <= alpha) {
     // At this point no capture can improve te score so we just return
     return alpha;
   }
@@ -107,15 +108,15 @@ int negamax(int alpha0,
   if (is_in_check) { ++depth; }
 
   // Razoring
-  if (!is_in_check && depth == 1) {
-    int stand_pat = (board->active_color == WHITE ? +1 : -1) * evaluate(board);
-    const int razor_margin = get_margin_value();
+  // if (!is_in_check && depth == 1) {
+  //   int stand_pat = (board->active_color == WHITE ? +1 : -1) *
+  //   evaluate(board); const int razor_margin = get_margin_value();
 
-    if (stand_pat + razor_margin < alpha) {
-      // No quiet move can possibly raise the score above alpha
-      return stand_pat;
-    }
-  }
+  //   if (stand_pat + razor_margin < alpha) {
+  //     // No quiet move can possibly raise the score above alpha
+  //     return stand_pat;
+  //   }
+  // }
 
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {

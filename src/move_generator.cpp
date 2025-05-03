@@ -1663,7 +1663,8 @@ size_t generate_captures(board_t* board, global_state_t* state, move_t result[])
   const size_t count = generate_legal_moves(board, state, moves);
 
   for (size_t i = 0; i < count; ++i) {
-    if (moves[i].captured != INVALID && moves[i].captured != EMPTY) {
+    if ((moves[i].captured != INVALID && moves[i].captured != EMPTY) ||
+        moves[i].promoted_to != TO_NONE) {
       result[capture_count] = moves[i];
       ++capture_count;
     }
