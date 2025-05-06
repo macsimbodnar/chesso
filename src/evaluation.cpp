@@ -8,12 +8,12 @@
 
 
 // clang-format off
-#define VALUE_PAWN    71
-#define VALUE_KNIGHT  293
-#define VALUE_BISHOP  300
-#define VALUE_ROOK    456
-#define VALUE_QUEEN   905
-// #define VALUE_KING    1000
+#define VALUE_PAWN    100
+#define VALUE_KNIGHT  300
+#define VALUE_BISHOP  350
+#define VALUE_ROOK    500
+#define VALUE_QUEEN   1000
+#define VALUE_KING    10000
 
 
 #define DOUBLE_PAWN_PENALTY -10
@@ -42,69 +42,69 @@
 // };
 
 static const int pawn_postion_value_table[BOARD_SIZE] = {
-  90, 90, 90, 90, 90, 90, 90, 90,         0,  0,  0,  0,  0,  0,  0,  0,
-  50, 50, 50, 50, 50, 50, 50, 50,         0,  0,  0,  0,  0,  0,  0,  0,
-  10, 10, 20, 30, 30, 20, 10, 10,         0,  0,  0,  0,  0,  0,  0,  0,
-   5,  5, 10, 25, 25, 10,  5,  5,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  0, 20, 20,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   5, -5,-10,  0,  0,-10, -5,  5,         0,  0,  0,  0,  0,  0,  0,  0,
-   5, 10, 10,-20,-20, 10, 10,  5,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0
+ 90,  90,  90,  90,  90,  90,  90,  90,         0,  0,  0,  0,  0,  0,  0,  0,
+ 30,  30,  30,  40,  40,  30,  30,  30,         0,  0,  0,  0,  0,  0,  0,  0,
+ 20,  20,  20,  30,  30,  30,  20,  20,         0,  0,  0,  0,  0,  0,  0,  0,
+ 10,  10,  10,  20,  20,  10,  10,  10,         0,  0,  0,  0,  0,  0,  0,  0,
+  5,   5,  10,  20,  20,   5,   5,   5,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   0,   5,   5,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   0, -10, -10,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   0,   0,   0,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
 static const int knight_postion_value_table[BOARD_SIZE] = {
- -50,-40,-30,-30,-30,-30,-40,-50,         0,  0,  0,  0,  0,  0,  0,  0,
- -40,-20,  0,  0,  0,  0,-20,-40,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,  0, 10, 15, 15, 10,  0,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,  5, 15, 20, 20, 15,  5,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,  0, 15, 20, 20, 15,  0,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -30,  5, 10, 15, 15, 10,  5,-30,         0,  0,  0,  0,  0,  0,  0,  0,
- -40,-20,  0,  5,  5,  0,-20,-40,         0,  0,  0,  0,  0,  0,  0,  0,
- -50,-40,-30,-30,-30,-30,-40,-50,         0,  0,  0,  0,  0,  0,  0,  0
+ -5,   0,   0,   0,   0,   0,   0,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,   0,   0,  10,  10,   0,   0,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,   5,  20,  20,  20,  20,   5,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,  10,  20,  30,  30,  20,  10,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,  10,  20,  30,  30,  20,  10,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,   5,  20,  10,  10,  20,   5,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5,   0,   0,   0,   0,   0,   0,  -5,         0,  0,  0,  0,  0,  0,  0,  0,
+ -5, -10,   0,   0,   0,   0, -10,  -5,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
 static const int bishop_postion_value_table[BOARD_SIZE] = {
- -20,-10,-10,-10,-10,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0,  0,  0,  0,  0,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0,  5, 10, 10,  5,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  5,  5, 10, 10,  5,  5,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0, 10, 10, 10, 10,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10, 10, 10, 10, 10, 10, 10,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  5,  0,  0,  0,  0,  5,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -20,-10,-10,-10,-10,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0
+  0,   0,   0,   0,   0,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   0,   0,   0,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  20,   0,  10,  10,   0,  20,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  10,   0,   0,   0,   0,  10,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,  30,   0,   0,   0,   0,  30,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0, -10,   0,   0, -10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
 static const int rook_postion_value_table[BOARD_SIZE] = {
-   0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   5, 10, 10, 10, 10, 10, 10,  5,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  0,  0,  0,  0,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  0,  0,  0,  0,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  0,  0,  0,  0,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  0,  0,  0,  0,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  0,  0,  0,  0,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  0,  5,  5,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0
+ 50,  50,  50,  50,  50,  50,  50,  50,         0,  0,  0,  0,  0,  0,  0,  0,
+ 50,  50,  50,  50,  50,  50,  50,  50,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,  10,  20,  20,  10,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   0,  20,  20,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0
 };
 
-static const int queen_postion_value_table[BOARD_SIZE] = {
- -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0,  0,  0,  0,  0,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0,  5,  5,  5,  5,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
-  -5,  0,  5,  5,  5,  5,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  5,  5,  5,  5,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  5,  5,  5,  5,  5,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -10,  0,  5,  0,  0,  0,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
- -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0
-};
+// static const int queen_postion_value_table[BOARD_SIZE] = {
+//  -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -10,  0,  0,  0,  0,  0,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -10,  0,  5,  5,  5,  5,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
+//   -5,  0,  5,  5,  5,  5,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
+//    0,  0,  5,  5,  5,  5,  0, -5,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -10,  5,  5,  5,  5,  5,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -10,  0,  5,  0,  0,  0,  0,-10,         0,  0,  0,  0,  0,  0,  0,  0,
+//  -20,-10,-10, -5, -5,-10,-10,-20,         0,  0,  0,  0,  0,  0,  0,  0
+// };
 
 static const int king_postion_value_table[BOARD_SIZE] = {
-   0,  0,  0,  0,  0,  0,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  5,  5,  5,  5,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  5,  5, 10, 10,  5,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  5, 10, 20, 20, 10,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  5, 10, 20, 20, 10,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  5, 10, 10,  5,  0,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  5,  5, -5, -5,  0,  5,  0,         0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  5,  0, 15,  0, 10,  0,         0,  0,  0,  0,  0,  0,  0,  0
+  0,   0,   0,   0,   0,   0,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   5,   5,   5,   5,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   5,   5,  10,  10,   5,   5,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   5,  10,  20,  20,  10,   5,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   5,  10,  20,  20,  10,   5,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   5,  10,  10,   5,   0,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   5,   5,  -5,  -5,   0,   5,   0,         0,  0,  0,  0,  0,  0,  0,  0,
+  0,   0,   5,   0, -15,   0,  10,   0,         0,  0,  0,  0,  0,  0,  0,  0
  };
 
 static const int white_indexes[BOARD_SIZE] = {
@@ -206,7 +206,7 @@ int evaluate(const board_t* board)
         } break;
         case B_QUEEN: {
           evaluation -= VALUE_QUEEN;
-          evaluation -= queen_postion_value_table[index];
+          // evaluation -= queen_postion_value_table[index];
 
           // Evaluate mobility
           const size_t moves_num =
@@ -217,7 +217,7 @@ int evaluate(const board_t* board)
           if (is_king_shielded(index, board)) {
             evaluation -= KING_SHIELD_BONUS;
           }
-          // evaluation -= VALUE_KING;
+          evaluation -= VALUE_KING;
           evaluation -= king_postion_value_table[index];
           break;
 
@@ -262,7 +262,7 @@ int evaluate(const board_t* board)
         } break;
         case W_QUEEN: {
           evaluation += VALUE_QUEEN;
-          evaluation += queen_postion_value_table[white_indexes[index]];
+          // evaluation += queen_postion_value_table[white_indexes[index]];
 
           // Evaluate mobility
           const size_t moves_num =
@@ -273,7 +273,7 @@ int evaluate(const board_t* board)
           if (is_king_shielded(index, board)) {
             evaluation += KING_SHIELD_BONUS;
           }
-          // evaluation += VALUE_KING;
+          evaluation += VALUE_KING;
           evaluation += king_postion_value_table[white_indexes[index]];
           break;
         case INVALID:
@@ -396,16 +396,21 @@ void order_captures(move_t moves[], size_t moves_size)
 
   int scores[MAX_MOVES];
   for (size_t i = 0; i < moves_size; ++i) {
-    // Evaluate captures by MVV/LVA
-    const piece_t attacker = moves[i].piece;
-    const piece_t victim = moves[i].captured;
+    if (moves[i].captured != EMPTY && moves[i].captured != INVALID) {
+      // Evaluate captures by MVV/LVA
+      const piece_t attacker = moves[i].piece;
+      const piece_t victim = moves[i].captured;
 
-    assert(attacker != INVALID);
-    assert(attacker != EMPTY);
-    assert(victim != INVALID);
-    assert(victim != EMPTY);
+      assert(attacker != INVALID);
+      assert(attacker != EMPTY);
+      assert(victim != INVALID);
+      assert(victim != EMPTY);
 
-    scores[i] = mvv_lva[attacker][victim];
+      scores[i] = mvv_lva[attacker][victim];
+    } else {
+      // Handling the promotions that are not captures
+      scores[i] = 0;
+    }
   }
 
   // Insertion sort

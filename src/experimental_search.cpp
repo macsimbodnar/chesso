@@ -101,7 +101,7 @@ int negamax(int alpha0,
   }
 
   // Check for repetitions
-  if (is_position_repeated(board, globals)) { return DRAW_SCORE; }
+  if (ply > 0 && is_position_repeated(board, globals)) { return DRAW_SCORE; }
 
   const bool is_in_check = is_check(board, &globals->zobrist_randoms);
 
@@ -111,6 +111,7 @@ int negamax(int alpha0,
   // if (!is_in_check && depth == 1) {
   //   int stand_pat = (board->active_color == WHITE ? +1 : -1) *
   //   evaluate(board); const int razor_margin = get_margin_value();
+  //   // const int razor_margin = 200;
 
   //   if (stand_pat + razor_margin < alpha) {
   //     // No quiet move can possibly raise the score above alpha
