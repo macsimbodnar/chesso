@@ -29,6 +29,3 @@
 
 * Change the == move_t overload operator to check ALL the parameters, and use a function to soft compare.
 * Connected rooks score
-
-* Crash with position:
-  position startpos moves d2d4 d7d5 c2c4 d5c4 g1f3 b7b5 a2a4 c7c6 a4b5 c6b5 e2e3 g8f6 b2b3 a7a5 b3c4 b5b4 f3e5 c8b7 c4c5 f6d7 f1b5 b7g2 e5d7 b8d7 h1g1 g2b7 c5c6 b7c6 b5c6 a8a6 c6b5 a6g6 g1g6 h7g6 b5d7 e8d7

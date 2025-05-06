@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include "board.hpp"
+#include "evaluation.hpp"
 #include "experimental_search.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
@@ -26,8 +27,8 @@ static board_t board = {};
 static global_state_t globals = {};
 static std::string initial_position = DEFAULT_POSITION;
 static bool opening_book_loaded = false;
-static bool opening_book_enabled = true;  // User cna disable the book
-static bool still_in_opening = true;      // Finish the opening line
+static bool opening_book_enabled = false;
+static bool still_in_opening = true;  // Finish the opening line
 static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
@@ -332,7 +333,7 @@ bool set_position(const std::string& fen)
 }
 
 
-bool try_load_opening_book()
+void try_load_opening_book()
 {
   opening_book_loaded = load_book_embedded(&opening_book);
 
@@ -342,8 +343,6 @@ bool try_load_opening_book()
   } else {
     LOG_E << "Failed to load the opening book." << END_E;
   }
-
-  return opening_book_loaded;
 }
 
 
@@ -460,6 +459,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   assert(state.tt != nullptr);
   stop_search_signal = false;
 
+  int info_prints_count = 0;
+
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
 
@@ -479,7 +480,22 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                                                               start_time);
 
     // If we interupted the current search we use the previous result
-    if (stop_search_signal) { break; }
+    if (stop_search_signal) {
+      if (info_prints_count == 0) {
+        const std::string score =
+            search_result.mate_found
+                ? ("mate " + std::to_string(search_result.mate_in))
+                : ("cp " + std::to_string(search_result.score));
+
+        uci_reply("info score " + score + " time " +
+                  std::to_string(duration_ms.count()) + " depth " +
+                  std::to_string(current_depth) + " nodes " +
+                  std::to_string(search_result.explored_nodes) + " pv " +
+                  pv_to_string(&search_result.pv));
+      }
+
+      break;
+    }
 
     const std::string score =
         search_result.mate_found
@@ -491,6 +507,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
               std::to_string(current_depth) + " nodes " +
               std::to_string(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
+
+    info_prints_count++;
 
     result.best_move = search_result.best_move;
     result.uci_best_move = {search_result.best_move.from,
@@ -525,6 +543,7 @@ bool command_uci(std::queue<std::string>& args)
   uci_reply("id name Chesso");
   uci_reply("id author MazerFaker");
   uci_reply("uciok");
+  uci_reply("option name Use Book type check default false");
 
   return true;
 }
@@ -568,9 +587,41 @@ bool command_setoption(std::queue<std::string>& args)
   LOG_I << "Command [setoption]. Args: " << args << END_I;
   if (args.size() == 0) { return false; }
 
-  // setoption name <id> [value <x>]
+  std::string option_name;
+  std::string option_value;
 
-  // TODO
+  while (!args.empty()) {
+    const std::string token = args.front();
+    args.pop();
+
+    if (token == "name") {
+      // Read the full option name (can contain spaces)
+      while (!args.empty() && args.front() != "value") {
+        option_name += args.front() + " ";
+        args.pop();
+      }
+      option_name = trim_whitespace(option_name);
+    }
+
+    if (!args.empty() && args.front() == "value") {
+      args.pop();  // remove "value"
+      if (!args.empty()) {
+        option_value = args.front();
+        args.pop();
+      }
+    }
+  }
+
+  // Handle specific options
+  if (option_name == "Use Book" && option_value == "true") {
+    opening_book_enabled = true;
+    LOG_I << "Use Book ON" << END_I;
+  }
+
+  if (option_name == "Use Book" && option_value == "false") {
+    opening_book_enabled = false;
+    LOG_I << "Use Book OFF" << END_I;
+  }
 
   return true;
 }
@@ -580,9 +631,6 @@ bool command_register(std::queue<std::string>& args)
 {
   LOG_I << "Command [register]. Args: " << args << END_I;
   if (args.size() == 0) { return false; }
-
-  // TODO
-
   return true;
 }
 
@@ -827,6 +875,9 @@ bool command_go(std::queue<std::string>& args)
                                         book_move.promoted_to};
 
       const std::string best_move_str = uci_move_to_algebraic(&uci_book_move);
+
+      // uci_reply("info score 0 depth 1 nodes 1 pv " + best_move_str);
+
       uci_reply("bestmove " + best_move_str);
 
       return true;
@@ -1058,8 +1109,7 @@ int main()
 
   // Initialization
   init_board(DEFAULT_POSITION, &board, &globals);
-  (void)try_load_opening_book();
-  still_in_opening = true;
+  try_load_opening_book();
 
   tt_reset(&tt);
 
