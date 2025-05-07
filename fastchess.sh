@@ -5,10 +5,15 @@
 
 
 fastchess \
-  -engine cmd=/usr/games/chesso name=chesso_experimental \
   -engine cmd=/usr/games/chesso_v0.2.1 name=chesso_v0.2.1 \
-  -each tc=10+0.1 \
+  -engine cmd=/usr/games/chesso_v0.3.0 name=chesso_v0.3.0 \
+  -openings file=/home/max/ws/chesso/.no_git/8moves_v3.pgn format=pgn \
+  -each tc=10+0.2 \
+  -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05 \
   -rounds 200 \
   -repeat \
-  -concurrency 16 \
+  -concurrency 12 \
   -log engine=true file=/tmp/fastchess.log
+
+
+# fastchess -quick cmd=/usr/games/chesso_v0.3.0 cmd=/usr/games/chesso_v0.2.1 book=/home/max/ws/chesso/.no_git/8moves_v3.pgn
