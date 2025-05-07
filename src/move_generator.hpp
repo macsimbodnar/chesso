@@ -25,3 +25,6 @@ bool is_check(board_t* board, const zobrist_randoms_t* rands);
 size_t generate_captures(board_t* board,
                          global_state_t* state,
                          move_t result[]);
+
+
+bool is_pv_legal(board_t* board, global_state_t* globals, const pv_t* pv);

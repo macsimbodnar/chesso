@@ -13,7 +13,6 @@
 #include <vector>
 #include "board.hpp"
 #include "evaluation.hpp"
-#include "experimental_search.hpp"
 #include "log.hpp"
 #include "move_generator.hpp"
 #include "openings.hpp"
@@ -469,10 +468,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    // const search_t search_result =
-    //     search_best_move(current_depth, &board, &globals, &state);
     const search_t search_result =
-        experimental_search(current_depth, &board, &globals, &state);
+        search(current_depth, &board, &globals, &state);
 
     const auto end_time = std::chrono::high_resolution_clock::now();
     const auto duration_ms =

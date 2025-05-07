@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   state.stop = &stop_search_signal;
   state.tt = &tt;
 
-  const search_t search_result = search_best_move(6, &board, &globals, &state);
+  const search_t search_result = search(6, &board, &globals, &state);
 
   LOG_I << search_result.best_move << " " << search_result.score << std::endl;
 

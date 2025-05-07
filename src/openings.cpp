@@ -1,7 +1,7 @@
 #include "openings.hpp"
 #include <cassert>
 #include <fstream>
-#include "book.hpp"
+#include "openings.book"
 #include "utils.hpp"
 
 #ifdef _MSC_VER
@@ -464,18 +464,10 @@ uint64_t get_key(const board_t* board)
   // white can castle long      1
   // black can castle short     2
   // black can castle long      3
-  if (board->castling & WK) {
-    key ^= polyglot_randoms[CASTLING_OFFSET + 0];
-  }
-  if (board->castling & WQ) {
-    key ^= polyglot_randoms[CASTLING_OFFSET + 1];
-  }
-  if (board->castling & BK) {
-    key ^= polyglot_randoms[CASTLING_OFFSET + 2];
-  }
-  if (board->castling & BQ) {
-    key ^= polyglot_randoms[CASTLING_OFFSET + 3];
-  }
+  if (board->castling & WK) { key ^= polyglot_randoms[CASTLING_OFFSET + 0]; }
+  if (board->castling & WQ) { key ^= polyglot_randoms[CASTLING_OFFSET + 1]; }
+  if (board->castling & BK) { key ^= polyglot_randoms[CASTLING_OFFSET + 2]; }
+  if (board->castling & BQ) { key ^= polyglot_randoms[CASTLING_OFFSET + 3]; }
 
 
   // Hash en-passant

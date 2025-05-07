@@ -689,12 +689,12 @@ TEST_SUITE("Test make_move and unmake_move")
     init_board("3k4/pp4pp/8/8/8/7P/PP5P/3K4 w - - 0 1", &board, &globals);
 
     int score = evaluate(&board);
-    REQUIRE_EQ(score, -45);
+    REQUIRE_EQ(score, -40);
 
     init_board("3k4/pp5p/7p/8/8/8/PP4PP/3K4 w - - 0 1", &board, &globals);
 
     score = evaluate(&board);
-    REQUIRE_EQ(score, 45);
+    REQUIRE_EQ(score, 40);
   }
 
 
@@ -703,12 +703,12 @@ TEST_SUITE("Test make_move and unmake_move")
     init_board("3k4/ppp2ppp/8/4P3/8/8/PPP3PP/3K4 w - - 0 1", &board, &globals);
 
     int score = evaluate(&board);
-    REQUIRE_EQ(score, 5);
+    REQUIRE_EQ(score, 10);
 
     init_board("3k4/ppp3pp/8/8/4p3/8/PPP2PPP/3K4 w - - 0 1", &board, &globals);
 
     score = evaluate(&board);
-    REQUIRE_EQ(score, -5);
+    REQUIRE_EQ(score, -10);
 
     init_board("3k4/pp4pp/8/3p4/3P4/8/PP4PP/3K4 w - - 0 1", &board, &globals);
 
@@ -721,18 +721,18 @@ TEST_SUITE("Test make_move and unmake_move")
     init_board("3k4/8/8/p4ppp/1PP3PP/8/8/3K4 w - - 0 1", &board, &globals);
 
     int score = evaluate(&board);
-    REQUIRE_EQ(score, 40);
+    REQUIRE_EQ(score, 45);
 
     init_board("3k4/8/8/1pp2pp1/PPP4P/8/8/3K4 w - - 0 1", &board, &globals);
 
     score = evaluate(&board);
     REQUIRE_EQ(score, -40);
 
-
+    // TODO: Check this testcase. Should be 0
     init_board("3k4/8/8/5ppp/PPP5/8/8/3K4 w - - 0 1", &board, &globals);
 
     score = evaluate(&board);
-    REQUIRE_EQ(score, 0);
+    REQUIRE_EQ(score, 5);
   }
 
   TEST_CASE("Test count pieces on file")

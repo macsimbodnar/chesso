@@ -3,7 +3,9 @@
 #include <unordered_map>
 #include "board.hpp"
 #include "exceptions.hpp"
+#include "log.hpp"
 #include "utils.hpp"
+
 
 #define OFFSETS_SIZE 8
 static const index_t OFFSETS_N[OFFSETS_SIZE] = {0x21, 0x1F, 0x0E, 0xEE,
@@ -1671,4 +1673,56 @@ size_t generate_captures(board_t* board, global_state_t* state, move_t result[])
   }
 
   return capture_count;
+}
+
+
+bool is_pv_legal(board_t* board, global_state_t* globals, const pv_t* pv)
+{
+  assert(board != nullptr);
+  assert(pv != nullptr);
+
+  bool is_pv_ok = true;
+  size_t make_move_counter = 0;
+
+  // Empty pv is illegal
+  if (pv->pv_length[0] < 1) {
+    LOG_W << "Empty PV" << END_W;
+    return false;
+  }
+
+  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
+    const move_t* move_to_test = &pv->pv_table[0][i];
+
+    move_t moves[MAX_MOVES];
+    const size_t moves_count = generate_legal_moves(board, globals, moves);
+
+    if (moves_count < 1) {
+      is_pv_ok = false;
+      break;
+    }
+
+    bool found = false;
+    for (size_t move_index = 0; move_index < moves_count; ++move_index) {
+      if (*move_to_test == moves[move_index] &&
+          move_to_test->captured == moves[move_index].captured) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      LOG_W << "PV with illegal move: " << *move_to_test << END_W;
+      is_pv_ok = false;
+      break;
+    }
+
+    make_move(move_to_test, board, globals);
+    make_move_counter++;
+  }
+
+  for (size_t i = 0; i < make_move_counter; ++i) {
+    unmake_move(board, globals);
+  }
+
+  return is_pv_ok;
 }
