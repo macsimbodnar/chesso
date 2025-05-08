@@ -14,3 +14,7 @@ piece_t get_piece(const board_t* board, index_t square);
 bb_t get_bishop_attacks(const bb_tables_t* data, index_t index, bb_t occupancy);
 bb_t get_rook_attacks(const bb_tables_t* data, index_t index, bb_t occupancy);
 bb_t get_queen_attacks(const bb_tables_t* data, index_t index, bb_t occupancy);
+bool is_attacked(const bb_tables_t* data,
+                 const board_t* board,
+                 index_t index,
+                 color_t color);

@@ -18,14 +18,11 @@ int main(int argc, char* argv[])
   LOG_E << "Debug" << END_E;
 
   initialize_const_data(&bb_data);
+  load_FEN(DEFAULT_POSITION, &board);
 
-  assert(load_FEN(DEFAULT_POSITION, &board));
   LOG_I << print_nice_board(&board) << END_I;
 
-  bb_t occupancy = BB_0;
-  bb_t q_attacks = get_rook_attacks(&bb_data, d4, occupancy);
-  
-  LOG_I << print_bboard(q_attacks) << END_I;
+  LOG_I << is_attacked(&bb_data, &board, a4, WHITE) << END_I;
 
   return 0;
 }

@@ -52,6 +52,63 @@ bb_t get_queen_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
 }
 
 
+bool is_attacked(const bb_tables_t* data,
+                 const board_t* board,
+                 index_t index,
+                 color_t color)
+{
+  assert(board != nullptr);
+
+  {  // Handle pawn attacks
+    if ((color == WHITE) &&
+        (data->pawn_attacks[BLACK][index] & board->bitboards[W_PAWN])) {
+      return true;
+    }
+
+    if ((color == BLACK) &&
+        (data->pawn_attacks[WHITE][index] & board->bitboards[B_PAWN])) {
+      return true;
+      ;
+    }
+  }
+
+  if (data->knight_attacks[index] &
+      ((color == WHITE) ? board->bitboards[W_KNIGHT]
+                        : board->bitboards[B_KNIGHT])) {
+    return true;
+  }
+
+
+  if (get_bishop_attacks(data, index, board->occupancies[BOTH]) &
+      ((color == WHITE) ? board->bitboards[W_BISHOP]
+                        : board->bitboards[B_BISHOP])) {
+    return true;
+  }
+
+  if (get_rook_attacks(data, index, board->occupancies[BOTH]) &
+      ((color == WHITE) ? board->bitboards[W_ROOK]
+                        : board->bitboards[B_ROOK])) {
+    return true;
+  }
+
+  // attacked by bishops
+  if (get_queen_attacks(data, index, board->occupancies[BOTH]) &
+      ((color == WHITE) ? board->bitboards[W_QUEEN]
+                        : board->bitboards[B_QUEEN])) {
+    return true;
+  }
+
+  // attacked by kings
+  if (data->king_attacks[index] &
+      ((color == WHITE) ? board->bitboards[W_KING]
+                        : board->bitboards[B_KING])) {
+    return true;
+  }
+
+  return false;
+}
+
+
 /******************************************************************************
  *                               UTIL FUNCTIONS
  * NOTE: Does not need to be optimized
@@ -306,6 +363,15 @@ bool load_FEN(const std::string& FEN, board_t* board)
           << END_E;
     return false;
   }
+
+  // Populate occupancies
+  for (int piece = W_PAWN; piece <= W_KING; ++piece) {
+    board->occupancies[WHITE] |= board->bitboards[piece];
+    board->occupancies[BLACK] |= board->bitboards[piece + B_PAWN];
+  }
+
+  board->occupancies[BOTH] |= board->occupancies[WHITE];
+  board->occupancies[BOTH] |= board->occupancies[BLACK];
 
   // Update Zobrist keys
   // board->zobrist_key = init_zobrist_key(state, board);
