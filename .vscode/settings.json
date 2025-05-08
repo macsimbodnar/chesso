@@ -5,6 +5,7 @@
     "bestmove",
     "binc",
     "bitboard",
+    "bitboards",
     "Cutechess",
     "fastchess",
     "fsanitize",
@@ -120,6 +121,7 @@
     "charconv": "cpp",
     "format": "cpp",
     "strstream": "cpp",
-    "*.ipp": "cpp"
+    "*.ipp": "cpp",
+    "text_encoding": "cpp"
   }
 }

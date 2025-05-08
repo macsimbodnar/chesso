@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <chrono>
 #include <iostream>
 
@@ -20,13 +21,20 @@
 #define END_E "\033[37m" << END_I  // End Error red log
 
 
+inline std::string to_hexstr(uint64_t value)
+{
+  std::ostringstream oss;
+  oss << "0x" << std::hex << std::setw(16) << std::setfill('0') << value;
+  return oss.str();
+}
+
+
 class stopwatch_t
 {
 private:
   std::chrono::steady_clock::time_point begin;
   std::chrono::nanoseconds tot = std::chrono::nanoseconds::zero();
   bool running = false;
-
 
   inline void reset()
   {
@@ -44,7 +52,6 @@ public:
   ~stopwatch_t()
   {
     if (running) { stop(); }
-
 
     const auto duration_ns =
         std::chrono::duration_cast<std::chrono::nanoseconds>(tot);

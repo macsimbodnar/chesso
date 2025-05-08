@@ -9,42 +9,6 @@
 #include <stack>
 #include <string>
 
-
-// clang-format off
-/**
- *
- * Mailbox 0x88
- *
- * 128 byte array
- * Files A - H        X
- * Ranks 1 - 8        7 - Y
- ****************************************************************************HEX****
- *     A    B    C    D    E    F    G    H
- * 8 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 7A | 7B | 7C | 7D | 7E | 7F
- * 7 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 6A | 6B | 6C | 6D | 6E | 6F
- * 6 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 5A | 5B | 5C | 5D | 5E | 5F
- * 5 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 4A | 4B | 4C | 4D | 4E | 4F
- * 4 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 3A | 3B | 3C | 3D | 3E | 3F
- * 3 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 2A | 2B | 2C | 2D | 2E | 2F
- * 2 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 1A | 1B | 1C | 1D | 1E | 1F
- * 1 | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 0A | 0B | 0C | 0D | 0E | 0F
- *     A    B    C    D    E    F    G    H
- ***********************************************************************************
-
- ************************************************************************DECIMAL****
- *     A    B    C    D    E    F    G    H
- * 8 |112 |113 |114 |115 |116 |117 |118 |119 |120 |121 |122 |123 |124 |125 |126 |127
- * 7 | 96 | 97 | 98 | 99 |100 |101 |102 |103 |104 |105 |106 |107 |108 |109 |110 |111
- * 6 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95
- * 5 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79
- * 4 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63
- * 3 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47
- * 2 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31
- * 1 | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 | 12 | 13 | 14 | 15
- *     A    B    C    D    E    F    G    H
- ***********************************************************************************/
-// clang-format on
-
 //-############################# POSITIONS ##################################-//
 // clang-format off
 #define DEFAULT_POSITION "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -63,16 +27,16 @@
 
 
 //-#############################  DEFINES  ##################################-//
-#define BOARD_SIZE 128
-
 #ifndef STR
 #define STR(_N_) std::to_string(_N_)
 #endif
 
+#define INVALID_INDEX 64
+
 typedef uint8_t index_t;
 typedef uint8_t castling_t;
-
-static constexpr index_t INVALID_BOARD_INDEX = 127;
+typedef uint64_t bb_t;
+typedef uint64_t hash_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
@@ -82,9 +46,21 @@ static constexpr index_t INVALID_BOARD_INDEX = 127;
 #define HISTORY_MAX_SIZE 1000000
 
 // Transposition table size
-// #define TT_SIZE 8388608
-// #define TT_SIZE 4194304
 #define TT_SIZE 4194301
+
+//-#######################   BITBOARD SPECIFIC   ############################-//
+#define BB_1 1ULL
+#define BB_0 0ULL
+
+#define NOT_A_FILE 0xFEFEFEFEFEFEFEFEULL
+#define NOT_H_FILE 0x7F7F7F7F7F7F7F7FULL
+#define NOT_GH_FILES 0x3F3F3F3F3F3F3F3FULL
+#define NOT_AB_FILES 0xFCFCFCFCFCFCFCFCULL
+
+#define GET_BIT(bboard, square) ((bboard) & (BB_1 << (square)))
+#define SET_BIT(bboard, square) ((bboard) |= (BB_1 << (square)))
+#define POP_BIT(bboard, square) ((bboard) &= ~(BB_1 << (square)))
+
 
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
@@ -97,10 +73,10 @@ enum castling_rights_t
 
 enum color_t
 {
+  WHITE,
   BLACK,
-  WHITE
+  BOTH
 };
-
 
 inline color_t operator!(const color_t& c)
 {
@@ -111,19 +87,18 @@ inline color_t operator!(const color_t& c)
 
 enum piece_t
 {
-  B_PAWN = 0,  // 'p'
-  B_KNIGHT,    // 'n'
-  B_BISHOP,    // 'b'
-  B_ROOK,      // 'r'
-  B_QUEEN,     // 'q'
-  B_KING,      // 'k'
-  W_PAWN,      // 'P'
-  W_KNIGHT,    // 'N'
-  W_BISHOP,    // 'B'
-  W_ROOK,      // 'R'
-  W_QUEEN,     // 'Q'
-  W_KING,      // 'K'
-  INVALID,
+  W_PAWN,    // 'P'   MUST be first
+  W_KNIGHT,  // 'N'
+  W_BISHOP,  // 'B'
+  W_ROOK,    // 'R'
+  W_QUEEN,   // 'Q'
+  W_KING,    // 'K'
+  B_PAWN,    // 'p'
+  B_KNIGHT,  // 'n'
+  B_BISHOP,  // 'b'
+  B_ROOK,    // 'r'
+  B_QUEEN,   // 'q'
+  B_KING,    // 'k'   MUST be last
   EMPTY
 };
 
@@ -136,6 +111,20 @@ enum promotion_t
   TO_ROOK,
   TO_QUEEN
 };
+
+
+// clang-format off
+enum bb_squares_t {
+  a8, b8, c8, d8, e8, f8, g8, h8,
+  a7, b7, c7, d7, e7, f7, g7, h7,
+  a6, b6, c6, d6, e6, f6, g6, h6,
+  a5, b5, c5, d5, e5, f5, g5, h5,
+  a4, b4, c4, d4, e4, f4, g4, h4,
+  a3, b3, c3, d3, e3, f3, g3, h3,
+  a2, b2, c2, d2, e2, f2, g2, h2,
+  a1, b1, c1, d1, e1, f1, g1, h1
+};
+// clang-format on
 
 
 //-#############################  STRUCTS  ##################################-//
@@ -167,161 +156,28 @@ inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
 }
 
 
-struct zobrist_randoms_t
+struct bb_const_data_t
 {
-  // Here we will use 128 instead 64 squares in order to include
-  // INVALID_BOARD_INDEX
-  uint64_t piece_randoms[12][BOARD_SIZE];  // 12 pieces
-  uint64_t castling_randoms[16];
-  uint64_t side_randoms[2];
-  uint64_t ep_randoms[BOARD_SIZE];  // en-passant randoms.
-  bool initialized = false;
+  bb_t pawn_attacks[2][64];  // [color][squares]
+  bb_t knight_attacks[64];
+  bb_t king_attacks[64];
+
+  bb_t bishop_masks[64];         // [square]
+  bb_t rook_masks[64];           // [square]
+  bb_t bishop_attacks[64][512];  // [square][occupancies]
+  bb_t rook_attacks[64][4096];   // [square][occupancies]
 };
 
-struct move_t
-{
-  index_t from;             // Source square
-  index_t to;               // Destination square
-  piece_t piece;            // Moved piece
-  promotion_t promoted_to;  // Eventual promotion
-  piece_t captured;         // If capture happened then the captured piece
-  bool double_pawn_move;    // Double pawn move. Eventually set en-passant
-  bool en_passant_capture;  // Set if this is en-passant capture happened
-  bool castling_move;       // Set if castling happened
-  // TODO: add if check
-  // TODO: add ifdiscovery check
-  // TODO: add if double check
-  // TODO: add if checkmate
-
-  // Comparison operator
-  bool operator==(const move_t& other) const
-  {
-    return (from == other.from && to == other.to && piece == other.piece &&
-            promoted_to == other.promoted_to);
-    // return (from == other.from && to == other.to && piece == other.piece &&
-    //         promoted_to == other.promoted_to && captured == other.captured &&
-    //         double_pawn_move == other.double_pawn_move &&
-    //         en_passant_capture == other.en_passant_capture &&
-    //         castling_move == other.castling_move);
-  }
-
-  // Boolean conversion operator. Is required to use inside if statements
-  explicit operator bool() const
-  {
-    return (from != INVALID_BOARD_INDEX && to != INVALID_BOARD_INDEX);
-  }
-
-  move_t() : move_t(INVALID_BOARD_INDEX, INVALID_BOARD_INDEX, INVALID) {}
-
-  move_t(index_t from, index_t to, piece_t piece)
-      : from(from),
-        to(to),
-        piece(piece),
-        promoted_to(TO_NONE),
-        captured(INVALID),
-        double_pawn_move(false),
-        en_passant_capture(false),
-        castling_move(false)
-  {}
-};
-
-
-inline std::ostream& operator<<(std::ostream& os, const move_t& move)
-{
-  const position_t from(move.from & 7, move.from >> 4);
-  const position_t to(move.to & 7, move.to >> 4);
-
-  const char from_file = 'a' + static_cast<char>(from.file);
-  const char from_rank = '1' + static_cast<char>(from.rank);
-  const char to_file = 'a' + static_cast<char>(to.file);
-  const char to_rank = '1' + static_cast<char>(to.rank);
-
-  os << from_file << from_rank << to_file << to_rank;
-
-  return os;
-}
 
 struct board_t
 {
-  piece_t board[BOARD_SIZE];
+  bb_t bitboards[12];
+  bb_t occupancies[3];
+
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
-  uint64_t zobrist_key;       // Zobrist Key
-};
-
-
-struct history_entry_t
-{
-  board_t board;
-  size_t repetition_size;
-};
-
-
-struct global_state_t
-{
-  zobrist_randoms_t zobrist_randoms;  // The keys used for Zobrist hashing.
-
-  size_t repetition_size;
-  uint64_t repetitions[REPETITION_MAX_SIZE];
-
-  size_t history_size;
-  history_entry_t history[HISTORY_MAX_SIZE];
-};
-
-struct pv_t
-{
-  size_t pv_length[MAX_PLY];
-  move_t pv_table[MAX_PLY][MAX_PLY];
-};
-
-
-enum node_type_t
-{
-  TT_EMPTY_NODE,
-  TT_PV_NODE,     // The stored score is EXACTLY that
-  TT_ALPHA_NODE,  // The stored score was at most that. Upperbound. Fail-low
-  TT_BETA_NODE    // The stored score was at least that. Lowerbound. Fail-high
-};
-
-
-struct tt_entry_t
-{
-  uint64_t key = 0;
-  node_type_t type = TT_EMPTY_NODE;
-  int depth = 0;
-  int score = 0;
-  move_t best_move;
-};
-
-
-struct transposition_table_t
-{
-  tt_entry_t entries[TT_SIZE];
-};
-
-
-struct search_t
-{
-  move_t best_move;
-  int score;
-  uint64_t explored_nodes;
-  pv_t pv;
-  bool mate_found;
-  int mate_in;
-};
-
-
-struct search_state_t
-{
-  std::atomic_bool* stop = nullptr;
-  uint64_t explored_nodes;
-  move_t killer_moves[2][MAX_PLY];
-  int history_moves[piece_t::EMPTY + 1][BOARD_SIZE];  // [piece][destination]
-  pv_t pv;
-  bool search_in_tt = true;
-  transposition_table_t* tt;  // Too big to keep on the stack
-  move_t best_move;
+  hash_t zobrist_key;         // Zobrist Key
 };

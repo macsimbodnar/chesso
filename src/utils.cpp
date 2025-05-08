@@ -1,12 +1,51 @@
 #include "utils.hpp"
 #include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <iterator>
 #include <sstream>
 #include <unordered_map>
-#include "exceptions.hpp"
+
+
+bool is_uint(const std::string& str)
+{
+  for (const char c : str) {
+    if (!isdigit(c)) { return false; }
+  }
+
+  return true;
+}
+
+
+std::vector<std::string> split_string(const std::string& str)
+{
+  std::stringstream ss(str);
+  std::istream_iterator<std::string> begin(ss);
+  std::istream_iterator<std::string> end;
+  std::vector<std::string> tokens(begin, end);
+
+  return tokens;
+}
+
+
+std::string index_to_str(index_t index)
+{
+  // clang-format off
+  static const char* map[] = {
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
+  };
+  // clang-format on
+
+  assert(index < sizeof(map) / sizeof(map[0]));
+
+  return map[index];
+}
 
 
 index_t position_to_index(const uint8_t file, const uint8_t rank)
@@ -14,9 +53,8 @@ index_t position_to_index(const uint8_t file, const uint8_t rank)
   assert(file >= 0 && file < 8);
   assert(rank >= 0 && rank < 8);
 
-  const index_t index = (rank << 4) + file;
-  assert(index < BOARD_SIZE);
-  assert(!(index & 0x88));
+  const index_t index = (7 - rank) * 8 + file;
+  assert(index < 64);
 
   return index;
 }
@@ -24,22 +62,19 @@ index_t position_to_index(const uint8_t file, const uint8_t rank)
 
 position_t index_to_position(index_t index)
 {
-  assert(!(index & 0x88));
-  assert(index < BOARD_SIZE);
+  assert(index < 64);
 
   position_t result;
-  result.file = index & 7;
-  result.rank = index >> 4;
+  result.file = index % 8;
+  result.rank = index / 8;
 
   return result;
 }
 
 
-index_t string_coordinates_to_index(const std::string& p)
+index_t str_to_index(const std::string& p)
 {
-  index_t result = INVALID_BOARD_INDEX;
-
-  if (p.size() != 2) { return INVALID_BOARD_INDEX; }
+  assert(p.length() == 2);
 
   uint8_t file = p[0];
   uint8_t rank = p[1];
@@ -52,82 +87,25 @@ index_t string_coordinates_to_index(const std::string& p)
   file = file - 'a';
   rank = rank - '1';
 
-  result = position_to_index(file, rank);
+  const index_t result = position_to_index(file, rank);
 
   return result;
 }
 
 
-std::string index_to_string_coordinates(const index_t i)
-{
-  if (i == INVALID_BOARD_INDEX) { return "-"; }
-
-  const position_t p = index_to_position(i);
-  std::string result;
-  result.reserve(2);
-
-  result.push_back('a' + p.file);
-  result.push_back('1' + p.rank);
-
-  return result;
-}
-
-
-char piece_to_char(const piece_t piece)
-{
-  static const std::unordered_map<piece_t, char> piece_to_char_map = {
-      {B_PAWN, 'p'},   {B_KNIGHT, 'n'}, {B_BISHOP, 'b'}, {B_ROOK, 'r'},
-      {B_QUEEN, 'q'},  {B_KING, 'k'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
-      {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
-      {INVALID, '*'},  {EMPTY, ' '}};
-
-  return piece_to_char_map.at(piece);
-}
-
-
-piece_t char_to_piece(const char c)
+piece_t char_to_piece(char c)
 {
   static const std::unordered_map<char, piece_t> char_to_piece_map = {
       {'p', B_PAWN},   {'n', B_KNIGHT}, {'b', B_BISHOP}, {'r', B_ROOK},
       {'q', B_QUEEN},  {'k', B_KING},   {'P', W_PAWN},   {'N', W_KNIGHT},
-      {'B', W_BISHOP}, {'R', W_ROOK},   {'Q', W_QUEEN},  {'K', W_KING},
-      {'*', INVALID},  {' ', EMPTY}};
+      {'B', W_BISHOP}, {'R', W_ROOK},   {'Q', W_QUEEN},  {'K', W_KING}};
 
   return char_to_piece_map.at(c);
 }
 
 
-std::string print_board(const board_t* board)
+std::string piece_to_icon(piece_t piece)
 {
-  std::stringstream ss;
-
-  for (size_t i = 8; i > 0; --i) {
-    for (size_t j = 0; j < 16; ++j) {
-      ss << piece_to_char(board->board[((i - 1) * 16) + j]);
-    }
-
-    ss << "\n";
-  }
-
-  return ss.str();
-}
-
-std::string print_nice_board(const board_t* board)
-{
-  /**
-   *
-   * 8  ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜
-   * 7  ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟
-   * 6
-   * 5
-   * 4
-   * 3
-   * 2  ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙
-   * 1  ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
-   *
-   *    A B C D E F G H
-   */
-
   // clang-format off
   static const std::unordered_map<char, std::string> sprite_map = {
     {W_PAWN, "♟︎"},
@@ -141,30 +119,93 @@ std::string print_nice_board(const board_t* board)
     {B_BISHOP, "♗"},
     {B_ROOK, "♖"},
     {B_QUEEN, "♕"},
-    {B_KING, "♔"},
-    {EMPTY, " "},
-    {INVALID, " "},
+    {B_KING, "♔"}
   };
+
   // clang-format on
+
+  return sprite_map.at(piece);
+}
+
+
+std::string piece_to_str(piece_t piece)
+{
+  const static char ascii_pieces[] = "PNBRQKpnbrqk";
+  std::string result;
+  result += ascii_pieces[piece];
+  return result;
+}
+
+
+std::string print_bboard(bb_t board)
+{
+  std::stringstream ss;
+  ss << "\n";
+
+  ss << "    bitboard: " << std::hex << board << std::dec << "\n\n";
+
+  for (int r_index = 0; r_index < 8; ++r_index) {
+    const int rank = 7 - r_index;
+
+    for (int file = 0; file < 8; ++file) {
+      const int square = position_to_index(file, rank);
+
+      // Print ranks
+      if (file == 0) { ss << 8 - rank << "   "; }
+
+      // Print the bit
+      ss << (GET_BIT(board, square) ? 1 : 0) << " ";
+    }
+
+    ss << "\n";
+  }
+
+  // Print the files
+  ss << "\n    A B C D E F G H \n";
+  return ss.str();
+}
+
+
+std::string print_nice_board(const board_t* board)
+{
+  assert(board != nullptr);
 
   std::stringstream ss;
 
+  /**
+   * 8  ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜
+   * 7  ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟
+   * 6
+   * 5
+   * 4
+   * 3
+   * 2  ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙
+   * 1  ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖
+   *    A  B  C  D  E  F  G  H
+   */
+
   ss << "#######################################\n";
 
-  for (size_t i = 8; i > 0; --i) {
-    ss << i << "  ";
+  for (uint8_t r_index = 0; r_index < 8; ++r_index) {
+    const uint8_t rank = 7 - r_index;
+    ss << int(rank) << "  ";
 
-    for (size_t j = 0; j < 16; ++j) {
-      const index_t index = ((i - 1) * 16) + j;
-      const char piece = board->board[index];
+    for (uint8_t file = 0; file < 8; ++file) {
+      const index_t square = position_to_index(file, rank);
 
-      if (index & 0x88) { continue; }
+      // loop over all piece bitboards
+      bool empty_square = true;
+      for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+        if (GET_BIT(board->bitboards[piece], square)) {
+          // ss << piece_to_str(static_cast<piece_t>(piece)) << " ";
+          ss << piece_to_icon(static_cast<piece_t>(piece)) << " ";
+          empty_square = false;
+          break;
+          ;
+        }
+      }
 
-      if (piece == EMPTY) {
-        const uint8_t file = index & 7;
-        const uint8_t rank = index >> 4;
-
-
+      if (empty_square) {
         if ((file + rank) % 2) {
           // WHITE EMPTY SQUARE
           ss << "  ";
@@ -172,15 +213,7 @@ std::string print_nice_board(const board_t* board)
           // BLACK EMPTY SQUARE
           ss << "* ";
         }
-      } else {
-        ss << sprite_map.at(piece) << " ";
       }
-
-
-      // if (file + rank) % 2 == 0:
-      //         square.color = Piece.PieceColor.WHITE
-      //     else:
-      //         square.color = Piece.PieceColor.BLACK
     }
 
     ss << "\n";
@@ -190,10 +223,10 @@ std::string print_nice_board(const board_t* board)
   ss << "   A B C D E F G H";
   ss << "\n------------------";
 
-  ss << "\nactive_color:      " << color_to_string(board->active_color);
+  ss << "\nactive_color:      " << ((board->active_color == WHITE) ? "WHITE" : "BLACK");
   ss << "\ncastling:          " << std::bitset<4>(board->castling);
   ss << "\nhalf_move_clock:   " << int(board->halfmove_clock);
-  ss << "\nen_passant:        " << index_to_string_coordinates(board->en_passant);
+  ss << "\nen_passant:        " << ((board->en_passant == INVALID_INDEX) ? "-" : index_to_str(board->en_passant));
   ss << "\nfull_move_number:  " << int(board->fullmove_counter);
   ss << "\nzobrist_key:       " << board->zobrist_key;
   // ss << "\nphase_value:       " << int(board->phase_value);
@@ -203,92 +236,4 @@ std::string print_nice_board(const board_t* board)
   // clang-format on
 
   return ss.str();
-}
-
-
-std::string color_to_string(color_t color)
-{
-  if (color == WHITE) { return "White"; }
-
-  return "Black";
-}
-
-
-color_t get_square_color(index_t index)
-{
-  position_t pos = index_to_position(index);
-
-  if (((pos.file + pos.rank) % 2) == 0) { return BLACK; }
-
-  return WHITE;
-}
-
-
-color_t get_piece_color(piece_t piece)
-{
-  assert(piece != EMPTY && piece != INVALID);
-
-  switch (piece) {
-    case B_KING:
-    case B_QUEEN:
-    case B_KNIGHT:
-    case B_BISHOP:
-    case B_ROOK:
-    case B_PAWN:
-      return BLACK;
-    case W_KING:
-    case W_QUEEN:
-    case W_KNIGHT:
-    case W_BISHOP:
-    case W_ROOK:
-    case W_PAWN:
-      return WHITE;
-    case EMPTY:
-    case INVALID:
-    default:
-      assert(false);
-      break;
-  }
-
-  assert(false);
-  return BLACK;
-}
-
-/**
- * This function fixes the weirdo castling move that can be found in Polyglot
- * book format and some times the UCI can send that as well! (Looking at you
- * Cutechess!)
- *
- * We just need the move
- * white short      e1h1 -> e1g1
- * white long       e1a1 -> e1c1
- * black short      e8h8 -> e8g8
- * black long       e8a8 -> e8c8
- */
-void fix_weirdo_castling(const board_t* board, move_t* move)
-{
-  assert(board != nullptr);
-  assert(move != nullptr);
-
-  if (move->from == 0x04 && move->to == 0x07 &&
-      board->board[move->from] == W_KING) {
-    // white short
-    move->to = 0x06;
-    move->castling_move = true;
-  } else if (move->from == 0x04 && move->to == 0x00 &&
-             board->board[move->from] == W_KING) {
-    // white long
-    move->to = 0x02;
-    move->castling_move = true;
-  } else if (move->from == 0x74 && move->to == 0x77 &&
-             board->board[move->from] == B_KING) {
-    // black short
-    move->to = 0x76;
-    move->castling_move = true;
-  } else if (move->from == 0x74 && move->to == 0x70 &&
-             board->board[move->from] == B_KING) {
-    // black short
-    move->to = 0x72;
-    move->castling_move = true;
-  }
 }

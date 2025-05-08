@@ -6,13 +6,13 @@
   "configurations": [
     {
       "name": "chesso",
-      "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/src/chesso",
-      "args": [],
-      "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build/src",
       "environment": [],
+      "type": "cppdbg",
+      "args": [],
+      "stopAtEntry": false,
       "externalConsole": false,
       "MIMode": "gdb",
       "setupCommands": [
@@ -74,11 +74,26 @@
     },
     {
       "name": "debug_main",
-      "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/build/tests/debug_main",
       "args": [],
       "cwd": "${workspaceFolder}/build/tests",
+      "type": "cppdbg",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }
