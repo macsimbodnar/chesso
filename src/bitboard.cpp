@@ -22,6 +22,7 @@ inline index_t get_lsb_index(bb_t board)
 bool load_FEN(const std::string& FEN, board_t* board)
 {
   assert(board != nullptr);
+  cleanup_board(board);
 
   // Start parsing
   auto sections = split_string(FEN);
@@ -272,6 +273,129 @@ bool load_FEN(const std::string& FEN, board_t* board)
   // Update Zobrist keys
   // board->zobrist_key = init_zobrist_key(state, board);
   return true;
+}
+
+
+std::string generate_FEN(const board_t* board)
+{
+  assert(board != nullptr);
+
+  std::stringstream ss;
+
+  // Step 1: Board representation
+  int empty_count = 0;
+
+  for (int rank = 7; rank >= 0; --rank) {
+    for (int file = 0; file < 8; ++file) {
+      const auto index = position_to_index(file, rank);
+      const auto piece = get_piece(board, index);
+
+      if (piece == piece_t::EMPTY) {
+        ++empty_count;
+      } else {
+        if (empty_count > 0) {
+          ss << empty_count;
+          empty_count = 0;
+        }
+
+        switch (piece) {
+          case piece_t::B_KING:
+            ss << 'k';
+            break;
+          case piece_t::B_QUEEN:
+            ss << 'q';
+            break;
+          case piece_t::B_ROOK:
+            ss << 'r';
+            break;
+          case piece_t::B_BISHOP:
+            ss << 'b';
+            break;
+          case piece_t::B_KNIGHT:
+            ss << 'n';
+            break;
+          case piece_t::B_PAWN:
+            ss << 'p';
+            break;
+          case piece_t::W_KING:
+            ss << 'K';
+            break;
+          case piece_t::W_QUEEN:
+            ss << 'Q';
+            break;
+          case piece_t::W_ROOK:
+            ss << 'R';
+            break;
+          case piece_t::W_BISHOP:
+            ss << 'B';
+            break;
+          case piece_t::W_KNIGHT:
+            ss << 'N';
+            break;
+          case piece_t::W_PAWN:
+            ss << 'P';
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+
+    if (empty_count > 0) {
+      ss << empty_count;
+      empty_count = 0;
+    }
+
+    if (rank > 0) { ss << '/'; }
+  }
+
+  // Step 2: Active color
+  ss << (board->active_color == color_t::WHITE ? " w " : " b ");
+
+  // Step 3: Castling rights
+  bool has_castling_rights = false;
+
+  if (board->castling & WK) {
+    ss << 'K';
+    has_castling_rights = true;
+  }
+
+  if (board->castling & WQ) {
+    ss << 'Q';
+    has_castling_rights = true;
+  }
+
+  if (board->castling & BK) {
+    ss << 'k';
+    has_castling_rights = true;
+  }
+
+  if (board->castling & BQ) {
+    ss << 'q';
+    has_castling_rights = true;
+  }
+
+  if (!has_castling_rights) { ss << '-'; }
+
+  ss << ' ';
+
+  // Step 4: En passant target square
+  if (board->en_passant != INVALID_INDEX) {
+    ss << index_to_str(board->en_passant);
+  } else {
+    ss << '-';
+  }
+
+  ss << ' ';
+
+  // Step 5: Halfmove clock
+  ss << int(board->halfmove_clock) << ' ';
+
+  // Step 6: Fullmove number
+  ss << int(board->fullmove_counter);
+
+  return ss.str();
 }
 
 
@@ -548,7 +672,16 @@ piece_t get_piece(const board_t* board, index_t square)
   return EMPTY;
 }
 
-/******************************************************************************
- *                      UTILS DEBUG FUNCTIONS
- * NOTE: Does not need to be optimized, they are called once at the start
- ******************************************************************************/
+
+void cleanup_board(board_t* board)
+{
+  assert(board != nullptr);
+  memset(board->bitboards, 0, sizeof(board->bitboards));
+
+  board->active_color = WHITE;
+  board->castling = WQ | WK | BQ | BK;
+  board->halfmove_clock = 0;
+  board->en_passant = INVALID_INDEX;
+  board->fullmove_counter = 1;
+  board->zobrist_key = 0;
+}
