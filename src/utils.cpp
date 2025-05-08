@@ -151,7 +151,7 @@ std::string print_bboard(bb_t board)
       const int square = position_to_index(file, rank);
 
       // Print ranks
-      if (file == 0) { ss << 8 - rank << "   "; }
+      if (file == 0) { ss << rank + 1 << "   "; }
 
       // Print the bit
       ss << (GET_BIT(board, square) ? 1 : 0) << " ";
@@ -188,7 +188,7 @@ std::string print_nice_board(const board_t* board)
 
   for (uint8_t r_index = 0; r_index < 8; ++r_index) {
     const uint8_t rank = 7 - r_index;
-    ss << int(rank) << "  ";
+    ss << int(rank + 1) << "  ";
 
     for (uint8_t file = 0; file < 8; ++file) {
       const index_t square = position_to_index(file, rank);

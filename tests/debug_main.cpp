@@ -4,7 +4,7 @@
 #include "utils.hpp"
 
 
-static bb_const_data_t bb_data;
+static bb_tables_t bb_data;
 static board_t board;
 
 int main(int argc, char* argv[])
@@ -20,17 +20,12 @@ int main(int argc, char* argv[])
   initialize_const_data(&bb_data);
 
   assert(load_FEN(DEFAULT_POSITION, &board));
-
-  // SET_BIT(board.bitboards[W_KING], a1);
-
   LOG_I << print_nice_board(&board) << END_I;
 
-
-  // LOG_I << piece_to_str(get_piece(&board, e1)) << END_I;
-
-  LOG_I << print_bboard(board.bitboards[B_ROOK]) << END_I;
-
-
+  bb_t occupancy = BB_0;
+  bb_t q_attacks = get_rook_attacks(&bb_data, d4, occupancy);
+  
+  LOG_I << print_bboard(q_attacks) << END_I;
 
   return 0;
 }

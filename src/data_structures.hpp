@@ -156,7 +156,7 @@ inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
 }
 
 
-struct bb_const_data_t
+struct bb_tables_t
 {
   bb_t pawn_attacks[2][64];  // [color][squares]
   bb_t knight_attacks[64];

@@ -6,6 +6,9 @@
 #include "utils.hpp"
 
 
+/******************************************************************************
+ *                               MUST RUN FAST
+ ******************************************************************************/
 inline int count_bits(bb_t board)
 {
   return std::popcount(board);
@@ -19,6 +22,40 @@ inline index_t get_lsb_index(bb_t board)
 }
 
 
+bb_t get_bishop_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+{
+  assert(data != nullptr);
+
+  occupancy &= data->bishop_masks[index];
+  occupancy *= bishop_magic_numbers[index];
+  occupancy >>= 64 - bishop_relevant_bits_count[index];
+  return data->bishop_attacks[index][occupancy];
+}
+
+
+bb_t get_rook_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+{
+  assert(data != nullptr);
+
+  occupancy &= data->rook_masks[index];
+  occupancy *= rook_magic_numbers[index];
+  occupancy >>= 64 - rook_relevant_bits_count[index];
+  return data->rook_attacks[index][occupancy];
+}
+
+
+bb_t get_queen_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+{
+  bb_t queen_attacks = get_bishop_attacks(data, index, occupancy);
+  queen_attacks |= get_rook_attacks(data, index, occupancy);
+  return queen_attacks;
+}
+
+
+/******************************************************************************
+ *                               UTIL FUNCTIONS
+ * NOTE: Does not need to be optimized
+ ******************************************************************************/
 bool load_FEN(const std::string& FEN, board_t* board)
 {
   assert(board != nullptr);
@@ -604,7 +641,7 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 }
 
 
-void initialize_const_data(bb_const_data_t* data)
+void initialize_const_data(bb_tables_t* data)
 {
   assert(data != nullptr);
 
