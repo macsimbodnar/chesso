@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
 
   move_count = generate_moves(&game.tables, &game.board, moves);
 
-  // for (size_t i = 0; i < move_count; ++i) {
-  //   LOG_I << print_move(moves[i]) << END_I;
-  // }
+  for (size_t i = 0; i < move_count; ++i) {
+    LOG_I << print_move(moves[i]) << END_I;
+  }
 
   const bool happened = make_move(&game, moves[0]);
 

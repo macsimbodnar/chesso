@@ -22,12 +22,12 @@ add_test(NAME test_chesso_board COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso_
 
 # add_test(NAME test_openings COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_openings)
 
-# # Perft
-# add_executable(test_perft test_perft.cpp)
-# target_include_directories(test_perft SYSTEM PRIVATE json/single_include/nlohmann)
-# target_include_directories(test_perft PRIVATE ../src)
-# target_link_libraries(test_perft PRIVATE chesso_engine)
-# add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
+# Perft
+add_executable(test_perft test_perft.cpp)
+target_include_directories(test_perft SYSTEM PRIVATE json/single_include/nlohmann)
+target_include_directories(test_perft PRIVATE ../src)
+target_link_libraries(test_perft PRIVATE chesso_engine)
+add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
 
 # # Test gui
 # if(CHESSO_BUILD_GUI)

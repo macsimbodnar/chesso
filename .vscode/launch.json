@@ -30,11 +30,26 @@
     },
     {
       "name": "test_chesso_board",
-      "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/build/tests/test_chesso_board",
       "args": [],
       "cwd": "${workspaceFolder}/build/tests",
+      "type": "cppdbg",
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
     },
     {
       "name": "test_perft",

@@ -8,10 +8,9 @@
 #include <optional>
 #include <ostream>
 #include <thread>
-#include "board.hpp"
+#include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "json.hpp"
-#include "move_generator.hpp"
 #include "unordered_map"
 
 
@@ -24,13 +23,12 @@ using json = nlohmann::json;
 // clang-format off
 const static std::vector<std::string> test_files = {
   // "assets/perft_json/debug_perft.json",
-  "assets/perft_json/talkchess_perft.json",
+  // "assets/perft_json/talkchess_perft.json",
   "assets/perft_json/perft.json"
 };
 // clang-format on
 
-static board_t g_board;
-static global_state_t g_globals;
+static game_t game;
 
 
 // ANSI escape codes for colors
@@ -272,10 +270,10 @@ stats_t get_move_stats(const move_t& move)
 {
   stats_t stats;
   stats.nodes += 1;
-  stats.captures += (move.captured != INVALID ? 1 : 0);
-  stats.en_passants += (move.en_passant_capture ? 1 : 0);
-  stats.castles += (move.castling_move ? 1 : 0);
-  stats.promotions += (move.promoted_to != TO_NONE ? 1 : 0);
+  stats.captures += (MOVE_CAPTURE(move) ? 1 : 0);
+  stats.en_passants += (MOVE_EN_PASSANT(move) ? 1 : 0);
+  stats.castles += (MOVE_CASTLING(move) ? 1 : 0);
+  stats.promotions += (MOVE_PROMOTED(move) > 0 ? 1 : 0);
   stats.checks = 0;
   stats.discovery_checks = 0;
   stats.double_checks = 0;
@@ -296,8 +294,10 @@ stats_t get_moves_stats(const move_t moves[], size_t moves_count)
 }
 
 
-stats_t perft(int depth, board_t* board, global_state_t* globals)
+stats_t perft(int depth, game_t* game)
 {
+  assert(game != nullptr);
+
   stats_t node_stats;
 
   if (depth == 0) {
@@ -306,27 +306,31 @@ stats_t perft(int depth, board_t* board, global_state_t* globals)
   }
 
   // Check if this position is in tt table
-  const stats_t* stats_in_tt = get_from_tt(board, depth);
-  if (stats_in_tt != nullptr) { return *stats_in_tt; }
+  // const stats_t* stats_in_tt = get_from_tt(board, depth);
+  // if (stats_in_tt != nullptr) { return *stats_in_tt; }
 
   move_t moves[270];
-  const size_t moves_count = generate_legal_moves(board, globals, moves);
+  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
-    make_move(&moves[i], board, globals);
-    if (depth == 1) {
-      node_stats += get_move_stats(moves[i]);
-    } else {
-      node_stats.nodes += 1;
+    if (make_move(game, moves[i])) {
+      if (depth == 1) {
+        node_stats += get_move_stats(moves[i]);
+      } else {
+        node_stats.nodes += 1;
+      }
+
+      node_stats.nodes -= 1;
+      node_stats += perft(depth - 1, game);
+
+      unmake_move(game);
     }
-    node_stats.nodes -= 1;
-    node_stats += perft(depth - 1, board, globals);
-    unmake_move(board, globals);
   }
 
-  store_to_tt(board, depth, &node_stats);
+  // store_to_tt(board, depth, &node_stats);
   return node_stats;
 }
+
 
 std::string print_stats(const expected_stats_t& expected, const stats_t real)
 {
@@ -376,6 +380,8 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
 
 int main()
 {
+  initialize_const_data(&game.tables);
+
   bool passed = true;
 
   for (const auto& test_file : test_files) {
@@ -424,7 +430,7 @@ int main()
         if (depth > depth_limit) { continue; }
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        init_board(fen, &g_board, &g_globals);
+        load_FEN(fen, &game.board, &game.history);
         stats_t stats;
         stats.nodes = 1;
 
@@ -433,7 +439,7 @@ int main()
 
           move_t moves[270];
           const size_t moves_count =
-              generate_legal_moves(&g_board, &g_globals, moves);
+              generate_moves(&game.tables, &game.board, moves);
 
           if (depth > 1) {
 #ifdef RUN_THREADS
@@ -463,10 +469,11 @@ int main()
             }
 #else
             for (size_t i = 0; i < moves_count; ++i) {
-              make_move(&moves[i], &g_board, &g_globals);
-              const auto res = perft(depth - 1, &g_board, &g_globals);
-              unmake_move(&g_board, &g_globals);
-              stats += res;
+              if (make_move(&game, moves[i])) {
+                const auto res = perft(depth - 1, &game);
+                unmake_move(&game);
+                stats += res;
+              }
             }
 #endif
 

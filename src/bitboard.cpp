@@ -1,5 +1,6 @@
 #include "bitboard.hpp"
 #include <bit>
+#include <unordered_map>
 #include "bb_tables.hpp"
 #include "data_structures.hpp"
 #include "log.hpp"
@@ -1057,429 +1058,499 @@ std::string generate_FEN(const board_t* board)
 }
 
 
-// std::string move_to_algebraic(const move_t* move,
-//                               const move_t moves[],
-//                               size_t moves_size,
-//                               board_t* board)
-// {
-//   assert(move != nullptr);
-//   assert(board != nullptr);
-//   assert(move->piece != INVALID);
-//   assert(move->piece != EMPTY);
-//   assert(moves != nullptr);
+/**
+ * @brief Returns the indexes of the ambiguous moves.
+ */
+size_t get_ambiguous_move(const unpacked_move_t* move,
+                          const move_t moves[],
+                          size_t moves_size,
+                          index_t result[])
+{
+  assert(moves != nullptr);
+  assert(result != nullptr);
 
-//   // Not using the piece_to_char function because the piece moved in
-//   // always upper case
-//   static const std::unordered_map<piece_t, char> piece_to_char_map = {
-//       {B_PAWN, 'P'},   {B_KNIGHT, 'N'}, {B_BISHOP, 'B'}, {B_ROOK, 'R'},
-//       {B_QUEEN, 'Q'},  {B_KING, 'K'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
-//       {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
-//       {INVALID, '*'},  {EMPTY, ' '}};
+  size_t result_count = 0;
+  for (size_t i = 0; i < moves_size; ++i) {
+    const unpacked_move_t I(moves[i]);
 
-//   static const char file_to_char_map[8] = {'a', 'b', 'c', 'd',
-//                                            'e', 'f', 'g', 'h'};
-//   static const char rank_to_char_map[8] = {'1', '2', '3', '4',
-//                                            '5', '6', '7', '8'};
+    // If same piece, same destination and different source
+    if (move->piece == I.piece && move->to == I.to && move->from != I.from) {
+      result[result_count] = i;
+      ++result_count;
+    }
+  }
 
-//   std::string notation;
-
-//   // Handle castling
-//   if (move->castling_move) {
-//     if (move->to == 0x06 || move->to == 0x76)
-//       return "O-O";  // King-side castling
-//     if (move->to == 0x02 || move->to == 0x72)
-//       return "O-O-O";  // Queen-side castling
-//   }
-
-//   if (move->piece != W_PAWN && move->piece != B_PAWN) {
-//     notation += piece_to_char_map.at(move->piece);  // Non-pawn pieces
-
-//     // If ambiguous move the add the from file
-//     index_t ambiguous_moves[MAX_MOVES];
-//     const size_t ambiguous_moves_count =
-//         get_ambiguous_move(move, moves, moves_size, ambiguous_moves);
-
-//     if (ambiguous_moves_count > 0) {
-//       const position_t move_from_pos = index_to_position(move->from);
-//       bool is_file_unique = true;
-//       bool is_rank_unique = true;
-
-//       // Check if file or rank are unique for the move->from
-//       for (size_t i = 0; i < ambiguous_moves_count; ++i) {
-//         const index_t index = ambiguous_moves[i];
-//         const position_t i_pos = index_to_position(moves[index].from);
-
-//         if (move_from_pos.file == i_pos.file) { is_file_unique = false; }
-
-//         if (move_from_pos.rank == i_pos.rank) { is_rank_unique = false; }
-
-//         // Exit from the loop in case both are non unique. No make sense
-//         // to search for more
-//         if (!is_file_unique && !is_rank_unique) { break; }
-//       }
-
-//       if (is_file_unique) {
-//         // Check if file unique
-//         notation += file_to_char_map[move_from_pos.file];
-//       } else if (is_rank_unique) {
-//         // Check if rank unique
-//         notation += rank_to_char_map[move_from_pos.rank];
-//       } else {
-//         // In case none is unique use both
-//         notation += file_to_char_map[move_from_pos.file];
-//         notation += rank_to_char_map[move_from_pos.rank];
-//       }
-//     }
-//   }
-
-//   // Capture notation
-//   if (move->captured != INVALID && move->piece != W_PAWN &&
-//       move->piece != B_PAWN) {
-//     notation += 'x';
-//   }
-
-//   // Destination square
-//   notation += index_to_string_coordinates(move->to);
-
-//   // Pawn captures (ex: exd5)
-//   if ((move->piece == W_PAWN || move->piece == B_PAWN) &&
-//       move->captured != INVALID) {
-//     notation = index_to_string_coordinates(move->from)[0] + std::string("x")
-//     +
-//                index_to_string_coordinates(move->to);
-//   }
-
-//   // Pawn promotion
-//   if (move->promoted_to != TO_NONE) {
-//     notation += "=";
-//     switch (move->promoted_to) {
-//       case TO_QUEEN:
-//         notation += 'Q';
-//         break;
-//       case TO_ROOK:
-//         notation += 'R';
-//         break;
-//       case TO_BISHOP:
-//         notation += 'B';
-//         break;
-//       case TO_KNIGHT:
-//         notation += 'N';
-//         break;
-//       default:
-//         break;
-//     }
-//   }
-
-//   // Handle check
-//   const index_t opponent_king_index =
-//       get_king_index(!board->active_color, board);
-
-//   const bool move_happened = make_move(move, board, state);
-//   assert(move_happened);
-//   (void)move_happened;  // Supress the unused var log
-
-//   // Generate moves for my color but after the current move is done
-//   move_t pseudo_legal_moves[30];
-//   const size_t pseudo_legal_moves_count =
-//       generate_pseudo_legal_moves_from_index(move->to, board,
-//                                              pseudo_legal_moves);
-
-//   assert(pseudo_legal_moves_count <=
-//          sizeof(pseudo_legal_moves) / sizeof(pseudo_legal_moves[0]));
-
-//   // Check if one of this moves put under check the opponent king
-
-//   for (size_t pseudo_index = 0; pseudo_index < pseudo_legal_moves_count;
-//        ++pseudo_index) {
-//     const move_t& pseudo_move = pseudo_legal_moves[pseudo_index];
-//     if (pseudo_move.to == opponent_king_index) {
-//       // Now let's check if this is check mate
-
-//       // Generate legal moves after the make move to see if any available.
-//       move_t moves[MAX_MOVES];
-//       const size_t moves_count = generate_legal_moves(board, state, moves);
-
-//       if (moves_count == 0) {
-//         // Check mate
-//         notation += '#';
-//         break;
-//       } else {
-//         // Append a '+' to the notation
-//         notation += '+';
-//         break;
-//       }
-//     }
-//   }
-
-//   const bool move_un_happened = unmake_move(board, state);
-//   assert(move_un_happened);
-//   (void)move_un_happened;
-
-//   return notation;
-// }
+  return result_count;
+}
 
 
-// move_t algebraic_to_move(std::string notation, board_t* board)
-// {
-//   assert(board != nullptr);
+bool is_move_legal(game_t* game, move_t move)
+{
+  if (make_move(game, move)) {
+    unmake_move(game);
+    return true;
+  }
 
-//   static const std::unordered_map<char, uint8_t> char_to_file_map = {
-//       {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3},
-//       {'e', 4}, {'f', 5}, {'g', 6}, {'h', 7}};
-//   static const std::unordered_map<char, uint8_t> char_to_rank_map = {
-//       {'1', 0}, {'2', 1}, {'3', 2}, {'4', 3},
-//       {'5', 4}, {'6', 5}, {'7', 6}, {'8', 7}};
-
-//   const std::string original_notation = notation;
-
-//   move_t result;
-//   const color_t color = board->active_color;
-
-//   // Make a working copy of the move string.
-//   bool is_capture = false;
-
-//   // TODO: Use this
-//   // bool is_check = false;
-//   // bool is_mate = false;
-//   // if (notation.back() == '+') { is_check = true; }
-//   // if (notation.back() == '#') { is_mate = true; }
-
-//   // Remove any trailing check ('+') or checkmate ('#') symbols.
-//   while (!notation.empty() &&
-//          (notation.back() == '+' || notation.back() == '#')) {
-//     notation.pop_back();
-//   }
-
-//   // Parse castling
-//   if (notation == "O-O-O") {
-//     result.castling_move = true;
-//     switch (color) {
-//       case BLACK:
-//         result.from = 0x74;
-//         result.to = 0x72;
-//         result.piece = B_KING;
-//         break;
-//       case WHITE:
-//         result.from = 0x04;
-//         result.to = 0x02;
-//         result.piece = W_KING;
-//         break;
-//       default:
-//         assert(false);
-//         break;
-//     }
-
-//     return result;
-//   }
-
-//   if (notation == "O-O") {
-//     result.castling_move = true;
-
-//     switch (color) {
-//       case BLACK:
-//         result.from = 0x74;
-//         result.to = 0x76;
-//         result.piece = B_KING;
-//         break;
-//       case WHITE:
-//         result.from = 0x04;
-//         result.to = 0x06;
-//         result.piece = W_KING;
-//         break;
-//       default:
-//         assert(false);
-//         break;
-//     }
-
-//     return result;
-//   }
+  return false;
+}
 
 
-//   // Parse non-castling moves
-//   size_t pos = 0;
-//   piece_t moving_piece;
+size_t count_legal_moves(game_t* game, move_t moves[], size_t count)
+{
+  size_t result = 0;
 
-//   // If the move begins with a piece letter (K, Q, R, B, N), then use it.
-//   if (pos < notation.size() && std::isupper(notation[pos])) {
-//     char piece_char = notation[pos];
-//     switch (piece_char) {
-//       case 'K':
-//         moving_piece = (color == WHITE) ? W_KING : B_KING;
-//         break;
-//       case 'Q':
-//         moving_piece = (color == WHITE) ? W_QUEEN : B_QUEEN;
-//         break;
-//       case 'R':
-//         moving_piece = (color == WHITE) ? W_ROOK : B_ROOK;
-//         break;
-//       case 'B':
-//         moving_piece = (color == WHITE) ? W_BISHOP : B_BISHOP;
-//         break;
-//       case 'N':
-//         moving_piece = (color == WHITE) ? W_KNIGHT : B_KNIGHT;
-//         break;
-//       default:
-//         moving_piece = INVALID;
-//         break;
-//     }
-//     ++pos;
-//   } else {
-//     // If no piece letter then it's a pawn move.
-//     moving_piece = (color == WHITE) ? W_PAWN : B_PAWN;
-//   }
-//   result.piece = moving_piece;
+  for (size_t i = 0; i < count; ++i) {
+    if (is_move_legal(game, moves[i])) { result++; }
+  }
 
-//   // We now extract any disambiguation info.
-//   // This may be a file letter, a rank digit, or both.
-//   std::optional<char> disambiguous_file;
-//   std::optional<char> disambiguous_rank;
+  return result;
+}
 
-//   // Look ahead for an 'x' (capture marker) or destination square.
-//   // We will also later remove any 'x' from the string.
-//   size_t temp_pos = pos;
-//   while (temp_pos < notation.size() && notation[temp_pos] != 'x' &&
-//          !(notation[temp_pos] >= 'a' && notation[temp_pos] <= 'h' &&
-//            (temp_pos + 1 < notation.size() && notation[temp_pos + 1] >= '1'
-//            &&
-//             notation[temp_pos + 1] <= '8'))) {
-//     // Assume any character here is part of disambiguation.
-//     char d = notation[temp_pos];
-//     if (d >= 'a' && d <= 'h')
-//       disambiguous_file = d;
-//     else if (d >= '1' && d <= '8')
-//       disambiguous_rank = d;
-//     ++temp_pos;
-//   }
 
-//   // Remove capture marker(s) from the string.
-//   std::string cleaned;
-//   for (char ch : notation.substr(pos)) {
-//     if (ch != 'x') {
-//       cleaned.push_back(ch);
-//     } else {
-//       is_capture = true;
-//     }
-//   }
+std::string move_to_algebraic(game_t* game,
+                              move_t encoded_move,
+                              const move_t moves[],
+                              size_t moves_size)
+{
+  assert(game != nullptr);
+  assert(moves != nullptr);
+  assert(moves_size > 0);
 
-//   // Look for promotion: if there is an '=' then the following char is the
-//   // promotion piece.
-//   promotion_t promo = TO_NONE;
-//   size_t promo_pos = cleaned.find('=');
-//   if (promo_pos != std::string::npos && promo_pos + 1 < cleaned.size()) {
-//     char promo_char = cleaned[promo_pos + 1];
-//     switch (promo_char) {
-//       case 'Q':
-//         promo = TO_QUEEN;
-//         break;
-//       case 'R':
-//         promo = TO_ROOK;
-//         break;
-//       case 'B':
-//         promo = TO_BISHOP;
-//         break;
-//       case 'N':
-//         promo = TO_KNIGHT;
-//         break;
-//       default:
-//         promo = TO_NONE;
-//         break;
-//     }
-//     cleaned = cleaned.substr(0, promo_pos);
-//   }
-//   result.promoted_to = promo;
+  board_t* board = &game->board;
 
-//   // The destination square is the last two characters of the cleaned
-//   // string.
-//   if (cleaned.size() < 2) {
-//     // Error: not enough characters to form a square.
-//     throw algebraic_exception("Wrong formatting. Invalid Algebraic notation:
-//     " +
-//                               original_notation);
-//   }
+  // Not using the piece_to_char function because the piece moved in
+  // always upper case
+  static const std::unordered_map<piece_t, char> piece_to_char_map = {
+      {B_PAWN, 'P'},   {B_KNIGHT, 'N'}, {B_BISHOP, 'B'}, {B_ROOK, 'R'},
+      {B_QUEEN, 'Q'},  {B_KING, 'K'},   {W_PAWN, 'P'},   {W_KNIGHT, 'N'},
+      {W_BISHOP, 'B'}, {W_ROOK, 'R'},   {W_QUEEN, 'Q'},  {W_KING, 'K'},
+      {EMPTY, ' '}};
 
-//   std::string dest_square = cleaned.substr(cleaned.size() - 2, 2);
-//   index_t to_index = string_coordinates_to_index(dest_square);
-//   result.to = to_index;
+  static const char file_to_char_map[8] = {'a', 'b', 'c', 'd',
+                                           'e', 'f', 'g', 'h'};
+  static const char rank_to_char_map[8] = {'1', '2', '3', '4',
+                                           '5', '6', '7', '8'};
 
-//   if (result.to >= INVALID_BOARD_INDEX) {
-//     throw algebraic_exception(
-//         "Invalid destination square. Invalid Algebraic notation: " +
-//         original_notation);
-//   }
+  std::string notation;
+  const unpacked_move_t move(encoded_move);
 
-//   if (is_capture) {
-//     // Attempt to use the destination as capture piece
-//     result.captured = board->board[result.to];
+  // Handle castling
+  if (move.castling) {
+    if (move.to == g1 || move.to == g8) {
+      return "O-O";  // King-side castling
+    }
 
-//     // In case of en-passant override the capture
-//     if (board->en_passant != INVALID_BOARD_INDEX) {
-//       if (color == WHITE) {
-//         if (board->board[result.to] == EMPTY &&
-//             board->board[result.to - 0x10] == B_PAWN) {
-//           result.captured = B_PAWN;
-//         }
-//       } else {
-//         if (board->board[result.to] == EMPTY &&
-//             board->board[result.to + 0x10] == W_PAWN) {
-//           result.captured = W_PAWN;
-//         }
-//       }
-//     }
+    if (move.to == c1 || move.to == c8) {
+      return "O-O-O";  // Queen-side castling
+    }
+  }
 
-//     if (result.captured == INVALID || result.captured == EMPTY) {
-//       throw algebraic_exception(
-//           "No capture found on the board. Invalid Algebraic notation: " +
-//           original_notation);
-//     }
-//   }
+  if (move.piece != W_PAWN && move.piece != B_PAWN) {
+    notation += piece_to_char_map.at(move.piece);  // Non-pawn pieces
 
-//   // Any remaining characters between our initial pos and the destination
-//   // have been interpreted as disambiguation.
-//   // (In many SAN moves the disambiguation is omitted if unneeded.)
-//   // Here we already extracted potential disambiguation earlier.
+    // If ambiguous move the add the from file
+    index_t ambiguous_moves[MAX_MOVES];
+    const size_t ambiguous_moves_count =
+        get_ambiguous_move(&move, moves, moves_size, ambiguous_moves);
 
-//   // Generate legal moves and search the compatible one
-//   move_t moves[MAX_MOVES];
-//   const size_t moves_count = generate_legal_moves(board, state, moves);
+    if (ambiguous_moves_count > 0) {
+      const position_t move_from_pos = index_to_position(move.from);
+      bool is_file_unique = true;
+      bool is_rank_unique = true;
 
-//   bool found = false;
-//   for (size_t i = 0; i < moves_count; ++i) {
-//     const move_t& legal_move = moves[i];
+      // Check if file or rank are unique for the move.from
+      for (size_t i = 0; i < ambiguous_moves_count; ++i) {
+        const index_t index = ambiguous_moves[i];
+        const position_t i_pos = index_to_position(MOVE_FROM(moves[index]));
 
-//     if (legal_move.to == result.to && legal_move.piece == result.piece &&
-//         legal_move.promoted_to == result.promoted_to &&
-//         legal_move.captured == result.captured &&
-//         legal_move.castling_move == result.castling_move) {
-//       // Check for disambiguous
-//       const position_t legal_from_pos = index_to_position(legal_move.from);
+        if (move_from_pos.file == i_pos.file) { is_file_unique = false; }
 
-//       if (disambiguous_file.has_value()) {
-//         const uint8_t file = char_to_file_map.at(disambiguous_file.value());
+        if (move_from_pos.rank == i_pos.rank) { is_rank_unique = false; }
 
-//         if (file != legal_from_pos.file) { continue; }
-//       }
+        // Exit from the loop in case both are non unique. No make sense
+        // to search for more
+        if (!is_file_unique && !is_rank_unique) { break; }
+      }
 
-//       if (disambiguous_rank.has_value()) {
-//         const uint8_t rank = char_to_rank_map.at(disambiguous_rank.value());
+      if (is_file_unique) {
+        // Check if file unique
+        notation += file_to_char_map[move_from_pos.file];
+      } else if (is_rank_unique) {
+        // Check if rank unique
+        notation += rank_to_char_map[move_from_pos.rank];
+      } else {
+        // In case none is unique use both
+        notation += file_to_char_map[move_from_pos.file];
+        notation += rank_to_char_map[move_from_pos.rank];
+      }
+    }
+  }
 
-//         if (rank != legal_from_pos.rank) { continue; }
-//       }
+  // Capture notation
+  if (move.capture && move.piece != W_PAWN && move.piece != B_PAWN) {
+    notation += 'x';
+  }
 
-//       // We found the move
-//       found = true;
-//       result = legal_move;
-//       break;
-//     }
-//   }
+  // Destination square
+  notation += index_to_str(move.to);
 
-//   if (!found) {
-//     throw algebraic_exception(
-//         "No legal move found. Invalid Algebraic notation: " +
-//         original_notation);
-//   }
+  // Pawn captures (ex: exd5)
+  if ((move.piece == W_PAWN || move.piece == B_PAWN) && move.capture) {
+    notation =
+        index_to_str(move.from)[0] + std::string("x") + index_to_str(move.to);
+  }
 
-//   return result;
-// }
+  // Pawn promotion
+  if (move.promoted_to > 0) {
+    notation += "=";
+    switch (move.promoted_to) {
+      case W_QUEEN:
+      case B_QUEEN:
+        notation += 'Q';
+        break;
+      case W_ROOK:
+      case B_ROOK:
+        notation += 'R';
+        break;
+      case W_BISHOP:
+      case B_BISHOP:
+        notation += 'B';
+        break;
+      case W_KNIGHT:
+      case B_KNIGHT:
+        notation += 'N';
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Handle check
+  const piece_t king_to_select =
+      (board->active_color == WHITE) ? B_KING : W_KING;
+
+  const index_t opponent_king_index = board->bitboards[king_to_select];
+
+  const bool move_happened = make_move(game, encoded_move);
+  assert(move_happened);
+
+  if (move_happened) {
+    // Generate moves for my color but after the current move is done
+    move_t pseudo_legal_moves[30];
+    const size_t pseudo_legal_moves_count =
+        generate_moves(&game->tables, board, pseudo_legal_moves);
+
+    assert(pseudo_legal_moves_count <=
+           sizeof(pseudo_legal_moves) / sizeof(pseudo_legal_moves[0]));
+
+    // Check if one of this moves put under check the opponent king
+
+    for (size_t pseudo_index = 0; pseudo_index < pseudo_legal_moves_count;
+         ++pseudo_index) {
+      const unpacked_move_t pseudo_move(pseudo_legal_moves[pseudo_index]);
+      if (pseudo_move.to == opponent_king_index) {
+        // Now let's check if this is check mate
+
+        // Generate legal moves after the make move to see if any available.
+        move_t loc_moves[MAX_MOVES];
+        const size_t moves_count =
+            generate_moves(&game->tables, &game->board, loc_moves);
+
+        const size_t legal_moves_count =
+            count_legal_moves(game, loc_moves, moves_count);
+
+        if (legal_moves_count == 0) {
+          // Check mate
+          notation += '#';
+          break;
+        } else {
+          // Append a '+' to the notation
+          notation += '+';
+          break;
+        }
+      }
+    }
+
+    unmake_move(game);
+  }
+
+  return notation;
+}
+
+
+move_t algebraic_to_move(std::string notation, game_t* game)
+{
+  assert(game != nullptr);
+  board_t* board = &game->board;
+
+  static const std::unordered_map<char, uint8_t> char_to_file_map = {
+      {'a', 0}, {'b', 1}, {'c', 2}, {'d', 3},
+      {'e', 4}, {'f', 5}, {'g', 6}, {'h', 7}};
+  static const std::unordered_map<char, uint8_t> char_to_rank_map = {
+      {'1', 0}, {'2', 1}, {'3', 2}, {'4', 3},
+      {'5', 4}, {'6', 5}, {'7', 6}, {'8', 7}};
+
+  const std::string original_notation = notation;
+
+  unpacked_move_t result(BB_0);
+
+  const color_t color = board->active_color;
+
+  // Make a working copy of the move string.
+  bool is_capture = false;
+
+  // TODO: Use this
+  // bool is_check = false;
+  // bool is_mate = false;
+  // if (notation.back() == '+') { is_check = true; }
+  // if (notation.back() == '#') { is_mate = true; }
+
+  // Remove any trailing check ('+') or checkmate ('#') symbols.
+  while (!notation.empty() &&
+         (notation.back() == '+' || notation.back() == '#')) {
+    notation.pop_back();
+  }
+
+  // Parse castling
+  if (notation == "O-O-O") {
+    result.castling = true;
+    switch (color) {
+      case BLACK:
+        result.from = e8;
+        result.to = c8;
+        result.piece = B_KING;
+        break;
+      case WHITE:
+        result.from = e1;
+        result.to = c1;
+        result.piece = W_KING;
+        break;
+      default:
+        assert(false);
+        break;
+    }
+
+    return NEW_MOVE(result.from, result.to, result.piece, result.promoted_to,
+                    result.capture, result.double_push, result.en_passant,
+                    result.castling);
+  }
+
+  if (notation == "O-O") {
+    result.castling = true;
+
+    switch (color) {
+      case BLACK:
+        result.from = e8;
+        result.to = g8;
+        result.piece = B_KING;
+        break;
+      case WHITE:
+        result.from = e1;
+        result.to = g1;
+        result.piece = W_KING;
+        break;
+      default:
+        assert(false);
+        break;
+    }
+
+    return NEW_MOVE(result.from, result.to, result.piece, result.promoted_to,
+                    result.capture, result.double_push, result.en_passant,
+                    result.castling);
+  }
+
+
+  // Parse non-castling moves
+  size_t pos = 0;
+  piece_t moving_piece;
+
+  // If the move begins with a piece letter (K, Q, R, B, N), then use it.
+  if (pos < notation.size() && std::isupper(notation[pos])) {
+    char piece_char = notation[pos];
+    switch (piece_char) {
+      case 'K':
+        moving_piece = (color == WHITE) ? W_KING : B_KING;
+        break;
+      case 'Q':
+        moving_piece = (color == WHITE) ? W_QUEEN : B_QUEEN;
+        break;
+      case 'R':
+        moving_piece = (color == WHITE) ? W_ROOK : B_ROOK;
+        break;
+      case 'B':
+        moving_piece = (color == WHITE) ? W_BISHOP : B_BISHOP;
+        break;
+      case 'N':
+        moving_piece = (color == WHITE) ? W_KNIGHT : B_KNIGHT;
+        break;
+      default:
+        moving_piece = EMPTY;
+        break;
+    }
+    ++pos;
+  } else {
+    // If no piece letter then it's a pawn move.
+    moving_piece = (color == WHITE) ? W_PAWN : B_PAWN;
+  }
+  result.piece = moving_piece;
+
+  // We now extract any disambiguation info.
+  // This may be a file letter, a rank digit, or both.
+  std::optional<char> disambiguous_file;
+  std::optional<char> disambiguous_rank;
+
+  // Look ahead for an 'x' (capture marker) or destination square.
+  // We will also later remove any 'x' from the string.
+  size_t temp_pos = pos;
+  while (temp_pos < notation.size() && notation[temp_pos] != 'x' &&
+         !(notation[temp_pos] >= 'a' && notation[temp_pos] <= 'h' &&
+           (temp_pos + 1 < notation.size() && notation[temp_pos + 1] >= '1' &&
+            notation[temp_pos + 1] <= '8'))) {
+    // Assume any character here is part of disambiguation.
+    char d = notation[temp_pos];
+    if (d >= 'a' && d <= 'h')
+      disambiguous_file = d;
+    else if (d >= '1' && d <= '8')
+      disambiguous_rank = d;
+    ++temp_pos;
+  }
+
+  // Remove capture marker(s) from the string.
+  std::string cleaned;
+  for (char ch : notation.substr(pos)) {
+    if (ch != 'x') {
+      cleaned.push_back(ch);
+    } else {
+      is_capture = true;
+    }
+  }
+
+  // Look for promotion: if there is an '=' then the following char is the
+  // promotion piece.
+  piece_t promo = W_PAWN;
+  size_t promo_pos = cleaned.find('=');
+  if (promo_pos != std::string::npos && promo_pos + 1 < cleaned.size()) {
+    char promo_char = cleaned[promo_pos + 1];
+    switch (promo_char) {
+      case 'Q':
+        promo = (board->active_color == WHITE) ? W_QUEEN : B_QUEEN;
+        break;
+      case 'R':
+        promo = (board->active_color == WHITE) ? W_ROOK : B_ROOK;
+        break;
+      case 'B':
+        promo = (board->active_color == WHITE) ? W_BISHOP : B_BISHOP;
+        break;
+      case 'N':
+        promo = (board->active_color == WHITE) ? W_KNIGHT : B_KNIGHT;
+        break;
+      default:
+        promo = W_PAWN;
+        break;
+    }
+    cleaned = cleaned.substr(0, promo_pos);
+  }
+  result.promoted_to = promo;
+
+  // The destination square is the last two characters of the cleaned string.
+  if (cleaned.size() < 2) {
+    // Error: not enough characters to form a square.
+
+    LOG_E << "Wrong formatting. Invalid Algebraic notation: "
+          << original_notation << END_E;
+    assert(false);
+  }
+
+  std::string dest_square = cleaned.substr(cleaned.size() - 2, 2);
+  index_t to_index = str_to_index(dest_square);
+  result.to = to_index;
+
+  if (result.to >= INVALID_INDEX) {
+    LOG_E << "Invalid destination square. Invalid Algebraic notation: "
+          << original_notation << END_E;
+
+    assert(false);
+  }
+
+  if (is_capture) {
+    // Attempt to use the destination as capture piece
+    result.capture = true;
+
+    // TODO: Check if needed
+    // In case of en-passant override the capture
+    // if (board->en_passant != INVALID_BOARD_INDEX) {
+    //   if (color == WHITE) {
+    //     if (board->board[result.to] == EMPTY &&
+    //         board->board[result.to - 0x10] == B_PAWN) {
+    //       result.captured = B_PAWN;
+    //     }
+    //   } else {
+    //     if (board->board[result.to] == EMPTY &&
+    //         board->board[result.to + 0x10] == W_PAWN) {
+    //       result.captured = W_PAWN;
+    //     }
+    //   }
+    // }
+
+    // if (result.captured == INVALID || result.captured == EMPTY) {
+    //   throw algebraic_exception(
+    //       "No capture found on the board. Invalid Algebraic notation: " +
+    //       original_notation);
+    // }
+  }
+
+  // Any remaining characters between our initial pos and the destination
+  // have been interpreted as disambiguation.
+  // (In many SAN moves the disambiguation is omitted if unneeded.)
+  // Here we already extracted potential disambiguation earlier.
+
+  // Generate legal moves and search the compatible one
+  move_t moves[MAX_MOVES];
+  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
+
+  bool found = false;
+  for (size_t i = 0; i < moves_count; ++i) {
+    if (!is_move_legal(game, moves[i])) { continue; }
+
+    const unpacked_move_t legal_move(moves[i]);
+
+    if (legal_move.to == result.to && legal_move.piece == result.piece &&
+        legal_move.promoted_to == result.promoted_to &&
+        legal_move.capture == result.capture &&
+        legal_move.castling == result.castling) {
+      // Check for disambiguous
+      const position_t legal_from_pos = index_to_position(legal_move.from);
+
+      if (disambiguous_file.has_value()) {
+        const uint8_t file = char_to_file_map.at(disambiguous_file.value());
+
+        if (file != legal_from_pos.file) { continue; }
+      }
+
+      if (disambiguous_rank.has_value()) {
+        const uint8_t rank = char_to_rank_map.at(disambiguous_rank.value());
+
+        if (rank != legal_from_pos.rank) { continue; }
+      }
+
+      // We found the move
+      found = true;
+      result = legal_move;
+      break;
+    }
+  }
+
+  if (!found) {
+    LOG_E << "No legal move found. Invalid Algebraic notation: "
+          << original_notation << END_E;
+
+    assert(false);
+  }
+
+  return NEW_MOVE(result.from, result.to, result.piece, result.promoted_to,
+                  result.capture, result.double_push, result.en_passant,
+                  result.castling);
+}
 
 
 /******************************************************************************
@@ -1690,6 +1761,7 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 void initialize_const_data(bb_tables_t* tables)
 {
   assert(tables != nullptr);
+  memset(tables, BB_0, sizeof(bb_tables_t));
 
   for (index_t i = 0; i < 64; ++i) {
     // Init pawn attacks
@@ -1761,7 +1833,7 @@ void cleanup_board(board_t* board, history_t* history)
   assert(board != nullptr);
   assert(history != nullptr);
 
-  memset(board->bitboards, 0, sizeof(board->bitboards));
+  memset(board, 0, sizeof(board_t));
 
   board->active_color = WHITE;
   board->castling = WQ | WK | BQ | BK;

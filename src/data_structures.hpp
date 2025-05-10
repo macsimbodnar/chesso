@@ -133,16 +133,6 @@ enum piece_t
 };
 
 
-enum promotion_t
-{
-  TO_NONE,
-  TO_KNIGHT,
-  TO_BISHOP,
-  TO_ROOK,
-  TO_QUEEN
-};
-
-
 // clang-format off
 enum bb_squares_t {
   a8, b8, c8, d8, e8, f8, g8, h8,

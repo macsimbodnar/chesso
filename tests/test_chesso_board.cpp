@@ -7,6 +7,7 @@
 #include <random>
 #include <string>
 #include "bitboard.hpp"
+#include "log.hpp"
 #include "utils.hpp"
 
 
@@ -206,6 +207,14 @@ json load_json(const std::string& filename)
 //   return depth_reached;
 // }
 
+
+TEST_SUITE("INITIALIZATION")
+{
+  TEST_CASE("Test INITIALIZATION")
+  {
+    initialize_const_data(&game.tables);
+  }
+}
 
 TEST_SUITE("Test utils")
 {
@@ -475,94 +484,95 @@ TEST_SUITE("Test utils")
 // }
 
 
-// TEST_SUITE("Test legal move generator")
-// {
-//   TEST_CASE("Basic test")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
+TEST_SUITE("Test legal move generator")
+{
+  TEST_CASE("Basic test")
+  {
+    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
 
-//     move_t moves[270];
-//     const size_t moves_count = generate_legal_moves(&board, &globals, moves);
-//     REQUIRE_EQ(moves_count, 20);
-//   }
+    move_t moves[270];
+    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
 
-//   TEST_CASE("Test against generated jsons")
-//   {
-//     for (const auto& test_json_file : test_files) {
-//       json test_cases = load_json(test_json_file);
+    REQUIRE_EQ(moves_count, 20);
+  }
 
-//       for (const json& test_case : test_cases["testCases"]) {
-//         std::string starting_pos = test_case["start"]["fen"];
-//         json expected_moves = test_case["expected"];
+  // TEST_CASE("Test against generated jsons")
+  // {
+  //   for (const auto& test_json_file : test_files) {
+  //     json test_cases = load_json(test_json_file);
 
-//         init_board(starting_pos, &board, &globals);
+  //     for (const json& test_case : test_cases["testCases"]) {
+  //       std::string starting_pos = test_case["start"]["fen"];
+  //       json expected_moves = test_case["expected"];
 
-//         move_t moves[270];
-//         const size_t moves_count =
-//             generate_legal_moves(&board, &globals, moves);
+  //       load_FEN(starting_pos, &game.board, &game.history);
 
-//         // Check size
-//         REQUIRE_MESSAGE(
-//             moves_count == expected_moves.size(),
-//             ("\nRunning " + test_json_file + " File\n" +
-//              "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
-//              moves_to_string(moves, moves_count, board, globals) +
-//              "Difference:\n" +
-//              difference_to_string(expected_moves, moves, moves_count, board,
-//                                   globals) +
-//              print_nice_board(&board)));
+  //       move_t moves[270];
+  //       const size_t moves_count =
+  //           generate_moves(&game.tables, &game.board, moves);
 
-//         // Check if move is in by Algebraic notation
-//         for (const json& expected : expected_moves) {
-//           const std::string move_str = expected["move"];
-//           std::string fen = expected["fen"];
+  //       // Check size
+  //       REQUIRE_MESSAGE(
+  //           moves_count == expected_moves.size(),
+  //           ("\nRunning " + test_json_file + " File\n" +
+  //            "Starting FEN: " + starting_pos + "\nGenerated moves:\n" +
+  //            moves_to_string(moves, moves_count, board, globals) +
+  //            "Difference:\n" +
+  //            difference_to_string(expected_moves, moves, moves_count, board,
+  //                                 globals) +
+  //            print_nice_board(&board)));
 
-//           {  // Check by algebraic notation
-//             bool found = contain_move_algebraic(move_str, moves, moves_count,
-//                                                 board, globals);
+  //       // Check if move is in by Algebraic notation
+  //       for (const json& expected : expected_moves) {
+  //         const std::string move_str = expected["move"];
+  //         std::string fen = expected["fen"];
 
-//             REQUIRE_MESSAGE(
-//                 found, ("\nStarting FEN: " + starting_pos +
-//                         "\nExpect move: " + move_str + " in:\n" +
-//                         moves_to_string(moves, moves_count, board, globals) +
-//                         "Difference:\n" +
-//                         difference_to_string(expected_moves, moves,
-//                         moves_count,
-//                                              board, globals) +
-//                         print_nice_board(&board)));
-//           }
+  //         {  // Check by algebraic notation
+  //           bool found = contain_move_algebraic(move_str, moves, moves_count,
+  //                                               board, globals);
 
-//           {  // Check by make_move and compare FEN
-//             const move_t move_to_make =
-//                 algebraic_to_move(move_str, &board, &globals);
+  //           REQUIRE_MESSAGE(
+  //               found, ("\nStarting FEN: " + starting_pos +
+  //                       "\nExpect move: " + move_str + " in:\n" +
+  //                       moves_to_string(moves, moves_count, board, globals) +
+  //                       "Difference:\n" +
+  //                       difference_to_string(expected_moves, moves,
+  //                       moves_count,
+  //                                            board, globals) +
+  //                       print_nice_board(&board)));
+  //         }
 
-//             // Make the move on a temporary board
-//             const bool move_happened =
-//                 make_move(&move_to_make, &board, &globals);
+  //         {  // Check by make_move and compare FEN
+  //           const move_t move_to_make =
+  //               algebraic_to_move(move_str, &board, &globals);
 
-//             REQUIRE(move_happened);
+  //           // Make the move on a temporary board
+  //           const bool move_happened =
+  //               make_move(&move_to_make, &board, &globals);
 
-//             std::string new_fen = generate_FEN(&board);
+  //           REQUIRE(move_happened);
 
-//             REQUIRE_MESSAGE(
-//                 new_fen == fen,
-//                 ("\nStarting FEN: " + starting_pos +
-//                  "\nExpect move: " + move_str + " in:\n" +
-//                  moves_to_string(moves, moves_count, board, globals) +
-//                  "Difference:\n" +
-//                  difference_to_string(expected_moves, moves, moves_count,
-//                  board,
-//                                       globals) +
-//                  print_nice_board(&board)));
+  //           std::string new_fen = generate_FEN(&board);
 
-//             const bool unmove_happened = unmake_move(&board, &globals);
-//             REQUIRE(unmove_happened);
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
+  //           REQUIRE_MESSAGE(
+  //               new_fen == fen,
+  //               ("\nStarting FEN: " + starting_pos +
+  //                "\nExpect move: " + move_str + " in:\n" +
+  //                moves_to_string(moves, moves_count, board, globals) +
+  //                "Difference:\n" +
+  //                difference_to_string(expected_moves, moves, moves_count,
+  //                board,
+  //                                     globals) +
+  //                print_nice_board(&board)));
+
+  //           const bool unmove_happened = unmake_move(&board, &globals);
+  //           REQUIRE(unmove_happened);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+}
 
 
 // TEST_SUITE("Test make_move and unmake_move")

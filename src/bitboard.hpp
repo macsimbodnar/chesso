@@ -2,6 +2,8 @@
 #include <cstdint>
 #include "data_structures.hpp"
 
+void initialize_const_data(bb_tables_t* tables);
+
 // FEN
 bool load_FEN(const std::string& FEN, board_t* board, history_t* history);
 std::string generate_FEN(const board_t* board);
@@ -31,10 +33,11 @@ size_t generate_moves(const bb_tables_t* tables,
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
 
-// std::string move_to_algebraic(const move_t* move,
-//                               const move_t moves[],
-//                               size_t moves_size,
-//                               board_t* board);
+
+std::string move_to_algebraic(game_t* game,
+                              move_t encoded_move,
+                              const move_t moves[],
+                              size_t moves_size);
 
 
-// move_t algebraic_to_move(std::string notation, board_t* board);
+move_t algebraic_to_move(std::string notation, game_t* game);
