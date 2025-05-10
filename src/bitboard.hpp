@@ -29,6 +29,7 @@ size_t generate_moves(const bb_tables_t* tables,
                       move_t moves[]);
 
 bool make_move(game_t* game, move_t move);
+void unmake_move(game_t* game);
 
 // std::string move_to_algebraic(const move_t* move,
 //                               const move_t moves[],

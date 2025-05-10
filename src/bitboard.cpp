@@ -497,6 +497,7 @@ bool make_move(game_t* game, move_t encoded_move)
 
   // Store the history
   history->entries[history->count++] = *board;
+  assert(history->count < HISTORY_MAX_SIZE);
 
   unpacked_move_t move(encoded_move);
 
@@ -643,11 +644,21 @@ bool make_move(game_t* game, move_t encoded_move)
                       : get_lsb_index(board->bitboards[W_KING]),
                   board->active_color)) {
     // Restore board
-    *board = history->entries[history->count--];
+    *board = history->entries[--history->count];
 
     return false;
   } else {
     return true;
+  }
+}
+
+
+void unmake_move(game_t* game)
+{
+  assert(game != nullptr);
+
+  if (game->history.count < HISTORY_MAX_SIZE) {
+    game->board = game->history.entries[--game->history.count];
   }
 }
 
