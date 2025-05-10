@@ -250,23 +250,16 @@ std::string print_nice_board(const board_t* board)
 std::string print_move(move_t move)
 {
   std::stringstream ss;
-  const index_t from = MOVE_FROM(move);
-  const index_t to = MOVE_TO(move);
-  const piece_t piece = MOVE_PIECE(move);
-  const piece_t promoted_to = MOVE_PROMOTED(move);
-  const bool capture = MOVE_CAPTURE(move);
-  const bool double_push = MOVE_DOUBLE_PUSH(move);
-  const bool en_passant = MOVE_EN_PASSANT(move);
-  const bool castling = MOVE_CASTLING(move);
+  unpacked_move_t m(move);
 
-  ss << index_to_str(from) << index_to_str(to);
-  ss << " " << piece_to_str(piece);
+  ss << index_to_str(m.from) << index_to_str(m.to);
+  ss << " " << piece_to_str(m.piece);
 
-  if (promoted_to > W_PAWN) { ss << " " << piece_to_str(promoted_to); }
-  if (capture) { ss << " capture"; }
-  if (double_push) { ss << " double push"; }
-  if (en_passant) { ss << " en passant"; }
-  if (castling) { ss << " castling"; }
+  if (m.promoted_to > W_PAWN) { ss << " " << piece_to_str(m.promoted_to); }
+  if (m.capture) { ss << " capture"; }
+  if (m.double_push) { ss << " double push"; }
+  if (m.en_passant) { ss << " en passant"; }
+  if (m.castling) { ss << " castling"; }
 
   return ss.str();
 }

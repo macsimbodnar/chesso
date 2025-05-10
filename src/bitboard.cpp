@@ -22,37 +22,39 @@ inline index_t get_lsb_index(bb_t board)
 }
 
 
-bb_t get_bishop_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+bb_t get_bishop_attacks(const bb_tables_t* tables,
+                        index_t index,
+                        bb_t occupancy)
 {
-  assert(data != nullptr);
+  assert(tables != nullptr);
 
-  occupancy &= data->bishop_masks[index];
+  occupancy &= tables->bishop_masks[index];
   occupancy *= bishop_magic_numbers[index];
   occupancy >>= 64 - bishop_relevant_bits_count[index];
-  return data->bishop_attacks[index][occupancy];
+  return tables->bishop_attacks[index][occupancy];
 }
 
 
-bb_t get_rook_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+bb_t get_rook_attacks(const bb_tables_t* tables, index_t index, bb_t occupancy)
 {
-  assert(data != nullptr);
+  assert(tables != nullptr);
 
-  occupancy &= data->rook_masks[index];
+  occupancy &= tables->rook_masks[index];
   occupancy *= rook_magic_numbers[index];
   occupancy >>= 64 - rook_relevant_bits_count[index];
-  return data->rook_attacks[index][occupancy];
+  return tables->rook_attacks[index][occupancy];
 }
 
 
-bb_t get_queen_attacks(const bb_tables_t* data, index_t index, bb_t occupancy)
+bb_t get_queen_attacks(const bb_tables_t* tables, index_t index, bb_t occupancy)
 {
-  bb_t queen_attacks = get_bishop_attacks(data, index, occupancy);
-  queen_attacks |= get_rook_attacks(data, index, occupancy);
+  bb_t queen_attacks = get_bishop_attacks(tables, index, occupancy);
+  queen_attacks |= get_rook_attacks(tables, index, occupancy);
   return queen_attacks;
 }
 
 
-bool is_attacked(const bb_tables_t* data,
+bool is_attacked(const bb_tables_t* tables,
                  const board_t* board,
                  index_t index,
                  color_t color)
@@ -61,45 +63,45 @@ bool is_attacked(const bb_tables_t* data,
 
   {  // Handle pawn attacks
     if ((color == WHITE) &&
-        (data->pawn_attacks[BLACK][index] & board->bitboards[W_PAWN])) {
+        (tables->pawn_attacks[BLACK][index] & board->bitboards[W_PAWN])) {
       return true;
     }
 
     if ((color == BLACK) &&
-        (data->pawn_attacks[WHITE][index] & board->bitboards[B_PAWN])) {
+        (tables->pawn_attacks[WHITE][index] & board->bitboards[B_PAWN])) {
       return true;
       ;
     }
   }
 
-  if (data->knight_attacks[index] &
+  if (tables->knight_attacks[index] &
       ((color == WHITE) ? board->bitboards[W_KNIGHT]
                         : board->bitboards[B_KNIGHT])) {
     return true;
   }
 
 
-  if (get_bishop_attacks(data, index, board->occupancies[BOTH]) &
+  if (get_bishop_attacks(tables, index, board->occupancies[BOTH]) &
       ((color == WHITE) ? board->bitboards[W_BISHOP]
                         : board->bitboards[B_BISHOP])) {
     return true;
   }
 
-  if (get_rook_attacks(data, index, board->occupancies[BOTH]) &
+  if (get_rook_attacks(tables, index, board->occupancies[BOTH]) &
       ((color == WHITE) ? board->bitboards[W_ROOK]
                         : board->bitboards[B_ROOK])) {
     return true;
   }
 
   // attacked by bishops
-  if (get_queen_attacks(data, index, board->occupancies[BOTH]) &
+  if (get_queen_attacks(tables, index, board->occupancies[BOTH]) &
       ((color == WHITE) ? board->bitboards[W_QUEEN]
                         : board->bitboards[B_QUEEN])) {
     return true;
   }
 
   // attacked by kings
-  if (data->king_attacks[index] &
+  if (tables->king_attacks[index] &
       ((color == WHITE) ? board->bitboards[W_KING]
                         : board->bitboards[B_KING])) {
     return true;
@@ -109,11 +111,11 @@ bool is_attacked(const bb_tables_t* data,
 }
 
 
-size_t generate_moves(const bb_tables_t* data,
+size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[])
 {
-  assert(data != nullptr);
+  assert(tables != nullptr);
   assert(board != nullptr);
   assert(moves != nullptr);
 
@@ -159,7 +161,8 @@ size_t generate_moves(const bb_tables_t* data,
           }
 
           // Pawn captures
-          attacks = data->pawn_attacks[color][from] & board->occupancies[BLACK];
+          attacks =
+              tables->pawn_attacks[color][from] & board->occupancies[BLACK];
 
           while (attacks) {
             // init target square
@@ -188,7 +191,7 @@ size_t generate_moves(const bb_tables_t* data,
           // En-passant
           if (board->en_passant != INVALID_INDEX) {
             const bb_t enp_attacks =
-                data->pawn_attacks[color][from] & (BB_1 << board->en_passant);
+                tables->pawn_attacks[color][from] & (BB_1 << board->en_passant);
 
             if (enp_attacks) {
               const index_t enp_index = get_lsb_index(enp_attacks);
@@ -210,8 +213,8 @@ size_t generate_moves(const bb_tables_t* data,
           if (!GET_BIT(board->occupancies[BOTH], f1) &&
               !GET_BIT(board->occupancies[BOTH], g1)) {
             // Check if squares are not attacked
-            if (!is_attacked(data, board, e1, BLACK) &&
-                !is_attacked(data, board, f1, BLACK)) {
+            if (!is_attacked(tables, board, e1, BLACK) &&
+                !is_attacked(tables, board, f1, BLACK)) {
               moves[move_count++] = NEW_MOVE(e1, g1, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -224,8 +227,8 @@ size_t generate_moves(const bb_tables_t* data,
               !GET_BIT(board->occupancies[BOTH], c1) &&
               !GET_BIT(board->occupancies[BOTH], b1)) {
             // Check if squares are not attacked
-            if (!is_attacked(data, board, e1, BLACK) &&
-                !is_attacked(data, board, d1, BLACK)) {
+            if (!is_attacked(tables, board, e1, BLACK) &&
+                !is_attacked(tables, board, d1, BLACK)) {
               moves[move_count++] = NEW_MOVE(e1, c1, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -267,7 +270,8 @@ size_t generate_moves(const bb_tables_t* data,
           }
 
           // Pawn attacks
-          attacks = data->pawn_attacks[color][from] & board->occupancies[WHITE];
+          attacks =
+              tables->pawn_attacks[color][from] & board->occupancies[WHITE];
 
           // generate pawn captures
           while (attacks) {
@@ -294,7 +298,7 @@ size_t generate_moves(const bb_tables_t* data,
           // En-passant
           if (board->en_passant != INVALID_INDEX) {
             const bb_t enp_attacks =
-                data->pawn_attacks[color][from] & (BB_1 << board->en_passant);
+                tables->pawn_attacks[color][from] & (BB_1 << board->en_passant);
 
             if (enp_attacks) {
               const index_t enp_index = get_lsb_index(enp_attacks);
@@ -316,8 +320,8 @@ size_t generate_moves(const bb_tables_t* data,
           if (!GET_BIT(board->occupancies[BOTH], f8) &&
               !GET_BIT(board->occupancies[BOTH], g8)) {
             // Check if squares are not attacked
-            if (!is_attacked(data, board, e8, WHITE) &&
-                !is_attacked(data, board, f8, WHITE)) {
+            if (!is_attacked(tables, board, e8, WHITE) &&
+                !is_attacked(tables, board, f8, WHITE)) {
               moves[move_count++] = NEW_MOVE(e8, g8, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -329,8 +333,8 @@ size_t generate_moves(const bb_tables_t* data,
               !GET_BIT(board->occupancies[BOTH], c8) &&
               !GET_BIT(board->occupancies[BOTH], b8)) {
             // Check if squares are not attacked
-            if (!is_attacked(data, board, e8, WHITE) &&
-                !is_attacked(data, board, d8, WHITE))
+            if (!is_attacked(tables, board, e8, WHITE) &&
+                !is_attacked(tables, board, d8, WHITE))
               moves[move_count++] = NEW_MOVE(e8, c8, piece, 0, 0, 0, 0, 1);
           }
         }
@@ -342,7 +346,7 @@ size_t generate_moves(const bb_tables_t* data,
       while (bboard) {
         from = get_lsb_index(bboard);
 
-        attacks = data->knight_attacks[from] &
+        attacks = tables->knight_attacks[from] &
                   ((color == WHITE) ? ~board->occupancies[WHITE]
                                     : ~board->occupancies[BLACK]);
 
@@ -371,7 +375,7 @@ size_t generate_moves(const bb_tables_t* data,
       while (bboard) {
         from = get_lsb_index(bboard);
 
-        attacks = get_bishop_attacks(data, from, board->occupancies[BOTH]) &
+        attacks = get_bishop_attacks(tables, from, board->occupancies[BOTH]) &
                   ((color == WHITE) ? ~board->occupancies[WHITE]
                                     : ~board->occupancies[BLACK]);
 
@@ -400,7 +404,7 @@ size_t generate_moves(const bb_tables_t* data,
     if ((color == WHITE) ? piece == W_ROOK : piece == B_ROOK) {
       while (bboard) {
         from = get_lsb_index(bboard);
-        attacks = get_rook_attacks(data, from, board->occupancies[BOTH]) &
+        attacks = get_rook_attacks(tables, from, board->occupancies[BOTH]) &
                   ((color == WHITE) ? ~board->occupancies[WHITE]
                                     : ~board->occupancies[BLACK]);
         while (attacks) {
@@ -427,7 +431,7 @@ size_t generate_moves(const bb_tables_t* data,
       while (bboard) {
         from = get_lsb_index(bboard);
 
-        attacks = get_queen_attacks(data, from, board->occupancies[BOTH]) &
+        attacks = get_queen_attacks(tables, from, board->occupancies[BOTH]) &
                   ((color == WHITE) ? ~board->occupancies[WHITE]
                                     : ~board->occupancies[BLACK]);
         while (attacks) {
@@ -454,7 +458,7 @@ size_t generate_moves(const bb_tables_t* data,
       while (bboard) {
         from = get_lsb_index(bboard);
 
-        attacks = data->king_attacks[from] &
+        attacks = tables->king_attacks[from] &
                   ((color == WHITE) ? ~board->occupancies[WHITE]
                                     : ~board->occupancies[BLACK]);
 
@@ -483,14 +487,180 @@ size_t generate_moves(const bb_tables_t* data,
 }
 
 
+bool make_move(game_t* game, move_t encoded_move)
+{
+  assert(game != nullptr);
+
+  const bb_tables_t* tables = &game->tables;
+  board_t* board = &game->board;
+  history_t* history = &game->history;
+
+  // Store the history
+  history->entries[history->count++] = *board;
+
+  unpacked_move_t move(encoded_move);
+
+  POP_BIT(board->bitboards[move.piece], move.from);
+  SET_BIT(board->bitboards[move.piece], move.to);
+  // TODO: update hash from and to
+
+  if (move.capture) {
+    // pick up bitboard piece index ranges depending on side
+    piece_t start_piece;
+    piece_t end_piece;
+
+    if (board->active_color == WHITE) {
+      start_piece = B_PAWN;
+      end_piece = B_KING;
+    } else {
+      start_piece = W_PAWN;
+      end_piece = W_KING;
+    }
+
+    // loop over bitboards opposite to the current side to move
+    for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++) {
+      if (GET_BIT(board->bitboards[bb_piece], move.to)) {
+        POP_BIT(board->bitboards[bb_piece], move.to);
+        // TODO: update hash
+        break;
+      }
+    }
+  }
+
+  if (move.promoted_to) {  // TODO: handle better the promotion in the move.
+    if (board->active_color == WHITE) {
+      POP_BIT(board->bitboards[W_PAWN], move.to);
+      // TODO: update hash
+    } else {
+      POP_BIT(board->bitboards[B_PAWN], move.to);
+      // TODO: update hash
+    }
+
+    SET_BIT(board->bitboards[move.promoted_to], move.to);
+    // TODO: update hash
+  }
+
+  if (move.en_passant) {
+    (board->active_color == WHITE)
+        ? POP_BIT(board->bitboards[B_PAWN], move.to + 8)
+        : POP_BIT(board->bitboards[W_PAWN], move.to - 8);
+
+    if (board->active_color == WHITE) {
+      POP_BIT(board->bitboards[B_PAWN], move.to + 8);
+      // TODO: update hash
+    } else {
+      POP_BIT(board->bitboards[W_PAWN], move.to - 8);
+      // TODO: update hash
+    }
+  }
+
+  // Reset en-passant
+  if (board->en_passant != INVALID_INDEX) {
+    // TODO: update hash
+    board->en_passant = INVALID_INDEX;
+  }
+
+  if (move.double_push) {
+    if (board->active_color == WHITE) {
+      board->en_passant = move.to + 8;
+      // TODO: update hash
+    } else {
+      board->en_passant = move.to - 8;
+      // TODO: update hash
+    }
+  }
+
+  if (move.castling) {
+    switch (move.to) {
+      // White castles king side
+      case (g1):
+        // move H rook
+        POP_BIT(board->bitboards[W_ROOK], h1);
+        SET_BIT(board->bitboards[W_ROOK], f1);
+
+        // TODO: update hash
+        break;
+
+      // white castles queen side
+      case (c1):
+        // move A rook
+        POP_BIT(board->bitboards[W_ROOK], a1);
+        SET_BIT(board->bitboards[W_ROOK], d1);
+
+        // TODO: update hash
+        break;
+
+      // black castles king side
+      case (g8):
+        // move H rook
+        POP_BIT(board->bitboards[B_ROOK], h8);
+        SET_BIT(board->bitboards[B_ROOK], f8);
+
+        // TODO: update hash
+        break;
+
+      // black castles queen side
+      case (c8):
+        // move A rook
+        POP_BIT(board->bitboards[B_ROOK], a8);
+        SET_BIT(board->bitboards[B_ROOK], d8);
+
+        // TODO: update hash
+        break;
+    }
+  }
+
+  // TODO: remove hash castling
+
+  // Update castling rights
+  board->castling &= castling_rights[move.from];
+  board->castling &= castling_rights[move.to];
+
+  // TODO: update hash castling
+
+  // Update occupancies
+  memset(board->occupancies, BB_0, sizeof(board->occupancies));
+
+  for (int bb_piece = W_PAWN; bb_piece <= W_KING; bb_piece++) {
+    board->occupancies[WHITE] |= board->bitboards[bb_piece];
+  }
+
+  for (int bb_piece = B_PAWN; bb_piece <= B_KING; bb_piece++) {
+    board->occupancies[BLACK] |= board->bitboards[bb_piece];
+  }
+
+  board->occupancies[BOTH] |= board->occupancies[WHITE];
+  board->occupancies[BOTH] |= board->occupancies[BLACK];
+
+  // change side
+  board->active_color = board->active_color == WHITE ? BLACK : WHITE;
+  // TODO: update hash
+
+  // Check legality
+  if (is_attacked(tables, board,
+                  (board->active_color == WHITE)
+                      ? get_lsb_index(board->bitboards[B_KING])
+                      : get_lsb_index(board->bitboards[W_KING]),
+                  board->active_color)) {
+    // Restore board
+    *board = history->entries[history->count--];
+
+    return false;
+  } else {
+    return true;
+  }
+}
+
+
 /******************************************************************************
  *                               UTIL FUNCTIONS
  * NOTE: Does not need to be optimized
  ******************************************************************************/
-bool load_FEN(const std::string& FEN, board_t* board)
+bool load_FEN(const std::string& FEN, board_t* board, history_t* history)
 {
   assert(board != nullptr);
-  cleanup_board(board);
+  assert(history != nullptr);
+  cleanup_board(board, history);
 
   // Start parsing
   auto sections = split_string(FEN);
@@ -501,7 +671,7 @@ bool load_FEN(const std::string& FEN, board_t* board)
   }
 
   /*****************************************************************************
-   * 0. Piece placement data
+   * 0. Piece placement tables
    *
    * pawn = "P"
    * knight = "N"
@@ -747,7 +917,7 @@ bool load_FEN(const std::string& FEN, board_t* board)
   board->occupancies[BOTH] |= board->occupancies[WHITE];
   board->occupancies[BOTH] |= board->occupancies[BLACK];
 
-  // Update Zobrist keys
+  // TODO: update hash
   // board->zobrist_key = init_zobrist_key(state, board);
   return true;
 }
@@ -963,7 +1133,8 @@ std::string generate_FEN(const board_t* board)
 //   // Pawn captures (ex: exd5)
 //   if ((move->piece == W_PAWN || move->piece == B_PAWN) &&
 //       move->captured != INVALID) {
-//     notation = index_to_string_coordinates(move->from)[0] + std::string("x") +
+//     notation = index_to_string_coordinates(move->from)[0] + std::string("x")
+//     +
 //                index_to_string_coordinates(move->to);
 //   }
 
@@ -1157,7 +1328,8 @@ std::string generate_FEN(const board_t* board)
 //   size_t temp_pos = pos;
 //   while (temp_pos < notation.size() && notation[temp_pos] != 'x' &&
 //          !(notation[temp_pos] >= 'a' && notation[temp_pos] <= 'h' &&
-//            (temp_pos + 1 < notation.size() && notation[temp_pos + 1] >= '1' &&
+//            (temp_pos + 1 < notation.size() && notation[temp_pos + 1] >= '1'
+//            &&
 //             notation[temp_pos + 1] <= '8'))) {
 //     // Assume any character here is part of disambiguation.
 //     char d = notation[temp_pos];
@@ -1209,7 +1381,8 @@ std::string generate_FEN(const board_t* board)
 //   // string.
 //   if (cleaned.size() < 2) {
 //     // Error: not enough characters to form a square.
-//     throw algebraic_exception("Wrong formatting. Invalid Algebraic notation: " +
+//     throw algebraic_exception("Wrong formatting. Invalid Algebraic notation:
+//     " +
 //                               original_notation);
 //   }
 
@@ -1503,28 +1676,28 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 }
 
 
-void initialize_const_data(bb_tables_t* data)
+void initialize_const_data(bb_tables_t* tables)
 {
-  assert(data != nullptr);
+  assert(tables != nullptr);
 
   for (index_t i = 0; i < 64; ++i) {
     // Init pawn attacks
-    data->pawn_attacks[WHITE][i] = precompute_pawn_attacks(WHITE, i);
-    data->pawn_attacks[BLACK][i] = precompute_pawn_attacks(BLACK, i);
+    tables->pawn_attacks[WHITE][i] = precompute_pawn_attacks(WHITE, i);
+    tables->pawn_attacks[BLACK][i] = precompute_pawn_attacks(BLACK, i);
 
     // Init knight attacks
-    data->knight_attacks[i] = precompute_knight_attacks(i);
+    tables->knight_attacks[i] = precompute_knight_attacks(i);
 
     // Init king attacks
-    data->king_attacks[i] = precompute_king_attacks(i);
+    tables->king_attacks[i] = precompute_king_attacks(i);
 
     // Init masks for bishop and rooks
-    data->bishop_masks[i] = precompute_bishop_attack_masks(i);
-    data->rook_masks[i] = precompute_rook_attack_masks(i);
+    tables->bishop_masks[i] = precompute_bishop_attack_masks(i);
+    tables->rook_masks[i] = precompute_rook_attack_masks(i);
 
     {  // Init bishop and rook attack vector
-      const bb_t bishop_attack_mask = data->bishop_masks[i];
-      const bb_t rook_attack_mask = data->rook_masks[i];
+      const bb_t bishop_attack_mask = tables->bishop_masks[i];
+      const bb_t rook_attack_mask = tables->rook_masks[i];
 
       const int bishop_num_relevant_bits = bishop_relevant_bits_count[i];
       const int rook_num_relevant_bits = rook_relevant_bits_count[i];
@@ -1539,7 +1712,7 @@ void initialize_const_data(bb_tables_t* data)
         const int magic_index = (occupancy * bishop_magic_numbers[i]) >>
                                 (64 - bishop_num_relevant_bits);
 
-        data->bishop_attacks[i][magic_index] =
+        tables->bishop_attacks[i][magic_index] =
             precompute_bishop_attacks(i, occupancy);
       }
 
@@ -1550,13 +1723,13 @@ void initialize_const_data(bb_tables_t* data)
         const int magic_index = (occupancy * rook_magic_numbers[i]) >>
                                 (64 - rook_num_relevant_bits);
 
-        data->rook_attacks[i][magic_index] =
+        tables->rook_attacks[i][magic_index] =
             precompute_rook_attacks(i, occupancy);
       }
     }
   }
 
-  LOG_I << "Bitboard const data initialized" << END_I;
+  LOG_I << "Bitboard const tables initialized" << END_I;
 }
 
 
@@ -1572,9 +1745,11 @@ piece_t get_piece(const board_t* board, index_t square)
 }
 
 
-void cleanup_board(board_t* board)
+void cleanup_board(board_t* board, history_t* history)
 {
   assert(board != nullptr);
+  assert(history != nullptr);
+
   memset(board->bitboards, 0, sizeof(board->bitboards));
 
   board->active_color = WHITE;
@@ -1583,4 +1758,6 @@ void cleanup_board(board_t* board)
   board->en_passant = INVALID_INDEX;
   board->fullmove_counter = 1;
   board->zobrist_key = 0;
+
+  history->count = 0;
 }

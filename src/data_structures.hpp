@@ -186,6 +186,30 @@ inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
 }
 
 
+struct unpacked_move_t
+{
+  index_t from;
+  index_t to;
+  piece_t piece;
+  piece_t promoted_to;
+  bool capture;
+  bool double_push;
+  bool en_passant;
+  bool castling;
+
+  unpacked_move_t(move_t move)
+      : from(MOVE_FROM(move)),
+        to(MOVE_TO(move)),
+        piece(MOVE_PIECE(move)),
+        promoted_to(MOVE_PROMOTED(move)),
+        capture(MOVE_CAPTURE(move)),
+        double_push(MOVE_DOUBLE_PUSH(move)),
+        en_passant(MOVE_EN_PASSANT(move)),
+        castling(MOVE_CASTLING(move))
+  {}
+};
+
+
 struct bb_tables_t
 {
   bb_t pawn_attacks[2][64];  // [color][squares]
@@ -210,4 +234,19 @@ struct board_t
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
   hash_t zobrist_key;         // Zobrist Key
+};
+
+
+struct history_t
+{
+  board_t entries[HISTORY_MAX_SIZE];
+  size_t count = 0;
+};
+
+
+struct game_t
+{
+  bb_tables_t tables;
+  board_t board;
+  history_t history;
 };
