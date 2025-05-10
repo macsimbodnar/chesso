@@ -18,3 +18,8 @@ bool is_attacked(const bb_tables_t* data,
                  const board_t* board,
                  index_t index,
                  color_t color);
+
+// Moves
+size_t generate_moves(const bb_tables_t* data,
+                      const board_t* board,
+                      move_t moves[]);

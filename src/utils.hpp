@@ -15,9 +15,11 @@ index_t str_to_index(const std::string& str);
 
 // Pieces
 piece_t char_to_piece(char c);
-std::string piece_to_icon(piece_t piece);
 std::string piece_to_str(piece_t piece);
 
 // Board
 std::string print_bboard(bb_t board);
 std::string print_nice_board(const board_t* board);
+
+// Moves
+std::string print_move(move_t move);

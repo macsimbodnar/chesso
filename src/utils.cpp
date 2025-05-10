@@ -104,7 +104,7 @@ piece_t char_to_piece(char c)
 }
 
 
-std::string piece_to_icon(piece_t piece)
+inline std::string piece_to_icon(piece_t piece)
 {
   // clang-format off
   static const std::unordered_map<char, std::string> sprite_map = {
@@ -121,19 +121,27 @@ std::string piece_to_icon(piece_t piece)
     {B_QUEEN, "♕"},
     {B_KING, "♔"}
   };
-
   // clang-format on
 
   return sprite_map.at(piece);
 }
 
 
-std::string piece_to_str(piece_t piece)
+inline char piece_to_char(piece_t piece)
 {
   const static char ascii_pieces[] = "PNBRQKpnbrqk";
-  std::string result;
-  result += ascii_pieces[piece];
-  return result;
+  return ascii_pieces[piece];
+}
+
+
+std::string piece_to_str(piece_t piece)
+{
+  std::string res;
+
+  res += piece_to_icon(piece);
+  // res += piece_to_char(piece);
+
+  return res;
 }
 
 
@@ -198,7 +206,7 @@ std::string print_nice_board(const board_t* board)
       for (int piece = W_PAWN; piece <= B_KING; ++piece) {
         if (GET_BIT(board->bitboards[piece], square)) {
           // ss << piece_to_str(static_cast<piece_t>(piece)) << " ";
-          ss << piece_to_icon(static_cast<piece_t>(piece)) << " ";
+          ss << piece_to_str(static_cast<piece_t>(piece)) << " ";
           empty_square = false;
           break;
           ;
@@ -234,6 +242,31 @@ std::string print_nice_board(const board_t* board)
 
   ss << "\n#######################################";
   // clang-format on
+
+  return ss.str();
+}
+
+
+std::string print_move(move_t move)
+{
+  std::stringstream ss;
+  const index_t from = MOVE_FROM(move);
+  const index_t to = MOVE_TO(move);
+  const piece_t piece = MOVE_PIECE(move);
+  const piece_t promoted_to = MOVE_PROMOTED(move);
+  const bool capture = MOVE_CAPTURE(move);
+  const bool double_push = MOVE_DOUBLE_PUSH(move);
+  const bool en_passant = MOVE_EN_PASSANT(move);
+  const bool castling = MOVE_CASTLING(move);
+
+  ss << index_to_str(from) << index_to_str(to);
+  ss << " " << piece_to_str(piece);
+
+  if (promoted_to > W_PAWN) { ss << " " << piece_to_str(promoted_to); }
+  if (capture) { ss << " capture"; }
+  if (double_push) { ss << " double push"; }
+  if (en_passant) { ss << " en passant"; }
+  if (castling) { ss << " castling"; }
 
   return ss.str();
 }

@@ -109,6 +109,380 @@ bool is_attacked(const bb_tables_t* data,
 }
 
 
+size_t generate_moves(const bb_tables_t* data,
+                      const board_t* board,
+                      move_t moves[])
+{
+  assert(data != nullptr);
+  assert(board != nullptr);
+  assert(moves != nullptr);
+
+  const color_t color = board->active_color;
+  size_t move_count = 0;
+
+  for (uint8_t p_index = W_PAWN; p_index <= B_KING; ++p_index) {
+    const piece_t piece = static_cast<piece_t>(p_index);
+    bb_t bboard = board->bitboards[piece];
+    bb_t attacks = BB_0;
+    index_t from = INVALID_INDEX;
+    index_t to = INVALID_INDEX;
+
+    // Pawns and Castling
+    if (color == WHITE) {
+      if (piece == W_PAWN) {
+        while (bboard) {
+          from = get_lsb_index(bboard);
+          to = from - 8;
+
+          if (!(to < a8) && !GET_BIT(board->occupancies[BOTH], to)) {
+            // Promotion
+            if (from >= a7 && from <= h7) {
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_QUEEN, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_ROOK, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_BISHOP, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_KNIGHT, 0, 0, 0, 0);
+            }
+
+            else {
+              moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+
+              if ((from >= a2 && from <= h2) &&
+                  !GET_BIT(board->occupancies[BOTH], to - 8))
+                // Double push
+                moves[move_count++] =
+                    NEW_MOVE(from, to - 8, piece, 0, 0, 1, 0, 0);
+            }
+          }
+
+          // Pawn captures
+          attacks = data->pawn_attacks[color][from] & board->occupancies[BLACK];
+
+          while (attacks) {
+            // init target square
+            to = get_lsb_index(attacks);
+
+            // Attack & promotion
+            if (from >= a7 && from <= h7) {
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_QUEEN, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_ROOK, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_BISHOP, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, W_KNIGHT, 1, 0, 0, 0);
+            }
+
+            else {
+              moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+            }
+
+            // moveto the next attack
+            POP_BIT(attacks, to);
+          }
+
+          // En-passant
+          if (board->en_passant != INVALID_INDEX) {
+            const bb_t enp_attacks =
+                data->pawn_attacks[color][from] & (BB_1 << board->en_passant);
+
+            if (enp_attacks) {
+              const index_t enp_index = get_lsb_index(enp_attacks);
+              moves[move_count++] =
+                  NEW_MOVE(from, enp_index, piece, 0, 1, 0, 1, 0);
+            }
+          }
+
+          // Move to next pawn
+          POP_BIT(bboard, from);
+        }
+      }
+
+      // Castling
+      if (piece == W_KING) {
+        // King side
+        if (board->castling & WK) {
+          // Check if the path is empty
+          if (!GET_BIT(board->occupancies[BOTH], f1) &&
+              !GET_BIT(board->occupancies[BOTH], g1)) {
+            // Check if squares are not attacked
+            if (!is_attacked(data, board, e1, BLACK) &&
+                !is_attacked(data, board, f1, BLACK)) {
+              moves[move_count++] = NEW_MOVE(e1, g1, piece, 0, 0, 0, 0, 1);
+            }
+          }
+        }
+
+        // Queen side
+        if (board->castling & WQ) {
+          // Check if the path is empty
+          if (!GET_BIT(board->occupancies[BOTH], d1) &&
+              !GET_BIT(board->occupancies[BOTH], c1) &&
+              !GET_BIT(board->occupancies[BOTH], b1)) {
+            // Check if squares are not attacked
+            if (!is_attacked(data, board, e1, BLACK) &&
+                !is_attacked(data, board, d1, BLACK)) {
+              moves[move_count++] = NEW_MOVE(e1, c1, piece, 0, 0, 0, 0, 1);
+            }
+          }
+        }
+      }
+    }
+
+    else {
+      if (piece == B_PAWN) {
+        while (bboard) {
+          from = get_lsb_index(bboard);
+          to = from + 8;
+
+          // Quiet pawn moves
+          if (!(to > h1) && !GET_BIT(board->occupancies[BOTH], to)) {
+            // Promotion
+            if (from >= a2 && from <= h2) {
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_QUEEN, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_ROOK, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_BISHOP, 0, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_KNIGHT, 0, 0, 0, 0);
+            }
+
+            else {
+              // Normal pawn move
+              moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+
+              // Double push
+              if ((from >= a7 && from <= h7) &&
+                  !GET_BIT(board->occupancies[BOTH], to + 8)) {
+                moves[move_count++] =
+                    NEW_MOVE(from, to + 8, piece, 0, 0, 1, 0, 0);
+              }
+            }
+          }
+
+          // Pawn attacks
+          attacks = data->pawn_attacks[color][from] & board->occupancies[WHITE];
+
+          // generate pawn captures
+          while (attacks) {
+            to = get_lsb_index(attacks);
+
+            // Promotion
+            if (from >= a2 && from <= h2) {
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_QUEEN, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_ROOK, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_BISHOP, 1, 0, 0, 0);
+              moves[move_count++] =
+                  NEW_MOVE(from, to, piece, B_KNIGHT, 1, 0, 0, 0);
+            } else {
+              moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+            }
+
+            // Move to next attack
+            POP_BIT(attacks, to);
+          }
+
+          // En-passant
+          if (board->en_passant != INVALID_INDEX) {
+            const bb_t enp_attacks =
+                data->pawn_attacks[color][from] & (BB_1 << board->en_passant);
+
+            if (enp_attacks) {
+              const index_t enp_index = get_lsb_index(enp_attacks);
+
+              moves[move_count++] =
+                  NEW_MOVE(from, enp_index, piece, 0, 1, 0, 1, 0);
+            }
+          }
+
+          // Loop to next pawn
+          POP_BIT(bboard, from);
+        }
+      }
+
+      // Castling
+      if (piece == B_KING) {
+        if (board->castling & BK) {
+          // Check if the path is empty
+          if (!GET_BIT(board->occupancies[BOTH], f8) &&
+              !GET_BIT(board->occupancies[BOTH], g8)) {
+            // Check if squares are not attacked
+            if (!is_attacked(data, board, e8, WHITE) &&
+                !is_attacked(data, board, f8, WHITE)) {
+              moves[move_count++] = NEW_MOVE(e8, g8, piece, 0, 0, 0, 0, 1);
+            }
+          }
+        }
+
+        if (board->castling & BQ) {
+          // Check if the path is empty
+          if (!GET_BIT(board->occupancies[BOTH], d8) &&
+              !GET_BIT(board->occupancies[BOTH], c8) &&
+              !GET_BIT(board->occupancies[BOTH], b8)) {
+            // Check if squares are not attacked
+            if (!is_attacked(data, board, e8, WHITE) &&
+                !is_attacked(data, board, d8, WHITE))
+              moves[move_count++] = NEW_MOVE(e8, c8, piece, 0, 0, 0, 0, 1);
+          }
+        }
+      }
+    }
+
+    // Knight
+    if ((color == WHITE) ? piece == W_KNIGHT : piece == B_KNIGHT) {
+      while (bboard) {
+        from = get_lsb_index(bboard);
+
+        attacks = data->knight_attacks[from] &
+                  ((color == WHITE) ? ~board->occupancies[WHITE]
+                                    : ~board->occupancies[BLACK]);
+
+        while (attacks) {
+          to = get_lsb_index(attacks);
+
+          if (!GET_BIT(((color == WHITE) ? board->occupancies[BLACK]
+                                         : board->occupancies[WHITE]),
+                       to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          } else {  // Capture
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+          }
+
+          // Next attack
+          POP_BIT(attacks, to);
+        }
+
+        // Next knight
+        POP_BIT(bboard, from);
+      }
+    }
+
+    // Bishop
+    if ((color == WHITE) ? piece == W_BISHOP : piece == B_BISHOP) {
+      while (bboard) {
+        from = get_lsb_index(bboard);
+
+        attacks = get_bishop_attacks(data, from, board->occupancies[BOTH]) &
+                  ((color == WHITE) ? ~board->occupancies[WHITE]
+                                    : ~board->occupancies[BLACK]);
+
+        while (attacks) {
+          // init target square
+          to = get_lsb_index(attacks);
+
+          if (!GET_BIT(((color == WHITE) ? board->occupancies[BLACK]
+                                         : board->occupancies[WHITE]),
+                       to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+
+          } else {  // Capture
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+          }
+          // Next attack
+          POP_BIT(attacks, to);
+        }
+
+        // Next bishop
+        POP_BIT(bboard, from);
+      }
+    }
+
+    // Rook
+    if ((color == WHITE) ? piece == W_ROOK : piece == B_ROOK) {
+      while (bboard) {
+        from = get_lsb_index(bboard);
+        attacks = get_rook_attacks(data, from, board->occupancies[BOTH]) &
+                  ((color == WHITE) ? ~board->occupancies[WHITE]
+                                    : ~board->occupancies[BLACK]);
+        while (attacks) {
+          to = get_lsb_index(attacks);
+          if (!GET_BIT(((color == WHITE) ? board->occupancies[BLACK]
+                                         : board->occupancies[WHITE]),
+                       to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          } else {  // Capture
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+          }
+
+          // Next attack
+          POP_BIT(attacks, to);
+        }
+
+        // Next rook
+        POP_BIT(bboard, from);
+      }
+    }
+
+    // Queen
+    if ((color == WHITE) ? piece == W_QUEEN : piece == B_QUEEN) {
+      while (bboard) {
+        from = get_lsb_index(bboard);
+
+        attacks = get_queen_attacks(data, from, board->occupancies[BOTH]) &
+                  ((color == WHITE) ? ~board->occupancies[WHITE]
+                                    : ~board->occupancies[BLACK]);
+        while (attacks) {
+          to = get_lsb_index(attacks);
+
+          if (!GET_BIT(((color == WHITE) ? board->occupancies[BLACK]
+                                         : board->occupancies[WHITE]),
+                       to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          } else {  // Capture
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+          }
+          // Next attack
+          POP_BIT(attacks, to);
+        }
+
+        // Next queen ???
+        POP_BIT(bboard, from);
+      }
+    }
+
+    // King
+    if ((color == WHITE) ? piece == W_KING : piece == B_KING) {
+      while (bboard) {
+        from = get_lsb_index(bboard);
+
+        attacks = data->king_attacks[from] &
+                  ((color == WHITE) ? ~board->occupancies[WHITE]
+                                    : ~board->occupancies[BLACK]);
+
+        while (attacks) {
+          to = get_lsb_index(attacks);
+          if (!GET_BIT(((color == WHITE) ? board->occupancies[BLACK]
+                                         : board->occupancies[WHITE]),
+                       to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          } else {  // Capture
+
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
+          }
+          // Next attack
+          POP_BIT(attacks, to);
+        }
+
+        // Next king ???
+        POP_BIT(bboard, from);
+      }
+    }
+  }
+
+  assert(move_count < MAX_MOVES);
+  return move_count;
+}
+
+
 /******************************************************************************
  *                               UTIL FUNCTIONS
  * NOTE: Does not need to be optimized

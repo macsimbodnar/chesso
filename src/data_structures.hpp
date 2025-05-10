@@ -31,12 +31,11 @@
 #define STR(_N_) std::to_string(_N_)
 #endif
 
-#define INVALID_INDEX 64
-
 typedef uint8_t index_t;
 typedef uint8_t castling_t;
 typedef uint64_t bb_t;
 typedef uint64_t hash_t;
+typedef uint64_t move_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
@@ -47,6 +46,38 @@ typedef uint64_t hash_t;
 
 // Transposition table size
 #define TT_SIZE 4194301
+
+/**
+ *   0000 0000 0000 0000 0011 1111    source square       0x3f
+ *   0000 0000 0000 1111 1100 0000    target square       0xfc0
+ *   0000 0000 1111 0000 0000 0000    piece               0xf000
+ *   0000 1111 0000 0000 0000 0000    promoted piece      0xf0000
+ *   0001 0000 0000 0000 0000 0000    capture flag        0x100000
+ *   0010 0000 0000 0000 0000 0000    double push flag    0x200000
+ *   0100 0000 0000 0000 0000 0000    en-passant flag     0x400000
+ *   1000 0000 0000 0000 0000 0000    castling flag       0x800000
+ */
+
+// clang-format off
+#define NEW_MOVE(source, target, piece, promoted, capture, double, en_passant, castling) \
+                ((source) | \
+                 ((target) << 6) | \
+                 ((piece) << 12) | \
+                 ((promoted) << 16) | \
+                 ((capture) << 20) | \
+                 ((double) << 21) | \
+                 ((en_passant) << 22) | \
+                 ((castling) << 23))
+// clang-format on
+
+#define MOVE_FROM(move) ((move)&0x3f)
+#define MOVE_TO(move) (((move)&0xfc0) >> 6)
+#define MOVE_PIECE(move) (static_cast<piece_t>(((move)&0xf000) >> 12))
+#define MOVE_PROMOTED(move) (static_cast<piece_t>(((move)&0xf0000) >> 16))
+#define MOVE_CAPTURE(move) ((move)&0x100000)
+#define MOVE_DOUBLE_PUSH(move) ((move)&0x200000)
+#define MOVE_EN_PASSANT(move) ((move)&0x400000)
+#define MOVE_CASTLING(move) ((move)&0x800000)
 
 //-#######################   BITBOARD SPECIFIC   ############################-//
 #define BB_1 1ULL
@@ -60,7 +91,6 @@ typedef uint64_t hash_t;
 #define GET_BIT(bboard, square) ((bboard) & (BB_1 << (square)))
 #define SET_BIT(bboard, square) ((bboard) |= (BB_1 << (square)))
 #define POP_BIT(bboard, square) ((bboard) &= ~(BB_1 << (square)))
-
 
 //-#############################   ENUMS   ##################################-//
 enum castling_rights_t
@@ -122,7 +152,7 @@ enum bb_squares_t {
   a4, b4, c4, d4, e4, f4, g4, h4,
   a3, b3, c3, d3, e3, f3, g3, h3,
   a2, b2, c2, d2, e2, f2, g2, h2,
-  a1, b1, c1, d1, e1, f1, g1, h1
+  a1, b1, c1, d1, e1, f1, g1, h1, INVALID_INDEX
 };
 // clang-format on
 
