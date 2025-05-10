@@ -23,3 +23,11 @@ bool is_attacked(const bb_tables_t* data,
 size_t generate_moves(const bb_tables_t* data,
                       const board_t* board,
                       move_t moves[]);
+
+// std::string move_to_algebraic(const move_t* move,
+//                               const move_t moves[],
+//                               size_t moves_size,
+//                               board_t* board);
+
+
+// move_t algebraic_to_move(std::string notation, board_t* board);
