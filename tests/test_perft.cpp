@@ -283,17 +283,6 @@ stats_t get_move_stats(const move_t& move)
 }
 
 
-stats_t get_moves_stats(const move_t moves[], size_t moves_count)
-{
-  stats_t result;
-  for (size_t i = 0; i < moves_count; ++i) {
-    result += get_move_stats(moves[i]);
-  }
-
-  return result;
-}
-
-
 stats_t perft(int depth, game_t* game)
 {
   assert(game != nullptr);
@@ -478,7 +467,13 @@ int main()
 #endif
 
           } else {
-            stats += get_moves_stats(moves, moves_count);
+            // In case depth 1 we try for legal moves and count stats
+            for (size_t i = 0; i < moves_count; ++i) {
+              if (make_move(&game, moves[i])) {
+                stats += get_move_stats(moves[i]);
+                unmake_move(&game);
+              }
+            }
           }
         }
 
