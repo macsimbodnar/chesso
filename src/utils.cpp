@@ -66,7 +66,7 @@ position_t index_to_position(index_t index)
 
   position_t result;
   result.file = index % 8;
-  result.rank = index / 8;
+  result.rank = 7 - (index / 8);
 
   return result;
 }

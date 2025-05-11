@@ -99,12 +99,6 @@ size_t test_generate_legal_moves(game_t* game, move_t moves[])
   const size_t all_moves_count =
       generate_moves(&game->tables, &game->board, all_moves);
 
-
-  for (size_t i = 0; i < all_moves_count; ++i) {
-    LOG_I << print_move(all_moves[i]) << END_I;
-  }
-
-
   assert(all_moves_count < MAX_MOVES);
 
   for (size_t i = 0; i < all_moves_count; ++i) {
@@ -564,7 +558,8 @@ TEST_SUITE("Test legal move generator")
             REQUIRE_MESSAGE(
                 new_fen == fen,
                 ("\nStarting FEN: " + starting_pos +
-                 "\nExpect move: " + move_str + " in:\n" +
+                 "\nExpect move: " + move_str + "\n" +
+                 "Translated into: " + print_move(move_to_make) + "\nin:\n" +
                  moves_to_string(moves, moves_count, &game) + "Difference:\n" +
                  difference_to_string(expected_moves, moves, moves_count,
                                       &game) +

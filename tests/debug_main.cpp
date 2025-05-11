@@ -19,34 +19,15 @@ int main(int argc, char* argv[])
   // LOG_E << "Debug" << END_E;
 
   initialize_const_data(&game.tables);
-  load_FEN("8/4k3/8/8/8/8/r6r/R3K2R w KQ - 0 1", &game.board, &game.history);
-  // load_FEN("8/4K3/8/8/8/8/R6R/r3k2r b KQ - 0 1", &game.board, &game.history);
-
-  // debug‐print the three pieces of data that get_rook_attacks uses
-  LOG_I << "rook mask [a1]:\n"
-        << print_bboard(game.tables.rook_masks[a1]) << END_I;
-
-  LOG_I << "rook_relevant_bits_count[a1] = " << rook_relevant_bits_count[a1]
-        << END_I;
-
-  LOG_I << "rook_magic_numbers[a1] = 0x" << std::hex << rook_magic_numbers[a1]
-        << std::dec << END_I;
-
-  LOG_I << "---------------------" << END_I;
-
-
-  bb_t occ = game.board.occupancies[BOTH];
-  LOG_I << print_bboard(occ) << END_I;
-
-  bb_t attacks = get_rook_attacks(&game.tables, a1, occ);
-  LOG_I << print_bboard(attacks) << END_I;
-
-
-  move_count = generate_moves(&game.tables, &game.board, moves);
-
-  for (size_t i = 0; i < move_count; ++i) {
-    LOG_I << print_move(moves[i]) << END_I;
-  }
-
+  
+  position_t pos = index_to_position(a1);
+  pos = index_to_position(a2);
+  pos = index_to_position(a3);
+  pos = index_to_position(a4);
+  pos = index_to_position(a5);
+  pos = index_to_position(a6);
+  pos = index_to_position(a7);
+  pos = index_to_position(a8);
+  
   return 0;
 }

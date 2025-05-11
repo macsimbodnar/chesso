@@ -645,8 +645,17 @@ bool make_move(game_t* game, move_t encoded_move)
   board->occupancies[BOTH] |= board->occupancies[WHITE];
   board->occupancies[BOTH] |= board->occupancies[BLACK];
 
+
   // change side
-  board->active_color = board->active_color == WHITE ? BLACK : WHITE;
+  if (board->active_color == WHITE) {
+    board->active_color = BLACK;
+  } else {
+    board->active_color = WHITE;
+
+    // After black turn update the full move counter as well
+    board->fullmove_counter++;
+  }
+
   // TODO: update hash
 
   // Check legality
@@ -1253,7 +1262,7 @@ std::string move_to_algebraic(game_t* game,
 
     const color_t opponent = (board->active_color == WHITE) ? BLACK : WHITE;
 
-    const index_t king_index = board->bitboards[king_to_select];
+    const index_t king_index = get_lsb_index(board->bitboards[king_to_select]);
 
     const bool is_check =
         is_attacked(&game->tables, &game->board, king_index, opponent);
