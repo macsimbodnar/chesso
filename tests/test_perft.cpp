@@ -23,7 +23,7 @@ using json = nlohmann::json;
 // clang-format off
 const static std::vector<std::string> test_files = {
   // "assets/perft_json/debug_perft.json",
-  // "assets/perft_json/talkchess_perft.json",
+  "assets/perft_json/talkchess_perft.json",
   "assets/perft_json/perft.json"
 };
 // clang-format on

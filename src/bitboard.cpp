@@ -614,6 +614,15 @@ bool make_move(game_t* game, move_t encoded_move)
     }
   }
 
+  // Handle half move clock
+  if (move.capture || move.piece == W_PAWN || move.piece == B_PAWN) {
+    board->halfmove_clock = 0;
+  } else {
+    board->halfmove_clock += 1;
+  }
+  // TODO: update half move zobrist?
+
+
   // TODO: remove hash castling
 
   // Update castling rights
