@@ -26,6 +26,8 @@ bool is_attacked(const bb_tables_t* tables,
                  color_t color);
 
 // Moves
+bool is_move_legal(game_t* game, move_t move);  // NOTE: only for debug
+
 size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[]);

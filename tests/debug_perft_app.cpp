@@ -14,9 +14,8 @@
 #include <iostream>
 #include <queue>
 #include <string>
-#include "board.hpp"
+#include "bitboard.hpp"
 #include "data_structures.hpp"
-#include "move_generator.hpp"
 #include "utils.hpp"
 
 
@@ -41,7 +40,7 @@ struct mini_move_t
 {
   index_t from;
   index_t to;
-  promotion_t promotion;
+  piece_t promotion;
 };
 
 
@@ -76,26 +75,34 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
   mini_move_t move;
   move.from = from;
   move.to = to;
-  move.promotion = TO_NONE;
-
+  move.promotion = W_PAWN;
+  // TODO: handle the of promotion
   if (p.length() == 5) {
     // Handle promotion
     switch (p[4]) {
       case 'Q':
+        move.promotion = W_QUEEN;
+        break;
       case 'q':
-        move.promotion = TO_QUEEN;
+        move.promotion = B_QUEEN;
         break;
       case 'N':
+        move.promotion = W_KNIGHT;
+        break;
       case 'n':
-        move.promotion = TO_KNIGHT;
+        move.promotion = B_KNIGHT;
         break;
       case 'R':
+        move.promotion = W_ROOK;
+        break;
       case 'r':
-        move.promotion = TO_ROOK;
+        move.promotion = B_ROOK;
         break;
       case 'B':
+        move.promotion = W_BISHOP;
+        break;
       case 'b':
-        move.promotion = TO_BISHOP;
+        move.promotion = B_BISHOP;
         break;
 
       default:
@@ -110,17 +117,21 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
 
 std::string promotion_to_string(const move_t& move)
 {
-  switch (move.promoted_to) {
-    case TO_QUEEN:
+  switch (MOVE_CAPTURE(move)) {
+    case B_QUEEN:
+    case W_QUEEN:
       return "q";
       break;
-    case TO_KNIGHT:
+    case W_KNIGHT:
+    case B_KNIGHT:
       return "n";
       break;
-    case TO_ROOK:
+    case W_ROOK:
+    case B_ROOK:
       return "r";
       break;
-    case TO_BISHOP:
+    case W_BISHOP:
+    case B_BISHOP:
       return "b";
       break;
 

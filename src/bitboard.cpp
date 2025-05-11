@@ -32,7 +32,8 @@ bb_t get_bishop_attacks(const bb_tables_t* tables,
   occupancy &= tables->bishop_masks[index];
   occupancy *= bishop_magic_numbers[index];
   occupancy >>= 64 - bishop_relevant_bits_count[index];
-  return tables->bishop_attacks[index][occupancy];
+  const bb_t result = tables->bishop_attacks[index][occupancy];
+  return result;
 }
 
 
@@ -43,7 +44,8 @@ bb_t get_rook_attacks(const bb_tables_t* tables, index_t index, bb_t occupancy)
   occupancy &= tables->rook_masks[index];
   occupancy *= rook_magic_numbers[index];
   occupancy >>= 64 - rook_relevant_bits_count[index];
-  return tables->rook_attacks[index][occupancy];
+  const bb_t result = tables->rook_attacks[index][occupancy];
+  return result;
 }
 
 
@@ -1225,50 +1227,34 @@ std::string move_to_algebraic(game_t* game,
     }
   }
 
-  // Handle check
-  const piece_t king_to_select =
-      (board->active_color == WHITE) ? B_KING : W_KING;
-
-  const index_t opponent_king_index = board->bitboards[king_to_select];
-
+  // Handle check and mate
   const bool move_happened = make_move(game, encoded_move);
   assert(move_happened);
 
   if (move_happened) {
-    // Generate moves for my color but after the current move is done
-    move_t pseudo_legal_moves[30];
-    const size_t pseudo_legal_moves_count =
-        generate_moves(&game->tables, board, pseudo_legal_moves);
+    move_t loc_moves[MAX_MOVES];
+    const size_t loc_moves_count =
+        generate_moves(&game->tables, &game->board, loc_moves);
 
-    assert(pseudo_legal_moves_count <=
-           sizeof(pseudo_legal_moves) / sizeof(pseudo_legal_moves[0]));
+    const size_t legal_moves_count =
+        count_legal_moves(game, loc_moves, loc_moves_count);
 
-    // Check if one of this moves put under check the opponent king
+    const piece_t king_to_select =
+        (board->active_color == WHITE) ? W_KING : B_KING;
 
-    for (size_t pseudo_index = 0; pseudo_index < pseudo_legal_moves_count;
-         ++pseudo_index) {
-      const unpacked_move_t pseudo_move(pseudo_legal_moves[pseudo_index]);
-      if (pseudo_move.to == opponent_king_index) {
-        // Now let's check if this is check mate
+    const color_t opponent = (board->active_color == WHITE) ? BLACK : WHITE;
 
-        // Generate legal moves after the make move to see if any available.
-        move_t loc_moves[MAX_MOVES];
-        const size_t moves_count =
-            generate_moves(&game->tables, &game->board, loc_moves);
+    const index_t king_index = board->bitboards[king_to_select];
 
-        const size_t legal_moves_count =
-            count_legal_moves(game, loc_moves, moves_count);
+    const bool is_check =
+        is_attacked(&game->tables, &game->board, king_index, opponent);
 
-        if (legal_moves_count == 0) {
-          // Check mate
-          notation += '#';
-          break;
-        } else {
-          // Append a '+' to the notation
-          notation += '+';
-          break;
-        }
-      }
+    if (is_check && legal_moves_count == 0) {
+      // Check mate
+      notation += '#';
+    } else if (is_check) {
+      // Append a '+' to the notation
+      notation += '+';
     }
 
     unmake_move(game);
@@ -1557,12 +1543,12 @@ move_t algebraic_to_move(std::string notation, game_t* game)
  *                      INITIALIZATION FUNCTIONS
  * NOTE: Does not need to be optimized, they are called once at the start
  ******************************************************************************/
-bb_t set_occupancy(index_t index, int mask_bit_count, bb_t attack_mask)
+bb_t set_occupancy(uint64_t index, int mask_bit_count, bb_t attack_mask)
 {
   bb_t occupancy = BB_0;
 
   for (int count = 0; count < mask_bit_count; ++count) {
-    const index_t square = get_lsb_index(attack_mask);
+    const uint64_t square = get_lsb_index(attack_mask);
     assert(square < 64);
 
     POP_BIT(attack_mask, square);
@@ -1761,58 +1747,67 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 void initialize_const_data(bb_tables_t* tables)
 {
   assert(tables != nullptr);
-  memset(tables, BB_0, sizeof(bb_tables_t));
+  memset(tables, 0, sizeof(bb_tables_t));
 
-  for (index_t i = 0; i < 64; ++i) {
-    // Init pawn attacks
-    tables->pawn_attacks[WHITE][i] = precompute_pawn_attacks(WHITE, i);
-    tables->pawn_attacks[BLACK][i] = precompute_pawn_attacks(BLACK, i);
+  for (index_t square = 0; square < 64; ++square) {
+    {
+      // Init pawn attacks
+      tables->pawn_attacks[WHITE][square] =
+          precompute_pawn_attacks(WHITE, square);
+      tables->pawn_attacks[BLACK][square] =
+          precompute_pawn_attacks(BLACK, square);
 
-    // Init knight attacks
-    tables->knight_attacks[i] = precompute_knight_attacks(i);
+      // Init knight attacks
+      tables->knight_attacks[square] = precompute_knight_attacks(square);
 
-    // Init king attacks
-    tables->king_attacks[i] = precompute_king_attacks(i);
+      // Init king attacks
+      tables->king_attacks[square] = precompute_king_attacks(square);
+    }
 
-    // Init masks for bishop and rooks
-    tables->bishop_masks[i] = precompute_bishop_attack_masks(i);
-    tables->rook_masks[i] = precompute_rook_attack_masks(i);
+    {  // Bishop
+      tables->bishop_masks[square] = precompute_bishop_attack_masks(square);
 
-    {  // Init bishop and rook attack vector
-      const bb_t bishop_attack_mask = tables->bishop_masks[i];
-      const bb_t rook_attack_mask = tables->rook_masks[i];
+      const bb_t bishop_attack_mask = tables->bishop_masks[square];
 
-      const int bishop_num_relevant_bits = bishop_relevant_bits_count[i];
-      const int rook_num_relevant_bits = rook_relevant_bits_count[i];
+      const uint8_t bishop_num_relevant_bits =
+          bishop_relevant_bits_count[square];
 
-      const int bishop_occupancy_indicies = (1 << bishop_num_relevant_bits);
-      const int rook_occupancy_indicies = (1 << rook_num_relevant_bits);
+      const uint64_t bishop_occupancy_indicies =
+          (BB_1 << bishop_num_relevant_bits);
 
-      for (int index = 0; index < bishop_occupancy_indicies; ++index) {
+      for (uint64_t index = 0; index < bishop_occupancy_indicies; ++index) {
         const bb_t occupancy =
             set_occupancy(index, bishop_num_relevant_bits, bishop_attack_mask);
 
-        const int magic_index = (occupancy * bishop_magic_numbers[i]) >>
-                                (64 - bishop_num_relevant_bits);
+        const uint64_t magic_index =
+            (occupancy * bishop_magic_numbers[square]) >>
+            (64 - bishop_num_relevant_bits);
 
-        tables->bishop_attacks[i][magic_index] =
-            precompute_bishop_attacks(i, occupancy);
+        tables->bishop_attacks[square][magic_index] =
+            precompute_bishop_attacks(square, occupancy);
       }
+    }
 
-      for (int index = 0; index < rook_occupancy_indicies; ++index) {
+    {  // Rook
+      tables->rook_masks[square] = precompute_rook_attack_masks(square);
+
+      const bb_t rook_attack_mask = tables->rook_masks[square];
+      const uint8_t rook_num_relevant_bits = rook_relevant_bits_count[square];
+      const uint64_t rook_occupancy_indicies = (BB_1 << rook_num_relevant_bits);
+
+      for (uint64_t index = 0; index < rook_occupancy_indicies; ++index) {
         const bb_t occupancy =
             set_occupancy(index, rook_num_relevant_bits, rook_attack_mask);
 
-        const int magic_index = (occupancy * rook_magic_numbers[i]) >>
-                                (64 - rook_num_relevant_bits);
+        const uint64_t magic_index = (occupancy * rook_magic_numbers[square]) >>
+                                     (64 - rook_num_relevant_bits);
 
-        tables->rook_attacks[i][magic_index] =
-            precompute_rook_attacks(i, occupancy);
+        tables->rook_attacks[square][magic_index] =
+            precompute_rook_attacks(square, occupancy);
       }
     }
   }
-
-  LOG_I << "Bitboard const tables initialized" << END_I;
+  // LOG_I << "Bitboard const tables initialized " << END_I;
 }
 
 

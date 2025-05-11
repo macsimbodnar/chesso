@@ -5,7 +5,7 @@
 // clang-format off
 
 // Bishop relevant occupancy bit count for every square on board 
-static inline constexpr int bishop_relevant_bits_count[64] = {
+static inline constexpr uint8_t bishop_relevant_bits_count[64] = {
   6, 5, 5, 5, 5, 5, 5, 6, 
   5, 5, 5, 5, 5, 5, 5, 5, 
   5, 5, 7, 7, 7, 7, 5, 5, 
@@ -17,7 +17,7 @@ static inline constexpr int bishop_relevant_bits_count[64] = {
 };
 
 // Rook relevant occupancy bit count for every square on board 
-static inline constexpr int rook_relevant_bits_count[64] = {
+static inline constexpr uint8_t rook_relevant_bits_count[64] = {
   12, 11, 11, 11, 11, 11, 11, 12, 
   11, 10, 10, 10, 10, 10, 10, 11, 
   11, 10, 10, 10, 10, 10, 10, 11, 
@@ -28,7 +28,7 @@ static inline constexpr int rook_relevant_bits_count[64] = {
   12, 11, 11, 11, 11, 11, 11, 12
 };
 
-static inline constexpr int castling_rights[64] = {
+static inline constexpr uint8_t castling_rights[64] = {
      7, 15, 15, 15,  3, 15, 15, 11,
     15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15,
