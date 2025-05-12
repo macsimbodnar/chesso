@@ -29,9 +29,9 @@
       ]
     },
     {
-      "name": "test_chesso_board",
+      "name": "test_chesso",
       "request": "launch",
-      "program": "${workspaceFolder}/build/tests/test_chesso_board",
+      "program": "${workspaceFolder}/build/tests/test_chesso",
       "args": [],
       "cwd": "${workspaceFolder}/build/tests",
       "type": "cppdbg",

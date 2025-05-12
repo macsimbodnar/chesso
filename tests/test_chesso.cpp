@@ -168,51 +168,56 @@ std::string difference_to_string(const json& expected_moves,
 }
 
 
-// move_t pick_random_move(const move_t moves[], size_t moves_size)
-// {
-//   std::uniform_int_distribution<size_t> dist(0, moves_size - 1);
-//   const size_t random_index = dist(gen);
-//   return moves[random_index];
-// }
+move_t pick_random_move(const move_t moves[], size_t moves_size)
+{
+  std::uniform_int_distribution<size_t> dist(0, moves_size - 1);
+  const size_t random_index = dist(gen);
+  return moves[random_index];
+}
 
 
-// static move_t moves[270];
-// int make_random_move(int depth, board_t* board, global_state_t* globals)
-// {
-//   if (depth == 0) { return 0; }
+static move_t moves[270];
+int make_random_move(int depth, game_t* g)
+{
+  assert(g != nullptr);
 
-//   const std::string fen_before = generate_FEN(board);
-//   const uint64_t zobrist_before = board->zobrist_key;
+  if (depth == 0) { return 0; }
 
-//   const size_t moves_count = generate_legal_moves(board, globals, moves);
+  const std::string fen_before = generate_FEN(&g->board);
 
-//   if (moves_count == 0) { return depth; }
+  // TODO: Update hash
+  // const uint64_t zobrist_before = board->zobrist_key;
 
-//   const move_t move_to_make = pick_random_move(moves, moves_count);
-//   bool move_happened = make_move(&move_to_make, board, globals);
-//   REQUIRE(move_happened);
+  const size_t moves_count = test_generate_legal_moves(g, moves);
 
-//   const std::string fen_after_make_move = generate_FEN(board);
-//   REQUIRE_NE(fen_after_make_move, fen_before);
+  if (moves_count == 0) { return depth; }
 
-//   const uint64_t zobrist_make = board->zobrist_key;
-//   REQUIRE_NE(zobrist_make, zobrist_before);
+  const move_t move_to_make = pick_random_move(moves, moves_count);
+  bool move_happened = make_move(g, move_to_make);
+  REQUIRE(move_happened);
 
-//   // Recursively go deeper
-//   int depth_reached = make_random_move(depth - 1, board, globals);
+  const std::string fen_after_make_move = generate_FEN(&g->board);
+  REQUIRE_NE(fen_after_make_move, fen_before);
 
-//   // Unmake the move
-//   const bool move_reverted = unmake_move(board, globals);
-//   REQUIRE(move_reverted);
+  // TODO: Update hash
+  // const uint64_t zobrist_make = board->zobrist_key;
+  // REQUIRE_NE(zobrist_make, zobrist_before);
 
-//   const std::string fen_after_unmake_move = generate_FEN(board);
-//   REQUIRE_EQ(fen_after_unmake_move, fen_before);
+  // Recursively go deeper
+  int depth_reached = make_random_move(depth - 1, g);
 
-//   const uint64_t zobrist_unmake = board->zobrist_key;
-//   REQUIRE_EQ(zobrist_unmake, zobrist_before);
+  // Unmake the move
+  unmake_move(g);
 
-//   return depth_reached;
-// }
+  const std::string fen_after_unmake_move = generate_FEN(&g->board);
+  REQUIRE_EQ(fen_after_unmake_move, fen_before);
+
+  // TODO: Update hash
+  // const uint64_t zobrist_unmake = board->zobrist_key;
+  // REQUIRE_EQ(zobrist_unmake, zobrist_before);
+
+  return depth_reached;
+}
 
 
 TEST_SUITE("INITIALIZATION")
@@ -259,239 +264,28 @@ TEST_SUITE("Test utils")
     }
   }
 
-  // TEST_CASE("Test algebraic parsing")
-  // {
-  //   init_board(DEFAULT_POSITION, &board, &globals);
+  TEST_CASE("Test algebraic parsing")
+  {
+    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
 
-  //   move_t moves[MAX_MOVES];
-  //   size_t moves_count = generate_legal_moves(&board, &globals, moves);
+    move_t moves[MAX_MOVES];
+    size_t moves_count = generate_moves(&game.tables, &game.board, moves);
 
-  //   for (size_t i = 0; i < moves_count; ++i) {
-  //     const move_t move = moves[i];
+    for (size_t i = 0; i < moves_count; ++i) {
+      const move_t move = moves[i];
 
-  //     const std::string generated_algebraic =
-  //         move_to_algebraic(&move, moves, moves_count, &board, &globals);
-  //     const move_t generated_move =
-  //         algebraic_to_move(generated_algebraic, &board, &globals);
+      const std::string generated_algebraic =
+          move_to_algebraic(&game, move, moves, moves_count);
+      const move_t generated_move =
+          algebraic_to_move(generated_algebraic, &game);
 
-  //     REQUIRE(generated_move == move);
-  //   }
-  // }
+      REQUIRE(generated_move == move);
+    }
+  }
 }
 
 
-// TEST_SUITE("Test pseudo legal move generator")
-// {
-//   TEST_CASE("Test pseudo legal black pawn")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(0, 6);
-//     piece_t piece = board.board[index];
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-
-//     move_t pos_1 = {index, position_to_index(0, 5), piece};
-//     REQUIRE(contain_move(pos_1, moves, moves_count));
-
-//     move_t pos_2 = {index, position_to_index(0, 4), piece};
-//     pos_2.double_pawn_move = true;
-//     REQUIRE(contain_move(pos_2, moves, moves_count));
-//   }
-
-
-//   TEST_CASE("Test pseudo legal white pawn")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(0, 1);
-//     piece_t piece = board.board[index];
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-
-//     move_t pos_1 = {index, position_to_index(0, 2), piece};
-//     REQUIRE(contain_move(pos_1, moves, moves_count));
-
-//     move_t pos_2 = {index, position_to_index(0, 3), piece};
-//     pos_2.double_pawn_move = true;
-//     REQUIRE(contain_move(pos_2, moves, moves_count));
-//   }
-
-
-//   TEST_CASE("Test pseudo legal rooks")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(7, 7);
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(0, 7);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(0, 0);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(7, 0);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-//   }
-
-
-//   TEST_CASE("Test pseudo legal bishops")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(2, 0);
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(5, 0);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(2, 7);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(5, 7);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-//   }
-
-
-//   TEST_CASE("Test pseudo legal knight")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(1, 0);
-//     piece_t piece = board.board[index];
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-//     REQUIRE(contain_move(move_t(index, position_to_index(0, 2), piece),
-//     moves,
-//                          moves_count));
-//     REQUIRE(contain_move(move_t(index, position_to_index(2, 2), piece),
-//     moves,
-//                          moves_count));
-
-//     index = position_to_index(6, 0);
-//     piece = board.board[index];
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-//     REQUIRE(contain_move(move_t(index, position_to_index(5, 2), piece),
-//     moves,
-//                          moves_count));
-//     REQUIRE(contain_move(move_t(index, position_to_index(7, 2), piece),
-//     moves,
-//                          moves_count));
-
-//     index = position_to_index(1, 7);
-//     piece = board.board[index];
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-//     REQUIRE(contain_move(move_t(index, position_to_index(0, 5), piece),
-//     moves,
-//                          moves_count));
-//     REQUIRE(contain_move(move_t(index, position_to_index(2, 5), piece),
-//     moves,
-//                          moves_count));
-
-//     index = position_to_index(6, 7);
-//     piece = board.board[index];
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 2);
-//     REQUIRE(contain_move(move_t(index, position_to_index(7, 5), piece),
-//     moves,
-//                          moves_count));
-//     REQUIRE(contain_move(move_t(index, position_to_index(5, 5), piece),
-//     moves,
-//                          moves_count));
-//   }
-
-
-//   TEST_CASE("Test pseudo legal queen")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(3, 0);
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(3, 7);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-//   }
-
-
-//   TEST_CASE("Test pseudo legal king")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     index_t index = position_to_index(4, 0);
-
-//     move_t moves[30];
-//     size_t moves_count =
-//         generate_pseudo_legal_moves_from_index(index, &board, moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-
-//     index = position_to_index(4, 7);
-//     moves_count = generate_pseudo_legal_moves_from_index(index, &board,
-//     moves);
-
-//     REQUIRE_EQ(moves_count, 0);
-//   }
-// }
-
-
-TEST_SUITE("Test legal move generator")
+TEST_SUITE("Test move generator")
 {
   TEST_CASE("Basic test")
   {
@@ -574,72 +368,74 @@ TEST_SUITE("Test legal move generator")
 }
 
 
-// TEST_SUITE("Test make_move and unmake_move")
+TEST_SUITE("Test make_move and unmake_move")
+{
+  TEST_CASE("Test make move with jsons")
+  {
+    for (const auto& test_json_file : test_files) {
+      json test_cases = load_json(test_json_file);
+
+      for (const json& test_case : test_cases["testCases"]) {
+        std::string starting_pos = test_case["start"]["fen"];
+        json expected_moves = test_case["expected"];
+
+        load_FEN(starting_pos, &game.board, &game.history);
+
+        move_t moves[270];
+        const size_t moves_count = test_generate_legal_moves(&game, moves);
+
+        // Apply the move
+        for (size_t i = 0; i < moves_count; ++i) {
+          const move_t& move = moves[i];
+
+          const std::string fen_before_move = generate_FEN(&game.board);
+          // TODO: update hash
+          // const uint64_t zobrist_key_before = board.zobrist_key;
+
+          const bool result = make_move(&game, move);
+          REQUIRE(result);
+
+          // Test the fen and zobrist keys changed
+          const std::string fen_after_make_move = generate_FEN(&game.board);
+          REQUIRE_NE(fen_after_make_move, fen_before_move);
+
+          // TODO: update hash
+          // const uint64_t zobrist_key_after_make_move = board.zobrist_key;
+          // REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
+
+          // Unmake the move
+          unmake_move(&game);
+
+          // Test fen and zobrist key is restored as before
+          const std::string fen_after_unmake = generate_FEN(&game.board);
+          REQUIRE_EQ(fen_after_unmake, fen_before_move);
+
+          // TODO: update hash
+          // const uint64_t zobrist_key_after_unmake_move = board.zobrist_key;
+          // REQUIRE_EQ(zobrist_key_after_unmake_move, zobrist_key_before);
+        }
+      }
+    }
+  }
+
+  TEST_CASE("Test random moves")
+  {
+    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+
+    // We limit the depth to the maximum number of repetitions we can store in
+    // order to avoid a crash
+    const int max_depth = 500;
+    // (sizeof(globals.repetitions) / sizeof(globals.repetitions[0])) - 1;
+
+    const int depth_reached = make_random_move(max_depth, &game);
+
+    std::cout << "Test random moves depth reached: "
+              << (max_depth - depth_reached) << std::endl;
+  }
+}
+
+// TEST_SUITE("Test evaluation")
 // {
-//   TEST_CASE("Test make move with jsons")
-//   {
-//     for (const auto& test_json_file : test_files) {
-//       json test_cases = load_json(test_json_file);
-
-//       for (const json& test_case : test_cases["testCases"]) {
-//         std::string starting_pos = test_case["start"]["fen"];
-//         json expected_moves = test_case["expected"];
-
-//         init_board(starting_pos, &board, &globals);
-
-//         move_t moves[270];
-//         const size_t moves_count =
-//             generate_legal_moves(&board, &globals, moves);
-
-//         // Apply the move
-//         for (size_t i = 0; i < moves_count; ++i) {
-//           const move_t& move = moves[i];
-
-//           const std::string fen_before_move = generate_FEN(&board);
-//           const uint64_t zobrist_key_before = board.zobrist_key;
-
-//           const bool result = make_move(&move, &board, &globals);
-//           REQUIRE(result);
-
-//           // Test the fen and zobrist keys changed
-//           const std::string fen_after_make_move = generate_FEN(&board);
-//           REQUIRE_NE(fen_after_make_move, fen_before_move);
-
-//           const uint64_t zobrist_key_after_make_move = board.zobrist_key;
-//           REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
-
-//           // Unmake the move
-//           const bool un_result = unmake_move(&board, &globals);
-//           REQUIRE(un_result);
-
-//           // Test fen and zobrist key is restored as before
-//           const std::string fen_after_unmake = generate_FEN(&board);
-//           REQUIRE_EQ(fen_after_unmake, fen_before_move);
-
-//           const uint64_t zobrist_key_after_unmake_move = board.zobrist_key;
-//           REQUIRE_EQ(zobrist_key_after_unmake_move, zobrist_key_before);
-//         }
-//       }
-//     }
-//   }
-
-//   TEST_CASE("Test random moves")
-//   {
-//     init_board(DEFAULT_POSITION, &board, &globals);
-
-//     // We limit the depth to the maximum number of repetitions we can store
-//     in
-//     // order to avoid a crash
-//     const int max_depth = 500;
-//     // (sizeof(globals.repetitions) / sizeof(globals.repetitions[0])) - 1;
-
-//     const int depth_reached = make_random_move(max_depth, &board, &globals);
-
-//     std::cout << "Test random moves depth reached: "
-//               << (max_depth - depth_reached) << std::endl;
-//   }
-
-
 //   TEST_CASE("Test double pawns detection")
 //   {
 //     // White
@@ -654,11 +450,14 @@ TEST_SUITE("Test legal move generator")
 //     REQUIRE(is_double_pawn(string_coordinates_to_index("h6"), &board));
 //     REQUIRE(is_double_pawn(string_coordinates_to_index("h7"), &board));
 
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("d2"), &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("f3"), &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("d2"),
+//     &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("f3"),
+//     &board));
 
 //     // Black
-//     init_board("8/pkp3pp/1p2p3/2p1p3/2p5/3PPP2/PPP3PP/6K1 b - - 0 1", &board,
+//     init_board("8/pkp3pp/1p2p3/2p1p3/2p5/3PPP2/PPP3PP/6K1 b - - 0 1",
+//     &board,
 //                &globals);
 
 //     REQUIRE(is_double_pawn(string_coordinates_to_index("e6"), &board));
@@ -667,11 +466,16 @@ TEST_SUITE("Test legal move generator")
 //     REQUIRE(is_double_pawn(string_coordinates_to_index("c5"), &board));
 //     REQUIRE(is_double_pawn(string_coordinates_to_index("c4"), &board));
 
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("h7"), &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("g7"), &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b6"), &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("a7"), &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b7"), &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("h7"),
+//     &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("g7"),
+//     &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b6"),
+//     &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("a7"),
+//     &board));
+//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b7"),
+//     &board));
 //   }
 
 
@@ -685,12 +489,18 @@ TEST_SUITE("Test legal move generator")
 //     REQUIRE(is_passed_pawn(string_coordinates_to_index("e5"), &board));
 //     REQUIRE(is_passed_pawn(string_coordinates_to_index("d4"), &board));
 
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f4"), &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f5"), &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("g4"), &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h5"), &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h6"), &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("a2"), &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f4"),
+//     &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f5"),
+//     &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("g4"),
+//     &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h5"),
+//     &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h6"),
+//     &board));
+//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("a2"),
+//     &board));
 //   }
 
 
@@ -766,7 +576,8 @@ TEST_SUITE("Test legal move generator")
 //     int score = evaluate(&board);
 //     REQUIRE_EQ(score, 45);
 
-//     init_board("3k4/8/8/1pp2pp1/PPP4P/8/8/3K4 w - - 0 1", &board, &globals);
+//     init_board("3k4/8/8/1pp2pp1/PPP4P/8/8/3K4 w - - 0 1", &board,
+//     &globals);
 
 //     score = evaluate(&board);
 //     REQUIRE_EQ(score, -40);
@@ -786,37 +597,29 @@ TEST_SUITE("Test legal move generator")
 
 //     piece_count_t count;
 
-//     count = count_pieces_on_file(string_coordinates_to_index("a3"), &board);
-//     REQUIRE_EQ(count.white, 0);
-//     REQUIRE_EQ(count.black, 0);
+//     count = count_pieces_on_file(string_coordinates_to_index("a3"),
+//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 0);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("b7"), &board);
-//     REQUIRE_EQ(count.white, 1);
-//     REQUIRE_EQ(count.black, 0);
+//     count = count_pieces_on_file(string_coordinates_to_index("b7"),
+//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 0);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("c2"), &board);
-//     REQUIRE_EQ(count.white, 0);
-//     REQUIRE_EQ(count.black, 1);
+//     count = count_pieces_on_file(string_coordinates_to_index("c2"),
+//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 1);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("d1"), &board);
-//     REQUIRE_EQ(count.white, 1);
-//     REQUIRE_EQ(count.black, 1);
+//     count = count_pieces_on_file(string_coordinates_to_index("d1"),
+//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 1);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("e1"), &board);
-//     REQUIRE_EQ(count.white, 1);
-//     REQUIRE_EQ(count.black, 2);
+//     count = count_pieces_on_file(string_coordinates_to_index("e1"),
+//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 2);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("f4"), &board);
-//     REQUIRE_EQ(count.white, 2);
-//     REQUIRE_EQ(count.black, 1);
+//     count = count_pieces_on_file(string_coordinates_to_index("f4"),
+//     &board); REQUIRE_EQ(count.white, 2); REQUIRE_EQ(count.black, 1);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("g7"), &board);
-//     REQUIRE_EQ(count.white, 1);
-//     REQUIRE_EQ(count.black, 0);
+//     count = count_pieces_on_file(string_coordinates_to_index("g7"),
+//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 0);
 
-//     count = count_pieces_on_file(string_coordinates_to_index("h1"), &board);
-//     REQUIRE_EQ(count.white, 0);
-//     REQUIRE_EQ(count.black, 0);
+//     count = count_pieces_on_file(string_coordinates_to_index("h1"),
+//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 0);
 //   }
 
 //   TEST_CASE("Test king shield")

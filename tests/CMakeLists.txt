@@ -2,15 +2,15 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Test chesso board
-add_executable(test_chesso_board test_chesso_board.cpp)
+add_executable(test_chesso test_chesso.cpp)
 
-target_include_directories(test_chesso_board SYSTEM PRIVATE doctest/doctest)
-target_include_directories(test_chesso_board SYSTEM PRIVATE json/single_include/nlohmann)
-target_include_directories(test_chesso_board PRIVATE ../src)
+target_include_directories(test_chesso SYSTEM PRIVATE doctest/doctest)
+target_include_directories(test_chesso SYSTEM PRIVATE json/single_include/nlohmann)
+target_include_directories(test_chesso PRIVATE ../src)
 
-target_link_libraries(test_chesso_board PRIVATE chesso_engine)
+target_link_libraries(test_chesso PRIVATE chesso_engine)
 
-add_test(NAME test_chesso_board COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso_board)
+add_test(NAME test_chesso COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso)
 
 # # Test openings
 # add_executable(test_openings test_openings.cpp)
