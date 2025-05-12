@@ -11,7 +11,7 @@ void order_moves(const board_t* board,
 
 bool should_reduce_move(move_t move);
 
-void order_captures(move_t moves[], size_t moves_size);
+void order_captures(const board_t* board, move_t moves[], size_t moves_size);
 
 int get_max_gain();
 int get_margin_value();

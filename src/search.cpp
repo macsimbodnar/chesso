@@ -52,7 +52,7 @@ int quiescence(int alpha,
   move_t moves[MAX_MOVES];
   const size_t n = generate_moves(&game->tables, &game->board, moves);
 
-  order_captures(moves, n);
+  order_captures(&game->board, moves, n);
 
   for (size_t i = 0; i < n; ++i) {
     // We consider only the captures that recapture the last capture
