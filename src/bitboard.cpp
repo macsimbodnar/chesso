@@ -753,7 +753,6 @@ bool load_FEN(const std::string& FEN, game_t* game)
 {
   assert(game != nullptr);
   board_t* board = &game->board;
-  history_t* history = &game->history;
 
   cleanup_board(game);
 
@@ -1594,6 +1593,65 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   return NEW_MOVE(result.from, result.to, result.piece, result.promoted_to,
                   result.capture, result.double_push, result.en_passant,
                   result.castling);
+}
+
+
+/**
+ * This function fixes the weirdo castling move that can be found in Polyglot
+ * book format and some times the UCI can send that as well! (Looking at you
+ * Cutechess!)
+ *
+ * We just need the move
+ * white short      e1h1 -> e1g1
+ * white long       e1a1 -> e1c1
+ * black short      e8h8 -> e8g8
+ * black long       e8a8 -> e8c8
+ */
+move_t fix_weirdo_castling(const board_t* board, move_t encoded_move)
+{
+  assert(board != nullptr);
+  unpacked_move_t move(encoded_move);
+  const piece_t p = get_piece(board, move.from);
+
+  if (move.from == e1 && move.to == h1 && p == W_KING) {
+    // white short
+    move.to = g1;
+    move.castling = true;
+    move.piece = W_KING;
+
+    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
+                    move.capture, move.double_push, move.en_passant,
+                    move.castling);
+  } else if (move.from == e1 && move.to == a1 && p == W_KING) {
+    // white long
+    move.to = c1;
+    move.castling = true;
+    move.piece = W_KING;
+
+    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
+                    move.capture, move.double_push, move.en_passant,
+                    move.castling);
+  } else if (move.from == e8 && move.to == h8 && p == B_KING) {
+    // black short
+    move.to = g8;
+    move.castling = true;
+    move.piece = B_KING;
+
+    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
+                    move.capture, move.double_push, move.en_passant,
+                    move.castling);
+  } else if (move.from == e8 && move.to == a8 && p == B_KING) {
+    // black short
+    move.to = c8;
+    move.castling = true;
+    move.piece = B_KING;
+
+    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
+                    move.capture, move.double_push, move.en_passant,
+                    move.castling);
+  }
+
+  return encoded_move;
 }
 
 

@@ -13,14 +13,14 @@ target_link_libraries(test_chesso PRIVATE chesso_engine)
 add_test(NAME test_chesso COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso)
 
 # # Test openings
-# add_executable(test_openings test_openings.cpp)
+add_executable(test_openings test_openings.cpp)
 
-# target_include_directories(test_openings SYSTEM PRIVATE doctest/doctest)
-# target_include_directories(test_openings PRIVATE ../src)
+target_include_directories(test_openings SYSTEM PRIVATE doctest/doctest)
+target_include_directories(test_openings PRIVATE ../src)
 
-# target_link_libraries(test_openings PRIVATE chesso_engine)
+target_link_libraries(test_openings PRIVATE chesso_engine)
 
-# add_test(NAME test_openings COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_openings)
+add_test(NAME test_openings COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_openings)
 
 # Perft
 add_executable(test_perft test_perft.cpp)

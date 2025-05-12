@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
   // LOG_E << "Debug" << END_E;
 
   initialize_game_const_data(&game);
-  
+
   position_t pos = index_to_position(a1);
   pos = index_to_position(a2);
   pos = index_to_position(a3);
@@ -31,6 +31,6 @@ int main(int argc, char* argv[])
   pos = index_to_position(a6);
   pos = index_to_position(a7);
   pos = index_to_position(a8);
-  
+
   return 0;
 }

@@ -34,11 +34,10 @@ size_t generate_moves(const bb_tables_t* tables,
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
 
-
+// Utils
+move_t fix_weirdo_castling(const board_t* board, move_t move);
 std::string move_to_algebraic(game_t* game,
                               move_t encoded_move,
                               const move_t moves[],
                               size_t moves_size);
-
-
 move_t algebraic_to_move(std::string notation, game_t* game);

@@ -242,10 +242,7 @@ public:
   int get_halfmove() const { return game.board.halfmove_clock; }
   int get_fullmove() const { return game.board.fullmove_counter; }
   std::string get_fen() const { return generate_FEN(&game.board); }
-  void set_fen(const std::string& fen)
-  {
-    load_FEN(fen, &game);
-  }
+  void set_fen(const std::string& fen) { load_FEN(fen, &game); }
   void reset() { load_FEN(DEFAULT_POSITION, &game); }
 
   bool make_move(const game_move_t& move)
