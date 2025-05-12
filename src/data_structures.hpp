@@ -236,10 +236,24 @@ struct board_t
 };
 
 
+struct history_entry_t
+{
+  board_t board;
+  size_t repetition_size;
+};
+
+
 struct history_t
 {
-  board_t entries[HISTORY_MAX_SIZE];
+  history_entry_t entries[HISTORY_MAX_SIZE];
   size_t count = 0;
+};
+
+
+struct repetition_t
+{
+  size_t size;
+  hash_t entries[REPETITION_MAX_SIZE];
 };
 
 
@@ -248,5 +262,6 @@ struct game_t
   bb_tables_t tables;
   board_t board;
   history_t history;
+  repetition_t repetitions;
   zobrist_randoms_t hash_randoms;
 };

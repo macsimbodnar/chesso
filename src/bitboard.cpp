@@ -496,12 +496,14 @@ bool make_move(game_t* game, move_t encoded_move)
   assert(game != nullptr);
 
   const bb_tables_t* tables = &game->tables;
+  const zobrist_randoms_t* randoms = &game->hash_randoms;
   board_t* board = &game->board;
   history_t* history = &game->history;
-  zobrist_randoms_t* randoms = &game->hash_randoms;
+
+  const hash_t old_hash = board->hash;
 
   // Store the history
-  history->entries[history->count++] = *board;
+  history->entries[history->count++] = {*board, game->repetitions.size};
   assert(history->count < HISTORY_MAX_SIZE);
 
   unpacked_move_t move(encoded_move);
@@ -658,6 +660,11 @@ bool make_move(game_t* game, move_t encoded_move)
   }
   board->hash ^= randoms->side_randoms[board->active_color];
 
+
+  // Store repetitions
+  game->repetitions.entries[game->repetitions.size++] = old_hash;
+  assert(game->repetitions.size < REPETITION_MAX_SIZE);
+
   // Check legality
   if (is_attacked(tables, board,
                   (board->active_color == WHITE)
@@ -665,7 +672,9 @@ bool make_move(game_t* game, move_t encoded_move)
                       : get_lsb_index(board->bitboards[W_KING]),
                   board->active_color)) {
     // Restore board
-    *board = history->entries[--history->count];
+    history->count--;
+    *board = history->entries[history->count].board;
+    game->repetitions.size = history->entries[history->count].repetition_size;
 
     return false;
   } else {
@@ -679,7 +688,10 @@ void unmake_move(game_t* game)
   assert(game != nullptr);
 
   if (game->history.count < HISTORY_MAX_SIZE) {
-    game->board = game->history.entries[--game->history.count];
+    game->history.count--;
+    game->board = game->history.entries[game->history.count].board;
+    game->repetitions.size =
+        game->history.entries[game->history.count].repetition_size;
   }
 }
 
