@@ -176,6 +176,15 @@ inline std::ostream& operator<<(std::ostream& os, const position_t& pos)
 }
 
 
+struct zobrist_randoms_t
+{
+  uint64_t piece_randoms[12][64];  // Each piece on each square
+  uint64_t castling_randoms[16];
+  uint64_t side_randoms[2];
+  uint64_t ep_randoms[64];  // en-passant randoms.
+  bool initialized = false;
+};
+
 struct unpacked_move_t
 {
   index_t from;
@@ -223,7 +232,7 @@ struct board_t
   uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
-  hash_t zobrist_key;         // Zobrist Key
+  hash_t hash;                // Zobrist Key
 };
 
 
@@ -239,4 +248,5 @@ struct game_t
   bb_tables_t tables;
   board_t board;
   history_t history;
+  zobrist_randoms_t hash_randoms;
 };

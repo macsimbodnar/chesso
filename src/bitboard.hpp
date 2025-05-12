@@ -2,10 +2,10 @@
 #include <cstdint>
 #include "data_structures.hpp"
 
-void initialize_const_data(bb_tables_t* tables);
+void initialize_game_const_data(game_t* game);
 
 // FEN
-bool load_FEN(const std::string& FEN, board_t* board, history_t* history);
+bool load_FEN(const std::string& FEN, game_t* game);
 std::string generate_FEN(const board_t* board);
 
 // Board manipulation

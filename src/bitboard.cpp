@@ -1,5 +1,6 @@
 #include "bitboard.hpp"
 #include <bit>
+#include <random>
 #include <unordered_map>
 #include "bb_tables.hpp"
 #include "data_structures.hpp"
@@ -497,6 +498,7 @@ bool make_move(game_t* game, move_t encoded_move)
   const bb_tables_t* tables = &game->tables;
   board_t* board = &game->board;
   history_t* history = &game->history;
+  zobrist_randoms_t* randoms = &game->hash_randoms;
 
   // Store the history
   history->entries[history->count++] = *board;
@@ -505,8 +507,10 @@ bool make_move(game_t* game, move_t encoded_move)
   unpacked_move_t move(encoded_move);
 
   POP_BIT(board->bitboards[move.piece], move.from);
+  board->hash ^= randoms->piece_randoms[move.piece][move.from];
+
   SET_BIT(board->bitboards[move.piece], move.to);
-  // TODO: update hash from and to
+  board->hash ^= randoms->piece_randoms[move.piece][move.to];
 
   if (move.capture) {
     // pick up bitboard piece index ranges depending on side
@@ -525,7 +529,7 @@ bool make_move(game_t* game, move_t encoded_move)
     for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++) {
       if (GET_BIT(board->bitboards[bb_piece], move.to)) {
         POP_BIT(board->bitboards[bb_piece], move.to);
-        // TODO: update hash
+        board->hash ^= randoms->piece_randoms[bb_piece][move.to];
         break;
       }
     }
@@ -534,14 +538,14 @@ bool make_move(game_t* game, move_t encoded_move)
   if (move.promoted_to) {  // TODO: handle better the promotion in the move.
     if (board->active_color == WHITE) {
       POP_BIT(board->bitboards[W_PAWN], move.to);
-      // TODO: update hash
+      board->hash ^= randoms->piece_randoms[W_PAWN][move.to];
     } else {
       POP_BIT(board->bitboards[B_PAWN], move.to);
-      // TODO: update hash
+      board->hash ^= randoms->piece_randoms[B_PAWN][move.to];
     }
 
     SET_BIT(board->bitboards[move.promoted_to], move.to);
-    // TODO: update hash
+    board->hash ^= randoms->piece_randoms[move.promoted_to][move.to];
   }
 
   if (move.en_passant) {
@@ -551,27 +555,27 @@ bool make_move(game_t* game, move_t encoded_move)
 
     if (board->active_color == WHITE) {
       POP_BIT(board->bitboards[B_PAWN], move.to + 8);
-      // TODO: update hash
+      board->hash ^= randoms->piece_randoms[B_PAWN][move.to + 8];
     } else {
       POP_BIT(board->bitboards[W_PAWN], move.to - 8);
-      // TODO: update hash
+      board->hash ^= randoms->piece_randoms[W_PAWN][move.to - 8];
     }
   }
 
   // Reset en-passant
   if (board->en_passant != INVALID_INDEX) {
-    // TODO: update hash
+    board->hash ^= randoms->ep_randoms[board->en_passant];
     board->en_passant = INVALID_INDEX;
   }
 
   if (move.double_push) {
     if (board->active_color == WHITE) {
       board->en_passant = move.to + 8;
-      // TODO: update hash
     } else {
       board->en_passant = move.to - 8;
-      // TODO: update hash
     }
+
+    board->hash ^= randoms->ep_randoms[board->en_passant];
   }
 
   if (move.castling) {
@@ -580,36 +584,36 @@ bool make_move(game_t* game, move_t encoded_move)
       case (g1):
         // move H rook
         POP_BIT(board->bitboards[W_ROOK], h1);
+        board->hash ^= randoms->piece_randoms[W_ROOK][h1];
         SET_BIT(board->bitboards[W_ROOK], f1);
-
-        // TODO: update hash
+        board->hash ^= randoms->piece_randoms[W_ROOK][f1];
         break;
 
       // white castles queen side
       case (c1):
         // move A rook
         POP_BIT(board->bitboards[W_ROOK], a1);
+        board->hash ^= randoms->piece_randoms[W_ROOK][a1];
         SET_BIT(board->bitboards[W_ROOK], d1);
-
-        // TODO: update hash
+        board->hash ^= randoms->piece_randoms[W_ROOK][d1];
         break;
 
       // black castles king side
       case (g8):
         // move H rook
         POP_BIT(board->bitboards[B_ROOK], h8);
+        board->hash ^= randoms->piece_randoms[B_ROOK][h8];
         SET_BIT(board->bitboards[B_ROOK], f8);
-
-        // TODO: update hash
+        board->hash ^= randoms->piece_randoms[B_ROOK][f8];
         break;
 
       // black castles queen side
       case (c8):
         // move A rook
         POP_BIT(board->bitboards[B_ROOK], a8);
+        board->hash ^= randoms->piece_randoms[B_ROOK][a8];
         SET_BIT(board->bitboards[B_ROOK], d8);
-
-        // TODO: update hash
+        board->hash ^= randoms->piece_randoms[B_ROOK][d8];
         break;
     }
   }
@@ -620,16 +624,12 @@ bool make_move(game_t* game, move_t encoded_move)
   } else {
     board->halfmove_clock += 1;
   }
-  // TODO: update half move zobrist?
-
-
-  // TODO: remove hash castling
 
   // Update castling rights
+  board->hash ^= randoms->castling_randoms[board->castling];
   board->castling &= castling_rights[move.from];
   board->castling &= castling_rights[move.to];
-
-  // TODO: update hash castling
+  board->hash ^= randoms->castling_randoms[board->castling];
 
   // Update occupancies
   memset(board->occupancies, BB_0, sizeof(board->occupancies));
@@ -647,6 +647,7 @@ bool make_move(game_t* game, move_t encoded_move)
 
 
   // change side
+  board->hash ^= randoms->side_randoms[board->active_color];
   if (board->active_color == WHITE) {
     board->active_color = BLACK;
   } else {
@@ -655,8 +656,7 @@ bool make_move(game_t* game, move_t encoded_move)
     // After black turn update the full move counter as well
     board->fullmove_counter++;
   }
-
-  // TODO: update hash
+  board->hash ^= randoms->side_randoms[board->active_color];
 
   // Check legality
   if (is_attacked(tables, board,
@@ -688,10 +688,43 @@ void unmake_move(game_t* game)
  *                               UTIL FUNCTIONS
  * NOTE: Does not need to be optimized
  ******************************************************************************/
-bool load_FEN(const std::string& FEN, board_t* board, history_t* history)
+hash_t compute_full_hash(game_t* game)
 {
-  assert(board != nullptr);
-  assert(history != nullptr);
+  assert(game != nullptr);
+
+  hash_t key = 0;
+
+  // Xor pieces on the board
+  for (int rank = 0; rank < 8; ++rank) {
+    for (int file = 0; file < 8; ++file) {
+      const index_t index = position_to_index(file, rank);
+      const piece_t piece = get_piece(&game->board, index);
+
+      if (piece != EMPTY) {
+        key ^= game->hash_randoms.piece_randoms[piece][index];
+      }
+    }
+  }
+
+  // Xor side to move
+  key ^= game->hash_randoms.side_randoms[game->board.active_color];
+
+  // Xor castling
+  key ^= game->hash_randoms.castling_randoms[game->board.castling];
+
+  // Xor en-passant
+  key ^= game->hash_randoms.ep_randoms[game->board.en_passant];
+
+  return key;
+}
+
+
+bool load_FEN(const std::string& FEN, game_t* game)
+{
+  assert(game != nullptr);
+  board_t* board = &game->board;
+  history_t* history = &game->history;
+
   cleanup_board(board, history);
 
   // Start parsing
@@ -949,8 +982,7 @@ bool load_FEN(const std::string& FEN, board_t* board, history_t* history)
   board->occupancies[BOTH] |= board->occupancies[WHITE];
   board->occupancies[BOTH] |= board->occupancies[BLACK];
 
-  // TODO: update hash
-  // board->zobrist_key = init_zobrist_key(state, board);
+  board->hash = compute_full_hash(game);
   return true;
 }
 
@@ -1479,28 +1511,6 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   if (is_capture) {
     // Attempt to use the destination as capture piece
     result.capture = true;
-
-    // TODO: Check if needed
-    // In case of en-passant override the capture
-    // if (board->en_passant != INVALID_BOARD_INDEX) {
-    //   if (color == WHITE) {
-    //     if (board->board[result.to] == EMPTY &&
-    //         board->board[result.to - 0x10] == B_PAWN) {
-    //       result.captured = B_PAWN;
-    //     }
-    //   } else {
-    //     if (board->board[result.to] == EMPTY &&
-    //         board->board[result.to + 0x10] == W_PAWN) {
-    //       result.captured = W_PAWN;
-    //     }
-    //   }
-    // }
-
-    // if (result.captured == INVALID || result.captured == EMPTY) {
-    //   throw algebraic_exception(
-    //       "No capture found on the board. Invalid Algebraic notation: " +
-    //       original_notation);
-    // }
   }
 
   // Any remaining characters between our initial pos and the destination
@@ -1561,6 +1571,37 @@ move_t algebraic_to_move(std::string notation, game_t* game)
  *                      INITIALIZATION FUNCTIONS
  * NOTE: Does not need to be optimized, they are called once at the start
  ******************************************************************************/
+void init_zobrist(zobrist_randoms_t* zobrist)
+{
+  assert(zobrist != nullptr);
+
+  // TODO(max): Move random initialization outside
+  std::random_device rd;
+  std::mt19937_64 gen(rd());
+  std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);
+
+  for (auto& piece_array : zobrist->piece_randoms) {
+    for (uint64_t& random : piece_array) {
+      random = dist(gen);
+    }
+  }
+
+  for (uint64_t& random : zobrist->castling_randoms) {
+    random = dist(gen);
+  }
+
+  for (uint64_t& random : zobrist->side_randoms) {
+    random = dist(gen);
+  }
+
+  for (uint64_t& random : zobrist->ep_randoms) {
+    random = dist(gen);
+  }
+
+  zobrist->initialized = true;
+}
+
+
 bb_t set_occupancy(uint64_t index, int mask_bit_count, bb_t attack_mask)
 {
   bb_t occupancy = BB_0;
@@ -1762,9 +1803,15 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 }
 
 
-void initialize_const_data(bb_tables_t* tables)
+void initialize_game_const_data(game_t* game)
 {
-  assert(tables != nullptr);
+  assert(game != nullptr);
+
+  // initialize Hash randoms values
+  init_zobrist(&game->hash_randoms);
+
+  // Initialize bitboard tables
+  bb_tables_t* tables = &game->tables;
   memset(tables, 0, sizeof(bb_tables_t));
 
   for (index_t square = 0; square < 64; ++square) {
@@ -1853,7 +1900,7 @@ void cleanup_board(board_t* board, history_t* history)
   board->halfmove_clock = 0;
   board->en_passant = INVALID_INDEX;
   board->fullmove_counter = 1;
-  board->zobrist_key = 0;
+  board->hash = 0ULL;
 
   history->count = 0;
 }

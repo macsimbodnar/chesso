@@ -134,13 +134,19 @@ inline const stats_t* get_from_tt(const board_t* board, int depth)
 {
   const stats_t* res = nullptr;
 
-  const tt_elem_t* entry = &tt[board->zobrist_key % TT_SIZE];
+  const tt_elem_t* entry = &tt[board->hash % TT_SIZE];
 
+#ifdef RUN_THREADS
   tt_spin_lock.lock();
-  if (entry->key == board->zobrist_key && entry->depth == depth) {
+#endif
+
+  if (entry->key == board->hash && entry->depth == depth) {
     res = &entry->stats;
   }
+
+#ifdef RUN_THREADS
   tt_spin_lock.unlock();
+#endif
 
   return res;
 }
@@ -148,12 +154,12 @@ inline const stats_t* get_from_tt(const board_t* board, int depth)
 
 inline void store_to_tt(const board_t* board, int depth, const stats_t* stats)
 {
-  tt_elem_t* elem = &tt[board->zobrist_key % TT_SIZE];
+  tt_elem_t* elem = &tt[board->hash % TT_SIZE];
 
   tt_spin_lock.lock();
   elem->depth = depth;
   elem->stats = *stats;
-  elem->key = board->zobrist_key;
+  elem->key = board->hash;
   tt_spin_lock.unlock();
 }
 
@@ -295,8 +301,8 @@ stats_t perft(int depth, game_t* game)
   }
 
   // Check if this position is in tt table
-  // const stats_t* stats_in_tt = get_from_tt(board, depth);
-  // if (stats_in_tt != nullptr) { return *stats_in_tt; }
+  const stats_t* stats_in_tt = get_from_tt(&game->board, depth);
+  if (stats_in_tt != nullptr) { return *stats_in_tt; }
 
   move_t moves[270];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
@@ -316,7 +322,7 @@ stats_t perft(int depth, game_t* game)
     }
   }
 
-  // store_to_tt(board, depth, &node_stats);
+  store_to_tt(&game->board, depth, &node_stats);
   return node_stats;
 }
 
@@ -369,7 +375,7 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
 
 int main()
 {
-  initialize_const_data(&game.tables);
+  initialize_game_const_data(&game);
 
   bool passed = true;
 
@@ -419,7 +425,7 @@ int main()
         if (depth > depth_limit) { continue; }
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        load_FEN(fen, &game.board, &game.history);
+        load_FEN(fen, &game);
         stats_t stats;
         stats.nodes = 1;
 

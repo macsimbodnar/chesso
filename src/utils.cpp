@@ -236,7 +236,7 @@ std::string print_nice_board(const board_t* board)
   ss << "\nhalf_move_clock:   " << int(board->halfmove_clock);
   ss << "\nen_passant:        " << ((board->en_passant == INVALID_INDEX) ? "-" : index_to_str(board->en_passant));
   ss << "\nfull_move_number:  " << int(board->fullmove_counter);
-  ss << "\nzobrist_key:       " << board->zobrist_key;
+  ss << "\nhash:              " << board->hash;
   // ss << "\nphase_value:       " << int(board->phase_value);
   // ss << "next_move:         " << board->next_move;
 

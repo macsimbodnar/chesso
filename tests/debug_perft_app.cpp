@@ -206,7 +206,7 @@ static game_t g_game;
 // "$depth" "$fen" "$moves"
 int main(int argc, char* argv[])
 {
-  initialize_const_data(&g_game.tables);
+  initialize_game_const_data(&g_game);
 
   if (argc < 3) {
     std::cout << "No arguments. Use \"$depth\" \"$fen\" \"$moves\"\n";
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  load_FEN(fen, &g_game.board, &g_game.history);
+  load_FEN(fen, &g_game);
 
   move_t moves[270];
   size_t moves_count = debug_generate_legal_moves(&g_game, moves);

@@ -12,13 +12,16 @@ int main(int argc, char* argv[])
 {
   (void)argc;
   (void)argv;
+  (void)move_count;
+  (void)moves;
+  (void)game;
 
   // LOG_I << "Debug" << END_I;
   // LOG_S << "Debug" << END_S;
   // LOG_W << "Debug" << END_W;
   // LOG_E << "Debug" << END_E;
 
-  initialize_const_data(&game.tables);
+  initialize_game_const_data(&game);
   
   position_t pos = index_to_position(a1);
   pos = index_to_position(a2);

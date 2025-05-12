@@ -185,8 +185,7 @@ int make_random_move(int depth, game_t* g)
 
   const std::string fen_before = generate_FEN(&g->board);
 
-  // TODO: Update hash
-  // const uint64_t zobrist_before = board->zobrist_key;
+  const uint64_t zobrist_before = g->board.hash;
 
   const size_t moves_count = test_generate_legal_moves(g, moves);
 
@@ -199,9 +198,8 @@ int make_random_move(int depth, game_t* g)
   const std::string fen_after_make_move = generate_FEN(&g->board);
   REQUIRE_NE(fen_after_make_move, fen_before);
 
-  // TODO: Update hash
-  // const uint64_t zobrist_make = board->zobrist_key;
-  // REQUIRE_NE(zobrist_make, zobrist_before);
+  const uint64_t zobrist_make = g->board.hash;
+  REQUIRE_NE(zobrist_make, zobrist_before);
 
   // Recursively go deeper
   int depth_reached = make_random_move(depth - 1, g);
@@ -212,9 +210,8 @@ int make_random_move(int depth, game_t* g)
   const std::string fen_after_unmake_move = generate_FEN(&g->board);
   REQUIRE_EQ(fen_after_unmake_move, fen_before);
 
-  // TODO: Update hash
-  // const uint64_t zobrist_unmake = board->zobrist_key;
-  // REQUIRE_EQ(zobrist_unmake, zobrist_before);
+  const uint64_t zobrist_unmake = g->board.hash;
+  REQUIRE_EQ(zobrist_unmake, zobrist_before);
 
   return depth_reached;
 }
@@ -224,7 +221,7 @@ TEST_SUITE("INITIALIZATION")
 {
   TEST_CASE("Test INITIALIZATION")
   {
-    initialize_const_data(&game.tables);
+    initialize_game_const_data(&game);
   }
 }
 
@@ -232,7 +229,7 @@ TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
   {
-    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+    load_FEN(DEFAULT_POSITION, &game);
 
     std::string fen_result = generate_FEN(&game.board);
 
@@ -247,7 +244,7 @@ TEST_SUITE("Test utils")
       for (const json& test_case : test_cases["testCases"]) {
         {
           const std::string expected_FEN = test_case["start"]["fen"];
-          load_FEN(expected_FEN, &game.board, &game.history);
+          load_FEN(expected_FEN, &game);
 
           const std::string result_FEN = generate_FEN(&game.board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -255,7 +252,7 @@ TEST_SUITE("Test utils")
 
         for (const json& expected : test_case["expected"]) {
           const std::string expected_FEN = expected["fen"];
-          load_FEN(expected_FEN, &game.board, &game.history);
+          load_FEN(expected_FEN, &game);
 
           const std::string result_FEN = generate_FEN(&game.board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -266,7 +263,7 @@ TEST_SUITE("Test utils")
 
   TEST_CASE("Test algebraic parsing")
   {
-    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+    load_FEN(DEFAULT_POSITION, &game);
 
     move_t moves[MAX_MOVES];
     size_t moves_count = generate_moves(&game.tables, &game.board, moves);
@@ -289,7 +286,7 @@ TEST_SUITE("Test move generator")
 {
   TEST_CASE("Basic test")
   {
-    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+    load_FEN(DEFAULT_POSITION, &game);
 
     move_t moves[270];
     const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
@@ -306,7 +303,7 @@ TEST_SUITE("Test move generator")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
-        load_FEN(starting_pos, &game.board, &game.history);
+        load_FEN(starting_pos, &game);
 
         move_t moves[270];
         const size_t moves_count = test_generate_legal_moves(&game, moves);
@@ -379,7 +376,7 @@ TEST_SUITE("Test make_move and unmake_move")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
-        load_FEN(starting_pos, &game.board, &game.history);
+        load_FEN(starting_pos, &game);
 
         move_t moves[270];
         const size_t moves_count = test_generate_legal_moves(&game, moves);
@@ -389,8 +386,7 @@ TEST_SUITE("Test make_move and unmake_move")
           const move_t& move = moves[i];
 
           const std::string fen_before_move = generate_FEN(&game.board);
-          // TODO: update hash
-          // const uint64_t zobrist_key_before = board.zobrist_key;
+          const uint64_t zobrist_key_before = game.board.hash;
 
           const bool result = make_move(&game, move);
           REQUIRE(result);
@@ -399,9 +395,8 @@ TEST_SUITE("Test make_move and unmake_move")
           const std::string fen_after_make_move = generate_FEN(&game.board);
           REQUIRE_NE(fen_after_make_move, fen_before_move);
 
-          // TODO: update hash
-          // const uint64_t zobrist_key_after_make_move = board.zobrist_key;
-          // REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
+          const uint64_t zobrist_key_after_make_move = game.board.hash;
+          REQUIRE_NE(zobrist_key_after_make_move, zobrist_key_before);
 
           // Unmake the move
           unmake_move(&game);
@@ -410,9 +405,8 @@ TEST_SUITE("Test make_move and unmake_move")
           const std::string fen_after_unmake = generate_FEN(&game.board);
           REQUIRE_EQ(fen_after_unmake, fen_before_move);
 
-          // TODO: update hash
-          // const uint64_t zobrist_key_after_unmake_move = board.zobrist_key;
-          // REQUIRE_EQ(zobrist_key_after_unmake_move, zobrist_key_before);
+          const uint64_t zobrist_key_after_unmake_move = game.board.hash;
+          REQUIRE_EQ(zobrist_key_after_unmake_move, zobrist_key_before);
         }
       }
     }
@@ -420,7 +414,7 @@ TEST_SUITE("Test make_move and unmake_move")
 
   TEST_CASE("Test random moves")
   {
-    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+    load_FEN(DEFAULT_POSITION, &game);
 
     // We limit the depth to the maximum number of repetitions we can store in
     // order to avoid a crash

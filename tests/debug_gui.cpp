@@ -185,10 +185,10 @@ private:
 public:
   game_handler_t()
   {
-    initialize_const_data(&game.tables);
+    initialize_game_const_data(&game);
 
     // Initialize the board to default
-    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
+    load_FEN(DEFAULT_POSITION, &game);
   }
 
 
@@ -244,9 +244,9 @@ public:
   std::string get_fen() const { return generate_FEN(&game.board); }
   void set_fen(const std::string& fen)
   {
-    load_FEN(fen, &game.board, &game.history);
+    load_FEN(fen, &game);
   }
-  void reset() { load_FEN(DEFAULT_POSITION, &game.board, &game.history); }
+  void reset() { load_FEN(DEFAULT_POSITION, &game); }
 
   bool make_move(const game_move_t& move)
   {
