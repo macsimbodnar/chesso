@@ -246,14 +246,14 @@ struct history_entry_t
 struct history_t
 {
   history_entry_t entries[HISTORY_MAX_SIZE];
-  size_t count = 0;
+  size_t size = 0;
 };
 
 
 struct repetition_t
 {
-  size_t size;
   hash_t entries[REPETITION_MAX_SIZE];
+  size_t size = 0;
 };
 
 

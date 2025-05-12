@@ -9,7 +9,6 @@ bool load_FEN(const std::string& FEN, game_t* game);
 std::string generate_FEN(const board_t* board);
 
 // Board manipulation
-void cleanup_board(board_t* board, history_t* history);
 piece_t get_piece(const board_t* board, index_t square);
 
 // Attacks

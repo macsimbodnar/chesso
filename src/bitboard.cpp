@@ -503,8 +503,8 @@ bool make_move(game_t* game, move_t encoded_move)
   const hash_t old_hash = board->hash;
 
   // Store the history
-  history->entries[history->count++] = {*board, game->repetitions.size};
-  assert(history->count < HISTORY_MAX_SIZE);
+  history->entries[history->size++] = {*board, game->repetitions.size};
+  assert(history->size < HISTORY_MAX_SIZE);
 
   unpacked_move_t move(encoded_move);
 
@@ -672,9 +672,9 @@ bool make_move(game_t* game, move_t encoded_move)
                       : get_lsb_index(board->bitboards[W_KING]),
                   board->active_color)) {
     // Restore board
-    history->count--;
-    *board = history->entries[history->count].board;
-    game->repetitions.size = history->entries[history->count].repetition_size;
+    history->size--;
+    *board = history->entries[history->size].board;
+    game->repetitions.size = history->entries[history->size].repetition_size;
 
     return false;
   } else {
@@ -687,11 +687,11 @@ void unmake_move(game_t* game)
 {
   assert(game != nullptr);
 
-  if (game->history.count < HISTORY_MAX_SIZE) {
-    game->history.count--;
-    game->board = game->history.entries[game->history.count].board;
+  if (game->history.size < HISTORY_MAX_SIZE) {
+    game->history.size--;
+    game->board = game->history.entries[game->history.size].board;
     game->repetitions.size =
-        game->history.entries[game->history.count].repetition_size;
+        game->history.entries[game->history.size].repetition_size;
   }
 }
 
@@ -700,6 +700,24 @@ void unmake_move(game_t* game)
  *                               UTIL FUNCTIONS
  * NOTE: Does not need to be optimized
  ******************************************************************************/
+void cleanup_board(game_t* game)
+{
+  assert(game != nullptr);
+
+  memset(&game->board, 0, sizeof(board_t));
+
+  game->board.active_color = WHITE;
+  game->board.castling = WQ | WK | BQ | BK;
+  game->board.halfmove_clock = 0;
+  game->board.en_passant = INVALID_INDEX;
+  game->board.fullmove_counter = 1;
+  game->board.hash = 0ULL;
+
+  game->history.size = 0;
+  game->repetitions.size = 0;
+}
+
+
 hash_t compute_full_hash(game_t* game)
 {
   assert(game != nullptr);
@@ -737,7 +755,7 @@ bool load_FEN(const std::string& FEN, game_t* game)
   board_t* board = &game->board;
   history_t* history = &game->history;
 
-  cleanup_board(board, history);
+  cleanup_board(game);
 
   // Start parsing
   auto sections = split_string(FEN);
@@ -1897,22 +1915,4 @@ piece_t get_piece(const board_t* board, index_t square)
   }
 
   return EMPTY;
-}
-
-
-void cleanup_board(board_t* board, history_t* history)
-{
-  assert(board != nullptr);
-  assert(history != nullptr);
-
-  memset(board, 0, sizeof(board_t));
-
-  board->active_color = WHITE;
-  board->castling = WQ | WK | BQ | BK;
-  board->halfmove_clock = 0;
-  board->en_passant = INVALID_INDEX;
-  board->fullmove_counter = 1;
-  board->hash = 0ULL;
-
-  history->count = 0;
 }
