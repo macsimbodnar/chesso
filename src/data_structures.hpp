@@ -181,7 +181,7 @@ struct zobrist_randoms_t
   uint64_t piece_randoms[12][64];  // Each piece on each square
   uint64_t castling_randoms[16];
   uint64_t side_randoms[2];
-  uint64_t ep_randoms[64];  // en-passant randoms.
+  uint64_t ep_randoms[65];  // en-passant for each square plus invalid
   bool initialized = false;
 };
 
