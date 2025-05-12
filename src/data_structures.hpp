@@ -233,9 +233,8 @@ struct unpacked_move_t
 
   move_t pack() const
   {
-    const move_t move =
-        NEW_MOVE(move.from, move.to, move.piece, move.promoted_to, move.capture,
-                 move.double_push, move.en_passant, move.castling);
+    const move_t move = NEW_MOVE(from, to, piece, promoted_to, capture,
+                                 double_push, en_passant, castling);
 
     return move;
   }

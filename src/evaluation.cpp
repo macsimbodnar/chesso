@@ -191,9 +191,11 @@ int evaluate_move(const board_t* board,
     case TO_ROOK:
       return 10000 + 350;
     case TO_KNIGHT:
-    case B_KNIGHT:
     case TO_BISHOP:
       return 10000 + 100;
+
+    case TO_NONE:
+      break;
   }
 
   // Killer & History
