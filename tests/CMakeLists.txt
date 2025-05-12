@@ -47,10 +47,10 @@ add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
 
 # # add_test(NAME debug_gui COMMAND ${CMAKE_CURRENT_BINARY_DIR}/debug_gui)
 
-# # Perft generation program
-# add_executable(debug_perft_app debug_perft_app.cpp)
-# target_include_directories(debug_perft_app PRIVATE ../src)
-# target_link_libraries(debug_perft_app chesso_engine)
+# Perft generation program
+add_executable(debug_perft_app debug_perft_app.cpp)
+target_include_directories(debug_perft_app PRIVATE ../src)
+target_link_libraries(debug_perft_app chesso_engine)
 
 # Debug main
 add_executable(debug_main debug_main.cpp)
