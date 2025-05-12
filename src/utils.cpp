@@ -145,6 +145,13 @@ std::string piece_to_str(piece_t piece)
 }
 
 
+std::string promotion_to_str(promotion_t piece)
+{
+  static const std::string value[] = {"", "n", "b", "r", "q"};
+  return value[piece];
+}
+
+
 std::string print_bboard(bb_t board)
 {
   std::stringstream ss;
@@ -255,7 +262,7 @@ std::string print_move(move_t move)
   ss << index_to_str(m.from) << index_to_str(m.to);
   ss << " " << piece_to_str(m.piece);
 
-  if (m.promoted_to > W_PAWN) { ss << " " << piece_to_str(m.promoted_to); }
+  if (m.promoted_to > TO_NONE) { ss << " " << promotion_to_str(m.promoted_to); }
   if (m.capture) { ss << " capture"; }
   if (m.double_push) { ss << " double push"; }
   if (m.en_passant) { ss << " en passant"; }

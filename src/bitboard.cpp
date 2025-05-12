@@ -144,23 +144,22 @@ size_t generate_moves(const bb_tables_t* tables,
             // Promotion
             if (from >= a7 && from <= h7) {
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_QUEEN, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_ROOK, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_BISHOP, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_KNIGHT, 0, 0, 0, 0);
-            }
-
-            else {
+                  NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
+            } else {
               moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
 
               if ((from >= a2 && from <= h2) &&
-                  !GET_BIT(board->occupancies[BOTH], to - 8))
+                  !GET_BIT(board->occupancies[BOTH], to - 8)) {
                 // Double push
                 moves[move_count++] =
                     NEW_MOVE(from, to - 8, piece, 0, 0, 1, 0, 0);
+              }
             }
           }
 
@@ -175,16 +174,14 @@ size_t generate_moves(const bb_tables_t* tables,
             // Attack & promotion
             if (from >= a7 && from <= h7) {
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_QUEEN, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_QUEEN, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_ROOK, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_ROOK, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_BISHOP, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_BISHOP, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, W_KNIGHT, 1, 0, 0, 0);
-            }
-
-            else {
+                  NEW_MOVE(from, to, piece, TO_KNIGHT, 1, 0, 0, 0);
+            } else {
               moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
             }
 
@@ -238,9 +235,7 @@ size_t generate_moves(const bb_tables_t* tables,
           }
         }
       }
-    }
-
-    else {
+    } else {
       if (piece == B_PAWN) {
         while (bboard) {
           from = get_lsb_index(bboard);
@@ -251,16 +246,14 @@ size_t generate_moves(const bb_tables_t* tables,
             // Promotion
             if (from >= a2 && from <= h2) {
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_QUEEN, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_ROOK, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_BISHOP, 0, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_KNIGHT, 0, 0, 0, 0);
-            }
-
-            else {
+                  NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
+            } else {
               // Normal pawn move
               moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
 
@@ -284,13 +277,13 @@ size_t generate_moves(const bb_tables_t* tables,
             // Promotion
             if (from >= a2 && from <= h2) {
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_QUEEN, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_QUEEN, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_ROOK, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_ROOK, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_BISHOP, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_BISHOP, 1, 0, 0, 0);
               moves[move_count++] =
-                  NEW_MOVE(from, to, piece, B_KNIGHT, 1, 0, 0, 0);
+                  NEW_MOVE(from, to, piece, TO_KNIGHT, 1, 0, 0, 0);
             } else {
               moves[move_count++] = NEW_MOVE(from, to, piece, 0, 1, 0, 0, 0);
             }
@@ -537,17 +530,30 @@ bool make_move(game_t* game, move_t encoded_move)
     }
   }
 
+  static const piece_t w_promotion_map[] = {W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK,
+                                            W_QUEEN};
+  static const piece_t b_promotion_map[] = {B_PAWN, B_KNIGHT, B_BISHOP, B_ROOK,
+                                            B_QUEEN};
+
   if (move.promoted_to) {  // TODO: handle better the promotion in the move.
     if (board->active_color == WHITE) {
       POP_BIT(board->bitboards[W_PAWN], move.to);
       board->hash ^= randoms->piece_randoms[W_PAWN][move.to];
+
+      const piece_t promoted_to = w_promotion_map[move.promoted_to];
+
+      SET_BIT(board->bitboards[promoted_to], move.to);
+      board->hash ^= randoms->piece_randoms[promoted_to][move.to];
+
     } else {
       POP_BIT(board->bitboards[B_PAWN], move.to);
       board->hash ^= randoms->piece_randoms[B_PAWN][move.to];
-    }
 
-    SET_BIT(board->bitboards[move.promoted_to], move.to);
-    board->hash ^= randoms->piece_randoms[move.promoted_to][move.to];
+      const piece_t promoted_to = b_promotion_map[move.promoted_to];
+
+      SET_BIT(board->bitboards[promoted_to], move.to);
+      board->hash ^= randoms->piece_randoms[promoted_to][move.to];
+    }
   }
 
   if (move.en_passant) {
@@ -693,6 +699,53 @@ void unmake_move(game_t* game)
     game->repetitions.size =
         game->history.entries[game->history.size].repetition_size;
   }
+}
+
+
+bool is_position_repeated(const repetition_t* rep, hash_t hash)
+{
+  assert(rep != nullptr);
+
+  for (size_t i = 0; i < rep->size; ++i) {
+    if (hash == rep->entries[i]) { return true; }
+  }
+
+  return false;
+}
+
+
+bool is_check(const game_t* game)
+{
+  assert(game != nullptr);
+  const index_t index = (game->board.active_color == WHITE)
+                            ? get_lsb_index(game->board.bitboards[W_KING])
+                            : get_lsb_index(game->board.bitboards[B_KING]);
+
+  // is king in check
+  const bool in_check = is_attacked(&game->tables, &game->board, index,
+                                    !game->board.active_color);
+
+  return in_check;
+}
+
+
+void swap_side(game_t* game)
+{
+  assert(game != nullptr);
+
+  game->board.hash ^= game->hash_randoms.side_randoms[game->board.active_color];
+  game->board.active_color = !game->board.active_color;
+  game->board.hash ^= game->hash_randoms.side_randoms[game->board.active_color];
+}
+
+
+void set_en_passant(game_t* game, index_t en_passant_index)
+{
+  assert(game != nullptr);
+
+  game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
+  game->board.en_passant = en_passant_index;
+  game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
 }
 
 
@@ -1285,20 +1338,16 @@ std::string move_to_algebraic(game_t* game,
   if (move.promoted_to > 0) {
     notation += "=";
     switch (move.promoted_to) {
-      case W_QUEEN:
-      case B_QUEEN:
+      case TO_QUEEN:
         notation += 'Q';
         break;
-      case W_ROOK:
-      case B_ROOK:
+      case TO_ROOK:
         notation += 'R';
         break;
-      case W_BISHOP:
-      case B_BISHOP:
+      case TO_BISHOP:
         notation += 'B';
         break;
-      case W_KNIGHT:
-      case B_KNIGHT:
+      case TO_KNIGHT:
         notation += 'N';
         break;
       default:
@@ -1492,25 +1541,25 @@ move_t algebraic_to_move(std::string notation, game_t* game)
 
   // Look for promotion: if there is an '=' then the following char is the
   // promotion piece.
-  piece_t promo = W_PAWN;
+  promotion_t promo = TO_NONE;
   size_t promo_pos = cleaned.find('=');
   if (promo_pos != std::string::npos && promo_pos + 1 < cleaned.size()) {
     char promo_char = cleaned[promo_pos + 1];
     switch (promo_char) {
       case 'Q':
-        promo = (board->active_color == WHITE) ? W_QUEEN : B_QUEEN;
+        promo = TO_QUEEN;
         break;
       case 'R':
-        promo = (board->active_color == WHITE) ? W_ROOK : B_ROOK;
+        promo = TO_ROOK;
         break;
       case 'B':
-        promo = (board->active_color == WHITE) ? W_BISHOP : B_BISHOP;
+        promo = TO_BISHOP;
         break;
       case 'N':
-        promo = (board->active_color == WHITE) ? W_KNIGHT : B_KNIGHT;
+        promo = TO_KNIGHT;
         break;
       default:
-        promo = W_PAWN;
+        promo = TO_NONE;
         break;
     }
     cleaned = cleaned.substr(0, promo_pos);
@@ -1619,39 +1668,126 @@ move_t fix_weirdo_castling(const board_t* board, move_t encoded_move)
     move.castling = true;
     move.piece = W_KING;
 
-    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
-                    move.capture, move.double_push, move.en_passant,
-                    move.castling);
+    return move.pack();
   } else if (move.from == e1 && move.to == a1 && p == W_KING) {
     // white long
     move.to = c1;
     move.castling = true;
     move.piece = W_KING;
 
-    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
-                    move.capture, move.double_push, move.en_passant,
-                    move.castling);
+    return move.pack();
   } else if (move.from == e8 && move.to == h8 && p == B_KING) {
     // black short
     move.to = g8;
     move.castling = true;
     move.piece = B_KING;
 
-    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
-                    move.capture, move.double_push, move.en_passant,
-                    move.castling);
+    return move.pack();
   } else if (move.from == e8 && move.to == a8 && p == B_KING) {
     // black short
     move.to = c8;
     move.castling = true;
     move.piece = B_KING;
 
-    return NEW_MOVE(move.from, move.to, move.piece, move.promoted_to,
-                    move.capture, move.double_push, move.en_passant,
-                    move.castling);
+    return move.pack();
   }
 
   return encoded_move;
+}
+
+
+/**
+ * This function fixes the weirdo castling move that can be found in Polyglot
+ * book format and some times the UCI can send that as well! (Looking at you
+ * Cutechess!)
+ *
+ * We just need the move
+ * white short      e1h1 -> e1g1
+ * white long       e1a1 -> e1c1
+ * black short      e8h8 -> e8g8
+ * black long       e8a8 -> e8c8
+ */
+void fix_weirdo_castling(const board_t* board, unpacked_move_t* move)
+{
+  assert(board != nullptr);
+  assert(move != nullptr);
+  const piece_t p = get_piece(board, move->from);
+
+  if (move->from == e1 && move->to == h1 && p == W_KING) {
+    // white short
+    move->to = g1;
+    move->castling = true;
+    move->piece = W_KING;
+  } else if (move->from == e1 && move->to == a1 && p == W_KING) {
+    // white long
+    move->to = c1;
+    move->castling = true;
+    move->piece = W_KING;
+  } else if (move->from == e8 && move->to == h8 && p == B_KING) {
+    // black short
+    move->to = g8;
+    move->castling = true;
+    move->piece = B_KING;
+  } else if (move->from == e8 && move->to == a8 && p == B_KING) {
+    // black short
+    move->to = c8;
+    move->castling = true;
+    move->piece = B_KING;
+  }
+}
+
+
+bool is_pv_legal(game_t* game, const pv_t* pv)
+{
+  assert(game != nullptr);
+  assert(pv != nullptr);
+
+  bool is_pv_ok = true;
+  size_t make_move_counter = 0;
+
+  // Empty pv is illegal
+  if (pv->pv_length[0] < 1) {
+    LOG_W << "Empty PV" << END_W;
+    return false;
+  }
+
+  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
+    const move_t move_to_test = pv->pv_table[0][i];
+
+    move_t moves[MAX_MOVES];
+    const size_t moves_count =
+        generate_moves(&game->tables, &game->board, moves);
+
+    if (moves_count < 1) {
+      is_pv_ok = false;
+      break;
+    }
+
+    bool found = false;
+    for (size_t move_index = 0; move_index < moves_count; ++move_index) {
+      if (move_to_test == moves[move_index]) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      LOG_W << "PV with illegal move: " << print_move(move_to_test) << END_W;
+      is_pv_ok = false;
+      break;
+    }
+
+    const bool legal = make_move(game, move_to_test);
+    assert(legal);
+    (void)legal;
+    make_move_counter++;
+  }
+
+  for (size_t i = 0; i < make_move_counter; ++i) {
+    unmake_move(game);
+  }
+
+  return is_pv_ok;
 }
 
 

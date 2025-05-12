@@ -36,32 +36,12 @@ std::vector<std::string> split(std::string s, std::string delimiter)
 }
 
 
-enum mini_promotion_t
-{
-  TO_NOPE,
-  TO_Q,
-  TO_N,
-  TO_R,
-  TO_B
-};
-
-
 struct mini_move_t
 {
   index_t from;
   index_t to;
-  mini_promotion_t promotion;
+  promotion_t promotion;
 };
-
-
-bool is_same_promotion(mini_promotion_t p1, piece_t p2)
-{
-  if (p1 == TO_Q && (p2 != W_QUEEN && p2 != B_QUEEN)) { return false; }
-  if (p1 == TO_N && (p2 != W_KNIGHT && p2 != B_KNIGHT)) { return false; }
-  if (p1 == TO_R && (p2 != W_ROOK && p2 != B_ROOK)) { return false; }
-  if (p1 == TO_B && (p2 != W_BISHOP && p2 != B_BISHOP)) { return false; }
-  return true;
-}
 
 
 mini_move_t algebraic_to_mini_move(const std::string& p)
@@ -95,29 +75,29 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
   mini_move_t move;
   move.from = from;
   move.to = to;
-  move.promotion = TO_NOPE;
+  move.promotion = TO_NONE;
   // TODO: handle the of promotion
   if (p.length() == 5) {
     // Handle promotion
     switch (p[4]) {
       case 'Q':
       case 'q':
-        move.promotion = TO_Q;
+        move.promotion = TO_QUEEN;
         break;
 
       case 'N':
       case 'n':
-        move.promotion = TO_N;
+        move.promotion = TO_KNIGHT;
         break;
 
       case 'R':
       case 'r':
-        move.promotion = TO_R;
+        move.promotion = TO_ROOK;
         break;
 
       case 'B':
       case 'b':
-        move.promotion = TO_B;
+        move.promotion = TO_BISHOP;
         break;
 
       default:
@@ -130,23 +110,19 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
 }
 
 
-std::string promotion_to_string(const move_t& move)
+std::string promotion_to_string(move_t move)
 {
   switch (MOVE_PROMOTED(move)) {
-    case B_QUEEN:
-    case W_QUEEN:
+    case TO_QUEEN:
       return "q";
       break;
-    case W_KNIGHT:
-    case B_KNIGHT:
+    case TO_KNIGHT:
       return "n";
       break;
-    case W_ROOK:
-    case B_ROOK:
+    case TO_ROOK:
       return "r";
       break;
-    case W_BISHOP:
-    case B_BISHOP:
+    case TO_BISHOP:
       return "b";
       break;
 
@@ -244,7 +220,7 @@ int main(int argc, char* argv[])
       const unpacked_move_t um(move);
 
       if (um.from == mini_move.from && um.to == mini_move.to &&
-          is_same_promotion(mini_move.promotion, um.promoted_to)) {
+          mini_move.promotion == um.promoted_to) {
         found = true;
 
         bool move_happened = make_move(&g_game, move);

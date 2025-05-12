@@ -531,7 +531,7 @@ uint64_t get_key(const board_t* board)
 }
 
 
-piece_t poly_promo_to_bb_promo(uint8_t poly_promotion, color_t side)
+promotion_t poly_promo_to_bb_promo(uint8_t poly_promotion)
 {
   assert(poly_promotion < 5);
   // TO_NONE == 0
@@ -542,21 +542,21 @@ piece_t poly_promo_to_bb_promo(uint8_t poly_promotion, color_t side)
 
   switch (poly_promotion) {
     case 1:
-      return (side == WHITE) ? W_KNIGHT : B_KNIGHT;
+      return TO_KNIGHT;
       break;
     case 2:
-      return (side == WHITE) ? W_BISHOP : B_BISHOP;
+      return TO_BISHOP;
       break;
     case 3:
-      return (side == WHITE) ? W_ROOK : B_ROOK;
+      return TO_ROOK;
       break;
     case 4:
-      return (side == WHITE) ? W_QUEEN : B_QUEEN;
+      return TO_QUEEN;
       break;
 
     case 0:
     default:
-      return W_PAWN;
+      return TO_NONE;
       break;
   }
 }
@@ -607,8 +607,7 @@ size_t get_book_moves_for_key(const book_t* book,
 
       // Handle promotion
       const uint8_t poly_promo = (move >> 12) & 7;
-      const piece_t promoted_to =
-          poly_promo_to_bb_promo(poly_promo, board->active_color);
+      const promotion_t promoted_to = poly_promo_to_bb_promo(poly_promo);
 
       const move_t m =
           NEW_MOVE(from, to, piece, promoted_to, (target != EMPTY), 0, 0, 0);

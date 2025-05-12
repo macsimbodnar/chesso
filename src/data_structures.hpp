@@ -35,7 +35,7 @@ typedef uint8_t index_t;
 typedef uint8_t castling_t;
 typedef uint64_t bb_t;
 typedef uint64_t hash_t;
-typedef uint64_t move_t;
+typedef uint32_t move_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
@@ -51,7 +51,8 @@ typedef uint64_t move_t;
  *   0000 0000 0000 0000 0011 1111    source square       0x3f
  *   0000 0000 0000 1111 1100 0000    target square       0xfc0
  *   0000 0000 1111 0000 0000 0000    piece               0xf000
- *   0000 1111 0000 0000 0000 0000    promoted piece      0xf0000
+ *   0000 0111 0000 0000 0000 0000    promoted to         0x70000
+ *   0000 1000 0000 0000 0000 0000    NOT USED            0xf0000
  *   0001 0000 0000 0000 0000 0000    capture flag        0x100000
  *   0010 0000 0000 0000 0000 0000    double push flag    0x200000
  *   0100 0000 0000 0000 0000 0000    en-passant flag     0x400000
@@ -70,10 +71,10 @@ typedef uint64_t move_t;
                  ((castling) << 23))
 // clang-format on
 
-#define MOVE_FROM(move) ((move)&0x3f)
-#define MOVE_TO(move) (((move)&0xfc0) >> 6)
+#define MOVE_FROM(move) (static_cast<index_t>((move)&0x3f))
+#define MOVE_TO(move) (static_cast<index_t>(((move)&0xfc0) >> 6))
 #define MOVE_PIECE(move) (static_cast<piece_t>(((move)&0xf000) >> 12))
-#define MOVE_PROMOTED(move) (static_cast<piece_t>(((move)&0xf0000) >> 16))
+#define MOVE_PROMOTED(move) (static_cast<promotion_t>(((move)&0x70000) >> 16))
 #define MOVE_CAPTURE(move) ((move)&0x100000)
 #define MOVE_DOUBLE_PUSH(move) ((move)&0x200000)
 #define MOVE_EN_PASSANT(move) ((move)&0x400000)
@@ -113,6 +114,16 @@ inline color_t operator!(const color_t& c)
   const color_t res = (c == WHITE) ? BLACK : WHITE;
   return res;
 }
+
+
+enum promotion_t
+{
+  TO_NONE = 0,  // MUST be zero
+  TO_KNIGHT,
+  TO_BISHOP,
+  TO_ROOK,
+  TO_QUEEN
+};
 
 
 enum piece_t
@@ -190,7 +201,7 @@ struct unpacked_move_t
   index_t from;
   index_t to;
   piece_t piece;
-  piece_t promoted_to;
+  promotion_t promoted_to;
   bool capture;
   bool double_push;
   bool en_passant;
@@ -206,6 +217,28 @@ struct unpacked_move_t
         en_passant(MOVE_EN_PASSANT(move)),
         castling(MOVE_CASTLING(move))
   {}
+
+  // Comparison operator
+  bool operator==(const unpacked_move_t& other) const
+  {
+    return (from == other.from && to == other.to && piece == other.piece &&
+            promoted_to == other.promoted_to);
+  }
+
+  // Boolean conversion operator. Is required to use inside if statements
+  explicit operator bool() const
+  {
+    return (from != INVALID_INDEX || to != INVALID_INDEX);
+  }
+
+  move_t pack() const
+  {
+    const move_t move =
+        NEW_MOVE(move.from, move.to, move.piece, move.promoted_to, move.capture,
+                 move.double_push, move.en_passant, move.castling);
+
+    return move;
+  }
 };
 
 
@@ -264,4 +297,60 @@ struct game_t
   history_t history;
   repetition_t repetitions;
   zobrist_randoms_t hash_randoms;
+};
+
+
+struct pv_t
+{
+  size_t pv_length[MAX_PLY];
+  move_t pv_table[MAX_PLY][MAX_PLY];
+};
+
+
+enum node_type_t
+{
+  TT_EMPTY_NODE,
+  TT_PV_NODE,     // The stored score is EXACTLY that
+  TT_ALPHA_NODE,  // The stored score was at most that. Upperbound. Fail-low
+  TT_BETA_NODE    // The stored score was at least that. Lowerbound. Fail-high
+};
+
+
+struct tt_entry_t
+{
+  uint64_t key = 0;
+  node_type_t type = TT_EMPTY_NODE;
+  int depth = 0;
+  int score = 0;
+  move_t best_move;
+};
+
+
+struct transposition_table_t
+{
+  tt_entry_t entries[TT_SIZE];
+};
+
+
+struct search_t
+{
+  move_t best_move;
+  int score;
+  uint64_t explored_nodes;
+  pv_t pv;
+  bool mate_found;
+  int mate_in;
+};
+
+
+struct search_state_t
+{
+  std::atomic_bool* stop = nullptr;
+  uint64_t explored_nodes;
+  move_t killer_moves[2][MAX_PLY];
+  int history_moves[12][64];  // [piece][destination]
+  pv_t pv;
+  bool search_in_tt = true;
+  transposition_table_t* tt;  // Too big to keep on the stack
+  move_t best_move;
 };
