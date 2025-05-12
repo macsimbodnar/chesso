@@ -30,22 +30,22 @@ target_link_libraries(test_perft PRIVATE chesso_engine)
 add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
 
 # # Test gui
-# if(CHESSO_BUILD_GUI)
-#      message("-- Debug gui build enabled")
-#      set(PIXELLO_ENABLE_TESTS OFF) # Disable pixello tests
-#      add_subdirectory(pixello)
-#      add_executable(debug_gui debug_gui.cpp)
+if(CHESSO_BUILD_GUI)
+     message("-- Debug gui build enabled")
+     set(PIXELLO_ENABLE_TESTS OFF) # Disable pixello tests
+     add_subdirectory(pixello)
+     add_executable(debug_gui debug_gui.cpp)
 
-#      target_include_directories(debug_gui SYSTEM PRIVATE pixello/src)
-#      target_include_directories(debug_gui PRIVATE ../src)
+     target_include_directories(debug_gui SYSTEM PRIVATE pixello/src)
+     target_include_directories(debug_gui PRIVATE ../src)
 
-#      target_link_libraries(debug_gui pixello)
-#      target_link_libraries(debug_gui chesso_engine)
-# else()
-#      message("-- Debug gui build disabled")
-# endif()
+     target_link_libraries(debug_gui pixello)
+     target_link_libraries(debug_gui chesso_engine)
+else()
+     message("-- Debug gui build disabled")
+endif()
 
-# # add_test(NAME debug_gui COMMAND ${CMAKE_CURRENT_BINARY_DIR}/debug_gui)
+# add_test(NAME debug_gui COMMAND ${CMAKE_CURRENT_BINARY_DIR}/debug_gui)
 
 # Perft generation program
 add_executable(debug_perft_app debug_perft_app.cpp)

@@ -1,28 +1,14 @@
-#include <iostream>
-
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <map>
 #include <optional>
 #include <pixello.hpp>
 #include <random>
-#include "board.hpp"
+#include "bitboard.hpp"
 #include "data_structures.hpp"
-#include "move_generator.hpp"
+#include "log.hpp"
 #include "utils.hpp"
-
-
-#define LOG_I std::cout  // Start log
-#define END_I std::endl  // End log
-
-#define LOG_S LOG_I << "\033[92m"  // Success green log
-#define END_S "\033[37m" << END_I  // End success green log
-
-#define LOG_W LOG_I << "\033[33m"  // Warning orange log
-#define END_W "\033[37m" << END_I  // End warning orange log
-
-#define LOG_E LOG_I << "\033[31m"  // Error red log
-#define END_E "\033[37m" << END_I  // End Error red log
 
 static constexpr char FONT_PATH[] = "assets/gui/font/PressStart2P.ttf";
 
@@ -191,27 +177,28 @@ struct selected_square_t
   position_t position;
 };
 
-class game_t
+class game_handler_t
 {
 private:
-  global_state_t globals;
-  board_t board;
+  game_t game;
 
 public:
-  game_t()
+  game_handler_t()
   {
+    initialize_const_data(&game.tables);
+
     // Initialize the board to default
-    init_board(DEFAULT_POSITION, &board, &globals);
+    load_FEN(DEFAULT_POSITION, &game.board, &game.history);
   }
 
 
   std::vector<game_piece_t> get_pieces() const
   {
     std::vector<game_piece_t> result;
-    for (index_t index = 0; index < BOARD_SIZE; ++index) {
-      const piece_t piece = board.board[index];
+    for (index_t index = 0; index < 64; ++index) {
+      const piece_t piece = get_piece(&game.board, index);
 
-      if (piece != EMPTY && piece != INVALID) {
+      if (piece != EMPTY) {
         result.push_back({piece, index_to_position(index)});
       }
     }
@@ -225,55 +212,59 @@ public:
     piece_t piece = EMPTY;
 
     const index_t index = position_to_index(pos.file, pos.rank);
-    assert(index < INVALID_BOARD_INDEX);
+    assert(index < INVALID_INDEX);
 
-    piece = board.board[index];
+    piece = get_piece(&game.board, index);
 
     return piece;
   }
 
 
-  color_t get_active_color() const { return board.active_color; }
+  color_t get_active_color() const { return game.board.active_color; }
 
 
   bool is_castling_available(const castling_rights_t castling) const
   {
-    return (board.castling & castling);
+    return (game.board.castling & castling);
   }
 
 
   std::optional<position_t> get_en_passant() const
   {
-    if (board.en_passant != INVALID_BOARD_INDEX) {
-      return index_to_position(board.en_passant);
+    if (game.board.en_passant != INVALID_INDEX) {
+      return index_to_position(game.board.en_passant);
     }
 
     return std::nullopt;
   }
 
 
-  int get_halfmove() const { return board.halfmove_clock; }
-  int get_fullmove() const { return board.fullmove_counter; }
-  std::string get_fen() const { return generate_FEN(&board); }
-  void set_fen(const std::string& fen) { load_FEN(fen, &board, &globals); }
-  void reset() { load_FEN(DEFAULT_POSITION, &board, &globals); }
+  int get_halfmove() const { return game.board.halfmove_clock; }
+  int get_fullmove() const { return game.board.fullmove_counter; }
+  std::string get_fen() const { return generate_FEN(&game.board); }
+  void set_fen(const std::string& fen)
+  {
+    load_FEN(fen, &game.board, &game.history);
+  }
+  void reset() { load_FEN(DEFAULT_POSITION, &game.board, &game.history); }
 
   bool make_move(const game_move_t& move)
   {
     move_t moves[270];
-    const size_t moves_count = generate_legal_moves(&board, &globals, moves);
+    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
 
     const index_t from = position_to_index(move.from.file, move.from.rank);
     const index_t to = position_to_index(move.to.file, move.to.rank);
     const piece_t piece = move.piece;
 
-    if (piece == INVALID || piece == EMPTY) { return false; }
+    if (piece == EMPTY) { return false; }
 
     for (size_t i = 0; i < moves_count; ++i) {
-      const move_t& legal_move = moves[i];
-      if (legal_move.from == from && legal_move.to == to &&
-          legal_move.piece == piece) {
-        return ::make_move(&legal_move, &board, &globals);
+      const move_t legal_move = moves[i];
+
+      if (MOVE_FROM(legal_move) == from && MOVE_TO(legal_move) == to &&
+          MOVE_PIECE(legal_move) == piece) {
+        return ::make_move(&game, legal_move);
       }
     }
 
@@ -283,13 +274,14 @@ public:
   std::vector<game_move_t> get_available_moves()
   {
     move_t moves[270];
-    const size_t moves_count = generate_legal_moves(&board, &globals, moves);
+    // TODO: generate legal moves here
+    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
 
     std::vector<game_move_t> result;
     for (size_t i = 0; i < moves_count; ++i) {
       const move_t& move = moves[i];
-      result.push_back({move.piece, index_to_position(move.from),
-                        index_to_position(move.to)});
+      result.push_back({MOVE_PIECE(move), index_to_position(MOVE_FROM(move)),
+                        index_to_position(MOVE_TO(move))});
     }
 
     return result;
@@ -297,7 +289,7 @@ public:
 };
 
 
-static game_t game;
+static game_handler_t game;
 
 
 class gui_t : public pixello
@@ -917,9 +909,9 @@ void gui_t::draw_panel()
 
     if (game.get_en_passant().has_value()) {
       const position_t pos = game.get_en_passant().value();
-      const texture_t en_passant_target_square = create_text(
-          index_to_string_coordinates(position_to_index(pos.file, pos.rank)),
-          panel_conf.text_color, font);
+      const texture_t en_passant_target_square =
+          create_text(index_to_str(position_to_index(pos.file, pos.rank)),
+                      panel_conf.text_color, font);
 
       draw_texture(en_passant_target_square,
                    en_passant_pos.x + en_passant.w + panel_conf.text_padding,
@@ -1174,7 +1166,7 @@ void gui_t::update_mouse_in_chessboard()
       // If click on piece get the suggested moves
       const piece_t piece =
           game.get_piece_at_position(selected_square.position);
-      if (piece != EMPTY && piece != INVALID) {
+      if (piece != EMPTY) {
         // Get moves
         const auto& all_moves = game.get_available_moves();
         current_piece_available_moves.clear();
