@@ -6,6 +6,7 @@
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "transposition_table.hpp"
+#include "utils.hpp"
 
 
 #define MATE_MAX 49000
@@ -148,7 +149,8 @@ int negamax(int alpha0,
 
   order_moves(&game->board, state, ply, moves_count, moves);
 
-  move_t best_move = 0;
+  // initialize best move just in case. TODO: this might be illegal move
+  move_t best_move = moves[0];
 
   // Null move pruning
   if (depth > NULL_MOVE_REDUCTION + 1 && !is_in_check && !zero_window) {
@@ -193,11 +195,12 @@ int negamax(int alpha0,
     //   return MATE_MAX - ply;
     // }
 
-    state->pv.pv_length[ply + 1] = ply + 1;
 
     if (!make_move(game, moves[i])) { continue; }
 
-    best_move = moves[i];
+    state->pv.pv_length[ply + 1] = ply + 1;
+
+    // best_move = moves[i];
     legal_moves_counter++;
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
@@ -277,7 +280,6 @@ int negamax(int alpha0,
     return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE;
   }
 
-
   // Store the node in TT
   tt_store_entry(state->tt, &game->board, depth, best_so_far, type, best_move);
 
@@ -297,6 +299,8 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   const int score =
       negamax(MIN, MAX, depth, 0, game, state, false, INVALID_INDEX);
+
+  assert(state->pv.pv_length[0] > 0);
 
   search_result.best_move = state->best_move;
 
@@ -319,7 +323,16 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
 
 #ifndef NDEBUG
-  is_pv_legal(game, &search_result.pv);
+  const bool legal = is_pv_legal(game, &search_result.pv);
+  if (!legal) { LOG_E << "Illegal PV" << END_E; }
+
+  if (search_result.best_move != search_result.pv.pv_table[0][0]) {
+    LOG_E << "Best move is not the same in the PV table" << END_E;
+    LOG_E << "Best move: " << print_move(search_result.best_move) << END_E;
+    LOG_E << "PV[0][0]:  " << print_move(search_result.pv.pv_table[0][0])
+          << END_E;
+  }
+
 #endif
 
   assert(search_result.best_move == search_result.pv.pv_table[0][0]);
