@@ -116,8 +116,9 @@ int negamax(int alpha0,
 
   // Razoring
   // if (!is_in_check && depth == 1) {
-  //   int stand_pat = (board->active_color == WHITE ? +1 : -1) *
-  //   evaluate(board); const int razor_margin = get_margin_value();
+  //   int stand_pat =
+  //       (game->board.active_color == WHITE ? +1 : -1) * evaluate(&game->board);
+  //   const int razor_margin = get_margin_value();
   //   // const int razor_margin = 200;
 
   //   if (stand_pat + razor_margin < alpha) {
@@ -183,18 +184,17 @@ int negamax(int alpha0,
 
   int legal_moves_counter = 0;
   for (size_t i = 0; i < moves_count; ++i) {
-    // if (is_capturing_king(&game->board, moves[i])) {
-    //   // TODO: Does this check even make any sense at all?
-    //   state->best_move = moves[i];
+    if (is_capturing_king(&game->board, moves[i])) {
+      // TODO: Does this check even make any sense at all?
+      state->best_move = moves[i];
 
-    //   state->pv.pv_table[ply][ply] = moves[i];
-    //   state->pv.pv_length[ply] = ply + 1;
+      state->pv.pv_table[ply][ply] = moves[i];
+      state->pv.pv_length[ply] = ply + 1;
 
-    //   assert(false);
+      assert(false);
 
-    //   return MATE_MAX - ply;
-    // }
-
+      return MATE_MAX - ply;
+    }
 
     if (!make_move(game, moves[i])) { continue; }
 

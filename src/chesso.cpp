@@ -29,6 +29,7 @@ static bool still_in_opening = true;  // Finish the opening line
 static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
+static std::atomic_int session_id = 0;
 static transposition_table_t tt = {};
 
 static std::random_device rd;
@@ -58,6 +59,9 @@ struct uci_search_options_t
   int winc_ms = 0;
   int binc_ms = 0;
   int movestogo = 1;
+
+  // Timer time used for current search
+  int search_time_ms = 0;
 };
 
 
@@ -372,10 +376,11 @@ std::queue<std::string> tokenize_input(const std::string string,
 void stop_search_after_ms(uint64_t ms)
 {
   std::thread job([ms]() {
+    const int session = session_id;
     std::chrono::milliseconds time_to_sleep(ms);
     std::this_thread::sleep_for(time_to_sleep);
 
-    stop_search_signal = true;
+    if (session_id == session) { stop_search_signal = true; }
   });
 
   // Left the timer be, we return! Adios
@@ -464,6 +469,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
   int info_prints_count = 0;
 
+  auto beguine_of_the_search = std::chrono::high_resolution_clock::now();
+
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
 
@@ -529,6 +536,15 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
     // Check if run out of nodes
     if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
+
+    // Calculate if during time control we should start another search
+    auto end_current_search = std::chrono::high_resolution_clock::now();
+    auto next_round_predict_time = end_current_search - beguine_of_the_search;
+    std::chrono::milliseconds allocated_time(conf.search_time_ms);
+    auto time_left = allocated_time - next_round_predict_time;
+
+    // Don't even start next search in case we estimate to not finish this
+    if (next_round_predict_time > time_left) { break; }
   }
 
   return result;
@@ -746,6 +762,7 @@ bool command_go(std::queue<std::string>& args)
   search_options.movestogo = 20;  // Assume by default we have 10 moves to go
   search_options.winc_ms = 0;
   search_options.binc_ms = 0;
+  search_options.search_time_ms = 0;
 
   while (!args.empty()) {
     const std::string token = args.front();
@@ -865,6 +882,9 @@ bool command_go(std::queue<std::string>& args)
     }
   }
 
+  // Increment the search id for time control
+  session_id++;
+
   // Book is searched only if the command make sense
   if (!search_options.infinite && search_options.nodes == 0) {
     const move_t book_move = search_random_move_in_book();
@@ -891,6 +911,7 @@ bool command_go(std::queue<std::string>& args)
 
     if (time_to_play < 100) { time_to_play = 100; }
 
+    search_options.search_time_ms = time_to_play;
     stop_search_after_ms(time_to_play);
 
     LOG_I << "Time to play for white calculated. Search will stop in "
@@ -904,10 +925,20 @@ bool command_go(std::queue<std::string>& args)
 
     if (time_to_play < 100) { time_to_play = 100; }
 
+    search_options.search_time_ms = time_to_play;
     stop_search_after_ms(time_to_play);
 
     LOG_I << "Time to play for black calculated. Search will stop in "
           << time_to_play << "ms" << END_I;
+  }
+
+  // Start the move timer if necessary
+  if (search_options.movetime_ms > 0) {
+    search_options.search_time_ms = search_options.movetime_ms;
+    stop_search_after_ms(search_options.movetime_ms);
+
+    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
+          << "ms" << END_I;
   }
 
   // Start search in a thread
@@ -927,14 +958,6 @@ bool command_go(std::queue<std::string>& args)
 
   // Let the thread go his way
   search_thread.detach();
-
-  // Start the move timer if necessary
-  if (search_options.movetime_ms > 0) {
-    stop_search_after_ms(search_options.movetime_ms);
-
-    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
-          << "ms" << END_I;
-  }
 
   return true;
 }
