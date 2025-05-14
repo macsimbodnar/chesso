@@ -11,13 +11,13 @@
 /******************************************************************************
  *                               MUST RUN FAST
  ******************************************************************************/
-inline int count_bits(bb_t board)
+int count_bits(bb_t board)
 {
   return std::popcount(board);
 }
 
 
-inline index_t get_lsb_index(bb_t board)
+index_t get_lsb_index(bb_t board)
 {
   // If 64 then invalid
   return std::countr_zero(board);
@@ -640,7 +640,7 @@ bool make_move(game_t* game, move_t encoded_move)
   board->hash ^= randoms->castling_randoms[board->castling];
 
   // Update occupancies
-  memset(board->occupancies, BB_0, sizeof(board->occupancies));
+  memset(board->occupancies, 0, sizeof(board->occupancies));
 
   for (int bb_piece = W_PAWN; bb_piece <= W_KING; bb_piece++) {
     board->occupancies[WHITE] |= board->bitboards[bb_piece];
@@ -746,6 +746,20 @@ void set_en_passant(game_t* game, index_t en_passant_index)
   game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
   game->board.en_passant = en_passant_index;
   game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
+}
+
+
+bool is_capturing_king(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+  assert(move != 0);
+  const bb_t kings_board = board->bitboards[W_KING] | board->bitboards[B_KING];
+  const index_t to = MOVE_TO(move);
+  const bb_t attack_mask = BB_1 << to;
+  const bool capture = MOVE_CAPTURE(move);
+  const bb_t attack = kings_board & attack_mask;
+  const bool result = capture && attack;
+  return result;
 }
 
 

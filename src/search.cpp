@@ -12,8 +12,10 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-static constexpr int MIN = std::numeric_limits<int>::min() + 100;
-static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+// static constexpr int MIN = std::numeric_limits<int>::min() + 100;
+static constexpr int MIN = -2000000000;
+// static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+static constexpr int MAX = 2000000000;
 // static constexpr int NO_SCORE = MAX + 42;
 
 #define NULL_MOVE_REDUCTION 2
@@ -140,11 +142,13 @@ int negamax(int alpha0,
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
-  if (moves_count == 0) { return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE; }
+  // TODO: Fix this. For now it's down below
+  // if (moves_count == 0) { return is_in_check ? -(MATE_MAX - ply) :
+  // DRAW_SCORE; }
 
   order_moves(&game->board, state, ply, moves_count, moves);
 
-  move_t* best_move = &moves[0];
+  move_t best_move = 0;
 
   // Null move pruning
   if (depth > NULL_MOVE_REDUCTION + 1 && !is_in_check && !zero_window) {
@@ -175,14 +179,16 @@ int negamax(int alpha0,
     set_en_passant(game, en_passant);
   }
 
+  int legal_moves_counter = 0;
   for (size_t i = 0; i < moves_count; ++i) {
-    // TODO: Implement this check
-    // if (moves[i].captured == (board->active_color == WHITE ? B_KING :
-    // W_KING)) {
+    // if (is_capturing_king(&game->board, moves[i])) {
+    //   // TODO: Does this check even make any sense at all?
     //   state->best_move = moves[i];
 
     //   state->pv.pv_table[ply][ply] = moves[i];
     //   state->pv.pv_length[ply] = ply + 1;
+
+    //   assert(false);
 
     //   return MATE_MAX - ply;
     // }
@@ -190,6 +196,9 @@ int negamax(int alpha0,
     state->pv.pv_length[ply + 1] = ply + 1;
 
     if (!make_move(game, moves[i])) { continue; }
+
+    best_move = moves[i];
+    legal_moves_counter++;
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_check_move = is_check(game);
@@ -248,10 +257,10 @@ int negamax(int alpha0,
 
     if (score > alpha) {
       alpha = score;
-      best_move = &moves[i];
+      best_move = moves[i];
 
       // Save principal variation
-      state->pv.pv_table[ply][ply] = *best_move;
+      state->pv.pv_table[ply][ply] = best_move;
 
       memcpy(&state->pv.pv_table[ply][ply + 1],
              &state->pv.pv_table[ply + 1][ply + 1],
@@ -264,10 +273,15 @@ int negamax(int alpha0,
     }
   }
 
+  if (legal_moves_counter == 0) {
+    return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE;
+  }
+
+
   // Store the node in TT
   tt_store_entry(state->tt, &game->board, depth, best_so_far, type, best_move);
 
-  state->best_move = *best_move;
+  state->best_move = best_move;
   return (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
 }
 

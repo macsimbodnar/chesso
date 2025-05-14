@@ -410,7 +410,7 @@ bool try_move(unpacked_move_t* move_candidate)
 
     if (move == *move_candidate) {
       // Apply the found move
-      bool move_result = make_move(&game, move_candidate->pack());
+      bool move_result = make_move(&game, moves[i]);
 
       if (move_result) { return true; }
 
@@ -1097,8 +1097,10 @@ bool command_test(std::queue<std::string>& args)
   return true;
 }
 
-
 //-##################################  MAIN  ################################-//
+#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+// The main function is omitted when we include this file in tests
+
 int main()
 {
   LOG_I << "Engine started" << END_I;
@@ -1150,3 +1152,5 @@ int main()
 
   return 0;
 }
+
+#endif

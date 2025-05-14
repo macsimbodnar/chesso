@@ -317,10 +317,10 @@ enum node_type_t
 
 struct tt_entry_t
 {
-  uint64_t key = 0;
-  node_type_t type = TT_EMPTY_NODE;
-  int depth = 0;
-  int score = 0;
+  uint64_t key;
+  node_type_t type;
+  int depth;
+  int score;
   move_t best_move;
 };
 

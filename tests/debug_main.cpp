@@ -22,15 +22,13 @@ int main(int argc, char* argv[])
   // LOG_E << "Debug" << END_E;
 
   initialize_game_const_data(&game);
+  load_FEN("1q1rkbnr/1b1n1pp1/2pp3p/1p1Pp3/1P2P1P1/2N1B1NP/2P1QPB1/R4RK1 b k - 0 15", &game);
 
-  position_t pos = index_to_position(a1);
-  pos = index_to_position(a2);
-  pos = index_to_position(a3);
-  pos = index_to_position(a4);
-  pos = index_to_position(a5);
-  pos = index_to_position(a6);
-  pos = index_to_position(a7);
-  pos = index_to_position(a8);
+  move_count = generate_moves(&game.tables, &game.board, moves);
+
+  for (size_t i = 0; i < move_count; ++i) {
+    LOG_I << print_move(moves[i]) << END_I;
+  }
 
   return 0;
 }

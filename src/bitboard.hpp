@@ -10,6 +10,8 @@ std::string generate_FEN(const board_t* board);
 
 // Board manipulation
 piece_t get_piece(const board_t* board, index_t square);
+int count_bits(bb_t board);
+index_t get_lsb_index(bb_t board);
 
 // Attacks
 bb_t get_bishop_attacks(const bb_tables_t* tables,
@@ -33,6 +35,7 @@ size_t generate_moves(const bb_tables_t* tables,
 
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
+bool is_capturing_king(const board_t* board, move_t move);
 
 // Utils that can be slow
 move_t fix_weirdo_castling(const board_t* board, move_t move);

@@ -451,6 +451,58 @@ TEST_SUITE("Test make_move and unmake_move")
       REQUIRE_EQ(res, test_case.is_in_check);
     }
   }
+
+  TEST_CASE("Test is_attacking_king")
+  {
+    struct test_case_t
+    {
+      std::string FEN;
+      move_t move;
+      bool expected_result;
+    };
+
+    const std::array<test_case_t, 4> test_cases = {{
+        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1",
+         NEW_MOVE(a5, d8, W_QUEEN, TO_NONE, 1, 0, 0, 0), true},
+        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1",
+         NEW_MOVE(a5, a8, W_QUEEN, TO_NONE, 0, 0, 0, 0), false},
+        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1",
+         NEW_MOVE(h1, h4, B_ROOK, TO_NONE, 1, 0, 0, 0), false},
+        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1",
+         NEW_MOVE(h1, c1, B_ROOK, TO_NONE, 1, 0, 0, 0), true},
+    }};
+
+    for (const auto& test_case : test_cases) {
+      load_FEN(test_case.FEN, &game);
+      const bool res = is_capturing_king(&game.board, test_case.move);
+      REQUIRE_MESSAGE(res == test_case.expected_result,
+                      ("Failed with FEN: " + test_case.FEN +
+                       "\nMove: " + print_move(test_case.move)));
+    }
+  }
+
+  // TEST_CASE("Test make_move")
+  // {
+  //   static const std::string moves_list[] = {
+  //       "e2e4", "e7e6", "d2d4", "d7d5", "b1c3", "g8f6", "c1g5",
+  //       "f8e7", "e4e5", "f6d7", "h2h4", "e8g8", "f1d3", "c7c5",
+  //       "d1g4", "e7g5", "h4g5", "d8c7", "d3h7",
+  //   };
+
+
+  //   for (const auto move_str : moves_list) {
+  //     const auto parsing_result = algebraic_to_uci_move(move_str);
+  //     REQUIRE(parsing_result.has_value());
+  //     const uci_move_t move_candidate = parsing_result.value();
+
+  //     unpacked_move_t move(0);
+  //     move.from = move_candidate.from;
+  //     move.to = move_candidate.to;
+  //     move.promoted_to = move_candidate.promotion;
+
+  //     // Attempt the move. We ignore if move happened or not
+  //     bool res = try_move(&move);
+  //   }
 }
 
 // TEST_SUITE("Test evaluation")

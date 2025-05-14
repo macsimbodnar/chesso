@@ -3,9 +3,10 @@
 #include "log.hpp"
 
 
-void tt_reset(const transposition_table_t* tt)
+void tt_reset(transposition_table_t* tt)
 {
-  memset(&tt, 0, sizeof(tt));
+  LOG_I << "Cleanup TT" << END_I;
+  memset(tt, 0, sizeof(transposition_table_t));
 }
 
 
@@ -31,11 +32,11 @@ void tt_store_entry(transposition_table_t* tt,
                     int depth,
                     int score,
                     node_type_t type,
-                    const move_t* best_move)
+                    move_t best_move)
 {
   assert(tt != nullptr);
   assert(board != nullptr);
-  assert(best_move != nullptr);
+  assert(best_move != 0);
 
   const uint64_t hash = board->hash;
   tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
@@ -44,5 +45,5 @@ void tt_store_entry(transposition_table_t* tt,
   entry->type = type;
   entry->depth = depth;
   entry->score = score;
-  entry->best_move = *best_move;
+  entry->best_move = best_move;
 }
