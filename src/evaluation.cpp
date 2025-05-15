@@ -143,6 +143,20 @@ int evaluate(const board_t* board)
 {
   assert(board != nullptr);
 
+  // TODO:
+  // Add doubled pawns penalty
+  // Isolated pawn penalty
+  // Passed pawn bonus
+  // Bishop mobility bonus
+  // Rook open file bonus
+  // Rook semi open file bonus
+  // Queen mobility
+  // King semi open file penalty
+  // King open file penalty
+  // King safety bonus
+  // Connected rook bonus
+
+
   int evaluation = 0;
 
   for (int piece = W_PAWN; piece <= B_KING; ++piece) {

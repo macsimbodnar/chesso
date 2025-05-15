@@ -111,6 +111,7 @@ bool command_print_board(std::queue<std::string>& args);
 bool command_fen(std::queue<std::string>& args);
 bool command_help(std::queue<std::string>& args);
 bool command_test(std::queue<std::string>& args);
+bool command_clean_TT(std::queue<std::string>& args);
 
 // clang-format off
 static const std::unordered_map<std::string, process_func> commands = {
@@ -130,6 +131,7 @@ static const std::unordered_map<std::string, process_func> commands = {
   {"fen", command_fen},
   {"help", command_help},
   {"test", command_test},
+  {"clean-tt", command_clean_TT},
 };
 // clang-format on
 
@@ -537,14 +539,16 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // Check if run out of nodes
     if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
 
-    // Calculate if during time control we should start another search
-    auto end_current_search = std::chrono::high_resolution_clock::now();
-    auto next_round_predict_time = end_current_search - beguine_of_the_search;
-    std::chrono::milliseconds allocated_time(conf.search_time_ms);
-    auto time_left = allocated_time - next_round_predict_time;
+    if (conf.search_time_ms > 0) {
+      // Calculate if during time control we should start another search
+      auto end_current_search = std::chrono::high_resolution_clock::now();
+      auto next_round_predict_time = end_current_search - beguine_of_the_search;
+      std::chrono::milliseconds allocated_time(conf.search_time_ms);
+      auto time_left = allocated_time - next_round_predict_time;
 
-    // Don't even start next search in case we estimate to not finish this
-    if (next_round_predict_time > time_left) { break; }
+      // Don't even start next search in case we estimate to not finish this
+      if (next_round_predict_time > time_left) { break; }
+    }
   }
 
   return result;
@@ -1119,6 +1123,16 @@ bool command_test(std::queue<std::string>& args)
 
   return true;
 }
+
+
+bool command_clean_TT(std::queue<std::string>& args)
+{
+  LOG_I << "Command [command_clean_TT]. Args: " << args << END_I;
+  tt_reset(&tt);
+
+  return true;
+}
+
 
 //-##################################  MAIN  ################################-//
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
