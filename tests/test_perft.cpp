@@ -335,39 +335,39 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
   ss << std::left;
 
   if (expected.nodes.has_value()) { 
-    ss << ((expected.nodes.value() == real.nodes) ? GREEN : RED) << std::setw(15) << std::string("|").append(std::to_string(expected.nodes.value())) << std::setw(15) << real.nodes << RESET;
+    ss << ((expected.nodes.value() == real.nodes) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.nodes.value())) << std::setw(15) << real.nodes << RESET;
   } else {
     ss << std::setw(15) << "| - " << std::setw(15) << real.nodes;
   }
 
   if (expected.captures.has_value()) { 
-    ss << ((expected.captures.value() == real.captures) ? GREEN : RED) << std::setw(15) << std::string("|").append(std::to_string(expected.captures.value())) << std::setw(15) << real.captures << RESET;
+    ss << ((expected.captures.value() == real.captures) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.captures.value())) << std::setw(15) << real.captures << RESET;
   } else {
     ss << std::setw(15) << "| - " << std::setw(15) << real.captures;
   }
 
   if (expected.en_passants.has_value()) { 
-    ss << ((expected.en_passants.value() == real.en_passants) ? GREEN : RED) << std::setw(width) << std::string("|").append(std::to_string(expected.en_passants.value())) << std::setw(width) << real.en_passants << RESET;
+    ss << ((expected.en_passants.value() == real.en_passants) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.en_passants.value())) << std::setw(width) << real.en_passants << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.en_passants;
   }
 
   if (expected.castles.has_value()) { 
-    ss << ((expected.castles.value() == real.castles) ? GREEN : RED) << std::setw(width) << std::string("|").append(std::to_string(expected.castles.value())) << std::setw(width) << real.castles << RESET;
+    ss << ((expected.castles.value() == real.castles) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.castles.value())) << std::setw(width) << real.castles << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.castles;
   }
 
   if (expected.promotions.has_value()) { 
-    ss << ((expected.promotions.value() == real.promotions) ? GREEN : RED) << std::setw(width) << std::string("|").append(std::to_string(expected.promotions.value())) << std::setw(width) << real.promotions << RESET;
+    ss << ((expected.promotions.value() == real.promotions) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.promotions.value())) << std::setw(width) << real.promotions << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.promotions;
   }
 
-    //  << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checks) << std::setw(width) << real.checks << RESET
-    //  << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
-    //  << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.double_checks) << std::setw(width) << real.double_checks << RESET
-    //  << ((expected.checkmates == real.checkmates) ? GREEN : RED) << std::setw(width) << "|" + std::to_string(expected.checkmates) << std::setw(width) << real.checkmates << RESET;
+    //  << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.checks) << std::setw(width) << real.checks << RESET
+    //  << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
+    //  << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.double_checks) << std::setw(width) << real.double_checks << RESET
+    //  << ((expected.checkmates == real.checkmates) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.checkmates) << std::setw(width) << real.checkmates << RESET;
   // clang-format on
   return ss.str();
 }
@@ -506,8 +506,8 @@ int main()
         std::cout << std::fixed << std::setprecision(10);
         // clang-format off
       std::cout << std::left
-                << std::setw(width - 2) << std::string("|").append(std::to_string(depth))
-                << std::setw(width / 2) << std::string("|").append(std::to_string(minutes.count()))
+                << std::setw(width - 2) << std::string("|").append(STR(depth))
+                << std::setw(width / 2) << std::string("|").append(STR(minutes.count()))
                 << std::setw(width / 2) << seconds.count()
                 << std::setw(width / 2) << milliseconds.count()
                 << print_stats(expected_stats, stats)

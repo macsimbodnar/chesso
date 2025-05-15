@@ -117,7 +117,8 @@ int negamax(int alpha0,
   // Razoring
   // if (!is_in_check && depth == 1) {
   //   int stand_pat =
-  //       (game->board.active_color == WHITE ? +1 : -1) * evaluate(&game->board);
+  //       (game->board.active_color == WHITE ? +1 : -1) *
+  //       evaluate(&game->board);
   //   const int razor_margin = get_margin_value();
   //   // const int razor_margin = 200;
 

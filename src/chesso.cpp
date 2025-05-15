@@ -491,30 +491,26 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // If we interupted the current search we use the previous result
     if (stop_search_signal) {
       if (info_prints_count == 0) {
-        const std::string score =
-            search_result.mate_found
-                ? ("mate " + std::to_string(search_result.mate_in))
-                : ("cp " + std::to_string(search_result.score));
+        const std::string score = search_result.mate_found
+                                      ? ("mate " + STR(search_result.mate_in))
+                                      : ("cp " + STR(search_result.score));
 
-        uci_reply("info score " + score + " time " +
-                  std::to_string(duration_ms.count()) + " depth " +
-                  std::to_string(current_depth) + " nodes " +
-                  std::to_string(search_result.explored_nodes) + " pv " +
+        uci_reply("info score " + score + " time " + STR(duration_ms.count()) +
+                  " depth " + STR(current_depth) + " nodes " +
+                  STR(search_result.explored_nodes) + " pv " +
                   pv_to_string(&search_result.pv));
       }
 
       break;
     }
 
-    const std::string score =
-        search_result.mate_found
-            ? ("mate " + std::to_string(search_result.mate_in))
-            : ("cp " + std::to_string(search_result.score));
+    const std::string score = search_result.mate_found
+                                  ? ("mate " + STR(search_result.mate_in))
+                                  : ("cp " + STR(search_result.score));
 
-    uci_reply("info score " + score + " time " +
-              std::to_string(duration_ms.count()) + " depth " +
-              std::to_string(current_depth) + " nodes " +
-              std::to_string(search_result.explored_nodes) + " pv " +
+    uci_reply("info score " + score + " time " + STR(duration_ms.count()) +
+              " depth " + STR(current_depth) + " nodes " +
+              STR(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
 
     info_prints_count++;
@@ -1079,8 +1075,8 @@ bool command_test(std::queue<std::string>& args)
 
 
   uci_reply("\nTESTS START ----------------------\nDepth: " +
-            std::to_string(search_options.depth) +
-            "\nBuild type: " + build_type + "\nDescription:");
+            STR(search_options.depth) + "\nBuild type: " + build_type +
+            "\nDescription:");
 
   stopwatch_t total_timer;
   total_timer.stop();
@@ -1119,7 +1115,7 @@ bool command_test(std::queue<std::string>& args)
   }
 
   uci_reply("\nTESTS END ------------------------");
-  uci_reply("Total explored nodes: " + std::to_string(total_nodes));
+  uci_reply("Total explored nodes: " + STR(total_nodes));
 
   return true;
 }

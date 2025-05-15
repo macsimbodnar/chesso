@@ -15,11 +15,6 @@ static constexpr char FONT_PATH[] = "assets/gui/font/PressStart2P.ttf";
 static constexpr char PICK_SOUND[] = "tick_2";
 static constexpr char RELEASE_SOUND[] = "tick_4";
 
-
-#ifndef STR
-#define STR(_N_) std::to_string(_N_)
-#endif
-
 #define U32(x) static_cast<uint32_t>(x)
 #define INT(x) static_cast<int>(x)
 

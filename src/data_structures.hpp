@@ -71,14 +71,14 @@ typedef uint32_t move_t;
                  ((castling) << 23))
 // clang-format on
 
-#define MOVE_FROM(move) (static_cast<index_t>((move)&0x3f))
-#define MOVE_TO(move) (static_cast<index_t>(((move)&0xfc0) >> 6))
-#define MOVE_PIECE(move) (static_cast<piece_t>(((move)&0xf000) >> 12))
-#define MOVE_PROMOTED(move) (static_cast<promotion_t>(((move)&0x70000) >> 16))
-#define MOVE_CAPTURE(move) ((move)&0x100000)
-#define MOVE_DOUBLE_PUSH(move) ((move)&0x200000)
-#define MOVE_EN_PASSANT(move) ((move)&0x400000)
-#define MOVE_CASTLING(move) ((move)&0x800000)
+#define MOVE_FROM(move) (static_cast<index_t>((move) & 0x3f))
+#define MOVE_TO(move) (static_cast<index_t>(((move) & 0xfc0) >> 6))
+#define MOVE_PIECE(move) (static_cast<piece_t>(((move) & 0xf000) >> 12))
+#define MOVE_PROMOTED(move) (static_cast<promotion_t>(((move) & 0x70000) >> 16))
+#define MOVE_CAPTURE(move) ((move) & 0x100000)
+#define MOVE_DOUBLE_PUSH(move) ((move) & 0x200000)
+#define MOVE_EN_PASSANT(move) ((move) & 0x400000)
+#define MOVE_CASTLING(move) ((move) & 0x800000)
 
 //-#######################   BITBOARD SPECIFIC   ############################-//
 #define BB_1 1ULL
