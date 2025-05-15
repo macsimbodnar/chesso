@@ -296,7 +296,7 @@ bool check_move_legality(move_t move)
 
   bool found = false;
   for (size_t i = 0; i < moves_size; ++i) {
-    // TODO: This check must be week, just check from and to and promotion
+    // NOTE: Here the check must be wick. Only from, to and promotion
     if (unpacked_move_t(move) == unpacked_move_t(moves[i])) {
       found = true;
       break;
@@ -1161,7 +1161,6 @@ int main()
     tokens = tokenize_input(input, " ");
 
     if (tokens.size() == 0) {
-      // TODO: There is a bug. This is spammed. Understand why and how
       LOG_W << "No tokens in string" << END_W;
       continue;
     }

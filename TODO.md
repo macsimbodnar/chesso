@@ -15,16 +15,20 @@
 * King open file penalty
 * King safety bonus
 * Connected rook bonus
+* Optimize order captures
 
 ### Search
 
 * Perpetual checks
 * Insufficient material draw
 * Experiment with Razoring
+* Generate only captures in quiescence
 
 ### Board
 
 * Generate legal moves
+* Optimize move generation
+* Generate only capture moves for quiescence
 
 ### Generic
 
@@ -32,3 +36,5 @@
 * Make it compile and work in windows
 
 ## Bugs
+
+* In the evaluate move function handle the en-passant

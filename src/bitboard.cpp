@@ -535,7 +535,7 @@ bool make_move(game_t* game, move_t encoded_move)
   static const piece_t b_promotion_map[] = {B_PAWN, B_KNIGHT, B_BISHOP, B_ROOK,
                                             B_QUEEN};
 
-  if (move.promoted_to) {  // TODO: handle better the promotion in the move.
+  if (move.promoted_to) {
     if (board->active_color == WHITE) {
       POP_BIT(board->bitboards[W_PAWN], move.to);
       board->hash ^= randoms->piece_randoms[W_PAWN][move.to];
@@ -1813,7 +1813,6 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 {
   assert(zobrist != nullptr);
 
-  // TODO(max): Move random initialization outside
   std::random_device rd;
   std::mt19937_64 gen(rd());
   std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);

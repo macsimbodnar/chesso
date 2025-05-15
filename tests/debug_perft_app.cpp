@@ -76,7 +76,7 @@ mini_move_t algebraic_to_mini_move(const std::string& p)
   move.from = from;
   move.to = to;
   move.promotion = TO_NONE;
-  // TODO: handle the of promotion
+
   if (p.length() == 5) {
     // Handle promotion
     switch (p[4]) {
