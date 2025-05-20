@@ -33,8 +33,8 @@ int quiescence(int alpha,
 {
   assert(game != nullptr);
 
-  const int stand_pat =
-      ((game->board.active_color == WHITE) ? +1 : -1) * evaluate(&game->board);
+  const int stand_pat = ((game->board.active_color == WHITE) ? +1 : -1) *
+                        evaluate(&game->tables, &game->board);
 
   state->explored_nodes++;
 
@@ -131,7 +131,7 @@ int negamax(int alpha0,
   // Time management
   if ((state->explored_nodes % 1000) && *state->stop) {
     return (game->board.active_color == WHITE ? 1 : -1) *
-           evaluate(&game->board);
+           evaluate(&game->tables, &game->board);
   }
 
   if (depth < 1 || ply > (MAX_PLY - 2)) {

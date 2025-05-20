@@ -84,11 +84,6 @@ typedef uint32_t move_t;
 #define BB_1 1ULL
 #define BB_0 0ULL
 
-#define NOT_A_FILE 0xFEFEFEFEFEFEFEFEULL
-#define NOT_H_FILE 0x7F7F7F7F7F7F7F7FULL
-#define NOT_GH_FILES 0x3F3F3F3F3F3F3F3FULL
-#define NOT_AB_FILES 0xFCFCFCFCFCFCFCFCULL
-
 #define GET_BIT(bboard, square) ((bboard) & (BB_1 << (square)))
 #define SET_BIT(bboard, square) ((bboard) |= (BB_1 << (square)))
 #define POP_BIT(bboard, square) ((bboard) &= ~(BB_1 << (square)))

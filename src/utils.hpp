@@ -11,6 +11,11 @@ std::vector<std::string> split_string(const std::string& str);
 std::string index_to_str(index_t index);
 index_t position_to_index(uint8_t file, uint8_t rank);
 position_t index_to_position(index_t index);
+inline uint8_t index_to_file(index_t index)
+{
+  const uint8_t file = index % 8;
+  return file;
+}
 index_t str_to_index(const std::string& str);
 
 // Pieces

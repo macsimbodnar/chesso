@@ -1,7 +1,7 @@
 #pragma once
 #include "data_structures.hpp"
 
-int evaluate(const board_t* board);
+int evaluate(const bb_tables_t* tables, const board_t* board);
 
 void order_moves(const board_t* board,
                  const search_state_t* state,

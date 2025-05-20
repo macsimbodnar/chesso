@@ -1867,13 +1867,13 @@ bb_t precompute_pawn_attacks(color_t color, index_t square)
 
   switch (color) {
     case WHITE:
-      if ((board >> 7) & NOT_A_FILE) { attacks |= (board >> 7); }
-      if ((board >> 9) & NOT_H_FILE) { attacks |= (board >> 9); }
+      if ((board >> 7) & (~files_masks[0])) { attacks |= (board >> 7); }
+      if ((board >> 9) & (~files_masks[7])) { attacks |= (board >> 9); }
       break;
 
     case BLACK:
-      if ((board << 7) & NOT_H_FILE) { attacks |= (board << 7); }
-      if ((board << 9) & NOT_A_FILE) { attacks |= (board << 9); }
+      if ((board << 7) & (~files_masks[7])) { attacks |= (board << 7); }
+      if ((board << 9) & (~files_masks[0])) { attacks |= (board << 9); }
       break;
 
     default:
@@ -1890,15 +1890,23 @@ bb_t precompute_knight_attacks(index_t square)
   bb_t board = BB_0;
   SET_BIT(board, square);
 
-  if ((board >> 17) & NOT_H_FILE) { attacks |= (board >> 17); }
-  if ((board >> 15) & NOT_A_FILE) { attacks |= (board >> 15); }
-  if ((board >> 10) & NOT_GH_FILES) { attacks |= (board >> 10); }
-  if ((board >> 6) & NOT_AB_FILES) { attacks |= (board >> 6); }
+  if ((board >> 17) & (~files_masks[7])) { attacks |= (board >> 17); }
+  if ((board >> 15) & (~files_masks[0])) { attacks |= (board >> 15); }
+  if ((board >> 10) & (~(files_masks[6] | files_masks[7]))) {
+    attacks |= (board >> 10);
+  }
+  if ((board >> 6) & (~(files_masks[0] | files_masks[1]))) {
+    attacks |= (board >> 6);
+  }
 
-  if ((board << 17) & NOT_A_FILE) { attacks |= (board << 17); }
-  if ((board << 15) & NOT_H_FILE) { attacks |= (board << 15); }
-  if ((board << 10) & NOT_AB_FILES) { attacks |= (board << 10); }
-  if ((board << 6) & NOT_GH_FILES) { attacks |= (board << 6); }
+  if ((board << 17) & (~files_masks[0])) { attacks |= (board << 17); }
+  if ((board << 15) & (~files_masks[7])) { attacks |= (board << 15); }
+  if ((board << 10) & (~(files_masks[0] | files_masks[1]))) {
+    attacks |= (board << 10);
+  }
+  if ((board << 6) & (~(files_masks[6] | files_masks[7]))) {
+    attacks |= (board << 6);
+  }
 
   return attacks;
 }
@@ -1911,14 +1919,14 @@ bb_t precompute_king_attacks(index_t square)
   SET_BIT(board, square);
 
   if (board >> 8) { attacks |= (board >> 8); }
-  if ((board >> 9) & NOT_H_FILE) { attacks |= (board >> 9); }
-  if ((board >> 7) & NOT_A_FILE) { attacks |= (board >> 7); }
-  if ((board >> 1) & NOT_H_FILE) { attacks |= (board >> 1); }
+  if ((board >> 9) & (~files_masks[7])) { attacks |= (board >> 9); }
+  if ((board >> 7) & (~files_masks[0])) { attacks |= (board >> 7); }
+  if ((board >> 1) & (~files_masks[7])) { attacks |= (board >> 1); }
 
   if (board << 8) { attacks |= (board << 8); }
-  if ((board << 9) & NOT_A_FILE) { attacks |= (board << 9); }
-  if ((board << 7) & NOT_H_FILE) { attacks |= (board << 7); }
-  if ((board << 1) & NOT_A_FILE) { attacks |= (board << 1); }
+  if ((board << 9) & (~files_masks[0])) { attacks |= (board << 9); }
+  if ((board << 7) & (~files_masks[7])) { attacks |= (board << 7); }
+  if ((board << 1) & (~files_masks[0])) { attacks |= (board << 1); }
 
   return attacks;
 }

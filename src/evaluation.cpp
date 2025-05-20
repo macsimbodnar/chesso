@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include "bb_tables.hpp"
 #include "bitboard.hpp"
 #include "utils.hpp"
 
@@ -136,17 +137,32 @@ static const int mvv_lva[12][12] = {
  {100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600}
 };
 
+static const int passed_pawn_bonus[8] = { 0, 10, 30, 50, 75, 100, 150, 200 };
+
 // clang-format on
 
+inline int num_pawns_on_file(bb_t pawn_board, uint8_t file)
+{
+  const bb_t pawns_on_file = pawn_board & files_masks[file];
+  const int num_of_pawns = count_bits(pawns_on_file);
+  return num_of_pawns;
+}
 
-int evaluate(const board_t* board)
+inline int is_pawn_isolated(bb_t pawn_board, uint8_t file)
+{
+  const bool is_pawn_on_board = pawn_board & files_masks[file];
+
+  const bb_t pawns_on_adjacent_files = pawn_board & isolated_files_masks[file];
+  const bool res = pawns_on_adjacent_files > 0;
+  return res && is_pawn_on_board;
+}
+
+
+int evaluate(const bb_tables_t* tables, const board_t* board)
 {
   assert(board != nullptr);
 
   // TODO:
-  // Add doubled pawns penalty
-  // Isolated pawn penalty
-  // Passed pawn bonus
   // Bishop mobility bonus
   // Rook open file bonus
   // Rook semi open file bonus
@@ -169,6 +185,13 @@ int evaluate(const board_t* board)
         case W_PAWN:
           evaluation += VALUE_PAWN;
           evaluation += pawn_postion_value_table[index];
+          // Passed pawn bonus
+          if ((passed_w_pawns_masks[index] & board->bitboards[W_PAWN]) == 0) {
+            const uint8_t rank = 7 - (index / 8);
+            assert(rank < 8);
+            evaluation += passed_pawn_bonus[rank];
+          }
+
           break;
         case W_KNIGHT:
           evaluation += VALUE_KNIGHT;
@@ -187,13 +210,25 @@ int evaluate(const board_t* board)
           evaluation += queen_postion_value_table[index];
           break;
         case W_KING:
-          evaluation += VALUE_KING;
+          // evaluation += VALUE_KING;
           evaluation += king_postion_value_table[index];
+
+          // King safety bonus
+          evaluation += count_bits(tables->king_attacks[index] &
+                                   board->occupancies[WHITE]) *
+                        KING_SHIELD_BONUS;
+
           break;
         // ################################# BLACK PIECES
         case B_PAWN:
           evaluation -= VALUE_PAWN;
           evaluation -= pawn_postion_value_table[black_indexes[index]];
+          // Passed pawn bonus
+          if ((passed_b_pawns_masks[index] & board->bitboards[B_PAWN]) == 0) {
+            const uint8_t rank = index / 8;
+            assert(rank < 8);
+            evaluation -= passed_pawn_bonus[rank];
+          }
           break;
         case B_KNIGHT:
           evaluation -= VALUE_KNIGHT;
@@ -212,8 +247,13 @@ int evaluate(const board_t* board)
           evaluation -= queen_postion_value_table[black_indexes[index]];
           break;
         case B_KING:
-          evaluation -= VALUE_KING;
+          // evaluation -= VALUE_KING;
           evaluation -= king_postion_value_table[black_indexes[index]];
+
+          // King safety bonus
+          evaluation += count_bits(tables->king_attacks[index] &
+                                   board->occupancies[BLACK]) *
+                        KING_SHIELD_BONUS;
           break;
         case EMPTY:
         default:
@@ -222,6 +262,31 @@ int evaluate(const board_t* board)
       }
 
       POP_BIT(current_board, index);
+    }
+  }
+
+  for (int file = 0; file < 8; ++file) {
+    // Count double pawns
+    const int num_of_w_pawns =
+        num_pawns_on_file(board->bitboards[W_PAWN], file);
+    const int num_of_b_pawns =
+        num_pawns_on_file(board->bitboards[B_PAWN], file);
+
+    if (num_of_w_pawns > 1) {
+      evaluation += num_of_w_pawns * DOUBLE_PAWN_PENALTY;
+    }
+
+    if (num_of_b_pawns > 1) {
+      evaluation -= num_of_b_pawns * DOUBLE_PAWN_PENALTY;
+    }
+
+    // Isolated pawns
+    if (is_pawn_isolated(board->bitboards[W_PAWN], file)) {
+      evaluation += ISOLATED_PAWN_PENALTY;
+    }
+
+    if (is_pawn_isolated(board->bitboards[B_PAWN], file)) {
+      evaluation -= ISOLATED_PAWN_PENALTY;
     }
   }
 

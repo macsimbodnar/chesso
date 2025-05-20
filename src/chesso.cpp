@@ -558,8 +558,8 @@ bool command_uci(std::queue<std::string>& args)
 
   uci_reply("id name Chesso");
   uci_reply("id author MazerFaker");
-  uci_reply("uciok");
   uci_reply("option name Use Book type check default false");
+  uci_reply("uciok");
 
   return true;
 }

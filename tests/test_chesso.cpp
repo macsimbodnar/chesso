@@ -6,6 +6,7 @@
 #include <json.hpp>
 #include <random>
 #include <string>
+#include "bb_tables.hpp"
 #include "bitboard.hpp"
 #include "log.hpp"
 #include "utils.hpp"
@@ -479,6 +480,20 @@ TEST_SUITE("Test make_move and unmake_move")
                       ("Failed with FEN: " + test_case.FEN +
                        "\nMove: " + print_move(test_case.move)));
     }
+  }
+
+
+  TEST_CASE("Test file masks")
+  {
+    static const bb_t NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL;
+    static const bb_t NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL;
+    static const bb_t NOT_GH_FILES = 0x3F3F3F3F3F3F3F3FULL;
+    static const bb_t NOT_AB_FILES = 0xFCFCFCFCFCFCFCFCULL;
+
+    REQUIRE_EQ(NOT_A_FILE, ~files_masks[0]);
+    REQUIRE_EQ(NOT_H_FILE, ~files_masks[7]);
+    REQUIRE_EQ(NOT_AB_FILES, ~(files_masks[0] | files_masks[1]));
+    REQUIRE_EQ(NOT_GH_FILES, ~(files_masks[6] | files_masks[7]));
   }
 
   // TEST_CASE("Test make_move")
