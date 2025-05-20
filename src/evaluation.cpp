@@ -18,19 +18,14 @@
 
 #define DOUBLE_PAWN_PENALTY -10
 #define ISOLATED_PAWN_PENALTY -10
-#define PASSED_PAWN_REWARD 10
-#define BISHOP_PAIR_BONUS 50
 
 #define SEMI_OPEN_FILE_BONUS 10
 #define OPEN_FILE_BONUS 15
 
-#define BISHOP_MOBILITY_BONUS 1
-#define QUEEN_MOBILITY_BONUS 1
-
 #define KING_SHIELD_BONUS 5
 
 
-static const int pawn_postion_value_table[64] = {
+static inline constexpr int pawn_postion_value_table[64] = {
  90,  90,  90,  90,  90,  90,  90,  90,
  30,  30,  30,  40,  40,  30,  30,  30,
  20,  20,  20,  30,  30,  30,  20,  20,
@@ -41,7 +36,7 @@ static const int pawn_postion_value_table[64] = {
   0,   0,   0,   0,   0,   0,   0,   0
 };
 
-static const int knight_postion_value_table[64] = {
+static inline constexpr int knight_postion_value_table[64] = {
  -5,   0,   0,   0,   0,   0,   0,  -5,
  -5,   0,   0,  10,  10,   0,   0,  -5,
  -5,   5,  20,  20,  20,  20,   5,  -5,
@@ -52,7 +47,7 @@ static const int knight_postion_value_table[64] = {
  -5, -10,   0,   0,   0,   0, -10,  -5
 };
 
-static const int bishop_postion_value_table[64] = {
+static inline constexpr int bishop_postion_value_table[64] = {
   0,   0,   0,   0,   0,   0,   0,   0,
   0,   0,   0,   0,   0,   0,   0,   0,
   0,  20,   0,  10,  10,   0,  20,   0,
@@ -63,7 +58,7 @@ static const int bishop_postion_value_table[64] = {
   0,   0, -10,   0,   0, -10,   0,   0
 };
 
-static const int rook_postion_value_table[64] = {
+static inline constexpr int rook_postion_value_table[64] = {
  50,  50,  50,  50,  50,  50,  50,  50,
  50,  50,  50,  50,  50,  50,  50,  50,
   0,   0,  10,  20,  20,  10,   0,   0,
@@ -74,7 +69,7 @@ static const int rook_postion_value_table[64] = {
   0,   0,   0,  20,  20,   0,   0,   0
 };
 
-static const int queen_postion_value_table[64] = {
+static inline constexpr int queen_postion_value_table[64] = {
  -20,-10,-10, -5, -5,-10,-10,-20,
  -10,  0,  0,  0,  0,  0,  0,-10,
  -10,  0,  5,  5,  5,  5,  0,-10,
@@ -85,7 +80,7 @@ static const int queen_postion_value_table[64] = {
  -20,-10,-10, -5, -5,-10,-10,-20
 };
 
-static const int king_postion_value_table[64] = {
+static inline constexpr int king_postion_value_table[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  5,  5,  5,  5,  0,  0,
    0,  5,  5, 10, 10,  5,  5,  0,
@@ -96,15 +91,11 @@ static const int king_postion_value_table[64] = {
    0,  0,  5,  0, 15,  0, 10,  0
  };
 
-static const int black_indexes[64] = {
-  a1, b1, c1, d1, e1, f1, g1, h1,
-  a2, b2, c2, d2, e2, f2, g2, h2,
-  a3, b3, c3, d3, e3, f3, g3, h3,
-  a4, b4, c4, d4, e4, f4, g4, h4,
-  a5, b5, c5, d5, e5, f5, g5, h5,
-  a6, b6, c6, d6, e6, f6, g6, h6,
-  a7, b7, c7, d7, e7, f7, g7, h7,
-  a8, b8, c8, d8, e8, f8, g8, h8
+static inline constexpr int black_indexes[128] = {
+  a1, b1, c1, d1, e1, f1, g1, h1, a2, b2, c2, d2, e2, f2, g2, h2,
+  a3, b3, c3, d3, e3, f3, g3, h3, a4, b4, c4, d4, e4, f4, g4, h4,
+  a5, b5, c5, d5, e5, f5, g5, h5, a6, b6, c6, d6, e6, f6, g6, h6,
+  a7, b7, c7, d7, e7, f7, g7, h7, a8, b8, c8, d8, e8, f8, g8, h8,
 };
 
 
@@ -121,7 +112,7 @@ static const int black_indexes[64] = {
 */
 
 // [attacker][victim]
-static const int mvv_lva[12][12] = {
+static inline constexpr int mvv_lva[12][12] = {
  {105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
  {104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604},
  {103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603},
@@ -137,24 +128,18 @@ static const int mvv_lva[12][12] = {
  {100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600}
 };
 
-static const int passed_pawn_bonus[8] = { 0, 10, 30, 50, 75, 100, 150, 200 };
+static inline constexpr int passed_pawn_bonus[8] = { 0, 10, 30, 50, 75, 100, 150, 200 };
 
 // clang-format on
 
-inline int num_pawns_on_file(bb_t pawn_board, uint8_t file)
-{
-  const bb_t pawns_on_file = pawn_board & files_masks[file];
-  const int num_of_pawns = count_bits(pawns_on_file);
-  return num_of_pawns;
-}
 
-inline int is_pawn_isolated(bb_t pawn_board, uint8_t file)
+inline int double_pawns_score(bb_t board, index_t index)
 {
-  const bool is_pawn_on_board = pawn_board & files_masks[file];
-
-  const bb_t pawns_on_adjacent_files = pawn_board & isolated_files_masks[file];
-  const bool res = pawns_on_adjacent_files > 0;
-  return res && is_pawn_on_board;
+  const int num_of_doubled_pawns = count_bits(board & file_masks[index]);
+  const int result = (num_of_doubled_pawns > 1)
+                         ? num_of_doubled_pawns * DOUBLE_PAWN_PENALTY
+                         : 0;
+  return result;
 }
 
 
@@ -163,15 +148,7 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
   assert(board != nullptr);
 
   // TODO:
-  // Bishop mobility bonus
-  // Rook open file bonus
-  // Rook semi open file bonus
-  // Queen mobility
-  // King semi open file penalty
-  // King open file penalty
-  // King safety bonus
   // Connected rook bonus
-
 
   int evaluation = 0;
 
@@ -185,7 +162,15 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
         case W_PAWN:
           evaluation += VALUE_PAWN;
           evaluation += pawn_postion_value_table[index];
-          // Passed pawn bonus
+          // Doubled pawns
+          evaluation += double_pawns_score(board->bitboards[W_PAWN], index);
+
+          // Isolated pawns
+          if ((board->bitboards[W_PAWN] & isolated_file_masks[index]) == 0) {
+            evaluation += ISOLATED_PAWN_PENALTY;
+          }
+
+          // Passed pawn
           if ((passed_w_pawns_masks[index] & board->bitboards[W_PAWN]) == 0) {
             const uint8_t rank = 7 - (index / 8);
             assert(rank < 8);
@@ -200,18 +185,47 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
         case W_BISHOP:
           evaluation += VALUE_BISHOP;
           evaluation += bishop_postion_value_table[index];
+
+          // Mobility
+          evaluation += count_bits(
+              get_bishop_attacks(tables, index, board->occupancies[BOTH]));
           break;
         case W_ROOK:
           evaluation += VALUE_ROOK;
           evaluation += rook_postion_value_table[index];
+
+          // Open and semi open file bonus
+          if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
+            evaluation += SEMI_OPEN_FILE_BONUS;
+          }
+
+          if (((board->bitboards[W_PAWN] | board->bitboards[B_PAWN]) &
+               file_masks[index]) == 0) {
+            evaluation += OPEN_FILE_BONUS;
+          }
+
           break;
         case W_QUEEN:
-          evaluation += VALUE_QUEEN;
-          evaluation += queen_postion_value_table[index];
+          // evaluation += VALUE_QUEEN;
+          // evaluation += queen_postion_value_table[index];
+
+          // Only mobility
+          evaluation += count_bits(
+              get_queen_attacks(tables, index, board->occupancies[BOTH]));
           break;
         case W_KING:
-          // evaluation += VALUE_KING;
+          evaluation += VALUE_KING;
           evaluation += king_postion_value_table[index];
+
+          // Open and semi open file penalty
+          if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
+            evaluation -= SEMI_OPEN_FILE_BONUS;
+          }
+
+          if (((board->bitboards[W_PAWN] | board->bitboards[B_PAWN]) &
+               file_masks[index]) == 0) {
+            evaluation -= OPEN_FILE_BONUS;
+          }
 
           // King safety bonus
           evaluation += count_bits(tables->king_attacks[index] &
@@ -223,6 +237,14 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
         case B_PAWN:
           evaluation -= VALUE_PAWN;
           evaluation -= pawn_postion_value_table[black_indexes[index]];
+          // Doubled pawns
+          evaluation -= double_pawns_score(board->bitboards[B_PAWN], index);
+
+          // Isolated pawns
+          if ((board->bitboards[B_PAWN] & isolated_file_masks[index]) == 0) {
+            evaluation -= ISOLATED_PAWN_PENALTY;
+          }
+
           // Passed pawn bonus
           if ((passed_b_pawns_masks[index] & board->bitboards[B_PAWN]) == 0) {
             const uint8_t rank = index / 8;
@@ -237,21 +259,50 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
         case B_BISHOP:
           evaluation -= VALUE_BISHOP;
           evaluation -= bishop_postion_value_table[black_indexes[index]];
+
+          // Mobility
+          evaluation -= count_bits(
+              get_bishop_attacks(tables, index, board->occupancies[BOTH]));
           break;
         case B_ROOK:
           evaluation -= VALUE_ROOK;
           evaluation -= rook_postion_value_table[black_indexes[index]];
+
+          // Open and semi open file bonus
+          if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
+            evaluation -= SEMI_OPEN_FILE_BONUS;
+          }
+
+          if (((board->bitboards[B_PAWN] | board->bitboards[W_PAWN]) &
+               file_masks[index]) == 0) {
+            evaluation -= OPEN_FILE_BONUS;
+          }
+
           break;
         case B_QUEEN:
-          evaluation -= VALUE_QUEEN;
-          evaluation -= queen_postion_value_table[black_indexes[index]];
+          // evaluation -= VALUE_QUEEN;
+          // evaluation -= queen_postion_value_table[black_indexes[index]];
+
+          // Only mobility
+          evaluation -= count_bits(
+              get_queen_attacks(tables, index, board->occupancies[BOTH]));
           break;
         case B_KING:
-          // evaluation -= VALUE_KING;
+          evaluation -= VALUE_KING;
           evaluation -= king_postion_value_table[black_indexes[index]];
 
+          // Open and semi open file penalty
+          if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
+            evaluation += SEMI_OPEN_FILE_BONUS;
+          }
+
+          if (((board->bitboards[B_PAWN] | board->bitboards[W_PAWN]) &
+               file_masks[index]) == 0) {
+            evaluation += OPEN_FILE_BONUS;
+          }
+
           // King safety bonus
-          evaluation += count_bits(tables->king_attacks[index] &
+          evaluation -= count_bits(tables->king_attacks[index] &
                                    board->occupancies[BLACK]) *
                         KING_SHIELD_BONUS;
           break;
@@ -262,31 +313,6 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
       }
 
       POP_BIT(current_board, index);
-    }
-  }
-
-  for (int file = 0; file < 8; ++file) {
-    // Count double pawns
-    const int num_of_w_pawns =
-        num_pawns_on_file(board->bitboards[W_PAWN], file);
-    const int num_of_b_pawns =
-        num_pawns_on_file(board->bitboards[B_PAWN], file);
-
-    if (num_of_w_pawns > 1) {
-      evaluation += num_of_w_pawns * DOUBLE_PAWN_PENALTY;
-    }
-
-    if (num_of_b_pawns > 1) {
-      evaluation -= num_of_b_pawns * DOUBLE_PAWN_PENALTY;
-    }
-
-    // Isolated pawns
-    if (is_pawn_isolated(board->bitboards[W_PAWN], file)) {
-      evaluation += ISOLATED_PAWN_PENALTY;
-    }
-
-    if (is_pawn_isolated(board->bitboards[B_PAWN], file)) {
-      evaluation -= ISOLATED_PAWN_PENALTY;
     }
   }
 
