@@ -13,15 +13,33 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-static constexpr int MIN = std::numeric_limits<int>::min() + 100;
-// static constexpr int MIN = -2000000000;
-static constexpr int MAX = std::numeric_limits<int>::max() - 100;
-// static constexpr int MAX = 2000000000;
-// static constexpr int NO_SCORE = MAX + 42;
+// static constexpr int MIN = std::numeric_limits<int>::min() + 100;
+// static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+static constexpr int MIN = -2000000000;
+static constexpr int MAX = 2000000000;
+
 
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
+
+
+inline int normalize_score(int score, int ply)
+{
+  if (score > MATE_MIN && score < MATE_MAX) {
+    return score > 0 ? score + ply : score - ply;
+  }
+  return score;
+}
+
+
+inline int de_normalize_score(int score, int ply)
+{
+  if (score > MATE_MIN && score < MATE_MAX) {
+    return score > 0 ? score - ply : score + ply;
+  }
+  return score;
+}
 
 
 int quiescence(int alpha,
@@ -79,17 +97,18 @@ int negamax(int alpha0,
   int alpha = alpha0;
 
   // Reuse TT entry if found
-  // const tt_entry_t* tt_entry = tt_get_entry(state->tt, &game->board);
-  // if (ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
-  //   if (tt_entry->type == TT_PV_NODE) {
-  //     state->best_move = tt_entry->best_move;
-  //     return tt_entry->score;
-  //   } else if (tt_entry->type == TT_BETA_NODE && tt_entry->score >= beta) {
-  //     return tt_entry->score;
-  //   } else if (tt_entry->type == TT_ALPHA_NODE && tt_entry->score <= alpha) {
-  //     return tt_entry->score;
-  //   }
-  // }
+  const tt_entry_t* tt_entry = tt_get_entry(state->tt, &game->board);
+  if (ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
+    const int tt_score = de_normalize_score(tt_entry->score, ply);
+    if (tt_entry->type == TT_PV_NODE) {
+      state->best_move = tt_entry->best_move;
+      return tt_score;
+    } else if (tt_entry->type == TT_BETA_NODE && tt_score >= beta) {
+      return tt_score;
+    } else if (tt_entry->type == TT_ALPHA_NODE && tt_score <= alpha) {
+      return tt_score;
+    }
+  }
 
   // Check for repetitions
   if (ply > 0 && is_position_repeated(&game->repetitions, game->board.hash)) {
@@ -120,7 +139,6 @@ int negamax(int alpha0,
 
   order_moves(&game->board, state, ply, moves_count, moves);
 
-  // initialize best move just in case. TODO: this might be illegal move
   move_t best_move = moves[0];
 
   for (size_t i = 0; i < moves_count; ++i) {
@@ -131,7 +149,6 @@ int negamax(int alpha0,
 
     state->pv.pv_length[ply + 1] = ply + 1;
 
-    // best_move = moves[i];
     legal_moves_counter++;
     const int score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
 
@@ -150,8 +167,7 @@ int negamax(int alpha0,
         state->killer_moves[0][ply] = moves[i];
 
         const int bonus = depth * depth;
-        state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])] +=
-        bonus;
+        state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])] += bonus;
       }
 
       break;
@@ -179,13 +195,15 @@ int negamax(int alpha0,
     return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE;
   }
 
-  // Store the node in TT
-  (void)type;
-  // tt_store_entry(state->tt, &game->board, depth, best_so_far, type,
-  // best_move);
-
+  const int result = (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
   state->best_move = best_move;
-  return (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
+
+  // Store the node in TT
+  // (void)type;
+  const int to_store = normalize_score(result, ply);
+  tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move);
+
+  return result;
 }
 
 

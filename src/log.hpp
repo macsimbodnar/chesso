@@ -8,6 +8,7 @@
 // #include <fstream>
 // static std::ofstream log_file("chesso.log", std::ios::app);
 
+#ifndef NDEBUG
 
 #define LOG_I std::clog  // Start log
 #define END_I "\n"       // End log
@@ -21,6 +22,23 @@
 #define LOG_E LOG_I << "\033[31m"  // Error red log
 #define END_E "\033[37m" << END_I  // End Error red log
 
+#else
+
+// clang-format off
+#define LOG_I if (false) std::clog
+#define END_I ""
+
+#define LOG_S if (false) std::clog
+#define END_S ""
+
+#define LOG_W if (false) std::clog
+#define END_W ""
+
+#define LOG_E if (false) std::clog
+#define END_E ""
+// clang-format on
+
+#endif
 
 inline std::string to_hexstr(uint64_t value)
 {

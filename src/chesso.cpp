@@ -655,6 +655,9 @@ bool command_ucinewgame(std::queue<std::string>& args)
 {
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
 
+  // Stop any running game
+  stop_search_signal = true;
+
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
   still_in_opening = true;

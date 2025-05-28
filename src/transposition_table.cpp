@@ -41,9 +41,11 @@ void tt_store_entry(transposition_table_t* tt,
   const uint64_t hash = board->hash;
   tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
 
-  entry->key = hash;
-  entry->type = type;
-  entry->depth = depth;
-  entry->score = score;
-  entry->best_move = best_move;
+  if (entry->key != hash || depth >= entry->depth) {
+    entry->key = hash;
+    entry->type = type;
+    entry->depth = depth;
+    entry->score = score;
+    entry->best_move = best_move;
+  }
 }
