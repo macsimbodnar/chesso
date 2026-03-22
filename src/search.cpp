@@ -130,6 +130,36 @@ int negamax(int alpha0,
   state->explored_nodes += 1;
   node_type_t type = TT_ALPHA_NODE;
 
+  // Null move pruning:
+  // Give the opponent a free move and see if they can still
+  // beat beta. If yes, the position is so good we can prune this branch.
+  // Skip when in check, at root, or with insufficient material (zugzwang risk).
+  if (!is_in_check && ply > 0 && depth >= NULL_MOVE_REDUCTION + 1) {
+    const bb_t side_pieces =
+        (game->board.active_color == WHITE)
+            ? (game->board.bitboards[W_KNIGHT] |
+               game->board.bitboards[W_BISHOP] | game->board.bitboards[W_ROOK] |
+               game->board.bitboards[W_QUEEN])
+            : (game->board.bitboards[B_KNIGHT] |
+               game->board.bitboards[B_BISHOP] | game->board.bitboards[B_ROOK] |
+               game->board.bitboards[B_QUEEN]);
+
+    if (side_pieces) {
+      const index_t saved_ep = game->board.en_passant;
+      set_en_passant(game, INVALID_INDEX);
+      swap_side(game);
+
+      const int null_score =
+          -negamax(-beta, -beta + 1, depth - 1 - NULL_MOVE_REDUCTION, ply + 1,
+                   game, state);
+
+      swap_side(game);
+      set_en_passant(game, saved_ep);
+
+      if (null_score >= beta) { return beta; }
+    }
+  }
+
   int legal_moves_counter = 0;
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
@@ -145,7 +175,23 @@ int negamax(int alpha0,
     const bool is_check_move = is_check(game);
 
     legal_moves_counter++;
-    const int score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+
+    // Late Move Reductions:
+    // Search later moves at reduced depth.
+    // If the reduced search beats alpha, re-search at full depth.
+    const bool do_lmr =
+        (i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH &&
+         !is_in_check && !is_check_move && should_reduce_move(moves[i]));
+
+    int score;
+    if (do_lmr) {
+      score = -negamax(-alpha - 1, -alpha, depth - 2, ply + 1, game, state);
+      if (score > alpha) {
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+      }
+    } else {
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+    }
 
     unmake_move(game);
 
@@ -201,7 +247,21 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   search_t search_result = {};
 
-  const int score = negamax(MIN, MAX, depth, 0, game, state);
+  // Aspiration windows: try a narrow window around the previous depth's score.
+  // Widen to the full window if we get a fail-low or fail-high.
+  int score;
+  constexpr int ASPIRATION_DELTA = 50;
+  if (depth > 1 && state->prev_score != 0) {
+    const int lo = state->prev_score - ASPIRATION_DELTA;
+    const int hi = state->prev_score + ASPIRATION_DELTA;
+    score = negamax(lo, hi, depth, 0, game, state);
+    if (score <= lo || score >= hi) {
+      score = negamax(MIN, MAX, depth, 0, game, state);
+    }
+  } else {
+    score = negamax(MIN, MAX, depth, 0, game, state);
+  }
+  state->prev_score = score;
 
   search_result.best_move = state->best_move;
 

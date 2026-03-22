@@ -358,4 +358,5 @@ struct search_state_t
   bool search_in_tt = true;
   transposition_table_t* tt;  // Too big to keep on the stack
   move_t best_move;
+  int prev_score = 0;  // Score from the previous iterative deepening iteration
 };

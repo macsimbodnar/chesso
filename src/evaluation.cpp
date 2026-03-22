@@ -70,16 +70,16 @@ static inline constexpr int rook_postion_value_table[64] = {
   0,  0,  0, 20, 20,  0,  0,  0
 };
 
-// static inline constexpr int queen_postion_value_table[64] = {
-// -20,-10,-10, -5, -5,-10,-10,-20,
-// -10,  0,  0,  0,  0,  0,  0,-10,
-// -10,  0,  5,  5,  5,  5,  0,-10,
-//  -5,  0,  5,  5,  5,  5,  0, -5,
-//   0,  0,  5,  5,  5,  5,  0, -5,
-// -10,  5,  5,  5,  5,  5,  0,-10,
-// -10,  0,  5,  0,  0,  0,  0,-10,
-// -20,-10,-10, -5, -5,-10,-10,-20
-// };
+static inline constexpr int queen_postion_value_table[64] = {
+-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5,  5,  5,  5,  0,-10,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+-10,  5,  5,  5,  5,  5,  0,-10,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20
+};
 
 static inline constexpr int king_postion_value_table[64] = {
   0,  0,  0,  0,  0,  0,  0,  0,
@@ -212,9 +212,7 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           break;
         case W_QUEEN:
           evaluation += VALUE_QUEEN;
-          // evaluation += queen_postion_value_table[index];
-
-          // Only mobility
+          evaluation += queen_postion_value_table[index];
           evaluation += count_bits(
               get_queen_attacks(tables, index, board->occupancies[BOTH]));
           break;
@@ -286,9 +284,7 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           break;
         case B_QUEEN:
           evaluation -= VALUE_QUEEN;
-          // evaluation -= queen_postion_value_table[black_indexes[index]];
-
-          // Only mobility
+          evaluation -= queen_postion_value_table[black_indexes[index]];
           evaluation -= count_bits(
               get_queen_attacks(tables, index, board->occupancies[BOTH]));
           break;
