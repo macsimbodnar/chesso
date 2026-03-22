@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 
 // #include <fstream>
@@ -68,10 +69,28 @@ public:
     start();
   }
 
-  ~stopwatch_t()
+  inline void start()
+  {
+    assert(!running);
+    running = true;
+    begin = std::chrono::steady_clock::now();
+  }
+
+  inline void stop()
+  {
+    if (running) {
+      const auto now = std::chrono::steady_clock::now();
+      tot += now - begin;
+      begin = now;
+      running = false;
+    }
+  }
+
+  inline std::string duration_str()
   {
     if (running) { stop(); }
 
+    std::stringstream ss;
     const auto duration_ns =
         std::chrono::duration_cast<std::chrono::nanoseconds>(tot);
 
@@ -83,26 +102,11 @@ public:
         std::chrono::duration_cast<std::chrono::milliseconds>(
             duration_ns - minutes - seconds);
 
-    LOG_I << "Search time: " << std::to_string(minutes.count()) << " min "
-          << seconds.count() << " sec " << milliseconds.count() << " msec"
-          << END_I;
-  }
+    ss << std::to_string(minutes.count()) << " min " << seconds.count()
+       << " sec " << milliseconds.count() << " msec"
+       << "\n";
 
-  inline void start()
-  {
-    assert(!running);
-    running = true;
-    begin = std::chrono::steady_clock::now();
-  }
-
-  inline void stop()
-  {
-    const auto now = std::chrono::steady_clock::now();
-
-    if (running) {
-      tot += now - begin;
-      begin = now;
-      running = false;
-    }
+    start();
+    return ss.str();
   }
 };

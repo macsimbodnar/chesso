@@ -1760,13 +1760,13 @@ bool is_pv_legal(game_t* game, const pv_t* pv)
   size_t make_move_counter = 0;
 
   // Empty pv is illegal
-  if (pv->pv_length[0] < 1) {
+  if (pv->length < 1) {
     LOG_W << "Empty PV" << END_W;
     return false;
   }
 
-  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
-    const move_t move_to_test = pv->pv_table[0][i];
+  for (size_t i = 0; i < pv->length; ++i) {
+    const move_t move_to_test = pv->table[i];
 
     move_t moves[MAX_MOVES];
     const size_t moves_count =

@@ -130,7 +130,6 @@ int negamax(int alpha0,
   }
 
   state->explored_nodes += 1;
-  state->pv.pv_length[ply] = ply;
   node_type_t type = TT_ALPHA_NODE;
 
   int legal_moves_counter = 0;
@@ -146,8 +145,6 @@ int negamax(int alpha0,
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_check_move = is_check(game);
-
-    state->pv.pv_length[ply + 1] = ply + 1;
 
     legal_moves_counter++;
     const int score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
@@ -176,16 +173,6 @@ int negamax(int alpha0,
     if (score > alpha) {
       alpha = score;
       best_move = moves[i];
-
-      // Save principal variation
-      state->pv.pv_table[ply][ply] = best_move;
-
-      memcpy(&state->pv.pv_table[ply][ply + 1],
-             &state->pv.pv_table[ply + 1][ply + 1],
-             (state->pv.pv_length[ply + 1] - (ply + 1)) *
-                 sizeof(state->pv.pv_table[0][0]));
-
-      state->pv.pv_length[ply] = state->pv.pv_length[ply + 1];
 
       type = TT_PV_NODE;
     }
@@ -218,8 +205,6 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   const int score = negamax(MIN, MAX, depth, 0, game, state);
 
-  assert(state->pv.pv_length[0] > 0);
-
   search_result.best_move = state->best_move;
 
   // Handle mate score
@@ -236,24 +221,25 @@ search_t search(int depth, game_t* game, search_state_t* state)
   }
 
   search_result.explored_nodes = state->explored_nodes;
-  search_result.pv = state->pv;
   search_result.score = score;
+  search_result.pv.length = 1;
+  search_result.pv.table[0] = state->best_move;
 
 
-#ifndef NDEBUG
-  const bool legal = is_pv_legal(game, &search_result.pv);
-  if (!legal) { LOG_E << "Illegal PV" << END_E; }
+  // #ifndef NDEBUG
+  //   const bool legal = is_pv_legal(game, &search_result.pv);
+  //   if (!legal) { LOG_E << "Illegal PV" << END_E; }
 
-  if (search_result.best_move != search_result.pv.pv_table[0][0]) {
-    LOG_E << "Best move is not the same in the PV table" << END_E;
-    LOG_E << "Best move: " << print_move(search_result.best_move) << END_E;
-    LOG_E << "PV[0][0]:  " << print_move(search_result.pv.pv_table[0][0])
-          << END_E;
-  }
+  //   if (search_result.best_move != search_result.pv.pv_table[0][0]) {
+  //     LOG_E << "Best move is not the same in the PV table" << END_E;
+  //     LOG_E << "Best move: " << print_move(search_result.best_move) << END_E;
+  //     LOG_E << "PV[0][0]:  " << print_move(search_result.pv.pv_table[0][0])
+  //           << END_E;
+  //   }
 
-#endif
+  // #endif
 
-  assert(search_result.best_move == search_result.pv.pv_table[0][0]);
+  //   assert(search_result.best_move == search_result.pv.pv_table[0][0]);
 
   return search_result;
 }

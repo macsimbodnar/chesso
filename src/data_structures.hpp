@@ -296,17 +296,29 @@ struct game_t
 
 struct pv_t
 {
-  size_t pv_length[MAX_PLY];
-  move_t pv_table[MAX_PLY][MAX_PLY];
+  size_t length;
+  move_t table[MAX_PLY];
 };
 
 
 enum node_type_t
 {
   TT_EMPTY_NODE,
-  TT_PV_NODE,     // The stored score is EXACTLY that
+  TT_PV_NODE,  // The stored score is EXACTLY that.
+               // Alpha node.  Every move you search will have a value less than
+               // or equal to alpha, meaning that none of the moves in here will
+               // be any good, probably because the starting position is bad for
+               // the side to move.
+
   TT_ALPHA_NODE,  // The stored score was at most that. Upperbound. Fail-low
-  TT_BETA_NODE    // The stored score was at least that. Lowerbound. Fail-high
+                  // Alpha node.  Every move you search will have a value less
+                  // than or equal to alpha, meaning that none of the moves in
+                  // here will be any good, probably because the starting
+                  // position is bad for the side to move.
+
+  TT_BETA_NODE  // The stored score was at least that. Lowerbound. Fail-high
+                // Beta node.  At least one of the moves will return a score
+                // greater than or equal to beta.
 };
 
 
@@ -343,7 +355,6 @@ struct search_state_t
   uint64_t explored_nodes;
   move_t killer_moves[2][MAX_PLY];
   int history_moves[12][64];  // [piece][destination]
-  pv_t pv;
   bool search_in_tt = true;
   transposition_table_t* tt;  // Too big to keep on the stack
   move_t best_move;

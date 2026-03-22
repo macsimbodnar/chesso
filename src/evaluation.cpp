@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "bb_tables.hpp"
 #include "bitboard.hpp"
+#include "transposition_table.hpp"
 #include "utils.hpp"
 
 
@@ -69,16 +70,16 @@ static inline constexpr int rook_postion_value_table[64] = {
   0,  0,  0, 20, 20,  0,  0,  0
 };
 
-static inline constexpr int queen_postion_value_table[64] = {
--20,-10,-10, -5, -5,-10,-10,-20,
--10,  0,  0,  0,  0,  0,  0,-10,
--10,  0,  5,  5,  5,  5,  0,-10,
- -5,  0,  5,  5,  5,  5,  0, -5,
-  0,  0,  5,  5,  5,  5,  0, -5,
--10,  5,  5,  5,  5,  5,  0,-10,
--10,  0,  5,  0,  0,  0,  0,-10,
--20,-10,-10, -5, -5,-10,-10,-20
-};
+// static inline constexpr int queen_postion_value_table[64] = {
+// -20,-10,-10, -5, -5,-10,-10,-20,
+// -10,  0,  0,  0,  0,  0,  0,-10,
+// -10,  0,  5,  5,  5,  5,  0,-10,
+//  -5,  0,  5,  5,  5,  5,  0, -5,
+//   0,  0,  5,  5,  5,  5,  0, -5,
+// -10,  5,  5,  5,  5,  5,  0,-10,
+// -10,  0,  5,  0,  0,  0,  0,-10,
+// -20,-10,-10, -5, -5,-10,-10,-20
+// };
 
 static inline constexpr int king_postion_value_table[64] = {
   0,  0,  0,  0,  0,  0,  0,  0,
@@ -331,20 +332,26 @@ int evaluate_move(const board_t* board,
 {
   assert(state != nullptr);
 
-  // PV move
-  if (state->pv.pv_length[ply] > ply) {
-    const move_t pv_move = state->pv.pv_table[ply][ply];
-    if (move == pv_move) { return 1000000; }
-  }
+  // const tt_entry_t* tt_entry = tt_get_entry(state->tt, board);
+  // if (ply > 0 && tt_entry != nullptr) {
+  //   if (tt_entry->type == TT_PV_NODE && tt_entry->best_move == move) {
+  //     return 1000000;
+  //   }
+  // }
 
   if (MOVE_CAPTURE(move)) {
     const piece_t attacker = MOVE_PIECE(move);
 
     // TODO: In case of en-passant this does not return the correct victim
-    const piece_t victim = get_piece(board, MOVE_TO(move));
+    piece_t victim = get_piece(board, MOVE_TO(move));
 
     assert(attacker != EMPTY);
-    // assert(victim != EMPTY);
+
+    // here e assume en-passant capture and set to pawn
+    if (victim == EMPTY) {
+      // Here we don't care about color
+      victim = W_PAWN;
+    }
 
     const int score = mvv_lva[attacker][victim];
     return 10000 + score;
@@ -430,10 +437,15 @@ void order_captures(const board_t* board, move_t moves[], size_t moves_size)
       const piece_t attacker = MOVE_PIECE(moves[i]);
 
       // TODO: In case of en-passant this does not return the correct victim
-      const piece_t victim = get_piece(board, MOVE_TO(moves[i]));
+      piece_t victim = get_piece(board, MOVE_TO(moves[i]));
 
       assert(attacker != EMPTY);
-      // assert(victim != EMPTY);
+
+      // here e assume en-passant capture and set to pawn
+      if (victim == EMPTY) {
+        // Here we don't care about color
+        victim = W_PAWN;
+      }
 
       scores[i] = mvv_lva[attacker][victim];
     } else {

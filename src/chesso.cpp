@@ -271,10 +271,9 @@ std::string pv_to_string(const pv_t* pv)
 
   std::stringstream ss;
 
-  for (size_t i = 0; i < pv->pv_length[0]; ++i) {
-    const uci_move_t move = {MOVE_FROM(pv->pv_table[0][i]),
-                             MOVE_TO(pv->pv_table[0][i]),
-                             MOVE_PROMOTED(pv->pv_table[0][i])};
+  for (size_t i = 0; i < pv->length; ++i) {
+    const uci_move_t move = {MOVE_FROM(pv->table[i]), MOVE_TO(pv->table[i]),
+                             MOVE_PROMOTED(pv->table[i])};
 
     ss << uci_move_to_algebraic(&move) << " ";
   }
@@ -521,11 +520,11 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                             MOVE_PROMOTED(search_result.best_move)};
 
     result.is_ponder_move = false;
-    if (search_result.pv.pv_length[0] > 1) {
+    if (search_result.pv.length > 1) {
       result.is_ponder_move = true;
-      result.ponder_move = {MOVE_FROM(search_result.pv.pv_table[0][1]),
-                            MOVE_TO(search_result.pv.pv_table[0][1]),
-                            MOVE_PROMOTED(search_result.pv.pv_table[0][1])};
+      result.ponder_move = {MOVE_FROM(search_result.pv.table[1]),
+                            MOVE_TO(search_result.pv.table[1]),
+                            MOVE_PROMOTED(search_result.pv.table[1])};
     }
 
     result.pv = search_result.pv;
@@ -957,6 +956,7 @@ bool command_go(std::queue<std::string>& args)
     }
 
     uci_reply("bestmove " + best_move_str + ponder_move);
+    LOG_I << "Search time: " << timer.duration_str() << END_I;
   });
 
   // Let the thread go his way
@@ -1115,10 +1115,13 @@ bool command_test(std::queue<std::string>& args)
     if (!is_pv_legal(&game, &res.pv)) {
       uci_reply("!!! ----- PV move is ILLEGAL   ----- !!!");
     }
+
+    uci_reply("Search time: " + timer.duration_str());
   }
 
   uci_reply("\nTESTS END ------------------------");
   uci_reply("Total explored nodes: " + STR(total_nodes));
+  uci_reply("Search time: " + total_timer.duration_str());
 
   return true;
 }
