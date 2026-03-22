@@ -339,6 +339,25 @@ int evaluate_move(const board_t* board,
   //   }
   // }
 
+  // Promotions (checked before captures so capture-promotions get both bonuses)
+  if (MOVE_PROMOTED(move) != TO_NONE) {
+    int promo_score = 0;
+    switch (MOVE_PROMOTED(move)) {
+      case TO_QUEEN:  promo_score = 20000; break;
+      case TO_ROOK:   promo_score = 15000; break;
+      case TO_KNIGHT:
+      case TO_BISHOP: promo_score = 10000; break;
+      default:        break;
+    }
+    if (MOVE_CAPTURE(move)) {
+      const piece_t attacker = MOVE_PIECE(move);
+      piece_t victim = get_piece(board, MOVE_TO(move));
+      if (victim == EMPTY) victim = W_PAWN;
+      promo_score += mvv_lva[attacker][victim];
+    }
+    return promo_score;
+  }
+
   if (MOVE_CAPTURE(move)) {
     const piece_t attacker = MOVE_PIECE(move);
 
@@ -347,7 +366,7 @@ int evaluate_move(const board_t* board,
 
     assert(attacker != EMPTY);
 
-    // here e assume en-passant capture and set to pawn
+    // here we assume en-passant capture and set to pawn
     if (victim == EMPTY) {
       // Here we don't care about color
       victim = W_PAWN;
@@ -355,20 +374,6 @@ int evaluate_move(const board_t* board,
 
     const int score = mvv_lva[attacker][victim];
     return 10000 + score;
-  }
-
-  // Promotions
-  switch (MOVE_PROMOTED(move)) {
-    case TO_QUEEN:
-      return 10000 + 500;
-    case TO_ROOK:
-      return 10000 + 350;
-    case TO_KNIGHT:
-    case TO_BISHOP:
-      return 10000 + 100;
-
-    case TO_NONE:
-      break;
   }
 
   // Killer & History

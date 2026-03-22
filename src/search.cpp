@@ -26,18 +26,16 @@ static constexpr int MAX = 2000000000;
 
 inline int normalize_score(int score, int ply)
 {
-  if (score > MATE_MIN && score < MATE_MAX) {
-    return score > 0 ? score + ply : score - ply;
-  }
+  if (score > MATE_MIN && score < MATE_MAX) { return score + ply; }
+  if (score < -MATE_MIN && score > -MATE_MAX) { return score - ply; }
   return score;
 }
 
 
 inline int de_normalize_score(int score, int ply)
 {
-  if (score > MATE_MIN && score < MATE_MAX) {
-    return score > 0 ? score - ply : score + ply;
-  }
+  if (score > MATE_MIN && score < MATE_MAX) { return score - ply; }
+  if (score < -MATE_MIN && score > -MATE_MAX) { return score + ply; }
   return score;
 }
 
@@ -59,7 +57,7 @@ int quiescence(int alpha,
   if (alpha < stand_pat) { alpha = stand_pat; }
 
   // Time management
-  if ((state->explored_nodes % 1000) && *state->stop) { return stand_pat; }
+  if ((state->explored_nodes % 1000 == 0) && *state->stop) { return stand_pat; }
   if (ply > (MAX_PLY - 2)) { return stand_pat; }
 
   move_t moves[MAX_MOVES];
@@ -120,7 +118,7 @@ int negamax(int alpha0,
   if (is_in_check) { ++depth; }
 
   // Time management
-  if ((state->explored_nodes % 1000) && *state->stop) {
+  if ((state->explored_nodes % 1000 == 0) && *state->stop) {
     return (game->board.active_color == WHITE ? 1 : -1) *
            evaluate(&game->tables, &game->board);
   }
