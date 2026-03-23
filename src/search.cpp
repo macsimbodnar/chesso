@@ -23,6 +23,7 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
+#define FUTILITY_MARGIN 500  // ~rook value
 
 
 inline int normalize_score(int score, int ply)
@@ -168,9 +169,19 @@ int negamax(int alpha0,
 
   order_moves(&game->board, state, ply, moves_count, moves);
 
+  // Futility pruning: if at depth 1 the static eval is so far below alpha that
+  // even gaining a rook with the best quiet move can't reach it, skip quiet moves.
+  const bool futility_prune = (depth == 1 && !is_in_check && ply > 0 &&
+      ((game->board.active_color == WHITE ? 1 : -1) *
+       evaluate(&game->tables, &game->board)) + FUTILITY_MARGIN < alpha);
+
   move_t best_move = moves[0];
 
   for (size_t i = 0; i < moves_count; ++i) {
+    if (futility_prune &&
+        !MOVE_CAPTURE(moves[i]) &&
+        MOVE_PROMOTED(moves[i]) == TO_NONE) { continue; }
+
     if (!make_move(game, moves[i])) { continue; }
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
