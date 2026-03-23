@@ -43,6 +43,11 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
+// Backward pawn: cannot advance (square ahead attacked by enemy pawn)
+// and no friendly pawn on adjacent file can support it from behind.
+#define MG_BACKWARD_PAWN_PENALTY  -10
+#define EG_BACKWARD_PAWN_PENALTY  -15
+
 // Passed pawn enhancements
 #define PASSED_KING_SUPPORT_WEIGHT   3   // EG: own king close to passer (per distance unit)
 #define PASSED_KING_BLOCK_WEIGHT     4   // EG: enemy king close to passer (per distance unit)
@@ -313,6 +318,17 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             eg_score += EG_ISOLATED_PAWN_PENALTY;
           }
 
+          // Backward pawn: square ahead attacked by enemy pawn, no support from behind
+          {
+            const index_t front      = index - 8;
+            const bb_t    behind_adj = isolated_file_masks[index] & ~((BB_1 << index) - 1);
+            if ((tables->pawn_attacks[WHITE][front] & board->bitboards[B_PAWN]) &&
+                (board->bitboards[W_PAWN] & behind_adj) == 0) {
+              mg_score += MG_BACKWARD_PAWN_PENALTY;
+              eg_score += EG_BACKWARD_PAWN_PENALTY;
+            }
+          }
+
           // Passed pawn
           if ((passed_w_pawns_masks[index] & board->bitboards[B_PAWN]) == 0) {
             const uint8_t rank = 7 - (index / 8);
@@ -490,6 +506,17 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           if ((board->bitboards[B_PAWN] & isolated_file_masks[index]) == 0) {
             mg_score -= MG_ISOLATED_PAWN_PENALTY;
             eg_score -= EG_ISOLATED_PAWN_PENALTY;
+          }
+
+          // Backward pawn
+          {
+            const index_t front      = index + 8;
+            const bb_t    behind_adj = isolated_file_masks[index] & ((BB_1 << (index + 1)) - 1);
+            if ((tables->pawn_attacks[BLACK][front] & board->bitboards[W_PAWN]) &&
+                (board->bitboards[B_PAWN] & behind_adj) == 0) {
+              mg_score -= MG_BACKWARD_PAWN_PENALTY;
+              eg_score -= EG_BACKWARD_PAWN_PENALTY;
+            }
           }
 
           // Passed pawn
