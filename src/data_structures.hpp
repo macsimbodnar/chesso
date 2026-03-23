@@ -359,4 +359,8 @@ struct search_state_t
   transposition_table_t* tt;  // Too big to keep on the stack
   move_t best_move;
   int prev_score = 0;  // Score from the previous iterative deepening iteration
+
+  // Triangular PV table: pv_table[ply] holds the PV from that ply onward.
+  move_t pv_table[MAX_PLY][MAX_PLY];
+  size_t pv_length[MAX_PLY];
 };

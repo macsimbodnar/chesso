@@ -1,6 +1,7 @@
 #include "search.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <limits>
 #include "bitboard.hpp"
 #include "evaluation.hpp"
@@ -129,6 +130,7 @@ int negamax(int alpha0,
 
   state->explored_nodes += 1;
   node_type_t type = TT_ALPHA_NODE;
+  state->pv_length[ply] = 0;
 
   // Null move pruning:
   // Give the opponent a free move and see if they can still
@@ -217,8 +219,13 @@ int negamax(int alpha0,
     if (score > alpha) {
       alpha = score;
       best_move = moves[i];
-
       type = TT_PV_NODE;
+
+      // Update triangular PV table
+      state->pv_table[ply][0] = moves[i];
+      memcpy(&state->pv_table[ply][1], state->pv_table[ply + 1],
+             state->pv_length[ply + 1] * sizeof(move_t));
+      state->pv_length[ply] = 1 + state->pv_length[ply + 1];
     }
   }
 
@@ -280,8 +287,9 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   search_result.explored_nodes = state->explored_nodes;
   search_result.score = score;
-  search_result.pv.length = 1;
-  search_result.pv.table[0] = state->best_move;
+  search_result.pv.length = state->pv_length[0];
+  memcpy(search_result.pv.table, state->pv_table[0],
+         state->pv_length[0] * sizeof(move_t));
 
 
   // #ifndef NDEBUG
