@@ -1,6 +1,7 @@
 #include "search.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include "bitboard.hpp"
@@ -210,9 +211,12 @@ int negamax(int alpha0,
       // First legal move: always search with full window.
       score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
     } else if (do_lmr) {
-      // LMR: probe with reduced depth + null window.
-      // If it beats alpha, re-search at full depth with full window.
-      score = -negamax(-alpha - 1, -alpha, depth - 2, ply + 1, game, state);
+      // LMR: logarithmic reduction — later moves and deeper searches are
+      // reduced more aggressively. Clamped so we always reduce by at least 1
+      // and never reduce to depth 0 (that falls into quiescence).
+      const int reduction = std::max(1, (int)(0.5 + std::log(depth) * std::log(i) / 2.0));
+      const int lmr_depth = std::max(1, depth - 1 - reduction);
+      score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, game, state);
       if (score > alpha) {
         score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
       }
