@@ -43,6 +43,10 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
+// Connected rooks: two rooks on the same file or rank with no pieces between them.
+#define MG_CONNECTED_ROOKS  15
+#define EG_CONNECTED_ROOKS  10
+
 // Rook on 7th rank (2nd for black): strong bonus, even more when enemy king
 // is trapped on the back rank.
 #define MG_ROOK_ON_7TH          20
@@ -297,7 +301,6 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
 {
   assert(board != nullptr);
 
-  // TODO: Connected rook bonus
 
   const index_t w_king_sq = get_lsb_index(board->bitboards[W_KING]);
   const index_t b_king_sq = get_lsb_index(board->bitboards[B_KING]);
@@ -734,6 +737,34 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
       }
 
       POP_BIT(current_board, index);
+    }
+  }
+
+  // Connected rooks: apply bonus once per side if any rook can see another
+  if (count_bits(board->bitboards[W_ROOK]) >= 2) {
+    bb_t rooks = board->bitboards[W_ROOK];
+    while (rooks) {
+      const index_t sq = get_lsb_index(rooks);
+      if (get_rook_attacks(tables, sq, board->occupancies[BOTH]) &
+          board->bitboards[W_ROOK]) {
+        mg_score += MG_CONNECTED_ROOKS;
+        eg_score += EG_CONNECTED_ROOKS;
+        break;
+      }
+      POP_BIT(rooks, sq);
+    }
+  }
+  if (count_bits(board->bitboards[B_ROOK]) >= 2) {
+    bb_t rooks = board->bitboards[B_ROOK];
+    while (rooks) {
+      const index_t sq = get_lsb_index(rooks);
+      if (get_rook_attacks(tables, sq, board->occupancies[BOTH]) &
+          board->bitboards[B_ROOK]) {
+        mg_score -= MG_CONNECTED_ROOKS;
+        eg_score -= EG_CONNECTED_ROOKS;
+        break;
+      }
+      POP_BIT(rooks, sq);
     }
   }
 
