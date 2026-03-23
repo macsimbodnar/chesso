@@ -369,11 +369,15 @@ int evaluate_move(const board_t* board,
     return 10000 + score;
   }
 
-  // Killer & History
+  // Killer, counter move, then history
   if (move == state->killer_moves[0][ply]) {
     return 10000 - 1000;
   } else if (move == state->killer_moves[1][ply]) {
     return 10000 - 2000;
+  } else if (state->node_prev_move[ply] != 0 &&
+             move == state->counter_moves[MOVE_PIECE(state->node_prev_move[ply])]
+                                         [MOVE_TO(state->node_prev_move[ply])]) {
+    return 10000 - 3000;
   } else {
     return state->history_moves[MOVE_PIECE(move)][MOVE_TO(move)];
   }

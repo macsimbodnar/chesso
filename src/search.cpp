@@ -90,7 +90,8 @@ int negamax(int alpha0,
             int depth,
             size_t ply,
             game_t* game,
-            search_state_t* state)
+            search_state_t* state,
+            move_t prev_move = 0)
 {
   assert(game != nullptr);
   assert(state != nullptr);
@@ -180,6 +181,7 @@ int negamax(int alpha0,
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
+  state->node_prev_move[ply] = prev_move;
   order_moves(&game->board, state, ply, moves_count, moves);
 
   // Futility pruning: if at depth 1 the static eval is so far below alpha that
@@ -209,22 +211,22 @@ int negamax(int alpha0,
     int score;
     if (legal_moves_counter == 1) {
       // First legal move: always search with full window.
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
     } else if (do_lmr) {
       // LMR: logarithmic reduction — later moves and deeper searches are
       // reduced more aggressively. Clamped so we always reduce by at least 1
       // and never reduce to depth 0 (that falls into quiescence).
       const int reduction = std::max(1, (int)(0.5 + std::log(depth) * std::log(i) / 2.0));
       const int lmr_depth = std::max(1, depth - 1 - reduction);
-      score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, game, state);
+      score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, game, state, moves[i]);
       if (score > alpha) {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
       }
     } else {
       // PVS: probe with null window. Re-search with full window only if needed.
-      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state);
+      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state, moves[i]);
       if (score > alpha && score < beta) {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
       }
     }
 
@@ -237,13 +239,17 @@ int negamax(int alpha0,
       // Fail-high
       type = TT_BETA_NODE;
 
-      // Store killing move and history
+      // Store killing move, history, and counter move
       if (!is_capture && !is_check_move) {
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 
         const int bonus = depth * depth;
         state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])] += bonus;
+
+        if (prev_move != 0) {
+          state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = moves[i];
+        }
       }
 
       break;

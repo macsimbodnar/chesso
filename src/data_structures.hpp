@@ -363,4 +363,9 @@ struct search_state_t
   // Triangular PV table: pv_table[ply] holds the PV from that ply onward.
   move_t pv_table[MAX_PLY][MAX_PLY];
   size_t pv_length[MAX_PLY];
+
+  // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
+  move_t counter_moves[12][64];
+  // Previous move at each ply, used to look up the counter move during ordering.
+  move_t node_prev_move[MAX_PLY];
 };
