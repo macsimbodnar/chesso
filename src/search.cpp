@@ -201,21 +201,27 @@ int negamax(int alpha0,
 
     legal_moves_counter++;
 
-    // Late Move Reductions:
-    // Search later moves at reduced depth.
-    // If the reduced search beats alpha, re-search at full depth.
     const bool do_lmr =
         (i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH &&
          !is_in_check && !is_check_move && should_reduce_move(moves[i]));
 
     int score;
-    if (do_lmr) {
+    if (legal_moves_counter == 1) {
+      // First legal move: always search with full window.
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+    } else if (do_lmr) {
+      // LMR: probe with reduced depth + null window.
+      // If it beats alpha, re-search at full depth with full window.
       score = -negamax(-alpha - 1, -alpha, depth - 2, ply + 1, game, state);
       if (score > alpha) {
         score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
       }
     } else {
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+      // PVS: probe with null window. Re-search with full window only if needed.
+      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state);
+      if (score > alpha && score < beta) {
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state);
+      }
     }
 
     unmake_move(game);
