@@ -43,6 +43,11 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
+// Knight outpost: defended by own pawn, no enemy pawn can ever reach an
+// adjacent file to attack it. Strong in MG, less relevant in EG.
+#define MG_OUTPOST_BONUS   20
+#define EG_OUTPOST_BONUS   10
+
 // Backward pawn: cannot advance (square ahead attacked by enemy pawn)
 // and no friendly pawn on adjacent file can support it from behind.
 #define MG_BACKWARD_PAWN_PENALTY  -10
@@ -371,6 +376,14 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             mg_score += mobility * MG_KNIGHT_MOBILITY;
             eg_score += mobility * EG_KNIGHT_MOBILITY;
           }
+          // Outpost: defended by own pawn AND no black pawn on adjacent files
+          // can advance to attack this square (they advance by increasing index)
+          if ((tables->pawn_attacks[BLACK][index] & board->bitboards[W_PAWN]) &&
+              (board->bitboards[B_PAWN] &
+               (isolated_file_masks[index] & ((BB_1 << index) - 1))) == 0) {
+            mg_score += MG_OUTPOST_BONUS;
+            eg_score += EG_OUTPOST_BONUS;
+          }
           break;
 
         case W_BISHOP:
@@ -558,6 +571,14 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
                 tables->knight_attacks[index] & ~board->occupancies[BLACK]);
             mg_score -= mobility * MG_KNIGHT_MOBILITY;
             eg_score -= mobility * EG_KNIGHT_MOBILITY;
+          }
+          // Outpost: defended by own pawn AND no white pawn on adjacent files
+          // can advance to attack this square (they advance by decreasing index)
+          if ((tables->pawn_attacks[WHITE][index] & board->bitboards[B_PAWN]) &&
+              (board->bitboards[W_PAWN] &
+               (isolated_file_masks[index] & ~((BB_1 << (index + 1)) - 1))) == 0) {
+            mg_score -= MG_OUTPOST_BONUS;
+            eg_score -= EG_OUTPOST_BONUS;
           }
           break;
 
