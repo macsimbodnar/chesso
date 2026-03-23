@@ -9,68 +9,140 @@
 
 
 // clang-format off
-#define VALUE_PAWN    100
-#define VALUE_KNIGHT  300
-#define VALUE_BISHOP  350
-#define VALUE_ROOK    500
-#define VALUE_QUEEN   1000
-#define VALUE_KING    10000
+
+// Material values split into middlegame and endgame
+#define MG_PAWN    100
+#define EG_PAWN    115
+#define MG_KNIGHT  300
+#define EG_KNIGHT  260
+#define MG_BISHOP  350
+#define EG_BISHOP  340
+#define MG_ROOK    500
+#define EG_ROOK    510
+#define MG_QUEEN   1000
+#define EG_QUEEN   960
+#define VALUE_KING 10000
+
+// Tapered eval: phase is computed from remaining non-pawn material
+// knights=1, bishops=1, rooks=2, queens=4, total possible = 24
+#define PHASE_KNIGHT  1
+#define PHASE_BISHOP  1
+#define PHASE_ROOK    2
+#define PHASE_QUEEN   4
+#define PHASE_MAX    24
+
+// Pawn structure penalties
+#define MG_DOUBLE_PAWN_PENALTY   -10
+#define EG_DOUBLE_PAWN_PENALTY   -25
+#define MG_ISOLATED_PAWN_PENALTY -10
+#define EG_ISOLATED_PAWN_PENALTY -20
+
+// Open file bonuses (rook) and penalties (king)
+#define MG_SEMI_OPEN_FILE_BONUS   10
+#define EG_SEMI_OPEN_FILE_BONUS    5
+#define MG_OPEN_FILE_BONUS        15
+#define EG_OPEN_FILE_BONUS        10
+
+// King shield: only relevant in the middlegame
+#define MG_KING_SHIELD_BONUS      10
 
 
-#define DOUBLE_PAWN_PENALTY -10
-#define ISOLATED_PAWN_PENALTY -10
+// Piece-square tables (PSTs) indexed a8(0) to h1(63), white's perspective.
+// Black pieces use black_indexes[] to mirror the table.
 
-#define SEMI_OPEN_FILE_BONUS 10
-#define OPEN_FILE_BONUS 15
-
-#define KING_SHIELD_BONUS 5
-
-
-static inline constexpr int pawn_postion_value_table[64] = {
- 90, 90, 90, 90, 90, 90, 90, 90,
- 30, 30, 30, 40, 40, 30, 30, 30,
- 20, 20, 20, 30, 30, 30, 20, 20,
- 10, 10, 10, 20, 20, 10, 10, 10,
-  5,  5, 10, 20, 20,  5,  5,  5,
-  0,  0,  0,  5,  5,  0,  0,  0,
-  0,  0,  0,-10,-10,  0,  0,  0,
+static inline constexpr int mg_pawn_pst[64] = {
+  0,  0,  0,  0,  0,  0,  0,  0,
+ 50, 50, 50, 50, 50, 50, 50, 50,
+ 10, 10, 20, 30, 30, 20, 10, 10,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  5, 10, 10,-20,-20, 10, 10,  5,
   0,  0,  0,  0,  0,  0,  0,  0
 };
 
-static inline constexpr int knight_postion_value_table[64] = {
- -5,  0,  0,  0,  0,  0,  0, -5,
- -5,  0,  0, 10, 10,  0,  0, -5,
- -5,  5, 20, 20, 20, 20,  5, -5,
- -5, 10, 20, 30, 30, 20, 10, -5,
- -5, 10, 20, 30, 30, 20, 10, -5,
- -5,  5, 20, 10, 10, 20,  5, -5,
- -5,  0,  0,  0,  0,  0,  0, -5,
- -5,-10,  0,  0,  0,  0,-10, -5
-};
-
-static inline constexpr int bishop_postion_value_table[64] = {
+// In endgames pawns are more valuable the further advanced they are;
+// file structure matters less.
+static inline constexpr int eg_pawn_pst[64] = {
   0,  0,  0,  0,  0,  0,  0,  0,
+ 80, 80, 80, 80, 80, 80, 80, 80,
+ 55, 55, 55, 55, 55, 55, 55, 55,
+ 30, 30, 30, 30, 30, 30, 30, 30,
+ 20, 20, 20, 20, 20, 20, 20, 20,
+ 10, 10, 10, 10, 10, 10, 10, 10,
+  5,  5,  5,  5,  5,  5,  5,  5,
+  0,  0,  0,  0,  0,  0,  0,  0
+};
+
+static inline constexpr int mg_knight_pst[64] = {
+-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50
+};
+
+// Knights are slightly less useful in pure endgames (fewer targets)
+// but their PST shape stays the same.
+static inline constexpr int eg_knight_pst[64] = {
+-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50
+};
+
+static inline constexpr int mg_bishop_pst[64] = {
+-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-20,-10,-10,-10,-10,-10,-10,-20
+};
+
+static inline constexpr int eg_bishop_pst[64] = {
+-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-20,-10,-10,-10,-10,-10,-10,-20
+};
+
+static inline constexpr int mg_rook_pst[64] = {
   0,  0,  0,  0,  0,  0,  0,  0,
-  0, 20,  0, 10, 10,  0, 20,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0, 10,  0,  0,  0,  0, 10,  0,
-  0, 30,  0,  0,  0,  0, 30,  0,
-  0,  0,-10,  0,  0,-10,  0,  0
+  5, 10, 10, 10, 10, 10, 10,  5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0
 };
 
-static inline constexpr int rook_postion_value_table[64] = {
- 50, 50, 50, 50, 50, 50, 50, 50,
- 50, 50, 50, 50, 50, 50, 50, 50,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0, 10, 20, 20, 10,  0,  0,
-  0,  0,  0, 20, 20,  0,  0,  0
+static inline constexpr int eg_rook_pst[64] = {
+  5,  5,  5,  5,  5,  5,  5,  5,
+  5, 10, 10, 10, 10, 10, 10,  5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0
 };
 
-static inline constexpr int queen_postion_value_table[64] = {
+static inline constexpr int mg_queen_pst[64] = {
 -20,-10,-10, -5, -5,-10,-10,-20,
 -10,  0,  0,  0,  0,  0,  0,-10,
 -10,  0,  5,  5,  5,  5,  0,-10,
@@ -81,16 +153,44 @@ static inline constexpr int queen_postion_value_table[64] = {
 -20,-10,-10, -5, -5,-10,-10,-20
 };
 
-static inline constexpr int king_postion_value_table[64] = {
-  0,  0,  0,  0,  0,  0,  0,  0,
-  0,  0,  5,  5,  5,  5,  0,  0,
-  0,  5,  5, 10, 10,  5,  5,  0,
-  0,  5, 10, 20, 20, 10,  5,  0,
-  0,  5, 10, 20, 20, 10,  5,  0,
-  0,  0,  5, 10, 10,  5,  0,  0,
-  0,  5,  5, -5, -5,  0,  5,  0,
-  0,  0,  5,  0,-15,  0, 10,  0
+static inline constexpr int eg_queen_pst[64] = {
+-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5,  5,  5,  5,  0,-10,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+-10,  5,  5,  5,  5,  5,  0,-10,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20
 };
+
+// King PSTs: MG prefers a castled position, EG prefers centralizing.
+static inline constexpr int mg_king_pst[64] = {
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-20,-30,-30,-40,-40,-30,-30,-20,
+-10,-20,-20,-20,-20,-20,-20,-10,
+ 20, 20,  0,  0,  0,  0, 20, 20,
+ 20, 30, 10,  0,  0, 10, 30, 20
+};
+
+static inline constexpr int eg_king_pst[64] = {
+-50,-40,-30,-20,-20,-30,-40,-50,
+-30,-20,-10,  0,  0,-10,-20,-30,
+-30,-10, 20, 30, 30, 20,-10,-30,
+-30,-10, 30, 40, 40, 30,-10,-30,
+-30,-10, 30, 40, 40, 30,-10,-30,
+-30,-10, 20, 30, 30, 20,-10,-30,
+-30,-30,  0,  0,  0,  0,-30,-30,
+-50,-30,-30,-30,-30,-30,-30,-50
+};
+
+// Passed pawn bonus by rank (0=starting rank, 7=promotion rank).
+// EG bonuses are much larger since the pawn is much closer to queening.
+static inline constexpr int mg_passed_pawn_bonus[8] = {  0,  5, 10, 20, 35,  60, 100, 200 };
+static inline constexpr int eg_passed_pawn_bonus[8] = {  0, 10, 25, 50, 75, 100, 150, 200 };
 
 static inline constexpr int black_indexes[64] = {
   a1, b1, c1, d1, e1, f1, g1, h1,
@@ -133,177 +233,211 @@ static inline constexpr int mvv_lva[12][12] = {
  {100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600}
 };
 
-static inline constexpr int passed_pawn_bonus[8] = { 0, 10, 30, 50, 75, 100, 150, 200 };
-
 // clang-format on
-
-
-inline int double_pawns_score(bb_t board, index_t index)
-{
-  const int num_of_pawns_on_file = count_bits(board & file_masks[index]);
-  return (num_of_pawns_on_file > 1) ? DOUBLE_PAWN_PENALTY : 0;
-}
 
 
 int evaluate(const bb_tables_t* tables, const board_t* board)
 {
   assert(board != nullptr);
 
-  // TODO:
-  // Connected rook bonus
+  // TODO: Connected rook bonus
 
-  int evaluation = 0;
+  int mg_score = 0;
+  int eg_score = 0;
+  int phase    = 0;
 
   for (int piece = W_PAWN; piece <= B_KING; ++piece) {
     bb_t current_board = board->bitboards[piece];
 
     while (current_board) {
       const index_t index = get_lsb_index(current_board);
+
       switch (piece) {
-          // ################################# WHITE PIECES
+        // ################################# WHITE PIECES
         case W_PAWN:
-          evaluation += VALUE_PAWN;
-          evaluation += pawn_postion_value_table[index];
+          mg_score += MG_PAWN + mg_pawn_pst[index];
+          eg_score += EG_PAWN + eg_pawn_pst[index];
+
           // Doubled pawns
-          evaluation += double_pawns_score(board->bitboards[W_PAWN], index);
+          if (count_bits(board->bitboards[W_PAWN] & file_masks[index]) > 1) {
+            mg_score += MG_DOUBLE_PAWN_PENALTY;
+            eg_score += EG_DOUBLE_PAWN_PENALTY;
+          }
 
           // Isolated pawns
           if ((board->bitboards[W_PAWN] & isolated_file_masks[index]) == 0) {
-            evaluation += ISOLATED_PAWN_PENALTY;
+            mg_score += MG_ISOLATED_PAWN_PENALTY;
+            eg_score += EG_ISOLATED_PAWN_PENALTY;
           }
 
           // Passed pawn
           if ((passed_w_pawns_masks[index] & board->bitboards[B_PAWN]) == 0) {
             const uint8_t rank = 7 - (index / 8);
             assert(rank < 8);
-            evaluation += passed_pawn_bonus[rank];
+            mg_score += mg_passed_pawn_bonus[rank];
+            eg_score += eg_passed_pawn_bonus[rank];
           }
 
           break;
+
         case W_KNIGHT:
-          evaluation += VALUE_KNIGHT;
-          evaluation += knight_postion_value_table[index];
+          mg_score += MG_KNIGHT + mg_knight_pst[index];
+          eg_score += EG_KNIGHT + eg_knight_pst[index];
+          phase += PHASE_KNIGHT;
           break;
+
         case W_BISHOP:
-          evaluation += VALUE_BISHOP;
-          evaluation += bishop_postion_value_table[index];
-
-          // Mobility
-          evaluation += count_bits(
-              get_bishop_attacks(tables, index, board->occupancies[BOTH]));
+          mg_score += MG_BISHOP + mg_bishop_pst[index];
+          eg_score += EG_BISHOP + eg_bishop_pst[index];
+          phase += PHASE_BISHOP;
+          {
+            const int mobility = count_bits(
+                get_bishop_attacks(tables, index, board->occupancies[BOTH]));
+            mg_score += mobility;
+            eg_score += mobility;
+          }
           break;
+
         case W_ROOK:
-          evaluation += VALUE_ROOK;
-          evaluation += rook_postion_value_table[index];
+          mg_score += MG_ROOK + mg_rook_pst[index];
+          eg_score += EG_ROOK + eg_rook_pst[index];
+          phase += PHASE_ROOK;
 
-          // Open and semi open file bonus
           if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
-            evaluation += SEMI_OPEN_FILE_BONUS;
+            mg_score += MG_SEMI_OPEN_FILE_BONUS;
+            eg_score += EG_SEMI_OPEN_FILE_BONUS;
           }
-
           if (((board->bitboards[W_PAWN] | board->bitboards[B_PAWN]) &
                file_masks[index]) == 0) {
-            evaluation += OPEN_FILE_BONUS;
+            mg_score += MG_OPEN_FILE_BONUS;
+            eg_score += EG_OPEN_FILE_BONUS;
           }
-
           break;
+
         case W_QUEEN:
-          evaluation += VALUE_QUEEN;
-          evaluation += queen_postion_value_table[index];
-          evaluation += count_bits(
-              get_queen_attacks(tables, index, board->occupancies[BOTH]));
-          break;
-        case W_KING:
-          evaluation += VALUE_KING;
-          evaluation += king_postion_value_table[index];
-
-          // Open and semi open file penalty
-          if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
-            evaluation -= SEMI_OPEN_FILE_BONUS;
+          mg_score += MG_QUEEN + mg_queen_pst[index];
+          eg_score += EG_QUEEN + eg_queen_pst[index];
+          phase += PHASE_QUEEN;
+          {
+            const int mobility = count_bits(
+                get_queen_attacks(tables, index, board->occupancies[BOTH]));
+            mg_score += mobility;
+            eg_score += mobility;
           }
+          break;
 
+        case W_KING:
+          mg_score += VALUE_KING + mg_king_pst[index];
+          eg_score += VALUE_KING + eg_king_pst[index];
+
+          if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
+            mg_score -= MG_SEMI_OPEN_FILE_BONUS;
+            eg_score -= EG_SEMI_OPEN_FILE_BONUS;
+          }
           if (((board->bitboards[W_PAWN] | board->bitboards[B_PAWN]) &
                file_masks[index]) == 0) {
-            evaluation -= OPEN_FILE_BONUS;
+            mg_score -= MG_OPEN_FILE_BONUS;
+            eg_score -= EG_OPEN_FILE_BONUS;
           }
 
-          // King safety bonus
-          evaluation += count_bits(tables->king_attacks[index] &
-                                   board->occupancies[WHITE]) *
-                        KING_SHIELD_BONUS;
-
+          // King shield only matters in the middlegame
+          mg_score += count_bits(tables->king_attacks[index] &
+                                 board->occupancies[WHITE]) *
+                      MG_KING_SHIELD_BONUS;
           break;
+
         // ################################# BLACK PIECES
         case B_PAWN:
-          evaluation -= VALUE_PAWN;
-          evaluation -= pawn_postion_value_table[black_indexes[index]];
+          mg_score -= MG_PAWN + mg_pawn_pst[black_indexes[index]];
+          eg_score -= EG_PAWN + eg_pawn_pst[black_indexes[index]];
+
           // Doubled pawns
-          evaluation -= double_pawns_score(board->bitboards[B_PAWN], index);
+          if (count_bits(board->bitboards[B_PAWN] & file_masks[index]) > 1) {
+            mg_score -= MG_DOUBLE_PAWN_PENALTY;
+            eg_score -= EG_DOUBLE_PAWN_PENALTY;
+          }
 
           // Isolated pawns
           if ((board->bitboards[B_PAWN] & isolated_file_masks[index]) == 0) {
-            evaluation -= ISOLATED_PAWN_PENALTY;
+            mg_score -= MG_ISOLATED_PAWN_PENALTY;
+            eg_score -= EG_ISOLATED_PAWN_PENALTY;
           }
 
-          // Passed pawn bonus
+          // Passed pawn
           if ((passed_b_pawns_masks[index] & board->bitboards[W_PAWN]) == 0) {
             const uint8_t rank = index / 8;
             assert(rank < 8);
-            evaluation -= passed_pawn_bonus[rank];
+            mg_score -= mg_passed_pawn_bonus[rank];
+            eg_score -= eg_passed_pawn_bonus[rank];
           }
           break;
+
         case B_KNIGHT:
-          evaluation -= VALUE_KNIGHT;
-          evaluation -= knight_postion_value_table[black_indexes[index]];
+          mg_score -= MG_KNIGHT + mg_knight_pst[black_indexes[index]];
+          eg_score -= EG_KNIGHT + eg_knight_pst[black_indexes[index]];
+          phase += PHASE_KNIGHT;
           break;
+
         case B_BISHOP:
-          evaluation -= VALUE_BISHOP;
-          evaluation -= bishop_postion_value_table[black_indexes[index]];
-
-          // Mobility
-          evaluation -= count_bits(
-              get_bishop_attacks(tables, index, board->occupancies[BOTH]));
+          mg_score -= MG_BISHOP + mg_bishop_pst[black_indexes[index]];
+          eg_score -= EG_BISHOP + eg_bishop_pst[black_indexes[index]];
+          phase += PHASE_BISHOP;
+          {
+            const int mobility = count_bits(
+                get_bishop_attacks(tables, index, board->occupancies[BOTH]));
+            mg_score -= mobility;
+            eg_score -= mobility;
+          }
           break;
+
         case B_ROOK:
-          evaluation -= VALUE_ROOK;
-          evaluation -= rook_postion_value_table[black_indexes[index]];
+          mg_score -= MG_ROOK + mg_rook_pst[black_indexes[index]];
+          eg_score -= EG_ROOK + eg_rook_pst[black_indexes[index]];
+          phase += PHASE_ROOK;
 
-          // Open and semi open file bonus
           if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
-            evaluation -= SEMI_OPEN_FILE_BONUS;
+            mg_score -= MG_SEMI_OPEN_FILE_BONUS;
+            eg_score -= EG_SEMI_OPEN_FILE_BONUS;
           }
-
           if (((board->bitboards[B_PAWN] | board->bitboards[W_PAWN]) &
                file_masks[index]) == 0) {
-            evaluation -= OPEN_FILE_BONUS;
+            mg_score -= MG_OPEN_FILE_BONUS;
+            eg_score -= EG_OPEN_FILE_BONUS;
           }
-
           break;
+
         case B_QUEEN:
-          evaluation -= VALUE_QUEEN;
-          evaluation -= queen_postion_value_table[black_indexes[index]];
-          evaluation -= count_bits(
-              get_queen_attacks(tables, index, board->occupancies[BOTH]));
-          break;
-        case B_KING:
-          evaluation -= VALUE_KING;
-          evaluation -= king_postion_value_table[black_indexes[index]];
-
-          // Open and semi open file penalty
-          if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
-            evaluation += SEMI_OPEN_FILE_BONUS;
+          mg_score -= MG_QUEEN + mg_queen_pst[black_indexes[index]];
+          eg_score -= EG_QUEEN + eg_queen_pst[black_indexes[index]];
+          phase += PHASE_QUEEN;
+          {
+            const int mobility = count_bits(
+                get_queen_attacks(tables, index, board->occupancies[BOTH]));
+            mg_score -= mobility;
+            eg_score -= mobility;
           }
+          break;
 
+        case B_KING:
+          mg_score -= VALUE_KING + mg_king_pst[black_indexes[index]];
+          eg_score -= VALUE_KING + eg_king_pst[black_indexes[index]];
+
+          if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
+            mg_score += MG_SEMI_OPEN_FILE_BONUS;
+            eg_score += EG_SEMI_OPEN_FILE_BONUS;
+          }
           if (((board->bitboards[B_PAWN] | board->bitboards[W_PAWN]) &
                file_masks[index]) == 0) {
-            evaluation += OPEN_FILE_BONUS;
+            mg_score += MG_OPEN_FILE_BONUS;
+            eg_score += EG_OPEN_FILE_BONUS;
           }
 
-          // King safety bonus
-          evaluation -= count_bits(tables->king_attacks[index] &
-                                   board->occupancies[BLACK]) *
-                        KING_SHIELD_BONUS;
+          // King shield only matters in the middlegame
+          mg_score -= count_bits(tables->king_attacks[index] &
+                                 board->occupancies[BLACK]) *
+                      MG_KING_SHIELD_BONUS;
           break;
+
         case EMPTY:
         default:
           assert(false);
@@ -314,7 +448,10 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
     }
   }
 
-  return evaluation;
+  // Interpolate between MG and EG scores based on remaining material.
+  // phase=PHASE_MAX means full MG, phase=0 means pure EG.
+  if (phase > PHASE_MAX) phase = PHASE_MAX;
+  return (mg_score * phase + eg_score * (PHASE_MAX - phase)) / PHASE_MAX;
 }
 
 
@@ -324,13 +461,6 @@ int evaluate_move(const board_t* board,
                   size_t ply)
 {
   assert(state != nullptr);
-
-  // const tt_entry_t* tt_entry = tt_get_entry(state->tt, board);
-  // if (ply > 0 && tt_entry != nullptr) {
-  //   if (tt_entry->type == TT_PV_NODE && tt_entry->best_move == move) {
-  //     return 1000000;
-  //   }
-  // }
 
   // Promotions (checked before captures so capture-promotions get both bonuses)
   if (MOVE_PROMOTED(move) != TO_NONE) {
@@ -443,7 +573,7 @@ void order_captures(const board_t* board, move_t moves[], size_t moves_size)
 
       assert(attacker != EMPTY);
 
-      // here e assume en-passant capture and set to pawn
+      // here we assume en-passant capture and set to pawn
       if (victim == EMPTY) {
         // Here we don't care about color
         victim = W_PAWN;
@@ -474,23 +604,23 @@ void order_captures(const board_t* board, move_t moves[], size_t moves_size)
 }
 
 
-int get_max_gain() { return VALUE_QUEEN; }
+int get_max_gain() { return MG_QUEEN; }
 
-int get_margin_value() { return VALUE_PAWN; }
+int get_margin_value() { return MG_PAWN; }
 
 int get_piece_value(piece_t piece)
 {
   switch (piece) {
-    case W_PAWN:   case B_PAWN:   return VALUE_PAWN;
-    case W_KNIGHT: case B_KNIGHT: return VALUE_KNIGHT;
-    case W_BISHOP: case B_BISHOP: return VALUE_BISHOP;
-    case W_ROOK:   case B_ROOK:   return VALUE_ROOK;
-    case W_QUEEN:  case B_QUEEN:  return VALUE_QUEEN;
+    case W_PAWN:   case B_PAWN:   return MG_PAWN;
+    case W_KNIGHT: case B_KNIGHT: return MG_KNIGHT;
+    case W_BISHOP: case B_BISHOP: return MG_BISHOP;
+    case W_ROOK:   case B_ROOK:   return MG_ROOK;
+    case W_QUEEN:  case B_QUEEN:  return MG_QUEEN;
     case W_KING:   case B_KING:   return VALUE_KING;
     default:                      return 0;
   }
 }
 
-int get_futility_margin()         { return VALUE_ROOK; }
-int get_reverse_futility_margin() { return VALUE_PAWN + 20; }
+int get_futility_margin()         { return MG_ROOK; }
+int get_reverse_futility_margin() { return MG_PAWN + 20; }
 int get_delta_margin()            { return 200; }
