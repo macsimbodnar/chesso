@@ -43,6 +43,16 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
+// Passed pawn enhancements
+#define PASSED_KING_SUPPORT_WEIGHT   3   // EG: own king close to passer (per distance unit)
+#define PASSED_KING_BLOCK_WEIGHT     4   // EG: enemy king close to passer (per distance unit)
+#define PASSED_ROOK_BEHIND_MG       15   // rook behind own passer
+#define PASSED_ROOK_BEHIND_EG       20
+#define PASSED_ROOK_ENEMY_MG        15   // enemy rook behind our passer
+#define PASSED_ROOK_ENEMY_EG        20
+#define PASSED_SUPPORTED_MG         10   // passer defended by own pawn
+#define PASSED_SUPPORTED_EG         15
+
 // King safety pawn shield penalties (MG only)
 #define SHIELD_MISSING_PAWN     -20   // no friendly pawn on shield file
 #define SHIELD_PUSHED_PAWN      -10   // pawn pushed to rank 3/6 instead of 2/7
@@ -256,11 +266,24 @@ static inline constexpr int mvv_lva[12][12] = {
 // clang-format on
 
 
+static inline int chebyshev_dist(index_t a, index_t b)
+{
+  const int dr = (a / 8) - (b / 8);
+  const int df = (a % 8) - (b % 8);
+  return (dr < 0 ? -dr : dr) > (df < 0 ? -df : df)
+             ? (dr < 0 ? -dr : dr)
+             : (df < 0 ? -df : df);
+}
+
+
 int evaluate(const bb_tables_t* tables, const board_t* board)
 {
   assert(board != nullptr);
 
   // TODO: Connected rook bonus
+
+  const index_t w_king_sq = get_lsb_index(board->bitboards[W_KING]);
+  const index_t b_king_sq = get_lsb_index(board->bitboards[B_KING]);
 
   int mg_score = 0;
   int eg_score = 0;
@@ -296,6 +319,28 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             assert(rank < 8);
             mg_score += mg_passed_pawn_bonus[rank];
             eg_score += eg_passed_pawn_bonus[rank];
+
+            // King proximity (EG only): own king close = good, enemy king close = bad
+            eg_score += (7 - chebyshev_dist(index, w_king_sq)) * PASSED_KING_SUPPORT_WEIGHT;
+            eg_score -= (7 - chebyshev_dist(index, b_king_sq)) * PASSED_KING_BLOCK_WEIGHT;
+
+            // Rook behind passer (Tarrasch rule): squares on same file behind the pawn
+            // "behind" for white = toward rank 1 = higher index numbers
+            const bb_t behind = file_masks[index] & ~((BB_1 << (index + 1)) - 1);
+            if (board->bitboards[W_ROOK] & behind) {
+              mg_score += PASSED_ROOK_BEHIND_MG;
+              eg_score += PASSED_ROOK_BEHIND_EG;
+            }
+            if (board->bitboards[B_ROOK] & behind) {
+              mg_score -= PASSED_ROOK_ENEMY_MG;
+              eg_score -= PASSED_ROOK_ENEMY_EG;
+            }
+
+            // Supported passer: defended by another white pawn
+            if (board->bitboards[W_PAWN] & tables->pawn_attacks[BLACK][index]) {
+              mg_score += PASSED_SUPPORTED_MG;
+              eg_score += PASSED_SUPPORTED_EG;
+            }
           }
 
           break;
@@ -453,6 +498,27 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             assert(rank < 8);
             mg_score -= mg_passed_pawn_bonus[rank];
             eg_score -= eg_passed_pawn_bonus[rank];
+
+            // King proximity (EG only)
+            eg_score -= (7 - chebyshev_dist(index, b_king_sq)) * PASSED_KING_SUPPORT_WEIGHT;
+            eg_score += (7 - chebyshev_dist(index, w_king_sq)) * PASSED_KING_BLOCK_WEIGHT;
+
+            // Rook behind passer: "behind" for black = toward rank 8 = lower index numbers
+            const bb_t behind = file_masks[index] & ((BB_1 << index) - 1);
+            if (board->bitboards[B_ROOK] & behind) {
+              mg_score -= PASSED_ROOK_BEHIND_MG;
+              eg_score -= PASSED_ROOK_BEHIND_EG;
+            }
+            if (board->bitboards[W_ROOK] & behind) {
+              mg_score += PASSED_ROOK_ENEMY_MG;
+              eg_score += PASSED_ROOK_ENEMY_EG;
+            }
+
+            // Supported passer: defended by another black pawn
+            if (board->bitboards[B_PAWN] & tables->pawn_attacks[WHITE][index]) {
+              mg_score -= PASSED_SUPPORTED_MG;
+              eg_score -= PASSED_SUPPORTED_EG;
+            }
           }
           break;
 
