@@ -43,6 +43,13 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
+// Rook on 7th rank (2nd for black): strong bonus, even more when enemy king
+// is trapped on the back rank.
+#define MG_ROOK_ON_7TH          20
+#define EG_ROOK_ON_7TH          30
+#define MG_ROOK_ON_7TH_KING     10   // extra bonus when enemy king is on back rank
+#define EG_ROOK_ON_7TH_KING     15
+
 // Knight outpost: defended by own pawn, no enemy pawn can ever reach an
 // adjacent file to attack it. Strong in MG, less relevant in EG.
 #define MG_OUTPOST_BONUS   20
@@ -410,6 +417,16 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             eg_score += mobility * EG_ROOK_MOBILITY;
           }
 
+          // Rook on 7th rank (indices 8-15)
+          if (index >= 8 && index <= 15) {
+            mg_score += MG_ROOK_ON_7TH;
+            eg_score += EG_ROOK_ON_7TH;
+            if (b_king_sq <= 7) {  // black king on rank 8
+              mg_score += MG_ROOK_ON_7TH_KING;
+              eg_score += EG_ROOK_ON_7TH_KING;
+            }
+          }
+
           if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
             mg_score += MG_SEMI_OPEN_FILE_BONUS;
             eg_score += EG_SEMI_OPEN_FILE_BONUS;
@@ -604,6 +621,16 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
                 ~board->occupancies[BLACK]);
             mg_score -= mobility * MG_ROOK_MOBILITY;
             eg_score -= mobility * EG_ROOK_MOBILITY;
+          }
+
+          // Rook on 2nd rank (indices 48-55)
+          if (index >= 48 && index <= 55) {
+            mg_score -= MG_ROOK_ON_7TH;
+            eg_score -= EG_ROOK_ON_7TH;
+            if (w_king_sq >= 56) {  // white king on rank 1
+              mg_score -= MG_ROOK_ON_7TH_KING;
+              eg_score -= EG_ROOK_ON_7TH_KING;
+            }
           }
 
           if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
