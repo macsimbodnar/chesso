@@ -46,6 +46,16 @@
 // King shield: only relevant in the middlegame
 #define MG_KING_SHIELD_BONUS      10
 
+// Bishop pair bonus: two bishops are worth more than a bishop + knight in open positions
+#define MG_BISHOP_PAIR_BONUS      40
+#define EG_BISHOP_PAIR_BONUS      60
+
+// Mobility bonuses (per reachable square, excluding own pieces)
+#define MG_KNIGHT_MOBILITY         4
+#define EG_KNIGHT_MOBILITY         4
+#define MG_ROOK_MOBILITY           2
+#define EG_ROOK_MOBILITY           3
+
 
 // Piece-square tables (PSTs) indexed a8(0) to h1(63), white's perspective.
 // Black pieces use black_indexes[] to mirror the table.
@@ -284,6 +294,12 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           mg_score += MG_KNIGHT + mg_knight_pst[index];
           eg_score += EG_KNIGHT + eg_knight_pst[index];
           phase += PHASE_KNIGHT;
+          {
+            const int mobility = count_bits(
+                tables->knight_attacks[index] & ~board->occupancies[WHITE]);
+            mg_score += mobility * MG_KNIGHT_MOBILITY;
+            eg_score += mobility * EG_KNIGHT_MOBILITY;
+          }
           break;
 
         case W_BISHOP:
@@ -302,6 +318,13 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           mg_score += MG_ROOK + mg_rook_pst[index];
           eg_score += EG_ROOK + eg_rook_pst[index];
           phase += PHASE_ROOK;
+          {
+            const int mobility = count_bits(
+                get_rook_attacks(tables, index, board->occupancies[BOTH]) &
+                ~board->occupancies[WHITE]);
+            mg_score += mobility * MG_ROOK_MOBILITY;
+            eg_score += mobility * EG_ROOK_MOBILITY;
+          }
 
           if ((board->bitboards[W_PAWN] & file_masks[index]) == 0) {
             mg_score += MG_SEMI_OPEN_FILE_BONUS;
@@ -376,6 +399,12 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           mg_score -= MG_KNIGHT + mg_knight_pst[black_indexes[index]];
           eg_score -= EG_KNIGHT + eg_knight_pst[black_indexes[index]];
           phase += PHASE_KNIGHT;
+          {
+            const int mobility = count_bits(
+                tables->knight_attacks[index] & ~board->occupancies[BLACK]);
+            mg_score -= mobility * MG_KNIGHT_MOBILITY;
+            eg_score -= mobility * EG_KNIGHT_MOBILITY;
+          }
           break;
 
         case B_BISHOP:
@@ -394,6 +423,13 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
           mg_score -= MG_ROOK + mg_rook_pst[black_indexes[index]];
           eg_score -= EG_ROOK + eg_rook_pst[black_indexes[index]];
           phase += PHASE_ROOK;
+          {
+            const int mobility = count_bits(
+                get_rook_attacks(tables, index, board->occupancies[BOTH]) &
+                ~board->occupancies[BLACK]);
+            mg_score -= mobility * MG_ROOK_MOBILITY;
+            eg_score -= mobility * EG_ROOK_MOBILITY;
+          }
 
           if ((board->bitboards[B_PAWN] & file_masks[index]) == 0) {
             mg_score -= MG_SEMI_OPEN_FILE_BONUS;
@@ -446,6 +482,16 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
 
       POP_BIT(current_board, index);
     }
+  }
+
+  // Bishop pair bonus
+  if (count_bits(board->bitboards[W_BISHOP]) >= 2) {
+    mg_score += MG_BISHOP_PAIR_BONUS;
+    eg_score += EG_BISHOP_PAIR_BONUS;
+  }
+  if (count_bits(board->bitboards[B_BISHOP]) >= 2) {
+    mg_score -= MG_BISHOP_PAIR_BONUS;
+    eg_score -= EG_BISHOP_PAIR_BONUS;
   }
 
   // Interpolate between MG and EG scores based on remaining material.
