@@ -23,7 +23,8 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
-#define FUTILITY_MARGIN 500  // ~rook value
+#define FUTILITY_MARGIN 500        // ~rook value
+#define REVERSE_FUTILITY_MARGIN 120  // ~pawn value per depth
 
 
 inline int normalize_score(int score, int ply)
@@ -132,6 +133,17 @@ int negamax(int alpha0,
   state->explored_nodes += 1;
   node_type_t type = TT_ALPHA_NODE;
   state->pv_length[ply] = 0;
+
+  // Reverse futility pruning (static null move):
+  // If static eval beats beta by a depth-scaled margin, the position is
+  // already so good for us that we can prune without searching.
+  if (depth <= 3 && !is_in_check && ply > 0) {
+    const int static_eval = (game->board.active_color == WHITE ? 1 : -1) *
+                            evaluate(&game->tables, &game->board);
+    if (static_eval - REVERSE_FUTILITY_MARGIN * depth >= beta) {
+      return static_eval;
+    }
+  }
 
   // Null move pruning:
   // Give the opponent a free move and see if they can still
