@@ -24,8 +24,16 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
-#define FUTILITY_MARGIN 500        // ~rook value
+#define FUTILITY_MARGIN 500          // ~rook value
 #define REVERSE_FUTILITY_MARGIN 120  // ~pawn value per depth
+#define DELTA_MARGIN 200             // safety margin for delta pruning
+
+// Mirror of piece values from evaluation.cpp, used for delta pruning.
+static constexpr int PIECE_VALUES[13] = {
+  100, 300, 350, 500, 1000, 10000,  // W_PAWN..W_KING
+  100, 300, 350, 500, 1000, 10000,  // B_PAWN..B_KING
+  0                                  // EMPTY
+};
 
 
 inline int normalize_score(int score, int ply)
@@ -71,6 +79,13 @@ int quiescence(int alpha,
 
   for (size_t i = 0; i < n; ++i) {
     if (!MOVE_CAPTURE(moves[i])) { continue; }
+
+    // Delta pruning: if stand_pat + captured piece value + margin still can't
+    // reach alpha, this capture has no hope of improving our position.
+    piece_t victim = get_piece(&game->board, MOVE_TO(moves[i]));
+    if (victim == EMPTY) victim = W_PAWN;  // en-passant
+    if (stand_pat + PIECE_VALUES[victim] + DELTA_MARGIN < alpha) { continue; }
+
     if (!make_move(game, moves[i])) { continue; }
 
     const int s = -quiescence(-beta, -alpha, ply + 1, game, state);
