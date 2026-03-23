@@ -140,11 +140,8 @@ static inline constexpr int passed_pawn_bonus[8] = { 0, 10, 30, 50, 75, 100, 150
 
 inline int double_pawns_score(bb_t board, index_t index)
 {
-  const int num_of_doubled_pawns = count_bits(board & file_masks[index]);
-  const int result = (num_of_doubled_pawns > 1)
-                         ? num_of_doubled_pawns * DOUBLE_PAWN_PENALTY
-                         : 0;
-  return result;
+  const int num_of_pawns_on_file = count_bits(board & file_masks[index]);
+  return (num_of_pawns_on_file > 1) ? DOUBLE_PAWN_PENALTY : 0;
 }
 
 

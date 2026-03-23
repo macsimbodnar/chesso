@@ -215,7 +215,8 @@ size_t generate_moves(const bb_tables_t* tables,
               !GET_BIT(board->occupancies[BOTH], g1)) {
             // Check if squares are not attacked
             if (!is_attacked(tables, board, e1, BLACK) &&
-                !is_attacked(tables, board, f1, BLACK)) {
+                !is_attacked(tables, board, f1, BLACK) &&
+                !is_attacked(tables, board, g1, BLACK)) {
               moves[move_count++] = NEW_MOVE(e1, g1, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -229,7 +230,8 @@ size_t generate_moves(const bb_tables_t* tables,
               !GET_BIT(board->occupancies[BOTH], b1)) {
             // Check if squares are not attacked
             if (!is_attacked(tables, board, e1, BLACK) &&
-                !is_attacked(tables, board, d1, BLACK)) {
+                !is_attacked(tables, board, d1, BLACK) &&
+                !is_attacked(tables, board, c1, BLACK)) {
               moves[move_count++] = NEW_MOVE(e1, c1, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -318,7 +320,8 @@ size_t generate_moves(const bb_tables_t* tables,
               !GET_BIT(board->occupancies[BOTH], g8)) {
             // Check if squares are not attacked
             if (!is_attacked(tables, board, e8, WHITE) &&
-                !is_attacked(tables, board, f8, WHITE)) {
+                !is_attacked(tables, board, f8, WHITE) &&
+                !is_attacked(tables, board, g8, WHITE)) {
               moves[move_count++] = NEW_MOVE(e8, g8, piece, 0, 0, 0, 0, 1);
             }
           }
@@ -331,8 +334,10 @@ size_t generate_moves(const bb_tables_t* tables,
               !GET_BIT(board->occupancies[BOTH], b8)) {
             // Check if squares are not attacked
             if (!is_attacked(tables, board, e8, WHITE) &&
-                !is_attacked(tables, board, d8, WHITE))
+                !is_attacked(tables, board, d8, WHITE) &&
+                !is_attacked(tables, board, c8, WHITE)) {
               moves[move_count++] = NEW_MOVE(e8, c8, piece, 0, 0, 0, 0, 1);
+            }
           }
         }
       }
@@ -557,10 +562,6 @@ bool make_move(game_t* game, move_t encoded_move)
   }
 
   if (move.en_passant) {
-    (board->active_color == WHITE)
-        ? POP_BIT(board->bitboards[B_PAWN], move.to + 8)
-        : POP_BIT(board->bitboards[W_PAWN], move.to - 8);
-
     if (board->active_color == WHITE) {
       POP_BIT(board->bitboards[B_PAWN], move.to + 8);
       board->hash ^= randoms->piece_randoms[B_PAWN][move.to + 8];
