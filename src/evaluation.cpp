@@ -474,13 +474,23 @@ void order_captures(const board_t* board, move_t moves[], size_t moves_size)
 }
 
 
-int get_max_gain()
+int get_max_gain() { return VALUE_QUEEN; }
+
+int get_margin_value() { return VALUE_PAWN; }
+
+int get_piece_value(piece_t piece)
 {
-  return VALUE_QUEEN;
+  switch (piece) {
+    case W_PAWN:   case B_PAWN:   return VALUE_PAWN;
+    case W_KNIGHT: case B_KNIGHT: return VALUE_KNIGHT;
+    case W_BISHOP: case B_BISHOP: return VALUE_BISHOP;
+    case W_ROOK:   case B_ROOK:   return VALUE_ROOK;
+    case W_QUEEN:  case B_QUEEN:  return VALUE_QUEEN;
+    case W_KING:   case B_KING:   return VALUE_KING;
+    default:                      return 0;
+  }
 }
 
-
-int get_margin_value()
-{
-  return VALUE_PAWN;
-}
+int get_futility_margin()         { return VALUE_ROOK; }
+int get_reverse_futility_margin() { return VALUE_PAWN + 20; }
+int get_delta_margin()            { return 200; }

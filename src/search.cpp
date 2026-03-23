@@ -24,16 +24,6 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
-#define FUTILITY_MARGIN 500          // ~rook value
-#define REVERSE_FUTILITY_MARGIN 120  // ~pawn value per depth
-#define DELTA_MARGIN 200             // safety margin for delta pruning
-
-// Mirror of piece values from evaluation.cpp, used for delta pruning.
-static constexpr int PIECE_VALUES[13] = {
-  100, 300, 350, 500, 1000, 10000,  // W_PAWN..W_KING
-  100, 300, 350, 500, 1000, 10000,  // B_PAWN..B_KING
-  0                                  // EMPTY
-};
 
 
 inline int normalize_score(int score, int ply)
@@ -84,7 +74,7 @@ int quiescence(int alpha,
     // reach alpha, this capture has no hope of improving our position.
     piece_t victim = get_piece(&game->board, MOVE_TO(moves[i]));
     if (victim == EMPTY) victim = W_PAWN;  // en-passant
-    if (stand_pat + PIECE_VALUES[victim] + DELTA_MARGIN < alpha) { continue; }
+    if (stand_pat + get_piece_value(victim) + get_delta_margin() < alpha) { continue; }
 
     if (!make_move(game, moves[i])) { continue; }
 
@@ -157,7 +147,7 @@ int negamax(int alpha0,
   if (depth <= 3 && !is_in_check && ply > 0) {
     const int static_eval = (game->board.active_color == WHITE ? 1 : -1) *
                             evaluate(&game->tables, &game->board);
-    if (static_eval - REVERSE_FUTILITY_MARGIN * depth >= beta) {
+    if (static_eval - get_reverse_futility_margin() * depth >= beta) {
       return static_eval;
     }
   }
@@ -203,7 +193,7 @@ int negamax(int alpha0,
   // even gaining a rook with the best quiet move can't reach it, skip quiet moves.
   const bool futility_prune = (depth == 1 && !is_in_check && ply > 0 &&
       ((game->board.active_color == WHITE ? 1 : -1) *
-       evaluate(&game->tables, &game->board)) + FUTILITY_MARGIN < alpha);
+       evaluate(&game->tables, &game->board)) + get_futility_margin() < alpha);
 
   move_t best_move = moves[0];
 
