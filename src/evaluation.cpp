@@ -43,8 +43,9 @@
 #define MG_OPEN_FILE_BONUS        15
 #define EG_OPEN_FILE_BONUS        10
 
-// King shield: only relevant in the middlegame
-#define MG_KING_SHIELD_BONUS      10
+// King safety pawn shield penalties (MG only)
+#define SHIELD_MISSING_PAWN     -20   // no friendly pawn on shield file
+#define SHIELD_PUSHED_PAWN      -10   // pawn pushed to rank 3/6 instead of 2/7
 
 // Bishop pair bonus: two bishops are worth more than a bishop + knight in open positions
 #define MG_BISHOP_PAIR_BONUS      40
@@ -195,6 +196,15 @@ static inline constexpr int eg_king_pst[64] = {
 -30,-10, 20, 30, 30, 20,-10,-30,
 -30,-30,  0,  0,  0,  0,-30,-30,
 -50,-30,-30,-30,-30,-30,-30,-50
+};
+
+// Non-linear king safety penalty table, indexed by total attack units.
+// Attack units: knight/bishop = 2, rook = 3, queen = 5.
+// The penalty rises slowly at first then steeply once multiple heavy pieces
+// are bearing down on the king zone.
+static inline constexpr int king_safety_table[20] = {
+   0,   0,   5,  15,  30,  50,  75, 110, 150, 200,
+ 260, 330, 400, 480, 500, 500, 500, 500, 500, 500
 };
 
 // Passed pawn bonus by rank (0=starting rank, 7=promotion rank).
@@ -363,10 +373,61 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             eg_score -= EG_OPEN_FILE_BONUS;
           }
 
-          // King shield only matters in the middlegame
-          mg_score += count_bits(tables->king_attacks[index] &
-                                 board->occupancies[WHITE]) *
-                      MG_KING_SHIELD_BONUS;
+          // King safety: count enemy piece attacks into the king zone
+          {
+            const bb_t king_zone = tables->king_attacks[index] | (BB_1 << index);
+            int attack_units = 0;
+
+            bb_t attackers = board->bitboards[B_KNIGHT];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (tables->knight_attacks[sq] & king_zone) attack_units += 2;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[B_BISHOP];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_bishop_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 2;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[B_ROOK];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_rook_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 3;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[B_QUEEN];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_queen_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 5;
+              POP_BIT(attackers, sq);
+            }
+
+            if (attack_units > 19) attack_units = 19;
+            mg_score -= king_safety_table[attack_units];
+          }
+
+          // Pawn shield: king on ranks 1-2 (row indices 7 and 6)
+          {
+            const int king_row  = index / 8;
+            const int king_file = index % 8;
+            if (king_row >= 6) {
+              const int f0 = (king_file > 0) ? king_file - 1 : 0;
+              const int f1 = (king_file < 7) ? king_file + 1 : 7;
+              for (int f = f0; f <= f1; ++f) {
+                const bb_t rank2 = BB_1 << (48 + f);
+                const bb_t rank3 = BB_1 << (40 + f);
+                if ((board->bitboards[W_PAWN] & (rank2 | rank3)) == 0) {
+                  mg_score += SHIELD_MISSING_PAWN;
+                } else if ((board->bitboards[W_PAWN] & rank2) == 0) {
+                  mg_score += SHIELD_PUSHED_PAWN;
+                }
+              }
+            }
+          }
           break;
 
         // ################################# BLACK PIECES
@@ -468,10 +529,61 @@ int evaluate(const bb_tables_t* tables, const board_t* board)
             eg_score += EG_OPEN_FILE_BONUS;
           }
 
-          // King shield only matters in the middlegame
-          mg_score -= count_bits(tables->king_attacks[index] &
-                                 board->occupancies[BLACK]) *
-                      MG_KING_SHIELD_BONUS;
+          // King safety: count enemy piece attacks into the king zone
+          {
+            const bb_t king_zone = tables->king_attacks[index] | (BB_1 << index);
+            int attack_units = 0;
+
+            bb_t attackers = board->bitboards[W_KNIGHT];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (tables->knight_attacks[sq] & king_zone) attack_units += 2;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[W_BISHOP];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_bishop_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 2;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[W_ROOK];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_rook_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 3;
+              POP_BIT(attackers, sq);
+            }
+            attackers = board->bitboards[W_QUEEN];
+            while (attackers) {
+              const index_t sq = get_lsb_index(attackers);
+              if (get_queen_attacks(tables, sq, board->occupancies[BOTH]) & king_zone)
+                attack_units += 5;
+              POP_BIT(attackers, sq);
+            }
+
+            if (attack_units > 19) attack_units = 19;
+            mg_score += king_safety_table[attack_units];
+          }
+
+          // Pawn shield: king on ranks 7-8 (row indices 0 and 1)
+          {
+            const int king_row  = index / 8;
+            const int king_file = index % 8;
+            if (king_row <= 1) {
+              const int f0 = (king_file > 0) ? king_file - 1 : 0;
+              const int f1 = (king_file < 7) ? king_file + 1 : 7;
+              for (int f = f0; f <= f1; ++f) {
+                const bb_t rank7 = BB_1 << (8  + f);
+                const bb_t rank6 = BB_1 << (16 + f);
+                if ((board->bitboards[B_PAWN] & (rank7 | rank6)) == 0) {
+                  mg_score -= SHIELD_MISSING_PAWN;
+                } else if ((board->bitboards[B_PAWN] & rank7) == 0) {
+                  mg_score -= SHIELD_PUSHED_PAWN;
+                }
+              }
+            }
+          }
           break;
 
         case EMPTY:
