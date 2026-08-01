@@ -1,21 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# fastchess -engine cmd=/home/max/ws/chesso/build/src/chesso name=chesso_experimental -engine cmd=/usr/games/chesso_v0.2.1 name=chesso_v0.2.1 -each tc=8+0.08 -rounds 15000 -repeat -concurrency 16 -recover -openings file=/home/max/ws/chesso/.no_git/8moves_v3.pgn format=pgn -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05
-# fastchess.exe -engine cmd=Engine1.exe name=Engine1 -engine cmd=Engine2.exe name=Engine2 -each tc=10+0.1 -rounds 200 -repeat -concurrency 4
+# NOTE: --fast will run the fast version.
 
-# fastchess --compliance /usr/games/chesso 
+# reference="/usr/games/chesso"
+reference="/home/max/ws/chesso/.no_git/chesso_bitboard_minimal_eval"
+candidate="/home/max/ws/chesso/build/src/chesso"
+book="/home/max/ws/chesso/.no_git/8moves_v3.pgn"
+tc="10+0.2"
+concurrency=12
 
+# adjudication cuts dead games, gets to a verdict faster
+adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"
+
+if [[ "${1:-}" == "--fast" ]]; then
+  # few hundred games
+  sprt="elo0=0 elo1=10 alpha=0.10 beta=0.10"
+  rounds=1500
+  logfile="/tmp/fastchess_fast.log"
+else
+  # SPRT will stop by it self
+  sprt="elo0=0 elo1=5 alpha=0.05 beta=0.05"
+  rounds=20000
+  logfile="/tmp/fastchess_full.log"
+fi
 
 fastchess \
-  -engine cmd=/usr/games/chesso_bitboard name=chesso_bitboard \
-  -engine cmd=./build/src/chesso name=chesso_candidate \
-  -openings file=/home/max/ws/chesso/.no_git/8moves_v3.pgn format=pgn \
-  -each tc=10+0.2 \
-  -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05 \
-  -rounds 200 \
+  -engine cmd="$candidate" name=candidate \
+  -engine cmd="$reference" name=reference \
+  -openings file="$book" format=pgn order=random \
+  -each tc="$tc" option.Hash=16 option.Threads=1 \
+  -sprt $sprt model=normalized \
+  $adjudication \
+  -rounds "$rounds" \
   -repeat \
-  -concurrency 12 \
-  -log engine=true file=/tmp/fastchess.log
-
-
-# fastchess -quick cmd=/usr/games/chesso_v0.3.0 cmd=/usr/games/chesso_v0.2.1 book=/home/max/ws/chesso/.no_git/8moves_v3.pgn
+  -concurrency "$concurrency" \
+  -log engine=true file="$logfile"
