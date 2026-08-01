@@ -1144,6 +1144,8 @@ int main()
 {
   LOG_I << "Engine started" << END_I;
 
+  init_tables();
+
   initialize_game_const_data(&game);
 
   // Print the engine info

@@ -24,6 +24,7 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
+#define MAX_QSEARCH_DEPTH 2
 
 
 inline int normalize_score(int score, int ply)
@@ -50,43 +51,42 @@ int quiescence(int alpha,
 {
   assert(game != nullptr);
 
-  const int stand_pat = ((game->board.active_color == WHITE) ? +1 : -1) *
-                        evaluate(&game->tables, &game->board);
+  int best_value =
+      ((game->board.active_color == WHITE) ? +1 : -1) * evaluate(&game->board);
 
   state->explored_nodes++;
 
-  if (stand_pat >= beta) { return beta; }
-  if (alpha < stand_pat) { alpha = stand_pat; }
+  if (best_value >= beta) { return best_value; }
+  if (best_value > alpha) { alpha = best_value; }
 
   // Time management
-  if ((state->explored_nodes % 1000 == 0) && *state->stop) { return stand_pat; }
-  if (ply > (MAX_PLY - 2)) { return stand_pat; }
+  if ((state->explored_nodes % 1000 == 0) && *state->stop) {
+    return best_value;
+  }
+
+  if (ply > (MAX_PLY - 2)) { return best_value; }
+  if (ply > MAX_QSEARCH_DEPTH) { return best_value; }
 
   move_t moves[MAX_MOVES];
   const size_t n = generate_moves(&game->tables, &game->board, moves);
 
-  order_captures(&game->board, moves, n);
+  // order_captures(&game->board, moves, n);
 
   for (size_t i = 0; i < n; ++i) {
     if (!MOVE_CAPTURE(moves[i])) { continue; }
 
-    // Delta pruning: if stand_pat + captured piece value + margin still can't
-    // reach alpha, this capture has no hope of improving our position.
-    piece_t victim = get_piece(&game->board, MOVE_TO(moves[i]));
-    if (victim == EMPTY) victim = W_PAWN;  // en-passant
-    if (stand_pat + get_piece_value(victim) + get_delta_margin() < alpha) { continue; }
-
     if (!make_move(game, moves[i])) { continue; }
 
-    const int s = -quiescence(-beta, -alpha, ply + 1, game, state);
+    const int score = -quiescence(-beta, -alpha, ply + 1, game, state);
 
     unmake_move(game);
 
-    if (s >= beta) return beta;
-    if (s > alpha) alpha = s;
+    if (score >= beta) { return score; }
+    if (score > best_value) { best_value = score; }
+    if (score > alpha) { alpha = score; }
   }
 
-  return alpha;
+  return best_value;
 }
 
 
@@ -125,119 +125,46 @@ int negamax(int alpha0,
 
   const bool is_in_check = is_check(game);
 
-  if (is_in_check) { ++depth; }
-
   // Time management
   if ((state->explored_nodes % 1000 == 0) && *state->stop) {
     return (game->board.active_color == WHITE ? 1 : -1) *
-           evaluate(&game->tables, &game->board);
+           evaluate(&game->board);
   }
 
-  if (depth < 1 || ply > (MAX_PLY - 2)) {
-    return quiescence(alpha, beta, ply, game, state);
-  }
+  // Quiescence search in leaves
+  // if (depth < 1 || ply > (MAX_PLY - 2)) {
+  //   return quiescence(alpha, beta, ply, game, state);
+  // }
+
 
   state->explored_nodes += 1;
   node_type_t type = TT_ALPHA_NODE;
   state->pv_length[ply] = 0;
 
-  // Reverse futility pruning (static null move):
-  // If static eval beats beta by a depth-scaled margin, the position is
-  // already so good for us that we can prune without searching.
-  if (depth <= 3 && !is_in_check && ply > 0) {
-    const int static_eval = (game->board.active_color == WHITE ? 1 : -1) *
-                            evaluate(&game->tables, &game->board);
-    if (static_eval - get_reverse_futility_margin() * depth >= beta) {
-      return static_eval;
-    }
-  }
-
-  // Null move pruning:
-  // Give the opponent a free move and see if they can still
-  // beat beta. If yes, the position is so good we can prune this branch.
-  // Skip when in check, at root, or with insufficient material (zugzwang risk).
-  if (!is_in_check && ply > 0 && depth >= NULL_MOVE_REDUCTION + 1) {
-    const bb_t side_pieces =
-        (game->board.active_color == WHITE)
-            ? (game->board.bitboards[W_KNIGHT] |
-               game->board.bitboards[W_BISHOP] | game->board.bitboards[W_ROOK] |
-               game->board.bitboards[W_QUEEN])
-            : (game->board.bitboards[B_KNIGHT] |
-               game->board.bitboards[B_BISHOP] | game->board.bitboards[B_ROOK] |
-               game->board.bitboards[B_QUEEN]);
-
-    if (side_pieces) {
-      const index_t saved_ep = game->board.en_passant;
-      set_en_passant(game, INVALID_INDEX);
-      swap_side(game);
-
-      const int null_score =
-          -negamax(-beta, -beta + 1, depth - 1 - NULL_MOVE_REDUCTION, ply + 1,
-                   game, state);
-
-      swap_side(game);
-      set_en_passant(game, saved_ep);
-
-      if (null_score >= beta) { return beta; }
-    }
+  // Terminal condition
+  if (depth == 0) {
+    return (game->board.active_color == WHITE ? 1 : -1) *
+           evaluate(&game->board);
   }
 
   int legal_moves_counter = 0;
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
-  state->node_prev_move[ply] = prev_move;
-  order_moves(&game->board, state, ply, moves_count, moves);
-
-  // Futility pruning: if at depth 1 the static eval is so far below alpha that
-  // even gaining a rook with the best quiet move can't reach it, skip quiet moves.
-  const bool futility_prune = (depth == 1 && !is_in_check && ply > 0 &&
-      ((game->board.active_color == WHITE ? 1 : -1) *
-       evaluate(&game->tables, &game->board)) + get_futility_margin() < alpha);
-
+  int score = 0;
   move_t best_move = moves[0];
 
   for (size_t i = 0; i < moves_count; ++i) {
-    if (futility_prune &&
-        !MOVE_CAPTURE(moves[i]) &&
-        MOVE_PROMOTED(moves[i]) == TO_NONE) { continue; }
-
     if (!make_move(game, moves[i])) { continue; }
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_check_move = is_check(game);
-
     legal_moves_counter++;
 
-    const bool do_lmr =
-        (i >= LMR_WHEN_START_IN_THE_LIST && depth >= LMR_START_AT_DEPTH &&
-         !is_in_check && !is_check_move && should_reduce_move(moves[i]));
-
-    int score;
-    if (legal_moves_counter == 1) {
-      // First legal move: always search with full window.
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
-    } else if (do_lmr) {
-      // LMR: logarithmic reduction — later moves and deeper searches are
-      // reduced more aggressively. Clamped so we always reduce by at least 1
-      // and never reduce to depth 0 (that falls into quiescence).
-      const int reduction = std::max(1, (int)(0.5 + std::log(depth) * std::log(i) / 2.0));
-      const int lmr_depth = std::max(1, depth - 1 - reduction);
-      score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, game, state, moves[i]);
-      if (score > alpha) {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
-      }
-    } else {
-      // PVS: probe with null window. Re-search with full window only if needed.
-      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state, moves[i]);
-      if (score > alpha && score < beta) {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
-      }
-    }
+    score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
 
     unmake_move(game);
 
-    // Found better scores
     if (score >= best_so_far) { best_so_far = score; }
 
     if (score >= beta) {
@@ -253,7 +180,8 @@ int negamax(int alpha0,
         state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])] += bonus;
 
         if (prev_move != 0) {
-          state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = moves[i];
+          state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
+              moves[i];
         }
       }
 
@@ -286,6 +214,9 @@ int negamax(int alpha0,
   tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move);
 
   return result;
+
+
+  return score;
 }
 
 
@@ -300,20 +231,9 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   // Aspiration windows: try a narrow window around the previous depth's score.
   // Widen to the full window if we get a fail-low or fail-high.
-  int score;
-  constexpr int ASPIRATION_DELTA = 50;
-  if (depth > 1 && state->prev_score != 0) {
-    const int lo = state->prev_score - ASPIRATION_DELTA;
-    const int hi = state->prev_score + ASPIRATION_DELTA;
-    score = negamax(lo, hi, depth, 0, game, state);
-    if (score <= lo || score >= hi) {
-      score = negamax(MIN, MAX, depth, 0, game, state);
-    }
-  } else {
-    score = negamax(MIN, MAX, depth, 0, game, state);
-  }
-  state->prev_score = score;
+  int score = negamax(MIN, MAX, depth, 0, game, state);
 
+  state->prev_score = score;
   search_result.best_move = state->best_move;
 
   // Handle mate score
@@ -332,6 +252,7 @@ search_t search(int depth, game_t* game, search_state_t* state)
   search_result.explored_nodes = state->explored_nodes;
   search_result.score = score;
   search_result.pv.length = state->pv_length[0];
+
   memcpy(search_result.pv.table, state->pv_table[0],
          state->pv_length[0] * sizeof(move_t));
 

@@ -72,9 +72,8 @@ size_t generate_moves(const bb_tables_t* tables,
 
   // Turning the en-passant square into a mask once lifts both the validity
   // test and the shift out of the per-pawn loop.
-  const bb_t en_passant_mask = (board->en_passant != INVALID_INDEX)
-                                   ? (BB_1 << board->en_passant)
-                                   : BB_0;
+  const bb_t en_passant_mask =
+      (board->en_passant != INVALID_INDEX) ? (BB_1 << board->en_passant) : BB_0;
 
   size_t move_count = 0;
 
@@ -107,8 +106,10 @@ size_t generate_moves(const bb_tables_t* tables,
         if (is_promoting) {
           moves[move_count++] = NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
           moves[move_count++] = NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
-          moves[move_count++] = NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
-          moves[move_count++] = NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
+          moves[move_count++] =
+              NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
+          moves[move_count++] =
+              NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
         } else {
           moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
 
@@ -305,8 +306,9 @@ bool make_move(game_t* game, move_t encoded_move)
     // The pawn leaves and the promoted piece arrives on the same square, so
     // the occupancies do not change here.
     const piece_t pawn = (us == WHITE) ? W_PAWN : B_PAWN;
-    const piece_t promoted_to = (us == WHITE) ? w_promotion_map[move.promoted_to]
-                                              : b_promotion_map[move.promoted_to];
+    const piece_t promoted_to = (us == WHITE)
+                                    ? w_promotion_map[move.promoted_to]
+                                    : b_promotion_map[move.promoted_to];
 
     board->bitboards[pawn] ^= to_bb;
     board->hash ^= randoms->piece_randoms[pawn][move.to];
@@ -337,11 +339,9 @@ bool make_move(game_t* game, move_t encoded_move)
   // same position reached by ordinary moves, and could never share a
   // transposition table entry with it.
   board->hash ^= randoms->ep_randoms[board->en_passant];
-
-  board->en_passant =
-      move.double_push
-          ? static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8))
-          : INVALID_INDEX;
+  const index_t push =
+      static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
+  board->en_passant = move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
 
   board->hash ^= randoms->ep_randoms[board->en_passant];
 
