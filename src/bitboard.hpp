@@ -1,5 +1,8 @@
 #pragma once
+#include <bit>
+#include <cassert>
 #include <cstdint>
+#include "bb_tables.hpp"
 #include "data_structures.hpp"
 
 void initialize_game_const_data(game_t* game);
@@ -10,17 +13,59 @@ std::string generate_FEN(const board_t* board);
 
 // Board manipulation
 piece_t get_piece(const board_t* board, index_t square);
-int count_bits(bb_t board);
-index_t get_lsb_index(bb_t board);
+
+
+inline int count_bits(bb_t board)
+{
+  return std::popcount(board);
+}
+
+
+inline index_t get_lsb_index(bb_t board)
+{
+  // If 64 then invalid
+  return static_cast<index_t>(std::countr_zero(board));
+}
+
 
 // Attacks
-bb_t get_bishop_attacks(const bb_tables_t* tables,
-                        index_t index,
-                        bb_t occupancy);
-bb_t get_rook_attacks(const bb_tables_t* tables, index_t index, bb_t occupancy);
-bb_t get_queen_attacks(const bb_tables_t* tables,
-                       index_t index,
-                       bb_t occupancy);
+inline bb_t get_bishop_attacks(const bb_tables_t* tables,
+                               index_t index,
+                               bb_t occupancy)
+{
+  assert(tables != nullptr);
+  assert(index < 64);
+
+  occupancy &= tables->bishop_masks[index];
+  occupancy *= bishop_magic_numbers[index];
+  occupancy >>= 64 - bishop_relevant_bits_count[index];
+  return tables->bishop_attacks[index][occupancy];
+}
+
+
+inline bb_t get_rook_attacks(const bb_tables_t* tables,
+                             index_t index,
+                             bb_t occupancy)
+{
+  assert(tables != nullptr);
+  assert(index < 64);
+
+  occupancy &= tables->rook_masks[index];
+  occupancy *= rook_magic_numbers[index];
+  occupancy >>= 64 - rook_relevant_bits_count[index];
+  return tables->rook_attacks[index][occupancy];
+}
+
+
+inline bb_t get_queen_attacks(const bb_tables_t* tables,
+                              index_t index,
+                              bb_t occupancy)
+{
+  return get_bishop_attacks(tables, index, occupancy) |
+         get_rook_attacks(tables, index, occupancy);
+}
+
+
 bool is_attacked(const bb_tables_t* tables,
                  const board_t* board,
                  index_t index,
@@ -48,7 +93,7 @@ move_t algebraic_to_move(std::string notation, game_t* game);
 bool is_pv_legal(game_t* game, const pv_t* pv);
 
 // Utils that must run fast
-bool is_position_repeated(const repetition_t* rep, hash_t hash);
+bool is_position_repeated(const repetition_t* rep, const board_t* board);
 
 bool is_check(const game_t* game);
 void swap_side(game_t* game);

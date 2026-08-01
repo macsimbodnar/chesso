@@ -119,7 +119,7 @@ int negamax(int alpha0,
   }
 
   // Check for repetitions
-  if (ply > 0 && is_position_repeated(&game->repetitions, game->board.hash)) {
+  if (ply > 0 && is_position_repeated(&game->repetitions, &game->board)) {
     return DRAW_SCORE;
   }
 
