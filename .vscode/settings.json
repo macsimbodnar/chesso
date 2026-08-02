@@ -40,7 +40,8 @@
     "uciok",
     "unmaked",
     "winc",
-    "wtime"
+    "wtime",
+    "zobrist"
   ],
   "files.associations": {
     "cctype": "cpp",

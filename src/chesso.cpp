@@ -4,6 +4,7 @@
 #include <future>
 #include <iostream>
 #include <limits>
+#include <mutex>
 #include <optional>
 #include <queue>
 #include <random>
@@ -21,6 +22,12 @@
 
 
 //-##############################    GLOBALS    #############################-//
+#define MOVE_OVERHEAD_MS 50
+#define DEFAULT_MOVES_TO_GO 20
+// This is an heuristic measured on TRICKY_POS
+#define SEARCH_BRANCHING_FACTOR 10
+
+
 static game_t game = {};
 static std::string initial_position = DEFAULT_POSITION;
 static bool opening_book_loaded = false;
@@ -31,6 +38,9 @@ static book_t opening_book;
 static std::atomic_bool stop_search_signal = false;
 static std::atomic_int session_id = 0;
 static transposition_table_t tt = {};
+
+static std::thread search_thread;
+static std::mutex output_mutex;
 
 static std::random_device rd;
 static std::mt19937_64 gen(rd());
@@ -90,7 +100,18 @@ std::string pv_to_string(const pv_t* pv);
 
 void uci_reply(const std::string& response)
 {
-  std::cout << response << std::endl;
+  const std::lock_guard<std::mutex> lock(output_mutex);
+  std::cout << (response + "\n") << std::flush;
+}
+
+
+// Every path that mutates the board or the transposition table, or that ends
+// the process, must call this first.
+void stop_and_join_search()
+{
+  stop_search_signal = true;
+
+  if (search_thread.joinable()) { search_thread.join(); }
 }
 
 
@@ -265,6 +286,14 @@ std::string uci_move_to_algebraic(const uci_move_t* move)
 }
 
 
+std::string best_move_to_string(const uci_search_result_t& result)
+{
+  // UCI null move is 0000
+  if (result.best_move == 0) { return "0000"; }
+  return uci_move_to_algebraic(&result.uci_best_move);
+}
+
+
 std::string pv_to_string(const pv_t* pv)
 {
   assert(pv != nullptr);
@@ -326,15 +355,21 @@ bool check_move_legality(move_t move)
 
 bool set_position(const std::string& fen)
 {
-  load_FEN(fen, &game);
+  if (!load_FEN(fen, &game)) {
+    LOG_E << "Failed to load FEN [" << fen << "]. Restoring previous position"
+          << END_E;
+
+    load_FEN(initial_position, &game);
+    return false;
+  }
 
   if (initial_position != fen) {
     initial_position = fen;
 
-    // We changed game, reset TT
     tt_reset(&tt);
+    still_in_opening = true;
   }
-  still_in_opening = false;
+
   return true;
 }
 
@@ -376,8 +411,7 @@ std::queue<std::string> tokenize_input(const std::string string,
 
 void stop_search_after_ms(uint64_t ms)
 {
-  std::thread job([ms]() {
-    const int session = session_id;
+  std::thread job([ms, session = session_id.load()]() {
     std::chrono::milliseconds time_to_sleep(ms);
     std::this_thread::sleep_for(time_to_sleep);
 
@@ -386,6 +420,21 @@ void stop_search_after_ms(uint64_t ms)
 
   // Left the timer be, we return! Adios
   job.detach();
+}
+
+
+int compute_search_time_ms(int remaining_ms, int increment_ms, int movestogo)
+{
+  assert(movestogo > 0);
+  assert(remaining_ms > 0);
+
+  int budget = (remaining_ms / movestogo) + (increment_ms / 2);
+
+  // Never budget more than is actually left
+  budget = std::min(budget, remaining_ms - MOVE_OVERHEAD_MS);
+  budget = std::max(budget, std::min(50, remaining_ms / 2));
+
+  return budget;
 }
 
 
@@ -462,15 +511,19 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   result.total_node_explored = 0;
 
   // If no move found in the book search by engine
+  // NOTE: stop_search_signal is cleared by the caller before the timer is
+  // armed. Clearing it here would race with the timer and with "stop".
   search_state_t state = {};
-  state.stop = &stop_search_signal;
   state.tt = &tt;
   assert(state.tt != nullptr);
-  stop_search_signal = false;
 
-  int info_prints_count = 0;
+  std::atomic_bool never_stop = false;
+  state.stop = &never_stop;
 
-  auto beguine_of_the_search = std::chrono::high_resolution_clock::now();
+  const auto beguine_of_the_search = std::chrono::steady_clock::now();
+  std::chrono::steady_clock::duration last_iteration = {};
+  std::chrono::steady_clock::duration prev_iteration = {};
+  double growth_estimate = SEARCH_BRANCHING_FACTOR;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -478,30 +531,35 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // Reset the explored nodes in the previous iteration
     state.explored_nodes = 0;
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    // Cap this iteration at whatever is left of the overall budget, so the
+    // limit is honoured inside the search instead of only being noticed after
+    // an iteration has already blown past it.
+    if (conf.nodes != 0) {
+      if (result.total_node_explored >= conf.nodes) { break; }
+      state.node_limit = conf.nodes - result.total_node_explored;
+    }
+
+    const auto start_time = std::chrono::steady_clock::now();
 
     const search_t search_result = search(current_depth, &game, &state);
 
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    const auto duration_ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
-                                                              start_time);
+    const auto end_time = std::chrono::steady_clock::now();
+    prev_iteration = last_iteration;
+    last_iteration = end_time - start_time;
 
-    // If we interupted the current search we use the previous result
-    if (stop_search_signal) {
-      if (info_prints_count == 0) {
-        const std::string score = search_result.mate_found
-                                      ? ("mate " + STR(search_result.mate_in))
-                                      : ("cp " + STR(search_result.score));
-
-        uci_reply("info score " + score + " time " + STR(duration_ms.count()) +
-                  " depth " + STR(current_depth) + " nodes " +
-                  STR(search_result.explored_nodes) + " pv " +
-                  pv_to_string(&search_result.pv));
-      }
-
-      break;
+    if (prev_iteration.count() > 0 && last_iteration.count() > 0) {
+      const double observed = static_cast<double>(last_iteration.count()) /
+                              static_cast<double>(prev_iteration.count());
+      growth_estimate =
+          std::clamp((growth_estimate + observed) / 2.0, 2.0, 20.0);
     }
+
+    const auto duration_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(last_iteration);
+
+    state.stop = &stop_search_signal;
+
+    if (state.aborted) { break; }
 
     const std::string score = search_result.mate_found
                                   ? ("mate " + STR(search_result.mate_in))
@@ -511,8 +569,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
               " depth " + STR(current_depth) + " nodes " +
               STR(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
-
-    info_prints_count++;
 
     result.best_move = search_result.best_move;
     result.uci_best_move = {MOVE_FROM(search_result.best_move),
@@ -531,18 +587,21 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
     result.total_node_explored += search_result.explored_nodes;
 
-    // Check if run out of nodes
-    if (conf.nodes != 0 && search_result.explored_nodes > conf.nodes) { break; }
+    if (stop_search_signal) { break; }
+    if (conf.nodes != 0 && result.total_node_explored >= conf.nodes) { break; }
 
     if (conf.search_time_ms > 0) {
-      // Calculate if during time control we should start another search
-      auto end_current_search = std::chrono::high_resolution_clock::now();
-      auto next_round_predict_time = end_current_search - beguine_of_the_search;
-      std::chrono::milliseconds allocated_time(conf.search_time_ms);
-      auto time_left = allocated_time - next_round_predict_time;
+      // Only start another iteration if we expect to finish it.
+      const double elapsed_ms =
+          std::chrono::duration<double, std::milli>(
+              std::chrono::steady_clock::now() - beguine_of_the_search)
+              .count();
+      const double last_ms =
+          std::chrono::duration<double, std::milli>(last_iteration).count();
 
-      // Don't even start next search in case we estimate to not finish this
-      if (next_round_predict_time > time_left) { break; }
+      if (elapsed_ms + (last_ms * growth_estimate) > conf.search_time_ms) {
+        break;
+      }
     }
   }
 
@@ -654,8 +713,7 @@ bool command_ucinewgame(std::queue<std::string>& args)
 {
   LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
 
-  // Stop any running game
-  stop_search_signal = true;
+  stop_and_join_search();
 
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
@@ -672,6 +730,8 @@ bool command_position(std::queue<std::string>& args)
   LOG_I << "Command [position]. Args: " << args << END_I;
 
   if (args.size() == 0) { return false; }
+
+  stop_and_join_search();
 
   while (!args.empty()) {
     const std::string token = args.front();
@@ -745,9 +805,57 @@ bool command_position(std::queue<std::string>& args)
     }
   }
 
-  still_in_opening = true;
 
   LOG_I << print_nice_board(&game.board) << END_I;
+
+  return true;
+}
+
+
+bool pop_int(std::queue<std::string>& args,
+             const char* name,
+             int& out,
+             int min,
+             int max)
+{
+  if (args.empty()) {
+    LOG_W << name << " is missing its value" << END_W;
+    return false;
+  }
+
+  const std::string token = args.front();
+  args.pop();
+
+  try {
+    const long long value = std::stoll(token);
+    out = static_cast<int>(std::clamp<long long>(value, min, max));
+  } catch (...) {
+    LOG_W << name << " is not a number: " << token << END_W;
+    return false;
+  }
+
+  return true;
+}
+
+
+bool pop_u64(std::queue<std::string>& args, const char* name, uint64_t& out)
+{
+  if (args.empty()) {
+    LOG_W << name << " is missing its value" << END_W;
+    return false;
+  }
+
+  const std::string token = args.front();
+  args.pop();
+
+  try {
+    // Parsed as signed on purpose: stoull silently wraps a negative literal
+    const long long value = std::stoll(token);
+    out = static_cast<uint64_t>(std::max<long long>(value, 0));
+  } catch (...) {
+    LOG_W << name << " is not a number: " << token << END_W;
+    return false;
+  }
 
   return true;
 }
@@ -761,131 +869,46 @@ bool command_go(std::queue<std::string>& args)
   search_options.infinite = false;
   search_options.depth = MAX_DEPTH;
   search_options.nodes = 0;
-  search_options.movestogo = 20;  // Assume by default we have 10 moves to go
+  search_options.movestogo = DEFAULT_MOVES_TO_GO;
   search_options.winc_ms = 0;
   search_options.binc_ms = 0;
   search_options.search_time_ms = 0;
+
+  const int int_max = std::numeric_limits<int>::max();
 
   while (!args.empty()) {
     const std::string token = args.front();
     args.pop();
 
     if (token == "depth") {
-      const std::string depth_token = args.front();
-      args.pop();
-
-      try {
-        search_options.depth = std::stoi(depth_token);
-      } catch (...) {
-        LOG_W << "Depth is not a number: " << depth_token << END_W;
-        return false;
-      }
-
+      pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
     } else if (token == "movetime") {
-      const std::string movetime_ms_token = args.front();
-      args.pop();
-
-      try {
-        search_options.movetime_ms = std::stoi(movetime_ms_token);
-      } catch (...) {
-        LOG_W << "Movetime is not a number: " << movetime_ms_token << END_W;
-        return false;
-      }
+      pop_int(args, "Movetime", search_options.movetime_ms, 0, int_max);
     } else if (token == "nodes") {
-      const std::string nodes_token = args.front();
-      args.pop();
-
-      try {
-        search_options.nodes = std::stoi(nodes_token);
-      } catch (...) {
-        LOG_W << "Nodes is not a number: " << nodes_token << END_W;
-        return false;
-      }
-    } else if (token == "mate") {
-      // TODO: To implement
-      LOG_W << "Not implemented" << END_W;
-      return false;
+      pop_u64(args, "Nodes", search_options.nodes);
+    } else if (token == "wtime") {
+      pop_int(args, "Wtime", search_options.wtime_ms, 0, int_max);
+    } else if (token == "btime") {
+      pop_int(args, "Btime", search_options.btime_ms, 0, int_max);
+    } else if (token == "winc") {
+      pop_int(args, "Winc", search_options.winc_ms, 0, int_max);
+    } else if (token == "binc") {
+      pop_int(args, "Binc", search_options.binc_ms, 0, int_max);
+    } else if (token == "movestogo") {
+      pop_int(args, "Movestogo", search_options.movestogo, 1, int_max);
     } else if (token == "infinite") {
       search_options.infinite = true;
-    }
-
-    if (token == "searchmoves") {
-      // TODO: To implement
-      LOG_W << "Not implemented" << END_W;
-      return false;
-    }
-
-    if (token == "ponder") {
-      // TODO: To implement
-      LOG_W << "Not implemented" << END_W;
-      return false;
-    }
-
-    if (token == "wtime") {
-      const std::string wtime_token = args.front();
-      args.pop();
-
-      try {
-        search_options.wtime_ms = std::stoi(wtime_token);
-      } catch (...) {
-        LOG_W << "Wtime is not a number: " << wtime_token << END_W;
-        return false;
-      }
-    }
-
-    if (token == "btime") {
-      const std::string btime_token = args.front();
-      args.pop();
-
-      try {
-        search_options.btime_ms = std::stoi(btime_token);
-      } catch (...) {
-        LOG_W << "Btime is not a number: " << btime_token << END_W;
-        return false;
-      }
-    }
-
-    if (token == "winc") {
-      const std::string winc_token = args.front();
-      args.pop();
-
-      try {
-        search_options.winc_ms = std::stoi(winc_token);
-      } catch (...) {
-        LOG_W << "Winc is not a number: " << winc_token << END_W;
-        return false;
-      }
-    }
-
-    if (token == "binc") {
-      const std::string binc_token = args.front();
-      args.pop();
-
-      try {
-        search_options.binc_ms = std::stoi(binc_token);
-      } catch (...) {
-        LOG_W << "Binc is not a number: " << binc_token << END_W;
-        return false;
-      }
-    }
-
-    if (token == "movestogo") {
-      const std::string movestogo_token = args.front();
-      args.pop();
-
-      try {
-        search_options.movestogo = std::stoi(movestogo_token);
-        if (search_options.movestogo == 0) { search_options.movestogo = 1; }
-
-      } catch (...) {
-        LOG_W << "Movestogo is not a number: " << movestogo_token << END_W;
-        return false;
-      }
+    } else if (token == "mate" || token == "searchmoves" || token == "ponder") {
+      // Not supported. UCI says to ignore what we do not implement, and the
+      // rest of the line still carries the time control we need.
+      LOG_W << "[go " << token << "] not implemented, ignored" << END_W;
     }
   }
 
-  // Increment the search id for time control
+  stop_and_join_search();
+
   session_id++;
+  stop_search_signal = false;
 
   // Book is searched only if the command make sense
   if (!search_options.infinite && search_options.nodes == 0) {
@@ -906,49 +929,42 @@ bool command_go(std::queue<std::string>& args)
     }
   }
 
-  // Calculate the time to play for white if set
-  if (search_options.wtime_ms > 0 && game.board.active_color == WHITE) {
-    int time_to_play = (search_options.wtime_ms / search_options.movestogo) +
-                       search_options.winc_ms - 10;
+  // These three cases are mutually exclusive.
+  if (search_options.infinite) {
+    search_options.search_time_ms = 0;
+    LOG_I << "Infinite search. Only [stop] ends it" << END_I;
 
-    if (time_to_play < 100) { time_to_play = 100; }
-
-    search_options.search_time_ms = time_to_play;
-    stop_search_after_ms(time_to_play);
-
-    LOG_I << "Time to play for white calculated. Search will stop in "
-          << time_to_play << "ms" << END_I;
-  }
-
-  // Calculate the time to play for black if set
-  if (search_options.btime_ms > 0 && game.board.active_color == BLACK) {
-    int time_to_play = (search_options.btime_ms / search_options.movestogo) +
-                       search_options.binc_ms - 10;
-
-    if (time_to_play < 100) { time_to_play = 100; }
-
-    search_options.search_time_ms = time_to_play;
-    stop_search_after_ms(time_to_play);
-
-    LOG_I << "Time to play for black calculated. Search will stop in "
-          << time_to_play << "ms" << END_I;
-  }
-
-  // Start the move timer if necessary
-  if (search_options.movetime_ms > 0) {
+  } else if (search_options.movetime_ms > 0) {
     search_options.search_time_ms = search_options.movetime_ms;
-    stop_search_after_ms(search_options.movetime_ms);
+    stop_search_after_ms(search_options.search_time_ms);
 
-    LOG_I << "Movetimes set. Search will stop in " << search_options.movetime_ms
-          << "ms" << END_I;
+    LOG_I << "Movetime set. Search will stop in "
+          << search_options.search_time_ms << "ms" << END_I;
+
+  } else {
+    const bool is_white = (game.board.active_color == WHITE);
+    const int remaining_ms =
+        is_white ? search_options.wtime_ms : search_options.btime_ms;
+    const int increment_ms =
+        is_white ? search_options.winc_ms : search_options.binc_ms;
+
+    if (remaining_ms > 0) {
+      search_options.search_time_ms = compute_search_time_ms(
+          remaining_ms, increment_ms, search_options.movestogo);
+
+      stop_search_after_ms(search_options.search_time_ms);
+
+      LOG_I << "Time budget " << search_options.search_time_ms << "ms out of "
+            << remaining_ms << "ms remaining" << END_I;
+    }
   }
 
   // Start search in a thread
-  std::thread search_thread([search_options]() {
+  search_thread = std::thread([search_options]() {
     stopwatch_t timer;
     const uci_search_result_t res = iterative_deepening_search(search_options);
 
-    const std::string best_move_str = uci_move_to_algebraic(&res.uci_best_move);
+    const std::string best_move_str = best_move_to_string(res);
 
     std::string ponder_move;
     if (res.is_ponder_move) {
@@ -958,9 +974,6 @@ bool command_go(std::queue<std::string>& args)
     uci_reply("bestmove " + best_move_str + ponder_move);
     LOG_I << "Search time: " << timer.duration_str() << END_I;
   });
-
-  // Let the thread go his way
-  search_thread.detach();
 
   return true;
 }
@@ -989,6 +1002,8 @@ bool command_ponderhit(std::queue<std::string>& args)
 bool command_quit(std::queue<std::string>& args)
 {
   LOG_I << "Command [quit]. Args: " << args << END_I;
+
+  stop_and_join_search();
 
   running = false;
   return true;
@@ -1060,14 +1075,7 @@ bool command_test(std::queue<std::string>& args)
   search_options.depth = 6;
 
   if (!args.empty()) {
-    const std::string depth_token = args.front();
-    args.pop();
-
-    try {
-      search_options.depth = std::stoi(depth_token);
-    } catch (...) {
-      LOG_W << "Depth is not a number: " << depth_token << END_W;
-    }
+    pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
   }
 
 #ifdef NDEBUG
@@ -1084,6 +1092,9 @@ bool command_test(std::queue<std::string>& args)
   stopwatch_t total_timer;
   total_timer.stop();
 
+  stop_and_join_search();
+  stop_search_signal = false;
+
   for (auto const& entry : entries) {
     uci_reply("");
 
@@ -1098,7 +1109,7 @@ bool command_test(std::queue<std::string>& args)
     timer.stop();
     total_timer.stop();
 
-    const std::string best_move_str = uci_move_to_algebraic(&res.uci_best_move);
+    const std::string best_move_str = best_move_to_string(res);
 
     std::string ponder_move;
     if (res.is_ponder_move) {
@@ -1158,7 +1169,13 @@ int main()
 
   while (running) {
     std::string input;
-    std::getline(std::cin, input);
+
+    // On EOF getline leaves input empty and keeps failing. Without this the
+    // loop would spin forever on a closed pipe.
+    if (!std::getline(std::cin, input)) {
+      LOG_I << "stdin closed" << END_I;
+      break;
+    }
 
     tokens = tokenize_input(input, " ");
 
@@ -1175,9 +1192,9 @@ int main()
       if (is_command(current_token)) {
         const bool result = commands.at(current_token)(tokens);
 
+        // UCI requires malformed or unsupported input to be ignored.
         if (!result) {
           LOG_W << "Command [" << current_token << "] error" << END_W;
-          return 1;
         }
 
         // We found and executed the command for this input. So jump to next
@@ -1185,6 +1202,8 @@ int main()
       }
     }
   }
+
+  stop_and_join_search();
 
   LOG_I << "Engine closed gracefully" << END_I;
 

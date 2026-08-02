@@ -101,6 +101,11 @@ int negamax(int alpha0,
   assert(game != nullptr);
   assert(state != nullptr);
 
+  if (ply + 1 >= MAX_PLY) {
+    return (game->board.active_color == WHITE ? 1 : -1) *
+           evaluate(&game->board);
+  }
+
   int best_so_far = MIN;
   int alpha = alpha0;
 
@@ -125,10 +130,15 @@ int negamax(int alpha0,
 
   const bool is_in_check = is_check(game);
 
-  // Time management
-  if ((state->explored_nodes % 1000 == 0) && *state->stop) {
-    return (game->board.active_color == WHITE ? 1 : -1) *
-           evaluate(&game->board);
+
+  if (state->explored_nodes % 1000 == 0) {
+    const bool out_of_nodes = (state->node_limit != NODE_BUDGET_UNLIMITED) &&
+                              (state->explored_nodes >= state->node_limit);
+
+    if (*state->stop || out_of_nodes) {
+      state->aborted = true;
+      return 0;
+    }
   }
 
   // Quiescence search in leaves
@@ -151,6 +161,10 @@ int negamax(int alpha0,
   move_t moves[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
+  if (moves_count == 0) {
+    return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
+  }
+
   int score = 0;
   move_t best_move = moves[0];
 
@@ -164,6 +178,8 @@ int negamax(int alpha0,
     score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
 
     unmake_move(game);
+
+    if (state->aborted) { return 0; }
 
     if (score >= best_so_far) { best_so_far = score; }
 
@@ -202,7 +218,7 @@ int negamax(int alpha0,
   }
 
   if (legal_moves_counter == 0) {
-    return is_in_check ? -(MATE_MAX - ply) : DRAW_SCORE;
+    return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
   }
 
   const int result = (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
@@ -228,6 +244,8 @@ search_t search(int depth, game_t* game, search_state_t* state)
   assert(state->tt != nullptr);
 
   search_t search_result = {};
+
+  state->aborted = false;
 
   // Aspiration windows: try a narrow window around the previous depth's score.
   // Widen to the full window if we get a fail-low or fail-high.

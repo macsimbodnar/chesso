@@ -1581,8 +1581,8 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 {
   assert(zobrist != nullptr);
 
-  std::random_device rd;
-  std::mt19937_64 gen(rd());
+  // Fixed seed.
+  std::mt19937_64 gen(0x9E3779B97F4A7C15ULL);
   std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);
 
   for (auto& piece_array : zobrist->piece_randoms) {

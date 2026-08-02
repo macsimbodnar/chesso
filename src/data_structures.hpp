@@ -39,10 +39,11 @@ typedef uint32_t move_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
-#define MAX_PLY 100
-#define MAX_DEPTH MAX_PLY
+#define MAX_PLY 1000
+#define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe
 #define REPETITION_MAX_SIZE 5000
 #define HISTORY_MAX_SIZE 1000000
+#define NODE_BUDGET_UNLIMITED 0
 
 // Transposition table size
 #define TT_SIZE 4194301
@@ -352,7 +353,11 @@ struct search_t
 struct search_state_t
 {
   std::atomic_bool* stop = nullptr;
+  // Set when the search gave up mid-tree. Everything above the abort point
+  // must be discarded rather than stored.
+  bool aborted = false;
   uint64_t explored_nodes;
+  uint64_t node_limit = NODE_BUDGET_UNLIMITED;
   move_t killer_moves[2][MAX_PLY];
   int history_moves[12][64];  // [piece][destination]
   bool search_in_tt = true;
