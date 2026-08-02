@@ -366,6 +366,7 @@ struct search_state_t
 
   // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
   move_t counter_moves[12][64];
-  // Previous move at each ply, used to look up the counter move during ordering.
+  // Previous move at each ply, used to look up the counter move during
+  // ordering.
   move_t node_prev_move[MAX_PLY];
 };
