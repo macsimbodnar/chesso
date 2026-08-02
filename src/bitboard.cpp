@@ -245,9 +245,29 @@ size_t generate_moves(const bb_tables_t* tables,
 }
 
 
+// Does this move even describe a piece of the side to move standing on its from
+// square? make_move() applies a move by xor-ing bitboards, so a move built for
+// some other position does not get rejected, it silently corrupts the board.
+bool move_belongs_to_side_to_move(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+
+  const unsigned piece = MOVE_PIECE(move);
+
+  if (piece > B_KING) { return false; }
+
+  const bool is_white_piece = (piece < B_PAWN);
+
+  if (is_white_piece != (board->active_color == WHITE)) { return false; }
+
+  return GET_BIT(board->bitboards[piece], MOVE_FROM(move)) != BB_0;
+}
+
+
 bool make_move(game_t* game, move_t encoded_move)
 {
   assert(game != nullptr);
+  assert(move_belongs_to_side_to_move(&game->board, encoded_move));
 
   const bb_tables_t* tables = &game->tables;
   const zobrist_randoms_t* randoms = &game->hash_randoms;
@@ -341,7 +361,8 @@ bool make_move(game_t* game, move_t encoded_move)
   board->hash ^= randoms->ep_randoms[board->en_passant];
   const index_t push =
       static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
-  board->en_passant = move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
+  board->en_passant =
+      move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
 
   board->hash ^= randoms->ep_randoms[board->en_passant];
 
@@ -1002,6 +1023,11 @@ size_t get_ambiguous_move(const unpacked_move_t* move,
 
 bool is_move_legal(game_t* game, move_t move)
 {
+  // Without this a move built for another position is applied rather than
+  // rejected, and this reports "legal" for, say, a black move in a
+  // white-to-move position while quietly corrupting the board.
+  if (!move_belongs_to_side_to_move(&game->board, move)) { return false; }
+
   if (make_move(game, move)) {
     unmake_move(game);
     return true;

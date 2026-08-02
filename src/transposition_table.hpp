@@ -3,6 +3,10 @@
 
 void tt_reset(transposition_table_t* tt);
 
+// Marks the start of a new search, so entries left by previous searches stop
+// competing on depth with the ones this search writes.
+void tt_new_search(transposition_table_t* tt);
+
 const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
                                const board_t* board);
 

@@ -9,12 +9,12 @@
 
 // clang-format off
 
-#define PAWN   1
-#define KNIGHT 3
-#define BISHOP 3
-#define ROOK   5
-#define QUEEN  9
-#define KING   10000
+#define PAWN   100
+#define KNIGHT 300
+#define BISHOP 300
+#define ROOK   500
+#define QUEEN  900
+#define KING   100000
 
 /* board representation */
 

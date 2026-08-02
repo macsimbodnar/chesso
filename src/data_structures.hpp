@@ -39,7 +39,10 @@ typedef uint32_t move_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
-#define MAX_PLY 1000
+// Deepest ply the search may occupy. It sizes the triangular PV table
+// quadratically, so it is worth keeping tight: at 1000 the search state was
+// 4 MB and had to be zeroed on every `go`. No search comes close to 128 plies.
+#define MAX_PLY 128
 #define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe
 #define REPETITION_MAX_SIZE 5000
 #define HISTORY_MAX_SIZE 1000000
@@ -323,18 +326,26 @@ enum node_type_t
 };
 
 
+// Field order and widths are chosen to keep the entry at 24 bytes: `type` and
+// `depth` were shrunk to make room for `generation` inside the padding that was
+// already there.
 struct tt_entry_t
 {
   uint64_t key;
-  node_type_t type;
-  int depth;
-  int score;
+  int32_t score;
   move_t best_move;
+  int16_t depth;
+  uint8_t type;        // node_type_t
+  uint8_t generation;  // search that wrote it; 0 means never written
 };
 
 
 struct transposition_table_t
 {
+  // Bumped once per search. Entries from an older search are replaceable
+  // whatever their depth, otherwise a deep entry from move 3 of the game would
+  // hold its slot for the rest of the game.
+  uint8_t generation;
   tt_entry_t entries[TT_SIZE];
 };
 
