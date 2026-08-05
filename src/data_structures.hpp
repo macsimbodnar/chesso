@@ -39,7 +39,7 @@ typedef uint32_t move_t;
 
 // The maximum number of legal moves that is possible to generate
 #define MAX_MOVES 270
-#define MAX_PLY 1000
+#define MAX_PLY 128
 #define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe
 #define REPETITION_MAX_SIZE 5000
 #define HISTORY_MAX_SIZE 1000000
@@ -326,15 +326,17 @@ enum node_type_t
 struct tt_entry_t
 {
   uint64_t key;
-  node_type_t type;
-  int depth;
-  int score;
+  int32_t score;
   move_t best_move;
+  int16_t depth;
+  uint8_t type;        // node_type_t
+  uint8_t generation;  // search that wrote it; 0 means never written
 };
 
 
 struct transposition_table_t
 {
+  uint8_t generation;
   tt_entry_t entries[TT_SIZE];
 };
 

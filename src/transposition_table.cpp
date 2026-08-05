@@ -7,6 +7,19 @@ void tt_reset(transposition_table_t* tt)
 {
   LOG_I << "Cleanup TT" << END_I;
   memset(tt, 0, sizeof(transposition_table_t));
+
+  tt->generation = 1; // 1 makes it stable
+}
+
+
+void tt_new_search(transposition_table_t* tt)
+{
+  assert(tt != nullptr);
+
+  tt->generation++;
+
+  // 0 is reserved for slots that were never written.
+  if (tt->generation == 0) { tt->generation = 1; }
 }
 
 
@@ -41,11 +54,13 @@ void tt_store_entry(transposition_table_t* tt,
   const uint64_t hash = board->hash;
   tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
 
-  if (entry->key != hash || depth >= entry->depth) {
+  // Depth-preferred inside one search, always replaceable across searches.
+  if (entry->generation != tt->generation || depth >= entry->depth) {
     entry->key = hash;
-    entry->type = type;
-    entry->depth = depth;
     entry->score = score;
     entry->best_move = best_move;
+    entry->depth = static_cast<int16_t>(depth);
+    entry->type = static_cast<uint8_t>(type);
+    entry->generation = tt->generation;
   }
 }

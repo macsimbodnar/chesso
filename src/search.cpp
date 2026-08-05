@@ -15,8 +15,9 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-// static constexpr int MIN = std::numeric_limits<int>::min() + 100;
-// static constexpr int MAX = std::numeric_limits<int>::max() - 100;
+// Keeps an accumulated history score from ever outranking a killer.
+#define ORDER_HISTORY_MAX 600000
+
 static constexpr int MIN = -2000000000;
 static constexpr int MAX = 2000000000;
 
@@ -24,7 +25,43 @@ static constexpr int MAX = 2000000000;
 #define NULL_MOVE_REDUCTION 2
 #define LMR_WHEN_START_IN_THE_LIST 4
 #define LMR_START_AT_DEPTH 3
-#define MAX_QSEARCH_DEPTH 2
+#define MAX_QSEARCH_DEPTH 8
+
+
+
+// Selection sort, one step per visited move. Most nodes fail high on one of the
+// first moves, so sorting the whole list up front would be wasted work.
+inline void pick_next_move(move_t moves[], int scores[], size_t count, size_t i)
+{
+  size_t best = i;
+
+  for (size_t j = i + 1; j < count; ++j) {
+    if (scores[j] > scores[best]) { best = j; }
+  }
+
+  if (best != i) {
+    std::swap(moves[i], moves[best]);
+    std::swap(scores[i], scores[best]);
+  }
+}
+
+
+inline bool check_limits(search_state_t* state)
+{
+  if (state->aborted) { return true; }
+
+  const bool out_of_nodes = (state->node_limit != NODE_BUDGET_UNLIMITED) &&
+                            (state->explored_nodes >= state->node_limit);
+
+  // The node budget is a plain integer compare, so it can be enforced exactly.
+  // Reading the stop flag is an atomic load, so it is only polled periodically.
+  if (out_of_nodes || (((state->explored_nodes & 2047) == 0) && *state->stop)) {
+    state->aborted = true;
+    return true;
+  }
+
+  return false;
+}
 
 
 inline int normalize_score(int score, int ply)
@@ -46,60 +83,109 @@ inline int de_normalize_score(int score, int ply)
 int quiescence(int alpha,
                int beta,
                size_t ply,
+               size_t qply,
                game_t* game,
                search_state_t* state)
 {
   assert(game != nullptr);
 
-  int best_value =
-      ((game->board.active_color == WHITE) ? +1 : -1) * evaluate(&game->board);
-
   state->explored_nodes++;
 
-  if (best_value >= beta) { return best_value; }
-  if (best_value > alpha) { alpha = best_value; }
+  const int stand_pat =
+      ((game->board.active_color == WHITE) ? +1 : -1) * evaluate(&game->board);
 
-  // Time management
-  if ((state->explored_nodes % 1000 == 0) && *state->stop) {
-    return best_value;
+  if (check_limits(state)) { return stand_pat; }
+  if (ply + 1 >= MAX_PLY) { return stand_pat; }
+
+  const bool in_check = is_check(game);
+
+  // Standing pat means "I could just stop here", which is not on offer while in
+  // check: the side to move is forced to reply. So no early return on the
+  // static score, and every evasion is searched rather than only the captures.
+  if (!in_check) {
+    if (stand_pat >= beta) { return stand_pat; }
+    if (stand_pat > alpha) { alpha = stand_pat; }
   }
 
-  if (ply > (MAX_PLY - 2)) { return best_value; }
-  if (ply > MAX_QSEARCH_DEPTH) { return best_value; }
+  // The depth bound applies to evasions as well, otherwise a perpetual check
+  // would recurse without end. At the bound the static score is all there is.
+  if (qply >= MAX_QSEARCH_DEPTH) { return stand_pat; }
 
   move_t moves[MAX_MOVES];
+  int scores[MAX_MOVES];
   const size_t n = generate_moves(&game->tables, &game->board, moves);
 
-  // order_captures(&game->board, moves, n);
-
+  // Compacted to the front of the same array: captures only, or everything when
+  // the move is forced. capture_score() ranks a quiet evasion below any
+  // capture, which is the order wanted here too.
+  size_t count = 0;
   for (size_t i = 0; i < n; ++i) {
-    if (!MOVE_CAPTURE(moves[i])) { continue; }
+    if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }
+
+    scores[count] = capture_score(&game->board, moves[i]);
+    moves[count] = moves[i];
+    count++;
+  }
+
+  int best_value = in_check ? MIN : stand_pat;
+  int legal_moves = 0;
+
+  for (size_t i = 0; i < count; ++i) {
+    pick_next_move(moves, scores, count, i);
 
     if (!make_move(game, moves[i])) { continue; }
 
-    const int score = -quiescence(-beta, -alpha, ply + 1, game, state);
+    legal_moves++;
+
+    const int score =
+        -quiescence(-beta, -alpha, ply + 1, qply + 1, game, state);
 
     unmake_move(game);
+
+    if (state->aborted) { return stand_pat; }
 
     if (score >= beta) { return score; }
     if (score > best_value) { best_value = score; }
     if (score > alpha) { alpha = score; }
   }
 
+  // No legal reply to a check is mate. "No captures available" says nothing of
+  // the sort, which is why this is guarded by in_check.
+  if (in_check && legal_moves == 0) {
+    return -(MATE_MAX - static_cast<int>(ply));
+  }
+
   return best_value;
 }
 
 
+// `is_pv` marks the nodes that lie on the principal variation: the root, and
+// then the first move searched at every PV node. They are the only nodes whose
+// PV row ends up in the reported line, so they never take a transposition table
+// cutoff - a cutoff returns a score without a move sequence and would chop the
+// PV short.
 int negamax(int alpha0,
             int beta,
             int depth,
             size_t ply,
             game_t* game,
             search_state_t* state,
-            move_t prev_move = 0)
+            move_t prev_move,
+            bool is_pv)
 {
   assert(game != nullptr);
   assert(state != nullptr);
+
+  // Every path out of this function must leave the PV row for this ply valid,
+  // so it is cleared before the early exits. Leaving it stale let a parent
+  // memcpy a line belonging to an unrelated node into its own PV.
+  state->pv_length[ply] = 0;
+
+  // Counted before any of the early exits below, so the counter advances once
+  // per visited node and the limit checks fire at a predictable rate.
+  state->explored_nodes++;
+
+  if (check_limits(state)) { return 0; }
 
   if (ply + 1 >= MAX_PLY) {
     return (game->board.active_color == WHITE ? 1 : -1) *
@@ -109,12 +195,27 @@ int negamax(int alpha0,
   int best_so_far = MIN;
   int alpha = alpha0;
 
+  // Draws are a property of the path, not of the position, and the Zobrist key
+  // does not carry the path. Both tests therefore have to run before the
+  // transposition table is allowed to answer for this position.
+  if (ply > 0) {
+    if (is_position_repeated(&game->repetitions, &game->board)) {
+      return DRAW_SCORE;
+    }
+
+    if (game->board.halfmove_clock >= 100) { return DRAW_SCORE; }
+  }
+
   // Reuse TT entry if found
   const tt_entry_t* tt_entry = tt_get_entry(state->tt, &game->board);
-  if (ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
+
+  // Copied out now: a deeper node can overwrite this slot while we recurse, and
+  // the move is wanted for ordering even when no cutoff is taken.
+  const move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
+
+  if (!is_pv && ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
     const int tt_score = de_normalize_score(tt_entry->score, ply);
     if (tt_entry->type == TT_PV_NODE) {
-      state->best_move = tt_entry->best_move;
       return tt_score;
     } else if (tt_entry->type == TT_BETA_NODE && tt_score >= beta) {
       return tt_score;
@@ -123,65 +224,63 @@ int negamax(int alpha0,
     }
   }
 
-  // Check for repetitions
-  if (ply > 0 && is_position_repeated(&game->repetitions, &game->board)) {
-    return DRAW_SCORE;
-  }
+  // Quiescence search in leaves
+  if (depth < 1) { return quiescence(alpha, beta, ply, 0, game, state); }
 
+  // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
 
-
-  if (state->explored_nodes % 1000 == 0) {
-    const bool out_of_nodes = (state->node_limit != NODE_BUDGET_UNLIMITED) &&
-                              (state->explored_nodes >= state->node_limit);
-
-    if (*state->stop || out_of_nodes) {
-      state->aborted = true;
-      return 0;
-    }
-  }
-
-  // Quiescence search in leaves
-  // if (depth < 1 || ply > (MAX_PLY - 2)) {
-  //   return quiescence(alpha, beta, ply, game, state);
-  // }
-
-
-  state->explored_nodes += 1;
   node_type_t type = TT_ALPHA_NODE;
-  state->pv_length[ply] = 0;
-
-  // Terminal condition
-  if (depth == 0) {
-    return (game->board.active_color == WHITE ? 1 : -1) *
-           evaluate(&game->board);
-  }
 
   int legal_moves_counter = 0;
   move_t moves[MAX_MOVES];
+  int scores[MAX_MOVES];
   const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
   if (moves_count == 0) {
     return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
   }
 
+  for (size_t i = 0; i < moves_count; ++i) {
+    scores[i] = score_move(game, state, moves[i], tt_move, ply, prev_move);
+  }
+
   int score = 0;
-  move_t best_move = moves[0];
+
+  // Stays zero until a move is proven legal by make_move(). generate_moves()
+  // is pseudo-legal, so seeding this with moves[0] used to publish moves that
+  // leave the king en prise, both as the search result and as the TT move.
+  move_t best_move = 0;
 
   for (size_t i = 0; i < moves_count; ++i) {
+    pick_next_move(moves, scores, moves_count, i);
+
     if (!make_move(game, moves[i])) { continue; }
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
-    const bool is_check_move = is_check(game);
+
+    // Only ever needed to decide whether a quiet move may become a killer, and
+    // is_check() is an attack scan - do not pay for it on captures.
+    const bool is_check_move = is_capture ? false : is_check(game);
     legal_moves_counter++;
 
-    score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i]);
+    // The first legal move of a PV node continues the principal variation.
+    const bool child_is_pv = is_pv && (legal_moves_counter == 1);
+
+    score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i],
+                     child_is_pv);
 
     unmake_move(game);
 
     if (state->aborted) { return 0; }
 
-    if (score >= best_so_far) { best_so_far = score; }
+    // best_move follows best_so_far, so a fail-low node still reports the move
+    // it liked most and a fail-high node reports the move that caused the
+    // cutoff (its score is above beta, hence above every earlier score).
+    if (score > best_so_far) {
+      best_so_far = score;
+      best_move = moves[i];
+    }
 
     if (score >= beta) {
       // Fail-high
@@ -192,8 +291,11 @@ int negamax(int alpha0,
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 
+        // Saturating: an unbounded accumulator overflows in a long search.
         const int bonus = depth * depth;
-        state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])] += bonus;
+        int& history =
+            state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])];
+        history = std::min(history + bonus, ORDER_HISTORY_MAX);
 
         if (prev_move != 0) {
           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
@@ -206,8 +308,11 @@ int negamax(int alpha0,
 
     if (score > alpha) {
       alpha = score;
-      best_move = moves[i];
       type = TT_PV_NODE;
+
+      // Publish the root move as soon as it is proven better, so a search that
+      // is aborted mid-iteration still reports the best move it has completed.
+      if (ply == 0) { state->best_move = moves[i]; }
 
       // Update triangular PV table
       state->pv_table[ply][0] = moves[i];
@@ -221,18 +326,17 @@ int negamax(int alpha0,
     return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
   }
 
-  const int result = (best_so_far != MIN) ? best_so_far : (alpha0 - 1);
-  state->best_move = best_move;
+  assert(best_move != 0);
 
-  // Store the node in TT
-  // (void)type;
-  const int to_store = normalize_score(result, ply);
+  // Only the root knows which move the caller is allowed to play. Publishing
+  // from every ply meant an aborted search handed back a move belonging to a
+  // deep node, and usually to the other side.
+  if (ply == 0) { state->best_move = best_move; }
+
+  const int to_store = normalize_score(best_so_far, ply);
   tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move);
 
-  return result;
-
-
-  return score;
+  return best_so_far;
 }
 
 
@@ -247,24 +351,25 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   state->aborted = false;
 
-  // Aspiration windows: try a narrow window around the previous depth's score.
-  // Widen to the full window if we get a fail-low or fail-high.
-  int score = negamax(MIN, MAX, depth, 0, game, state);
+  int score = negamax(MIN, MAX, depth, 0, game, state, 0, true);
 
   state->prev_score = score;
   search_result.best_move = state->best_move;
 
-  // Handle mate score
-  search_result.mate_found = false;
+  // A mate score is +-(MATE_MAX - ply of the mate), so the distance in plies
+  // falls straight out of it. UCI wants full moves, and the side that delivers
+  // the mate is given by the sign.
+  const int plies_to_mate = MATE_MAX - std::abs(score);
 
-  if (score >= -MATE_MAX && score <= -MATE_MIN) {
-    search_result.mate_found = true;
-    search_result.mate_in = -(score + MATE_MAX) / 2 - 1;
-  }
+  // The lower bound matters because evaluate() prices a king above MATE_MAX: a
+  // position with an unbalanced king count would otherwise be reported as a
+  // mate at a negative distance.
+  search_result.mate_found =
+      (plies_to_mate >= 0) && (plies_to_mate < (MATE_MAX - MATE_MIN));
 
-  if (score >= MATE_MIN && score <= MATE_MAX) {
-    search_result.mate_found = true;
-    search_result.mate_in = (MATE_MAX - score) / 2 + 1;
+  if (search_result.mate_found) {
+    const int moves_to_mate = (plies_to_mate + 1) / 2;
+    search_result.mate_in = (score > 0) ? moves_to_mate : -moves_to_mate;
   }
 
   search_result.explored_nodes = state->explored_nodes;
@@ -274,21 +379,19 @@ search_t search(int depth, game_t* game, search_state_t* state)
   memcpy(search_result.pv.table, state->pv_table[0],
          state->pv_length[0] * sizeof(move_t));
 
+#ifndef NDEBUG
+  // The caller is allowed to keep the root result of an aborted iteration, so
+  // the invariant has to hold there too: whenever a PV exists it is legal and
+  // starts with the reported best move. Having no PV at all is only valid for
+  // an abort or a terminal position.
+  if (search_result.pv.length > 0) {
+    if (!is_pv_legal(game, &search_result.pv)) {
+      LOG_E << "Illegal PV" << END_E;
+    }
 
-  // #ifndef NDEBUG
-  //   const bool legal = is_pv_legal(game, &search_result.pv);
-  //   if (!legal) { LOG_E << "Illegal PV" << END_E; }
-
-  //   if (search_result.best_move != search_result.pv.pv_table[0][0]) {
-  //     LOG_E << "Best move is not the same in the PV table" << END_E;
-  //     LOG_E << "Best move: " << print_move(search_result.best_move) << END_E;
-  //     LOG_E << "PV[0][0]:  " << print_move(search_result.pv.pv_table[0][0])
-  //           << END_E;
-  //   }
-
-  // #endif
-
-  //   assert(search_result.best_move == search_result.pv.pv_table[0][0]);
+    assert(search_result.best_move == search_result.pv.table[0]);
+  }
+#endif
 
   return search_result;
 }

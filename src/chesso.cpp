@@ -24,8 +24,7 @@
 //-##############################    GLOBALS    #############################-//
 #define MOVE_OVERHEAD_MS 50
 #define DEFAULT_MOVES_TO_GO 20
-// This is an heuristic measured on TRICKY_POS
-#define SEARCH_BRANCHING_FACTOR 10
+#define SEARCH_SOFT_LIMIT_PERCENT 60
 
 
 static game_t game = {};
@@ -517,13 +516,18 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   state.tt = &tt;
   assert(state.tt != nullptr);
 
+  tt_new_search(state.tt);
+
   std::atomic_bool never_stop = false;
   state.stop = &never_stop;
 
   const auto beguine_of_the_search = std::chrono::steady_clock::now();
   std::chrono::steady_clock::duration last_iteration = {};
-  std::chrono::steady_clock::duration prev_iteration = {};
-  double growth_estimate = SEARCH_BRANCHING_FACTOR;
+
+  const int soft_percent =
+      (conf.movetime_ms > 0) ? 100 : SEARCH_SOFT_LIMIT_PERCENT;
+  const double soft_limit_ms =
+      (static_cast<double>(conf.search_time_ms) * soft_percent) / 100.0;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -544,20 +548,39 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     const search_t search_result = search(current_depth, &game, &state);
 
     const auto end_time = std::chrono::steady_clock::now();
-    prev_iteration = last_iteration;
     last_iteration = end_time - start_time;
-
-    if (prev_iteration.count() > 0 && last_iteration.count() > 0) {
-      const double observed = static_cast<double>(last_iteration.count()) /
-                              static_cast<double>(prev_iteration.count());
-      growth_estimate =
-          std::clamp((growth_estimate + observed) / 2.0, 2.0, 20.0);
-    }
 
     const auto duration_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(last_iteration);
 
     state.stop = &stop_search_signal;
+
+    result.total_node_explored += search_result.explored_nodes;
+
+    // An aborted iteration is still worth to evaluate. The root replaces its
+    // move only when that move beats every move searched before it at this
+    // depth, and the first move it searches is the previous iteration's best
+    // so a non-empty PV means the partial iteration knows something the
+    // completed one did not. Its *score* is meaningless, which is why nothing
+    // is reported for it.
+    const bool has_result = search_result.pv.length > 0;
+
+    if (has_result) {
+      result.best_move = search_result.best_move;
+      result.uci_best_move = {MOVE_FROM(search_result.best_move),
+                              MOVE_TO(search_result.best_move),
+                              MOVE_PROMOTED(search_result.best_move)};
+
+      result.is_ponder_move = false;
+      if (search_result.pv.length > 1) {
+        result.is_ponder_move = true;
+        result.ponder_move = {MOVE_FROM(search_result.pv.table[1]),
+                              MOVE_TO(search_result.pv.table[1]),
+                              MOVE_PROMOTED(search_result.pv.table[1])};
+      }
+
+      result.pv = search_result.pv;
+    }
 
     if (state.aborted) { break; }
 
@@ -570,38 +593,16 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
               STR(search_result.explored_nodes) + " pv " +
               pv_to_string(&search_result.pv));
 
-    result.best_move = search_result.best_move;
-    result.uci_best_move = {MOVE_FROM(search_result.best_move),
-                            MOVE_TO(search_result.best_move),
-                            MOVE_PROMOTED(search_result.best_move)};
-
-    result.is_ponder_move = false;
-    if (search_result.pv.length > 1) {
-      result.is_ponder_move = true;
-      result.ponder_move = {MOVE_FROM(search_result.pv.table[1]),
-                            MOVE_TO(search_result.pv.table[1]),
-                            MOVE_PROMOTED(search_result.pv.table[1])};
-    }
-
-    result.pv = search_result.pv;
-
-    result.total_node_explored += search_result.explored_nodes;
-
     if (stop_search_signal) { break; }
     if (conf.nodes != 0 && result.total_node_explored >= conf.nodes) { break; }
 
     if (conf.search_time_ms > 0) {
-      // Only start another iteration if we expect to finish it.
       const double elapsed_ms =
           std::chrono::duration<double, std::milli>(
               std::chrono::steady_clock::now() - beguine_of_the_search)
               .count();
-      const double last_ms =
-          std::chrono::duration<double, std::milli>(last_iteration).count();
 
-      if (elapsed_ms + (last_ms * growth_estimate) > conf.search_time_ms) {
-        break;
-      }
+      if (elapsed_ms >= soft_limit_ms) { break; }
     }
   }
 

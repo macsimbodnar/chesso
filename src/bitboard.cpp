@@ -245,9 +245,26 @@ size_t generate_moves(const bb_tables_t* tables,
 }
 
 
+bool move_belongs_to_side_to_move(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+
+  const unsigned piece = MOVE_PIECE(move);
+
+  if (piece > B_KING) { return false; }
+
+  const bool is_white_piece = (piece < B_PAWN);
+
+  if (is_white_piece != (board->active_color == WHITE)) { return false; }
+
+  return GET_BIT(board->bitboards[piece], MOVE_FROM(move)) != BB_0;
+}
+
+
 bool make_move(game_t* game, move_t encoded_move)
 {
   assert(game != nullptr);
+  assert(move_belongs_to_side_to_move(&game->board, encoded_move));
 
   const bb_tables_t* tables = &game->tables;
   const zobrist_randoms_t* randoms = &game->hash_randoms;
@@ -1002,6 +1019,8 @@ size_t get_ambiguous_move(const unpacked_move_t* move,
 
 bool is_move_legal(game_t* game, move_t move)
 {
+  if (!move_belongs_to_side_to_move(&game->board, move)) { return false; }
+
   if (make_move(game, move)) {
     unmake_move(game);
     return true;
