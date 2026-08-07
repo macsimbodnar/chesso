@@ -22,9 +22,9 @@ static constexpr int MIN = -2000000000;
 static constexpr int MAX = 2000000000;
 
 
-#define NULL_MOVE_REDUCTION 2
-#define LMR_WHEN_START_IN_THE_LIST 4
-#define LMR_START_AT_DEPTH 3
+// NOTE: there is no null move pruning, no late move reduction and no PVS
+// re-search yet. The tuning constants for them used to live here and read as
+// if the pruning existed.
 #define MAX_QSEARCH_DEPTH 8
 
 
@@ -353,7 +353,6 @@ search_t search(int depth, game_t* game, search_state_t* state)
 
   int score = negamax(MIN, MAX, depth, 0, game, state, 0, true);
 
-  state->prev_score = score;
   search_result.best_move = state->best_move;
 
   // A mate score is +-(MATE_MAX - ply of the mate), so the distance in plies

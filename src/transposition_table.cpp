@@ -1,14 +1,78 @@
 #include "transposition_table.hpp"
+#include <algorithm>
+#include <bit>
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
 #include "log.hpp"
+
+
+void tt_resize(transposition_table_t* tt, size_t megabytes)
+{
+  assert(tt != nullptr);
+
+  megabytes = std::clamp<size_t>(megabytes, TT_MIN_MB, TT_MAX_MB);
+
+  free(tt->entries);
+  tt->entries = nullptr;
+  tt->entry_count = 0;
+  tt->index_mask = 0;
+
+  // Rounded down to a power of two so probing can mask instead of divide.
+  size_t count = std::bit_floor((megabytes * 1024 * 1024) / sizeof(tt_entry_t));
+
+  // A machine that cannot spare the requested size still has to play, so keep
+  // halving rather than giving up on the table entirely.
+  while (count > 0) {
+    tt->entries =
+        static_cast<tt_entry_t*>(calloc(count, sizeof(tt_entry_t)));
+
+    if (tt->entries != nullptr) { break; }
+
+    LOG_W << "TT allocation of " << count << " entries failed, halving"
+          << END_W;
+    count /= 2;
+  }
+
+  if (tt->entries == nullptr) {
+    LOG_E << "Could not allocate a transposition table. Running without one."
+          << END_E;
+    return;
+  }
+
+  tt->entry_count = count;
+  tt->index_mask = count - 1;
+  tt->generation = 1;  // 1 makes it stable
+
+  LOG_I << "TT sized to " << megabytes << "MB (" << count << " entries, "
+        << ((count * sizeof(tt_entry_t)) / (1024 * 1024)) << "MB used)" << END_I;
+}
+
+
+void tt_free(transposition_table_t* tt)
+{
+  assert(tt != nullptr);
+
+  free(tt->entries);
+  tt->entries = nullptr;
+  tt->entry_count = 0;
+  tt->index_mask = 0;
+}
 
 
 void tt_reset(transposition_table_t* tt)
 {
-  LOG_I << "Cleanup TT" << END_I;
-  memset(tt, 0, sizeof(transposition_table_t));
+  assert(tt != nullptr);
 
-  tt->generation = 1; // 1 makes it stable
+  LOG_I << "Cleanup TT" << END_I;
+
+  // Only the entries are cleared. Wiping the struct itself would drop the
+  // pointer to the allocation and leak it.
+  if (tt->entries != nullptr) {
+    memset(tt->entries, 0, tt->entry_count * sizeof(tt_entry_t));
+  }
+
+  tt->generation = 1;  // 1 makes it stable
 }
 
 
@@ -29,10 +93,10 @@ const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
   assert(tt != nullptr);
   assert(board != nullptr);
 
-  const uint64_t hash = board->hash;
-  const tt_entry_t* res = &tt->entries[hash % TT_SIZE];
+  if (tt->entries == nullptr) { return nullptr; }
 
-  assert(res != nullptr);
+  const uint64_t hash = board->hash;
+  const tt_entry_t* res = &tt->entries[hash & tt->index_mask];
 
   if (res->key == hash) { return res; }
 
@@ -51,8 +115,10 @@ void tt_store_entry(transposition_table_t* tt,
   assert(board != nullptr);
   assert(best_move != 0);
 
+  if (tt->entries == nullptr) { return; }
+
   const uint64_t hash = board->hash;
-  tt_entry_t* entry = &tt->entries[hash % TT_SIZE];
+  tt_entry_t* entry = &tt->entries[hash & tt->index_mask];
 
   // Depth-preferred inside one search, always replaceable across searches.
   if (entry->generation != tt->generation || depth >= entry->depth) {

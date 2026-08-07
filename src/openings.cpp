@@ -576,7 +576,8 @@ size_t get_book_moves_for_key(const book_t* book,
   const polyglot_entry_t* data_ptr =
       reinterpret_cast<const polyglot_entry_t*>(book->book.data());
 
-  for (size_t i = 0; i < book->num_of_positions; ++i) {
+  for (size_t i = 0; i < book->num_of_positions && moves_count < MAX_MOVES;
+       ++i) {
     const polyglot_entry_t& entry = data_ptr[i];
 
 

@@ -1,5 +1,6 @@
 #include "bitboard.hpp"
 #include <bit>
+#include <limits>
 #include <random>
 #include <unordered_map>
 #include "bb_tables.hpp"
@@ -273,11 +274,20 @@ bool make_move(game_t* game, move_t encoded_move)
 
   const hash_t old_hash = board->hash;
 
+  // Both stacks are fixed size. Refusing the move leaves the board untouched
+  // and consistent; writing past the end would corrupt whatever follows. The
+  // search can never reach this - it is bounded by MAX_PLY - so this only
+  // guards an absurdly long [position ... moves ...] line.
+  if (history->size + 1 >= HISTORY_MAX_SIZE ||
+      game->repetitions.size + 1 >= REPETITION_MAX_SIZE) {
+    LOG_E << "Move stack is full, refusing the move" << END_E;
+    return false;
+  }
+
   // Store the history
   history_entry_t* history_entry = &history->entries[history->size++];
   memcpy(&history_entry->board, board, sizeof(board_t));
   history_entry->repetition_size = game->repetitions.size;
-  assert(history->size < HISTORY_MAX_SIZE);
 
   unpacked_move_t move(encoded_move);
 
@@ -350,11 +360,9 @@ bool make_move(game_t* game, move_t encoded_move)
   // ep_randoms has an entry for INVALID_INDEX and it must be folded in and out
   // like any other square. Skipping it when there is no en-passant square (as
   // this used to) leaves the incremental hash offset by a constant from
-  // compute_full_hash() and from set_en_passant(), which applies it
-  // unconditionally. Null move pruning calls set_en_passant(), so every
-  // position under a null move used to land in a different key space than the
-  // same position reached by ordinary moves, and could never share a
-  // transposition table entry with it.
+  // compute_full_hash() and from set_en_passant(), both of which apply it
+  // unconditionally, so the two would disagree about the key for the same
+  // position.
   board->hash ^= randoms->ep_randoms[board->en_passant];
   const index_t push =
       static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
@@ -441,9 +449,8 @@ bool make_move(game_t* game, move_t encoded_move)
   // After black turn update the full move counter as well
   if (us == BLACK) { board->fullmove_counter++; }
 
-  // Store repetitions
+  // Store repetitions. Capacity was checked before the history push above.
   game->repetitions.entries[game->repetitions.size++] = old_hash;
-  assert(game->repetitions.size < REPETITION_MAX_SIZE);
 
   // Check legality: the side that just moved must not have left its king en
   // prise.
@@ -502,15 +509,23 @@ bool is_position_repeated(const repetition_t* rep, const board_t* board)
 bool is_check(const game_t* game)
 {
   assert(game != nullptr);
-  const index_t index = (game->board.active_color == WHITE)
-                            ? get_lsb_index(game->board.bitboards[W_KING])
-                            : get_lsb_index(game->board.bitboards[B_KING]);
 
-  // is king in check
-  const bool in_check = is_attacked(&game->tables, &game->board, index,
-                                    !game->board.active_color);
+  const bb_t king = (game->board.active_color == WHITE)
+                        ? game->board.bitboards[W_KING]
+                        : game->board.bitboards[B_KING];
 
-  return in_check;
+  // A side with no king cannot be in check. This is reachable: EMPTY_POS has
+  // no kings at all, and an illegal FEN where the side to move is already
+  // giving check lets the search capture the enemy king. get_lsb_index()
+  // returns 64 for an empty board, which is out of bounds for every attack
+  // table is_attacked() touches. make_move() already guards its own king test
+  // the same way.
+  if (king == BB_0) { return false; }
+
+  const index_t index = get_lsb_index(king);
+
+  return is_attacked(&game->tables, &game->board, index,
+                     !game->board.active_color);
 }
 
 
@@ -636,6 +651,14 @@ bool load_FEN(const std::string& FEN, game_t* game)
   for (const char c : sections[0]) {
     switch (c) {
       case '/':
+        // Both counters are unsigned and index straight into a 64 bit board,
+        // so a rank that does not add up to 8, or a ninth rank, has to be
+        // rejected here rather than shifting past the end of the bitboard.
+        if (file != 8 || rank == 0) {
+          LOG_E << "Malformed rank in FEN string. FEN: " << FEN << END_E;
+          return false;
+        }
+
         file = 0;
         --rank;
         break;
@@ -677,6 +700,12 @@ bool load_FEN(const std::string& FEN, game_t* game)
       case 'r':
       case 'q':
       case 'k': {
+        if (file >= 8) {
+          LOG_E << "Too many pieces on a rank in FEN string. FEN: " << FEN
+                << END_E;
+          return false;
+        }
+
         const index_t index = position_to_index(file, rank);
         const piece_t piece = char_to_piece(c);
         SET_BIT(board->bitboards[piece], index);
@@ -691,6 +720,17 @@ bool load_FEN(const std::string& FEN, game_t* game)
         return false;
         break;
     }
+
+    if (file > 8) {
+      LOG_E << "Rank overflows past the h file in FEN string. FEN: " << FEN
+            << END_E;
+      return false;
+    }
+  }
+
+  if (rank != 0 || file != 8) {
+    LOG_E << "FEN string does not describe all 8 ranks. FEN: " << FEN << END_E;
+    return false;
   }
 
   /***************************************************************************
@@ -782,7 +822,11 @@ bool load_FEN(const std::string& FEN, game_t* game)
   }
 
   if (sections[3].size() == 2) {
-    if (!isalpha(sections[3][0]) || !isdigit(sections[3][1])) {
+    // isalpha/isdigit are far too permissive here: str_to_index() subtracts
+    // 'a' and '1' and feeds the result to position_to_index(), so anything
+    // outside the board wraps the unsigned index and reads out of bounds.
+    if (sections[3][0] < 'a' || sections[3][0] > 'h' || sections[3][1] < '1' ||
+        sections[3][1] > '8') {
       LOG_E << "Invalid en passant section. Wrong algebraic notation ["
             << sections[3] << "]. FEN: " << FEN << END_E;
       return false;
@@ -814,7 +858,17 @@ bool load_FEN(const std::string& FEN, game_t* game)
   }
 
   try {
-    board->halfmove_clock = static_cast<int>(std::stoul(half_move));
+    const unsigned long clock = std::stoul(half_move);
+
+    // The field is a uint8_t. Truncating a larger value would silently reset
+    // the fifty move counter and shrink the repetition search window.
+    if (clock > std::numeric_limits<uint8_t>::max()) {
+      LOG_E << "Halfmove clock out of range [" << half_move
+            << "]. FEN: " << FEN << END_E;
+      return false;
+    }
+
+    board->halfmove_clock = static_cast<uint8_t>(clock);
   } catch (std::exception& e) {
     LOG_E << "Can't convert Halfmove clock to integer.What: "
           << std::string(e.what()) << " FEN: " << FEN << END_E;

@@ -1,33 +1,52 @@
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-# Test chesso board
-add_executable(test_chesso test_chesso.cpp)
+# Every doctest binary needs the same include paths and the same engine
+# library, and every one of them is expected to finish in seconds. Perft is the
+# exception and is registered separately with the "slow" label.
+function(add_doctest_target name)
+     add_executable(${name} ${name}.cpp)
 
-target_include_directories(test_chesso SYSTEM PRIVATE doctest/doctest)
-target_include_directories(test_chesso SYSTEM PRIVATE json/single_include/nlohmann)
-target_include_directories(test_chesso PRIVATE ../src)
+     target_include_directories(${name} SYSTEM PRIVATE doctest/doctest)
+     target_include_directories(${name} SYSTEM PRIVATE json/single_include/nlohmann)
+     target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+     target_include_directories(${name} PRIVATE ../src)
 
-target_link_libraries(test_chesso PRIVATE chesso_engine)
+     target_link_libraries(${name} PRIVATE chesso_engine)
 
-add_test(NAME test_chesso COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_chesso)
+     add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
 
-# # Test openings
-add_executable(test_openings test_openings.cpp)
+     # A fast test that stops making progress is a bug. Without an explicit
+     # timeout it would burn CTest's 1500 second default before saying so.
+     set_tests_properties(${name} PROPERTIES LABELS "fast" TIMEOUT 60)
+endfunction()
 
-target_include_directories(test_openings SYSTEM PRIVATE doctest/doctest)
-target_include_directories(test_openings PRIVATE ../src)
+add_doctest_target(test_chesso)
+add_doctest_target(test_openings)
+add_doctest_target(test_movegen)
+add_doctest_target(test_evaluation)
+add_doctest_target(test_search)
+add_doctest_target(test_engine)
 
-target_link_libraries(test_openings PRIVATE chesso_engine)
-
-add_test(NAME test_openings COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_openings)
-
-# Perft
+# Perft. Not a doctest binary: it has its own main() and reports through the
+# process exit code. Minutes, not seconds, so it carries the "slow" label and
+# is skipped by `ctest -L fast`.
 add_executable(test_perft test_perft.cpp)
 target_include_directories(test_perft SYSTEM PRIVATE json/single_include/nlohmann)
 target_include_directories(test_perft PRIVATE ../src)
 target_link_libraries(test_perft PRIVATE chesso_engine)
 add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
+set_tests_properties(test_perft PROPERTIES LABELS "slow" TIMEOUT 1800)
+
+# Move generation benchmark. Registered so it can be run through ctest, but
+# under its own label and with no threshold: timings depend on the machine, so
+# there is nothing here that can pass or fail. It prints, and you compare two
+# runs yourself.
+add_executable(bench_movegen bench_movegen.cpp)
+target_include_directories(bench_movegen PRIVATE ../src)
+target_link_libraries(bench_movegen PRIVATE chesso_engine)
+add_test(NAME bench_movegen COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bench_movegen)
+set_tests_properties(bench_movegen PROPERTIES LABELS "bench" TIMEOUT 600)
 
 # # Test gui
 if(CHESSO_BUILD_GUI)

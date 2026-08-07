@@ -4,11 +4,11 @@ set -euo pipefail
 # NOTE: --fast will run the fast version.
 
 # reference="/usr/games/chesso"
-reference="/home/max/ws/chesso/.no_git/chesso_bitboard_minimal_eval"
-candidate="/home/max/ws/chesso/build/src/chesso"
-book="/home/max/ws/chesso/.no_git/8moves_v3.pgn"
+reference="/Users/max/.local/bin/chesso"
+candidate="/Users/max/ws/chesso/build/src/chesso"
+book="/Users/max/ws/chesso/books/8moves_v3.pgn"
 tc="10+0.2"
-concurrency=12
+concurrency=8
 
 # adjudication cuts dead games, gets to a verdict faster
 adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"

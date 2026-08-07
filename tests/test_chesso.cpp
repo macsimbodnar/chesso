@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
@@ -13,8 +14,19 @@
 
 
 using json = nlohmann::json;
-static std::random_device rd;
-static std::mt19937 gen(rd());
+
+// A fixed seed keeps a failing random walk reproducible. Set CHESSO_TEST_SEED
+// to replay a different one.
+static unsigned int test_seed()
+{
+  const char* env = std::getenv("CHESSO_TEST_SEED");
+
+  if (env == nullptr) { return 20240807u; }
+
+  return static_cast<unsigned int>(std::strtoul(env, nullptr, 10));
+}
+
+static std::mt19937 gen(test_seed());
 
 static game_t game;
 
@@ -230,7 +242,7 @@ TEST_SUITE("Test utils")
 {
   TEST_CASE("Test FEN")
   {
-    load_FEN(DEFAULT_POSITION, &game);
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     std::string fen_result = generate_FEN(&game.board);
 
@@ -245,7 +257,7 @@ TEST_SUITE("Test utils")
       for (const json& test_case : test_cases["testCases"]) {
         {
           const std::string expected_FEN = test_case["start"]["fen"];
-          load_FEN(expected_FEN, &game);
+          REQUIRE(load_FEN(expected_FEN, &game));
 
           const std::string result_FEN = generate_FEN(&game.board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -253,7 +265,7 @@ TEST_SUITE("Test utils")
 
         for (const json& expected : test_case["expected"]) {
           const std::string expected_FEN = expected["fen"];
-          load_FEN(expected_FEN, &game);
+          REQUIRE(load_FEN(expected_FEN, &game));
 
           const std::string result_FEN = generate_FEN(&game.board);
           REQUIRE_EQ(result_FEN, expected_FEN);
@@ -264,7 +276,7 @@ TEST_SUITE("Test utils")
 
   TEST_CASE("Test algebraic parsing")
   {
-    load_FEN(DEFAULT_POSITION, &game);
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     move_t moves[MAX_MOVES];
     size_t moves_count = generate_moves(&game.tables, &game.board, moves);
@@ -287,7 +299,7 @@ TEST_SUITE("Test move generator")
 {
   TEST_CASE("Basic test")
   {
-    load_FEN(DEFAULT_POSITION, &game);
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     move_t moves[270];
     const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
@@ -304,7 +316,7 @@ TEST_SUITE("Test move generator")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
-        load_FEN(starting_pos, &game);
+        REQUIRE(load_FEN(starting_pos, &game));
 
         move_t moves[270];
         const size_t moves_count = test_generate_legal_moves(&game, moves);
@@ -377,7 +389,7 @@ TEST_SUITE("Test make_move and unmake_move")
         std::string starting_pos = test_case["start"]["fen"];
         json expected_moves = test_case["expected"];
 
-        load_FEN(starting_pos, &game);
+        REQUIRE(load_FEN(starting_pos, &game));
 
         move_t moves[270];
         const size_t moves_count = test_generate_legal_moves(&game, moves);
@@ -415,7 +427,7 @@ TEST_SUITE("Test make_move and unmake_move")
 
   TEST_CASE("Test random moves")
   {
-    load_FEN(DEFAULT_POSITION, &game);
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     // We limit the depth to the maximum number of repetitions we can store in
     // order to avoid a crash
@@ -424,8 +436,11 @@ TEST_SUITE("Test make_move and unmake_move")
 
     const int depth_reached = make_random_move(max_depth, &game);
 
-    std::cout << "Test random moves depth reached: "
-              << (max_depth - depth_reached) << std::endl;
+    std::cout << "Test random moves seed: " << test_seed()
+              << " depth reached: " << (max_depth - depth_reached) << std::endl;
+
+    // Without this the whole walk is satisfied by a game that ends at once.
+    REQUIRE(max_depth - depth_reached > 0);
   }
 
 
@@ -447,7 +462,7 @@ TEST_SUITE("Test make_move and unmake_move")
     // clang-format on
 
     for (const auto& test_case : test_cases) {
-      load_FEN(test_case.FEN, &game);
+      REQUIRE(load_FEN(test_case.FEN, &game));
       const bool res = is_check(&game);
       REQUIRE_EQ(res, test_case.is_in_check);
     }
@@ -474,7 +489,7 @@ TEST_SUITE("Test make_move and unmake_move")
     }};
 
     for (const auto& test_case : test_cases) {
-      load_FEN(test_case.FEN, &game);
+      REQUIRE(load_FEN(test_case.FEN, &game));
       const bool res = is_capturing_king(&game.board, test_case.move);
       REQUIRE_MESSAGE(res == test_case.expected_result,
                       ("Failed with FEN: " + test_case.FEN +
@@ -496,235 +511,4 @@ TEST_SUITE("Test make_move and unmake_move")
     REQUIRE_EQ(NOT_GH_FILES, ~(file_masks[6] | file_masks[7]));
   }
 
-  // TEST_CASE("Test make_move")
-  // {
-  //   static const std::string moves_list[] = {
-  //       "e2e4", "e7e6", "d2d4", "d7d5", "b1c3", "g8f6", "c1g5",
-  //       "f8e7", "e4e5", "f6d7", "h2h4", "e8g8", "f1d3", "c7c5",
-  //       "d1g4", "e7g5", "h4g5", "d8c7", "d3h7",
-  //   };
-
-
-  //   for (const auto move_str : moves_list) {
-  //     const auto parsing_result = algebraic_to_uci_move(move_str);
-  //     REQUIRE(parsing_result.has_value());
-  //     const uci_move_t move_candidate = parsing_result.value();
-
-  //     unpacked_move_t move(0);
-  //     move.from = move_candidate.from;
-  //     move.to = move_candidate.to;
-  //     move.promoted_to = move_candidate.promotion;
-
-  //     // Attempt the move. We ignore if move happened or not
-  //     bool res = try_move(&move);
-  //   }
 }
-
-// TEST_SUITE("Test evaluation")
-// {
-//   TEST_CASE("Test double pawns detection")
-//   {
-//     // White
-//     init_board("4P3/pppppppP/1p5P/1p6/1p6/1P3P2/1P1P4/4P1K1 w - - 0 1",
-//     &board,
-//                &globals);
-
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("b2"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("b3"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("e1"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("e8"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("h6"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("h7"), &board));
-
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("d2"),
-//     &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("f3"),
-//     &board));
-
-//     // Black
-//     init_board("8/pkp3pp/1p2p3/2p1p3/2p5/3PPP2/PPP3PP/6K1 b - - 0 1",
-//     &board,
-//                &globals);
-
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("e6"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("e5"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("c7"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("c5"), &board));
-//     REQUIRE(is_double_pawn(string_coordinates_to_index("c4"), &board));
-
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("h7"),
-//     &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("g7"),
-//     &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b6"),
-//     &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("a7"),
-//     &board));
-//     REQUIRE_FALSE(is_double_pawn(string_coordinates_to_index("b7"),
-//     &board));
-//   }
-
-
-//   TEST_CASE("Test passed pawns detection")
-//   {
-//     init_board("4k3/8/7p/1P2Pp1P/2Pp1PP1/8/8/4K3 w - - 0 1", &board,
-//     &globals);
-
-//     REQUIRE(is_passed_pawn(string_coordinates_to_index("b5"), &board));
-//     REQUIRE(is_passed_pawn(string_coordinates_to_index("c4"), &board));
-//     REQUIRE(is_passed_pawn(string_coordinates_to_index("e5"), &board));
-//     REQUIRE(is_passed_pawn(string_coordinates_to_index("d4"), &board));
-
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f4"),
-//     &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("f5"),
-//     &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("g4"),
-//     &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h5"),
-//     &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("h6"),
-//     &board));
-//     REQUIRE_FALSE(is_passed_pawn(string_coordinates_to_index("a2"),
-//     &board));
-//   }
-
-
-//   TEST_CASE("Test isolated pawns detection")
-//   {
-//     init_board("4k3/pp6/7p/1P2Pp1P/3p1PP1/8/2p5/4K3 w - - 0 1", &board,
-//                &globals);
-
-//     REQUIRE(is_isolated_pawn(string_coordinates_to_index("b5"), &board));
-//     REQUIRE(is_isolated_pawn(string_coordinates_to_index("f5"), &board));
-//     REQUIRE(is_isolated_pawn(string_coordinates_to_index("h6"), &board));
-
-
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("a7"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("b7"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("c2"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("d4"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("e5"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("f4"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("g4"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("h5"),
-//     &board));
-//     REQUIRE_FALSE(is_isolated_pawn(string_coordinates_to_index("e1"),
-//     &board));
-//   }
-
-//   TEST_CASE("Test double pawns evaluation")
-//   {
-//     init_board("3k4/pp4pp/8/8/8/7P/PP5P/3K4 w - - 0 1", &board, &globals);
-
-//     int score = evaluate(&board);
-//     REQUIRE_EQ(score, -40);
-
-//     init_board("3k4/pp5p/7p/8/8/8/PP4PP/3K4 w - - 0 1", &board, &globals);
-
-//     score = evaluate(&board);
-//     REQUIRE_EQ(score, 40);
-//   }
-
-
-//   TEST_CASE("Test isolated pawns evaluation")
-//   {
-//     init_board("3k4/ppp2ppp/8/4P3/8/8/PPP3PP/3K4 w - - 0 1", &board,
-//     &globals);
-
-//     int score = evaluate(&board);
-//     REQUIRE_EQ(score, 10);
-
-//     init_board("3k4/ppp3pp/8/8/4p3/8/PPP2PPP/3K4 w - - 0 1", &board,
-//     &globals);
-
-//     score = evaluate(&board);
-//     REQUIRE_EQ(score, -10);
-
-//     init_board("3k4/pp4pp/8/3p4/3P4/8/PP4PP/3K4 w - - 0 1", &board,
-//     &globals);
-
-//     score = evaluate(&board);
-//     REQUIRE_EQ(score, 0);
-//   }
-
-//   TEST_CASE("Test passed pawns evaluation")
-//   {
-//     init_board("3k4/8/8/p4ppp/1PP3PP/8/8/3K4 w - - 0 1", &board, &globals);
-
-//     int score = evaluate(&board);
-//     REQUIRE_EQ(score, 45);
-
-//     init_board("3k4/8/8/1pp2pp1/PPP4P/8/8/3K4 w - - 0 1", &board,
-//     &globals);
-
-//     score = evaluate(&board);
-//     REQUIRE_EQ(score, -40);
-
-//     // TODO: Check this testcase. Should be 0
-//     init_board("3k4/8/8/5ppp/PPP5/8/8/3K4 w - - 0 1", &board, &globals);
-
-//     score = evaluate(&board);
-//     REQUIRE_EQ(score, 5);
-//   }
-
-//   TEST_CASE("Test count pieces on file")
-//   {
-//     init_board("3k4/1p4p1/2p1pp2/4p3/1Q1BBB2/B4PP1/2B2P2/3K4 w - - 0 1",
-//     &board,
-//                &globals);
-
-//     piece_count_t count;
-
-//     count = count_pieces_on_file(string_coordinates_to_index("a3"),
-//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 0);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("b7"),
-//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 0);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("c2"),
-//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 1);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("d1"),
-//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 1);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("e1"),
-//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 2);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("f4"),
-//     &board); REQUIRE_EQ(count.white, 2); REQUIRE_EQ(count.black, 1);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("g7"),
-//     &board); REQUIRE_EQ(count.white, 1); REQUIRE_EQ(count.black, 0);
-
-//     count = count_pieces_on_file(string_coordinates_to_index("h1"),
-//     &board); REQUIRE_EQ(count.white, 0); REQUIRE_EQ(count.black, 0);
-//   }
-
-//   TEST_CASE("Test king shield")
-//   {
-//     init_board("2k5/1pp5/8/8/8/8/5PPP/6K1 w - - 0 1", &board, &globals);
-//     bool res;
-
-//     res = is_king_shielded(string_coordinates_to_index("g1"), &board);
-//     REQUIRE(res);
-
-//     res = is_king_shielded(string_coordinates_to_index("c8"), &board);
-//     REQUIRE_FALSE(res);
-
-//     init_board("2k5/1ppp4/8/8/8/8/5P1P/6K1 w - - 0 1", &board, &globals);
-
-//     res = is_king_shielded(string_coordinates_to_index("g1"), &board);
-//     REQUIRE_FALSE(res);
-
-//     res = is_king_shielded(string_coordinates_to_index("c8"), &board);
-//     REQUIRE(res);
-//   }
-// }

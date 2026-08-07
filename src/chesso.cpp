@@ -18,15 +18,11 @@
 #include "openings.hpp"
 #include "search.hpp"
 #include "transposition_table.hpp"
+#include "uci.hpp"
 #include "utils.hpp"
 
 
 //-##############################    GLOBALS    #############################-//
-#define MOVE_OVERHEAD_MS 50
-#define DEFAULT_MOVES_TO_GO 20
-#define SEARCH_SOFT_LIMIT_PERCENT 60
-
-
 static game_t game = {};
 static std::string initial_position = DEFAULT_POSITION;
 static bool opening_book_loaded = false;
@@ -48,53 +44,20 @@ static bool is_debug = false;
 static bool running = true;
 
 
-//-##############################   DATA TYPES  #############################-//
-struct uci_search_options_t
-{
-  // Modifiers
-  std::vector<move_t> searchmoves;
-  bool ponder = false;
-
-  // Exclusive fixed Limit Options
-  int depth = 0;
-  uint64_t nodes = 0;
-  int movetime_ms = 0;
-  int mate_in_n_moves = 0;
-  bool infinite = false;
-
-  // Time control options
-  int wtime_ms = 0;
-  int btime_ms = 0;
-  int winc_ms = 0;
-  int binc_ms = 0;
-  int movestogo = 1;
-
-  // Timer time used for current search
-  int search_time_ms = 0;
-};
-
-
-struct uci_move_t
-{
-  index_t from;
-  index_t to;
-  promotion_t promotion;
-};
-
-struct uci_search_result_t
-{
-  uci_move_t uci_best_move;
-  bool is_ponder_move = false;
-  uci_move_t ponder_move;
-  move_t best_move;
-  uint64_t total_node_explored;
-  pv_t pv;
-};
-
-
 //-#############################   DECLARATIONS  ############################-//
 typedef bool (*process_func)(std::queue<std::string>&);
-std::string pv_to_string(const pv_t* pv);
+
+
+const game_t* uci_game()
+{
+  return &game;
+}
+
+
+const transposition_table_t* uci_tt()
+{
+  return &tt;
+}
 
 
 void uci_reply(const std::string& response)
@@ -110,6 +73,15 @@ void stop_and_join_search()
 {
   stop_search_signal = true;
 
+  if (search_thread.joinable()) { search_thread.join(); }
+}
+
+
+// Waits for a running [go] to finish on its own, without cutting it short. A
+// GUI never needs this - it just reads bestmove off stdout - but a test has to
+// know when the reply has been written.
+void uci_wait_for_search()
+{
   if (search_thread.joinable()) { search_thread.join(); }
 }
 
@@ -476,6 +448,32 @@ bool try_move(unpacked_move_t* move_candidate)
 }
 
 
+// Matches a book entry against the real move list and returns the generated
+// encoding of that move, or 0 when it is not legal here. Only from, to and the
+// promotion piece are compared: the book carries its own flags and they are
+// not necessarily the ones generate_moves() produces.
+move_t validate_book_move(move_t book_move)
+{
+  move_t moves[MAX_MOVES];
+  const size_t count = generate_moves(&game.tables, &game.board, moves);
+
+  for (size_t i = 0; i < count; ++i) {
+    if (MOVE_FROM(moves[i]) != MOVE_FROM(book_move) ||
+        MOVE_TO(moves[i]) != MOVE_TO(book_move) ||
+        MOVE_PROMOTED(moves[i]) != MOVE_PROMOTED(book_move)) {
+      continue;
+    }
+
+    if (make_move(&game, moves[i])) {
+      unmake_move(&game);
+      return moves[i];
+    }
+  }
+
+  return 0;
+}
+
+
 move_t search_random_move_in_book()
 {
   move_t result = {};
@@ -485,13 +483,30 @@ move_t search_random_move_in_book()
     const size_t moves_cout =
         get_book_moves_for_key(&opening_book, &game.board, moves);
 
-    if (moves_cout > 0) {
+    // A book move is reported to the GUI as the best move without ever being
+    // searched or played, so nothing else would catch a bad one. A polyglot
+    // key collision or a malformed book used to forfeit the game outright.
+    move_t legal_moves[MAX_MOVES];
+    size_t legal_count = 0;
+
+    for (size_t i = 0; i < moves_cout; ++i) {
+      const move_t validated = validate_book_move(moves[i]);
+
+      if (validated != 0) { legal_moves[legal_count++] = validated; }
+    }
+
+    if (legal_count != moves_cout) {
+      LOG_W << "Opening book returned " << (moves_cout - legal_count)
+            << " illegal move(s) for this position, discarded" << END_W;
+    }
+
+    if (legal_count > 0) {
       // Extreme included
-      std::uniform_int_distribution<size_t> dist(0, moves_cout - 1);
+      std::uniform_int_distribution<size_t> dist(0, legal_count - 1);
 
       const size_t index = dist(gen);
-      assert(index < moves_cout);
-      result = moves[index];
+      assert(index < legal_count);
+      result = legal_moves[index];
 
       LOG_I << "Found position in the opening book." << END_I;
     } else {
@@ -501,6 +516,27 @@ move_t search_random_move_in_book()
   }
 
   return result;
+}
+
+
+// A search cut off before it finishes even one root move still owes the GUI a
+// move. Only a position with no legal move at all may answer with the UCI null
+// move.
+move_t first_legal_move()
+{
+  move_t moves[MAX_MOVES];
+  const size_t count = generate_moves(&game.tables, &game.board, moves);
+
+  for (size_t i = 0; i < count; ++i) {
+    // generate_moves() is pseudo-legal, so the move only counts once it has
+    // survived make_move().
+    if (make_move(&game, moves[i])) {
+      unmake_move(&game);
+      return moves[i];
+    }
+  }
+
+  return 0;
 }
 
 
@@ -606,6 +642,22 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     }
   }
 
+  // A node or time budget small enough to abort before the first root move
+  // completes used to leave this at zero and report "bestmove 0000".
+  if (result.best_move == 0) {
+    const move_t fallback = first_legal_move();
+
+    if (fallback != 0) {
+      result.best_move = fallback;
+      result.uci_best_move = {MOVE_FROM(fallback), MOVE_TO(fallback),
+                              MOVE_PROMOTED(fallback)};
+      result.is_ponder_move = false;
+
+      LOG_W << "Search returned no move, answering with " << print_move(fallback)
+            << END_W;
+    }
+  }
+
   return result;
 }
 
@@ -618,6 +670,9 @@ bool command_uci(std::queue<std::string>& args)
   uci_reply("id name Chesso");
   uci_reply("id author MazerFaker");
   uci_reply("option name Use Book type check default false");
+  uci_reply("option name Hash type spin default " + STR(TT_DEFAULT_MB) +
+            " min " + STR(TT_MIN_MB) + " max " + STR(TT_MAX_MB));
+  uci_reply("option name Threads type spin default 1 min 1 max 1");
   uci_reply("uciok");
 
   return true;
@@ -696,6 +751,23 @@ bool command_setoption(std::queue<std::string>& args)
   if (option_name == "Use Book" && option_value == "false") {
     opening_book_enabled = false;
     LOG_I << "Use Book OFF" << END_I;
+  }
+
+  if (option_name == "Hash") {
+    try {
+      const long long megabytes = std::stoll(option_value);
+
+      // Reallocating under a live search would free the table it is probing.
+      stop_and_join_search();
+      tt_resize(&tt, static_cast<size_t>(std::max<long long>(megabytes, 0)));
+    } catch (...) {
+      LOG_W << "Hash value is not a number: " << option_value << END_W;
+    }
+  }
+
+  if (option_name == "Threads" && option_value != "1") {
+    LOG_W << "Only one search thread is supported, ignoring Threads="
+          << option_value << END_W;
   }
 
   return true;
@@ -877,12 +949,16 @@ bool command_go(std::queue<std::string>& args)
 
   const int int_max = std::numeric_limits<int>::max();
 
+  // `depth` cannot be inspected for this, it is pre-seeded with MAX_DEPTH so
+  // that an unconstrained search still terminates somewhere.
+  bool depth_given = false;
+
   while (!args.empty()) {
     const std::string token = args.front();
     args.pop();
 
     if (token == "depth") {
-      pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
+      depth_given = pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
     } else if (token == "movetime") {
       pop_int(args, "Movetime", search_options.movetime_ms, 0, int_max);
     } else if (token == "nodes") {
@@ -953,10 +1029,20 @@ bool command_go(std::queue<std::string>& args)
       search_options.search_time_ms = compute_search_time_ms(
           remaining_ms, increment_ms, search_options.movestogo);
 
-      stop_search_after_ms(search_options.search_time_ms);
-
       LOG_I << "Time budget " << search_options.search_time_ms << "ms out of "
             << remaining_ms << "ms remaining" << END_I;
+
+    } else if (!depth_given && search_options.nodes == 0) {
+      // Nothing bounds this search: no clock (or a clock already at zero), no
+      // depth, no node budget. Answering late is bad, never answering is worse.
+      search_options.search_time_ms = FALLBACK_SEARCH_TIME_MS;
+
+      LOG_W << "[go] carries no usable limit, falling back to "
+            << search_options.search_time_ms << "ms" << END_W;
+    }
+
+    if (search_options.search_time_ms > 0) {
+      stop_search_after_ms(search_options.search_time_ms);
     }
   }
 
@@ -1014,6 +1100,12 @@ bool command_quit(std::queue<std::string>& args)
 bool command_print_board(std::queue<std::string>& args)
 {
   LOG_I << "Command [print_board]. Args: " << args << END_I;
+
+  // The search thread mutates game.board as it walks the tree. Reading it from
+  // here without joining is a data race that prints a board belonging to no
+  // real position.
+  stop_and_join_search();
+
   LOG_I << print_nice_board(&game.board) << END_I;
 
   uci_reply(print_nice_board(&game.board));
@@ -1025,6 +1117,10 @@ bool command_print_board(std::queue<std::string>& args)
 bool command_fen(std::queue<std::string>& args)
 {
   LOG_I << "Command [command_fen]. Args: " << args << END_I;
+
+  // Same race as command_print_board().
+  stop_and_join_search();
+
   LOG_I << "position fen " << generate_FEN(&game.board) << END_I;
 
   uci_reply(generate_FEN(&game.board));
@@ -1148,67 +1244,64 @@ bool command_clean_TT(std::queue<std::string>& args)
 }
 
 
-//-##################################  MAIN  ################################-//
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-// The main function is omitted when we include this file in tests
+//-###########################  ENGINE ENTRY POINTS  ########################-//
+// main() lives in main.cpp so that this translation unit can be linked into
+// the test binaries. Everything below is what main() used to do inline.
 
-int main()
+void uci_init()
 {
   LOG_I << "Engine started" << END_I;
 
   initialize_game_const_data(&game);
 
-  // Print the engine info
-  std::queue<std::string> tokens;
-  // (void)command_uci(tokens);
-
-  // Initialization
   load_FEN(DEFAULT_POSITION, &game);
   try_load_opening_book();
 
-  tt_reset(&tt);
+  tt_resize(&tt, TT_DEFAULT_MB);
 
-  while (running) {
-    std::string input;
-
-    // On EOF getline leaves input empty and keeps failing. Without this the
-    // loop would spin forever on a closed pipe.
-    if (!std::getline(std::cin, input)) {
-      LOG_I << "stdin closed" << END_I;
-      break;
-    }
-
-    tokens = tokenize_input(input, " ");
-
-    if (tokens.size() == 0) {
-      LOG_W << "No tokens in string" << END_W;
-      continue;
-    }
-
-    // Try to find the command
-    while (!tokens.empty()) {
-      const std::string current_token = tokens.front();
-      tokens.pop();
-
-      if (is_command(current_token)) {
-        const bool result = commands.at(current_token)(tokens);
-
-        // UCI requires malformed or unsupported input to be ignored.
-        if (!result) {
-          LOG_W << "Command [" << current_token << "] error" << END_W;
-        }
-
-        // We found and executed the command for this input. So jump to next
-        break;
-      }
-    }
-  }
-
-  stop_and_join_search();
-
-  LOG_I << "Engine closed gracefully" << END_I;
-
-  return 0;
+  running = true;
 }
 
-#endif
+
+void uci_shutdown()
+{
+  stop_and_join_search();
+  tt_free(&tt);
+
+  LOG_I << "Engine closed gracefully" << END_I;
+}
+
+
+bool uci_is_running()
+{
+  return running;
+}
+
+
+void uci_process_line(const std::string& input)
+{
+  std::queue<std::string> tokens = tokenize_input(input, " ");
+
+  if (tokens.size() == 0) {
+    LOG_W << "No tokens in string" << END_W;
+    return;
+  }
+
+  // Try to find the command
+  while (!tokens.empty()) {
+    const std::string current_token = tokens.front();
+    tokens.pop();
+
+    if (is_command(current_token)) {
+      const bool result = commands.at(current_token)(tokens);
+
+      // UCI requires malformed or unsupported input to be ignored.
+      if (!result) {
+        LOG_W << "Command [" << current_token << "] error" << END_W;
+      }
+
+      // We found and executed the command for this input. So jump to next
+      return;
+    }
+  }
+}

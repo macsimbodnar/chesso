@@ -42,10 +42,20 @@ typedef uint32_t move_t;
 #define MAX_PLY 128
 #define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe
 #define REPETITION_MAX_SIZE 5000
-#define HISTORY_MAX_SIZE 1000000
+
+// Holds the game moves replayed by [position ... moves ...] plus MAX_PLY of
+// search on top. 5000 is far past the longest game the 75-move rule allows,
+// and keeps game_t at a few megabytes instead of 150.
+#define HISTORY_MAX_SIZE 5000
 #define NODE_BUDGET_UNLIMITED 0
 
-// Transposition table size
+// Transposition table size, in megabytes. The table is heap allocated so the
+// UCI [Hash] option can pick the size.
+#define TT_DEFAULT_MB 16
+#define TT_MIN_MB 1
+#define TT_MAX_MB 4096
+
+// Fixed size table used by the perft tests, unrelated to the engine's TT.
 #define TT_SIZE 4194301
 
 /**
@@ -53,7 +63,7 @@ typedef uint32_t move_t;
  *   0000 0000 0000 1111 1100 0000    target square       0xfc0
  *   0000 0000 1111 0000 0000 0000    piece               0xf000
  *   0000 0111 0000 0000 0000 0000    promoted to         0x70000
- *   0000 1000 0000 0000 0000 0000    NOT USED            0xf0000
+ *   0000 1000 0000 0000 0000 0000    NOT USED            0x80000
  *   0001 0000 0000 0000 0000 0000    capture flag        0x100000
  *   0010 0000 0000 0000 0000 0000    double push flag    0x200000
  *   0100 0000 0000 0000 0000 0000    en-passant flag     0x400000
@@ -336,8 +346,14 @@ struct tt_entry_t
 
 struct transposition_table_t
 {
-  uint8_t generation;
-  tt_entry_t entries[TT_SIZE];
+  uint8_t generation = 0;
+
+  // entry_count is always a power of two, so the index is a mask instead of a
+  // division on every probe.
+  size_t entry_count = 0;
+  size_t index_mask = 0;
+
+  tt_entry_t* entries = nullptr;
 };
 
 
@@ -362,10 +378,8 @@ struct search_state_t
   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
   move_t killer_moves[2][MAX_PLY];
   int history_moves[12][64];  // [piece][destination]
-  bool search_in_tt = true;
-  transposition_table_t* tt;  // Too big to keep on the stack
+  transposition_table_t* tt;
   move_t best_move;
-  int prev_score = 0;  // Score from the previous iterative deepening iteration
 
   // Triangular PV table: pv_table[ply] holds the PV from that ply onward.
   move_t pv_table[MAX_PLY][MAX_PLY];
@@ -373,7 +387,4 @@ struct search_state_t
 
   // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
   move_t counter_moves[12][64];
-  // Previous move at each ply, used to look up the counter move during
-  // ordering.
-  move_t node_prev_move[MAX_PLY];
 };
