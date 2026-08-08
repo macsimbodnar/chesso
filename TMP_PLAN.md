@@ -1,236 +1,255 @@
-# Move generation speed-up plan
+# Move generation plan
 
-Working notes for making move generation faster. Every number below was
-measured on this machine (arm64, `-O3 -DNDEBUG`) before the plan was written,
-so the ranking reflects where the time actually is rather than where it looks
-like it should be.
+Supersedes the previous plan, whose steps are all done or judged not worth
+doing. Every number here was measured on this machine (arm64, Apple M1,
+`-O3 -DNDEBUG`) at commit `95eefa5`, or is labelled as an estimate.
 
 ## Baseline
 
-`./build/tests/bench_movegen`, full workload:
+`./build/tests/bench_movegen`:
 
 ```
 perft  (generate_moves + make_move + unmake_move)
-  total   41812668 nodes   785.8 ms   53.21 Mnps
+  total   41812668 nodes   597.7 ms   69.95 Mnps
 
 generate_moves  (no make_move, no unmake_move)
-  total   12000000 calls   629.6 ms   19.06 Mcalls/s   673.5 Mmoves/s
+  total   12000000 calls   744.1 ms   16.13 Mcalls/s   478.4 Mmoves/s
 ```
 
-Run-to-run agreement is about 0.4 %, and up to 3 % between invocations minutes
-apart. **Treat anything under 3 % as noise.** The benchmark verifies node
-counts before reporting, so a change that loses moves cannot look like a
-speed-up.
+Use `hyperfine` for before/after, not the bench's own sweep, and always give it
+both binaries so the runs interleave:
 
-## Where the time goes
+```
+hyperfine --warmup 1 --runs 10 './bench_before -r 1' './bench_after -r 1'
+```
 
-Sampled profile of a 986 M node perft over three positions, with `is_attacked`
-forced out of line so it could be attributed separately:
+## Where the time actually is
+
+Two `sample` runs of 10 s each, taken 3 s into a `-r 40` run so the window sits
+entirely inside the perft phase. The two runs agree to within 0.5 points.
 
 | part | self time |
 |---|---|
-| `make_move` body | ~58 % |
-| `is_attacked`, the legality check after every move | ~17 % |
-| `generate_moves` | ~11 % |
-| `unmake_move` | ~9 % |
-| perft driver | ~4 % |
+| `make_move` | **47 %** |
+| `unmake_move` | **26 %** |
+| `generate_moves` | 20 % |
+| perft driver | 6 % |
+| `is_attacked` | 0.1 % |
 
-**The generator itself is about 11 % of the cost.** Making it infinitely fast
-buys 11 %. The work is in `make_move`.
+**Correction to an earlier measurement.** A profile taken during this work
+reported `generate_moves` at 41 % and `make_move` at 35 %. That sample was taken
+with `-r 12`, where the perft phase lasts about 7 s, so a 10 s window starting
+at 2 s spilled into the generator-only phase of the benchmark and inflated it.
+The table above is the corrected one, and it reverses the conclusion: **the
+generator is the smallest of the three, and make/unmake is 73 % of the work.**
 
-Ablation builds, same tree, node counts identical unless noted:
+Any future profile must use a large enough `-r` that the sampling window cannot
+leave the phase being measured.
 
-| change | effect |
-|---|---|
-| all `board->hash ^=` removed | 17.8 s to 15.2 s, so Zobrist maintenance is **13.5 %** |
-| one extra `board_t` copy added | +0.59 s, so the history copy costs **3.3 %** |
-| repetition push removed | **~1 %** |
-| leaves counted from the move list, no make/unmake | 17.8 s to 2.9 s, **6.1x** |
+## Ordering
 
-Only **1.5 %** of generated moves turn out illegal (1,000,088,160 pseudo-legal
-leaf moves against 985,752,918 legal ones), so the make-then-roll-back path is
-not the problem either.
+The list is ordered by expected gain toward engine strength, so that speed work
+and search work sit on one scale. The conversion used is the usual rule of
+thumb, **about 60 Elo per doubling of nps**, i.e. `Elo ~= 60 * log2(speedup)`.
+A 25 % speed-up is therefore worth roughly 19 Elo. That is the only honest way
+to rank a percentage against an Elo figure.
 
-Two intuitions to drop: copy-make is cheap here, and wasted work on illegal
-moves is negligible.
+Estimates in this plan are hypotheses. The previous plan got two of its
+estimates badly wrong in both directions, so **re-read this ordering after every
+step**; the next item may no longer be the next item.
 
-### Sizes
+---
 
+## 1. Staged move generation
+
+Generate the transposition-table move first, then captures, and only generate
+the quiets if no capture produced a cutoff. Most nodes fail high on one of the
+first few captures and never need the 30-odd quiet moves at all.
+
+This is the only item on the list that is worth more than every speed item
+combined, and **perft cannot see it**. `bench_movegen` will not move. It has to
+be measured in games.
+
+- Expected: **30-50 Elo.** Engines report 39 Elo for staged generation and about
+  50 Elo for staged generation together with aspiration windows.
+- Also removes work from `generate_moves`, which is why it belongs above the
+  micro-optimisations rather than below them.
+- Risk: medium. The staging interacts with move ordering, and a bug shows up as
+  a strength regression rather than a wrong node count. Perft must keep passing
+  through the unstaged path.
+- Verify: `fastchess` SPRT against the current build. Nothing else will tell you.
+
+## 2. Template make_move, unmake_move and generate_moves on colour
+
+Every one of these functions branches on `us == WHITE` repeatedly, at runtime,
+on a value that is constant for the whole call. `board.cpp` has these ternaries
+in the push direction, the promotion maps, the piece bases, the en-passant
+offsets and the castling squares.
+
+Make colour a template parameter and dispatch once at the top:
+
+```cpp
+template <color_t Us> bool make_move_impl(game_t*, move_t);
+bool make_move(game_t* g, move_t m)
+{
+  return g->board.active_color == WHITE ? make_move_impl<WHITE>(g, m)
+                                        : make_move_impl<BLACK>(g, m);
+}
 ```
-board_t             144 B      history_entry_t     152 B
-history_t           742 KB     repetition_t         39 KB
-bb_tables_t        2307 KB     of which rook_attacks 2048 KB
-game_t             3095 KB
+
+- Expected: **5-15 %**, so roughly 4-12 Elo. It applies to 93 % of the measured
+  time, which is what puts it above everything else in this half of the list.
+- Risk: low. Pure mechanical transformation, no logic changes, and the perft
+  node counts catch any slip immediately.
+- Cost: the two instantiations roughly double the object code for these
+  functions. Watch for an I-cache regression — measure, do not assume.
+
+## 3. Delete the repetition stack
+
+`repetition_t` is 39 KB of hashes that are already stored elsewhere.
+`make_move` writes the same value twice:
+
+```cpp
+history_entry->hash = board->hash;                       // src/bitboard.cpp
+game->repetitions.entries[game->repetitions.size++] = old_hash;  // same value
 ```
 
-## Results
+`repetitions.size` also moves in lockstep with `history.size` - one push per
+`make_move`, both reset together in `cleanup_board()` - so
+`history_entry_t::repetition_size` is a third copy of a number that is already
+known.
 
-Steps 1, 2, 4 and 3 are done, in that order. Every number below is the perft
-total from `bench_movegen`, taken from three interleaved runs of the old and
-new binaries in the same session, so machine drift cancels out.
+Drop both. `is_position_repeated()` walks `history.entries[i].hash` instead.
+`history_entry_t` goes from 24 bytes to 16.
 
-| build | perft total | vs baseline |
-|---|---|---|
-| baseline | 790 ms | — |
-| + step 1 | 770 ms | -2.6 % |
-| + step 2 | 853 ms | +8.0 % |
-| + step 4 | 781 ms | -1.2 % |
-| + step 3 | **600 ms** | **-25.5 %** |
+- Expected: **1-3 %.** One 8-byte store removed from every `make_move`, one load
+  from every `unmake_move`, and the entry crosses back under a 16-byte
+  boundary. Today's measurements showed this codebase is unusually sensitive to
+  the size of what make/unmake touches.
+- Risk: low, but `is_position_repeated()` changes from a packed array walk to a
+  strided one. It runs once per search node rather than once per move, so the
+  trade should be positive; confirm it with `test_engine`'s repetition cases.
+- Also removes 39 KB from `game_t`.
 
-Two of the estimates above turned out to be wrong, and the ordering suffered
-for it:
+## 4. Maintain `occupancies[BOTH]` incrementally
 
-- **The `board_t` copy is not 3.3 %.** Step 2 grew `board_t` from 144 B to
-  208 B and cost 8 %; padding it out by another 64 B cost a further 23 %. The
-  copy was the dominant term in `make_move`, not a footnote, so step 2 could
-  not pay for itself until step 4 removed the copy. Step 4 was moved ahead of
-  step 3 for that reason.
-- **The slim undo record is worth almost nothing on its own.** Steps 2 and 4
-  together beat step 1 by 0.6 %, against the 12 % predicted. Replacing a
-  144-byte memcpy undo with an xor undo is a wash: the branchy xor path costs
-  about what the vectorised copy did. What step 4 bought was `history_t` at
-  120 KB instead of 742 KB and, with step 2, O(1) `get_piece()`.
-- **Step 3 beat its estimate**, 23 % against the 17 % attributed to
-  `is_attacked`, because it also drops the make/unmake of the illegal 1.5 %
-  and the branch on `make_move`'s return value.
+Both `make_move` and `unmake_move` end with
 
-`generate_moves` on its own got 19 % slower (628 ms to 749 ms), which is the
-pin and check computation. It is bought back many times over by the caller.
+```cpp
+board->occupancies[BOTH] = board->occupancies[WHITE] | board->occupancies[BLACK];
+```
 
-Sizes now: `board_t` 208 B, `history_entry_t` 24 B, `history_t` 120 KB,
-`bb_tables_t` 2371 KB (the extra 64 KB is `between[64][64]` and
-`line[64][64]`).
+Two loads, an or, and a store, on every move in both directions. Every mask
+needed to update it incrementally has already been computed a few lines above.
 
-## Step 1: guard the unconditional Zobrist work
+- Expected: **1-3 %.**
+- Risk: low. The existing occupancy assertions under `!NDEBUG` already check
+  this invariant on every node.
 
-Smallest change with a real number attached, so it goes first.
+## 5. A no-check, no-pin fast path in generate_moves
 
-`src/bitboard.cpp:366-371` folds the en-passant key out and back in on every
-single move, and `src/bitboard.cpp:426-429` does the same for castling rights.
-Both run unconditionally: four table loads and four xors per move, even though
-the en-passant square is `INVALID -> INVALID` and the castling rights are
-unchanged for the overwhelming majority of moves.
+Most nodes have no checkers and no pinned pieces. On those, `check_mask` is all
+ones, `pinned` is zero, and every `& targets` and every `targets_from()` branch
+is provably a no-op that still costs an instruction and a predicted branch.
 
-Compare first, xor only when the value actually changes.
+Branch once at the top of the piece loops on `(checkers | pinned) == 0` and run
+a version with the masking removed. This composes with item 2 as a second
+template parameter rather than a runtime branch.
 
-- Expected: a good part of the measured 13.5 %.
-- Risk: low. The incremental hash is compared against `compute_full_hash()`
-  over a whole move tree by `tests/test_engine.cpp`, so a mistake here fails
-  the suite immediately.
+- Expected: **2-5 %** of total, being some fraction of the generator's 20 %.
+- Risk: low-medium. It is a second copy of the emit loops, so the two can drift.
+  Keep the masked version as the only implementation and let the specialisation
+  fall out of the template, rather than writing the loops twice by hand.
 
-## Step 2: piece-on-square array
+## 6. 16-bit move encoding
 
-Add `piece_t squares[64]` to `board_t`, maintained by the same xors that
-already update the bitboards.
+`move_t` is 32 bits and carries the moving piece, which the board already knows.
+Stockfish and most modern engines use 16 bits: 6 from, 6 to, 4 flags. The move
+list is `MAX_MOVES` entries touched on every node, so this halves the traffic
+through it.
 
-`src/bitboard.cpp:316` scans up to six bitboards to find out what was just
-captured. A square array answers it in one load. The same array also removes
-the scans in `capture_score()`, `get_piece()` and `generate_FEN()`.
+- Expected: **1-3 %.**
+- Risk: medium, and it is wide rather than deep - it touches the encoding
+  macros, the generator, `make_move`, move ordering, the opening book and the
+  UCI layer. Do it when the surrounding code has stopped moving.
 
-- Expected: part of the unattributed ~40 % inside `make_move`. Measure it.
-- Risk: medium. It is a second representation of the same state, so it can
-  drift out of sync with the bitboards. Add an assertion under `!NDEBUG` that
-  rebuilds it from the bitboards and compares, which the existing make/unmake
-  tree walk will then exercise on every node.
+## 7. Single side-to-move key
 
-## Step 3: legal move generation
+```cpp
+board->hash ^= randoms->side_randoms[us];
+board->hash ^= randoms->side_randoms[them];
+```
 
-The big one. Compute checkers, the pin rays and the king-danger squares once
-per node, and emit only legal moves.
+Two table loads and two xors, where one constant xored unconditionally does the
+same job. `compute_full_hash()` and `swap_side()` must change together.
 
-- Deletes the **17 %** `is_attacked` call after every move.
-- Removes the roll-back path for the 1.5 % of moves that are illegal.
-- `make_move` can stop returning `bool`, and every caller that tests it can
-  drop the branch.
-- Unlocks bulk counting in perft: at depth 1 the move count is the answer, no
-  make/unmake needed.
+- Expected: **under 1 %.** Listed only because it is a ten-minute change with no
+  risk attached.
 
-**Read the 6.1x carefully. That number is perft only.** A search has to make
-every move it searches, so it can never bulk-count. The honest gain for the
-engine is the 17 % from dropping the per-move legality check. Optimising for
-the 6.1x means optimising the benchmark instead of the engine.
+## 8. PEXT sliding attacks, on x86 only
 
-- Risk: high. This is the change most likely to produce a subtly wrong move
-  list. It is also the one the test suite is best equipped to catch: the perft
-  columns in `tests/test_movegen.cpp` check captures, en passant, castles and
-  promotions separately, and `tests/test_perft.cpp` goes deep.
+Replace the magic multiply with `_pext_u64` where BMI2 is available, keeping
+magics as the fallback.
 
-## Step 4: slim undo record
+- Expected: **about 5 % of sliding attack generation**, which is a fraction of
+  the generator's 20 %, so call it **1 % of perft**. Published comparisons put
+  PEXT at 12.8 s against 13.5 s for magics on Kiwipete perft(6), and Stockfish's
+  own perft numbers differ by well under a percent between the two.
+- **Zero on this machine.** ARM has no PEXT. This cannot be measured on the M1
+  and is one of the reasons an x86 box is needed before any of this can be
+  ranked properly.
+- Risk: low, but it is dead code on the development machine, which is its own
+  hazard.
 
-Replace the 144-byte `board_t` copy at `src/bitboard.cpp:289` with a small
-record holding the hash, the captured piece, the castling rights, the
-en-passant square and the halfmove clock, and undo by xor.
+## Not worth doing
 
-- Expected: the copy itself is only 3.3 %, but `unmake_move` is 9 % and the
-  pair is around 12 %. Also cuts `history_t` from 742 KB to roughly 40 KB.
-- Risk: medium. `unmake_move` stops being a memcpy and starts being real code.
-- Depends on step 2, which is what makes the captured piece known in O(1).
+- **Fancy or black magics.** They shrink the attack tables from 2307 KB to
+  roughly 860 KB. The corrected profile does not implicate table size anywhere,
+  and `is_attacked` is now 0.1 % of the workload. Measure a cache-miss counter
+  before spending a day on this.
+- **Callback enumeration instead of a move list.** This is the single largest
+  item in every published perft record and it is unavailable to an engine: a
+  search must materialise moves to score and order them. Adopting it optimises
+  `bench_movegen` and pessimises the engine.
+- **Bulk counting at depth 1 in perft.** Legal generation makes it valid now,
+  and it would multiply the headline number by roughly 6. It changes nothing
+  about the engine. Worth doing once, only to get a figure comparable with the
+  ones published online, and then never used as a target.
+- **Shared attack tables.** `bb_tables_t` is 2307 KB inside every `game_t`, so
+  `sizeof(game_t)` is about 3 MB. This is an ergonomics problem for anything
+  that copies a `game_t`, not a speed problem, and perft has one instance.
 
-## Step 5: share the attack tables
+## The ceiling, stated plainly
 
-`bb_tables_t` is 2307 KB and is embedded in every `game_t`, which is why
-`sizeof(game_t)` is 3095 KB. The tables are read-only after
-`initialize_game_const_data()`, so one shared instance would do.
+Items 2 through 8 together are worth maybe 15-25 % if every estimate lands,
+which is **12-20 Elo**. Item 1 alone is worth more than all of them.
 
-- Expected: nothing in perft, where there is a single instance. It is why
-  anything that copies a `game_t` moves 3 MB.
-- Risk: low, but it touches every signature that currently takes
-  `const bb_tables_t*`.
-
-## Step 6: fancy magics
-
-Per-square offsets into one shared table would take the attack tables from
-2307 KB to roughly 860 KB.
-
-**Measure before doing this.** The caches on this machine may already absorb
-the 2 MB rook table, in which case the work buys nothing.
-
-## Step 7: pawn generation as bulk shifts
-
-Replace the per-pawn loop and its `is_promoting` branch with shifted bitboards
-over the whole pawn set.
-
-Bounded by the generator's 11 % share, so a few percent at best. Last on the
-list for that reason.
-
-## Not worth touching
-
-The history copy on its own (3.3 %), the repetition push (~1 %), and the move
-encoding. All measured, all too small to matter.
+Beyond that, movegen is not where engine strength lives. The corrected profile
+measures perft, and perft is not the search: it has no evaluation in it. Once an
+NNUE evaluation exists, it dominates the profile and every percentage in this
+document shrinks accordingly. Finish this list, then stop.
 
 ## How to verify each step
 
 ```
 cmake --build build -j8
 ctest -L fast                      # correctness, must stay green
-./build/tests/bench_movegen        # speed, compare against the baseline above
+./build/tests/bench_movegen        # node counts first, then speed
 ```
 
-For anything touching the generator or `make_move`, also run the deep perft
-before calling it done:
+For anything touching the generator or `make_move`, also:
 
 ```
 ctest -L slow                      # tests/test_perft, minutes
+cd tests && ../build-debug/tests/test_movegen   # squares[] assertions on every node
 ```
 
 Rules for this work:
 
 - Node counts first, timings second. `bench_movegen` exits non-zero on a wrong
-  count and prints nothing worth reading.
-- Record the benchmark output before and after each step, one step at a time.
-  Two changes at once and neither number means anything.
-- A change under 3 % has not been shown to do anything on this machine.
-```
-./build/tests/bench_movegen > before.txt
-# ... make the change ...
-./build/tests/bench_movegen > after.txt
-diff before.txt after.txt
-```
-
-## Reproducing the measurements
-
-The profile and the ablations were run from a throwaway copy of `src/`, not
-from the repository. To redo them: build a perft driver against the engine
-with `-g -fno-omit-frame-pointer`, run `sample <pid> 8 1` while it works, and
-read the "Sort by top of stack" section for self time. For the ablations,
-patch the copied source, rebuild, and time the same fixed workload.
+  count.
+- One change at a time. Two at once and neither number means anything.
+- A change under 3 % has not been shown to do anything unless `hyperfine` says
+  otherwise with a tight sigma over interleaved runs.
+- Record the before and after for every step, and correct the estimates in this
+  file when they turn out wrong. They already did once.
