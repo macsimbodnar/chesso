@@ -7,3 +7,5 @@ tmp.txt
 chesso_engine.log
 .claude
 config.json
+.ref-builds
+
