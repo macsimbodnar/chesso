@@ -170,7 +170,38 @@ Drop both. `is_position_repeated()` walks `history.entries[i].hash` instead.
   trade should be positive; confirm it with `test_engine`'s repetition cases.
 - Also removes 39 KB from `game_t`.
 
-## 4. Maintain `occupancies[BOTH]` incrementally
+## 4. Maintain `occupancies[BOTH]` incrementally — TRIED, REJECTED, +2.0 %
+
+Implemented and reverted. Seven interleaved rounds, and the sign never changed:
+
+```
+with recompute (kept)      475.0  475.2  475.3  476.0 ms
+with running delta         484.5  484.9  485.3  485.4 ms
+```
+
+The version that "saves" memory traffic is **2.0 % slower**. The delta was
+accumulated in a register through the whole function and applied once as
+`occupancies[BOTH] ^= both_delta`.
+
+Why the intuition was wrong: the existing
+
+```cpp
+board->occupancies[BOTH] = board->occupancies[WHITE] | board->occupancies[BLACK];
+```
+
+reads two words that were written a few instructions earlier on the same cache
+line, so both loads are store-forwarded and effectively free, and the statement
+depends on nothing else - the scheduler can place it anywhere. The accumulator
+replaces that with a serial dependency chain threaded through every branch in
+the function, ending in a read-modify-write that cannot start until the chain
+resolves. Fewer memory operations, worse schedule.
+
+Do not retry this without a different shape. Anything that lengthens the
+dependency chain through `make_move` is suspect on this core.
+
+Original entry follows.
+
+
 
 Both `make_move` and `unmake_move` end with
 
