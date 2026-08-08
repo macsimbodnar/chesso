@@ -1,4 +1,6 @@
 build
+build-*
+*.dSYM
 tmp.hpp
 tmp.txt
 .no_git
