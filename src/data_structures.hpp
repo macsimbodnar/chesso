@@ -132,7 +132,9 @@ enum promotion_t
 };
 
 
-enum piece_t
+// uint8_t so that board_t can carry a piece-per-square array without paying
+// four bytes a square for it.
+enum piece_t : uint8_t
 {
   W_PAWN,    // 'P'   MUST be first
   W_KNIGHT,  // 'N'
@@ -257,6 +259,12 @@ struct bb_tables_t
   bb_t rook_masks[64];           // [square]
   bb_t bishop_attacks[64][512];  // [square][occupancies]
   bb_t rook_attacks[64][4096];   // [square][occupancies]
+
+  // Both are empty for square pairs that do not share a rank, file or
+  // diagonal. between[a][b] excludes a and b; line[a][b] includes them and
+  // runs the full length of the board.
+  bb_t between[64][64];
+  bb_t line[64][64];
 };
 
 
@@ -264,6 +272,10 @@ struct board_t
 {
   bb_t bitboards[12];
   bb_t occupancies[3];
+
+  // Redundant with the bitboards, kept in sync by the same code that xors
+  // them. Answers "what is on this square" in one load instead of a scan.
+  piece_t squares[64];
 
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
@@ -274,10 +286,18 @@ struct board_t
 };
 
 
+// Everything unmake_move() cannot recompute from the move itself. The pieces,
+// the occupancies and the square array are undone by re-applying the same xors
+// make_move() applied, so none of them are stored here.
 struct history_entry_t
 {
-  board_t board;
+  hash_t hash;
   size_t repetition_size;
+  move_t move;
+  piece_t captured;  // piece taken off the target square, EMPTY if none
+  uint8_t castling;
+  index_t en_passant;
+  uint8_t halfmove_clock;
 };
 
 

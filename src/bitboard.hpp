@@ -76,6 +76,7 @@ bool is_move_legal(game_t* game, move_t move);  // NOTE: only for debug
 
 bool move_belongs_to_side_to_move(const board_t* board, move_t move);
 
+// Legal moves only: every move returned can be played and none is missing.
 size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[]);

@@ -528,8 +528,6 @@ move_t first_legal_move()
   const size_t count = generate_moves(&game.tables, &game.board, moves);
 
   for (size_t i = 0; i < count; ++i) {
-    // generate_moves() is pseudo-legal, so the move only counts once it has
-    // survived make_move().
     if (make_move(&game, moves[i])) {
       unmake_move(&game);
       return moves[i];

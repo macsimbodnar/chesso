@@ -78,16 +78,8 @@ int evaluate(const board_t* board)
 
 inline piece_t captured_piece(const board_t* board, index_t square)
 {
-  const int first = (board->active_color == WHITE) ? B_PAWN : W_PAWN;
-  const int last = (board->active_color == WHITE) ? B_KING : W_KING;
-
-  for (int piece = first; piece <= last; ++piece) {
-    if (GET_BIT(board->bitboards[piece], square)) {
-      return static_cast<piece_t>(piece);
-    }
-  }
-
-  return EMPTY;
+  assert(square < 64);
+  return board->squares[square];
 }
 
 

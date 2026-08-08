@@ -63,6 +63,44 @@ bb_tables_t        2307 KB     of which rook_attacks 2048 KB
 game_t             3095 KB
 ```
 
+## Results
+
+Steps 1, 2, 4 and 3 are done, in that order. Every number below is the perft
+total from `bench_movegen`, taken from three interleaved runs of the old and
+new binaries in the same session, so machine drift cancels out.
+
+| build | perft total | vs baseline |
+|---|---|---|
+| baseline | 790 ms | — |
+| + step 1 | 770 ms | -2.6 % |
+| + step 2 | 853 ms | +8.0 % |
+| + step 4 | 781 ms | -1.2 % |
+| + step 3 | **600 ms** | **-25.5 %** |
+
+Two of the estimates above turned out to be wrong, and the ordering suffered
+for it:
+
+- **The `board_t` copy is not 3.3 %.** Step 2 grew `board_t` from 144 B to
+  208 B and cost 8 %; padding it out by another 64 B cost a further 23 %. The
+  copy was the dominant term in `make_move`, not a footnote, so step 2 could
+  not pay for itself until step 4 removed the copy. Step 4 was moved ahead of
+  step 3 for that reason.
+- **The slim undo record is worth almost nothing on its own.** Steps 2 and 4
+  together beat step 1 by 0.6 %, against the 12 % predicted. Replacing a
+  144-byte memcpy undo with an xor undo is a wash: the branchy xor path costs
+  about what the vectorised copy did. What step 4 bought was `history_t` at
+  120 KB instead of 742 KB and, with step 2, O(1) `get_piece()`.
+- **Step 3 beat its estimate**, 23 % against the 17 % attributed to
+  `is_attacked`, because it also drops the make/unmake of the illegal 1.5 %
+  and the branch on `make_move`'s return value.
+
+`generate_moves` on its own got 19 % slower (628 ms to 749 ms), which is the
+pin and check computation. It is bought back many times over by the caller.
+
+Sizes now: `board_t` 208 B, `history_entry_t` 24 B, `history_t` 120 KB,
+`bb_tables_t` 2371 KB (the extra 64 KB is `between[64][64]` and
+`line[64][64]`).
+
 ## Step 1: guard the unconditional Zobrist work
 
 Smallest change with a real number attached, so it goes first.

@@ -247,9 +247,8 @@ int negamax(int alpha0,
 
   int score = 0;
 
-  // Stays zero until a move is proven legal by make_move(). generate_moves()
-  // is pseudo-legal, so seeding this with moves[0] used to publish moves that
-  // leave the king en prise, both as the search result and as the TT move.
+  // Left at zero until a move is actually searched, so an aborted node never
+  // publishes an unsearched move as the search result or as the TT move.
   move_t best_move = 0;
 
   for (size_t i = 0; i < moves_count; ++i) {

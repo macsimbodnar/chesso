@@ -14,10 +14,14 @@
  * NOTE: count_bits, get_lsb_index and the get_*_attacks lookups are defined
  * inline in bitboard.hpp so that every translation unit can inline them.
  ******************************************************************************/
-bool is_attacked(const bb_tables_t* tables,
-                 const board_t* board,
-                 index_t index,
-                 color_t color)
+// Same test as is_attacked(), but against a caller supplied occupancy. King
+// move generation needs the board with its own king lifted off, so that a
+// slider x-rays through the square the king is leaving.
+static inline bool is_attacked_with_occupancy(const bb_tables_t* tables,
+                                              const board_t* board,
+                                              index_t index,
+                                              color_t color,
+                                              bb_t occupancy)
 {
   assert(board != nullptr);
   assert(index < 64);
@@ -35,7 +39,6 @@ bool is_attacked(const bb_tables_t* tables,
   // Sliders: the queen shares the bishop and rook rays, so testing it against
   // the same two attack sets costs nothing extra. Computing queen attacks
   // separately would repeat both magic lookups for no gain.
-  const bb_t occupancy = board->occupancies[BOTH];
   const bb_t queens = pieces[4];
 
   if (get_bishop_attacks(tables, index, occupancy) & (pieces[2] | queens)) {
@@ -47,6 +50,34 @@ bool is_attacked(const bb_tables_t* tables,
   }
 
   return false;
+}
+
+
+bool is_attacked(const bb_tables_t* tables,
+                 const board_t* board,
+                 index_t index,
+                 color_t color)
+{
+  return is_attacked_with_occupancy(tables, board, index, color,
+                                    board->occupancies[BOTH]);
+}
+
+
+// Every piece of `color` that attacks `index`, as a bitboard of their squares.
+static inline bb_t attackers_to(const bb_tables_t* tables,
+                                const board_t* board,
+                                index_t index,
+                                color_t color)
+{
+  const bb_t* pieces = &board->bitboards[(color == WHITE) ? W_PAWN : B_PAWN];
+  const bb_t occupancy = board->occupancies[BOTH];
+  const bb_t queens = pieces[4];
+
+  return (tables->pawn_attacks[!color][index] & pieces[0]) |
+         (tables->knight_attacks[index] & pieces[1]) |
+         (tables->king_attacks[index] & pieces[5]) |
+         (get_bishop_attacks(tables, index, occupancy) & (pieces[2] | queens)) |
+         (get_rook_attacks(tables, index, occupancy) & (pieces[3] | queens));
 }
 
 
@@ -70,6 +101,8 @@ size_t generate_moves(const bb_tables_t* tables,
   // never walk the opponent's six.
   const piece_t first_piece = (color == WHITE) ? W_PAWN : B_PAWN;
   const bb_t* my_bitboards = &board->bitboards[first_piece];
+  const bb_t* opp_bitboards =
+      &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
 
   // Turning the en-passant square into a mask once lifts both the validity
   // test and the shift out of the per-pawn loop.
@@ -77,6 +110,65 @@ size_t generate_moves(const bb_tables_t* tables,
       (board->en_passant != INVALID_INDEX) ? (BB_1 << board->en_passant) : BB_0;
 
   size_t move_count = 0;
+
+  //-#####################  LEGALITY, ONCE PER NODE  #######################-//
+  // Instead of making every pseudo-legal move and asking whether it left the
+  // king en prise, work out up front which squares a non-king move is allowed
+  // to land on. Two masks do it:
+  //
+  //   check_mask  targets that answer the check: the checker itself or a
+  //               square on the ray between it and the king. All ones when
+  //               there is no check, all zeros under double check, where only
+  //               the king may move.
+  //   pinned      our pieces standing alone between the king and an enemy
+  //               slider. Such a piece may only move along that same line.
+  //
+  // A side with no king is reachable (EMPTY_POS, and illegal FENs), and then
+  // nothing constrains the move list.
+  const bb_t king_bb = my_bitboards[5];
+  const index_t king_square = king_bb ? get_lsb_index(king_bb) : INVALID_INDEX;
+
+  bb_t check_mask = ~BB_0;
+  bb_t pinned = BB_0;
+
+  if (king_bb) {
+    const bb_t checkers = attackers_to(tables, board, king_square, opponent);
+    const int checker_count = count_bits(checkers);
+
+    if (checker_count == 1) {
+      const index_t checker_square = get_lsb_index(checkers);
+      check_mask = tables->between[king_square][checker_square] | checkers;
+    } else if (checker_count > 1) {
+      check_mask = BB_0;
+    }
+
+    // Sliders that would hit the king on an empty board are the only ones that
+    // can pin anything; a single one of our pieces in the way is pinned.
+    bb_t snipers =
+        (get_rook_attacks(tables, king_square, BB_0) &
+         (opp_bitboards[3] | opp_bitboards[4])) |
+        (get_bishop_attacks(tables, king_square, BB_0) &
+         (opp_bitboards[2] | opp_bitboards[4]));
+
+    while (snipers) {
+      const index_t sniper_square = get_lsb_index(snipers);
+      snipers &= snipers - 1;
+
+      const bb_t blockers =
+          tables->between[king_square][sniper_square] & all_occupancy;
+
+      if (blockers && (blockers & (blockers - 1)) == BB_0) {
+        pinned |= blockers & board->occupancies[color];
+      }
+    }
+  }
+
+  // Where a piece standing on `from` is allowed to land.
+  const auto targets_from = [&](index_t from) {
+    const bb_t from_bb = BB_1 << from;
+    return (pinned & from_bb) ? (check_mask & tables->line[king_square][from])
+                              : check_mask;
+  };
 
   //-############################  PAWNS  ##################################-//
   {
@@ -102,24 +194,34 @@ size_t generate_moves(const bb_tables_t* tables,
       const bool is_promoting =
           (from >= promotion_rank_start && from <= promotion_rank_start + 7);
 
-      // Quiet pushes
+      const bb_t targets = targets_from(from);
+
+      // Quiet pushes. The square in front must be empty for either push to
+      // exist, but only the landing square has to satisfy `targets` - a double
+      // push can block a check that the single push does not.
       if (!GET_BIT(all_occupancy, to)) {
         if (is_promoting) {
-          moves[move_count++] = NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
-          moves[move_count++] = NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
-          moves[move_count++] =
-              NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
-          moves[move_count++] =
-              NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
+          if (GET_BIT(targets, to)) {
+            moves[move_count++] =
+                NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
+            moves[move_count++] = NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
+            moves[move_count++] =
+                NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
+            moves[move_count++] =
+                NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
+          }
         } else {
-          moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          if (GET_BIT(targets, to)) {
+            moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
+          }
 
           if (from >= double_push_rank_start &&
               from <= double_push_rank_start + 7) {
             const index_t double_to =
                 static_cast<index_t>((color == WHITE) ? (to - 8) : (to + 8));
 
-            if (!GET_BIT(all_occupancy, double_to)) {
+            if (!GET_BIT(all_occupancy, double_to) &&
+                GET_BIT(targets, double_to)) {
               moves[move_count++] =
                   NEW_MOVE(from, double_to, piece, 0, 0, 1, 0, 0);
             }
@@ -129,7 +231,7 @@ size_t generate_moves(const bb_tables_t* tables,
 
       // Captures
       const bb_t pawn_attacks = tables->pawn_attacks[color][from];
-      bb_t attacks = pawn_attacks & opp_occupancy;
+      bb_t attacks = pawn_attacks & opp_occupancy & targets;
 
       while (attacks) {
         const index_t target = get_lsb_index(attacks);
@@ -149,10 +251,39 @@ size_t generate_moves(const bb_tables_t* tables,
         }
       }
 
-      // En-passant
+      // En-passant. It is the one move that takes two pieces off the same
+      // rank at once, so neither `check_mask` nor `pinned` describes it: the
+      // victim is not on the landing square, and vacating both squares can
+      // expose the king to a rook or queen that was pinning neither pawn on
+      // its own. Rare enough to just play it out and look at the king.
       if (pawn_attacks & en_passant_mask) {
-        moves[move_count++] =
-            NEW_MOVE(from, board->en_passant, piece, 0, 1, 0, 1, 0);
+        const index_t victim_square = static_cast<index_t>(
+            (color == WHITE) ? (board->en_passant + 8) : (board->en_passant - 8));
+
+        bool legal = true;
+
+        if (king_bb) {
+          const bb_t occupancy_after =
+              (all_occupancy ^ (BB_1 << from) ^ (BB_1 << victim_square)) |
+              en_passant_mask;
+          const bb_t opp_pawns_after =
+              opp_bitboards[0] ^ (BB_1 << victim_square);
+          const bb_t opp_queens = opp_bitboards[4];
+
+          legal =
+              !((tables->pawn_attacks[color][king_square] & opp_pawns_after) ||
+                (tables->knight_attacks[king_square] & opp_bitboards[1]) ||
+                (tables->king_attacks[king_square] & opp_bitboards[5]) ||
+                (get_bishop_attacks(tables, king_square, occupancy_after) &
+                 (opp_bitboards[2] | opp_queens)) ||
+                (get_rook_attacks(tables, king_square, occupancy_after) &
+                 (opp_bitboards[3] | opp_queens)));
+        }
+
+        if (legal) {
+          moves[move_count++] =
+              NEW_MOVE(from, board->en_passant, piece, 0, 1, 0, 1, 0);
+        }
       }
     }
   }
@@ -170,7 +301,7 @@ size_t generate_moves(const bb_tables_t* tables,
       const index_t from = get_lsb_index(bboard);
       bboard &= bboard - 1;  // Clear the lowest set bit
 
-      bb_t attacks = attacks_of(from) & free_squares;
+      bb_t attacks = attacks_of(from) & free_squares & targets_from(from);
 
       while (attacks) {
         const index_t to = get_lsb_index(attacks);
@@ -239,7 +370,32 @@ size_t generate_moves(const bb_tables_t* tables,
     }
   }
 
-  emit_moves(5, [&](index_t sq) { return tables->king_attacks[sq]; });
+  //-############################  KING  ###################################-//
+  // The king is the one piece `check_mask` and `pinned` say nothing about, so
+  // each destination is tested directly. The king is lifted out of the
+  // occupancy first, otherwise it blocks the slider that is checking it and
+  // stepping backwards along the ray looks safe.
+  if (king_bb) {
+    const piece_t piece = static_cast<piece_t>(first_piece + 5);
+    const bb_t occupancy_without_king = all_occupancy ^ king_bb;
+
+    bb_t attacks = tables->king_attacks[king_square] & free_squares;
+
+    while (attacks) {
+      const index_t to = get_lsb_index(attacks);
+      attacks &= attacks - 1;
+
+      if (is_attacked_with_occupancy(tables, board, to, opponent,
+                                     occupancy_without_king)) {
+        continue;
+      }
+
+      const move_t capture = static_cast<move_t>((opp_occupancy >> to) & BB_1);
+
+      moves[move_count++] =
+          NEW_MOVE(king_square, to, piece, 0, capture, 0, 0, 0);
+    }
+  }
 
   assert(move_count < MAX_MOVES);
   return move_count;
@@ -262,12 +418,63 @@ bool move_belongs_to_side_to_move(const board_t* board, move_t move)
 }
 
 
+#ifndef NDEBUG
+// squares[] duplicates the bitboards, so it can drift out of sync with them.
+// Rebuilding it and comparing on every node is what makes the existing
+// make/unmake tree walks catch that.
+static bool squares_match_bitboards(const board_t* board)
+{
+  for (index_t square = 0; square < 64; ++square) {
+    piece_t expected = EMPTY;
+
+    for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+      if (GET_BIT(board->bitboards[piece], square)) {
+        expected = static_cast<piece_t>(piece);
+        break;
+      }
+    }
+
+    if (board->squares[square] != expected) { return false; }
+  }
+
+  return true;
+}
+#endif
+
+
+static const piece_t w_promotion_map[] = {W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK,
+                                          W_QUEEN};
+static const piece_t b_promotion_map[] = {B_PAWN, B_KNIGHT, B_BISHOP, B_ROOK,
+                                          B_QUEEN};
+
+struct castling_rook_t
+{
+  piece_t piece;  // EMPTY when the king target is not a castling square
+  index_t from;
+  index_t to;
+};
+
+
+// A castling flag on any other target square is malformed input; the caller
+// applies the king move and leaves the rooks alone.
+static inline castling_rook_t castling_rook(index_t king_to)
+{
+  switch (king_to) {
+    case g1: return {W_ROOK, h1, f1};
+    case c1: return {W_ROOK, a1, d1};
+    case g8: return {B_ROOK, h8, f8};
+    case c8: return {B_ROOK, a8, d8};
+    default: return {EMPTY, INVALID_INDEX, INVALID_INDEX};
+  }
+}
+
+
 bool make_move(game_t* game, move_t encoded_move)
 {
   assert(game != nullptr);
   assert(move_belongs_to_side_to_move(&game->board, encoded_move));
+  assert(squares_match_bitboards(&game->board));
 
-  const bb_tables_t* tables = &game->tables;
   const zobrist_randoms_t* randoms = &game->hash_randoms;
   board_t* board = &game->board;
   history_t* history = &game->history;
@@ -284,10 +491,15 @@ bool make_move(game_t* game, move_t encoded_move)
     return false;
   }
 
-  // Store the history
+  // Store the history. Only the state that cannot be recomputed from the move;
+  // `captured` is filled in below, once the target square has been read.
   history_entry_t* history_entry = &history->entries[history->size++];
-  memcpy(&history_entry->board, board, sizeof(board_t));
+  history_entry->hash = board->hash;
   history_entry->repetition_size = game->repetitions.size;
+  history_entry->move = encoded_move;
+  history_entry->castling = board->castling;
+  history_entry->en_passant = board->en_passant;
+  history_entry->halfmove_clock = board->halfmove_clock;
 
   unpacked_move_t move(encoded_move);
 
@@ -296,38 +508,31 @@ bool make_move(game_t* game, move_t encoded_move)
   const bb_t from_bb = BB_1 << move.from;
   const bb_t to_bb = BB_1 << move.to;
 
+  // An en-passant move carries the capture flag but the captured pawn does not
+  // sit on the target square, so this test skips it and the en-passant block
+  // further down removes it. Runs before the mover is placed, so the target
+  // square still holds the victim.
+  piece_t captured = EMPTY;
+
+  if (move.capture && (board->occupancies[them] & to_bb)) {
+    captured = board->squares[move.to];
+    board->bitboards[captured] ^= to_bb;
+    board->hash ^= randoms->piece_randoms[captured][move.to];
+    board->occupancies[them] ^= to_bb;
+  }
+
+  history_entry->captured = captured;
+
   // Occupancies are updated incrementally below. Rebuilding them from the
   // twelve piece bitboards at the end of the move costs far more than the
   // handful of xors each case needs.
   board->bitboards[move.piece] ^= from_bb | to_bb;
   board->occupancies[us] ^= from_bb | to_bb;
+  board->squares[move.from] = EMPTY;
+  board->squares[move.to] = move.piece;
 
   board->hash ^= randoms->piece_randoms[move.piece][move.from];
   board->hash ^= randoms->piece_randoms[move.piece][move.to];
-
-  // An en-passant move carries the capture flag but the captured pawn does not
-  // sit on the target square, so the occupancy test below skips it and the
-  // en-passant block further down removes it.
-  if (move.capture && (board->occupancies[them] & to_bb)) {
-    // Loop over the bitboards opposite to the current side to move
-    const piece_t start_piece = (us == WHITE) ? B_PAWN : W_PAWN;
-    const piece_t end_piece = (us == WHITE) ? B_KING : W_KING;
-
-    for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++) {
-      if (board->bitboards[bb_piece] & to_bb) {
-        board->bitboards[bb_piece] ^= to_bb;
-        board->hash ^= randoms->piece_randoms[bb_piece][move.to];
-        break;
-      }
-    }
-
-    board->occupancies[them] ^= to_bb;
-  }
-
-  static const piece_t w_promotion_map[] = {W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK,
-                                            W_QUEEN};
-  static const piece_t b_promotion_map[] = {B_PAWN, B_KNIGHT, B_BISHOP, B_ROOK,
-                                            B_QUEEN};
 
   if (move.promoted_to) {
     // The pawn leaves and the promoted piece arrives on the same square, so
@@ -342,6 +547,8 @@ bool make_move(game_t* game, move_t encoded_move)
 
     board->bitboards[promoted_to] ^= to_bb;
     board->hash ^= randoms->piece_randoms[promoted_to][move.to];
+
+    board->squares[move.to] = promoted_to;
   }
 
   if (move.en_passant) {
@@ -353,6 +560,7 @@ bool make_move(game_t* game, move_t encoded_move)
     board->bitboards[captured_pawn] ^= captured_bb;
     board->occupancies[them] ^= captured_bb;
     board->hash ^= randoms->piece_randoms[captured_pawn][captured_square];
+    board->squares[captured_square] = EMPTY;
   }
 
   // Update the en-passant square.
@@ -363,55 +571,30 @@ bool make_move(game_t* game, move_t encoded_move)
   // compute_full_hash() and from set_en_passant(), both of which apply it
   // unconditionally, so the two would disagree about the key for the same
   // position.
-  board->hash ^= randoms->ep_randoms[board->en_passant];
+  // Almost every move goes INVALID -> INVALID, where the two xors cancel. Only
+  // pay for them when the square actually changes.
   const index_t push =
       static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
-  board->en_passant = move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
+  const index_t new_en_passant =
+      move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
 
-  board->hash ^= randoms->ep_randoms[board->en_passant];
+  if (new_en_passant != board->en_passant) {
+    board->hash ^= randoms->ep_randoms[board->en_passant];
+    board->hash ^= randoms->ep_randoms[new_en_passant];
+    board->en_passant = new_en_passant;
+  }
 
   if (move.castling) {
-    piece_t rook = EMPTY;
-    index_t rook_from = INVALID_INDEX;
-    index_t rook_to = INVALID_INDEX;
+    const castling_rook_t rook = castling_rook(move.to);
 
-    switch (move.to) {
-      case (g1):  // White castles king side
-        rook = W_ROOK;
-        rook_from = h1;
-        rook_to = f1;
-        break;
-
-      case (c1):  // White castles queen side
-        rook = W_ROOK;
-        rook_from = a1;
-        rook_to = d1;
-        break;
-
-      case (g8):  // Black castles king side
-        rook = B_ROOK;
-        rook_from = h8;
-        rook_to = f8;
-        break;
-
-      case (c8):  // Black castles queen side
-        rook = B_ROOK;
-        rook_from = a8;
-        rook_to = d8;
-        break;
-
-      default:
-        // A castling flag on any other target square is malformed input; the
-        // king move has already been applied, leave the rooks alone.
-        break;
-    }
-
-    if (rook != EMPTY) {
-      const bb_t rook_bb = (BB_1 << rook_from) | (BB_1 << rook_to);
-      board->bitboards[rook] ^= rook_bb;
+    if (rook.piece != EMPTY) {
+      const bb_t rook_bb = (BB_1 << rook.from) | (BB_1 << rook.to);
+      board->bitboards[rook.piece] ^= rook_bb;
       board->occupancies[us] ^= rook_bb;
-      board->hash ^= randoms->piece_randoms[rook][rook_from];
-      board->hash ^= randoms->piece_randoms[rook][rook_to];
+      board->hash ^= randoms->piece_randoms[rook.piece][rook.from];
+      board->hash ^= randoms->piece_randoms[rook.piece][rook.to];
+      board->squares[rook.from] = EMPTY;
+      board->squares[rook.to] = rook.piece;
     }
   }
 
@@ -422,11 +605,16 @@ bool make_move(game_t* game, move_t encoded_move)
     board->halfmove_clock += 1;
   }
 
-  // Update castling rights
-  board->hash ^= randoms->castling_randoms[board->castling];
-  board->castling &= castling_rights[move.from];
-  board->castling &= castling_rights[move.to];
-  board->hash ^= randoms->castling_randoms[board->castling];
+  // Update castling rights. Unchanged for the overwhelming majority of moves,
+  // where the two xors would cancel, so compare before touching the hash.
+  const uint8_t new_castling = static_cast<uint8_t>(
+      board->castling & castling_rights[move.from] & castling_rights[move.to]);
+
+  if (new_castling != board->castling) {
+    board->hash ^= randoms->castling_randoms[board->castling];
+    board->hash ^= randoms->castling_randoms[new_castling];
+    board->castling = new_castling;
+  }
 
   // The per-side occupancies were maintained incrementally above
   board->occupancies[BOTH] =
@@ -440,6 +628,7 @@ bool make_move(game_t* game, move_t encoded_move)
          (board->bitboards[B_PAWN] | board->bitboards[B_KNIGHT] |
           board->bitboards[B_BISHOP] | board->bitboards[B_ROOK] |
           board->bitboards[B_QUEEN] | board->bitboards[B_KING]));
+  assert(squares_match_bitboards(board));
 
   // change side
   board->hash ^= randoms->side_randoms[us];
@@ -452,18 +641,15 @@ bool make_move(game_t* game, move_t encoded_move)
   // Store repetitions. Capacity was checked before the history push above.
   game->repetitions.entries[game->repetitions.size++] = old_hash;
 
-  // Check legality: the side that just moved must not have left its king en
-  // prise.
-  const bb_t our_king = board->bitboards[(us == WHITE) ? W_KING : B_KING];
-
-  if (our_king && is_attacked(tables, board, get_lsb_index(our_king), them)) {
-    // Restore board
-    history->size--;
-    memcpy(board, &history->entries[history->size].board, sizeof(board_t));
-    game->repetitions.size = history->entries[history->size].repetition_size;
-
-    return false;
-  }
+  // No legality check here. generate_moves() emits legal moves only, so the
+  // king cannot be left en prise by anything that reaches this point, and
+  // every caller feeds this function a generated move. The assertion is the
+  // net that catches a caller that does not.
+  assert(board->bitboards[(us == WHITE) ? W_KING : B_KING] == BB_0 ||
+         !is_attacked(&game->tables, board,
+                      get_lsb_index(board->bitboards[(us == WHITE) ? W_KING
+                                                                   : B_KING]),
+                      them));
 
   return true;
 }
@@ -475,12 +661,84 @@ void unmake_move(game_t* game)
 
   // Guard the *empty* end of the stack: `size` is unsigned, so decrementing it
   // at zero wraps around and reads far out of bounds.
-  if (game->history.size > 0) {
-    game->history.size--;
-    const history_entry_t* entry = &game->history.entries[game->history.size];
-    memcpy(&game->board, &entry->board, sizeof(board_t));
-    game->repetitions.size = entry->repetition_size;
+  if (game->history.size == 0) { return; }
+
+  board_t* board = &game->board;
+  const history_entry_t* entry = &game->history.entries[--game->history.size];
+
+  const unpacked_move_t move(entry->move);
+  const color_t us = !board->active_color;  // the side that made the move
+  const color_t them = board->active_color;
+  const bb_t from_bb = BB_1 << move.from;
+  const bb_t to_bb = BB_1 << move.to;
+
+  // Everything below reverses make_move step by step, in the opposite order.
+  if (move.castling) {
+    const castling_rook_t rook = castling_rook(move.to);
+
+    if (rook.piece != EMPTY) {
+      const bb_t rook_bb = (BB_1 << rook.from) | (BB_1 << rook.to);
+      board->bitboards[rook.piece] ^= rook_bb;
+      board->occupancies[us] ^= rook_bb;
+      board->squares[rook.to] = EMPTY;
+      board->squares[rook.from] = rook.piece;
+    }
   }
+
+  if (move.promoted_to) {
+    // Take the promoted piece off and put the pawn back on the same square;
+    // the move undo below then walks that pawn back to `from`.
+    const piece_t pawn = (us == WHITE) ? W_PAWN : B_PAWN;
+    const piece_t promoted_to = (us == WHITE) ? w_promotion_map[move.promoted_to]
+                                              : b_promotion_map[move.promoted_to];
+
+    board->bitboards[promoted_to] ^= to_bb;
+    board->bitboards[pawn] ^= to_bb;
+  }
+
+  if (move.en_passant) {
+    const piece_t captured_pawn = (us == WHITE) ? B_PAWN : W_PAWN;
+    const index_t captured_square =
+        static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
+    const bb_t captured_bb = BB_1 << captured_square;
+
+    board->bitboards[captured_pawn] ^= captured_bb;
+    board->occupancies[them] ^= captured_bb;
+    board->squares[captured_square] = captured_pawn;
+  }
+
+  board->bitboards[move.piece] ^= from_bb | to_bb;
+  board->occupancies[us] ^= from_bb | to_bb;
+  board->squares[move.from] = move.piece;
+  board->squares[move.to] = entry->captured;
+
+  if (entry->captured != EMPTY) {
+    board->bitboards[entry->captured] ^= to_bb;
+    board->occupancies[them] ^= to_bb;
+  }
+
+  board->occupancies[BOTH] =
+      board->occupancies[WHITE] | board->occupancies[BLACK];
+
+  board->active_color = us;
+  board->castling = entry->castling;
+  board->en_passant = entry->en_passant;
+  board->halfmove_clock = entry->halfmove_clock;
+  board->hash = entry->hash;
+
+  if (us == BLACK) { board->fullmove_counter--; }
+
+  game->repetitions.size = entry->repetition_size;
+
+  assert(squares_match_bitboards(board));
+  assert(board->occupancies[WHITE] ==
+         (board->bitboards[W_PAWN] | board->bitboards[W_KNIGHT] |
+          board->bitboards[W_BISHOP] | board->bitboards[W_ROOK] |
+          board->bitboards[W_QUEEN] | board->bitboards[W_KING]));
+  assert(board->occupancies[BLACK] ==
+         (board->bitboards[B_PAWN] | board->bitboards[B_KNIGHT] |
+          board->bitboards[B_BISHOP] | board->bitboards[B_ROOK] |
+          board->bitboards[B_QUEEN] | board->bitboards[B_KING]));
 }
 
 
@@ -572,6 +830,11 @@ void cleanup_board(game_t* game)
   assert(game != nullptr);
 
   memset(&game->board, 0, sizeof(board_t));
+
+  // Zero is W_PAWN, not EMPTY, so the square array cannot ride on the memset.
+  for (index_t square = 0; square < 64; ++square) {
+    game->board.squares[square] = EMPTY;
+  }
 
   game->board.active_color = WHITE;
   game->board.castling = WQ | WK | BQ | BK;
@@ -709,6 +972,7 @@ bool load_FEN(const std::string& FEN, game_t* game)
         const index_t index = position_to_index(file, rank);
         const piece_t piece = char_to_piece(c);
         SET_BIT(board->bitboards[piece], index);
+        board->squares[index] = piece;
         ++file;
       } break;
 
@@ -1075,9 +1339,13 @@ bool is_move_legal(game_t* game, move_t move)
 {
   if (!move_belongs_to_side_to_move(&game->board, move)) { return false; }
 
-  if (make_move(game, move)) {
-    unmake_move(game);
-    return true;
+  // generate_moves() is the definition of legal now, so membership in its
+  // output is the test. make_move() no longer rejects anything.
+  move_t moves[MAX_MOVES];
+  const size_t count = generate_moves(&game->tables, &game->board, moves);
+
+  for (size_t i = 0; i < count; ++i) {
+    if (moves[i] == move) { return true; }
   }
 
   return false;
@@ -1958,17 +2226,40 @@ void initialize_game_const_data(game_t* game)
       }
     }
   }
+
+  // between[] and line[], built from the magic tables above so they must come
+  // after the loop. attacks(a, {b}) & attacks(b, {a}) is exactly the open
+  // segment between two aligned squares: each ray stops on the other square,
+  // and the rays that do not point at each other cannot overlap.
+  for (index_t a = 0; a < 64; ++a) {
+    const bb_t a_bb = BB_1 << a;
+
+    for (index_t b = 0; b < 64; ++b) {
+      if (a == b) { continue; }
+
+      const bb_t b_bb = BB_1 << b;
+
+      if (get_rook_attacks(tables, a, BB_0) & b_bb) {
+        tables->between[a][b] =
+            get_rook_attacks(tables, a, b_bb) & get_rook_attacks(tables, b, a_bb);
+        tables->line[a][b] = (get_rook_attacks(tables, a, BB_0) &
+                              get_rook_attacks(tables, b, BB_0)) |
+                             a_bb | b_bb;
+      } else if (get_bishop_attacks(tables, a, BB_0) & b_bb) {
+        tables->between[a][b] = get_bishop_attacks(tables, a, b_bb) &
+                                get_bishop_attacks(tables, b, a_bb);
+        tables->line[a][b] = (get_bishop_attacks(tables, a, BB_0) &
+                              get_bishop_attacks(tables, b, BB_0)) |
+                             a_bb | b_bb;
+      }
+    }
+  }
   // LOG_I << "Bitboard const tables initialized " << END_I;
 }
 
 
 piece_t get_piece(const board_t* board, index_t square)
 {
-  for (int piece = W_PAWN; piece <= B_KING; ++piece) {
-    if (GET_BIT(board->bitboards[piece], square)) {
-      return static_cast<piece_t>(piece);
-    }
-  }
-
-  return EMPTY;
+  assert(square < 64);
+  return board->squares[square];
 }
