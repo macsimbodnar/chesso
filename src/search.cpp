@@ -211,6 +211,10 @@ int negamax(int alpha0,
     }
 
     if (game->board.halfmove_clock >= 100) { return DRAW_SCORE; }
+
+    // Nothing on the board can force mate, so there is nothing below this node
+    // worth looking at. The root is exempt: it still has to produce a move.
+    if (is_insufficient_material(&game->board)) { return DRAW_SCORE; }
   }
 
   // Reuse TT entry if found

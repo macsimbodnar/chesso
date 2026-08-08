@@ -345,8 +345,17 @@ TEST_SUITE("search: tactics")
       {"4k3/8/q7/1N6/8/8/8/4K3 w - - 0 1",       b5, c7, TO_NONE,  "fork the king and the queen"},
       {"4k3/8/8/8/8/8/4r3/4K1R1 w - - 0 1",      e1, e2, TO_NONE,  "the king takes the loose rook"},
       {"2k5/8/8/8/8/8/1q6/K1R5 w - - 0 1",       a1, b2, TO_NONE,  "the king takes the loose queen"},
-      {"4k3/4q3/8/8/8/8/4R3/4KR2 w - - 0 1",     e2, e7, TO_NONE,  "the doubled rooks win the queen"},
-      {"4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1",      e4, d5, TO_NONE,  "take the free pawn"},
+      // The black king stands on d8 rather than e8 on purpose. With the king on
+      // e8 the queen is pinned to it by the rook on e2 and cannot leave the
+      // file, so every white move wins it and the position has no unique
+      // answer - it passed only because captures happen to be ordered first.
+      // On d8 the queen is free to run, so Rxe7 has to be played at once.
+      {"3k4/4q3/8/8/8/8/4R3/4KR2 w - - 0 1",     e2, e7, TO_NONE,  "the doubled rooks win the queen"},
+      // The kings are parked out of the way on purpose. With them on e1 and e8
+      // the black king walks back and wins the pawn again, so the position is
+      // drawn whatever White plays and the case is not about a free pawn at
+      // all - it passed only because captures are ordered first.
+      {"k7/8/8/3p4/4P3/8/8/6K1 w - - 0 1",       e4, d5, TO_NONE,  "take the free pawn"},
       {"8/P6k/8/8/8/8/8/4K3 w - - 0 1",          a7, a8, TO_QUEEN, "promote to a queen"},
       {"6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1",      a1, a8, TO_NONE,  "mate on the back rank"},
       {"r5k1/8/8/8/8/8/5PPP/6K1 b - - 0 1",      a8, a1, TO_NONE,  "mate on the back rank, black"},
@@ -504,8 +513,10 @@ TEST_SUITE("search: quiescence")
 
     // evaluate() and quiescence both answer from the side to move's point of
     // view, so Black's static score is what evaluate() returns.
+    // Two pawns up, plus whatever the piece-square tables make of the squares
+    // everything happens to be standing on.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 200);
+    REQUIRE_EQ(black_static, 208);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -538,8 +549,8 @@ TEST_SUITE("search: quiescence")
       REQUIRE_FALSE(MOVE_CAPTURE(moves[i]));
     }
 
-    // A rook down, and nothing else to say about it.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -500);
+    // A rook down, give or take where the piece-square tables put the kings.
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -475);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -750,12 +761,44 @@ TEST_SUITE("search: draws")
 {
   TEST_CASE_FIXTURE(search_fixture_t, "a bare king endgame is a draw")
   {
-    // Nothing left to do for either side, so every line is a draw.
+    // Nothing left to do for either side, so every line is a draw. This holds
+    // because the search knows the material is insufficient; without that it
+    // would report the small advantage the piece-square tables see in walking
+    // one king toward the middle.
     const search_t result = search_fen("7k/8/8/8/8/8/8/K7 w - - 0 1", 6);
 
     REQUIRE(result.best_move != 0);
     REQUIRE_EQ(result.score, 0);
     REQUIRE_FALSE(result.mate_found);
+  }
+
+  TEST_CASE_FIXTURE(search_fixture_t, "which material can still mate")
+  {
+    struct case_t
+    {
+      std::string fen;
+      bool dead;
+      std::string title;
+    };
+
+    // clang-format off
+    const std::vector<case_t> cases = {
+      {"7k/8/8/8/8/8/8/K7 w - - 0 1",        true,  "king against king"},
+      {"7k/8/8/8/8/8/8/KN6 w - - 0 1",       true,  "one knight"},
+      {"7k/8/8/8/8/8/8/KB6 w - - 0 1",       true,  "one bishop"},
+      {"6nk/8/8/8/8/8/8/KN6 w - - 0 1",      false, "a knight each is not dead by rule"},
+      {"7k/8/8/8/8/8/8/KNN5 w - - 0 1",      false, "two knights"},
+      {"7k/8/8/8/8/8/8/KR6 w - - 0 1",       false, "a rook mates"},
+      {"7k/8/8/8/8/8/8/KQ6 w - - 0 1",       false, "a queen mates"},
+      {"7k/8/8/8/8/8/P7/K7 w - - 0 1",       false, "a pawn can promote"},
+    };
+    // clang-format on
+
+    for (const case_t& test : cases) {
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
+      REQUIRE_MESSAGE(is_insufficient_material(&game.board) == test.dead,
+                      test.title);
+    }
   }
 
   // Regression: an illegal FEN where the side to move can capture the enemy
@@ -797,8 +840,9 @@ TEST_SUITE("search: draws")
 
     // Black is a rook down and Black is to move, and evaluate() answers from
     // the side to move's point of view, so anything other than the repetition
-    // is losing by that much.
-    REQUIRE_EQ(evaluate(&game.board), -500);
+    // is losing by about that much - the rest is where the tables put the
+    // kings and the rook.
+    REQUIRE_EQ(evaluate(&game.board), -482);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

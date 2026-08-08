@@ -942,6 +942,34 @@ void unmake_move(game_t* game)
 }
 
 
+// Positions where no sequence of legal moves can produce a mate, so there is
+// nothing left to search for. Without this the evaluation is free to prefer one
+// drawn position to another - a centralised king scores better than a cornered
+// one - and the engine reports a bare king endgame as a small advantage.
+//
+// Deliberately strict: only the cases that are dead by rule. Two bishops on the
+// same colour, or knight against knight, are drawn in practice but not by the
+// laws, and claiming them here would throw away positions that are still won on
+// the clock.
+bool is_insufficient_material(const board_t* board)
+{
+  assert(board != nullptr);
+
+  // Anything that can promote, or mate on its own, settles it.
+  if (board->bitboards[W_PAWN] | board->bitboards[B_PAWN] |
+      board->bitboards[W_ROOK] | board->bitboards[B_ROOK] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN]) {
+    return false;
+  }
+
+  // King against king, or a single minor piece against a bare king.
+  const bb_t minors = board->bitboards[W_KNIGHT] | board->bitboards[W_BISHOP] |
+                      board->bitboards[B_KNIGHT] | board->bitboards[B_BISHOP];
+
+  return count_bits(minors) <= 1;
+}
+
+
 bool is_position_repeated(const history_t* history, const board_t* board)
 {
   assert(history != nullptr);

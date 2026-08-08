@@ -129,13 +129,15 @@ TEST_SUITE("evaluation: score")
     }
   }
 
-  // ANCHOR: pinned to the material-only evaluation. Update when the evaluation
-  // gains positional terms.
+  // ANCHOR: pinned to today's numbers. Every value here is material plus the
+  // piece-square term for the one square the piece is standing on, so editing
+  // either table moves them and this test is what makes that deliberate rather
+  // than accidental.
   //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
-  TEST_CASE_FIXTURE(eval_fixture_t, "each piece is worth what the table says")
+  TEST_CASE_FIXTURE(eval_fixture_t, "each piece is worth what the tables say")
   {
     struct case_t
     {
@@ -146,12 +148,12 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 100, "pawn"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 300, "knight"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 300, "bishop"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 500, "rook"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 900, "queen"},
-      {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",    0, "bare kings cancel"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 105, "pawn on e2"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 260, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 292, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 500, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 897, "queen on d1"},
+      {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on
 
@@ -161,6 +163,44 @@ TEST_SUITE("evaluation: score")
     }
   }
 
+  // The piece-square tables have to actually prefer the squares they are meant
+  // to. These are the two clearest cases and they pull in opposite directions,
+  // so a table pasted in upside down fails one of them.
+  TEST_CASE_FIXTURE(eval_fixture_t, "the tables prefer the right squares")
+  {
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/N3K3 w - - 0 1", &game));
+    const int knight_corner = evaluate(&game.board);
+
+    REQUIRE(load_FEN("4k3/8/8/3N4/8/8/8/4K3 w - - 0 1", &game));
+    const int knight_centre = evaluate(&game.board);
+
+    REQUIRE_MESSAGE(knight_centre > knight_corner,
+                    "a centralised knight must beat one in the corner");
+
+    // With a full board the king belongs at home; with nothing left it belongs
+    // in the middle. Same two squares, opposite verdicts. The middlegame case
+    // needs an actual full board: with one queen each the phase is already 8 of
+    // 24, which is mostly endgame and the tables correctly say so.
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+    const int home_mg = evaluate(&game.board);
+
+    REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/3K4/8/PPPPPPPP/RNBQ1BNR w kq - 0 1",
+                     &game));
+    const int centre_mg = evaluate(&game.board);
+
+    REQUIRE_MESSAGE(home_mg > centre_mg,
+                    "with a full board, the king is safer at home");
+
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/4K3 w - - 0 1", &game));
+    const int home_eg = evaluate(&game.board);
+
+    REQUIRE(load_FEN("4k3/8/8/8/3K4/8/8/8 w - - 0 1", &game));
+    const int centre_eg = evaluate(&game.board);
+
+    REQUIRE_MESSAGE(centre_eg > home_eg,
+                    "with the board bare, the king wants the centre");
+  }
+
   // The king carries no material. Both sides always have exactly one in a legal
   // position, so the term could only ever cancel, and pricing it meant an
   // illegal position with an unbalanced king count scored above every mate -
@@ -168,11 +208,14 @@ TEST_SUITE("evaluation: score")
   // a mate at all.
   TEST_CASE_FIXTURE(eval_fixture_t, "a missing king is not worth anything")
   {
+    // A lone king still moves the score, because it stands on a square the
+    // tables have an opinion about. What it must not do is carry material: a
+    // whole missing king has to be worth less than a single pawn.
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/8 w - - 0 1", &game));
-    REQUIRE_EQ(evaluate(&game.board), 0);
+    REQUIRE(std::abs(evaluate(&game.board)) < 100);
 
     REQUIRE(load_FEN("8/8/8/8/8/8/8/4K3 w - - 0 1", &game));
-    REQUIRE_EQ(evaluate(&game.board), 0);
+    REQUIRE(std::abs(evaluate(&game.board)) < 100);
 
     // The score has to stay well inside the mate band, or search() reports a
     // material imbalance as a mate.

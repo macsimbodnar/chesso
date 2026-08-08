@@ -144,7 +144,47 @@ pieces move. **Measure both** - this codebase has already punished one
 Verify: perft unchanged, `ctest` green, `search_bench.py` node counts identical
 where the change is meant to be behaviour-neutral.
 
-## Phase 1 - tapered piece-square tables
+## Phase 1 - tapered piece-square tables — DONE, awaiting SPRT
+
+Two tables per piece, middlegame and endgame, interpolated on `game_phase()`.
+Written by hand from ordinary positional principles rather than taken from a
+published set; phase 5 replaces them by fitting to game outcomes, and until then
+they are worth much less than a tuned table.
+
+**Cost: about 25 % of nodes per second**, 13.0 down to 10.1 Mnps, because the
+tables are recomputed from the bitboards on every call. That is the 0.4
+question arriving: whether to accumulate the score in `make_move` instead. Left
+as it is for now, so the SPRT measures the evaluation rather than the
+evaluation and an optimisation together.
+
+Three test positions turned out to be over-specified rather than wrong, and all
+three had been passing by accident of move ordering:
+
+- "the doubled rooks win the queen" had the black king on e8, where the queen is
+  pinned to it and *every* white move wins it. Moved the king to d8, where the
+  queen can run and Rxe7 has to be played at once.
+- "take the free pawn" had the kings close enough that the black king walks back
+  and wins the pawn again, so the position is drawn whatever White plays. Kings
+  moved to opposite corners.
+- "a bare king endgame is a draw" asserted a score of exactly zero, which only
+  held because a material-only evaluation is flat. It is now true for the right
+  reason - see below.
+
+### Insufficient material
+
+Added, because the alternative was weakening that last test. Without it the
+search prefers one drawn position to another - a centralised king scores better
+than a cornered one - and reports a bare king endgame as a small advantage.
+
+Deliberately strict: king against king, and a single minor against a bare king.
+Knight against knight and same-colour bishops are drawn in practice but not by
+the laws, and claiming them would throw away positions still winnable on the
+clock. Applied at every node except the root, which still has to return a move.
+
+**This is bundled into the same commit as the tables**, so the SPRT below
+measures both. They are separable if the result is bad.
+
+## Phase 1 - original entry
 
 The single largest evaluation item, and the floor NNUE needs.
 

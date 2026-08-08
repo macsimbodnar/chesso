@@ -108,6 +108,9 @@ bool is_pv_legal(game_t* game, const pv_t* pv);
 // Utils that must run fast
 bool is_position_repeated(const history_t* history, const board_t* board);
 
+// True when neither side can force mate with what is left on the board.
+bool is_insufficient_material(const board_t* board);
+
 bool is_check(const game_t* game);
 void swap_side(game_t* game);
 void set_en_passant(game_t* game, index_t ep_index);
