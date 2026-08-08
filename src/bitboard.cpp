@@ -84,10 +84,20 @@ static inline bb_t attackers_to(const bb_tables_t* tables,
 // Colour is a template parameter for the same reason as in make_move_impl: it
 // is constant for the whole call, and it drives the piece bases, the pawn push
 // direction, the promotion and double-push ranks, and the castling squares.
-template <color_t Color>
-static size_t generate_moves_impl(const bb_tables_t* tables,
+//
+// `Constrained` says whether anything restricts the move list at all. On most
+// nodes there is no check and nothing is pinned, and then `check_mask` is all
+// ones, `pinned` is empty, and every mask below is provably a no-op that still
+// costs an instruction and a branch. Instantiating with Constrained == false
+// folds the whole lot away, including the pinned-pawn loop, which becomes dead
+// code and is deleted outright.
+template <color_t Color, bool Constrained>
+static size_t generate_moves_body(const bb_tables_t* tables,
                                   const board_t* board,
-                                  move_t moves[])
+                                  move_t moves[],
+                                  const bb_t check_mask_in,
+                                  const bb_t pinned_in,
+                                  const index_t king_square)
 {
   assert(tables != nullptr);
   assert(board != nullptr);
@@ -96,6 +106,11 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
   constexpr color_t color = Color;
   constexpr color_t opponent = (Color == WHITE) ? BLACK : WHITE;
   assert(board->active_color == color);
+
+  // The condition is a compile-time constant, so the unconstrained
+  // instantiation sees literal ~0 and 0 here and propagates them everywhere.
+  const bb_t check_mask = Constrained ? check_mask_in : ~BB_0;
+  const bb_t pinned = Constrained ? pinned_in : BB_0;
 
   const bb_t all_occupancy = board->occupancies[BOTH];
   const bb_t opp_occupancy = board->occupancies[opponent];
@@ -114,58 +129,9 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
   const bb_t en_passant_mask =
       (board->en_passant != INVALID_INDEX) ? (BB_1 << board->en_passant) : BB_0;
 
-  size_t move_count = 0;
-
-  //-#####################  LEGALITY, ONCE PER NODE  #######################-//
-  // Instead of making every pseudo-legal move and asking whether it left the
-  // king en prise, work out up front which squares a non-king move is allowed
-  // to land on. Two masks do it:
-  //
-  //   check_mask  targets that answer the check: the checker itself or a
-  //               square on the ray between it and the king. All ones when
-  //               there is no check, all zeros under double check, where only
-  //               the king may move.
-  //   pinned      our pieces standing alone between the king and an enemy
-  //               slider. Such a piece may only move along that same line.
-  //
-  // A side with no king is reachable (EMPTY_POS, and illegal FENs), and then
-  // nothing constrains the move list.
   const bb_t king_bb = my_bitboards[5];
-  const index_t king_square = king_bb ? get_lsb_index(king_bb) : INVALID_INDEX;
 
-  bb_t check_mask = ~BB_0;
-  bb_t pinned = BB_0;
-
-  if (king_bb) {
-    const bb_t checkers = attackers_to(tables, board, king_square, opponent);
-    const int checker_count = count_bits(checkers);
-
-    if (checker_count == 1) {
-      const index_t checker_square = get_lsb_index(checkers);
-      check_mask = tables->between[king_square][checker_square] | checkers;
-    } else if (checker_count > 1) {
-      check_mask = BB_0;
-    }
-
-    // Sliders that would hit the king on an empty board are the only ones that
-    // can pin anything; a single one of our pieces in the way is pinned.
-    bb_t snipers = (get_rook_attacks(tables, king_square, BB_0) &
-                    (opp_bitboards[3] | opp_bitboards[4])) |
-                   (get_bishop_attacks(tables, king_square, BB_0) &
-                    (opp_bitboards[2] | opp_bitboards[4]));
-
-    while (snipers) {
-      const index_t sniper_square = get_lsb_index(snipers);
-      snipers &= snipers - 1;
-
-      const bb_t blockers =
-          tables->between[king_square][sniper_square] & all_occupancy;
-
-      if (blockers && (blockers & (blockers - 1)) == BB_0) {
-        pinned |= blockers & board->occupancies[color];
-      }
-    }
-  }
+  size_t move_count = 0;
 
   // Where a piece standing on `from` is allowed to land.
   const auto targets_from = [&](index_t from) {
@@ -477,6 +443,80 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
 
   assert(move_count < MAX_MOVES);
   return move_count;
+}
+
+
+// Works out what constrains the move list, then picks the instantiation that
+// knows about it. Instead of making every pseudo-legal move and asking whether
+// it left the king en prise, two masks decide it up front:
+//
+//   check_mask  targets that answer the check: the checker itself or a square
+//               on the ray between it and the king. All ones when there is no
+//               check, all zeros under double check, where only the king may
+//               move.
+//   pinned      our pieces standing alone between the king and an enemy
+//               slider. Such a piece may only move along that same line.
+//
+// A side with no king is reachable (EMPTY_POS, and illegal FENs), and then
+// nothing constrains the move list.
+template <color_t Color>
+static size_t generate_moves_impl(const bb_tables_t* tables,
+                                  const board_t* board,
+                                  move_t moves[])
+{
+  constexpr color_t color = Color;
+  constexpr color_t opponent = (Color == WHITE) ? BLACK : WHITE;
+
+  const bb_t* my_bitboards =
+      &board->bitboards[(color == WHITE) ? W_PAWN : B_PAWN];
+  const bb_t* opp_bitboards =
+      &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
+
+  const bb_t king_bb = my_bitboards[5];
+  const index_t king_square = king_bb ? get_lsb_index(king_bb) : INVALID_INDEX;
+
+  bb_t check_mask = ~BB_0;
+  bb_t pinned = BB_0;
+
+  if (king_bb) {
+    const bb_t all_occupancy = board->occupancies[BOTH];
+    const bb_t checkers = attackers_to(tables, board, king_square, opponent);
+    const int checker_count = count_bits(checkers);
+
+    if (checker_count == 1) {
+      const index_t checker_square = get_lsb_index(checkers);
+      check_mask = tables->between[king_square][checker_square] | checkers;
+    } else if (checker_count > 1) {
+      check_mask = BB_0;
+    }
+
+    // Sliders that would hit the king on an empty board are the only ones that
+    // can pin anything; a single one of our pieces in the way is pinned.
+    bb_t snipers = (get_rook_attacks(tables, king_square, BB_0) &
+                    (opp_bitboards[3] | opp_bitboards[4])) |
+                   (get_bishop_attacks(tables, king_square, BB_0) &
+                    (opp_bitboards[2] | opp_bitboards[4]));
+
+    while (snipers) {
+      const index_t sniper_square = get_lsb_index(snipers);
+      snipers &= snipers - 1;
+
+      const bb_t blockers =
+          tables->between[king_square][sniper_square] & all_occupancy;
+
+      if (blockers && (blockers & (blockers - 1)) == BB_0) {
+        pinned |= blockers & board->occupancies[color];
+      }
+    }
+
+    if (check_mask != ~BB_0 || pinned != BB_0) {
+      return generate_moves_body<Color, true>(tables, board, moves, check_mask,
+                                              pinned, king_square);
+    }
+  }
+
+  return generate_moves_body<Color, false>(tables, board, moves, check_mask,
+                                           pinned, king_square);
 }
 
 

@@ -216,7 +216,35 @@ needed to update it incrementally has already been computed a few lines above.
 - Risk: low. The existing occupancy assertions under `!NDEBUG` already check
   this invariant on every node.
 
-## 5. A no-check, no-pin fast path in generate_moves
+## 5. A no-check, no-pin fast path — DONE, -1.8 % perft, -11.7 % generator
+
+Three interleaved rounds:
+
+```
+perft total          475.0 -> 466.9 ms   -1.8 %   88.0 -> 89.6 Mnps
+generate_moves alone 659.2 -> 582.1 ms  -11.7 %  540 -> 612 Mmoves/s
+```
+
+The generator itself got 11.7 % faster, which is close to the top of what the
+estimate allowed, but it is only about a fifth of perft, so the workload as a
+whole moved 1.8 %. That is below the 3 % bar this file sets, and it is kept only
+because the direction is consistent across every round and the mechanism is
+understood rather than lucky.
+
+`generate_moves` was split into a body templated on `<Color, Constrained>` and
+a small front end that computes the checkers and the pinned set and picks the
+instantiation. Writing the masks as `Constrained ? mask : ~BB_0` is enough - the
+condition is compile-time, so the unconstrained instantiation sees literal
+constants and the optimiser removes every `& check_mask`, every pin test, and
+the whole pinned-pawn loop as dead code.
+
+Object code for `bitboard.cpp` went 61 KB to 68 KB with four instantiations of
+the body. Still no instruction cache regression. This is the last template
+parameter that pays; a third would double the code again for less.
+
+Original entry follows.
+
+
 
 Most nodes have no checkers and no pinned pieces. On those, `check_mask` is all
 ones, `pinned` is zero, and every `& targets` and every `targets_from()` branch
