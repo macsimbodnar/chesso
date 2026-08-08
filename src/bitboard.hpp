@@ -98,6 +98,12 @@ size_t generate_quiets(const bb_tables_t* tables,
 
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
+
+// Pass the turn without moving, for null move pruning. Must be undone with
+// unmake_null_move(), not unmake_move(): the history entry it pushes carries no
+// move to reverse.
+void make_null_move(game_t* game);
+void unmake_null_move(game_t* game);
 bool is_capturing_king(const board_t* board, move_t move);
 
 // Utils that can be slow

@@ -241,6 +241,57 @@ int negamax(int alpha0,
   // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
 
+  // Null move pruning. Give the opponent a free move; if the position is still
+  // good enough to fail high after that, it is won by so much that searching it
+  // properly is wasted effort, and the whole subtree is skipped.
+  //
+  // The reasoning only holds where having to move is an advantage, which is why
+  // the guards matter more than the idea:
+  //
+  //   in check      a pass is not merely illegal, the search after it is
+  //                 meaningless - the king is captured
+  //   PV node       these are the lines that get reported and played, and the
+  //                 bound this returns is not a real score
+  //   game_phase 0  zugzwang. With only kings and pawns left, being obliged to
+  //                 move is often the losing part of the position, so "I am
+  //                 fine even after passing" stops being evidence of anything.
+  //                 This is what game_phase() was added for
+  //   prev_move 0   the parent was itself a null move. Two passes in a row is
+  //                 the same position with less depth
+  //   beta near mate  a fail-high against a mate bound would return a mate
+  //                 score this search never proved
+  //
+  // Deeper searches can afford to give up more, since what is left is still
+  // enough to answer the question.
+  const int null_reduction = 2 + (depth / 6);
+
+  // The reduced search has to keep at least one real ply. Let it fall to zero
+  // and it becomes pure quiescence, which only looks at captures and therefore
+  // cannot see a mate that is two plies away - it answers with the static score
+  // and the pass looks safe. That is not a theoretical risk: it lost a mate in
+  // two at depth 4, where this node had three plies left and the null search
+  // had none.
+  if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
+      depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
+      game_phase(&game->board) > 0) {
+    const int reduction = null_reduction;
+
+    make_null_move(game);
+
+    const int null_score = -negamax(-beta, -beta + 1, depth - 1 - reduction,
+                                    ply + 1, game, state, 0, false);
+
+    unmake_null_move(game);
+
+    if (state->aborted) { return 0; }
+
+    if (null_score >= beta) {
+      // A mate score out of a null move search is not a mate anyone can force,
+      // it is an artefact of the pass. Report the bound instead.
+      return (null_score >= MATE_MIN) ? beta : null_score;
+    }
+  }
+
   node_type_t type = TT_ALPHA_NODE;
 
   int legal_moves_counter = 0;

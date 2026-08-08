@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -770,6 +771,58 @@ TEST_SUITE("search: draws")
     REQUIRE(result.best_move != 0);
     REQUIRE_EQ(result.score, 0);
     REQUIRE_FALSE(result.mate_found);
+  }
+
+  // Null move pruning leans on make_null_move leaving the position exactly as
+  // it found it. A hash that does not come back poisons the transposition
+  // table with entries filed under the wrong position, which shows up much
+  // later as a wrong move in a position that has nothing to do with the bug.
+  TEST_CASE_FIXTURE(search_fixture_t, "a null move undoes itself exactly")
+  {
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      const board_t before = game.board;
+      const size_t history_before = game.history.size;
+
+      make_null_move(&game);
+
+      // The passed position must be a different position: the side to move
+      // changed, so the key has to change with it.
+      REQUIRE_MESSAGE(game.board.hash != before.hash, ("FEN: " + fen));
+      REQUIRE_MESSAGE(game.board.active_color != before.active_color,
+                      ("FEN: " + fen));
+      REQUIRE_MESSAGE(game.board.en_passant == INVALID_INDEX, ("FEN: " + fen));
+
+      unmake_null_move(&game);
+
+      REQUIRE_MESSAGE(std::memcmp(&before, &game.board, sizeof(board_t)) == 0,
+                      ("FEN: " + fen));
+      REQUIRE_MESSAGE(game.history.size == history_before, ("FEN: " + fen));
+    }
+  }
+
+  // The reduced search a null move runs must keep at least one real ply. At
+  // zero it is quiescence, which only looks at captures, cannot see a mate two
+  // plies away, and answers with the static score - so the pass looks safe and
+  // the mating line is pruned. This caught exactly that at depth 4.
+  TEST_CASE_FIXTURE(search_fixture_t, "pruning does not hide a forced mate")
+  {
+    for (int depth = 3; depth <= 6; ++depth) {
+      const search_t white = search_fen(MATE_IN_2_W_POS, depth);
+
+      REQUIRE_MESSAGE(white.mate_found,
+                      ("white, depth " + std::to_string(depth)));
+      REQUIRE_MESSAGE(white.mate_in == 2,
+                      ("white, depth " + std::to_string(depth)));
+
+      const search_t black = search_fen(MATE_IN_2_B_POS, depth);
+
+      REQUIRE_MESSAGE(black.mate_found,
+                      ("black, depth " + std::to_string(depth)));
+      REQUIRE_MESSAGE(black.mate_in == 2,
+                      ("black, depth " + std::to_string(depth)));
+    }
   }
 
   TEST_CASE_FIXTURE(search_fixture_t, "which material can still mate")

@@ -983,6 +983,65 @@ void unmake_move(game_t* game)
 }
 
 
+// Passing the turn without moving. Illegal in chess, which is the point: if a
+// side is so far ahead that it could give the opponent a free move and still be
+// winning, the position does not need searching properly.
+//
+// A history entry is pushed like any other move so that unmake_null_move() has
+// something to restore from, and so that the repetition walk keeps its stride.
+// The move is stored as 0, which no real move encodes.
+//
+// The en-passant square has to go: after a pass, the capture it advertises is
+// no longer available, and leaving it set would produce a key for a position
+// that cannot arise.
+void make_null_move(game_t* game)
+{
+  assert(game != nullptr);
+  assert(game->history.size + 1 < HISTORY_MAX_SIZE);
+
+  board_t* board = &game->board;
+  const zobrist_randoms_t* randoms = &game->hash_randoms;
+
+  history_entry_t* entry = &game->history.entries[game->history.size++];
+  entry->hash = board->hash;
+  entry->move = 0;
+  entry->captured = EMPTY;
+  entry->castling = board->castling;
+  entry->en_passant = board->en_passant;
+  entry->halfmove_clock = board->halfmove_clock;
+
+  if (board->en_passant != INVALID_INDEX) {
+    board->hash ^= randoms->ep_randoms[board->en_passant];
+    board->hash ^= randoms->ep_randoms[INVALID_INDEX];
+    board->en_passant = INVALID_INDEX;
+  }
+
+  board->hash ^= randoms->side_randoms[board->active_color];
+  board->active_color = !board->active_color;
+  board->hash ^= randoms->side_randoms[board->active_color];
+
+  board->halfmove_clock++;
+}
+
+
+void unmake_null_move(game_t* game)
+{
+  assert(game != nullptr);
+  assert(game->history.size > 0);
+
+  board_t* board = &game->board;
+  const history_entry_t* entry = &game->history.entries[--game->history.size];
+
+  assert(entry->move == 0);
+
+  board->active_color = !board->active_color;
+  board->castling = entry->castling;
+  board->en_passant = entry->en_passant;
+  board->halfmove_clock = entry->halfmove_clock;
+  board->hash = entry->hash;
+}
+
+
 // Positions where no sequence of legal moves can produce a mate, so there is
 // nothing left to search for. Without this the evaluation is free to prefer one
 // drawn position to another - a centralised king scores better than a cornered
