@@ -302,6 +302,87 @@ TEST_SUITE("movegen: generation")
 }
 
 
+TEST_SUITE("movegen: staged generation")
+{
+  // generate_captures() and generate_quiets() exist so a search can stop after
+  // the captures when one of them causes a cutoff. That is only sound if the
+  // two together are exactly generate_moves(): nothing invented, nothing lost,
+  // nothing counted twice. This walks a tree over every test position and
+  // checks it at every node, which is the only way a gap in the split shows up
+  // before it costs a game.
+  static void check_split(game_t * g, int depth, size_t* nodes_checked)
+  {
+    move_t all[MAX_MOVES];
+    move_t captures[MAX_MOVES];
+    move_t quiets[MAX_MOVES];
+
+    const size_t all_count = generate_moves(&g->tables, &g->board, all);
+    const size_t capture_count =
+        generate_captures(&g->tables, &g->board, captures);
+    const size_t quiet_count = generate_quiets(&g->tables, &g->board, quiets);
+
+    const std::string fen = generate_FEN(&g->board);
+
+    REQUIRE_MESSAGE(
+        capture_count + quiet_count == all_count,
+        ("counts disagree, FEN: " + fen + " all " + std::to_string(all_count) +
+         " captures " + std::to_string(capture_count) + " quiets " +
+         std::to_string(quiet_count)));
+
+    std::vector<move_t> combined(captures, captures + capture_count);
+    combined.insert(combined.end(), quiets, quiets + quiet_count);
+
+    std::vector<move_t> expected(all, all + all_count);
+
+    std::sort(combined.begin(), combined.end());
+    std::sort(expected.begin(), expected.end());
+
+    REQUIRE_MESSAGE(
+        combined == expected,
+        ("captures + quiets is not the full move list, FEN: " + fen));
+
+    // A capture list that contains a quiet move would make quiescence search
+    // the whole tree, so the classification is checked and not just the union.
+    for (size_t i = 0; i < capture_count; ++i) {
+      const bool tactical =
+          MOVE_CAPTURE(captures[i]) || MOVE_PROMOTED(captures[i]);
+      REQUIRE_MESSAGE(tactical,
+                      ("quiet move in the capture list, FEN: " + fen));
+    }
+
+    for (size_t i = 0; i < quiet_count; ++i) {
+      const bool tactical = MOVE_CAPTURE(quiets[i]) || MOVE_PROMOTED(quiets[i]);
+      REQUIRE_MESSAGE(!tactical,
+                      ("tactical move in the quiet list, FEN: " + fen));
+    }
+
+    (*nodes_checked)++;
+
+    if (depth <= 1) { return; }
+
+    for (size_t i = 0; i < all_count; ++i) {
+      REQUIRE(make_move(g, all[i]));
+      check_split(g, depth - 1, nodes_checked);
+      unmake_move(g);
+    }
+  }
+
+
+  TEST_CASE_FIXTURE(movegen_fixture_t, "captures and quiets partition the list")
+  {
+    size_t nodes_checked = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+      check_split(&game, 3, &nodes_checked);
+    }
+
+    // Guards against the loop above quietly becoming a no-op.
+    REQUIRE(nodes_checked > 1000);
+  }
+}
+
+
 TEST_SUITE("movegen: perft")
 {
   // test_perft carries the deep runs and takes minutes, so it is labelled slow

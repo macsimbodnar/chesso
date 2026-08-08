@@ -123,6 +123,22 @@ inline color_t operator!(const color_t& c)
 }
 
 
+// What a caller wants out of the generator. A search spends most of its nodes
+// failing high on one of the first captures, so generating the 30-odd quiet
+// moves at those nodes is wasted work.
+//
+// GEN_CAPTURES and GEN_QUIETS partition GEN_ALL exactly: every legal move
+// belongs to one of them and none to both. Promotions count as captures
+// whether or not anything is taken, because they are tactical and quiescence
+// wants them; castling counts as quiet.
+enum gen_type_t : uint8_t
+{
+  GEN_ALL,
+  GEN_CAPTURES,
+  GEN_QUIETS
+};
+
+
 enum promotion_t : uint8_t
 {
   TO_NONE = 0,  // MUST be zero

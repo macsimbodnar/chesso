@@ -60,6 +60,57 @@ step**; the next item may no longer be the next item.
 
 ---
 
+## 1a. Split generation by type — DONE, -11.5 % on real search time
+
+`generate_captures()` and `generate_quiets()` join `generate_moves()`. All
+three go through the same body, now templated on `<Color, Constrained, Type>`,
+with a `type_mask` that is `opp_occupancy` for captures, `~all_occupancy` for
+quiets and `free_squares` for everything. Castling is quiet, promotions and en
+passant are captures.
+
+Wired into quiescence, which out of check now generates captures instead of
+generating everything and discarding four fifths of it:
+
+```
+                    before    after
+midgame             4.257s   3.655s
+kiwipete            3.325s   3.008s
+tactical            2.094s   1.930s
+total               9.676s   8.593s    -11.5 %
+```
+
+**Node counts are identical** - 46622276, 36703759, 26765104 - and so are the
+best moves. That is the proof that this is a pure speed-up and not a search
+change: the same tree, explored faster.
+
+The generator numbers behind it: captures cost **36 %** of a full generation,
+so a node that stops after the captures saves the other 64 %.
+
+No regression on `GEN_ALL` from the extra instantiations. Object code for
+`bitboard.cpp` went 68 KB to 90 KB for twelve instantiations of the body, and
+perft was unchanged within the measurement resolution.
+
+Correctness: a new test walks a three-ply tree from every test FEN and asserts
+that captures and quiets partition the full list exactly - same multiset, no
+overlap, and no quiet move in the capture list. 90.5 M assertions, up from
+31.5 M.
+
+**Deliberately left on the table.** `generate_captures()` also emits promotions
+that capture nothing, and quiescence did not search those before. The filter in
+`quiescence()` still drops them, so this change alters nothing. Letting them
+through is very likely an improvement and is a *search* change: it needs games,
+not a benchmark.
+
+## 1b. Staged move generation in the main search — NOT STARTED
+
+The remaining half of item 1, and still the largest item on this list. The
+generator side is now in place; what is missing is the search side: try the
+transposition table move, then the captures, and only generate the quiets if
+nothing has caused a cutoff yet.
+
+- Expected: **30-50 Elo**, and invisible to `bench_movegen`.
+- Verify with `fastchess` SPRT. Nothing else will tell you.
+
 ## 1. Staged move generation
 
 Generate the transposition-table move first, then captures, and only generate

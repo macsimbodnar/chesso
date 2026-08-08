@@ -112,11 +112,23 @@ int quiescence(int alpha,
 
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
-  const size_t n = generate_moves(&game->tables, &game->board, moves);
+
+  // Out of check, this node only ever searches captures, so only captures are
+  // generated. In check every evasion has to be considered, quiet ones
+  // included, so the full list is needed.
+  const size_t n = in_check
+                       ? generate_moves(&game->tables, &game->board, moves)
+                       : generate_captures(&game->tables, &game->board, moves);
 
   // Compacted to the front of the same array: captures only, or everything when
   // the move is forced. capture_score() ranks a quiet evasion below any
   // capture, which is the order wanted here too.
+  //
+  // The filter still runs when out of check: generate_captures() also emits
+  // promotions that capture nothing, and this node did not search those before.
+  // Keeping them out means this change is a pure speed-up with no effect on
+  // what the search explores. Letting them through is very likely an
+  // improvement, but it is a search change and needs to be measured in games.
   size_t count = 0;
   for (size_t i = 0; i < n; ++i) {
     if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }

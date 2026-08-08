@@ -79,6 +79,18 @@ size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[]);
 
+// The same list, split in two. Captures carries every capture, en passant and
+// every promotion; quiets carries everything else, including castling. The two
+// partition generate_moves() exactly: concatenated they are the same set, and
+// no move appears in both.
+size_t generate_captures(const bb_tables_t* tables,
+                         const board_t* board,
+                         move_t moves[]);
+
+size_t generate_quiets(const bb_tables_t* tables,
+                       const board_t* board,
+                       move_t moves[]);
+
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
 bool is_capturing_king(const board_t* board, move_t move);

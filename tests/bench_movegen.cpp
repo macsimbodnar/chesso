@@ -122,32 +122,101 @@ static uint64_t generate_only(game_t* g, uint64_t calls)
 }
 
 
+static uint64_t generate_captures_only(game_t* g, uint64_t calls)
+{
+  move_t moves[MAX_MOVES];
+  uint64_t produced = 0;
+
+  for (uint64_t i = 0; i < calls; ++i) {
+    produced += generate_captures(&g->tables, &g->board, moves);
+  }
+
+  return produced;
+}
+
+
+// Keeps every sample rather than a running best, because the useful statistic
+// here is not the average. Interference from other processes can only ever make
+// a run slower, so the minimum is the estimate of the machine's actual speed
+// and the mean is an estimate of how busy the machine was.
 struct timing_t
 {
-  double best = 0.0;
-  double worst = 0.0;
+  std::vector<double> samples;
 
-  void add(double sample)
+  void add(double sample) { samples.push_back(sample); }
+
+  double best() const
   {
-    if (best == 0.0 || sample < best) { best = sample; }
-    if (sample > worst) { worst = sample; }
+    if (samples.empty()) { return 0.0; }
+    return *std::min_element(samples.begin(), samples.end());
+  }
+
+  double worst() const
+  {
+    if (samples.empty()) { return 0.0; }
+    return *std::max_element(samples.begin(), samples.end());
+  }
+
+  double median() const
+  {
+    if (samples.empty()) { return 0.0; }
+
+    std::vector<double> sorted = samples;
+    std::sort(sorted.begin(), sorted.end());
+    return sorted[sorted.size() / 2];
+  }
+
+  // The minimum over the first and second half of the run, as two independent
+  // estimates of the same quantity. How far apart they are is the resolution
+  // of this measurement: a difference between two builds that is smaller than
+  // this has not been shown to exist.
+  double best_of_half(bool second) const
+  {
+    if (samples.size() < 2) { return 0.0; }
+
+    const size_t middle = samples.size() / 2;
+    const auto from = samples.begin() + (second ? middle : 0);
+    const auto to = second ? samples.end() : samples.begin() + middle;
+
+    return *std::min_element(from, to);
+  }
+
+  // Percentage disagreement between the two halves.
+  double resolution() const
+  {
+    const double a = best_of_half(false);
+    const double b = best_of_half(true);
+
+    if (a <= 0.0 || b <= 0.0) { return 0.0; }
+
+    const double low = (a < b) ? a : b;
+    return ((a < b ? b - a : a - b) / low) * 100.0;
   }
 };
 
 
 static void print_spread(const timing_t& sweep)
 {
-  const double spread = (sweep.best > 0.0)
-                            ? ((sweep.worst - sweep.best) / sweep.best) * 100.0
-                            : 0.0;
+  const double best = sweep.best();
+  const double spread =
+      (best > 0.0) ? ((sweep.worst() - best) / best) * 100.0 : 0.0;
 
-  printf("  sweep best %.1f ms, worst %.1f ms, spread %.1f%%\n", sweep.best,
-         sweep.worst, spread);
+  printf("  best %.1f ms, median %.1f ms, worst %.1f ms, spread %.1f%%\n", best,
+         sweep.median(), sweep.worst(), spread);
 
-  if (spread > 5.0) {
+  const double resolution = sweep.resolution();
+
+  printf(
+      "  resolution %.1f%%  (the two halves of this run disagree by that "
+      "much)\n",
+      resolution);
+
+  if (resolution > 1.0) {
     printf(
-        "  NOTE: over 5%% apart. Something else was using the machine;\n"
-        "        treat the number as indicative and run it again.\n");
+        "  NOTE: this run cannot resolve a change smaller than %.1f%%. Close\n"
+        "        whatever else is using the machine, or raise -r, before\n"
+        "        trusting a comparison at that scale.\n",
+        resolution);
   }
 }
 
@@ -276,7 +345,7 @@ int main(int argc, char** argv)
     const bench_position_t& position = positions[p];
     const int depth = quick ? position.quick_depth : position.depth;
     const uint64_t nodes = quick ? position.quick_nodes : position.nodes;
-    const double best = per_position[p].best;
+    const double best = per_position[p].best();
 
     printf("  %-12s %6d %12llu %11.1f %10.2f\n", position.name, depth,
            (unsigned long long)nodes, best, nodes / best / 1000.0);
@@ -328,7 +397,7 @@ int main(int argc, char** argv)
   uint64_t total_moves = 0;
 
   for (size_t p = 0; p < positions.size(); ++p) {
-    const double best = per_position_gen[p].best;
+    const double best = per_position_gen[p].best();
     const uint64_t moves = moves_per_call[p] * generate_calls;
 
     printf("  %-12s %11llu %12llu %11.1f %10.2f %11.1f\n", positions[p].name,
@@ -347,6 +416,70 @@ int main(int argc, char** argv)
          total_moves / generate_total_ms / 1000.0);
 
   print_spread(generate_sweep);
+
+  //-###################  generate_captures phase  #########################-//
+  // What a quiescence node asks for, and what the first stage of a staged
+  // search asks for. Most search nodes fail high on one of the first few
+  // captures, so the gap between this phase and the one above is the work a
+  // staged search never has to do.
+
+  std::vector<timing_t> per_position_cap(positions.size());
+  std::vector<uint64_t> caps_per_call(positions.size(), 0);
+  timing_t capture_sweep;
+
+  for (const bench_position_t& position : positions) {
+    load_FEN(position.fen, &game);
+    generate_captures_only(&game, generate_calls / 10);
+  }
+
+  for (int r = 0; r < repetitions; ++r) {
+    double sweep_ms = 0.0;
+
+    for (size_t p = 0; p < positions.size(); ++p) {
+      load_FEN(positions[p].fen, &game);
+
+      const auto start = std::chrono::steady_clock::now();
+      const uint64_t produced = generate_captures_only(&game, generate_calls);
+      const double elapsed = ms_since(start);
+
+      per_position_cap[p].add(elapsed);
+      caps_per_call[p] = produced / generate_calls;
+      sweep_ms += elapsed;
+    }
+
+    capture_sweep.add(sweep_ms);
+  }
+
+  printf("\ngenerate_captures  (what a quiescence node asks for)\n");
+  printf("  %-12s %11s %11s %11s %10s\n", "position", "caps/call", "moves/call",
+         "best ms", "Mcalls/s");
+
+  double capture_total_ms = 0.0;
+
+  for (size_t p = 0; p < positions.size(); ++p) {
+    const double best = per_position_cap[p].best();
+
+    printf("  %-12s %11llu %11llu %11.1f %10.2f\n", positions[p].name,
+           (unsigned long long)caps_per_call[p],
+           (unsigned long long)moves_per_call[p], best,
+           generate_calls / best / 1000.0);
+
+    capture_total_ms += best;
+  }
+
+  printf("  %-12s %11s %11s %11.1f %10.2f\n", "total", "", "", capture_total_ms,
+         total_calls / capture_total_ms / 1000.0);
+
+  print_spread(capture_sweep);
+
+  if (generate_total_ms > 0.0) {
+    printf(
+        "\n  captures cost %.0f%% of a full generation. A node that fails "
+        "high\n"
+        "  on an early capture saves the other %.0f%%.\n",
+        (capture_total_ms / generate_total_ms) * 100.0,
+        (1.0 - capture_total_ms / generate_total_ms) * 100.0);
+  }
 
   printf("\nnode counts verified against the published perft values.\n");
 

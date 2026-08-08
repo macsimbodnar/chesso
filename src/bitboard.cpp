@@ -91,7 +91,7 @@ static inline bb_t attackers_to(const bb_tables_t* tables,
 // costs an instruction and a branch. Instantiating with Constrained == false
 // folds the whole lot away, including the pinned-pawn loop, which becomes dead
 // code and is deleted outright.
-template <color_t Color, bool Constrained>
+template <color_t Color, bool Constrained, gen_type_t Type>
 static size_t generate_moves_body(const bb_tables_t* tables,
                                   const board_t* board,
                                   move_t moves[],
@@ -130,6 +130,12 @@ static size_t generate_moves_body(const bb_tables_t* tables,
       (board->en_passant != INVALID_INDEX) ? (BB_1 << board->en_passant) : BB_0;
 
   const bb_t king_bb = my_bitboards[5];
+
+  // What the requested move type allows a piece to land on. All three are
+  // subsets of free_squares, so this replaces it rather than joining it.
+  const bb_t type_mask = (Type == GEN_CAPTURES) ? opp_occupancy
+                         : (Type == GEN_QUIETS) ? ~all_occupancy
+                                                : free_squares;
 
   size_t move_count = 0;
 
@@ -219,16 +225,22 @@ static size_t generate_moves_body(const bb_tables_t* tables,
     const int left_shift = white ? 9 : -7;
     const int right_shift = white ? 7 : -9;
 
-    emit_plain(quiet_pushes, push_shift, 0);
-    emit_plain(double_pushed, 2 * push_shift, NEW_MOVE(0, 0, 0, 0, 0, 1, 0, 0));
-    emit_promotions(push_promotions, push_shift, 0);
+    if constexpr (Type != GEN_CAPTURES) {
+      emit_plain(quiet_pushes, push_shift, 0);
+      emit_plain(double_pushed, 2 * push_shift,
+                 NEW_MOVE(0, 0, 0, 0, 0, 1, 0, 0));
+    }
 
-    emit_plain(left_captures & ~last_rank, left_shift,
-               NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
-    emit_promotions(left_captures & last_rank, left_shift, 1);
-    emit_plain(right_captures & ~last_rank, right_shift,
-               NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
-    emit_promotions(right_captures & last_rank, right_shift, 1);
+    if constexpr (Type != GEN_QUIETS) {
+      emit_promotions(push_promotions, push_shift, 0);
+
+      emit_plain(left_captures & ~last_rank, left_shift,
+                 NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
+      emit_promotions(left_captures & last_rank, left_shift, 1);
+      emit_plain(right_captures & ~last_rank, right_shift,
+                 NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
+      emit_promotions(right_captures & last_rank, right_shift, 1);
+    }
 
     // Pinned pawns, one at a time: the line they are pinned on differs per
     // pawn, so there is nothing to do in bulk. `pinned` is only ever non-empty
@@ -246,42 +258,48 @@ static size_t generate_moves_body(const bb_tables_t* tables,
       if (!GET_BIT(all_occupancy, to)) {
         if (GET_BIT(targets, to)) {
           if (is_promoting) {
-            emit_promotions(BB_1 << to, push_shift, 0);
-          } else {
+            if constexpr (Type != GEN_QUIETS) {
+              emit_promotions(BB_1 << to, push_shift, 0);
+            }
+          } else if constexpr (Type != GEN_CAPTURES) {
             moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
           }
         }
 
-        if ((BB_1 << to) & middle_rank) {
-          const index_t double_to =
-              static_cast<index_t>(white ? (to - 8) : (to + 8));
+        if constexpr (Type != GEN_CAPTURES) {
+          if ((BB_1 << to) & middle_rank) {
+            const index_t double_to =
+                static_cast<index_t>(white ? (to - 8) : (to + 8));
 
-          if (!GET_BIT(all_occupancy, double_to) &&
-              GET_BIT(targets, double_to)) {
-            moves[move_count++] =
-                NEW_MOVE(from, double_to, piece, 0, 0, 1, 0, 0);
+            if (!GET_BIT(all_occupancy, double_to) &&
+                GET_BIT(targets, double_to)) {
+              moves[move_count++] =
+                  NEW_MOVE(from, double_to, piece, 0, 0, 1, 0, 0);
+            }
           }
         }
       }
 
-      bb_t attacks =
-          tables->pawn_attacks[color][from] & opp_occupancy & targets;
+      if constexpr (Type != GEN_QUIETS) {
+        bb_t attacks =
+            tables->pawn_attacks[color][from] & opp_occupancy & targets;
 
-      while (attacks) {
-        const index_t target = get_lsb_index(attacks);
-        attacks &= attacks - 1;
+        while (attacks) {
+          const index_t target = get_lsb_index(attacks);
+          attacks &= attacks - 1;
 
-        if ((BB_1 << target) & last_rank) {
-          moves[move_count++] =
-              NEW_MOVE(from, target, piece, TO_QUEEN, 1, 0, 0, 0);
-          moves[move_count++] =
-              NEW_MOVE(from, target, piece, TO_ROOK, 1, 0, 0, 0);
-          moves[move_count++] =
-              NEW_MOVE(from, target, piece, TO_BISHOP, 1, 0, 0, 0);
-          moves[move_count++] =
-              NEW_MOVE(from, target, piece, TO_KNIGHT, 1, 0, 0, 0);
-        } else {
-          moves[move_count++] = NEW_MOVE(from, target, piece, 0, 1, 0, 0, 0);
+          if ((BB_1 << target) & last_rank) {
+            moves[move_count++] =
+                NEW_MOVE(from, target, piece, TO_QUEEN, 1, 0, 0, 0);
+            moves[move_count++] =
+                NEW_MOVE(from, target, piece, TO_ROOK, 1, 0, 0, 0);
+            moves[move_count++] =
+                NEW_MOVE(from, target, piece, TO_BISHOP, 1, 0, 0, 0);
+            moves[move_count++] =
+                NEW_MOVE(from, target, piece, TO_KNIGHT, 1, 0, 0, 0);
+          } else {
+            moves[move_count++] = NEW_MOVE(from, target, piece, 0, 1, 0, 0, 0);
+          }
         }
       }
     }
@@ -291,7 +309,7 @@ static size_t generate_moves_body(const bb_tables_t* tables,
     // is not on the landing square, and vacating both squares can expose the
     // king to a rook or queen that was pinning neither pawn on its own. Rare
     // enough to just play it out and look at the king.
-    if (en_passant_mask) {
+    if (en_passant_mask && Type != GEN_QUIETS) {
       // A pawn of ours attacks the en-passant square from exactly the squares
       // an enemy pawn standing there would attack.
       bb_t candidates =
@@ -345,7 +363,7 @@ static size_t generate_moves_body(const bb_tables_t* tables,
       const index_t from = get_lsb_index(bboard);
       bboard &= bboard - 1;  // Clear the lowest set bit
 
-      bb_t attacks = attacks_of(from) & free_squares & targets_from(from);
+      bb_t attacks = attacks_of(from) & type_mask & targets_from(from);
 
       while (attacks) {
         const index_t to = get_lsb_index(attacks);
@@ -377,7 +395,8 @@ static size_t generate_moves_body(const bb_tables_t* tables,
     const castling_t king_side = (color == WHITE) ? WK : BK;
     const castling_t queen_side = (color == WHITE) ? WQ : BQ;
 
-    if (board->castling & (king_side | queen_side)) {
+    // Castling is a quiet move, so a captures-only request skips it entirely.
+    if (Type != GEN_CAPTURES && (board->castling & (king_side | queen_side))) {
       const index_t e_square = (color == WHITE) ? e1 : e8;
       const index_t f_square = (color == WHITE) ? f1 : f8;
       const index_t g_square = (color == WHITE) ? g1 : g8;
@@ -423,7 +442,7 @@ static size_t generate_moves_body(const bb_tables_t* tables,
     const piece_t piece = static_cast<piece_t>(first_piece + 5);
     const bb_t occupancy_without_king = all_occupancy ^ king_bb;
 
-    bb_t attacks = tables->king_attacks[king_square] & free_squares;
+    bb_t attacks = tables->king_attacks[king_square] & type_mask;
 
     while (attacks) {
       const index_t to = get_lsb_index(attacks);
@@ -459,7 +478,7 @@ static size_t generate_moves_body(const bb_tables_t* tables,
 //
 // A side with no king is reachable (EMPTY_POS, and illegal FENs), and then
 // nothing constrains the move list.
-template <color_t Color>
+template <color_t Color, gen_type_t Type>
 static size_t generate_moves_impl(const bb_tables_t* tables,
                                   const board_t* board,
                                   move_t moves[])
@@ -510,26 +529,45 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
     }
 
     if (check_mask != ~BB_0 || pinned != BB_0) {
-      return generate_moves_body<Color, true>(tables, board, moves, check_mask,
-                                              pinned, king_square);
+      return generate_moves_body<Color, true, Type>(
+          tables, board, moves, check_mask, pinned, king_square);
     }
   }
 
-  return generate_moves_body<Color, false>(tables, board, moves, check_mask,
-                                           pinned, king_square);
+  return generate_moves_body<Color, false, Type>(
+      tables, board, moves, check_mask, pinned, king_square);
+}
+
+
+template <gen_type_t Type>
+static inline size_t generate_dispatch(const bb_tables_t* tables,
+                                       const board_t* board,
+                                       move_t moves[])
+{
+  assert(board != nullptr);
+
+  return (board->active_color == WHITE)
+             ? generate_moves_impl<WHITE, Type>(tables, board, moves)
+             : generate_moves_impl<BLACK, Type>(tables, board, moves);
 }
 
 
 size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[])
-{
-  assert(board != nullptr);
+{ return generate_dispatch<GEN_ALL>(tables, board, moves); }
 
-  return (board->active_color == WHITE)
-             ? generate_moves_impl<WHITE>(tables, board, moves)
-             : generate_moves_impl<BLACK>(tables, board, moves);
-}
+
+size_t generate_captures(const bb_tables_t* tables,
+                         const board_t* board,
+                         move_t moves[])
+{ return generate_dispatch<GEN_CAPTURES>(tables, board, moves); }
+
+
+size_t generate_quiets(const bb_tables_t* tables,
+                       const board_t* board,
+                       move_t moves[])
+{ return generate_dispatch<GEN_QUIETS>(tables, board, moves); }
 
 
 bool move_belongs_to_side_to_move(const board_t* board, move_t move)
