@@ -502,9 +502,9 @@ TEST_SUITE("search: quiescence")
 
     REQUIRE(load_FEN(fen, &game));
 
-    // evaluate() is from White's point of view, quiescence returns from the
-    // side to move's, so Black's static score is the negation.
-    const int black_static = -evaluate(&game.board);
+    // evaluate() and quiescence both answer from the side to move's point of
+    // view, so Black's static score is what evaluate() returns.
+    const int black_static = evaluate(&game.board);
     REQUIRE_EQ(black_static, 200);
 
     const int score = quiesce(fen, -10000000, 10000000);
@@ -795,8 +795,10 @@ TEST_SUITE("search: draws")
 
     REQUIRE_EQ(game.board.active_color, BLACK);
 
-    // Black is a rook down, so anything other than the repetition is losing.
-    REQUIRE_EQ(evaluate(&game.board), 500);
+    // Black is a rook down and Black is to move, and evaluate() answers from
+    // the side to move's point of view, so anything other than the repetition
+    // is losing by that much.
+    REQUIRE_EQ(evaluate(&game.board), -500);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

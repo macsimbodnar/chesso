@@ -24,19 +24,33 @@
 
 /* board representation */
 
+// Material, as evaluate() sees it. The king carries no value: both sides
+// always have exactly one in a legal position, so it can only cancel, and
+// pricing it meant an illegal position with an unbalanced king count produced a
+// score larger than any mate and had to be guarded against everywhere it
+// reached. Move ordering keeps its own table below, where the king does need a
+// price.
 static constexpr int piece_values[] = {
-  PAWN, 
-  KNIGHT, 
-  BISHOP, 
-  ROOK, 
-  QUEEN, 
-  KING, 
-  -PAWN, 
-  -KNIGHT, 
-  -BISHOP, 
-  -ROOK, 
-  -QUEEN, 
-  -KING,
+  PAWN,
+  KNIGHT,
+  BISHOP,
+  ROOK,
+  QUEEN,
+  0,
+  -PAWN,
+  -KNIGHT,
+  -BISHOP,
+  -ROOK,
+  -QUEEN,
+  0,
+  0
+};
+
+// Phase weights, indexed by piece. Queens dominate, pawns and kings contribute
+// nothing. A full set on both sides comes to 24.
+static constexpr int phase_values[] = {
+  0, 1, 1, 2, 4, 0,
+  0, 1, 1, 2, 4, 0,
   0
 };
 
@@ -60,6 +74,10 @@ static constexpr int piece_values_abs[] = {
 
 // clang-format on
 
+// Piece values are written from White's point of view, so the sum is
+// White-relative and is negated once at the end for Black. Doing it here rather
+// than at every call site is what keeps a later term from picking up the wrong
+// sign.
 int evaluate(const board_t* board)
 {
   int score = 0;
@@ -72,7 +90,20 @@ int evaluate(const board_t* board)
     score += piece_values[pc] * num_of_pieces;
   }
 
-  return score;
+  return (board->active_color == WHITE) ? score : -score;
+}
+
+
+int game_phase(const board_t* board)
+{
+  int phase = 0;
+
+  for (int pc = W_PAWN; pc < EMPTY; ++pc) {
+    phase += phase_values[pc] * count_bits(board->bitboards[pc]);
+  }
+
+  // Promotions can put more material on the board than the opening had.
+  return (phase > GAME_PHASE_MAX) ? GAME_PHASE_MAX : phase;
 }
 
 

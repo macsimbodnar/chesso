@@ -50,7 +50,11 @@ TEST_SUITE("evaluation: score")
       const int score = evaluate(&game.board);
       const int mirrored_score = evaluate(&mirrored.board);
 
-      REQUIRE_MESSAGE(score == -mirrored_score,
+      // evaluate() answers from the side to move's point of view, and
+      // mirror_fen() swaps the side to move along with the colours. The two
+      // therefore agree rather than negate: the same player, looking at the
+      // same position, has to reach the same number.
+      REQUIRE_MESSAGE(score == mirrored_score,
                       ("FEN: " + fen + "\nmirror: " + flipped));
       checked++;
     }
@@ -72,17 +76,29 @@ TEST_SUITE("evaluation: score")
     REQUIRE_EQ(evaluate(&game.board), 0);
   }
 
-  TEST_CASE_FIXTURE(eval_fixture_t, "score is from White's point of view")
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "score is from the side to move's point of view")
   {
-    // White is a whole queen up. The sign must not depend on side to move.
+    // The same position, read by each side in turn. White is a whole queen up,
+    // so it is winning for White and losing for Black, and the number has to
+    // change sign with the side to move rather than stay put.
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", &game));
-    REQUIRE(evaluate(&game.board) > 0);
+    const int white_to_move = evaluate(&game.board);
 
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 b - - 0 1", &game));
-    REQUIRE(evaluate(&game.board) > 0);
+    const int black_to_move = evaluate(&game.board);
 
+    REQUIRE(white_to_move > 0);
+    REQUIRE(black_to_move < 0);
+    REQUIRE_EQ(white_to_move, -black_to_move);
+
+    // And the mirror image, so a sign error that happens to be symmetric does
+    // not slip through.
     REQUIRE(load_FEN("3qk3/8/8/8/8/8/8/4K3 w - - 0 1", &game));
     REQUIRE(evaluate(&game.board) < 0);
+
+    REQUIRE(load_FEN("3qk3/8/8/8/8/8/8/4K3 b - - 0 1", &game));
+    REQUIRE(evaluate(&game.board) > 0);
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "removing a piece moves the score")
@@ -145,17 +161,75 @@ TEST_SUITE("evaluation: score")
     }
   }
 
-  // ANCHOR: the king price only ever shows up when the two sides do not have
-  // one each, which cannot happen in a legal game but does arrive through
-  // [position fen]. search() leans on it being far above any mate score when
-  // it decides whether a result is a mate at all.
-  TEST_CASE_FIXTURE(eval_fixture_t, "a missing king outweighs every mate score")
+  // The king carries no material. Both sides always have exactly one in a legal
+  // position, so the term could only ever cancel, and pricing it meant an
+  // illegal position with an unbalanced king count scored above every mate -
+  // which search() then had to guard against when deciding whether a result was
+  // a mate at all.
+  TEST_CASE_FIXTURE(eval_fixture_t, "a missing king is not worth anything")
   {
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/8 w - - 0 1", &game));
-    REQUIRE_EQ(evaluate(&game.board), -100000);
+    REQUIRE_EQ(evaluate(&game.board), 0);
 
     REQUIRE(load_FEN("8/8/8/8/8/8/8/4K3 w - - 0 1", &game));
-    REQUIRE_EQ(evaluate(&game.board), 100000);
+    REQUIRE_EQ(evaluate(&game.board), 0);
+
+    // The score has to stay well inside the mate band, or search() reports a
+    // material imbalance as a mate.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", &game));
+    REQUIRE(std::abs(evaluate(&game.board)) < 48000);
+  }
+}
+
+
+TEST_SUITE("evaluation: game phase")
+{
+  TEST_CASE_FIXTURE(eval_fixture_t, "runs from a full board down to bare kings")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+    REQUIRE_EQ(game_phase(&game.board), GAME_PHASE_MAX);
+
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/4K3 w - - 0 1", &game));
+    REQUIRE_EQ(game_phase(&game.board), 0);
+
+    // Pawns are not part of it, so a pawn endgame is still phase 0.
+    REQUIRE(load_FEN("4k3/pppppppp/8/8/8/8/PPPPPPPP/4K3 w - - 0 1", &game));
+    REQUIRE_EQ(game_phase(&game.board), 0);
+  }
+
+  TEST_CASE_FIXTURE(eval_fixture_t, "weights the pieces the tables expect")
+  {
+    struct case_t
+    {
+      std::string fen;
+      int phase;
+      std::string title;
+    };
+
+    // clang-format off
+    const std::vector<case_t> cases = {
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 1, "knight"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 1, "bishop"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 2, "rook"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 4, "queen"},
+      {"3qk3/8/8/8/8/8/8/3QK3 w - - 0 1", 8, "a queen each"},
+    };
+    // clang-format on
+
+    for (const case_t& test : cases) {
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
+      REQUIRE_MESSAGE(game_phase(&game.board) == test.phase, test.title);
+    }
+  }
+
+  // Promotions can put more material on the board than the opening had, and a
+  // tapered term that interpolates on an out-of-range phase reads off the end
+  // of its own tables.
+  TEST_CASE_FIXTURE(eval_fixture_t, "never exceeds the maximum")
+  {
+    REQUIRE(load_FEN("qqqqkqqq/qqqqqqqq/8/8/8/8/QQQQQQQQ/QQQQKQQQ w - - 0 1",
+                     &game));
+    REQUIRE_EQ(game_phase(&game.board), GAME_PHASE_MAX);
   }
 }
 

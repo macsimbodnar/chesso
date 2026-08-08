@@ -85,7 +85,39 @@ is real either way, it is the sequencing that is at issue.
 
 ---
 
-## Phase 0 - unblock evaluation work
+## Phase 0 - unblock evaluation work — 0.1 to 0.3 DONE
+
+Behaviour-neutral by construction, and confirmed: node counts after the change
+are identical to before it, 43691503 / 36729994 / 27160039 on the three
+`search_bench.py` positions, with the same best moves.
+
+- **0.1 done.** The king is out of `piece_values[]`. It could only ever cancel
+  in a legal position, and pricing it meant an illegal one scored above every
+  mate. `piece_values_abs[]`, which move ordering uses, keeps its king price -
+  the king really is the least desirable capturer, and changing that is a
+  move-ordering change that needs its own SPRT.
+- **0.2 done.** `evaluate()` returns from the side to move's point of view. The
+  two call sites no longer apply a sign.
+- **0.3 done.** `game_phase()` returns 24 down to 0, clamped so promotions
+  cannot push it past the maximum, with pawns and kings contributing nothing.
+- **0.4 deferred to phase 1.** Incremental versus recomputed only becomes a real
+  question once there is something to accumulate. Measure it there.
+
+Four test contracts changed with the code, each rewritten to assert the new
+behaviour rather than relaxed:
+
+- colour symmetry now expects the mirrored score to *agree* rather than negate,
+  because `mirror_fen()` swaps the side to move along with the colours;
+- "score is from White's point of view" became "from the side to move's",
+  and gained the mirror case so a symmetric sign error cannot pass;
+- the missing-king anchor asserts the king is worth nothing and that the score
+  stays inside the mate band;
+- two search tests that compensated for the old convention by hand.
+
+New tests cover `game_phase()`: the full board, bare kings, a pawn endgame,
+each piece's weight, and the promotion overflow case.
+
+## Phase 0 - original entry
 
 Small, and everything after depends on it.
 

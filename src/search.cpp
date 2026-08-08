@@ -90,8 +90,7 @@ int quiescence(int alpha,
 
   state->explored_nodes++;
 
-  const int stand_pat =
-      ((game->board.active_color == WHITE) ? +1 : -1) * evaluate(&game->board);
+  const int stand_pat = evaluate(&game->board);
 
   if (check_limits(state)) { return stand_pat; }
   if (ply + 1 >= MAX_PLY) { return stand_pat; }
@@ -198,10 +197,7 @@ int negamax(int alpha0,
 
   if (check_limits(state)) { return 0; }
 
-  if (ply + 1 >= MAX_PLY) {
-    return (game->board.active_color == WHITE ? 1 : -1) *
-           evaluate(&game->board);
-  }
+  if (ply + 1 >= MAX_PLY) { return evaluate(&game->board); }
 
   int best_so_far = MIN;
   int alpha = alpha0;
@@ -412,9 +408,10 @@ search_t search(int depth, game_t* game, search_state_t* state)
   // the mate is given by the sign.
   const int plies_to_mate = MATE_MAX - std::abs(score);
 
-  // The lower bound matters because evaluate() prices a king above MATE_MAX: a
-  // position with an unbalanced king count would otherwise be reported as a
-  // mate at a negative distance.
+  // The lower bound is now belt and braces: evaluate() no longer prices the
+  // king, so a position with an unbalanced king count scores like any other
+  // material imbalance instead of above every mate. It is kept because nothing
+  // else stops a future term from returning something larger than MATE_MAX.
   search_result.mate_found =
       (plies_to_mate >= 0) && (plies_to_mate < (MATE_MAX - MATE_MIN));
 
