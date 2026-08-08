@@ -101,7 +101,40 @@ that capture nothing, and quiescence did not search those before. The filter in
 through is very likely an improvement and is a *search* change: it needs games,
 not a benchmark.
 
-## 1b. Staged move generation in the main search — NOT STARTED
+## 1b. Staged move generation in the main search — DONE, -17 % at fixed depth
+
+`negamax` generates the captures, and only generates the quiets if the captures
+run out without a cutoff. At fixed depth 9 over three positions:
+
+```
+unstaged   9.041  7.878  7.837 s
+staged     7.346  6.281  6.779 s     about -17 %
+```
+
+**The node counts moved, and the reason is worth recording.** The bands in
+`score_move()` are disjoint - the worst capture, a king taking a pawn, still
+scores 900100 against a killer's 900000 - so selecting within each stage in
+turn picks captures before quiets exactly as one combined selection sort would.
+That part of the reasoning held.
+
+What it missed: in the unstaged version every score, quiets included, was
+computed before any child search ran. Staged, the quiet scores are computed
+after the capture stage has been searched, by which point the killer, history
+and counter-move tables have been updated by those searches. Quiet-against-quiet
+ordering therefore differs, on fresher data.
+
+That is the normal behaviour of staged generation and generally counts as an
+improvement, but it means this is a speed *and* ordering change, not the pure
+speed change it was predicted to be. Node counts went down on one position and
+up on two, while the time fell on all three.
+
+A transposition table move that is quiet outranks the captures, so those nodes
+generate both stages up front and save nothing. `MOVE_CAPTURE` and
+`MOVE_PROMOTED` say which stage the move belongs to without consulting the
+move list, which avoids needing a standalone legality check for a move that
+arrived from a different position.
+
+## 1c. Staged move generation, remaining ideas
 
 The remaining half of item 1, and still the largest item on this list. The
 generator side is now in place; what is missing is the search side: try the

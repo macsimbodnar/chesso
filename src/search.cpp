@@ -246,10 +246,34 @@ int negamax(int alpha0,
   int legal_moves_counter = 0;
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
-  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
 
-  if (moves_count == 0) {
-    return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
+  // Staged generation. Most nodes fail high on one of the first few captures
+  // and never look at a quiet move, so the quiets are not generated until the
+  // captures have been exhausted without a cutoff.
+  //
+  // This does not change the order anything is searched in. score_move() puts
+  // every capture and promotion at ORDER_CAPTURE or above, and the worst
+  // possible capture - a king taking a pawn, 1000000 + 100 - 100000 - still
+  // scores 900100, above the 900000 a killer gets. The two stages are already
+  // disjoint bands, so selecting within each in turn is the same sequence as
+  // selecting across both at once.
+  //
+  // The exception is the transposition table move, which outranks everything.
+  // If it is a quiet then it has to be available before the captures are
+  // searched, and this node generates both stages up front. Its flags say which
+  // stage it belongs to without needing the move list to find out.
+  const bool tt_move_is_quiet =
+      (tt_move != 0) && !MOVE_CAPTURE(tt_move) && !MOVE_PROMOTED(tt_move);
+
+  size_t moves_count = generate_captures(&game->tables, &game->board, moves);
+  bool quiets_generated = false;
+
+  // With no captures there is nothing to fail high on, so the second stage is
+  // needed immediately and staging saves nothing here.
+  if (tt_move_is_quiet || moves_count == 0) {
+    moves_count +=
+        generate_quiets(&game->tables, &game->board, moves + moves_count);
+    quiets_generated = true;
   }
 
   for (size_t i = 0; i < moves_count; ++i) {
@@ -262,7 +286,25 @@ int negamax(int alpha0,
   // publishes an unsearched move as the search result or as the TT move.
   move_t best_move = 0;
 
-  for (size_t i = 0; i < moves_count; ++i) {
+  for (size_t i = 0;; ++i) {
+    if (i == moves_count) {
+      // The captures ran out without a cutoff, so the quiets are needed after
+      // all. This is the branch staging exists to avoid.
+      if (quiets_generated) { break; }
+
+      const size_t added =
+          generate_quiets(&game->tables, &game->board, moves + moves_count);
+
+      for (size_t j = moves_count; j < moves_count + added; ++j) {
+        scores[j] = score_move(game, state, moves[j], tt_move, ply, prev_move);
+      }
+
+      moves_count += added;
+      quiets_generated = true;
+
+      if (i == moves_count) { break; }
+    }
+
     pick_next_move(moves, scores, moves_count, i);
 
     if (!make_move(game, moves[i])) { continue; }
