@@ -156,8 +156,8 @@ inline std::string mirror_fen(const std::string& fen)
 
   std::string castling;
   for (const char c : parts[2]) {
-    castling += static_cast<char>(std::isupper(c) ? std::tolower(c)
-                                                  : std::toupper(c));
+    castling +=
+        static_cast<char>(std::isupper(c) ? std::tolower(c) : std::toupper(c));
   }
   if (parts[2] == "-") { castling = "-"; }
 
@@ -188,9 +188,7 @@ public:
   std::string str() const { return buffer.str(); }
 
   bool contains(const std::string& needle) const
-  {
-    return buffer.str().find(needle) != std::string::npos;
-  }
+  { return buffer.str().find(needle) != std::string::npos; }
 
   std::vector<std::string> lines() const
   {

@@ -173,9 +173,7 @@ struct position_t
   uint8_t rank;  // From 0 to 7
 
   bool operator==(const position_t& other) const
-  {
-    return file == other.file && rank == other.rank;
-  }
+  { return file == other.file && rank == other.rank; }
 
   bool operator!=(const position_t& other) const { return !(*this == other); }
 
@@ -235,9 +233,7 @@ struct unpacked_move_t
 
   // Boolean conversion operator. Is required to use inside if statements
   explicit operator bool() const
-  {
-    return (from != INVALID_INDEX || to != INVALID_INDEX);
-  }
+  { return (from != INVALID_INDEX || to != INVALID_INDEX); }
 
   move_t pack() const
   {

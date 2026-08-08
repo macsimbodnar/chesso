@@ -32,7 +32,7 @@ TEST_SUITE("engine: zobrist and unmake")
   // the incrementally maintained hash equals a full recomputation, and unmake
   // restores the board bit for bit. A drift in either poisons the
   // transposition table and shows up as unexplainable moves much later.
-  static void walk(game_t* g, int depth, const std::string& root_fen)
+  static void walk(game_t * g, int depth, const std::string& root_fen)
   {
     if (depth == 0) { return; }
 
@@ -252,7 +252,8 @@ TEST_SUITE("engine: transposition table")
   // Depth preferred, but not depth exclusive: a re-search of the same node at
   // the same depth carries the newer bound and has to win the slot. Only a
   // strictly shallower entry is refused.
-  TEST_CASE_FIXTURE(engine_fixture_t, "an equal depth entry replaces the older one")
+  TEST_CASE_FIXTURE(engine_fixture_t,
+                    "an equal depth entry replaces the older one")
   {
     transposition_table_t table = {};
     tt_resize(&table, 1);
@@ -299,7 +300,8 @@ TEST_SUITE("engine: transposition table")
     tt_free(&table);
   }
 
-  TEST_CASE_FIXTURE(engine_fixture_t, "generation never lands on the reserved 0")
+  TEST_CASE_FIXTURE(engine_fixture_t,
+                    "generation never lands on the reserved 0")
   {
     transposition_table_t table = {};
     tt_resize(&table, 1);
@@ -316,8 +318,8 @@ TEST_SUITE("engine: transposition table")
   {
     transposition_table_t table = {};
 
-    for (const size_t requested : {size_t(0), size_t(1), size_t(3), size_t(16),
-                                   size_t(100000)}) {
+    for (const size_t requested :
+         {size_t(0), size_t(1), size_t(3), size_t(16), size_t(100000)}) {
       tt_resize(&table, requested);
 
       REQUIRE(table.entries != nullptr);
@@ -354,7 +356,8 @@ TEST_SUITE("engine: move stack limits")
 {
   // make_move used to assert after writing, so an overlong game corrupted
   // memory in a release build instead of refusing the move.
-  TEST_CASE_FIXTURE(engine_fixture_t, "make_move refuses once the stack is full")
+  TEST_CASE_FIXTURE(engine_fixture_t,
+                    "make_move refuses once the stack is full")
   {
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/N3K2N w - - 0 1", &game));
 
@@ -420,10 +423,9 @@ TEST_SUITE("engine: uci layer")
       const int budget = compute_search_time_ms(test.remaining, test.increment,
                                                 test.movestogo);
 
-      const std::string title =
-          "remaining " + std::to_string(test.remaining) + " inc " +
-          std::to_string(test.increment) + " movestogo " +
-          std::to_string(test.movestogo);
+      const std::string title = "remaining " + std::to_string(test.remaining) +
+                                " inc " + std::to_string(test.increment) +
+                                " movestogo " + std::to_string(test.movestogo);
 
       REQUIRE_MESSAGE(budget > 0, title);
 
@@ -629,8 +631,8 @@ TEST_SUITE("engine: uci layer")
 
   TEST_CASE("algebraic move parsing round trips")
   {
-    const std::vector<std::string> moves = {"e2e4", "a1h8", "b7b8q", "b7b8n",
-                                            "h2h1r", "d7d8b"};
+    const std::vector<std::string> moves = {"e2e4",  "a1h8",  "b7b8q",
+                                            "b7b8n", "h2h1r", "d7d8b"};
 
     for (const std::string& text : moves) {
       const auto parsed = algebraic_to_uci_move(text);
@@ -641,7 +643,7 @@ TEST_SUITE("engine: uci layer")
 
   TEST_CASE("garbage move text is rejected")
   {
-    const std::vector<std::string> bad = {"", "e2", "e2e", "z2e4",
+    const std::vector<std::string> bad = {"",     "e2",   "e2e",  "z2e4",
                                           "e9e4", "e2e9", "e2e4x"};
 
     for (const std::string& text : bad) {
@@ -712,9 +714,8 @@ TEST_SUITE("engine: uci go")
       found = line.substr(std::string("bestmove ").length());
     }
 
-    REQUIRE_MESSAGE(count == 1,
-                    ("expected one bestmove line, got " + std::to_string(count) +
-                     "\n" + capture.str()));
+    REQUIRE_MESSAGE(count == 1, ("expected one bestmove line, got " +
+                                 std::to_string(count) + "\n" + capture.str()));
 
     // Strip a ponder move if one is ever attached.
     const size_t space = found.find(' ');
@@ -865,13 +866,16 @@ TEST_SUITE("engine: uci go")
 
     // From and to are what a book entry carries; the flags come from the
     // generator. A move that is not in the list has to come back as nothing.
-    REQUIRE_EQ(validate_book_move(NEW_MOVE(e2, e4, W_PAWN, TO_NONE, 0, 0, 0, 0)),
-               NEW_MOVE(e2, e4, W_PAWN, TO_NONE, 0, 1, 0, 0));
+    REQUIRE_EQ(
+        validate_book_move(NEW_MOVE(e2, e4, W_PAWN, TO_NONE, 0, 0, 0, 0)),
+        NEW_MOVE(e2, e4, W_PAWN, TO_NONE, 0, 1, 0, 0));
 
-    REQUIRE_EQ(validate_book_move(NEW_MOVE(e2, e5, W_PAWN, TO_NONE, 0, 0, 0, 0)),
-               move_t(0));
-    REQUIRE_EQ(validate_book_move(NEW_MOVE(d4, d5, W_PAWN, TO_NONE, 0, 0, 0, 0)),
-               move_t(0));
+    REQUIRE_EQ(
+        validate_book_move(NEW_MOVE(e2, e5, W_PAWN, TO_NONE, 0, 0, 0, 0)),
+        move_t(0));
+    REQUIRE_EQ(
+        validate_book_move(NEW_MOVE(d4, d5, W_PAWN, TO_NONE, 0, 0, 0, 0)),
+        move_t(0));
 
     // A pinned piece is in the generated list but never survives make_move.
     {

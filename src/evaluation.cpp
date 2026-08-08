@@ -106,8 +106,8 @@ int score_move(const game_t* game,
   if (tt_move != 0 && move == tt_move) { return ORDER_TT_MOVE; }
 
   assert(static_cast<size_t>(MOVE_PROMOTED(move)) <
-  sizeof(piece_values_abs) / sizeof(piece_values_abs[0]));
-  
+         sizeof(piece_values_abs) / sizeof(piece_values_abs[0]));
+
   // Promotion_t maps onto W_KNIGHT..W_QUEEN by construction.
   const int promotion_bonus =
       MOVE_PROMOTED(move) ? piece_values_abs[MOVE_PROMOTED(move)] : 0;

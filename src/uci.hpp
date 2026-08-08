@@ -95,7 +95,8 @@ bool check_move_legality(move_t move);
 move_t first_legal_move();
 move_t validate_book_move(move_t book_move);
 
-uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf);
+uci_search_result_t iterative_deepening_search(
+    const uci_search_options_t& conf);
 
 // Read-only access to the UCI layer's board and table, for assertions in
 // tests, plus a way to wait for a [go] to answer instead of racing it.

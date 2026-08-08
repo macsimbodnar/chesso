@@ -13,9 +13,7 @@ static game_t game;
 TEST_SUITE("Test openings")
 {
   TEST_CASE("Initialize")
-  {
-    initialize_game_const_data(&game);
-  }
+  { initialize_game_const_data(&game); }
 
   TEST_CASE("Test key generation")
   {

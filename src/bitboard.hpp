@@ -16,9 +16,7 @@ piece_t get_piece(const board_t* board, index_t square);
 
 
 inline int count_bits(bb_t board)
-{
-  return std::popcount(board);
-}
+{ return std::popcount(board); }
 
 
 inline index_t get_lsb_index(bb_t board)

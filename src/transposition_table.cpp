@@ -24,8 +24,7 @@ void tt_resize(transposition_table_t* tt, size_t megabytes)
   // A machine that cannot spare the requested size still has to play, so keep
   // halving rather than giving up on the table entirely.
   while (count > 0) {
-    tt->entries =
-        static_cast<tt_entry_t*>(calloc(count, sizeof(tt_entry_t)));
+    tt->entries = static_cast<tt_entry_t*>(calloc(count, sizeof(tt_entry_t)));
 
     if (tt->entries != nullptr) { break; }
 
@@ -45,7 +44,8 @@ void tt_resize(transposition_table_t* tt, size_t megabytes)
   tt->generation = 1;  // 1 makes it stable
 
   LOG_I << "TT sized to " << megabytes << "MB (" << count << " entries, "
-        << ((count * sizeof(tt_entry_t)) / (1024 * 1024)) << "MB used)" << END_I;
+        << ((count * sizeof(tt_entry_t)) / (1024 * 1024)) << "MB used)"
+        << END_I;
 }
 
 

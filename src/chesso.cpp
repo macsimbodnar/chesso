@@ -49,15 +49,11 @@ typedef bool (*process_func)(std::queue<std::string>&);
 
 
 const game_t* uci_game()
-{
-  return &game;
-}
+{ return &game; }
 
 
 const transposition_table_t* uci_tt()
-{
-  return &tt;
-}
+{ return &tt; }
 
 
 void uci_reply(const std::string& response)
@@ -651,8 +647,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                               MOVE_PROMOTED(fallback)};
       result.is_ponder_move = false;
 
-      LOG_W << "Search returned no move, answering with " << print_move(fallback)
-            << END_W;
+      LOG_W << "Search returned no move, answering with "
+            << print_move(fallback) << END_W;
     }
   }
 
@@ -1271,9 +1267,7 @@ void uci_shutdown()
 
 
 bool uci_is_running()
-{
-  return running;
-}
+{ return running; }
 
 
 void uci_process_line(const std::string& input)

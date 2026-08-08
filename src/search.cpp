@@ -28,7 +28,6 @@ static constexpr int MAX = 2000000000;
 #define MAX_QSEARCH_DEPTH 8
 
 
-
 // Selection sort, one step per visited move. Most nodes fail high on one of the
 // first moves, so sorting the whole list up front would be wasted work.
 inline void pick_next_move(move_t moves[], int scores[], size_t count, size_t i)

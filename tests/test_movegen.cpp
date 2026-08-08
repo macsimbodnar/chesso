@@ -36,9 +36,8 @@ TEST_SUITE("movegen: move encoding")
               const int en_passant = (flags >> 2) & 1;
               const int castling = (flags >> 3) & 1;
 
-              const move_t move =
-                  NEW_MOVE(from, to, piece, promotion, capture, double_push,
-                           en_passant, castling);
+              const move_t move = NEW_MOVE(from, to, piece, promotion, capture,
+                                           double_push, en_passant, castling);
 
               REQUIRE_EQ(MOVE_FROM(move), from);
               REQUIRE_EQ(MOVE_TO(move), to);
@@ -323,7 +322,7 @@ TEST_SUITE("movegen: perft")
 
   // The counters are the ones on the leaf moves, which is the convention every
   // published perft table uses.
-  static void perft(game_t* g, int depth, perft_counts_t* out)
+  static void perft(game_t * g, int depth, perft_counts_t* out)
   {
     if (depth == 0) {
       out->nodes++;
@@ -358,9 +357,8 @@ TEST_SUITE("movegen: perft")
     size_t layers_checked = 0;
     size_t columns_checked = 0;
 
-    for (const std::string& file :
-         {"assets/perft_json/perft.json",
-          "assets/perft_json/talkchess_perft.json"}) {
+    for (const std::string& file : {"assets/perft_json/perft.json",
+                                    "assets/perft_json/talkchess_perft.json"}) {
       const nlohmann::json positions = load_json(file);
 
       for (const nlohmann::json& position : positions) {
@@ -387,10 +385,10 @@ TEST_SUITE("movegen: perft")
           const auto compare = [&](const char* column, uint64_t actual) {
             if (layer[column].is_null()) { return; }
 
-            REQUIRE_MESSAGE(actual == layer[column].get<uint64_t>(),
-                            (title + " " + column + ": got " +
-                             std::to_string(actual) + " expected " +
-                             layer[column].dump()));
+            REQUIRE_MESSAGE(
+                actual == layer[column].get<uint64_t>(),
+                (title + " " + column + ": got " + std::to_string(actual) +
+                 " expected " + layer[column].dump()));
             columns_checked++;
           };
 

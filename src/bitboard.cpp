@@ -144,11 +144,10 @@ size_t generate_moves(const bb_tables_t* tables,
 
     // Sliders that would hit the king on an empty board are the only ones that
     // can pin anything; a single one of our pieces in the way is pinned.
-    bb_t snipers =
-        (get_rook_attacks(tables, king_square, BB_0) &
-         (opp_bitboards[3] | opp_bitboards[4])) |
-        (get_bishop_attacks(tables, king_square, BB_0) &
-         (opp_bitboards[2] | opp_bitboards[4]));
+    bb_t snipers = (get_rook_attacks(tables, king_square, BB_0) &
+                    (opp_bitboards[3] | opp_bitboards[4])) |
+                   (get_bishop_attacks(tables, king_square, BB_0) &
+                    (opp_bitboards[2] | opp_bitboards[4]));
 
     while (snipers) {
       const index_t sniper_square = get_lsb_index(snipers);
@@ -188,8 +187,10 @@ size_t generate_moves(const bb_tables_t* tables,
     const bb_t empty_squares = ~all_occupancy;
 
     // Rank the double push passes over, and the rank a push promotes on.
-    const bb_t middle_rank = white ? 0x0000FF0000000000ULL : 0x0000000000FF0000ULL;
-    const bb_t last_rank = white ? 0x00000000000000FFULL : 0xFF00000000000000ULL;
+    const bb_t middle_rank =
+        white ? 0x0000FF0000000000ULL : 0x0000000000FF0000ULL;
+    const bb_t last_rank =
+        white ? 0x00000000000000FFULL : 0xFF00000000000000ULL;
 
     // Masking the source file before the shift is what stops a capture from
     // wrapping around the edge of the board onto the opposite file.
@@ -292,7 +293,8 @@ size_t generate_moves(const bb_tables_t* tables,
         }
       }
 
-      bb_t attacks = tables->pawn_attacks[color][from] & opp_occupancy & targets;
+      bb_t attacks =
+          tables->pawn_attacks[color][from] & opp_occupancy & targets;
 
       while (attacks) {
         const index_t target = get_lsb_index(attacks);
@@ -328,9 +330,8 @@ size_t generate_moves(const bb_tables_t* tables,
         const index_t from = get_lsb_index(candidates);
         candidates &= candidates - 1;
 
-        const index_t victim_square =
-            static_cast<index_t>(white ? (board->en_passant + 8)
-                                       : (board->en_passant - 8));
+        const index_t victim_square = static_cast<index_t>(
+            white ? (board->en_passant + 8) : (board->en_passant - 8));
 
         bool legal = true;
 
@@ -532,11 +533,16 @@ struct castling_rook_t
 static inline castling_rook_t castling_rook(index_t king_to)
 {
   switch (king_to) {
-    case g1: return {W_ROOK, h1, f1};
-    case c1: return {W_ROOK, a1, d1};
-    case g8: return {B_ROOK, h8, f8};
-    case c8: return {B_ROOK, a8, d8};
-    default: return {EMPTY, INVALID_INDEX, INVALID_INDEX};
+    case g1:
+      return {W_ROOK, h1, f1};
+    case c1:
+      return {W_ROOK, a1, d1};
+    case g8:
+      return {B_ROOK, h8, f8};
+    case c8:
+      return {B_ROOK, a8, d8};
+    default:
+      return {EMPTY, INVALID_INDEX, INVALID_INDEX};
   }
 }
 
@@ -718,10 +724,10 @@ bool make_move(game_t* game, move_t encoded_move)
   // every caller feeds this function a generated move. The assertion is the
   // net that catches a caller that does not.
   assert(board->bitboards[(us == WHITE) ? W_KING : B_KING] == BB_0 ||
-         !is_attacked(&game->tables, board,
-                      get_lsb_index(board->bitboards[(us == WHITE) ? W_KING
-                                                                   : B_KING]),
-                      them));
+         !is_attacked(
+             &game->tables, board,
+             get_lsb_index(board->bitboards[(us == WHITE) ? W_KING : B_KING]),
+             them));
 
   return true;
 }
@@ -761,8 +767,9 @@ void unmake_move(game_t* game)
     // Take the promoted piece off and put the pawn back on the same square;
     // the move undo below then walks that pawn back to `from`.
     const piece_t pawn = (us == WHITE) ? W_PAWN : B_PAWN;
-    const piece_t promoted_to = (us == WHITE) ? w_promotion_map[move.promoted_to]
-                                              : b_promotion_map[move.promoted_to];
+    const piece_t promoted_to = (us == WHITE)
+                                    ? w_promotion_map[move.promoted_to]
+                                    : b_promotion_map[move.promoted_to];
 
     board->bitboards[promoted_to] ^= to_bb;
     board->bitboards[pawn] ^= to_bb;
@@ -1199,8 +1206,8 @@ bool load_FEN(const std::string& FEN, game_t* game)
     // The field is a uint8_t. Truncating a larger value would silently reset
     // the fifty move counter and shrink the repetition search window.
     if (clock > std::numeric_limits<uint8_t>::max()) {
-      LOG_E << "Halfmove clock out of range [" << half_move
-            << "]. FEN: " << FEN << END_E;
+      LOG_E << "Halfmove clock out of range [" << half_move << "]. FEN: " << FEN
+            << END_E;
       return false;
     }
 
@@ -2312,8 +2319,8 @@ void initialize_game_const_data(game_t* game)
       const bb_t b_bb = BB_1 << b;
 
       if (get_rook_attacks(tables, a, BB_0) & b_bb) {
-        tables->between[a][b] =
-            get_rook_attacks(tables, a, b_bb) & get_rook_attacks(tables, b, a_bb);
+        tables->between[a][b] = get_rook_attacks(tables, a, b_bb) &
+                                get_rook_attacks(tables, b, a_bb);
         tables->line[a][b] = (get_rook_attacks(tables, a, BB_0) &
                               get_rook_attacks(tables, b, BB_0)) |
                              a_bb | b_bb;

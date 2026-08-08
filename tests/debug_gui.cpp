@@ -219,9 +219,7 @@ public:
 
 
   bool is_castling_available(const castling_rights_t castling) const
-  {
-    return (game.board.castling & castling);
-  }
+  { return (game.board.castling & castling); }
 
 
   std::optional<position_t> get_en_passant() const
@@ -825,9 +823,7 @@ void gui_t::draw_static_board(const rect_t& rect,
 
 
 void gui_t::draw_background()
-{
-  draw_texture(textures["background"], {0, 0, screen.w, screen.h});
-}
+{ draw_texture(textures["background"], {0, 0, screen.w, screen.h}); }
 
 
 void gui_t::draw_panel()

@@ -164,7 +164,7 @@ TEST_SUITE("evaluation: capture_score")
 {
   // Finds the move matching from/to in the current position, so the tests can
   // name moves without hand-encoding move_t.
-  static move_t find_move(game_t* g, index_t from, index_t to)
+  static move_t find_move(game_t * g, index_t from, index_t to)
   {
     move_t moves[MAX_MOVES];
     const size_t count = legal_moves(g, moves);
@@ -247,9 +247,10 @@ TEST_SUITE("evaluation: score_move ordering")
   // on anyway.
   TEST_CASE_FIXTURE(eval_fixture_t, "bands are strictly ordered")
   {
-    REQUIRE(load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
-                     "R3K2R w KQkq - 0 1",
-                     &game));
+    REQUIRE(
+        load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+                 "R3K2R w KQkq - 0 1",
+                 &game));
 
     move_t moves[MAX_MOVES];
     const size_t count = legal_moves(&game, moves);
@@ -262,8 +263,8 @@ TEST_SUITE("evaluation: score_move ordering")
     for (size_t i = 0; i < count; ++i) {
       if (MOVE_CAPTURE(moves[i]) && a_capture == 0) {
         a_capture = moves[i];
-      } else if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE &&
-                 quiet_count < 4) {
+      } else if (!MOVE_CAPTURE(moves[i]) &&
+                 MOVE_PROMOTED(moves[i]) == TO_NONE && quiet_count < 4) {
         quiets[quiet_count++] = moves[i];
       }
     }
@@ -287,7 +288,8 @@ TEST_SUITE("evaluation: score_move ordering")
 
     const move_t tt_move = a_capture;
 
-    const int s_tt = score_move(&game, &state, tt_move, tt_move, ply, prev_move);
+    const int s_tt =
+        score_move(&game, &state, tt_move, tt_move, ply, prev_move);
     const int s_capture =
         score_move(&game, &state, a_capture, 0, ply, prev_move);
     const int s_killer0 =

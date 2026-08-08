@@ -233,9 +233,7 @@ int make_random_move(int depth, game_t* g)
 TEST_SUITE("INITIALIZATION")
 {
   TEST_CASE("Test INITIALIZATION")
-  {
-    initialize_game_const_data(&game);
-  }
+  { initialize_game_const_data(&game); }
 }
 
 TEST_SUITE("Test utils")
@@ -510,5 +508,4 @@ TEST_SUITE("Test make_move and unmake_move")
     REQUIRE_EQ(NOT_AB_FILES, ~(file_masks[0] | file_masks[1]));
     REQUIRE_EQ(NOT_GH_FILES, ~(file_masks[6] | file_masks[7]));
   }
-
 }

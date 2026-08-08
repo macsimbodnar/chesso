@@ -102,8 +102,8 @@ TEST_SUITE("search: mate detection")
 
       REQUIRE_MESSAGE(result.mate_found, ("FEN: " + test.fen));
       REQUIRE_MESSAGE(result.mate_in == test.mate_in,
-                      ("FEN: " + test.fen +
-                       " got mate in " + std::to_string(result.mate_in)));
+                      ("FEN: " + test.fen + " got mate in " +
+                       std::to_string(result.mate_in)));
 
       REQUIRE(load_FEN(test.fen, &game));
       REQUIRE_MESSAGE(move_is_legal(&game, result.best_move),
@@ -119,7 +119,8 @@ TEST_SUITE("search: mate detection")
   // The distance is asserted exactly. A range would pass with the mate score
   // normalised by the wrong number of plies on its way through the
   // transposition table, which is the whole thing worth checking here.
-  TEST_CASE_FIXTURE(search_fixture_t, "mate in two is found at the right distance")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "mate in two is found at the right distance")
   {
     // Needs depth 3 at least: white move, black reply, white mate.
     for (int depth = 3; depth <= 6; ++depth) {
@@ -171,7 +172,8 @@ TEST_SUITE("search: invariants")
   // Every result invariant is checked in one pass: a search over the whole
   // JSON corpus is the expensive part, so running it once and asserting four
   // properties keeps this suite inside the "fast" label.
-  TEST_CASE_FIXTURE(search_fixture_t, "search results are well formed everywhere")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "search results are well formed everywhere")
   {
     size_t checked = 0;
 
@@ -190,9 +192,9 @@ TEST_SUITE("search: invariants")
         REQUIRE_MESSAGE(result.best_move == 0, ("FEN: " + fen));
       } else {
         REQUIRE_MESSAGE(result.best_move != 0, ("FEN: " + fen));
-        REQUIRE_MESSAGE(move_is_legal(&game, result.best_move),
-                        ("FEN: " + fen + " returned " +
-                         print_move(result.best_move)));
+        REQUIRE_MESSAGE(
+            move_is_legal(&game, result.best_move),
+            ("FEN: " + fen + " returned " + print_move(result.best_move)));
       }
 
       REQUIRE_MESSAGE(result.pv.length <= MAX_PLY, ("FEN: " + fen));
@@ -213,7 +215,8 @@ TEST_SUITE("search: invariants")
     REQUIRE(checked > 100);
   }
 
-  TEST_CASE_FIXTURE(search_fixture_t, "the same search twice gives the same answer")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the same search twice gives the same answer")
   {
     // A fresh state and a fresh table must make the search a pure function of
     // position and depth. Anything else means state is leaking between runs.
@@ -268,7 +271,8 @@ TEST_SUITE("search: budgets")
   // covered by "a one node search still answers with a legal move" in
   // test_engine. What must never happen is a non-zero move that is not
   // playable, which is what used to reach the GUI as "bestmove 0000".
-  TEST_CASE_FIXTURE(search_fixture_t, "an aborted search reports no move at all")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "an aborted search reports no move at all")
   {
     for (const uint64_t budget :
          {uint64_t(1), uint64_t(2), uint64_t(8), uint64_t(64), uint64_t(512),
@@ -355,9 +359,9 @@ TEST_SUITE("search: tactics")
       for (int depth = 4; depth <= 6; ++depth) {
         const search_t result = search_fen(test.fen, depth);
 
-        const std::string title =
-            test.title + " at depth " + std::to_string(depth) + ", played " +
-            print_move(result.best_move);
+        const std::string title = test.title + " at depth " +
+                                  std::to_string(depth) + ", played " +
+                                  print_move(result.best_move);
 
         REQUIRE_MESSAGE(MOVE_FROM(result.best_move) == test.from, title);
         REQUIRE_MESSAGE(MOVE_TO(result.best_move) == test.to, title);
@@ -516,7 +520,8 @@ TEST_SUITE("search: quiescence")
   // Being in check is not the same as being mated, and the reply need not be
   // a capture. A quiescence that only ever looks at captures finds no move
   // here and calls a perfectly ordinary position a mate.
-  TEST_CASE_FIXTURE(search_fixture_t, "a quiet evasion is a legal answer to a check")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet evasion is a legal answer to a check")
   {
     // The rook on e8 checks down the open e file. White has four king moves
     // and not one of them takes anything.
@@ -549,7 +554,8 @@ TEST_SUITE("search: quiescence")
 
   // "No captures available" is not mate. Without the check test guarding it,
   // a quiet position with nothing to take would be scored as one.
-  TEST_CASE_FIXTURE(search_fixture_t, "a quiet position at depth zero is not mate")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet position at depth zero is not mate")
   {
     const search_t result = search_fen("4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 0);
 
@@ -582,9 +588,9 @@ TEST_SUITE("search: quiescence")
       quiescence(-10000000, 10000000, 0, 0, &game, &state);
 
       REQUIRE_MESSAGE(state.explored_nodes > 0, ("FEN: " + fen));
-      REQUIRE_MESSAGE(state.explored_nodes < 100000,
-                      ("FEN: " + fen + " nodes " +
-                       std::to_string(state.explored_nodes)));
+      REQUIRE_MESSAGE(
+          state.explored_nodes < 100000,
+          ("FEN: " + fen + " nodes " + std::to_string(state.explored_nodes)));
     }
   }
 }
@@ -648,10 +654,10 @@ TEST_SUITE("search: transposition table")
       const search_t cold = search_fen_with(fen, 5, &tt, true);
       const search_t warm = search_fen_with(fen, 5, &tt, false);
 
-      REQUIRE_MESSAGE(warm.explored_nodes < cold.explored_nodes,
-                      ("FEN: " + fen + " cold " +
-                       std::to_string(cold.explored_nodes) + " warm " +
-                       std::to_string(warm.explored_nodes)));
+      REQUIRE_MESSAGE(
+          warm.explored_nodes < cold.explored_nodes,
+          ("FEN: " + fen + " cold " + std::to_string(cold.explored_nodes) +
+           " warm " + std::to_string(warm.explored_nodes)));
     }
   }
 
@@ -661,7 +667,8 @@ TEST_SUITE("search: transposition table")
   // that is visible on the stored line: one ply closer at every step, sign
   // alternating with the side to move. Without it the same entry read from a
   // different distance reports the wrong mate.
-  TEST_CASE_FIXTURE(search_fixture_t, "a stored mate score counts from its own position")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a stored mate score counts from its own position")
   {
     for (const char* fen : {MATE_IN_2_W_POS, MATE_IN_2_B_POS}) {
       const search_t result = search_fen_with(fen, 4, &tt, true);
@@ -697,7 +704,8 @@ TEST_SUITE("search: transposition table")
     }
   }
 
-  TEST_CASE_FIXTURE(search_fixture_t, "the root is stored with the move it played")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the root is stored with the move it played")
   {
     for (const std::string& fen : tt_positions) {
       const search_t result = search_fen_with(fen, 4, &tt, true);
@@ -753,7 +761,8 @@ TEST_SUITE("search: draws")
   // Regression: an illegal FEN where the side to move can capture the enemy
   // king used to leave a side with no king on the board, and is_check() then
   // indexed the attack tables with square 64.
-  TEST_CASE_FIXTURE(search_fixture_t, "a position with a capturable king is survivable")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a position with a capturable king is survivable")
   {
     // Black is in check with White to move, which cannot arise in a real game
     // but does arrive through [position fen].
@@ -773,7 +782,8 @@ TEST_SUITE("search: draws")
   // be seen through the moves played before the search started. The losing
   // side takes the draw over the loss, which is the only way the rule shows
   // up in a score.
-  TEST_CASE_FIXTURE(search_fixture_t, "the losing side takes an available repetition")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the losing side takes an available repetition")
   {
     REQUIRE(load_FEN("7k/8/8/8/8/8/R7/K7 w - - 0 1", &game));
 
@@ -808,8 +818,7 @@ TEST_SUITE("search: draws")
   TEST_CASE_FIXTURE(search_fixture_t, "the fifty move rule is a draw")
   {
     // Halfmove clock already at 100: every node below the root is a draw.
-    const search_t result =
-        search_fen("4k3/8/8/8/8/8/8/3QK3 w - - 100 200", 4);
+    const search_t result = search_fen("4k3/8/8/8/8/8/8/3QK3 w - - 100 200", 4);
 
     REQUIRE_EQ(result.score, 0);
   }
