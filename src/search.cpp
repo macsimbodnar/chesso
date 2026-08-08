@@ -198,7 +198,7 @@ int negamax(int alpha0,
   // does not carry the path. Both tests therefore have to run before the
   // transposition table is allowed to answer for this position.
   if (ply > 0) {
-    if (is_position_repeated(&game->repetitions, &game->board)) {
+    if (is_position_repeated(&game->history, &game->board)) {
       return DRAW_SCORE;
     }
 

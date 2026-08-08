@@ -104,7 +104,21 @@ bool make_move(game_t* g, move_t m)
 - Cost: the two instantiations roughly double the object code for these
   functions. Watch for an I-cache regression — measure, do not assume.
 
-## 3. Delete the repetition stack
+## 3. Delete the repetition stack — DONE, -5.5 %
+
+Measured with `hyperfine`, 12 interleaved runs, sigma 0.013 s:
+**2.036 s to 1.925 s, 1.06x.** The bench's own perft total went 608 ms to
+554 ms, 69.0 to 75.5 Mnps. `history_entry_t` is 16 bytes, `history_t` 80 KB,
+`game_t` 2515 KB.
+
+The estimate below said 1-3 %. It was low, for the same reason the old plan's
+copy estimate was low: this codebase is more sensitive to the size of what
+make/unmake touches than any of these estimates assume. Treat that as the
+standing prior for the remaining items.
+
+Original entry follows.
+
+
 
 `repetition_t` is 39 KB of hashes that are already stored elsewhere.
 `make_move` writes the same value twice:

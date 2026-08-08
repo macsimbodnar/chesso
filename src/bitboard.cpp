@@ -557,23 +557,20 @@ bool make_move(game_t* game, move_t encoded_move)
   board_t* board = &game->board;
   history_t* history = &game->history;
 
-  const hash_t old_hash = board->hash;
-
-  // Both stacks are fixed size. Refusing the move leaves the board untouched
-  // and consistent; writing past the end would corrupt whatever follows. The
-  // search can never reach this - it is bounded by MAX_PLY - so this only
-  // guards an absurdly long [position ... moves ...] line.
-  if (history->size + 1 >= HISTORY_MAX_SIZE ||
-      game->repetitions.size + 1 >= REPETITION_MAX_SIZE) {
+  // The stack is fixed size. Refusing the move leaves the board untouched and
+  // consistent; writing past the end would corrupt whatever follows. The search
+  // can never reach this - it is bounded by MAX_PLY - so this only guards an
+  // absurdly long [position ... moves ...] line.
+  if (history->size + 1 >= HISTORY_MAX_SIZE) {
     LOG_E << "Move stack is full, refusing the move" << END_E;
     return false;
   }
 
   // Store the history. Only the state that cannot be recomputed from the move;
-  // `captured` is filled in below, once the target square has been read.
+  // `captured` is filled in below, once the target square has been read. The
+  // hash stored here is the one is_position_repeated() searches for.
   history_entry_t* history_entry = &history->entries[history->size++];
   history_entry->hash = board->hash;
-  history_entry->repetition_size = game->repetitions.size;
   history_entry->move = encoded_move;
   history_entry->castling = board->castling;
   history_entry->en_passant = board->en_passant;
@@ -716,9 +713,6 @@ bool make_move(game_t* game, move_t encoded_move)
   // After black turn update the full move counter as well
   if (us == BLACK) { board->fullmove_counter++; }
 
-  // Store repetitions. Capacity was checked before the history push above.
-  game->repetitions.entries[game->repetitions.size++] = old_hash;
-
   // No legality check here. generate_moves() emits legal moves only, so the
   // king cannot be left en prise by anything that reaches this point, and
   // every caller feeds this function a generated move. The assertion is the
@@ -807,8 +801,6 @@ void unmake_move(game_t* game)
 
   if (us == BLACK) { board->fullmove_counter--; }
 
-  game->repetitions.size = entry->repetition_size;
-
   assert(squares_match_bitboards(board));
   assert(board->occupancies[WHITE] ==
          (board->bitboards[W_PAWN] | board->bitboards[W_KNIGHT] |
@@ -821,22 +813,28 @@ void unmake_move(game_t* game)
 }
 
 
-bool is_position_repeated(const repetition_t* rep, const board_t* board)
+bool is_position_repeated(const history_t* history, const board_t* board)
 {
-  assert(rep != nullptr);
+  assert(history != nullptr);
   assert(board != nullptr);
 
+  // Each history entry carries the key of the position its move was played
+  // from, which is the same sequence a separate repetition stack used to hold.
+  //
   // A position can only recur while no irreversible move (capture, pawn move)
   // has been played, so the halfmove clock bounds how far back it is worth
   // looking. Anything older cannot match except through a hash collision.
   //
   // Stepping by two skips the plies where the other side is to move; those can
   // never equal the current hash because the side to move is part of it.
-  const size_t limit =
-      (board->halfmove_clock < rep->size) ? board->halfmove_clock : rep->size;
+  const size_t limit = (board->halfmove_clock < history->size)
+                           ? board->halfmove_clock
+                           : history->size;
 
   for (size_t back = 2; back <= limit; back += 2) {
-    if (rep->entries[rep->size - back] == board->hash) { return true; }
+    if (history->entries[history->size - back].hash == board->hash) {
+      return true;
+    }
   }
 
   return false;
@@ -923,7 +921,6 @@ void cleanup_board(game_t* game)
   game->board.hash = 0ULL;
 
   game->history.size = 0;
-  game->repetitions.size = 0;
 }
 
 

@@ -148,7 +148,7 @@ TEST_SUITE("engine: repetition")
       }
     }
 
-    REQUIRE(is_position_repeated(&game.repetitions, &game.board));
+    REQUIRE(is_position_repeated(&game.history, &game.board));
   }
 
   TEST_CASE_FIXTURE(engine_fixture_t, "an irreversible move clears the window")
@@ -164,7 +164,7 @@ TEST_SUITE("engine: repetition")
 
       REQUIRE(make_move(&game, moves[i]));
       REQUIRE_EQ(game.board.halfmove_clock, 0);
-      REQUIRE_FALSE(is_position_repeated(&game.repetitions, &game.board));
+      REQUIRE_FALSE(is_position_repeated(&game.history, &game.board));
       unmake_move(&game);
     }
   }
@@ -386,7 +386,6 @@ TEST_SUITE("engine: move stack limits")
     // The guard, not an assert or a crash, is what stops the loop.
     REQUIRE(applied < HISTORY_MAX_SIZE);
     REQUIRE(game.history.size < HISTORY_MAX_SIZE);
-    REQUIRE(game.repetitions.size < REPETITION_MAX_SIZE);
   }
 }
 

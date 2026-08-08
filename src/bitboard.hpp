@@ -94,7 +94,7 @@ move_t algebraic_to_move(std::string notation, game_t* game);
 bool is_pv_legal(game_t* game, const pv_t* pv);
 
 // Utils that must run fast
-bool is_position_repeated(const repetition_t* rep, const board_t* board);
+bool is_position_repeated(const history_t* history, const board_t* board);
 
 bool is_check(const game_t* game);
 void swap_side(game_t* game);

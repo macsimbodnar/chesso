@@ -41,7 +41,6 @@ typedef uint32_t move_t;
 #define MAX_MOVES 270
 #define MAX_PLY 128
 #define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe
-#define REPETITION_MAX_SIZE 5000
 
 // Holds the game moves replayed by [position ... moves ...] plus MAX_PLY of
 // search on top. 5000 is far past the longest game the 75-move rule allows,
@@ -285,10 +284,12 @@ struct board_t
 // Everything unmake_move() cannot recompute from the move itself. The pieces,
 // the occupancies and the square array are undone by re-applying the same xors
 // make_move() applied, so none of them are stored here.
+//
+// `hash` doubles as the repetition history: it is the key of the position this
+// move was played from, which is exactly what a threefold test looks for.
 struct history_entry_t
 {
   hash_t hash;
-  size_t repetition_size;
   move_t move;
   piece_t captured;  // piece taken off the target square, EMPTY if none
   uint8_t castling;
@@ -304,19 +305,11 @@ struct history_t
 };
 
 
-struct repetition_t
-{
-  hash_t entries[REPETITION_MAX_SIZE];
-  size_t size = 0;
-};
-
-
 struct game_t
 {
   bb_tables_t tables;
   board_t board;
   history_t history;
-  repetition_t repetitions;
   zobrist_randoms_t hash_randoms;
 };
 
