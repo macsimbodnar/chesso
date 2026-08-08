@@ -107,7 +107,9 @@ enum castling_rights_t
   BQ = 0b0001000
 };
 
-enum color_t
+// uint8_t for the same reason as piece_t: these are stored in board_t, and an
+// int-backed enum costs three bytes of padding each time.
+enum color_t : uint8_t
 {
   WHITE,
   BLACK,
@@ -121,7 +123,7 @@ inline color_t operator!(const color_t& c)
 }
 
 
-enum promotion_t
+enum promotion_t : uint8_t
 {
   TO_NONE = 0,  // MUST be zero
   TO_KNIGHT,
@@ -263,6 +265,11 @@ struct bb_tables_t
 };
 
 
+// Field order is deliberate. The scalars below are read and written on every
+// single move, so they are packed together and follow `hash` immediately
+// rather than being separated from it by padding: with the old layout the
+// group straddled a cache line boundary and make_move touched two lines to
+// update state that fits comfortably in one.
 struct board_t
 {
   bb_t bitboards[12];
@@ -272,12 +279,12 @@ struct board_t
   // them. Answers "what is on this square" in one load instead of a scan.
   piece_t squares[64];
 
+  hash_t hash;                // Zobrist Key
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
-  hash_t hash;                // Zobrist Key
 };
 
 

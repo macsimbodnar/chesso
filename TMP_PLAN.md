@@ -259,6 +259,41 @@ template parameter rather than a runtime branch.
   Keep the masked version as the only implementation and let the specialisation
   fall out of the template, rather than writing the loops twice by hand.
 
+## Struct packing — DONE, no measurable effect
+
+`board_t` carried 10 bytes of padding: `color_t` was an int-backed enum using
+four bytes for three values, and `fullmove_counter` sat between two holes.
+Worse in principle, the scalars written on every move were separated from
+`hash` by that padding and straddled a cache line boundary, so `make_move`
+touched two lines to update state that fits in one.
+
+Fixed: `color_t` and `promotion_t` are `uint8_t`-backed, and `hash` moved next
+to the scalar group. **208 bytes to 200.**
+
+**It bought nothing measurable.** Best-of-N over five interleaved rounds put the
+two builds within 0.3 % of each other, which is noise. The likely reason is that
+`board_t` is 200 bytes accessed on every move, so it is L1-resident either way
+and the line split never costs a miss.
+
+Kept regardless: it is strictly less padding and strictly smaller, it costs
+nothing, and the size matters again the moment anything copies a `board_t` or
+an NNUE accumulator lands beside it. Recorded here so the idea is not retried
+expecting a speed-up.
+
+## Measurement is currently blocked
+
+These runs were taken with `opendirectoryd` at 45 % of a core and a load
+average near 3. Under that, repeated runs of the *same* binary spread by 3 %,
+which is the entire size of the remaining items. `hyperfine` reported a sigma of
+0.166 s on one pair - larger than every effect left on this list.
+
+**Do not attempt items 6 or 7 until the machine is quiet.** Their estimates are
+1-3 % and under 1 %, and neither can be resolved through this much interference.
+Check `ps aux | sort -rnk3 | head` before trusting any number below 5 %.
+
+Item 1 does not have this problem: SPRT over thousands of games averages out
+machine noise by construction, which is another argument for doing it next.
+
 ## 6. 16-bit move encoding
 
 `move_t` is 32 bits and carries the moving piece, which the board already knows.
