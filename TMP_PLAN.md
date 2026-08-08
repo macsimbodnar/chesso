@@ -101,7 +101,45 @@ that capture nothing, and quiescence did not search those before. The filter in
 through is very likely an improvement and is a *search* change: it needs games,
 not a benchmark.
 
-## 1b. Staged move generation in the main search — DONE, -17 % at fixed depth
+## 1b. Staged move generation — DONE, -17 % at fixed depth, but **0 Elo**
+
+Measured in games against `62fbdcb`, which is this change and nothing else:
+
+```
+Games 340   W 102   L 98   D 140   Points 172.0 (50.59 %)
+Elo   +4.09 +/- 27.52      nElo +5.50 +/- 36.93
+Ptnml(0-2)  [13, 41, 57, 47, 12]
+LLR    0.01   bounds (-2.20, 2.20)   [0.00, 10.00]
+```
+
+The LLR wandered between -0.10 and +0.15 over five checkpoints and never
+trended toward either bound, so the run was stopped rather than left to grind
+for hours to say the same thing more precisely. The pentanomial spread is close
+to symmetric.
+
+**The 17 % saved at fixed depth did not become Elo.** It was given back by the
+ordering change described below: quiet moves are now scored after the capture
+stage has run, on a killer and history table that the capture searches have
+already modified, and on these positions that ordering is slightly worse. Faster
+nodes, more of them.
+
+This was predicted to be worth 30-50 Elo, on the strength of published reports
+from other engines. It is worth nothing here. The likely reason is that those
+gains come from engines whose quiet ordering is good enough that skipping the
+generation is pure profit; this engine has no late move reduction, no null move
+pruning and no PVS re-search, so it searches far more quiet moves than a
+comparable engine and the ordering matters more than the generation cost.
+
+**Kept anyway**, on two grounds that are not Elo today: it makes each node
+cheaper, which will show once the pruning that should be sitting on top of it
+exists, and it is the mechanism any further staging needs. Revert it if it gets
+in the way.
+
+The estimate in this file was wrong by 30-50 Elo. That is the fourth wrong
+estimate in this project and by far the largest. Published Elo figures from
+other engines are not transferable to an engine with a different search.
+
+## 1b (detail). What the change actually does
 
 `negamax` generates the captures, and only generates the quiets if the captures
 run out without a cutoff. At fixed depth 9 over three positions:
