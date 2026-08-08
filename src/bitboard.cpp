@@ -171,73 +171,134 @@ size_t generate_moves(const bb_tables_t* tables,
   };
 
   //-############################  PAWNS  ##################################-//
+  // Pawns all step the same way, so one shift of the whole set replaces a loop
+  // over each of them. Splitting the destinations into promoting and
+  // non-promoting sets before emitting also removes the per-pawn `is_promoting`
+  // branch. Pinned pawns and en passant do not fit the pattern and are handled
+  // one at a time below; both are rare.
   {
     const piece_t piece = first_piece;  // W_PAWN or B_PAWN
+    const bool white = (color == WHITE);
 
     // A pawn can never legally stand on the first or last rank. A malformed
-    // FEN can still put one there, and the push below would then compute an
-    // off-board target square, so mask those pawns out once instead of
-    // bounds-checking every push.
-    bb_t bboard = my_bitboards[0] & 0x00FFFFFFFFFFFF00ULL;
+    // FEN can still put one there, and a push would then compute an off-board
+    // target square, so mask those pawns out once.
+    const bb_t all_pawns = my_bitboards[0] & 0x00FFFFFFFFFFFF00ULL;
+    const bb_t free_pawns = all_pawns & ~pinned;
+    const bb_t empty_squares = ~all_occupancy;
 
-    // Ranks the pawn pushes toward, expressed as source squares
-    const index_t promotion_rank_start = (color == WHITE) ? a7 : a2;
-    const index_t double_push_rank_start = (color == WHITE) ? a2 : a7;
+    // Rank the double push passes over, and the rank a push promotes on.
+    const bb_t middle_rank = white ? 0x0000FF0000000000ULL : 0x0000000000FF0000ULL;
+    const bb_t last_rank = white ? 0x00000000000000FFULL : 0xFF00000000000000ULL;
 
-    while (bboard) {
-      const index_t from = get_lsb_index(bboard);
-      bboard &= bboard - 1;  // Clear the lowest set bit
+    // Masking the source file before the shift is what stops a capture from
+    // wrapping around the edge of the board onto the opposite file.
+    const bb_t not_file_a = ~0x0101010101010101ULL;
+    const bb_t not_file_h = ~0x8080808080808080ULL;
 
-      const index_t to =
-          static_cast<index_t>((color == WHITE) ? (from - 8) : (from + 8));
+    const bb_t pushed =
+        (white ? (free_pawns >> 8) : (free_pawns << 8)) & empty_squares;
+    const bb_t double_pushed = (white ? ((pushed & middle_rank) >> 8)
+                                      : ((pushed & middle_rank) << 8)) &
+                               empty_squares & check_mask;
 
-      const bool is_promoting =
-          (from >= promotion_rank_start && from <= promotion_rank_start + 7);
+    // A pawn on the a file has no capture toward the a side, and likewise for
+    // the h file, hence the two different source masks.
+    const bb_t left_captures = (white ? ((free_pawns & not_file_a) >> 9)
+                                      : ((free_pawns & not_file_a) << 7)) &
+                               opp_occupancy & check_mask;
+    const bb_t right_captures = (white ? ((free_pawns & not_file_h) >> 7)
+                                       : ((free_pawns & not_file_h) << 9)) &
+                                opp_occupancy & check_mask;
 
-      const bb_t targets = targets_from(from);
+    const bb_t quiet_pushes = pushed & ~last_rank & check_mask;
+    const bb_t push_promotions = pushed & last_rank & check_mask;
 
-      // Quiet pushes. The square in front must be empty for either push to
-      // exist, but only the landing square has to satisfy `targets` - a double
-      // push can block a check that the single push does not.
+    // `shift` is what to add to a destination square to recover the source.
+    const auto emit_plain = [&](bb_t targets, int shift, move_t flags) {
+      while (targets) {
+        const index_t to = get_lsb_index(targets);
+        targets &= targets - 1;
+
+        const index_t from = static_cast<index_t>(static_cast<int>(to) + shift);
+        moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0) | flags;
+      }
+    };
+
+    const auto emit_promotions = [&](bb_t targets, int shift, move_t capture) {
+      while (targets) {
+        const index_t to = get_lsb_index(targets);
+        targets &= targets - 1;
+
+        const index_t from = static_cast<index_t>(static_cast<int>(to) + shift);
+
+        moves[move_count++] =
+            NEW_MOVE(from, to, piece, TO_QUEEN, capture, 0, 0, 0);
+        moves[move_count++] =
+            NEW_MOVE(from, to, piece, TO_ROOK, capture, 0, 0, 0);
+        moves[move_count++] =
+            NEW_MOVE(from, to, piece, TO_BISHOP, capture, 0, 0, 0);
+        moves[move_count++] =
+            NEW_MOVE(from, to, piece, TO_KNIGHT, capture, 0, 0, 0);
+      }
+    };
+
+    const int push_shift = white ? 8 : -8;
+    const int left_shift = white ? 9 : -7;
+    const int right_shift = white ? 7 : -9;
+
+    emit_plain(quiet_pushes, push_shift, 0);
+    emit_plain(double_pushed, 2 * push_shift, NEW_MOVE(0, 0, 0, 0, 0, 1, 0, 0));
+    emit_promotions(push_promotions, push_shift, 0);
+
+    emit_plain(left_captures & ~last_rank, left_shift,
+               NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
+    emit_promotions(left_captures & last_rank, left_shift, 1);
+    emit_plain(right_captures & ~last_rank, right_shift,
+               NEW_MOVE(0, 0, 0, 0, 1, 0, 0, 0));
+    emit_promotions(right_captures & last_rank, right_shift, 1);
+
+    // Pinned pawns, one at a time: the line they are pinned on differs per
+    // pawn, so there is nothing to do in bulk. `pinned` is only ever non-empty
+    // when we have a king, so king_square is valid here.
+    bb_t pinned_pawns = all_pawns & pinned;
+
+    while (pinned_pawns) {
+      const index_t from = get_lsb_index(pinned_pawns);
+      pinned_pawns &= pinned_pawns - 1;
+
+      const bb_t targets = check_mask & tables->line[king_square][from];
+      const index_t to = static_cast<index_t>(white ? (from - 8) : (from + 8));
+      const bool is_promoting = (BB_1 << to) & last_rank;
+
       if (!GET_BIT(all_occupancy, to)) {
-        if (is_promoting) {
-          if (GET_BIT(targets, to)) {
-            moves[move_count++] =
-                NEW_MOVE(from, to, piece, TO_QUEEN, 0, 0, 0, 0);
-            moves[move_count++] = NEW_MOVE(from, to, piece, TO_ROOK, 0, 0, 0, 0);
-            moves[move_count++] =
-                NEW_MOVE(from, to, piece, TO_BISHOP, 0, 0, 0, 0);
-            moves[move_count++] =
-                NEW_MOVE(from, to, piece, TO_KNIGHT, 0, 0, 0, 0);
-          }
-        } else {
-          if (GET_BIT(targets, to)) {
+        if (GET_BIT(targets, to)) {
+          if (is_promoting) {
+            emit_promotions(BB_1 << to, push_shift, 0);
+          } else {
             moves[move_count++] = NEW_MOVE(from, to, piece, 0, 0, 0, 0, 0);
           }
+        }
 
-          if (from >= double_push_rank_start &&
-              from <= double_push_rank_start + 7) {
-            const index_t double_to =
-                static_cast<index_t>((color == WHITE) ? (to - 8) : (to + 8));
+        if ((BB_1 << to) & middle_rank) {
+          const index_t double_to =
+              static_cast<index_t>(white ? (to - 8) : (to + 8));
 
-            if (!GET_BIT(all_occupancy, double_to) &&
-                GET_BIT(targets, double_to)) {
-              moves[move_count++] =
-                  NEW_MOVE(from, double_to, piece, 0, 0, 1, 0, 0);
-            }
+          if (!GET_BIT(all_occupancy, double_to) &&
+              GET_BIT(targets, double_to)) {
+            moves[move_count++] =
+                NEW_MOVE(from, double_to, piece, 0, 0, 1, 0, 0);
           }
         }
       }
 
-      // Captures
-      const bb_t pawn_attacks = tables->pawn_attacks[color][from];
-      bb_t attacks = pawn_attacks & opp_occupancy & targets;
+      bb_t attacks = tables->pawn_attacks[color][from] & opp_occupancy & targets;
 
       while (attacks) {
         const index_t target = get_lsb_index(attacks);
         attacks &= attacks - 1;
 
-        if (is_promoting) {
+        if ((BB_1 << target) & last_rank) {
           moves[move_count++] =
               NEW_MOVE(from, target, piece, TO_QUEEN, 1, 0, 0, 0);
           moves[move_count++] =
@@ -250,15 +311,26 @@ size_t generate_moves(const bb_tables_t* tables,
           moves[move_count++] = NEW_MOVE(from, target, piece, 0, 1, 0, 0, 0);
         }
       }
+    }
 
-      // En-passant. It is the one move that takes two pieces off the same
-      // rank at once, so neither `check_mask` nor `pinned` describes it: the
-      // victim is not on the landing square, and vacating both squares can
-      // expose the king to a rook or queen that was pinning neither pawn on
-      // its own. Rare enough to just play it out and look at the king.
-      if (pawn_attacks & en_passant_mask) {
-        const index_t victim_square = static_cast<index_t>(
-            (color == WHITE) ? (board->en_passant + 8) : (board->en_passant - 8));
+    // En-passant. It is the one move that takes two pieces off the same rank
+    // at once, so neither `check_mask` nor `pinned` describes it: the victim
+    // is not on the landing square, and vacating both squares can expose the
+    // king to a rook or queen that was pinning neither pawn on its own. Rare
+    // enough to just play it out and look at the king.
+    if (en_passant_mask) {
+      // A pawn of ours attacks the en-passant square from exactly the squares
+      // an enemy pawn standing there would attack.
+      bb_t candidates =
+          all_pawns & tables->pawn_attacks[opponent][board->en_passant];
+
+      while (candidates) {
+        const index_t from = get_lsb_index(candidates);
+        candidates &= candidates - 1;
+
+        const index_t victim_square =
+            static_cast<index_t>(white ? (board->en_passant + 8)
+                                       : (board->en_passant - 8));
 
         bool legal = true;
 
