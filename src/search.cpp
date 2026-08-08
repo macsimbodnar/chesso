@@ -316,11 +316,34 @@ int negamax(int alpha0,
     const bool is_check_move = is_capture ? false : is_check(game);
     legal_moves_counter++;
 
-    // The first legal move of a PV node continues the principal variation.
-    const bool child_is_pv = is_pv && (legal_moves_counter == 1);
+    // Principal variation search. Move ordering is good enough that the first
+    // move is usually the best one, which makes every later move a claim that
+    // has to be *disproved* rather than measured. A null window - one point
+    // wide, (alpha, alpha + 1) - answers "is this better than alpha?" and
+    // nothing else, and a window that narrow cuts off far sooner than a full
+    // one.
+    //
+    // When the answer comes back yes, the score is only a bound and the move
+    // has to be searched again properly. That costs a whole re-search, which is
+    // why this is a win only while the first move really is usually best; it
+    // pays for the move ordering the rest of the engine does.
+    if (legal_moves_counter == 1) {
+      // The first legal move of a PV node continues the principal variation.
+      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i],
+                       is_pv);
+    } else {
+      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state,
+                       moves[i], false);
 
-    score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i],
-                     child_is_pv);
+      // Beat alpha without reaching beta, so the null window has told us the
+      // move is interesting and nothing more. Only then is the full search
+      // worth doing. Skipped when the search was abandoned mid-way, because
+      // the score is meaningless then.
+      if (!state->aborted && score > alpha && score < beta) {
+        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state,
+                         moves[i], is_pv);
+      }
+    }
 
     unmake_move(game);
 
