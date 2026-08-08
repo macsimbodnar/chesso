@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
       "1q1rkbnr/1b1n1pp1/2pp3p/1p1Pp3/1P2P1P1/2N1B1NP/2P1QPB1/R4RK1 b k - 0 15",
       &game);
 
-  move_count = generate_moves(&game.tables, &game.board, moves);
+  move_count = generate_moves(game_tables(), &game.board, moves);
 
   for (size_t i = 0; i < move_count; ++i) {
     LOG_I << print_move(moves[i]) << END_I;

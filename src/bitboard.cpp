@@ -821,7 +821,7 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   // net that catches a caller that does not.
   assert(board->bitboards[(us == WHITE) ? W_KING : B_KING] == BB_0 ||
          !is_attacked(
-             &game->tables, board,
+             game_tables(), board,
              get_lsb_index(board->bitboards[(us == WHITE) ? W_KING : B_KING]),
              them));
 
@@ -1016,7 +1016,7 @@ bool is_check(const game_t* game)
 
   const index_t index = get_lsb_index(king);
 
-  return is_attacked(&game->tables, &game->board, index,
+  return is_attacked(game_tables(), &game->board, index,
                      !game->board.active_color);
 }
 
@@ -1575,7 +1575,7 @@ bool is_move_legal(game_t* game, move_t move)
   // generate_moves() is the definition of legal now, so membership in its
   // output is the test. make_move() no longer rejects anything.
   move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(&game->tables, &game->board, moves);
+  const size_t count = generate_moves(game_tables(), &game->board, moves);
 
   for (size_t i = 0; i < count; ++i) {
     if (moves[i] == move) { return true; }
@@ -1718,7 +1718,7 @@ std::string move_to_algebraic(game_t* game,
   if (move_happened) {
     move_t loc_moves[MAX_MOVES];
     const size_t loc_moves_count =
-        generate_moves(&game->tables, &game->board, loc_moves);
+        generate_moves(game_tables(), &game->board, loc_moves);
 
     const size_t legal_moves_count =
         count_legal_moves(game, loc_moves, loc_moves_count);
@@ -1731,7 +1731,7 @@ std::string move_to_algebraic(game_t* game,
     const index_t king_index = get_lsb_index(board->bitboards[king_to_select]);
 
     const bool is_check =
-        is_attacked(&game->tables, &game->board, king_index, opponent);
+        is_attacked(game_tables(), &game->board, king_index, opponent);
 
     if (is_check && legal_moves_count == 0) {
       // Check mate
@@ -1954,7 +1954,7 @@ move_t algebraic_to_move(std::string notation, game_t* game)
 
   // Generate legal moves and search the compatible one
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
+  const size_t moves_count = generate_moves(game_tables(), &game->board, moves);
 
   bool found = false;
   for (size_t i = 0; i < moves_count; ++i) {
@@ -2112,7 +2112,7 @@ bool is_pv_legal(game_t* game, const pv_t* pv)
 
     move_t moves[MAX_MOVES];
     const size_t moves_count =
-        generate_moves(&game->tables, &game->board, moves);
+        generate_moves(game_tables(), &game->board, moves);
 
     if (moves_count < 1) {
       is_pv_ok = false;
@@ -2390,6 +2390,19 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 }
 
 
+// One instance for the whole process. Read-only once built, identical for
+// every game, and 2.3 MB - far too large to hand each game_t its own copy.
+static bb_tables_t shared_tables;
+static bool shared_tables_ready = false;
+
+
+const bb_tables_t* game_tables()
+{
+  assert(shared_tables_ready);
+  return &shared_tables;
+}
+
+
 void initialize_game_const_data(game_t* game)
 {
   assert(game != nullptr);
@@ -2397,8 +2410,13 @@ void initialize_game_const_data(game_t* game)
   // initialize Hash randoms values
   init_zobrist(&game->hash_randoms);
 
+  // Building the tables costs a few milliseconds and every game asks for the
+  // same ones, so the second and later calls do nothing.
+  if (shared_tables_ready) { return; }
+  shared_tables_ready = true;
+
   // Initialize bitboard tables
-  bb_tables_t* tables = &game->tables;
+  bb_tables_t* tables = &shared_tables;
   memset(tables, 0, sizeof(bb_tables_t));
 
   for (index_t square = 0; square < 64; ++square) {

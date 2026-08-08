@@ -77,7 +77,7 @@ inline const std::vector<std::string>& all_test_fens()
 inline size_t legal_moves(game_t* game, move_t out[])
 {
   move_t pseudo[MAX_MOVES];
-  const size_t count = generate_moves(&game->tables, &game->board, pseudo);
+  const size_t count = generate_moves(game_tables(), &game->board, pseudo);
 
   size_t legal = 0;
 
@@ -97,7 +97,7 @@ inline size_t legal_moves(game_t* game, move_t out[])
 inline bool play_move(game_t* game, index_t from, index_t to)
 {
   move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(&game->tables, &game->board, moves);
+  const size_t count = generate_moves(game_tables(), &game->board, moves);
 
   for (size_t i = 0; i < count; ++i) {
     if (MOVE_FROM(moves[i]) != from || MOVE_TO(moves[i]) != to) { continue; }

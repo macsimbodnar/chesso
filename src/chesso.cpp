@@ -281,7 +281,7 @@ std::string pv_to_string(const pv_t* pv)
 bool check_move_legality(move_t move)
 {
   move_t moves[MAX_MOVES];
-  const size_t moves_size = generate_moves(&game.tables, &game.board, moves);
+  const size_t moves_size = generate_moves(game_tables(), &game.board, moves);
 
   if (moves_size < 1) {
     LOG_E << print_move(move) << " ILLEGAL. No move available in this position"
@@ -418,7 +418,7 @@ bool try_move(unpacked_move_t* move_candidate)
   assert(move_candidate != nullptr);
 
   move_t moves[MAX_MOVES];
-  const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
+  const size_t moves_count = generate_moves(game_tables(), &game.board, moves);
 
   // Fix the possible weirdo move notation for castling
   fix_weirdo_castling(&game.board, move_candidate);
@@ -451,7 +451,7 @@ bool try_move(unpacked_move_t* move_candidate)
 move_t validate_book_move(move_t book_move)
 {
   move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(&game.tables, &game.board, moves);
+  const size_t count = generate_moves(game_tables(), &game.board, moves);
 
   for (size_t i = 0; i < count; ++i) {
     if (MOVE_FROM(moves[i]) != MOVE_FROM(book_move) ||
@@ -521,7 +521,7 @@ move_t search_random_move_in_book()
 move_t first_legal_move()
 {
   move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(&game.tables, &game.board, moves);
+  const size_t count = generate_moves(game_tables(), &game.board, moves);
 
   for (size_t i = 0; i < count; ++i) {
     if (make_move(&game, moves[i])) {

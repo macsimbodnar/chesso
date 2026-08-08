@@ -141,7 +141,7 @@ size_t debug_generate_legal_moves(game_t* game, move_t moves[])
   size_t count = 0;
   move_t all_moves[MAX_MOVES];
   const size_t all_moves_count =
-      generate_moves(&game->tables, &game->board, all_moves);
+      generate_moves(game_tables(), &game->board, all_moves);
 
   assert(all_moves_count < MAX_MOVES);
 
@@ -162,7 +162,7 @@ uint64_t perft(int depth, game_t* game)
   if (depth == 0) { return 1; }
 
   move_t moves[270];
-  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
+  const size_t moves_count = generate_moves(game_tables(), &game->board, moves);
   assert(moves_count <= 270);
   // node_stats += get_moves_stats(moves);
 

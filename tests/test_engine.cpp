@@ -37,7 +37,7 @@ TEST_SUITE("engine: zobrist and unmake")
     if (depth == 0) { return; }
 
     move_t moves[MAX_MOVES];
-    const size_t count = generate_moves(&g->tables, &g->board, moves);
+    const size_t count = generate_moves(game_tables(), &g->board, moves);
 
     for (size_t i = 0; i < count; ++i) {
       board_t before;
@@ -365,7 +365,7 @@ TEST_SUITE("engine: move stack limits")
 
     while (true) {
       move_t moves[MAX_MOVES];
-      const size_t count = generate_moves(&game.tables, &game.board, moves);
+      const size_t count = generate_moves(game_tables(), &game.board, moves);
       REQUIRE(count > 0);
 
       bool made = false;

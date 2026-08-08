@@ -74,7 +74,7 @@ TEST_SUITE("movegen: generation")
       REQUIRE(load_FEN(fen, &game));
 
       move_t moves[MAX_MOVES];
-      const size_t count = generate_moves(&game.tables, &game.board, moves);
+      const size_t count = generate_moves(game_tables(), &game.board, moves);
 
       REQUIRE_MESSAGE(count < MAX_MOVES, ("FEN: " + fen));
     }
@@ -316,10 +316,11 @@ TEST_SUITE("movegen: staged generation")
     move_t captures[MAX_MOVES];
     move_t quiets[MAX_MOVES];
 
-    const size_t all_count = generate_moves(&g->tables, &g->board, all);
+    const size_t all_count = generate_moves(game_tables(), &g->board, all);
     const size_t capture_count =
-        generate_captures(&g->tables, &g->board, captures);
-    const size_t quiet_count = generate_quiets(&g->tables, &g->board, quiets);
+        generate_captures(game_tables(), &g->board, captures);
+    const size_t quiet_count =
+        generate_quiets(game_tables(), &g->board, quiets);
 
     const std::string fen = generate_FEN(&g->board);
 
@@ -411,7 +412,7 @@ TEST_SUITE("movegen: perft")
     }
 
     move_t moves[MAX_MOVES];
-    const size_t count = generate_moves(&g->tables, &g->board, moves);
+    const size_t count = generate_moves(game_tables(), &g->board, moves);
 
     for (size_t i = 0; i < count; ++i) {
       if (!make_move(g, moves[i])) { continue; }

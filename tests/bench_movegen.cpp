@@ -77,7 +77,7 @@ static double ms_since(const std::chrono::steady_clock::time_point& start)
 static uint64_t perft(game_t* g, int depth)
 {
   move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(&g->tables, &g->board, moves);
+  const size_t count = generate_moves(game_tables(), &g->board, moves);
 
   if (depth == 1) {
     // Counting the legal ones here rather than recursing one more level saves
@@ -115,7 +115,7 @@ static uint64_t generate_only(game_t* g, uint64_t calls)
   uint64_t produced = 0;
 
   for (uint64_t i = 0; i < calls; ++i) {
-    produced += generate_moves(&g->tables, &g->board, moves);
+    produced += generate_moves(game_tables(), &g->board, moves);
   }
 
   return produced;
@@ -128,7 +128,7 @@ static uint64_t generate_captures_only(game_t* g, uint64_t calls)
   uint64_t produced = 0;
 
   for (uint64_t i = 0; i < calls; ++i) {
-    produced += generate_captures(&g->tables, &g->board, moves);
+    produced += generate_captures(game_tables(), &g->board, moves);
   }
 
   return produced;

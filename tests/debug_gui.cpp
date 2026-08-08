@@ -241,7 +241,8 @@ public:
   bool make_move(const game_move_t& move)
   {
     move_t moves[270];
-    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
+    const size_t moves_count =
+        generate_moves(game_tables(), &game.board, moves);
 
     const index_t from = position_to_index(move.from.file, move.from.rank);
     const index_t to = position_to_index(move.to.file, move.to.rank);
@@ -265,7 +266,8 @@ public:
   {
     move_t moves[270];
     // TODO: generate legal moves here
-    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
+    const size_t moves_count =
+        generate_moves(game_tables(), &game.board, moves);
 
     std::vector<game_move_t> result;
     for (size_t i = 0; i < moves_count; ++i) {

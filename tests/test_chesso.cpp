@@ -110,7 +110,7 @@ size_t test_generate_legal_moves(game_t* game, move_t moves[])
   size_t count = 0;
   move_t all_moves[MAX_MOVES];
   const size_t all_moves_count =
-      generate_moves(&game->tables, &game->board, all_moves);
+      generate_moves(game_tables(), &game->board, all_moves);
 
   assert(all_moves_count < MAX_MOVES);
 
@@ -277,7 +277,7 @@ TEST_SUITE("Test utils")
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     move_t moves[MAX_MOVES];
-    size_t moves_count = generate_moves(&game.tables, &game.board, moves);
+    size_t moves_count = generate_moves(game_tables(), &game.board, moves);
 
     for (size_t i = 0; i < moves_count; ++i) {
       const move_t move = moves[i];
@@ -300,7 +300,8 @@ TEST_SUITE("Test move generator")
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
     move_t moves[270];
-    const size_t moves_count = generate_moves(&game.tables, &game.board, moves);
+    const size_t moves_count =
+        generate_moves(game_tables(), &game.board, moves);
 
     REQUIRE_EQ(moves_count, 20);
   }
@@ -318,7 +319,7 @@ TEST_SUITE("Test move generator")
 
         move_t moves[270];
         const size_t moves_count = test_generate_legal_moves(&game, moves);
-        // const size_t moves_count = generate_moves(&game.tables, &game.board,
+        // const size_t moves_count = generate_moves(game_tables(), &game.board,
         // moves);
 
         // Check size

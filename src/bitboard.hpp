@@ -7,6 +7,11 @@
 
 void initialize_game_const_data(game_t* game);
 
+// The attack tables, which are read-only once built and the same for every
+// game. initialize_game_const_data() fills them on the first call and does
+// nothing on later ones, so calling it per game_t is cheap.
+const bb_tables_t* game_tables();
+
 // FEN
 bool load_FEN(const std::string& FEN, game_t* game);
 std::string generate_FEN(const board_t* board);

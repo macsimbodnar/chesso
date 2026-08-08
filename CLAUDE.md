@@ -149,8 +149,9 @@ short:
 - **`make_move` mutates pieces at six open-coded sites.** An NNUE accumulator
   needs those as add/remove events. Refactoring them into primitives is cheap
   now and expensive after more instantiations exist.
-- **`game_t` is 2.5 MB**, of which 2.3 MB is the read-only attack tables. Lazy
-  SMP wants a board per thread; today that duplicates the tables.
+- ~~`game_t` is 2.5 MB~~ **Closed.** The attack tables are a process-wide
+  singleton behind `game_tables()`; `game_t` is 87 KB, of which 80 KB is the
+  move history.
 - **The move-ordering bands clear each other by 100 points.** A king capturing a
   pawn scores `1000000 + 100 - 100000 = 900100`, against 900000 for a killer.
   Tuning `piece_values_abs` can invert that silently.

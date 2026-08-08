@@ -116,8 +116,8 @@ int quiescence(int alpha,
   // generated. In check every evasion has to be considered, quiet ones
   // included, so the full list is needed.
   const size_t n = in_check
-                       ? generate_moves(&game->tables, &game->board, moves)
-                       : generate_captures(&game->tables, &game->board, moves);
+                       ? generate_moves(game_tables(), &game->board, moves)
+                       : generate_captures(game_tables(), &game->board, moves);
 
   // Compacted to the front of the same array: captures only, or everything when
   // the move is forced. capture_score() ranks a quiet evasion below any
@@ -265,14 +265,14 @@ int negamax(int alpha0,
   const bool tt_move_is_quiet =
       (tt_move != 0) && !MOVE_CAPTURE(tt_move) && !MOVE_PROMOTED(tt_move);
 
-  size_t moves_count = generate_captures(&game->tables, &game->board, moves);
+  size_t moves_count = generate_captures(game_tables(), &game->board, moves);
   bool quiets_generated = false;
 
   // With no captures there is nothing to fail high on, so the second stage is
   // needed immediately and staging saves nothing here.
   if (tt_move_is_quiet || moves_count == 0) {
     moves_count +=
-        generate_quiets(&game->tables, &game->board, moves + moves_count);
+        generate_quiets(game_tables(), &game->board, moves + moves_count);
     quiets_generated = true;
   }
 
@@ -293,7 +293,7 @@ int negamax(int alpha0,
       if (quiets_generated) { break; }
 
       const size_t added =
-          generate_quiets(&game->tables, &game->board, moves + moves_count);
+          generate_quiets(game_tables(), &game->board, moves + moves_count);
 
       for (size_t j = moves_count; j < moves_count + added; ++j) {
         scores[j] = score_move(game, state, moves[j], tt_move, ply, prev_move);

@@ -305,7 +305,7 @@ stats_t perft(int depth, game_t* game)
   if (stats_in_tt != nullptr) { return *stats_in_tt; }
 
   move_t moves[270];
-  const size_t moves_count = generate_moves(&game->tables, &game->board, moves);
+  const size_t moves_count = generate_moves(game_tables(), &game->board, moves);
 
   for (size_t i = 0; i < moves_count; ++i) {
     if (make_move(game, moves[i])) {
@@ -434,7 +434,7 @@ int main()
 
           move_t moves[270];
           const size_t moves_count =
-              generate_moves(&game.tables, &game.board, moves);
+              generate_moves(game_tables(), &game.board, moves);
 
           if (depth > 1) {
 #ifdef RUN_THREADS

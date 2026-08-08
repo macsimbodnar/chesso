@@ -328,9 +328,12 @@ struct history_t
 };
 
 
+// The attack tables are not in here. They are 2.3 MB of constants that are
+// identical for every game, so one shared instance serves all of them - see
+// game_tables() in bitboard.hpp. Keeping them per game made sizeof(game_t)
+// 2.5 MB, which means a search thread cannot cheaply own a board.
 struct game_t
 {
-  bb_tables_t tables;
   board_t board;
   history_t history;
   zobrist_randoms_t hash_randoms;
