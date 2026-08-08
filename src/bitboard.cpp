@@ -81,16 +81,21 @@ static inline bb_t attackers_to(const bb_tables_t* tables,
 }
 
 
-size_t generate_moves(const bb_tables_t* tables,
-                      const board_t* board,
-                      move_t moves[])
+// Colour is a template parameter for the same reason as in make_move_impl: it
+// is constant for the whole call, and it drives the piece bases, the pawn push
+// direction, the promotion and double-push ranks, and the castling squares.
+template <color_t Color>
+static size_t generate_moves_impl(const bb_tables_t* tables,
+                                  const board_t* board,
+                                  move_t moves[])
 {
   assert(tables != nullptr);
   assert(board != nullptr);
   assert(moves != nullptr);
 
-  const color_t color = board->active_color;
-  const color_t opponent = !color;
+  constexpr color_t color = Color;
+  constexpr color_t opponent = (Color == WHITE) ? BLACK : WHITE;
+  assert(board->active_color == color);
 
   const bb_t all_occupancy = board->occupancies[BOTH];
   const bb_t opp_occupancy = board->occupancies[opponent];
@@ -475,6 +480,18 @@ size_t generate_moves(const bb_tables_t* tables,
 }
 
 
+size_t generate_moves(const bb_tables_t* tables,
+                      const board_t* board,
+                      move_t moves[])
+{
+  assert(board != nullptr);
+
+  return (board->active_color == WHITE)
+             ? generate_moves_impl<WHITE>(tables, board, moves)
+             : generate_moves_impl<BLACK>(tables, board, moves);
+}
+
+
 bool move_belongs_to_side_to_move(const board_t* board, move_t move)
 {
   assert(board != nullptr);
@@ -547,7 +564,12 @@ static inline castling_rook_t castling_rook(index_t king_to)
 }
 
 
-bool make_move(game_t* game, move_t encoded_move)
+// The side to move is constant for the whole call, so it is a template
+// parameter rather than a value read from the board. Every `(us == WHITE) ? a
+// : b` below then folds at compile time: the promotion maps, the en-passant
+// offsets, the piece bases and the occupancy indices all become constants.
+template <color_t Us>
+static bool make_move_impl(game_t* game, move_t encoded_move)
 {
   assert(game != nullptr);
   assert(move_belongs_to_side_to_move(&game->board, encoded_move));
@@ -578,8 +600,10 @@ bool make_move(game_t* game, move_t encoded_move)
 
   unpacked_move_t move(encoded_move);
 
-  const color_t us = board->active_color;
-  const color_t them = !us;
+  constexpr color_t us = Us;
+  constexpr color_t them = (Us == WHITE) ? BLACK : WHITE;
+  assert(board->active_color == us);
+
   const bb_t from_bb = BB_1 << move.from;
   const bb_t to_bb = BB_1 << move.to;
 
@@ -727,20 +751,30 @@ bool make_move(game_t* game, move_t encoded_move)
 }
 
 
-void unmake_move(game_t* game)
+bool make_move(game_t* game, move_t encoded_move)
 {
   assert(game != nullptr);
 
-  // Guard the *empty* end of the stack: `size` is unsigned, so decrementing it
-  // at zero wraps around and reads far out of bounds.
-  if (game->history.size == 0) { return; }
+  return (game->board.active_color == WHITE)
+             ? make_move_impl<WHITE>(game, encoded_move)
+             : make_move_impl<BLACK>(game, encoded_move);
+}
 
+
+// `Us` is the side that made the move being undone, so it is the side that is
+// *not* to move on entry. Same reason as make_move_impl: it is constant for the
+// whole call, so the colour ternaries fold away.
+template <color_t Us>
+static void unmake_move_impl(game_t* game)
+{
   board_t* board = &game->board;
   const history_entry_t* entry = &game->history.entries[--game->history.size];
 
   const unpacked_move_t move(entry->move);
-  const color_t us = !board->active_color;  // the side that made the move
-  const color_t them = board->active_color;
+  constexpr color_t us = Us;
+  constexpr color_t them = (Us == WHITE) ? BLACK : WHITE;
+  assert(board->active_color == them);
+
   const bb_t from_bb = BB_1 << move.from;
   const bb_t to_bb = BB_1 << move.to;
 
@@ -810,6 +844,23 @@ void unmake_move(game_t* game)
          (board->bitboards[B_PAWN] | board->bitboards[B_KNIGHT] |
           board->bitboards[B_BISHOP] | board->bitboards[B_ROOK] |
           board->bitboards[B_QUEEN] | board->bitboards[B_KING]));
+}
+
+
+void unmake_move(game_t* game)
+{
+  assert(game != nullptr);
+
+  // Guard the *empty* end of the stack: `size` is unsigned, so decrementing it
+  // at zero wraps around and reads far out of bounds.
+  if (game->history.size == 0) { return; }
+
+  // The side to move now is the one that did *not* make the move being undone.
+  if (game->board.active_color == WHITE) {
+    unmake_move_impl<BLACK>(game);
+  } else {
+    unmake_move_impl<WHITE>(game);
+  }
 }
 
 

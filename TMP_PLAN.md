@@ -79,7 +79,32 @@ be measured in games.
   through the unstaged path.
 - Verify: `fastchess` SPRT against the current build. Nothing else will tell you.
 
-## 2. Template make_move, unmake_move and generate_moves on colour
+## 2. Template on colour — DONE, -12.1 %
+
+Applied one function at a time, each measured against the previous, three
+interleaved rounds each (perft total, best of five internal sweeps):
+
+| step | before | after | gain |
+|---|---|---|---|
+| `make_move` | 552.5 ms | 517.1 ms | -6.4 % |
+| `unmake_move` | 517.1 ms | 491.9 ms | -4.7 % |
+| `generate_moves` | 491.9 ms | 485.5 ms | -1.3 % |
+| **total** | **552.5 ms** | **485.5 ms** | **-12.1 %** |
+
+75.5 to 86.0 Mnps. `generate_moves` on its own went 754 ms to 674 ms, -10.6 %.
+The gains track the profile almost exactly, which is the first time in this
+project an estimate has landed where it was aimed.
+
+The transformation is smaller than it looks. Colour becomes a template
+parameter and the body keeps its `(us == WHITE) ? a : b` expressions verbatim -
+they fold on their own once `us` is `constexpr`. No logic moved.
+
+Object code for `bitboard.cpp` is 61 KB with both instantiations. No I-cache
+regression is visible at this size.
+
+Original entry follows.
+
+
 
 Every one of these functions branches on `us == WHITE` repeatedly, at runtime,
 on a value that is constant for the whole call. `board.cpp` has these ternaries
