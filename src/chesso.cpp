@@ -554,6 +554,11 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   const auto beguine_of_the_search = std::chrono::steady_clock::now();
   std::chrono::steady_clock::duration last_iteration = {};
 
+  // Carried across iterations so an aborted one can report the last score and
+  // depth that actually mean something alongside the line it will play.
+  std::string last_score = "cp 0";
+  int last_complete_depth = 0;
+
   const int soft_percent =
       (conf.movetime_ms > 0) ? 100 : SEARCH_SOFT_LIMIT_PERCENT;
   const double soft_limit_ms =
@@ -612,16 +617,29 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       result.pv = search_result.pv;
     }
 
+    if (!state.aborted) {
+      last_score = search_result.mate_found
+                       ? ("mate " + STR(search_result.mate_in))
+                       : ("cp " + STR(search_result.score));
+      last_complete_depth = current_depth;
+    }
+
+    // Reported whenever there is a line to report, aborted iteration included.
+    // An aborted iteration that produced a PV supplies the move that will be
+    // played, so staying silent about it leaves the GUI holding a principal
+    // variation from the previous depth and a bestmove that does not start it.
+    // The score and depth of an unfinished iteration mean nothing - its window
+    // never closed - so the last completed ones are repeated instead, and the
+    // line printed is the one that will actually be played.
+    if (has_result || !state.aborted) {
+      uci_reply("info score " + last_score + " time " +
+                STR(duration_ms.count()) + " depth " +
+                STR(last_complete_depth) + " nodes " +
+                STR(search_result.explored_nodes) + " pv " +
+                pv_to_string(&result.pv));
+    }
+
     if (state.aborted) { break; }
-
-    const std::string score = search_result.mate_found
-                                  ? ("mate " + STR(search_result.mate_in))
-                                  : ("cp " + STR(search_result.score));
-
-    uci_reply("info score " + score + " time " + STR(duration_ms.count()) +
-              " depth " + STR(current_depth) + " nodes " +
-              STR(search_result.explored_nodes) + " pv " +
-              pv_to_string(&search_result.pv));
 
     if (stop_search_signal) { break; }
     if (conf.nodes != 0 && result.total_node_explored >= conf.nodes) { break; }
