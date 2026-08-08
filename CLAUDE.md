@@ -146,9 +146,11 @@ short:
 
 ## Known hazards and one-way doors
 
-- **`make_move` mutates pieces at six open-coded sites.** An NNUE accumulator
-  needs those as add/remove events. Refactoring them into primitives is cheap
-  now and expensive after more instantiations exist.
+- ~~`make_move` mutates pieces at six open-coded sites~~ **Closed.** Every
+  change goes through `add_piece` / `remove_piece` / `move_piece`, which is the
+  alphabet an NNUE accumulator is updated from. `unmake_move` deliberately does
+  not use them: an accumulator is kept per ply in the search stack and popped,
+  never reverse-updated, so only the forward direction needs the events.
 - ~~`game_t` is 2.5 MB~~ **Closed.** The attack tables are a process-wide
   singleton behind `game_tables()`; `game_t` is 87 KB, of which 80 KB is the
   move history.

@@ -642,6 +642,69 @@ static inline castling_rook_t castling_rook(index_t king_to)
 }
 
 
+// Every change make_move() makes to the position goes through one of these
+// three. They are the whole vocabulary: a piece appears, a piece disappears, a
+// piece goes from one square to another.
+//
+// Written this way on purpose rather than as open-coded xors. An NNUE
+// accumulator is updated from exactly this alphabet, and having the events in
+// one place means adding it later is a change to three functions instead of a
+// hunt through every branch of make_move for the sites that touch a piece.
+//
+// `Side` is the colour of the piece being moved, known at compile time from
+// make_move_impl's own template parameter, so the occupancy index is a
+// constant.
+template <color_t Side>
+static inline void add_piece(board_t* board,
+                             const zobrist_randoms_t* randoms,
+                             piece_t piece,
+                             index_t square)
+{
+  const bb_t bb = BB_1 << square;
+
+  board->bitboards[piece] ^= bb;
+  board->occupancies[Side] ^= bb;
+  board->squares[square] = piece;
+  board->hash ^= randoms->piece_randoms[piece][square];
+}
+
+
+template <color_t Side>
+static inline void remove_piece(board_t* board,
+                                const zobrist_randoms_t* randoms,
+                                piece_t piece,
+                                index_t square)
+{
+  const bb_t bb = BB_1 << square;
+
+  board->bitboards[piece] ^= bb;
+  board->occupancies[Side] ^= bb;
+  board->squares[square] = EMPTY;
+  board->hash ^= randoms->piece_randoms[piece][square];
+}
+
+
+// Not remove followed by add: the two squares are toggled in the piece bitboard
+// and the occupancy with one xor each, which is what the open-coded version
+// did and what keeps this off the critical path.
+template <color_t Side>
+static inline void move_piece(board_t* board,
+                              const zobrist_randoms_t* randoms,
+                              piece_t piece,
+                              index_t from,
+                              index_t to)
+{
+  const bb_t bb = (BB_1 << from) | (BB_1 << to);
+
+  board->bitboards[piece] ^= bb;
+  board->occupancies[Side] ^= bb;
+  board->squares[from] = EMPTY;
+  board->squares[to] = piece;
+  board->hash ^= randoms->piece_randoms[piece][from];
+  board->hash ^= randoms->piece_randoms[piece][to];
+}
+
+
 // The side to move is constant for the whole call, so it is a template
 // parameter rather than a value read from the board. Every `(us == WHITE) ? a
 // : b` below then folds at compile time: the promotion maps, the en-passant
@@ -682,7 +745,6 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   constexpr color_t them = (Us == WHITE) ? BLACK : WHITE;
   assert(board->active_color == us);
 
-  const bb_t from_bb = BB_1 << move.from;
   const bb_t to_bb = BB_1 << move.to;
 
   // An en-passant move carries the capture flag but the captured pawn does not
@@ -693,51 +755,36 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
 
   if (move.capture && (board->occupancies[them] & to_bb)) {
     captured = board->squares[move.to];
-    board->bitboards[captured] ^= to_bb;
-    board->hash ^= randoms->piece_randoms[captured][move.to];
-    board->occupancies[them] ^= to_bb;
+    remove_piece<them>(board, randoms, captured, move.to);
   }
 
   history_entry->captured = captured;
 
-  // Occupancies are updated incrementally below. Rebuilding them from the
-  // twelve piece bitboards at the end of the move costs far more than the
-  // handful of xors each case needs.
-  board->bitboards[move.piece] ^= from_bb | to_bb;
-  board->occupancies[us] ^= from_bb | to_bb;
-  board->squares[move.from] = EMPTY;
-  board->squares[move.to] = move.piece;
-
-  board->hash ^= randoms->piece_randoms[move.piece][move.from];
-  board->hash ^= randoms->piece_randoms[move.piece][move.to];
+  // Occupancies are updated incrementally here and in every branch below.
+  // Rebuilding them from the twelve piece bitboards at the end of the move
+  // costs far more than the handful of xors each case needs.
+  move_piece<us>(board, randoms, move.piece, move.from, move.to);
 
   if (move.promoted_to) {
-    // The pawn leaves and the promoted piece arrives on the same square, so
-    // the occupancies do not change here.
+    // The pawn leaves and the promoted piece arrives on the same square, so the
+    // occupancy is toggled off and straight back on. Two wasted xors on a rare
+    // branch, in exchange for promotion being described in the same vocabulary
+    // as everything else.
     const piece_t pawn = (us == WHITE) ? W_PAWN : B_PAWN;
     const piece_t promoted_to = (us == WHITE)
                                     ? w_promotion_map[move.promoted_to]
                                     : b_promotion_map[move.promoted_to];
 
-    board->bitboards[pawn] ^= to_bb;
-    board->hash ^= randoms->piece_randoms[pawn][move.to];
-
-    board->bitboards[promoted_to] ^= to_bb;
-    board->hash ^= randoms->piece_randoms[promoted_to][move.to];
-
-    board->squares[move.to] = promoted_to;
+    remove_piece<us>(board, randoms, pawn, move.to);
+    add_piece<us>(board, randoms, promoted_to, move.to);
   }
 
   if (move.en_passant) {
     const piece_t captured_pawn = (us == WHITE) ? B_PAWN : W_PAWN;
     const index_t captured_square =
-        (us == WHITE) ? (move.to + 8) : (move.to - 8);
-    const bb_t captured_bb = BB_1 << captured_square;
+        static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
 
-    board->bitboards[captured_pawn] ^= captured_bb;
-    board->occupancies[them] ^= captured_bb;
-    board->hash ^= randoms->piece_randoms[captured_pawn][captured_square];
-    board->squares[captured_square] = EMPTY;
+    remove_piece<them>(board, randoms, captured_pawn, captured_square);
   }
 
   // Update the en-passant square.
@@ -765,13 +812,7 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
     const castling_rook_t rook = castling_rook(move.to);
 
     if (rook.piece != EMPTY) {
-      const bb_t rook_bb = (BB_1 << rook.from) | (BB_1 << rook.to);
-      board->bitboards[rook.piece] ^= rook_bb;
-      board->occupancies[us] ^= rook_bb;
-      board->hash ^= randoms->piece_randoms[rook.piece][rook.from];
-      board->hash ^= randoms->piece_randoms[rook.piece][rook.to];
-      board->squares[rook.from] = EMPTY;
-      board->squares[rook.to] = rook.piece;
+      move_piece<us>(board, randoms, rook.piece, rook.from, rook.to);
     }
   }
 
