@@ -25,8 +25,8 @@ int main()
       return 1;
     }
 
-    const std::string lan = index_to_str(MOVE_FROM(move)) +
-                            index_to_str(MOVE_TO(move));
+    const std::string lan =
+        index_to_str(MOVE_FROM(move)) + index_to_str(MOVE_TO(move));
 
     printf("%d\t%s\t%s\t%s\n", ply, token.c_str(), lan.c_str(),
            fen_before.c_str());

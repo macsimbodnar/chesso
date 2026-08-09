@@ -37,9 +37,9 @@ static constexpr int phase_value[6] = {0, 1, 1, 2, 4, 0};
 // These numbers are hand-written from ordinary positional principles -
 // centralise the knights, keep the king home in the middlegame and active in
 // the endgame, push pawns, put rooks on the seventh. They are a starting point
-// and nothing more. Phase 5 of EVAL_PLAN.md replaces the lot by fitting them to
-// game outcomes, which is what makes a table actually good; until then, expect
-// these to be worth much less than a tuned set.
+// and nothing more. Step S028 replaces the lot by fitting them to game
+// outcomes, which is what makes a table actually good; until then, expect these
+// to be worth much less than a tuned set.
 
 // clang-format off
 static constexpr int psqt_mg[6][64] = {

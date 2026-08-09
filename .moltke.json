@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "enabled": true,
+  "plan_active_max": 1,
+  "plan_stack_max": 3,
+  "surface_guard": "cli",
+  "test_command": "cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check"
+}

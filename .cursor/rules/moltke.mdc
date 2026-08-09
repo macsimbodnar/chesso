@@ -1,0 +1,10 @@
+---
+description: Pointer to the project ruleset
+alwaysApply: true
+---
+
+Follow the rules in @AGENTS.md. They are the single source of truth for how
+work is planned, recorded, tested, and documented in this repository.
+
+This file carries no rules of its own. Cursor also reads `AGENTS.md` natively;
+this pointer exists for configurations where that is off.
