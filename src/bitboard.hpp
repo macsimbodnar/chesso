@@ -127,6 +127,11 @@ bool is_insufficient_material(const board_t* board);
 // Negative means the exchange loses material for the side to move.
 int see(const board_t* board, move_t move);
 
+// True when a capture cannot lose material without working the exchange out:
+// the victim is worth at least as much as the piece taking it. Answers most
+// captures worth making without touching an attack table.
+bool capture_cannot_lose(const board_t* board, move_t move);
+
 bool is_check(const game_t* game);
 void swap_side(game_t* game);
 void set_en_passant(game_t* game, index_t ep_index);

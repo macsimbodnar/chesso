@@ -169,7 +169,13 @@ int quiescence(int alpha,
     //
     // Not while in check, where every move is forced and standing pat is not on
     // offer, so a losing capture may still be the only legal reply.
-    if (!in_check && see(&game->board, moves[i]) < 0) { continue; }
+    // The cheap test first: most captures worth searching take something at
+    // least as valuable as the piece taking it, and those cannot lose material
+    // whatever the defenders do. Only the rest are worth an exchange analysis.
+    if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&
+        see(&game->board, moves[i]) < 0) {
+      continue;
+    }
 
     scores[count] = capture_score(&game->board, moves[i]);
     moves[count] = moves[i];

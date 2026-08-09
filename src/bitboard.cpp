@@ -1151,6 +1151,28 @@ static inline bb_t least_valuable_attacker(const board_t* board,
 }
 
 
+// A capture of something worth at least as much as the piece taking it cannot
+// lose material, whatever the defenders do: the first exchange is already
+// non-negative and the side to move may stop there. That covers most captures
+// worth making - every pawn take, a knight for a rook - and answers them
+// without touching an attack table.
+bool capture_cannot_lose(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+
+  if (MOVE_EN_PASSANT(move)) {
+    return true;  // pawn takes pawn
+  }
+
+  const piece_t victim = board->squares[MOVE_TO(move)];
+
+  if (victim == EMPTY) { return false; }
+
+  return see_value[piece_type_of(victim)] >=
+         see_value[piece_type_of(MOVE_PIECE(move))];
+}
+
+
 int see(const board_t* board, move_t move)
 {
   assert(board != nullptr);
@@ -1192,10 +1214,27 @@ int see(const board_t* board, move_t move)
   color_t side = !board->active_color;
   int depth = 0;
 
-  while (true) {
-    const bb_t attackers =
-        attackers_to_square(tables, board, to, occupancy) & occupancy;
+  // The full attacker set is built once. After that only the sliders can
+  // change, and only when the piece that just left was standing in front of
+  // one, so the pawn, knight and king lookups never run again.
+  const bb_t bishops_queens =
+      board->bitboards[W_BISHOP] | board->bitboards[B_BISHOP] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
+  const bb_t rooks_queens =
+      board->bitboards[W_ROOK] | board->bitboards[B_ROOK] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
 
+  // A knight that attacks the target is never on a rank, file or diagonal
+  // through it, so it cannot be standing in front of a slider and taking it
+  // uncovers nothing. Every other attacker is aligned with the target, kings
+  // included, so any of them can have a slider behind it.
+  const bb_t may_uncover =
+      ~(board->bitboards[W_KNIGHT] | board->bitboards[B_KNIGHT]);
+
+  bb_t attackers =
+      attackers_to_square(tables, board, to, occupancy) & occupancy;
+
+  while (true) {
     int attacker_type = 0;
     const bb_t attacker =
         least_valuable_attacker(board, attackers, side, &attacker_type);
@@ -1211,6 +1250,16 @@ int see(const board_t* board, move_t move)
     if (std::max(-gain[depth - 1], gain[depth]) < 0) { break; }
 
     occupancy ^= attacker;
+    attackers ^= attacker;
+
+    if (attacker & may_uncover) {
+      attackers |=
+          (get_bishop_attacks(tables, to, occupancy) & bishops_queens) |
+          (get_rook_attacks(tables, to, occupancy) & rooks_queens);
+    }
+
+    attackers &= occupancy;
+
     on_square = attacker_type;
     side = !side;
 
