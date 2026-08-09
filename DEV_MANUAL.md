@@ -65,6 +65,16 @@ accumulators against a full recomputation, on every make and unmake. Any change
 to `make_move`, `unmake_move` or the generator must be run through it. That is
 INV-2 and INV-4.
 
+`test_uci_surface` is the golden surface guard. It reads the command set out of
+`uci_command_names()` and the option lines out of the `uci` reply, then holds
+both against a golden list and against `MANUAL.md`. **A failure there is not a
+broken test.** It means the protocol surface moved: update `MANUAL.md` and the
+golden lists in `tests/test_uci_surface.cpp` in the same commit as the change.
+It reads `MANUAL.md` through the `CHESSO_SOURCE_DIR` compile definition, so it
+is the one test binary that does not need to run from `tests/`. The `go` and
+`position` argument lists in it are maintained by hand and a newly added
+argument will not fail it — DEC-028 says why.
+
 ## Format
 
 ```bash

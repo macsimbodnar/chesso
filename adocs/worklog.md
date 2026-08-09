@@ -85,3 +85,15 @@ data and the training program and states the run; the owner executes it.
 Files: `CLAUDE.md`, `AGENTS.md` section 0, `adocs/specs.md`,
 `adocs/decisions.md`, `adocs/plan.md`, `adocs/status.md`, `adocs/testing.md`,
 `DEV_MANUAL.md`, and seven `plan_todo/` step files. No source changed.
+
+## 2026-08-09T17:05+02:00 prompt
+
+> let's move next with the plan
+
+## 2026-08-09T17:09+02:00 prompt
+
+> go
+
+## 2026-08-09T23:26+02:00 prompt
+
+> next?

@@ -654,3 +654,43 @@ Rejected:     Keeping them as retitled records -- two sources for the same numbe
 Consequences: `adocs/plan_done/S0nn_*.md` is the primary record of what a completed
               change measured. `TOOLCHAIN.md` was unaffected: it is tooling
               reference, not a plan.
+
+## DEC-028  2026-08-09  The surface guard enumerates commands and options, and pins go and position arguments by hand
+Tags:         testing, uci, surface
+Context:      S017 had to make the UCI surface checkable (DEC-024). Two parts of
+              that surface are enumerable at runtime and two are not. The command
+              set is an `unordered_map` in `chesso.cpp` that `uci_process_line`
+              dispatches through, and the option declarations are the lines the
+              `uci` reply prints, so a test can read both out of the running
+              engine and a name that is added, renamed or removed cannot pass
+              unnoticed. The `go` and `position` arguments are if-else chains
+              inside their handlers -- there is no table to read, and an
+              unrecognised token is silently ignored, so a newly added one has no
+              observable effect a test can catch.
+Decision:     Proposed by the agent, accepted by the owner. `tests/test_uci_surface.cpp`
+              reads the commands from the new `uci_command_names()` and the option
+              lines from the `uci` reply, and compares each against a golden list
+              and against `MANUAL.md`. The `go` and `position` argument lists in
+              that file are maintained by hand: a rename or a removal fails, both
+              through the documentation check and through a behavioural probe, and
+              a brand-new argument does not fail. `command_help` was changed to
+              print `uci_command_names()`, which also makes its output sorted
+              rather than in bucket order.
+Rejected:     Rewriting `command_go` and `command_position` into dispatch tables so
+              their arguments enumerate like the commands do. `uci_search_options_t`
+              holds `int`, `uint64_t` and `bool` members with per-token ranges, so
+              the table needs a variant or a member-pointer union, and three of the
+              twelve tokens exist only to be ignored. That is a rewrite of live
+              parsing code for a guard that is not the step's stated acceptance,
+              and it is a drive-by refactor of the exact kind the house rules
+              forbid. Grepping `chesso.cpp` from the test for `token == "..."`
+              string literals -- exact today, and broken by the first reformat.
+              Leaving the arguments out of the test entirely -- a rename would then
+              silently break every GUI that sends it.
+Consequences: Adding a `go` or `position` argument does not fail the suite. It has
+              to be added to `expected_go_tokens` or `expected_position_tokens` and
+              to `MANUAL.md` by whoever adds it, and the comment at the top of
+              `tests/test_uci_surface.cpp` says so. If that turns out to be a real
+              source of drift, the dispatch-table rewrite is the fix and it gets
+              its own step. `uci_command_names()` is now part of the engine's
+              public header and `help` output is sorted.

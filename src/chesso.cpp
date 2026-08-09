@@ -1146,9 +1146,8 @@ bool command_help(std::queue<std::string>& args)
   LOG_I << "Command [command_help]. Args: " << args << END_I;
 
   uci_reply("--- Help: available commands ---");
-  for (const auto& pair : commands) {
-    const std::string& key = pair.first;
-    uci_reply(key);
+  for (const std::string& name : uci_command_names()) {
+    uci_reply(name);
   }
   uci_reply("--------------------------------");
 
@@ -1286,6 +1285,23 @@ void uci_shutdown()
 
 bool uci_is_running()
 { return running; }
+
+
+// Sorted so that the order is the dispatch table's contents and not
+// unordered_map's bucket layout, which changes with the key set.
+std::vector<std::string> uci_command_names()
+{
+  std::vector<std::string> names;
+  names.reserve(commands.size());
+
+  for (const auto& pair : commands) {
+    names.push_back(pair.first);
+  }
+
+  std::sort(names.begin(), names.end());
+
+  return names;
+}
 
 
 void uci_process_line(const std::string& input)

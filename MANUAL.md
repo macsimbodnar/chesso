@@ -51,7 +51,14 @@ warning in the log. UCI says to ignore what is not implemented, and the rest of
 the line still carries the time control. A GUI asking for a mate search gets a
 normal search.
 
+`position` takes `startpos` or `fen <six fields>`, either of them optionally
+followed by `moves`. A move in the `moves` list that does not parse or is not
+legal is skipped with a warning, and the rest of the list is still applied.
+
 `ponderhit` is accepted; pondering itself is not implemented.
+
+`debug on` and `debug off` are accepted. The flag is recorded and currently
+changes nothing.
 
 ### Non-standard commands
 
@@ -62,8 +69,25 @@ Convenience only, not part of UCI. A GUI never sends these.
 | `pb` | print the board |
 | `fen` | print the current position as FEN |
 | `help` | list commands |
-| `test` | run the built-in self-test |
+| `test` | run the built-in self-test over seven positions. `test <n>` sets the depth, default 6 |
 | `clean-tt` | clear the transposition table |
+
+### Non-standard position shortcuts
+
+`position` also accepts these names in place of `startpos` or `fen`. They are
+the fixed positions the engine is developed and self-tested against, listed
+here as the FEN each one loads. A GUI never sends them.
+
+| shortcut | FEN |
+|---|---|
+| `empty` | `8/8/8/8/8/8/8/8 b - - 0 1` |
+| `tricky` | `r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1` |
+| `killer` | `rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1` |
+| `cmk` | `r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9` |
+| `fine70` | `8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1` |
+| `mate2w` | `4k3/Q7/8/4K3/8/8/8/8 w - - 0 1` |
+| `mate2b` | `4K3/q7/8/4k3/8/8/8/8 b - - 0 1` |
+| `3frep` | `2r3k1/R7/8/1R6/8/8/P4KPP/8 w - - 0 1` |
 
 ## Known bugs and limitations
 

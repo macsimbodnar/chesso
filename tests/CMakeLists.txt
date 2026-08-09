@@ -28,6 +28,12 @@ add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
 
+# The surface guard reads MANUAL.md out of the source tree, so it needs to know
+# where that tree is. Nothing else in the tests looks outside its own directory.
+add_doctest_target(test_uci_surface)
+target_compile_definitions(test_uci_surface
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.

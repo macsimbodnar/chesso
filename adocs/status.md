@@ -5,9 +5,9 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-09 by `moltke --step status`.
 
-- Last done: S016
+- Last done: S017
 - In progress: none
-- Next: S017
+- Next: S018
 - Blocked: none
 - Parked:
   - **S015's quiescence SEE pruning has never been re-measured.** It returned

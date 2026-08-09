@@ -59,3 +59,11 @@ documents they replace; their test columns name tests that exist today.
 | S015 | `see()` cheap enough to be worth calling | fixed depth | measured, -12.1 % |
 | S016 | SAN in, per-move cost out, no new dependency | `build/tools/pgn_to_positions` uses the engine's own `algebraic_to_move` | green |
 | S016 | a 158-ply game analysed in about 45 seconds at depth 18 | `tools/analyse_game.py`, 159 positions in ~47 s | measured |
+| S017 | the command set fails when a command is added, renamed or removed | `test_uci_surface` "the command set is exactly the documented one", read from `uci_command_names()`; observed red with a 17th command, reported `Present but not in the golden list: [eval]` | green |
+| S017 | `help` reports the table it walks | `test_uci_surface` "help prints the dispatch table and nothing else" | green |
+| S017 | an unrecognised command prints nothing, and a recognised one does | `test_uci_surface` "an unknown command is answered with silence" | green |
+| S017 | the option declarations fail on a changed name, default or range | `test_uci_surface` "the option declarations are exactly the documented ones"; observed red with `Threads ... max 4`, reported both directions of the diff | green |
+| S017 | `MANUAL.md` fails until it documents every command and option | `test_uci_surface` "MANUAL.md documents every command and every option"; observed red with the `clean-tt` row deleted | green |
+| S017 | `MANUAL.md` fails until it documents every `go` and `position` argument | `test_uci_surface` "MANUAL.md documents every go and position argument"; observed red with the `fine70` row deleted | green |
+| S017 | `go mate`, `go searchmoves` and `go ponder` are swallowed and the rest of the line still searches | `test_uci_surface` "the ignored go arguments leave the rest of the line working" | green |
+| S017 | every `position` shortcut still reaches the board, and no two land on the same one | `test_uci_surface` "every position argument still reaches the board" | green |

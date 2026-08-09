@@ -69,6 +69,11 @@ void uci_shutdown();
 bool uci_is_running();
 void uci_process_line(const std::string& input);
 
+// Every command uci_process_line() dispatches, sorted. [help] prints this and
+// the surface test compares it against MANUAL.md, so a command that is added
+// or renamed cannot reach a GUI undocumented. S017, DEC-024.
+std::vector<std::string> uci_command_names();
+
 
 //-#############################  UCI INTERNALS  ############################-//
 // Exposed so the test binaries can drive them directly. Not part of any
