@@ -224,6 +224,49 @@ list.
 
 Cheap, and it multiplies the value of phase 2.
 
+### 3.0 Bad captures after the quiets — TRIED, SET ASIDE, revisit
+
+Other engines get their SEE Elo here rather than from quiescence pruning.
+Stockfish splits captures into `GOOD_CAPTURE` and `BAD_CAPTURE` stages: good
+ones are searched before the quiets, bad ones after. Move ordering at fixed
+depth is reported to be worth on the order of 150 Elo, and the case it fixes is
+a queen taking a defended pawn being searched ahead of every killer.
+
+**It measured slower here, three ways.** Depth 13, three positions:
+
+| where the exchange analysis happened | against the two-stage build |
+|---|---|
+| exact `see()` inside `score_move` | +17.6 % |
+| `see_ge` inside `score_move` | +13 % |
+| lazily, in the picker, on the move about to be searched | +3 % |
+
+Nodes do fall where it fires - midgame 2,288,701 to 1,870,912 - but the calls
+cost more than the ordering saves on this engine.
+
+**How to rebuild it**, since the code is not in the tree:
+
+- an `ORDER_BAD_CAPTURE` band below zero, since history scores start at zero and
+  only climb, so the sign of the best remaining score says the good captures
+  have run out;
+- `score_move()` keeps scoring every capture optimistically;
+- a `demote_if_losing_capture(game, move, &score)` called from the picker after
+  `pick_next_move`, looping while it returns true, so each capture is asked at
+  most once and only if the search actually reaches it;
+- `negamax` generates the quiets when the best remaining score goes negative,
+  rather than when the captures run out.
+
+**The trap to avoid.** The first version guarded on `*score >= ORDER_CAPTURE`.
+A losing capture is scored `ORDER_CAPTURE` plus a *negative* most-valuable-victim
+term, so a queen taking a pawn sits at 999200 - below `ORDER_CAPTURE` - and the
+guard rejected exactly the moves it existed to catch. It looked like it worked
+and changed nothing. Identical node counts is what exposed it; the timings did
+not. Guard on `*score < 0` for "already demoted" instead.
+
+**What would make it pay.** The cost is the exchange analysis, so anything that
+makes it rarer or cheaper: a capture history table that orders captures without
+SEE, or reaching the point where quiet move ordering is good enough that the
+extra work buys a real cut. Worth retrying after 3.3 and 3.4 exist.
+
 **3.1 Static exchange evaluation.** Decide whether a capture wins material
 without searching it. Uses it in three places: order losing captures after
 quiets rather than among the winners, prune losing captures in quiescence, and

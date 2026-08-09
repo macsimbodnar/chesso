@@ -33,13 +33,14 @@ by measurement rather than by argument.
 |---|---|
 | move generation | legal-only, templated `<Color, Constrained, Type>`, ~90 Mnps perft |
 | `generate_captures` / `generate_quiets` | partition `generate_moves` exactly |
-| board | `board_t` 200 B, bitboards plus `squares[64]` |
+| board | `board_t` 216 B, bitboards plus `squares[64]` plus the evaluation accumulators |
 | make/unmake | 16-byte history record, undo by xor, no board copy |
-| evaluation | material plus tapered piece-square tables, `game_phase()` 24..0 |
-| search | alpha-beta, transposition table, quiescence, staged generation, killers, history, countermoves, insufficient-material draws |
-| **missing** | **PVS, null move pruning, late move reduction, aspiration windows, SEE, futility, razoring, singular extensions, delta pruning** |
+| evaluation | material plus tapered piece-square tables, maintained incrementally by make/unmake rather than recomputed |
+| search | alpha-beta, transposition table, quiescence, PVS, null move pruning, late move reduction, staged generation, killers, history, countermoves, insufficient-material draws |
+| exchange evaluation | `see()` exact, `see_ge()` fast; quiescence declines losing captures |
+| **missing** | **aspiration windows, futility, razoring, singular extensions, delta pruning, capture history, continuation history** |
 
-The missing row is where the strength is. See `EVAL_PLAN.md`.
+The missing row is where the remaining strength is. See `EVAL_PLAN.md`.
 
 ## Build and test
 
