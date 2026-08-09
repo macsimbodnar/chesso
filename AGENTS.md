@@ -5,16 +5,26 @@ Claude Code entry point: `CLAUDE.md` containing `@AGENTS.md`.
 
 ## 0. Repository overrides — read before section 2
 
-These are house rules. They win over the stock ruleset below wherever the two
-disagree. **A moltke upgrade that rewrites this file must re-apply them**; that
-is why they are stated here and not only in `decisions.md`.
+This is the `achesso` branch — *agentic chesso*. The goal is the strongest
+open-source chess engine in the world, built to find out what AI-driven
+development can produce. `CLAUDE.md` is the full statement; DEC-013 is the
+decision.
 
-- **`README.md` is written by hand by the repository owner. No agent writes in
-  it, ever.** The developer-facing document section 2 and section 7 call
-  `README.md` is `DEV_MANUAL.md` in this repository — same purpose, same rewrite
-  discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
-  describes. At step completion, "checked `README.md`, human-owned, no change
-  needed" is the expected outcome and a valid one. DEC-001.
+The rules below are house rules. They win over the stock ruleset wherever the
+two disagree. **A moltke upgrade that rewrites this file must re-apply them**,
+which is why they are stated here and not only in `decisions.md`.
+
+- **Nothing is copied. Ever.** No source from another engine, no tables from
+  another engine, no NNUE training data derived from another engine's evaluation
+  or search. Ideas, techniques and published articles are used freely — reading
+  the documented state of the art and implementing it here is the plan (DEC-014).
+  Copying it is not. Running another engine's *binary* as a tool creates no
+  derivative work and is encouraged. DEC-002.
+- **The agent does not run NNUE training or evaluation-table fine tuning.** It
+  builds the tuner, generates and prepares the data, and states exactly what the
+  run should be. The owner executes the run; the result comes back as constants
+  or a network and is measured by SPRT like any other change. The line is
+  *running* the training, not writing it. DEC-015.
 - **Chess judgement comes from a tool, never from the agent.** No agent assesses
   a position, move, line or result from its own reasoning. This covers whether a
   position is winning, whether a move is a blunder, whether an ending is
@@ -22,12 +32,20 @@ is why they are stated here and not only in `decisions.md`.
   soundness. Getting a position onto a board is itself a tool job. See
   `CLAUDE.md` for the tool per question, and DEC-008 for the failure that
   produced the rule.
+- **A change that alters play is decided by SPRT, not by argument.** A change
+  claimed behaviour-neutral proves it with identical node counts and best moves
+  instead. INV-6. One change at a time — two at once and neither number means
+  anything. A verdict of zero is recorded as zero.
 - **A bug that has been found gets fixed before anything else starts.** Not
   noted, not scheduled, not carried into the next change. A known defect in the
   tree contaminates every measurement taken after it. This narrows section 3's
   "correctness jumps the queue" to: it jumps the queue *now*.
-- **One change at a time, and a change is retained only against a measurement.**
-  INV-6. Two changes at once and neither number means anything.
+- **`README.md` is written by hand by the repository owner. No agent writes in
+  it, ever.** The developer-facing document section 2 and section 7 call
+  `README.md` is `DEV_MANUAL.md` in this repository — same purpose, same rewrite
+  discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
+  describes. At step completion, "checked `README.md`, owner-written, no change
+  needed" is the expected outcome and a valid one. DEC-001.
 
 Marker file: `.moltke.json` at repo root.
 Present with `"enabled": true` means these rules are active and enforced.

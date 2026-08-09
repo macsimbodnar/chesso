@@ -3,6 +3,17 @@
 What the software must do. Precedence: specs beat plan beat status. Code that
 disagrees with this file is a bug or an unrecorded decision.
 
+## What is being built
+
+The strongest open-source chess engine in the world, built on the `achesso`
+branch — *agentic chesso* — to find out what AI-driven development can produce.
+It is founded on the owner's own bitboard engine, its test framework and its
+fastchess SPRT scripts, and on nothing else. DEC-013.
+
+Phase one is to reach the level the published literature describes, by reading
+documented technique and implementing it here. Phase two is to experiment.
+`adocs/plan.md` is phase one. DEC-014.
+
 ## Prime directive
 
 Chesso never plays or accepts an illegal move and never corrupts its own board
@@ -42,7 +53,7 @@ Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
 
-Engine state as of 2026-08-09, at commit `9e4126a`:
+Engine state as of 2026-08-09, at commit `b6ef5c4`:
 
 | area | state |
 |---|---|
@@ -59,15 +70,20 @@ The absent row is where the remaining strength is, and it is the plan.
 
 ## Non-goals
 
-- **No source copied from another engine.** Ideas and published techniques are
-  fine; source is not. The piece-square tables in `eval_tables.hpp` are
-  hand-written for this reason. DEC-002.
-- **No Stockfish-derived NNUE training data.** Training data comes from
-  self-play. Running the Stockfish binary as a tool -- perft oracle, analysis,
-  gauntlet opponent -- creates no derivative work and is fine. DEC-002.
-- **Published Elo figures from other engines are not targets.** They have failed
-  to transfer three times here. DEC-004.
+- **Nothing is copied.** No source from another engine, no tables from another
+  engine, no NNUE training data derived from another engine's evaluation or
+  search. Ideas and published articles are used freely; that is the plan.
+  Running another engine's binary as a tool creates no derivative work and is
+  encouraged. DEC-002.
+- **The agent does not run training or table tuning.** It builds the tuner, the
+  self-play data generation and the training program, and states what the run
+  should be. The owner executes the run. DEC-015.
+- **Published Elo figures are not targets.** They have failed to transfer three
+  times here. They decide what to try, never what to conclude. DEC-004.
+- **Phase-two experiments are not started early.** An idea measured against a
+  weak engine produces a number that does not transfer. DEC-014.
 - **`README.md` is not an agent-writable file.** DEC-001.
+- **`master` and `bitboard` are lineage, not maintained here.** DEC-013.
 
 ## Open items
 
@@ -80,3 +96,6 @@ The absent row is where the remaining strength is, and it is the plan.
   is only `8moves_v3.pgn`, and this machine has a habit of running
   `opendirectoryd` at half a core. An x86-64 Linux box resolves this and is
   needed for S032 and S029 regardless.
+- Phase two has no steps and should not get any until the engine is strong
+  enough for an experiment to mean something. The transition gets a decision
+  entry when it happens.

@@ -1,9 +1,9 @@
 id:         S029
 goal:       a perspective network evaluation trained on chesso's own self-play
-accepts:    the accumulator is updated incrementally through the S008 primitives and asserted against a full refresh in the debug build; an SPRT against the tuned hand-crafted evaluation
+accepts:    the accumulator is updated incrementally through the S008 primitives and asserted against a full refresh in the debug build; the training program and the self-play data pipeline delivered and the run stated for the owner; then an SPRT of the returned network against the tuned hand-crafted evaluation
 touches:    src/, plus a separate training program outside the engine
-excludes:   any Stockfish-derived training data -- see DEC-002
-decisions:  DEC-002
+excludes:   any training data derived from another engine's evaluation or search (DEC-002); **running the training** -- the agent delivers the program and the data, the owner runs it (DEC-015)
+decisions:  DEC-002, DEC-015
 closes:
 blocks:
 paused_by:
@@ -22,6 +22,15 @@ done:
 
 ## Provenance constraint
 
-Training data comes from self-play. No Stockfish-derived data, ever: the licence
-provenance of the network stays clean. Running the Stockfish binary as a tool
-creates no derivative work and is fine. DEC-002.
+Training data comes from chesso's own self-play. **No data derived from another
+engine's evaluation or search, ever** -- the provenance of the network stays
+clean, and reproducing someone else's network is the opposite of what this
+branch is for. Running another engine's binary as a tool creates no derivative
+work and is fine. DEC-002, DEC-013.
+
+## Split of work
+
+The agent builds the training program, the self-play data generation and the
+inference code, and states exactly what the run should be. **The owner executes
+the training.** The network comes back and is measured by SPRT like any other
+change. DEC-015.

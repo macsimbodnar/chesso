@@ -28,3 +28,37 @@ them.
 Tests: no new tests. `tools/pgn_to_positions.cpp` was unformatted in the tree
 and `./clang-format.sh --check` failed on it; fixed before anything else, per
 the bug-first rule. Gate green afterwards: 6 of 6 in 11.6 s, format clean.
+
+## 2026-08-09T16:50+02:00 prompt
+
+> I want to redefine the project. Please whipe out what is there excpet the plan done and the future plan but what is this project about and how it hsould be handlead should be rewriten. This is what the project is:
+> I started chesso as a way to lear chess engine development. I followed multiple online sources like chess dev wiki. And i ended up with my own mailbox implementation of the engine with no ai. That's what in master right now. Then i started to move to bitboard board representation following Maxim from @chessprogramming591 youtube channel the video series Bitboard chess engine in C. That is what in bitboard branch. I used ai for debugging but still code is mine. Then, since i realized I was copieng majority of what was out there i decided that i want to give a try to AI development. And that's what i am doing in the branch achesso that stais for agentic chesso. This piece starts with my bitboard implementation as founfaments and the tests framework with tests and fastechess for SPRT scripts tests. My goal is to use AI to build the strongest opensource chess engine in the world. My plan is first to follow the state of the art documentated online documentation and articles to build a really strong engine and then start to experiment and maybe find new way to be strong. The rules for the ai are to never copy the code or tables from existing open source engines nor use them for training NNUE. I would prefer to run the training and the fine tuning of tables by myself when the time will come. The other foundation of this effort is the rigorous testing and tool usage. The changes must be evaluated by running sprt tests, the tables must be finetuned by proper tools and measurements and the AI should use tools like stockfish and others for chess game evaluation, position, debugging and everything that can help in the development that is not training of models or tables finetuning directly.
+
+## Recap 2026-08-09 — project redefinition
+
+No step id: this rewrites what the project is, not what it does. `plan.md`,
+`plan_todo/` and `plan_done/` are untouched, as asked.
+
+The owner stated the project's definition: chesso began as learning, following
+the Chess Programming Wiki and similar; `master` is the hand-written mailbox
+engine with no AI; `bitboard` followed Maxim's "Bitboard chess engine in C"
+series with AI used only for debugging; `achesso` is agentic chesso, founded on
+that bitboard engine plus its tests and fastchess SPRT scripts, aiming at the
+strongest open-source engine in the world. Phase one follows documented
+technique, phase two experiments. Two foundations: nothing is copied, and
+nothing is believed without a measurement. New boundary: the agent does not run
+NNUE training or table fine tuning — it builds the tooling and the data and
+hands the run to the owner.
+
+`adocs/decisions.md` was wiped and rewritten from scratch on the owner's
+instruction. The 12 DEC ids were kept because `plan_done/` cites them and
+completed history is immutable; no wording survived, and DEC-013 to DEC-015 are
+new. **INV-8 refused this**, correctly — it is the append-only guard installed
+one commit earlier. It was cleared by committing the rewrite, not by restoring
+the old entries. That is a deliberate, owner-instructed reset of decision
+history and it is recorded here so it is not mistaken for drift.
+
+Files: `CLAUDE.md`, `AGENTS.md` section 0, `adocs/specs.md`,
+`adocs/decisions.md`, `adocs/plan.md` description, `adocs/plan_todo/S028`,
+`adocs/plan_todo/S029`. No source changed. Gate green: 6 of 6 in 10.1 s, format
+clean.

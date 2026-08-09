@@ -1,8 +1,16 @@
 # Plan
 
-A genuinely strong open-source UCI chess engine in C++20, bitboard based, built
-over a long period with every change justified by measurement rather than by
-argument. See `specs.md` for what it must do and what it is today.
+The strongest open-source chess engine in the world, in C++20, bitboard based,
+built on the `achesso` branch to find out what AI-driven development can produce
+(DEC-013). See `specs.md` for what it must do and what it is today.
+
+**This whole list is phase one:** reach the level the published literature
+already describes, by reading documented technique and implementing it here —
+never by copying it (DEC-002, DEC-014). Phase two is experimentation and has no
+steps yet, and should not get any until the engine is strong enough for an
+experiment to mean something. S028 and S029 are the two steps where the agent
+stops short of the run itself: it delivers the tuner, the data and the training
+program, and the owner executes them (DEC-015).
 
 The order below is not the order of expected Elo, and that is deliberate. S001
 to S016 are already done and are here as the record of what each change cost and
