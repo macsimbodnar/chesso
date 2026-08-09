@@ -23,9 +23,9 @@ static constexpr int MIN = -2000000000;
 static constexpr int MAX = 2000000000;
 
 
-// NOTE: there is no null move pruning, no late move reduction and no PVS
-// re-search yet. The tuning constants for them used to live here and read as
-// if the pruning existed.
+// How deep quiescence may keep going on its own. Without a bound a string of
+// checks recurses forever, since an evasion is not a capture and does not
+// shorten the line.
 #define MAX_QSEARCH_DEPTH 8
 
 

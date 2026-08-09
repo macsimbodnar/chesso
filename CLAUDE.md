@@ -133,6 +133,11 @@ short:
 
 ## Conventions
 
+- **A bug that has been found gets fixed before anything else starts.** Not
+  noted, not scheduled, not carried into the next change. A known defect
+  sitting in the tree contaminates every measurement taken after it and makes
+  the next bug harder to attribute. This is the rule with the fewest exceptions
+  in the project.
 - **Never weaken a test to make it pass.** If a test looks wrong, stop and say
   so. When a change alters a contract the test encodes, rewrite the test to
   assert the new behaviour - do not relax it. Several tests in this repository
