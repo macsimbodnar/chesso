@@ -12,6 +12,45 @@ A UCI chess engine in C++20, bitboard based. The goal is a genuinely strong
 open-source engine, worked on over a long period, with every change justified
 by measurement rather than by argument.
 
+## Chess judgement is not yours to make
+
+**Never assess a chess position, move, line or result from your own reasoning.
+Use a tool.** You are not a strong chess player and the failure mode is not
+uncertainty, it is confident and specific error.
+
+This covers every claim of the form:
+
+- is this position winning, equal or lost, and by how much
+- is this move good, is it a blunder, what should have been played instead
+- is this ending theoretically won or drawn
+- what is the material balance after this sequence
+- is this opening line sound
+
+What to use instead:
+
+| question | tool |
+|---|---|
+| what did each move in this game cost | `tools/analyse_game.py`, below |
+| what is this position worth | `stockfish` on the FEN, `go depth 20` |
+| is this endgame won | a tablebase, or Stockfish, never a rule you remember |
+| what are the legal moves here | the engine, not a mental board |
+
+Getting a position onto a board is itself a tool job: `build/tools/pgn_to_positions`
+turns SAN into FENs using the engine's own parser. Do not track a position in
+your head across a move list.
+
+**What is still yours:** reasoning about code, measurement, profiles, search
+behaviour and test design. The engine's own reported evaluation is data - quote
+it. Deriving a chess conclusion from it is not.
+
+The rule exists because of a specific failure. A drawn game was analysed by
+reading the move list. The analysis claimed the evaluation was two pawns too
+optimistic before move 62; Stockfish put the position at +196 against the
+engine's +1.95, agreeing to within five centipawns. The real defect was the
+opposite one, in the ten moves *after* that trade. The same analysis missed the
+four other moves that each cost more than a pawn, including the largest error in
+the game. Reading a game finds the move you were already looking for.
+
 ## Decisions already made — do not re-open without being asked
 
 - **C++**, targeting `gnu++20`. Evaluated against C, Rust and Zig; C++ wins on
@@ -147,14 +186,9 @@ for a 158-ply game at depth 18.
 
 ## Conventions
 
-- **Never judge a game by reading it. Run Stockfish over it.** An agent reading
-  a move list and reasoning about the position is guessing, and the guesses are
-  confident and wrong. Analysing one drawn game by hand produced three claims:
-  that the engine's evaluation was two pawns too optimistic before move 62
-  (Stockfish agreed with the engine to within five centipawns), that a
-  particular move threw the win (correct), and no mention at all of the four
-  other moves that cost more than a pawn each, including the largest error in
-  the game. Use `tools/analyse_game.py`.
+- **Chess judgement comes from a tool, never from you.** See the section near
+  the top; it is the rule most easily forgotten because guessing feels like
+  analysis.
 - **A bug that has been found gets fixed before anything else starts.** Not
   noted, not scheduled, not carried into the next change. A known defect
   sitting in the tree contaminates every measurement taken after it and makes
