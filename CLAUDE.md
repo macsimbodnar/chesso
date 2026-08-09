@@ -118,6 +118,19 @@ short:
 | `tools/search_bench.py` | time and node counts for the **search**, not perft |
 | `build/tests/bench_movegen` | perft and generator throughput |
 | `./fastchess.sh` | SPRT against a commit |
+| `build/tools/pgn_to_positions` + `tools/analyse_game.py` | what a game actually cost, move by move, from Stockfish |
+
+Analysing a game:
+
+```bash
+# SAN moves, one per line or whitespace separated, no move numbers
+build/tools/pgn_to_positions < moves.txt > positions.tsv
+tools/analyse_game.py positions.tsv --engine ~/.local/bin/stockfish --depth 18
+```
+
+It prints every move that cost more than the threshold, with what was played,
+what Stockfish wanted, and the evaluation either side of it. About 45 seconds
+for a 158-ply game at depth 18.
 
 ### Reference engines in `~/.local/bin`
 
@@ -134,6 +147,14 @@ short:
 
 ## Conventions
 
+- **Never judge a game by reading it. Run Stockfish over it.** An agent reading
+  a move list and reasoning about the position is guessing, and the guesses are
+  confident and wrong. Analysing one drawn game by hand produced three claims:
+  that the engine's evaluation was two pawns too optimistic before move 62
+  (Stockfish agreed with the engine to within five centipawns), that a
+  particular move threw the win (correct), and no mention at all of the four
+  other moves that cost more than a pawn each, including the largest error in
+  the game. Use `tools/analyse_game.py`.
 - **A bug that has been found gets fixed before anything else starts.** Not
   noted, not scheduled, not carried into the next change. A known defect
   sitting in the tree contaminates every measurement taken after it and makes
