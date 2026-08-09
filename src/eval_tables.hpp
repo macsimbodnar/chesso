@@ -170,7 +170,6 @@ static constexpr int psqt_eg[6][64] = {
 // clang-format on
 
 
-
 // clang-format on
 
 

@@ -1090,3 +1090,94 @@ TEST_SUITE("transposition table: storage")
     tt_free(&table);
   }
 }
+
+
+// Static exchange evaluation, checked against positions where the answer can
+// be worked out by hand. This is the kind of function that looks right, passes
+// a search, and quietly throws away a piece a hundred games later.
+TEST_SUITE("search: static exchange evaluation")
+{
+  static move_t find_move(game_t * g, index_t from, index_t to)
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &g->board, moves);
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_FROM(moves[i]) == from && MOVE_TO(moves[i]) == to) {
+        return moves[i];
+      }
+    }
+
+    return 0;
+  }
+
+
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the exchange comes out at the right value")
+  {
+    struct case_t
+    {
+      std::string fen;
+      index_t from;
+      index_t to;
+      int value;
+      std::string title;
+    };
+
+    // clang-format off
+    const std::vector<case_t> cases = {
+      // Nothing defends the pawn: a clean win of one pawn.
+      {"4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1",        e4, d5,  100, "free pawn"},
+
+      // The pawn on c6 recaptures, so it is pawn for pawn.
+      {"4k3/8/2p5/3p4/4P3/8/8/4K3 w - - 0 1",      e4, d5,    0, "pawn takes pawn, defended by a pawn"},
+
+      // Queen takes a defended pawn: wins 100, loses a 900 queen.
+      {"4k3/8/2p5/3p4/8/8/8/3QK3 w - - 0 1",       d1, d5, -800, "queen grabs a pawn a pawn defends"},
+
+      // Rook takes an undefended rook.
+      {"4k3/8/8/3r4/8/8/8/3RK3 w - - 0 1",         d1, d5,  500, "rook takes a loose rook"},
+
+      // Rook takes a rook that a pawn defends: 500 for a 500 rook, then the
+      // pawn takes, so the exchange is a rook down.
+      {"4k3/8/2p5/3r4/8/8/8/3RK3 w - - 0 1",       d1, d5,    0, "rook takes rook, pawn recaptures"},
+
+      // Both sides pile on: pawn takes pawn, knight recaptures, bishop takes
+      // the knight, and nothing is left to answer.
+      {"4k3/8/2n5/3p4/4P3/5B2/8/4K3 w - - 0 1",    e4, d5,  100, "the exchange runs and White comes out ahead"},
+    };
+    // clang-format on
+
+    for (const case_t& test : cases) {
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
+
+      const move_t move = find_move(&game, test.from, test.to);
+      REQUIRE_MESSAGE(move != 0, (test.title + ": move is not legal here"));
+
+      const int value = see(&game.board, move);
+      REQUIRE_MESSAGE(value == test.value,
+                      (test.title + ": got " + std::to_string(value) +
+                       " expected " + std::to_string(test.value)));
+    }
+  }
+
+
+  // A quiet move takes nothing, so the exchange starts from zero and can only
+  // be negative if the destination is attacked.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet move into an attack loses material")
+  {
+    REQUIRE(load_FEN("4k3/8/2p5/8/8/8/8/3QK3 w - - 0 1", &game));
+
+    const move_t safe = find_move(&game, d1, d4);
+    REQUIRE(safe != 0);
+    REQUIRE_EQ(see(&game.board, safe), 0);
+
+    // d5 is attacked by the pawn on c6 and defended by nothing.
+    const move_t hangs = find_move(&game, d1, d5);
+    REQUIRE(hangs != 0);
+    REQUIRE_MESSAGE(
+        see(&game.board, hangs) < 0,
+        "moving a queen onto a square a pawn covers must be losing");
+  }
+}

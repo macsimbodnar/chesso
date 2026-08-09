@@ -122,6 +122,11 @@ bool is_position_repeated(const history_t* history, const board_t* board);
 // True when neither side can force mate with what is left on the board.
 bool is_insufficient_material(const board_t* board);
 
+// Static exchange evaluation: what a capture is worth in material once both
+// sides have finished taking on the target square, cheapest piece first.
+// Negative means the exchange loses material for the side to move.
+int see(const board_t* board, move_t move);
+
 bool is_check(const game_t* game);
 void swap_side(game_t* game);
 void set_en_passant(game_t* game, index_t ep_index);

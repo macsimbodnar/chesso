@@ -1081,6 +1081,153 @@ void unmake_null_move(game_t* game)
 }
 
 
+// What a move is worth in material once both sides have finished capturing on
+// the target square, each time with the cheapest piece that can still take.
+//
+// The point is to tell a capture that wins material from one that merely starts
+// an exchange the mover loses. Quiescence otherwise searches every capture,
+// including the ones that hand over a queen for a pawn, and those subtrees are
+// most of what it spends its time on.
+//
+// Values are local to this function. Ordering by them is what matters, not
+// their agreement with the evaluation, and the king needs a price high enough
+// that it is always the last piece considered.
+static constexpr int see_value[6] = {100, 300, 300, 500, 900, 10000};
+
+
+static inline int piece_type_of(piece_t piece)
+{ return (piece < B_PAWN) ? piece : (piece - B_PAWN); }
+
+
+// Every piece of either colour bearing on `square`, given an occupancy that the
+// caller is free to have taken pieces out of. Recomputed from scratch each
+// round of the exchange rather than tracked incrementally: it re-derives the
+// x-ray attackers that appear behind a piece once it has been taken, which is
+// the part that is easy to get wrong.
+static inline bb_t attackers_to_square(const bb_tables_t* tables,
+                                       const board_t* board,
+                                       index_t square,
+                                       bb_t occupancy)
+{
+  const bb_t bishops_queens =
+      board->bitboards[W_BISHOP] | board->bitboards[B_BISHOP] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
+  const bb_t rooks_queens =
+      board->bitboards[W_ROOK] | board->bitboards[B_ROOK] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
+
+  // A white pawn attacks `square` from exactly where a black pawn standing on
+  // `square` would attack, hence the swapped colour index.
+  return (tables->pawn_attacks[BLACK][square] & board->bitboards[W_PAWN]) |
+         (tables->pawn_attacks[WHITE][square] & board->bitboards[B_PAWN]) |
+         (tables->knight_attacks[square] &
+          (board->bitboards[W_KNIGHT] | board->bitboards[B_KNIGHT])) |
+         (tables->king_attacks[square] &
+          (board->bitboards[W_KING] | board->bitboards[B_KING])) |
+         (get_bishop_attacks(tables, square, occupancy) & bishops_queens) |
+         (get_rook_attacks(tables, square, occupancy) & rooks_queens);
+}
+
+
+// The cheapest attacker of `color` in `attackers`, as a one-bit board, plus
+// which piece it is. Empty when that side has run out of attackers.
+static inline bb_t least_valuable_attacker(const board_t* board,
+                                           bb_t attackers,
+                                           color_t color,
+                                           int* piece_type)
+{
+  const bb_t* pieces = &board->bitboards[(color == WHITE) ? W_PAWN : B_PAWN];
+
+  for (int type = 0; type < 6; ++type) {
+    const bb_t candidates = attackers & pieces[type];
+
+    if (candidates) {
+      *piece_type = type;
+      return candidates & -candidates;
+    }
+  }
+
+  return BB_0;
+}
+
+
+int see(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+
+  const bb_tables_t* tables = game_tables();
+  const index_t from = MOVE_FROM(move);
+  const index_t to = MOVE_TO(move);
+
+  bb_t occupancy = board->occupancies[BOTH] ^ (BB_1 << from);
+  int gain[32];
+
+  if (MOVE_EN_PASSANT(move)) {
+    // The victim is not on the target square, so it has to be taken out of the
+    // occupancy by hand or the exchange is computed against a pawn that is
+    // still standing there.
+    const index_t victim = static_cast<index_t>(
+        (board->active_color == WHITE) ? (to + 8) : (to - 8));
+
+    occupancy ^= BB_1 << victim;
+    gain[0] = see_value[0];
+  } else {
+    const piece_t captured = board->squares[to];
+    gain[0] = (captured == EMPTY) ? 0 : see_value[piece_type_of(captured)];
+  }
+
+  // Whatever is standing on the target square after the move is what the
+  // opponent stands to win next.
+  int on_square = piece_type_of(MOVE_PIECE(move));
+
+  if (MOVE_PROMOTED(move)) {
+    // The pawn is not what gets recaptured, the new piece is, and the promotion
+    // itself is a gain.
+    const int promoted = MOVE_PROMOTED(move);
+
+    gain[0] += see_value[promoted] - see_value[0];
+    on_square = promoted;
+  }
+
+  color_t side = !board->active_color;
+  int depth = 0;
+
+  while (true) {
+    const bb_t attackers =
+        attackers_to_square(tables, board, to, occupancy) & occupancy;
+
+    int attacker_type = 0;
+    const bb_t attacker =
+        least_valuable_attacker(board, attackers, side, &attacker_type);
+
+    if (attacker == BB_0) { break; }
+
+    depth++;
+    gain[depth] = see_value[on_square] - gain[depth - 1];
+
+    // Neither side has to continue an exchange that is already losing for
+    // them, so once both the standing score and the next one are bad the rest
+    // of the sequence cannot matter.
+    if (std::max(-gain[depth - 1], gain[depth]) < 0) { break; }
+
+    occupancy ^= attacker;
+    on_square = attacker_type;
+    side = !side;
+
+    if (depth + 1 >= 32) { break; }
+  }
+
+  // Walk back up: at each step the side to move takes the exchange only if it
+  // beats standing still.
+  while (depth > 0) {
+    gain[depth - 1] = -std::max(-gain[depth - 1], gain[depth]);
+    depth--;
+  }
+
+  return gain[0];
+}
+
+
 // Positions where no sequence of legal moves can produce a mate, so there is
 // nothing left to search for. Without this the evaluation is free to prefer one
 // drawn position to another - a centralised king scores better than a cornered

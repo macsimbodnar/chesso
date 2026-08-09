@@ -162,6 +162,15 @@ int quiescence(int alpha,
   for (size_t i = 0; i < n; ++i) {
     if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }
 
+    // A capture that loses material to the recapture is not worth searching:
+    // whatever it leads to, the side to move could have declined it and stood
+    // pat instead. This is where quiescence spends most of its time, and these
+    // subtrees are the bulk of it.
+    //
+    // Not while in check, where every move is forced and standing pat is not on
+    // offer, so a losing capture may still be the only legal reply.
+    if (!in_check && see(&game->board, moves[i]) < 0) { continue; }
+
     scores[count] = capture_score(&game->board, moves[i]);
     moves[count] = moves[i];
     count++;
