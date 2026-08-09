@@ -1181,3 +1181,42 @@ TEST_SUITE("search: static exchange evaluation")
         "moving a queen onto a square a pawn covers must be losing");
   }
 }
+
+
+// see_ge() answers the comparison that see() would, but stops early. The two
+// are separate implementations of the same idea, so the only way to trust the
+// fast one is to check it against the exact one everywhere the search could
+// call it.
+TEST_SUITE("search: see_ge agrees with see")
+{
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "over every legal move of every test position")
+  {
+    const std::vector<int> thresholds = {-900, -500, -100, -1, 0, 1, 100, 500};
+    size_t checked = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      move_t moves[MAX_MOVES];
+      const size_t count = generate_moves(game_tables(), &game.board, moves);
+
+      for (size_t i = 0; i < count; ++i) {
+        const int exact = see(&game.board, moves[i]);
+
+        for (const int threshold : thresholds) {
+          const bool fast = see_ge(&game.board, moves[i], threshold);
+
+          REQUIRE_MESSAGE(fast == (exact >= threshold),
+                          ("FEN: " + fen + " move " + print_move(moves[i]) +
+                           " see " + std::to_string(exact) + " threshold " +
+                           std::to_string(threshold) + " see_ge said " +
+                           (fast ? "yes" : "no")));
+          checked++;
+        }
+      }
+    }
+
+    REQUIRE(checked > 10000);
+  }
+}

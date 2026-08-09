@@ -173,7 +173,7 @@ int quiescence(int alpha,
     // least as valuable as the piece taking it, and those cannot lose material
     // whatever the defenders do. Only the rest are worth an exchange analysis.
     if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&
-        see(&game->board, moves[i]) < 0) {
+        !see_ge(&game->board, moves[i], 0)) {
       continue;
     }
 

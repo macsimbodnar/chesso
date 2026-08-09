@@ -127,6 +127,11 @@ bool is_insufficient_material(const board_t* board);
 // Negative means the exchange loses material for the side to move.
 int see(const board_t* board, move_t move);
 
+// Whether the exchange is worth at least `threshold`, which is all any caller
+// in the search actually asks. Stops as soon as the comparison is settled
+// instead of resolving the sequence, so it is much cheaper than see().
+bool see_ge(const board_t* board, move_t move, int threshold);
+
 // True when a capture cannot lose material without working the exchange out:
 // the victim is worth at least as much as the piece taking it. Answers most
 // captures worth making without touching an attack table.

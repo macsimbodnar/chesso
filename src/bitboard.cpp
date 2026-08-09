@@ -1173,6 +1173,100 @@ bool capture_cannot_lose(const board_t* board, move_t move)
 }
 
 
+// Whether the exchange clears a bar, rather than what it is worth. Almost
+// every caller only wants the comparison, and answering it is much cheaper
+// than resolving the whole sequence: as soon as one side is far enough ahead
+// that the rest of the exchange cannot bring it back, the answer is settled.
+//
+// `swap` carries how much the side about to move must win to still clear the
+// bar. Each capture flips whose question it is and turns that figure around,
+// and `result` tracks whose turn it currently is to fail.
+bool see_ge(const board_t* board, move_t move, int threshold)
+{
+  assert(board != nullptr);
+
+  const bb_tables_t* tables = game_tables();
+  const index_t from = MOVE_FROM(move);
+  const index_t to = MOVE_TO(move);
+
+  bb_t occupancy = board->occupancies[BOTH] ^ (BB_1 << from);
+  int gain;
+
+  if (MOVE_EN_PASSANT(move)) {
+    const index_t victim = static_cast<index_t>(
+        (board->active_color == WHITE) ? (to + 8) : (to - 8));
+
+    occupancy ^= BB_1 << victim;
+    gain = see_value[0];
+  } else {
+    const piece_t captured = board->squares[to];
+    gain = (captured == EMPTY) ? 0 : see_value[piece_type_of(captured)];
+  }
+
+  int on_square = piece_type_of(MOVE_PIECE(move));
+
+  if (MOVE_PROMOTED(move)) {
+    gain += see_value[MOVE_PROMOTED(move)] - see_value[0];
+    on_square = MOVE_PROMOTED(move);
+  }
+
+  // Winning the victim outright is not enough, so nothing later can help.
+  int swap = gain - threshold;
+  if (swap < 0) { return false; }
+
+  // Losing the piece that just moved still clears the bar, so nothing the
+  // opponent does can change the answer either.
+  swap = see_value[on_square] - swap;
+  if (swap <= 0) { return true; }
+
+  const bb_t bishops_queens =
+      board->bitboards[W_BISHOP] | board->bitboards[B_BISHOP] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
+  const bb_t rooks_queens =
+      board->bitboards[W_ROOK] | board->bitboards[B_ROOK] |
+      board->bitboards[W_QUEEN] | board->bitboards[B_QUEEN];
+  const bb_t may_uncover =
+      ~(board->bitboards[W_KNIGHT] | board->bitboards[B_KNIGHT]);
+
+  bb_t attackers =
+      attackers_to_square(tables, board, to, occupancy) & occupancy;
+  color_t side = !board->active_color;
+  bool result = true;
+
+  while (true) {
+    int attacker_type = 0;
+    const bb_t attacker =
+        least_valuable_attacker(board, attackers, side, &attacker_type);
+
+    // Whoever has run out of attackers is the one who has to live with the
+    // position as it stands.
+    if (attacker == BB_0) { break; }
+
+    result = !result;
+
+    swap = see_value[attacker_type] - swap;
+
+    // The bar moves by one depending on whose turn it is to fail: the side
+    // that would have to break even to keep going is the one that stops.
+    if (swap < (result ? 1 : 0)) { break; }
+
+    occupancy ^= attacker;
+    attackers ^= attacker;
+
+    if (attacker & may_uncover) {
+      attackers |=
+          (get_bishop_attacks(tables, to, occupancy) & bishops_queens) |
+          (get_rook_attacks(tables, to, occupancy) & rooks_queens);
+    }
+
+    attackers &= occupancy;
+    side = !side;
+  }
+
+  return result;
+}
+
+
 int see(const board_t* board, move_t move)
 {
   assert(board != nullptr);
@@ -1244,11 +1338,13 @@ int see(const board_t* board, move_t move)
     depth++;
     gain[depth] = see_value[on_square] - gain[depth - 1];
 
-    // Neither side has to continue an exchange that is already losing for
-    // them, so once both the standing score and the next one are bad the rest
-    // of the sequence cannot matter.
-    if (std::max(-gain[depth - 1], gain[depth]) < 0) { break; }
-
+    // No speculative cutoff here. The usual one - stop once both the standing
+    // score and the next are negative - was wrong as written: on
+    // 3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR it stopped after the first recapture
+    // and reported 400 for a sequence worth 500, because the rollback then had
+    // one fewer level to fold. see_ge() is the fast path and this stays exact;
+    // paying for the full sequence here is what makes it a reference the
+    // faster function can be checked against.
     occupancy ^= attacker;
     attackers ^= attacker;
 
