@@ -632,13 +632,23 @@ TEST_SUITE("search: transposition table")
   // the answer. A wrong bound test, a cutoff taken at the wrong depth or a
   // score stored without its mate normalisation all show up as a search that
   // answers differently depending on what happens to be in the table.
+  //
+  // Only holds while the search is a pure function of position and depth.
+  // Reductions break that - the table supplies a move, which changes the
+  // ordering, which changes which moves are late enough to be reduced - so this
+  // runs below the depth where any of them engage. Late move reduction needs
+  // ply > 0 and depth >= 3, so a root search of depth 3 or less has none
+  // anywhere in its tree, and null move pruning needs more depth still.
+  //
+  // The table's own logic is pinned directly by "transposition table: storage"
+  // below, which does not care what the search does.
   TEST_CASE_FIXTURE(search_fixture_t, "the table never changes the answer")
   {
     // Never allocated, so every probe misses and every store is dropped. That
     // makes it a reference search with the table taken out of the picture.
     transposition_table_t inert = {};
 
-    for (int depth = 4; depth <= 5; ++depth) {
+    for (int depth = 2; depth <= 3; ++depth) {
       for (const std::string& fen : tt_positions) {
         const std::string title =
             "depth " + std::to_string(depth) + " FEN: " + fen;
@@ -920,5 +930,163 @@ TEST_SUITE("search: draws")
     const search_t result = search_fen("4k3/8/8/8/8/8/8/3QK3 w - - 100 200", 4);
 
     REQUIRE_EQ(result.score, 0);
+  }
+}
+
+
+// The table's own behaviour, pinned without going through a search. The
+// whole-search comparison above can only infer these, and only while the
+// search has no reductions in it; these hold whatever the search does.
+TEST_SUITE("transposition table: storage")
+{
+  static board_t board_keyed(hash_t key)
+  {
+    board_t board = {};
+    board.hash = key;
+    return board;
+  }
+
+
+  TEST_CASE("a stored entry comes back with every field intact")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const board_t board = board_keyed(0x0123456789abcdefULL);
+    tt_store_entry(&table, &board, 7, -1234, TT_BETA_NODE, 0xabcd);
+
+    const tt_entry_t* entry = tt_get_entry(&table, &board);
+
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->key, board.hash);
+    REQUIRE_EQ(entry->depth, 7);
+    REQUIRE_EQ(entry->score, -1234);
+    REQUIRE_EQ(entry->type, TT_BETA_NODE);
+    REQUIRE_EQ(entry->best_move, 0xabcd);
+
+    tt_free(&table);
+  }
+
+
+  // Two positions sharing a slot must not be confused for one another. The
+  // whole point of storing the key is that a collision reads as a miss, and a
+  // probe that skipped the comparison would return a score belonging to an
+  // unrelated position.
+  TEST_CASE("a colliding key is a miss, not somebody else's entry")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const board_t stored = board_keyed(0x1000ULL);
+    tt_store_entry(&table, &stored, 5, 42, TT_PV_NODE, 0x1111);
+
+    // Same slot by construction: the index is the key masked to the table size.
+    const board_t colliding = board_keyed(0x1000ULL + (table.index_mask + 1));
+
+    REQUIRE_EQ(stored.hash & table.index_mask,
+               colliding.hash & table.index_mask);
+    REQUIRE(tt_get_entry(&table, &colliding) == nullptr);
+    REQUIRE(tt_get_entry(&table, &stored) != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  TEST_CASE("within one search the deeper entry keeps the slot")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const board_t board = board_keyed(0x2000ULL);
+
+    tt_store_entry(&table, &board, 9, 100, TT_PV_NODE, 0x1111);
+    tt_store_entry(&table, &board, 4, 200, TT_PV_NODE, 0x2222);
+
+    const tt_entry_t* entry = tt_get_entry(&table, &board);
+    REQUIRE(entry != nullptr);
+    REQUIRE_MESSAGE(entry->depth == 9, "a shallower result overwrote a deeper");
+    REQUIRE_EQ(entry->score, 100);
+
+    // Equal depth is allowed to replace: the later result is the more recent.
+    tt_store_entry(&table, &board, 9, 300, TT_PV_NODE, 0x3333);
+    REQUIRE_EQ(tt_get_entry(&table, &board)->score, 300);
+
+    tt_free(&table);
+  }
+
+
+  // Across searches the depth rule is dropped, or a deep entry from an early
+  // iteration would hold a slot for the rest of the game.
+  TEST_CASE("a new search may replace at any depth")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const board_t board = board_keyed(0x3000ULL);
+    tt_store_entry(&table, &board, 12, 100, TT_PV_NODE, 0x1111);
+
+    tt_new_search(&table);
+    tt_store_entry(&table, &board, 2, 500, TT_ALPHA_NODE, 0x2222);
+
+    const tt_entry_t* entry = tt_get_entry(&table, &board);
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->depth, 2);
+    REQUIRE_EQ(entry->score, 500);
+
+    tt_free(&table);
+  }
+
+
+  // Generation zero marks a slot that was never written, so the counter must
+  // skip it when it wraps - otherwise every entry in the table suddenly looks
+  // like it belongs to the current search.
+  TEST_CASE("the generation counter never wraps to zero")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+
+    for (int i = 0; i < 600; ++i) {
+      tt_new_search(&table);
+      REQUIRE_MESSAGE(table.generation != 0, ("after " + std::to_string(i)));
+    }
+
+    tt_free(&table);
+  }
+
+
+  // Every caller has to tolerate a table that could not be allocated, because
+  // tt_resize() gives up rather than refusing to play.
+  TEST_CASE("an unallocated table stores nothing and answers nothing")
+  {
+    transposition_table_t table = {};
+    const board_t board = board_keyed(0x4000ULL);
+
+    tt_store_entry(&table, &board, 5, 100, TT_PV_NODE, 0x1111);
+    REQUIRE(tt_get_entry(&table, &board) == nullptr);
+  }
+
+
+  TEST_CASE("reset clears the entries but keeps the allocation")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const board_t board = board_keyed(0x5000ULL);
+    tt_store_entry(&table, &board, 5, 100, TT_PV_NODE, 0x1111);
+    REQUIRE(tt_get_entry(&table, &board) != nullptr);
+
+    const size_t entries_before = table.entry_count;
+    tt_reset(&table);
+
+    REQUIRE(tt_get_entry(&table, &board) == nullptr);
+    REQUIRE_EQ(table.entry_count, entries_before);
+    REQUIRE(table.entries != nullptr);
+
+    tt_free(&table);
   }
 }

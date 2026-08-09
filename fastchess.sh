@@ -53,6 +53,19 @@ if [[ ! -x "$candidate" ]]; then
   exit 1
 fi
 
+# Snapshot the candidate before playing a single game.
+#
+# fastchess spawns the engine binary once per game, so pointing it at build/
+# means a rebuild part way through silently swaps the engine under the match
+# and the result becomes a mixture of two versions. That has already happened
+# once. Copying it makes the match immune to whatever the working tree does
+# next.
+snapshot="$(mktemp -t chesso-candidate)"
+cp "$candidate" "$snapshot"
+chmod +x "$snapshot"
+trap 'rm -f "$snapshot"' EXIT
+candidate="$snapshot"
+
 # Build the reference from the ref, in its own worktree, once per ref.
 ref_sha="$(git rev-parse --short "$REF")"
 ref_dir="$(git rev-parse --show-toplevel)/.ref-builds/$ref_sha"

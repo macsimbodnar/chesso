@@ -1,5 +1,6 @@
 #include "search.hpp"
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -26,6 +27,35 @@ static constexpr int MAX = 2000000000;
 // re-search yet. The tuning constants for them used to live here and read as
 // if the pruning existed.
 #define MAX_QSEARCH_DEPTH 8
+
+
+// How much depth a late quiet move gives up, by remaining depth and by how far
+// down the move order it is. Both axes are logarithmic: the first few moves are
+// where the good ones live, so the penalty grows quickly at first and then
+// flattens, and a deeper search can afford to give up more of it.
+//
+// Built once rather than computed per move - two logarithms in the innermost
+// loop of the search is not a trade worth making.
+static const auto lmr_table = [] {
+  std::array<std::array<uint8_t, 64>, 64> table{};
+
+  for (int depth = 1; depth < 64; ++depth) {
+    for (int move_number = 1; move_number < 64; ++move_number) {
+      const double r = 0.75 + (std::log(depth) * std::log(move_number)) / 2.25;
+      table[depth][move_number] = static_cast<uint8_t>(r);
+    }
+  }
+
+  return table;
+}();
+
+
+static inline int lmr_reduction(int depth, int move_number)
+{
+  const int d = (depth < 63) ? depth : 63;
+  const int m = (move_number < 63) ? move_number : 63;
+  return lmr_table[d][m];
+}
 
 
 // Selection sort, one step per visited move. Most nodes fail high on one of the
@@ -378,20 +408,53 @@ int negamax(int alpha0,
     // has to be searched again properly. That costs a whole re-search, which is
     // why this is a win only while the first move really is usually best; it
     // pays for the move ordering the rest of the engine does.
+    const int child_depth = depth - 1;
+
+    // Late move reduction. Move ordering puts the moves worth searching first,
+    // so a quiet move this far down the list is unlikely to be the best one.
+    // Searching it shallower costs almost nothing when that guess is right and
+    // is paid back by a re-search when it is wrong.
+    //
+    // Not reduced: captures and promotions, because they are the tactics the
+    // ordering already promoted; moves that give check or answer one, because
+    // those lines are forcing and a shallow look at them is worthless; and the
+    // first few moves, which is where the ordering expects the answer to be.
+    //
+    // The reduced search keeps at least one real ply, for the same reason null
+    // move pruning does: at zero it becomes quiescence, which sees only
+    // captures and will happily report that a quiet move is fine.
+    int reduction = 0;
+
+    if (ply > 0 && depth >= 3 && legal_moves_counter > 3 && !is_capture &&
+        !MOVE_PROMOTED(moves[i]) && !is_in_check && !is_check_move) {
+      reduction = lmr_reduction(depth, static_cast<int>(legal_moves_counter));
+
+      if (reduction > child_depth - 1) { reduction = child_depth - 1; }
+      if (reduction < 0) { reduction = 0; }
+    }
+
     if (legal_moves_counter == 1) {
       // The first legal move of a PV node continues the principal variation.
-      score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state, moves[i],
-                       is_pv);
+      score = -negamax(-beta, -alpha, child_depth, ply + 1, game, state,
+                       moves[i], is_pv);
     } else {
-      score = -negamax(-alpha - 1, -alpha, depth - 1, ply + 1, game, state,
-                       moves[i], false);
+      score = -negamax(-alpha - 1, -alpha, child_depth - reduction, ply + 1,
+                       game, state, moves[i], false);
+
+      // A reduced search that beats alpha has proved only that the reduction
+      // was wrong, not what the move is worth. Repeat it at full depth before
+      // believing anything.
+      if (!state->aborted && reduction > 0 && score > alpha) {
+        score = -negamax(-alpha - 1, -alpha, child_depth, ply + 1, game, state,
+                         moves[i], false);
+      }
 
       // Beat alpha without reaching beta, so the null window has told us the
       // move is interesting and nothing more. Only then is the full search
       // worth doing. Skipped when the search was abandoned mid-way, because
       // the score is meaningless then.
       if (!state->aborted && score > alpha && score < beta) {
-        score = -negamax(-beta, -alpha, depth - 1, ply + 1, game, state,
+        score = -negamax(-beta, -alpha, child_depth, ply + 1, game, state,
                          moves[i], is_pv);
       }
     }
