@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "bb_tables.hpp"
 #include "data_structures.hpp"
+#include "eval_tables.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 
@@ -587,6 +588,21 @@ bool move_belongs_to_side_to_move(const board_t* board, move_t move)
 
 
 #ifndef NDEBUG
+// The evaluation accumulators are maintained by make_move and unmake_move
+// rather than recomputed, so they can drift out of step with the position in
+// exactly the way squares[] can. Rebuilding and comparing on every node is what
+// makes the existing tree walks catch that.
+static bool eval_accumulators_match(const board_t* board)
+{
+  board_t rebuilt = *board;
+  eval_refresh(&rebuilt);
+
+  return rebuilt.material == board->material &&
+         rebuilt.psqt_mg == board->psqt_mg &&
+         rebuilt.psqt_eg == board->psqt_eg && rebuilt.phase == board->phase;
+}
+
+
 // squares[] duplicates the bitboards, so it can drift out of sync with them.
 // Rebuilding it and comparing on every node is what makes the existing
 // make/unmake tree walks catch that.
@@ -666,6 +682,8 @@ static inline void add_piece(board_t* board,
   board->occupancies[Side] ^= bb;
   board->squares[square] = piece;
   board->hash ^= randoms->piece_randoms[piece][square];
+
+  eval_add_piece(board, piece, square);
 }
 
 
@@ -681,6 +699,8 @@ static inline void remove_piece(board_t* board,
   board->occupancies[Side] ^= bb;
   board->squares[square] = EMPTY;
   board->hash ^= randoms->piece_randoms[piece][square];
+
+  eval_remove_piece(board, piece, square);
 }
 
 
@@ -702,6 +722,9 @@ static inline void move_piece(board_t* board,
   board->squares[to] = piece;
   board->hash ^= randoms->piece_randoms[piece][from];
   board->hash ^= randoms->piece_randoms[piece][to];
+
+  eval_remove_piece(board, piece, from);
+  eval_add_piece(board, piece, to);
 }
 
 
@@ -715,6 +738,7 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   assert(game != nullptr);
   assert(move_belongs_to_side_to_move(&game->board, encoded_move));
   assert(squares_match_bitboards(&game->board));
+  assert(eval_accumulators_match(&game->board));
 
   const zobrist_randoms_t* randoms = &game->hash_randoms;
   board_t* board = &game->board;
@@ -847,6 +871,7 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
           board->bitboards[B_BISHOP] | board->bitboards[B_ROOK] |
           board->bitboards[B_QUEEN] | board->bitboards[B_KING]));
   assert(squares_match_bitboards(board));
+  assert(eval_accumulators_match(board));
 
   // change side
   board->hash ^= randoms->side_randoms[us];
@@ -907,6 +932,9 @@ static void unmake_move_impl(game_t* game)
       board->occupancies[us] ^= rook_bb;
       board->squares[rook.to] = EMPTY;
       board->squares[rook.from] = rook.piece;
+
+      eval_remove_piece(board, rook.piece, rook.to);
+      eval_add_piece(board, rook.piece, rook.from);
     }
   }
 
@@ -920,6 +948,9 @@ static void unmake_move_impl(game_t* game)
 
     board->bitboards[promoted_to] ^= to_bb;
     board->bitboards[pawn] ^= to_bb;
+
+    eval_remove_piece(board, promoted_to, move.to);
+    eval_add_piece(board, pawn, move.to);
   }
 
   if (move.en_passant) {
@@ -931,6 +962,8 @@ static void unmake_move_impl(game_t* game)
     board->bitboards[captured_pawn] ^= captured_bb;
     board->occupancies[them] ^= captured_bb;
     board->squares[captured_square] = captured_pawn;
+
+    eval_add_piece(board, captured_pawn, captured_square);
   }
 
   board->bitboards[move.piece] ^= from_bb | to_bb;
@@ -938,9 +971,14 @@ static void unmake_move_impl(game_t* game)
   board->squares[move.from] = move.piece;
   board->squares[move.to] = entry->captured;
 
+  eval_remove_piece(board, move.piece, move.to);
+  eval_add_piece(board, move.piece, move.from);
+
   if (entry->captured != EMPTY) {
     board->bitboards[entry->captured] ^= to_bb;
     board->occupancies[them] ^= to_bb;
+
+    eval_add_piece(board, entry->captured, move.to);
   }
 
   board->occupancies[BOTH] =
@@ -955,6 +993,7 @@ static void unmake_move_impl(game_t* game)
   if (us == BLACK) { board->fullmove_counter--; }
 
   assert(squares_match_bitboards(board));
+  assert(eval_accumulators_match(board));
   assert(board->occupancies[WHITE] ==
          (board->bitboards[W_PAWN] | board->bitboards[W_KNIGHT] |
           board->bitboards[W_BISHOP] | board->bitboards[W_ROOK] |
@@ -1176,6 +1215,8 @@ void cleanup_board(game_t* game)
   game->board.en_passant = INVALID_INDEX;
   game->board.fullmove_counter = 1;
   game->board.hash = 0ULL;
+
+  eval_refresh(&game->board);
 
   game->history.size = 0;
 }
@@ -1515,6 +1556,11 @@ bool load_FEN(const std::string& FEN, game_t* game)
   board->occupancies[BOTH] |= board->occupancies[BLACK];
 
   board->hash = compute_full_hash(game);
+
+  // The accumulators are maintained by make_move from here on; this is the one
+  // place they are built from the position itself.
+  eval_refresh(board);
+
   return true;
 }
 

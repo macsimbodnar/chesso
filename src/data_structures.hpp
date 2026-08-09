@@ -295,7 +295,17 @@ struct board_t
   // them. Answers "what is on this square" in one load instead of a scan.
   piece_t squares[64];
 
-  hash_t hash;                // Zobrist Key
+  hash_t hash;  // Zobrist Key
+
+  // Maintained by make_move and unmake_move rather than recomputed. evaluate()
+  // was 40% of the search when it rebuilt these by walking the bitboards on
+  // every call, which quiescence does at every node. All four are White
+  // relative; `phase` counts both sides and is clamped by game_phase().
+  int32_t material;
+  int32_t psqt_mg;
+  int32_t psqt_eg;
+  int32_t phase;
+
   color_t active_color;       // Side to move
   uint8_t castling;           // Castling permissions
   uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
