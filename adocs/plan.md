@@ -6,7 +6,7 @@ built on the `achesso` branch to find out what AI-driven development can produce
 
 **This whole list is phase one:** reach the level the published literature
 already describes, by reading documented technique and implementing it here —
-never by copying it (DEC-002, DEC-014). Phase two is experimentation and has no
+never by copying it (DEC-016, DEC-014). Phase two is experimentation and has no
 steps yet, and should not get any until the engine is strong enough for an
 experiment to mean something. S028 and S029 are the two steps where the agent
 stops short of the run itself: it delivers the tuner, the data and the training
@@ -17,7 +17,7 @@ to S016 are already done and are here as the record of what each change cost and
 bought. Of the rest: S017 comes first because the workflow asserts a surface
 check that nothing currently performs. S018 comes second because this engine has
 now taken three published Elo figures at face value and measured 0, 0 and
-*slower* (DEC-004), so the next evaluation term is chosen from chesso's own
+*slower* (DEC-019), so the next evaluation term is chosen from chesso's own
 error distribution rather than from what other engines report. S019 to S026 are
 the search and ordering features that make evaluation worth having -- a better
 score at the leaves is worth less when the tree above them is the wrong shape,

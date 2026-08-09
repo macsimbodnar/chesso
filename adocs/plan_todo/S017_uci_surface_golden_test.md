@@ -3,7 +3,7 @@ goal:       a test over the UCI command and option surface that fails when it ch
 accepts:    a test in the fast suite that enumerates every UCI command chesso answers and every option it advertises, and fails when one is added, renamed or removed; MANUAL.md documents the same surface and the test fails until it is updated in the same commit
 touches:    tests/, src/uci or equivalent, MANUAL.md
 excludes:   fastchess --compliance, which checks protocol conformance rather than pinning this engine's surface; keep test_uci.sh as it is
-decisions:  DEC-009
+decisions:  DEC-024
 closes:
 blocks:
 paused_by:

@@ -3,7 +3,7 @@ goal:       fit every evaluation constant at once against self-play game outcome
 accepts:    a tuner that reduces prediction error on a held-out set, self-play data generated and prepared, and the exact run stated for the owner to execute; then an SPRT of the returned constants against the hand-picked ones
 touches:    tools/, src/eval_tables.hpp values only
 excludes:   changing which terms exist; **running the fit** -- the agent delivers the tuner and the data, the owner runs it (DEC-015)
-decisions:  DEC-002, DEC-015
+decisions:  DEC-016, DEC-015
 closes:
 blocks:
 paused_by:
@@ -16,7 +16,7 @@ self-play, and a tuner. Worth more than several S027 terms put together: it is
 what turns a set of plausible numbers into a tuned evaluation. Hand-picked
 weights are the wrong weights, including the ones written by hand in S010 --
 which are hand-written precisely because the published tuned ones were refused
-(DEC-002).
+(DEC-016).
 
 ## Split of work
 

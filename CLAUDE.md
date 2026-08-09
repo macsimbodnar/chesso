@@ -67,7 +67,7 @@ owner wants no GPL question anywhere in this codebase or in a future network.
 Consequences you will meet: the piece-square tables in `eval_tables.hpp` are
 hand-written and untuned, because the tuned published ones were available and
 refused. Running another engine's *binary* as a tool creates no derivative work
-and is encouraged. DEC-002.
+and is encouraged. DEC-016.
 
 ### 2. Nothing is believed without a measurement
 
@@ -83,7 +83,7 @@ SPRT is pointless — the engines play identical games. INV-6.
 
 **3. A change that alters play is decided by SPRT.** `./fastchess.sh --fast`, or
 `REF=<sha> ./fastchess.sh`. Not by argument, not by fixed-depth timing, not by
-how sound it sounds. DEC-005 is the contamination that made attribution
+how sound it sounds. DEC-020 is the contamination that made attribution
 necessary: one run reported +301 Elo and meant nothing.
 
 **4. Know the noise floor before believing a number.** `bench_movegen` reports
@@ -101,7 +101,7 @@ over interleaved runs.
 generation quoted at 30–50 Elo and measured **0**; SEE pruning in quiescence
 measured **0**; capture ordering reported around 150 Elo and measured
 **slower**. The common cause is that a technique's value depends on the search
-around it. Reported figures decide what to try, never what to conclude. DEC-004.
+around it. Reported figures decide what to try, never what to conclude. DEC-019.
 
 **8. Record negative results.** A verdict of zero is recorded as zero, in the
 step file, and the feature may still be kept with the reason stated. S005, S006
@@ -138,7 +138,7 @@ parser. Do not track a position in your head across a move list.
 behaviour and test design. The engine's own reported evaluation is data — quote
 it. Deriving a chess conclusion from it is not.
 
-The rule exists because of a specific failure, recorded as DEC-008. A drawn game
+The rule exists because of a specific failure, recorded as DEC-023. A drawn game
 was analysed by reading the move list. The analysis claimed the evaluation was
 two pawns too optimistic before move 62; Stockfish put the position at +196
 against the engine's +1.95, agreeing to within five centipawns. The real defect

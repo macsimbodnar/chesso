@@ -25,5 +25,5 @@ Updated: 2026-08-09 by `moltke --step status`.
     needed for S032 and S029 regardless.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
-    from the two plan documents they replace (DEC-012). Treat their `done:`
+    from the two plan documents they replace (DEC-027). Treat their `done:`
     stamps as provenance, not as evidence that the gates of section 4 ran.

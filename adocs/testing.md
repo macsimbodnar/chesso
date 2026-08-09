@@ -12,7 +12,7 @@ change that alters play is retained only against a verdict, and a verdict of
 zero is recorded as zero.
 
 Rows S001 to S016 were written retrospectively when moltke was adopted
-(DEC-001). Their measurements are transcribed from the commits and the plan
+(DEC-017). Their measurements are transcribed from the commits and the plan
 documents they replace; their test columns name tests that exist today.
 
 | Step | Criterion | Covering test | Result |

@@ -52,7 +52,7 @@ cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure &&
 
 That gate is necessary and not sufficient. Deep perft, the debug-build
 assertions and any SPRT are named in each step's `accepts:` field and run by
-hand. DEC-010.
+hand. DEC-025.
 
 **Run test binaries from `tests/`** — they load assets by relative path:
 
@@ -123,7 +123,7 @@ REF=HEAD~1 ./fastchess.sh       # pick what to measure against
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
 a result is always attributable to a commit range, and the candidate binary is
 snapshotted before the first game. Both exist because an SPRT once reported
-+301 Elo and meant nothing — DEC-005.
++301 Elo and meant nothing — DEC-020.
 
 Games are played at a time control, so a change that makes the engine faster
 shows up and a change that only reorders equal work does not. Bounds must match
@@ -132,7 +132,7 @@ random-walked for 340 games before being stopped.
 
 ## Analyse a game
 
-Never by reading it. See `CLAUDE.md` and DEC-008.
+Never by reading it. See `CLAUDE.md` and DEC-023.
 
 ```bash
 # SAN moves, one per line or whitespace separated, no move numbers

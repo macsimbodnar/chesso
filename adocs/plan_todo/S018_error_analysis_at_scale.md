@@ -13,7 +13,7 @@ done:
 
 Every published Elo figure this project has borrowed has failed to transfer:
 staged generation 30-50 predicted and 0 measured, SEE quiescence pruning 0,
-move ordering reported around 150 and measured slower. See DEC-004. The
+move ordering reported around 150 and measured slower. See DEC-019. The
 remaining way to choose the next evaluation term is to measure where this
 engine actually loses centipawns, not where other engines report gains.
 

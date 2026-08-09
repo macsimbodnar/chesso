@@ -74,15 +74,15 @@ The absent row is where the remaining strength is, and it is the plan.
   engine, no NNUE training data derived from another engine's evaluation or
   search. Ideas and published articles are used freely; that is the plan.
   Running another engine's binary as a tool creates no derivative work and is
-  encouraged. DEC-002.
+  encouraged. DEC-016.
 - **The agent does not run training or table tuning.** It builds the tuner, the
   self-play data generation and the training program, and states what the run
   should be. The owner executes the run. DEC-015.
 - **Published Elo figures are not targets.** They have failed to transfer three
-  times here. They decide what to try, never what to conclude. DEC-004.
+  times here. They decide what to try, never what to conclude. DEC-019.
 - **Phase-two experiments are not started early.** An idea measured against a
   weak engine produces a number that does not transfer. DEC-014.
-- **`README.md` is not an agent-writable file.** DEC-001.
+- **`README.md` is not an agent-writable file.** DEC-017.
 - **`master` and `bitboard` are lineage, not maintained here.** DEC-013.
 
 ## Open items

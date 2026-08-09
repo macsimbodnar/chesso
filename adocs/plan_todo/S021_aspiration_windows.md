@@ -12,6 +12,6 @@ done:
 ## Expected
 
 Small. One engine reported +9 with an error bar of +/-17, which is a reported
-figure and therefore direction only (DEC-004). `elo0=0 elo1=10` cannot resolve
+figure and therefore direction only (DEC-019). `elo0=0 elo1=10` cannot resolve
 an effect this size -- use `elo0=-5 elo1=5` or similar or the run random-walks,
 as S006's did for 340 games.

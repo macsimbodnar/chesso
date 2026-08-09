@@ -19,7 +19,7 @@ which is why they are stated here and not only in `decisions.md`.
   or search. Ideas, techniques and published articles are used freely — reading
   the documented state of the art and implementing it here is the plan (DEC-014).
   Copying it is not. Running another engine's *binary* as a tool creates no
-  derivative work and is encouraged. DEC-002.
+  derivative work and is encouraged. DEC-016.
 - **The agent does not run NNUE training or evaluation-table fine tuning.** It
   builds the tuner, generates and prepares the data, and states exactly what the
   run should be. The owner executes the run; the result comes back as constants
@@ -30,7 +30,7 @@ which is why they are stated here and not only in `decisions.md`.
   position is winning, whether a move is a blunder, whether an ending is
   theoretically won, the material balance after a sequence, and opening
   soundness. Getting a position onto a board is itself a tool job. See
-  `CLAUDE.md` for the tool per question, and DEC-008 for the failure that
+  `CLAUDE.md` for the tool per question, and DEC-023 for the failure that
   produced the rule.
 - **A change that alters play is decided by SPRT, not by argument.** A change
   claimed behaviour-neutral proves it with identical node counts and best moves
@@ -45,7 +45,7 @@ which is why they are stated here and not only in `decisions.md`.
   `README.md` is `DEV_MANUAL.md` in this repository — same purpose, same rewrite
   discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
   describes. At step completion, "checked `README.md`, owner-written, no change
-  needed" is the expected outcome and a valid one. DEC-001.
+  needed" is the expected outcome and a valid one. DEC-017.
 
 Marker file: `.moltke.json` at repo root.
 Present with `"enabled": true` means these rules are active and enforced.

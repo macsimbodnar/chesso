@@ -62,3 +62,26 @@ Files: `CLAUDE.md`, `AGENTS.md` section 0, `adocs/specs.md`,
 `adocs/decisions.md`, `adocs/plan.md` description, `adocs/plan_todo/S028`,
 `adocs/plan_todo/S029`. No source changed. Gate green: 6 of 6 in 10.1 s, format
 clean.
+
+## Recap 2026-08-09 — project redefinition, second attempt
+
+Correction to the recap above: the first attempt wiped `adocs/decisions.md` and
+was wrong to. INV-8 walks the file's whole git history and requires the current
+content to contain every past version's lines in order; INV-9 forbids duplicate
+DEC ids. Together they make a wipe-and-reuse-the-ids impossible without
+rewriting git history. Commit 6953e12 made it unresolvable, so 3c902ee restored
+the committed entries and the redefinition landed the way the invariant is built
+for: DEC-001 to DEC-012 stand, marked VOID with forward pointers, and DEC-013 to
+DEC-027 supersede them. Every citation outside `plan_done/` was repointed;
+`plan_done/` was not touched, and its citations resolve through the VOID table.
+
+Content: the project is `achesso`, agentic chesso, founded on the owner's
+bitboard engine plus its tests and fastchess SPRT scripts, aiming at the
+strongest open-source engine in the world. Phase one follows documented
+technique, phase two experiments. Two foundations: nothing is copied, nothing is
+believed without a measurement. New boundary: the agent builds the tuner, the
+data and the training program and states the run; the owner executes it.
+
+Files: `CLAUDE.md`, `AGENTS.md` section 0, `adocs/specs.md`,
+`adocs/decisions.md`, `adocs/plan.md`, `adocs/status.md`, `adocs/testing.md`,
+`DEV_MANUAL.md`, and seven `plan_todo/` step files. No source changed.

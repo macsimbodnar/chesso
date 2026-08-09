@@ -3,7 +3,7 @@ goal:       retry searching losing captures after the quiets, now that capture h
 accepts:    fixed-depth time is not worse than the two-stage build on all three search_bench positions; only then an SPRT
 touches:    src/search.cpp move picker and staging, src/evaluation.cpp score_move
 excludes:   attempting it before S023 and S024 exist, which is the whole reason it was set aside
-decisions:  DEC-007
+decisions:  DEC-022
 closes:
 blocks:
 paused_by:
@@ -20,7 +20,7 @@ Depth 13, three positions, against the two-stage build:
 | lazily, in the picker, on the move about to be searched | +3 % |
 
 Nodes do fall where it fires -- midgame 2288701 to 1870912 -- but the calls
-cost more than the ordering saves on this engine. See DEC-007.
+cost more than the ordering saves on this engine. See DEC-022.
 
 ## How to rebuild it, since the code is not in the tree
 
