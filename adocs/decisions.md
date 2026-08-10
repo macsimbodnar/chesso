@@ -777,3 +777,48 @@ Consequences: The two match kinds are not comparable to each other. Under the
               produced it. Whether that gap is the endgame defect or the small
               sample is exactly what the S018 profile is being run to find out,
               and it is not to be asserted before the numbers land.
+
+## DEC-032  2026-08-10  Evaluation work is aimed by the measured error profile, not by the anecdote
+Tags:         evaluation, measurement, s018, s019
+Context:      S019 was written from one game. Stockfish at depth 18 found chesso
+              holding +1.5 to +1.9 for ten consecutive moves in a king and pawn
+              endgame it valued at +0.25, and the step that followed was called
+              "endgame evaluation". S019's own text required that finding to be
+              confirmed against a distribution before anything was written,
+              because one game is an anecdote. S018 measured the distribution:
+              13522 moves by chesso over 210 games against sgambetto, every
+              position scored by Stockfish at 3000000 nodes.
+Decision:     By the owner, on the agent's measurement. The profile is the basis
+              for choosing evaluation work from here. What it says, over 407740
+              centipawns given away:
+
+              | phase | cp/move | share |
+              |---|---|---|
+              | opening 22-24 | 39.9 | 18.9 % |
+              | early middlegame 14-21 | 44.1 | 36.0 % |
+              | late middlegame 7-13 | 28.4 | 24.3 % |
+              | endgame 1-6 | 18.3 | 20.5 % |
+              | pawn endgame 0 | 6.8 | 0.3 % |
+
+              The early middlegame is the largest pot on both measures. The
+              endgame is the cheapest phase per move outside pawn endgames.
+              Separately, chesso's own score against Stockfish's for the same
+              position is optimistic in every phase, worst in the late
+              middlegame at +100.2 mean, +55 median, +392 p90.
+Rejected:     Keeping the endgame as the target because a step file already said
+              so. That is the failure mode this project has recorded three times
+              under DEC-019 -- acting on a number that was never shown to
+              transfer. Treating the S016 game as refuted: it is not. It measured
+              bias in one position class and the endgame p90 bias of +357 says
+              such positions exist. It simply does not say where the centipawns
+              go.
+Consequences: S019 as written is aimed at the wrong phase and its content is
+              reopened; what it becomes is a separate decision and is not taken
+              here. The ranking survives removing the 1347 mate-touching moves
+              and again removing every clamped reference score, so it is not an
+              artefact of the +/-1000 clamp. It has been measured against one
+              opponent, which DEC-019 says is exactly the condition under which
+              a figure has previously failed to transfer; a second opponent is
+              the outstanding check. Raw per-move records are kept, so any later
+              question can be asked with `--from-raw` without replaying the 8.8 h
+              run.

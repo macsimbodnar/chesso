@@ -68,6 +68,32 @@ Engine state as of 2026-08-09, at commit `b6ef5c4`:
 
 The absent row is where the remaining strength is, and it is the plan.
 
+### Where the centipawns actually go
+
+Measured, not assumed. 13522 moves by chesso over 210 games against sgambetto at
+10+0.2, every position scored by Stockfish `dev-20260803-762dd1da` at 3000000
+nodes. S018, DEC-032. Phase is the engine's own `game_phase()`, so it names the
+quantity the tapered evaluation tapers on.
+
+| phase | moves | cp/move | share of 407740 cp | own score minus reference, mean |
+|---|---|---|---|---|
+| opening 22-24 | 1934 | 39.9 | 18.9 % | +39.2 |
+| early middlegame 14-21 | 3323 | **44.1** | **36.0 %** | +77.4 |
+| late middlegame 7-13 | 3493 | 28.4 | 24.3 % | **+100.2** |
+| endgame 1-6 | 4570 | 18.3 | 20.5 % | +41.8 |
+| pawn endgame 0 | 202 | 6.8 | 0.3 % | +29.5 |
+
+Half the loss sits in moves costing 100 to 400 cp. Blunders above 400 cp are
+0.5 % of moves and 9.3 % of the loss; moves under 25 cp are 73 % of moves and
+7.7 % of the loss.
+
+Two things follow and are held to. **The early middlegame is where the
+centipawns go**, not the endgame, which is the cheapest phase per move outside
+pawn endgames. **The evaluation is optimistic in every phase**, worst in the
+late middlegame. The ranking is stable after removing mate-touching moves and
+after removing clamped reference scores. It has been measured against one
+opponent only, and DEC-019 is the reason that matters.
+
 ## Non-goals
 
 - **Nothing is copied.** No source from another engine, no tables from another

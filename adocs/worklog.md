@@ -436,3 +436,28 @@ Open, for the owner:
   it. DEC-019 is three figures that failed to transfer.
 - Whether `test_uci.sh` gets wired into ctest, still unanswered from S017.
 - The `clang-format.sh` untracked-file hole above.
+
+## 2026-08-10T22:30+02:00 prompt
+
+> ok store the outcome of the investigation
+
+## 2026-08-10 recap — the S018 finding promoted out of the step
+
+The outcome was only in `plan_done/S018`, which is step history nobody greps for
+"where does chesso lose centipawns". Promoted into the three places that are
+read:
+
+- `adocs/decisions.md` DEC-032. The measured profile is the basis for choosing
+  evaluation work; the anecdote is not. Records that S019 as written aims at the
+  wrong phase and that what it becomes is a separate decision, not taken there.
+- `adocs/specs.md`, a new "Where the centipawns actually go" block under the
+  engine state, with the per-phase table and the two conclusions held to: the
+  early middlegame is where the centipawns go, and the evaluation is optimistic
+  in every phase.
+- `MANUAL.md` known bugs. The entry claimed the endgame specifically, from the
+  one game. That is narrower than the evidence and pointed users at the wrong
+  thing, so it now states the measured per-phase bias and keeps the endgame game
+  as an example rather than as the headline. The reference to S019 was dropped
+  because that step's content is reopened.
+
+Gate green: build, fast suite 7/7, clang-format check clean.

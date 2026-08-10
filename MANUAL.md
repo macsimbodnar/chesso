@@ -96,10 +96,16 @@ here as the FEN each one loads. A GUI never sends them.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
 - **No aspiration windows, futility pruning, razoring or singular extensions.**
   These are planned, not present; see `adocs/plan.md`.
-- **Endgame evaluation is measurably optimistic.** Verified against Stockfish at
-  depth 18: in one king-and-pawn endgame chesso reported +1.5 to +1.9 for ten
-  consecutive moves where Stockfish valued the position at +0.25. Fixing it is
-  S019. Do not trust chesso's evaluation of a simplified endgame.
+- **The evaluation is optimistic in every phase**, not only the endgame.
+  Measured over 13522 moves in 210 games, against Stockfish at 3000000 nodes:
+  chesso's own score exceeds Stockfish's by +39 cp on average in the opening,
+  +77 in the early middlegame, +100 in the late middlegame, +42 in the endgame
+  and +30 in pawn endgames. The tail is what to watch — the 90th percentile is
+  around +350 to +400 in every phase from the early middlegame on. Treat a
+  reported advantage as an upper bound.
+  An earlier note here named the endgame specifically, from one king-and-pawn
+  game where chesso held +1.5 to +1.9 against Stockfish's +0.25. That game is
+  real and such positions exist, but it is not where most of the error is.
 - **The piece-square tables are hand-written and untuned.** Tuning them is S028.
 - **`Hash` is not honoured exactly.** The value is clamped to 1–4096 MB, then the
   *entry count* is rounded down to a power of two so probing can mask instead of
