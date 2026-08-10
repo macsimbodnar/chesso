@@ -329,6 +329,39 @@ def write_raw(path, records):
             handle.write("\t".join(str(record[f]) for f in RAW_FIELDS) + "\n")
 
 
+class RawWriter:
+    """Appends each game's records as they arrive, flushed.
+
+    A full run is hours long and the last one was killed part way through with
+    nothing to show for it. Records reach the file per game, so a killed run
+    loses at most the games that were in flight, and --resume picks up the
+    rest.
+    """
+
+    def __init__(self, path, resume):
+        self.done = set()
+        existing = os.path.exists(path) and os.path.getsize(path) > 0
+
+        if resume and existing:
+            for record in read_raw(path):
+                self.done.add(record["game"])
+            self.handle = open(path, "a")
+        else:
+            self.handle = open(path, "w")
+            self.handle.write("\t".join(RAW_FIELDS) + "\n")
+            self.handle.flush()
+
+    def add(self, records):
+        for record in records:
+            self.handle.write(
+                "\t".join(str(record[f]) for f in RAW_FIELDS) + "\n")
+        self.handle.flush()
+        os.fsync(self.handle.fileno())
+
+    def close(self):
+        self.handle.close()
+
+
 def read_raw(path):
     records = []
     with open(path) as handle:
@@ -469,6 +502,10 @@ def main():
     ap.add_argument("--max-games", type=int, default=0,
                     help="analyse at most this many games")
     ap.add_argument("--raw-out", default="")
+    ap.add_argument("--resume", action="store_true",
+                    help="keep the games already in --raw-out and analyse only "
+                         "the rest. A long run that was interrupted continues "
+                         "from where it stopped")
     ap.add_argument("--from-raw", default="",
                     help="re-bucket an earlier run, no engine needed")
     ap.add_argument("--worst", type=int, default=15)
@@ -515,7 +552,15 @@ def main():
     for line in skipped[:10]:
         print("  " + line, file=sys.stderr)
 
+    writer = RawWriter(args.raw_out, args.resume) if args.raw_out else None
     all_records, errors = [], []
+
+    if writer and writer.done:
+        all_records = [r for r in read_raw(args.raw_out)]
+        prepared = [item for item in prepared if item[0] not in writer.done]
+        print(f"resuming: {len(writer.done)} games already in "
+              f"{args.raw_out}, {len(prepared)} left", file=sys.stderr)
+
     done = 0
 
     # Processes rather than threads. Each worker owns a separate engine process
@@ -529,10 +574,15 @@ def main():
         for records, error in pool.map(_worker, work):
             done += 1
             print(f"\ranalysed {done}/{len(prepared)} games",
-                  end="", file=sys.stderr)
+                  end="", file=sys.stderr, flush=True)
             all_records.extend(records)
+            if writer:
+                writer.add(records)
             if error:
                 errors.append(error)
+
+    if writer:
+        writer.close()
 
     print(file=sys.stderr)
     for line in errors[:10]:
@@ -541,9 +591,7 @@ def main():
     all_records.sort(key=lambda r: (r["game"], r["ply"]))
 
     if args.raw_out:
-        write_raw(args.raw_out, all_records)
-        print(f"raw per-move records written to {args.raw_out}",
-              file=sys.stderr)
+        print(f"raw per-move records in {args.raw_out}", file=sys.stderr)
 
     meta = [
         f"pgn         {args.pgn}",
