@@ -3,10 +3,10 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-09 by `moltke --step status`.
+Updated: 2026-08-10 by `moltke --step status`.
 
 - Last done: S017
-- In progress: none
+- In progress: S018 rank chesso's own errors by game phase over hundreds of games, from Stockfish
 - Next: S018
 - Blocked: none
 - Parked:

@@ -72,7 +72,10 @@ def main():
     rows = []
     with open(args.positions) as handle:
         for line in handle:
-            ply, san, lan, fen = line.rstrip("\n").split("\t")
+            # Only the first four fields are used here. The converter also
+            # emits a phase column, which error_profile.py reads and this does
+            # not.
+            ply, san, lan, fen = line.rstrip("\n").split("\t")[:4]
             rows.append((int(ply), san, lan, fen))
 
     engine = Engine(args.engine)

@@ -97,3 +97,99 @@ Files: `CLAUDE.md`, `AGENTS.md` section 0, `adocs/specs.md`,
 ## 2026-08-09T23:26+02:00 prompt
 
 > next?
+
+## 2026-08-09T23:32+02:00 prompt
+
+> i used for my implementation fastchess uci test. I even have script for that. Is it not more convinient to use that one for uci tests?
+
+## 2026-08-09T23:34+02:00 prompt
+
+> what's next in the plan?
+
+## 2026-08-10T09:21+02:00 prompt
+
+> ok let's measure and record the outcome remembering to register the characteristics of hte machien and the compilation flags aswell. Stockfish, sgambetto (a chess engine maid complitly by AI by a friend) and mailbox chesso, fastechss, cutechess are all in /Users/max/.local/bin/ and can be invoked directly in console
+
+## 2026-08-10 recap — S018 in progress, not complete
+
+Step S018 started. Tooling written and smoke tested; no full run yet, nothing
+committed.
+
+Files touched:
+- `tools/error_profile.py` new. PGN of a match in, per-move cost out, bucketed
+  by game phase, by error size, and the two crossed. Also reports evaluation
+  bias, engine score against reference score, which the PGN carries for free in
+  fastchess's move comments. `--raw-out` writes every analysed move so a rerun
+  is never needed to re-bucket; `--from-raw` re-buckets with no engine.
+- `tools/pgn_to_positions.cpp` emits a fifth column, the engine's own
+  `game_phase()` for the position before the move. Appended, not inserted.
+- `tools/analyse_game.py` takes the first four fields, so the added column does
+  not break the S016 usage.
+
+Machine and build recorded for the step: Apple M1, MacBookPro17,1, 4
+performance + 4 efficiency cores, 8 GB, macOS 14.8.5 build 23J423. Apple clang
+16.0.0. Release flags `-O3 -DNDEBUG -std=gnu++20 -arch arm64 -Wall -Wextra
+-Werror`. Reference `stockfish dev-20260803-762dd1da`.
+
+Two measurements taken:
+- Smoke match achesso vs mailbox, 6 games: 6-0. `~/.local/bin/chesso`
+  advertises only `Use Book`, confirming it is the mailbox build.
+- Probe achesso vs sgambetto, 20 games at 10+0.2: 11.5/20 for achesso.
+
+One finding that changes the run design: under the SPRT adjudication settings
+the smoke run produced 48 opening, 61 early middlegame, 6 late middlegame and
+**0 endgame** moves. S019 is an endgame defect, so those settings cannot see the
+phase the step exists to measure. Opponent, adjudication and run size are with
+the owner.
+
+Depth-18 throughput measurement was still running at the end of the turn.
+
+No tests added yet. No commit yet.
+
+## 2026-08-10T09:55+02:00 prompt
+
+> ok meanwhile let's go over open items
+
+## 2026-08-10 recap — S018 measurement turn, no source change
+
+No code written this turn. Measurements only, plus a defect found in the tooling
+written in the previous turn.
+
+Reference cost, one Stockfish process, three middlegame FENs taken from the
+smoke games, machine mostly idle:
+
+| depth | s/position |
+|---|---|
+| 14 | 0.09 |
+| 16 | 0.36 |
+| 18 | 0.78 |
+| 20 | 1.52 |
+
+S016's figure of 158 positions in about 47 s, 0.30 s per position, does not
+transfer. That game was largely a simplified endgame and endgames are cheap at
+fixed depth; middlegame-heavy games cost 2.6x more at the same depth.
+
+**Defect, blocking, not yet fixed.** `tools/error_profile.py` is slower with
+four workers than with one. The 6 smoke games score 236 positions, which is
+about 184 s serially at 0.78 s per position. The four-worker run took 1139 s,
+6.2x slower. The same code at depth 12 was 2.2x faster than serial, so it
+degrades as Stockfish's `info` output grows. Suspect is `evaluate()` calling
+`line.split()` on every info line, with four Python threads contending on the
+GIL. Fix before any full run: keep the last matching line and parse once after
+`bestmove`, and use processes rather than threads.
+
+Open items carried to the owner: opponent choice (mailbox as the step file says,
+sgambetto, nodes-limited Stockfish, or self-play), adjudication (the SPRT
+settings produced 0 endgame moves out of 115), reference depth 16 against 18,
+and run size. Run size cannot be decided until the defect above is fixed.
+
+No tests added. No commit. Working tree still carries the previous turn's
+`tools/` changes and the S018 step-file move.
+
+## 2026-08-10T10:02+02:00 prompt
+
+> Let's go back to the iteractiv way for the questions you asked two messages ago
+
+## 2026-08-10T11:51+02:00 prompt
+
+> retyr
