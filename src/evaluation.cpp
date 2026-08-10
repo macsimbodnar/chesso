@@ -10,12 +10,24 @@
 
 // clang-format off
 
-#define PAWN   100
-#define KNIGHT 300
-#define BISHOP 300
-#define ROOK   500
-#define QUEEN  900
-#define KING   100000
+// Move-ordering piece values. These are deliberately not the evaluation's
+// piece_value[] and they carry their own names so that the two cannot be
+// confused or accidentally unified. They used to be spelled PAWN..QUEEN, the
+// same names eval_tables.hpp defines, and only compiled because both sides
+// happened to hold the same numbers.
+//
+// Ordering needs a stable ranking, not an accurate price, and the bands below
+// clear each other by exactly 100 points: a king capturing a pawn scores
+// ORDER_CAPTURE + MVV_PAWN - MVV_KING = 900100, against 900000 for a killer.
+// Feed a fitted queen value of 1026 into that and the arithmetic still holds,
+// but nothing in the tree would say so out loud if it stopped holding. The
+// symptom of getting it wrong is a strength regression, not a wrong node count.
+#define MVV_PAWN   100
+#define MVV_KNIGHT 300
+#define MVV_BISHOP 300
+#define MVV_ROOK   500
+#define MVV_QUEEN  900
+#define MVV_KING   100000
 
 #define ORDER_TT_MOVE 2000000
 #define ORDER_CAPTURE 1000000
@@ -25,9 +37,9 @@
 
 /* board representation */
 
-static constexpr int piece_values_abs[] = {PAWN,  KNIGHT, BISHOP, ROOK,   QUEEN,
-                                           KING,  PAWN,   KNIGHT, BISHOP, ROOK,
-                                           QUEEN, KING,   0};
+static constexpr int piece_values_abs[] = {
+    MVV_PAWN,  MVV_KNIGHT, MVV_BISHOP, MVV_ROOK, MVV_QUEEN, MVV_KING, MVV_PAWN,
+    MVV_KNIGHT, MVV_BISHOP, MVV_ROOK,  MVV_QUEEN, MVV_KING, 0};
 
 
 // clang-format on
