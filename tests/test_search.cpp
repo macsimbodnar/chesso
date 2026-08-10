@@ -357,7 +357,15 @@ TEST_SUITE("search: tactics")
       // drawn whatever White plays and the case is not about a free pawn at
       // all - it passed only because captures are ordered first.
       {"k7/8/8/3p4/4P3/8/8/6K1 w - - 0 1",       e4, d5, TO_NONE,  "take the free pawn"},
-      {"8/P6k/8/8/8/8/8/4K3 w - - 0 1",          a7, a8, TO_QUEEN, "promote to a queen"},
+      // The black king stands on c7 on purpose. The position this case used to
+      // hold, with the black king on h7 and nothing else near, has four moves
+      // that all mate in ten by Stockfish at depth 20 -- a8=Q, Kd2, Ke2 and Kf2
+      // -- so it asserted a preference among equals and passed only because the
+      // promotion happened to be ordered first. S028's tuned tables order them
+      // differently and it failed. On c7 the black king is close enough that
+      // dawdling throws the win away: a8=Q is mate in 14, a8=R is +387, a8=B is
+      // +10 and Ke2 is 0.
+      {"8/P1k5/8/8/8/8/8/4K3 w - - 0 1",         a7, a8, TO_QUEEN, "promote to a queen"},
       {"6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1",      a1, a8, TO_NONE,  "mate on the back rank"},
       {"r5k1/8/8/8/8/8/5PPP/6K1 b - - 0 1",      a8, a1, TO_NONE,  "mate on the back rank, black"},
     };
@@ -491,7 +499,7 @@ TEST_SUITE("search: quiescence")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 500);
+    REQUIRE_EQ(static_score, 511);
 
     // Beta below the static score: the cutoff is immediate.
     REQUIRE_EQ(quiesce(fen, 0, 100), static_score);
@@ -517,7 +525,7 @@ TEST_SUITE("search: quiescence")
     // Two pawns up, plus whatever the piece-square tables make of the squares
     // everything happens to be standing on.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 208);
+    REQUIRE_EQ(black_static, 276);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -551,7 +559,7 @@ TEST_SUITE("search: quiescence")
     }
 
     // A rook down, give or take where the piece-square tables put the kings.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -475);
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -474);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -905,7 +913,7 @@ TEST_SUITE("search: draws")
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook.
-    REQUIRE_EQ(evaluate(&game.board), -482);
+    REQUIRE_EQ(evaluate(&game.board), -453);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;
