@@ -151,9 +151,48 @@ tools/analyse_game.py positions.tsv --engine ~/.local/bin/stockfish --depth 18
 ```
 
 Prints every move that cost more than the threshold, with what was played, what
-Stockfish wanted, and the evaluation either side of it. About 45 seconds for a
-158-ply game at depth 18. `pgn_to_positions` uses the engine's own
-`algebraic_to_move`, so there is no `python-chess` dependency.
+Stockfish wanted, and the evaluation either side of it. `pgn_to_positions` uses
+the engine's own `algebraic_to_move`, so there is no `python-chess` dependency.
+It also emits the engine's own `game_phase()` as a fifth column, which
+`error_profile.py` reads and this script ignores.
+
+That one game took about 45 seconds at depth 18. **Do not budget from it.**
+Fixed depth has no bounded cost: over 12 positions sampled from real games,
+depth 18 ran a median of 0.71 s and a maximum of 925.90 s. Use node limits for
+anything bigger than a single game — DEC-030.
+
+## Profile the engine's own errors over many games
+
+```bash
+tools/error_profile.py match.pgn --player achesso \
+    --engine ~/.local/bin/stockfish --nodes 1000000 --workers 4 \
+    --raw-out raw.tsv --resume
+```
+
+Centipawns lost bucketed by game phase, by error size, and the two crossed, plus
+evaluation bias — the engine's own score against the reference's, which comes
+free because fastchess writes the engine's eval into each move comment. Book
+moves are excluded. Scores are clamped to +/-1000 cp so one mate cannot outweigh
+a game of real errors.
+
+Node limits, not depth, and the reason is DEC-030. Measured over 20 sampled
+positions: 500000 nodes is 0.83 s mean and reaches median depth 18, 1000000 is
+1.63 s and median depth 21, 3000000 is 4.84 s and median depth 24.
+
+Records are flushed per game, so an interrupted run keeps what it had and
+`--resume` continues from there. `--from-raw raw.tsv` re-buckets an existing run
+with no engine at all, which is how a finished run is asked a different question
+without repeating it.
+
+**Matches played for profiling are adjudicated differently from matches played
+for strength.** The `fastchess.sh` settings stop games as soon as the result is
+known, which produced zero endgame moves out of 115 and would have made the run
+blind to the phase it was for. Use loose settings instead, and do not compare
+the two kinds of match to each other — DEC-031:
+
+```bash
+-draw movenumber=80 movecount=10 score=5 -resign movecount=8 score=900 -maxmoves 200
+```
 
 ## Profile
 
@@ -182,3 +221,13 @@ and it reversed the conclusion of the work that followed.
   chesso's losses, labelling positions for tuning, and as a calibration opponent
   limited by `go nodes N`. Prefer fixed nodes over `UCI_LimitStrength`, which
   injects random blunders and is high variance.
+- **`sgambetto`**, an engine written by a friend, unrelated to this codebase.
+  Close enough in strength to give fought games: 39.3 % over 210 games at
+  10+0.2 under the loose adjudication of DEC-031, 57.5 % over 20 under the SPRT
+  settings. It is the opponent for the S018 error profile (DEC-029), chosen over
+  the mailbox build, which loses 6-0 and therefore profiles an already-won
+  position rather than a game.
+
+The mailbox build and `sgambetto` are both fixed binaries that this repository
+does not build. Record which one produced a number, because they are not
+interchangeable.
