@@ -258,3 +258,39 @@ No tests added. No step completion.
 > <status>killed</status>
 > <summary>Background command "Play 400 games vs sgambetto" was stopped</summary>
 > </task-notification>
+
+## 2026-08-10 recap — S018 analysis running, decisions recorded
+
+Commits `ed56ef6` (resumable runs) and this one (decisions).
+
+The 400-game match was killed by the harness at 210 games, cause unknown;
+fastchess's own output was lost behind a pipe. The PGN is intact: 210 games,
+all parse, last game ends cleanly. Owner chose to proceed with the 210 rather
+than top up.
+
+Match result, for the record: achesso +61 =43 -106 against sgambetto, 39.3 %,
+median 133 plies, longest 380, 142 adjudications and 68 normal terminations.
+Both matches used binary `c7ea34b5`, verified by checksum, so the swing from
+57.5 % under SPRT adjudication to 39.3 % under loose adjudication is not a build
+difference. What it is instead is undetermined and is not to be guessed at.
+
+Decisions recorded before the numbers land, so the method cannot be chosen to
+fit the answer: DEC-029 opponent, DEC-030 node limits instead of fixed depth,
+DEC-031 loose adjudication for profiling matches.
+
+Analysis launched detached, so a harness kill cannot take it down as it did the
+match:
+
+```
+tools/error_profile.py <match.pgn> --player achesso \
+    --engine ~/.local/bin/stockfish --nodes 3000000 --workers 6 \
+    --raw-out <raw.tsv> --resume --worst 40
+```
+
+27124 positions over 210 games at 3000000 nodes, median depth 24. Six workers on
+a four performance plus four efficiency core M1; fixed node counts make the
+scores independent of scheduling, so only wall time is affected. Estimated 10 to
+13 h.
+
+Still owed before S018 can close: the numbers themselves, `testing.md` rows, and
+a check of `MANUAL.md` and `DEV_MANUAL.md`.

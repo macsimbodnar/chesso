@@ -694,3 +694,86 @@ Consequences: Adding a `go` or `position` argument does not fail the suite. It h
               source of drift, the dispatch-table rewrite is the fix and it gets
               its own step. `uci_command_names()` is now part of the engine's
               public header and `help` output is sorted.
+
+## DEC-029  2026-08-10  S018 profiles games against sgambetto, not the mailbox build
+Tags:         measurement, s018, opponent
+Context:      S017's successor step names "the fixed mailbox build in
+              ~/.local/bin" as the opponent whose games are profiled. Measured,
+              that build loses 6-0 to the current engine over a smoke match, and
+              `~/.local/bin/chesso` advertises only `Use Book`, confirming it is
+              the pre-bitboard engine. An error profile taken from those games
+              is the error distribution of an already-won position, which is not
+              the distribution that decides games. sgambetto, an engine written
+              by a friend and available in the same directory, scored 8.5/20
+              against the current build under the same conditions.
+Decision:     Proposed by the agent, chosen by the owner. sgambetto is the
+              opponent for the S018 run. 210 games were played at 10+0.2 and the
+              current engine scored 39.3 % (+61 =43 -106), so the two are close
+              enough that the games are fought rather than decided.
+Rejected:     The mailbox build, for the reason above -- the step file's letter
+              against its purpose. Self-play, which is balanced by construction
+              and closest to what SPRT measures, but shares every blind spot
+              between the two sides, so a weakness both hold is never punished
+              and never appears as cost. Nodes-limited Stockfish, which is
+              tunable and would give a lasting strength anchor, but is the same
+              program as the judge, so the opponent and the referee would share
+              an evaluation function. It stays on the table as a second opponent
+              if the distribution needs a cross-check.
+Consequences: The step file's `accepts` field is not satisfied literally and this
+              entry is the reason. The finding this run produces has been shown
+              on one opponent only; if S019 turns out to rest on the phase
+              ranking, a second opponent is the check that it transfers, and
+              DEC-019 is the history that says such checks are not optional.
+
+## DEC-030  2026-08-10  The reference search is limited by nodes, never by depth
+Tags:         measurement, tooling, stockfish
+Context:      S016 analysed one game at a fixed depth of 18 and reported 159
+              positions in about 47 seconds, which reads as 0.30 s per position.
+              That figure does not generalise. Over 12 positions sampled at
+              random from real games, depth 18 ran a median of 0.71 s, a mean of
+              78.80 s and a maximum of 925.90 s: one position in twelve took a
+              quarter of an hour. A budget built on the mean is meaningless and a
+              budget built on the median is wrong by two orders of magnitude on
+              the positions that matter.
+Decision:     Proposed by the agent, accepted by the owner. Bulk analysis is
+              limited by nodes. Measured over 20 sampled positions: 500000 nodes
+              is 0.83 s mean, 1.08 s worst, median depth 18; 1000000 nodes is
+              1.63 s mean, 2.11 s worst, median depth 21; 3000000 nodes is 4.84 s
+              mean, 6.21 s worst, median depth 24. The S018 run uses 3000000.
+              `--depth` remains available and is documented as unbudgetable.
+Rejected:     Keeping fixed depth for consistency with S016 -- consistency with a
+              measurement whose cost estimate was wrong by 100x is not worth
+              having. A movetime limit, which bounds cost but makes the result
+              depend on machine load and on how many workers are running, so two
+              runs of the same file would disagree.
+Consequences: Reference scores in this project are quoted with a node count, not
+              a depth. The S016 figures were taken at depth 18 and are not
+              directly comparable; the closest equivalent is 500000 nodes, which
+              reaches median depth 18. Node limits are reproducible across
+              machines, which fixed depth also is and movetime is not.
+
+## DEC-031  2026-08-10  Profiling matches are adjudicated loosely, strength matches are not
+Tags:         measurement, fastchess, adjudication
+Context:      `fastchess.sh` adjudicates at `-resign movecount=3 score=400
+              -draw movenumber=40 movecount=8 score=10`, which is right for an
+              SPRT: it stops spending time on games whose result is already
+              known. Reusing it for S018 was measured and produced 48 opening,
+              61 early middlegame, 6 late middlegame and **0 endgame** moves out
+              of 115. S019 exists because of an endgame evaluation defect, so the
+              profiling run would have been blind to the phase it was for.
+Decision:     Proposed by the agent, chosen by the owner. Profiling matches use
+              `-draw movenumber=80 movecount=10 score=5 -resign movecount=8
+              score=900 -maxmoves 200`. Measured over 10 games, this moved the
+              median game from 50 plies to 166 and produced 238 late middlegame,
+              289 endgame and 9 pawn endgame moves.
+Rejected:     No adjudication at all, which is the most faithful and spends the
+              machine on dead-drawn endings that contribute nothing. Keeping the
+              SPRT settings, for the reason above.
+Consequences: The two match kinds are not comparable to each other. Under the
+              SPRT settings the engine scored 57.5 % against sgambetto over 20
+              games; under the loose settings it scored 39.3 % over 210 with the
+              same binary, `c7ea34b5`. Games played to completion are a different
+              measurement, and any future comparison has to state which settings
+              produced it. Whether that gap is the endgame defect or the small
+              sample is exactly what the S018 profile is being run to find out,
+              and it is not to be asserted before the numbers land.
