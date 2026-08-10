@@ -14,36 +14,42 @@ Updated: 2026-08-11, overnight S028 run.
   pinned clang-format at `e0c338e` — `ae814b6` had shipped them unformatted, so
   the section 5 gate was red at that commit and at every commit after it. The
   self-play data is generated: `.tuning/selfplay_v1.tsv`, 20000 games,
-  1 490 839 rows. The fit is running, executed by the agent under a one-run
-  delegation from the owner (DEC-034; DEC-015 stands for every later fit).
-  S027 follows, once the returned constants have an SPRT verdict.
+  1 490 839 rows. The fit ran, executed by the agent under a one-run
+  delegation from the owner (DEC-034; DEC-015 stands for every later fit), and
+  took held-out error from 0.113852 to 0.108043 on a 149083-position split it
+  never saw. The constants are in `src/eval_tables.hpp` at `c31b995`, the
+  anchor tests are re-anchored against a second implementation of `evaluate()`,
+  and the whole suite is green including deep perft. **Only the SPRT is left.**
+  S027 follows the verdict.
 
 ## The overnight run, and how to resume it
 
 Written so an interrupted session picks up from the filesystem alone. Check
 each state in order and act on the first that matches.
 
-1. **Tuner still running** — `pgrep -f "build/tools/tuner"` returns a pid.
-   Wait. Progress is in `.tuning/tuner_v1.log`. Do not start a timed match
-   alongside it; a match sharing the cores measures the tuner.
-2. **Tuner finished, `.tuning/tuned_tables.hpp` exists** — read the last line
-   of `.tuning/tuner_v1.log`. It prints `best: train ... validation ...
-   (start ... / ...)`. Held-out must be below the starting figure, and the
-   tuner prints a refusal warning if it is not. If it refused, stop: the fit
-   failed, record that and do not touch `eval_tables.hpp`.
-3. **Fit good, `src/eval_tables.hpp` unmodified** — paste the tuned
-   definitions over the corresponding ones, `cmake --build build -j8`,
-   `ctest --test-dir build -L fast`, `./clang-format.sh --check`. Leave it
-   uncommitted so the SPRT reference is the hand-picked constants.
-4. **Tables pasted, no match running** — `REF=e0c338e ./fastchess.sh`, full
-   bounds, wrapped in `caffeinate -is` and detached. That commit is the
-   hand-picked constants with a green gate. Log at `/tmp/fastchess_full.log`.
-5. **Match finished** — the verdict goes into the step file and into
-   `testing.md` whatever it says. Zero is recorded as zero and the constants
-   are still discardable. Commit only on a green suite; never push.
+1. **A match is running** — `pgrep -x fastchess` returns a pid. Wait, and
+   start nothing else: a second timed match measures the first. Progress is in
+   `/tmp/sprt_s028_console.log`, and `/tmp/fastchess_full.log` is fastchess's
+   own.
+2. **No match running and the step file has no verdict** — the match was
+   interrupted. Read the last SPRT block in `/tmp/sprt_s028_console.log`; if it
+   holds a few hundred games or more, that is a partial result and is recorded
+   as partial, not as a verdict. Otherwise restart it:
+   `REF=9fc6fdf ./fastchess.sh`, full bounds, wrapped in `caffeinate -is` and
+   detached. `9fc6fdf` is the hand-written constants with a green gate, one
+   commit before the tuned ones.
+3. **Match finished** — the verdict goes into the step file and into
+   `testing.md` whatever it says. Zero is recorded as zero. A pass completes
+   the step; a fail reverts `c31b995` and the step stays open with the fit
+   recorded as measured and rejected.
 
-The tuned constants are worthless until step 5, and the owner may discard the
-whole run on DEC-034 grounds without anything downstream depending on it.
+Earlier states, kept because they say what has already been checked: the tuner
+did not print its refusal warning, `.tuning/tuned_tables.hpp` is the fit it
+produced, and the paste is committed rather than sitting in the working tree.
+
+The tuned constants are worth nothing until the verdict, and the owner may
+discard the whole run on DEC-034 grounds without anything downstream depending
+on it.
 
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
