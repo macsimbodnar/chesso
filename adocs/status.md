@@ -5,9 +5,9 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-10 by `moltke --step status`.
 
-- Last done: S017
-- In progress: S018 rank chesso's own errors by game phase over hundreds of games, from Stockfish
-- Next: S018
+- Last done: S018
+- In progress: none
+- Next: S019
 - Blocked: none
 - Parked:
   - **S015's quiescence SEE pruning has never been re-measured.** It returned

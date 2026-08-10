@@ -190,17 +190,27 @@ class Engine:
         # it once rather than splitting every line on the way past. A search
         # prints about 30 lines, so this is tidiness rather than a measured
         # speed-up; it was not the cause of anything.
-        last, best = "", "-"
+        #
+        # A terminal position prints "info depth 0 score mate 0" and then
+        # "bestmove (none)", with no pv at all. Requiring a pv missed those and
+        # returned 0, which charged every delivered checkmate as a 1000 cp
+        # blunder: 20 moves and 20106 cp in the first full run. A pv line still
+        # wins when there is one, so a normal search is unaffected.
+        last_pv, last_any, best = "", "", "-"
         while True:
             line = self.p.stdout.readline()
             if not line:
                 break
             if line[0] == "i":
-                if " score " in line and " pv " in line:
-                    last = line
+                if " score " in line:
+                    last_any = line
+                    if " pv " in line:
+                        last_pv = line
             elif line.startswith("bestmove"):
                 best = line.split()[1]
                 break
+
+        last = last_pv or last_any
 
         if not last:
             return 0, best, False

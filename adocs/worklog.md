@@ -320,3 +320,119 @@ a check of `MANUAL.md` and `DEV_MANUAL.md`.
 > <summary>Monitor event: "S018 analysis progress and completion"</summary>
 > <event>S018 progress: 48/210 games</event>
 > </task-notification>
+
+## 2026-08-10T15:46+02:00 prompt
+
+> <task-notification>
+> <task-id>bk2f88z31</task-id>
+> <summary>Monitor event: "S018 analysis progress and completion"</summary>
+> <event>S018 progress: 88/210 games</event>
+> </task-notification>
+
+## 2026-08-10T16:58+02:00 prompt
+
+> <task-notification>
+> <task-id>bk2f88z31</task-id>
+> <summary>Monitor event: "S018 analysis progress and completion"</summary>
+> <event>S018 progress: 129/210 games</event>
+> </task-notification>
+
+## 2026-08-10T18:03+02:00 prompt
+
+> what is the status?
+
+## 2026-08-10T18:22+02:00 prompt
+
+> <task-notification>
+> <task-id>bk2f88z31</task-id>
+> <summary>Monitor event: "S018 analysis progress and completion"</summary>
+> <event>S018 progress: 169/210 games</event>
+> </task-notification>
+
+## 2026-08-10T19:40+02:00 prompt
+
+> <task-notification>
+> <task-id>bk2f88z31</task-id>
+> <summary>Monitor event: "S018 analysis progress and completion"</summary>
+> <event>S018 ANALYSIS ENDED at 210/210 games</event>
+> </task-notification>
+
+## 2026-08-10 recap — S018 first full run, defect found in the profiler, repair running
+
+The 8.8 h analysis completed: 210 games, 13522 profiled moves, 424740 cp given
+away, reference Stockfish at 3000000 nodes.
+
+**The numbers were not recorded, because reading the report found a defect in
+`tools/error_profile.py`.** The worst-moves table listed `Ra7#`, `Qg4#` and
+`Qxh6#` -- checkmates chesso delivered -- as its most expensive moves at 1000 cp
+each.
+
+Cause, confirmed against the real terminal positions obtained from
+`pgn_to_positions` rather than from a hand-written FEN: a mated position prints
+`info depth 0 score mate 0` and `bestmove (none)`, with no `pv` field at all.
+`Engine.evaluate` required `" pv "` to accept a scoring line, so it fell through
+to its default of 0. A delivered mate therefore cost `1000 + 0 = 1000` instead of
+`1000 + (-1000) = 0`.
+
+Scale: the whole `>=1000` band, 20 moves and 20106 cp, 4.7 % of the total, and it
+inverted the reading of the largest error band. Contamination sits mostly in the
+late middlegame and endgame columns, which are the ones S019 turns on.
+
+Fix: keep the last line carrying a score, preferring one with a `pv` when there
+is one, so a normal search is unaffected and a terminal position is no longer
+dropped. Verified on the three real mated FENs: score -100000, clamped -1000,
+mate flag true, so a delivered mate now costs 0.
+
+Repair rather than a fresh 8.8 h run: 32 of 210 games end in a terminal
+position, 17 of them on a profiled move. Those 17 were dropped from the raw file
+-- 965 rows, backed up as `s018_raw_prefix.tsv.bak` -- and re-analysed through
+`--resume`. About 30 minutes.
+
+While first checking this I hand-edited a FEN's side to move and got it wrong,
+which is the failure `CLAUDE.md` warns about; the verification that counts used
+the engine's own parser.
+
+Files: `tools/error_profile.py` only. No commit yet, the fix is committed with
+the corrected numbers once the repair lands.
+
+Still owed: the final numbers into the step file with machine and build
+characteristics, `testing.md` rows, completion stamp. Docs already checked and
+committed in `f371182`.
+
+## 2026-08-10T20:15+02:00 prompt
+
+> <task-notification>
+> <task-id>bzpr6xafj</task-id>
+> <summary>Monitor event: "S018 repair run completion"</summary>
+> <event>S018 REPAIR ENDED at 210/210 games</event>
+> </task-notification>
+
+## 2026-08-10 recap — S018 complete
+
+Repair finished. Corrected totals recorded in the step file and in
+`testing.md`, step moved to `plan_done/`.
+
+Verdict: the early middlegame costs most, 44.1 cp/move and 36.0 % of 407740 cp
+over 13522 moves. The endgame is the cheapest phase per move at 18.3, outside
+pawn endgames at 6.8. Evaluation bias is positive in every phase and worst in
+the late middlegame at +100.2 mean. The ranking survives removing the 1347
+mate-touching moves and again removing every clamped reference score, so it is
+not an artefact of the +/-1000 clamp.
+
+This contradicts the single game that produced S019. S019's own text asked for
+exactly this check before anything was written.
+
+Second defect found this session, in the gate rather than the code:
+`clang-format.sh` formats `git ls-files`, so a file that is still untracked is
+skipped. `tests/test_uci_surface.cpp` was untracked when the formatter ran
+during S017, so the format gate passed vacuously and the file was committed
+unformatted in `d31432a`. Caught by the S018 completion gate, formatted, tests
+still green. Worth a decision or a step: the gate cannot certify a new file on
+the commit that introduces it.
+
+Open, for the owner:
+- What S019 becomes, now that the endgame is not the phase that costs most.
+- Whether a second opponent cross-checks the distribution before S019 acts on
+  it. DEC-019 is three figures that failed to transfer.
+- Whether `test_uci.sh` gets wired into ctest, still unanswered from S017.
+- The `clang-format.sh` untracked-file hole above.

@@ -96,12 +96,16 @@ static std::string set_difference_report(const std::vector<std::string>& actual,
 
   if (!unexpected.empty()) {
     report += " Present but not in the golden list:";
-    for (const std::string& value : unexpected) { report += " [" + value + "]"; }
+    for (const std::string& value : unexpected) {
+      report += " [" + value + "]";
+    }
   }
 
   if (!missing.empty()) {
     report += " In the golden list but gone from the engine:";
-    for (const std::string& value : missing) { report += " [" + value + "]"; }
+    for (const std::string& value : missing) {
+      report += " [" + value + "]";
+    }
   }
 
   report += ". Update MANUAL.md and this test together.";

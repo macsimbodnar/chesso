@@ -67,3 +67,11 @@ documents they replace; their test columns name tests that exist today.
 | S017 | `MANUAL.md` fails until it documents every `go` and `position` argument | `test_uci_surface` "MANUAL.md documents every go and position argument"; observed red with the `fine70` row deleted | green |
 | S017 | `go mate`, `go searchmoves` and `go ponder` are swallowed and the rest of the line still searches | `test_uci_surface` "the ignored go arguments leave the rest of the line working" | green |
 | S017 | every `position` shortcut still reaches the board, and no two land on the same one | `test_uci_surface` "every position argument still reaches the board" | green |
+| S018 | a PGN of many games in, centipawns lost by phase and by error size out | `tools/error_profile.py` over 210 games, 13522 profiled moves, 27124 positions at 3000000 nodes | measured |
+| S018 | the reference limit has a bounded cost | 12 sampled positions: depth 18 median 0.71 s, max 925.90 s; 20 sampled positions: 3000000 nodes mean 4.84 s, max 6.21 s | measured, **fixed depth rejected**, DEC-030 |
+| S018 | the profiling match reaches every game phase | 10-game probe: SPRT adjudication 0 endgame moves, loose adjudication 289 | measured, **loose adopted**, DEC-031 |
+| S018 | a delivered checkmate costs nothing | three real mated FENs from `pgn_to_positions` score -100000, clamp to -1000, so cost is 1000 + -1000 = 0; observed wrong first, at +1000 for 20 moves and 20106 cp | green, red observed |
+| S018 | the repair changed only the contaminated games | corrected total 407740 cp against 424740, a difference of exactly 17000 = 17 games x 1000 | measured, identical elsewhere |
+| S018 | an interrupted run resumes without loss | 3 games, then `--resume`, gives the same 115 moves as an uninterrupted run | green |
+| S018 | the phase ranking is not an artefact of the clamp | re-bucketed excluding 1347 mate-touching moves, then excluding clamped reference scores; ranking unchanged in both | measured, stable |
+| S018 | the phase that costs most is named by measurement | early middlegame 44.1 cp/move and 36.0 % of loss; endgame 18.3 cp/move and 20.5 % | measured, **contradicts the S016 anecdote**, S019 affected |
