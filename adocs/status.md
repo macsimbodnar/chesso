@@ -6,9 +6,15 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-10, replan on DEC-033.
 
 - Last done: S018
-- In progress: S028 — tuner and self-play data built, data generation running
-- Next: S027 once S028 has a verdict
+- In progress: S028 fit every evaluation constant at once against self-play game outcomes
+- Next: S028
 - Blocked: none
+- Where S028 has got to: `datagen`, `tuner`, `eval_model.hpp` and
+  `test_eval_model` are built and committed at `ae814b6`. Self-play data is
+  generating into `.tuning/selfplay_v1.tsv`, 20000 games at 100000 nodes per
+  move, about 1.5 M rows and 95 minutes. The fit itself is the owner's to run
+  (DEC-015) and the run is stated at the end of the step file. S027 follows,
+  once the returned constants have an SPRT verdict.
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
