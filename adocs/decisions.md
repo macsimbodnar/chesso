@@ -933,3 +933,53 @@ Consequences: The next step is S028 and it ends in a handoff, not in a verdict:
               4M figure are not the same measurement; the 4M against 64M
               comparison, which is what the decision rests on, is internally
               consistent.
+
+## DEC-034  2026-08-11  The owner delegated the S028 fit to the agent for one run
+Tags:         tuning, workflow, dec-015
+
+Context:      DEC-015 draws the line at *running* the fit: the agent builds the
+              tuner, generates the data and states the run, and the owner
+              executes it. On the night of 2026-08-11 the owner had roughly
+              eight hours of idle machine and no intention of staying awake for
+              it. The self-play data was already generated and the tuner already
+              built and tested, so the only thing standing between the data and
+              an SPRT verdict was a single command nobody was awake to type.
+
+Decision:     The owner, asked which of three overnight plans to run, chose the
+              one that starts with the fit, and then said "everything else is on
+              you". The agent takes that as authorisation to execute this
+              specific run: the exact command written in
+              plan_current/S028_texel_tuning.md, on .tuning/selfplay_v1.tsv,
+              with the stated hyperparameters and thread count unchanged.
+
+              This is a one-run delegation, not an amendment. DEC-015 stands
+              unchanged for every later fit and for the S029 network training,
+              which is the case it was really written for. The agent states the
+              crossing out loud rather than performing it quietly, and the run
+              is reversible: the constants are worthless until an SPRT says
+              otherwise, and the owner can discard them and re-run the fit
+              themselves at no cost but the hours.
+
+Rejected:     Waiting for the owner to type the command. Correct by the letter
+              of DEC-015 and it spends the night doing nothing, which is the
+              opposite of what the owner asked for.
+
+              Treating the delegation as a general amendment to DEC-015. The
+              owner authorised a night, not a policy. The reason DEC-015 exists
+              -- that the owner wants the training runs of an engine bearing
+              their name to be theirs -- is untouched by one Texel fit over
+              constants the agent could equally have hand-written.
+
+              Running with more threads than the step file states, to finish
+              sooner and leave more of the night for the SPRT. Changing the
+              stated run makes the recorded run and the executed run two
+              different things, and float summation order is thread-dependent.
+              The 25 % is not worth the discrepancy.
+
+Consequences: S028's fit is executed by the agent this once and the fact is
+              recorded here rather than left in a transcript. The constants that
+              come back are measured by SPRT exactly as the step file requires,
+              against e0c338e, and a verdict of zero is recorded as zero. If the
+              owner reads this in the morning and disagrees, the constants are
+              discarded and the fit is re-run by them; nothing downstream has
+              been built on it by then.

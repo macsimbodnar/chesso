@@ -518,3 +518,12 @@ the step file for the owner.
 
 Also found: the S018 evidence was living in a session scratchpad under
 /private/tmp, which macOS purges. Moved to `adocs/data/` with a README.
+
+## 2026-08-11T00:58+02:00 prompt
+
+>  i am about to go to sleep. I think this is a good moment to run long tests since you have 8h of time to run anything we need. I think you should execute the step in the plan that will require
+>   rigorouse test or chacking or finetuning that can be done comletly by you unsupervised and that requires long time. Propose me and i will decide
+
+## 2026-08-11T01:05+02:00 prompt
+
+> i am alresdy running caffeinate -d. Everything else is on you. Be sure that if you got interrupted you get back to work

@@ -3,18 +3,48 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-10, replan on DEC-033.
+Updated: 2026-08-11, overnight S028 run.
 
 - Last done: S018
 - In progress: S028 fit every evaluation constant at once against self-play game outcomes
 - Next: S028
 - Blocked: none
 - Where S028 has got to: `datagen`, `tuner`, `eval_model.hpp` and
-  `test_eval_model` are built and committed at `ae814b6`. Self-play data is
-  generating into `.tuning/selfplay_v1.tsv`, 20000 games at 100000 nodes per
-  move, about 1.5 M rows and 95 minutes. The fit itself is the owner's to run
-  (DEC-015) and the run is stated at the end of the step file. S027 follows,
-  once the returned constants have an SPRT verdict.
+  `test_eval_model` are built and committed at `ae814b6`, and formatted to the
+  pinned clang-format at `e0c338e` — `ae814b6` had shipped them unformatted, so
+  the section 5 gate was red at that commit and at every commit after it. The
+  self-play data is generated: `.tuning/selfplay_v1.tsv`, 20000 games,
+  1 490 839 rows. The fit is running, executed by the agent under a one-run
+  delegation from the owner (DEC-034; DEC-015 stands for every later fit).
+  S027 follows, once the returned constants have an SPRT verdict.
+
+## The overnight run, and how to resume it
+
+Written so an interrupted session picks up from the filesystem alone. Check
+each state in order and act on the first that matches.
+
+1. **Tuner still running** — `pgrep -f "build/tools/tuner"` returns a pid.
+   Wait. Progress is in `.tuning/tuner_v1.log`. Do not start a timed match
+   alongside it; a match sharing the cores measures the tuner.
+2. **Tuner finished, `.tuning/tuned_tables.hpp` exists** — read the last line
+   of `.tuning/tuner_v1.log`. It prints `best: train ... validation ...
+   (start ... / ...)`. Held-out must be below the starting figure, and the
+   tuner prints a refusal warning if it is not. If it refused, stop: the fit
+   failed, record that and do not touch `eval_tables.hpp`.
+3. **Fit good, `src/eval_tables.hpp` unmodified** — paste the tuned
+   definitions over the corresponding ones, `cmake --build build -j8`,
+   `ctest --test-dir build -L fast`, `./clang-format.sh --check`. Leave it
+   uncommitted so the SPRT reference is the hand-picked constants.
+4. **Tables pasted, no match running** — `REF=e0c338e ./fastchess.sh`, full
+   bounds, wrapped in `caffeinate -is` and detached. That commit is the
+   hand-picked constants with a green gate. Log at `/tmp/fastchess_full.log`.
+5. **Match finished** — the verdict goes into the step file and into
+   `testing.md` whatever it says. Zero is recorded as zero and the constants
+   are still discardable. Commit only on a green suite; never push.
+
+The tuned constants are worthless until step 5, and the owner may discard the
+whole run on DEC-034 grounds without anything downstream depending on it.
+
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
@@ -40,8 +70,8 @@ Updated: 2026-08-10, replan on DEC-033.
     10+0.2 with three usable cores an SPRT verdict costs about an hour, the
     opening book is only `8moves_v3.pgn`, and this machine runs `opendirectoryd`
     at half a core often enough to matter. An x86-64 Linux box fixes this and is
-    needed for S032 and S029 regardless. S028's self-play data generation will
-    occupy the same cores, so nothing can be measured while it runs.
+    needed for S032 and S029 regardless. S028's self-play data generation and
+    its fit occupy the same cores, so nothing can be measured while either runs.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
