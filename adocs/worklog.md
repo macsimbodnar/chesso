@@ -193,3 +193,58 @@ No tests added. No commit. Working tree still carries the previous turn's
 ## 2026-08-10T11:51+02:00 prompt
 
 > retyr
+
+## 2026-08-10 recap — S018 tooling committed, 400-game match started
+
+Commit `45c83ab`. `tools/error_profile.py` new, phase column added to
+`tools/pgn_to_positions.cpp`, `tools/analyse_game.py` made tolerant of it.
+
+**Correction to the previous recap.** The "defect, blocking" recorded there --
+`error_profile.py` 6.2x slower with four workers than with one -- was not real.
+It came from comparing a 236-position run against an extrapolation from three
+hand-picked FENs that happened to sit near the median cost. Measured properly,
+6 games and 236 positions take 140.67 s with four workers against a 385 s
+serial estimate, a 2.7x speed-up. There was never a parallel defect and the GIL
+explanation was wrong: a search prints about 30 lines, not thousands. The
+parse-once change was kept because it is verified behaviour-neutral, identical
+raw output at depth 12, but its justification comment was rewritten to say it
+is tidiness and not a fix.
+
+**Fixed depth abandoned for the reference search.** Over 12 sampled positions
+depth 18 ran a median of 0.71 s, a mean of 78.80 s and a maximum of 925.90 s:
+one position in twelve took a quarter of an hour. Node limits have no such
+tail.
+
+| limit | mean | median | max | depth reached min/med/max |
+|---|---|---|---|---|
+| 500000 nodes | 0.83 s | 0.88 s | 1.08 s | 16/18/64 |
+| 1000000 nodes | 1.63 s | 1.77 s | 2.11 s | 17/21/82 |
+| 3000000 nodes | 4.84 s | 5.04 s | 6.21 s | 17/24/134 |
+
+1000000 nodes reaches median depth 21, so it is at least the depth 20 the owner
+asked for, and it is budgetable.
+
+**Adjudication settings decided by measurement.** The SPRT settings produce no
+endgames at all, which would have made the run blind to the phase S019 is about.
+
+| | tight (SPRT) | loose |
+|---|---|---|
+| median plies | 50 | 166 |
+| scored positions per game | 39 | 155 |
+| endgame moves | 0 | 289 |
+| pawn endgame moves | 0 | 9 |
+
+Loose is `-draw movenumber=80 movecount=10 score=5 -resign movecount=8
+score=900 -maxmoves 200`.
+
+Owner's choices for the run: opponent sgambetto, loose adjudication, depth 20
+equivalent, about 400 games. Opponent deviates from the step file, which names
+the mailbox build; mailbox lost 6-0 in the smoke match while sgambetto scored
+8.5/20, so the mailbox distribution would be that of an already-won position.
+A decision entry is owed before the step completes.
+
+Match started in the background: 400 games, achesso vs sgambetto, 10+0.2,
+concurrency 3, engine binary snapshotted. About 2 h. Analysis follows and is
+about 10.3 h at 1000000 nodes or 5.3 h at 500000; the choice is open.
+
+No tests added. No step completion.
