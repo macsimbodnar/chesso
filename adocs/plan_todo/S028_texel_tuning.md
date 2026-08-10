@@ -3,11 +3,25 @@ goal:       fit every evaluation constant at once against self-play game outcome
 accepts:    a tuner that reduces prediction error on a held-out set, self-play data generated and prepared, and the exact run stated for the owner to execute; then an SPRT of the returned constants against the hand-picked ones
 touches:    tools/, src/eval_tables.hpp values only
 excludes:   changing which terms exist; **running the fit** -- the agent delivers the tuner and the data, the owner runs it (DEC-015)
-decisions:  DEC-016, DEC-015
+decisions:  DEC-016, DEC-015, DEC-033
 closes:
 blocks:
 paused_by:
 done:
+
+## Why this runs first
+
+It was 28th in the plan and it is now next. DEC-033 measured what kind of defect
+gives the centipawns away: 160 expensive moves re-asked at sixteen times the
+search removed 24.1 % of the error and left 95 of 160 moves unchanged. The engine
+mostly believes the move it played. What it believes it with is material plus a
+piece-square table written by hand, which `eval_tables.hpp` itself calls a
+starting point and nothing more.
+
+Nothing else on the plan touches that. The search block is bounded at about
+10 cp per effective doubling on the same population, and every S027 term added
+before the tuner exists is measured against unfitted tables, so a term that
+measures zero cannot be told from a term whose weight is wrong.
 
 ## Needs
 

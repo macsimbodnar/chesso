@@ -14,6 +14,7 @@ are in `CLAUDE.md`.
 | `tests/` | doctest suites plus `bench_movegen`, the perft and generator benchmark |
 | `tools/` | measurement and analysis, not shipped with the engine |
 | `adocs/` | the workflow state: specs, plan, steps, decisions, testing ledger |
+| `adocs/data/` | raw output of runs a decision rests on, kept because regenerating it costs hours of reference search. `adocs/data/README.md` says what each file is |
 | `books/` | opening books for match play |
 | `.ref-builds/` | git worktrees created by `fastchess.sh`, gitignored |
 
@@ -193,6 +194,27 @@ the two kinds of match to each other — DEC-031:
 ```bash
 -draw movenumber=80 movecount=10 score=5 -resign movecount=8 score=900 -maxmoves 200
 ```
+
+## Ask whether an error was the search or the evaluation
+
+```bash
+tools/depth_vs_eval.py adocs/data/S018_raw.tsv \
+    --engine build/src/chesso --reference ~/.local/bin/stockfish \
+    --out probe.tsv
+```
+
+Samples the expensive moves out of a raw profile, re-asks chesso at its in-game
+node budget and at 16 times it, and re-costs both answers with the same
+reference. A big drop means horizon errors and the payoff is in search; a small
+one means the engine still likes the same move much deeper and the payoff is in
+what it believes a position is worth.
+
+The default sample of 160 positions at 4M against 64M nodes took 683 s on three
+workers with the machine otherwise busy. `--min-cost` and `--decided` select
+which errors are asked about; the defaults take errors of 100 cp or more in
+positions inside +/-300, because centipawns given away in an already-decided
+position do not decide games. DEC-033 is the run this produced and
+`adocs/data/DEC033_depth_vs_eval.tsv` is its output.
 
 ## Profile
 

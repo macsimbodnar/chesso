@@ -822,3 +822,114 @@ Consequences: S019 as written is aimed at the wrong phase and its content is
               the outstanding check. Raw per-move records are kept, so any later
               question can be asked with `--from-raw` without replaying the 8.8 h
               run.
+
+## DEC-033  2026-08-10  Evaluation is the binding constraint, so tuning comes before search
+Tags:         evaluation, search, measurement, plan-order, s019, s027, s028, s033
+Context:      DEC-032 established where the centipawns go by phase but not what
+              kind of defect gives them away. A move can cost 200 cp because the
+              engine did not see far enough, or because it saw far enough and
+              liked the wrong position. The plan's order assumed the first: S019
+              to S026 are search and ordering work, placed ahead of the
+              evaluation terms in S027 on the argument that a better score at the
+              leaves is worth less when the tree above them is the wrong shape.
+              That argument was never measured.
+
+              It is now. 160 positions were sampled from the S018 raw records
+              where chesso gave away 100 cp or more with the game still
+              undecided (reference score inside +/-300, no mate). Each was
+              re-asked of chesso at 4000000 nodes, which is about its budget per
+              move at 10+0.2, and at 64000000 nodes, which is 16 times that and
+              more effective depth than any pruning package buys. Both answers
+              were costed by the same reference the profile used: Stockfish
+              dev-20260803-762dd1da at 3000000 nodes, DEC-030.
+
+              | | cp/move |
+              |---|---|
+              | as played in the game | 204.7 |
+              | at 4000000 nodes | 170.1 |
+              | at 64000000 nodes | 129.1 |
+
+              Sixteen times the search removes 24.1 % of the error, 10.3 cp per
+              doubling. **95 of the 160 moves are unchanged at 16x**: the engine
+              is not missing a refutation, it believes the move. Where the move
+              does change, 65 of 160, cost falls from 186.0 to 84.9, so depth
+              works where the horizon is the defect and is not the defect three
+              times in five. 97 of 160 still cost 100 cp or more at 16x.
+
+              Removed by 16x, by phase: opening 26 %, early middlegame 30 %,
+              late middlegame 15 %, endgame 3 % (n=11, too few to lean on).
+
+              Two supporting cuts of the same raw file: quiet moves carry 82.8 %
+              of all loss and 1031 of the 1235 errors of 100 cp or more; the
+              coupling between evaluation bias and move cost is weak, 18.2
+              cp/move at bias under 25 against 40.7 at bias 300 or more, twelve
+              times the bias for 2.2 times the cost.
+
+              What the engine evaluates with, meanwhile, is material plus a
+              tapered piece-square table and nothing else, with knight and
+              bishop both at 300, no bishop pair, and tables that eval_tables.hpp
+              itself calls a starting point and nothing more. None of it has ever
+              been fitted to anything.
+Decision:     By the owner, on the agent's measurement. The plan order changes.
+              S028, fitting the evaluation constants that already exist to
+              self-play outcomes, is promoted ahead of S019 to S026 and becomes
+              the next step. S027's terms follow it and are fitted in the same
+              way rather than hand-picked. The cheap search items stay in the
+              plan and stay worth doing at about 10 cp per effective doubling,
+              but they are bounded by that number and no longer lead.
+
+              S019 is dropped. Its premise died twice: DEC-032 showed the endgame
+              is the cheapest phase per move, and the measurement above shows
+              endgame errors are the least depth-fixable but on 11 positions. Its
+              content was always going to be S027's, and keeping two steps for
+              one body of work is how the same term gets written twice. The step
+              file is removed from plan_todo and its line from plan.md; the id is
+              retired and never reused.
+
+              S033 is created for reverse futility pruning, which the plan did
+              not contain anywhere. S026 is "futility and razoring" and its goal
+              line describes forward futility; reverse futility, also called
+              static null move pruning, is a different technique and is the
+              largest single search gain in the one public per-feature log
+              found (Blunder, +57.1 +/- 16.9 self-play).
+Rejected:     Keeping the search-first order. It rests on an argument that the
+              measurement contradicts for this engine at this strength: the tree
+              shape is worth about 10 cp per doubling and the leaf value is worth
+              the 129 cp that four doublings did not touch. DEC-019 is three
+              cases of exactly this, a plausible ordering that did not survive
+              contact with a number.
+
+              Going straight to S029. A network needs training data from an
+              engine that already plays reasonably, and a tuned hand-crafted
+              evaluation is that floor. It is also the only evaluation the owner
+              can inspect when the network later disagrees with it.
+
+              Writing S027's terms before tuning. An untuned term is measured
+              against untuned tables, so its SPRT answers a question about two
+              unfitted things at once, and a term that measures zero cannot be
+              told from a term whose weight is wrong. Tuning what exists first is
+              one change and makes every later term's verdict mean something.
+
+              Retargeting S019 at the middlegame instead of dropping it. That
+              makes it a duplicate of S027 under a different id.
+Consequences: The next step is S028 and it ends in a handoff, not in a verdict:
+              the agent builds the tuner, generates and prepares the self-play
+              data and states the run; the owner executes the fit; the returned
+              constants are then measured by SPRT. DEC-015 is unchanged and this
+              is the first step it actually binds.
+
+              The evidence behind DEC-032 and this entry now lives in
+              adocs/data/ instead of a temporary directory. It was found in a
+              session scratchpad under /private/tmp, which macOS purges: 8.8
+              hours of reference search was one cleanup away from gone.
+              tools/depth_vs_eval.py is the probe that produced the numbers
+              above and re-runs them from the raw records.
+
+              The measurement inherits every caveat of the profile it samples.
+              One opponent, sgambetto, DEC-029. It samples only errors of 100 cp
+              or more, which are 61 % of the total loss and not all of it. The
+              4000000-node baseline starts from an empty transposition table
+              where the game move had a warm one, so the in-game figure and the
+              4M figure are not the same measurement; the 4M against 64M
+              comparison, which is what the decision rests on, is internally
+              consistent.

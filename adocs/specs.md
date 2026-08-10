@@ -61,12 +61,16 @@ Engine state as of 2026-08-09, at commit `b6ef5c4`:
 | `generate_captures` / `generate_quiets` | partition `generate_moves` exactly (INV-3) |
 | board | `board_t` 216 B: bitboards, `squares[64]`, evaluation accumulators |
 | make/unmake | 16-byte history record, undo by xor, no board copy |
-| evaluation | material plus tapered piece-square tables, maintained incrementally (INV-4) |
+| evaluation | material plus tapered piece-square tables, maintained incrementally (INV-4), **never fitted to anything** |
 | search | alpha-beta, transposition table, quiescence, PVS, null move pruning, late move reduction, staged generation, killers, history, countermoves, insufficient-material draws |
 | exchange evaluation | `see()` exact, `see_ge()` fast; quiescence declines losing captures |
-| absent | aspiration windows, futility, razoring, singular extensions, delta pruning, capture history, continuation history |
+| absent, evaluation | any term beyond material and the tables: mobility, king safety, pawn structure, passed pawns, bishop pair, tempo. No tuning of the constants that do exist |
+| absent, search | aspiration windows, reverse futility, forward futility, razoring, late move pruning, extensions of any kind, delta pruning, capture history, continuation history, correction history |
+| absent, machinery | quiescence never probes or stores the transposition table; no static evaluation in a table entry; no `improving` flag; history is `[piece][to]` with a bonus and no malus and no ageing, and is zeroed on every `go` rather than carried through the game; quiescence is capped at 8 plies |
 
-The absent row is where the remaining strength is, and it is the plan.
+Both absent rows hold strength. **The evaluation row holds more of it**, which
+is measured rather than assumed — see below and DEC-033. The machinery row is
+what the audit of the search found while measuring that and has no steps yet.
 
 ### Where the centipawns actually go
 
@@ -93,6 +97,31 @@ pawn endgames. **The evaluation is optimistic in every phase**, worst in the
 late middlegame. The ranking is stable after removing mate-touching moves and
 after removing clamped reference scores. It has been measured against one
 opponent only, and DEC-019 is the reason that matters.
+
+### Search error or evaluation error
+
+Added 2026-08-10 with DEC-033. The profile above says how much was given away
+and where; it does not say why. 160 moves that cost 100 cp or more while the
+game was still undecided were re-asked of chesso at 4000000 nodes, about its
+budget per move at 10+0.2, and at 64000000 nodes, and both answers were costed
+by the same reference. `tools/depth_vs_eval.py`, evidence in
+`adocs/data/DEC033_depth_vs_eval.tsv`.
+
+| | cp/move |
+|---|---|
+| as played in the game | 204.7 |
+| at 4000000 nodes | 170.1 |
+| at 64000000 nodes | 129.1 |
+
+Sixteen times the search removes **24.1 %** of the error, 10.3 cp per doubling,
+and **95 of the 160 moves are unchanged**. Where the move does change, cost
+falls from 186.0 to 84.9. Quiet moves carry 82.8 % of all loss in the profile
+and 1031 of its 1235 errors of 100 cp or more.
+
+**Chesso is evaluation-limited, not depth-limited, on the errors that decide
+games.** That is what put S028 next and reordered everything after it. The
+figure bounds the search block too: about 10 cp per effective doubling is what
+those steps are playing for.
 
 ## Non-goals
 
@@ -125,3 +154,9 @@ opponent only, and DEC-019 is the reason that matters.
 - Phase two has no steps and should not get any until the engine is strong
   enough for an experiment to mean something. The transition gets a decision
   entry when it happens.
+- The "absent, machinery" row above has no plan steps behind it. Late move
+  pruning, check and singular extensions, a quiescence transposition probe, a
+  static evaluation in the table entry, an `improving` flag, history malus and
+  ageing, and correction history are all standard and all missing. They were
+  found while measuring DEC-033 and are parked rather than planned, because a
+  step is created by a decision and no decision has been taken on them.

@@ -13,18 +13,31 @@ stops short of the run itself: it delivers the tuner, the data and the training
 program, and the owner executes them (DEC-015).
 
 The order below is not the order of expected Elo, and that is deliberate. S001
-to S016 are already done and are here as the record of what each change cost and
-bought. Of the rest: S017 comes first because the workflow asserts a surface
-check that nothing currently performs. S018 comes second because this engine has
-now taken three published Elo figures at face value and measured 0, 0 and
-*slower* (DEC-019), so the next evaluation term is chosen from chesso's own
-error distribution rather than from what other engines report. S019 to S026 are
-the search and ordering features that make evaluation worth having -- a better
-score at the leaves is worth less when the tree above them is the wrong shape,
-which is the measured reason S006 was worth nothing. S027 and S028 are the
-hand-crafted evaluation and its tuning, which exist mainly as the floor that
-generates training data for S029. S030 to S032 are movegen work worth 1-3 % each
-and are last because they are worth 1-3 % each.
+to S018 are already done and are here as the record of what each change cost and
+bought. S017 came first because the workflow asserts a surface check that nothing
+performed. S018 came second because this engine has now taken three published Elo
+figures at face value and measured 0, 0 and *slower* (DEC-019), so what is worked
+on next is chosen from chesso's own error distribution rather than from what
+other engines report.
+
+**The rest of the order is what S018 and DEC-033 measured, and it is not what it
+was.** The plan used to run the search and ordering features first, on the
+argument that a better score at the leaves is worth less when the tree above them
+is the wrong shape. That argument was tested: 160 expensive moves re-asked at 16
+times the search removed 24.1 % of the error, 10.3 cp per doubling, and 95 of the
+160 moves did not change at all. The engine mostly is not missing the refutation,
+it believes the move — and it believes it with material and a hand-written
+piece-square table that has never been fitted to anything. So the evaluation
+leads: **S028 fits the constants that already exist, S027 adds terms and fits
+them the same way.** The search and ordering block follows, still worth doing and
+now with a number on what it is worth. S029 is the network, for which the tuned
+hand-crafted evaluation is the floor that generates training data. S030 to S032
+are movegen work worth 1-3 % each and are last because they are worth 1-3 % each.
+
+S019 is retired. It was written from one game, DEC-032 showed the endgame is the
+cheapest phase per move, and DEC-033 showed endgame errors are the least
+depth-fixable of all. Its content belonged to S027 from the start. The id is not
+reused.
 
 Order lives here and nowhere else. Step detail lives in the step files under
 `plan_todo/`, `plan_current/`, and `plan_done/`. Ids are allocated in creation
@@ -54,16 +67,16 @@ every list entry must have a step file — both are INV-3.
 16. S016  turn a game into per-move cost from Stockfish instead of reading the move list
 17. S017  a test over the UCI command and option surface that fails when it changes
 18. S018  rank chesso's own errors by game phase over hundreds of games, from Stockfish
-19. S019  evaluation terms for the phase the error analysis says costs most
-20. S020  compute the in-check state once per node instead of once per call site
-21. S021  start the root search in a narrow window around the previous score
-22. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
-23. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
+19. S028  fit every evaluation constant at once against self-play game outcomes
+20. S027  mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
+21. S033  prune a node whose static score is already far enough above beta
+22. S021  start the root search in a narrow window around the previous score
+23. S026  drop nodes near the horizon that cannot reach alpha
 24. S024  history indexed by the move played n plies ago and the current move
-25. S025  retry searching losing captures after the quiets, now that capture history exists
-26. S026  drop nodes near the horizon that cannot reach alpha
-27. S027  mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
-28. S028  fit every evaluation constant at once against self-play game outcomes
+25. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
+26. S025  retry searching losing captures after the quiets, now that capture history exists
+27. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
+28. S020  compute the in-check state once per node instead of once per call site
 29. S029  a perspective network evaluation trained on chesso's own self-play
 30. S030  move_t drops the moving piece and becomes 16 bits
 31. S031  one unconditional xor for the side-to-move zobrist key instead of two
