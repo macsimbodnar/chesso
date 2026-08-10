@@ -489,3 +489,32 @@ Gate green: build, fast suite 7/7, clang-format check clean.
 ## 2026-08-10T23:06+02:00 prompt
 
 > ok I agree with you. Adjust the plan and start execite them
+
+## 2026-08-10T23:35+02:00 recap
+
+**DEC-033, plan replan, S028 started.** Two commits: `bec9ed3` reorders the
+plan, `ae814b6` builds the S028 tooling.
+
+Measurement that caused it: `tools/depth_vs_eval.py`, new, sampled 160 moves
+from the S018 raw records that cost 100 cp or more with the game still
+undecided, re-asked chesso at 4M and 64M nodes and re-costed both with Stockfish
+at 3M nodes. 170.1 to 129.1 cp/move, 24.1 % removed, 10.3 cp per doubling, 95 of
+160 moves unchanged. Evaluation-limited, not depth-limited.
+
+Plan: S028 promoted from 28th to next, S027 follows, the search block after
+that. S019 retired, file removed. S033 created for reverse futility pruning,
+which the plan did not contain. specs.md gained the measurement, the two absent
+rows and a parked list of standard search machinery with no step behind it.
+
+S028 so far: `tools/datagen.cpp` self-play generator, `tools/tuner.cpp` Texel
+fit, `tools/eval_model.hpp` the shared linear model of `evaluate()`, and
+`tests/test_eval_model.cpp` which keeps that model equal to the engine (observed
+red: 408 cp of disagreement without the black mirror). Four testing.md rows.
+
+Data generation running: 20000 games at 100000 nodes per move into
+`.tuning/selfplay_v1.tsv`, about 15800 positions a minute, roughly 1.5 M rows
+and 95 minutes. The fit is not run here -- DEC-015 -- and the run is stated in
+the step file for the owner.
+
+Also found: the S018 evidence was living in a session scratchpad under
+/private/tmp, which macOS purges. Moved to `adocs/data/` with a README.

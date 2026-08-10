@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-10, replan on DEC-033.
 
 - Last done: S018
-- In progress: none
-- Next: S028 — fit every evaluation constant at once against self-play outcomes
+- In progress: S028 — tuner and self-play data built, data generation running
+- Next: S027 once S028 has a verdict
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
