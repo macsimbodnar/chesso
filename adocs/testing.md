@@ -75,3 +75,7 @@ documents they replace; their test columns name tests that exist today.
 | S018 | an interrupted run resumes without loss | 3 games, then `--resume`, gives the same 115 moves as an uninterrupted run | green |
 | S018 | the phase ranking is not an artefact of the clamp | re-bucketed excluding 1347 mate-touching moves, then excluding clamped reference scores; ranking unchanged in both | measured, stable |
 | S018 | the phase that costs most is named by measurement | early middlegame 44.1 cp/move and 36.0 % of loss; endgame 18.3 cp/move and 20.5 % | measured, **contradicts the S016 anecdote**, S019 affected |
+| DEC-033 | 16x more search removes only a quarter of the error | `tools/depth_vs_eval.py` over 160 positions: 170.1 cp/move at 4M nodes, 129.1 at 64M, 95 of 160 moves unchanged; evidence in `adocs/data/DEC033_depth_vs_eval.tsv` | measured, **evaluation-limited**, plan reordered |
+| S028 | the tuner's model computes what evaluate() computes | `test_eval_model` "the model reproduces evaluate() on every phase", 13 positions from a full board to bare kings, both sides to move | green, red observed: dropping the black mirror in `parse_placement` gives 408 cp of disagreement at the start position |
+| S028 | the model tapers on the engine's own phase | `test_eval_model` "the model's phase is game_phase()" | green |
+| S028 | those positions can tell colours and phases apart | `test_eval_model` "the positions can tell colours apart": at least 5 score non-zero, and both a phase <= 6 and a phase >= 22 appear | green, non-vacuous by construction |

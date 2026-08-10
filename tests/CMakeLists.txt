@@ -28,6 +28,12 @@ add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
 
+# The tuner's model of evaluate() lives in tools/, so this is the one test that
+# includes from there. S028: a model that drifts from the engine tunes the
+# wrong function and nothing downstream notices.
+add_doctest_target(test_eval_model)
+target_include_directories(test_eval_model PRIVATE ../tools)
+
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
 # where that tree is. Nothing else in the tests looks outside its own directory.
 add_doctest_target(test_uci_surface)

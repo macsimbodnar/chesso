@@ -216,6 +216,46 @@ positions inside +/-300, because centipawns given away in an already-decided
 position do not decide games. DEC-033 is the run this produced and
 `adocs/data/DEC033_depth_vs_eval.tsv` is its output.
 
+## Generate self-play data and fit the evaluation
+
+S028. Two programs: `datagen` plays chesso against itself and writes labelled
+positions, `tuner` fits the evaluation constants to those labels.
+
+```bash
+build/tools/datagen --out .tuning/selfplay_v1.tsv \
+    --games 20000 --nodes 100000 --threads 3 --seed 20260810
+
+build/tools/tuner --data .tuning/selfplay_v1.tsv \
+    --out .tuning/tuned_tables.hpp --threads 3
+```
+
+`datagen` writes `fen result score phase`, one line per position, where
+`result` is the game's outcome from White's point of view. It records only
+quiet positions — not in check, and the move the search chose is neither a
+capture nor a promotion — because `evaluate()` is only ever asked about
+positions quiescence has already resolved. Openings are 8 uniform random plies,
+discarded if the position is already scored past `--opening-limit`; games are
+adjudicated once one side holds `--resign-score` for `--resign-plies`.
+
+Rate on this machine, three threads: 200 games at 100000 nodes per move in 61 s,
+about 77 positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame.
+
+`tuner` fits `piece_value[0..4]`, `psqt_mg` and `psqt_eg`, 773 numbers, so that
+a sigmoid of the evaluation predicts the game result — Texel tuning. It never
+calls the search: `tools/eval_model.hpp` is `evaluate()` written as a linear
+function of its own constants, which is what makes a full pass cheap, and
+`test_eval_model` is what stops that model drifting from the engine. It reports
+held-out error every `--report` epochs and keeps the best one, prints a warning
+if the fit never beats the hand-written constants, and writes a header to paste
+into `eval_tables.hpp`.
+
+**The agent does not run the fit.** It builds both tools, generates the data and
+states the run; the owner executes it and the constants come back to be measured
+by SPRT like anything else. DEC-015.
+
+`.tuning/` is gitignored. Datasets are hundreds of megabytes and are not
+evidence in the sense `adocs/data/` is.
+
 ## Profile
 
 ```bash
