@@ -104,8 +104,8 @@ TEST_SUITE("eval model: agrees with the engine")
       REQUIRE(load_FEN(fen, &game));
 
       std::vector<uint16_t> pieces;
-      REQUIRE(eval_model::parse_placement(fen.substr(0, fen.find(' ')),
-                                          &pieces));
+      REQUIRE(
+          eval_model::parse_placement(fen.substr(0, fen.find(' ')), &pieces));
 
       CHECK(eval_model::phase_of(pieces.data(), pieces.size()) ==
             game_phase(&game.board));

@@ -146,9 +146,7 @@ double evaluate_position(const dataset_t& data,
 
 
 double sigmoid(double score, double k)
-{
-  return 1.0 / (1.0 + std::exp(-k * score * LN10_OVER_400));
-}
+{ return 1.0 / (1.0 + std::exp(-k * score * LN10_OVER_400)); }
 
 
 // Mean squared error over [first, last).
@@ -181,10 +179,14 @@ double error_range(const dataset_t& data,
     });
   }
 
-  for (std::thread& worker : workers) { worker.join(); }
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
 
   double total = 0.0;
-  for (const double value : partial) { total += value; }
+  for (const double value : partial) {
+    total += value;
+  }
 
   return total / static_cast<double>(count);
 }
@@ -201,8 +203,8 @@ void gradient(const dataset_t& data,
               std::vector<double>* out)
 {
   const size_t count = last - first;
-  std::vector<std::vector<double>> partial(threads,
-                                           std::vector<double>(PARAM_COUNT, 0.0));
+  std::vector<std::vector<double>> partial(
+      threads, std::vector<double>(PARAM_COUNT, 0.0));
   std::vector<std::thread> workers;
 
   for (unsigned t = 0; t < threads; ++t) {
@@ -219,9 +221,8 @@ void gradient(const dataset_t& data,
         const double sig = sigmoid(s, k);
 
         // d/ds of (r - sigma)^2, chained through the sigmoid.
-        const double outer =
-            -2.0 * (data.result[position] - sig) * sig * (1.0 - sig) *
-            k * LN10_OVER_400;
+        const double outer = -2.0 * (data.result[position] - sig) * sig *
+                             (1.0 - sig) * k * LN10_OVER_400;
 
         for (uint32_t j = data.offsets[position];
              j < data.offsets[position + 1]; ++j) {
@@ -239,12 +240,16 @@ void gradient(const dataset_t& data,
     });
   }
 
-  for (std::thread& worker : workers) { worker.join(); }
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
 
   out->assign(PARAM_COUNT, 0.0);
 
   for (const std::vector<double>& part : partial) {
-    for (size_t i = 0; i < PARAM_COUNT; ++i) { (*out)[i] += part[i]; }
+    for (size_t i = 0; i < PARAM_COUNT; ++i) {
+      (*out)[i] += part[i];
+    }
   }
 
   for (size_t i = 0; i < PARAM_COUNT; ++i) {
@@ -302,19 +307,21 @@ void write_tables(const std::string& path,
 
   const char* names[6] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
 
-  fprintf(out,
-          "// Fitted by tools/tuner from %zu self-play positions.\n"
-          "// data       %s\n"
-          "// K          %.4f\n"
-          "// error      %.6f train, %.6f validation\n"
-          "// seed       %" PRIu64 ", lr %.3f, validation split %.2f\n"
-          "//\n"
-          "// Paste over the corresponding definitions in eval_tables.hpp. The\n"
-          "// piece defines are what PAWN..QUEEN expand to; the tables replace\n"
-          "// psqt_mg and psqt_eg wholesale. S028, DEC-015: measured by SPRT\n"
-          "// against the hand-written constants before it is kept.\n\n",
-          positions, opts.data.c_str(), opts.k, train_error, validation_error,
-          opts.seed, opts.lr, opts.validation);
+  fprintf(
+      out,
+      "// Fitted by tools/tuner from %zu self-play positions.\n"
+      "// data       %s\n"
+      "// K          %.4f\n"
+      "// error      %.6f train, %.6f validation\n"
+      "// seed       %" PRIu64
+      ", lr %.3f, validation split %.2f\n"
+      "//\n"
+      "// Paste over the corresponding definitions in eval_tables.hpp. The\n"
+      "// piece defines are what PAWN..QUEEN expand to; the tables replace\n"
+      "// psqt_mg and psqt_eg wholesale. S028, DEC-015: measured by SPRT\n"
+      "// against the hand-written constants before it is kept.\n\n",
+      positions, opts.data.c_str(), opts.k, train_error, validation_error,
+      opts.seed, opts.lr, opts.validation);
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -393,17 +400,27 @@ int main(int argc, char** argv)
 
     const std::string value = argv[++i];
 
-    if (arg == "--data") { opts.data = value; }
-    else if (arg == "--out") { opts.out = value; }
-    else if (arg == "--k") { opts.k = atof(value.c_str()); }
-    else if (arg == "--lr") { opts.lr = atof(value.c_str()); }
-    else if (arg == "--epochs") { opts.epochs = atoi(value.c_str()); }
-    else if (arg == "--report") { opts.report = atoi(value.c_str()); }
-    else if (arg == "--patience") { opts.patience = atoi(value.c_str()); }
-    else if (arg == "--validation") { opts.validation = atof(value.c_str()); }
-    else if (arg == "--threads") { opts.threads = static_cast<unsigned>(atoi(value.c_str())); }
-    else if (arg == "--seed") { opts.seed = strtoull(value.c_str(), nullptr, 10); }
-    else {
+    if (arg == "--data") {
+      opts.data = value;
+    } else if (arg == "--out") {
+      opts.out = value;
+    } else if (arg == "--k") {
+      opts.k = atof(value.c_str());
+    } else if (arg == "--lr") {
+      opts.lr = atof(value.c_str());
+    } else if (arg == "--epochs") {
+      opts.epochs = atoi(value.c_str());
+    } else if (arg == "--report") {
+      opts.report = atoi(value.c_str());
+    } else if (arg == "--patience") {
+      opts.patience = atoi(value.c_str());
+    } else if (arg == "--validation") {
+      opts.validation = atof(value.c_str());
+    } else if (arg == "--threads") {
+      opts.threads = static_cast<unsigned>(atoi(value.c_str()));
+    } else if (arg == "--seed") {
+      opts.seed = strtoull(value.c_str(), nullptr, 10);
+    } else {
       usage();
       return 1;
     }
@@ -450,9 +467,8 @@ int main(int argc, char** argv)
     fprintf(stderr, "fitted K = %.4f\n", opts.k);
   }
 
-  const double start_train =
-      error_range(data, params.data(), opts.k, index, 0, train_count,
-                  opts.threads);
+  const double start_train = error_range(data, params.data(), opts.k, index, 0,
+                                         train_count, opts.threads);
   const double start_validation =
       error_range(data, params.data(), opts.k, index, train_count, data.size(),
                   opts.threads);
@@ -513,12 +529,10 @@ int main(int argc, char** argv)
     }
   }
 
-  const double final_train =
-      error_range(data, best.data(), opts.k, index, 0, train_count,
-                  opts.threads);
+  const double final_train = error_range(data, best.data(), opts.k, index, 0,
+                                         train_count, opts.threads);
 
-  fprintf(stderr,
-          "best: train %.6f  validation %.6f  (start %.6f / %.6f)\n",
+  fprintf(stderr, "best: train %.6f  validation %.6f  (start %.6f / %.6f)\n",
           final_train, best_validation, start_train, start_validation);
 
   if (best_validation >= start_validation) {

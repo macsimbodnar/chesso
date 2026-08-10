@@ -43,10 +43,10 @@ struct options_t
   uint64_t nodes = 5000;
   int random_plies = 8;
   int max_plies = 400;
-  int opening_limit = 400;   // discard an opening already this lopsided
-  int resign_score = 2000;   // adjudicate once one side is this far ahead
-  int resign_plies = 6;      // ... for this many plies in a row
-  int quiet_limit = 1000;    // do not record a position scored beyond this
+  int opening_limit = 400;  // discard an opening already this lopsided
+  int resign_score = 2000;  // adjudicate once one side is this far ahead
+  int resign_plies = 6;     // ... for this many plies in a row
+  int quiet_limit = 1000;   // do not record a position scored beyond this
   unsigned threads = 3;
   uint64_t seed = 1;
   int tt_mb = 16;
@@ -184,8 +184,8 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
 
   std::mt19937_64 rng(opts.seed + index);
 
-  const uint64_t share = opts.games / opts.threads +
-                         ((index < opts.games % opts.threads) ? 1 : 0);
+  const uint64_t share =
+      opts.games / opts.threads + ((index < opts.games % opts.threads) ? 1 : 0);
 
   std::vector<sample_t> samples;
 
@@ -245,8 +245,8 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
                          std::abs(found.score) < opts.quiet_limit;
 
       if (quiet) {
-        samples.push_back({generate_FEN(&game.board), white_score,
-                           game_phase(&game.board)});
+        samples.push_back(
+            {generate_FEN(&game.board), white_score, game_phase(&game.board)});
       }
 
       // Adjudication. Playing out a position won by 20 pawns produces labels
@@ -296,19 +296,20 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
 
 void usage()
 {
-  fprintf(stderr,
-          "datagen --out FILE [options]\n"
-          "  --games N          games to play (default 1000)\n"
-          "  --nodes N          node budget per move (default 5000)\n"
-          "  --random-plies N   uniform random opening moves (default 8)\n"
-          "  --max-plies N      give up on a game after this many (default 400)\n"
-          "  --opening-limit N  discard an opening scored beyond this (400)\n"
-          "  --resign-score N   adjudicate at this margin (default 2000)\n"
-          "  --resign-plies N   ... held for this many plies (default 6)\n"
-          "  --quiet-limit N    do not record beyond this score (default 1000)\n"
-          "  --threads N        worker threads (default 3)\n"
-          "  --seed N           rng seed (default 1)\n"
-          "  --hash N           transposition table MB per thread (default 16)\n");
+  fprintf(
+      stderr,
+      "datagen --out FILE [options]\n"
+      "  --games N          games to play (default 1000)\n"
+      "  --nodes N          node budget per move (default 5000)\n"
+      "  --random-plies N   uniform random opening moves (default 8)\n"
+      "  --max-plies N      give up on a game after this many (default 400)\n"
+      "  --opening-limit N  discard an opening scored beyond this (400)\n"
+      "  --resign-score N   adjudicate at this margin (default 2000)\n"
+      "  --resign-plies N   ... held for this many plies (default 6)\n"
+      "  --quiet-limit N    do not record beyond this score (default 1000)\n"
+      "  --threads N        worker threads (default 3)\n"
+      "  --seed N           rng seed (default 1)\n"
+      "  --hash N           transposition table MB per thread (default 16)\n");
 }
 
 }  // namespace
@@ -334,19 +335,31 @@ int main(int argc, char** argv)
 
     const std::string value = argv[++i];
 
-    if (arg == "--out") { opts.out = value; }
-    else if (arg == "--games") { opts.games = strtoull(value.c_str(), nullptr, 10); }
-    else if (arg == "--nodes") { opts.nodes = strtoull(value.c_str(), nullptr, 10); }
-    else if (arg == "--random-plies") { opts.random_plies = atoi(value.c_str()); }
-    else if (arg == "--max-plies") { opts.max_plies = atoi(value.c_str()); }
-    else if (arg == "--opening-limit") { opts.opening_limit = atoi(value.c_str()); }
-    else if (arg == "--resign-score") { opts.resign_score = atoi(value.c_str()); }
-    else if (arg == "--resign-plies") { opts.resign_plies = atoi(value.c_str()); }
-    else if (arg == "--quiet-limit") { opts.quiet_limit = atoi(value.c_str()); }
-    else if (arg == "--threads") { opts.threads = static_cast<unsigned>(atoi(value.c_str())); }
-    else if (arg == "--seed") { opts.seed = strtoull(value.c_str(), nullptr, 10); }
-    else if (arg == "--hash") { opts.tt_mb = atoi(value.c_str()); }
-    else {
+    if (arg == "--out") {
+      opts.out = value;
+    } else if (arg == "--games") {
+      opts.games = strtoull(value.c_str(), nullptr, 10);
+    } else if (arg == "--nodes") {
+      opts.nodes = strtoull(value.c_str(), nullptr, 10);
+    } else if (arg == "--random-plies") {
+      opts.random_plies = atoi(value.c_str());
+    } else if (arg == "--max-plies") {
+      opts.max_plies = atoi(value.c_str());
+    } else if (arg == "--opening-limit") {
+      opts.opening_limit = atoi(value.c_str());
+    } else if (arg == "--resign-score") {
+      opts.resign_score = atoi(value.c_str());
+    } else if (arg == "--resign-plies") {
+      opts.resign_plies = atoi(value.c_str());
+    } else if (arg == "--quiet-limit") {
+      opts.quiet_limit = atoi(value.c_str());
+    } else if (arg == "--threads") {
+      opts.threads = static_cast<unsigned>(atoi(value.c_str()));
+    } else if (arg == "--seed") {
+      opts.seed = strtoull(value.c_str(), nullptr, 10);
+    } else if (arg == "--hash") {
+      opts.tt_mb = atoi(value.c_str());
+    } else {
       usage();
       return 1;
     }
@@ -365,7 +378,8 @@ int main(int argc, char** argv)
   }
 
   fprintf(stderr,
-          "datagen: %" PRIu64 " games, %" PRIu64 " nodes per move, %u threads, "
+          "datagen: %" PRIu64 " games, %" PRIu64
+          " nodes per move, %u threads, "
           "seed %" PRIu64 "\n",
           opts.games, opts.nodes, opts.threads, opts.seed);
 
@@ -382,7 +396,9 @@ int main(int argc, char** argv)
     workers.emplace_back(play_games, std::cref(opts), i, out);
   }
 
-  for (std::thread& worker : workers) { worker.join(); }
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
 
   fclose(out);
 

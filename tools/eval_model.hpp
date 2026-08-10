@@ -45,13 +45,26 @@ inline int piece_from_char(char c, bool* black)
   *black = (c >= 'a' && c <= 'z');
 
   switch (c) {
-    case 'P': case 'p': return 0;
-    case 'N': case 'n': return 1;
-    case 'B': case 'b': return 2;
-    case 'R': case 'r': return 3;
-    case 'Q': case 'q': return 4;
-    case 'K': case 'k': return 5;
-    default: return -1;
+    case 'P':
+    case 'p':
+      return 0;
+    case 'N':
+    case 'n':
+      return 1;
+    case 'B':
+    case 'b':
+      return 2;
+    case 'R':
+    case 'r':
+      return 3;
+    case 'Q':
+    case 'q':
+      return 4;
+    case 'K':
+    case 'k':
+      return 5;
+    default:
+      return -1;
   }
 }
 
