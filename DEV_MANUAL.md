@@ -251,7 +251,13 @@ into `eval_tables.hpp`.
 
 **The agent does not run the fit.** It builds both tools, generates the data and
 states the run; the owner executes it and the constants come back to be measured
-by SPRT like anything else. DEC-015.
+by SPRT like anything else. DEC-015. The one exception so far is the first fit
+itself, which the owner delegated for that single run and which is recorded as
+DEC-034 rather than left implicit.
+
+That fit is the one in `eval_tables.hpp` today: 1490839 positions, K = 1.1141
+fitted from the data, held-out error 0.113852 to 0.108043, stopped at epoch
+11200 on patience. It measured +188.74 +/- 32.21 Elo over 438 games.
 
 `.tuning/` is gitignored. Datasets are hundreds of megabytes and are not
 evidence in the sense `adocs/data/` is.

@@ -3,11 +3,17 @@ goal:       fit every evaluation constant at once against self-play game outcome
 accepts:    a tuner that reduces prediction error on a held-out set, self-play data generated and prepared, and the exact run stated for the owner to execute; then an SPRT of the returned constants against the hand-picked ones
 touches:    tools/, src/eval_tables.hpp values only
 excludes:   changing which terms exist; **running the fit** -- the agent delivers the tuner and the data, the owner runs it (DEC-015)
-decisions:  DEC-016, DEC-015, DEC-033
+decisions:  DEC-016, DEC-015, DEC-033, DEC-034
 closes:
 blocks:
 paused_by:
-done:
+done:       2026-08-11. Fitted 773 constants over 1490839 self-play positions;
+            held-out error 0.113852 to 0.108043. SPRT against the hand-written
+            constants: **+188.74 +/- 32.21 Elo** over 438 games, LLR 2.95,
+            H1 accepted. Commits e0c338e, 9fc6fdf, c31b995, c519ef4.
+            The fit itself was run by the agent under a one-run delegation
+            from the owner, DEC-034; the exclusion above stands for every
+            later fit.
 
 ## Why this runs first
 
@@ -110,3 +116,64 @@ held-out error 0.117789 to 0.073804. That is the step's "reduces prediction
 error on a held-out set" and nothing from it goes near `eval_tables.hpp`. If
 even that crosses the DEC-015 line, say so and it will be recorded as a
 correction.
+
+## What actually happened
+
+The owner delegated the fit for this one run (DEC-034) rather than typing the
+command themselves, and it ran exactly as stated above: 1490839 positions,
+1341756 train and 149083 held out, K = 1.1141 fitted from the data and then
+held, Adam at lr 1.0, stopped at epoch 11200 when 20 consecutive reports failed
+to beat the best. Held-out error 0.113852 to 0.108043, train 0.113554 to
+0.107749. No refusal warning.
+
+**Verdict: +188.74 +/- 32.21 Elo**, 438 games at 10+0.2, LLR 2.95 against a
+bound of 2.94, H1 accepted. 294 wins, 77 losses, 67 draws, Ptnml [5, 9, 65, 44,
+96]. Candidate `c31b995` against reference `9fc6fdf`. It is the largest single
+change the project has measured, and it was 28th in the plan until DEC-033
+moved it to the front.
+
+### Three things went wrong on the way in
+
+**The gate was already red.** `ae814b6` committed the four new files without
+running `./clang-format.sh`, so every commit from there on failed the section 5
+gate. Formatting only, `e0c338e`, found while establishing a baseline and fixed
+before the measurement rather than after it.
+
+**The paste did not compile.** `evaluation.cpp` defines `PAWN` to `QUEEN` after
+including `eval_tables.hpp`, which defines the same five names. That only ever
+worked because both sides held the same numbers; the fitted values turn it into
+five `-Wmacro-redefined` errors under `-Werror`. The fix is not to unify them.
+Move ordering needs a stable ranking, not an accurate price, and the `ORDER_`
+bands clear each other by exactly 100 points, so a queen at 1026 in that
+arithmetic is the silent strength regression `CLAUDE.md` warns about. The
+ordering values keep their old numbers under `MVV_` names, `9fc6fdf`, shown
+behaviour-neutral by identical node counts and best moves (INV-6).
+
+**Nine anchor assertions moved**, which is what they are for. Every replacement
+value was recomputed by a second implementation of `evaluate()` written over
+the fitted constants, and the two agree exactly -- including `-474`, which is a
+quiescence result and turns out to be the best of four king evasions. An anchor
+copied from the thing it anchors asserts nothing.
+
+### One test was wrong rather than stale
+
+"promote to a queen" stood on `8/P6k/8/8/8/8/8/4K3`, where Stockfish at depth 20
+finds **four** moves that all mate in ten. It asserted a preference among equals
+and passed only because promotions are ordered first; the fitted endgame king
+table, which likes the white king off e1, reordered them and it failed at depth
+5. The black king moves to c7, where `a8=Q` is mate in 14 and the next best move
+is +387. The new position passes on the hand-written tables too, so it tests the
+engine and not the tuning. This is the third case in that file to have been
+written this way, after two the file already documents.
+
+### What this does not settle
+
+The fit is over the constants that exist. `eval_tables.hpp` has two tables and
+five values and nothing else, so a term chesso does not have cannot be fitted --
+that is S027, and it now has a tuner to be fitted by. The 5.1 % of held-out
+error the fit removed is not directly comparable to 188 Elo and nobody should
+try: the objective is a prediction of game outcome, not a strength model.
+
+The data is one generation of self-play at 100000 nodes a move. Nothing here
+says a second generation, sampled from the stronger engine this produced, would
+not do better; nothing here says it would either.

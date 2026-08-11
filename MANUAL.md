@@ -106,7 +106,11 @@ here as the FEN each one loads. A GUI never sends them.
   An earlier note here named the endgame specifically, from one king-and-pawn
   game where chesso held +1.5 to +1.9 against Stockfish's +0.25. That game is
   real and such positions exist, but it is not where most of the error is.
-- **The piece-square tables are hand-written and untuned.** Tuning them is S028.
+  These figures were measured before the evaluation constants were fitted
+  (S028, 2026-08-11), which moved every one of them and was worth +188.74 Elo.
+  The direction is unlikely to have reversed and the magnitudes have not been
+  re-measured; treat the numbers as an upper bound on an engine that no longer
+  exists, and the warning as still standing.
 - **`Hash` is not honoured exactly.** The value is clamped to 1–4096 MB, then the
   *entry count* is rounded down to a power of two so probing can mask instead of
   divide, so the table is usually smaller than asked for. If the allocation

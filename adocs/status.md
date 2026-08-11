@@ -3,53 +3,23 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-11, overnight S028 run.
+Updated: 2026-08-11, S028 complete.
 
-- Last done: S018
-- In progress: S028 fit every evaluation constant at once against self-play game outcomes
-- Next: S028
+- Last done: S028, **+188.74 +/- 32.21 Elo**, the largest single change measured
+  so far
+- In progress: none
+- Next: S027 mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
 - Blocked: none
-- Where S028 has got to: `datagen`, `tuner`, `eval_model.hpp` and
-  `test_eval_model` are built and committed at `ae814b6`, and formatted to the
-  pinned clang-format at `e0c338e` — `ae814b6` had shipped them unformatted, so
-  the section 5 gate was red at that commit and at every commit after it. The
-  self-play data is generated: `.tuning/selfplay_v1.tsv`, 20000 games,
-  1 490 839 rows. The fit ran, executed by the agent under a one-run
-  delegation from the owner (DEC-034; DEC-015 stands for every later fit), and
-  took held-out error from 0.113852 to 0.108043 on a 149083-position split it
-  never saw. The constants are in `src/eval_tables.hpp` at `c31b995`, the
-  anchor tests are re-anchored against a second implementation of `evaluate()`,
-  and the whole suite is green including deep perft. **Only the SPRT is left.**
-  S027 follows the verdict.
-
-## The overnight run, and how to resume it
-
-Written so an interrupted session picks up from the filesystem alone. Check
-each state in order and act on the first that matches.
-
-1. **A match is running** — `pgrep -x fastchess` returns a pid. Wait, and
-   start nothing else: a second timed match measures the first. Progress is in
-   `/tmp/sprt_s028_console.log`, and `/tmp/fastchess_full.log` is fastchess's
-   own.
-2. **No match running and the step file has no verdict** — the match was
-   interrupted. Read the last SPRT block in `/tmp/sprt_s028_console.log`; if it
-   holds a few hundred games or more, that is a partial result and is recorded
-   as partial, not as a verdict. Otherwise restart it:
-   `REF=9fc6fdf ./fastchess.sh`, full bounds, wrapped in `caffeinate -is` and
-   detached. `9fc6fdf` is the hand-written constants with a green gate, one
-   commit before the tuned ones.
-3. **Match finished** — the verdict goes into the step file and into
-   `testing.md` whatever it says. Zero is recorded as zero. A pass completes
-   the step; a fail reverts `c31b995` and the step stays open with the fit
-   recorded as measured and rejected.
-
-Earlier states, kept because they say what has already been checked: the tuner
-did not print its refusal warning, `.tuning/tuned_tables.hpp` is the fit it
-produced, and the paste is committed rather than sitting in the working tree.
-
-The tuned constants are worth nothing until the verdict, and the owner may
-discard the whole run on DEC-034 grounds without anything downstream depending
-on it.
+- What S028 came to: all 773 evaluation constants are fitted to chesso's own
+  self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
+  to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
+  was run by the agent under a one-run delegation from the owner, DEC-034 —
+  **DEC-015 stands unchanged for every later fit and for the S029 network.**
+  Three things went wrong on the way in and all three are in the step file: a
+  clang-format gate that had been red since `ae814b6`, a macro collision
+  between the ordering values and the evaluation's that only compiled while the
+  numbers matched, and a tactics test that had been asserting a preference among
+  four moves that all mate in ten.
 
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
@@ -76,8 +46,9 @@ on it.
     10+0.2 with three usable cores an SPRT verdict costs about an hour, the
     opening book is only `8moves_v3.pgn`, and this machine runs `opendirectoryd`
     at half a core often enough to matter. An x86-64 Linux box fixes this and is
-    needed for S032 and S029 regardless. S028's self-play data generation and
-    its fit occupy the same cores, so nothing can be measured while either runs.
+    needed for S032 and S029 regardless. S028 spent 95 minutes generating data
+    and 75 minutes on its SPRT on the same three cores, and nothing could be
+    measured while either ran; S029 will want far more of both.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
