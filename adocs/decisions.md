@@ -1523,3 +1523,169 @@ Consequences: A verdict costs about a third less wall time, which matters
               flight when this was decided keeps concurrency 3; restarting it to
               gain a third of the speed would have cost more than the third was
               worth with forty minutes left.
+
+## DEC-043  2026-08-11  S027 adds its terms in the order the literature reports
+Tags:         evaluation, s027, ordering, measurement
+
+Context:      S027's step file listed king safety, passed pawns, pawn structure,
+              bishop pair and tempo in the order engines generally report value
+              in, and then argued against its own list. The argument for
+              inverting it was that the cheap terms -- tempo, bishop pair, the
+              rook file terms -- cost near nothing, so each SPRT would measure
+              the term rather than the term minus a speed penalty, and the
+              record of what a term is worth here would be built before anything
+              expensive was paid for.
+
+              Mobility is the evidence for that argument. On hand-picked weights
+              and at full price it measured -14.93 Elo and looked like a
+              failure; behind the lazy shortcut with fitted weights it measured
+              +28.46. DEC-040.
+
+              The step file left the choice open and said so: "The owner chooses
+              when the step starts."
+
+Decision:     The owner chose the literature order. King safety first, tempo
+              last. The agent laid out three orders with the cost and the risk
+              of each and recommended the cheap-first inversion; the owner took
+              the other one.
+
+Rejected:     Cheap terms first, then the pawn terms, king safety last. The
+              agent's recommendation. Its case is above and it was not refuted,
+              only outweighed: the largest expected gain lands first and
+              resolves fastest under SPRT, and measurement capacity is the
+              binding constraint on the whole plan.
+
+              Pawn terms first, on the argument that the pawn hash is the one
+              piece of new infrastructure the step needs and two term families
+              would amortise it.
+
+Consequences: The first term is the expensive one, so its verdict mixes the
+              term's value with its speed cost. That is answered by measuring
+              the cost separately and removing it before the SPRT rather than by
+              reordering: king safety at zero weights measured 7.7 % against the
+              build without it, and fusing its piece loop with mobility's
+              brought that to 0.35 %, inside the noise floor.
+
+              The remaining terms keep the order of the list. Each still gets
+              its weights fitted before any verdict is believed.
+
+## DEC-044  2026-08-11  King safety is linear in its weights, not a lookup curve
+Tags:         evaluation, s027, king-safety, tuning, texel
+
+Context:      The king safety the literature describes is not linear. The
+              standard form accumulates a weighted count of attackers on the
+              king zone and uses that count to index a table whose values grow
+              faster than linearly, so two attackers are worth much more than
+              twice one attacker.
+
+              chesso fits its evaluation constants with the Texel tuner built at
+              S028. That tuner exists because the evaluation is a linear
+              function of its own constants, which is what makes a full pass
+              over 1.49 M positions cost milliseconds instead of a million
+              searches, and what makes the gradient closed form. An
+              attack_table[weighted_count] term is not a linear function of the
+              weights that build its index. It cannot be fitted by that
+              machinery at all.
+
+              Every term in S027 must have its weights fitted before its SPRT is
+              believed -- DEC-033, and DEC-040 is what happens when they are
+              guessed instead.
+
+Decision:     King safety ships as nine count features per side, each with a
+              middlegame and an endgame weight, tapered like every other term.
+              Attackers by piece type, zone attack incidences, near and far pawn
+              shield, open and half-open files by the king. Eighteen parameters,
+              linear, fittable.
+
+              Proposed by the agent, which supplied the constraint and the
+              options. The non-linear form is not rejected on its merits; it is
+              deferred until there is a fitter that can handle it.
+
+Rejected:     The indexed attack curve with hand-picked weights and a
+              hand-picked table. It is the form that is reported to work, and it
+              would have gone into an SPRT unfitted. That is exactly the
+              sequence that produced -14.93 for mobility and nearly closed the
+              feature as a failure.
+
+              Extending the tuner to fit a non-linear model. A gradient through
+              a table index is a different optimiser and a different tool, and
+              building it before knowing whether the linear form is worth
+              anything is work on a guess.
+
+Consequences: The individual weight signs are not interpretable and must not be
+              read as chess statements. The attacker counts and the zone
+              incidence count are collinear by construction -- a piece that adds
+              one to a count adds several to the incidence total -- so the fit
+              splits one effect across several parameters, exactly the way the
+              piece values and the piece-square tables are degenerate by five
+              dimensions. What is fitted is the sum.
+
+              If the linear form measures at or near zero, that is a result
+              about the linear form and not about king safety. Recording it as
+              "king safety is worth nothing here" would be wrong, and the
+              non-linear version becomes a candidate for phase two with a fitter
+              to match.
+
+## DEC-045  2026-08-12  evaluate_lazy returns the guaranteed bound, not the cheap score
+Tags:         evaluation, search, lazy-eval, correctness, s027, s034
+
+Context:      S034's lazy shortcut skips the expensive evaluation terms when the
+              cheap score is already LAZY_EVAL_MARGIN clear of the window, and
+              returned the cheap score when it did. The soundness argument
+              written at the time was about the caller's decision: if
+              cheap - 150 >= beta then the true score is above beta too, so the
+              node fails high either way and the expensive stage would change
+              nothing the caller does.
+
+              That argument is correct and it is not the whole contract.
+              quiesce() is fail soft. It returns stand_pat to its parent, which
+              reads that number as a lower bound on the true score and may store
+              it in the transposition table as one. The guarantee is only that
+              the true score lies within a margin of cheap, so cheap can be up
+              to 150 centipawns *better* than the truth. A lower bound that is
+              not a lower bound.
+
+              Found while applying S027's fitted king safety weights, when
+              test_search "the table never changes the answer" began failing:
+              the same position answered 110 or 59 depending on what was cached,
+              because the shortcut makes the returned score depend on the window
+              and the table changes windows. The defect predates king safety
+              entirely. Mobility's corrections were too small to flip a score on
+              those positions; the fitted king safety weights were not.
+
+Decision:     The shortcut returns cheap - LAZY_EVAL_MARGIN at beta and
+              cheap + LAZY_EVAL_MARGIN at alpha. Both are still on the caller's
+              side of the window, so no cutoff changes, and both are true
+              statements about the real score.
+
+              It ships and is measured alone, before the king safety weights it
+              was found under. A known defect in the tree contaminates every
+              measurement taken after it, and two changes in one SPRT means
+              neither number means anything.
+
+              The owner was asked how to sequence this and was asleep; the agent
+              took the option it had recommended and recorded the choice here.
+
+Rejected:     Keeping the cheap score and narrowing the table invariant test to
+              nodes the shortcut cannot reach. It would have shipped king safety
+              tonight instead of tomorrow, and it accepts a wrong bound
+              propagating through the tree in exchange. The strongest test over
+              the transposition table would have lost coverage permanently.
+
+              Shipping the fix and the king safety weights in one commit and one
+              SPRT. Half the machine time and no attribution: a verdict of +5
+              could be king safety at +15 and this at -10, or the reverse.
+
+Consequences: The shortcut still makes the search score window dependent, and
+              that is inherent to lazy evaluation rather than to this bug. "The
+              table never changes the answer" is green again but it is now a
+              weaker statement than it reads as -- it says this corpus at depths
+              2 and 3 does not expose the impurity, not that there is none. A
+              comment in the test says exactly that, and a future failure there
+              should be read as "one of these two changed", not "the table is
+              broken".
+
+              Over the 2696 test positions the old form claimed a bound it did
+              not have on 2613 of them, 1473 at beta and 1140 at alpha. That is
+              the size of what was wrong, not a count of games lost -- what it
+              cost in play is what the SPRT measures.

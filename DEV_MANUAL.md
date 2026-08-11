@@ -146,6 +146,46 @@ hyperfine --warmup 1 --runs 10 './bench_before -r 2' './bench_after -r 2'
 
 Check the machine is idle first: `ps aux | sort -rnk3 | head`.
 
+## Size the lazy evaluation margin
+
+```bash
+build/tools/eval_spread --data .tuning/selfplay_v1.tsv            # 1.49 M positions, 2.4 s
+build/tools/eval_spread --data .tuning/selfplay_v1.tsv --limit 200000
+```
+
+Reads `tools/datagen`'s `fen result score phase` and uses only the FEN. Prints
+the distribution of the **unclamped** expensive-stage correction in absolute
+centipawns — p50, p90, p95, p99, p99.9, max — for mobility, for king safety and
+for the two combined, then how many positions exceed each of 150, 200, 250, 300
+and 400, then the worst position per term.
+
+Three terms and not one because a margin that binds on the sum and a margin that
+binds on a single term are different problems. `--limit N` stops after N
+positions; the corpus is 1.49 M lines and the first N are consecutive plies of
+the same games, so a limited run is a smoke test and not a sample.
+
+**The unclamped number is not observable any other way.**
+`evaluate_expensive()` clamps to `LAZY_EVAL_MARGIN` before it returns, which is
+what makes the shortcut sound by construction, and it also means every caller
+outside `evaluation.cpp` sees the truncated figure. `evaluate_expensive_terms()`
+in `src/evaluation.hpp` exists for this tool and rides the collecting
+instantiation `king_safety_features()` already uses, so the instantiation the
+search compiles keeps one caller — S027's 21 % regression came from giving a
+hot-path function a second one.
+
+Every run re-checks itself: clamping the pair it reports must reproduce
+`evaluate() - evaluate_cheap()` on every position, and it says so on the last
+line or exits non-zero.
+
+The two distributions on record differ in weights as well as corpus, so quote
+them apart. Mobility with the pre-fit weights over 149084 positions: p50 19,
+p95 60, p99 81, max 143 — what `LAZY_EVAL_MARGIN` was set from. Mobility with
+the fitted weights of DEC-040 over all 1490839 of `.tuning/selfplay_v1.tsv`:
+p50 24, p95 81, p99 113, max 244, and 0.104 % already past 150 with king safety
+still at zero weight. Put the pre-fit weights back and the tool returns the
+first set to within 2 cp, which is what says the gap is the fit and not the
+measurement.
+
 ## Play games
 
 ```bash

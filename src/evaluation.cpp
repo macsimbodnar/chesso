@@ -114,10 +114,16 @@ static bb_t piece_attacks(const bb_tables_t* tables,
 // describes cannot be fitted here and is not used. DEC-016 rules out taking
 // anyone else's table for it in any case.
 //
-// Shipped at zero, deliberately. The weights are fitted before the term is
-// judged, DEC-033, and zeros make this commit provably behaviour-neutral --
-// identical node counts, identical best moves -- so the SPRT that follows
-// measures the fitted term instead of a guess about it.
+// Still at zero, and no longer only because the fit had not run. It has:
+// tools/tuner over 1490839 positions with the other 781 constants frozen gave
+// mg {23, 13, 4, 21, -16, 3, 2, -33, -11} and eg {-8, -8, -2, -34, 8, -3, -8,
+// -10, 10}, held-out error 0.107413 to 0.107109. Those weights are in
+// .tuning/tuned_ks_only.hpp and they are not applied here yet.
+//
+// They are held back because applying them exposed a defect in evaluate_lazy
+// that predates this term, and a known defect in the tree contaminates every
+// measurement taken after it. The bound fix goes first and alone, so its SPRT
+// and king safety's each measure one change. S027.
 const int king_safety_mg[KS_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 const int king_safety_eg[KS_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -231,9 +237,15 @@ static inline void king_shelter_features(const board_t* board,
 // counts from this code and not from a copy of it, which is the point -- a
 // second extraction would be free to agree with the model and disagree with the
 // engine.
+//
+// The two tapered terms are handed back separately through `mobility_out` and
+// `safety_out` for the same reason and under the same `if constexpr`: at
+// <false> the pointers and the stores are not compiled at all.
 template <bool collect>
 static int evaluate_mobility_and_king_safety(const board_t* board,
-                                             int out[2][KS_FEATURE_COUNT])
+                                             int out[2][KS_FEATURE_COUNT],
+                                             int* mobility_out = nullptr,
+                                             int* safety_out = nullptr)
 {
   const bb_tables_t* tables = game_tables();
   const bb_t occupancy = board->occupancies[BOTH];
@@ -333,6 +345,11 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
   const int safety =
       (safety_mg_sum * phase + safety_eg_sum * endgame) / GAME_PHASE_MAX;
 
+  if constexpr (collect) {
+    if (mobility_out != nullptr) { *mobility_out = mobility; }
+    if (safety_out != nullptr) { *safety_out = safety; }
+  }
+
   return mobility + safety;
 }
 
@@ -373,6 +390,30 @@ void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT])
 { evaluate_mobility_and_king_safety<true>(board, out); }
 
 
+// What evaluate_expensive() computed before the clamp took it away. The counts
+// it also collects are thrown away here, for the reason above: the collecting
+// instantiation is the one the search does not compile, so a tool riding on it
+// cannot slow the search down whatever clang decides to inline.
+void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
+{
+  int counts[2][KS_FEATURE_COUNT];
+  int mobility_white = 0;
+  int safety_white = 0;
+
+  evaluate_mobility_and_king_safety<true>(board, counts, &mobility_white,
+                                          &safety_white);
+
+  // The same sign evaluate_expensive() applies, so the sum is the correction as
+  // the caller would have received it and not a White-relative number that has
+  // to be turned round again. The clamp is symmetric, so applying the sign
+  // before it rather than after changes nothing.
+  const int sign = (board->active_color == WHITE) ? 1 : -1;
+
+  *mobility = sign * mobility_white;
+  *safety = sign * safety_white;
+}
+
+
 int evaluate_lazy(const board_t* board, int alpha, int beta)
 {
   const int cheap = evaluate_cheap(board);
@@ -382,8 +423,8 @@ int evaluate_lazy(const board_t* board, int alpha, int beta)
   // fails high on either number and the expensive stage would change nothing it
   // does. Same argument mirrored at alpha. Anywhere between the two, the
   // correction can decide the node and has to be computed.
-  if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap; }
-  if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap; }
+  if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+  if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
 
   return cheap + evaluate_expensive(board);
 }

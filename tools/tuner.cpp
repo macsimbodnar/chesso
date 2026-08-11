@@ -91,6 +91,7 @@ struct options_t
 {
   std::string data;
   std::string out = "tuned_tables.hpp";
+  std::string only = "all";
   double k = 0.0;  // 0 means fit it
   double lr = 1.0;
   int epochs = 20000;
@@ -100,6 +101,53 @@ struct options_t
   unsigned threads = 3;
   uint64_t seed = 1;
 };
+
+
+const char* const GROUP_LIST = "all, material, psqt, mobility, king_safety";
+
+
+// Marks the parameters a --only group leaves free; the rest keep the value the
+// engine ships and come out of the run unchanged.
+//
+// This exists for attribution under SPRT. Fitting a new term jointly also
+// refits the 781 constants that were already fitted, so the match that follows
+// measures two changes at once and its number says nothing about either. One
+// change at a time; DEC-020 is what that rule cost to learn.
+//
+// Each group is one contiguous range because eval_model.hpp lays the vector out
+// that way.
+bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
+{
+  size_t first = 0;
+  size_t last = 0;
+
+  if (group == "all") {
+    first = 0;
+    last = PARAM_COUNT;
+  } else if (group == "material") {
+    first = 0;
+    last = MATERIAL_COUNT;
+  } else if (group == "psqt") {
+    first = MG_BASE;
+    last = MOB_MG_BASE;
+  } else if (group == "mobility") {
+    first = MOB_MG_BASE;
+    last = KS_MG_BASE;
+  } else if (group == "king_safety") {
+    first = KS_MG_BASE;
+    last = PARAM_COUNT;
+  } else {
+    return false;
+  }
+
+  mask->assign(PARAM_COUNT, 0);
+
+  for (size_t i = first; i < last; ++i) {
+    (*mask)[i] = 1;
+  }
+
+  return true;
+}
 
 
 bool load(const std::string& path, dataset_t* data)
@@ -400,6 +448,7 @@ void write_tables(const std::string& path,
       "// error      %.6f train, %.6f validation\n"
       "// seed       %" PRIu64
       ", lr %.3f, validation split %.2f\n"
+      "// only       %s\n"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility and king "
@@ -409,7 +458,7 @@ void write_tables(const std::string& path,
       "// S027, S028 and S034, DEC-015: measured by SPRT before any of it is "
       "kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
-      opts.seed, opts.lr, opts.validation);
+      opts.seed, opts.lr, opts.validation, opts.only.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -494,6 +543,8 @@ void usage()
   fprintf(stderr,
           "tuner --data FILE [options]\n"
           "  --out FILE       where the fitted constants are written\n"
+          "  --only GROUP     fit only this group and hold the rest at what\n"
+          "                   the engine ships: %s\n"
           "  --k VALUE        sigmoid scale; 0 fits it from the data\n"
           "  --lr VALUE       Adam step size (default 1.0)\n"
           "  --epochs N       maximum full-batch steps (default 20000)\n"
@@ -501,7 +552,8 @@ void usage()
           "  --patience N     stop after this many reports without a new best\n"
           "  --validation F   held-out fraction (default 0.1)\n"
           "  --threads N      worker threads (default 3)\n"
-          "  --seed N         shuffle seed for the split (default 1)\n");
+          "  --seed N         shuffle seed for the split (default 1)\n",
+          GROUP_LIST);
 }
 
 }  // namespace
@@ -530,6 +582,8 @@ int main(int argc, char** argv)
       opts.data = value;
     } else if (arg == "--out") {
       opts.out = value;
+    } else if (arg == "--only") {
+      opts.only = value;
     } else if (arg == "--k") {
       opts.k = atof(value.c_str());
     } else if (arg == "--lr") {
@@ -557,6 +611,19 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  std::vector<uint8_t> mask;
+
+  if (!free_mask(opts.only, &mask)) {
+    fprintf(stderr, "unknown --only group '%s'; groups are: %s\n",
+            opts.only.c_str(), GROUP_LIST);
+    return 1;
+  }
+
+  size_t free_count = 0;
+  for (const uint8_t value : mask) {
+    free_count += value;
+  }
+
   dataset_t data;
 
   if (!load(opts.data, &data)) {
@@ -580,8 +647,11 @@ int main(int argc, char** argv)
       static_cast<size_t>(static_cast<double>(data.size()) * opts.validation);
   const size_t train_count = data.size() - validation_count;
 
-  fprintf(stderr, "%zu positions, %zu train, %zu validation, %zu parameters\n",
-          data.size(), train_count, validation_count, PARAM_COUNT);
+  fprintf(stderr,
+          "%zu positions, %zu train, %zu validation, %zu parameters, "
+          "group %s, %zu free\n",
+          data.size(), train_count, validation_count, PARAM_COUNT,
+          opts.only.c_str(), free_count);
 
   // Starting point is what the engine ships with, so a fit that finds nothing
   // reports the error of the hand-written constants rather than of noise.
@@ -625,6 +695,15 @@ int main(int argc, char** argv)
     const double correction2 = 1.0 - std::pow(beta2, epoch);
 
     for (size_t i = 0; i < PARAM_COUNT; ++i) {
+      // A frozen parameter is left out of the update entirely rather than
+      // having its gradient zeroed, because a zero gradient does not mean a
+      // zero step: Adam divides a decaying moment by a decaying velocity and
+      // keeps moving on what it accumulated before. Skipping the whole
+      // iteration leaves moment and velocity at zero too, so the parameter
+      // comes out bit-identical to what it went in as and the emitted file is
+      // one change.
+      if (!mask[i]) { continue; }
+
       moment[i] = beta1 * moment[i] + (1.0 - beta1) * grad[i];
       velocity[i] = beta2 * velocity[i] + (1.0 - beta2) * grad[i] * grad[i];
 

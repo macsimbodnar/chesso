@@ -20,9 +20,17 @@ int evaluate_cheap(const board_t* board);
 // when the cheap ones already put the position far enough outside the window
 // that no correction they could apply would bring it back. S034.
 //
-// What is returned in that case is the cheap score, which is not the true
-// score: it is a bound on the correct side of the window, which is all the
-// caller was going to do with it.
+// What is returned in that case is the guaranteed bound and not the cheap
+// score: cheap - LAZY_EVAL_MARGIN at beta, cheap + LAZY_EVAL_MARGIN at alpha.
+// Both are still on the caller's side of the window, so the cutoff is the same
+// one it would have taken, and both are true statements about the real score.
+//
+// It returned the cheap score until S027 and that was wrong. quiesce() is fail
+// soft: it returns stand_pat to the parent, which reads it as a lower bound and
+// may store it. cheap is not a lower bound on anything -- the guarantee is only
+// that the true score is within a margin of it, so cheap can be up to
+// LAZY_EVAL_MARGIN better than the truth. Over the 2696 test positions the old
+// form claimed a bound it did not have on 2613 of them.
 int evaluate_lazy(const board_t* board, int alpha, int beta);
 
 // The mobility weights, per piece type in knight, bishop, rook, queen order.
@@ -72,6 +80,23 @@ extern const int king_safety_eg[KS_FEATURE_COUNT];
 // drift.
 void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT]);
 
+// The two expensive terms before the clamp, in the orientation the correction
+// is applied in: clamping their sum to the margin below reproduces exactly what
+// evaluate() adds to evaluate_cheap().
+//
+// It exists because the clamp lives inside evaluate_expensive() and nothing
+// outside that file can see the number it truncated, so the margin cannot be
+// re-decided from data without this. tools/eval_spread reads a position corpus
+// through it. Split into two terms because a large correction coming from
+// mobility, from king safety or from both at once are three different answers.
+//
+// Off the hot path by construction rather than by measurement: it goes through
+// the same collecting instantiation king_safety_features() uses, so the
+// instantiation the search compiles keeps exactly one caller. Handing that one
+// a second caller is what cost 21 % once -- see king_shelter_features() in
+// evaluation.cpp.
+void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
+
 // The largest correction the expensive terms are allowed to apply. The shortcut
 // is only sound while that holds, so it is asserted over a position list rather
 // than assumed -- see test_evaluation "the lazy shortcut cannot change a
@@ -84,7 +109,7 @@ void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT]);
 // It bounds the sum of every expensive term, not each one, so king safety now
 // shares the same budget. That figure is still the whole correction only
 // because king safety ships at zero weight; the margin is re-decided from
-// measured data once it is fitted.
+// measured data once it is fitted, and tools/eval_spread is what measures it.
 #define LAZY_EVAL_MARGIN 150
 
 // How far into the game the position is: 24 with a full set of pieces, 0 once

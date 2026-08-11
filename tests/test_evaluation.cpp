@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <algorithm>
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -214,19 +215,32 @@ TEST_SUITE("evaluation: score")
           ("FEN: " + fen));
 
       // A beta the cheap score already clears by the margin: the shortcut
-      // fires, returns the cheap score, and the exact score is above beta too
-      // -- which is the whole soundness claim, that the caller's decision is
-      // the same either way.
+      // fires. The two things that have to hold of what comes back are that it
+      // is still above beta, so the caller takes the same cutoff it would have
+      // taken from the exact score, and that it is not above the exact score,
+      // because fail-soft propagates it upward as a lower bound on it. Those
+      // are the soundness claim; which number the shortcut picks to satisfy
+      // them is not. `full >= beta` follows and is not asserted separately.
       const int beta = cheap - LAZY_EVAL_MARGIN;
-      REQUIRE_MESSAGE(evaluate_lazy(&game.board, beta - 1000, beta) == cheap,
-                      ("FEN: " + fen));
-      REQUIRE_MESSAGE(full >= beta, ("FEN: " + fen));
+      const int at_beta = evaluate_lazy(&game.board, beta - 1000, beta);
 
-      // The same mirrored at alpha.
+      REQUIRE_MESSAGE(at_beta >= beta,
+                      ("FEN: " + fen + " returned " + std::to_string(at_beta) +
+                       " at beta " + std::to_string(beta)));
+      REQUIRE_MESSAGE(at_beta <= full,
+                      ("FEN: " + fen + " returned " + std::to_string(at_beta) +
+                       " against a true " + std::to_string(full)));
+
+      // The same mirrored at alpha, where the number is an upper bound instead.
       const int alpha = cheap + LAZY_EVAL_MARGIN;
-      REQUIRE_MESSAGE(evaluate_lazy(&game.board, alpha, alpha + 1000) == cheap,
-                      ("FEN: " + fen));
-      REQUIRE_MESSAGE(full <= alpha, ("FEN: " + fen));
+      const int at_alpha = evaluate_lazy(&game.board, alpha, alpha + 1000);
+
+      REQUIRE_MESSAGE(at_alpha <= alpha,
+                      ("FEN: " + fen + " returned " + std::to_string(at_alpha) +
+                       " at alpha " + std::to_string(alpha)));
+      REQUIRE_MESSAGE(at_alpha >= full,
+                      ("FEN: " + fen + " returned " + std::to_string(at_alpha) +
+                       " against a true " + std::to_string(full)));
 
       checked++;
     }
@@ -237,6 +251,106 @@ TEST_SUITE("evaluation: score")
     // at all, every assertion above would hold for a reason that has nothing to
     // do with the margin being right.
     REQUIRE(worst > 0);
+  }
+
+  // The case above is about the decision the caller takes. This one is about
+  // the number it carries away, and a shortcut can be right about the first and
+  // wrong about the second.
+  //
+  // The search is fail-soft: quiescence() does `if (stand_pat >= beta) { return
+  // stand_pat; }`, so whatever the shortcut returned reaches the parent and the
+  // transposition table as a lower bound on the true score, and a later search
+  // reads it back as one. What is actually known at that branch is only
+  // `full >= cheap - LAZY_EVAL_MARGIN`; the true score can be anywhere up to
+  // `cheap + LAZY_EVAL_MARGIN`. Returning `cheap` therefore claims a bound up
+  // to 150 centipawns better than anything the shortcut has established, and
+  // nothing downstream can tell the difference. Mirrored at alpha, where the
+  // number is an upper bound and the error runs the other way. S027.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "a shortcut return is never better than the truth")
+  {
+    size_t checked = 0;
+    size_t optimistic_at_beta = 0;
+    size_t optimistic_at_alpha = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      const int full = evaluate(&game.board);
+      const int cheap = evaluate_cheap(&game.board);
+
+      const int beta = cheap - LAZY_EVAL_MARGIN;
+      const int lower = evaluate_lazy(&game.board, beta - 1000, beta);
+
+      REQUIRE_MESSAGE(lower <= full,
+                      ("FEN: " + fen + " claimed " + std::to_string(lower) +
+                       " as a lower bound on " + std::to_string(full)));
+
+      const int alpha = cheap + LAZY_EVAL_MARGIN;
+      const int upper = evaluate_lazy(&game.board, alpha, alpha + 1000);
+
+      REQUIRE_MESSAGE(upper >= full,
+                      ("FEN: " + fen + " claimed " + std::to_string(upper) +
+                       " as an upper bound on " + std::to_string(full)));
+
+      // The positions where returning the cheap score was wrong rather than
+      // merely unproven: the expensive terms move the score against the side of
+      // the window being answered, so `cheap` sits above the truth at beta and
+      // below it at alpha.
+      if (full < cheap) { optimistic_at_beta++; }
+      if (full > cheap) { optimistic_at_alpha++; }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 100);
+
+    // Non-vacuous by construction, and on both sides separately. Every
+    // assertion above holds trivially on a corpus where the expensive terms
+    // never take the score the wrong way, and it was exactly such a corpus this
+    // case was written to rule out -- the counts below are what make it fail on
+    // the behaviour it exists to catch rather than merely pass on the fix.
+    REQUIRE(optimistic_at_beta > 0);
+    REQUIRE(optimistic_at_alpha > 0);
+  }
+
+  // evaluate_expensive_terms() is what tools/eval_spread measures the margin
+  // from, and a number nobody can check is how a margin gets re-decided from
+  // the wrong distribution. Clamping the pair it reports has to reproduce
+  // exactly what evaluate() applied on top of evaluate_cheap(), which is the
+  // one part of it the shipping path also computes. S034.
+  TEST_CASE_FIXTURE(eval_fixture_t, "the unclamped terms are the engine's own")
+  {
+    size_t checked = 0;
+    size_t clamped = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      int mobility = 0;
+      int safety = 0;
+      evaluate_expensive_terms(&game.board, &mobility, &safety);
+
+      const int applied = evaluate(&game.board) - evaluate_cheap(&game.board);
+      const int raw = mobility + safety;
+
+      if (std::abs(raw) > LAZY_EVAL_MARGIN) { clamped++; }
+
+      REQUIRE_MESSAGE(
+          std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN) == applied,
+          ("FEN: " + fen + " raw " + std::to_string(raw) + " applied " +
+           std::to_string(applied)));
+
+      checked++;
+    }
+
+    REQUIRE(checked > 100);
+
+    // Non-vacuous by construction. Every equality above would also hold for a
+    // function that returned the clamped number, which is the one thing this
+    // accessor must not do, unless some position in the corpus is outside the
+    // margin. One is: the nine-bishop promotion pile-up S034 found.
+    REQUIRE(clamped > 0);
   }
 
   // The piece-square tables have to actually prefer the squares they are meant

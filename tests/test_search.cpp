@@ -494,10 +494,12 @@ TEST_SUITE("search: quiescence")
   // already above beta stops at once and reports a score above beta.
   //
   // Since S034 that score is not always the exact one. When the cheap terms
-  // alone are a margin clear of beta, quiescence returns them and never
-  // computes the expensive ones, because the caller does the same thing with
-  // either number. The exact score is what comes back when the window contains
-  // it, and that is asserted below too.
+  // alone are a margin clear of beta, quiescence never computes the expensive
+  // ones and what it returns is a bound instead of a score. It has to be a
+  // bound on the right side of both beta and the truth: this is fail-soft, so
+  // the number is stored as a lower bound and read back as one. The exact score
+  // is what comes back when the window contains it, and that is asserted below
+  // too.
   TEST_CASE_FIXTURE(search_fixture_t, "a quiet position stands pat")
   {
     // White is a rook up with nothing to capture.
@@ -514,14 +516,24 @@ TEST_SUITE("search: quiescence")
     REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
 
     // Beta far enough below: the cutoff is immediate and the expensive terms
-    // are never computed, so what comes back is the cheap score.
+    // are never computed, so what comes back is a lower bound rather than the
+    // score.
     const int cut = quiesce(fen, 0, 100);
-    REQUIRE_EQ(cut, cheap_score);
 
-    // And the cutoff it reports is a real one: both the number returned and the
-    // exact score are above beta, so nothing was cut that should not have been.
+    // The cutoff it reports is a real one: the number returned and the exact
+    // score are both above beta, so nothing was cut that should not have been.
     REQUIRE(cut >= 100);
     REQUIRE(static_score >= 100);
+
+    // And the number is one the parent can keep. This is fail-soft, so it is
+    // propagated and stored as a lower bound on the true score and must not be
+    // above it. Which number the shortcut picks to satisfy that is the
+    // implementation's business and is deliberately not pinned here.
+    //
+    // Strictly below, and that is what shows the shortcut fired at all:
+    // mobility is worth +16 on this position, so a quiescence that had computed
+    // the expensive terms would have answered 540 on the nose.
+    REQUIRE(cut < static_score);
 
     // A window that contains it: still the static score, there are no
     // captures to change it.
@@ -666,6 +678,20 @@ TEST_SUITE("search: transposition table")
   // runs below the depth where any of them engage. Late move reduction needs
   // ply > 0 and depth >= 3, so a root search of depth 3 or less has none
   // anywhere in its tree, and null move pruning needs more depth still.
+  //
+  // The lazy evaluation shortcut breaks it too, and unlike the reductions there
+  // is no depth below which it does not. Whether the expensive terms are
+  // computed at a leaf depends on the window, the table changes the windows the
+  // search arrives with, so a leaf can be scored exactly on one run and by a
+  // bound on the next. It caught the shortcut returning the cheap score, which
+  // is not a bound at all: the same position answered 110 or 59 depending on
+  // what was cached. That is fixed - the shortcut returns the guaranteed bound
+  // now - and this case is green again, but green here means only that the
+  // corpus and the depths below do not expose the difference. It is not the
+  // purity the case claims, and a position where a bound and the exact score
+  // land on opposite sides of a cutoff would fail here without anything being
+  // wrong with the table. Read a failure as "one of these two things changed"
+  // and not as "the table is broken". S027.
   //
   // The table's own logic is pinned directly by "transposition table: storage"
   // below, which does not care what the search does.

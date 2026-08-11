@@ -26,3 +26,11 @@ target_link_libraries(tuner PRIVATE chesso_engine Threads::Threads)
 add_executable(probe_cost probe_cost.cpp)
 target_include_directories(probe_cost PRIVATE ../src)
 target_link_libraries(probe_cost PRIVATE chesso_engine)
+
+# What the lazy shortcut's margin is worth, measured rather than sampled. Links
+# the engine because the correction it reports has to be the one the search
+# computes; the clamp inside evaluate_expensive() is why a copy of the model
+# could not answer this.
+add_executable(eval_spread eval_spread.cpp)
+target_include_directories(eval_spread PRIVATE ../src)
+target_link_libraries(eval_spread PRIVATE chesso_engine)

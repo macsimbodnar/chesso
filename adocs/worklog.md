@@ -1313,3 +1313,148 @@ Commit: pending, at the end of the term.
 > One thing to flag: `tools/eval_model.hpp` and `tools/tuner.cpp` are modified in the working tree by the other agent (they have added `KS_MG_BASE` / `KING_SAFETY_COUNT` against my enum). Mid-run their `eval_model.hpp` had a clang-format violation that made the repo-wide check fail; it is clean again now. Nothing of mine touched `tools/` or `tests/`.</result>
 > <usage><subagent_tokens>146374</subagent_tokens><tool_uses>43</tool_uses><duration_ms>767845</duration_ms></usage>
 > </task-notification>
+
+## 2026-08-11T23:48+02:00 prompt
+
+> <task-notification>
+> <task-id>b9ifbzxi5</task-id>
+> <tool-use-id>toolu_01XKaLoe6pNKBt8TrxVX14G6</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b9ifbzxi5.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Wait for fit to finish" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-12T00:30+02:00 recap
+
+**S027 term 1 committed behaviour-neutral as 690de1f, then fitted.**
+
+Tests landed with teeth. The engine's nine feature counts are now exposed per
+colour through a template instantiation -- one extraction, two instantiations,
+no second implementation -- and `test_eval_model` compares them against the
+model's independent extractor position by position and colour by colour. Per
+colour matters: a bug crediting both kings equally cancels in the difference.
+Red observed by perturbing one knight step in the model only, `CHECK( 3 == 2 )`
+on `r1bq2k1/ppp2ppp/2n4r/1B1p4/3P2n1/2N5/PPP2PPP/R1BQ1RK1 b - - 0 1`.
+
+**The existing corpus was badly vacuous and the non-vacuity assertion caught
+it.** Knight attackers and rook attackers were zero in all thirteen positions on
+both sides, and seven of the nine counts only ever pointed one way. Five
+positions were added rather than the assertion weakened. All nine counts are now
+non-zero somewhere and take both signs. All four cases in the file got stronger.
+
+**Exposing the counts cost 21 % until it was diagnosed.** A second caller made
+clang stop inlining `king_shelter_features()`, and out of line the zero weights
+downstream no longer folded it away: 18.60 to 22.55 ns per call. `static inline`
+restores 18.54; `always_inline` on the fused template made it worse at 25.43,
+which is the wrong function. Nothing in the suite catches an inliner regression,
+so the number is recorded at the declaration and `bench_eval` is the instrument.
+
+**The fit ran on all four cores and stopped at epoch 2100 on patience.**
+Validation 0.107413 to 0.106964, K 1.0338, 799 parameters over 1490839
+positions. S028's own jump was 0.113852 to 0.108043, so this is a much smaller
+move -- expected, since it starts from an already-fitted point and adds one
+term.
+
+**The fit moved everything, which is a problem for attribution.** PAWN 87 to 83,
+ROOK 505 to 511, QUEEN 1067 to 1077, every piece-square table, and mobility
+{0,5,9,2} to {0,5,8,2}. Pasting all of it would put two changes in one SPRT and
+S027's `accepts` forbids exactly that. Being resolved by measurement rather than
+argument: a second fit with the other 781 parameters frozen gives the best king
+safety weights given everything else unchanged, and the two validation errors
+say what the joint refit was worth on its own.
+
+**A tool is being built for the margin decision.** `LAZY_EVAL_MARGIN` is 150 and
+`evaluate_expensive()` clamps to it, so the correction's true size is not
+observable from outside the file and the constant cannot be re-decided without
+exposing it. `tools/eval_spread` reports the unclamped distribution over a
+datagen corpus, split by term.
+
+Decisions: DEC-043, the owner chose the literature order over the cheap-first
+inversion the agent recommended. DEC-044, king safety is linear because the
+Texel tuner cannot fit an indexed attack curve, and its weight signs are
+therefore not chess statements -- the attacker counts and the incidence count
+are collinear by construction.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `tests/test_eval_model.cpp`,
+`tests/test_evaluation.cpp`, `tools/eval_model.hpp`, `tools/tuner.cpp`,
+`adocs/testing.md`, `adocs/decisions.md`, `DEV_MANUAL.md`.
+
+`DEV_MANUAL.md` documented `hyperfine ... './bench_before -r 1'` as the A/B
+command and `bench_eval` exits 1 on `-r 1`. The documented command could never
+have run. Now `-r 2`.
+
+Tests: full suite green, 11/11, 571 assertions in `test_eval_model`.
+
+Commit: 690de1f. The fitted weights are not committed and not yet applied.
+
+## 2026-08-12T00:03+02:00 prompt
+
+> <task-notification>
+> <task-id>a8424e470fbc3de33</task-id>
+> <tool-use-id>toolu_01244Uo5AjmBjvqdxgGpseJw</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/a8424e470fbc3de33.output</output-file>
+> <status>completed</status>
+> <summary>Agent "Build correction-spread tool" finished</summary>
+> <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+> <result>Done. `build/` gate still has to be run by the orchestrator — I built and tested only in `build-prof`.
+> 
+> ## What was exposed
+> 
+> `evaluate_expensive_terms(const board_t*, int* mobility, int* safety)` in `/Users/max/ws/chesso/src/evaluation.hpp`. Both terms tapered, unclamped, in the same orientation `evaluate_expensive()` applies, so `clamp(mobility + safety)` is exactly what `evaluate()` adds to `evaluate_cheap()`.
+> 
+> Hot path stays free by construction, not by hope: the accessor calls `evaluate_mobility_and_king_safety&lt;true&gt;`, the collecting instantiation `king_safety_features()` already uses. The `&lt;false&gt;` instantiation the search compiles keeps exactly one caller. The two out-pointers are written under the existing `if constexpr (collect)`, so at `&lt;false&gt;` neither the stores nor the parameters are compiled.
+> 
+> ## bench_eval comparison
+> 
+> Scores and checksum identical HEAD vs patched: `-36766996307977` over 10 positions. Interface changed, function did not.
+> 
+> `hyperfine --warmup 1 --runs 8`, `bench_eval -r 9 -n 4000000`, throwaway worktree at HEAD built into its own dir with the same flags as `build-prof` (`-O3 -DNDEBUG -g -fno-omit-frame-pointer`, Ninja):
+> 
+> | order | HEAD | patched |
+> |---|---|---|
+> | head first | 7.606 s ± 0.039 | 7.616 s ± 0.029 |
+> | patched first | 7.772 s ± 0.034 | 7.695 s ± 0.110 |
+> 
+> The sign flips with the order, so the ≤1 % gap is drift, not code. Sigmas are 0.4–1.4 %, which resolves 3 % comfortably. I believe it.
+> 
+> Caveat on machine state: **the tuner fit finished at 23:48, mid-task** (`.tuning/tuned_v3.hpp` written, stopped on patience, best validation 0.106964 against a 0.107413 start). My first attempt ran while it was still going and gave σ of 2.4 % and 3.5 % — that run could not resolve 3 % and I discarded it. The numbers above are from the quiet machine afterwards.
+> 
+> ## Tool output, 200000 positions
+> 
+> ```
+>                  mobility  king safety     combined
+>   p50                  24            0           24
+>   p90                  66            0           66
+>   p95                  81            0           81
+>   p99                 114            0          114
+>   p99.9               153            0          153
+>   max                 223            0          223
+> 
+> above a candidate margin
+>   150           231 0.116%      0 0.000%    231 0.116%
+>   200             4 0.002%      0 0.000%      4 0.002%
+>   250/300/400     0 0.000%      0 0.000%      0 0.000%
+> 
+> worst: r1b3k1/pp1nrqp1/3Rp2p/5p1P/BP3P2/P1B2Q2/6P1/4R1K1 b - - 9 28   (mobility 223)
+> ```
+> 
+> Full corpus, 1490839 positions, 2.4 s: p50 24, p90 67, p95 81, p99 113, p99.9 151, max 244; 1550 positions (0.104 %) over 150, 41 (0.003 %) over 200, none over 250. Worst `rn2kb1r/p3pppp/2p3q1/4P3/R2PB1P1/1R6/2P1QP2/2B1K1N1 b kq - 0 15` at 244.
+> 
+> ## It did not reproduce mobility's recorded distribution — and why
+> 
+> Recorded: p50 19, p95 60, p99 81, max 143. Measured at HEAD: p50 24, p95 81, p99 113/114, max 223–244. Not a small disagreement, so I ran it down rather than reporting either number as fact.
+> 
+> The engine changed, not the tool. The recorded figures predate the weight fit. I put the pre-fit weights (`mobility_mg {4,5,2,1}`, `mobility_eg {4,5,4,2}`) back in a throwaway worktree and ran the tool over the first 149084 lines: **p50 19, p90 50, p95 60, p99 82, p99.9 109, max 144**, against the recorded 19 / 50 / 60 / 81 / 107 / 143. Three exact, three within 2 cp (the remainder is almost certainly a slightly different 149084 positions — S034's corpus is not this file's first 149084 lines). The tool is validated against the record; the shift is DEC-040's fit, chiefly rook middlegame mobility 2 → 9.
+> 
+> **The finding that matters for the margin:** the clamp already binds on 0.104 % of the corpus, 1550 positions, with king safety still at zero weight. When it was chosen, it bound on none.
+> 
+> ## Also changed
+> 
+> - `tests/test_evaluation.cpp`: "the unclamped terms are the engine's own" — clamped pair must equal `evaluate() - evaluate_cheap()` over the whole corpus, plus `clamped &gt; 0` for non-vacuity. Red observed: clamping the accessor leaves every equality passing and fails `clamped &gt; 0` at `0 &gt; 0`, which is precisely what the guard is for. Reverted after observing.
+> - `adocs/testing.md`: two rows (correctness of the accessor, hot-path cost). I did not touch `decisions.md` or `worklog.md` — those show as modified from your side.
+> - `DEV_MANUAL.md`: new "Size the lazy evaluation margin" section between "Measure" and "Play games" — what it reads, what it prints, why `--limit N` is a smoke test and not a sample, why the unclamped number is unobservable otherwise, the self-check, and both recorded distributions kept apart with the weights each belongs to.
+> - Tool self-check runs on every invocation and exits non-zero if the clamped pair ever disagrees with `evaluate()`. It has never disagreed.
+> 
+> Verification run: `cmake --build build-prof -j8 &amp;&amp; ctest --test-dir build-prof --output-on-failure` — 11/11 pass including slow perft — and `./clang-format.sh --check` clean. Note `clang-format.sh` filters `git ls-files`, so the new tool was invisible to it until I staged `tools/eval_spread.cpp`; it is staged, not committed.</result>
+> <usage><subagent_tokens>121818</subagent_tokens><tool_uses>75</tool_uses><duration_ms>1081677</duration_ms></usage>
+> </task-notification>
