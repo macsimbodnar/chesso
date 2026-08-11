@@ -6,7 +6,7 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-11, S028 complete.
 
 - Last done: S028
-- In progress: S034 stop paying for evaluate() at every node: static eval in the table entry, and a quiescence eval cache
+- In progress: S034 compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
 - Next: S034
 - Blocked: none
 - S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
@@ -46,11 +46,21 @@ Updated: 2026-08-11, S028 complete.
   a difference of 56.4 ns per node where `bench_eval` measured 14.6 per call.
   The benchmark keeps a slice of the magic tables hot; a real search walks 2 MB
   of rook attacks at random. Mobility was costing about 56 ns, not 14.6.
-- Three ways out of S034, none started: close it keeping only the static eval in
-  the table entry as an enabler for S033 and an `improving` flag, which is free
-  in bytes and justified by what it unlocks rather than by speed; convert it to
-  lazy evaluation; or drop it and go at fitted mobility weights knowing the real
-  cost. The agent leans the first. **Owner's call.**
+- **S034 is now lazy evaluation** (DEC-039). The cache is retired on its own
+  measurement. `evaluate()` splits into the cheap stage the accumulators already
+  provide and an expensive stage that only runs when the cheap score is near the
+  window. It lands with mobility behind it on the same hand-picked weights that
+  measured -14.93, so the only difference from that run is the staging and the
+  comparison attributes to the staging alone. Fitting the weights is the
+  experiment after, kept separate.
+- **The margin is the risk.** A margin too small returns a stage-one score where
+  the full score would have decided differently. Pruning that hides a mate is
+  this project's recurring bug and both earlier instances were caught by the
+  mate tests in the fast suite, not by a benchmark. Eleven mate tests are the
+  gate before any match is played.
+- **The owner set the discipline for the S027 terms**: one at a time, a fast
+  SPRT after each, full bounds when inconclusive, weights fitted rather than
+  guessed.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit

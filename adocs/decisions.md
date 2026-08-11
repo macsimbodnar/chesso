@@ -1287,3 +1287,73 @@ Consequences: S034 is created and started. S027 moves behind it and its term
               If S034 dies on its own opening measurement, that is a success
               costing an hour rather than a failure, and lazy evaluation gets a
               step of its own with the number as its justification.
+
+## DEC-039  2026-08-11  Skip the expensive evaluation work rather than remember it
+Tags:         evaluation, search, lazy-evaluation, s034, s027
+
+Context:      S034 was created to make calling evaluate() cheaper, by keeping a
+              static score in the transposition entry and a separate cache for
+              quiescence. Its own opening measurement retired that plan. A probe
+              is cheaper than the evaluation -- 0.36 ns into a 256 KB cache and
+              0.80 to 1.08 ns into the 12 MB table, against 1.36 ns to recompute
+              -- so the concern that killed it was not the price. It was the
+              prize: a node costs about 116 ns, so the whole saving is under 1 %
+              against a 3 % noise floor and no SPRT could resolve it.
+
+              The same measurement found that tools/bench_eval understates an
+              occupancy term by 3.9 times. Kiwipete searched 9095066 nodes in
+              one build and 8860613 in the other, close enough to compare
+              per-node cost directly: 115.7 ns against 172.1, a difference of
+              56.4 ns per node where bench_eval reported 14.6 per call. The
+              isolated loop keeps a slice of the magic tables hot; a real search
+              walks 2 MB of rook attacks at random. Mobility was never costing
+              14.6 ns. DEC-036 and DEC-037 both understated it.
+
+Decision:     Presented with the options in plain terms, the owner chose to skip
+              the expensive work rather than remember it. S034 is retargeted
+              from caching to lazy evaluation and keeps its id: evaluate()
+              splits into a cheap stage the accumulators already provide and an
+              expensive stage that only runs when the cheap score is close
+              enough to the window to matter.
+
+              The owner also set the discipline for the terms that follow: one
+              at a time, a fast SPRT after each, the full-bounds run when that
+              is inconclusive, and the weights fitted rather than guessed. That
+              is now what S027's accepts field means in practice.
+
+              Lazy evaluation alone has nothing to skip, so it lands with
+              mobility behind it, using the same hand-picked weights DEC-037
+              measured at -14.93. The only difference between the two candidates
+              is the staging, so the comparison attributes to the staging and to
+              nothing else. Fitting the weights is the experiment after, kept
+              separate so that a term, its price and its weights are never three
+              unknowns in one number.
+
+Rejected:     Keeping the 16-bit static evaluation in the transposition entry as
+              an enabler for S033 and an improving flag. It is free in bytes and
+              the agent recommended it, but the owner did not take it and
+              nothing needs it yet. S033 can add it when S033 needs it, and a
+              field added early is a field whose reason has to be remembered.
+
+              Building lazy evaluation with nothing behind it. The staging costs
+              a comparison and a branch and saves nothing while every term is
+              cheap, so it would measure a small negative and teach nothing.
+
+              Adding all six S027 terms and fitting them together. Fastest to a
+              number and the number would be unattributable. The owner rejected
+              this explicitly.
+
+Consequences: The step's verdict is not INV-6 behaviour-neutral. Returning a
+              stage-one score where the full score would have differed changes
+              what the engine plays, on purpose, so node counts move and the
+              identical-nodes route does not apply. It is judged by SPRT against
+              HEAD and read against the -14.93.
+
+              The margin is the risk and it is the familiar one: pruning that
+              hides a mate is this project's recurring bug and both earlier
+              instances were caught by the mate tests in the fast suite rather
+              than by a benchmark. The eleven mate tests are the gate before any
+              match is played.
+
+              tools/bench_eval keeps its blind spot in writing. Any future term
+              built on occupancy is priced in a real search, not in that loop.

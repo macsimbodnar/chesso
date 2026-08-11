@@ -1,9 +1,9 @@
 id:         S034
-goal:       stop paying for evaluate() at every node: static eval in the table entry, and a quiescence eval cache
-accepts:    the feasibility measurement first, and it is allowed to end the step; then, for whatever survives it, one change at a time, each shown behaviour-neutral by identical node counts and best moves (INV-6) and each measured by SPRT for the speed it buys
-touches:    src/search.cpp, src/transposition_table.hpp, src/transposition_table.cpp, tests/
-excludes:   adding any evaluation term -- that is S027; lazy evaluation, which is a different answer to the same problem and gets its own step if this one fails
-decisions:  DEC-036, DEC-037, DEC-038
+goal:       compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
+accepts:    lazy evaluation, delivered with one expensive term behind it so there is something to skip, measured by `./fastchess.sh --fast` against the same hand-picked mobility weights that measured -14.93, so the comparison isolates the staging; full bounds if that is inconclusive
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/search.cpp, tests/
+excludes:   fitting any weight -- that follows and is measured separately; the transposition-entry static eval and the quiescence cache, which this step's own measurement retired
+decisions:  DEC-036, DEC-037, DEC-038, DEC-039
 closes:
 blocks:
 paused_by:
@@ -99,30 +99,57 @@ a cache costs 0.36 ns and a miss path. Part 1 keeps a reason that is not speed:
 S033's reverse futility pruning and an `improving` flag both want a static score
 they did not pay for, and it is free in bytes.
 
-## If it survives, the two changes, separately
+## What the step became, 2026-08-11
 
-**1. Static evaluation in the transposition entry.** Full-depth nodes already
-probe the table, so the read is close to free -- the line is in cache because
-the entry was just read for the move and the bound. This is also the
-prerequisite for the `improving` flag and for S033's reverse futility pruning,
-both of which want a static score they did not pay for. Watch the entry size:
-the table is sized in entries rounded down to a power of two, so a wider entry
-means fewer of them for the same megabytes, and that is a behaviour change
-hiding inside a speed change.
+The owner chose to skip the work rather than remember it: DEC-039. The cache is
+retired on its own measurement and this step is now lazy evaluation.
 
-**2. A quiescence eval cache.** Quiescence does not probe the table today.
-Arasan keeps a separate evaluation cache rather than putting q-nodes in the
-transposition table, because there are far more q-nodes than useful entries and
-they would evict the ones the main search needs. If this part is built at all it
-is built that way, and separately from part 1, because two caches at once make
-neither number attributable.
+**The shape.** `evaluate()` splits in two. Stage one is what it computes today,
+material and the tapered tables, straight off the accumulators at 1.36 ns. If
+that score is far enough outside the caller's window that no plausible stage two
+could bring it back, the function returns stage one and the expensive terms are
+never computed. Otherwise stage two runs and the full score is returned.
 
-## How each part is judged
+That needs `evaluate()` to know the window, which it does not today: the
+signature is `int evaluate(const board_t*)` and both call sites are in
+`search.cpp`. The window has to be passed in, and the margin has to be a
+constant that is bigger than stage two can plausibly be worth.
 
-Caching is behaviour-neutral by construction: a cache that returns anything
-other than what `evaluate()` would have returned is a bug, not a feature. So
-each part proves neutrality with identical node counts and identical best moves
-from `tools/search_bench.py` (INV-6) before any timing is believed, and then the
-speed it buys is measured by SPRT like anything else. A part that measures zero
-is recorded as zero and reverted unless there is a stated reason to keep it --
-part 1 has one, that S033 needs it.
+**The margin is the whole risk.** A margin that is too small returns a stage-one
+score in a position where mobility would have changed the decision, which is a
+wrong score rather than a slow one. The Chess Programming Wiki carries a warning
+about exactly this and names an endgame case, K vs KBN. The mate tests in the
+fast suite are the guard: pruning that hides a mate is this project's recurring
+bug and both previous instances were caught there rather than by a benchmark.
+
+**What it is measured with, and why that is clean.** Lazy evaluation alone has
+nothing to skip, so it lands with mobility behind it as stage two, using the
+same hand-picked weights that DEC-037 measured at -14.93 Elo. The only
+difference between this candidate and that one is the staging, so the comparison
+attributes cleanly:
+
+| candidate | verdict |
+|---|---|
+| mobility, always computed | -14.93 +/- 16.44, DEC-037 |
+| mobility, behind lazy evaluation | this step |
+
+If the second is much better than the first, the staging works and the cost was
+the problem. If it is the same, the cost was not the problem and the weights
+are, which is the next experiment and not this one.
+
+**Fitting the weights comes after and separately**, so that a term, its price
+and its weights are never three unknowns in one number again. The tuner already
+links the engine and the model stays linear -- mobility counts are a property of
+the position, so they enter as features. DEC-037 has the sizing.
+
+## How it is judged
+
+Not behaviour-neutral: returning a stage-one score where the full score would
+have differed changes what the engine plays, deliberately. So node counts will
+move and INV-6's identical-nodes route does not apply. The verdict is
+`./fastchess.sh --fast` against `HEAD`, full bounds if that is inconclusive,
+read alongside the -14.93 above.
+
+Before any of that: the fast suite green, all eleven mate tests included, and
+the static-eval anchors recomputed rather than relaxed, the same way S028 did
+it. A margin bug that hides a mate must fail a test, not a match.

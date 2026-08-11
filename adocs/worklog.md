@@ -799,3 +799,11 @@ Commits: 82a34e3 (S034 created, DEC-038), fbce2a7 (the measurement).
 
 Open: S034 needs a decision before more work. Three options in status.md and in
 the step file; nothing started.
+
+## 2026-08-11T15:46+02:00 prompt
+
+> let's take the decision iteractivly for s034
+
+## 2026-08-11T15:49+02:00 prompt
+
+> when you present me a question about some steps you can not ask me just about s034 or similar, i don't know what that is, you should give me a short description of the item we are talking about. When you present me a choise you need to give me some short context or i can not decide. Now let's redo the iteractvi decisoon taking
