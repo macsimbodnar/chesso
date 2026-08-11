@@ -983,3 +983,80 @@ Consequences: S028's fit is executed by the agent this once and the fact is
               owner reads this in the morning and disagrees, the constants are
               discarded and the fit is re-run by them; nothing downstream has
               been built on it by then.
+
+## DEC-035  2026-08-11  The plan order survives the tuning, re-measured rather than assumed
+Tags:         evaluation, measurement, plan-order, s027
+
+Context:      DEC-032 and DEC-033 set the order of the entire plan. They put the
+              evaluation ahead of the search on two findings: the early
+              middlegame costs most per move, and sixteen times the search
+              removed only 24.1 % of the error, so the engine believes the move
+              it plays rather than failing to see the refutation. Both were
+              measured on the hand-written constants that S028 has just
+              replaced, and S028 was worth +188.74 Elo. A conclusion about
+              where the error lives, drawn from an engine that no longer
+              exists, is not evidence about the engine that does.
+
+              So the same measurement was run again on the fitted evaluation:
+              same opponent, same time control, same loose adjudication, same
+              reference at the same 3000000-node limit. 98 games, 5582 profiled
+              moves, against S018's 210 games and 13522 moves. The probe that
+              produced DEC-033 was re-run on the new profile with the same
+              criteria and the same sample size.
+
+Decision:     The plan order stands. S027 is next, the search block follows it,
+              and nothing moves. The agent ran the measurement and proposed
+              this reading; the owner was asleep and has not yet seen it.
+
+              What the numbers say. The phase ranking is unchanged: early
+              middlegame first at 35.2 cp/move and 38.8 % of the loss, against
+              44.1 and 36.0 % before. Per-move cost fell in every phase except
+              the endgame, which is flat at 18.6 against 18.3 -- the tuning
+              bought most of its Elo where most of the loss already was, and
+              the endgame is the phase it moved least.
+
+              The engine is still evaluation-limited. Sixteen times the search
+              now removes 29.8 % of the error against 24.1 % before, and 78 of
+              160 moves are unchanged against 95. So the balance did shift
+              toward the search, but seventy per cent of the error still
+              survives a sixteen-fold search, and the price of buying it is
+              unchanged at 10.4 cp per effective doubling against 10.3. Neither
+              figure is close to reversing the order.
+
+              The systematic optimism is gone. The engine used to score every
+              phase above the reference: +39, +77, +100, +42, +30. It now runs
+              -1.5, -24.3, -40.3, -3.5 and +204.3. Medians are 6, 0, -4, -1 and
+              227, so four of the five are tail effects rather than a uniform
+              shift, and the p90 spread of 111 to 423 is still wide. The pawn
+              endgame is the exception and it is 22 moves, which decides
+              nothing on its own but is the one place the old warning survives
+              and the one place it got worse.
+
+Rejected:     Assuming DEC-033 still held because the change was an
+              improvement. It is exactly the assumption this project has been
+              wrong about often enough to have a rule against it, and the
+              measurement cost four hours of an idle machine.
+
+              Reordering the plan to put the search block first on the strength
+              of 24.1 % becoming 29.8 %. The direction is real and the size is
+              not decisive; 10.4 cp per doubling is what the search block is
+              playing for either way, and S027 now has a tuner to fit its terms
+              with, which is the whole reason it was put after S028.
+
+              Profiling all 120 games. Cut at 98 for time. The lost 22 games
+              would narrow the buckets and cannot plausibly move a ranking this
+              wide, and the full PGN is kept so the run can be finished.
+
+Consequences: The optimism entry in MANUAL.md is rewritten against these
+              numbers instead of the S018 ones. specs.md carries both profiles
+              rather than replacing one with the other, because the pair is the
+              measurement of what the tuning did.
+
+              S027 keeps its term list and its aim at the middlegame. The
+              pawn-endgame bias is the one signal that argues for an endgame
+              term, and 22 moves is not enough to act on: if it matters it will
+              show up in the next profile, which is cheap now that the pipeline
+              exists.
+
+              The same caveats as DEC-032 apply and are not lessened by
+              repetition: one opponent, one time control, one machine. DEC-019.

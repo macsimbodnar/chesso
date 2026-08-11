@@ -91,12 +91,36 @@ Half the loss sits in moves costing 100 to 400 cp. Blunders above 400 cp are
 0.5 % of moves and 9.3 % of the loss; moves under 25 cp are 73 % of moves and
 7.7 % of the loss.
 
-Two things follow and are held to. **The early middlegame is where the
-centipawns go**, not the endgame, which is the cheapest phase per move outside
-pawn endgames. **The evaluation is optimistic in every phase**, worst in the
-late middlegame. The ranking is stable after removing mate-touching moves and
-after removing clamped reference scores. It has been measured against one
-opponent only, and DEC-019 is the reason that matters.
+Two things followed. **The early middlegame is where the centipawns go**, not
+the endgame, which is the cheapest phase per move outside pawn endgames. **The
+evaluation is optimistic in every phase**, worst in the late middlegame. The
+ranking is stable after removing mate-touching moves and after removing clamped
+reference scores. It has been measured against one opponent only, and DEC-019
+is the reason that matters.
+
+#### The same profile after the constants were fitted
+
+Added 2026-08-11 with DEC-035. S028 replaced every constant in the evaluation
+and was worth +188.74 Elo, so the table above describes an engine that no longer
+exists. Re-run identically -- same opponent, time control, adjudication,
+reference and 3000000-node limit -- over 98 games and 5582 moves. Evidence in
+`adocs/data/S028_raw.tsv`.
+
+| phase | moves | cp/move | share of 154039 cp | own score minus reference, mean | median |
+|---|---|---|---|---|---|
+| opening 22-24 | 1098 | 31.6 | 22.5 % | -1.5 | 6 |
+| early middlegame 14-21 | 1697 | **35.2** | **38.8 %** | -24.3 | 0 |
+| late middlegame 7-13 | 1289 | 24.8 | 20.8 % | -40.3 | -4 |
+| endgame 1-6 | 1448 | 18.6 | 17.5 % | -3.5 | -1 |
+| pawn endgame 0 | 50 | 13.2 | 0.4 % | **+204.3** | 227 |
+
+**The ranking is unchanged and the optimism is gone.** Per-move cost fell in
+every phase except the endgame, which is flat at 18.6 against 18.3: the tuning
+bought most where most of the loss already was, and moved the endgame least.
+The bias reversed sign in four phases of five, but the medians say that is a
+tail effect rather than a uniform shift. The exception is the pawn endgame,
+which is the one place the old warning survives and the one place it got worse
+-- on 22 moves, which decides nothing by itself.
 
 ### Search error or evaluation error
 
@@ -122,6 +146,14 @@ and 1031 of its 1235 errors of 100 cp or more.
 games.** That is what put S028 next and reordered everything after it. The
 figure bounds the search block too: about 10 cp per effective doubling is what
 those steps are playing for.
+
+Re-run on the fitted evaluation, 2026-08-11, DEC-035, same criteria and sample
+size, evidence in `adocs/data/S028_depth_vs_eval.tsv`: as played 182.1, at 4M
+139.7, at 64M 98.0. Sixteen times the search now removes **29.8 %** and **78 of
+160 moves are unchanged**. The balance shifted toward the search and did not
+turn over -- seventy per cent of the error still survives a sixteen-fold search
+-- and the price is the same, **10.4 cp per effective doubling** against 10.3.
+The order stands.
 
 ## Non-goals
 

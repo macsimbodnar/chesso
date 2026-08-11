@@ -96,21 +96,20 @@ here as the FEN each one loads. A GUI never sends them.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
 - **No aspiration windows, futility pruning, razoring or singular extensions.**
   These are planned, not present; see `adocs/plan.md`.
-- **The evaluation is optimistic in every phase**, not only the endgame.
-  Measured over 13522 moves in 210 games, against Stockfish at 3000000 nodes:
-  chesso's own score exceeds Stockfish's by +39 cp on average in the opening,
-  +77 in the early middlegame, +100 in the late middlegame, +42 in the endgame
-  and +30 in pawn endgames. The tail is what to watch — the 90th percentile is
-  around +350 to +400 in every phase from the early middlegame on. Treat a
-  reported advantage as an upper bound.
-  An earlier note here named the endgame specifically, from one king-and-pawn
-  game where chesso held +1.5 to +1.9 against Stockfish's +0.25. That game is
-  real and such positions exist, but it is not where most of the error is.
-  These figures were measured before the evaluation constants were fitted
-  (S028, 2026-08-11), which moved every one of them and was worth +188.74 Elo.
-  The direction is unlikely to have reversed and the magnitudes have not been
-  re-measured; treat the numbers as an upper bound on an engine that no longer
-  exists, and the warning as still standing.
+- **The reported score is unreliable in both directions, and worst in pawn
+  endgames.** Measured over 5582 moves in 98 games against Stockfish at 3000000
+  nodes, after the evaluation constants were fitted (S028, 2026-08-11). Chesso's
+  own score minus Stockfish's, mean and median: opening −1.5 / +6, early
+  middlegame −24.3 / 0, late middlegame −40.3 / −4, endgame −3.5 / −1, pawn
+  endgame **+204.3 / +227**. The typical move is close; the tail is not, and the
+  90th percentile of the disagreement runs +111 to +423 depending on phase.
+  Treat a reported score as an estimate with a wide tail, and treat one in a
+  pawn endgame with real suspicion.
+  Until 2026-08-11 this entry said the engine was optimistic in every phase, by
+  +39 to +100 cp. That was measured on the hand-written constants and it no
+  longer holds: fitting them removed the systematic optimism everywhere except
+  pawn endgames, where it grew — on 22 moves, which is too few to be more than
+  a warning.
 - **`Hash` is not honoured exactly.** The value is clamped to 1–4096 MB, then the
   *entry count* is rounded down to a power of two so probing can mask instead of
   divide, so the table is usually smaller than asked for. If the allocation

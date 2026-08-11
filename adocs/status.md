@@ -9,9 +9,16 @@ Updated: 2026-08-11, S028 complete.
 - In progress: none
 - Next: S027
 - Blocked: none
-- S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far.
-  S027 is mobility, king safety, passed pawns, pawn structure, bishop pair and
-  tempo, and its aim is being re-measured — see below.
+- S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
+  67.5 % against sgambetto where S018 measured 39.3 % under identical settings —
+  so the chained SPRT gains are real against a fixed opponent, not drift.
+- **The plan order was re-measured after it and stands** (DEC-035). Everything
+  DEC-032 and DEC-033 concluded was measured on constants S028 replaced, so the
+  whole profile was run again on the fitted engine: 98 games, 5582 moves, same
+  opponent, reference and node limit. Early middlegame still first at 35.2
+  cp/move and 38.8 %; 16x search still leaves 70 % of the error, at the same
+  10.4 cp per doubling. S027 is next, unchanged, and it now has a tuner to fit
+  its terms with.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
