@@ -4,7 +4,8 @@
 //
 // Reads what tools/datagen writes, `fen result score phase`, and fits the
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
-// and psqt_eg[6][64], 773 numbers -- so that a sigmoid of the evaluation
+// and psqt_eg[6][64], the mobility weights since S034 and the king safety
+// weights since S027, 799 numbers -- so that a sigmoid of the evaluation
 // predicts the outcome of the game the position came from. This is Texel
 // tuning; the objective is the mean squared error of that prediction.
 //
@@ -26,9 +27,11 @@
 // what is fitted, and what an SPRT later measures, is the evaluation, not the
 // split between the tables.
 //
-// **The agent does not run this.** It is built, the data is generated and
-// prepared, and the run is stated. The owner executes it and the constants come
-// back to be measured by SPRT like any other change. DEC-015.
+// The agent runs this itself, without asking, and schedules a long fit for the
+// night when there is better work to do meanwhile. DEC-041, which supersedes
+// DEC-015 for tuning. What still belongs to the owner is the S029 network
+// training. Either way the constants come back to be measured by SPRT like any
+// other change.
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
@@ -48,6 +51,9 @@ namespace
 
 using eval_model::BLACK_BIT;
 using eval_model::EG_BASE;
+using eval_model::KING_SAFETY_COUNT;
+using eval_model::KS_EG_BASE;
+using eval_model::KS_MG_BASE;
 using eval_model::MATERIAL_COUNT;
 using eval_model::MG_BASE;
 using eval_model::MOB_EG_BASE;
@@ -70,6 +76,12 @@ struct dataset_t
   // the model stays linear. int16 because the extremes are in the low
   // hundreds: 1.49 M rows cost 12 MB.
   std::vector<int16_t> mobility;
+
+  // King safety counts, White minus Black, nine per position, extracted once
+  // for the same reason. The counts are bounded by the number of pieces on the
+  // board, so int16 is again far more room than they need: 1.49 M rows cost
+  // 27 MB.
+  std::vector<int16_t> king_safety;
 
   size_t size() const { return phase.size(); }
 };
@@ -140,11 +152,20 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    int safety[KING_SAFETY_COUNT] = {0};
+    if (!eval_model::king_safety_features(placement, safety)) {
+      fprintf(stderr, "bad placement for king safety: %s\n", placement.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
 
     for (const int count : counts) {
       data->mobility.push_back(static_cast<int16_t>(count));
+    }
+    for (const int count : safety) {
+      data->king_safety.push_back(static_cast<int16_t>(count));
     }
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
@@ -162,9 +183,14 @@ double evaluate_position(const dataset_t& data,
       data.mobility[index * 4 + 0], data.mobility[index * 4 + 1],
       data.mobility[index * 4 + 2], data.mobility[index * 4 + 3]};
 
+  int safety[KING_SAFETY_COUNT];
+  for (size_t i = 0; i < KING_SAFETY_COUNT; ++i) {
+    safety[i] = data.king_safety[index * KING_SAFETY_COUNT + i];
+  }
+
   return eval_model::evaluate(&data.pieces[data.offsets[index]],
                               data.offsets[index + 1] - data.offsets[index],
-                              data.phase[index], mobility, params);
+                              data.phase[index], mobility, params, safety);
 }
 
 
@@ -276,6 +302,18 @@ void gradient(const dataset_t& data,
           grad[MOB_MG_BASE + m] += outer * count * mg_weight;
           grad[MOB_EG_BASE + m] += outer * count * eg_weight;
         }
+
+        // King safety, the same shape and the same trap: the model was extended
+        // first and without this block the eighteen weights come back exactly
+        // as they were handed in. The clamp is ignored here for the reason
+        // above, and it now bounds both terms together.
+        for (size_t s = 0; s < KING_SAFETY_COUNT; ++s) {
+          const double count =
+              data.king_safety[position * KING_SAFETY_COUNT + s];
+
+          grad[KS_MG_BASE + s] += outer * count * mg_weight;
+          grad[KS_EG_BASE + s] += outer * count * eg_weight;
+        }
       }
     });
   }
@@ -347,6 +385,13 @@ void write_tables(const std::string& path,
 
   const char* names[6] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
 
+  // king_safety_feature_t's enumerators, in its order, so the emitted rows can
+  // be read against the enum they index.
+  const char* king_safety_names[KING_SAFETY_COUNT] = {
+      "KS_KNIGHT_ATTACKERS", "KS_BISHOP_ATTACKERS", "KS_ROOK_ATTACKERS",
+      "KS_QUEEN_ATTACKERS",  "KS_ZONE_ATTACKS",     "KS_SHIELD_NEAR",
+      "KS_SHIELD_FAR",       "KS_OPEN_FILE",        "KS_HALF_OPEN_FILE"};
+
   fprintf(
       out,
       "// Fitted by tools/tuner from %zu self-play positions.\n"
@@ -357,9 +402,11 @@ void write_tables(const std::string& path,
       ", lr %.3f, validation split %.2f\n"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
-      "// two tables live in src/eval_tables.hpp; the mobility weights at the\n"
-      "// end live in src/evaluation.cpp, a different file and easy to miss.\n"
-      "// S028 and S034, DEC-015: measured by SPRT before any of it is "
+      "// two tables live in src/eval_tables.hpp; the mobility and king "
+      "safety\n"
+      "// weights at the end live in src/evaluation.cpp, a different file and\n"
+      "// easy to miss.\n"
+      "// S027, S028 and S034, DEC-015: measured by SPRT before any of it is "
       "kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
       opts.seed, opts.lr, opts.validation);
@@ -399,12 +446,13 @@ void write_tables(const std::string& path,
     fprintf(out, "};\n");
   }
 
-  // The mobility weights are fitted too, since S034, and they do not live in
-  // eval_tables.hpp with everything else. Emitting them here is what stops a
-  // fit quietly discarding eight of its own parameters, which is exactly what
-  // this function did until it was checked.
+  // The mobility weights are fitted too, since S034, and the king safety
+  // weights since S027, and neither lives in eval_tables.hpp with everything
+  // else. Emitting them here is what stops a fit quietly discarding twenty-six
+  // of its own parameters, which is exactly what this function did with
+  // mobility's eight until it was checked.
   fprintf(out,
-          "\n// These two live in src/evaluation.cpp, not eval_tables.hpp.\n");
+          "\n// These four live in src/evaluation.cpp, not eval_tables.hpp.\n");
 
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? MOB_MG_BASE : MOB_EG_BASE;
@@ -417,6 +465,23 @@ void write_tables(const std::string& path,
     }
 
     fprintf(out, "};  // knight bishop rook queen\n");
+  }
+
+  for (int table = 0; table < 2; ++table) {
+    const size_t base = (table == 0) ? KS_MG_BASE : KS_EG_BASE;
+
+    fprintf(out, "\nconst int king_safety_%s[KS_FEATURE_COUNT] = {\n",
+            (table == 0) ? "mg" : "eg");
+
+    // One per line with its enumerator, because nine numbers on one line is a
+    // row nobody can check against the enum it is indexed by.
+    for (size_t i = 0; i < KING_SAFETY_COUNT; ++i) {
+      fprintf(out, "    %d,  // %s\n",
+              static_cast<int>(std::lround(params[base + i])),
+              king_safety_names[i]);
+    }
+
+    fprintf(out, "};\n");
   }
 
   fclose(out);

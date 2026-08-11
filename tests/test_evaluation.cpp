@@ -176,10 +176,19 @@ TEST_SUITE("evaluation: score")
   // not about the ten someone thought of, so it is asserted over the whole
   // corpus. S034.
   //
-  // The margin was chosen from the distribution over 149084 self-play
-  // positions, where the correction ran p99 81 and a maximum of 143. This test
-  // is what stops a later term quietly outgrowing it: add king safety with a
-  // bigger swing and the suite fails here rather than losing games.
+  // The margin is a bound on the sum of those terms and not on each of them,
+  // which is why evaluate_expensive() clamps once over the total. Two terms
+  // each bounded by the margin can correct by twice it between them, and the
+  // shortcut is unsound the moment that happens.
+  //
+  // The distribution the margin was chosen from is mobility's alone: 149084
+  // self-play positions, p99 81 and a maximum of 143, measured before king
+  // safety existed. King safety shares the budget now and ships at zero weight,
+  // so `worst` below is still mobility's number and this case cannot witness
+  // the second term at all -- test_eval_model checks its counts instead, which
+  // is the only thing a zero-weighted term leaves checkable. Once the weights
+  // are fitted the margin is re-decided from measured data, and if it is left
+  // too small this is where that shows up rather than in lost games. S027.
   TEST_CASE_FIXTURE(eval_fixture_t,
                     "the lazy shortcut cannot change a decision")
   {

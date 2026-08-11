@@ -42,9 +42,20 @@ static double model_score_white(const std::string& fen, const double* params)
   int mobility[4] = {0, 0, 0, 0};
   REQUIRE(eval_model::mobility_features(placement, mobility));
 
+  int king_safety[eval_model::KING_SAFETY_COUNT] = {};
+  REQUIRE(eval_model::king_safety_features(placement, king_safety));
+
   return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
-                              params);
+                              params, king_safety);
 }
+
+
+// king_safety_feature_t's enumerators, in its order, so a failure names the
+// count that disagreed instead of an index the reader has to go and look up.
+static const char* const king_safety_feature_names[KS_FEATURE_COUNT] = {
+    "knight attackers", "bishop attackers", "rook attackers",
+    "queen attackers",  "zone attacks",     "shield near",
+    "shield far",       "open file",        "half open file"};
 
 
 static const std::vector<std::string> positions = {
@@ -68,6 +79,26 @@ static const std::vector<std::string> positions = {
     "8/PPPPPPPP/8/2k5/2K5/8/pppppppp/8 w - - 0 1",
     // Lopsided material, so a wrong sign cannot cancel itself.
     "3qk3/8/8/8/8/8/8/3QK2R w K - 0 1",
+    // King safety, added at S027 because the positions above leave most of the
+    // term at zero: no knight and no rook ever bore on a king zone across all
+    // thirteen, and seven of the nine counts only ever pointed one way. A count
+    // that is zero everywhere is a count the engine and the model agree about
+    // for free. "the positions exercise every count" is what says so out loud;
+    // each line below is here to move one of the entries it checks.
+    //
+    // A knight and a rook on the black king, and the same position mirrored so
+    // that the White-ahead direction is covered too.
+    "r1bq1rk1/ppp2ppp/2n5/3p2N1/1b1P4/2N4R/PPP2PPP/R1BQ2K1 w - - 0 1",
+    "r1bq2k1/ppp2ppp/2n4r/1B1p4/3P2n1/2N5/PPP2PPP/R1BQ1RK1 b - - 0 1",
+    // A bishop and a queen on the white king, from a black king with three
+    // open files and no shelter of its own.
+    "1k6/b7/8/8/7q/8/5PPP/6K1 w - - 0 1",
+    // Shelter at both distances: White's pawns are two ranks ahead of its king
+    // and Black's are one.
+    "6k1/5ppp/8/8/8/5PPP/8/6K1 w - - 0 1",
+    // Three half-open files in front of the white king, against a black king
+    // standing behind its own pawns.
+    "1k6/ppp2ppp/8/8/8/8/PP6/6K1 w - - 0 1",
 };
 
 
@@ -95,7 +126,84 @@ TEST_SUITE("eval model: agrees with the engine")
       // each stage rounding on its own, so the arithmetic can differ by two
       // centipawns rather than one. Anything beyond that is a difference in
       // what is being computed, which is what this file is for.
+      //
+      // King safety is inside this number but says nothing while its weights
+      // are zero: the term contributes 0 on both sides however far apart the
+      // two implementations' counts are. What checks the counts is the case
+      // below; this one starts checking them for free the moment the fit
+      // lands. S027.
       CHECK(std::abs(model - engine_white) <= 2.0);
+    }
+  }
+
+  // The king safety counts themselves, per colour, engine against model. This
+  // is the case with teeth today.
+  //
+  // Per colour and not as the White-minus-Black difference the tuner consumes,
+  // because that difference cancels: a bug that credits both kings with one
+  // extra attacker is invisible in it and shows up here. The two
+  // implementations were written independently from the same specification and
+  // neither reads the other -- that is what eval_model.hpp is for, and a shared
+  // extraction would agree with itself rather than with the engine.
+  TEST_CASE_FIXTURE(model_fixture_t, "the model counts what the engine counts")
+  {
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][KS_FEATURE_COUNT];
+      king_safety_features(&game.board, engine);
+
+      int model[2][eval_model::KING_SAFETY_COUNT];
+      REQUIRE(eval_model::king_safety_features_by_colour(
+          fen.substr(0, fen.find(' ')), model));
+
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int feature = 0; feature < KS_FEATURE_COUNT; ++feature) {
+          const std::string who = (colour == WHITE) ? "White " : "Black ";
+
+          CHECK_MESSAGE(engine[colour][feature] == model[colour][feature],
+                        (who + king_safety_feature_names[feature]));
+        }
+      }
+    }
+  }
+
+  // Non-vacuous by construction, and the reason the case above means anything:
+  // a feature that is zero in every position of the corpus is a feature the
+  // comparison agrees about for free. Every count has to appear, and the
+  // difference the tuner fits has to take both signs, or a whole side of the
+  // term is untested and a sign error in it would pass.
+  TEST_CASE_FIXTURE(model_fixture_t, "the positions exercise every count")
+  {
+    int seen[KS_FEATURE_COUNT] = {};
+    int white_ahead[KS_FEATURE_COUNT] = {};
+    int black_ahead[KS_FEATURE_COUNT] = {};
+
+    for (const std::string& fen : positions) {
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][KS_FEATURE_COUNT];
+      king_safety_features(&game.board, engine);
+
+      for (int feature = 0; feature < KS_FEATURE_COUNT; ++feature) {
+        if (engine[WHITE][feature] != 0 || engine[BLACK][feature] != 0) {
+          seen[feature]++;
+        }
+
+        const int difference = engine[WHITE][feature] - engine[BLACK][feature];
+
+        if (difference > 0) { white_ahead[feature]++; }
+        if (difference < 0) { black_ahead[feature]++; }
+      }
+    }
+
+    for (int feature = 0; feature < KS_FEATURE_COUNT; ++feature) {
+      const std::string name = king_safety_feature_names[feature];
+
+      CHECK_MESSAGE(seen[feature] > 0, (name + ": never non-zero"));
+      CHECK_MESSAGE(white_ahead[feature] > 0, (name + ": never White ahead"));
+      CHECK_MESSAGE(black_ahead[feature] > 0, (name + ": never Black ahead"));
     }
   }
 

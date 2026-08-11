@@ -141,7 +141,7 @@ in a real search at depth 12 — worse than the 25 % S014 removed. DEC-036.
 A/B timing with statistics, always interleaved so machine drift cancels:
 
 ```bash
-hyperfine --warmup 1 --runs 10 './bench_before -r 1' './bench_after -r 1'
+hyperfine --warmup 1 --runs 10 './bench_before -r 2' './bench_after -r 2'
 ```
 
 Check the machine is idle first: `ps aux | sort -rnk3 | head`.
@@ -272,11 +272,17 @@ held-out error every `--report` epochs and keeps the best one, prints a warning
 if the fit never beats the hand-written constants, and writes a header to paste
 into `eval_tables.hpp`.
 
-**The agent does not run the fit.** It builds both tools, generates the data and
-states the run; the owner executes it and the constants come back to be measured
-by SPRT like anything else. DEC-015. The one exception so far is the first fit
-itself, which the owner delegated for that single run and which is recorded as
-DEC-034 rather than left implicit.
+**The agent runs the fit**, and every test and measurement, without asking.
+DEC-041, which supersedes DEC-015 for tuning. A run of several hours is
+scheduled for the night if there is better work to do meanwhile. The constants
+still come back to be measured by SPRT like anything else. What DEC-015 still
+holds is the S029 network training, which is the owner's and is asked again when
+S029 arrives.
+
+Before DEC-041 the rule was that the agent built the tools and the owner
+executed the run. The first fit was delegated for that single run and recorded
+as DEC-034 rather than left implicit; the second suspension in a day is what
+said the rule did not fit.
 
 That fit is the one in `eval_tables.hpp` today: 1490839 positions, K = 1.1141
 fitted from the data, held-out error 0.113852 to 0.108043, stopped at epoch

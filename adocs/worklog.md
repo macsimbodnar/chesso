@@ -1127,3 +1127,189 @@ model, dataset, gradient and writer, all four -- because two of those four were
 silently missing today.
 
 Commits: 463b3bd (S034 complete), and this turn's S027 correction.
+
+## 2026-08-11T22:53+02:00 prompt
+
+> proceed to the next step in the plan
+
+## 2026-08-11T23:00+02:00 prompt
+
+> yes, proceed. For each step in the plan use a subagent with only the ncessary context to perform the task. You will be the orchestrator and consume the outcome of the agents in order to complete the task. I am doing this to keep the context under 100K limit where the llm performance are optimal
+
+## 2026-08-11T23:20+02:00 recap
+
+**S027 started**, term 1 of 6: king safety. Owner picked the literature order
+over the cheap-terms-first inversion the step file argued for, so king safety
+goes first and tempo last. Step file moved to `plan_current/`.
+
+Work is being run through subagents on the owner's instruction, to keep the
+orchestrating context small. One agent owns `src/`, one owns `tools/`, and the
+files do not overlap.
+
+**King safety is linear in its parameters, and that is forced.** The tuner fits
+a linear function of its constants, so the `attack_table[weighted_attacker_count]`
+curve the literature describes cannot be fitted by the machinery S028 built.
+What ships is nine count features per side -- attackers by piece type, zone
+attack incidences, near and far pawn shield, open and half-open files near the
+king -- each with a middlegame and an endgame weight, tapered like mobility.
+Eighteen parameters.
+
+**It ships at zero weights.** That makes the engine change provably
+behaviour-neutral: identical node counts at depth 9 (212136 / 870209 / 174998)
+and identical best moves against the pre-change build. The fit sets the weights
+afterwards and the SPRT then measures the fitted term rather than a guess, which
+is what DEC-033 and S034's three-measurement lesson require.
+
+**The lazy shortcut was restructured, not extended.** Mobility used to clamp
+itself to `LAZY_EVAL_MARGIN` and `evaluate_lazy()` relied on that bound. A second
+term clamped to its own margin would have let the total correction reach twice
+the margin and made the shortcut unsound. There is now one `evaluate_expensive()`
+computing both terms with a single clamp on the sum, and the negation for Black
+happens exactly once, on that sum. `LAZY_EVAL_MARGIN` stays 150 until the fitted
+correction's distribution says otherwise.
+
+**The term costs 7.7 % at zero weights**, measured interleaved at depth 12 on an
+idle machine, 1.534/1.541 s against 1.652/1.662 s. King safety recomputes slider
+attacks that mobility already computed for the same piece. A fused pass is in
+flight; it is behaviour-neutral and proved by node counts rather than by SPRT.
+
+**A missing king was a live crash, not a hypothetical.** `test_evaluation`
+prices `4k3/8/8/8/8/8/8/8` to check the king carries no material, and
+`get_lsb_index(0)` answers 64, off the end of `king_attacks`, `file_masks` and
+`rank_masks`. Mobility never touched kings so it never met this.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `DEV_MANUAL.md`,
+`adocs/plan_current/S027_handcrafted_eval_terms.md` (moved).
+
+`DEV_MANUAL.md` still said "The agent does not run the fit", which DEC-041
+superseded this morning. Corrected.
+
+Tests: full suite green, 11/11. No new test yet -- with zero weights nothing in
+the suite can distinguish a correct feature from a wrong one, so the coverage
+arrives with the fitted weights.
+
+Commit: pending, at the end of the term.
+
+## 2026-08-11T23:19+02:00 prompt
+
+> <task-notification>
+> <task-id>aafd21866c68b44d9</task-id>
+> <tool-use-id>toolu_01691U5i3GCWj9sbnfMWiuT3</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/aafd21866c68b44d9.output</output-file>
+> <status>completed</status>
+> <summary>Agent "Add king safety to tuner" finished</summary>
+> <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+> <result>Done. All green.
+> 
+> **The five places**
+> 1. `tools/eval_model.hpp` model — `KING_SAFETY_COUNT = KS_FEATURE_COUNT` (taken from the engine's enum, not a literal 9), `KS_MG_BASE`/`KS_EG_BASE` after the mobility bases, `PARAM_COUNT` now 799; `evaluate()` sums the tapered king safety term; `starting_params()` copies `king_safety_mg`/`king_safety_eg` out of the engine.
+> 2. `tools/eval_model.hpp` features — `king_safety_features(const std::string&amp;, int out[KING_SAFETY_COUNT])`, ray-walked independently from the placement in true board squares, White minus Black, all-zero contribution for a side with no king.
+> 3. `tools/tuner.cpp` dataset — `dataset_t::king_safety`, nine int16 per row, extracted in `load()`; `evaluate_position()` passes them.
+> 4. `tools/tuner.cpp` gradient — king safety block mirroring mobility's, `outer * count * mg_weight` / `eg_weight`.
+> 5. `tools/tuner.cpp` writer — emits `king_safety_mg[KS_FEATURE_COUNT]` and `king_safety_eg[KS_FEATURE_COUNT]`, one value per line with its enumerator, under the same "these live in src/evaluation.cpp" note.
+> 
+> **The clamp** — now one clamp to `LAZY_EVAL_MARGIN` on `(mobility_mg + ks_mg) * mg_weight + (mobility_eg + ks_eg) * eg_weight`, not per term. Comment rewritten: the 143-vs-150 measurement was mobility alone and is no longer a reason to assume the clamp never binds. `LAZY_EVAL_MARGIN` untouched. The gradient still ignores the clamp, as before.
+> 
+> **Verification** — `cmake --build build -j8`, `ctest --test-dir build --output-on-failure` (11/11, full suite incl. slow/bench), `./clang-format.sh --check` all pass. `test_eval_model.cpp` needed no change.
+> 
+> **Smoke run** — 1490839 positions, 799 parameters, K 1.0338, validation 0.107413 → 0.106971 over 40 epochs. All 18 king safety weights moved off zero:
+> 
+> ```
+> king_safety_mg = 13, 7, -12, 14, -17, 18, 7, -26, -15
+> king_safety_eg =  2, 1,  11, -25,  5, -11, -13, -19, 11
+> ```
+> (knight/bishop/rook/queen attackers, zone attacks, shield near, shield far, open file, half-open file). 40 epochs of Adam at lr 1.0 bounds every weight to ±40, so these are a plumbing receipt, not a fit.
+> 
+> I also spot-checked the extractor on four hand-countable positions (bare kings → all zero; `4k3/8/8/8/8/8/4PPP1/4K3` → shield_near +2, half_open −2; `4k3/8/8/4Q3/8/8/8/4K3` → queen attackers −1, zone attacks −2; a black-kingless board → open_file +3, no crash). All matched.
+> 
+> **Two choices you should relay**
+> 
+> - **`evaluate()` signature.** `tests/test_eval_model.cpp` calls the five-argument form and I may not edit it, so the new parameter is *trailing and defaulted*: `evaluate(pieces, count, phase, mobility, params, const int* king_safety = nullptr)` — not `king_safety` before `params` as the mobility mirror would suggest. The agent extending that test needs this exact order. The default is a footgun once weights are non-zero (a five-argument call silently drops the term); the comment says so, and the default should be deleted as soon as the test passes features.
+> - **Stale doc lines in `tuner.cpp`.** Its header said "773 numbers" (never updated for mobility's eight); I corrected it to 799 and named both terms, and extended the generated file's paste note. Outside the strict five places but inside the files I was given.
+> 
+> Two spec points I resolved rather than asked about: the emitted arrays are sized `[KS_FEATURE_COUNT]` rather than `[9]`, and `KING_SAFETY_COUNT` is derived from the enum rather than written as 9 — both so a tenth feature in `evaluation.hpp` breaks loudly instead of leaving the model fitting a short vector.</result>
+> <usage><subagent_tokens>87537</subagent_tokens><tool_uses>34</tool_uses><duration_ms>530950</duration_ms></usage>
+> </task-notification>
+
+## 2026-08-11T23:40+02:00 recap
+
+**S027 term 1, tuner side done.** The king safety weights are fittable. Five
+places changed, which is the count S034 got wrong: the model, the feature
+extractor, the dataset, the gradient and the writer. `PARAM_COUNT` is 799.
+
+**The plumbing was proved live rather than assumed.** A 40-epoch smoke run over
+1490839 positions moved all eighteen weights off zero, K 1.0338, validation
+0.107413 to 0.106971. S034's silent failure was a writer that discarded its new
+weights and a gradient that never moved them, and a fit that returns a weight
+exactly as it was handed in is the symptom. It did not repeat. Those numbers are
+a receipt, not a fit: 40 epochs of Adam at lr 1.0 cannot move a weight past
+plus or minus 40.
+
+**The model's clamp now matches the engine's.** One clamp on the combined
+stage-two score rather than one per term. The 143-against-150 measurement that
+justified the old comment was mobility alone and no longer says the clamp never
+binds.
+
+**A footgun was introduced deliberately and must be removed.**
+`eval_model::evaluate()` takes king safety as a trailing defaulted parameter,
+because `tests/test_eval_model.cpp` calls the five-argument form and the agent
+that wrote the model was not allowed to edit tests. A five-argument call now
+silently drops the term. The default is deleted in the same change that teaches
+the test to pass features.
+
+`tools/tuner.cpp` still carried DEC-015's rule that the agent does not run the
+fit, and its header still said 773 parameters, never updated for mobility's
+eight. Both corrected.
+
+Files: `tools/eval_model.hpp`, `tools/tuner.cpp`.
+
+Tests: full suite green, 11/11, including the slow and bench labels.
+`test_eval_model` needed no change and that is the problem the next agent fixes
+-- with zero weights an engine-against-model comparison of `evaluate()` is
+0 == 0 for king safety, which is vacuous. The test has to compare the nine
+features directly, which means the engine's extractor stops being `static`.
+
+Commit: pending, at the end of the term.
+
+## 2026-08-11T23:22+02:00 prompt
+
+> <task-notification>
+> <task-id>ad4e7597c02f53690</task-id>
+> <tool-use-id>toolu_01Fxi5bKGUhcX1V5ouL46UzM</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/ad4e7597c02f53690.output</output-file>
+> <status>completed</status>
+> <summary>Agent "Implement king safety term" finished</summary>
+> <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+> <result>Fusion done and proven.
+> 
+> **The fused loop**
+> 
+> `evaluate_mobility_and_king_safety()` walks the knights, bishops, rooks and queens of both colours once, calls `piece_attacks()` once per piece, and spends that one attack set twice: `count_bits(attacks &amp; ~own)` into the mobility accumulators signed by the piece's own colour (`mover`), and `attacks &amp; zone[1 - colour]` into the king safety accumulators signed by the *other* colour (`defender = -mover`), with the same early `continue` when the intersection is empty. The two king zones are computed once up front into `zone[2]`; a missing king yields an empty zone, which no attack set can intersect, so the old early-return case is preserved without a branch in the loop. Features 5–8 stay in `king_shelter_features()`, called once per king in a separate small pass.
+> 
+> Mobility and safety keep **separate mg/eg accumulator pairs and separate taper divisions**, so the fusion is exact for *any* weights rather than only for the zeros shipping today — integer truncation would otherwise have made the two forms differ by up to 1 cp once the tuner fits the weights.
+> 
+> `evaluate_mobility()` and `evaluate_king_safety()` are gone, replaced by the one function; `evaluate_expensive()` still owns the single clamp and the single sign flip.
+> 
+> **Node-count proof**
+> 
+> `tools/search_bench.py` depth 9, pre-fusion binary vs post-fusion: 212136 / 870209 / 174998 nodes on both, best moves c3d5 / e2a6 / d7c8q on both. Identical to the digit.
+> 
+> Stronger, because zero weights make the node-count proof insensitive to the counts themselves: I compiled the pre-fusion and post-fusion `evaluation.cpp` side by side in one binary with every file-scope name prefixed, gave **both** the same non-zero king safety weights (mg `{17,-5,23,41,7,13,-3,29,11}`, eg `{2,9,-7,19,3,31,5,-11,23}`), and compared `evaluate()` over the whole JSON corpus plus the two kingless positions and the nine-bishop position: **2699 positions, 0 mismatches**, expensive correction non-zero on 2657 of them (worst 150, the clamp binding). The nine counts per side are therefore identical, not just the sum of zeros.
+> 
+> **Timing** — machine idle, verified first (had to wait out another agent's `test_perft`). `hyperfine --runs 8`, three binaries, depth 12:
+> 
+> | build | mean | σ |
+> |---|---|---|
+> | ref (before king safety existed) | 1.651 s | 0.063 |
+> | pre-fusion | 1.768 s | 0.034 |
+> | post-fusion | 1.652 s | 0.045 |
+> 
+> Interleaved `search_bench` medians agree: ref 1.517 s, pre 1.630 s, post 1.480 s.
+> 
+> **Conclusion: all of the 7.7 % came back.** Post-fusion vs ref is 1.00 ± 0.05 — 0.06 % on the means, far inside every sigma and inside the 3 % noise floor, so king safety at zero weight is now indistinguishable from not having the term at all. Pre vs post is 7.0 %, well outside the sigmas. The remaining cost of the term is the arithmetic on an attack set that mobility was already paying for, which is not measurable here.
+> 
+> **Gates**: `cmake --build build -j8` clean, `ctest --test-dir build --output-on-failure` 11/11 (full suite, not just the fast label — includes `test_perft`, `bench_movegen`, `bench_eval`), `./clang-format.sh --check` exit 0. The benchmarked binary was confirmed byte-identical (md5) to a forced rebuild of the current source, so the numbers describe the code as it stands.
+> 
+> One thing to flag: `tools/eval_model.hpp` and `tools/tuner.cpp` are modified in the working tree by the other agent (they have added `KS_MG_BASE` / `KING_SAFETY_COUNT` against my enum). Mid-run their `eval_model.hpp` had a clang-format violation that made the repo-wide check fail; it is clean again now. Nothing of mine touched `tools/` or `tests/`.</result>
+> <usage><subagent_tokens>146374</subagent_tokens><tool_uses>43</tool_uses><duration_ms>767845</duration_ms></usage>
+> </task-notification>

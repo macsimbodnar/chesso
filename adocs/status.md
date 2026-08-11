@@ -3,53 +3,12 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-11, S034 complete.
+Updated: 2026-08-11 by `moltke --step status`.
 
 - Last done: S034
-- In progress: none
+- In progress: S027 king safety, passed pawns, pawn structure, bishop pair, tempo
 - Next: S027
 - Blocked: none
-- S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
-  67.5 % against sgambetto where S018 measured 39.3 % under identical settings —
-  so the chained SPRT gains are real against a fixed opponent, not drift.
-- **The plan order was re-measured after it and stands** (DEC-035). Everything
-  DEC-032 and DEC-033 concluded was measured on constants S028 replaced, so the
-  whole profile was run again on the fitted engine: 98 games, 5582 moves, same
-  opponent, reference and node limit. Early middlegame still first at 35.2
-  cp/move and 38.8 %; 16x search still leaves 70 % of the error, at the same
-  10.4 cp per doubling. S027 is next, unchanged, and it now has a tuner to fit
-  its terms with.
-- **S034 is done: +28.46 +/- 18.61 Elo over 942 games**, H1 accepted, LOS
-  99.87 %. Lazy evaluation plus mobility, with the eight mobility weights fitted
-  rather than guessed. Three measurements were needed to get there and the order
-  is the point: mobility always computed on hand-picked weights measured
-  **-14.93**; behind lazy evaluation, same weights, **+4.19 over 498 games and
-  stopped**; with the weights fitted, **+28.46 and passed**. The staging is
-  worth about 15 Elo and the weights about 25, and the first run measured both
-  at once and said the whole thing was a failure.
-- **The fit disagreed with hand-picking where it mattered.** Knight mobility
-  fitted to nothing on top of the piece-square table; rook middlegame mobility
-  to four times the guess. mg {0, 5, 9, 2}, eg {-1, 6, 1, 3}.
-- **The margin is 150 and it is a guarantee, not an observation.** The term is
-  clamped to it. Any of S027's remaining terms added behind the shortcut has to
-  fit inside that bound or move it deliberately, and `test_evaluation` "the lazy
-  shortcut cannot change a decision" is what forces the choice.
-- **Two tuner bugs are worth remembering because no test caught them.**
-  `write_tables()` did not emit the mobility weights and `gradient()` did not
-  compute their derivative, so a fit would have run, reported an improvement
-  from the other 773 parameters, and returned the eight weights unchanged. Found
-  by a smoke run whose output looked too familiar.
-- What S028 came to: all 773 evaluation constants are fitted to chesso's own
-  self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
-  to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
-  was run by the agent under a one-run delegation from the owner, DEC-034 —
-  **DEC-015 stands unchanged for every later fit and for the S029 network.**
-  Three things went wrong on the way in and all three are in the step file: a
-  clang-format gate that had been red since `ae814b6`, a macro collision
-  between the ordering values and the evaluation's that only compiled while the
-  numbers matched, and a tactics test that had been asserting a preference among
-  four moves that all mate in ten.
-
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
