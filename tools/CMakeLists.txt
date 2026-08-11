@@ -18,3 +18,11 @@ target_link_libraries(datagen PRIVATE chesso_engine Threads::Threads)
 add_executable(tuner tuner.cpp)
 target_include_directories(tuner PRIVATE ../src)
 target_link_libraries(tuner PRIVATE chesso_engine Threads::Threads)
+
+# S034 feasibility probe. Prices a table access against the cost of calling
+# evaluate(), which is the question that decides whether caching the evaluation
+# can pay for itself. Kept rather than thrown away: the answer changes every
+# time the evaluation gets more expensive, and it will.
+add_executable(probe_cost probe_cost.cpp)
+target_include_directories(probe_cost PRIVATE ../src)
+target_link_libraries(probe_cost PRIVATE chesso_engine)

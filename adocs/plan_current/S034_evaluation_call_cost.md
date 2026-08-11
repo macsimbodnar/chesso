@@ -52,6 +52,53 @@ recorded number, and the answer becomes lazy evaluation, which skips the
 expensive work rather than remembering it. That outcome is a success for this
 step, not a failure: it costs an hour and saves building the wrong thing.
 
+## What the measurement said, 2026-08-11
+
+**The concern above was wrong, and something worse is true.**
+
+`sizeof(tt_entry_t)` is 24 bytes with 20 used, so a 16-bit static evaluation
+fits in existing tail padding. No entry growth, no change in entry count, and
+the behaviour risk this file warned about does not exist.
+
+Probe costs, best of seven sweeps, independent random accesses:
+
+| | ns |
+|---|---|
+| index loop only | 0.08 |
+| access into the 524288-entry table the engine allocates at Hash=16 | 1.08 |
+| access into a 256 KB direct-mapped cache | 0.36 |
+| `evaluate()` today | 1.36 |
+
+So a probe is **cheaper** than the evaluation, not dearer. The literature's
+premise survives in the sense that mattered.
+
+**But the saving is below the noise floor.** A search node costs about 116 ns.
+Replacing a 1.36 ns evaluation with a 0.36 ns cache hit saves 1 ns, which is
+under 1 % of a node, against a 3 % noise floor. There is nothing here an SPRT
+could see. The cache is not a pessimisation; it simply has nothing to buy while
+the evaluation is this cheap.
+
+**And `bench_eval` understates an occupancy term by about four times.** The
+kiwipete position searched nearly the same number of nodes in both builds --
+9095066 against 8860613 -- so the per-node cost is comparable: 115.7 ns against
+172.1 ns, a difference of **56.4 ns per node**. `bench_eval` priced the same
+term at +14.6 ns per call. The gap is the working set: `bench_eval` evaluates
+ten positions in a loop and keeps a small slice of the magic tables hot, while a
+real search walks 2 MB of rook attacks and 256 KB of bishop attacks at random.
+An occupancy-based term pays cache misses that the isolated benchmark never
+sees, and that is a limitation of the instrument, recorded here rather than
+discovered again later.
+
+That also revises DEC-036 and DEC-037 downward in mobility's favour on cost and
+upward on the difficulty: the term was not costing 14.6 ns, it was costing 56.
+
+**Where this leaves the step.** The cache cannot pay for itself against a 1.36 ns
+evaluation, and against an expensive one the cheaper answer is not to remember
+the work but to skip it -- lazy evaluation costs no memory traffic at all, where
+a cache costs 0.36 ns and a miss path. Part 1 keeps a reason that is not speed:
+S033's reverse futility pruning and an `improving` flag both want a static score
+they did not pay for, and it is free in bytes.
+
 ## If it survives, the two changes, separately
 
 **1. Static evaluation in the transposition entry.** Full-depth nodes already
