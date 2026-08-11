@@ -20,11 +20,13 @@ which is why they are stated here and not only in `decisions.md`.
   the documented state of the art and implementing it here is the plan (DEC-014).
   Copying it is not. Running another engine's *binary* as a tool creates no
   derivative work and is encouraged. DEC-016.
-- **The agent does not run NNUE training or evaluation-table fine tuning.** It
-  builds the tuner, generates and prepares the data, and states exactly what the
-  run should be. The owner executes the run; the result comes back as constants
-  or a network and is measured by SPRT like any other change. The line is
-  *running* the training, not writing it. DEC-015.
+- **The agent runs tests, measurements and evaluation tuning itself** (DEC-041),
+  without asking, and schedules anything lasting several hours for the night if
+  there is better work to do meanwhile. **NNUE training is still the owner's**:
+  the agent builds the trainer, prepares the data and states the run, and the
+  result comes back as a network measured by SPRT like any other change. The
+  line is *running the network training*, not writing it. DEC-015 as amended by
+  DEC-041.
 - **Chess judgement comes from a tool, never from the agent.** No agent assesses
   a position, move, line or result from its own reasoning. This covers whether a
   position is winning, whether a move is a blunder, whether an ending is

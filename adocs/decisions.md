@@ -1426,3 +1426,53 @@ Consequences: The engine now plays with mobility in its evaluation and a lazy
 
               DEC-015 is unchanged: the fit that follows is the owner's to run.
               DEC-034 was one night and said so.
+
+## DEC-041  2026-08-11  The agent runs tests and evaluation tuning without asking
+Tags:         workflow, tuning, dec-015, delegation
+
+Context:      DEC-015 stopped the agent short of running a fit: it built the
+              tuner, generated the data, stated the run, and the owner executed
+              it. DEC-034 crossed that line once, for one night, and said
+              explicitly that it was not an amendment.
+
+              In practice the rule cost more than it bought. Every fit and every
+              measurement became a handoff, and the last one sat unstarted for
+              an hour while the machine was idle and the agent had nothing to do
+              but wait for a command that takes thirty seconds to type.
+
+Decision:     The owner grants a standing delegation: the agent runs tests,
+              measurements and evaluation tuning itself, without asking. No
+              handoff, no waiting.
+
+              Two conditions came with it. The machine has caffeinate running
+              permanently on the owner's side, so the agent does not need to
+              wrap anything or worry about sleep. And a job of several hours is
+              scheduled for the night if there is better work to do in the
+              meantime -- the machine is the binding constraint on the whole
+              plan and daylight hours are worth more spent on work that needs a
+              person awake.
+
+              This supersedes DEC-015 for evaluation tuning and for every kind
+              of measurement. **It is not extended to the S029 network training
+              on the agent's own initiative.** DEC-015's stated reason was that
+              the owner wanted the training runs of an engine bearing their name
+              to be theirs, and a Texel fit over constants the agent could have
+              hand-written is not the case that reason was written for. Training
+              a network is. That one is asked again when S029 arrives.
+
+Rejected:     Reading the delegation as covering everything DEC-015 covered.
+              The owner said "tests or tuning"; the network is neither, it is
+              the case DEC-015 exists for, and assuming otherwise would be the
+              agent quietly widening its own permissions.
+
+              Leaving DEC-015 in force and treating this as another one-off.
+              It is the second time the rule has been suspended in a day, which
+              is what a rule that does not fit looks like.
+
+Consequences: CLAUDE.md and AGENTS.md both state the old rule in their own
+              words and both are amended in the same commit as this entry, with
+              a pointer here. DEC-015 is not deleted -- it is superseded in
+              part, and the part about the network still stands.
+
+              Long runs move to the night by default. The agent says what it is
+              scheduling and why, rather than silently occupying the machine.

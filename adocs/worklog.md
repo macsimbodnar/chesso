@@ -913,3 +913,11 @@ Nothing built, nothing committed, no tests run.
 ## 2026-08-11T17:49+02:00 prompt
 
 > ok, let's follow your suggestion
+
+## 2026-08-11T18:36+02:00 prompt
+
+> what is the status right now? what about hte found bugs? What are we in the plan?
+
+## 2026-08-11T18:39+02:00 prompt
+
+> wheneer you need to run something about tests or tuning run it by yourself. I already have caffenaite running on my side so you should never worry about that on this machine. So if you needs somethign run just run it. the only requirements is that, if you need to run something that is long multiple hours wait the night if possible and if you have better job to do. Like for example we can wait the tuning to this night if it's long but now we can work on other items to improve the engine

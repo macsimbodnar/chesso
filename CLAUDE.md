@@ -152,13 +152,18 @@ looking for.
 Use every tool, for everything — evaluation, analysis, debugging, perft oracles,
 labelling, calibration.
 
-**Except two things. Do not run NNUE training. Do not run evaluation-table fine
-tuning.** Build the tooling, generate and prepare the data, state exactly what
-the run should be, and hand it to the owner. The result comes back as constants
-or as a network, and is then measured by SPRT like any other change.
+**Except one thing. Do not run NNUE training.** Build the tooling, generate and
+prepare the data, state exactly what the run should be, and hand it to the
+owner. The result comes back as a network and is then measured by SPRT like any
+other change.
 
-The line is *running* the training, not writing it. S028 and S029 are split that
-way in practice. DEC-015.
+Evaluation tuning is no longer on that list. Run it, and run tests and
+measurements, without asking (DEC-041). Schedule anything lasting several hours
+for the night when there is better work to do meanwhile; the machine is the
+binding constraint on the plan.
+
+The line is *running the network training*, not writing it. S029 is the case it
+is written for. DEC-015 as amended by DEC-041.
 
 ## Known hazards and one-way doors
 
