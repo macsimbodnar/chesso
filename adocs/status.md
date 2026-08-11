@@ -6,7 +6,7 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-11, S028 complete.
 
 - Last done: S028
-- In progress: S034 stop paying for evaluate() at every node
+- In progress: S034 stop paying for evaluate() at every node: static eval in the table entry, and a quiescence eval cache
 - Next: S034
 - Blocked: none
 - S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
@@ -32,13 +32,25 @@ Updated: 2026-08-11, S028 complete.
   linear, `PARAM_COUNT` 773 to 781), or make `evaluate()` run less often first.
   **The owner chose the cost work** (DEC-038), which is now S034 and sits
   between S028 and S027.
-- **S034 opens with a measurement that is allowed to end it.** The literature's
-  case for an eval cache rests on the evaluation being expensive to call.
-  Chesso's is 1.36 ns. A probe into a useful-sized table is a memory access and
-  may well cost more than that, in which case the cache is a pessimisation today
-  and the answer is lazy evaluation instead. That is an argument, and arguments
-  have been wrong here three times, so it gets a number before anything is
-  built. Dying on that measurement is a success for the step, not a failure.
+- **S034's opening measurement is done and the step needs a decision.** The
+  concern that a probe would cost more than the 1.36 ns evaluation was wrong:
+  0.80–1.08 ns into the 12 MB table, 0.36 ns into a 256 KB cache, and
+  `sizeof(tt_entry_t)` is 24 bytes with 20 used so a 16-bit static eval is free.
+  What kills the speed rationale is the size of the prize: a node costs about
+  116 ns, so trading 1.36 ns for 0.36 ns saves under 1 % against a 3 % noise
+  floor. Nothing an SPRT could see. `tools/probe_cost` is kept because the
+  answer changes as the evaluation gets more expensive.
+- **`bench_eval` understates an occupancy term 3.9x, and that revises DEC-036
+  and DEC-037.** Kiwipete searched 9095066 nodes against 8860613 in the two
+  mobility builds, so per-node cost compares directly: 115.7 ns against 172.1,
+  a difference of 56.4 ns per node where `bench_eval` measured 14.6 per call.
+  The benchmark keeps a slice of the magic tables hot; a real search walks 2 MB
+  of rook attacks at random. Mobility was costing about 56 ns, not 14.6.
+- Three ways out of S034, none started: close it keeping only the static eval in
+  the table entry as an enabler for S033 and an `improving` flag, which is free
+  in bytes and justified by what it unlocks rather than by speed; convert it to
+  lazy evaluation; or drop it and go at fitted mobility weights knowing the real
+  cost. The agent leans the first. **Owner's call.**
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit

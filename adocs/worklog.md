@@ -761,3 +761,41 @@ Nothing built, nothing committed, no tests run.
 ## 2026-08-11T15:20+02:00 prompt
 
 > I agree with your plan, let's start with 2 first
+
+## 2026-08-11T16:05+02:00 recap
+
+S034, created and started this turn, and its opening measurement is done.
+
+Planning: DEC-038 records the owner choosing the cost work ahead of S027.
+`adocs/plan_current/S034_evaluation_call_cost.md` created, `plan.md` renumbered
+with S034 at position 20 between S028 and S027.
+
+Measurement: `tools/probe_cost` prices a table access against `evaluate()`.
+`sizeof(tt_entry_t)` 24 bytes with 20 used, so a 16-bit static eval is free.
+Access 0.80-1.08 ns into the 524288-entry table, 0.36 ns into a 256 KB cache,
+against 1.36 ns for `evaluate()` — the step's opening concern was wrong, a probe
+is cheaper. What kills the speed rationale is the prize: under 1 % of a 116 ns
+node against a 3 % noise floor.
+
+Found while reconciling: `bench_eval` understates an occupancy term 3.9 times.
+Kiwipete's two builds searched 9095066 and 8860613 nodes, so per-node cost
+compares directly at 115.7 against 172.1 ns, +56.4 per node where `bench_eval`
+said +14.6 per call. Magic-table cache pressure the isolated loop never pays.
+Written next to the instrument and into the step file; it revises what DEC-036
+and DEC-037 believed mobility cost.
+
+Two benchmarking traps hit and both fixed: the compiler hoisted the whole inner
+loop out of the repeat loop as loop-invariant, and then sank it past the second
+clock read because the result was not needed until after it. Every number came
+back as 0.00 ns twice before the barrier went in.
+
+Files: `tools/probe_cost.cpp` (new), `tools/CMakeLists.txt`, `adocs/plan.md`,
+`adocs/plan_current/S034_evaluation_call_cost.md` (new), `adocs/decisions.md`,
+`adocs/testing.md`, `adocs/status.md`.
+
+Tests: fast suite 8/8 green, format clean, at every commit.
+
+Commits: 82a34e3 (S034 created, DEC-038), fbce2a7 (the measurement).
+
+Open: S034 needs a decision before more work. Three options in status.md and in
+the step file; nothing started.
