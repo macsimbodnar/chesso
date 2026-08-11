@@ -60,6 +60,15 @@ target_link_libraries(bench_movegen PRIVATE chesso_engine)
 add_test(NAME bench_movegen COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bench_movegen)
 set_tests_properties(bench_movegen PROPERTIES LABELS "bench" TIMEOUT 600)
 
+# Evaluation benchmark. Same reasoning and same label as bench_movegen: it
+# prints, nothing passes or fails. It exists because a term that changes the
+# score changes the tree, so no search timing can price a term on its own.
+add_executable(bench_eval bench_eval.cpp)
+target_include_directories(bench_eval PRIVATE ../src)
+target_link_libraries(bench_eval PRIVATE chesso_engine)
+add_test(NAME bench_eval COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bench_eval)
+set_tests_properties(bench_eval PROPERTIES LABELS "bench" TIMEOUT 600)
+
 # # Test gui
 if(CHESSO_BUILD_GUI)
      message("-- Debug gui build enabled")

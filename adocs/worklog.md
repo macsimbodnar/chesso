@@ -587,3 +587,15 @@ Also found: the S018 evidence was living in a session scratchpad under
 > <status>completed</status>
 > <summary>Background command "Watch the probe" completed (exit code 0)</summary>
 > </task-notification>
+
+## 2026-08-11T10:55+02:00 prompt
+
+> what do you mean with That is a design decision with the 25 %-of-nps hazard behind it, and it is yours, not mine to guess at while you sleep.?
+
+## 2026-08-11T10:58+02:00 prompt
+
+> whar does other chess engine do in this case? What the litterature says about?
+
+## 2026-08-11T11:03+02:00 prompt
+
+> let's reompute as you suggest in 1. and see what the numbers says. From there we can take a decision.

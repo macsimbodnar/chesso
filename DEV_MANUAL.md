@@ -11,7 +11,7 @@ are in `CLAUDE.md`.
 | path | what |
 |---|---|
 | `src/` | the engine. `bitboard.cpp` is move generation, make/unmake and SEE; `search.cpp` is the search; `evaluation.cpp` and `eval_tables.hpp` are the evaluation; `uci.hpp` and `chesso.cpp` are the protocol |
-| `tests/` | doctest suites plus `bench_movegen`, the perft and generator benchmark |
+| `tests/` | doctest suites plus `bench_movegen` and `bench_eval`, the generator and evaluation benchmarks |
 | `tools/` | measurement and analysis, not shipped with the engine |
 | `adocs/` | the workflow state: specs, plan, steps, decisions, testing ledger |
 | `adocs/data/` | raw output of runs a decision rests on, kept because regenerating it costs hours of reference search. `adocs/data/README.md` says what each file is |
@@ -114,6 +114,29 @@ change meant to be a pure speed-up must leave it identical; if the node count
 moved, the search changed behaviour and the times are not comparable. That
 comparison is how INV-6 is discharged for a behaviour-neutral change, and it is
 what caught two bugs that timings did not.
+
+Neither of those can price an evaluation term. A term that changes the score
+changes the tree, so the two builds visit different nodes and a wall time at
+fixed depth mixes the cost of the term with the shape of the search it caused.
+`bench_eval` calls `evaluate()` and nothing else, over ten compiled-in positions
+running from a full board down to bare kings:
+
+```bash
+./build/tests/bench_eval                  # ns per call, and the resolution of the run
+./build/tests/bench_eval -r 9 -n 4000000  # longer sweeps when the difference is small
+```
+
+`-n` is repetitions of the position list per sweep and it matters: the same `-n`
+that gives a 640 ms sweep with an expensive term gives a 6 ms sweep without one,
+and the cheap build is then the one that cannot be trusted. Compare two builds
+at the same `-n`, and raise it until the printed resolution is small against the
+difference being claimed. The scores and a checksum are printed before any
+timing, so a build that evaluates differently says so instead of quietly being
+timed as though it were the same function.
+
+Today's evaluation is **1.31 ns per call, 762 M calls per second**. Recomputed
+mobility measured 15.93 ns, 12.2 times more, and cost 33 % of nodes per second
+in a real search at depth 12 — worse than the 25 % S014 removed. DEC-036.
 
 A/B timing with statistics, always interleaved so machine drift cancels:
 

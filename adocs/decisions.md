@@ -1060,3 +1060,89 @@ Consequences: The optimism entry in MANUAL.md is rewritten against these
 
               The same caveats as DEC-032 apply and are not lessened by
               repetition: one opponent, one time control, one machine. DEC-019.
+
+## DEC-036  2026-08-11  Recomputed mobility costs a third of the search, measured
+Tags:         evaluation, performance, inv-4, s027, mobility
+
+Context:      S027's first term is mobility and its step file says every term
+              must go through the S014 accumulators. Mobility cannot. Material
+              and the piece-square tables are sums over pieces of a function of
+              one piece and one square, which is why eval_add_piece is four
+              table lookups and why make_move can apply an O(1) delta. Mobility
+              is a function of occupancy: move any piece and it changes for
+              every slider whose ray crosses the from or the to square. There
+              is no delta for add_piece, remove_piece or move_piece to apply.
+
+              The step file's escape hatch does not exist either. It says the
+              generator already produces the attack sets cheaply, but
+              evaluate() is the first statement of every quiescence node,
+              search.cpp:123, before is_check and before any generation, and a
+              node that stands pat returns at search.cpp:135 without generating
+              a move at all. There is nothing to reuse at the point the score
+              is wanted.
+
+              The literature does not accumulate mobility either. The
+              Chess Programming Wiki calls only *safe* mobility expensive, and
+              only "unless a program already keeps incrementally updated attack
+              tables"; OliThink's whole evaluation is material plus mobility.
+              What the literature does instead is reduce how often the
+              evaluation runs: lazy evaluation with the cheap accumulated terms
+              as the first stage, and caching the static score -- Arasan keeps a
+              separate evaluation cache for exactly this rather than putting
+              q-nodes in the transposition table.
+
+Decision:     Measure the cost rather than argue about it, which is what the
+              owner asked for. A probe was written -- mobility recomputed in
+              evaluate() over knights, bishops, rooks and queens, own pieces
+              excluded, tapered, placeholder weights -- measured, and reverted.
+              Nothing from it is in the tree and its weights were never
+              intended for play.
+
+              tests/bench_eval was written to take the measurement and is kept.
+              No existing tool could: a term that changes the score changes the
+              tree, so search_bench at fixed depth prices the term and the
+              search it caused together. bench_eval calls evaluate() and
+              nothing else over ten positions from a full board to bare kings,
+              and reports its own resolution the way bench_movegen does.
+
+              The numbers, three interleaved passes, resolution 0.1 %:
+
+                evaluate() today          1.31 ns per call, 762 M per second
+                with recomputed mobility 15.93 ns per call,  62.8 M per second
+
+              12.2 times the cost per call. In a real search at depth 12,
+              nodes per second fell 32.8 % on kiwipete, 45.5 % on the midgame
+              position and 23.7 % on the tactical one, and wall time to depth 12
+              over the three rose 33 %. That is worse than the 25 % S014
+              removed, and 0.58 of an effective doubling against the 10.4 cp per
+              doubling DEC-035 measured the same day.
+
+Rejected:     Shipping it and letting an SPRT decide the net. Defensible, and it
+              would confound a term's value with a third of the machine; if it
+              measured zero nobody could say which half was responsible. One
+              change at a time.
+
+              Concluding from the number that mobility is not worth having.
+              Engines carry it while paying this cost, and 33 % of nps is a
+              price, not a verdict. What the number settles is that the price
+              must be seen before the term is chosen, not that the term is bad.
+
+Consequences: The open question for S027 is no longer "can mobility be
+              accumulated" -- it cannot -- but which of three ways to pay for
+              it, and that is the owner's call:
+
+                1. Ship it recomputed and SPRT the net, accepting the 33 %.
+                2. Take the parked machinery first -- a static evaluation in the
+                   transposition table entry and a quiescence eval cache -- so
+                   evaluate() runs less often, then add the term. Standard, on
+                   the parked list in status.md already, and it needs a decision
+                   to become a step.
+                3. Lazy evaluation: the accumulated terms as stage one, mobility
+                   and king safety behind a margin. Cheapest in nps and the one
+                   with a documented failure mode in sharp endgames.
+
+              INV-4 is narrower than it reads. What S014 proved is that
+              rebuilding material and the tables from the bitboards cost 25 % of
+              nps. It did not prove that any recomputed term costs that, and
+              until today no measurement here had priced one. bench_eval is the
+              instrument for the five S027 terms that follow.
