@@ -5,11 +5,13 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-11, S028 complete.
 
-- Last done: S028, **+188.74 +/- 32.21 Elo**, the largest single change measured
-  so far
+- Last done: S028
 - In progress: none
-- Next: S027 mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
+- Next: S027
 - Blocked: none
+- S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far.
+  S027 is mobility, king safety, passed pawns, pawn structure, bishop pair and
+  tempo, and its aim is being re-measured — see below.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
