@@ -757,3 +757,7 @@ take the eval-cache machinery first, so `evaluate()` runs less often and the
 Awaiting that decision; nothing started.
 
 Nothing built, nothing committed, no tests run.
+
+## 2026-08-11T15:20+02:00 prompt
+
+> I agree with your plan, let's start with 2 first

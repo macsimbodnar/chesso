@@ -68,16 +68,17 @@ every list entry must have a step file — both are INV-3.
 17. S017  a test over the UCI command and option surface that fails when it changes
 18. S018  rank chesso's own errors by game phase over hundreds of games, from Stockfish
 19. S028  fit every evaluation constant at once against self-play game outcomes
-20. S027  mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
-21. S033  prune a node whose static score is already far enough above beta
-22. S021  start the root search in a narrow window around the previous score
-23. S026  drop nodes near the horizon that cannot reach alpha
-24. S024  history indexed by the move played n plies ago and the current move
-25. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
-26. S025  retry searching losing captures after the quiets, now that capture history exists
-27. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
-28. S020  compute the in-check state once per node instead of once per call site
-29. S029  a perspective network evaluation trained on chesso's own self-play
-30. S030  move_t drops the moving piece and becomes 16 bits
-31. S031  one unconditional xor for the side-to-move zobrist key instead of two
-32. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+20. S034  stop paying for evaluate() at every node: static eval in the table entry, and a quiescence eval cache
+21. S027  mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
+22. S033  prune a node whose static score is already far enough above beta
+23. S021  start the root search in a narrow window around the previous score
+24. S026  drop nodes near the horizon that cannot reach alpha
+25. S024  history indexed by the move played n plies ago and the current move
+26. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
+27. S025  retry searching losing captures after the quiets, now that capture history exists
+28. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
+29. S020  compute the in-check state once per node instead of once per call site
+30. S029  a perspective network evaluation trained on chesso's own self-play
+31. S030  move_t drops the moving piece and becomes 16 bits
+32. S031  one unconditional xor for the side-to-move zobrist key instead of two
+33. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback

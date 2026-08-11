@@ -1216,3 +1216,74 @@ Consequences: S027's first term is unresolved rather than closed, and the two
               A verdict of zero, or worse, is recorded as zero. S005, S006 and
               S015 are the precedent and two of those features were kept anyway
               with the reason stated. This one is not kept.
+
+## DEC-038  2026-08-11  Cut the cost of calling evaluate() before adding terms to it
+Tags:         evaluation, search, plan-order, s027, s034, transposition-table
+
+Context:      DEC-037 rejected mobility at -14.93 Elo while it was paying a
+              third of the nodes per second, and the verdict bundled two causes:
+              weights that were never fitted, and the cost. Two experiments
+              separate them, and they were put to the owner. Fitting the weights
+              measures the weights against a baseline still paying full price.
+              Making evaluate() run less often changes what every S027 term
+              costs, not just this one.
+
+              evaluate() is the first statement of every quiescence node and a
+              node that stands pat returns having done nothing else, so the
+              evaluation is computed at the highest-traffic point in the search
+              and the result is discarded every time. Quiescence never probes or
+              stores the transposition table. Both a static evaluation in the
+              table entry and a quiescence evaluation cache have sat on the
+              parked list in status.md with no decision behind them.
+
+Decision:     The owner chose the cost work first, and it becomes S034, inserted
+              between S028 and S027. The agent proposed both options and
+              recommended this order on the grounds that it discounts the price
+              for six terms rather than one.
+
+              **The step opens with a measurement that is allowed to end it.**
+              The literature's premise is that calling the evaluation is
+              expensive -- the Chess Programming Wiki says so, and Arasan keeps
+              a separate evaluation cache for exactly that reason. Chesso's
+              evaluate() is 1.36 ns, measured by bench_eval at resolution 0.1 %.
+              A probe into a table big enough to be useful is a memory access,
+              and one that misses cache is plausibly slower than 1.36 ns of
+              arithmetic on values already in registers. If that holds, the
+              cache is a pessimisation today and its value is conditional on an
+              expensive term existing, which is circular: the expensive term was
+              rejected for being expensive.
+
+              That reasoning is an argument, and arguments have been wrong here
+              three times (DEC-019), so it is settled with a number before any
+              cache is built. A probe measured slower than the evaluation ends
+              S034 with a recorded figure and moves the answer to lazy
+              evaluation, which skips the expensive work rather than
+              remembering it.
+
+Rejected:     Fitting the mobility weights first. It measures the weights
+              honestly but against a baseline paying full price, so a second
+              negative would again bundle two causes.
+
+              Building both the table-entry static evaluation and the
+              quiescence cache as one change. Two caches at once and neither
+              number is attributable. They are separate changes inside the step,
+              each proving neutrality by node count before any timing.
+
+              Putting quiescence nodes in the main transposition table. There
+              are far more of them than useful entries and they would evict what
+              the main search needs; Arasan's separate cache exists for that
+              reason.
+
+Consequences: S034 is created and started. S027 moves behind it and its term
+              list is unchanged. Mobility stays unresolved rather than closed,
+              and DEC-037 records the two experiments that would resolve it.
+
+              A widened transposition entry is a behaviour change hiding in a
+              speed change: the table is sized in entries rounded down to a
+              power of two, so a wider entry means fewer entries for the same
+              megabytes. Neutrality is proved by node count and best move before
+              any timing is believed, INV-6.
+
+              If S034 dies on its own opening measurement, that is a success
+              costing an hour rather than a failure, and lazy evaluation gets a
+              step of its own with the number as its justification.

@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-11, S028 complete.
 
 - Last done: S028
-- In progress: none
-- Next: S027
+- In progress: S034 stop paying for evaluate() at every node
+- Next: S034
 - Blocked: none
 - S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
   67.5 % against sgambetto where S018 measured 39.3 % under identical settings —
@@ -29,10 +29,16 @@ Updated: 2026-08-11, S028 complete.
   That verdict bundles two things — four weights that were never fitted, and a
   third of the machine — so it does not close mobility. The two experiments that
   would are in DEC-037: fit the eight weights through the tuner (the model stays
-  linear, `PARAM_COUNT` 773 to 781), or make `evaluate()` run less often first
-  with a static eval in the transposition entry and a quiescence eval cache,
-  which discounts the price for every S027 term rather than this one. **Order is
-  the owner's call and nothing starts until it is made.**
+  linear, `PARAM_COUNT` 773 to 781), or make `evaluate()` run less often first.
+  **The owner chose the cost work** (DEC-038), which is now S034 and sits
+  between S028 and S027.
+- **S034 opens with a measurement that is allowed to end it.** The literature's
+  case for an eval cache rests on the evaluation being expensive to call.
+  Chesso's is 1.36 ns. A probe into a useful-sized table is a memory access and
+  may well cost more than that, in which case the cache is a pessimisation today
+  and the answer is lazy evaluation instead. That is an argument, and arguments
+  have been wrong here three times, so it gets a number before anything is
+  built. Dying on that measurement is a success for the step, not a failure.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
