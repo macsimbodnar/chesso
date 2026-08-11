@@ -50,6 +50,9 @@ using eval_model::BLACK_BIT;
 using eval_model::EG_BASE;
 using eval_model::MATERIAL_COUNT;
 using eval_model::MG_BASE;
+using eval_model::MOB_EG_BASE;
+using eval_model::MOB_MG_BASE;
+using eval_model::MOBILITY_COUNT;
 using eval_model::PARAM_COUNT;
 
 constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
@@ -256,6 +259,23 @@ void gradient(const dataset_t& data,
           grad[MG_BASE + square] += outer * sign * mg_weight;
           grad[EG_BASE + square] += outer * sign * eg_weight;
         }
+
+        // Mobility. The count is a property of the position, so the derivative
+        // with respect to a weight is just that count, tapered. Forgetting this
+        // block is a silent failure and it happened: the forward model was
+        // extended first and a 20-epoch smoke run returned the eight weights
+        // exactly as they started, because nothing was pushing them.
+        //
+        // The clamp in the model is ignored here. It binds essentially never --
+        // the term's maximum over 149084 real positions was 143 against a bound
+        // of 150 -- and treating the boundary as flat would stop the fit moving
+        // a weight it should move.
+        for (size_t m = 0; m < MOBILITY_COUNT; ++m) {
+          const double count = data.mobility[position * 4 + m];
+
+          grad[MOB_MG_BASE + m] += outer * count * mg_weight;
+          grad[MOB_EG_BASE + m] += outer * count * eg_weight;
+        }
       }
     });
   }
@@ -336,10 +356,11 @@ void write_tables(const std::string& path,
       "// seed       %" PRIu64
       ", lr %.3f, validation split %.2f\n"
       "//\n"
-      "// Paste over the corresponding definitions in eval_tables.hpp. The\n"
-      "// piece defines are what PAWN..QUEEN expand to; the tables replace\n"
-      "// psqt_mg and psqt_eg wholesale. S028, DEC-015: measured by SPRT\n"
-      "// against the hand-written constants before it is kept.\n\n",
+      "// Paste over the corresponding definitions. The piece defines and the\n"
+      "// two tables live in src/eval_tables.hpp; the mobility weights at the\n"
+      "// end live in src/evaluation.cpp, a different file and easy to miss.\n"
+      "// S028 and S034, DEC-015: measured by SPRT before any of it is "
+      "kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
       opts.seed, opts.lr, opts.validation);
 
@@ -376,6 +397,26 @@ void write_tables(const std::string& path,
     }
 
     fprintf(out, "};\n");
+  }
+
+  // The mobility weights are fitted too, since S034, and they do not live in
+  // eval_tables.hpp with everything else. Emitting them here is what stops a
+  // fit quietly discarding eight of its own parameters, which is exactly what
+  // this function did until it was checked.
+  fprintf(out,
+          "\n// These two live in src/evaluation.cpp, not eval_tables.hpp.\n");
+
+  for (int table = 0; table < 2; ++table) {
+    const size_t base = (table == 0) ? MOB_MG_BASE : MOB_EG_BASE;
+
+    fprintf(out, "const int mobility_%s[4] = {", (table == 0) ? "mg" : "eg");
+
+    for (size_t i = 0; i < MOBILITY_COUNT; ++i) {
+      fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+              static_cast<int>(std::lround(params[base + i])));
+    }
+
+    fprintf(out, "};  // knight bishop rook queen\n");
   }
 
   fclose(out);
