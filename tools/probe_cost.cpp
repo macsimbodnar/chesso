@@ -39,10 +39,12 @@ struct eval_cache_entry_t
 int main()
 {
   printf("sizeof(tt_entry_t)        = %zu bytes\n", sizeof(tt_entry_t));
-  printf("sizeof(eval_cache_entry_t) = %zu bytes\n", sizeof(eval_cache_entry_t));
+  printf("sizeof(eval_cache_entry_t) = %zu bytes\n",
+         sizeof(eval_cache_entry_t));
 
   // The table the engine actually allocates at the default Hash=16.
-  const size_t tt_count = std::bit_floor((16u * 1024 * 1024) / sizeof(tt_entry_t));
+  const size_t tt_count =
+      std::bit_floor((16u * 1024 * 1024) / sizeof(tt_entry_t));
   printf("tt at Hash=16             = %zu entries, %zu MB\n\n", tt_count,
          (tt_count * sizeof(tt_entry_t)) / (1024 * 1024));
 
@@ -137,8 +139,9 @@ int main()
          tt_count, big, big - baseline);
   printf("+ probe into a 256 KB cache     %6.2f ns  (access %.2f ns)\n", smallp,
          smallp - baseline);
-  printf("\nevaluate() today is 1.36 ns. With a recomputed mobility term it was "
-         "15.93 ns.\n");
+  printf(
+      "\nevaluate() today is 1.36 ns. With a recomputed mobility term it was "
+      "15.93 ns.\n");
 
   return 0;
 }

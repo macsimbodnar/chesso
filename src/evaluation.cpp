@@ -1,4 +1,5 @@
 #include "evaluation.hpp"
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
@@ -52,7 +53,7 @@ static constexpr int piece_values_abs[] = {
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later
 // term from picking up the wrong sign.
-int evaluate(const board_t* board)
+int evaluate_cheap(const board_t* board)
 {
   // Interpolate the two tables on how much material is left, so a term slides
   // from its middlegame value to its endgame one instead of jumping when some
@@ -65,6 +66,106 @@ int evaluate(const board_t* board)
   const int score = board->material + positional;
 
   return (board->active_color == WHITE) ? score : -score;
+}
+
+
+// Mobility, and the reason this file now has two stages. It cannot be
+// accumulated: it is a function of occupancy, not of a piece and its square, so
+// moving any piece changes it for every slider whose ray crosses the from or
+// the to square and there is no O(1) delta for make_move to apply. Measured at
+// 56 ns per node in a real search, DEC-039, where the isolated benchmark said
+// 14.6 -- the difference is cache misses in 2 MB of rook attack tables that a
+// ten-position benchmark loop never pays.
+//
+// The weights are hand-picked from ordinary positional principles and no
+// published table was consulted, DEC-016. They are not fitted yet; fitting them
+// is the experiment after this one and is deliberately not bundled with it.
+const int mobility_mg[4] = {4, 5, 2, 1};  // knight bishop rook queen
+const int mobility_eg[4] = {4, 5, 4, 2};
+
+static int evaluate_mobility(const board_t* board)
+{
+  const bb_tables_t* tables = game_tables();
+  const bb_t occupancy = board->occupancies[BOTH];
+
+  int mg = 0;
+  int eg = 0;
+
+  for (int colour = 0; colour < 2; ++colour) {
+    const int sign = (colour == WHITE) ? 1 : -1;
+    const bb_t own = board->occupancies[colour];
+    const int base = (colour == WHITE) ? W_KNIGHT : B_KNIGHT;
+
+    for (int type = 0; type < 4; ++type) {
+      bb_t pieces = board->bitboards[base + type];
+
+      while (pieces) {
+        const index_t square = get_lsb_index(pieces);
+        pieces &= pieces - 1;
+
+        bb_t attacks;
+        switch (type) {
+          case 0:
+            attacks = tables->knight_attacks[square];
+            break;
+          case 1:
+            attacks = get_bishop_attacks(tables, square, occupancy);
+            break;
+          case 2:
+            attacks = get_rook_attacks(tables, square, occupancy);
+            break;
+          default:
+            attacks = get_queen_attacks(tables, square, occupancy);
+            break;
+        }
+
+        // Squares the piece could move to, own pieces excluded. Not safe
+        // mobility: no enemy-pawn-attack mask, which is the expensive variant.
+        const int count = count_bits(attacks & ~own);
+
+        mg += sign * count * mobility_mg[type];
+        eg += sign * count * mobility_eg[type];
+      }
+    }
+  }
+
+  const int phase = game_phase(board);
+  int score = (mg * phase + eg * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX;
+
+  // Clamped so that the lazy shortcut's margin is a guarantee rather than a
+  // hope. Without this the bound is an observation about the positions someone
+  // sampled, and a position outside the sample silently makes the shortcut
+  // unsound -- which is not hypothetical: the corpus contains
+  // 1Bk5/B1B5/1B1B4/B1B4B/8/B1B5/5K2/8, nine white bishops from promotions,
+  // where the term reached 155 against a margin of 150 and the test caught it.
+  //
+  // The clamp costs nothing in real play. Over 149084 positions of S028
+  // self-play the term ran p99 81 and a maximum of 143, so it does not bind
+  // there at all; it binds only in the promotion pile-ups where the number was
+  // never meaningful anyway.
+  score = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+
+  return (board->active_color == WHITE) ? score : -score;
+}
+
+
+int evaluate(const board_t* board)
+{ return evaluate_cheap(board) + evaluate_mobility(board); }
+
+
+int evaluate_lazy(const board_t* board, int alpha, int beta)
+{
+  const int cheap = evaluate_cheap(board);
+
+  // Both tests are one-sided on purpose. If the cheap score is already a
+  // margin clear of beta then the full score is above beta too, so the caller
+  // fails high on either number and the expensive stage would change nothing it
+  // does. Same argument mirrored at alpha. Anywhere between the two, the
+  // correction can decide the node and has to be computed.
+  if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap; }
+  if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap; }
+
+  return cheap + evaluate_mobility(board);
 }
 
 

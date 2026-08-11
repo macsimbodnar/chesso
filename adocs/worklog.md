@@ -807,3 +807,109 @@ the step file; nothing started.
 ## 2026-08-11T15:49+02:00 prompt
 
 > when you present me a question about some steps you can not ask me just about s034 or similar, i don't know what that is, you should give me a short description of the item we are talking about. When you present me a choise you need to give me some short context or i can not decide. Now let's redo the iteractvi decisoon taking
+
+## 2026-08-11T17:40+02:00 recap
+
+S034, lazy evaluation built and measuring. Nothing committed: the working tree
+holds the candidate the SPRT is playing, deliberately, so the reference is the
+same commit without it.
+
+Built. `evaluate()` splits into `evaluate_cheap()`, the accumulator-based score
+at 1.36 ns, and `evaluate_lazy(board, alpha, beta)`, which returns the cheap
+score when it is a margin clear of the window and otherwise adds mobility.
+Quiescence calls the lazy form; the depth-cap site keeps the exact one.
+
+The margin came from data, not a guess: over 149084 self-play positions the
+tapered mobility term ran p50 19, p95 60, p99 81, p99.9 107, max 143, so the
+margin is 150.
+
+**A real bug, caught by the new test before it shipped.** The corpus contains
+`1Bk5/B1B5/1B1B4/B1B4B/8/B1B5/5K2/8`, nine white bishops from promotions, where
+the correction reaches 155 and the shortcut would have been unsound. Fixed by
+clamping the term to +/-150 so the bound is a guarantee rather than an
+observation about sampled positions. It cannot bind in real play.
+
+Also done because a green suite required it: `tools/eval_model.hpp` learned
+mobility. PARAM_COUNT 773 to 781, counts extracted once per position as
+features so the model stays linear, ray-walked by hand rather than through the
+engine's magic tables so the drift guard stays an independent implementation.
+`tools/tuner.cpp` carries the feature through its dataset at 12 MB over 1.49 M
+rows. That is the weight-fitting work, done early because the drift guard
+demanded it.
+
+Nine anchors re-derived by two independent implementations. The engine and the
+Python reference disagreed by one centipawn on the repetition anchor until the
+cause was found: the throwaway probe folded mobility into a single division,
+the staged version divides twice. Both now say -502.
+
+Speed: kiwipete at depth 12, near-identical node counts, 116.6 ns per node
+baseline against 138.4 lazy, where always-computing it was 172.1. The staging
+removed about 61 % of the term's cost, -32.8 % nps becoming -14.8 %.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `src/search.cpp`,
+`tools/eval_model.hpp`, `tools/tuner.cpp`, `tests/test_evaluation.cpp`,
+`tests/test_search.cpp`, `tests/test_eval_model.cpp`. All uncommitted.
+
+Tests: fast suite 8/8, all 11 mate tests, format clean. New test
+"the lazy shortcut cannot change a decision" over the whole corpus, observed red
+at correction 155 before the clamp. `test_search` "a quiet position stands pat"
+re-targeted to the lazy contract rather than relaxed: it now asserts the
+precondition, that the cutoff returns the cheap score, and that both the
+returned score and the exact score are above beta.
+
+Running: `REF=3f90f89 ./fastchess.sh --fast`. The number to beat is -14.93,
+which is what these same weights measured without the staging.
+
+## 2026-08-11T17:07+02:00 prompt
+
+> <task-notification>
+> <task-id>b8rxof3kn</task-id>
+> <tool-use-id>toolu_017S7gWBFrqHFBEcpwWzM4ib</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b8rxof3kn.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Watch the lazy SPRT" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T18:32+02:00 recap
+
+No step change, no code change. S034's SPRT still running, the candidate still
+uncommitted in the working tree.
+
+At 280 games: +12.41 +/- 31.96 Elo, LLR +0.25 of +/-2.20, 92 wins 82 losses 106
+draws. Positive, against -14.93 for the same weights without the staging, so
+the swing attributable to lazy evaluation is around 27 Elo. The interval still
+crosses zero and no bound is near.
+
+Nothing built, nothing committed, no tests run. The machine is playing a timed
+match.
+
+## 2026-08-11T17:48+02:00 prompt
+
+> status?
+
+## 2026-08-11T17:50+02:00 recap
+
+Status question, no step change, no code change. S034's SPRT still running with
+the candidate uncommitted in the working tree.
+
+At 498 games: +4.19 +/- 24.11 Elo, LLR +0.01 of +/-2.20, LOS 63.3 %, 159 wins
+153 losses 186 draws. It drifted back from +12.41 at 280 games and the LLR is
+sitting on the start line.
+
+Read: the staging bought back the cost -- the same weights measured -14.93
+without it and sit at about zero with it, so lazy evaluation is worth roughly
+15 Elo -- and mobility itself, on hand-picked weights, is worth about nothing
+once it is no longer being paid for.
+
+Told the owner the run will not resolve this: an SPRT separates two hypotheses
+and the truth here sits between elo0=0 and elo1=10, so the LLR random-walks.
+2500 games and four to five hours remain with the same shrug the likely end.
+Recommended stopping, recording it as consistent with zero, and fitting the
+weights, which is the one unknown left and which the tuner is already extended
+for. Awaiting that decision; the match is untouched.
+
+Nothing built, nothing committed, no tests run.
+
+## 2026-08-11T17:49+02:00 prompt
+
+> ok, let's follow your suggestion

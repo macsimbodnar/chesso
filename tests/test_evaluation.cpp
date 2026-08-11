@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -135,10 +136,11 @@ TEST_SUITE("evaluation: score")
   // than accidental.
   //
   // It did its job at S028: the tuned tables moved all five and the suite said
-  // so. The values below were recomputed from the fitted constants by a second
-  // implementation of evaluate() written for the purpose, not read off the
-  // engine, because an anchor copied from the thing it anchors asserts
-  // nothing.
+  // so. It did it again at S034, when mobility became part of the score. The
+  // values below were recomputed by a second implementation of evaluate()
+  // written for the purpose -- one that walks the rays by hand rather than
+  // through the magic tables -- and not read off the engine, because an anchor
+  // copied from the thing it anchors asserts nothing.
   //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
@@ -155,10 +157,10 @@ TEST_SUITE("evaluation: score")
     // clang-format off
     const std::vector<case_t> cases = {
       {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 112, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 210, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 277, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 511, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 971, "queen on d1"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 222, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 312, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 549, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1002, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on
@@ -167,6 +169,65 @@ TEST_SUITE("evaluation: score")
       REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
       REQUIRE_MESSAGE(evaluate(&game.board) == test.score, test.title);
     }
+  }
+
+  // The lazy shortcut is sound only while the expensive terms cannot move the
+  // score by more than LAZY_EVAL_MARGIN. That is a claim about every position,
+  // not about the ten someone thought of, so it is asserted over the whole
+  // corpus. S034.
+  //
+  // The margin was chosen from the distribution over 149084 self-play
+  // positions, where the correction ran p99 81 and a maximum of 143. This test
+  // is what stops a later term quietly outgrowing it: add king safety with a
+  // bigger swing and the suite fails here rather than losing games.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the lazy shortcut cannot change a decision")
+  {
+    size_t checked = 0;
+    int worst = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      const int full = evaluate(&game.board);
+      const int cheap = evaluate_cheap(&game.board);
+      const int correction = std::abs(full - cheap);
+
+      if (correction > worst) { worst = correction; }
+
+      REQUIRE_MESSAGE(
+          correction <= LAZY_EVAL_MARGIN,
+          ("FEN: " + fen + " correction " + std::to_string(correction)));
+
+      // A window that contains the score: no shortcut, the exact number.
+      REQUIRE_MESSAGE(
+          evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
+          ("FEN: " + fen));
+
+      // A beta the cheap score already clears by the margin: the shortcut
+      // fires, returns the cheap score, and the exact score is above beta too
+      // -- which is the whole soundness claim, that the caller's decision is
+      // the same either way.
+      const int beta = cheap - LAZY_EVAL_MARGIN;
+      REQUIRE_MESSAGE(evaluate_lazy(&game.board, beta - 1000, beta) == cheap,
+                      ("FEN: " + fen));
+      REQUIRE_MESSAGE(full >= beta, ("FEN: " + fen));
+
+      // The same mirrored at alpha.
+      const int alpha = cheap + LAZY_EVAL_MARGIN;
+      REQUIRE_MESSAGE(evaluate_lazy(&game.board, alpha, alpha + 1000) == cheap,
+                      ("FEN: " + fen));
+      REQUIRE_MESSAGE(full <= alpha, ("FEN: " + fen));
+
+      checked++;
+    }
+
+    REQUIRE(checked > 100);
+
+    // Non-vacuous by construction: if the expensive terms never moved the score
+    // at all, every assertion above would hold for a reason that has nothing to
+    // do with the margin being right.
+    REQUIRE(worst > 0);
   }
 
   // The piece-square tables have to actually prefer the squares they are meant

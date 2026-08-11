@@ -62,6 +62,12 @@ struct dataset_t
   std::vector<uint8_t> phase;
   std::vector<float> result;
 
+  // Mobility counts, White minus Black, four per position. A property of the
+  // position rather than of the parameters, so it is extracted once here and
+  // the model stays linear. int16 because the extremes are in the low
+  // hundreds: 1.49 M rows cost 12 MB.
+  std::vector<int16_t> mobility;
+
   size_t size() const { return phase.size(); }
 };
 
@@ -125,8 +131,18 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    int counts[4] = {0, 0, 0, 0};
+    if (!eval_model::mobility_features(placement, counts)) {
+      fprintf(stderr, "bad placement for mobility: %s\n", placement.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
+
+    for (const int count : counts) {
+      data->mobility.push_back(static_cast<int16_t>(count));
+    }
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
   }
@@ -139,9 +155,13 @@ double evaluate_position(const dataset_t& data,
                          size_t index,
                          const double* params)
 {
+  const int mobility[4] = {
+      data.mobility[index * 4 + 0], data.mobility[index * 4 + 1],
+      data.mobility[index * 4 + 2], data.mobility[index * 4 + 3]};
+
   return eval_model::evaluate(&data.pieces[data.offsets[index]],
                               data.offsets[index + 1] - data.offsets[index],
-                              data.phase[index], params);
+                              data.phase[index], mobility, params);
 }
 
 

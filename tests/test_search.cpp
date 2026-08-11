@@ -491,7 +491,13 @@ TEST_SUITE("search: quiescence")
   }
 
   // Standing pat means "I do not have to do anything here". A side that is
-  // already above beta stops at once and reports the static score.
+  // already above beta stops at once and reports a score above beta.
+  //
+  // Since S034 that score is not always the exact one. When the cheap terms
+  // alone are a margin clear of beta, quiescence returns them and never
+  // computes the expensive ones, because the caller does the same thing with
+  // either number. The exact score is what comes back when the window contains
+  // it, and that is asserted below too.
   TEST_CASE_FIXTURE(search_fixture_t, "a quiet position stands pat")
   {
     // White is a rook up with nothing to capture.
@@ -499,10 +505,23 @@ TEST_SUITE("search: quiescence")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 511);
+    const int cheap_score = evaluate_cheap(&game.board);
+    REQUIRE_EQ(static_score, 549);
+    REQUIRE_EQ(cheap_score, 511);
 
-    // Beta below the static score: the cutoff is immediate.
-    REQUIRE_EQ(quiesce(fen, 0, 100), static_score);
+    // The precondition for the shortcut. Without it the assertions below would
+    // pass on a build where the shortcut never fires at all.
+    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
+
+    // Beta far enough below: the cutoff is immediate and the expensive terms
+    // are never computed, so what comes back is the cheap score.
+    const int cut = quiesce(fen, 0, 100);
+    REQUIRE_EQ(cut, cheap_score);
+
+    // And the cutoff it reports is a real one: both the number returned and the
+    // exact score are above beta, so nothing was cut that should not have been.
+    REQUIRE(cut >= 100);
+    REQUIRE(static_score >= 100);
 
     // A window that contains it: still the static score, there are no
     // captures to change it.
@@ -525,7 +544,7 @@ TEST_SUITE("search: quiescence")
     // Two pawns up, plus whatever the piece-square tables make of the squares
     // everything happens to be standing on.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 276);
+    REQUIRE_EQ(black_static, 235);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -559,7 +578,7 @@ TEST_SUITE("search: quiescence")
     }
 
     // A rook down, give or take where the piece-square tables put the kings.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -474);
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -516);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -913,7 +932,7 @@ TEST_SUITE("search: draws")
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook.
-    REQUIRE_EQ(evaluate(&game.board), -453);
+    REQUIRE_EQ(evaluate(&game.board), -502);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

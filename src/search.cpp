@@ -120,7 +120,9 @@ int quiescence(int alpha,
 
   state->explored_nodes++;
 
-  const int stand_pat = evaluate(&game->board);
+  // Lazy: quiescence is where the evaluation is called most, and most of those
+  // nodes are nowhere near the window. S034.
+  const int stand_pat = evaluate_lazy(&game->board, alpha, beta);
 
   if (check_limits(state)) { return stand_pat; }
   if (ply + 1 >= MAX_PLY) { return stand_pat; }

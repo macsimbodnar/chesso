@@ -1357,3 +1357,72 @@ Consequences: The step's verdict is not INV-6 behaviour-neutral. Returning a
 
               tools/bench_eval keeps its blind spot in writing. Any future term
               built on occupancy is priced in a real search, not in that loop.
+
+## DEC-040  2026-08-11  Lazy evaluation is kept at a measured zero, as the platform for the weight fit
+Tags:         evaluation, lazy-evaluation, mobility, s034, s027, negative-result
+
+Context:      S034 built lazy evaluation and measured it with mobility behind
+              it, on the same hand-picked weights DEC-037 measured at -14.93,
+              so that the only difference between the two candidates was the
+              staging.
+
+              The staging works. Kiwipete at depth 12, with node counts close
+              enough to compare directly, went 116.6 ns per node at the baseline
+              against 172.1 with mobility always computed and 138.4 with it
+              behind the shortcut: about 61 % of the term's cost removed,
+              -32.8 % nodes per second becoming -14.8 %.
+
+              The strength run does not resolve, and it will not. 498 games:
+              +4.19 +/- 24.11 Elo, LLR +0.01 of +/-2.20, LOS 63.3 %, Ptnml
+              [21, 61, 86, 53, 28]. An SPRT separates two hypotheses and this
+              truth sits between elo0=0 and elo1=10, so the ratio random-walks.
+              2500 games remained. Extending to the full bounds is slower, not
+              faster, for an effect this close to zero.
+
+Decision:     The run is stopped and recorded as a partial: **consistent with
+              zero over 498 games, +/-24 Elo**. It is not a verdict and is not
+              written down as one. S013's LMR run is the precedent for saying so
+              out loud rather than letting a stopped run be read as a pass.
+
+              The code is kept and committed, at a measured zero, for a stated
+              reason: it is the platform the next experiment needs. Mobility on
+              hand-picked weights is worth about nothing once it is no longer
+              being paid for, and the only remaining unknown is the weights.
+              Fitting them and measuring the fitted version against this commit
+              isolates the weights and nothing else, which is the attribution
+              the owner asked for. S005, S006 and S015 are the precedent for
+              keeping a feature that measured zero with the reason stated.
+
+              **If the fitted weights do not measure positive, this commit is
+              reverted with them.** Lazy evaluation has no independent
+              justification: it is machinery for making an expensive term
+              affordable, and with no expensive term worth having it is a branch
+              and a margin for nothing.
+
+Rejected:     Running to 3000 games. Four to five hours for the same shrug, on
+              the one machine that can measure anything.
+
+              Leaving the work uncommitted while the fit runs. Hours of work in
+              a dirty tree, and the fit needs the model changes that come with
+              it.
+
+              Committing only the tuner-side changes, which are behaviour
+              neutral, and holding the engine changes back. The tests were
+              re-anchored for mobility, so the two halves are not separable
+              without a red suite.
+
+Consequences: The engine now plays with mobility in its evaluation and a lazy
+              shortcut in quiescence, on a measurement that says neither helps
+              nor hurts. That is an unusual thing to ship and it is temporary by
+              this entry's own terms.
+
+              The margin is 150 and it is a guarantee, not an observation: the
+              term is clamped to it, because the corpus contains a nine-bishop
+              promotion position where the correction reached 155 and the new
+              test caught it before it shipped. Any later term added behind the
+              shortcut has to fit inside the same bound or move it, and
+              test_evaluation "the lazy shortcut cannot change a decision" is
+              what forces that to be deliberate.
+
+              DEC-015 is unchanged: the fit that follows is the owner's to run.
+              DEC-034 was one night and said so.

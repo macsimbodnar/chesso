@@ -39,7 +39,11 @@ static double model_score_white(const std::string& fen, const double* params)
 
   const int phase = eval_model::phase_of(pieces.data(), pieces.size());
 
-  return eval_model::evaluate(pieces.data(), pieces.size(), phase, params);
+  int mobility[4] = {0, 0, 0, 0};
+  REQUIRE(eval_model::mobility_features(placement, mobility));
+
+  return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
+                              params);
 }
 
 
@@ -86,10 +90,12 @@ TEST_SUITE("eval model: agrees with the engine")
 
       const double model = model_score_white(fen, params.data());
 
-      // evaluate() interpolates in integers and truncates towards zero, so one
-      // centipawn of disagreement is the arithmetic and anything more is a
-      // difference in what is being computed.
-      CHECK(std::abs(model - engine_white) <= 1.0);
+      // evaluate() interpolates in integers and truncates towards zero. Since
+      // S034 it does that twice, once for the tables and once for mobility,
+      // each stage rounding on its own, so the arithmetic can differ by two
+      // centipawns rather than one. Anything beyond that is a difference in
+      // what is being computed, which is what this file is for.
+      CHECK(std::abs(model - engine_white) <= 2.0);
     }
   }
 
