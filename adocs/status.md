@@ -19,6 +19,14 @@ Updated: 2026-08-11, S028 complete.
   cp/move and 38.8 %; 16x search still leaves 70 % of the error, at the same
   10.4 cp per doubling. S027 is next, unchanged, and it now has a tuner to fit
   its terms with.
+- **S027 needs one decision before it starts** (DEC-036). Its first term is
+  mobility and its step file assumes every term can go through the S014
+  accumulators. Mobility cannot — it is a function of occupancy, not of a piece
+  and a square. Measured with the new `tests/bench_eval`: recomputed mobility is
+  12.2 times the cost per call and 33 % of nodes per second at depth 12, worse
+  than the 25 % S014 removed. Three ways to pay for it are in DEC-036 and the
+  choice is the owner's: ship it recomputed and SPRT the net, take the parked
+  eval-cache machinery first, or add lazy evaluation.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit
