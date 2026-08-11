@@ -19,14 +19,20 @@ Updated: 2026-08-11, S028 complete.
   cp/move and 38.8 %; 16x search still leaves 70 % of the error, at the same
   10.4 cp per doubling. S027 is next, unchanged, and it now has a tuner to fit
   its terms with.
-- **S027 needs one decision before it starts** (DEC-036). Its first term is
-  mobility and its step file assumes every term can go through the S014
-  accumulators. Mobility cannot — it is a function of occupancy, not of a piece
-  and a square. Measured with the new `tests/bench_eval`: recomputed mobility is
-  12.2 times the cost per call and 33 % of nodes per second at depth 12, worse
-  than the 25 % S014 removed. Three ways to pay for it are in DEC-036 and the
-  choice is the owner's: ship it recomputed and SPRT the net, take the parked
-  eval-cache machinery first, or add lazy evaluation.
+- **S027's first term has been tried and rejected, and the step has not started.**
+  Mobility cannot go through the S014 accumulators — it is a function of
+  occupancy, not of a piece and a square. `tests/bench_eval` priced recomputing
+  it at 12.2 times the cost per call and 33 % of nodes per second, worse than
+  the 25 % S014 removed (DEC-036). Measured in play anyway, because nodes per
+  second is not Elo: **−14.93 +/- 16.44 over 1164 games, H0 accepted**
+  (DEC-037). Reverted, nothing in the tree.
+  That verdict bundles two things — four weights that were never fitted, and a
+  third of the machine — so it does not close mobility. The two experiments that
+  would are in DEC-037: fit the eight weights through the tuner (the model stays
+  linear, `PARAM_COUNT` 773 to 781), or make `evaluate()` run less often first
+  with a static eval in the transposition entry and a quiescence eval cache,
+  which discounts the price for every S027 term rather than this one. **Order is
+  the owner's call and nothing starts until it is made.**
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit

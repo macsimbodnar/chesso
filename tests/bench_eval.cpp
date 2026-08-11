@@ -54,9 +54,12 @@ const std::vector<bench_position_t> POSITIONS = {
     {"kiwipete",
      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"},
     {"midgame",
-     "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"},
-    {"open midgame", "2r2rk1/1p1qbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR3R w - - 0 15"},
-    {"rooks and minors", "8/2p2pk1/1p1r2p1/p2n3p/P2P3P/1P3NP1/2R2PK1/8 w - - 0 30"},
+     "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 "
+     "10"},
+    {"open midgame",
+     "2r2rk1/1p1qbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR3R w - - 0 15"},
+    {"rooks and minors",
+     "8/2p2pk1/1p1r2p1/p2n3p/P2P3P/1P3NP1/2R2PK1/8 w - - 0 30"},
     {"queen endgame", "8/5pk1/6p1/7p/7P/1Q4P1/5PK1/1q6 w - - 0 40"},
     {"rook endgame", "8/5pk1/6p1/7p/7P/6P1/R4PK1/6r1 w - - 0 40"},
     {"minor endgame", "8/5pk1/6p1/7p/7P/5NP1/5PK1/6n1 w - - 0 40"},
@@ -136,7 +139,9 @@ int64_t sweep(const std::vector<board_t>& boards)
   int64_t sink = 0;
 
   for (int i = 0; i < repetitions; ++i) {
-    for (const board_t& board : boards) { sink += evaluate(&board); }
+    for (const board_t& board : boards) {
+      sink += evaluate(&board);
+    }
   }
 
   return sink;
@@ -149,7 +154,8 @@ void usage()
       "usage: bench_eval [-r N] [-n N]\n"
       "\n"
       "  -r N     timed sweeps, best is reported (default 7)\n"
-      "  -n N     repetitions of the position list per sweep (default 400000).\n"
+      "  -n N     repetitions of the position list per sweep (default "
+      "400000).\n"
       "           Raise it until the reported resolution is small against the\n"
       "           difference being claimed\n");
 }
@@ -227,8 +233,8 @@ int main(int argc, char** argv)
   }
 
   const double best = timing.best();
-  const double spread = (best > 0.0) ? ((timing.worst() - best) / best) * 100.0
-                                     : 0.0;
+  const double spread =
+      (best > 0.0) ? ((timing.worst() - best) / best) * 100.0 : 0.0;
   const double per_call = (best * 1e6) / static_cast<double>(calls_per_sweep);
   const double per_second =
       (best > 0.0) ? (static_cast<double>(calls_per_sweep) / (best / 1000.0))

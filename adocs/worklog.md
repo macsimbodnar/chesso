@@ -599,3 +599,161 @@ Also found: the S018 evidence was living in a session scratchpad under
 ## 2026-08-11T11:03+02:00 prompt
 
 > let's reompute as you suggest in 1. and see what the numbers says. From there we can take a decision.
+
+## 2026-08-11T11:39+02:00 prompt
+
+> speed in nodes does not mean we lose ELO and that's the only things that matters at the end. let's recompute them and see how a recomputed performs against the accumulated chesso in a SPRT test. I would suggest to start with fast one and if it's not conclusiv eextends to the long one
+
+## 2026-08-11T11:45+02:00 recap
+
+No step. DEC-036 measurement, then the SPRT the owner asked for.
+
+Built `tests/bench_eval` because no existing tool can price an evaluation term:
+a term that changes the score changes the tree, so `search_bench` at fixed depth
+prices the term and the search it caused together. Ten positions from a full
+board to bare kings, scores and a checksum printed before any timing, own
+resolution reported like `bench_movegen`. `-n` is a flag because the right
+workload depends on how expensive the evaluation is.
+
+Measured recomputed mobility: 1.31 ns per `evaluate()` call against 15.93, 12.2
+times; depth-12 nps -32.8 % kiwipete, -45.5 % midgame, -23.7 % tactical; wall
+time to depth 12 +33 %. Three interleaved passes at resolution 0.1 %. Recorded
+as DEC-036 with the three ways to pay for it. Probe reverted at that point.
+
+Owner's call: nps is not Elo, so measure the Elo. Mobility re-applied to
+`src/evaluation.cpp` and left uncommitted, and `REF=c8fe860 ./fastchess.sh
+--fast` is running against the accumulated engine.
+
+Files: `tests/bench_eval.cpp` (new), `tests/CMakeLists.txt`, `DEV_MANUAL.md`,
+`adocs/decisions.md`, `adocs/testing.md`, `adocs/status.md`;
+`src/evaluation.cpp` modified and **deliberately uncommitted** pending the
+verdict.
+
+Suite with the probe applied: 5 of 8 green. The three failures are expected and
+were checked one by one — the pinned static-eval anchors in `test_evaluation`
+and `test_search`, and `test_eval_model`, which is the model-drift guard
+noticing that the tuner's model does not know about mobility. All 11 mate tests
+and the tactics suite pass. Nothing is committed unless the SPRT says to, and if
+it does, the anchors get recomputed and the model taught the term in the same
+commit.
+
+Commits: 544cad2 (bench_eval and DEC-036), c8fe860 (status).
+
+## 2026-08-11T12:32+02:00 prompt
+
+> <task-notification>
+> <task-id>b000s11tx</task-id>
+> <tool-use-id>toolu_01NmRahmYUg5hHia7PXzBE7M</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b000s11tx.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Watch the mobility SPRT" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T12:35+02:00 recap
+
+No step, no change since the last recap. The mobility SPRT is still running and
+`src/evaluation.cpp` still holds the uncommitted term it is measuring.
+
+At 260 games: -12.03 +/- 35.14 Elo, LLR -0.42 of +/-2.20, 82 wins 91 losses 87
+draws. Negative trend, error bars across zero, no bound reached.
+
+Nothing built, nothing committed, no tests run — the machine is playing a timed
+match and anything else run on it would be measured instead of the engine.
+
+## 2026-08-11T13:22+02:00 prompt
+
+> <task-notification>
+> <task-id>bayn8pr3r</task-id>
+> <tool-use-id>toolu_017yCYjBjL9pVrsXTxW5MGEG</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bayn8pr3r.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Re-arm the mobility SPRT watcher" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T13:26+02:00 recap
+
+No step, no change. Mobility SPRT still running, `src/evaluation.cpp` still
+uncommitted.
+
+At 518 games: -21.49 +/- 24.94 Elo, LLR -1.32 of +/-2.20, 165 wins 197 losses
+156 draws. The negative trend firmed up as games accumulated and the run is
+60 % of the way to the lower bound.
+
+Nothing built, nothing committed, no tests run. The machine is playing a timed
+match.
+
+## 2026-08-11T14:13+02:00 prompt
+
+> <task-notification>
+> <task-id>bn0zbpleb</task-id>
+> <tool-use-id>toolu_01GXn8brW9BrETPFQBAsG9rK</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bn0zbpleb.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Re-arm the mobility SPRT watcher" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T14:17+02:00 recap
+
+No step, no change. Mobility SPRT still running, `src/evaluation.cpp` still
+uncommitted.
+
+At 804 games: -13.40 +/- 19.71 Elo, LLR -1.42 of +/-2.20, 257 wins 288 losses
+259 draws. The LLR moved only from -1.32 to -1.42 over 286 games while the point
+estimate pulled back from -21.49 to -13.40, which is the random walk DEV_MANUAL
+warns about when the bounds do not match the effect size.
+
+Noted for whoever reads this next: extending to the full bounds would be slower
+here, not faster. For a negative true effect the LLR drifts toward H0 faster the
+further away elo1 is, and the fast bound is +/-2.20 against the full run's
++/-2.94.
+
+Nothing built, nothing committed, no tests run.
+
+## 2026-08-11T15:04+02:00 prompt
+
+> <task-notification>
+> <task-id>bu92kr7p4</task-id>
+> <tool-use-id>toolu_01PuFNURNYGN4M1Y7pdh7mja</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bu92kr7p4.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Re-arm the mobility SPRT watcher" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T15:08+02:00 recap
+
+No step, no change. Mobility SPRT still running, `src/evaluation.cpp` still
+uncommitted.
+
+At 1100 games: -12.01 +/- 16.77 Elo, LLR -1.79 of +/-2.20, 355 wins 393 losses
+352 draws. The point estimate has held near -12 for 600 games and the interval
+is tightening on it rather than wandering, so the earlier random walk has
+settled. 82 % of the way to the lower bound.
+
+Nothing built, nothing committed, no tests run.
+
+## 2026-08-11T15:14+02:00 prompt
+
+> what are you waiting for?
+
+## 2026-08-11T15:20+02:00 recap
+
+No step, no code change. Mobility SPRT still running, `src/evaluation.cpp` still
+holds the uncommitted term.
+
+At 1140 games: -12.50 +/- 16.52 Elo, LLR -1.91 of +/-2.20, 87 % of the way to
+the lower bound.
+
+Read the tuner's model and the tools build while waiting, to cost the follow-up.
+`tools/tuner` already links `chesso_engine`, so the magic tables are available
+and fitting mobility needs no build-system change. The model stays linear:
+mobility counts are a property of the position, not of the parameters, so they
+enter as features and the gradient keeps its present shape. PARAM_COUNT would go
+773 to 781, four mg and four eg weights, with an int16 count difference per
+piece type stored per position — 12 MB over the existing dataset.
+
+Presented to the owner as a choice against the alternative DEC-036 records:
+take the eval-cache machinery first, so `evaluate()` runs less often and the
+33 % price is discounted for mobility and for the five S027 terms after it.
+Awaiting that decision; nothing started.
+
+Nothing built, nothing committed, no tests run.

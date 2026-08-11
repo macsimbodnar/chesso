@@ -1146,3 +1146,73 @@ Consequences: The open question for S027 is no longer "can mobility be
               nps. It did not prove that any recomputed term costs that, and
               until today no measurement here had priced one. bench_eval is the
               instrument for the five S027 terms that follow.
+
+## DEC-037  2026-08-11  Recomputed mobility measured -14.93 Elo and is not kept
+Tags:         evaluation, mobility, sprt, s027, negative-result
+
+Context:      DEC-036 priced recomputed mobility at 12.2 times the cost per
+              evaluate() call and a third of the nodes per second, and left
+              three ways to pay for it as the owner's choice. The owner's answer
+              was that nodes per second is not Elo and Elo is the only verdict:
+              ship it recomputed and let an SPRT decide the net, fast bounds
+              first and full bounds if that was not conclusive.
+
+Decision:     It was conclusive. Not kept.
+
+              REF=c8fe860 ./fastchess.sh --fast, 10+0.2, concurrency 3, the term
+              uncommitted in the working tree against the same commit without
+              it. **-14.93 +/- 16.44 Elo over 1164 games**, LLR -2.23 against a
+              bound of -2.20, H0 accepted, LOS 3.72 %. 373 wins, 423 losses, 368
+              draws, Ptnml [77, 129, 203, 113, 60]. Three and a half hours.
+
+              The probe is reverted and nothing from it is in the tree. What is
+              kept is the number, this entry, and tests/bench_eval, which was
+              built to take the DEC-036 measurement and stays.
+
+              Extending to the full bounds was considered during the run and
+              rejected on arithmetic: for a negative true effect the log
+              likelihood ratio drifts toward H0 faster the further away elo1 is,
+              and the fast bound is +/-2.20 against the full run's +/-2.94. The
+              fast configuration was already the quicker route to this verdict.
+
+Rejected:     Reading this as "mobility is worthless". It is not what was
+              measured. Two things were bundled into one candidate: four
+              hand-picked weights, and a third of the machine. The weights were
+              never fitted -- the tuner fits piece_value and the two tables and
+              nothing else -- so a term with the wrong weight and a real cost is
+              exactly what a -15 looks like. Engines carry mobility while paying
+              this price.
+
+              Stopping the run early once the trend was clear. It was 87 % of
+              the way to the bound with a settled point estimate and it would
+              have joined S013's LMR run in the parked list as a number nobody
+              could cite. It was allowed to finish.
+
+Consequences: S027's first term is unresolved rather than closed, and the two
+              experiments that would resolve it are separable:
+
+                1. Fit the weights. The model stays linear -- mobility counts
+                   are a property of the position, not of the parameters, so
+                   they enter as features. PARAM_COUNT 773 to 781, four mg and
+                   four eg weights, one int16 count difference per piece type
+                   per position, about 12 MB over the existing 1.49 M rows.
+                   tools/tuner already links chesso_engine, so the magic tables
+                   are there and no build change is needed. test_eval_model
+                   must learn the term in the same change: it failed during
+                   this probe, correctly, because the model did not know about
+                   mobility.
+                2. Make evaluate() run less often first -- a static evaluation
+                   in the transposition table entry and a quiescence eval cache,
+                   both already on the parked list in status.md. That discounts
+                   the 33 % for mobility and for the five S027 terms after it,
+                   and it is the answer the literature gives to this exact
+                   problem rather than one specific to mobility.
+
+              Order matters and is not settled here: fitting the weights against
+              a baseline that still pays full price measures the weights, while
+              the cache changes what every later measurement costs. The owner
+              chooses.
+
+              A verdict of zero, or worse, is recorded as zero. S005, S006 and
+              S015 are the precedent and two of those features were kept anyway
+              with the reason stated. This one is not kept.
