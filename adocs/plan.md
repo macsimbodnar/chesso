@@ -69,7 +69,7 @@ every list entry must have a step file — both are INV-3.
 18. S018  rank chesso's own errors by game phase over hundreds of games, from Stockfish
 19. S028  fit every evaluation constant at once against self-play game outcomes
 20. S034  compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
-21. S027  mobility, king safety, passed pawns, pawn structure, bishop pair, tempo
+21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
 22. S033  prune a node whose static score is already far enough above beta
 23. S021  start the root search in a narrow window around the previous score
 24. S026  drop nodes near the horizon that cannot reach alpha

@@ -1080,3 +1080,50 @@ Commits: 5cdb836 (DEC-042).
 > <status>completed</status>
 > <summary>Background command "Re-arm the watcher" completed (exit code 0)</summary>
 > </task-notification>
+
+## 2026-08-11T22:51+02:00 prompt
+
+> check if the plan that we agreed in this session is written down and documented
+
+## 2026-08-11T23:35+02:00 recap
+
+S034 complete, and a documentation audit the owner asked for.
+
+**Verdict: +28.46 +/- 18.61 Elo over 942 games**, LLR 2.24 against 2.20, H1
+accepted, LOS 99.87 %, Ptnml [50, 76, 160, 117, 68]. Reference `fcf0025`
+differing only by the 781 fitted constants. Step stamped and moved to
+`plan_done/`. DEC-040's revert clause does not fire.
+
+Three measurements were needed: -14.93 always computed on hand-picked weights,
++4.19 over 498 games behind the lazy shortcut with the same weights, +28.46 with
+the weights fitted. The staging is worth about 15 Elo and the weights about 25.
+
+Docs: `specs.md` state table gains mobility and the shortcut and loses it from
+the absent row. `MANUAL.md`'s score warning narrowed again, since its figures
+predate this change too. `README.md` checked, owner-written, no change needed.
+
+**Two bookkeeping problems found and both stated rather than hidden.**
+
+`5cdb836` is titled "Play matches on every performance core" and its message is
+entirely about fastchess.sh, but `git add -A` also swept in the fitted
+constants, `src/eval_tables.hpp`, `src/evaluation.cpp` and the re-anchored
+tests. The measurement is unaffected -- the SPRT snapshots the candidate binary
+and `fcf0025` predates all of it -- and the S034 step file does list 5cdb836
+among the step's commits, so the record is incomplete rather than wrong. Not
+rewriting history to fix a subject line.
+
+`fastchess.sh` was edited while it was running. Bash reads a script
+incrementally, so it hit a syntax error at the shifted offset after fastchess had
+exited. The match and its verdict were unaffected and `bash -n` passes, but the
+next edit to a running script may not be so lucky.
+
+**Documentation audit.** All nine decisions from this session are recorded,
+DEC-034 through DEC-042. Two gaps found and fixed: S027's step file still listed
+mobility in its goal, still carried the "every term must be accumulated" rule
+that S034 disproved, and its `accepts` did not encode the discipline the owner
+set. `plan.md` line 72 still advertised mobility as part of S027. Both corrected
+in this turn, and S027 now states where a term's weights have to be added --
+model, dataset, gradient and writer, all four -- because two of those four were
+silently missing today.
+
+Commits: 463b3bd (S034 complete), and this turn's S027 correction.
