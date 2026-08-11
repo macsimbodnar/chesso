@@ -3,11 +3,11 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-11, S028 complete.
+Updated: 2026-08-11, S034 complete.
 
-- Last done: S028
-- In progress: S034 compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
-- Next: S034
+- Last done: S034
+- In progress: none
+- Next: S027
 - Blocked: none
 - S028 measured **+188.74 +/- 32.21 Elo**, the largest single change so far, and
   67.5 % against sgambetto where S018 measured 39.3 % under identical settings —
@@ -19,48 +19,26 @@ Updated: 2026-08-11, S028 complete.
   cp/move and 38.8 %; 16x search still leaves 70 % of the error, at the same
   10.4 cp per doubling. S027 is next, unchanged, and it now has a tuner to fit
   its terms with.
-- **S027's first term has been tried and rejected, and the step has not started.**
-  Mobility cannot go through the S014 accumulators — it is a function of
-  occupancy, not of a piece and a square. `tests/bench_eval` priced recomputing
-  it at 12.2 times the cost per call and 33 % of nodes per second, worse than
-  the 25 % S014 removed (DEC-036). Measured in play anyway, because nodes per
-  second is not Elo: **−14.93 +/- 16.44 over 1164 games, H0 accepted**
-  (DEC-037). Reverted, nothing in the tree.
-  That verdict bundles two things — four weights that were never fitted, and a
-  third of the machine — so it does not close mobility. The two experiments that
-  would are in DEC-037: fit the eight weights through the tuner (the model stays
-  linear, `PARAM_COUNT` 773 to 781), or make `evaluate()` run less often first.
-  **The owner chose the cost work** (DEC-038), which is now S034 and sits
-  between S028 and S027.
-- **S034's opening measurement is done and the step needs a decision.** The
-  concern that a probe would cost more than the 1.36 ns evaluation was wrong:
-  0.80–1.08 ns into the 12 MB table, 0.36 ns into a 256 KB cache, and
-  `sizeof(tt_entry_t)` is 24 bytes with 20 used so a 16-bit static eval is free.
-  What kills the speed rationale is the size of the prize: a node costs about
-  116 ns, so trading 1.36 ns for 0.36 ns saves under 1 % against a 3 % noise
-  floor. Nothing an SPRT could see. `tools/probe_cost` is kept because the
-  answer changes as the evaluation gets more expensive.
-- **`bench_eval` understates an occupancy term 3.9x, and that revises DEC-036
-  and DEC-037.** Kiwipete searched 9095066 nodes against 8860613 in the two
-  mobility builds, so per-node cost compares directly: 115.7 ns against 172.1,
-  a difference of 56.4 ns per node where `bench_eval` measured 14.6 per call.
-  The benchmark keeps a slice of the magic tables hot; a real search walks 2 MB
-  of rook attacks at random. Mobility was costing about 56 ns, not 14.6.
-- **S034 is now lazy evaluation** (DEC-039). The cache is retired on its own
-  measurement. `evaluate()` splits into the cheap stage the accumulators already
-  provide and an expensive stage that only runs when the cheap score is near the
-  window. It lands with mobility behind it on the same hand-picked weights that
-  measured -14.93, so the only difference from that run is the staging and the
-  comparison attributes to the staging alone. Fitting the weights is the
-  experiment after, kept separate.
-- **The margin is the risk.** A margin too small returns a stage-one score where
-  the full score would have decided differently. Pruning that hides a mate is
-  this project's recurring bug and both earlier instances were caught by the
-  mate tests in the fast suite, not by a benchmark. Eleven mate tests are the
-  gate before any match is played.
-- **The owner set the discipline for the S027 terms**: one at a time, a fast
-  SPRT after each, full bounds when inconclusive, weights fitted rather than
-  guessed.
+- **S034 is done: +28.46 +/- 18.61 Elo over 942 games**, H1 accepted, LOS
+  99.87 %. Lazy evaluation plus mobility, with the eight mobility weights fitted
+  rather than guessed. Three measurements were needed to get there and the order
+  is the point: mobility always computed on hand-picked weights measured
+  **-14.93**; behind lazy evaluation, same weights, **+4.19 over 498 games and
+  stopped**; with the weights fitted, **+28.46 and passed**. The staging is
+  worth about 15 Elo and the weights about 25, and the first run measured both
+  at once and said the whole thing was a failure.
+- **The fit disagreed with hand-picking where it mattered.** Knight mobility
+  fitted to nothing on top of the piece-square table; rook middlegame mobility
+  to four times the guess. mg {0, 5, 9, 2}, eg {-1, 6, 1, 3}.
+- **The margin is 150 and it is a guarantee, not an observation.** The term is
+  clamped to it. Any of S027's remaining terms added behind the shortcut has to
+  fit inside that bound or move it deliberately, and `test_evaluation` "the lazy
+  shortcut cannot change a decision" is what forces the choice.
+- **Two tuner bugs are worth remembering because no test caught them.**
+  `write_tables()` did not emit the mobility weights and `gradient()` did not
+  compute their derivative, so a fit would have run, reported an improvement
+  from the other 773 parameters, and returned the eight weights unchanged. Found
+  by a smoke run whose output looked too familiar.
 - What S028 came to: all 773 evaluation constants are fitted to chesso's own
   self-play, over 1 490 839 positions from 20000 games. Held-out error 0.113852
   to 0.108043; SPRT +188.74 +/- 32.21 Elo over 438 games, H1 accepted. The fit

@@ -109,7 +109,11 @@ here as the FEN each one loads. A GUI never sends them.
   +39 to +100 cp. That was measured on the hand-written constants and it no
   longer holds: fitting them removed the systematic optimism everywhere except
   pawn endgames, where it grew — on 22 moves, which is too few to be more than
-  a warning.
+  a warning. The constants moved again the same day, when mobility was added and
+  all 781 of them were refitted (S034, +28.46 Elo), so even the figures above
+  predate the current evaluation. The shape of the warning is what to keep:
+  the typical move is close, the tail is wide, and a pawn endgame score deserves
+  suspicion.
 - **`Hash` is not honoured exactly.** The value is clamped to 1–4096 MB, then the
   *entry count* is rounded down to a power of two so probing can mask instead of
   divide, so the table is usually smaller than asked for. If the allocation

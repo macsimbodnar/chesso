@@ -1010,3 +1010,73 @@ Running: `REF=fcf0025 ./fastchess.sh --fast`, restarted from zero games.
 ## 2026-08-11T20:01+02:00 prompt
 
 > next time use all cores for this kind of things,
+
+## 2026-08-11T20:50+02:00 prompt
+
+> <task-notification>
+> <task-id>byc272lh4</task-id>
+> <tool-use-id>toolu_01L35tKmHSXeQs33V8qxJDQQ</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/byc272lh4.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Arm a fresh watcher" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T21:25+02:00 prompt
+
+> status? How long is still missing?
+
+## 2026-08-11T21:40+02:00 prompt
+
+> <task-notification>
+> <task-id>b98t9mm9n</task-id>
+> <tool-use-id>toolu_014TV7aZNDYkGNTSef6FxCHY</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b98t9mm9n.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Check load, time losses, re-arm" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T21:42+02:00 recap
+
+S034, no code change. The fitted-weights SPRT is running clean after the
+hibernation restart: 560 games, +29.85 +/- 24.53 Elo, LLR 1.38 of +/-2.20, zero
+time losses, battery charging.
+
+The estimate has drifted down as games accumulated -- +52.13 at 282 games,
++37.05 at 480, +29.85 at 560 -- and the LLR gave back ground with it, 1.53 to
+1.38. Still clearly positive and LOS was 99.76 % at the 480-game mark.
+
+Checked the machine when the load metric read 166 %: the largest consumer is the
+candidate engine itself at 49.6 %, which is the match. Nothing foreign.
+
+DEC-042 committed separately this turn: matches now default to every performance
+core rather than all-but-one, since the core left free was being kept for a
+machine the script's own load check says was busy anyway. Efficiency cores stay
+out, and the reason is written down -- a game on one is played at the wrong
+speed and which engine gets hit is luck. Applies from the next run; this one
+keeps concurrency 3.
+
+Commits: 5cdb836 (DEC-042).
+
+## 2026-08-11T22:28+02:00 prompt
+
+> status?
+
+## 2026-08-11T22:31+02:00 prompt
+
+> <task-notification>
+> <task-id>b3tyye5nl</task-id>
+> <tool-use-id>toolu_01BzPDs98RVC7VUXQFzRknW1</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b3tyye5nl.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Re-arm the watcher" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T22:45+02:00 prompt
+
+> <task-notification>
+> <task-id>bs01accu9</task-id>
+> <tool-use-id>toolu_01UQxESaP77rr5uyhbn5L3yr</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bs01accu9.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Re-arm the watcher" completed (exit code 0)</summary>
+> </task-notification>

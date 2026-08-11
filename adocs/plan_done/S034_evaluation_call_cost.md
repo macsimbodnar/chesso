@@ -7,7 +7,10 @@ decisions:  DEC-036, DEC-037, DEC-038, DEC-039
 closes:
 blocks:
 paused_by:
-done:
+done:       2026-08-11. Lazy evaluation plus mobility, with the eight mobility
+            weights fitted rather than guessed: **+28.46 +/- 18.61 Elo** over
+            942 games, LLR 2.24, H1 accepted, LOS 99.87 %. Commits fbce2a7,
+            10bef50, b2b0a8c, fcf0025, 5cdb836 and the fitted constants.
 
 ## Why this exists, and why it is ahead of S027
 
@@ -153,3 +156,67 @@ read alongside the -14.93 above.
 Before any of that: the fast suite green, all eleven mate tests included, and
 the static-eval anchors recomputed rather than relaxed, the same way S028 did
 it. A margin bug that hides a mate must fail a test, not a match.
+
+## The verdict, 2026-08-11
+
+**+28.46 +/- 18.61 Elo over 942 games**, LLR 2.24 against a bound of 2.20, H1
+accepted, LOS 99.87 %, Ptnml [50, 76, 160, 117, 68]. Candidate against
+`fcf0025`, whose only difference is the 781 fitted constants.
+
+DEC-040 said this commit would be reverted if the fitted weights did not measure
+positive. They did. The clause does not fire and lazy evaluation stays.
+
+### What the three measurements say together
+
+| candidate | verdict |
+|---|---|
+| mobility, always computed, hand-picked weights | -14.93 +/- 16.44, DEC-037 |
+| mobility, behind lazy evaluation, same weights | +4.19 +/- 24.11 over 498, stopped |
+| the same, weights fitted | **+28.46 +/- 18.61**, passed |
+
+Two separate causes, and neither would have been visible without splitting
+them. The staging is worth roughly 15 Elo: it removed 61 % of the term's cost,
+116.6 ns per node against 172.1 becoming 138.4. The weights are worth roughly
+another 25, and the fit disagreed with the hand-picked numbers about the two
+things that mattered -- knight mobility is worth nothing on top of the
+piece-square table, and rook middlegame mobility is worth four times what was
+guessed.
+
+The first run measured both causes at once and returned -14.93. Had it been
+believed, mobility would have been recorded as a failure and the step closed.
+
+### What went wrong on the way, and what it cost
+
+**The margin was a hope before it was a guarantee.** Chosen at 150 from the
+distribution over 149084 self-play positions, maximum 143, and the new corpus
+test immediately found `1Bk5/B1B5/1B1B4/B1B4B/8/B1B5/5K2/8` at 155 -- nine white
+bishops, legal by promotion. Fixed by clamping the term, so the bound holds by
+construction rather than by sampling.
+
+**Two silent failures in the tuner**, both found by a smoke run whose output
+looked too familiar. `write_tables()` never emitted the mobility weights, and
+`gradient()` never computed their derivative. Together they would have produced
+a header that pasted cleanly, reported a healthy drop in error from the other
+773 parameters, and left mobility exactly where it was.
+
+**A match ruined by hibernation.** Three games flagged with 988000 ms overruns,
+exactly the three in flight at concurrency 3. Discarded and restarted rather
+than corrected; DEC-020 is why.
+
+**A shell script edited while it was running.** fastchess.sh was changed for
+DEC-042 mid-match and bash, which reads a script incrementally, hit a syntax
+error at the shifted offset after fastchess had exited. The match and its
+verdict were unaffected and the script is valid, but the next edit to a running
+script may not be so lucky.
+
+### What this step did not do
+
+The transposition-entry static evaluation and the quiescence cache were retired
+by this step's own opening measurement and never built. S033 will want the
+static score and can add it then.
+
+Nothing here says the margin of 150 is right, only that it is sound. A tighter
+margin fires more often and a wider one fires less; neither has been measured.
+The five remaining S027 terms each have to fit inside the same bound or move it,
+and `test_evaluation` "the lazy shortcut cannot change a decision" is what makes
+that a decision rather than an accident.
