@@ -506,8 +506,8 @@ TEST_SUITE("search: quiescence")
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
     const int cheap_score = evaluate_cheap(&game.board);
-    REQUIRE_EQ(static_score, 549);
-    REQUIRE_EQ(cheap_score, 511);
+    REQUIRE_EQ(static_score, 540);
+    REQUIRE_EQ(cheap_score, 524);
 
     // The precondition for the shortcut. Without it the assertions below would
     // pass on a build where the shortcut never fires at all.
@@ -544,7 +544,7 @@ TEST_SUITE("search: quiescence")
     // Two pawns up, plus whatever the piece-square tables make of the squares
     // everything happens to be standing on.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 235);
+    REQUIRE_EQ(black_static, 304);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -578,7 +578,7 @@ TEST_SUITE("search: quiescence")
     }
 
     // A rook down, give or take where the piece-square tables put the kings.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -516);
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -507);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -932,7 +932,7 @@ TEST_SUITE("search: draws")
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook.
-    REQUIRE_EQ(evaluate(&game.board), -502);
+    REQUIRE_EQ(evaluate(&game.board), -491);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

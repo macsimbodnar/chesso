@@ -921,3 +921,92 @@ Nothing built, nothing committed, no tests run.
 ## 2026-08-11T18:39+02:00 prompt
 
 > wheneer you need to run something about tests or tuning run it by yourself. I already have caffenaite running on my side so you should never worry about that on this machine. So if you needs somethign run just run it. the only requirements is that, if you need to run something that is long multiple hours wait the night if possible and if you have better job to do. Like for example we can wait the tuning to this night if it's long but now we can work on other items to improve the engine
+
+## 2026-08-11T18:49+02:00 prompt
+
+> <task-notification>
+> <task-id>b3wflwxeh</task-id>
+> <tool-use-id>toolu_01UwcNLuDRQVBrH1j8edJyTk</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b3wflwxeh.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Watch the fit" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-11T19:05+02:00 recap
+
+S034. The fit ran and its result is being measured. Uncommitted by design: the
+candidate is in the working tree so the reference is the same commit without it.
+
+Delegation: DEC-041 records the owner granting a standing delegation for tests,
+measurements and evaluation tuning, with multi-hour jobs scheduled for the night
+when there is better work to do. Scoped deliberately to exclude the S029 network
+training, which is the case DEC-015 was written for and gets asked again when it
+arrives. `CLAUDE.md` and `AGENTS.md` both stated the old rule and both were
+amended in the same commit, `fcf0025`.
+
+The fit did not need the night: 450 seconds, 3700 epochs, stopped on patience.
+781 parameters over the same 1490839 positions, K = 1.0380. Held-out 0.108134 to
+0.107402, 0.68 %, small because the tables were already fitted last night and
+only the eight new weights and refinement remained.
+
+Fitted mobility mg {0, 5, 9, 2} and eg {-1, 6, 1, 3} against hand-picked
+{4, 5, 2, 1} and {4, 5, 4, 2}. Knight mobility fitted to nothing, rook
+middlegame mobility to four times the guess. Piece values PAWN 78 to 87,
+KNIGHT 338 to 366, QUEEN 1026 to 1067.
+
+One mistake caught immediately: `paste_tables.py` had the v1 filename hardcoded
+and pasted the tables already in the tree. Harmless, spotted because the defines
+printed unchanged, and the script now takes the file as an argument.
+
+Anchors: all nine re-derived and matched exactly by the independent Python
+implementation, which now reads the mobility weights out of `evaluation.cpp` and
+mirrors the clamp instead of hardcoding either.
+
+Files: `src/eval_tables.hpp`, `src/evaluation.cpp`, `tests/test_evaluation.cpp`,
+`tests/test_search.cpp`. All uncommitted pending the verdict.
+
+Tests: fast suite 8/8, all 11 mate tests, deep perft green, format clean.
+
+Running: `REF=fcf0025 ./fastchess.sh --fast`. The only difference between the
+two engines is the 781 fitted constants, so this measures the weights and
+nothing else. DEC-040: if it is not positive, the lazy machinery and mobility
+are reverted together.
+
+Commits: fcf0025 (DEC-041 and the house-rule amendments).
+
+## 2026-08-11T19:57+02:00 prompt
+
+> The computer went hibernate because of low battery. Now i resumed it and plugged in. Check the status
+
+## 2026-08-11T20:00+02:00 recap
+
+S034. The first fitted-weights SPRT was thrown away and restarted. No code
+change; the candidate is still uncommitted in the working tree.
+
+The machine hibernated on low battery mid-match and was resumed on AC. Three
+games straddled it and were flagged by fastchess as time losses with about
+988000 ms of overrun each -- the clock ran while the machine slept. Concurrency
+is 3, so exactly the three games in flight were hit; every other game either
+finished before or started after, which bounds the contamination completely.
+
+Restarted rather than continued. DEC-020 is in this repository because one
+contaminated run reported +301 Elo and meant nothing, and this verdict decides
+whether the whole lazy-evaluation line is reverted under DEC-040. The
+contaminated interim read was +48.08 +/- 39.18 with LLR 0.96 over 240 games,
+which is encouraging and is deliberately not recorded as a measurement. The old
+log is kept at /tmp/sprt_fitted_contaminated.log rather than deleted.
+
+Noted against the new run: `fastchess.sh` printed its load warning at 96 % of a
+core, above the 60 % threshold, from the post-resume tail. Both engines play
+interleaved so it inflates variance rather than biasing the result, and it goes
+next to the number rather than being left out. Battery was at 3 % and charging.
+
+Verified after the hibernation: fitted constants still in place, mobility
+{0, 5, 9, 2} and {-1, 6, 1, 3}, PAWN 87, QUEEN 1067, build current, fast suite
+8/8.
+
+Running: `REF=fcf0025 ./fastchess.sh --fast`, restarted from zero games.
+
+## 2026-08-11T20:01+02:00 prompt
+
+> next time use all cores for this kind of things,

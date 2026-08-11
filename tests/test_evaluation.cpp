@@ -156,11 +156,11 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 112, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 222, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 312, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 549, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1002, "queen on d1"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 117, "pawn on e2"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 240, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 540, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1085, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on

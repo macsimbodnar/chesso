@@ -1476,3 +1476,50 @@ Consequences: CLAUDE.md and AGENTS.md both state the old rule in their own
 
               Long runs move to the night by default. The agent says what it is
               scheduling and why, rather than silently occupying the machine.
+
+## DEC-042  2026-08-11  Matches use every performance core, and no efficiency core
+Tags:         measurement, sprt, throughput, fastchess
+
+Context:      fastchess.sh played on the performance cores minus one, leaving a
+              core free for the operating system on the argument that a timed
+              match on a busy machine measures the load. On this machine that is
+              three of four, so a third of the throughput was being spent on
+              quiet.
+
+              It did not buy the quiet. The script's own load check fires above
+              60 % of a core and it has fired on nearly every run today, at 39,
+              69, 96 and 153 %, from opendirectoryd, the terminal, this session
+              and a post-hibernation wake storm. The core was being left free
+              for a machine that was busy anyway.
+
+Decision:     The owner asked for all cores. The default becomes every
+              performance core, four here, and CONCURRENCY still overrides it
+              when a run has to share the machine with something else.
+
+              **Efficiency cores stay out**, and that is the agent's reading of
+              "all cores" rather than the literal one. They run at a different
+              speed, so a game landing on one is played at the wrong speed, and
+              which of the two engines gets hit is luck. That is not more data,
+              it is data with a bias neither engine controls and nothing
+              corrects. The distinction was stated to the owner rather than
+              taken silently.
+
+Rejected:     Using all eight cores. Above.
+
+              Keeping one core free. The argument is sound in principle and
+              false in practice on this machine; the measured load says the
+              quiet was never there to protect.
+
+Consequences: A verdict costs about a third less wall time, which matters
+              because measurement capacity is the binding constraint on the
+              whole plan and has been all day.
+
+              Contention rises, and both engines pay it equally on an
+              interleaved match, so it inflates variance rather than biasing
+              the result. If runs start needing more games to reach a bound,
+              that is the cost showing up and CONCURRENCY is the dial.
+
+              The change applies from the next run. The fitted-weights SPRT in
+              flight when this was decided keeps concurrency 3; restarting it to
+              gain a third of the speed would have cost more than the third was
+              worth with forty minutes left.

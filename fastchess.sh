@@ -25,10 +25,17 @@ candidate="$(dirname "$0")/build/src/chesso"
 tc="10+0.2"
 
 # Games are timed, so a game that lands on an efficiency core is a game played
-# at the wrong speed. Only the performance cores count, and one is left free
-# for the operating system and for whatever else is running.
+# at the wrong speed, and which engine gets hit is luck rather than something
+# either of them controls. Only the performance cores are used, and all of them
+# are: DEC-042. It used to leave one free for the operating system, which cost a
+# third of the throughput to buy quiet that the machine did not actually deliver
+# -- the load warning below fires on this machine anyway.
+#
+# Both engines play interleaved on the same machine, so contention inflates
+# variance rather than biasing the result. Override with CONCURRENCY when a run
+# has to share the machine with something else.
 perf_cores="$(sysctl -n hw.perflevel0.physicalcpu 2> /dev/null || sysctl -n hw.physicalcpu)"
-concurrency="${CONCURRENCY:-$((perf_cores > 2 ? perf_cores - 1 : 1))}"
+concurrency="${CONCURRENCY:-$perf_cores}"
 
 # adjudication cuts dead games, gets to a verdict faster
 adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"

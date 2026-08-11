@@ -80,8 +80,8 @@ int evaluate_cheap(const board_t* board)
 // The weights are hand-picked from ordinary positional principles and no
 // published table was consulted, DEC-016. They are not fitted yet; fitting them
 // is the experiment after this one and is deliberately not bundled with it.
-const int mobility_mg[4] = {4, 5, 2, 1};  // knight bishop rook queen
-const int mobility_eg[4] = {4, 5, 4, 2};
+const int mobility_mg[4] = {0, 5, 9, 2};  // knight bishop rook queen
+const int mobility_eg[4] = {-1, 6, 1, 3};
 
 static int evaluate_mobility(const board_t* board)
 {
