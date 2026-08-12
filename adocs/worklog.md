@@ -2006,3 +2006,50 @@ weights forced non-zero.
 > <status>completed</status>
 > <summary>Monitor "pawn structure fit" stream ended</summary>
 > </task-notification>
+
+## 2026-08-12T21:48+02:00 prompt
+
+> <task-notification>
+> <task-id>b1zzaz7o0</task-id>
+> <summary>Monitor event: "pawn structure SPRT verdict"</summary>
+> <event>SPRT4 DONE
+> Elo: 13.05 +/- 11.15, nElo: 16.68 +/- 14.23
+> Games: 2290, Wins: 770, Losses: 684, Draws: 836, Points: 1188.0 (51.88 %)
+> SPRT ([0.00, 10.00]) completed - H1 was accepted</event>
+> </task-notification>
+
+## 2026-08-12T20:15+02:00 recap
+
+**S027 term 3 done: pawn structure, +13.05 +/- 11.15 Elo, H1 accepted** over
+2290 games. `b6531b7` against `cd273d2`. Isolated, doubled and backward, three
+counts per side, sharing bitboard fills with passed pawns. Marginal cost 4.1 %.
+
+**Three terms, three times held-out error understated the Elo.** King safety
+0.000304 and +20.87; passed pawns 0.000206 and +17.34; pawn structure 0.000126
+and +13.05. The ordering is right, the scale is not, and every one of the three
+cleared a 4 to 5 % speed cost besides. Error improvement ranks candidates and
+must not be used to decide against running one -- this term looked like it might
+not clear its own cost and cleared it comfortably.
+
+**A perturbation that no corpus check could catch.** Weakening the model's
+backward definition so a neighbour abreast no longer stops a pawn being backward
+leaves all 22 corpus positions green; only hand-built cases see it. The two
+kinds of test are not substitutes.
+
+**The tuner group-boundary bug appeared a second time.** `--only passed_pawns`
+ran to `PARAM_COUNT` and would have swallowed the six new weights, exactly as
+`--only king_safety` did to the twelve passed pawn weights one commit earlier.
+No test fails; the symptom is a fit returning new weights exactly as handed in.
+Rule and symptom written into `DEV_MANUAL.md`.
+
+Running total for the step, chained SPRTs against each other: +20.87, +17.34,
++13.05.
+
+Files: `adocs/plan_current/S027_handcrafted_eval_terms.md`, `adocs/worklog.md`.
+
+Commits: `cd273d2` term at zero weights, `cc9b701` tuner side, `b6531b7` fitted
+weights.
+
+Next: term 4, bishop pair and the rook placement terms. All cheap, so for the
+first time in this step a verdict will not be measuring a term minus a speed
+penalty of its own size.

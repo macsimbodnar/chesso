@@ -157,7 +157,45 @@ DEC-047, the one that matters: a term shipped at zero weights is deleted by the
 compiler, not measured, so every "this term is free" figure taken at those
 weights describes a build without the term in it.
 
-### 3. Pawn structure -- next
+### 3. Pawn structure -- **+13.05 +/- 11.15 Elo**, H1 accepted
+
+2290 games, 10+0.2, `b6531b7` against `cd273d2`. Isolated, doubled and backward,
+three counts per side, sharing its bitboard fills with passed pawns -- four
+fills where two independent passes would need six. Marginal cost 4.1 % of a
+depth 14 search.
+
+**Held-out error understated it for the third time in a row.**
+
+| term | error improvement | measured Elo |
+|---|---|---|
+| king safety | 0.000304 | +20.87 +/- 15.41 |
+| passed pawns | 0.000206 | +17.34 +/- 13.51 |
+| pawn structure | 0.000126 | +13.05 +/- 11.15 |
+
+The ordering is right and the scale is not: each term measured far more Elo than
+its share of the error would suggest, and every one of the three cleared a
+4 to 5 % speed cost on top. Error improvement ranks candidates. It does not
+predict Elo and it should not be used to decide against running a term.
+
+**A definition that no corpus check could catch.** Weakening the model's
+backward test so that a neighbour abreast no longer stops it leaves all 22
+corpus positions green and is caught only by hand-built cases. Corpus sweeps and
+hand-built cases are not substitutes for each other.
+
+**The group-boundary bug appeared a second time.** `--only passed_pawns` ran to
+`PARAM_COUNT` and would have swallowed all six new weights, exactly as
+`--only king_safety` did to the twelve passed pawn weights one commit earlier.
+Neither fails a test; the symptom is a fit returning the new weights exactly as
+it was handed them. `DEV_MANUAL.md` now states the rule and the symptom.
+
+### 4. Bishop pair, rook on open and half-open file, rook on seventh -- next
+
+Cheap terms, all of them, which is the first time in this step that a verdict
+will not be measuring a term minus a speed penalty of its own size.
+
+### 5. Tempo -- last
+
+A single bonus for the side to move. One parameter.
 
 Isolated, doubled, backward. `isolated_file_masks[]` exists in `bb_tables.hpp`,
 unused. It has lost the pawn hash it was expected to share, so its cost is
