@@ -133,7 +133,38 @@ regression from clang declining to inline a function that gained a second
 caller, a corpus so vacuous that two of the nine features were zero in every
 position of it, and a defect in `evaluate_lazy` that predates the term.
 
-### 2. Passed pawns -- next
+### 2. Passed pawns -- **+17.34 +/- 13.51 Elo**, H1 accepted
+
+1584 games, 10+0.2, `ce7cd35` against `6950be1`. Two commits: the term at zero
+weights, then the fitted weights.
+
+**Held-out error said it would be smaller than it was.** The frozen fit moved
+validation 0.107106 to 0.106900, an improvement of 0.000206 against king
+safety's 0.000304 which measured +20.87. On that ratio this term looked like
+roughly 14 Elo gross before its 4.5 % speed cost came out, and it measured 17.34
+net. Error improvement orders candidates; it does not predict Elo.
+
+**The buckets are a residual and not a valuation.** mg {3, -16, 1, 10, 30, 2},
+eg {-15, -4, 18, 28, 25, 8}, not monotonic in the rank, and bucket 5 -- a pawn
+one square from promotion -- fits to almost nothing because `psqt_mg`'s pawn
+table already pays 79 to 214 for that square. Third time this project has met
+the effect: knight mobility fitted to nothing at S034, king safety's attacker
+counts at DEC-044.
+
+**Two negative results came out of this term and both are recorded.** DEC-046,
+the pawn hash, built in full and discarded because it recovers nothing.
+DEC-047, the one that matters: a term shipped at zero weights is deleted by the
+compiler, not measured, so every "this term is free" figure taken at those
+weights describes a build without the term in it.
+
+### 3. Pawn structure -- next
+
+Isolated, doubled, backward. `isolated_file_masks[]` exists in `bb_tables.hpp`,
+unused. It has lost the pawn hash it was expected to share, so its cost is
+unpaid for and has to be measured on its own terms -- with the weights forced
+non-zero, per DEC-047. The set-wise fills the passed pawn term already computes
+are the place to look first: doubled pawns fall out of a front span that is
+already built.
 
 `passed_w_pawns_masks[]` and `passed_b_pawns_masks[]` exist in `bb_tables.hpp`,
 unused. Tapered by rank. Needs the decision on where it runs: stage one pays at

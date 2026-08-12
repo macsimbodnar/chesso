@@ -1929,3 +1929,57 @@ Commits: none this turn. Last is `6950be1`.
 ## 2026-08-12T14:22+02:00 prompt
 
 > Record in the repo rules to use persistent monitor to sprt and finetuning tasks
+
+## 2026-08-12T15:22+02:00 prompt
+
+> <task-notification>
+> <task-id>bux7lql9k</task-id>
+> <summary>Monitor event: "passed pawn SPRT verdict"</summary>
+> <event>SPRT3 DONE
+> Elo: 17.34 +/- 13.51, nElo: 22.02 +/- 17.11
+> Games: 1584, Wins: 545, Losses: 466, Draws: 573, Points: 831.5 (52.49 %)
+> SPRT ([0.00, 10.00]) completed - H1 was accepted</event>
+> </task-notification>
+
+## 2026-08-12T15:22+02:00 prompt
+
+> <task-notification>
+> <task-id>bux7lql9k</task-id>
+> <tool-use-id>toolu_01U7rZp3qMzmJdxfURQwWdk3</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bux7lql9k.output</output-file>
+> <status>completed</status>
+> <summary>Monitor "passed pawn SPRT verdict" stream ended</summary>
+> </task-notification>
+
+## 2026-08-12T15:20+02:00 recap
+
+**S027 term 2 done: passed pawns, +17.34 +/- 13.51 Elo, H1 accepted** over 1584
+games. `ce7cd35` against `6950be1`.
+
+**The fit understated it.** Held-out error moved 0.107106 to 0.106900, two
+thirds of king safety's 0.000304 which measured +20.87, so on that ratio this
+looked like about 14 Elo gross before a 4.5 % speed cost came out of it. It
+measured 17.34 net. Error improvement is good for ordering candidates and does
+not predict Elo.
+
+**A watcher rule was written into the repository**, `a96c647`. A long run is
+detached with nohup and survives everything; the watcher is what fails. A
+backgrounded shell loop is scoped to the turn that started it and dies silently
+the moment the user types, and because the run carries on the failure looks
+exactly like a match still in progress. Twice in one session. In Claude Code the
+answer is `Monitor` with `persistent: true`; an agent without it polls the log
+on its next turn rather than pretending a watcher is armed. AGENTS.md carries
+the rule, DEV_MANUAL.md the commands.
+
+Also recorded there: a verdict costs 3 to 4.5 hours on this machine, measured
+rather than assumed. It was assumed to be an hour twice today and planned
+against wrongly both times.
+
+Files: `adocs/plan_current/S027_handcrafted_eval_terms.md`, `AGENTS.md`,
+`DEV_MANUAL.md`.
+
+Commits: `ce7cd35` fitted passed pawn weights, `a96c647` the watcher rule.
+
+Next: term 3, pawn structure -- isolated, doubled, backward. It lost the pawn
+hash DEC-046 discarded, so its cost is unpaid for and gets measured with the
+weights forced non-zero.
