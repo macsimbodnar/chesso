@@ -303,14 +303,41 @@ adjudicated once one side holds `--resign-score` for `--resign-plies`.
 Rate on this machine, three threads: 200 games at 100000 nodes per move in 61 s,
 about 77 positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame.
 
-`tuner` fits `piece_value[0..4]`, `psqt_mg` and `psqt_eg`, 773 numbers, so that
-a sigmoid of the evaluation predicts the game result — Texel tuning. It never
-calls the search: `tools/eval_model.hpp` is `evaluate()` written as a linear
-function of its own constants, which is what makes a full pass cheap, and
-`test_eval_model` is what stops that model drifting from the engine. It reports
-held-out error every `--report` epochs and keeps the best one, prints a warning
-if the fit never beats the hand-written constants, and writes a header to paste
-into `eval_tables.hpp`.
+`tuner` fits 799 numbers so that a sigmoid of the evaluation predicts the game
+result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
+them; the mobility weights are 8 more since S034 and the king safety weights 18
+more since S027. It never calls the search: `tools/eval_model.hpp` is
+`evaluate()` written as a linear function of its own constants, which is what
+makes a full pass cheap, and `test_eval_model` is what stops that model drifting
+from the engine. It reports held-out error every `--report` epochs and keeps the
+best one, prints a warning if the fit never beats the constants it started from,
+and writes a header to paste in.
+
+**Paste target is two files.** The piece defines and the two tables go in
+`src/eval_tables.hpp`; the mobility and king safety weights at the end of the
+emitted file go in `src/evaluation.cpp`. The header says so, because it is easy
+to miss and a fit that is half applied looks like a fit that did not work.
+
+```bash
+build/tools/tuner --data .tuning/selfplay_v1.tsv \
+    --out .tuning/tuned_ks_only.hpp --only king_safety --threads 4
+```
+
+`--only GROUP` fits one group and holds every other parameter at what the engine
+ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
+`king_safety`, and the emitted header records which was used.
+
+**This is an attribution tool, not a speed tool.** A joint fit of a new term
+also refits the constants that were already fitted, so the SPRT that follows
+measures two changes at once and its number says nothing about either. Frozen
+parameters come out bit-identical, and Adam skips them entirely rather than
+being fed a zero gradient — a decaying moment over a decaying velocity still
+takes a step from a zero gradient.
+
+What the freeze costs is measurable and was measured at S027: king safety alone
+took held-out error 0.107413 to 0.107109, and fitting all 799 jointly reached
+0.106964 instead. The refit of the other 781 is worth 0.000145 and is a separate
+change.
 
 **The agent runs the fit**, and every test and measurement, without asking.
 DEC-041, which supersedes DEC-015 for tuning. A run of several hours is

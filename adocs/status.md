@@ -3,7 +3,7 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-11 by `moltke --step status`.
+Updated: 2026-08-12 by `moltke --step status`.
 
 - Last done: S034
 - In progress: S027 king safety, passed pawns, pawn structure, bishop pair, tempo

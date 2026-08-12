@@ -508,7 +508,7 @@ TEST_SUITE("search: quiescence")
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
     const int cheap_score = evaluate_cheap(&game.board);
-    REQUIRE_EQ(static_score, 540);
+    REQUIRE_EQ(static_score, 530);
     REQUIRE_EQ(cheap_score, 524);
 
     // The precondition for the shortcut. Without it the assertions below would
@@ -530,9 +530,11 @@ TEST_SUITE("search: quiescence")
     // above it. Which number the shortcut picks to satisfy that is the
     // implementation's business and is deliberately not pinned here.
     //
-    // Strictly below, and that is what shows the shortcut fired at all:
-    // mobility is worth +16 on this position, so a quiescence that had computed
-    // the expensive terms would have answered 540 on the nose.
+    // Strictly below, and that is what shows the shortcut fired at all: the
+    // expensive terms are worth +6 between them here, mobility +16 and king
+    // safety -10 since S027 fitted it, so a quiescence that had computed them
+    // would have answered 530 on the nose. The witness is thinner than it was
+    // when mobility had the stage to itself and the gap was the whole +16.
     REQUIRE(cut < static_score);
 
     // A window that contains it: still the static score, there are no
@@ -553,10 +555,10 @@ TEST_SUITE("search: quiescence")
 
     // evaluate() and quiescence both answer from the side to move's point of
     // view, so Black's static score is what evaluate() returns.
-    // Two pawns up, plus whatever the piece-square tables make of the squares
+    // Two pawns up, plus whatever the positional terms make of the squares
     // everything happens to be standing on.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 304);
+    REQUIRE_EQ(black_static, 292);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -589,8 +591,9 @@ TEST_SUITE("search: quiescence")
       REQUIRE_FALSE(MOVE_CAPTURE(moves[i]));
     }
 
-    // A rook down, give or take where the piece-square tables put the kings.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -507);
+    // A rook down, give or take what the positional terms make of where the
+    // kings end up.
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -491);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its

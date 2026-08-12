@@ -1458,3 +1458,86 @@ Commit: 690de1f. The fitted weights are not committed and not yet applied.
 > Verification run: `cmake --build build-prof -j8 &amp;&amp; ctest --test-dir build-prof --output-on-failure` — 11/11 pass including slow perft — and `./clang-format.sh --check` clean. Note `clang-format.sh` filters `git ls-files`, so the new tool was invisible to it until I staged `tools/eval_spread.cpp`; it is staged, not committed.</result>
 > <usage><subagent_tokens>121818</subagent_tokens><tool_uses>75</tool_uses><duration_ms>1081677</duration_ms></usage>
 > </task-notification>
+
+## 2026-08-12T01:50+02:00 recap
+
+**A defect was found and it jumped the queue.** Applying S027's fitted king
+safety weights turned `test_search` "the table never changes the answer" red:
+the same position answered 110 or 59 depending on what was cached.
+
+The cause is not king safety. `evaluate_lazy()` returned the cheap score when
+the shortcut fired, and `quiesce()` is fail soft -- it hands `stand_pat` to its
+parent, which reads it as a lower bound on the true score and may store it as
+one. The guarantee is only that the true score is within `LAZY_EVAL_MARGIN` of
+cheap, so cheap can be up to 150 centipawns *better* than the truth. A lower
+bound that is not a lower bound. It has been there since S034 shipped the
+shortcut; mobility's corrections were too small to flip a score on those
+positions and the fitted king safety weights were not.
+
+Diagnosed by experiment rather than by reading: setting the margin to 4000000
+disables the shortcut, and with it disabled the invariant passes and only the
+exact-score anchors fail.
+
+**Fixed alone, and measured alone.** `cheap - LAZY_EVAL_MARGIN` at beta,
+`cheap + LAZY_EVAL_MARGIN` at alpha -- still on the caller's side of the window,
+so no cutoff changes, and both are true. Commit `ad3b17d`. The king safety
+weights were reverted to zero and wait for their own commit, because a known
+defect contaminates every measurement taken after it and two changes in one SPRT
+means neither number means anything.
+
+The owner was asked how to sequence this, with three options costed, and was
+asleep. The agent took the option it had recommended and DEC-045 records that
+it did.
+
+**How big it was: 2613 of 2696 corpus positions**, 1473 at beta and 1140 at
+alpha, had the old form claiming a bound it did not have. That is the size of
+what was wrong, not what it cost in play -- the SPRT is what says that.
+
+**Two tests were re-targeted, not relaxed.** Both pinned the old return value
+directly; both now pin the guarantee it was a proxy for -- the returned value is
+on the caller's side of the window *and* is a true bound on `evaluate()`. That
+is strictly stronger and it fails on the old code. Red observed by restoring the
+old behaviour: `CHECK( -3358 <= -3475 )` on
+`1Bk1B3/B1B5/1B1B4/B1B5/1B6/B7/5K2/8 b - - 1 1`.
+
+**The invariant test is green again on a weaker claim than it reads as.** The
+shortcut still makes the score window-dependent -- that is inherent to lazy
+evaluation, not to this bug -- so green means this corpus at depths 2 and 3 does
+not expose the impurity. Its comment now says exactly that, and that a future
+failure there should be read as "one of these two changed".
+
+**The margin was measured and stays at 150.** `tools/eval_spread` over all
+1490839 positions with the fitted king safety weights in: combined correction
+p50 27, p95 90, p99 128, p99.9 178, max 330; 0.365 % of positions clamped
+against 0.104 % with king safety at zero. Raising the margin cuts truncation but
+fires the shortcut less often, so it changes play twice over and is its own
+change with its own measurement.
+
+**Frozen fits exist now.** `tuner --only king_safety` holds the other 781
+constants bit-identical, checked mechanically over 781 values with 0 differing
+and the check shown non-vacuous against the joint fit at 673 of 781. Adam skips
+a frozen parameter rather than being fed a zero gradient, because a decaying
+moment over a decaying velocity still steps from zero.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `tests/test_evaluation.cpp`,
+`tests/test_search.cpp`, `tools/tuner.cpp`, `tools/eval_spread.cpp`,
+`tools/CMakeLists.txt`, `adocs/testing.md`, `adocs/decisions.md`,
+`DEV_MANUAL.md`.
+
+Tests: full suite green, 11/11.
+
+Decisions: DEC-045.
+
+Commits: `690de1f` king safety at zero weights, `ad3b17d` the bound fix.
+
+SPRT in flight: `ad3b17d` against `690de1f`, `--fast`, 10+0.2, concurrency 4.
+
+## 2026-08-12T05:27+02:00 prompt
+
+> <task-notification>
+> <task-id>b28zrtu0w</task-id>
+> <tool-use-id>toolu_01F9VBa1KrKv6qT16o624XhF</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/b28zrtu0w.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Wait for SPRT verdict" completed (exit code 0)</summary>
+> </task-notification>

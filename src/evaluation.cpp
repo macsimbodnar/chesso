@@ -114,18 +114,22 @@ static bb_t piece_attacks(const bb_tables_t* tables,
 // describes cannot be fitted here and is not used. DEC-016 rules out taking
 // anyone else's table for it in any case.
 //
-// Still at zero, and no longer only because the fit had not run. It has:
-// tools/tuner over 1490839 positions with the other 781 constants frozen gave
-// mg {23, 13, 4, 21, -16, 3, 2, -33, -11} and eg {-8, -8, -2, -34, 8, -3, -8,
-// -10, 10}, held-out error 0.107413 to 0.107109. Those weights are in
-// .tuning/tuned_ks_only.hpp and they are not applied here yet.
+// Fitted, never guessed. tools/tuner over 1490839 self-play positions with the
+// other 781 constants frozen -- `--only king_safety`, which exists so that this
+// change is one change and its SPRT measures one thing. Held-out error 0.107413
+// to 0.107109. Fitting all 799 jointly reached 0.106964 instead, so the refit
+// of the rest is worth a further 0.000145 and is a separate change if it is
+// worth anything at all.
 //
-// They are held back because applying them exposed a defect in evaluate_lazy
-// that predates this term, and a known defect in the tree contaminates every
-// measurement taken after it. The bound fix goes first and alone, so its SPRT
-// and king safety's each measure one change. S027.
-const int king_safety_mg[KS_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-const int king_safety_eg[KS_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+// Do not read a sign here as a chess statement. The four attacker counts and
+// the incidence count are collinear by construction -- a piece that adds one to
+// a count adds several to the incidence total -- so the fit splits one effect
+// across several parameters, exactly the way piece_value and the piece-square
+// tables are degenerate by five dimensions. What is fitted is the sum. DEC-044.
+const int king_safety_mg[KS_FEATURE_COUNT] = {23, 13, 4,   21, -16,
+                                              3,  2,  -33, -11};
+const int king_safety_eg[KS_FEATURE_COUNT] = {-8, -8, -2,  -34, 8,
+                                              -3, -8, -10, 10};
 
 
 // A king's own zone: its square and the eight around it. Empty when that king

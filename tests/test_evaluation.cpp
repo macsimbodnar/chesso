@@ -131,14 +131,20 @@ TEST_SUITE("evaluation: score")
     }
   }
 
-  // ANCHOR: pinned to today's numbers. Every value here is material plus the
-  // piece-square term for the one square the piece is standing on, so editing
-  // either table moves them and this test is what makes that deliberate rather
-  // than accidental.
+  // ANCHOR: pinned to today's numbers. Every value here is material plus what
+  // the positional terms make of the one square the piece is standing on, so
+  // editing any constant they read moves them and this test is what makes that
+  // deliberate rather than accidental.
   //
   // It did its job at S028: the tuned tables moved all five and the suite said
-  // so. It did it again at S034, when mobility became part of the score. The
-  // values below were recomputed by a second implementation of evaluate()
+  // so. It did it again at S034, when mobility became part of the score, and
+  // again at S027 when the fitted king safety weights landed -- the pawn, the
+  // rook and the queen moved and the knight, the bishop and the bare kings did
+  // not. Those three are positions where king_safety_features() reports the
+  // same nine counts for both colours, so the term cancels in the difference
+  // the score is built from rather than being absent from it.
+  //
+  // The values below were recomputed by a second implementation of evaluate()
   // written for the purpose -- one that walks the rays by hand rather than
   // through the magic tables -- and not read off the engine, because an anchor
   // copied from the thing it anchors asserts nothing.
@@ -157,11 +163,11 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 117, "pawn on e2"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 104, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 240, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 540, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1085, "queen on d1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 530, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1101, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on
@@ -182,14 +188,18 @@ TEST_SUITE("evaluation: score")
   // each bounded by the margin can correct by twice it between them, and the
   // shortcut is unsound the moment that happens.
   //
-  // The distribution the margin was chosen from is mobility's alone: 149084
-  // self-play positions, p99 81 and a maximum of 143, measured before king
-  // safety existed. King safety shares the budget now and ships at zero weight,
-  // so `worst` below is still mobility's number and this case cannot witness
-  // the second term at all -- test_eval_model checks its counts instead, which
-  // is the only thing a zero-weighted term leaves checkable. Once the weights
-  // are fitted the margin is re-decided from measured data, and if it is left
-  // too small this is where that shows up rather than in lost games. S027.
+  // 150 was chosen from mobility's distribution alone -- 149084 self-play
+  // positions, p99 81, maximum 143 -- before king safety existed. King safety
+  // shares that budget now and its weights are fitted, so the number is no
+  // longer the one it was chosen against: tools/eval_spread over all 1490839
+  // positions reports the combined correction at p99 128, p99.9 178 and a
+  // maximum of 330, clamped on 0.365 % of them against mobility's own 0.104 %.
+  //
+  // That is truncation, not unsoundness. The clamp is what makes the bound true
+  // by construction, so the shortcut stays sound at any margin and what a small
+  // one costs is evaluation accuracy on those positions. Moving it is its own
+  // change with its own SPRT -- a larger margin truncates less and fires the
+  // shortcut less often, which is two effects in opposite directions. S027.
   TEST_CASE_FIXTURE(eval_fixture_t,
                     "the lazy shortcut cannot change a decision")
   {
@@ -399,13 +409,29 @@ TEST_SUITE("evaluation: score")
   TEST_CASE_FIXTURE(eval_fixture_t, "a missing king is not worth anything")
   {
     // A lone king still moves the score, because it stands on a square the
-    // tables have an opinion about. What it must not do is carry material: a
-    // whole missing king has to be worth less than a single pawn.
+    // positional terms have an opinion about, and since S027 they price its
+    // shelter as well. What it must not do is carry material, so material is
+    // what is asserted: `material` is the White-relative accumulator make_move
+    // maintains and evaluate_cheap() reads, and a king given a piece value
+    // would move it while no positional term can.
+    //
+    // The proxy this replaces was |evaluate()| under 100, standing in for a
+    // pawn. It measured material plus every positional term, so it held only
+    // while those were small: it failed at 102 once king safety started scoring
+    // a bare king's three open files, which says nothing about what a king is
+    // worth. Pinned to the accumulator, the assertion cannot be broken again by
+    // a term that is not about material at all.
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/8 w - - 0 1", &game));
-    REQUIRE(std::abs(evaluate(&game.board)) < 100);
+    REQUIRE_EQ(game.board.material, 0);
 
     REQUIRE(load_FEN("8/8/8/8/8/8/8/4K3 w - - 0 1", &game));
-    REQUIRE(std::abs(evaluate(&game.board)) < 100);
+    REQUIRE_EQ(game.board.material, 0);
+
+    // Non-vacuous by construction: the accumulator does move for a piece that
+    // is priced, so a zero above is a king worth nothing rather than an
+    // accumulator that never moves.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", &game));
+    REQUIRE(game.board.material > 0);
 
     // The score has to stay well inside the mate band, or search() reports a
     // material imbalance as a mate.
