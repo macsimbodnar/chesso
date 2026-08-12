@@ -1541,3 +1541,73 @@ SPRT in flight: `ad3b17d` against `690de1f`, `--fast`, 10+0.2, concurrency 4.
 > <status>completed</status>
 > <summary>Background command "Wait for SPRT verdict" completed (exit code 0)</summary>
 > </task-notification>
+
+## 2026-08-12T06:40+02:00 recap
+
+**SPRT 1 verdict: the bound fix is worth zero. H0 accepted, -6.52 +/- 11.69 Elo
+over 2024 games**, LOS 13.68 %, 4 h 30 m at 10+0.2 on four cores. `ad3b17d`
+against `690de1f`.
+
+**Kept anyway, and this is a judgement the owner may want to reverse.** The
+interval contains zero, correctness outranks a point estimate inside its own
+error bar, and this project has kept zero-Elo changes before with the reason
+stated -- S005, S006 and S015 all were. Returning a lower bound that is not a
+lower bound is wrong whatever the scoreboard says. Reverting is one commit.
+
+The negative point estimate has a plausible mechanism and it is not evidence of
+a mistake: `cheap - 150` is a looser bound than `cheap`, so fail-soft parents
+and the transposition table get less information per node. The old code bought
+that information by claiming something untrue. There is no tighter sound value
+-- the true score can be anywhere in `[cheap - 150, cheap + 150]`, so
+`cheap - 150` is the best lower bound available without computing the expensive
+stage.
+
+**A run costs 4.5 hours, not the hour that was assumed.** `--fast` is 3000
+rounds and this one went to 2024 games before accepting. That is the real
+budget for every remaining term in S027 and it should be planned against, not
+discovered again.
+
+**King safety weights applied and committed, `72c00d4`.** Six exact-score
+anchors moved and were re-anchored from `tools/eval_model.hpp`, the independent
+second implementation, rather than read off the engine -- reading the new number
+out of the thing under test is how an anchor stops being evidence. Three rows
+did not move and that was checked rather than assumed: king safety reports
+identical count vectors for both colours there, so the term cancels in the
+difference instead of being absent.
+
+One anchor moved +16 against everything else's -10 to -13, on the position where
+a queen bears on the enemy king zone. Queen attackers mg +21 against zone
+attacks mg -16 nets positive at that phase.
+
+**"A missing king is not worth anything" was re-targeted, not given a bigger
+constant.** Its assertion was a proxy -- `abs(evaluate()) < 100` -- and it failed
+at 102 because the piece-square tables and king safety together score a bare
+king's position, which was never what the case was about. It now asserts
+`board.material == 0`, with a lone pawn as the non-vacuity witness, so no future
+positional term can break it again. Red observed both ways.
+
+**A stale comment was caught by the agent doing the re-anchor**, not by a test:
+`test_search.cpp` claimed the expensive stage was worth +16 on its position and
+that a quiescence computing it would answer 540 on the nose. It is +6 now --
+mobility +16, king safety -10 -- and the answer is 530. Rewritten to the
+measured split.
+
+Files: `src/evaluation.cpp`, `tests/test_evaluation.cpp`, `tests/test_search.cpp`,
+`adocs/testing.md`, `DEV_MANUAL.md`, `adocs/worklog.md`.
+
+Tests: full suite green, 11/11.
+
+Commits: `ad3b17d` the bound fix, `72c00d4` the fitted king safety weights.
+
+SPRT 2 in flight: `72c00d4` against `ad3b17d`, `--fast`, 10+0.2, concurrency 4.
+Started 06:35, expected around 11:00.
+
+## 2026-08-12T08:43+02:00 prompt
+
+> <task-notification>
+> <task-id>bpx07pn73</task-id>
+> <tool-use-id>toolu_01WPtWQqp7vZytwXk2E4td45</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bpx07pn73.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Confirm start then wait for verdict" completed (exit code 0)</summary>
+> </task-notification>

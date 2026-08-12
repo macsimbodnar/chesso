@@ -93,3 +93,57 @@ Most of this is thrown away when S029 lands. It is done anyway because NNUE
 training data comes from self-play by an engine that already plays reasonably,
 and because PeSTO reaches about 3125 on CCRL Blitz on piece-square tables and
 search alone. The floor is what matters, not the ceiling.
+
+## Results, one row per term
+
+### 1. King safety -- **+20.87 +/- 15.41 Elo**, H1 accepted
+
+1300 games, LOS 99.61 %, 10+0.2, `72c00d4` against `ad3b17d`. Three commits:
+
+| commit | what | verdict |
+|---|---|---|
+| `690de1f` | the term, nine linear features, weights at zero | behaviour-neutral, INV-6 discharged |
+| `ad3b17d` | the `evaluate_lazy` bound fix found under it | **0**, -6.52 +/- 11.69 over 2024 games, H0 accepted, kept |
+| `72c00d4` | the fitted weights | **+20.87 +/- 15.41**, H1 accepted |
+
+**Linear, and that was forced.** The `attack_table[weighted_attacker_count]`
+curve the literature describes is not a linear function of the weights that
+build its index, so the S028 tuner cannot fit it at all. Nine counts per side
+instead: attackers by piece type, zone attack incidences, near and far pawn
+shield, open and half-open files by the king. DEC-044. A verdict of +20.87 is a
+verdict on the linear form, and the non-linear one is untested rather than
+rejected.
+
+**The staging discipline from S034 held and paid.** The term shipped at zero
+weights first, which made that commit provably behaviour-neutral -- identical
+node counts at depth 9 and identical best moves -- so the SPRT that followed
+measured the fitted term and nothing else. `tuner --only king_safety` was built
+for the same reason: a joint fit also refits the 781 constants that were already
+fitted, and the match would then have measured two changes. Frozen parameters
+come out bit-identical, checked over 781 values.
+
+**Fusing the piece loop was worth more than it looks.** Computed as its own pass
+the term cost 7.7 % at zero weights, because it recomputed slider attacks
+mobility had already computed for the same piece. Fused, 0.35 %, inside the
+noise floor. Without that, 20.87 Elo of evaluation would have been measured
+through a 7.7 % speed loss.
+
+**What it cost to get there:** a live crash on a kingless position, a 21 %
+regression from clang declining to inline a function that gained a second
+caller, a corpus so vacuous that two of the nine features were zero in every
+position of it, and a defect in `evaluate_lazy` that predates the term.
+
+### 2. Passed pawns -- next
+
+`passed_w_pawns_masks[]` and `passed_b_pawns_masks[]` exist in `bb_tables.hpp`,
+unused. Tapered by rank. Needs the decision on where it runs: stage one pays at
+every node, stage two shares a margin budget that king safety has already
+tightened to 0.365 % clamped.
+
+## What a verdict costs, measured
+
+**4.5 hours, not the one hour assumed.** SPRT 1 ran 2024 games in 4 h 30 m;
+SPRT 2 reached its bound in 1300 games and 2 h 53 m. `--fast` is
+`elo0=0 elo1=10 alpha=0.10 beta=0.10` over 3000 rounds at 10+0.2 on four cores.
+Four terms remain and each needs at least one run, so this step's floor is
+roughly a day of machine time and the plan should be read against that.
