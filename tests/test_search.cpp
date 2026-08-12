@@ -557,8 +557,15 @@ TEST_SUITE("search: quiescence")
     // view, so Black's static score is what evaluate() returns.
     // Two pawns up, plus whatever the positional terms make of the squares
     // everything happens to be standing on.
+    //
+    // S027's passed pawn term moved this from 292: White has no pawns at all,
+    // so all three of Black's are passed and all three sit on Black's own
+    // second rank, bucket 0. Three of them at phase 8 -- two rooks and a queen
+    // -- come to 27 centipawns White-relative, which is 27 off Black's score,
+    // and the last centipawn is the single truncating division evaluate_cheap()
+    // does over the summed pair.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 292);
+    REQUIRE_EQ(black_static, 266);
 
     const int score = quiesce(fen, -10000000, 10000000);
 

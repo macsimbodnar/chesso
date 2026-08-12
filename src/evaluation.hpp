@@ -52,6 +52,27 @@ extern const int mobility_eg[4];
 extern const int passed_pawn_mg[6];
 extern const int passed_pawn_eg[6];
 
+// The raw counts the term is built from, per colour, WHITE first. Each row is
+// that side's own passed pawns in the buckets the weights above are indexed by;
+// the White-minus-Black difference the term scores is one subtraction away.
+//
+// It exists for tests/test_eval_model, and only because the weights ship at
+// zero. While they do, comparing the engine's score against the tuner's model
+// compares 0 against 0 for this term and would pass just as happily if the two
+// disagreed about every bucket. The model has a test of its own against
+// hand-computed positions, which says it matches the written specification;
+// nothing said the engine reads that specification the same way, and a tuner
+// fitted against a model the engine disagrees with fits the wrong function.
+//
+// Per colour and not as the difference, for the same reason
+// king_safety_features() is: a miscount that hits both sides equally cancels in
+// the difference, so a check that sees only the difference cannot see it.
+//
+// Not on the hot path: it is the collecting instantiation of the same function
+// evaluate_cheap() calls, so there is one extraction and no second
+// implementation to drift.
+void passed_pawn_counts(const board_t* board, int out[2][6]);
+
 // What the king safety term counts, in the order its weights are indexed. The
 // first four are attacker counts by piece type and share the order the mobility
 // weights use.

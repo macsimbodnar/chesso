@@ -49,15 +49,30 @@ constexpr size_t MOBILITY_COUNT = 4;
 // reads.
 constexpr size_t KING_SAFETY_COUNT = KS_FEATURE_COUNT;
 
+// Passed pawns, added at S035: six weights for the middlegame and six for the
+// endgame, indexed by how far the pawn has advanced rather than by anything
+// about the pawn itself. Bucket 0 is a pawn on its own second rank and bucket 5
+// one on the seventh, a square from promoting; a pawn cannot stand on its own
+// first or eighth rank, so six buckets are all there are.
+//
+// Six weights rather than one scaled by the rank because the value of a passed
+// pawn is not linear in how far it has come, and because the model is only
+// allowed to be linear in its own parameters -- a rank multiplier would be a
+// feature, not a parameter.
+constexpr size_t PASSED_PAWN_COUNT = 6;
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
 constexpr size_t MOB_EG_BASE = MOB_MG_BASE + MOBILITY_COUNT;
 constexpr size_t KS_MG_BASE = MOB_EG_BASE + MOBILITY_COUNT;
 constexpr size_t KS_EG_BASE = KS_MG_BASE + KING_SAFETY_COUNT;
+constexpr size_t PP_MG_BASE = KS_EG_BASE + KING_SAFETY_COUNT;
+constexpr size_t PP_EG_BASE = PP_MG_BASE + PASSED_PAWN_COUNT;
 
 constexpr size_t PARAM_COUNT = MATERIAL_COUNT + 2 * SQUARE_COUNT +
-                               2 * MOBILITY_COUNT + 2 * KING_SAFETY_COUNT;
+                               2 * MOBILITY_COUNT + 2 * KING_SAFETY_COUNT +
+                               2 * PASSED_PAWN_COUNT;
 
 // A piece is one uint16: the top bit says Black, the rest is type * 64 plus the
 // square the tables are read at, already mirrored for Black the way
@@ -455,6 +470,97 @@ inline bool king_safety_features(const std::string& placement,
 }
 
 
+// Passed pawn counts, White minus Black, one per advancement bucket. A pawn is
+// passed when no enemy pawn stands strictly ahead of it on its own file or on
+// either neighbouring file; "ahead" is toward the enemy, so for White a lower
+// index and for Black a higher one, and an enemy pawn level with the pawn or
+// behind it does not block. Own pawns never block, so both halves of a doubled
+// pair can be passed at once.
+//
+// Walked by hand from the placement for the same reason mobility_features() is:
+// this file has to be able to disagree with the engine, and code shared with it
+// cannot.
+//
+// Squares are true board squares, index 0 = a8 to index 63 = h1, not the
+// mirrored ones parse_placement() stores. In that indexing a white pawn's home
+// rank is 6 and a black pawn's is 1, which is why the two colours count their
+// buckets in opposite directions.
+inline bool passed_pawn_features(const std::string& placement,
+                                 int out[PASSED_PAWN_COUNT])
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
+    out[i] = 0;
+  }
+
+  for (int from = 0; from < 64; ++from) {
+    if (kind_at[from] != 0) { continue; }
+
+    const bool white = white_at[from];
+    const int rank = from / 8;
+    const int file = from % 8;
+
+    // A pawn on a back rank is not a position the engine can reach, and it
+    // would index outside the six buckets. Refusing the placement is louder
+    // than clamping it and the caller already reports a refusal.
+    if (rank == 0 || rank == 7) { return false; }
+
+    const int ahead = white ? -1 : 1;
+    bool blocked = false;
+
+    for (int df = -1; df <= 1 && !blocked; ++df) {
+      const int f = file + df;
+
+      if (f < 0 || f > 7) { continue; }
+
+      for (int r = rank + ahead; r >= 0 && r <= 7; r += ahead) {
+        const int sq = r * 8 + f;
+
+        if (kind_at[sq] == 0 && white_at[sq] != white) {
+          blocked = true;
+          break;
+        }
+      }
+    }
+
+    if (blocked) { continue; }
+
+    const int bucket = white ? (6 - rank) : (rank - 1);
+
+    out[bucket] += white ? 1 : -1;
+  }
+
+  return true;
+}
+
+
 // White relative, in floating point. evaluate() divides in integers and
 // truncates towards zero, so the two agree to within one centipawn rather than
 // exactly; the tuner works in floating point precisely so that the derivative
@@ -470,7 +576,8 @@ inline double evaluate(const uint16_t* pieces,
                        int phase,
                        const int* mobility,
                        const double* params,
-                       const int* king_safety)
+                       const int* king_safety,
+                       const int* passed_pawn)
 {
   const double mg_weight = static_cast<double>(phase) / GAME_PHASE_MAX;
   const double eg_weight =
@@ -526,7 +633,25 @@ inline double evaluate(const uint16_t* pieces,
   if (stage_two > LAZY_EVAL_MARGIN) { stage_two = LAZY_EVAL_MARGIN; }
   if (stage_two < -LAZY_EVAL_MARGIN) { stage_two = -LAZY_EVAL_MARGIN; }
 
-  return material + mg * mg_weight + eg * eg_weight + stage_two;
+  double passed_pawn_mg_sum = 0.0;
+  double passed_pawn_eg_sum = 0.0;
+
+  for (size_t t = 0; t < PASSED_PAWN_COUNT; ++t) {
+    passed_pawn_mg_sum += passed_pawn[t] * params[PP_MG_BASE + t];
+    passed_pawn_eg_sum += passed_pawn[t] * params[PP_EG_BASE + t];
+  }
+
+  // Outside the clamp, and that is the whole point of where this line sits.
+  // Passed pawns are part of evaluate_cheap(), the stage the lazy shortcut
+  // takes when it skips the expensive terms, so the margin says nothing about
+  // them. Folding this sum into stage_two would clamp a quantity the engine
+  // never clamps, and the two would agree everywhere except on the positions
+  // where it binds -- which is exactly where a bound has to be right.
+  const double stage_one_passed =
+      passed_pawn_mg_sum * mg_weight + passed_pawn_eg_sum * eg_weight;
+
+  return material + mg * mg_weight + eg * eg_weight + stage_one_passed +
+         stage_two;
 }
 
 
@@ -554,6 +679,11 @@ inline void starting_params(double* params)
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
     params[KS_MG_BASE + t] = king_safety_mg[t];
     params[KS_EG_BASE + t] = king_safety_eg[t];
+  }
+
+  for (size_t t = 0; t < PASSED_PAWN_COUNT; ++t) {
+    params[PP_MG_BASE + t] = passed_pawn_mg[t];
+    params[PP_EG_BASE + t] = passed_pawn_eg[t];
   }
 }
 

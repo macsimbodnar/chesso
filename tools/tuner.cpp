@@ -4,10 +4,11 @@
 //
 // Reads what tools/datagen writes, `fen result score phase`, and fits the
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
-// and psqt_eg[6][64], the mobility weights since S034 and the king safety
-// weights since S027, 799 numbers -- so that a sigmoid of the evaluation
-// predicts the outcome of the game the position came from. This is Texel
-// tuning; the objective is the mean squared error of that prediction.
+// and psqt_eg[6][64], the mobility weights since S034, the king safety weights
+// since S027 and the passed pawn weights since S035, 811 numbers -- so that a
+// sigmoid of the evaluation predicts the outcome of the game the position came
+// from. This is Texel tuning; the objective is the mean squared error of that
+// prediction.
 //
 // It does not run the search. The model below reproduces evaluate() in floating
 // point, which is what makes the fit a linear problem and lets a full pass over
@@ -60,6 +61,9 @@ using eval_model::MOB_EG_BASE;
 using eval_model::MOB_MG_BASE;
 using eval_model::MOBILITY_COUNT;
 using eval_model::PARAM_COUNT;
+using eval_model::PASSED_PAWN_COUNT;
+using eval_model::PP_EG_BASE;
+using eval_model::PP_MG_BASE;
 
 constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
 
@@ -83,6 +87,11 @@ struct dataset_t
   // 27 MB.
   std::vector<int16_t> king_safety;
 
+  // Passed pawn counts, White minus Black, six per position, extracted once for
+  // the same reason. Eight pawns per side bounds every bucket, so int16 is
+  // again far more room than they need: 1.49 M rows cost 18 MB.
+  std::vector<int16_t> passed_pawn;
+
   size_t size() const { return phase.size(); }
 };
 
@@ -103,7 +112,8 @@ struct options_t
 };
 
 
-const char* const GROUP_LIST = "all, material, psqt, mobility, king_safety";
+const char* const GROUP_LIST =
+    "all, material, psqt, mobility, king_safety, passed_pawns";
 
 
 // Marks the parameters a --only group leaves free; the rest keep the value the
@@ -134,7 +144,13 @@ bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     first = MOB_MG_BASE;
     last = KS_MG_BASE;
   } else if (group == "king_safety") {
+    // Ends at the passed pawn block, not at PARAM_COUNT. A group that reaches
+    // to the end of the vector silently swallows whatever term is appended
+    // after it, and the run that follows measures two changes at once.
     first = KS_MG_BASE;
+    last = PP_MG_BASE;
+  } else if (group == "passed_pawns") {
+    first = PP_MG_BASE;
     last = PARAM_COUNT;
   } else {
     return false;
@@ -206,6 +222,13 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    int passed[PASSED_PAWN_COUNT] = {0};
+    if (!eval_model::passed_pawn_features(placement, passed)) {
+      fprintf(stderr, "bad placement for passed pawns: %s\n",
+              placement.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
 
@@ -214,6 +237,9 @@ bool load(const std::string& path, dataset_t* data)
     }
     for (const int count : safety) {
       data->king_safety.push_back(static_cast<int16_t>(count));
+    }
+    for (const int count : passed) {
+      data->passed_pawn.push_back(static_cast<int16_t>(count));
     }
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
@@ -236,9 +262,15 @@ double evaluate_position(const dataset_t& data,
     safety[i] = data.king_safety[index * KING_SAFETY_COUNT + i];
   }
 
+  int passed[PASSED_PAWN_COUNT];
+  for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
+    passed[i] = data.passed_pawn[index * PASSED_PAWN_COUNT + i];
+  }
+
   return eval_model::evaluate(&data.pieces[data.offsets[index]],
                               data.offsets[index + 1] - data.offsets[index],
-                              data.phase[index], mobility, params, safety);
+                              data.phase[index], mobility, params, safety,
+                              passed);
 }
 
 
@@ -362,6 +394,17 @@ void gradient(const dataset_t& data,
           grad[KS_MG_BASE + s] += outer * count * mg_weight;
           grad[KS_EG_BASE + s] += outer * count * eg_weight;
         }
+
+        // Passed pawns, the same shape and the same trap a third time. No
+        // clamp to ignore here: the term is part of evaluate_cheap(), on the
+        // near side of the lazy margin, so the model does not clamp it either.
+        for (size_t p = 0; p < PASSED_PAWN_COUNT; ++p) {
+          const double count =
+              data.passed_pawn[position * PASSED_PAWN_COUNT + p];
+
+          grad[PP_MG_BASE + p] += outer * count * mg_weight;
+          grad[PP_EG_BASE + p] += outer * count * eg_weight;
+        }
       }
     });
   }
@@ -451,12 +494,11 @@ void write_tables(const std::string& path,
       "// only       %s\n"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
-      "// two tables live in src/eval_tables.hpp; the mobility and king "
-      "safety\n"
-      "// weights at the end live in src/evaluation.cpp, a different file and\n"
-      "// easy to miss.\n"
-      "// S027, S028 and S034, DEC-015: measured by SPRT before any of it is "
-      "kept.\n\n",
+      "// two tables live in src/eval_tables.hpp; the mobility, king safety\n"
+      "// and passed pawn weights at the end live in src/evaluation.cpp, a\n"
+      "// different file and easy to miss.\n"
+      "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
+      "// it is kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
       opts.seed, opts.lr, opts.validation, opts.only.c_str());
 
@@ -495,13 +537,13 @@ void write_tables(const std::string& path,
     fprintf(out, "};\n");
   }
 
-  // The mobility weights are fitted too, since S034, and the king safety
-  // weights since S027, and neither lives in eval_tables.hpp with everything
-  // else. Emitting them here is what stops a fit quietly discarding twenty-six
-  // of its own parameters, which is exactly what this function did with
-  // mobility's eight until it was checked.
+  // The mobility weights are fitted too, since S034, the king safety weights
+  // since S027 and the passed pawn weights since S035, and none of them lives
+  // in eval_tables.hpp with everything else. Emitting them here is what stops a
+  // fit quietly discarding thirty-eight of its own parameters, which is exactly
+  // what this function did with mobility's eight until it was checked.
   fprintf(out,
-          "\n// These four live in src/evaluation.cpp, not eval_tables.hpp.\n");
+          "\n// These six live in src/evaluation.cpp, not eval_tables.hpp.\n");
 
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? MOB_MG_BASE : MOB_EG_BASE;
@@ -531,6 +573,22 @@ void write_tables(const std::string& path,
     }
 
     fprintf(out, "};\n");
+  }
+
+  for (int table = 0; table < 2; ++table) {
+    const size_t base = (table == 0) ? PP_MG_BASE : PP_EG_BASE;
+
+    fprintf(out, "\nconst int passed_pawn_%s[6] = {",
+            (table == 0) ? "mg" : "eg");
+
+    for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
+      fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+              static_cast<int>(std::lround(params[base + i])));
+    }
+
+    // The index is how far the pawn has come, not which rank it stands on, so
+    // the trailing comment names the buckets from the pawn's own point of view.
+    fprintf(out, "};  // second rank .. seventh\n");
   }
 
   fclose(out);

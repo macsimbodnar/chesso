@@ -1720,3 +1720,184 @@ Tests: full suite green, 11/11.
 > Tree holds only `src/evaluation.cpp` and `src/evaluation.hpp`; the temporary comparator, the loop form and the reference worktree are all removed.</result>
 > <usage><subagent_tokens>199360</subagent_tokens><tool_uses>39</tool_uses><duration_ms>1542347</duration_ms></usage>
 > </task-notification>
+
+## 2026-08-12T11:35+02:00 recap
+
+**S027 term 2, passed pawns, committed at zero weights as `6950be1`.** Set-wise
+rather than per pawn: the enemy pawn set widened one file each way with
+wrap-masked shifts, Kogge-Stone filled toward its own back rank, shifted by
+eight to make the span exclusive, and the passers fall out as
+`own_pawns & ~span`. Six buckets by rank, because the value is not linear in the
+rank and the tuner fits only a linear function of its parameters -- the same
+constraint that shaped king safety, DEC-044.
+
+Stage one, not behind the lazy shortcut, and that is from data: stage two is
+clamped to +/-150, `eval_spread` already puts that correction at max 330 with
+0.365 % clamped, and a pawn one square from promotion swings further than the
+clamp would pass.
+
+Proven equal to the naive form over **1493535 positions**, the whole test corpus
+plus the whole tuning corpus, 687067 of them carrying a non-zero term across 64
+distinct values. The wrap bug it exists to avoid was verified red: dropping the
+file masks gives 3 mismatches on the test corpus and 129574 on the tuning
+corpus, so the small corpus alone would have been weak evidence.
+
+**Two negative results, both recorded rather than buried.**
+
+DEC-046, the pawn hash. Built in full -- key folded in `add_piece`,
+`remove_piece` and `move_piece`, restored by unmake through the same history
+entry the main key uses, 1024 entries of 16 bytes to stay in L1, whole 64-bit
+key stored xored with the payload so a torn read degrades to a miss, debug
+assertion on every hit. It recovers nothing: 1.892 s against the fill's 1.897 s
+over 40 hyperfine runs a side at sigma 0.023 to 0.026, sign flipping between two
+passes run in opposite order. Discarded. It cost 2.2 % even with the term
+switched off, because the compiler folds the fill away and cannot fold a mutable
+global's probe.
+
+**DEC-039 repeated itself exactly.** `bench_eval`'s ten-position loop says the
+cache recovers 61 % of the term, because ten pawn structures sit in the table at
+a 100 % hit rate. The real search hits 89.8 % over 15291002 probes and gains
+nothing. Second time an isolated benchmark has priced a memory-touching change
+wrongly in this engine.
+
+DEC-047, the methodology hole under all of it. A term shipped at zero weights is
+**folded away by the compiler**, not measured: the weights are `const` with
+constant initialisers in the same translation unit, so `evaluate_cheap()`
+compiles to nineteen instructions with no loop in them whether or not the term
+is there. Every "the term is free" figure taken at zero weights describes a
+build without the term in it, which includes king safety's recorded 0.35 %. That
+verdict stands -- +20.87 was measured with the weights fitted and includes
+whatever the term really costs -- but the intermediate number was weaker than it
+read as. Costs are now measured with weights forced non-zero in a throwaway
+build, and two builds compared on wall time must walk the identical tree,
+because nodes per second varies +/- 8 % with tree size for the same binary.
+
+**A live bug was found in the tuner and fixed.** `--only king_safety` ran from
+`KS_MG_BASE` to `PARAM_COUNT` and would have swallowed all twelve new passed
+pawn weights -- exactly the S034 silent failure, sitting in the tree. It now
+ends at `PP_MG_BASE`.
+
+Tuner extended in all six places for the term, `PARAM_COUNT` 799 to 811, and the
+passed pawn contribution enters the model **outside** the `LAZY_EVAL_MARGIN`
+clamp, because the term is stage one and clamping it would model something the
+engine does not do.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `tools/eval_model.hpp`,
+`tools/tuner.cpp`, `tests/test_eval_model.cpp`, `adocs/decisions.md`.
+
+Tests: full suite green, 11/11. Node counts identical to `2861cdc` at depth 9
+and 12 with identical best moves; INV-6 discharged.
+
+Decisions: DEC-046, DEC-047.
+
+Commits: `6950be1`.
+
+**In flight:** the frozen fit for the twelve passed pawn weights, and an agent
+exposing the engine's per-colour passed pawn counts so the tuner's independent
+extractor has something to disagree with -- today it is checked only against the
+specification it was written from, which an engine reading that specification
+differently would pass.
+
+## 2026-08-12T11:31+02:00 prompt
+
+> <task-notification>
+> <task-id>brb7phbo5</task-id>
+> <tool-use-id>toolu_019mACzCCWeDeD6Yiv33YLkQ</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/brb7phbo5.output</output-file>
+> <status>completed</status>
+> <summary>Background command "Wait for fit" completed (exit code 0)</summary>
+> </task-notification>
+
+## 2026-08-12T11:50+02:00 recap
+
+**Passed pawn weights fitted, frozen.** `tuner --only passed_pawns` over
+1490839 positions, stopped at epoch 2100 on patience. Held-out error 0.107106 to
+**0.106900**, an improvement of 0.000206 against king safety's 0.000304, which
+measured +20.87 Elo. The term is smaller and it carries a 4.5 % speed cost the
+SPRT will net out, so an inconclusive verdict is a live possibility and would be
+recorded as one.
+
+```
+passed_pawn_mg[6] = {3, -16, 1, 10, 30, 2}    // second rank .. seventh
+passed_pawn_eg[6] = {-15, -4, 18, 28, 25, 8}
+```
+
+**Not monotonic in the rank, and bucket 5 fits to almost nothing.** That is the
+degeneracy this project has now hit three times. A frozen fit prices only what
+the term adds *on top* of the constants it holds fixed, and the pawn
+piece-square table already pays heavily for an advanced pawn -- its seventh-rank
+row runs 79 to 214 in the middlegame table. Knight mobility fitted to nothing
+against the same effect at S034, and DEC-044 records it for king safety's
+attacker counts. The numbers are a residual, not a valuation, and reading a
+bucket as "a pawn on the seventh is worth 2 centipawns" would be wrong.
+
+Not yet applied: `src/evaluation.cpp` is held by the agent exposing the engine's
+per-colour passed pawn counts, so that the tuner's independently written
+extractor has something to disagree with. Today it is checked only against the
+specification it was written from.
+
+Files this turn: `adocs/worklog.md`, `adocs/status.md`. The `src/` and `tests/`
+changes in the tree belong to the running agent and are recapped when it lands.
+
+Tests: not re-run this turn; the tree is mid-edit by the agent.
+
+Commits: none this turn. Last is `6950be1`.
+
+## 2026-08-12T11:42+02:00 prompt
+
+> <task-notification>
+> <task-id>a7d3cb69c2b6ddc68</task-id>
+> <tool-use-id>toolu_015ZrybZGAF4gHv9YpKXTZua</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/a7d3cb69c2b6ddc68.output</output-file>
+> <status>completed</status>
+> <summary>Agent "Expose engine passed pawn counts" finished</summary>
+> <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+> <result>Done. Everything green.
+> 
+> ## The accessor
+> 
+> `void passed_pawn_counts(const board_t* board, int out[2][6])` — `src/evaluation.hpp:52`, defined at `src/evaluation.cpp:223`. `WHITE` row first; each row counts that side's own passers, so Black's row is positive too (the minus in the score is the sign, not the count).
+> 
+> Built exactly like `king_safety_features()`: `passed_pawns()` became `template &lt;bool collect&gt;`, `static inline` kept, stores and `out` under `if constexpr`. `evaluate_cheap()` calls `passed_pawns&lt;false&gt;(…, nullptr)`, the accessor calls `&lt;true&gt;` — the search's instantiation still has exactly one caller, which is the thing that cost 21 % last time.
+> 
+> ## Hot path, proven not assumed
+> 
+> - `otool -tv` on `evaluation.cpp.o` against a throwaway build of `6950be1`: `evaluate_cheap` **19 instructions before and after, instruction-for-instruction identical**. So are `evaluate`, `evaluate_lazy`, `evaluate_expensive`, the fused mobility/king-safety loop, `score_move`, `capture_score`, `game_phase`, `evaluate_expensive_terms`. Only new symbol is `passed_pawn_counts`, 52 instructions, out of line. Modulo relocation addresses the object is the same code.
+> - `bench_eval -r 9 -n 4000000`, checksum **-35923867477560** identical. Interleaved on an idle machine: reference 26.06 / 26.07 ns, patched 26.17 / 26.14 / 25.81 — straddles the reference, printed resolution 0.0–0.6 %. Per DEC-047 this number cannot show a regression at zero weights anyway; the instruction count is the check that bites.
+> - `search_bench.py` depth 9: 233484 / 816320 / 166715 nodes, identical to the digit, best moves c3d5 / e2a6 / d7c8q identical.
+> 
+> ## Which comparisons are per colour
+> 
+> `eval_model::passed_pawn_features()` returns only White-minus-Black and I could not modify `tools/`, so against the model I compare the **difference derived from the engine's two rows**, 22 positions × 6 buckets. The per-colour rows are pinned in the hand-built case instead: on a placement carrying only one side's pawns the hand-computed difference *is* that side's row and the other row must be empty — which is the check a difference cannot make. Six placements are White-only, three Black-only, five mixed; the case asserts each kind occurs. The corpus non-vacuity case also works on both rows separately.
+> 
+> ## Red observed
+> 
+> Perturbed the **engine** only, giving White's bucket Black's rank arithmetic (`(sq &gt;&gt; 3) - 1`). 32 assertions failed across two cases, e.g.
+> 
+> ```
+> test_eval_model.cpp:284: ERROR: CHECK( engine[WHITE][bucket] - engine[BLACK][bucket] == model[bucket] ) is NOT correct!
+>   values: CHECK( 1 == 0 )
+>   logged: fen := 2r3k1/5ppp/p2q4/1p1Pn3/8/2P2Q2/PP3PPP/3R2K1 b - - 0 24
+>           bucket := 2
+> ```
+> 
+> 14 of 132 difference assertions, plus 4 at `engine[WHITE][bucket] == item.expected[bucket]` (the per-colour pin). Restored; `git diff src/evaluation.cpp` contains no `get_lsb_index` line at all.
+> 
+> ## Corpus coverage
+> 
+> The inherited 20 positions failed 12 of the 24 coverage claims: **no White passer in buckets 1, 2 or 4, no Black passer in 1 or 3, and bucket 5 reached only by the eight-against-eight promotion race where the sides cancel**. Added two positions — a ladder of unopposed pawns and its mirror, `4k3/4P3/3P4/2P5/1P6/P7/8/4K3 w` and `4k3/8/p7/1p6/2p5/3p4/4p3/4K3 b` — which claim buckets 1–5 for both colours and both signs; bucket 0 already had both. No assertion was dropped.
+> 
+> ## Ledger
+> 
+> Six rows appended to `adocs/testing.md`, tagged **S027** (passed pawns is S027 term 2): the accessor riding one extraction, model-agreement with its red line, the per-colour pinning, bucket coverage with the 12 failures that forced the two new positions, INV-6 identity, and the instruction-count check with DEC-047's reason a timing cannot substitute.
+> 
+> ## Gates
+> 
+> `cmake --build build-prof -j8 &amp;&amp; ctest --test-dir build-prof --output-on-failure` — 11/11 pass, `test_eval_model` 1176 assertions. `./clang-format.sh --check` exit 0. **The `build/` gate has not been run — the orchestrator must run it.**
+> 
+> Notes, none blocking:
+> - The tuner finished during this task (`build/tools/tuner` no longer running), which is why the late benchmarks were on an idle machine.
+> - Not committed. `tools/eval_model.hpp`, `tools/tuner.cpp` and `adocs/worklog.md` carry someone else's in-flight edits, so staging is yours.
+> - Two stale doc claims spotted, untouched: `src/evaluation.cpp:61` and `:70` describe "the pawn hash below", which does not exist in the file; `adocs/specs.md:67` still lists king safety and passed pawns as absent. `tests/test_eval_model.cpp` comments cite "S035", which is not a step id anywhere in `adocs/`.</result>
+> <usage><subagent_tokens>127117</subagent_tokens><tool_uses>70</tool_uses><duration_ms>861186</duration_ms></usage>
+> </task-notification>

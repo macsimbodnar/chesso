@@ -61,10 +61,10 @@ Engine state as of 2026-08-09, at commit `b6ef5c4`:
 | `generate_captures` / `generate_quiets` | partition `generate_moves` exactly (INV-3) |
 | board | `board_t` 216 B: bitboards, `squares[64]`, evaluation accumulators |
 | make/unmake | 16-byte history record, undo by xor, no board copy |
-| evaluation | material, tapered piece-square tables and mobility. The first three are maintained incrementally (INV-4); mobility is recomputed and sits behind a lazy shortcut that skips it when the cheap score is a margin clear of the window (2026-08-11, S034). **All 781 constants fitted to chesso's own self-play outcomes** |
+| evaluation | material, tapered piece-square tables, mobility, king safety and passed pawns. The first two are maintained incrementally (INV-4). Mobility and king safety are recomputed behind a lazy shortcut that skips them when the cheap score is a margin clear of the window, and their sum is clamped to that margin so the bound holds by construction (2026-08-11, S034; 2026-08-12, S027). Passed pawns are recomputed in the cheap stage instead, because the clamp would truncate them on the positions they exist for (2026-08-12, S027). **All 811 constants fitted to chesso's own self-play outcomes** |
 | search | alpha-beta, transposition table, quiescence, PVS, null move pruning, late move reduction, staged generation, killers, history, countermoves, insufficient-material draws |
 | exchange evaluation | `see()` exact, `see_ge()` fast; quiescence declines losing captures |
-| absent, evaluation | king safety, pawn structure, passed pawns, bishop pair, tempo. Mobility arrived at S034 and every constant that exists is fitted |
+| absent, evaluation | pawn structure, bishop pair, rook on open file, tempo. Mobility arrived at S034, king safety and passed pawns at S027, and every constant that exists is fitted |
 | absent, search | aspiration windows, reverse futility, forward futility, razoring, late move pruning, extensions of any kind, delta pruning, capture history, continuation history, correction history |
 | absent, machinery | quiescence never probes or stores the transposition table; no static evaluation in a table entry; no `improving` flag; history is `[piece][to]` with a bonus and no malus and no ageing, and is zeroed on every `go` rather than carried through the game; quiescence is capped at 8 plies |
 

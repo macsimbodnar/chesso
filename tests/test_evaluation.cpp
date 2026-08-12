@@ -6,6 +6,7 @@
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
+#include "eval_tables.hpp"
 #include "evaluation.hpp"
 #include "test_helpers.hpp"
 
@@ -109,16 +110,30 @@ TEST_SUITE("evaluation: score")
     {
       std::string with;
       std::string without;
+      int material;
       std::string title;
     };
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", "4k3/8/8/8/8/8/8/4K3 w - - 0 1", "white queen"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", "4k3/8/8/8/8/8/8/4K3 w - - 0 1", "white rook"},
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1","4k3/8/8/8/8/8/8/4K3 w - - 0 1", "white pawn"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", "4k3/8/8/8/8/8/8/4K3 w - - 0 1", piece_value[4], "white queen"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", "4k3/8/8/8/8/8/8/4K3 w - - 0 1", piece_value[3], "white rook"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1","4k3/8/8/8/8/8/8/4K3 w - - 0 1", piece_value[0], "white pawn"},
     };
     // clang-format on
+
+    // Against the piece's own fitted value, not against a round number. This
+    // used to require the delta to clear 100 and that was a proxy for "material
+    // is priced": it passed while a pawn happened to evaluate above a hundred
+    // and failed at 89 the moment S027's passed pawn term took some of it back,
+    // which says nothing about whether material is priced.
+    //
+    // Bounding the delta on both sides is the stronger statement, and it is the
+    // one the case is for. A piece has to be worth its material to within what
+    // the positional terms can say about one square, so a term that quietly
+    // doubled a queen fails here as loudly as one that zeroed it. The old form
+    // caught neither.
+    constexpr int POSITIONAL_ROOM = 150;
 
     for (const case_t& test : cases) {
       REQUIRE(load_FEN(test.with, &game));
@@ -127,7 +142,9 @@ TEST_SUITE("evaluation: score")
       REQUIRE(load_FEN(test.without, &game));
       const int without = evaluate(&game.board);
 
-      REQUIRE_MESSAGE(with - without >= 100, test.title);
+      REQUIRE_MESSAGE(
+          std::abs((with - without) - test.material) <= POSITIONAL_ROOM,
+          test.title);
     }
   }
 
@@ -140,9 +157,13 @@ TEST_SUITE("evaluation: score")
   // so. It did it again at S034, when mobility became part of the score, and
   // again at S027 when the fitted king safety weights landed -- the pawn, the
   // rook and the queen moved and the knight, the bishop and the bare kings did
-  // not. Those three are positions where king_safety_features() reports the
-  // same nine counts for both colours, so the term cancels in the difference
-  // the score is built from rather than being absent from it.
+  // not. S027's passed pawn weights then moved the pawn alone, 104 to 89: it is
+  // the only case here with a pawn on the board, that pawn is passed because
+  // there are no enemy pawns anywhere, and at phase 0 it collects
+  // passed_pawn_eg[0] = -15 and nothing else. Those three are positions where
+  // king_safety_features() reports the same nine counts for both colours, so
+  // the term cancels in the difference the score is built from rather than
+  // being absent from it.
   //
   // The values below were recomputed by a second implementation of evaluate()
   // written for the purpose -- one that walks the rays by hand rather than
@@ -163,7 +184,7 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 104, "pawn on e2"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  89, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 240, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
       {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 530, "rook on d1"},

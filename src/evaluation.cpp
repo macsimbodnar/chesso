@@ -58,23 +58,28 @@ static constexpr int piece_values_abs[] = {
 // was first added and all three reported no difference, because there was none
 // to report.
 //
-// What does not fold away is the pawn hash below. The probe and the store
-// survive at any weights, because the table is a mutable global, and so does
-// the pawn key make_move maintains to index it: at these weights
-// evaluate_cheap() is 35 instructions against 18 for the build with no term at
-// all, and a depth 12 search is 2.2 % slower than 2861cdc while returning a
-// score identical to the digit.
-//
 // Forced non-zero to find out what the term itself costs, and the cost is real:
 // evaluate_cheap() goes from 1.14 to 2.75 ns and a depth 12 search takes 4.5 %
-// longer -- 3.1 % when it was re-measured against the pawn hash -- measured
+// longer -- measured
 // against a build carrying the term with its result discarded behind a barrier,
 // so both sides walk the identical tree and the node counts prove it. Whoever
 // fits these weights pays that in the same commit. DEC-040 is the warning:
 // mobility measured -14.93 Elo the one time a term was judged while its speed
 // cost was still unpaid.
-const int passed_pawn_mg[6] = {0, 0, 0, 0, 0, 0};
-const int passed_pawn_eg[6] = {0, 0, 0, 0, 0, 0};
+// Fitted with the other 799 constants frozen -- `tuner --only passed_pawns`
+// over 1490839 self-play positions, held-out error 0.107106 to 0.106900.
+//
+// **These are a residual, not a valuation.** A frozen fit prices only what the
+// term adds on top of what is already there, and psqt_mg's pawn table already
+// pays 79 to 214 for a pawn on the seventh rank. That is why the buckets are
+// not monotonic and why the last one, a pawn one square from promotion, fits to
+// almost nothing: the piece-square table has already paid for it. Reading
+// bucket 5 as "a passed pawn on the seventh is worth 2 centipawns" is the same
+// mistake as reading a pawn's fitted value of 83 as what a pawn is worth.
+// Knight mobility fitted to nothing against this same effect at S034, DEC-040,
+// and DEC-044 records it for king safety's attacker counts.
+const int passed_pawn_mg[6] = {3, -16, 1, 10, 30, 2};
+const int passed_pawn_eg[6] = {-15, -4, 18, 28, 25, 8};
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's
@@ -145,8 +150,21 @@ static inline bb_t widen_by_one_file(bb_t squares)
 // Index 0 is a8 and index 63 is h1, so White advances by *decreasing* the
 // index: square >> 3 is 6 on White's second rank and 1 on the seventh. Reversed
 // it pays for retreating pawns, and while the weights are zero no test can say
-// so, because every score it produces is the same score.
-static inline void passed_pawns(const board_t* board, int* mg, int* eg)
+// so, because every score it produces is the same score. What can say so is
+// passed_pawn_counts() below, which is why `collect` is here.
+//
+// `collect` is how that accessor reads the buckets out without the search
+// paying for it. A template rather than a flag, the arrangement king safety
+// arrived at: at <false> the stores and the out pointer are not compiled at
+// all, and the instantiation the search calls keeps exactly one caller, so
+// clang still inlines it and the zero weights still fold everything downstream
+// away. Handing that instantiation a second caller instead is what cost 21 %
+// once -- see king_shelter_features() below.
+template <bool collect>
+static inline void passed_pawns(const board_t* board,
+                                int* mg,
+                                int* eg,
+                                int out[2][6])
 {
   const bb_t white_pawns = board->bitboards[W_PAWN];
   const bb_t black_pawns = board->bitboards[B_PAWN];
@@ -162,6 +180,14 @@ static inline void passed_pawns(const board_t* board, int* mg, int* eg)
   int mg_sum = 0;
   int eg_sum = 0;
 
+  if constexpr (collect) {
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int bucket = 0; bucket < 6; ++bucket) {
+        out[colour][bucket] = 0;
+      }
+    }
+  }
+
   while (white_passed) {
     // Rank 2 is squares 48..55 and rank 7 is 8..15, so this runs 0 to 5 up the
     // board. What keeps it in range is that a pawn cannot stand on rank 1 or
@@ -174,6 +200,8 @@ static inline void passed_pawns(const board_t* board, int* mg, int* eg)
 
     mg_sum += passed_pawn_mg[bucket];
     eg_sum += passed_pawn_eg[bucket];
+
+    if constexpr (collect) { out[WHITE][bucket]++; }
   }
 
   while (black_passed) {
@@ -185,10 +213,28 @@ static inline void passed_pawns(const board_t* board, int* mg, int* eg)
 
     mg_sum -= passed_pawn_mg[bucket];
     eg_sum -= passed_pawn_eg[bucket];
+
+    // Black's own row counts Black's passers as positives. The minus above is
+    // the score's sign and not the count's, and folding the two together is
+    // what would make a row mean two different things.
+    if constexpr (collect) { out[BLACK][bucket]++; }
   }
 
   *mg = mg_sum;
   *eg = eg_sum;
+}
+
+
+// The counts on their own, weights and taper discarded. Only the test calls it,
+// so the mg/eg pair it also computes is thrown away rather than split out: a
+// second entry point into the same loop would be one more thing to keep in
+// step.
+void passed_pawn_counts(const board_t* board, int out[2][6])
+{
+  int mg = 0;
+  int eg = 0;
+
+  passed_pawns<true>(board, &mg, &eg, out);
 }
 
 
@@ -226,7 +272,7 @@ int evaluate_cheap(const board_t* board)
 
   int passed_mg = 0;
   int passed_eg = 0;
-  passed_pawns(board, &passed_mg, &passed_eg);
+  passed_pawns<false>(board, &passed_mg, &passed_eg, nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that

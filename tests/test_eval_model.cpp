@@ -45,8 +45,11 @@ static double model_score_white(const std::string& fen, const double* params)
   int king_safety[eval_model::KING_SAFETY_COUNT] = {};
   REQUIRE(eval_model::king_safety_features(placement, king_safety));
 
+  int passed_pawn[eval_model::PASSED_PAWN_COUNT] = {};
+  REQUIRE(eval_model::passed_pawn_features(placement, passed_pawn));
+
   return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
-                              params, king_safety);
+                              params, king_safety, passed_pawn);
 }
 
 
@@ -99,7 +102,45 @@ static const std::vector<std::string> positions = {
     // Three half-open files in front of the white king, against a black king
     // standing behind its own pawns.
     "1k6/ppp2ppp/8/8/8/8/PP6/6K1 w - - 0 1",
+    // Passed pawns, added at S027 for the reason it added the two above: the
+    // thirteen original positions leave the White-minus-Black difference at
+    // zero in every bucket but two, and the eight-against-eight promotion race
+    // cancels exactly. These two put a passed pawn on each side at different
+    // distances from promotion, so the evaluate() comparison has something to
+    // disagree about the moment the weights stop being zero.
+    "4k3/8/8/3pP3/8/5p2/8/4K3 w - - 0 1",
+    "4k3/8/8/P3p3/4P3/8/8/4K3 w - - 0 1",
+    // Five buckets at a time, per colour, added when the engine's own counts
+    // were exposed and the corpus turned out to reach almost none of them: no
+    // White passer existed anywhere on the third, fourth or sixth rank, no
+    // Black one on the fourth or sixth, and the only position touching the last
+    // bucket is the eight-against-eight promotion race, where the two sides
+    // cancel exactly and the difference says nothing. A ladder of unopposed
+    // pawns and its mirror claim every bucket but the first from both
+    // directions, which the first already had.
+    "4k3/4P3/3P4/2P5/1P6/P7/8/4K3 w - - 0 1",
+    "4k3/8/p7/1p6/2p5/3p4/4p3/4K3 b - - 0 1",
 };
+
+
+// One hand-built placement and the passed pawn count per bucket it must
+// produce, White minus Black. Hand-built so that the answer comes from the
+// specification both implementations were written from and not from either of
+// them: two extractions agreeing say nothing about whether the thing they agree
+// on is what was specified.
+struct passed_pawn_case_t
+{
+  const char* placement;
+  const char* what;
+  int expected[eval_model::PASSED_PAWN_COUNT];
+};
+
+
+// The engine indexes its buckets with a literal 6 and the model with a named
+// constant. Nothing forces the two to be the same number, and if they ever stop
+// being one the loops below would read off the end of a row rather than fail.
+static_assert(eval_model::PASSED_PAWN_COUNT == 6,
+              "the engine's passed_pawn_counts() rows are six wide");
 
 
 TEST_SUITE("eval model: agrees with the engine")
@@ -127,11 +168,11 @@ TEST_SUITE("eval model: agrees with the engine")
       // centipawns rather than one. Anything beyond that is a difference in
       // what is being computed, which is what this file is for.
       //
-      // King safety is inside this number but says nothing while its weights
-      // are zero: the term contributes 0 on both sides however far apart the
-      // two implementations' counts are. What checks the counts is the case
-      // below; this one starts checking them for free the moment the fit
-      // lands. S027.
+      // King safety and passed pawns are inside this number but say nothing
+      // while their weights are zero: each contributes 0 on both sides however
+      // far apart the two implementations' counts are. What checks the counts
+      // is the two cases below; this one starts checking them for free the
+      // moment the fits land. S027.
       CHECK(std::abs(model - engine_white) <= 2.0);
     }
   }
@@ -204,6 +245,216 @@ TEST_SUITE("eval model: agrees with the engine")
       CHECK_MESSAGE(seen[feature] > 0, (name + ": never non-zero"));
       CHECK_MESSAGE(white_ahead[feature] > 0, (name + ": never White ahead"));
       CHECK_MESSAGE(black_ahead[feature] > 0, (name + ": never Black ahead"));
+    }
+  }
+
+  // The passed pawn counts, engine against model, over the same corpus. The
+  // case with teeth for this term, for the reason the king safety pair above
+  // has teeth: the weights ship at zero, so the evaluate() comparison compares
+  // 0 against 0 here and would pass however far apart the two counts are.
+  //
+  // What can be compared is the White-minus-Black difference and not the two
+  // rows: eval_model::passed_pawn_features() reports the difference and nothing
+  // else, which is the form the tuner is linear in. The rows are checked
+  // against hand-computed answers instead, in the case below, on the placements
+  // where only one side has a pawn -- and the engine's rows are checked for
+  // both signs and every bucket in the case after this one, which is what a
+  // difference-only comparison cannot see: a bug that credits both sides
+  // equally cancels.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the engine counts the passed pawns the model counts")
+  {
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][6];
+      passed_pawn_counts(&game.board, engine);
+
+      int model[eval_model::PASSED_PAWN_COUNT] = {};
+      REQUIRE(eval_model::passed_pawn_features(fen.substr(0, fen.find(' ')),
+                                               model));
+
+      for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT;
+           ++bucket) {
+        CAPTURE(bucket);
+        CAPTURE(engine[WHITE][bucket]);
+        CAPTURE(engine[BLACK][bucket]);
+
+        CHECK(engine[WHITE][bucket] - engine[BLACK][bucket] == model[bucket]);
+      }
+    }
+  }
+
+  // Non-vacuous by construction, and the reason the case above means anything.
+  // A bucket that is zero in every position of the corpus is a bucket the two
+  // implementations agree about for free, and the two colours count their ranks
+  // in opposite directions, so a rank arithmetic error that only hits one of
+  // them needs both rows claimed to be caught.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the positions exercise every passed pawn bucket")
+  {
+    int seen[2][6] = {};
+    int white_ahead[6] = {};
+    int black_ahead[6] = {};
+
+    for (const std::string& fen : positions) {
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][6];
+      passed_pawn_counts(&game.board, engine);
+
+      for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT;
+           ++bucket) {
+        for (int colour = 0; colour < 2; ++colour) {
+          if (engine[colour][bucket] != 0) { seen[colour][bucket]++; }
+        }
+
+        const int difference = engine[WHITE][bucket] - engine[BLACK][bucket];
+
+        if (difference > 0) { white_ahead[bucket]++; }
+        if (difference < 0) { black_ahead[bucket]++; }
+      }
+    }
+
+    for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT; ++bucket) {
+      const std::string which = "bucket " + std::to_string(bucket);
+
+      CHECK_MESSAGE(seen[WHITE][bucket] > 0, (which + ": no White passer"));
+      CHECK_MESSAGE(seen[BLACK][bucket] > 0, (which + ": no Black passer"));
+      CHECK_MESSAGE(white_ahead[bucket] > 0, (which + ": never White ahead"));
+      CHECK_MESSAGE(black_ahead[bucket] > 0, (which + ": never Black ahead"));
+    }
+  }
+
+  // The same counts against placements whose answer was worked out by hand
+  // rather than by either implementation, which is what says the two agree on
+  // the specification and not merely with each other.
+  //
+  // It is also where the engine's rows are pinned per colour. The hand-computed
+  // answer is a difference, but on a placement carrying only one side's pawns
+  // that difference *is* that side's row and the other row has to be empty --
+  // so a count credited to both kings at once, which cancels in every
+  // difference, fails here.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the model and the engine count passed pawns by rank")
+  {
+    static const passed_pawn_case_t cases[] = {
+        {"4k3/8/8/8/8/8/P7/4K3",
+         "white pawn on its own second rank",
+         {1, 0, 0, 0, 0, 0}},
+        {"4k3/P7/8/8/8/8/8/4K3",
+         "white pawn one square from promotion",
+         {0, 0, 0, 0, 0, 1}},
+        {"4k3/8/3P4/2P5/1P6/P7/8/4K3",
+         "white pawns filling the four buckets "
+         "between the ends",
+         {0, 1, 1, 1, 1, 0}},
+        {"4k3/p7/8/8/8/8/8/4K3",
+         "black pawn on its own second rank",
+         {-1, 0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/p7/4K3",
+         "black pawn one square from promotion",
+         {0, 0, 0, 0, 0, -1}},
+        {"4k3/8/p7/1p6/2p5/3p4/8/4K3",
+         "black pawns filling the four buckets "
+         "between the ends",
+         {0, -1, -1, -1, -1, 0}},
+        // Both colours at once: the two bucket-0 pawns cancel in the difference
+        // and the c5 pawn is what is left, so a model that lost the sign would
+        // report -1 here rather than nothing at all.
+        {"4k3/7p/8/2P5/8/8/P7/4K3",
+         "one passed pawn each in the same bucket",
+         {0, 0, 0, 1, 0, 0}},
+        {"4k3/8/8/P3p3/4P3/8/8/4K3",
+         "e4 and e5 block each other head on",
+         {0, 0, 0, 1, 0, 0}},
+        {"4k3/8/5p2/8/4P3/8/p7/4K3",
+         "f6 stops e4 from a neighbouring file",
+         {0, 0, 0, 0, 0, -1}},
+        // The two directions that must not block, in one placement: d5 is level
+        // with e5 and f3 is behind it. Reverse "ahead" and every one of these
+        // three answers changes.
+        {"4k3/8/8/3pP3/8/5p2/8/4K3",
+         "level and behind do not block",
+         {0, 0, -1, 1, -1, 0}},
+        {"4k3/8/8/3pP3/4P3/8/8/4K3",
+         "doubled pawns, only the front one passed",
+         {0, 0, 0, 1, 0, 0}},
+    };
+
+    int positive[eval_model::PASSED_PAWN_COUNT] = {};
+    int negative[eval_model::PASSED_PAWN_COUNT] = {};
+    int white_only_cases = 0;
+    int black_only_cases = 0;
+    int mixed_cases = 0;
+
+    for (const passed_pawn_case_t& item : cases) {
+      // As strings, because CAPTURE of a `const char*` logs the pointer and a
+      // failure then names the case by its address.
+      const std::string placement = item.placement;
+      const std::string what = item.what;
+
+      CAPTURE(placement);
+      CAPTURE(what);
+
+      int model[eval_model::PASSED_PAWN_COUNT] = {};
+      REQUIRE(eval_model::passed_pawn_features(item.placement, model));
+
+      // The cases carry a placement and load_FEN wants a whole FEN, so the
+      // tail is the neutral one: White to move, nothing castling, no en
+      // passant. None of the four is read by the term.
+      REQUIRE(load_FEN(placement + " w - - 0 1", &game));
+
+      int engine[2][6];
+      passed_pawn_counts(&game.board, engine);
+
+      // Which rows the difference pins. A placement with no black pawn on it
+      // cannot hide a Black count inside a zero difference, and the mirror.
+      const bool white_only = placement.find('p') == std::string::npos;
+      const bool black_only = placement.find('P') == std::string::npos;
+
+      white_only_cases += white_only ? 1 : 0;
+      black_only_cases += black_only ? 1 : 0;
+      mixed_cases += (!white_only && !black_only) ? 1 : 0;
+
+      for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT;
+           ++bucket) {
+        CAPTURE(bucket);
+        CHECK(model[bucket] == item.expected[bucket]);
+        CHECK(engine[WHITE][bucket] - engine[BLACK][bucket] ==
+              item.expected[bucket]);
+
+        if (white_only) {
+          CHECK(engine[WHITE][bucket] == item.expected[bucket]);
+          CHECK(engine[BLACK][bucket] == 0);
+        }
+
+        if (black_only) {
+          CHECK(engine[BLACK][bucket] == -item.expected[bucket]);
+          CHECK(engine[WHITE][bucket] == 0);
+        }
+
+        if (item.expected[bucket] > 0) { positive[bucket]++; }
+        if (item.expected[bucket] < 0) { negative[bucket]++; }
+      }
+    }
+
+    // The per-colour pinning above is only worth something if placements of
+    // each kind are actually in the list, and the mixed ones are what stop the
+    // whole case from being a pair of one-sided boards.
+    CHECK(white_only_cases > 0);
+    CHECK(black_only_cases > 0);
+    CHECK(mixed_cases > 0);
+
+    // Non-vacuous by construction. A bucket no case ever reaches is a bucket
+    // the extractor could compute any way it liked, and the mirror between the
+    // colours is exactly where a rank arithmetic error hides, so each one has
+    // to be claimed from both directions.
+    for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT; ++bucket) {
+      CAPTURE(bucket);
+      CHECK(positive[bucket] > 0);
+      CHECK(negative[bucket] > 0);
     }
   }
 
