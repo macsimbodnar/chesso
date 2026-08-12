@@ -158,11 +158,23 @@ enum
 // of the general registers and back, +6 cnt.8b, +6 uaddlv.8b and +12 fmov for
 // 65 instructions on a function that was 164. The bishop pair is the one
 // feature that costs nothing -- clang rewrites count_bits(x) >= 2 into x & (x -
-// 1), so it compiles to a tst and a cset. Whoever fits these weights pays
-// the 3.1 to 4.0 % in the same commit; DEC-040 is the warning about judging a
-// term while its speed cost is still unpaid.
-const int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
-const int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+// 1), so it compiles to a tst and a cset. The 3.1 to 4.0 % is paid by the
+// weights below and their SPRT is net of it; DEC-040 is the warning about
+// judging a term while its speed cost is still unpaid.
+//
+// Fitted with the other 817 constants frozen -- `tuner --only piece_placement`
+// over 1490839 self-play positions, held-out error 0.106766 to 0.106605.
+//
+// A residual, not a valuation, for the fourth time in this file. The bishop
+// pair's endgame weight is the largest single number S027 fitted, and the
+// rook-on-the-seventh middlegame weight is negative -- which read as chess
+// would say putting a rook there is a mistake. It says nothing of the kind. The
+// rook features overlap by construction (a rook on the seventh is usually also
+// on an open or half-open file, and the header says so), and every one of them
+// sits on a rook piece-square table that has already priced the squares. What
+// is fitted is the sum.
+const int piece_placement_mg[PL_FEATURE_COUNT] = {2, 32, 8, -26};
+const int piece_placement_eg[PL_FEATURE_COUNT] = {55, -8, 12, 11};
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's
