@@ -61,6 +61,29 @@ constexpr size_t KING_SAFETY_COUNT = KS_FEATURE_COUNT;
 // feature, not a parameter.
 constexpr size_t PASSED_PAWN_COUNT = 6;
 
+// Pawn structure, added at S027: three counts per side -- isolated, doubled,
+// backward, in that order -- weighted for the middlegame and for the endgame.
+// The counts are a property of the position, so they enter as features and the
+// model stays linear, exactly like the three terms above.
+//
+// Taken from the width of the engine's own weight array rather than written as
+// 3, so that a feature added there cannot leave the model fitting a shorter
+// vector than the engine reads. King safety takes the same guarantee from
+// KS_FEATURE_COUNT; this term has no enum to take it from, because its index
+// order is stated in prose over the arrays in src/evaluation.hpp instead.
+constexpr size_t PAWN_STRUCTURE_COUNT =
+    sizeof(pawn_structure_mg) / sizeof(pawn_structure_mg[0]);
+
+// What the three counts are, in the order the weights are indexed. Named here
+// because the engine names them only in that prose, and an index nobody can
+// read is an index a caller gets wrong.
+enum pawn_structure_feature_t
+{
+  PS_ISOLATED,
+  PS_DOUBLED,
+  PS_BACKWARD
+};
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -69,10 +92,12 @@ constexpr size_t KS_MG_BASE = MOB_EG_BASE + MOBILITY_COUNT;
 constexpr size_t KS_EG_BASE = KS_MG_BASE + KING_SAFETY_COUNT;
 constexpr size_t PP_MG_BASE = KS_EG_BASE + KING_SAFETY_COUNT;
 constexpr size_t PP_EG_BASE = PP_MG_BASE + PASSED_PAWN_COUNT;
+constexpr size_t PS_MG_BASE = PP_EG_BASE + PASSED_PAWN_COUNT;
+constexpr size_t PS_EG_BASE = PS_MG_BASE + PAWN_STRUCTURE_COUNT;
 
 constexpr size_t PARAM_COUNT = MATERIAL_COUNT + 2 * SQUARE_COUNT +
                                2 * MOBILITY_COUNT + 2 * KING_SAFETY_COUNT +
-                               2 * PASSED_PAWN_COUNT;
+                               2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT;
 
 // A piece is one uint16: the top bit says Black, the rest is type * 64 plus the
 // square the tables are read at, already mirrored for Black the way
@@ -561,6 +586,139 @@ inline bool passed_pawn_features(const std::string& placement,
 }
 
 
+// Pawn structure counts, White minus Black, in isolated, doubled, backward
+// order. Each is about a side's own pawns, and the three are not exclusive: one
+// pawn can be counted in all of them.
+//
+// The definitions are src/evaluation.hpp's, stated there because this file is
+// written from that comment and the two have to mean the same thing:
+//
+//   isolated  no own pawn anywhere on either neighbouring file, rank ignored.
+//   doubled   another own pawn ahead on the same file, so a file with n own
+//             pawns contributes n - 1.
+//   backward  no own pawn on either neighbouring file at or behind its own
+//             rank, the pawn's own rank counting as behind, and the square
+//             directly ahead attacked by an enemy pawn. Whether that square is
+//             occupied is not asked.
+//
+// Walked by hand from the placement for the same reason mobility_features() is:
+// this file has to be able to disagree with the engine, and code shared with it
+// cannot.
+//
+// Squares are true board squares, index 0 = a8 to index 63 = h1, not the
+// mirrored ones parse_placement() stores. "Ahead" is toward the enemy, so a
+// lower index for White and a higher one for Black, and "behind" is the
+// opposite -- which is why the two colours compare ranks in opposite
+// directions.
+inline bool pawn_structure_features(const std::string& placement,
+                                    int out[PAWN_STRUCTURE_COUNT])
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  for (size_t i = 0; i < PAWN_STRUCTURE_COUNT; ++i) {
+    out[i] = 0;
+  }
+
+  for (int from = 0; from < 64; ++from) {
+    if (kind_at[from] != 0) { continue; }
+
+    const bool white = white_at[from];
+    const int rank = from / 8;
+    const int file = from % 8;
+    const int ahead = white ? -1 : 1;
+    const int sign = white ? 1 : -1;
+
+    // The two neighbouring files answer both the isolated question and the
+    // first half of the backward one, so they are walked once.
+    bool neighbour_anywhere = false;
+    bool neighbour_at_or_behind = false;
+
+    for (int df = -1; df <= 1; df += 2) {
+      const int f = file + df;
+
+      if (f < 0 || f > 7) { continue; }
+
+      for (int r = 0; r < 8; ++r) {
+        const int sq = r * 8 + f;
+
+        if (kind_at[sq] != 0 || white_at[sq] != white) { continue; }
+
+        neighbour_anywhere = true;
+
+        if (white ? (r >= rank) : (r <= rank)) {
+          neighbour_at_or_behind = true;
+        }
+      }
+    }
+
+    if (!neighbour_anywhere) { out[PS_ISOLATED] += sign; }
+
+    for (int r = rank + ahead; r >= 0 && r <= 7; r += ahead) {
+      const int sq = r * 8 + file;
+
+      if (kind_at[sq] == 0 && white_at[sq] == white) {
+        out[PS_DOUBLED] += sign;
+        break;
+      }
+    }
+
+    if (neighbour_at_or_behind) { continue; }
+
+    // An enemy pawn attacking the stop square stands one square further ahead
+    // again, on a neighbouring file. Both bounds hold for any pawn a legal
+    // position can have; they are here so a pawn on a back rank walks off the
+    // board the way the engine's shifts do rather than reading past the array.
+    const int stop = rank + ahead;
+    const int attacker_rank = stop + ahead;
+
+    if (stop < 0 || stop > 7 || attacker_rank < 0 || attacker_rank > 7) {
+      continue;
+    }
+
+    for (int df = -1; df <= 1; df += 2) {
+      const int f = file + df;
+
+      if (f < 0 || f > 7) { continue; }
+
+      const int sq = attacker_rank * 8 + f;
+
+      if (kind_at[sq] == 0 && white_at[sq] != white) {
+        out[PS_BACKWARD] += sign;
+        break;
+      }
+    }
+  }
+
+  return true;
+}
+
+
 // White relative, in floating point. evaluate() divides in integers and
 // truncates towards zero, so the two agree to within one centipawn rather than
 // exactly; the tuner works in floating point precisely so that the derivative
@@ -577,7 +735,8 @@ inline double evaluate(const uint16_t* pieces,
                        const int* mobility,
                        const double* params,
                        const int* king_safety,
-                       const int* passed_pawn)
+                       const int* passed_pawn,
+                       const int* pawn_structure)
 {
   const double mg_weight = static_cast<double>(phase) / GAME_PHASE_MAX;
   const double eg_weight =
@@ -650,8 +809,23 @@ inline double evaluate(const uint16_t* pieces,
   const double stage_one_passed =
       passed_pawn_mg_sum * mg_weight + passed_pawn_eg_sum * eg_weight;
 
+  double pawn_structure_mg_sum = 0.0;
+  double pawn_structure_eg_sum = 0.0;
+
+  for (size_t t = 0; t < PAWN_STRUCTURE_COUNT; ++t) {
+    pawn_structure_mg_sum += pawn_structure[t] * params[PS_MG_BASE + t];
+    pawn_structure_eg_sum += pawn_structure[t] * params[PS_EG_BASE + t];
+  }
+
+  // Outside the clamp for the reason written over the line above: pawn
+  // structure is part of evaluate_cheap() too, so the lazy margin says nothing
+  // about it and folding it into stage_two would clamp a quantity the engine
+  // never clamps.
+  const double stage_one_structure =
+      pawn_structure_mg_sum * mg_weight + pawn_structure_eg_sum * eg_weight;
+
   return material + mg * mg_weight + eg * eg_weight + stage_one_passed +
-         stage_two;
+         stage_one_structure + stage_two;
 }
 
 
@@ -684,6 +858,11 @@ inline void starting_params(double* params)
   for (size_t t = 0; t < PASSED_PAWN_COUNT; ++t) {
     params[PP_MG_BASE + t] = passed_pawn_mg[t];
     params[PP_EG_BASE + t] = passed_pawn_eg[t];
+  }
+
+  for (size_t t = 0; t < PAWN_STRUCTURE_COUNT; ++t) {
+    params[PS_MG_BASE + t] = pawn_structure_mg[t];
+    params[PS_EG_BASE + t] = pawn_structure_eg[t];
   }
 }
 

@@ -48,8 +48,11 @@ static double model_score_white(const std::string& fen, const double* params)
   int passed_pawn[eval_model::PASSED_PAWN_COUNT] = {};
   REQUIRE(eval_model::passed_pawn_features(placement, passed_pawn));
 
+  int pawn_structure[eval_model::PAWN_STRUCTURE_COUNT] = {};
+  REQUIRE(eval_model::pawn_structure_features(placement, pawn_structure));
+
   return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
-                              params, king_safety, passed_pawn);
+                              params, king_safety, passed_pawn, pawn_structure);
 }
 
 
@@ -59,6 +62,13 @@ static const char* const king_safety_feature_names[KS_FEATURE_COUNT] = {
     "knight attackers", "bishop attackers", "rook attackers",
     "queen attackers",  "zone attacks",     "shield near",
     "shield far",       "open file",        "half open file"};
+
+
+// The same for the three pawn structure counts, in the order the weights are
+// indexed.
+static const char* const
+    pawn_structure_feature_names[eval_model::PAWN_STRUCTURE_COUNT] = {
+        "isolated", "doubled", "backward"};
 
 
 static const std::vector<std::string> positions = {
@@ -120,6 +130,14 @@ static const std::vector<std::string> positions = {
     // directions, which the first already had.
     "4k3/4P3/3P4/2P5/1P6/P7/8/4K3 w - - 0 1",
     "4k3/8/p7/1p6/2p5/3p4/4p3/4K3 b - - 0 1",
+    // Pawn structure, added at S027 when the engine's own counts were exposed
+    // and the twenty-two positions above turned out to reach one of the three
+    // features from one direction only: no side ever had a doubled pawn
+    // anywhere, and only White was ever backward. A doubled f-pawn, an isolated
+    // and backward d-pawn stopped by an enemy pawn on c5, and the same position
+    // mirrored so that Black is the side carrying all three.
+    "r2q1rk1/pp3ppp/4pn2/2p5/8/2NP1P2/PP3PPP/R2Q1RK1 w - - 0 14",
+    "r2q1rk1/pp3ppp/2np1p2/8/2P5/4PN2/PP3PPP/R2Q1RK1 b - - 0 14",
 };
 
 
@@ -141,6 +159,36 @@ struct passed_pawn_case_t
 // being one the loops below would read off the end of a row rather than fail.
 static_assert(eval_model::PASSED_PAWN_COUNT == 6,
               "the engine's passed_pawn_counts() rows are six wide");
+
+
+// One hand-built placement and the pawn structure counts it must produce, per
+// colour rather than as the difference the model reports.
+//
+// Per colour because a backward pawn needs an enemy pawn attacking the square
+// in front of it, so the trick the passed pawn cases use -- a placement with
+// only one side's pawns, where the difference *is* that side's row -- cannot
+// reach the feature at all. Writing both rows out pins what that trick pins and
+// the backward rows besides.
+//
+// Hand-built so that the answer comes from the specification both
+// implementations were written from and not from either of them: two
+// extractions agreeing say nothing about whether the thing they agree on is
+// what was specified.
+struct pawn_structure_case_t
+{
+  const char* placement;
+  const char* what;
+  int white[eval_model::PAWN_STRUCTURE_COUNT];
+  int black[eval_model::PAWN_STRUCTURE_COUNT];
+};
+
+
+// The engine indexes its counts with a literal 3, the model with a constant
+// taken from the width of the engine's own weight array. Nothing forces those
+// to be the same number, and if they ever stop being one the loops below would
+// read off the end of a row rather than fail.
+static_assert(eval_model::PAWN_STRUCTURE_COUNT == 3,
+              "the engine's pawn_structure_counts() rows are three wide");
 
 
 TEST_SUITE("eval model: agrees with the engine")
@@ -455,6 +503,199 @@ TEST_SUITE("eval model: agrees with the engine")
       CAPTURE(bucket);
       CHECK(positive[bucket] > 0);
       CHECK(negative[bucket] > 0);
+    }
+  }
+
+  // The pawn structure counts, engine against model, over the same corpus, and
+  // the case with teeth for this term for the reason the two pairs above have
+  // teeth: the weights ship at zero, so the evaluate() comparison compares 0
+  // against 0 here and would pass however far apart the two counts are.
+  //
+  // eval_model::pawn_structure_features() reports White minus Black and nothing
+  // else, which is the form the tuner is linear in, so that is what can be
+  // compared here. The rows themselves are pinned against hand-computed answers
+  // in the case below, which is what a difference cannot see: a miscount that
+  // hits both sides equally cancels.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the engine counts the pawn structure the model counts")
+  {
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][3];
+      pawn_structure_counts(&game.board, engine);
+
+      int model[eval_model::PAWN_STRUCTURE_COUNT] = {};
+      REQUIRE(eval_model::pawn_structure_features(fen.substr(0, fen.find(' ')),
+                                                  model));
+
+      for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
+           ++feature) {
+        const std::string name = pawn_structure_feature_names[feature];
+
+        CAPTURE(name);
+        CAPTURE(engine[WHITE][feature]);
+        CAPTURE(engine[BLACK][feature]);
+
+        CHECK(engine[WHITE][feature] - engine[BLACK][feature] ==
+              model[feature]);
+      }
+    }
+  }
+
+  // Non-vacuous by construction, and the reason the case above means anything.
+  // A count that is zero in every position of the corpus is a count the two
+  // implementations agree about for free, and the two colours read "ahead" and
+  // "behind" in opposite directions, so an error that only hits one of them
+  // needs both rows claimed to be caught.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the positions exercise every pawn structure count")
+  {
+    int seen[2][eval_model::PAWN_STRUCTURE_COUNT] = {};
+    int white_ahead[eval_model::PAWN_STRUCTURE_COUNT] = {};
+    int black_ahead[eval_model::PAWN_STRUCTURE_COUNT] = {};
+
+    for (const std::string& fen : positions) {
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][3];
+      pawn_structure_counts(&game.board, engine);
+
+      for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
+           ++feature) {
+        for (int colour = 0; colour < 2; ++colour) {
+          if (engine[colour][feature] != 0) { seen[colour][feature]++; }
+        }
+
+        const int difference = engine[WHITE][feature] - engine[BLACK][feature];
+
+        if (difference > 0) { white_ahead[feature]++; }
+        if (difference < 0) { black_ahead[feature]++; }
+      }
+    }
+
+    for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
+         ++feature) {
+      const std::string name = pawn_structure_feature_names[feature];
+
+      CHECK_MESSAGE(seen[WHITE][feature] > 0, (name + ": never White"));
+      CHECK_MESSAGE(seen[BLACK][feature] > 0, (name + ": never Black"));
+      CHECK_MESSAGE(white_ahead[feature] > 0, (name + ": never White ahead"));
+      CHECK_MESSAGE(black_ahead[feature] > 0, (name + ": never Black ahead"));
+    }
+  }
+
+  // The same counts against placements whose answer was worked out by hand
+  // rather than by either implementation, which is what says the two agree on
+  // the specification and not merely with each other. Each clause of that
+  // specification that could be read another way has a case here: the rank a
+  // neighbour has to be on before it stops a pawn being backward, that rank
+  // does not enter the isolated question at all, and that a file with n pawns
+  // on it is worth n - 1 doubled and not one.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the model and the engine count pawn structure by hand")
+  {
+    static const pawn_structure_case_t cases[] = {
+        {"4k3/8/8/8/8/8/P7/4K3",
+         "a lone pawn has no neighbour and is isolated",
+         {1, 0, 0},
+         {0, 0, 0}},
+        {"4k3/8/8/8/8/P7/P7/4K3",
+         "two on a file are two isolated and one doubled",
+         {2, 1, 0},
+         {0, 0, 0}},
+        {"4k3/8/8/8/P7/P7/P7/4K3",
+         "three on a file are three isolated and two doubled",
+         {3, 2, 0},
+         {0, 0, 0}},
+        {"4k3/p7/p7/p7/8/8/8/4K3",
+         "the same three for Black, whose file runs the other way",
+         {0, 0, 0},
+         {3, 2, 0}},
+        {"4k3/1P6/8/8/8/8/P7/4K3",
+         "rank does not enter isolated: a neighbour five ranks "
+         "ahead still answers it",
+         {0, 0, 0},
+         {0, 0, 0}},
+        {"4k3/8/8/8/2p5/8/PP6/4K3",
+         "a neighbour abreast stops b2 being backward, and c4 is "
+         "backward on a2",
+         {0, 0, 0},
+         {1, 0, 1}},
+        {"4k3/8/8/3p4/2p5/8/1P6/4K3",
+         "b2 is backward on c4, and d5 behind c4 stops c4 being "
+         "backward itself",
+         {1, 0, 1},
+         {0, 0, 0}},
+        {"4k3/1p6/8/2P5/3P4/8/8/4K3",
+         "the same placement mirrored, so Black is the backward "
+         "side",
+         {0, 0, 0},
+         {1, 0, 1}},
+        // The three features are not exclusive and are not meant to be, so one
+        // pawn counted in all three is the case that says so.
+        {"4k3/8/8/8/1p6/P7/P7/4K3",
+         "a2 is isolated, doubled and backward at once",
+         {2, 1, 1},
+         {1, 0, 1}},
+    };
+
+    int positive[eval_model::PAWN_STRUCTURE_COUNT] = {};
+    int negative[eval_model::PAWN_STRUCTURE_COUNT] = {};
+    int white_row[eval_model::PAWN_STRUCTURE_COUNT] = {};
+    int black_row[eval_model::PAWN_STRUCTURE_COUNT] = {};
+
+    for (const pawn_structure_case_t& item : cases) {
+      // As strings, because CAPTURE of a `const char*` logs the pointer and a
+      // failure then names the case by its address.
+      const std::string placement = item.placement;
+      const std::string what = item.what;
+
+      CAPTURE(placement);
+      CAPTURE(what);
+
+      int model[eval_model::PAWN_STRUCTURE_COUNT] = {};
+      REQUIRE(eval_model::pawn_structure_features(item.placement, model));
+
+      // The cases carry a placement and load_FEN wants a whole FEN, so the
+      // tail is the neutral one: White to move, nothing castling, no en
+      // passant. None of the four is read by the term.
+      REQUIRE(load_FEN(placement + " w - - 0 1", &game));
+
+      int engine[2][3];
+      pawn_structure_counts(&game.board, engine);
+
+      for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
+           ++feature) {
+        const std::string name = pawn_structure_feature_names[feature];
+        const int difference = item.white[feature] - item.black[feature];
+
+        CAPTURE(name);
+
+        CHECK(model[feature] == difference);
+        CHECK(engine[WHITE][feature] == item.white[feature]);
+        CHECK(engine[BLACK][feature] == item.black[feature]);
+
+        if (difference > 0) { positive[feature]++; }
+        if (difference < 0) { negative[feature]++; }
+        if (item.white[feature] != 0) { white_row[feature]++; }
+        if (item.black[feature] != 0) { black_row[feature]++; }
+      }
+    }
+
+    // Non-vacuous by construction. A count no case ever reaches is a count the
+    // extractors could compute any way they liked, and a row no case ever
+    // claims is a row the per-colour pinning above never pins -- which is the
+    // whole reason these cases carry two rows instead of a difference.
+    for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
+         ++feature) {
+      const std::string name = pawn_structure_feature_names[feature];
+
+      CHECK_MESSAGE(positive[feature] > 0, (name + ": never White ahead"));
+      CHECK_MESSAGE(negative[feature] > 0, (name + ": never Black ahead"));
+      CHECK_MESSAGE(white_row[feature] > 0, (name + ": no White row claimed"));
+      CHECK_MESSAGE(black_row[feature] > 0, (name + ": no Black row claimed"));
     }
   }
 
