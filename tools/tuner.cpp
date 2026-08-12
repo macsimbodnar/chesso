@@ -5,10 +5,10 @@
 // Reads what tools/datagen writes, `fen result score phase`, and fits the
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
 // and psqt_eg[6][64], the mobility weights since S034, the king safety weights
-// since S027, the passed pawn weights since S035 and the pawn structure
-// weights since S027, 817 numbers -- so that a sigmoid of the evaluation
-// predicts the outcome of the game the position came from. This is Texel
-// tuning; the objective is the mean squared error of that prediction.
+// since S027, the passed pawn weights since S035 and the pawn structure and
+// piece placement weights since S027, 825 numbers -- so that a sigmoid of the
+// evaluation predicts the outcome of the game the position came from. This is
+// Texel tuning; the objective is the mean squared error of that prediction.
 //
 // It does not run the search. The model below reproduces evaluate() in floating
 // point, which is what makes the fit a linear problem and lets a full pass over
@@ -63,6 +63,9 @@ using eval_model::MOBILITY_COUNT;
 using eval_model::PARAM_COUNT;
 using eval_model::PASSED_PAWN_COUNT;
 using eval_model::PAWN_STRUCTURE_COUNT;
+using eval_model::PIECE_PLACEMENT_COUNT;
+using eval_model::PL_EG_BASE;
+using eval_model::PL_MG_BASE;
 using eval_model::PP_EG_BASE;
 using eval_model::PP_MG_BASE;
 using eval_model::PS_EG_BASE;
@@ -100,6 +103,12 @@ struct dataset_t
   // so int16 is again far more room than they need: 1.49 M rows cost 9 MB.
   std::vector<int16_t> pawn_structure;
 
+  // Piece placement counts, White minus Black, four per position, extracted
+  // once for the same reason. The bishop pair is 1, 0 or -1 and the three rook
+  // counts are bounded by the rooks on the board, so int16 is again far more
+  // room than they need: 1.49 M rows cost 12 MB.
+  std::vector<int16_t> piece_placement;
+
   size_t size() const { return phase.size(); }
 };
 
@@ -121,7 +130,8 @@ struct options_t
 
 
 const char* const GROUP_LIST =
-    "all, material, psqt, mobility, king_safety, passed_pawns, pawn_structure";
+    "all, material, psqt, mobility, king_safety, passed_pawns, "
+    "pawn_structure, piece_placement";
 
 
 // Marks the parameters a --only group leaves free; the rest keep the value the
@@ -164,7 +174,13 @@ bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     first = PP_MG_BASE;
     last = PS_MG_BASE;
   } else if (group == "pawn_structure") {
+    // Ends at the piece placement block for the reason above, and it reached to
+    // PARAM_COUNT until that block was appended -- the third time this same
+    // function has swallowed the term appended after it.
     first = PS_MG_BASE;
+    last = PL_MG_BASE;
+  } else if (group == "piece_placement") {
+    first = PL_MG_BASE;
     last = PARAM_COUNT;
   } else {
     return false;
@@ -250,6 +266,13 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    int placement_counts[PIECE_PLACEMENT_COUNT] = {0};
+    if (!eval_model::piece_placement_features(placement, placement_counts)) {
+      fprintf(stderr, "bad placement for piece placement: %s\n",
+              placement.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
 
@@ -264,6 +287,9 @@ bool load(const std::string& path, dataset_t* data)
     }
     for (const int count : structure) {
       data->pawn_structure.push_back(static_cast<int16_t>(count));
+    }
+    for (const int count : placement_counts) {
+      data->piece_placement.push_back(static_cast<int16_t>(count));
     }
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
@@ -296,10 +322,15 @@ double evaluate_position(const dataset_t& data,
     structure[i] = data.pawn_structure[index * PAWN_STRUCTURE_COUNT + i];
   }
 
+  int placement[PIECE_PLACEMENT_COUNT];
+  for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+    placement[i] = data.piece_placement[index * PIECE_PLACEMENT_COUNT + i];
+  }
+
   return eval_model::evaluate(&data.pieces[data.offsets[index]],
                               data.offsets[index + 1] - data.offsets[index],
                               data.phase[index], mobility, params, safety,
-                              passed, structure);
+                              passed, structure, placement);
 }
 
 
@@ -445,6 +476,17 @@ void gradient(const dataset_t& data,
           grad[PS_MG_BASE + p] += outer * count * mg_weight;
           grad[PS_EG_BASE + p] += outer * count * eg_weight;
         }
+
+        // Piece placement, the same shape and the same trap a fifth time, and
+        // no clamp to ignore for the same reason: the term is part of
+        // evaluate_cheap(), on the near side of the lazy margin.
+        for (size_t p = 0; p < PIECE_PLACEMENT_COUNT; ++p) {
+          const double count =
+              data.piece_placement[position * PIECE_PLACEMENT_COUNT + p];
+
+          grad[PL_MG_BASE + p] += outer * count * mg_weight;
+          grad[PL_EG_BASE + p] += outer * count * eg_weight;
+        }
       }
     });
   }
@@ -535,8 +577,8 @@ void write_tables(const std::string& path,
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
-      "// passed pawn and pawn structure weights at the end live in\n"
-      "// src/evaluation.cpp, a different file and easy to miss.\n"
+      "// passed pawn, pawn structure and piece placement weights at the end\n"
+      "// live in src/evaluation.cpp, a different file and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
@@ -578,11 +620,11 @@ void write_tables(const std::string& path,
   }
 
   // The mobility weights are fitted too, since S034, the king safety weights
-  // since S027, the passed pawn weights since S035 and the pawn structure
-  // weights since S027, and none of them lives in eval_tables.hpp with
-  // everything else. Emitting them here is what stops a fit quietly discarding
-  // forty-four of its own parameters, which is exactly what this function did
-  // with mobility's eight until it was checked.
+  // since S027, the passed pawn weights since S035 and the pawn structure and
+  // piece placement weights since S027, and none of them lives in
+  // eval_tables.hpp with everything else. Emitting them here is what stops a
+  // fit quietly discarding fifty-two of its own parameters, which is exactly
+  // what this function did with mobility's eight until it was checked.
   fprintf(
       out,
       "\n// These eight live in src/evaluation.cpp, not eval_tables.hpp.\n");
@@ -645,6 +687,20 @@ void write_tables(const std::string& path,
     }
 
     fprintf(out, "};  // isolated doubled backward\n");
+  }
+
+  for (int table = 0; table < 2; ++table) {
+    const size_t base = (table == 0) ? PL_MG_BASE : PL_EG_BASE;
+
+    fprintf(out, "\nconst int piece_placement_%s[4] = {",
+            (table == 0) ? "mg" : "eg");
+
+    for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+      fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+              static_cast<int>(std::lround(params[base + i])));
+    }
+
+    fprintf(out, "};  // pair, open, half open, seventh\n");
   }
 
   fclose(out);

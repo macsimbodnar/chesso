@@ -84,6 +84,29 @@ enum pawn_structure_feature_t
   PS_BACKWARD
 };
 
+// Piece placement, added at S027: four counts per side -- bishop pair, rook on
+// an open file, rook on a half-open file, rook on the seventh, in that order --
+// weighted for the middlegame and for the endgame. The counts are a property of
+// the position, so they enter as features and the model stays linear, exactly
+// like the four terms above.
+//
+// Taken from the width of the engine's own weight array rather than written as
+// 4, for the reason the pawn structure count is: a feature added there cannot
+// then leave the model fitting a shorter vector than the engine reads.
+constexpr size_t PIECE_PLACEMENT_COUNT =
+    sizeof(piece_placement_mg) / sizeof(piece_placement_mg[0]);
+
+// What the four counts are, in the order the weights are indexed. Named here
+// because the engine names them only in the prose over those arrays, and an
+// index nobody can read is an index a caller gets wrong.
+enum piece_placement_feature_t
+{
+  PL_BISHOP_PAIR,
+  PL_ROOK_OPEN,
+  PL_ROOK_HALF_OPEN,
+  PL_ROOK_SEVENTH
+};
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -94,10 +117,13 @@ constexpr size_t PP_MG_BASE = KS_EG_BASE + KING_SAFETY_COUNT;
 constexpr size_t PP_EG_BASE = PP_MG_BASE + PASSED_PAWN_COUNT;
 constexpr size_t PS_MG_BASE = PP_EG_BASE + PASSED_PAWN_COUNT;
 constexpr size_t PS_EG_BASE = PS_MG_BASE + PAWN_STRUCTURE_COUNT;
+constexpr size_t PL_MG_BASE = PS_EG_BASE + PAWN_STRUCTURE_COUNT;
+constexpr size_t PL_EG_BASE = PL_MG_BASE + PIECE_PLACEMENT_COUNT;
 
-constexpr size_t PARAM_COUNT = MATERIAL_COUNT + 2 * SQUARE_COUNT +
-                               2 * MOBILITY_COUNT + 2 * KING_SAFETY_COUNT +
-                               2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT;
+constexpr size_t PARAM_COUNT =
+    MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
+    2 * KING_SAFETY_COUNT + 2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT +
+    2 * PIECE_PLACEMENT_COUNT;
 
 // A piece is one uint16: the top bit says Black, the rest is type * 64 plus the
 // square the tables are read at, already mirrored for Black the way
@@ -719,6 +745,120 @@ inline bool pawn_structure_features(const std::string& placement,
 }
 
 
+// Piece placement counts, White minus Black, in bishop pair, rook on an open
+// file, rook on a half-open file, rook on the seventh order. Each is about a
+// side's own pieces.
+//
+// The definitions are src/evaluation.hpp's, stated there because this file is
+// written from that comment and the two have to mean the same thing:
+//
+//   bishop_pair     1 when the side has two or more bishops, 0 otherwise. Not a
+//                   count: three bishops off a promotion still score 1, and
+//                   square colour is not asked about.
+//   rook_open       own rooks standing on a file carrying no pawn of either
+//                   colour. The rook's rank does not enter it, and a piece is
+//                   not a pawn and does not close a file.
+//   rook_half_open  own rooks standing on a file carrying no own pawn and at
+//                   least one enemy pawn.
+//   rook_seventh    own rooks standing on the rank the enemy's pawns start on,
+//                   rank 7 for White and rank 2 for Black. The enemy king is
+//                   not asked about; a conditional version is a different
+//                   feature and would need its own fit.
+//
+// The first two rook features exclude each other and the third excludes
+// neither, so a rook on an open file on the seventh counts once in each of two.
+// A file with an own pawn on it is neither open nor half-open, whatever the
+// enemy has there.
+//
+// Walked by hand from the placement for the same reason mobility_features() is:
+// this file has to be able to disagree with the engine, and code shared with it
+// cannot.
+//
+// Squares are true board squares, index 0 = a8 to index 63 = h1, not the
+// mirrored ones parse_placement() stores. In that indexing the rank a side's
+// pawns start on is row 6 for White and row 1 for Black, so the rank each side
+// is paid for standing a rook on is the other one's.
+inline bool piece_placement_features(const std::string& placement,
+                                     int out[PIECE_PLACEMENT_COUNT])
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+    out[i] = 0;
+  }
+
+  // Row 0 is White's, row 1 is Black's. Both rook file questions are about the
+  // pawns on a file and nothing else on it, so the pawns are collected once.
+  bool pawn_on[2][8] = {};
+
+  for (int sq = 0; sq < 64; ++sq) {
+    if (kind_at[sq] != 0) { continue; }
+
+    pawn_on[white_at[sq] ? 0 : 1][sq % 8] = true;
+  }
+
+  int bishops[2] = {0, 0};
+
+  for (int sq = 0; sq < 64; ++sq) {
+    const int type = kind_at[sq];
+
+    if (type < 0) { continue; }
+
+    const int side = white_at[sq] ? 0 : 1;
+    const int sign = white_at[sq] ? 1 : -1;
+
+    if (type == 2) {
+      bishops[side]++;
+      continue;
+    }
+
+    if (type != 3) { continue; }
+
+    const int file = sq % 8;
+    const bool own = pawn_on[side][file];
+    const bool enemy = pawn_on[1 - side][file];
+
+    if (!own && !enemy) { out[PL_ROOK_OPEN] += sign; }
+    if (!own && enemy) { out[PL_ROOK_HALF_OPEN] += sign; }
+
+    if (sq / 8 == (white_at[sq] ? 1 : 6)) { out[PL_ROOK_SEVENTH] += sign; }
+  }
+
+  // The one feature that is not a count. Two bishops are a pair and so are
+  // three, which is why this is a comparison and not an accumulation.
+  out[PL_BISHOP_PAIR] =
+      ((bishops[0] >= 2) ? 1 : 0) - ((bishops[1] >= 2) ? 1 : 0);
+
+  return true;
+}
+
+
 // White relative, in floating point. evaluate() divides in integers and
 // truncates towards zero, so the two agree to within one centipawn rather than
 // exactly; the tuner works in floating point precisely so that the derivative
@@ -736,7 +876,8 @@ inline double evaluate(const uint16_t* pieces,
                        const double* params,
                        const int* king_safety,
                        const int* passed_pawn,
-                       const int* pawn_structure)
+                       const int* pawn_structure,
+                       const int* piece_placement)
 {
   const double mg_weight = static_cast<double>(phase) / GAME_PHASE_MAX;
   const double eg_weight =
@@ -824,8 +965,22 @@ inline double evaluate(const uint16_t* pieces,
   const double stage_one_structure =
       pawn_structure_mg_sum * mg_weight + pawn_structure_eg_sum * eg_weight;
 
+  double piece_placement_mg_sum = 0.0;
+  double piece_placement_eg_sum = 0.0;
+
+  for (size_t t = 0; t < PIECE_PLACEMENT_COUNT; ++t) {
+    piece_placement_mg_sum += piece_placement[t] * params[PL_MG_BASE + t];
+    piece_placement_eg_sum += piece_placement[t] * params[PL_EG_BASE + t];
+  }
+
+  // Outside the clamp for the reason written over the two lines above: the term
+  // is part of evaluate_cheap(), so the lazy margin says nothing about it and
+  // folding it into stage_two would clamp a quantity the engine never clamps.
+  const double stage_one_placement =
+      piece_placement_mg_sum * mg_weight + piece_placement_eg_sum * eg_weight;
+
   return material + mg * mg_weight + eg * eg_weight + stage_one_passed +
-         stage_one_structure + stage_two;
+         stage_one_structure + stage_one_placement + stage_two;
 }
 
 
@@ -863,6 +1018,11 @@ inline void starting_params(double* params)
   for (size_t t = 0; t < PAWN_STRUCTURE_COUNT; ++t) {
     params[PS_MG_BASE + t] = pawn_structure_mg[t];
     params[PS_EG_BASE + t] = pawn_structure_eg[t];
+  }
+
+  for (size_t t = 0; t < PIECE_PLACEMENT_COUNT; ++t) {
+    params[PL_MG_BASE + t] = piece_placement_mg[t];
+    params[PL_EG_BASE + t] = piece_placement_eg[t];
   }
 }
 

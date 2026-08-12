@@ -332,10 +332,10 @@ adjudicated once one side holds `--resign-score` for `--resign-plies`.
 Rate on this machine, three threads: 200 games at 100000 nodes per move in 61 s,
 about 77 positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame.
 
-`tuner` fits 817 numbers so that a sigmoid of the evaluation predicts the game
+`tuner` fits 825 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
-them; mobility adds 8 at S034, and king safety 18, passed pawns 12 and pawn
-structure 6 at S027. It never calls the search: `tools/eval_model.hpp` is
+them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn
+structure 6 and piece placement 8 at S027. It never calls the search: `tools/eval_model.hpp` is
 `evaluate()` written as a linear function of its own constants, which is what
 makes a full pass cheap, and `test_eval_model` is what stops that model drifting
 from the engine. It reports held-out error every `--report` epochs and keeps the
@@ -343,8 +343,9 @@ best one, prints a warning if the fit never beats the constants it started from,
 and writes a header to paste in.
 
 **Paste target is two files.** The piece defines and the two tables go in
-`src/eval_tables.hpp`; the mobility, king safety, passed pawn and pawn
-structure weights at the end of the emitted file go in `src/evaluation.cpp`. The header says so, because it is easy
+`src/eval_tables.hpp`; the mobility, king safety, passed pawn, pawn structure
+and piece placement weights at the end of the emitted file go in
+`src/evaluation.cpp`. The header says so, because it is easy
 to miss and a fit that is half applied looks like a fit that did not work.
 
 ```bash
@@ -354,15 +355,16 @@ build/tools/tuner --data .tuning/selfplay_v1.tsv \
 
 `--only GROUP` fits one group and holds every other parameter at what the engine
 ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
-`king_safety`, `passed_pawns`, `pawn_structure`, and the emitted header records
-which was used.
+`king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, and the
+emitted header records which was used.
 
 **Adding a group means re-ending the one before it.** Each group is a contiguous
 range and the last one runs to `PARAM_COUNT`, so a new group appended after it
 is silently swallowed unless the previous group's end moves. That has now
-happened twice — `king_safety` ran past the passed pawn weights, `passed_pawns`
-ran past the pawn structure weights — and neither would fail a test. The symptom
-is a fit returning the new weights exactly as it was handed them.
+happened three times — `king_safety` ran past the passed pawn weights,
+`passed_pawns` past the pawn structure weights, `pawn_structure` past the piece
+placement weights — and none of them would fail a test. The symptom is a fit
+returning the new weights exactly as it was handed them.
 
 **This is an attribution tool, not a speed tool.** A joint fit of a new term
 also refits the constants that were already fitted, so the SPRT that follows

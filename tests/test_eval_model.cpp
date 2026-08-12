@@ -51,8 +51,12 @@ static double model_score_white(const std::string& fen, const double* params)
   int pawn_structure[eval_model::PAWN_STRUCTURE_COUNT] = {};
   REQUIRE(eval_model::pawn_structure_features(placement, pawn_structure));
 
+  int piece_placement[eval_model::PIECE_PLACEMENT_COUNT] = {};
+  REQUIRE(eval_model::piece_placement_features(placement, piece_placement));
+
   return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
-                              params, king_safety, passed_pawn, pawn_structure);
+                              params, king_safety, passed_pawn, pawn_structure,
+                              piece_placement);
 }
 
 
@@ -69,6 +73,14 @@ static const char* const king_safety_feature_names[KS_FEATURE_COUNT] = {
 static const char* const
     pawn_structure_feature_names[eval_model::PAWN_STRUCTURE_COUNT] = {
         "isolated", "doubled", "backward"};
+
+
+// The same for the four piece placement counts, in the order the weights are
+// indexed.
+static const char* const
+    piece_placement_feature_names[eval_model::PIECE_PLACEMENT_COUNT] = {
+        "bishop pair", "rook on an open file", "rook on a half open file",
+        "rook on the seventh"};
 
 
 static const std::vector<std::string> positions = {
@@ -138,6 +150,15 @@ static const std::vector<std::string> positions = {
     // mirrored so that Black is the side carrying all three.
     "r2q1rk1/pp3ppp/4pn2/2p5/8/2NP1P2/PP3PPP/R2Q1RK1 w - - 0 14",
     "r2q1rk1/pp3ppp/2np1p2/8/2P5/4PN2/PP3PPP/R2Q1RK1 b - - 0 14",
+    // Piece placement, added at S027 when the engine's own counts were exposed
+    // and the twenty-four positions above turned out never to put a rook on the
+    // seventh at all, never to give Black a rook on an open file and never to
+    // give White one on a half-open file. Only the bishop pair was reached from
+    // both directions. A rook lifted to the seventh beside a second one on a
+    // half-open file, and the same position with the colours swapped so that
+    // Black is the side holding all three.
+    "r5k1/ppppRppp/8/8/8/8/PPP2PPP/3R2K1 w - - 0 1",
+    "3r2k1/ppp2ppp/8/8/8/8/PPPPrPPP/R5K1 b - - 0 1",
 };
 
 
@@ -189,6 +210,35 @@ struct pawn_structure_case_t
 // read off the end of a row rather than fail.
 static_assert(eval_model::PAWN_STRUCTURE_COUNT == 3,
               "the engine's pawn_structure_counts() rows are three wide");
+
+
+// One hand-built placement and the piece placement counts it must produce, per
+// colour rather than as the difference the model reports.
+//
+// Per colour for the reason the pawn structure cases carry two rows: a miscount
+// that hits both sides equally cancels in a difference, and the one-sided
+// placement trick the passed pawn cases use cannot reach half-open files, which
+// need an enemy pawn on the rook's file by definition.
+//
+// Hand-built so that the answer comes from the specification both
+// implementations were written from and not from either of them: two
+// extractions agreeing say nothing about whether the thing they agree on is
+// what was specified.
+struct piece_placement_case_t
+{
+  const char* placement;
+  const char* what;
+  int white[eval_model::PIECE_PLACEMENT_COUNT];
+  int black[eval_model::PIECE_PLACEMENT_COUNT];
+};
+
+
+// The engine indexes its counts with a literal 4, the model with a constant
+// taken from the width of the engine's own weight array. Nothing forces those
+// to be the same number, and if they ever stop being one the loops below would
+// read off the end of a row rather than fail.
+static_assert(eval_model::PIECE_PLACEMENT_COUNT == 4,
+              "the engine's piece_placement_counts() rows are four wide");
 
 
 TEST_SUITE("eval model: agrees with the engine")
@@ -691,6 +741,233 @@ TEST_SUITE("eval model: agrees with the engine")
     for (size_t feature = 0; feature < eval_model::PAWN_STRUCTURE_COUNT;
          ++feature) {
       const std::string name = pawn_structure_feature_names[feature];
+
+      CHECK_MESSAGE(positive[feature] > 0, (name + ": never White ahead"));
+      CHECK_MESSAGE(negative[feature] > 0, (name + ": never Black ahead"));
+      CHECK_MESSAGE(white_row[feature] > 0, (name + ": no White row claimed"));
+      CHECK_MESSAGE(black_row[feature] > 0, (name + ": no Black row claimed"));
+    }
+  }
+
+  // The piece placement counts, engine against model, over the same corpus, and
+  // the case with teeth for this term for the reason the three pairs above have
+  // teeth: the weights ship at zero, so the evaluate() comparison compares 0
+  // against 0 here and would pass however far apart the two counts are.
+  //
+  // eval_model::piece_placement_features() reports White minus Black and
+  // nothing else, which is the form the tuner is linear in, so that is what can
+  // be compared here. The rows themselves are pinned against hand-computed
+  // answers in the case below, which is what a difference cannot see: a
+  // miscount that hits both sides equally cancels.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the engine counts the piece placement the model counts")
+  {
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][4];
+      piece_placement_counts(&game.board, engine);
+
+      int model[eval_model::PIECE_PLACEMENT_COUNT] = {};
+      REQUIRE(eval_model::piece_placement_features(fen.substr(0, fen.find(' ')),
+                                                   model));
+
+      for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
+           ++feature) {
+        const std::string name = piece_placement_feature_names[feature];
+
+        CAPTURE(name);
+        CAPTURE(engine[WHITE][feature]);
+        CAPTURE(engine[BLACK][feature]);
+
+        CHECK(engine[WHITE][feature] - engine[BLACK][feature] ==
+              model[feature]);
+      }
+    }
+  }
+
+  // Non-vacuous by construction, and the reason the case above means anything.
+  // A count that is zero in every position of the corpus is a count the two
+  // implementations agree about for free, and the seventh rank is a different
+  // rank for each colour, so an error that only hits one of them needs both
+  // rows claimed to be caught.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the positions exercise every piece placement count")
+  {
+    int seen[2][eval_model::PIECE_PLACEMENT_COUNT] = {};
+    int white_ahead[eval_model::PIECE_PLACEMENT_COUNT] = {};
+    int black_ahead[eval_model::PIECE_PLACEMENT_COUNT] = {};
+
+    for (const std::string& fen : positions) {
+      REQUIRE(load_FEN(fen, &game));
+
+      int engine[2][4];
+      piece_placement_counts(&game.board, engine);
+
+      for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
+           ++feature) {
+        for (int colour = 0; colour < 2; ++colour) {
+          if (engine[colour][feature] != 0) { seen[colour][feature]++; }
+        }
+
+        const int difference = engine[WHITE][feature] - engine[BLACK][feature];
+
+        if (difference > 0) { white_ahead[feature]++; }
+        if (difference < 0) { black_ahead[feature]++; }
+      }
+    }
+
+    for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
+         ++feature) {
+      const std::string name = piece_placement_feature_names[feature];
+
+      CHECK_MESSAGE(seen[WHITE][feature] > 0, (name + ": never White"));
+      CHECK_MESSAGE(seen[BLACK][feature] > 0, (name + ": never Black"));
+      CHECK_MESSAGE(white_ahead[feature] > 0, (name + ": never White ahead"));
+      CHECK_MESSAGE(black_ahead[feature] > 0, (name + ": never Black ahead"));
+    }
+  }
+
+  // The same counts against placements whose answer was worked out by hand
+  // rather than by either implementation, which is what says the two agree on
+  // the specification and not merely with each other. Each clause that could be
+  // read another way has a case here: that a pair is not a count of bishops and
+  // does not ask about square colour, that a file with an own pawn on it is
+  // neither open nor half-open however many enemy pawns stand there, that a
+  // piece does not close a file, and that the seventh rank is the rank alone.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the model and the engine count piece placement by hand")
+  {
+    static const piece_placement_case_t cases[] = {
+        {"4k3/8/8/8/8/8/8/2B1KB2",
+         "two bishops are a pair",
+         {1, 0, 0, 0},
+         {0, 0, 0, 0}},
+        {"2b1kb2/8/8/8/8/8/8/4K3",
+         "the same two for Black",
+         {0, 0, 0, 0},
+         {1, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/8/2B1KB1B",
+         "three bishops are still one pair, not three",
+         {1, 0, 0, 0},
+         {0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/8/2B1K1B1",
+         "two bishops on the same colour square are still a pair",
+         {1, 0, 0, 0},
+         {0, 0, 0, 0}},
+        {"2b1kb2/8/8/8/8/8/8/2B1K3",
+         "one bishop is not a pair and two are",
+         {0, 0, 0, 0},
+         {1, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/8/R3K3",
+         "a file with no pawn of either colour on it is open",
+         {0, 1, 0, 0},
+         {0, 0, 0, 0}},
+        {"r3k3/8/8/8/8/8/8/4K3",
+         "the same for Black",
+         {0, 0, 0, 0},
+         {0, 1, 0, 0}},
+        {"4k3/8/8/8/8/8/P7/R3K3",
+         "an own pawn makes the file neither open nor half open",
+         {0, 0, 0, 0},
+         {0, 0, 0, 0}},
+        {"4k3/p7/8/8/8/8/P7/R3K3",
+         "an own pawn still closes it with an enemy pawn there too",
+         {0, 0, 0, 0},
+         {0, 0, 0, 0}},
+        {"4k3/p7/8/8/8/8/8/R3K3",
+         "an enemy pawn alone makes the file half open",
+         {0, 0, 1, 0},
+         {0, 0, 0, 0}},
+        {"r3k3/8/8/8/8/8/P7/4K3",
+         "the same for Black",
+         {0, 0, 0, 0},
+         {0, 0, 1, 0}},
+        {"4k3/8/8/8/n7/8/8/R3K3",
+         "a piece is not a pawn and does not close a file",
+         {0, 1, 0, 0},
+         {0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/8/R3K2R",
+         "two rooks on open files count two, not one",
+         {0, 2, 0, 0},
+         {0, 0, 0, 0}},
+        {"8/R7/8/8/4k3/8/8/4K3",
+         "the seventh is the rank alone, with the enemy king off "
+         "its back rank",
+         {0, 1, 0, 1},
+         {0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/r7/4K3",
+         "Black's seventh is rank 2",
+         {0, 0, 0, 0},
+         {0, 1, 0, 1}},
+        {"4k3/8/8/8/8/8/R7/4K3",
+         "a White rook on rank 2 is on its own second, not the "
+         "seventh",
+         {0, 1, 0, 0},
+         {0, 0, 0, 0}},
+        {"4k3/1R6/8/1p6/8/8/8/4K3",
+         "a rook on the seventh on a half open file counts in both",
+         {0, 0, 1, 1},
+         {0, 0, 0, 0}},
+        // Both colours at once, so a model that lost the sign reports the wrong
+        // difference rather than nothing at all.
+        {"4k3/8/8/8/8/8/r7/2B1KB2",
+         "White has the pair, Black the rook on the seventh",
+         {1, 0, 0, 0},
+         {0, 1, 0, 1}},
+    };
+
+    int positive[eval_model::PIECE_PLACEMENT_COUNT] = {};
+    int negative[eval_model::PIECE_PLACEMENT_COUNT] = {};
+    int white_row[eval_model::PIECE_PLACEMENT_COUNT] = {};
+    int black_row[eval_model::PIECE_PLACEMENT_COUNT] = {};
+
+    for (const piece_placement_case_t& item : cases) {
+      // As strings, because CAPTURE of a `const char*` logs the pointer and a
+      // failure then names the case by its address.
+      const std::string placement = item.placement;
+      const std::string what = item.what;
+
+      CAPTURE(placement);
+      CAPTURE(what);
+
+      int model[eval_model::PIECE_PLACEMENT_COUNT] = {};
+      REQUIRE(eval_model::piece_placement_features(item.placement, model));
+
+      // The cases carry a placement and load_FEN wants a whole FEN, so the
+      // tail is the neutral one: White to move, nothing castling, no en
+      // passant. None of the four is read by the term.
+      REQUIRE(load_FEN(placement + " w - - 0 1", &game));
+
+      int engine[2][4];
+      piece_placement_counts(&game.board, engine);
+
+      for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
+           ++feature) {
+        const std::string name = piece_placement_feature_names[feature];
+        const int difference = item.white[feature] - item.black[feature];
+
+        CAPTURE(name);
+
+        CHECK(model[feature] == difference);
+        CHECK(engine[WHITE][feature] == item.white[feature]);
+        CHECK(engine[BLACK][feature] == item.black[feature]);
+
+        if (difference > 0) { positive[feature]++; }
+        if (difference < 0) { negative[feature]++; }
+        if (item.white[feature] != 0) { white_row[feature]++; }
+        if (item.black[feature] != 0) { black_row[feature]++; }
+      }
+    }
+
+    // Non-vacuous by construction. A count no case ever reaches is a count the
+    // extractors could compute any way they liked, and a row no case ever
+    // claims is a row the per-colour pinning above never pins -- which is the
+    // whole reason these cases carry two rows instead of a difference.
+    for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
+         ++feature) {
+      const std::string name = piece_placement_feature_names[feature];
 
       CHECK_MESSAGE(positive[feature] > 0, (name + ": never White ahead"));
       CHECK_MESSAGE(negative[feature] > 0, (name + ": never Black ahead"));
