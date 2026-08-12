@@ -73,6 +73,51 @@ extern const int passed_pawn_eg[6];
 // implementation to drift.
 void passed_pawn_counts(const board_t* board, int out[2][6]);
 
+// The pawn structure weights, indexed by feature: 0 isolated, 1 doubled, 2
+// backward. Exposed for the same reason as the passed pawn weights above: the
+// tuner's model in tools/eval_model.hpp starts from what the engine ships
+// instead of from a copy of it that would be free to drift.
+//
+// Zero until the tuner fits them, so that the SPRT measures the fitted term
+// rather than a guess.
+//
+// The three definitions, stated exactly, because the tuner's model is written
+// from this comment and the two have to mean the same thing. Each is about one
+// side's own pawns; the term is the White count minus the Black one, feature by
+// feature. "Ahead" and "behind" are that side's own directions, so ahead is
+// toward rank 8 for White and toward rank 1 for Black.
+//
+//   isolated  own pawns with no own pawn anywhere on either neighbouring file.
+//             Rank does not enter it.
+//   doubled   own pawns with another own pawn ahead of them on the same file.
+//             Per file that is one less than the number of own pawns on it, so
+//             three pawns on a file count two.
+//   backward  own pawns meeting both of: no own pawn on either neighbouring
+//             file at or behind their own rank -- the same rank counts as
+//             behind, so a neighbour abreast of the pawn stops it being
+//             backward -- and the square directly ahead of it is attacked by an
+//             enemy pawn. Whether that square is occupied is not asked, and
+//             neither is whether the pawn could be defended after advancing.
+//
+// Counts and not booleans: three isolated pawns count three. The three features
+// are not exclusive and are not meant to be -- an isolated pawn whose stop
+// square an enemy pawn attacks is counted as isolated and again as backward,
+// and the fit splits the shared effect between them the way DEC-044 describes
+// for king safety's collinear counts.
+extern const int pawn_structure_mg[3];
+extern const int pawn_structure_eg[3];
+
+// The raw counts the term is built from, per colour, WHITE first, in the
+// feature order above. Exists for tests/test_eval_model and per colour rather
+// than as the difference, for the reasons written out over passed_pawn_counts()
+// -- while the weights are zero the score compares 0 against 0, and a miscount
+// that hits both sides equally cancels in a difference.
+//
+// Not on the hot path: it is the collecting instantiation of the same function
+// evaluate_cheap() calls, so there is one extraction and no second
+// implementation to drift.
+void pawn_structure_counts(const board_t* board, int out[2][3]);
+
 // What the king safety term counts, in the order its weights are indexed. The
 // first four are attacker counts by piece type and share the order the mobility
 // weights use.

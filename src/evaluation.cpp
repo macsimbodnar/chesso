@@ -45,27 +45,6 @@ static constexpr int piece_values_abs[] = {
 
 // clang-format on
 
-// Zero, deliberately, and fitted by tools/tuner afterwards. Shipping the term
-// at zero makes this commit provably behaviour-neutral -- identical node counts
-// and identical best moves -- so the SPRT that follows measures the fitted term
-// and not a guess about it. It is the staging discipline S034 arrived at and
-// king safety repeated. No published table was consulted, DEC-016.
-//
-// Zero also means clang folds the *arithmetic* away: it can see these are const
-// and zero, so the fill and the bucket loop compile to nothing at all.
-// **Nothing measured at these weights says anything about what they cost.**
-// That is not a hypothetical -- three gates were run against the term when it
-// was first added and all three reported no difference, because there was none
-// to report.
-//
-// Forced non-zero to find out what the term itself costs, and the cost is real:
-// evaluate_cheap() goes from 1.14 to 2.75 ns and a depth 12 search takes 4.5 %
-// longer -- measured
-// against a build carrying the term with its result discarded behind a barrier,
-// so both sides walk the identical tree and the node counts prove it. Whoever
-// fits these weights pays that in the same commit. DEC-040 is the warning:
-// mobility measured -14.93 Elo the one time a term was judged while its speed
-// cost was still unpaid.
 // Fitted with the other 799 constants frozen -- `tuner --only passed_pawns`
 // over 1490839 self-play positions, held-out error 0.107106 to 0.106900.
 //
@@ -78,8 +57,62 @@ static constexpr int piece_values_abs[] = {
 // mistake as reading a pawn's fitted value of 83 as what a pawn is worth.
 // Knight mobility fitted to nothing against this same effect at S034, DEC-040,
 // and DEC-044 records it for king safety's attacker counts.
+//
+// The term costs 4.5 % of a depth 12 search, measured with the weights forced
+// non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
+// of that: +17.34 +/- 13.51 Elo over 1584 games, H1 accepted.
 const int passed_pawn_mg[6] = {3, -16, 1, 10, 30, 2};
 const int passed_pawn_eg[6] = {-15, -4, 18, 28, 25, 8};
+
+
+// The three pawn structure features, in the order their weights are indexed.
+// Shared between the weights, the counts and the accessor so that none of the
+// three can disagree with the others about which index means what.
+enum
+{
+  PS_ISOLATED,
+  PS_DOUBLED,
+  PS_BACKWARD,
+  PS_FEATURE_COUNT
+};
+
+
+// Zero, deliberately, and fitted by tools/tuner afterwards. Same staging as
+// passed pawns above and for the same reason: at zero the commit is provably
+// behaviour-neutral, so the SPRT that follows measures the fitted term instead
+// of a guess. No published table was consulted, DEC-016.
+//
+// The exact definition of each of the three is in evaluation.hpp, written out
+// there because tools/eval_model.hpp is built from it and the two have to mean
+// the same thing. What is here is why the arithmetic below computes them the
+// way it does.
+//
+// **Nothing measured at these weights says anything about what they cost** --
+// clang sees the zeros and deletes the two extra fills, the popcounts and the
+// arithmetic that feed them, DEC-047. evaluate_cheap() disassembles to the same
+// 87 instructions with the term as without it, and to 166 with the weights
+// forced. Every "this term is free" figure taken at zero is a figure about a
+// build that does not contain it.
+//
+// Forced non-zero with the passed pawn term already live, so the figure is the
+// marginal cost of adding this one on top of that one and not the cost of the
+// pair: **4.1 % of a depth 14 search**, 5.590 s to 5.820 s, 40 hyperfine runs
+// per build with per-block sigma 0.9 to 1.5 %, the two run orders bracketing
+// 3.7 % and 4.5 %. The costing build computes the term at forced weights and
+// throws it away behind an asm barrier so the score is unchanged, which is what
+// makes the two node-for-node identical -- 32643888 nodes either way -- and the
+// wall time the cost and nothing else.
+//
+// The barrier is not what is being measured: the same build with the barrier
+// moved onto the passed pawn sums and these weights back at zero ran 5.584 s
+// against 5.589 s for b5fb5ff with no barrier at all, a difference of 0.1 %
+// inside a sigma of 1.0 %.
+//
+// Whoever fits these weights pays that 4.1 % in the same commit. DEC-040 is the
+// warning: mobility measured -14.93 Elo the one time a term was judged while
+// its speed cost was still unpaid.
+const int pawn_structure_mg[PS_FEATURE_COUNT] = {0, 0, 0};
+const int pawn_structure_eg[PS_FEATURE_COUNT] = {0, 0, 0};
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's
@@ -104,30 +137,46 @@ static inline bb_t fill_toward_rank1(bb_t squares)
 }
 
 
-// The same squares plus the two neighbouring files. The file masks are the
-// whole point of the function: a bit on the h file shifted one to the left
-// lands on the a file of the next rank down, so without them a pawn on one
-// edge of the board would stop a passer on the other. That is the bug this term
-// is most likely to have and it is invisible while the weights are zero, so it
-// was not reasoned about: dropping the two masks and re-running the corpus
-// comparison that replaced the old per-pawn form disagreed on 3 of the 2696
-// test positions and 129574 of the 1490839 tuning ones.
-static inline bb_t widen_by_one_file(bb_t squares)
+// The two neighbouring files of every square in the set, and not the squares
+// themselves. The file masks are the whole point of the function: a bit on the
+// h file shifted one to the left lands on the a file of the next rank down, so
+// without them a pawn on one edge of the board would stop a passer on the
+// other. That is the bug these terms are most likely to have and it is
+// invisible while the weights are zero, so it was not reasoned about: dropping
+// the two masks and re-running the corpus comparison that replaced the old
+// per-pawn form disagreed on 3 of the 2696 test positions and 129574 of the
+// 1490839 tuning ones.
+static inline bb_t neighbour_files(bb_t squares)
 {
-  return squares | ((squares << 1) & ~file_masks[0]) |
-         ((squares >> 1) & ~file_masks[7]);
+  return ((squares << 1) & ~file_masks[0]) | ((squares >> 1) & ~file_masks[7]);
 }
 
 
-// Passed pawns, White minus Black, as an untapered middlegame and endgame pair
-// for the caller to interpolate.
+// The same squares plus the two neighbouring files. Split from the above
+// because the pawn structure terms ask about the neighbours with the pawn's own
+// file left out, and passed pawns asks about both together.
+static inline bb_t widen_by_one_file(bb_t squares)
+{ return squares | neighbour_files(squares); }
+
+
+// Both pawn terms, passed pawns and pawn structure, White minus Black, as one
+// untapered middlegame and endgame pair for the caller to interpolate.
 //
-// Both sides fall out of one identity, set-wise, in a fixed dozen shifts for
+// One function and not two because the two terms are the same four fills read
+// four different ways, and a second pass over the pawns would recompute them.
+// The fusion is the one mobility and king safety already use, for the reason
+// recorded there: asking the same question twice cost 7.7 % of the search.
+//
+// Passed pawns falls out of one identity, set-wise, in a fixed dozen shifts for
 // the whole board. Widen the enemy pawns by one file each way, fill that toward
 // the enemy's own back rank, and the result is every square an enemy pawn
 // stands in the way of -- so the passers are the pawns not in it. The extra
 // shift by eight makes the span exclusive, which is what stops two pawns facing
 // each other on the same file from each deciding the other is behind it.
+//
+// Pawn structure is three counts per side and evaluation.hpp states each one
+// exactly. Their signs are not decided here: the weights are fitted, so a
+// penalty arrives as a negative weight rather than as a minus in this file.
 //
 // The first form of this looped over every pawn and asked
 // passed_w_pawns_masks[square] whether that one was passed. It cost 8.50 ns per
@@ -151,9 +200,10 @@ static inline bb_t widen_by_one_file(bb_t squares)
 // index: square >> 3 is 6 on White's second rank and 1 on the seventh. Reversed
 // it pays for retreating pawns, and while the weights are zero no test can say
 // so, because every score it produces is the same score. What can say so is
-// passed_pawn_counts() below, which is why `collect` is here.
+// passed_pawn_counts() below, which is why `collect` is here. Pawn structure
+// has the same hole and pawn_structure_counts() is the same answer to it.
 //
-// `collect` is how that accessor reads the buckets out without the search
+// `collect` is how the two accessors read the counts out without the search
 // paying for it. A template rather than a flag, the arrangement king safety
 // arrived at: at <false> the stores and the out pointer are not compiled at
 // all, and the instantiation the search calls keeps exactly one caller, so
@@ -161,29 +211,100 @@ static inline bb_t widen_by_one_file(bb_t squares)
 // away. Handing that instantiation a second caller instead is what cost 21 %
 // once -- see king_shelter_features() below.
 template <bool collect>
-static inline void passed_pawns(const board_t* board,
-                                int* mg,
-                                int* eg,
-                                int out[2][6])
+static inline void evaluate_pawns(const board_t* board,
+                                  int* mg,
+                                  int* eg,
+                                  int passed_out[2][6],
+                                  int structure_out[2][PS_FEATURE_COUNT])
 {
   const bb_t white_pawns = board->bitboards[W_PAWN];
   const bb_t black_pawns = board->bitboards[B_PAWN];
 
-  const bb_t black_stops = fill_toward_rank1(widen_by_one_file(black_pawns))
-                           << 8;
-  const bb_t white_stops =
-      fill_toward_rank8(widen_by_one_file(white_pawns)) >> 8;
+  // Four fills, each spent on more than one thing, which is the reason the two
+  // terms share a function at all. Forward -- toward rank 8 for White, toward
+  // rank 1 for Black -- gives the passed pawn spans and the "no neighbour at or
+  // behind" half of backward. Backward gives doubled. The union of the two is
+  // the set of files a side has a pawn on, which is what isolated asks about.
+  // Computed as two independent passes it is six fills instead of four -- two
+  // for passed pawns and four for structure; the same fusion argument that
+  // recovered 7.7 % on mobility and king safety.
+  const bb_t white_ahead = fill_toward_rank8(white_pawns);
+  const bb_t white_behind = fill_toward_rank1(white_pawns);
+  const bb_t black_ahead = fill_toward_rank1(black_pawns);
+  const bb_t black_behind = fill_toward_rank8(black_pawns);
+
+  // Strictly ahead. The extra shift by eight is what makes the span exclusive,
+  // which is what stops two pawns facing each other on the same file from each
+  // deciding the other is behind it.
+  const bb_t white_front = white_ahead >> 8;
+  const bb_t black_front = black_ahead << 8;
+
+  // Widening the span rather than the pawns, which is the order the passed pawn
+  // term used before pawn structure needed the bare span. The two are equal
+  // because a horizontal shift and a vertical fill commute and the file masks
+  // are invariant under the vertical one -- and because equality was checked by
+  // brute force over 200000 random pawn placements rather than argued, the a
+  // and h file wrap being exactly what the masks are there to stop.
+  const bb_t white_stops = widen_by_one_file(white_front);
+  const bb_t black_stops = widen_by_one_file(black_front);
 
   bb_t white_passed = white_pawns & ~black_stops;
   bb_t black_passed = black_pawns & ~white_stops;
 
+  // A pawn is isolated when neither neighbouring file holds an own pawn at any
+  // rank, so the file fill is the whole file set and the rank drops out.
+  const bb_t white_isolated =
+      white_pawns & ~neighbour_files(white_ahead | white_behind);
+  const bb_t black_isolated =
+      black_pawns & ~neighbour_files(black_ahead | black_behind);
+
+  // white_behind shifted one further is every square with an own pawn strictly
+  // ahead of it, so intersecting that with the pawns is the definition read
+  // literally. The other reading -- pawns with an own pawn strictly behind
+  // -- selects a different set of squares and the same number of them, n-1 per
+  // file either way, so only the comment can tell the two apart and it does.
+  const bb_t white_doubled = white_pawns & (white_behind << 8);
+  const bb_t black_doubled = black_pawns & (black_behind >> 8);
+
+  // One step forward and one file each way: the squares a side's pawns attack.
+  const bb_t white_attacks = neighbour_files(white_pawns >> 8);
+  const bb_t black_attacks = neighbour_files(black_pawns << 8);
+
+  // Backward, both halves. The neighbour test uses the *forward* fill: a square
+  // is in neighbour_files(white_ahead) exactly when an own pawn on an adjacent
+  // file stands at or behind it, since the fill of that pawn covers every
+  // square from it forward. The stop-square test shifts the enemy attack set
+  // back by one rank instead of the pawns forward by one, so the pawn's own bit
+  // is what is tested and no second shift is needed to get back.
+  const bb_t white_backward =
+      white_pawns & ~neighbour_files(white_ahead) & (black_attacks << 8);
+  const bb_t black_backward =
+      black_pawns & ~neighbour_files(black_ahead) & (white_attacks >> 8);
+
   int mg_sum = 0;
   int eg_sum = 0;
 
+  const int structure[2][PS_FEATURE_COUNT] = {
+      {count_bits(white_isolated), count_bits(white_doubled),
+       count_bits(white_backward)},
+      {count_bits(black_isolated), count_bits(black_doubled),
+       count_bits(black_backward)}};
+
+  for (int f = 0; f < PS_FEATURE_COUNT; ++f) {
+    const int difference = structure[WHITE][f] - structure[BLACK][f];
+
+    mg_sum += difference * pawn_structure_mg[f];
+    eg_sum += difference * pawn_structure_eg[f];
+  }
+
   if constexpr (collect) {
     for (int colour = 0; colour < 2; ++colour) {
+      for (int f = 0; f < PS_FEATURE_COUNT; ++f) {
+        structure_out[colour][f] = structure[colour][f];
+      }
+
       for (int bucket = 0; bucket < 6; ++bucket) {
-        out[colour][bucket] = 0;
+        passed_out[colour][bucket] = 0;
       }
     }
   }
@@ -201,7 +322,7 @@ static inline void passed_pawns(const board_t* board,
     mg_sum += passed_pawn_mg[bucket];
     eg_sum += passed_pawn_eg[bucket];
 
-    if constexpr (collect) { out[WHITE][bucket]++; }
+    if constexpr (collect) { passed_out[WHITE][bucket]++; }
   }
 
   while (black_passed) {
@@ -217,7 +338,7 @@ static inline void passed_pawns(const board_t* board,
     // Black's own row counts Black's passers as positives. The minus above is
     // the score's sign and not the count's, and folding the two together is
     // what would make a row mean two different things.
-    if constexpr (collect) { out[BLACK][bucket]++; }
+    if constexpr (collect) { passed_out[BLACK][bucket]++; }
   }
 
   *mg = mg_sum;
@@ -233,8 +354,24 @@ void passed_pawn_counts(const board_t* board, int out[2][6])
 {
   int mg = 0;
   int eg = 0;
+  int structure[2][PS_FEATURE_COUNT];
 
-  passed_pawns<true>(board, &mg, &eg, out);
+  evaluate_pawns<true>(board, &mg, &eg, out, structure);
+}
+
+
+// The other half of the same call, and thrown away the same way. Both accessors
+// go through the collecting instantiation, so the one evaluate_cheap() calls
+// keeps exactly one caller and clang keeps inlining it -- handing a hot-path
+// function a second caller is what cost 21 % once, see king_shelter_features()
+// below.
+void pawn_structure_counts(const board_t* board, int out[2][3])
+{
+  int mg = 0;
+  int eg = 0;
+  int passed[2][6];
+
+  evaluate_pawns<true>(board, &mg, &eg, passed, out);
 }
 
 
@@ -246,19 +383,21 @@ void passed_pawn_counts(const board_t* board, int out[2][6])
 // rebuilt from the bitboards, which is why this function stopped being 40% of
 // the search.
 //
-// Passed pawns are the exception and the first term here that is computed
-// rather than accumulated. "Every evaluation term must be accumulated" was the
-// rule and it is not the rule any more: a term that reads where the *other*
-// side's pawns stand has no O(1) delta make_move could apply, so it cannot be
+// The pawn terms are the exception and the first here that are computed rather
+// than accumulated. "Every evaluation term must be accumulated" was the rule
+// and it is not the rule any more: a term that reads where the *other* side's
+// pawns stand has no O(1) delta make_move could apply, so it cannot be
 // accumulated at all and what is left to choose is the stage.
 //
-// It is here rather than behind the shortcut with mobility and king safety
+// They are here rather than behind the shortcut with mobility and king safety
 // because evaluate_expensive() clamps stage two to +/-LAZY_EVAL_MARGIN. That
 // clamp is what makes the shortcut sound, and tools/eval_spread already puts
 // the stage-two correction at p99 128 and max 330 over 1490839 corpus
 // positions, clamped on 0.365 % of them. A pawn one square from promotion
 // swings further than the clamp would let through, so stage two would truncate
-// this term on exactly the positions it exists for.
+// the passed pawn term on exactly the positions it exists for. Pawn structure
+// is in the same call and therefore the same stage; it has no clamp argument of
+// its own, it shares the fills.
 //
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later
@@ -270,9 +409,9 @@ int evaluate_cheap(const board_t* board)
   // arbitrary piece comes off.
   const int phase = game_phase(board);
 
-  int passed_mg = 0;
-  int passed_eg = 0;
-  passed_pawns<false>(board, &passed_mg, &passed_eg, nullptr);
+  int pawn_mg = 0;
+  int pawn_eg = 0;
+  evaluate_pawns<false>(board, &pawn_mg, &pawn_eg, nullptr, nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that
@@ -280,8 +419,8 @@ int evaluate_cheap(const board_t* board)
   // which is what keeps test_eval_model's one-centipawn slack against the
   // tuner's floating-point model from having to grow.
   const int positional =
-      (((board->psqt_mg + passed_mg) * phase) +
-       ((board->psqt_eg + passed_eg) * (GAME_PHASE_MAX - phase))) /
+      (((board->psqt_mg + pawn_mg) * phase) +
+       ((board->psqt_eg + pawn_eg) * (GAME_PHASE_MAX - phase))) /
       GAME_PHASE_MAX;
 
   const int score = board->material + positional;
