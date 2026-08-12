@@ -1983,3 +1983,26 @@ Commits: `ce7cd35` fitted passed pawn weights, `a96c647` the watcher rule.
 Next: term 3, pawn structure -- isolated, doubled, backward. It lost the pawn
 hash DEC-046 discarded, so its cost is unpaid for and gets measured with the
 weights forced non-zero.
+
+## 2026-08-12T16:33+02:00 prompt
+
+> <task-notification>
+> <task-id>bdo5xmuot</task-id>
+> <summary>Monitor event: "pawn structure fit"</summary>
+> <event>PS FIT DONE
+> no improvement in 20 reports, stopping
+> best: train 0.106391  validation 0.106766  (start 0.106510 / 0.106892)
+> constants written to .tuning/tuned_ps_only.hpp
+> const int pawn_structure_mg[3] = {-2, 5, -4};  // isolated doubled backward
+> const int pawn_structure_eg[3] = {-1, -34, -6};  // isolated doubled backward</event>
+> </task-notification>
+
+## 2026-08-12T16:33+02:00 prompt
+
+> <task-notification>
+> <task-id>bdo5xmuot</task-id>
+> <tool-use-id>toolu_01EtiXN3Mc35crsdLK4UHzT9</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bdo5xmuot.output</output-file>
+> <status>completed</status>
+> <summary>Monitor "pawn structure fit" stream ended</summary>
+> </task-notification>

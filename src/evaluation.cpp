@@ -111,8 +111,22 @@ enum
 // Whoever fits these weights pays that 4.1 % in the same commit. DEC-040 is the
 // warning: mobility measured -14.93 Elo the one time a term was judged while
 // its speed cost was still unpaid.
-const int pawn_structure_mg[PS_FEATURE_COUNT] = {0, 0, 0};
-const int pawn_structure_eg[PS_FEATURE_COUNT] = {0, 0, 0};
+// Fitted with the other 811 constants frozen -- `tuner --only pawn_structure`
+// over 1490839 self-play positions, held-out error 0.106892 to 0.106766.
+//
+// That improvement is the smallest of S027's three terms: king safety moved the
+// error 0.000304 and measured +20.87 Elo, passed pawns 0.000206 and measured
+// +17.34, this one 0.000126 against a 4.1 % speed cost it has to pay back.
+//
+// A residual, not a valuation, and the middlegame doubled weight is the one
+// that shows it: +5, which read as chess would say doubling a pawn helps. It
+// says nothing of the kind. The three features overlap by construction -- the
+// header says they are not exclusive -- and they sit on top of a pawn
+// piece-square table that has already priced the files, so the fit distributes
+// one effect across whatever is available to it. Third time in this file;
+// DEC-044 and the passed pawn comment above record the other two.
+const int pawn_structure_mg[PS_FEATURE_COUNT] = {-2, 5, -4};
+const int pawn_structure_eg[PS_FEATURE_COUNT] = {-1, -34, -6};
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's

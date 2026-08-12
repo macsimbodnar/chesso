@@ -160,10 +160,13 @@ TEST_SUITE("evaluation: score")
   // not. S027's passed pawn weights then moved the pawn alone, 104 to 89: it is
   // the only case here with a pawn on the board, that pawn is passed because
   // there are no enemy pawns anywhere, and at phase 0 it collects
-  // passed_pawn_eg[0] = -15 and nothing else. Those three are positions where
-  // king_safety_features() reports the same nine counts for both colours, so
-  // the term cancels in the difference the score is built from rather than
-  // being absent from it.
+  // passed_pawn_eg[0] = -15 and nothing else. The pawn structure weights then
+  // moved the same case alone again, 89 to 88: that pawn is also isolated, with
+  // no own pawn on the d or the f file, and it is not backward because nothing
+  // attacks e3, so it collects pawn_structure_eg[isolated] = -1 once. Those
+  // three are positions where king_safety_features() reports the same nine
+  // counts for both colours, so the term cancels in the difference the score is
+  // built from rather than being absent from it.
   //
   // The values below were recomputed by a second implementation of evaluate()
   // written for the purpose -- one that walks the rays by hand rather than
@@ -184,7 +187,7 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  89, "pawn on e2"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  88, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 240, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
       {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 530, "rook on d1"},
