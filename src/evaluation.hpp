@@ -118,6 +118,71 @@ extern const int pawn_structure_eg[3];
 // implementation to drift.
 void pawn_structure_counts(const board_t* board, int out[2][3]);
 
+// The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
+// open file, 2 rook on a half-open file, 3 rook on the seventh. Exposed for the
+// same reason as the weights above: the tuner's model in tools/eval_model.hpp
+// starts from what the engine ships instead of from a copy of it that would be
+// free to drift.
+//
+// Zero until the tuner fits them, so that the SPRT measures the fitted term
+// rather than a guess.
+//
+// The four definitions, stated exactly, because the tuner's model is written
+// from this comment and the two have to mean the same thing. Each is about one
+// side's own pieces; the term is the White count minus the Black one, feature
+// by feature.
+//
+//   bishop_pair     1 when the side has two or more bishops, 0 otherwise. Not a
+//                   count of bishops: it is the pair that is claimed to be
+//                   worth something, so three bishops off a promotion still
+//                   score 1. Square colour is not asked about -- two bishops on
+//                   the same colour count as a pair here.
+//   rook_open       own rooks standing on a file carrying no pawn of either
+//                   colour. The rook's own rank does not enter it, and neither
+//                   does anything else standing on the file: pieces are not
+//                   pawns and do not close a file.
+//   rook_half_open  own rooks standing on a file carrying no own pawn and at
+//                   least one enemy pawn.
+//   rook_seventh    own rooks standing on the rank the enemy's pawns start on
+//                   -- rank 7 for White, rank 2 for Black.
+//
+// Counts and not booleans for the three rook features: two rooks on open files
+// count two. Only rooks are asked about, so a queen on an open file is not
+// counted anywhere here.
+//
+// rook_open and rook_half_open exclude each other, rook_seventh excludes
+// neither: a rook on an open file on the seventh rank counts once in each of
+// the two, and the fit splits the shared effect between them the way DEC-044
+// describes for king safety's collinear counts.
+//
+// Two places a reader could reasonably differ, so the choice is stated rather
+// than left to be inferred:
+//
+//   **rook_seventh asks nothing about the enemy king.** The literature usually
+//   pays for a rook on the seventh only when the enemy king is on its back rank
+//   or pawns are still there to be eaten. This is the rank and nothing else.
+//   The condition is what the weight is fitted against, so a conditional
+//   version is a different feature and would need its own fit, not a different
+//   reading of this one.
+//
+//   **A file with an own pawn on it is neither open nor half-open**, whatever
+//   the enemy has there. The two features are disjoint by construction and
+//   their sum is not "rooks on files this side's pawns do not block" -- a rook
+//   behind its own pawn scores zero in both, deliberately.
+extern const int piece_placement_mg[4];
+extern const int piece_placement_eg[4];
+
+// The raw counts the term is built from, per colour, WHITE first, in the
+// feature order above. Exists for tests/test_eval_model and per colour rather
+// than as the difference, for the reasons written out over passed_pawn_counts()
+// -- while the weights are zero the score compares 0 against 0, and a miscount
+// that hits both sides equally cancels in a difference.
+//
+// Not on the hot path: it is the collecting instantiation of the same function
+// evaluate_cheap() calls, so there is one extraction and no second
+// implementation to drift.
+void piece_placement_counts(const board_t* board, int out[2][4]);
+
 // What the king safety term counts, in the order its weights are indexed. The
 // first four are attacker counts by piece type and share the order the mobility
 // weights use.
