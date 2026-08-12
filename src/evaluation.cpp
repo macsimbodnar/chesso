@@ -45,10 +45,174 @@ static constexpr int piece_values_abs[] = {
 
 // clang-format on
 
-// Everything here was already computed by make_move: the material balance, the
-// two piece-square sums and the phase are maintained as pieces move rather than
-// rebuilt from the bitboards. All that is left is the interpolation and the
-// sign, which is why this function stopped being 40% of the search.
+// Zero, deliberately, and fitted by tools/tuner afterwards. Shipping the term
+// at zero makes this commit provably behaviour-neutral -- identical node counts
+// and identical best moves -- so the SPRT that follows measures the fitted term
+// and not a guess about it. It is the staging discipline S034 arrived at and
+// king safety repeated. No published table was consulted, DEC-016.
+//
+// Zero also means clang folds the *arithmetic* away: it can see these are const
+// and zero, so the fill and the bucket loop compile to nothing at all.
+// **Nothing measured at these weights says anything about what they cost.**
+// That is not a hypothetical -- three gates were run against the term when it
+// was first added and all three reported no difference, because there was none
+// to report.
+//
+// What does not fold away is the pawn hash below. The probe and the store
+// survive at any weights, because the table is a mutable global, and so does
+// the pawn key make_move maintains to index it: at these weights
+// evaluate_cheap() is 35 instructions against 18 for the build with no term at
+// all, and a depth 12 search is 2.2 % slower than 2861cdc while returning a
+// score identical to the digit.
+//
+// Forced non-zero to find out what the term itself costs, and the cost is real:
+// evaluate_cheap() goes from 1.14 to 2.75 ns and a depth 12 search takes 4.5 %
+// longer -- 3.1 % when it was re-measured against the pawn hash -- measured
+// against a build carrying the term with its result discarded behind a barrier,
+// so both sides walk the identical tree and the node counts prove it. Whoever
+// fits these weights pays that in the same commit. DEC-040 is the warning:
+// mobility measured -14.93 Elo the one time a term was judged while its speed
+// cost was still unpaid.
+const int passed_pawn_mg[6] = {0, 0, 0, 0, 0, 0};
+const int passed_pawn_eg[6] = {0, 0, 0, 0, 0, 0};
+
+
+// Toward rank 8, which is toward index 0 because index 0 is a8. White's
+// forward direction. Three shifts and not seven: each one doubles the distance
+// already filled, so 8, 16 and 32 between them cover all eight ranks.
+static inline bb_t fill_toward_rank8(bb_t squares)
+{
+  squares |= squares >> 8;
+  squares |= squares >> 16;
+  squares |= squares >> 32;
+  return squares;
+}
+
+
+// Toward rank 1, which is toward index 63. Black's forward direction.
+static inline bb_t fill_toward_rank1(bb_t squares)
+{
+  squares |= squares << 8;
+  squares |= squares << 16;
+  squares |= squares << 32;
+  return squares;
+}
+
+
+// The same squares plus the two neighbouring files. The file masks are the
+// whole point of the function: a bit on the h file shifted one to the left
+// lands on the a file of the next rank down, so without them a pawn on one
+// edge of the board would stop a passer on the other. That is the bug this term
+// is most likely to have and it is invisible while the weights are zero, so it
+// was not reasoned about: dropping the two masks and re-running the corpus
+// comparison that replaced the old per-pawn form disagreed on 3 of the 2696
+// test positions and 129574 of the 1490839 tuning ones.
+static inline bb_t widen_by_one_file(bb_t squares)
+{
+  return squares | ((squares << 1) & ~file_masks[0]) |
+         ((squares >> 1) & ~file_masks[7]);
+}
+
+
+// Passed pawns, White minus Black, as an untapered middlegame and endgame pair
+// for the caller to interpolate.
+//
+// Both sides fall out of one identity, set-wise, in a fixed dozen shifts for
+// the whole board. Widen the enemy pawns by one file each way, fill that toward
+// the enemy's own back rank, and the result is every square an enemy pawn
+// stands in the way of -- so the passers are the pawns not in it. The extra
+// shift by eight makes the span exclusive, which is what stops two pawns facing
+// each other on the same file from each deciding the other is behind it.
+//
+// The first form of this looped over every pawn and asked
+// passed_w_pawns_masks[square] whether that one was passed. It cost 8.50 ns per
+// evaluate_cheap() call on kiwipete's sixteen pawns against 1.14 without the
+// term, because the answer per pawn is a branch nothing can predict. This form
+// does not look at a pawn at all until it already knows the pawn is passed:
+// 2.75 ns, flat in the number of pawns, and 10.8 % of a depth 12 search down to
+// 4.5 %. Both forms were run over 1493535 positions -- the 2696 of
+// all_test_fens() and all 1490839 of the tuning corpus -- and agreed on the
+// mg/eg pair in every one.
+//
+// Six buckets by how far the pawn has advanced, not one weight multiplied by
+// the rank. The value is not linear in the rank -- a pawn one square from
+// queening is worth several times one on the third -- and the tuner fits a
+// linear function of its parameters, so a non-linear shape has to sit in the
+// features or it cannot be fitted here at all. Same constraint that made king
+// safety linear, DEC-044.
+//
+// The bucket arithmetic is the part of this term that is easy to get backwards.
+// Index 0 is a8 and index 63 is h1, so White advances by *decreasing* the
+// index: square >> 3 is 6 on White's second rank and 1 on the seventh. Reversed
+// it pays for retreating pawns, and while the weights are zero no test can say
+// so, because every score it produces is the same score.
+static inline void passed_pawns(const board_t* board, int* mg, int* eg)
+{
+  const bb_t white_pawns = board->bitboards[W_PAWN];
+  const bb_t black_pawns = board->bitboards[B_PAWN];
+
+  const bb_t black_stops = fill_toward_rank1(widen_by_one_file(black_pawns))
+                           << 8;
+  const bb_t white_stops =
+      fill_toward_rank8(widen_by_one_file(white_pawns)) >> 8;
+
+  bb_t white_passed = white_pawns & ~black_stops;
+  bb_t black_passed = black_pawns & ~white_stops;
+
+  int mg_sum = 0;
+  int eg_sum = 0;
+
+  while (white_passed) {
+    // Rank 2 is squares 48..55 and rank 7 is 8..15, so this runs 0 to 5 up the
+    // board. What keeps it in range is that a pawn cannot stand on rank 1 or
+    // rank 8; the debug build checks that instead of trusting it, because the
+    // penalty for being wrong is a read off the end of a six-entry table.
+    const int bucket = 6 - (get_lsb_index(white_passed) >> 3);
+    white_passed &= white_passed - 1;
+
+    assert(bucket >= 0 && bucket < 6);
+
+    mg_sum += passed_pawn_mg[bucket];
+    eg_sum += passed_pawn_eg[bucket];
+  }
+
+  while (black_passed) {
+    // Mirrored: Black's own second rank is rank 7, squares 8..15.
+    const int bucket = (get_lsb_index(black_passed) >> 3) - 1;
+    black_passed &= black_passed - 1;
+
+    assert(bucket >= 0 && bucket < 6);
+
+    mg_sum -= passed_pawn_mg[bucket];
+    eg_sum -= passed_pawn_eg[bucket];
+  }
+
+  *mg = mg_sum;
+  *eg = eg_sum;
+}
+
+
+// Stage one: what is cheap enough to pay at every node, including the nodes
+// evaluate_lazy() takes the shortcut on.
+//
+// Most of it was already computed by make_move: the material balance, the two
+// piece-square sums and the phase are maintained as pieces move rather than
+// rebuilt from the bitboards, which is why this function stopped being 40% of
+// the search.
+//
+// Passed pawns are the exception and the first term here that is computed
+// rather than accumulated. "Every evaluation term must be accumulated" was the
+// rule and it is not the rule any more: a term that reads where the *other*
+// side's pawns stand has no O(1) delta make_move could apply, so it cannot be
+// accumulated at all and what is left to choose is the stage.
+//
+// It is here rather than behind the shortcut with mobility and king safety
+// because evaluate_expensive() clamps stage two to +/-LAZY_EVAL_MARGIN. That
+// clamp is what makes the shortcut sound, and tools/eval_spread already puts
+// the stage-two correction at p99 128 and max 330 over 1490839 corpus
+// positions, clamped on 0.365 % of them. A pawn one square from promotion
+// swings further than the clamp would let through, so stage two would truncate
+// this term on exactly the positions it exists for.
 //
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later
@@ -59,8 +223,19 @@ int evaluate_cheap(const board_t* board)
   // from its middlegame value to its endgame one instead of jumping when some
   // arbitrary piece comes off.
   const int phase = game_phase(board);
+
+  int passed_mg = 0;
+  int passed_eg = 0;
+  passed_pawns(board, &passed_mg, &passed_eg);
+
+  // Summed into the accumulated pair before the interpolation rather than
+  // tapered on its own. One integer division instead of two, on a function that
+  // costs 1.36 ns in total, and one truncation towards zero instead of two --
+  // which is what keeps test_eval_model's one-centipawn slack against the
+  // tuner's floating-point model from having to grow.
   const int positional =
-      ((board->psqt_mg * phase) + (board->psqt_eg * (GAME_PHASE_MAX - phase))) /
+      (((board->psqt_mg + passed_mg) * phase) +
+       ((board->psqt_eg + passed_eg) * (GAME_PHASE_MAX - phase))) /
       GAME_PHASE_MAX;
 
   const int score = board->material + positional;

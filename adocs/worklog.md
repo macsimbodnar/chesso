@@ -1611,3 +1611,112 @@ Started 06:35, expected around 11:00.
 > <status>completed</status>
 > <summary>Background command "Confirm start then wait for verdict" completed (exit code 0)</summary>
 > </task-notification>
+
+## 2026-08-12T10:05+02:00 recap
+
+**SPRT 2 verdict: king safety is worth +20.87 +/- 15.41 Elo.** 1300 games, LOS
+99.61 %, H1 accepted, 2 h 53 m. `72c00d4` against `ad3b17d`. S027 term 1 is done
+and the result is recorded in the step file with the three commits that got
+there.
+
+That is a verdict on the **linear** king safety. The
+`attack_table[weighted_attacker_count]` curve the literature describes is not a
+linear function of the weights that build its index, so the S028 tuner cannot
+fit it; the non-linear form is untested, not rejected. DEC-044.
+
+**A verdict costs 3 to 4.5 hours, not the one hour that was assumed.** SPRT 1
+ran 2024 games in 4 h 30 m, SPRT 2 reached its bound in 1300 games and 2 h 53 m.
+Four terms remain in S027 and each needs at least one run, so the step's floor is
+about a day of machine time. Recorded in the step file because the plan should
+be read against it.
+
+**S027 term 2 started: passed pawns.** It goes in stage one rather than behind
+the lazy shortcut, and that is a decision from data: `evaluate_expensive()`
+clamps stage two to +/-150, `tools/eval_spread` already puts the stage-two
+correction at max 330 with 0.365 % clamped, and a pawn one square from promotion
+swings further than the clamp would pass. Stage two would truncate the term on
+exactly the positions it exists for.
+
+**The zero-weight staging discipline has a hole in it, and it was found here.**
+With the weights `const` and zero in the same translation unit, clang folds every
+table read and deletes the loop: `evaluate_cheap()` compiles to nineteen
+instructions with no loop in them and times identically either way. Every
+"behaviour-neutral and free" measurement was of a build that does not contain
+the term.
+
+Priced properly, with the weights forced non-zero: `evaluate_cheap()` 1.17 to
+6.43 ns, 5.5 times; it runs 1.40 times per node, 14854261 calls over 10609963
+nodes at depth 12; and a real depth-12 search loses **10 to 18 % of its nodes
+per second**. Fitting the weights without fixing that first would put a 10-18 %
+speed loss in the same commit as the term, which is how mobility measured -14.93
+on hand-picked weights at full price.
+
+This also means king safety's own "0.35 % after fusion" figure was measured at
+zero weights and understated its cost. It does not change that verdict --
+`72c00d4` shipped with fitted weights and measured +20.87 net of whatever the
+term really costs -- but the method was weaker than it read as, and the same
+mistake is now not available to make.
+
+**In flight:** the term rewritten set-wise, as shift-fills over the enemy pawns'
+front and attack spans rather than a table lookup per pawn, with the decision
+rule stated in advance: under about 3 % and it ships as it stands, over and the
+next step is a pawn hash keyed on a pawn-only zobrist, which the pawn structure
+term would share.
+
+Commits: `2861cdc` records term 1.
+
+Tests: full suite green, 11/11.
+
+## 2026-08-12T09:39+02:00 prompt
+
+> <task-notification>
+> <task-id>a40ada555b571200a</task-id>
+> <tool-use-id>toolu_0168BKkksrjGZ52AkUMp9huh</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/a40ada555b571200a.output</output-file>
+> <status>completed</status>
+> <summary>Agent "Implement passed pawn term" finished</summary>
+> <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+> <result>**The fill.** Widen the enemy pawn set by one file each way with wrap-masked shifts, Kogge-Stone fill it toward the enemy's own back rank (three shift-or pairs), then shift by eight to make the span exclusive; the passers are `own_pawns &amp; ~span`. About a dozen shifts for the whole board, both sides, no table lookups and no per-pawn branch.
+> 
+> **One deviation, flagged.** You specified six mask-ands and popcounts for the buckets. I built it and measured it: it is flat at **5.29 ns regardless of pawn count** — twelve popcount/multiply pairs became the new floor and cost more than the detection they follow. Replacing them with a loop over the *passed* set (usually empty, rarely more than two bits) gives 2.75 ns. I shipped that. Both forms are proven equal to the original loop over the full corpus, so this is swappable if you disagree.
+> 
+> ## Corpus equality
+> 
+> Zero mismatches on the mg/eg pair, both forms, over **1493535 positions** — all 2696 of `all_test_fens()` plus all 1490839 of `.tuning/selfplay_v1.tsv`. 687067 of those carry a non-zero term across 64 distinct mg values, so the comparison is not vacuous.
+> 
+> Verified red by observation, as the wrap bug is exactly what a green run would hide: dropping the two file masks from `widen_by_one_file` produced **3 mismatches on the test corpus and 129574 on the tuning corpus**. The small corpus alone would have been weak evidence — three positions out of 2696.
+> 
+> ## Timing
+> 
+> `evaluate_cheap`, ns per call, best of nine sweeps with the run halves agreeing inside 0.5 %:
+> 
+> | position | no term | loop | fill + popcounts | fill + loop (shipped) |
+> |---|---|---|---|---|
+> | ten-position average | 1.16 | 6.41 | 5.40 | **2.76** |
+> | kiwipete, 16 pawns | 1.14 | 8.50 | 5.29 | 2.75 |
+> | rooks and minors, 8 pawns | 1.14 | 7.25 | 5.29 | 2.76 |
+> | pawn endgame, 6 pawns | 1.14 | 5.37 | 5.29 | 2.75 |
+> | bare kings, 0 pawns | 1.14 | 1.63 | 5.29 | 2.75 |
+> 
+> Search at depth 12. **A methodology correction matters here.** I first compared nodes per second between builds searching different trees, then ran the control: knps varies by ±8 % with tree size for the *same* binary (`2861cdc` on kiwipete gives 7197 knps at depth 10, 6137 at depth 11, 7016 at depth 12). That comparison was confounded by roughly the size of the effect. Redone with cost-only builds — the term computed at non-zero weights, the result discarded behind an `asm volatile` barrier — which search node-for-node the identical tree to `2861cdc` (1634111 / 8658807 / 1296714, verified), so wall time is the cost and nothing else. hyperfine, 20 runs, warmup 2, 58.9 ms driver overhead subtracted:
+> 
+> | build | wall time | search time | vs no term |
+> |---|---|---|---|
+> | no term (`2861cdc`) | 1.692 s ± 0.017 | 1.633 s | — |
+> | loop | 1.869 s ± 0.018 | 1.810 s | +10.8 % |
+> | fill + popcount buckets | 1.783 s ± 0.014 | 1.724 s | +5.6 % |
+> | fill + loop over passers | 1.766 s ± 0.013 | 1.707 s | **+4.5 %** |
+> 
+> Sigmas 0.7–1.0 %.
+> 
+> ## Verdict against your rule
+> 
+> **It does not clear 3 %.** The algorithmic fix cut the cost by more than half, 10.8 % to 4.5 %, but 4.5 % is above the bar with sigmas far too tight to argue it away. By your decision rule the next step is the pawn hash on a pawn-only zobrist. Not built — yours to call.
+> 
+> ## Gate, zeros restored
+> 
+> Green. `cmake --build build -j8 &amp;&amp; ctest --test-dir build --output-on-failure &amp;&amp; ./clang-format.sh --check` all pass, 11/11 including slow perft; debug build clean over 498493 assertions. Node counts identical to `2861cdc` at depth 9 (233484 / 816320 / 166715) and depth 12, same best moves; `bench_eval` checksum identical at `-35923867477560`. `evaluate_cheap` is back to nineteen instructions — at zero weights the fill folds away exactly as the loop did.
+> 
+> Tree holds only `src/evaluation.cpp` and `src/evaluation.hpp`; the temporary comparator, the loop form and the reference worktree are all removed.</result>
+> <usage><subagent_tokens>199360</subagent_tokens><tool_uses>39</tool_uses><duration_ms>1542347</duration_ms></usage>
+> </task-notification>

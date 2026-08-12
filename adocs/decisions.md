@@ -1689,3 +1689,111 @@ Consequences: The shortcut still makes the search score window dependent, and
               not have on 2613 of them, 1473 at beta and 1140 at alpha. That is
               the size of what was wrong, not a count of games lost -- what it
               cost in play is what the SPRT measures.
+
+## DEC-046  2026-08-12  No pawn hash: it was built, measured, and recovers nothing
+Tags:         evaluation, performance, cache, s027, passed-pawns, dec-039
+
+Context:      S027's passed pawn term goes in stage one, where it is paid at
+              every node. Written as a loop over each pawn with a table lookup
+              per pawn it cost 10.8 % of a depth 12 search. Rewritten set-wise
+              -- the enemy pawn set widened one file each way, Kogge-Stone
+              filled, passers falling out as own_pawns & ~span -- it costs 4.5 %.
+
+              4.5 % is above this project's 3 % noise bar with sigmas of 0.7 to
+              1.0 %, so the standard answer was the standard one: cache the term
+              on a pawn-only Zobrist key, which pawn structure would then share.
+
+Decision:     The pawn hash was built in full -- key folded in add_piece,
+              remove_piece and move_piece, restored by unmake through the same
+              history entry the main key uses, 1024 entries of 16 bytes to stay
+              in L1, whole 64-bit key stored, xored with the payload so a torn
+              read degrades to a miss, and a debug assertion comparing every hit
+              against a fresh computation.
+
+              It is discarded. It recovers nothing: 1.892 s against the fill's
+              1.897 s over 40 hyperfine runs each at sigma 0.023 to 0.026, and
+              the sign of the difference flips between two passes run in
+              opposite order.
+
+              The term ships as the set-wise fill, at 4.5 %, uncached.
+
+Rejected:     Tuning the table size until it wins. At an 89.8 % hit rate over
+              15291002 probes the entire remaining headroom is a tenth of a 3 %
+              term, and the probe already costs about what the fill costs. A
+              size that won would be a size fitted to one benchmark.
+
+              Keeping it anyway because it is standard. A cache is state: it can
+              go stale, it is one more thing that has to be right for the
+              evaluation to be right, and it is measured here to buy nothing.
+
+Consequences: **DEC-039 repeated itself exactly and the tools said opposite
+              things again.** bench_eval's ten-position loop says the cache
+              recovers 61 % of the term -- 27.48 ns per evaluate() down to
+              26.71, against 26.22 with no term -- because ten pawn structures
+              sit in the table at a 100 % hit rate. The real search says it
+              recovers nothing. An isolated benchmark cannot price anything that
+              touches memory in this engine, and that is now the second time.
+
+              The cache cost 2.2 % *with the term switched off*, which is the one
+              difference in the whole exercise that was consistent across 40 runs
+              a side. At zero weights clang folds the fill to nothing and
+              evaluate_cheap() compiles to 19 instructions; it cannot fold a
+              mutable global's probe, and the key maintenance in make_move is
+              paid whatever the evaluation does.
+
+              The pawn structure term that follows loses the cache it was
+              expected to share, so its own cost is unpaid for and has to be
+              measured on its own terms.
+
+## DEC-047  2026-08-12  A term shipped at zero weights is deleted, not measured
+Tags:         measurement, methodology, staging, s027, s034, compiler
+
+Context:      S034 arrived at a staging discipline that S027 repeated: ship a new
+              evaluation term with its weights at zero, prove that commit
+              behaviour-neutral by identical node counts and best moves, then fit
+              the weights and let the SPRT measure the fitted term rather than a
+              guess about it. It is a good discipline and it produced +20.87 Elo
+              for king safety.
+
+              It carries a hole that went unnoticed for two terms. The weights
+              are `const` with constant initialisers in the same translation
+              unit, so the compiler folds every read of them to zero and deletes
+              the arithmetic and the loops that feed it. evaluate_cheap()
+              compiles to nineteen instructions with no loop in them whether or
+              not the passed pawn term is present, and times identically.
+
+              Every "the term is free" measurement taken at zero weights is a
+              measurement of a build that does not contain the term.
+
+Decision:     A term's cost is measured with its weights **forced non-zero**, in
+              a throwaway build, and the numbers are recorded in the comment next
+              to the weights so the next person does not re-derive them.
+
+              Where two builds must be compared on wall time, they have to walk
+              the identical tree. Nodes per second between builds searching
+              different trees varies by +/- 8 % with tree size for the same
+              binary, which is larger than every effect being measured here. The
+              method that works is a cost-only build: compute the term at
+              non-zero weights and discard the result behind an asm volatile
+              barrier, so the search is node-for-node identical and wall time is
+              the cost and nothing else.
+
+Rejected:     Shipping terms with hand-picked non-zero weights so the compiler
+              cannot fold them. That is what DEC-040 exists to stop -- mobility
+              measured -14.93 Elo the one time a term was judged on guessed
+              weights at full price, and +28.46 once they were fitted.
+
+              Marking the weights volatile or otherwise defeating the fold in the
+              shipping build. It would make the neutral commit non-neutral and
+              cost speed in every build to serve a measurement.
+
+Consequences: The behaviour-neutral commit is still worth making and INV-6 is
+              still discharged by it -- identical node counts prove the term
+              changes no decision. What it does not prove, and what it was
+              casually read as proving, is that the term is cheap.
+
+              King safety's recorded "0.35 % after fusion" was measured at zero
+              weights and understates its cost. The +20.87 Elo verdict stands,
+              because that was measured with the weights fitted and includes
+              whatever the term really costs; only the intermediate figure was
+              weaker than it read as.

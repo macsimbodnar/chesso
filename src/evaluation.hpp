@@ -39,6 +39,19 @@ int evaluate_lazy(const board_t* board, int alpha, int beta);
 extern const int mobility_mg[4];
 extern const int mobility_eg[4];
 
+// The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
+// own second rank, 5 on the seventh and one square from promotion. Exposed for
+// the same reason as the mobility weights: the tuner's model in
+// tools/eval_model.hpp starts from what the engine ships instead of from a copy
+// of it that would be free to drift.
+//
+// Zero until the tuner fits them, so that the SPRT measures the fitted term
+// rather than a guess. Six buckets rather than one weight scaled by the rank
+// because the value is not linear in the rank and the tuner fits only a linear
+// function of its parameters -- see evaluation.cpp.
+extern const int passed_pawn_mg[6];
+extern const int passed_pawn_eg[6];
+
 // What the king safety term counts, in the order its weights are indexed. The
 // first four are attacker counts by piece type and share the order the mobility
 // weights use.
