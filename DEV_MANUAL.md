@@ -204,6 +204,35 @@ shows up and a change that only reorders equal work does not. Bounds must match
 the expected effect: `elo0=0 elo1=10` cannot resolve a small change, and one run
 random-walked for 340 games before being stopped.
 
+**A verdict costs 3 to 4.5 hours** on this machine at `--fast`, four performance
+cores, 10+0.2. Measured: 2024 games in 4 h 30 m for a run that accepted H0,
+1300 games in 2 h 53 m for one that accepted H1. Plan against that number rather
+than rediscovering it — a step with four terms left in it is a day of machine
+time.
+
+### Detach the run, and arm a watcher that outlives the turn
+
+```bash
+REF=<sha> nohup ./fastchess.sh --fast > .tuning/sprt_<what>.log 2>&1 &
+```
+
+Same for `tuner`, which takes tens of minutes. Never hold either open in the
+foreground.
+
+Then watch the log with something **session-scoped**. In Claude Code that is
+`Monitor` with `persistent: true`; a backgrounded shell loop is scoped to the
+turn that started it and is killed the moment the user types, without saying so.
+The run itself survives — it is `nohup`'d — so the failure is silent and looks
+exactly like a match that has not finished yet. It happened twice in one
+session before the rule was written down. AGENTS.md carries it too.
+
+Progress without disturbing the match:
+
+```bash
+grep -E "^Elo:|^LLR:" .tuning/sprt_<what>.log | tail -2
+grep -c "^Finished game" .tuning/sprt_<what>.log
+```
+
 ## Analyse a game
 
 Never by reading it. See `CLAUDE.md` and DEC-023.

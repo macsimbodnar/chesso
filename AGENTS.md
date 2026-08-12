@@ -48,6 +48,15 @@ which is why they are stated here and not only in `decisions.md`.
   discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
   describes. At step completion, "checked `README.md`, owner-written, no change
   needed" is the expected outcome and a valid one. DEC-017.
+- **A long run is detached, and the thing watching it must outlive the turn.**
+  An SPRT takes three to four and a half hours here and a fit takes tens of
+  minutes, so both are started detached — `nohup ... &` — and never held open by
+  the turn that launched them. The watcher is the part that gets this wrong: a
+  backgrounded shell loop is scoped to its turn and dies the moment the user
+  types anything, silently, while the run itself carries on. In Claude Code use
+  `Monitor` with `persistent: true`, which lives as long as the session. Any
+  agent without that tool polls the log on its next turn instead and does not
+  pretend a watcher is armed.
 
 Marker file: `.moltke.json` at repo root.
 Present with `"enabled": true` means these rules are active and enforced.

@@ -1901,3 +1901,31 @@ Commits: none this turn. Last is `6950be1`.
 > - Two stale doc claims spotted, untouched: `src/evaluation.cpp:61` and `:70` describe "the pawn hash below", which does not exist in the file; `adocs/specs.md:67` still lists king safety and passed pawns as absent. `tests/test_eval_model.cpp` comments cite "S035", which is not a step id anywhere in `adocs/`.</result>
 > <usage><subagent_tokens>127117</subagent_tokens><tool_uses>70</tool_uses><duration_ms>861186</duration_ms></usage>
 > </task-notification>
+
+## 2026-08-12T13:06+02:00 prompt
+
+> <task-notification>
+> <task-id>bdmcbbppc</task-id>
+> <tool-use-id>toolu_01VzL7adzbumEz7yypbb3i46</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bdmcbbppc.output</output-file>
+> <status>killed</status>
+> <summary>Background command "Wait for SPRT 3 verdict" was stopped</summary>
+> </task-notification>
+
+## 2026-08-12T14:06+02:00 prompt
+
+> <task-notification>
+> <task-id>bx4vfqupf</task-id>
+> <tool-use-id>toolu_01S8vnX6GyGY5FfWiYCebypv</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bx4vfqupf.output</output-file>
+> <status>killed</status>
+> <summary>Background command "Show interim, wait for verdict" was stopped</summary>
+> </task-notification>
+
+## 2026-08-12T14:20+02:00 prompt
+
+> why the watchers is killed all the time? is it that difficult to start a process and be notified when it finishes?
+
+## 2026-08-12T14:22+02:00 prompt
+
+> Record in the repo rules to use persistent monitor to sprt and finetuning tasks
