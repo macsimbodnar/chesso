@@ -2869,3 +2869,63 @@ play.
 `status.md` still derives "Last done: S053" because the checker takes the
 positionally last completed entry in `plan.md` and S054 sits at position 37,
 ahead of S038 where its execution order put it. "Next: S038" is right.
+
+## Recap — S038, the tuner-model guard's slack
+
+`b904d1b`. `tests/test_eval_model.cpp` only. Tolerance 2.0 -> 3.0, the comment
+re-derived from the code, and the four FENs `2026-08-13_adversarial-F04` recorded
+pinned into the corpus behind a new case that keeps them exercising the bound.
+
+**The truncation count was wrong in three places, including the audit.** The old
+comment said `evaluate()` truncates twice; F04 said three; it is **four**
+divisions by `GAME_PHASE_MAX` — `src/evaluation.cpp:640-643` psqt plus pawn
+terms, `:668-670` tempo, `:951-952` mobility, `:953-954` king safety.
+`GAME_PHASE_MAX` is defined once, `src/evaluation.hpp:289`, so there is no fifth.
+F04 missed tempo, whose own comment at `:647-670` documents it as a deliberate
+second truncation and prices it at one centipawn against the model. F04's *bound*
+of 2.875 was still right, for a reason it did not state: tempo ships at
+`tempo_mg == tempo_eg == 0` (`:582-583`), so that division truncates `0 / 24`
+exactly and three of the four can round. 3 x 23/24 = 2.875, which is why the
+measured worst case was exactly 2.875 and not 3.833. Fit tempo and the bound
+becomes 3.833, so the premise is asserted in the test rather than left in a
+comment.
+
+Red twice. With the four FENs added and the tolerance still 2.0:
+`CHECK( 2.875 <= 2 )`, `CHECK( 2.33333 <= 2 )`, `CHECK( 2.25 <= 2 )`,
+`CHECK( 2.125 <= 2 )`, each logging its FEN, with all 26 pre-existing positions
+passing in the same run — so the failures are about the pinned corpus and not
+about a tolerance nothing could satisfy. Those four differences reproduce F04's
+recorded `DRIFT` values to the digit, which matters because `.tuning/` does not
+exist on the DEC-049 machine and F04's own reproduction cannot be re-run here.
+Then the new case with one pinned FEN swapped for the start position:
+`CHECK( 0 > 2 )` naming it at difference 0.000000, and `CHECK( 2.33333 > 2.8 )`
+for the worst — a pinned position that agrees for free cannot pass.
+
+No SPRT, and not by argument: `git diff --quiet 7068cd2 -- src/evaluation.cpp
+tools/eval_model.hpp` exits 0 and `sha256sum` agrees either side
+(`18ab9550...5323`, `b3a96b65...5335`). The evaluation is bit-identical, so there
+is no play to measure.
+
+Found while re-deriving: `tools/eval_model.hpp:973-974` **already** sums mobility
+and king safety before tapering them once. The extra truncation is the engine's
+alone, so S055 moves the engine to the shape the model has had all along and
+needs no arithmetic change on the model side. That was not in the audit and it is
+why S055's `touches:` keeps the header for re-reading rather than for editing.
+
+Two comments in `src/evaluation.cpp` now state a tolerance that is false —
+`:638-639` "one-centipawn slack", `:662` "test_eval_model allows two". Left
+alone deliberately: the step's `excludes:` forbade touching the file so the
+evaluation stayed bit-identical. S055 owns them and its body says so.
+
+Files: `tests/test_eval_model.cpp`, `adocs/decisions.md` (DEC-053),
+`adocs/testing.md` (3 rows), `adocs/plan.md`,
+`adocs/plan_todo/S055_taper_stage_two_once.md` (new, unstarted, listed at
+position 49 after S042 and before S029), `adocs/plan_done/S038_eval_model_tolerance.md`,
+`adocs/status.md`. Gate: build clean, `ctest -L fast` 11/11 (`test_eval_model`
+17 cases, 2604 assertions, 0.01 s), `clang-format.sh --check` exit 0.
+`DEV_MANUAL.md` and `MANUAL.md` checked, no change needed — the manual's only
+claim about this test is that it stops the model drifting and carries no number.
+`README.md` owner-written, untouched.
+
+The completion pruned S043's `plan.md` entry and its 3 `testing.md` rows, which
+is DEC-053-unrelated and the retention rule S053 documented.
