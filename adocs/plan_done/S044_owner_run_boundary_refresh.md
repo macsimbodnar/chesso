@@ -7,7 +7,7 @@ decisions:  DEC-041, DEC-015
 closes:     2026-08-13_plan_review-F01
 blocks:
 paused_by:
-done:
+done:      plan.md:11-14 and specs.md:165-170 both state the boundary as DEC-015 amended by DEC-041: the owner runs only S029's network training, fits and measurements are the agent's, S028 reads as history. grep for DEC-015/owner finds no line assigning fits to the owner. Dated inline note in specs.md. Gate green.
 
 ## What is there
 
@@ -24,3 +24,4 @@ plan, so the stale copy is also the authoritative one: a cold session reading
 either file re-inherits the handoff cost DEC-041 was taken to remove.
 
 Full evidence: 2026-08-13_plan_review-F01.
+author:    Maksym Bodnar

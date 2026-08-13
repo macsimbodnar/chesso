@@ -8,9 +8,10 @@ built on the `achesso` branch to find out what AI-driven development can produce
 already describes, by reading documented technique and implementing it here —
 never by copying it (DEC-016, DEC-014). Phase two is experimentation and has no
 steps yet, and should not get any until the engine is strong enough for an
-experiment to mean something. S028 and S029 are the two steps where the agent
-stops short of the run itself: it delivers the tuner, the data and the training
-program, and the owner executes them (DEC-015).
+experiment to mean something. S029 is the one step where the agent stops short
+of the run itself: it prepares the data and the training program, and the owner
+runs the network training (DEC-015 as amended by DEC-041 — fits, measurements
+and evaluation tuning are the agent's to run, and S028's fit was run that way).
 
 The order below is not the order of expected Elo, and that is deliberate. S001
 to S018 are already done and are here as the record of what each change cost and
@@ -71,7 +72,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-19. S028  fit every evaluation constant at once against self-play game outcomes
 20. S034  compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
 21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
 22. S035  restore fastchess.sh so a match actually runs, and stop the EXIT trap masking a failure as status 0

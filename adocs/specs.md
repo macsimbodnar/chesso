@@ -162,9 +162,12 @@ The order stands.
   search. Ideas and published articles are used freely; that is the plan.
   Running another engine's binary as a tool creates no derivative work and is
   encouraged. DEC-016.
-- **The agent does not run training or table tuning.** It builds the tuner, the
-  self-play data generation and the training program, and states what the run
-  should be. The owner executes the run. DEC-015.
+- **The agent does not run the NNUE network training.** It builds the trainer,
+  prepares the data and states what the run should be; the owner executes that
+  one run. Fits, measurements and evaluation tuning are the agent's to run.
+  DEC-015 as amended by DEC-041. (2026-08-13: narrowed from "training or table
+  tuning" — DEC-041 superseded DEC-015 for evaluation tuning and every kind of
+  measurement, and S028's fit was agent-run.)
 - **Published Elo figures are not targets.** They have failed to transfer three
   times here. They decide what to try, never what to conclude. DEC-019.
 - **Phase-two experiments are not started early.** An idea measured against a
