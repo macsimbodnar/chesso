@@ -559,15 +559,25 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 // 1 for whoever is to move. In the tuner's White-relative model that is +1 with
 // White to move and -1 with Black, which is the only place the term needs a
 // sign at all.
-// Fitted with the other 825 constants frozen -- `tuner --only tempo` over
-// 1490839 self-play positions, held-out error 0.106766 to 0.106723. That is the
-// smallest improvement of S027's five terms by a factor of three, and after
-// term 4 measured -5.48 Elo on the second *largest* improvement of the five, it
-// predicts nothing in either direction. The match decides.
+// **Back at zero: the term measured nothing.** The fitted pair was mg 10, eg 0,
+// from `tuner --only tempo` over 1490839 positions with the other 825 constants
+// frozen, held-out error 0.106766 to 0.106723.
 //
-// The endgame weight fits to zero, which is not the same as the term being
-// absent there: the fit was free to make it anything and chose nothing.
-const int tempo_mg = 10;
+// Its SPRT ran the full 3000 games and reached neither bound -- LLR -1.46
+// against a -2.20 boundary -- for -0.69 +/- 9.64 Elo. **That is unresolved and
+// not H0 accepted**, and the difference matters: what the run establishes is
+// that the term is smaller than this instrument can see, not that it is
+// harmful. The interval is the tightest of S027's five terms and it is centred
+// on zero.
+//
+// Kept inert rather than deleted because the cost of finding out again is one
+// fit and one match, and the plumbing is the expensive part. Seven instructions
+// when the weights are non-zero, six of which are the taper.
+//
+// If this is ever revisited it needs tighter bounds than `--fast` gives, and
+// 3000 games at 10+0.2 is already three hours. A term this small is a thing to
+// measure when there is a faster machine, not a thing to argue about.
+const int tempo_mg = 0;
 const int tempo_eg = 0;
 
 

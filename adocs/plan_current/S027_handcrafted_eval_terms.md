@@ -226,10 +226,36 @@ objectives and this is the first term where they came apart.
 pair alone. It is free and it is where the weight is. That needs its own
 `--only` group and its own fit, and it is a new step rather than a re-run.
 
-### 5. Tempo -- next
+### 5. Tempo -- **0**, -0.69 +/- 9.64 Elo, unresolved
 
-A single bonus for the side to move. One parameter, and the cheapest thing in
-the step.
+3000 games, `201c15e` against `496b942`. Fitted mg 10, eg 0, held-out error
+0.106766 to 0.106723 -- the smallest improvement of the five terms by a factor
+of three. Weights reverted to zero, code kept inert.
+
+**The run reached neither bound.** It exhausted the 3000-game limit at LLR -1.46
+against a -2.20 boundary. That is unresolved, not H0 accepted, and the record
+says so: what it establishes is that the term is smaller than this instrument
+can see over 3000 games at 10+0.2, not that it is harmful. The interval is the
+tightest of the step and centred on zero. S013's LMR run is the precedent for
+being careful here -- it was killed at 96 % of its bound and "passed" was never
+written into the record.
+
+Revisiting it needs tighter bounds than `--fast`, and 3000 games already costs
+three hours. It is a thing to measure on a faster machine, not a thing to argue
+about.
+
+**The term nearly went somewhere invisible.** The obvious home is `evaluate()`
+and the search never calls it: quiescence goes through `evaluate_lazy()`, which
+is built on `evaluate_cheap()`. A tempo bonus in `evaluate()` would have been
+correct-looking, fully tested, and applied at none of the nodes the search
+evaluates.
+
+**Three tests were re-targeted and one of them could only be found by forcing
+the weights.** "The start position is balanced" asserted `== 0`, which stops
+being the property the moment the engine believes having the move is worth
+something: a symmetric position is not symmetric in whose turn it is. The third,
+`white_to_move == -black_to_move`, reads as obviously true and printed
+`REQUIRE_EQ( 1118, 1084 )` the moment the weights were non-zero.
 
 ### 5. Tempo -- last
 

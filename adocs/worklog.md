@@ -2120,3 +2120,24 @@ penalty of its own size.
 > <status>completed</status>
 > <summary>Monitor "tempo fit" stream ended</summary>
 > </task-notification>
+
+## 2026-08-13T11:27+02:00 prompt
+
+> <task-notification>
+> <task-id>bzhvcmv8e</task-id>
+> <summary>Monitor event: "tempo SPRT verdict"</summary>
+> <event>SPRT6 DONE
+> Games: 2980, Wins: 914, Losses: 922, Draws: 1144, Points: 1486.0 (49.87 %)
+> Elo: -0.69 +/- 9.64, nElo: -0.90 +/- 12.43
+> Games: 3000, Wins: 921, Losses: 927, Draws: 1152, Points: 1497.0 (49.90 %)</event>
+> </task-notification>
+
+## 2026-08-13T11:27+02:00 prompt
+
+> <task-notification>
+> <task-id>bzhvcmv8e</task-id>
+> <tool-use-id>toolu_01LqV5pxyhsuJHfErXvicyqX</tool-use-id>
+> <output-file>/private/tmp/claude-502/-Users-max-ws-chesso/c7bab205-8190-4227-9eb5-361c8575ebfe/tasks/bzhvcmv8e.output</output-file>
+> <status>completed</status>
+> <summary>Monitor "tempo SPRT verdict" stream ended</summary>
+> </task-notification>

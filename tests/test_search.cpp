@@ -565,7 +565,7 @@ TEST_SUITE("search: quiescence")
     // and the last centipawn is the single truncating division evaluate_cheap()
     // does over the summed pair.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 269);
+    REQUIRE_EQ(black_static, 266);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
