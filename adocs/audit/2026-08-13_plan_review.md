@@ -45,7 +45,7 @@ and no longer reports it. Fixing without re-running leaves it `planned`.
 
 ### 2026-08-13_plan_review-F01  medium  plan.md still assigns the S028-style fit to the owner under DEC-015, which DEC-041 superseded
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan.md:11-13`:
 
@@ -80,7 +80,7 @@ non-goals in the same commit.
 
 ### 2026-08-13_plan_review-F02  medium  S024 conflates the countermove heuristic with one-ply continuation history
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan_todo/S024_continuation_history.md`:
 
@@ -124,7 +124,7 @@ table first, the two-ply table second, one SPRT each.
 
 ### 2026-08-13_plan_review-F03  medium  S030, S031 and S032 acceptance criteria stop at perft and never discharge INV-6
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `specs.md:44-48` (INV-6): a change claimed behaviour-neutral
 proves it with identical node counts and best moves from
@@ -174,7 +174,7 @@ condition it on proven bit-identity.
 
 ### 2026-08-13_plan_review-F04  medium  S032's "blocked on hardware" premise is false on the machine the tree now records
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan_todo/S032_pext_sliding_attacks.md`: "**Blocked on
 hardware.** **Zero on this machine.** ARM has no PEXT. [...] An x86-64 Linux
@@ -220,7 +220,7 @@ starting). Refresh the specs.md open item in the same commit.
 
 ### 2026-08-13_plan_review-F05  low  plan.md's own consistency rule cites the wrong invariant and does not hold of the file
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan.md:60-61`: "Every step file must appear as a list
 entry, and every list entry must have a step file — both are INV-3." INV-3 in
@@ -259,7 +259,7 @@ refresh the two stale prose claims.
 
 ### 2026-08-13_plan_review-F06  low  S039 cites DEC-034 — the one-night fit delegation — as the decision it implements
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan_todo/S039_lazy_margin_redecide.md` header:
 `decisions: DEC-034`. DEC-034 (`decisions.md:937`) is "The owner delegated the
@@ -278,7 +278,7 @@ step's eventual margin decision take a new entry).
 
 ### 2026-08-13_plan_review-F07  low  S022's acceptance line asks one run to measure two changes, against its own body and the house rule
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `adocs/plan_todo/S022_delta_pruning_quiescence.md`, accepts: "an
 SPRT returns a verdict; **the same run** re-measures the S015 quiescence SEE
@@ -298,7 +298,7 @@ in either order, each against the commit before it.
 
 ### 2026-08-13_plan_review-F08  low  S020 and S030 make a positive measured gain an acceptance criterion
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `S020_single_check_computation.md` accepts: "measured gain larger
 than the benchmark's own reported resolution"; `S030_move_encoding_16_bit.md`
@@ -324,7 +324,7 @@ interleaved fixed-depth runs, per CLAUDE.md rule 5).
 
 ### 2026-08-13_plan_review-F09  low  S021 points at the wrong file for iterative deepening
 
-Status: planned
+Status: closed — 2026-08-13_plan_review.2 re-ran this report and does not report it
 
 **Evidence.** `S021_aspiration_windows.md`: `touches: src/search.cpp iterative
 deepening`. The iterative deepening loop is not in `src/search.cpp`:
