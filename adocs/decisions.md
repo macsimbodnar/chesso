@@ -2264,3 +2264,117 @@ Consequences: The parked "standard search machinery with no step behind it"
               Nothing else moves: the delegation boundary in `specs.md`'s
               non-goals is unaffected, because it says who runs a training run
               and not whether one happens.
+
+## DEC-055  2026-08-14  Regenerate the tuning corpus tonight, with the tactical filter clause loosened
+Tags:         tuning, datagen, corpus, evaluation, planning, s065, s066, s033,
+              dec-016, dec-019, dec-041
+
+Context:      There is no tuning corpus on this machine. Audit finding
+              `2026-08-13_plan_review.2-F02` established it: `.tuning/` is
+              gitignored (`.gitignore:11`), the work moved machines at DEC-049
+              and `.tuning/selfplay_v1.tsv` did not come along, and it is not
+              regenerable identically because S027 and S028 changed the engine
+              that generates it. Every fit the plan still wants needs a corpus
+              that does not exist here, so a fit is impossible without one.
+
+              A 2026-08-14 literature survey of hand-crafted evaluation and its
+              tuning ranked corpus regeneration second of twenty candidates and
+              reported that the largest published Texel methodology gains came
+              from filtering *less*: Österlund's biggest single step was
+              removing an exclusion, Grant filters only mate scores, Blunder
+              converged on check, mate and a quiescence disagreement. chesso
+              filtered harder than all three.
+
+              The night held one alternative: S033's SPRT, which is next in
+              `plan.md` order.
+
+Decision:     **By the owner**, from options the agent supplied and measured:
+              regenerate the corpus tonight, ahead of `plan.md` order, as S065.
+              Eight hours of `datagen` at 12 threads (DEC-050), 120000 games at
+              100000 nodes a move, about 11.3 M positions from an engine that
+              is seven steps newer than the one that produced the last corpus.
+
+              **One filter clause is loosened, and it is the one the engine's
+              own code contradicts.** `tools/datagen.cpp` excluded a position
+              whose search-chosen move was a capture or a promotion, justified
+              in its header by the claim that `evaluate()` is only asked about
+              positions quiescence has already resolved. `src/search.cpp:125`
+              calls `evaluate_lazy()` at the top of every quiescence node,
+              before `generate_captures` at `:152` runs, and returns on that
+              stand-pat score at `:136-137`. The static evaluation is asked at
+              exactly the positions the clause excluded. It becomes
+              `--allow-tactical`, default 0, so the S028 behaviour stays
+              reachable and the change is a run parameter; the run passes 1.
+              Measured cost of the clause: 4814 positions of 27839 considered
+              over 240 games, +27.4 % on top of what was recorded.
+
+              **The other three clauses stay**, on measurement rather than
+              taste. In check: kept, all three surveyed engines keep it and the
+              stand-pat score is not a bound while in check
+              (`src/search.cpp:135`). Mate: kept, and it is shadowed rather
+              than redundant — 0 marginal rejections under the score cap, 649
+              without it. Score past `--quiet-limit` 1000: kept, because
+              uncapping admits 8.93 % more rows carrying **0.206 %** of the
+              corpus's gradient mass, the tuner weighting a row by
+              `sig * (1 - sig)` (`tools/tuner.cpp:380-384`), which is 5.28 % of
+              an equal position's at a score of 1000 and falling. One clause
+              moves, so one thing is attributable.
+
+              **This produces candidate weights, not a verdict.** 827 constants
+              move at once. Nothing is kept without an SPRT against the
+              constants shipping today, and a verdict of zero is recorded as
+              zero. Held-out error cannot rank it: a different corpus is a
+              different objective, and K is refitted per corpus — 0.7472 here
+              against S028's 1.1141.
+
+Rejected:     **Run S033's SPRT tonight instead.** It is the next step in
+              `plan.md` order and it stays there, one place behind. A verdict
+              costs three to four and a half hours and would leave half the
+              night idle, while generation scales with every hour it is given;
+              and S033 is a pruning change measured against an evaluation that
+              may be about to move under it, so its number is worth more taken
+              after the corpus question is settled than before.
+
+              **Loosen more than one clause.** Admitting the score cap as well
+              was measured at 0.206 % of the gradient mass, which buys almost
+              nothing and costs the attribution: two clauses behind one SPRT
+              and neither number means anything.
+
+              **Regenerate with the filter unchanged.** Free, and it would
+              answer only "is this engine's self-play better data than the old
+              engine's" while leaving the exclusion the code contradicts in
+              place for the next corpus too.
+
+              **Edit the filter rather than flag it.** The old behaviour would
+              stop being reachable and `selfplay_v1.tsv`'s generation settings
+              would stop being expressible, which is what makes a corpus
+              comparison possible at all.
+
+              **Grant's PV-resolution construction** (the survey's C16), which
+              plays out the principal variation to reach a quiet position
+              instead of filtering for one. It is the most expensive candidate
+              in the survey — one deep search per sampled position — and it
+              tests the same hypothesis this does for a fraction of the
+              machine time. Behind this, not instead of it.
+
+Consequences: `--allow-tactical` exists in `tools/datagen.cpp` and is
+              documented in `DEV_MANUAL.md`. Every datagen run now also prints
+              what each filter clause cost, so the next corpus is sized from a
+              measurement rather than from a comment. The default is inert:
+              240 games at seed 20260814 give byte-identical output through the
+              pre-change and post-change binaries.
+
+              S065 carries the run and the SPRT. S066 goes immediately ahead of
+              it: the tuner shuffles rows and holds out 10 %, `datagen` writes
+              about 94 rows per game consecutively, and 99.5 to 99.8 % of games
+              land on both sides of the split, so S065's own held-out gate is
+              read through an instrument known to be optimistic until that is
+              fixed. It changes a diagnostic and no game.
+
+              A second corpus variant is now a step and not a drift. The survey
+              lists three separable changes here and this takes one of them;
+              the others cost an SPRT each and are decided the same way.
+
+              The datagen filter is no longer a rule with a rationale in a
+              comment. It is four independent clauses, each with a measured
+              marginal cost, and changing one is a run parameter.
