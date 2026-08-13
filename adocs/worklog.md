@@ -2459,3 +2459,50 @@ moved. No code changed.
 Tests: fast suite green, 9/9, format check clean.
 
 Commit: this one.
+
+## 2026-08-13 recap — plan_review fixes executed, S044 to S053
+
+The nine audit-fix steps ran to completion in plan order, one commit
+each, plus the reorder that put them ahead of S037 and one step the
+batch itself discovered. Commits: reorder `476f65d`; S044 `9087b69`,
+S045 `c167d05`, S046 `d06120c`, S047 `962ec3a`, S048 `8ff10d1`, S049
+`5ac770a`, S050 `14a4f56`, S051 `0c0993c`, S052 `c54eea7`, S053
+`b21f277`. Every completion passed the gate (build, fast suite 9/9,
+format check). All 2026-08-13_plan_review findings sit `planned` with
+their closing steps done; they move to `closed` on a re-run, not by
+assertion.
+
+S053 was discovered mid-batch by S044's fast check, which flagged 11
+S028 ledger rows deleted without explanation. The deletion turned out
+to be the checker's own retention — prune_plan() keeps the newest five
+completed entries in plan.md and takes with them every row all of whose
+step ids were pruned in that pass — while testing.md's header still
+said "Append only". S053 states the rule in the header, traced to
+moltke.py:1684-1727. Across the batch the checker pruned ten completed
+entries and 85 rows; git and plan_done/ keep all of it.
+
+Corrections this recap exists to record:
+
+- S049's commit message says S044's ledger row was pruned with its
+  entry. It was not — the row also names S029, and a row leaves only
+  when every id it mentions goes. The message overclaims; the tree is
+  correct.
+- S047's stamp says its verifying grep "exits empty"; the grep finds
+  one hit, specs.md's own dated note recording the replaced text. The
+  ledger row and the commit message state it correctly; plan_done/
+  immutability keeps the stamp as written.
+- S053 reached plan_done/ with scaffold placeholders in its
+  accepts/touches fields — the session was interrupted between the
+  completion and its commit, and the fields were never filled. The
+  stamp carries the real acceptance evidence.
+
+Fast checks on all eleven commits: S044's produced the S028-rows flag
+above; every other run reported nothing.
+
+`README.md` not touched, owner-written. `MANUAL.md` and `DEV_MANUAL.md`
+not touched — no surface, command, or flag moved. No code changed
+anywhere in the batch.
+
+Tests: gate green at every one of the eleven commits.
+
+Commit: this one.
