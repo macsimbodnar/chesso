@@ -2413,3 +2413,49 @@ Tests: fast suite 9/9 green in 17.8 s with `ctest` exit 0 read directly rather
 than through a pipe, `clang-format.sh --check` clean.
 
 Commit: this one.
+
+## 2026-08-13 recap — plan_review audit, nine findings planned
+
+Audit run: `adocs/audit/2026-08-13_plan_review.md`, second report of the day.
+Spawned on a clean context against `ea61e5f`; scope was the plan itself —
+`plan.md` plus the 19 pending step files — assessed for internal consistency,
+agreement with the chess-programming literature, and agreement with the code.
+Method included a full rebuild, the fast suite (9/9), the engine over UCI,
+`search_bench.py`, and `/proc/cpuinfo` for the hardware claims.
+
+Verdicts on the morning's adversarial findings, each from its own
+reproduction: F01 (fastchess.sh) and F02 (1 ms clock) fixed and verified;
+F03–F09 all still reproduce and sit correctly `planned` under S037–S043.
+
+Nine new findings, four medium, five low, all defects in the plan's own text,
+none in the engine. **F01: plan.md and specs.md still assign fits to the owner
+under DEC-015, which DEC-041 superseded** — and specs outrank plan, so the
+stale copy is authoritative. **F02: S024 calls the countermove heuristic
+one-ply continuation history**, steering the step into building only the
+weaker two-ply variant and measuring the wrong thing. **F03: S030–S032
+accepts stop at perft**, so any of the three could alter play with no INV-6
+discharge and no SPRT. **F04: S032 says "blocked on hardware" on a machine
+that has had BMI2 since DEC-049**; S029 and S020 carry the same retired
+premise. Then the lows: plan.md's list rule cites INV-3 (a movegen invariant)
+and is false of the file; S039 cites DEC-034 instead of DEC-039; S022's
+accepts asks one run to measure two changes against its own body; S020 and
+S030 gates require a positive gain, which the modal honest outcome (zero,
+per DEC-019) cannot satisfy; S021's touches points at the wrong file for
+iterative deepening. Ordering, dependencies, the audit-step mapping, and the
+literature formulations in S021/S022/S023/S026/S029/S032/S033 checked out
+sound.
+
+Nothing was fixed. `--audit check` reported the report as the run's only
+change.
+
+Nine steps created, S044 to S052, one per finding, `closes:` set on each.
+`plan.md` reordered: all nine sit between S037 and the S043 cheap-fix block —
+they correct the plan the later steps execute against, and together cost less
+than one SPRT. The reasoning paragraph is in `plan.md` itself.
+
+`README.md` not touched, owner-written. `MANUAL.md` not touched, no surface
+moved. No code changed.
+
+Tests: fast suite green, 9/9, format check clean.
+
+Commit: this one.
