@@ -2812,3 +2812,60 @@ Found by the post-commit fast check over `96863ae`, as prescribed. Files:
 `tools/tuner_groups.hpp`, `adocs/testing.md`, `adocs/worklog.md`. Gate at the
 fix: build clean, `ctest -L fast` 10/10, `clang-format.sh --check` clean **with
 both new files tracked**.
+
+## 2026-08-13 — S054, the format check sees untracked files
+
+Commit `031ff70`. `clang-format.sh:60` was `git ls-files | grep -E ...`, the
+index only, so `./clang-format.sh --check` passed over a source file that had
+not been staged. It is the third command in `.moltke.json`'s gate, so every step
+that added a file was checked on everything except the files it added — S041's
+`96863ae` is the case that shipped, three lines at 81 characters, repaired by
+`d853843`. Found while completing S041, not by an audit, so `closes:` is empty.
+Placed ahead of S038 under the AGENTS.md house rule.
+
+Selection is now `git ls-files --cached --others --exclude-standard`, filtered
+to paths that exist and `sort -u`. The filter is a second fix in the same line:
+`--cached` names files deleted from the worktree but still in the index, and
+clang-format cannot open them — the old line had that weakness too and never met
+the case.
+
+Measured. 42 paths before, 42 after on a clean tree; 42 against 44 with two
+untracked probes written, `comm -13` naming the delta as exactly those two.
+0 paths under `build*/`, `.ref-builds/` or `.no_git/` in the new selection;
+dropping `--exclude-standard` adds 7, all named. `.ref-builds/`'s 32 sources
+never appear even without it — `.ref-builds/7b4d9a4/.git` is a `gitdir:` pointer
+and `git ls-files --others` will not descend into a nested repository, so that
+tree is held out twice over and the sandbox's plain directory is what exercises
+the `.gitignore` path. With the fix, a misformatted unstaged
+`src/zz_unstaged_probe.cpp` makes `--check` exit 1.
+
+Test: `tests/test_clang_format_script.sh`, CTest `test_clang_format_script`,
+label `fast`, 0.25 s, five assertions in a throwaway git repository. Two are
+preconditions, which is what stops a script that always fails from passing.
+Observed red with line 60 reverted in place through ctest: exactly two
+assertions failed, the untracked one over an empty `out.txt` and the
+deleted-file one over `src/gone.cpp: No such file or directory`.
+
+One defect found and fixed inside the step. The first draft leaked every
+sandbox into `${TMPDIR}`: `sandboxes+=("$tmp")` ran inside the
+`$(make_sandbox)` command substitution, so the parent shell's array stayed
+empty and the cleanup loop removed nothing. Replaced with one root and a
+`trap ... EXIT`, which also survives an early exit. Verified 0 leftover roots
+after a green run and after a red one, and `git status --porcelain` identical
+before and after `ctest -L fast`.
+
+The clean fixture is a declaration and a comment, not a short function:
+`AllowShortBlocksOnASingleLine` collapses `int ok() { return 0; }` under
+clang-format 22 and leaves it alone under 18, which failed the first draft's
+precondition assertion and would have made the test version-dependent.
+
+Files: `clang-format.sh`, `tests/test_clang_format_script.sh`,
+`tests/CMakeLists.txt`, `DEV_MANUAL.md`, `adocs/testing.md` (4 rows),
+`adocs/plan.md`, `adocs/plan_done/S054_clang_format_untracked.md`. Gate: build
+clean, `ctest -L fast` 11/11, `clang-format.sh --check` exit 0, run with the
+two new files staged. No SPRT: a shell script outside the engine cannot alter
+play.
+
+`status.md` still derives "Last done: S053" because the checker takes the
+positionally last completed entry in `plan.md` and S054 sits at position 37,
+ahead of S038 where its execution order put it. "Next: S038" is right.
