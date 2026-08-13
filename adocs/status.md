@@ -3,11 +3,11 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-13 by `moltke --step status`.
+Updated: 2026-08-14 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S033
+- Next: S066
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
