@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-13_plan_review-F09
 blocks:
 paused_by:
-done:
+done:      S021's touches names src/chesso.cpp iterative_deepening_search (the loop, chesso.cpp:544) with src/search.cpp only for signature plumbing, agreeing with S037's location claim. Gate green.
 
 ## What is there
 
@@ -19,3 +19,4 @@ parameters. S037's step file cites the correct location for the same loop, so
 two pending step files currently disagree about where the code lives.
 
 Full evidence: 2026-08-13_plan_review-F09.
+author:    Maksym Bodnar

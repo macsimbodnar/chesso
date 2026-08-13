@@ -1,7 +1,7 @@
 id:         S021
 goal:       start the root search in a narrow window around the previous score
 accepts:    an SPRT with bounds matched to the expected effect size returns a verdict
-touches:    src/search.cpp iterative deepening
+touches:    src/chesso.cpp iterative_deepening_search, where the aspiration loop lives; src/search.cpp only to plumb the window through search()'s signature
 excludes:
 decisions:
 closes:
