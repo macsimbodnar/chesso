@@ -226,7 +226,9 @@ int main(int argc, char** argv)
     const int64_t sink = sweep(boards);
     const auto end = std::chrono::steady_clock::now();
 
-    if (sink == 0x5EEDL) { printf(""); }  // the sink is never optimised out
+    // The sink is never optimised out. Printing it rather than an empty string
+    // keeps the value observable to the compiler on both toolchains.
+    if (sink == 0x5EEDL) { printf("%lld", static_cast<long long>(sink)); }
 
     timing.samples.push_back(
         std::chrono::duration<double, std::milli>(end - start).count());

@@ -439,8 +439,9 @@ TEST_SUITE("movegen: perft")
     size_t layers_checked = 0;
     size_t columns_checked = 0;
 
-    for (const std::string& file : {"assets/perft_json/perft.json",
-                                    "assets/perft_json/talkchess_perft.json"}) {
+    for (const std::string& file :
+         {std::string("assets/perft_json/perft.json"),
+          std::string("assets/perft_json/talkchess_perft.json")}) {
       const nlohmann::json positions = load_json(file);
 
       for (const nlohmann::json& position : positions) {

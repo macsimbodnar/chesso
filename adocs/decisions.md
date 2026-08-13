@@ -1844,3 +1844,64 @@ Consequences: Verdicts get faster and noisier. The distortion falls on both
               If a result ever needs to be as clean as this setup can make it,
               `CONCURRENCY=4` is the way back and the reason should be recorded
               with the run.
+
+## DEC-049  2026-08-13  GCC is the reference compiler on the Linux machine
+Tags:         toolchain, measurement, portability, build, dec-048
+
+Context:      Work moved to a Linux machine -- Pop!_OS 24.04, i7-8700K, 6 cores
+              and 12 threads. Apple clang, the compiler every recorded figure
+              before this point was built with, does not exist here.
+
+              The tree did not compile at all with the distribution default.
+              `g++ 13.3` under `-Werror` rejected four sites: an enum mixed with
+              `uint8_t` in a ternary (`src/bitboard.cpp`), a zero-length
+              `printf` format (`tests/bench_eval.cpp`), and two range-for loops
+              binding `const std::string&` to a temporary built from `const
+              char*` (`tests/test_engine.cpp`, `tests/test_movegen.cpp`). All
+              four are portability defects, not gcc pedantry, and none of them
+              was visible under Apple clang.
+
+              TOOLCHAIN.md carries a standing warning that pointing CMake at a
+              different compiler makes every recorded benchmark incomparable.
+              The agent raised it and did not decide it.
+
+Decision:     The owner chose the distribution default, `g++ 13.3`, as the
+              reference compiler on this machine.
+
+              The owner's reasoning, recorded because it narrows the TOOLCHAIN.md
+              warning rather than overriding it: comparability is a property of
+              a (machine, compiler) pair, not of a compiler. A comparison made
+              on one machine with one compiler is sound. The warning bites only
+              when a figure is carried across machines, or across compilers on
+              one machine, and neither is done here.
+
+              The owner also counted the switch as a positive: a different front
+              end reports defects the previous one did not. The four `-Werror`
+              sites are that argument's evidence, found on day one.
+
+Rejected:     Clang 22 as the reference. It is installed and is the closer
+              relative of Apple clang, so it would have kept the old numbers
+              nominally comparable -- which is worth nothing once numbers are
+              not carried across machines at all. It also cannot link as
+              installed (`cannot find -lstdc++`; it resolves gcc-14's directory
+              while only gcc-13's libstdc++ is present). Kept as a second front
+              end for `clang-tidy-22` and for a second opinion on warnings, not
+              as the build compiler.
+
+Consequences: Every figure recorded before this entry was measured on Apple
+              silicon under Apple clang and is not comparable to anything
+              measured here. Those figures keep their conditions attached
+              wherever they are quoted -- the same discipline DEC-048 applies to
+              core counts, for the same reason.
+
+              The baseline restarts here. `bench_movegen`, `bench_eval` and
+              every Elo verdict get re-established on this machine before any of
+              them is compared against.
+
+              Changing compiler on this machine again is a decision and an entry
+              here, never a build flag, because it restarts the baseline a
+              second time.
+
+              TOOLCHAIN.md documents the macOS toolchain throughout -- Homebrew
+              paths, `dsymutil`, `xcrun --show-sdk-path`, `-mcpu=apple-m1` -- and
+              is stale on this machine until rewritten.

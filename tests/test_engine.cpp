@@ -657,7 +657,8 @@ TEST_SUITE("engine: uci layer")
     size_t smallest = 0;
     size_t previous = 0;
 
-    for (const std::string& value : {"1", "64", "4096"}) {
+    for (const std::string& value :
+         {std::string("1"), std::string("64"), std::string("4096")}) {
       stdout_capture_t capture;
       uci_process_line("setoption name Hash value " + value);
       uci_process_line("position startpos");

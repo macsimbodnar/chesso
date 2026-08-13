@@ -493,7 +493,8 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
       &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
 
   const bb_t king_bb = my_bitboards[5];
-  const index_t king_square = king_bb ? get_lsb_index(king_bb) : INVALID_INDEX;
+  const index_t king_square =
+      king_bb ? get_lsb_index(king_bb) : static_cast<index_t>(INVALID_INDEX);
 
   bb_t check_mask = ~BB_0;
   bb_t pinned = BB_0;
