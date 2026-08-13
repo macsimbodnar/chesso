@@ -2673,9 +2673,30 @@ comment; the plan directory is what a step id means. The four comments are in
 `tools/`, which this step excludes, so they are reported and not touched.
 
 The step file's own pointers were stale and were corrected in place while it sat
-in `plan_current/`: `src/eval_model.hpp` for `tools/eval_model.hpp`, and four of
-its five code line ranges. `plan_done/` is immutable; `plan_current/` is not, and
-S043 sealed a false sentence next to its own refutation by forgetting that.
+in `plan_current/`: **all four** of its code line ranges — `GROUP_LIST`
+`:140-142` for `:153-155`, `free_mask`'s tempo branch `:198` for `:209-211`, the
+tempo weights `src/evaluation.cpp:580-581` for `:582-583`, and the fourth
+swallowing occurrence `:194-197` for `:204-206`. Its `goal:` line named
+`eval_model.hpp` with no directory, which gained the `tools/` prefix.
+`plan_done/` is immutable; `plan_current/` is not, and S043 sealed a false
+sentence next to its own refutation by forgetting that.
+
+**Correction, and it is the S043 failure repeated one layer up.** The paragraph
+above is the corrected version. The completion stamp in
+`adocs/plan_done/S040_dev_manual_tuner_refresh.md`, and the body sentence at its
+`## Shape`, both say the step file "said `src/eval_model.hpp`". It did not:
+`git show 5b00896^:adocs/plan_todo/S040_dev_manual_tuner_refresh.md` contains
+that string zero times. `src/eval_model.hpp` was in the prompt that assigned the
+step, not in the step file, and the two were conflated. The stamp also says
+"four of its five code line ranges were stale" — there were four code line
+ranges and all four were stale; the five are the `DEV_MANUAL.md` line ranges,
+which were dropped rather than corrected because the edit moves them. Found by
+the post-commit fast check over `5b00896`, after the move to `plan_done/`. Both
+sentences are immutable now and are corrected here, not there: `plan_done/` is
+never rewritten and neither is git history. The claims the step is graded on —
+827, the group list, the paste target, the swallowing count, the datagen filter —
+were re-verified by that same check against the code and against nine live
+`tuner` runs, and every one of them holds.
 
 Files: `DEV_MANUAL.md`, `adocs/plan_current/S040_dev_manual_tuner_refresh.md`
 (now `plan_done/`), `adocs/testing.md`, `adocs/worklog.md`. Six ledger rows.
