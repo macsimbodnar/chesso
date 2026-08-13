@@ -77,7 +77,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-30. S050  S022 accepts one verdict per change instead of one run measuring two
 31. S051  S020 and S030 gates accept a measured zero and name the instrument
 32. S052  S021 touches line points at the file where iterative deepening lives
 33. S037  info nodes reports the whole search's node count so search_bench.py compares the whole tree
