@@ -28,11 +28,18 @@ add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
 
-# The tuner's model of evaluate() lives in tools/, so this is the one test that
-# includes from there. S028: a model that drifts from the engine tunes the
+# The tuner's model of evaluate() lives in tools/, so these are the two tests
+# that include from there. S028: a model that drifts from the engine tunes the
 # wrong function and nothing downstream notices.
 add_doctest_target(test_eval_model)
 target_include_directories(test_eval_model PRIVATE ../tools)
+
+# S041: the tuner's --only groups have to partition its parameter vector, and
+# free_mask() has swallowed the term appended after it four times with nothing
+# in tests/ linking tuner.cpp at all. Needs no dataset, so it is a fast test
+# like the rest.
+add_doctest_target(test_tuner_groups)
+target_include_directories(test_tuner_groups PRIVATE ../tools)
 
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
 # where that tree is. Nothing else in the tests looks outside its own directory.

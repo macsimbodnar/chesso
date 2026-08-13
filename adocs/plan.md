@@ -77,7 +77,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-32. S052  S021 touches line points at the file where iterative deepening lives
 33. S037  info nodes reports the whole search's node count so search_bench.py compares the whole tree
 34. S043  delete the CMAKE_TOOLCHAIN_FILE line that names a file that does not exist
 35. S040  re-derive the DEV_MANUAL tuner section from tools/tuner.cpp and eval_model.hpp

@@ -7,7 +7,7 @@ Updated: 2026-08-13 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S041
+- Next: S038
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
@@ -49,3 +49,15 @@ Updated: 2026-08-13 by `moltke --step status`.
     so a golden check has something to hold them against. Found while doing
     S037. Parked, not planned: a step is created by a decision and none has been
     taken on this.
+  - **The tuner's last `--only` group runs to `PARAM_COUNT`, and that is a blind
+    spot S041's test cannot cover.** `tempo` ends at `PARAM_COUNT`
+    (`tools/tuner_groups.hpp`), so a parameter block appended after it and given
+    no group of its own is covered by `tempo` and all three partition properties
+    still hold. `test_tuner_groups` catches it through a precondition instead —
+    `TEMPO_EG_BASE + TEMPO_COUNT == PARAM_COUNT`, the bases chain against
+    `eval_model.hpp`'s independent width sum — which fires but names the wrong
+    thing. The structural fix is a group table the last entry cannot outrun, and
+    it would delete the four historical comments that are the only record of the
+    defect. Found while doing S041, whose `excludes:` puts it out of reach.
+    Parked, not planned: a step is created by a decision and none has been taken
+    on this.

@@ -47,6 +47,7 @@
 #include <thread>
 #include <vector>
 #include "eval_model.hpp"
+#include "tuner_groups.hpp"
 
 namespace
 {
@@ -73,6 +74,12 @@ using eval_model::PS_EG_BASE;
 using eval_model::PS_MG_BASE;
 using eval_model::TEMPO_EG_BASE;
 using eval_model::TEMPO_MG_BASE;
+
+// Both moved to tools/tuner_groups.hpp at S041 so that
+// tests/test_tuner_groups.cpp can reach them. Imported under their old names so
+// the call sites below are unchanged.
+using tuner_groups::free_mask;
+using tuner_groups::GROUP_LIST;
 
 constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
 
@@ -148,79 +155,6 @@ struct options_t
   unsigned threads = default_threads();
   uint64_t seed = 1;
 };
-
-
-const char* const GROUP_LIST =
-    "all, material, psqt, mobility, king_safety, passed_pawns, "
-    "pawn_structure, piece_placement, tempo";
-
-
-// Marks the parameters a --only group leaves free; the rest keep the value the
-// engine ships and come out of the run unchanged.
-//
-// This exists for attribution under SPRT. Fitting a new term jointly also
-// refits the 781 constants that were already fitted, so the match that follows
-// measures two changes at once and its number says nothing about either. One
-// change at a time; DEC-020 is what that rule cost to learn.
-//
-// Each group is one contiguous range because eval_model.hpp lays the vector out
-// that way.
-bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
-{
-  size_t first = 0;
-  size_t last = 0;
-
-  if (group == "all") {
-    first = 0;
-    last = PARAM_COUNT;
-  } else if (group == "material") {
-    first = 0;
-    last = MATERIAL_COUNT;
-  } else if (group == "psqt") {
-    first = MG_BASE;
-    last = MOB_MG_BASE;
-  } else if (group == "mobility") {
-    first = MOB_MG_BASE;
-    last = KS_MG_BASE;
-  } else if (group == "king_safety") {
-    // Ends at the passed pawn block, not at PARAM_COUNT. A group that reaches
-    // to the end of the vector silently swallows whatever term is appended
-    // after it, and the run that follows measures two changes at once.
-    first = KS_MG_BASE;
-    last = PP_MG_BASE;
-  } else if (group == "passed_pawns") {
-    // Ends at the pawn structure block for the reason above, and it reached to
-    // PARAM_COUNT until that block was appended -- the same bug the comment
-    // over king_safety describes, one term later.
-    first = PP_MG_BASE;
-    last = PS_MG_BASE;
-  } else if (group == "pawn_structure") {
-    // Ends at the piece placement block for the reason above, and it reached to
-    // PARAM_COUNT until that block was appended -- the third time this same
-    // function has swallowed the term appended after it.
-    first = PS_MG_BASE;
-    last = PL_MG_BASE;
-  } else if (group == "piece_placement") {
-    // Ends at the tempo block for the reason above, and it reached to
-    // PARAM_COUNT until that block was appended -- the fourth term in a row to
-    // meet the same defect in the same function.
-    first = PL_MG_BASE;
-    last = TEMPO_MG_BASE;
-  } else if (group == "tempo") {
-    first = TEMPO_MG_BASE;
-    last = PARAM_COUNT;
-  } else {
-    return false;
-  }
-
-  mask->assign(PARAM_COUNT, 0);
-
-  for (size_t i = first; i < last; ++i) {
-    (*mask)[i] = 1;
-  }
-
-  return true;
-}
 
 
 bool load(const std::string& path, dataset_t* data)

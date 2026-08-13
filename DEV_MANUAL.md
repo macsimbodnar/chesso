@@ -446,10 +446,18 @@ range and the last one runs to `PARAM_COUNT`, so a new group appended after it
 is silently swallowed unless the previous group's end moves. That has now
 happened four times — `king_safety` ran past the passed pawn weights,
 `passed_pawns` past the pawn structure weights, `pawn_structure` past the piece
-placement weights, `piece_placement` past the tempo weights — and none of them
-would fail a test. The symptom is a fit returning the new weights exactly as it
-was handed them. `tempo` is the group running to `PARAM_COUNT` today, so it is
-the one that swallows the fifth term.
+placement weights, `piece_placement` past the tempo weights — and the first four
+would have failed no test. The symptom is a fit returning the new weights
+exactly as it was handed them. `tempo` is the group running to `PARAM_COUNT`
+today, so it is the one that swallows the fifth term.
+
+`test_tuner_groups` is what a fifth occurrence fails now. S041 moved
+`GROUP_LIST` and `free_mask` out of `tools/tuner.cpp` into
+`tools/tuner_groups.hpp` so a test could reach them, and holds three properties
+over the ranges: every group frees at least one parameter, the groups are
+pairwise disjoint, and their union is exactly `[0, PARAM_COUNT)`. Disjointness
+is the clause a swallowing breaks — the predecessor and the new group both claim
+the new block. It needs no dataset and carries the `fast` label.
 
 **This is an attribution tool, not a speed tool.** A joint fit of a new term
 also refits the constants that were already fitted, so the SPRT that follows

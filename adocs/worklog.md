@@ -2703,3 +2703,64 @@ Files: `DEV_MANUAL.md`, `adocs/plan_current/S040_dev_manual_tuner_refresh.md`
 Gate: build clean, `ctest -L fast` 9/9, `clang-format.sh --check` clean.
 MANUAL.md checked — no tuner surface anywhere in it, no change. `README.md`
 checked, owner-written, no change needed.
+
+## 2026-08-13 — S041, a test over the tuner's --only group ranges
+
+`tools/tuner.cpp`'s `free_mask` has swallowed the term appended after it four
+times and had no test at all — `2026-08-13_adversarial-F07`. `GROUP_LIST` and
+`free_mask` moved to a new `tools/tuner_groups.hpp` so a test can reach them,
+and `tests/test_tuner_groups.cpp` now holds three properties over the ranges:
+every group frees at least one parameter, the groups are pairwise disjoint, and
+their union is exactly `[0, PARAM_COUNT)`. Registered with CTest under `fast`,
+45 assertions, 0.00 s; the suite is 10/10.
+
+Names come from `tuner_groups::GROUP_LIST` and every length and index from
+`eval_model::PARAM_COUNT`; the test carries no literal for either. Preconditions
+first, and they would fail if absent: `PARAM_COUNT > 0`, at least two names,
+exactly one `all`, every listed name accepted by `free_mask`, `not_a_group`
+refused, and `TEMPO_EG_BASE + TEMPO_COUNT == PARAM_COUNT`.
+
+**Observed red three ways.** The fourth recorded swallowing — `piece_placement`
+re-ended at `PARAM_COUNT` — failed `CHECK( 2 == 0 )` with "2 of 827 parameters
+are freed by more than one --only group; the first is index 825, claimed by
+piece_placement and tempo". `tempo` dropped from `GROUP_LIST` failed
+`CHECK( 2 == 0 )` with "2 of 827 parameters are in no --only group; the first is
+index 825". `material` emptied failed `CHECK( 0 > 0 )` with "group frees no
+parameter at all: material".
+
+**The step file was wrong about which clause fires, and was corrected while
+current.** It said the union clause fires when a group is appended without
+re-ending its predecessor. It is disjointness: the predecessor still covers the
+new block, so both claim it and the union is still the whole vector. The first
+red run above is that correction's evidence. Its two code line ranges were stale
+too, inherited from the audit finding — `:157-209` for `:153-223`, and
+`:198-200` for the `tempo` branch, which is `:209-211` and where `:198-200` is
+the `pawn_structure` comment.
+
+**Behaviour identity was measured, not asserted.** `HEAD`'s own `free_mask` text
+compiled into a scratchpad translation unit and asked for all 9 groups plus 8
+names it must refuse, dumping return value, mask length and all 827 bits per
+call: 8160 bytes over 19 lines, byte-identical to the same dump through the new
+header. The move is textual — the moved region differs from
+`git show HEAD:tools/tuner.cpp` on exactly two declaration lines. End to end,
+`tuner --only <group>` for all 9 groups over a 2-row TSV against the
+`fcd82f8`-built binary: emitted header and stderr identical for every group,
+the 9 headers being 9 distinct files. `--help` and the unknown-group error
+identical too.
+
+**Reported, not fixed.** `tempo` still runs to `PARAM_COUNT`, so a block
+appended after it with no group of its own is covered by `tempo` and all three
+properties still hold. The precondition catches it and names the wrong thing.
+The structural fix would restructure `GROUP_LIST` and delete the four historical
+comments, which this step's `excludes:` puts out of reach. Parked in
+`status.md`.
+
+Files: `tools/tuner_groups.hpp` (new), `tools/tuner.cpp`,
+`tests/test_tuner_groups.cpp` (new), `tests/CMakeLists.txt`, `DEV_MANUAL.md`,
+`adocs/plan_current/S041_free_mask_partition_test.md` (now `plan_done/`),
+`adocs/testing.md`, `adocs/status.md`, `adocs/worklog.md`. Two ledger rows.
+Gate: build clean, `ctest -L fast` 10/10 in 17.1 s, `clang-format.sh --check`
+clean. `MANUAL.md` checked — the tuner is not end-user surface and `--help` is
+byte-identical, no change. `README.md` checked, owner-written, no change needed.
+No SPRT: the tuner is not the engine and nothing here is in the search path.
+`2026-08-13_adversarial-F07` stays `planned`; only an audit re-run closes it.
