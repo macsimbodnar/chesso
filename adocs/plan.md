@@ -72,7 +72,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-20. S034  compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
 21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
 22. S035  restore fastchess.sh so a match actually runs, and stop the EXIT trap masking a failure as status 0
 23. S036  a go command with a 1 ms clock returns a bestmove instead of searching forever

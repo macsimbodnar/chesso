@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-13_plan_review-F02
 blocks:
 paused_by:
-done:
+done:      S024's note distinguishes the countermove heuristic (present, counter_moves[12][64], flat ORDER_COUNTER band) from continuation history (absent at every depth), and its accepts now asks two SPRT verdicts, one-ply table first, two-ply second, each against the commit before it. Gate green.
 
 ## What is there
 
@@ -27,3 +27,4 @@ two-ply table; a zero verdict on that would be recorded against a technique
 whose strongest form was never built — the DEC-019 failure mode made locally.
 
 Full evidence: 2026-08-13_plan_review-F02.
+author:    Maksym Bodnar
