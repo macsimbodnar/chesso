@@ -47,7 +47,8 @@ neutrality claim to be quietly wrong. S039 and S042 cost an SPRT each and buy
 little, so they wait behind the search block rather than ahead of it.
 
 **S044 to S052 are the 2026-08-13 plan_review audit's nine findings, one step
-each, between the last instrument fix and the older cheap-fix block.** They
+each, ahead of everything still pending: they are pure text, cost minutes
+each, and they correct the documents the pending steps execute against.** They
 correct the plan and its step files rather than the engine: S045, S046, S050
 and S051 each remove a way for a later step to alter play unmeasured or to
 record a verdict against the wrong thing; S044, S047 and S048 retire premises
@@ -75,16 +76,16 @@ every list entry must have a step file — both are INV-3.
 21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
 22. S035  restore fastchess.sh so a match actually runs, and stop the EXIT trap masking a failure as status 0
 23. S036  a go command with a 1 ms clock returns a bestmove instead of searching forever
-24. S037  info nodes reports the whole search's node count so search_bench.py compares the whole tree
-25. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
-26. S045  S024 distinguishes continuation history from the countermove heuristic and scopes the one-ply table first
-27. S046  S030, S031 and S032 accepts discharge INV-6: search_bench identity or an SPRT
-28. S047  S032, S029 and S020 premises re-stated against the DEC-049 machine; specs open item refreshed
-29. S048  plan.md's list rule names a real property and holds; stale harness and price prose refreshed
-30. S049  S039 cites the decision that governs the lazy margin, not the one-night fit delegation
-31. S050  S022 accepts one verdict per change instead of one run measuring two
-32. S051  S020 and S030 gates accept a measured zero and name the instrument
-33. S052  S021 touches line points at the file where iterative deepening lives
+24. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
+25. S045  S024 distinguishes continuation history from the countermove heuristic and scopes the one-ply table first
+26. S046  S030, S031 and S032 accepts discharge INV-6: search_bench identity or an SPRT
+27. S047  S032, S029 and S020 premises re-stated against the DEC-049 machine; specs open item refreshed
+28. S048  plan.md's list rule names a real property and holds; stale harness and price prose refreshed
+29. S049  S039 cites the decision that governs the lazy margin, not the one-night fit delegation
+30. S050  S022 accepts one verdict per change instead of one run measuring two
+31. S051  S020 and S030 gates accept a measured zero and name the instrument
+32. S052  S021 touches line points at the file where iterative deepening lives
+33. S037  info nodes reports the whole search's node count so search_bench.py compares the whole tree
 34. S043  delete the CMAKE_TOOLCHAIN_FILE line that names a file that does not exist
 35. S040  re-derive the DEV_MANUAL tuner section from tools/tuner.cpp and eval_model.hpp
 36. S041  a test that fails the moment a tuner group range is appended without re-ending the one before it
