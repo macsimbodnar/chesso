@@ -5,10 +5,11 @@
 // Reads what tools/datagen writes, `fen result score phase`, and fits the
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
 // and psqt_eg[6][64], the mobility weights since S034, the king safety weights
-// since S027, the passed pawn weights since S035 and the pawn structure and
-// piece placement weights since S027, 825 numbers -- so that a sigmoid of the
-// evaluation predicts the outcome of the game the position came from. This is
-// Texel tuning; the objective is the mean squared error of that prediction.
+// since S027, the passed pawn weights since S035 and the pawn structure, piece
+// placement and tempo weights since S027, 827 numbers -- so that a sigmoid of
+// the evaluation predicts the outcome of the game the position came from.
+// This is Texel tuning; the objective is the mean squared error of that
+// prediction.
 //
 // It does not run the search. The model below reproduces evaluate() in floating
 // point, which is what makes the fit a linear problem and lets a full pass over
@@ -70,6 +71,8 @@ using eval_model::PP_EG_BASE;
 using eval_model::PP_MG_BASE;
 using eval_model::PS_EG_BASE;
 using eval_model::PS_MG_BASE;
+using eval_model::TEMPO_EG_BASE;
+using eval_model::TEMPO_MG_BASE;
 
 constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
 
@@ -109,6 +112,13 @@ struct dataset_t
   // room than they need: 1.49 M rows cost 12 MB.
   std::vector<int16_t> piece_placement;
 
+  // The tempo feature, one per position: +1 with White to move and -1 with
+  // Black. Not a count of anything and not extracted from the placement -- it
+  // is the FEN's second field, which is why load() below has to split the FEN
+  // rather than take its first token and stop. int8 because the only two values
+  // it ever holds are +1 and -1: 1.49 M rows cost 1.5 MB.
+  std::vector<int8_t> tempo;
+
   size_t size() const { return phase.size(); }
 };
 
@@ -131,7 +141,7 @@ struct options_t
 
 const char* const GROUP_LIST =
     "all, material, psqt, mobility, king_safety, passed_pawns, "
-    "pawn_structure, piece_placement";
+    "pawn_structure, piece_placement, tempo";
 
 
 // Marks the parameters a --only group leaves free; the rest keep the value the
@@ -180,7 +190,13 @@ bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     first = PS_MG_BASE;
     last = PL_MG_BASE;
   } else if (group == "piece_placement") {
+    // Ends at the tempo block for the reason above, and it reached to
+    // PARAM_COUNT until that block was appended -- the fourth term in a row to
+    // meet the same defect in the same function.
     first = PL_MG_BASE;
+    last = TEMPO_MG_BASE;
+  } else if (group == "tempo") {
+    first = TEMPO_MG_BASE;
     last = PARAM_COUNT;
   } else {
     return false;
@@ -211,11 +227,12 @@ bool load(const std::string& path, dataset_t* data)
     if (line.empty()) { continue; }
 
     std::istringstream fields(line);
-    std::string placement, rest, result_text, score_text, phase_text;
+    std::string placement, side_to_move, result_text, score_text, phase_text;
 
-    // The FEN's first field is the placement; the rest of the FEN is not
-    // needed, but the side to move sits between it and the tab, so the line is
-    // split on tabs first and the FEN on spaces after.
+    // The FEN's first field is the placement and its second is the side to
+    // move, which the tempo term reads and nothing else does. The line is split
+    // on tabs first and the FEN on spaces after, because the space between
+    // those two fields is inside the first tab-separated column.
     std::string fen;
     if (!std::getline(fields, fen, '\t')) { continue; }
     if (!std::getline(fields, result_text, '\t')) { continue; }
@@ -224,6 +241,7 @@ bool load(const std::string& path, dataset_t* data)
 
     std::istringstream fen_fields(fen);
     if (!(fen_fields >> placement)) { continue; }
+    if (!(fen_fields >> side_to_move)) { continue; }
 
     pieces.clear();
 
@@ -273,6 +291,12 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    int tempo = 0;
+    if (!eval_model::tempo_feature(side_to_move, &tempo)) {
+      fprintf(stderr, "bad side to move: %s\n", side_to_move.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
 
@@ -291,6 +315,7 @@ bool load(const std::string& path, dataset_t* data)
     for (const int count : placement_counts) {
       data->piece_placement.push_back(static_cast<int16_t>(count));
     }
+    data->tempo.push_back(static_cast<int8_t>(tempo));
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
   }
@@ -330,7 +355,7 @@ double evaluate_position(const dataset_t& data,
   return eval_model::evaluate(&data.pieces[data.offsets[index]],
                               data.offsets[index + 1] - data.offsets[index],
                               data.phase[index], mobility, params, safety,
-                              passed, structure, placement);
+                              passed, structure, placement, data.tempo[index]);
 }
 
 
@@ -487,6 +512,15 @@ void gradient(const dataset_t& data,
           grad[PL_MG_BASE + p] += outer * count * mg_weight;
           grad[PL_EG_BASE + p] += outer * count * eg_weight;
         }
+
+        // Tempo, the same shape and the same trap a sixth time, and no clamp
+        // to ignore for the same reason: the term is part of evaluate_cheap(),
+        // on the near side of the lazy margin. No loop, because there is one
+        // weight per table and the feature is the position's own +1 or -1.
+        const double tempo = data.tempo[position];
+
+        grad[TEMPO_MG_BASE] += outer * tempo * mg_weight;
+        grad[TEMPO_EG_BASE] += outer * tempo * eg_weight;
       }
     });
   }
@@ -577,8 +611,9 @@ void write_tables(const std::string& path,
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
-      "// passed pawn, pawn structure and piece placement weights at the end\n"
-      "// live in src/evaluation.cpp, a different file and easy to miss.\n"
+      "// passed pawn, pawn structure, piece placement and tempo weights at\n"
+      "// the end live in src/evaluation.cpp, a different file and easy to\n"
+      "// miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
@@ -620,10 +655,10 @@ void write_tables(const std::string& path,
   }
 
   // The mobility weights are fitted too, since S034, the king safety weights
-  // since S027, the passed pawn weights since S035 and the pawn structure and
-  // piece placement weights since S027, and none of them lives in
+  // since S027, the passed pawn weights since S035 and the pawn structure,
+  // piece placement and tempo weights since S027, and none of them lives in
   // eval_tables.hpp with everything else. Emitting them here is what stops a
-  // fit quietly discarding fifty-two of its own parameters, which is exactly
+  // fit quietly discarding fifty-four of its own parameters, which is exactly
   // what this function did with mobility's eight until it was checked.
   fprintf(
       out,
@@ -702,6 +737,13 @@ void write_tables(const std::string& path,
 
     fprintf(out, "};  // pair, open, half open, seventh\n");
   }
+
+  // One number per table and no array, so these two lines are the whole term.
+  // Emitted here for the reason the eight above are: a parameter the fit moves
+  // and the writer forgets is a parameter the run silently discards.
+  fprintf(out, "\nconst int tempo_mg = %d;\nconst int tempo_eg = %d;\n",
+          static_cast<int>(std::lround(params[TEMPO_MG_BASE])),
+          static_cast<int>(std::lround(params[TEMPO_EG_BASE])));
 
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());

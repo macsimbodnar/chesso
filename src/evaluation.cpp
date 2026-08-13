@@ -544,6 +544,25 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 }
 
 
+// Zero, deliberately, and fitted by tools/tuner afterwards. Same staging as the
+// four terms above and for the same reason: at zero the commit is provably
+// behaviour-neutral, so the SPRT that follows measures the fitted term instead
+// of a guess. No published value was consulted, DEC-016 -- and there is a
+// well-known one for this term, which is exactly why the rule exists.
+//
+// The exact definition is in evaluation.hpp, written out there because
+// tools/eval_model.hpp is built from it and the two have to mean the same
+// thing. The short version: it is added after evaluate_cheap() has resolved the
+// sign, so it belongs to the side on move rather than to White.
+//
+// One parameter each and no feature vector, because the feature is the constant
+// 1 for whoever is to move. In the tuner's White-relative model that is +1 with
+// White to move and -1 with Black, which is the only place the term needs a
+// sign at all.
+const int tempo_mg = 0;
+const int tempo_eg = 0;
+
+
 // Stage one: what is cheap enough to pay at every node, including the nodes
 // evaluate_lazy() takes the shortcut on.
 //
@@ -575,6 +594,13 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later
 // term from picking up the wrong sign.
+//
+// Tempo is here and not in evaluate() because evaluate() is not what the search
+// calls: quiescence goes through evaluate_lazy(), which is built on this
+// function and takes its shortcut on the cheap score alone. A bonus added in
+// evaluate() would be invisible to every node the search actually evaluates.
+// The lazy margin is unaffected -- it bounds the difference between the two
+// stages, and this term is in the same stage on both sides of that difference.
 int evaluate_cheap(const board_t* board)
 {
   // Interpolate the two tables on how much material is left, so a term slides
@@ -598,7 +624,32 @@ int evaluate_cheap(const board_t* board)
 
   const int score = board->material + positional;
 
-  return (board->active_color == WHITE) ? score : -score;
+  // Tapered on its own rather than summed into the pair above, and that is not
+  // a stylistic choice: everything above is White relative and is negated below
+  // for Black, and a bonus for having the move must survive that negation
+  // unchanged. Inside the pair it would be a bonus for White.
+  //
+  // Folding it in with the side-to-move sign would be arithmetically the same
+  // score and one truncation cheaper -- the comment over the pair above is
+  // exactly that argument, made for the pawn terms -- and it is not done here.
+  // It would entangle this term's truncation with the board's: the two sides'
+  // scores would then sum to trunc((P + T) / 24) - trunc((P - T) / 24), which
+  // is not twice the bonus, so the one property this term can be tested on
+  // stops being exactly true. See test_eval_model, "the move is worth the same
+  // to either side".
+  //
+  // What that costs is a second truncating division, one centipawn against the
+  // tuner's floating-point model -- test_eval_model allows two and this widens
+  // the worst case by one -- and seven instructions, measured: evaluate_cheap()
+  // disassembles to 164 at these zero weights and 171 with them forced, the
+  // extra six being the taper and only one of them the add. At zero the
+  // compiler deletes all seven, DEC-047, which is why the count is the
+  // measurement and no timing was run.
+  const int tempo =
+      ((tempo_mg * phase) + (tempo_eg * (GAME_PHASE_MAX - phase))) /
+      GAME_PHASE_MAX;
+
+  return ((board->active_color == WHITE) ? score : -score) + tempo;
 }
 
 

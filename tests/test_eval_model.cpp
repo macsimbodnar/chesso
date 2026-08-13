@@ -27,6 +27,18 @@ struct model_fixture_t
 };
 
 
+// The FEN's second field. Every feature but tempo is read out of the placement
+// alone; that one is read out of this, and a substr that stopped at the first
+// space would silently hand it whatever the caller's default was.
+static std::string side_to_move_of(const std::string& fen)
+{
+  const size_t first = fen.find(' ');
+  const size_t second = fen.find(' ', first + 1);
+
+  return fen.substr(first + 1, second - first - 1);
+}
+
+
 // The engine's score is side-to-move relative (INV-5); the model's is White
 // relative. One negation is the whole difference and getting it wrong is
 // exactly the kind of mistake this file exists to catch.
@@ -54,9 +66,27 @@ static double model_score_white(const std::string& fen, const double* params)
   int piece_placement[eval_model::PIECE_PLACEMENT_COUNT] = {};
   REQUIRE(eval_model::piece_placement_features(placement, piece_placement));
 
+  int tempo = 0;
+  REQUIRE(eval_model::tempo_feature(side_to_move_of(fen), &tempo));
+
   return eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
                               params, king_safety, passed_pawn, pawn_structure,
-                              piece_placement);
+                              piece_placement, tempo);
+}
+
+
+// The same FEN with the other side to move, which is the second field and
+// nothing else. Castling rights, the en passant square and the two clocks are
+// left exactly as they were: evaluate() reads none of them, so the two boards
+// differ in the one thing the tempo term is about.
+static std::string with_side_to_move(const std::string& fen, char side)
+{
+  const size_t first = fen.find(' ');
+  std::string flipped = fen;
+
+  flipped[first + 1] = side;
+
+  return flipped;
 }
 
 
@@ -271,6 +301,15 @@ TEST_SUITE("eval model: agrees with the engine")
       // far apart the two implementations' counts are. What checks the counts
       // is the two cases below; this one starts checking them for free the
       // moment the fits land. S027.
+      //
+      // Tempo is inside it too and is the one term with no counts to check
+      // separately, because there is nothing to count: the feature is the side
+      // to move. What stands in for the count cases is that the corpus carries
+      // positions of each side to move -- "the positions have both sides to
+      // move" below -- so that once the weights are fitted a model that read
+      // the wrong field, or read it White relative when the engine reads it
+      // side-to-move relative, fails here rather than on half the corpus by
+      // luck.
       CHECK(std::abs(model - engine_white) <= 2.0);
     }
   }
@@ -974,6 +1013,83 @@ TEST_SUITE("eval model: agrees with the engine")
       CHECK_MESSAGE(white_row[feature] > 0, (name + ": no White row claimed"));
       CHECK_MESSAGE(black_row[feature] > 0, (name + ": no Black row claimed"));
     }
+  }
+
+  // Non-vacuous by construction, and the reason the tempo term is inside the
+  // comparison at the top of this file at all. Every other feature is checked
+  // by a case of its own against the engine's counts; this one has no counts,
+  // so the only thing that can make the comparison sensitive to it is a corpus
+  // that contains both answers. A corpus that were all White to move would fit
+  // and check a bonus for White and a bonus for the mover identically.
+  TEST_CASE_FIXTURE(model_fixture_t, "the positions have both sides to move")
+  {
+    int white_to_move = 0;
+    int black_to_move = 0;
+
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+
+      int tempo = 0;
+      REQUIRE(eval_model::tempo_feature(side_to_move_of(fen), &tempo));
+
+      // The model's feature and the engine's board have to agree about who is
+      // on move before anything downstream of either means anything.
+      REQUIRE(load_FEN(fen, &game));
+      CHECK(tempo == ((game.board.active_color == WHITE) ? 1 : -1));
+
+      if (tempo > 0) { white_to_move++; }
+      if (tempo < 0) { black_to_move++; }
+    }
+
+    CHECK(white_to_move > 0);
+    CHECK(black_to_move > 0);
+  }
+
+  // The tempo term's own property, and the one thing about it that can be
+  // wrong: it belongs to the side to move and not to White.
+  //
+  // Every other term in evaluate() is a function of the board, so it is White
+  // relative and negates when the side to move changes; this one does not
+  // change at all. The two therefore separate cleanly in the sum of the two
+  // scores -- everything else cancels and twice the bonus is what is left. A
+  // bonus added before the sign resolves would cancel here instead and leave 0,
+  // whatever the weights were.
+  //
+  // With the weights at zero the sum is 0, which is the same statement as "this
+  // commit changes nothing": the shipped engine has to answer a position and
+  // its side-to-move flip with scores that negate exactly. Fitting the weights
+  // does not make the case vacuous, it makes it stronger, which is why it is
+  // not written as a comparison against zero.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the move is worth the same to either side")
+  {
+    int checked = 0;
+
+    for (const std::string& fen : positions) {
+      CAPTURE(fen);
+
+      REQUIRE(load_FEN(with_side_to_move(fen, 'w'), &game));
+      const int white = evaluate(&game.board);
+      const int phase = game_phase(&game.board);
+
+      REQUIRE(load_FEN(with_side_to_move(fen, 'b'), &game));
+      const int black = evaluate(&game.board);
+
+      // The taper evaluate_cheap() applies, on the phase both boards share.
+      // Exact rather than approximate: the same truncation happens on both
+      // sides and the White-relative part negates without one.
+      const int tempo =
+          ((tempo_mg * phase) + (tempo_eg * (GAME_PHASE_MAX - phase))) /
+          GAME_PHASE_MAX;
+
+      CAPTURE(white);
+      CAPTURE(black);
+
+      CHECK(white + black == 2 * tempo);
+      checked++;
+    }
+
+    CHECK(checked == static_cast<int>(positions.size()));
   }
 
   // The phase the model rebuilds from the piece list is the quantity the

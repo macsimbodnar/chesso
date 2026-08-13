@@ -183,6 +183,31 @@ extern const int piece_placement_eg[4];
 // implementation to drift.
 void piece_placement_counts(const board_t* board, int out[2][4]);
 
+// The tempo weights: a bonus for having the move, middlegame and endgame,
+// tapered like every other term. Exposed for the same reason as the weights
+// above: the tuner's model in tools/eval_model.hpp starts from what the engine
+// ships instead of from a copy of it that would be free to drift.
+//
+// Zero until the tuner fits them, so that the SPRT measures the fitted term
+// rather than a guess.
+//
+// **The only term here that is not a function of the board**, which is what
+// makes its placement the whole definition. evaluate() answers from the side to
+// move's point of view and evaluate_cheap() resolves that sign by negating a
+// White-relative sum; the bonus is added *after* that negation, so it pays
+// whichever side is on move. Added before it, it would pay White -- a different
+// term that agrees with this one on every position where White happens to be to
+// move, and disagrees on every other.
+//
+// It has no count to expose and no per-colour row, unlike the four terms above.
+// The feature is the same 1 for whoever is to move, so there is nothing an
+// accessor could report that the side to move does not already say. What checks
+// it instead is that the score of a position and the score of the same position
+// with the other side to move sum to twice this bonus -- test_eval_model, "the
+// move is worth the same to either side".
+extern const int tempo_mg;
+extern const int tempo_eg;
+
 // What the king safety term counts, in the order its weights are indexed. The
 // first four are attacker counts by piece type and share the order the mobility
 // weights use.

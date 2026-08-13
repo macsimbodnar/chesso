@@ -107,6 +107,17 @@ enum piece_placement_feature_t
   PL_ROOK_SEVENTH
 };
 
+// Tempo, added at S027: one weight for the middlegame and one for the endgame,
+// tapered the way everything above is.
+//
+// The odd one out, and in the one way that matters here. Every other feature is
+// a count of something on the board and is read out of the placement field;
+// this one is not read from the board at all. The engine adds the bonus to the
+// side to move's score, so in this White-relative model the feature is +1 with
+// White to move and -1 with Black -- which means the model needs the FEN's
+// *second* field, the only term here that does.
+constexpr size_t TEMPO_COUNT = 1;
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -119,11 +130,13 @@ constexpr size_t PS_MG_BASE = PP_EG_BASE + PASSED_PAWN_COUNT;
 constexpr size_t PS_EG_BASE = PS_MG_BASE + PAWN_STRUCTURE_COUNT;
 constexpr size_t PL_MG_BASE = PS_EG_BASE + PAWN_STRUCTURE_COUNT;
 constexpr size_t PL_EG_BASE = PL_MG_BASE + PIECE_PLACEMENT_COUNT;
+constexpr size_t TEMPO_MG_BASE = PL_EG_BASE + PIECE_PLACEMENT_COUNT;
+constexpr size_t TEMPO_EG_BASE = TEMPO_MG_BASE + TEMPO_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
     2 * KING_SAFETY_COUNT + 2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT +
-    2 * PIECE_PLACEMENT_COUNT;
+    2 * PIECE_PLACEMENT_COUNT + 2 * TEMPO_COUNT;
 
 // A piece is one uint16: the top bit says Black, the rest is type * 64 plus the
 // square the tables are read at, already mirrored for Black the way
@@ -859,6 +872,30 @@ inline bool piece_placement_features(const std::string& placement,
 }
 
 
+// The tempo feature: +1 with White to move, -1 with Black, which is the White
+// relative form of "the side to move gets the bonus".
+//
+// It takes the FEN's second field and not the placement, because it is the one
+// feature that is not about the board. Refusing anything else rather than
+// defaulting to White: a row whose side to move could not be read is a row this
+// term would fit backwards on half the time, and the caller already reports a
+// refusal.
+inline bool tempo_feature(const std::string& side_to_move, int* out)
+{
+  if (side_to_move == "w") {
+    *out = 1;
+    return true;
+  }
+
+  if (side_to_move == "b") {
+    *out = -1;
+    return true;
+  }
+
+  return false;
+}
+
+
 // White relative, in floating point. evaluate() divides in integers and
 // truncates towards zero, so the two agree to within one centipawn rather than
 // exactly; the tuner works in floating point precisely so that the derivative
@@ -869,6 +906,11 @@ inline bool piece_placement_features(const std::string& placement,
 // silently, which reads as correct only while the weights are zero and starts
 // fitting a different function than the engine computes the moment they are
 // not.
+//
+// `tempo` is the last argument and an int rather than a one-element vector, so
+// the same mistake does not compile here: it is +1 or -1, not a pointer, and a
+// call that leaves it out or hands it a feature array is rejected by the type
+// rather than by a reviewer.
 inline double evaluate(const uint16_t* pieces,
                        size_t count,
                        int phase,
@@ -877,7 +919,8 @@ inline double evaluate(const uint16_t* pieces,
                        const int* king_safety,
                        const int* passed_pawn,
                        const int* pawn_structure,
-                       const int* piece_placement)
+                       const int* piece_placement,
+                       int tempo)
 {
   const double mg_weight = static_cast<double>(phase) / GAME_PHASE_MAX;
   const double eg_weight =
@@ -979,8 +1022,20 @@ inline double evaluate(const uint16_t* pieces,
   const double stage_one_placement =
       piece_placement_mg_sum * mg_weight + piece_placement_eg_sum * eg_weight;
 
+  // Outside the clamp for the reason written over the three lines above: the
+  // term is part of evaluate_cheap(), so the lazy margin says nothing about it.
+  //
+  // The feature carries the sign, which is what makes this White relative: the
+  // engine adds the same positive bonus to whichever side is to move, and
+  // multiplying by +1 or -1 is that statement turned round to White's point of
+  // view. Everything else in this sum is a difference between the two colours
+  // and this is the one quantity that is not.
+  const double stage_one_tempo = tempo * (params[TEMPO_MG_BASE] * mg_weight +
+                                          params[TEMPO_EG_BASE] * eg_weight);
+
   return material + mg * mg_weight + eg * eg_weight + stage_one_passed +
-         stage_one_structure + stage_one_placement + stage_two;
+         stage_one_structure + stage_one_placement + stage_one_tempo +
+         stage_two;
 }
 
 
@@ -1024,6 +1079,11 @@ inline void starting_params(double* params)
     params[PL_MG_BASE + t] = piece_placement_mg[t];
     params[PL_EG_BASE + t] = piece_placement_eg[t];
   }
+
+  // No loop: TEMPO_COUNT is 1 and writing it as one would suggest there is a
+  // vector here to index, which is exactly the thing this term does not have.
+  params[TEMPO_MG_BASE] = tempo_mg;
+  params[TEMPO_EG_BASE] = tempo_eg;
 }
 
 }  // namespace eval_model

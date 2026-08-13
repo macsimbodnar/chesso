@@ -65,18 +65,40 @@ TEST_SUITE("evaluation: score")
     REQUIRE(checked > 100);
   }
 
+  // Both cases below asserted exactly 0 until S027 added the tempo term, and
+  // that number stopped being the right one the moment the engine started
+  // believing the move is worth something. The start position is symmetric in
+  // material, in structure and in every square either side stands on -- but not
+  // in whose turn it is, so a term about the turn is precisely the term that
+  // does not cancel here.
+  //
+  // What the pair was protecting is that *nothing else* separates the two
+  // sides, and that is what they assert now: each side, on move, gets the same
+  // number, and that number is the tempo bonus alone. Re-targeted rather than
+  // deleted or special-cased -- the assertion is still exact, and a term that
+  // unbalanced a symmetric position would fail it as loudly as before.
+  //
+  // With a full set of pieces the phase is GAME_PHASE_MAX, so the taper is the
+  // middlegame weight exactly and no arithmetic is restated here. The phase is
+  // asserted rather than assumed, because if it were anything else the expected
+  // value would be wrong in a way that reads as right.
   TEST_CASE_FIXTURE(eval_fixture_t, "the start position is balanced")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    REQUIRE_EQ(evaluate(&game.board), 0);
+    REQUIRE_EQ(game_phase(&game.board), GAME_PHASE_MAX);
+    REQUIRE_EQ(evaluate(&game.board), tempo_mg);
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "a mirrored start position is balanced")
   {
-    // Same material, black to move. Still symmetric, so still zero.
+    // Same material, black to move. Still symmetric, so still worth exactly
+    // what it was worth to White above: the two cases together are the
+    // property, that a symmetric position is the same number to whoever is on
+    // move.
     REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1",
                      &game));
-    REQUIRE_EQ(evaluate(&game.board), 0);
+    REQUIRE_EQ(game_phase(&game.board), GAME_PHASE_MAX);
+    REQUIRE_EQ(evaluate(&game.board), tempo_mg);
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t,
@@ -87,13 +109,29 @@ TEST_SUITE("evaluation: score")
     // change sign with the side to move rather than stay put.
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", &game));
     const int white_to_move = evaluate(&game.board);
+    const int phase = game_phase(&game.board);
 
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 b - - 0 1", &game));
     const int black_to_move = evaluate(&game.board);
 
     REQUIRE(white_to_move > 0);
     REQUIRE(black_to_move < 0);
-    REQUIRE_EQ(white_to_move, -black_to_move);
+
+    // This was `white_to_move == -black_to_move` until S027 added the tempo
+    // term, and that stopped being true of the evaluation rather than of this
+    // position: every term that reads the board negates with the side to move,
+    // and the bonus for having the move is added to whoever has it, so the two
+    // scores are P + tempo and -P + tempo. Their *sum* is what the old equality
+    // was really claiming, and it is what is claimed now -- everything that
+    // reads the board cancels in it and twice the bonus is left.
+    //
+    // The queen alone is phase 4 of 24, so the taper is mostly the endgame
+    // weight and neither weight can be read off this on its own.
+    const int tempo =
+        ((tempo_mg * phase) + (tempo_eg * (GAME_PHASE_MAX - phase))) /
+        GAME_PHASE_MAX;
+
+    REQUIRE_EQ(white_to_move + black_to_move, 2 * tempo);
 
     // And the mirror image, so a sign error that happens to be symmetric does
     // not slip through.
