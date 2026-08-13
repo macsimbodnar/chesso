@@ -1,6 +1,6 @@
 id:         S030
 goal:       move_t drops the moving piece and becomes 16 bits
-accepts:    perft node counts unchanged; identical tools/search_bench.py node counts and best moves against the preceding commit, or an SPRT verdict where the tree changes (INV-6); measured gain larger than the benchmark's own resolution; the opening book and UCI layer still round-trip every move
+accepts:    perft node counts unchanged; identical tools/search_bench.py node counts and best moves against the preceding commit, or an SPRT verdict where the tree changes (INV-6); the speed change measured against the benchmark's own reported resolution and the keep-or-revert call made from that number — a zero is recorded as zero and does not block completion; the opening book and UCI layer still round-trip every move
 touches:    the encoding macros, src/bitboard.cpp, move ordering, the opening book, the UCI layer
 excludes:
 decisions:

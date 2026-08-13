@@ -1,6 +1,6 @@
 id:         S020
 goal:       compute the in-check state once per node instead of once per call site
-accepts:    identical search_bench node counts and best moves, since this is behaviour-neutral; measured gain larger than the benchmark's own reported resolution
+accepts:    identical search_bench node counts and best moves, since this is behaviour-neutral; the cost measured with hyperfine over interleaved fixed-depth runs, its noise floor recorded, and the keep-or-revert call made from that number — a zero is recorded as zero and does not block completion
 touches:    src/search.cpp negamax and quiescence
 excludes:   changing when the search decides it is in check
 decisions:

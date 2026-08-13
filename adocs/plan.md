@@ -77,7 +77,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-26. S046  S030, S031 and S032 accepts discharge INV-6: search_bench identity or an SPRT
 27. S047  S032, S029 and S020 premises re-stated against the DEC-049 machine; specs open item refreshed
 28. S048  plan.md's list rule names a real property and holds; stale harness and price prose refreshed
 29. S049  S039 cites the decision that governs the lazy margin, not the one-night fit delegation

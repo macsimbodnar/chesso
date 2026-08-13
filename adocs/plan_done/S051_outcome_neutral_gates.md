@@ -7,7 +7,7 @@ decisions:  DEC-019
 closes:     2026-08-13_plan_review-F08
 blocks:
 paused_by:
-done:
+done:      Both gates read outcome-neutral: a measurement with its noise floor, the keep-or-revert call from that number, zero recorded as zero. S020 names hyperfine over interleaved fixed-depth runs, the instrument that actually reports what the gate asks; S030 measures against bench resolution. Gate green.
 
 ## What is there
 
@@ -22,3 +22,4 @@ does not run the search; `search_bench.py` times the search but reports no
 resolution.
 
 Full evidence: 2026-08-13_plan_review-F08.
+author:    Maksym Bodnar
