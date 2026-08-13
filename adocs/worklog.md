@@ -2312,3 +2312,54 @@ datagen rate are Apple-machine numbers and now say so (DEC-049).
 Tests: fast suite 9/9 green, `clang-format.sh --check` clean.
 
 Commit: not made. Left unstaged for the owner.
+
+## 2026-08-13 — S036, a 1 ms clock buys a 1 ms budget
+
+`compute_search_time_ms()` returned 0 for `remaining_ms == 1` at every increment
+and every `movestogo`. The cap against the clock drove the budget to -49, the
+floor `min(50, remaining_ms / 2)` halved to zero, and the `max()` that should
+have rescued it returned zero too. A zero budget arms no timer, and
+`command_go`'s zero-clock fallback sits behind an `else if` that a positive clock
+already took, so with no depth and no node limit nothing bounded the search at
+all. Closes `2026-08-13_adversarial-F02`, which stays `planned` until the audit
+is re-run.
+
+Changed: `src/chesso.cpp` `compute_search_time_ms()`, one line plus its comment —
+the floor cannot fall below 1 ms. `command_go` untouched; its `else if` is
+reachable for a clock that is genuinely absent and is what "a search with no
+limit is still bounded" covers.
+
+The existing unit case asserted `budget > 0` alongside `budget < remaining`, and
+no integer satisfies both at `remaining == 1`. Re-targeted: `budget <= remaining`
+throughout, strict only where `remaining > 1`. Nothing loses strength — the
+smallest existing case was 51.
+
+Tests added, `tests/test_engine.cpp`: four cases below that old floor
+(`{50,0,1}`, `{2,0,1}`, `{1,0,20}`, `{1,100,1}`), and "a one millisecond clock
+answers without a stop", which drives `go wtime 1 btime 1` through
+`uci_process_line` and fails if a watchdog had to send `stop`. Red observed on
+both: `REQUIRE( 0 > 0 )` logged `remaining 1 inc 0 movestogo 20`, and the
+end-to-end case ran 3.023 s logging `Time budget 0ms out of 1ms remaining` before
+the watchdog cut it off. Green: `Time budget 1ms`, search reports 0 s, no stop.
+The real binary answers `bestmove e2e4`.
+
+Found while running the gate, and fixed before anything else: `build/` had an
+empty `CMAKE_BUILD_TYPE` against the `Release` `DEV_MANUAL.md` specifies. The
+fast suite took 126 s and `test_movegen` and `test_search` blew the 60 s timeout
+every `fast` target carries — which reads as two test failures, not as a wrongly
+configured build directory. Reconfigured; `DEV_MANUAL.md` now says how to tell
+the two apart and carries the 18 s the suite actually costs here, against the
+11 s it claimed from the Apple machine.
+
+`moltke --step done` pruned S018 from `plan.md` and took 8 `testing.md` rows with
+it. Checked before accepting: every figure survives verbatim in
+`plan_done/S018_error_analysis_at_scale.md` and in DEC-035. Nothing lost.
+
+`MANUAL.md` checked, no change — the hang was never a listed known bug, the `go`
+surface is unchanged, and `test_uci_surface` passes. `README.md` checked,
+owner-written.
+
+Tests: fast suite 9/9 green in 18.2 s, `clang-format.sh --check` clean.
+
+Commit: `dfd6afe`. Made under AGENTS.md section 5; the two turns before this one
+left their work unstaged instead, so this is flagged rather than assumed.
