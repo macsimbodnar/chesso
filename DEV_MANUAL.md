@@ -106,6 +106,16 @@ a script that aborts before that point exits non-zero. It exists because
 `44877c4` left a renamed variable behind and the harness stopped running for a
 commit without anything noticing (S035, `2026-08-13_adversarial-F01`).
 
+`test_clang_format_script` is the same shape over `clang-format.sh`, and it
+exists because that script is the third command in the gate above. It asserts
+five things in a throwaway git repository: a clean tree passes, a misformatted
+tracked file is caught, a misformatted **untracked** file is caught, a
+misformatted file under a gitignored path is skipped, and a file the index still
+names but the worktree no longer has is not opened. The first two are
+preconditions — without them a script that always fails, or a fixture that is
+not actually misformatted, would satisfy the rest by accident. See the `Format`
+section below for what the selection is (S054).
+
 ## Format
 
 ```bash
@@ -117,6 +127,17 @@ Pins clang-format major version 22 and refuses to run on anything else,
 deliberately: clang-format changes its output between major versions and an
 unpinned formatter rewrites files nobody touched. Override with
 `CLANG_FORMAT_MAJOR=15 ./clang-format.sh --check`.
+
+Covers every `.c .cc .cpp .h .hpp .hh` file git reports as tracked **or
+untracked and not ignored** — `git ls-files --cached --others
+--exclude-standard`. So a source file you have just written is checked before it
+is staged, which is the whole of S054: until then the selection was
+`git ls-files` with no flags, the index only, and a step that added a file got a
+vacuous pass for exactly the files it added. `--exclude-standard` is what keeps
+the generated sources under `build*/` and the checked-out engine copies under
+`.ref-builds/` out, so those stay unformatted; a file the index still names but
+the worktree no longer has is skipped rather than handed to clang-format, which
+cannot open it. `test_clang_format_script` holds all of that.
 
 ## Measure
 

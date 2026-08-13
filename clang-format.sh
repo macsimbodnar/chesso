@@ -57,7 +57,20 @@ if [ -z "$TOOL" ]; then
     exit 1
 fi
 
-FILES=$(git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$')
+# S054: `git ls-files` with no flags lists the index, so a source file that has
+# not been added yet is invisible to the check -- and --check is one of the three
+# commands in .moltke.json's step-completion gate, so every step that added a
+# file got a vacuous pass for exactly the files it added. --others adds the
+# untracked ones. --exclude-standard is load-bearing: it is what keeps the
+# generated sources under build*/ and the checked-out engine copies under
+# .ref-builds/ out of the list. --cached can also name a file deleted from the
+# worktree but still in the index, which clang-format cannot open, so the list
+# is filtered to paths that exist.
+FILES=""
+while IFS= read -r FILE; do
+    [ -f "$FILE" ] && FILES="$FILES $FILE"
+done < <(git ls-files --cached --others --exclude-standard |
+    grep -E '\.(c|cc|cpp|h|hpp|hh)$' | sort -u)
 
 EXTRA_ARGS=""
 if [ "$1" == "--check" ]; then

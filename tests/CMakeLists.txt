@@ -57,6 +57,16 @@ add_test(NAME test_fastchess_script
                       ${CMAKE_SOURCE_DIR}/fastchess.sh)
 set_tests_properties(test_fastchess_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# The format check is one of the three commands in .moltke.json's
+# step-completion gate, and until S054 it selected tracked files only -- so a
+# step that added a source file was checked on everything except the files it
+# had just added. Same shape as the fastchess smoke run: no games, no builds,
+# and every fixture inside a throwaway git repository.
+add_test(NAME test_clang_format_script
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_clang_format_script.sh
+                      ${CMAKE_SOURCE_DIR}/clang-format.sh)
+set_tests_properties(test_clang_format_script PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.
