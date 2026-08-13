@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-13_plan_review-F07
 blocks:
 paused_by:
-done:
+done:      S022's accepts asks two SPRT verdicts, one per change, each against the commit before it, in either order; the body's one-at-a-time rule and the accepts now agree; the 12.1 % see() figure carries its Apple-machine pre-DEC-049 condition. Gate green.
 
 ## What is there
 
@@ -21,3 +21,4 @@ cost 12.1 % more than it does now" premise predates DEC-049 and carries no
 machine condition.
 
 Full evidence: 2026-08-13_plan_review-F07.
+author:    Maksym Bodnar
