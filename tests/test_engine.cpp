@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstring>
 #include <string>
@@ -415,6 +416,13 @@ TEST_SUITE("engine: uci layer")
       {60,     0,    1},
       {51,     0,    40},
       {300000, 5000, 1},
+      // S036. Below 2 * MOVE_OVERHEAD_MS the cap goes negative and only the
+      // floor is left; at remaining == 1 the floor halves to zero too. A zero
+      // budget arms no timer, so the search never ends.
+      {50,     0,    1},
+      {2,      0,    1},
+      {1,      0,    20},
+      {1,      100,  1},
     };
     // clang-format on
 
@@ -428,9 +436,17 @@ TEST_SUITE("engine: uci layer")
 
       REQUIRE_MESSAGE(budget > 0, title);
 
-      // Strictly less: something has to be left for getting the move out of
-      // the door, or the flag falls while the engine is still talking.
-      REQUIRE_MESSAGE(budget < test.remaining, title);
+      // Never more than the clock.
+      REQUIRE_MESSAGE(budget <= test.remaining, title);
+
+      // Strictly less wherever a clock that size leaves room for it: something
+      // has to be left for getting the move out of the door, or the flag falls
+      // while the engine is still talking. At remaining == 1 no positive
+      // budget is strictly less, and the flag falls either way -- answering
+      // late is a lost game, not answering hangs the match. S036.
+      if (test.remaining > 1) {
+        REQUIRE_MESSAGE(budget < test.remaining, title);
+      }
 
       // And a floor, so a nearly empty clock still buys a real search rather
       // than a move picked at depth one.
@@ -616,6 +632,64 @@ TEST_SUITE("engine: uci layer")
     // The soft limit is checked between iterations, so allow a generous
     // margin over the 200ms budget while still catching an unbounded search.
     REQUIRE(elapsed < 30000);
+
+    uci_shutdown();
+  }
+
+  // Regression, S036: [go wtime 1] computed a zero budget, which armed no
+  // timer, and with no depth and no node limit nothing else bounded the search.
+  // Measured before the fix: 30s, depth 19, 137396943 nodes, no bestmove.
+  TEST_CASE("a one millisecond clock answers without a stop")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+    }
+
+    // The watchdog is what keeps a failure a failure instead of a hang: an
+    // unbounded search would otherwise run until CTest kills the binary, and a
+    // killed run reports nothing about which assertion was missed. It fires
+    // only if the answer never came, so on a working engine no stop is ever
+    // sent - which is the property under test.
+    std::atomic_bool search_finished(false);
+    std::atomic_bool watchdog_fired(false);
+
+    std::vector<std::string> lines;
+
+    {
+      stdout_capture_t capture;
+
+      uci_process_line("go wtime 1 btime 1");
+
+      std::thread watchdog([&search_finished, &watchdog_fired]() {
+        for (int waited = 0; waited < 300 && !search_finished; ++waited) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        if (!search_finished) {
+          watchdog_fired = true;
+          uci_process_line("stop");
+        }
+      });
+
+      uci_wait_for_search();
+      search_finished = true;
+      watchdog.join();
+
+      lines = capture.lines();
+    }
+
+    REQUIRE_FALSE(watchdog_fired);
+
+    std::string best_move_line;
+    for (const std::string& line : lines) {
+      if (line.rfind("bestmove ", 0) == 0) { best_move_line = line; }
+    }
+
+    REQUIRE_FALSE(best_move_line.empty());
+    REQUIRE_NE(best_move_line, std::string("bestmove 0000"));
 
     uci_shutdown();
   }

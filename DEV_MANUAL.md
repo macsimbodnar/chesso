@@ -41,9 +41,15 @@ every recorded benchmark becomes incomparable.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 11 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 18 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
+
+Those 18 s assume `build/` was configured `Release`. A `build/` with an empty
+`CMAKE_BUILD_TYPE` runs the same suite in 126 s and `test_movegen` and
+`test_search` blow the 60 s timeout every `fast` target carries, which reads as
+two test failures rather than as a wrongly configured build directory. Check
+`grep CMAKE_BUILD_TYPE build/CMakeCache.txt` before believing either.
 
 The step-completion gate in `.moltke.json` is:
 

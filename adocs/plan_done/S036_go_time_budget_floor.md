@@ -7,7 +7,16 @@ decisions:
 closes:     2026-08-13_adversarial-F02
 blocks:
 paused_by:
-done:
+done:      compute_search_time_ms floors at 1ms instead of collapsing to 0 at remaining_ms == 1.
+                Red observed on both new unit cases: REQUIRE( 0 > 0 ) for remaining 1, and
+                REQUIRE_FALSE( watchdog_fired ) after a 3.023 s run whose log read
+                'Time budget 0ms out of 1ms remaining'. Green: log reads 1ms, search reports
+                0 s, no stop sent. Real binary answers 'go wtime 1 btime 1' with bestmove e2e4.
+                ctest -L fast 9/9 in 18.2 s, clang-format --check clean.
+                Found and fixed alongside: build/ had an empty CMAKE_BUILD_TYPE, which is why
+                the first gate run took 126 s and timed out test_movegen and test_search.
+                Reconfigured Release; DEV_MANUAL.md records the trap. Audit F02 stays 'planned'
+                until the audit is re-run.
 
 ## What is broken
 
@@ -51,3 +60,4 @@ non-positive budget the way it treats a clock of zero and fall back to
 Red first: add `{1, 0, 20}` and `{1, 100, 1}` to the case list at
 `tests/test_engine.cpp:409` and observe `REQUIRE_MESSAGE(budget > 0, title)`
 fail before the fix.
+author:    Maksym Bodnar

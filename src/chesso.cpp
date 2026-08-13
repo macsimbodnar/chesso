@@ -399,7 +399,14 @@ int compute_search_time_ms(int remaining_ms, int increment_ms, int movestogo)
 
   // Never budget more than is actually left
   budget = std::min(budget, remaining_ms - MOVE_OVERHEAD_MS);
-  budget = std::max(budget, std::min(50, remaining_ms / 2));
+
+  // The floor is half the clock, capped at 50ms, and below 2 * MOVE_OVERHEAD_MS
+  // it is the only thing left holding the budget up - the cap above has already
+  // gone negative. At remaining_ms == 1 that halving lands on zero as well, and
+  // a zero budget arms no timer, so with no depth and no node limit nothing at
+  // all bounds the search and the engine never answers. One millisecond loses
+  // on time; silence hangs the match. S036.
+  budget = std::max(budget, std::max(1, std::min(50, remaining_ms / 2)));
 
   return budget;
 }

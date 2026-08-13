@@ -61,7 +61,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-18. S018  rank chesso's own errors by game phase over hundreds of games, from Stockfish
 19. S028  fit every evaluation constant at once against self-play game outcomes
 20. S034  compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
 21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
