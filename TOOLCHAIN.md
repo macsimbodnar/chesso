@@ -78,7 +78,7 @@ samply targets the Firefox Profiler UI, which is useless in a terminal.
 ```bash
 cmake -S . -B build-prof -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -DNDEBUG -g -fno-omit-frame-pointer"
-cmake --build build-prof -j8
+cmake --build build-prof -j12
 
 # macOS keeps debug info in the .o files until dsymutil collects it
 dsymutil build-prof/tests/bench_movegen
@@ -110,7 +110,7 @@ Whole project, in parallel — note `run-clang-tidy` takes **one** dash on
 `-extra-arg`, unlike `clang-tidy`:
 
 ```bash
-run-clang-tidy -p build -j 8 -quiet \
+run-clang-tidy -p build -j 12 -quiet \
   -extra-arg=-isysroot"$(xcrun --show-sdk-path)" 'src/.*'
 ```
 

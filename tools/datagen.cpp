@@ -37,6 +37,17 @@
 namespace
 {
 
+// Every hardware thread the machine has. DEC-050 sets the policy at all of
+// them, SMT included; asking the machine rather than writing the number keeps
+// it true on the next one. hardware_concurrency() may answer 0 when it cannot
+// tell.
+unsigned default_threads()
+{
+  const unsigned reported = std::thread::hardware_concurrency();
+  return (reported > 0) ? reported : 1;
+}
+
+
 struct options_t
 {
   uint64_t games = 1000;
@@ -47,7 +58,7 @@ struct options_t
   int resign_score = 2000;  // adjudicate once one side is this far ahead
   int resign_plies = 6;     // ... for this many plies in a row
   int quiet_limit = 1000;   // do not record a position scored beyond this
-  unsigned threads = 3;
+  unsigned threads = default_threads();
   uint64_t seed = 1;
   int tt_mb = 16;
   std::string out = "";
@@ -307,7 +318,7 @@ void usage()
       "  --resign-score N   adjudicate at this margin (default 2000)\n"
       "  --resign-plies N   ... held for this many plies (default 6)\n"
       "  --quiet-limit N    do not record beyond this score (default 1000)\n"
-      "  --threads N        worker threads (default 3)\n"
+      "  --threads N        worker threads (default: every hardware thread)\n"
       "  --seed N           rng seed (default 1)\n"
       "  --hash N           transposition table MB per thread (default 16)\n");
 }

@@ -1905,3 +1905,59 @@ Consequences: Every figure recorded before this entry was measured on Apple
               TOOLCHAIN.md documents the macOS toolchain throughout -- Homebrew
               paths, `dsymutil`, `xcrun --show-sdk-path`, `-mcpu=apple-m1` -- and
               is stale on this machine until rewritten.
+
+## DEC-050  2026-08-13  Every parallel tool uses all 12 hardware threads here
+Tags:         measurement, concurrency, toolchain, dec-048, dec-049
+
+Context:      DEC-048 set match concurrency at "every core the machine has" on
+              hardware whose extra cores were efficiency cores. This machine's
+              extra cores are not a second core type: `nproc` reports 12 for 6
+              physical cores with SMT, so two games land on one physical core
+              rather than one game landing on a slower core.
+              `.moltke.local.md` recorded the policy for it as undecided, and
+              `fastchess.sh` had been defaulting to 12 without one.
+
+              The rest of the toolchain still carried numbers written for the
+              Apple machine: `-j8` in the step gate, in `DEV_MANUAL.md` and in
+              `TOOLCHAIN.md`, and a compiled-in `--threads 3` default in both
+              `tools/datagen.cpp` and `tools/tuner.cpp`.
+
+Decision:     The owner: on this machine fastchess and every other tool that
+              multitasks uses all 12 hardware threads. This closes the open
+              question in `.moltke.local.md` in favour of DEC-048's reasoning --
+              measurement capacity is the binding constraint on the plan --
+              extended from a second core type to SMT siblings.
+
+              `datagen` and `tuner` now default to
+              `std::thread::hardware_concurrency()` rather than to a literal,
+              so the policy holds on the next machine without another edit.
+              `fastchess.sh` already reached 12 through its `|| nproc` fallback
+              and needed no change; its comment did.
+
+Rejected:     Six, one game per physical core. It is the cleaner measurement --
+              no two games sharing an execution unit -- and it is what DEC-042
+              would have chosen. Rejected for DEC-048's reason and available as
+              `CONCURRENCY=6` when a single result has to be as clean as this
+              machine can make it.
+
+              A literal 12 in the two tools. Same defect class as the
+              `mktemp -t` and `sysctl -n hw.logicalcpu` lines S035 had just
+              removed from `fastchess.sh`: a machine's number written into a
+              file that travels.
+
+Consequences: Two games share a physical core throughout a match, so a game's
+              speed depends on what its sibling thread is doing. As with
+              DEC-048 the scheduler hits both engines about equally, so this
+              inflates variance rather than biasing the result, and a run may
+              need more games to reach its bound. Nothing corrects it.
+
+              A tuner fit at 12 threads is not bit-identical to one at 3: the
+              per-thread gradient partials are summed in a different order.
+              Weights differ in the last digits, which is noise against what a
+              fit is read for, but a fit is not reproducible across a thread
+              count.
+
+              The S027 verdict costs -- 3 to 4.5 hours, measured at four cores
+              on the Apple machine -- carry to nothing here. What a verdict
+              costs on this machine is unknown until the first runs report it,
+              and DEC-049 already says the same about every other figure.

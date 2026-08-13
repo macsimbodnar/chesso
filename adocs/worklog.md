@@ -2284,3 +2284,31 @@ fastchess surface, no change. `README.md` checked, owner-written, no change.
 Tests: fast suite 9/9 green, `clang-format.sh --check` clean.
 
 Commit: not made. Left unstaged for the owner.
+
+## 2026-08-13 — DEC-050, all 12 hardware threads
+
+Owner's decision, prompted by the `concurrency 12 of 12 cores` line S035 made
+visible: on this machine fastchess and every other tool that multitasks uses all
+12 hardware threads. Closes the open question in `.moltke.local.md`, extending
+DEC-048 from a second core type to SMT siblings.
+
+`fastchess.sh` already reached 12 through its `|| nproc` fallback and needed no
+code change — only its comment, which described efficiency cores. Changed:
+`tools/datagen.cpp` and `tools/tuner.cpp` default `--threads` from a literal 3
+to `std::thread::hardware_concurrency()`, verified as
+`datagen: 12 games, 2000 nodes per move, 12 threads`; `.moltke.json` gate
+`-j8` to `-j12`; `DEV_MANUAL.md` and `TOOLCHAIN.md` `-j` counts, the concurrency
+paragraph, and the tuner and datagen invocations, which no longer pass
+`--threads` at all.
+
+Recorded as consequences rather than found later: two games now share a physical
+core, which inflates variance the same way DEC-048's efficiency cores did, and a
+tuner fit is not bit-identical across a thread count because the per-thread
+gradient partials sum in a different order.
+
+Stale figures marked rather than re-taken: the S027 verdict costs and the
+datagen rate are Apple-machine numbers and now say so (DEC-049).
+
+Tests: fast suite 9/9 green, `clang-format.sh --check` clean.
+
+Commit: not made. Left unstaged for the owner.

@@ -24,7 +24,7 @@ that gets measured), `build-debug` (asserts on), `build-prof` (RelWithDebInfo).
 ## Build
 
 ```bash
-cmake --build build -j8
+cmake --build build -j12
 ```
 
 Configure a directory that does not exist yet, with ccache:
@@ -48,7 +48,7 @@ ctest --test-dir build -L slow    # deep perft, minutes
 The step-completion gate in `.moltke.json` is:
 
 ```bash
-cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check
+cmake --build build -j12 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check
 ```
 
 That gate is necessary and not sufficient. Deep perft, the debug-build
@@ -213,22 +213,29 @@ shows up and a change that only reorders equal work does not. Bounds must match
 the expected effect: `elo0=0 elo1=10` cannot resolve a small change, and one run
 random-walked for 340 games before being stopped.
 
-**Concurrency is every physical core**, eight here, efficiency cores included —
-DEC-048, superseding DEC-042. `CONCURRENCY=N` overrides it; do not lower it to
-be polite, since nothing else should be running during a match. A run that does
-lower it records why, and `CONCURRENCY=4` is the way back to performance cores
-only if a result has to be as clean as this machine can make it.
+**Concurrency is every core the machine reports**, whatever kind it is — 12 on
+this machine, which is 6 physical cores with SMT (DEC-050); efficiency cores on
+Apple silicon (DEC-048, superseding DEC-042). The script reads it from `nproc`,
+so it needs no edit per machine. `CONCURRENCY=N` overrides it; do not lower it
+to be polite, since nothing else should be running during a match, and a run
+that does lower it records why. `CONCURRENCY=6` is the way to one game per
+physical core here if a result has to be as clean as this machine can make it.
 
-**A verdict cost 3 to 4.5 hours at four cores.** Measured across S027: 2024
-games in 4 h 30 m accepting H0, 1300 games in 2 h 53 m accepting H1, and one run
-that exhausted 3000 games in about three hours without reaching either bound.
-Six verdicts came to roughly twenty hours and 13462 games.
+Everything else that parallelises follows the same policy: `-j12` for a build,
+and `datagen` and `tuner` default to every hardware thread rather than to a
+number written into the source.
 
-Eight cores should cut the wall time and widen the spread, so a run may need
-more games to reach the same bound. **How much more is not known yet** — check
-the games-to-verdict figure against those numbers and record what happens rather
-than assuming the throughput was free. A verdict measured at eight cores is not
-directly comparable to one measured at four.
+**A verdict cost 3 to 4.5 hours at four cores** on the Apple machine. Measured
+across S027: 2024 games in 4 h 30 m accepting H0, 1300 games in 2 h 53 m
+accepting H1, and one run that exhausted 3000 games in about three hours without
+reaching either bound. Six verdicts came to roughly twenty hours and 13462
+games.
+
+Those figures do not carry to this machine — different cores, different
+compiler, DEC-049 — and neither does the four-core baseline they were taken
+against. **The cost of a verdict here is not known yet**: check the
+games-to-verdict figure of the first runs and record what happens rather than
+assuming the throughput was free.
 
 ### Detach the run, and arm a watcher that outlives the turn
 
@@ -335,10 +342,10 @@ positions, `tuner` fits the evaluation constants to those labels.
 
 ```bash
 build/tools/datagen --out .tuning/selfplay_v1.tsv \
-    --games 20000 --nodes 100000 --threads 3 --seed 20260810
+    --games 20000 --nodes 100000 --seed 20260810
 
 build/tools/tuner --data .tuning/selfplay_v1.tsv \
-    --out .tuning/tuned_tables.hpp --threads 3
+    --out .tuning/tuned_tables.hpp
 ```
 
 `datagen` writes `fen result score phase`, one line per position, where
@@ -349,8 +356,10 @@ positions quiescence has already resolved. Openings are 8 uniform random plies,
 discarded if the position is already scored past `--opening-limit`; games are
 adjudicated once one side holds `--resign-score` for `--resign-plies`.
 
-Rate on this machine, three threads: 200 games at 100000 nodes per move in 61 s,
-about 77 positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame.
+Both default to every hardware thread, 12 here — DEC-050. Rate on the Apple
+machine at three threads: 200 games at 100000 nodes per move in 61 s, about 77
+positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame. That
+figure has not been re-taken here, and DEC-049 says it does not carry.
 
 `tuner` fits 825 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
@@ -370,7 +379,7 @@ to miss and a fit that is half applied looks like a fit that did not work.
 
 ```bash
 build/tools/tuner --data .tuning/selfplay_v1.tsv \
-    --out .tuning/tuned_ks_only.hpp --only king_safety --threads 4
+    --out .tuning/tuned_ks_only.hpp --only king_safety
 ```
 
 `--only GROUP` fits one group and holds every other parameter at what the engine
@@ -420,7 +429,7 @@ evidence in the sense `adocs/data/` is.
 ## Profile
 
 ```bash
-cmake --build build-prof -j8
+cmake --build build-prof -j12
 dsymutil build-prof/tests/bench_movegen        # macOS keeps debug info in the .o files
 samply record --save-only --unstable-presymbolicate \
   -r 2000 -o /tmp/prof.json.gz -- ./build-prof/tests/bench_movegen

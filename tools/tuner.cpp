@@ -123,6 +123,17 @@ struct dataset_t
 };
 
 
+// Every hardware thread the machine has. DEC-050 sets the policy at all of
+// them, SMT included; asking the machine rather than writing the number keeps
+// it true on the next one. hardware_concurrency() may answer 0 when it cannot
+// tell.
+unsigned default_threads()
+{
+  const unsigned reported = std::thread::hardware_concurrency();
+  return (reported > 0) ? reported : 1;
+}
+
+
 struct options_t
 {
   std::string data;
@@ -134,7 +145,7 @@ struct options_t
   int report = 100;
   int patience = 20;
   double validation = 0.1;
-  unsigned threads = 3;
+  unsigned threads = default_threads();
   uint64_t seed = 1;
 };
 
@@ -763,7 +774,7 @@ void usage()
           "  --report N       report and checkpoint every N epochs (100)\n"
           "  --patience N     stop after this many reports without a new best\n"
           "  --validation F   held-out fraction (default 0.1)\n"
-          "  --threads N      worker threads (default 3)\n"
+          "  --threads N      worker threads (default: every hardware thread)\n"
           "  --seed N         shuffle seed for the split (default 1)\n",
           GROUP_LIST);
 }
