@@ -72,7 +72,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-21. S027  king safety, passed pawns, pawn structure, bishop pair, tempo
 22. S035  restore fastchess.sh so a match actually runs, and stop the EXIT trap masking a failure as status 0
 23. S036  a go command with a 1 ms clock returns a bestmove instead of searching forever
 24. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
@@ -103,3 +102,4 @@ every list entry must have a step file — both are INV-3.
 49. S030  move_t drops the moving piece and becomes 16 bits
 50. S031  one unconditional xor for the side-to-move zobrist key instead of two
 51. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+52. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it

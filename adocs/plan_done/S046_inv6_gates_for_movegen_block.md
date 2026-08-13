@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-13_plan_review-F03
 blocks:
 paused_by:
-done:
+done:      All three accepts now discharge INV-6: S030 search_bench identity or SPRT plus the MOVE_PIECE re-pointing hazard named, S031 the side_randoms[W]^side_randoms[B] construction with bit-identical hashes and the bundling line conditioned on that proof, S032 search_bench identity with PEXT on and off. Gate green.
 
 ## What is there
 
@@ -30,3 +30,4 @@ tree — unless the single key is defined as
 it.
 
 Full evidence: 2026-08-13_plan_review-F03.
+author:    Maksym Bodnar

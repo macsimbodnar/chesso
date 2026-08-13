@@ -5,9 +5,9 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-13 by `moltke --step status`.
 
-- Last done: S045
+- Last done: S046
 - In progress: none
-- Next: S046
+- Next: S047
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive

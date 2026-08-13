@@ -1,6 +1,6 @@
 id:         S032
 goal:       use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-accepts:    perft node counts unchanged on both paths; measured on x86-64, since it cannot be measured here
+accepts:    perft node counts unchanged on both paths; identical tools/search_bench.py node counts and best moves with PEXT on and off (INV-6); measured on x86-64, since it cannot be measured here
 touches:    src/bb_tables.hpp, src/bitboard.cpp sliding attack generation
 excludes:   fancy or black magics -- see DEC-021
 decisions:  DEC-021
