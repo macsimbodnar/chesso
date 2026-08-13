@@ -2506,3 +2506,62 @@ anywhere in the batch.
 Tests: gate green at every one of the eleven commits.
 
 Commit: this one.
+
+## 2026-08-13 — S037, info nodes is the whole search's count
+
+`iterative_deepening_search` zeroed `state.explored_nodes` per iteration and
+printed that figure, so `info nodes` fell between depths and
+`tools/search_bench.py` — which keeps the last `info` line and is how INV-6 is
+discharged — compared the final iteration alone, about half the search on the
+bench positions. A change that altered depths 1..n-1 and left the last iteration
+identical passed a check meant to prove it changed nothing. Closes
+`2026-08-13_adversarial-F03`, which stays `planned` until the audit is re-run.
+
+Changed, `src/chesso.cpp`: the info line reports `result.total_node_explored`,
+times from the start of the whole search instead of the iteration, and adds
+`nps` computed from the two. `last_iteration`, `start_time` and `end_time` went
+with `duration_ms`. The per-iteration count is not printed alongside: it is the
+difference between two successive lines. The soft-limit check keeps its own
+`steady_clock::now()` — reusing the earlier timestamp would have moved time
+management by microseconds, and this change alters nothing that plays.
+
+INV-6, and the instrument's own reading is what moved, so the baseline is the
+pre-change *sum* of per-iteration counts: depth 9 gives 609848 / 2058510 /
+468039 either way, best moves c3d5 / e2a6 / d7c8q either way, and every single
+iteration matches as a successive difference of the new cumulative sequence.
+Identical tree, no SPRT owed. `search_bench.py` now prints those totals where it
+printed 254082 / 1022573 / 168767.
+
+Test added, `tests/test_engine.cpp`: "info nodes is cumulative over the whole
+search". Six iterations on the midgame position, monotone across all six lines,
+last line equal to `uci_search_result_t::total_node_explored`. Red observed at
+`REQUIRE( 8891 >= 12980 )` logging "info nodes fell between depths", the
+per-iteration sequence being 149, 1568, 4482, 12980, 8891, 49034 against a total
+of 77104 — both halves of the property failed. The preconditions run first and
+passed, so the red was the property and not a vacuous test.
+
+Two things the step file had wrong, found while doing it. The 47438623 figure it
+attributes to `DEV_MANUAL.md` is in `src/evaluation.cpp:144`, restated there.
+And `[position]` calls `stop_and_join_search()`, so a test calling
+`iterative_deepening_search` straight after one runs with the stop flag set and
+gets exactly one iteration; `command_go` is the only path that clears it, which
+is why the test issues a `go depth 1` first and says so.
+
+`MANUAL.md` gained the search output: every field of the `info` line with what
+it means, and the note that `nodes` used to be per-iteration and `nps` was not
+reported at all. `DEV_MANUAL.md`, `specs.md` INV-6 and the tool's own docstring
+all now say that a node figure recorded from `search_bench.py` before today is a
+sum of last iterations and does not compare with one taken after. `DEV_MANUAL`'s
+"about ten seconds per binary" was measured on the Apple machine and on an
+engine with less pruning; replaced by 3136397 nodes in about 0.44 s here.
+`README.md` checked, owner-written, no change.
+
+Parked in `status.md`: the `info` line is UCI surface that `test_uci_surface`
+does not cover, which is how a field could be added and two others redefined
+without a test noticing. `MANUAL.md` now documents the fields, so a golden check
+has something to hold them against. No decision taken, so no step.
+
+Tests: fast suite 9/9 green in 16.7 s, `clang-format.sh --check` clean after
+formatting. No SPRT — INV-6 says an identity makes one pointless.
+
+Commit: this one.

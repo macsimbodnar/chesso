@@ -7,7 +7,11 @@ decisions:
 closes:     2026-08-13_adversarial-F03
 blocks:
 paused_by:
-done:
+done:      info nodes and time are the whole search's and nps is reported: search_bench reads 609848 / 2058510 / 468039 at depth 9 where the last info line used to read 254082 / 1022573 / 168767.
+            INV-6 discharged, tree identical: the new cumulative totals equal the pre-change sums of per-iteration counts to the digit, every single iteration matches as a successive difference, best moves c3d5 / e2a6 / d7c8q either way. No SPRT owed.
+            Red first: test_engine 'info nodes is cumulative over the whole search' observed failing before the fix at REQUIRE( 8891 >= 12980 ), the per-iteration sequence being 149, 1568, 4482, 12980, 8891, 49034 against a whole-search total of 77104. Preconditions asserted first and passed, so the red was the property and not a vacuous test.
+            The accepts named DEV_MANUAL.md for the 47438623 figure; it lives in src/evaluation.cpp:144 and was restated there instead. DEV_MANUAL.md, MANUAL.md, specs.md INV-6 and search_bench.py all now state what the count means and that a pre-S037 figure is a sum of last iterations. DEV_MANUAL's stale 'about ten seconds per binary' replaced by the measured 3136397 nodes in about 0.44 s.
+            Gate green: build clean under -Wall -Wextra -Werror, ctest -L fast 9/9, clang-format --check clean.
 
 ## What is broken
 
@@ -55,3 +59,4 @@ saying so is the point.
 This lands before any further neutrality claim is made, because until it does,
 "identical node counts" is a weaker statement than the invariant it is standing
 in for.
+author:    Maksym Bodnar

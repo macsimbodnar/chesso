@@ -142,7 +142,9 @@ enum
 // The costing build computes the term at forced weights and throws it away
 // behind an asm barrier so the score is unchanged, which is what makes the two
 // node-for-node identical -- 47438623 nodes either way over the three
-// search_bench positions -- and the wall time the cost and nothing else.
+// search_bench positions -- and the wall time the cost and nothing else. That
+// figure is the sum of the three last iterations, which is what `info nodes`
+// reported until S037; the whole-search count is roughly twice it.
 //
 // The barrier is not what is being measured: the same build with the barrier
 // left in place and these weights back at zero ran within 0.5 % of the shipping

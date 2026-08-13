@@ -12,8 +12,14 @@ The node count is printed next to the time on purpose. A change meant to be a
 pure speed-up must leave it identical; if the node count moved, the search
 changed behaviour and the times are not comparable.
 
-Depth 9 takes about ten seconds per binary. Interleave the runs when comparing
-two builds, and check the machine is idle first - see TOOLCHAIN.md.
+The count read is the last info line's, which since S037 is the whole search's
+node count rather than the last iteration's. A figure recorded from this tool
+before S037 is a sum of last iterations and is not comparable with one taken
+after it.
+
+Depth 9 is 3136397 nodes and under half a second for all three positions on the
+DEC-049 machine. Interleave the runs when comparing two builds, and check the
+machine is idle first - see TOOLCHAIN.md.
 """
 
 import subprocess, sys, time

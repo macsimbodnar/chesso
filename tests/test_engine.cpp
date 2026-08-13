@@ -694,6 +694,87 @@ TEST_SUITE("engine: uci layer")
     uci_shutdown();
   }
 
+  // Regression, S037: the info line carried the *current iteration's* node
+  // count, so `nodes` fell between depths and tools/search_bench.py - which
+  // keeps the last info line and is how INV-6 is discharged for a change
+  // claimed behaviour-neutral - compared the final iteration alone. Measured
+  // before the fix on this position at depth 6: 149, 1568, 4482, 12980, 8891,
+  // 49034, against a whole-search total of 77104. Both halves failed - the
+  // count fell from 12980 to 8891, and the last line said 49034.
+  //
+  // The per-iteration figure is not printed alongside it. It is the difference
+  // between two successive lines, so nothing is lost by leaving it out.
+  TEST_CASE("info nodes is cumulative over the whole search")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line(
+          "position fen r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/"
+          "1PP1QPPP/R4RK1 w - - 0 10");
+
+      // [position] stops whatever was running, and [go] is the only path that
+      // clears the stop flag again - iterative_deepening_search documents that
+      // its caller has cleared it before the timer is armed. Without this the
+      // direct call below aborts after its first iteration, since that is the
+      // one that runs against a local never-stop flag. A depth-limited [go]
+      // arms no timer, so the flag stays clear afterwards.
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+    }
+
+    // No clock and no node budget, so nothing arms a timer and the iteration
+    // count is fixed rather than whatever the machine got through.
+    uci_search_options_t options = {};
+    options.depth = 6;
+    options.movestogo = DEFAULT_MOVES_TO_GO;
+
+    uci_search_result_t result;
+    std::vector<std::string> lines;
+    {
+      stdout_capture_t capture;
+      result = iterative_deepening_search(options);
+      lines = capture.lines();
+    }
+
+    std::vector<uint64_t> reported;
+    for (const std::string& line : lines) {
+      if (line.rfind("info ", 0) != 0) { continue; }
+
+      const size_t at = line.find(" nodes ");
+      REQUIRE_MESSAGE(at != std::string::npos,
+                      ("info line without a node count: " + line));
+
+      reported.push_back(std::stoull(line.substr(at + 7)));
+    }
+
+    // Preconditions, without which the two assertions below cannot fail.
+    // Monotonicity over a single line is vacuous, and a cumulative total
+    // equals the last iteration's own count whenever only one iteration ran or
+    // every earlier one explored nothing. Both are ruled out here, so the
+    // per-iteration reporting this replaces would print something smaller than
+    // the total.
+    REQUIRE(reported.size() >= 2);
+    REQUIRE(reported.front() > 0);
+    REQUIRE(reported[reported.size() - 2] > 0);
+
+    for (size_t i = 1; i < reported.size(); ++i) {
+      REQUIRE_MESSAGE(reported[i] >= reported[i - 1],
+                      ("info nodes fell between depths: " +
+                       std::to_string(reported[i - 1]) + " then " +
+                       std::to_string(reported[i])));
+    }
+
+    // total_node_explored is the accumulation of every iteration's own count,
+    // so this is the "final value equals the sum of the per-iteration counts"
+    // half of the property.
+    REQUIRE_EQ(reported.back(), result.total_node_explored);
+
+    uci_shutdown();
+  }
+
+
   TEST_CASE("best_move_to_string emits the UCI null move for nothing")
   {
     uci_search_result_t result = {};

@@ -45,7 +45,12 @@ names and commit messages. Each one has a row in `testing.md`.
   behaviour-neutral proves it with identical node counts and identical best
   moves from `tools/search_bench.py`. A change that alters play is retained only
   with an SPRT verdict against a named commit, and a verdict of zero is recorded
-  as zero.
+  as zero. (2026-08-13, S037: the count the tool reads is the whole search's,
+  cumulative over every iteration, so the identity covers the whole tree.
+  Before S037 `info nodes` was the current iteration's own count and the tool
+  compared the final iteration alone — about half the search — so a change that
+  altered depths 1..n-1 could pass. Every node figure recorded from the tool
+  before that date is a sum of last iterations.)
 
 ## Behaviour
 

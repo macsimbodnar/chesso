@@ -138,12 +138,26 @@ one number and not the other:
 tools/search_bench.py ./build/src/chesso 9
 ```
 
-Depth 9 is about ten seconds per binary, over three positions: midgame,
-kiwipete, tactical. **The node count is printed next to the time on purpose.** A
-change meant to be a pure speed-up must leave it identical; if the node count
-moved, the search changed behaviour and the times are not comparable. That
-comparison is how INV-6 is discharged for a behaviour-neutral change, and it is
-what caught two bugs that timings did not.
+Three positions: midgame, kiwipete, tactical. Depth 9 is 3136397 nodes and
+about 0.44 s for all three on this machine — raise the depth when a difference
+is small, and do not budget from the "about ten seconds per binary" this line
+used to claim, which was measured on the pre-DEC-049 machine and on an engine
+with less pruning in it.
+
+**The node count is printed next to the time on purpose.** A change meant to be
+a pure speed-up must leave it identical; if the node count moved, the search
+changed behaviour and the times are not comparable. That comparison is how INV-6
+is discharged for a behaviour-neutral change, and it is what caught two bugs
+that timings did not.
+
+The tool keeps the last `info` line, and since S037 that line's `nodes` is the
+**whole search's** count, cumulative over every iteration, so the comparison
+covers the whole tree. **Every node figure recorded from this tool before
+S037 — 2026-08-13 — is a sum of last iterations only**, roughly half of the
+search on these positions, and a figure from before that date is not comparable
+with one taken after it. The counts themselves did not move: the same run reads
+609848 / 2058510 / 468039 at depth 9 where it used to read 254082 / 1022573 /
+168767.
 
 Neither of those can price an evaluation term. A term that changes the score
 changes the tree, so the two builds visit different nodes and a wall time at

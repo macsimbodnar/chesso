@@ -7,7 +7,7 @@ Updated: 2026-08-13 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S037
+- Next: S043
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
@@ -41,3 +41,11 @@ Updated: 2026-08-13 by `moltke --step status`.
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
     stamps as provenance, not as evidence that the gates of section 4 ran.
+  - **The `info` line is UCI surface that the golden guard does not cover.**
+    `test_uci_surface` holds the command set, the option lines and the `go` and
+    `position` tokens against `MANUAL.md`; the search output has never been in
+    it, which is how S037 could add an `nps` field and change what `nodes` and
+    `time` mean without any test noticing. `MANUAL.md` now documents the fields,
+    so a golden check has something to hold them against. Found while doing
+    S037. Parked, not planned: a step is created by a decision and none has been
+    taken on this.

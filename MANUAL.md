@@ -60,6 +60,32 @@ legal is skipped with a warning, and the rest of the list is still applied.
 `debug on` and `debug off` are accepted. The flag is recorded and currently
 changes nothing.
 
+### What a search prints
+
+One `info` line per finished iteration, then one `bestmove`. An iteration that
+was cut short reports too, if it already has a line to play.
+
+```
+info score cp 80 time 10 depth 6 nodes 77104 nps 7165799 pv c3d5 e7d8 c2c3 f8e8 h2h3 g4f3
+bestmove c3d5
+```
+
+| field | meaning |
+|---|---|
+| `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |
+| `time` | milliseconds since this search started, not since this iteration started |
+| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything |
+| `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
+| `nps` | `nodes` over `time`, both for the whole search |
+| `pv` | the line the engine will play, and `bestmove` is its first move |
+
+`bestmove 0000` means no legal move at all. A search cut off before it finished
+even one move still answers with a legal one.
+
+Until 2026-08-13 `nodes` was the current iteration's count and `time` the
+current iteration's duration, so the count fell between depths and the
+implied rate was several times too low. `nps` was not reported at all.
+
 ### Non-standard commands
 
 Convenience only, not part of UCI. A GUI never sends these.

@@ -559,7 +559,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   state.stop = &never_stop;
 
   const auto beguine_of_the_search = std::chrono::steady_clock::now();
-  std::chrono::steady_clock::duration last_iteration = {};
 
   // Carried across iterations so an aborted one can report the last score and
   // depth that actually mean something alongside the line it will play.
@@ -585,15 +584,12 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       state.node_limit = conf.nodes - result.total_node_explored;
     }
 
-    const auto start_time = std::chrono::steady_clock::now();
-
     const search_t search_result = search(current_depth, &game, &state);
 
-    const auto end_time = std::chrono::steady_clock::now();
-    last_iteration = end_time - start_time;
-
-    const auto duration_ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(last_iteration);
+    // Timed from the start of the whole search, not of this iteration: it is
+    // the number a GUI divides the node count below by. S037.
+    const auto elapsed =
+        std::chrono::steady_clock::now() - beguine_of_the_search;
 
     state.stop = &stop_search_signal;
 
@@ -638,12 +634,30 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // The score and depth of an unfinished iteration mean nothing - its window
     // never closed - so the last completed ones are repeated instead, and the
     // line printed is the one that will actually be played.
+    // [nodes] is the whole search's count, which is how the protocol is read
+    // everywhere and what makes it non-decreasing between depths. It used to be
+    // this iteration's, so a GUI watched the count fall and
+    // tools/search_bench.py - which keeps the last info line and is how INV-6
+    // is discharged - compared only the final iteration. The per-iteration
+    // figure is the difference between two successive lines, so printing it as
+    // well would add nothing. S037.
     if (has_result || !state.aborted) {
+      const auto elapsed_ms =
+          std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
+      const int64_t elapsed_us =
+          std::chrono::duration_cast<std::chrono::microseconds>(elapsed)
+              .count();
+
+      // Floored at a microsecond so the first iteration of a trivial position
+      // cannot divide by zero. A real iteration never lands under it.
+      const uint64_t nps =
+          (result.total_node_explored * 1000000ULL) /
+          ((elapsed_us > 0) ? static_cast<uint64_t>(elapsed_us) : 1ULL);
+
       uci_reply("info score " + last_score + " time " +
-                STR(duration_ms.count()) + " depth " +
-                STR(last_complete_depth) + " nodes " +
-                STR(search_result.explored_nodes) + " pv " +
-                pv_to_string(&result.pv));
+                STR(elapsed_ms.count()) + " depth " + STR(last_complete_depth) +
+                " nodes " + STR(result.total_node_explored) + " nps " +
+                STR(nps) + " pv " + pv_to_string(&result.pv));
     }
 
     if (state.aborted) { break; }
