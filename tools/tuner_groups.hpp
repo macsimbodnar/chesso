@@ -2,17 +2,18 @@
 // The tuner's `--only` groups and the parameter range each one frees. S041.
 //
 // Split out of tools/tuner.cpp so a test can reach it. The function below has
-// swallowed the term appended after it four times -- its own comments record all
-// four -- and nothing in tests/ linked tuner.cpp at all
+// swallowed the term appended after it four times -- its own comments record
+// all four -- and nothing in tests/ linked tuner.cpp at all
 // (2026-08-13_adversarial-F07). tests/test_tuner_groups.cpp now holds the three
 // properties the ranges have to have: non-empty, pairwise disjoint, and a union
 // of exactly [0, PARAM_COUNT).
 //
 // A header rather than a second translation unit because free_mask() has no
 // state and needs nothing but the layout constants in eval_model.hpp. The
-// using-declarations below are what let the function body stay byte-identical to
-// the one that lived in tuner.cpp; they are visible as tuner_groups::MG_BASE and
-// so on, which is a small price for a move that changed no line of the body.
+// using-declarations below are what let the function body stay byte-identical
+// to the one that lived in tuner.cpp; they are visible as tuner_groups::MG_BASE
+// and so on, which is a small price for a move that changed no line of the
+// body.
 #include <cstddef>
 #include <cstdint>
 #include <string>

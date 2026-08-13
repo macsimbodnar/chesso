@@ -2764,3 +2764,51 @@ clean. `MANUAL.md` checked — the tuner is not end-user surface and `--help` is
 byte-identical, no change. `README.md` checked, owner-written, no change needed.
 No SPRT: the tuner is not the engine and nothing here is in the search path.
 `2026-08-13_adversarial-F07` stays `planned`; only an audit re-run closes it.
+
+## 2026-08-13 — S041 fast check, the gate that skipped the files the step added
+
+**The commit is not green and the stamp says it is.** `96863ae` fails
+`./clang-format.sh --check` with ten `-Wclang-format-violations` errors, all in
+`tools/tuner_groups.hpp`: three lines of the file-top comment at 81 characters
+against `ColumnLimit: 80`, and clang-format's reflow cascading into two more.
+
+The cause is the reason it was not caught. `clang-format.sh` formats
+`git ls-files | grep -E '\.(c|cc|cpp|h|hpp|hh)$'`, which lists **tracked** files
+only. `tools/tuner_groups.hpp` and `tests/test_tuner_groups.cpp` were untracked
+until `git add -A` immediately before the commit, so every check run during the
+step — three by hand and the one the moltke checker runs inside `--step done` —
+skipped exactly the two files the step added. All four reported exit 0 truthfully
+and none of them looked at the new code. **A format check run before `git add`
+proves nothing about a step that adds files.**
+
+Fixed in the follow-up commit. Only the file-top comment reflowed:
+`GROUP_LIST` and `free_mask` are byte-identical across the reformat, so the
+behaviour-identity evidence in the stamp still holds. The reflow moved the
+header's line numbers by one.
+
+The false sentence is the last of the `done:` stamp in
+`adocs/plan_done/S041_free_mask_partition_test.md`: "Gate: cmake --build build
+-j12 exit 0, ctest --test-dir build -L fast 10/10 exit 0, ./clang-format.sh
+--check exit 0." The first two hold at `96863ae`. The third does not, and is
+corrected here rather than there: `plan_done/` is immutable and git history is
+not rewritten. Same remedy `fcd82f8` and `5bee57e` used for the same class of
+mistake — and this is the third step in a row to seal a false sentence, which
+makes the pattern the defect rather than the instance.
+
+**Second correction, minor.** The commit message and the stamp both say the test
+"contains no literal" for the group names or for `PARAM_COUNT`. It hardcodes the
+group name `"all"` three times, deliberately: `all` is the one group excluded
+from the partition and is checked on its own. What the claim is load-bearing
+about holds — no copied group list, no `827`.
+
+**Third, and it is a real staleness the move created.** Three `testing.md` rows
+written by S040 one commit earlier cite `tools/tuner.cpp` coordinates the move
+invalidated, two of them naming a file that no longer contains the symbol at
+all. Removing the 71-line region shifted the rest of the file up by 66. A row is
+appended with the new coordinates rather than the three being rewritten, which
+is what an append-only ledger wants.
+
+Found by the post-commit fast check over `96863ae`, as prescribed. Files:
+`tools/tuner_groups.hpp`, `adocs/testing.md`, `adocs/worklog.md`. Gate at the
+fix: build clean, `ctest -L fast` 10/10, `clang-format.sh --check` clean **with
+both new files tracked**.
