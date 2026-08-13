@@ -2197,3 +2197,41 @@ Commits: `807091f` term 5 recorded as zero, `d36d3cd` step completion.
 ## 2026-08-13T12:58+02:00 prompt
 
 > record into project instructions to: run all the sprt at maximum cores available.
+
+## 2026-08-13 recap — adversarial audit, nine findings planned
+
+Audit run: `adocs/audit/2026-08-13_adversarial.md`, the first report in
+`adocs/audit/`. Spawned on a clean context against `44877c4`, whole repository
+in scope, no prior findings to give a verdict on. It re-measured what could be
+re-measured — INV-1 and INV-3 against Stockfish over 3000 corpus positions,
+INV-5 over 300000, `see_ge` against `see` over 1415600 comparisons, ASan and
+UBSan over the suite and a 309-case FEN fuzz — and reported all of those clean.
+
+Nine findings, two high. **F01: `fastchess.sh` has been inoperative since
+`44877c4`** and exits 0 while doing it, because the `EXIT` trap's successful
+`rm -f` overwrites the status. No SPRT verdict has been obtainable since that
+commit, and the failure is indistinguishable from a match that has not reached
+its first verdict. **F02: `go wtime 1` arms no timer and never answers** —
+30 s, depth 19, 137396943 nodes, no `bestmove`. Then `info nodes` being per
+iteration rather than cumulative, which is the number `search_bench.py` reads
+for INV-6; a 2 cp test tolerance against 2.875 cp of real truncation; a
+`LAZY_EVAL_MARGIN` comment describing weights that stopped shipping at S027;
+four stale claims in the DEV_MANUAL tuner section; `free_mask` with four
+recorded failures and no test; an en passant square set after every double
+push, splitting the hash of transposing move orders; and a dead
+`CMAKE_TOOLCHAIN_FILE` line.
+
+Nothing was fixed. The reviewer modified nothing in the tree — `--audit check`
+reported the report as the only change.
+
+Nine steps created, S035 to S043, one per finding, `closes:` set on each.
+`plan.md` reordered: S035, S036, S037, S043, S040, S041, S038 ahead of S033,
+and S039 and S042 behind the search block because each costs an SPRT and buys
+little. The reasoning is in `plan.md` itself.
+
+`README.md` not touched, owner-written. `MANUAL.md` not touched, no surface
+moved. No code changed.
+
+Tests: fast suite green, 8/8.
+
+Commit: `247c070`.
