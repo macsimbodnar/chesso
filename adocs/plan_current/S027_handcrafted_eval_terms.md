@@ -188,10 +188,48 @@ hand-built cases are not substitutes for each other.
 Neither fails a test; the symptom is a fit returning the new weights exactly as
 it was handed them. `DEV_MANUAL.md` now states the rule and the symptom.
 
-### 4. Bishop pair, rook on open and half-open file, rook on seventh -- next
+### 4. Bishop pair and rook placement -- **0**, -5.48 +/- 11.46 Elo, H0 accepted
 
-Cheap terms, all of them, which is the first time in this step that a verdict
-will not be measuring a term minus a speed penalty of its own size.
+2284 games, `b05cc62` against `7375546`. The weights are reverted to zero and
+the term is inert; the code and the tuner plumbing stay, because at zero the
+compiler deletes the term -- `evaluate_cheap()` is the same 164 instructions
+either way -- so it costs nothing to keep and it is what a split would need.
+
+**This is the term that broke the pattern and it is the most useful result of
+the step.**
+
+| term | error improvement | cost | measured Elo |
+|---|---|---|---|
+| king safety | 0.000304 | -- | +20.87 +/- 15.41 |
+| passed pawns | 0.000206 | 4.5 % | +17.34 +/- 13.51 |
+| pawn structure | 0.000126 | 4.1 % | +13.05 +/- 11.15 |
+| piece placement | 0.000161 | 3.1-4.0 % | **-5.48 +/- 11.46** |
+
+Three terms in a row had held-out error understating the Elo, which was starting
+to look like a rule. This one had it overstating by enough to change the sign,
+on the *second largest* error improvement of the four. Held-out error is not a
+weak predictor of strength, it is an unreliable one in both directions. It ranks
+what to try. The match decides, and nothing else does.
+
+**Two candidates for why, neither tested.** The bishop pair is the only one of
+the four features that is free -- clang rewrites `count_bits(x) >= 2` into
+`x & (x - 1)` -- and it carries the largest weight the step fitted, eg +55. The
+three rook features cost six popcounts between them and their weights are small
+and mutually cancelling. And the corpus is self-play by an engine predating all
+of S027, so a residual fitted on it encodes what correlated with winning in
+*those* games; for a feature like a rook on the seventh that may be a
+consequence of already being better rather than a cause of becoming so.
+Minimising squared error on that corpus and playing better are different
+objectives and this is the first term where they came apart.
+
+**Candidate follow-up, not scheduled:** split the term and measure the bishop
+pair alone. It is free and it is where the weight is. That needs its own
+`--only` group and its own fit, and it is a new step rather than a re-run.
+
+### 5. Tempo -- next
+
+A single bonus for the side to move. One parameter, and the cheapest thing in
+the step.
 
 ### 5. Tempo -- last
 

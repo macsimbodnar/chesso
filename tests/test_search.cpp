@@ -508,8 +508,8 @@ TEST_SUITE("search: quiescence")
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
     const int cheap_score = evaluate_cheap(&game.board);
-    REQUIRE_EQ(static_score, 525);
-    REQUIRE_EQ(cheap_score, 519);
+    REQUIRE_EQ(static_score, 530);
+    REQUIRE_EQ(cheap_score, 524);
 
     // The precondition for the shortcut. Without it the assertions below would
     // pass on a build where the shortcut never fires at all.
@@ -564,13 +564,8 @@ TEST_SUITE("search: quiescence")
     // -- come to 27 centipawns White-relative, which is 27 off Black's score,
     // and the last centipawn is the single truncating division evaluate_cheap()
     // does over the summed pair.
-    //
-    // S027's piece placement term then moved it again, 266 to 255. There is no
-    // pawn on the e file, so it is open, and both white rooks stand on it:
-    // rook_open is 2 for White and 0 for Black, which at phase 8 is 11
-    // centipawns White-relative and 11 off Black's score.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 255);
+    REQUIRE_EQ(black_static, 266);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -605,7 +600,7 @@ TEST_SUITE("search: quiescence")
 
     // A rook down, give or take what the positional terms make of where the
     // kings end up.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -486);
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -491);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -973,7 +968,7 @@ TEST_SUITE("search: draws")
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook.
-    REQUIRE_EQ(evaluate(&game.board), -487);
+    REQUIRE_EQ(evaluate(&game.board), -491);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

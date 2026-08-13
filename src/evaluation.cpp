@@ -162,19 +162,40 @@ enum
 // weights below and their SPRT is net of it; DEC-040 is the warning about
 // judging a term while its speed cost is still unpaid.
 //
-// Fitted with the other 817 constants frozen -- `tuner --only piece_placement`
-// over 1490839 self-play positions, held-out error 0.106766 to 0.106605.
+// **Back at zero because the fitted weights measured zero.** They were
+// mg {2, 32, 8, -26} and eg {55, -8, 12, 11}, fitted with the other 817
+// constants frozen, held-out error 0.106766 to 0.106605 -- and they measured
+// -5.48 +/- 11.46 Elo over 2284 games, H0 accepted. At zero the compiler
+// deletes the whole term, which is checked rather than assumed:
+// evaluate_cheap() is the same 164 instructions with it as without. So this
+// costs nothing to leave here, and what it leaves is the plumbing for the split
+// below.
 //
-// A residual, not a valuation, for the fourth time in this file. The bishop
-// pair's endgame weight is the largest single number S027 fitted, and the
-// rook-on-the-seventh middlegame weight is negative -- which read as chess
-// would say putting a rook there is a mistake. It says nothing of the kind. The
-// rook features overlap by construction (a rook on the seventh is usually also
-// on an open or half-open file, and the header says so), and every one of them
-// sits on a rook piece-square table that has already priced the squares. What
-// is fitted is the sum.
-const int piece_placement_mg[PL_FEATURE_COUNT] = {2, 32, 8, -26};
-const int piece_placement_eg[PL_FEATURE_COUNT] = {55, -8, 12, 11};
+// **This is the term that broke the pattern, and that is the useful part.** Its
+// error improvement was 0.000161, the second largest of the step's four terms,
+// above pawn structure's 0.000126 which measured +13.05 Elo. Three terms in a
+// row had held-out error understating the Elo; this one had it overstating by
+// enough to change the sign. Held-out error is not a weak predictor of
+// strength, it is an unreliable one in both directions, and the only thing that
+// decides a term here is the match.
+//
+// Two candidates for why, neither of them tested:
+//
+// The bishop pair is the only one of the four that is free -- clang rewrites
+// count_bits(x) >= 2 into x & (x - 1) -- and it carries the largest weight the
+// step fitted. The three rook features cost six popcounts between them, 3.1 to
+// 4.0 % of a search, and their weights are small and mutually cancelling. A
+// split measuring the pair alone would separate a cheap term that may work from
+// three expensive ones that may not.
+//
+// And the corpus is self-play by an engine that predates all of S027. A
+// residual fitted on it encodes what correlated with winning in *those* games,
+// which for a feature like a rook on the seventh may be a consequence of
+// already being better rather than a cause of becoming so. Reducing squared
+// error on that corpus and playing better are different objectives, and this is
+// the first term where they came apart.
+const int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+const int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's
