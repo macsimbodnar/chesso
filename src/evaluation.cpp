@@ -559,7 +559,15 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 // 1 for whoever is to move. In the tuner's White-relative model that is +1 with
 // White to move and -1 with Black, which is the only place the term needs a
 // sign at all.
-const int tempo_mg = 0;
+// Fitted with the other 825 constants frozen -- `tuner --only tempo` over
+// 1490839 self-play positions, held-out error 0.106766 to 0.106723. That is the
+// smallest improvement of S027's five terms by a factor of three, and after
+// term 4 measured -5.48 Elo on the second *largest* improvement of the five, it
+// predicts nothing in either direction. The match decides.
+//
+// The endgame weight fits to zero, which is not the same as the term being
+// absent there: the fit was free to make it anything and chose nothing.
+const int tempo_mg = 10;
 const int tempo_eg = 0;
 
 
