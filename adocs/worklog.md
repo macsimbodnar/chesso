@@ -2929,3 +2929,66 @@ claim about this test is that it stops the model drifting and carries no number.
 
 The completion pruned S043's `plan.md` entry and its 3 `testing.md` rows, which
 is DEC-053-unrelated and the retention rule S053 documented.
+
+## Recap — audit triage for the plan_review re-run, and NNUE deferred
+
+Planning session, no engine code touched. Three commits, one per change.
+
+**Nine new steps, one per finding** (`0df50e5`). The 2026-08-13 plan_review
+re-run (`adocs/audit/2026-08-13_plan_review.2.md`, committed here as the
+evidence) reported nine defects in the plan documents. Each got its own step
+through `--step new`, so ids and `plan.md` entries came from the tooling:
+S056 F01 (S055's accepts asks for a suite state its own change makes
+unreachable — the merge puts the bound at 1.917 and the S038 guard asserts
+every pinned difference is past 2.0), S057 F02 (S039 names `.tuning/`, which
+does not exist here), S058 F03 (S030's remedy indexes a 12-row table with 12 at
+the two `prev_move` sites and never names the write at `src/search.cpp:507`),
+S059 F04 (S025's gate admits only the outcome its own three timings contradict),
+S060 F05 (S026's accepts is weaker than its own mate hazard), S061 F06 (S023's
+"bands stay disjoint" has no instrument), S062 F07 (plan.md prose calls S037 and
+S054 pending), S063 F08 (three step files cite lines S037 moved), S064 F09
+(plan.md and testing.md describe the checker's pruning as oldest-first; it is
+last-five-by-position). None started; all in `plan_todo/`.
+
+Placed by what each corrects, not as a block: each sits immediately ahead of the
+pending step it corrects, and S062 and S064 go at the front behind S033 only.
+S033 is still next.
+
+Two figures re-measured rather than copied from the report.
+`build/tools/eval_spread` over the tracked corpus (`adocs/data/S028_raw.tsv`,
+ninth field cut out because `eval_spread` reads the FEN as the first field):
+5582 positions, 29 past 150 (0.520 %), worst combined 242 — the report's numbers
+to the digit. A scratch program against `libchesso_engine.a` in the position
+`test_evaluation` uses: 48 legal moves, 8 captures, 0 king captures, worst
+capture 999200 against the 900000 killer band, 99200 points of slack.
+
+**Prior nine closed** (`85cd2f5`). The re-run re-measured all nine
+2026-08-13_plan_review findings and none reproduces, which is what AGENTS.md
+section 10 requires to move `planned` to `closed`. Status lines only, nine
+insertions and nine deletions, no Evidence text touched. The adversarial report
+was left alone: two of its findings (F05, F08) still reproduce and only an
+adversarial re-run moves any of them.
+
+**S029 parked** (`190849c`). The owner: "no NNEU Training. Focus on building a
+better and stronger engine without NNUE for now." DEC-054 records it. Parked is
+not retired — S019 lost its file and entry, S029 keeps both, its entry moved to
+the end of the pending order marked parked so nothing derives it as next, and
+the id is not reused. `plan.md` prose, `status.md`'s Parked block and the step
+file's own header each say so.
+
+The new report's own findings still read `Status: open` with a step each. The
+precedent commit `c554546` recorded the first plan_review report with its nine
+already `planned`; this session was told not to touch the new report, so the
+transition was not made and is flagged rather than done.
+
+Files: `adocs/audit/2026-08-13_plan_review.2.md` (tracked),
+`adocs/audit/2026-08-13_plan_review.md` (status lines),
+`adocs/plan_todo/S056..S064` (new), `adocs/plan_todo/S029_nnue.md`,
+`adocs/plan.md`, `adocs/decisions.md` (DEC-054), `adocs/status.md`. No
+`testing.md` rows: nothing here adds a covering test, and the nine steps' rows
+belong to their own completions. Gate green before each commit: build clean,
+`ctest -L fast` 11/11, `clang-format.sh --check` exit 0. `DEV_MANUAL.md` and
+`MANUAL.md` checked, no change needed — the only NNUE claim in either is
+`DEV_MANUAL.md:500-501`, that the S029 training run stays the owner's and is
+asked again when S029 arrives, which parking does not falsify. `README.md`
+owner-written, untouched.
