@@ -1797,3 +1797,50 @@ Consequences: The behaviour-neutral commit is still worth making and INV-6 is
               because that was measured with the weights fitted and includes
               whatever the term really costs; only the intermediate figure was
               weaker than it read as.
+
+## DEC-048  2026-08-13  Matches use every core, efficiency cores included
+Tags:         measurement, sprt, throughput, fastchess, dec-042
+
+Context:      DEC-042 set matches to every performance core and deliberately
+              excluded the efficiency cores. The agent proposed that exclusion
+              and stated the reason rather than taking it silently: a timed game
+              landing on an efficiency core is played at roughly half speed, the
+              scheduler picks which games those are, and that is not more data
+              but data carrying a distortion neither engine controls.
+
+              S027 then spent about twenty hours of machine time on six verdicts,
+              13462 games. Measurement capacity has been the binding constraint
+              on the plan all along and that step is what it costs in practice.
+              Four terms remain unbuilt in the search block and every one of them
+              needs at least one run.
+
+Decision:     The owner asked for maximum cores and, asked directly whether that
+              included the efficiency cores, said yes. `fastchess.sh` now
+              defaults to every physical core -- eight here rather than four.
+
+              This supersedes DEC-042 on the core count. Everything else DEC-042
+              decided still stands, including that CONCURRENCY overrides the
+              default and that the one free core it used to leave for the
+              operating system bought quiet the machine never delivered.
+
+Rejected:     Keeping performance cores only. The agent recommended it and the
+              argument is unchanged and was not refuted: a game at the wrong
+              speed measures something other than the change. It was outweighed
+              by throughput, knowingly, and the tradeoff was stated before the
+              choice was made.
+
+Consequences: Verdicts get faster and noisier. The distortion falls on both
+              engines on average because the assignment is the scheduler's, so
+              it inflates variance rather than biasing the result -- a run needs
+              more games to reach the same bound, and how many more is not known
+              yet. Watch the games-to-verdict figures against S027's, which were
+              1300 to 3000 at four cores, and record what actually happens
+              rather than assuming this was free.
+
+              **A verdict measured at eight cores is not directly comparable to
+              one measured at four**, so the S027 numbers keep their conditions
+              attached wherever they are quoted.
+
+              If a result ever needs to be as clean as this setup can make it,
+              `CONCURRENCY=4` is the way back and the reason should be recorded
+              with the run.

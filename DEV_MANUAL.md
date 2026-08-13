@@ -204,11 +204,22 @@ shows up and a change that only reorders equal work does not. Bounds must match
 the expected effect: `elo0=0 elo1=10` cannot resolve a small change, and one run
 random-walked for 340 games before being stopped.
 
-**A verdict costs 3 to 4.5 hours** on this machine at `--fast`, four performance
-cores, 10+0.2. Measured: 2024 games in 4 h 30 m for a run that accepted H0,
-1300 games in 2 h 53 m for one that accepted H1. Plan against that number rather
-than rediscovering it — a step with four terms left in it is a day of machine
-time.
+**Concurrency is every physical core**, eight here, efficiency cores included —
+DEC-048, superseding DEC-042. `CONCURRENCY=N` overrides it; do not lower it to
+be polite, since nothing else should be running during a match. A run that does
+lower it records why, and `CONCURRENCY=4` is the way back to performance cores
+only if a result has to be as clean as this machine can make it.
+
+**A verdict cost 3 to 4.5 hours at four cores.** Measured across S027: 2024
+games in 4 h 30 m accepting H0, 1300 games in 2 h 53 m accepting H1, and one run
+that exhausted 3000 games in about three hours without reaching either bound.
+Six verdicts came to roughly twenty hours and 13462 games.
+
+Eight cores should cut the wall time and widen the spread, so a run may need
+more games to reach the same bound. **How much more is not known yet** — check
+the games-to-verdict figure against those numbers and record what happens rather
+than assuming the throughput was free. A verdict measured at eight cores is not
+directly comparable to one measured at four.
 
 ### Detach the run, and arm a watcher that outlives the turn
 

@@ -2193,3 +2193,7 @@ Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `adocs/specs.md`,
 Tests: full suite green, 11/11, at every commit.
 
 Commits: `807091f` term 5 recorded as zero, `d36d3cd` step completion.
+
+## 2026-08-13T12:58+02:00 prompt
+
+> record into project instructions to: run all the sprt at maximum cores available.

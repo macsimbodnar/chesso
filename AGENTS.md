@@ -48,6 +48,13 @@ which is why they are stated here and not only in `decisions.md`.
   discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
   describes. At step completion, "checked `README.md`, owner-written, no change
   needed" is the expected outcome and a valid one. DEC-017.
+- **A match runs on every core the machine has.** `fastchess.sh` defaults to it
+  and the default is not lowered to be polite -- nothing else should be running
+  during a match anyway. Efficiency cores are included, knowingly: DEC-048
+  supersedes DEC-042 on that, trading some variance for throughput because
+  measurement capacity is the binding constraint on the plan and S027 spent
+  about twenty hours of it on six verdicts. `CONCURRENCY` overrides when a run
+  genuinely has to share the machine, and a run that lowers it says why.
 - **A long run is detached, and the thing watching it must outlive the turn.**
   An SPRT takes three to four and a half hours here and a fit takes tens of
   minutes, so both are started detached — `nohup ... &` — and never held open by

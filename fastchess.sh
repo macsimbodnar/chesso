@@ -24,18 +24,25 @@ book="$(dirname "$0")/books/8moves_v3.pgn"
 candidate="$(dirname "$0")/build/src/chesso"
 tc="10+0.2"
 
-# Games are timed, so a game that lands on an efficiency core is a game played
-# at the wrong speed, and which engine gets hit is luck rather than something
-# either of them controls. Only the performance cores are used, and all of them
-# are: DEC-042. It used to leave one free for the operating system, which cost a
-# third of the throughput to buy quiet that the machine did not actually deliver
-# -- the load warning below fires on this machine anyway.
+# Every core the machine has, efficiency cores included. DEC-048, which
+# supersedes DEC-042 on this point: measurement capacity is the binding
+# constraint on the whole plan and S027 spent about twenty hours of it on six
+# verdicts.
 #
-# Both engines play interleaved on the same machine, so contention inflates
-# variance rather than biasing the result. Override with CONCURRENCY when a run
-# has to share the machine with something else.
-perf_cores="$(sysctl -n hw.perflevel0.physicalcpu 2> /dev/null || sysctl -n hw.physicalcpu)"
-concurrency="${CONCURRENCY:-$perf_cores}"
+# What that buys and what it costs. Games are timed, so a game landing on an
+# efficiency core is played at roughly half speed. The scheduler decides which,
+# not the match, so over a run both engines are hit about equally and the effect
+# inflates variance rather than biasing the result -- but it is variance neither
+# engine controls and nothing corrects, so a run may need more games to reach
+# its bound. DEC-042 excluded them for exactly that reason and the owner
+# reversed it knowingly.
+#
+# CONCURRENCY still overrides, and it is the dial to reach for when a run has to
+# share the machine or when a result needs to be as clean as this setup can make
+# it. Do not set it below the default to be polite: nothing else should be
+# running during a match.
+all_cores="$(sysctl -n hw.physicalcpu 2> /dev/null || nproc)"
+concurrency="${CONCURRENCY:-$all_cores}"
 
 # adjudication cuts dead games, gets to a verdict faster
 adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"
