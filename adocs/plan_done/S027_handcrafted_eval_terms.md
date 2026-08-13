@@ -11,7 +11,7 @@ decisions:  DEC-033, DEC-037, DEC-039, DEC-040
 closes:
 blocks:
 paused_by:
-done:
+done:       2026-08-13. Five terms, each fitted with every other constant frozen and each decided by its own SPRT. Three passed and two measured zero. +20.87, +17.34, +13.05, 0, 0.
 
 ## What this step is now
 
@@ -280,3 +280,76 @@ SPRT 2 reached its bound in 1300 games and 2 h 53 m. `--fast` is
 `elo0=0 elo1=10 alpha=0.10 beta=0.10` over 3000 rounds at 10+0.2 on four cores.
 Four terms remain and each needs at least one run, so this step's floor is
 roughly a day of machine time and the plan should be read against that.
+
+
+## What the step came to
+
+**Three terms of the five are worth something and two are not.**
+
+| term | error improvement | cost | verdict |
+|---|---|---|---|
+| king safety | 0.000304 | fused into mobility's loop | **+20.87 +/- 15.41**, H1 |
+| passed pawns | 0.000206 | 4.5 % | **+17.34 +/- 13.51**, H1 |
+| pawn structure | 0.000126 | 4.1 % | **+13.05 +/- 11.15**, H1 |
+| piece placement | 0.000161 | 3.1-4.0 % | **0**, -5.48 +/- 11.46, H0 |
+| tempo | 0.000043 | ~0 | **0**, -0.69 +/- 9.64, unresolved |
+
+Plus one correctness fix found under king safety and measured on its own:
+`evaluate_lazy()` returned a lower bound it did not have. **0**, -6.52 +/- 11.69,
+H0 accepted, kept anyway because a lower bound that is not a lower bound is
+wrong whatever the scoreboard says.
+
+Six SPRTs, roughly 20 hours of machine time, 13462 games.
+
+## The four things worth carrying forward
+
+**1. Held-out error does not predict Elo, in either direction.** Three terms
+running it understated the measurement, which was beginning to look like a rule
+worth relying on. Then piece placement had the second-largest error improvement
+of the five and measured -5.48. It ranks what to try. Only the match decides.
+
+**2. A term shipped at zero weights is deleted, not measured.** DEC-047. The
+weights are `const` with constant initialisers in the same translation unit, so
+the compiler folds them and removes the loops that feed them. Three gates were
+run against the passed pawn term at zero and all three reported no difference,
+because there was none to report. Costs are now measured with the weights forced
+non-zero, and two builds compared on wall time must walk the identical tree --
+nodes per second varies +/- 8 % with tree size for the same binary, which is
+larger than every effect in this step.
+
+**3. An isolated benchmark cannot price anything that touches memory here.**
+DEC-046. `bench_eval` said the pawn hash recovered 61 % of the passed pawn term;
+the real search said it recovered nothing, and the cache was discarded after
+being built in full. That is the second time, DEC-039 being the first.
+
+**4. Corpus sweeps and hand-built cases are not substitutes.** Three deliberate
+perturbations across two terms passed a full sweep of the inherited corpus and
+were caught only by hand-built positions -- one by cancellation between the two
+sides, one because no corpus position exercised the feature at all. Every term
+in this step needed positions added before its coverage assertion could hold.
+
+## What is left behind
+
+**Two inert terms.** Piece placement and tempo are in the tree at zero weight
+with their tuner plumbing intact. They cost nothing -- the compiler removes them
+-- and re-measuring either is one fit and one match rather than a rewrite.
+
+**A candidate worth a step, not a re-run.** Split piece placement and measure the
+bishop pair alone. It is the only one of those four features that is free, clang
+rewrites `count_bits(x) >= 2` into `x & (x - 1)`, and it carried the largest
+weight the step fitted at eg +55. The three rook features cost six popcounts
+between them and their weights are small and mutually cancelling.
+
+**A structural fix the tuner needs.** `--only` groups are contiguous ranges and
+the last one runs to `PARAM_COUNT`, so every new term is silently swallowed by
+the group before it until that group is re-ended. This happened on **four
+consecutive terms** and never once failed a test; the only symptom is a fit
+returning the new weights exactly as it was handed them.
+
+**A question this step raised and did not answer.** The tuning corpus is
+self-play by an engine predating every term here. A residual fitted on it
+encodes what correlated with winning in *those* games, which is not the same as
+what causes winning now. Minimising squared error on that corpus and playing
+better came apart for the first time at piece placement. Regenerating the corpus
+from the current engine costs 95 minutes and is the obvious thing to try before
+trusting another residual.
