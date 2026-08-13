@@ -8,10 +8,12 @@ built on the `achesso` branch to find out what AI-driven development can produce
 already describes, by reading documented technique and implementing it here —
 never by copying it (DEC-016, DEC-014). Phase two is experimentation and has no
 steps yet, and should not get any until the engine is strong enough for an
-experiment to mean something. S029 is the one step where the agent stops short
-of the run itself: it prepares the data and the training program, and the owner
+experiment to mean something. S029 was the one step where the agent stops short
+of the run itself — it prepares the data and the training program, and the owner
 runs the network training (DEC-015 as amended by DEC-041 — fits, measurements
 and evaluation tuning are the agent's to run, and S028's fit was run that way).
+S029 is parked at DEC-054, so nothing now in the pending order stops short of
+its own run; the boundary stands for whenever it resumes.
 
 The order below is not the order of expected Elo, and that is deliberate. S001
 to S018 are already done and are here as the record of what each change cost and
@@ -31,8 +33,9 @@ it believes the move — and it believes it with material and a hand-written
 piece-square table that has never been fitted to anything. So the evaluation
 leads: **S028 fits the constants that already exist, S027 adds terms and fits
 them the same way.** The search and ordering block follows, still worth doing and
-now with a number on what it is worth. S029 is the network, for which the tuned
-hand-crafted evaluation is the floor that generates training data. S030 to S032
+now with a number on what it is worth. S029 was the network the tuned
+hand-crafted evaluation would have floored and fed; it is parked, DEC-054, and
+what it was going to answer is now the hand-crafted work's to answer. S030 to S032
 are movegen work worth 1-3 % each — under 1 % for S031, its own file says — and
 are last because that is what they are worth.
 
@@ -84,6 +87,15 @@ cheapest phase per move, and DEC-033 showed endgame errors are the least
 depth-fixable of all. Its content belonged to S027 from the start. The id is not
 reused.
 
+**S029 is parked, which is not retired.** NNUE is deferred by the owner's
+decision at DEC-054: strength comes from search and from the hand-crafted
+evaluation instead. Where S019 lost its file and its entry, S029 keeps both —
+`plan_todo/S029_nnue.md` with its architecture, accumulator plan and data
+pipeline intact, and a list entry moved to the end of the pending order and
+marked parked, so nothing derives it as the next step and nothing has to be
+rewritten if it resumes. The id is not reused in either case. Resuming it is a
+decision, not a drift.
+
 Order lives here and nowhere else. Step detail lives in the step files under
 `plan_todo/`, `plan_current/`, and `plan_done/`. Ids are allocated in creation
 order and never renumbered, so reordering is a one-line edit to this list.
@@ -120,9 +132,9 @@ completions land. `plan_done/` and git history keep everything pruned.
 55. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
 56. S056  S055's accepts re-targets the pinned thresholds to the post-merge bound instead of asking for a suite state the merge makes unreachable
 57. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
-58. S029  a perspective network evaluation trained on chesso's own self-play
-59. S058  S030's neutrality remedy separates sites keyed on the move from sites keyed on prev_move, and names the write site
-60. S030  move_t drops the moving piece and becomes 16 bits
-61. S031  one unconditional xor for the side-to-move zobrist key instead of two
-62. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+58. S058  S030's neutrality remedy separates sites keyed on the move from sites keyed on prev_move, and names the write site
+59. S030  move_t drops the moving piece and becomes 16 bits
+60. S031  one unconditional xor for the side-to-move zobrist key instead of two
+61. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+62. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
 63. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it

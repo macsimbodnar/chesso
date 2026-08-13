@@ -61,3 +61,12 @@ Updated: 2026-08-13 by `moltke --step status`.
     defect. Found while doing S041, whose `excludes:` puts it out of reach.
     Parked, not planned: a step is created by a decision and none has been taken
     on this.
+  - **NNUE is deferred and S029 is parked, DEC-054.** The owner's decision:
+    strength comes from search and from the hand-crafted evaluation instead.
+    Parked is not retired — `plan_todo/S029_nnue.md` is kept whole, its id is
+    not reused, and its plan.md entry moved to the end of the pending order
+    marked parked, so nothing derives it as the next step. Resuming it is a
+    decision, not a drift. This makes the "standard search machinery" list above
+    the place the next steps have to come from; it still has no step behind it,
+    on the same rule, and DEC-033's finding that the engine is
+    evaluation-limited now has to be answered by hand-crafted terms and fits.

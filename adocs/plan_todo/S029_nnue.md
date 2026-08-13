@@ -9,6 +9,14 @@ blocks:
 paused_by:
 done:
 
+## Parked, 2026-08-13, DEC-054
+
+NNUE is deferred by the owner: strength comes from search and the hand-crafted
+evaluation instead. Parked is not retired — this file, its id and its plan.md
+entry are all kept, the entry sits last in the pending order marked parked, and
+nothing below is withdrawn. Starting this step again is a decision, not a
+resumption.
+
 ## Shape
 
 - Architecture: the standard `(768 -> N) x 2 -> 1` perspective network, `N` of

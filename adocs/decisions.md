@@ -2197,3 +2197,70 @@ Consequences: Until S055 lands the guard cannot separate rounding from a real
               slack", `:662` "test_eval_model allows two") are now false and
               were left alone: S038's `excludes:` forbade touching the file so
               that the evaluation's output stayed bit-identical. S055 owns them.
+
+
+## DEC-054  2026-08-13  NNUE is deferred; strength comes from search and the hand-crafted evaluation
+Tags:         nnue, evaluation, search, planning, s029, dec-015, dec-041, dec-033
+
+Context:      `plan.md` positions S029 as the endpoint of the evaluation work:
+              a perspective network trained on chesso's own self-play, with the
+              tuned hand-crafted evaluation as "the floor that generates
+              training data". It is also the one step the agent does not
+              finish -- DEC-015 as amended by DEC-041 leaves running the
+              network training with the owner, and S029's own `excludes:` says
+              so in those words.
+
+              The whole plan list is phase one, reaching the level the
+              published literature already describes (DEC-014), and in that
+              reading the network is where the hand-crafted evaluation stops
+              being the thing that is fitted.
+
+Decision:     **By the owner**: "no NNEU Training. Focus on building a better
+              and stronger engine without NNUE for now." NNUE is deferred and
+              effort goes to search and to the hand-crafted evaluation.
+
+              S029 is **parked, not retired**. Its step file stays in
+              `plan_todo/`, its id is not reused, and its list entry moves to
+              the end of the pending order carrying the word parked, so nothing
+              derives it as the next step. Resuming it is a decision, not a
+              drift.
+
+Rejected:     Retire S029 outright, the way S019 was retired. The work may
+              resume, and DEC-014's phase ordering still argues that a network
+              is where a tuned hand-crafted evaluation leads; retiring it would
+              throw away the architecture, the accumulator plan and the data
+              pipeline already written down in the file.
+
+              Leave it in the order unmarked. The next step is derived from
+              `plan.md` order and from nothing else (AGENTS.md section 1), so
+              an agent would eventually start it, and DEC-015 as amended by
+              DEC-041 reserves the training run to the owner -- the step would
+              stall mid-flight, with the data generated and no one able to run
+              the thing it was generated for.
+
+Consequences: The parked "standard search machinery with no step behind it"
+              list is now where the next steps have to come from rather than a
+              sideline. `status.md`'s Parked block and `specs.md`'s open item
+              both carry it: late move pruning, check and singular extensions,
+              a quiescence transposition probe, a static evaluation in the
+              table entry, an `improving` flag, history malus and ageing,
+              correction history. Parked still means a step is created by a
+              decision, and this entry creates none of them.
+
+              S055 keeps its value and loses its deadline. Its ordering
+              argument was that the tighter model-guard bound is worth more
+              before S029, because S029 is where the network takes over from
+              the hand-crafted evaluation as the thing being fitted. With S029
+              parked the hand-crafted evaluation stays the thing being fitted
+              indefinitely, so the bound matters for longer rather than less.
+
+              DEC-033's finding is now answered by hand or not at all. 160
+              expensive moves re-asked at 16 times the search removed 24.1 % of
+              the error and left 95 of 160 moves unchanged, so the engine is
+              evaluation-limited on the errors that decide games -- and the
+              answer to that is hand-crafted terms and fits, not a network.
+
+              Phase one loses its stated endpoint for the evaluation work.
+              Nothing else moves: the delegation boundary in `specs.md`'s
+              non-goals is unaffected, because it says who runs a training run
+              and not whether one happens.
