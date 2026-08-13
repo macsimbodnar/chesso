@@ -33,16 +33,18 @@ leads: **S028 fits the constants that already exist, S027 adds terms and fits
 them the same way.** The search and ordering block follows, still worth doing and
 now with a number on what it is worth. S029 is the network, for which the tuned
 hand-crafted evaluation is the floor that generates training data. S030 to S032
-are movegen work worth 1-3 % each and are last because they are worth 1-3 % each.
+are movegen work worth 1-3 % each — under 1 % for S031, its own file says — and
+are last because that is what they are worth.
 
 **S035 to S043 are the 2026-08-13 adversarial audit's nine findings, one step
 each, and seven of them cut ahead of S033.** Not out of politeness to the
-auditor: S035 is the SPRT harness, which has not run since `44877c4`, so no
-verdict on anything below it is obtainable until it is fixed; S036 is a search
-that never returns on a 1 ms clock, which corrupts the games running beside it
-in the same match; S037 is the node count that `search_bench.py` reads, which is
-how INV-6 is discharged. Those three are the measuring instruments, and the rest
-of this plan is measured with them. S043, S040, S041 and S038 follow because
+auditor: S035 was the SPRT harness, dead since `44877c4` with no verdict
+obtainable below it, repaired and smoke-tested first; S036 was a search that
+never returned on a 1 ms clock, corrupting the games beside it in a match; both
+are done. S037 is the node count that `search_bench.py` reads, which is how
+INV-6 is discharged — the last of the three instruments still pending. Those
+three are the measuring instruments, and the rest of this plan is measured with
+them. S043, S040, S041 and S038 follow because
 they are cheap and each one removes a way for a later fit or a later
 neutrality claim to be quietly wrong. S039 and S042 cost an SPRT each and buy
 little, so they wait behind the search block rather than ahead of it.
@@ -68,11 +70,13 @@ order and never renumbered, so reordering is a one-line edit to this list.
 
 Order is read from the list entries below, the lines starting `1.`, `-`, or `*`.
 An id named in a sentence anywhere else in this file is prose: it does not change
-the order, and it is not checked. Every step file must appear as a list entry, and
-every list entry must have a step file — both are INV-3.
+the order, and it is not checked. Every pending step file must appear as a list
+entry and every list entry must name an existing step file; the workflow checker
+enforces the correspondence, adds an entry when a step is created, and prunes the
+oldest completed entry — taking its testing.md rows with it — as newer
+completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-23. S036  a go command with a 1 ms clock returns a bestmove instead of searching forever
 24. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
 25. S045  S024 distinguishes continuation history from the countermove heuristic and scopes the one-ply table first
 26. S046  S030, S031 and S032 accepts discharge INV-6: search_bench identity or an SPRT

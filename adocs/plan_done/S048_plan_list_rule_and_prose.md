@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-13_plan_review-F05
 blocks:
 paused_by:
-done:
+done:      The rule reads: pending files and list entries correspond, the checker adds and prunes entries, plan_done/ and git keep what is pruned; no INV-3 citation remains. Both comm checks empty at completion. Harness prose reads past tense with S035/S036 done and S037 the last pending instrument; the S030-S032 price line carries S031's under-1 % figure. Gate green.
 
 ## What is there
 
@@ -24,3 +24,4 @@ harness "has not run since `44877c4`" although S035 and S036 are in
 "**Under 1 %**".
 
 Full evidence: 2026-08-13_plan_review-F05.
+author:    Maksym Bodnar
