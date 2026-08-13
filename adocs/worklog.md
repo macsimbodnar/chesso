@@ -2992,3 +2992,50 @@ belong to their own completions. Gate green before each commit: build clean,
 `DEV_MANUAL.md:500-501`, that the S029 training run stays the owner's and is
 asked again when S029 arrives, which parking does not falsify. `README.md`
 owner-written, untouched.
+
+## 2026-08-14 — prepare the overnight corpus regeneration (DEC-055, S065, S066)
+
+Preparation only. The eight-hour `datagen` run is the owner's to launch, because
+a watcher owned by a subagent dies with the subagent. Nothing was detached here.
+
+**DEC-055.** Regenerate the tuning corpus tonight, ahead of `plan.md` order,
+with one datagen filter clause loosened. Two facts made it necessary rather than
+attractive: `2026-08-13_plan_review.2-F02` established there is no corpus on this
+machine and no identical regeneration of the old one, and the 2026-08-14
+evaluation survey's C2 reports the largest published Texel methodology gains
+came from filtering less. Owner's decision from agent-supplied, measured
+options; S033's SPRT is the recorded rejected alternative and stays one place
+behind.
+
+**The filter change.** `tools/datagen.cpp` excluded a position whose
+search-chosen move was a capture or a promotion, justified in its own header by
+the claim that `evaluate()` is only asked about positions quiescence has
+resolved. `src/search.cpp:125` calls `evaluate_lazy()` at the top of every
+quiescence node, before `generate_captures` at `:152`, and returns on that
+stand-pat score at `:136-137`. The claim is false about this engine. The clause
+became `--allow-tactical`, default 0, so `selfplay_v1.tsv`'s settings stay
+expressible. The other three clauses stayed on measured marginal cost, the score
+cap included: uncapping admits 8.93 % more rows carrying 0.206 % of the
+corpus's gradient mass.
+
+**Smoke.** 600 games at the exact run settings: 56304 positions in 143.93 s at
+12 threads, 4.169 games/s, 391.2 positions/s, 93.84 positions per game against
+73.3 under the old filter. Format audited field by field against
+`tools/tuner.cpp:171-204` and then fitted end to end — 56304 rows read, K =
+0.7472, held-out 0.120776 to 0.109413 over 20 epochs, exit 0. Eight hours
+extrapolates to 120000 games and 11.27 M positions, 723 MB, against S028's
+1490839 positions from 20000 games.
+
+**S066 was verified before it was written.** 600 contiguous runs for 600 games
+in the smoke file, and 99.5 to 99.8 % of games straddle the tuner's 10 % row
+shuffle in simulation over the real per-game counts. It sits immediately ahead
+of S065 because S065's own gate is a held-out figure.
+
+Files: `tools/datagen.cpp`, `DEV_MANUAL.md`, `adocs/decisions.md` (DEC-055),
+`adocs/plan_todo/S065_corpus_regen_loosened_filter.md` and
+`S066_tuner_split_by_game.md` (new), `adocs/plan.md`, `adocs/testing.md` (6
+rows), `adocs/status.md`. Commits `6b5365b`, `9c947d1`, `088c7fe`. Gate green
+before each: build clean, `ctest -L fast` 11/11, `clang-format.sh --check` exit
+0. `MANUAL.md` checked, no change needed — it names no tool and no datagen flag,
+and the `cli` surface guard covers the engine's UCI surface, which this does not
+touch. `README.md` owner-written, untouched.
