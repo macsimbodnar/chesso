@@ -2141,3 +2141,55 @@ penalty of its own size.
 > <status>completed</status>
 > <summary>Monitor "tempo SPRT verdict" stream ended</summary>
 > </task-notification>
+
+## 2026-08-13T06:40+02:00 recap
+
+**S027 is complete.** Five hand-crafted evaluation terms, each fitted with every
+other constant frozen and each decided by its own SPRT. Three passed and two
+measured zero.
+
+| term | error improvement | cost | verdict |
+|---|---|---|---|
+| king safety | 0.000304 | fused into mobility's loop | +20.87 +/- 15.41, H1 |
+| passed pawns | 0.000206 | 4.5 % | +17.34 +/- 13.51, H1 |
+| pawn structure | 0.000126 | 4.1 % | +13.05 +/- 11.15, H1 |
+| piece placement | 0.000161 | 3.1-4.0 % | **0**, -5.48 +/- 11.46, H0 |
+| tempo | 0.000043 | ~0 | **0**, -0.69 +/- 9.64, unresolved |
+
+Plus the `evaluate_lazy()` bound fix found under king safety: **0**,
+-6.52 +/- 11.69, H0 accepted, kept because a lower bound that is not a lower
+bound is wrong whatever the scoreboard says.
+
+Six SPRTs, 13462 games, about twenty hours of machine time.
+
+**Tempo's run reached neither bound** -- it exhausted 3000 games at LLR -1.46
+against -2.20. Recorded as unresolved and not as H0 accepted, because those are
+different statements and S013 is the precedent for not blurring them.
+
+**The four findings that outlive the step** are written into the step file:
+held-out error does not predict Elo in either direction; a term shipped at zero
+weights is deleted by the compiler rather than measured (DEC-047); an isolated
+benchmark cannot price anything touching memory here (DEC-046, second time after
+DEC-039); corpus sweeps and hand-built cases are not substitutes.
+
+**Left behind, deliberately:** two inert terms with their tuner plumbing intact,
+so re-measuring either is one fit and one match. A candidate step to split piece
+placement and measure the bishop pair alone -- it is the only free feature of
+the four and carried the largest weight the step fitted. A structural fix the
+tuner's `--only` groups need, having swallowed four consecutive terms without
+ever failing a test. And an open question: the tuning corpus is self-play by an
+engine predating every term in it, and minimising squared error on it came apart
+from playing better for the first time at piece placement.
+
+`specs.md` updated: 817 shipped constants all fitted, 827 carried by the tuner,
+and the absent-evaluation row now says the five zero-weight features are present
+in the code rather than missing from it. `README.md` checked, owner-written, no
+change needed. `MANUAL.md` checked, no UCI surface moved and
+`test_uci_surface` is green.
+
+Files: `src/evaluation.cpp`, `src/evaluation.hpp`, `adocs/specs.md`,
+`adocs/plan_done/S027_handcrafted_eval_terms.md`, `adocs/status.md`.
+
+Tests: full suite green, 11/11, at every commit.
+
+Commits: `807091f` term 5 recorded as zero, `d36d3cd` step completion.
