@@ -7,7 +7,7 @@ decisions:  DEC-039
 closes:     2026-08-13_plan_review-F06
 blocks:
 paused_by:
-done:
+done:      S039's decisions field reads DEC-039, the skip-not-remember decision the margin implements; DEC-034 appears nowhere in the file. Gate green.
 
 ## What is there
 
@@ -20,3 +20,4 @@ transposition. Traceability is what the field exists for: grep from DEC-034
 lands on a step it does not constrain, and DEC-039 is cited nowhere.
 
 Full evidence: 2026-08-13_plan_review-F06.
+author:    Maksym Bodnar

@@ -77,7 +77,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-24. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
 25. S045  S024 distinguishes continuation history from the countermove heuristic and scopes the one-ply table first
 26. S046  S030, S031 and S032 accepts discharge INV-6: search_bench identity or an SPRT
 27. S047  S032, S029 and S020 premises re-stated against the DEC-049 machine; specs open item refreshed

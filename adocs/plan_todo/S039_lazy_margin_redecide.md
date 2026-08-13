@@ -3,7 +3,7 @@ goal:       re-decide LAZY_EVAL_MARGIN from measured spread at the weights that 
 accepts:    the margin is chosen from an eval_spread run over the full corpus at current weights and the run is recorded; the comment at src/evaluation.hpp:274-282 describes the weights that ship; an SPRT against the preceding commit returns a verdict if the margin changes
 touches:    src/evaluation.hpp LAZY_EVAL_MARGIN and its comment
 excludes:   the structure of the lazy shortcut itself, which is S034 and is done
-decisions:  DEC-034
+decisions:  DEC-039
 closes:     2026-08-13_adversarial-F05
 blocks:
 paused_by:
