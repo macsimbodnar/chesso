@@ -17,9 +17,15 @@ are in `CLAUDE.md`.
 | `adocs/data/` | raw output of runs a decision rests on, kept because regenerating it costs hours of reference search. `adocs/data/README.md` says what each file is |
 | `books/` | opening books for match play |
 | `.ref-builds/` | git worktrees created by `fastchess.sh`, gitignored |
+| tool config | tracked when it describes the project, ignored when it describes a machine. `CLAUDE.md` and `.cursor/rules/moltke.mdc` are the two agent pointers at `AGENTS.md`, `.vscode/` is the editor setup; `.claude/settings.local.json` is the one exception and is gitignored. DEC-051 |
 
 Three build directories, all with `ccache` wired in: `build` (Release, the one
 that gets measured), `build-debug` (asserts on), `build-prof` (RelWithDebInfo).
+
+Nothing may reconfigure `build` behind your back. VS Code's CMake Tools used to:
+it defaults to `${workspaceFolder}/build`, configures on open, and wrote Debug
+and `CMAKE_C_COMPILER=gcc-14` into it against the g++ 13.3 DEC-049 pins.
+`.vscode/settings.json` now points it at `build-debug`. DEC-052.
 
 ## Build
 
@@ -45,11 +51,20 @@ ctest --test-dir build -L fast    # correctness, must stay green, about 18 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
-Those 18 s assume `build/` was configured `Release`. A `build/` with an empty
-`CMAKE_BUILD_TYPE` runs the same suite in 126 s and `test_movegen` and
-`test_search` blow the 60 s timeout every `fast` target carries, which reads as
-two test failures rather than as a wrongly configured build directory. Check
-`grep CMAKE_BUILD_TYPE build/CMakeCache.txt` before believing either.
+Those 18 s assume `build/` was configured `Release`. Configured `Debug`, or with
+an empty `CMAKE_BUILD_TYPE`, the same suite takes 126 s and `test_movegen` and
+`test_search` blow the 60 s timeout every `fast` target carries — which reads as
+two test failures rather than as a wrongly configured build directory. Both
+happened on 2026-08-13, the second time because an editor rewrote the directory
+mid-session (DEC-052). Check it before believing either result:
+
+```bash
+grep -E 'CMAKE_BUILD_TYPE|CMAKE_C_COMPILER:' build/CMakeCache.txt
+```
+
+Piping `ctest` into `tail` or `head` hides its exit status behind the pipe, so a
+gate written that way reports success on a failed suite. Redirect to a file and
+read `$?`, or let `ctest` print in full.
 
 The step-completion gate in `.moltke.json` is:
 

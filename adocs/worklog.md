@@ -2363,3 +2363,53 @@ Tests: fast suite 9/9 green in 18.2 s, `clang-format.sh --check` clean.
 
 Commit: `dfd6afe`. Made under AGENTS.md section 5; the two turns before this one
 left their work unstaged instead, so this is flagged rather than assumed.
+
+## 2026-08-13 — DEC-051 and DEC-052, tool config and the build directory
+
+Started as a question about why `.cursor` was tracked and `.claude` ignored.
+Neither was a leftover. Both agent pointers are eight lines aimed at `AGENTS.md`
+and both were already tracked -- Claude Code reads its one from the root as
+`CLAUDE.md`, Cursor requires its one under `.cursor/rules/`. What was wrong was
+the width of the ignore rule: `git check-ignore` showed `.gitignore:8:.claude`
+swallowing `.claude/settings.json` and `.claude/skills/` along with the local
+file it was aimed at.
+
+The owner removed the blanket line. `.gitignore` now names
+`.claude/settings.local.json` instead. Stated in the repository's own file
+rather than left to `~/.config/git/ignore`, which is where it was actually being
+caught -- verified with `git -c core.excludesFile=/dev/null status`, which is
+what a second machine or a contributor sees. DEC-051 records the rule: tool
+config is tracked when it describes the project, ignored when it describes a
+machine.
+
+Then the gate failed and the second finding fell out of it. `ctest -L fast` took
+126 s instead of 18 and `test_movegen` and `test_search` blew their 60 s
+timeouts, with a green run 25 minutes earlier and nothing touched in between.
+`build/CMakeCache.txt` was written at 17:23:22; `code` started at 17:23;
+`~/.local/share/CMakeTools/log.txt` carries
+`-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc-14 ... -B /home/max/ws/chesso/build
+-G Ninja`. VS Code's CMake Tools defaults to `${workspaceFolder}/build` and
+configures on open, so it had rewritten the measured Release directory to Debug
+and pointed it at gcc-14 against the g++ 13.3 DEC-049 pins.
+
+Fixed in `.vscode/settings.json`, which is tracked, so it holds for anyone who
+opens the repository: `cmake.buildDirectory` is `build-debug`,
+`configureOnOpen` and `configureOnEdit` are false. `build/` was deleted and
+reconfigured from the command `DEV_MANUAL.md` documents -- Release,
+`/usr/bin/c++` at g++ 13.3.0. Generator went Ninja to Unix Makefiles as a
+consequence; the documented command names none and the Ninja was the
+extension's. DEC-052.
+
+Third thing, found while proving the second: `ctest ... | tail -4` reports
+success on a failed suite, because the pipe's status is `tail`'s. That is how
+the first of these runs printed `gate exit=0` under two timeouts. Recorded in
+`DEV_MANUAL.md` next to the build-type check.
+
+No measurement is affected. S036 is a correctness step and the only numbers it
+recorded are node counts, depths and the suite's own wall clock; all were
+re-taken on the restored Release build.
+
+Tests: fast suite 9/9 green in 17.8 s with `ctest` exit 0 read directly rather
+than through a pipe, `clang-format.sh --check` clean.
+
+Commit: this one.

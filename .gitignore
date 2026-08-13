@@ -5,9 +5,10 @@ tmp.hpp
 tmp.txt
 .no_git
 chesso_engine.log
-.claude
 config.json
 .ref-builds
 
 .tuning
 .reprofile
+
+.claude/settings.local.json

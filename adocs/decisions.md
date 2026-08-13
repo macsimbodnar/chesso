@@ -1961,3 +1961,149 @@ Consequences: Two games share a physical core throughout a match, so a game's
               on the Apple machine -- carry to nothing here. What a verdict
               costs on this machine is unknown until the first runs report it,
               and DEC-049 already says the same about every other figure.
+
+
+## DEC-051  2026-08-13  Tool config is tracked when it describes the project
+Tags:         git, tooling, agents, repo-layout
+
+Context:      `.cursor/rules/moltke.mdc` was tracked and `.claude` was ignored
+              wholesale, which read as an inconsistency and prompted the
+              question of which one was the leftover. Neither was. The two
+              directories arrived by different routes: `.cursor/rules/moltke.mdc`
+              was scaffolded deliberately in `b6ef5c4` when the moltke workflow
+              was adopted, while the `.claude` line in `.gitignore` predates
+              moltke entirely -- it was added in `bf80449`, a tapered-evaluation
+              commit, to keep one machine-local permissions file out.
+
+              The apparent asymmetry was an artefact of where each tool reads
+              its pointer. Both agent pointers are eight lines aimed at
+              `AGENTS.md` and both were already tracked: Claude Code reads its
+              one from the repository root as `CLAUDE.md`, and Cursor requires
+              its one under `.cursor/rules/*.mdc`. Nothing was missing.
+
+              What was wrong was the width of the ignore rule. `git check-ignore`
+              confirmed `.gitignore:8:.claude` swallowed `.claude/settings.json`
+              and `.claude/skills/` along with the local file it was aimed at, so
+              shared Claude configuration added later would have been invisible
+              to git with no warning -- the same silent-omission class as the
+              stale figures DEC-049 had to go back and mark.
+
+Decision:     Tool configuration is tracked when it describes the project and
+              ignored when it describes a machine. The owner removed the
+              `.claude` line; the agent supplied the analysis and the narrow
+              replacement, `.claude/settings.local.json`.
+
+              Tracked: `AGENTS.md`, `CLAUDE.md`, `.moltke.json`,
+              `.cursor/rules/moltke.mdc`, `.vscode/`. Ignored:
+              `.claude/settings.local.json`, which holds this machine's
+              permission grants as absolute `/tmp/claude-1000/` paths carrying a
+              session UUID and is meaningless anywhere else.
+
+              The narrow line is stated in the repository's own `.gitignore`
+              rather than left to the global one at `~/.config/git/ignore`, which
+              is where it was actually being caught once the blanket line went.
+              A rule that only holds on one developer's machine is not a rule the
+              repository has.
+
+Rejected:     Ignore `.cursor` as well, for symmetry. It is project
+              configuration: a Cursor session with native `AGENTS.md` reading
+              turned off gets no ruleset at all without it, and on this branch
+              the ruleset is load-bearing rather than decorative. The same
+              argument already keeps `.vscode/` tracked.
+
+              Leave `.gitignore` bare and rely on `~/.config/git/ignore`. It
+              works here and only here; a second machine or a contributor would
+              see the local file as untracked and could commit it. DEC-049 is
+              the standing reminder that this repository now spans more than one
+              machine.
+
+              Add a shared `.claude/settings.json` while the directory is being
+              sorted out. Not taken and not proposed as a step: a checked-in
+              permission allowlist pre-approves tool calls for anyone who clones,
+              which is a trust decision and not a tidiness one. The directory is
+              now visible to git if that is ever wanted.
+
+Consequences: `.claude/settings.json`, `.claude/skills/`, `.claude/commands/` and
+              `.claude/agents/` are now visible to git, so adding one is a
+              deliberate act rather than a silent omission. `DEV_MANUAL.md`'s
+              layout table states the rule, so the next tool directory --
+              whichever assistant it belongs to -- is classified by what is in it
+              rather than by which tool wrote it.
+
+
+## DEC-052  2026-08-13  VS Code's CMake Tools is kept out of the measured build directory
+Tags:         tooling, measurement, build, vscode, contamination
+
+Context:      Found while running the step gate for S036, twice, with a green
+              run in between: `ctest -L fast` took 126 s instead of 18 and
+              `test_movegen` and `test_search` blew the 60 s timeout every
+              `fast` target carries. Neither is a slow test. `build/` had been
+              reconfigured underneath the session.
+
+              `build/CMakeCache.txt` was written at 17:23:22 and the `code`
+              process started at 17:23. `~/.local/share/CMakeTools/log.txt`
+              carries the command: `-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc-14
+              --no-warn-unused-cli -S /home/max/ws/chesso -B
+              /home/max/ws/chesso/build -G Ninja`. The extension defaults
+              `cmake.buildDirectory` to `${workspaceFolder}/build` and
+              `cmake.configureOnOpen` to true, so opening the project points its
+              own Debug configuration at the one directory `DEV_MANUAL.md` calls
+              "Release, the one that gets measured".
+
+              Two separate contaminations, not one. The build type went to Debug,
+              which is what the timeouts were. The C compiler went to `gcc-14`,
+              against the `g++ 13.3` DEC-049 pins as the reference compiler on
+              this machine -- and DEC-049 records that gcc-14 cannot even link
+              here (`cannot find -lstdc++`). `DEV_MANUAL.md` states the stake
+              directly: different compiler, different codegen, every recorded
+              benchmark incomparable.
+
+              Nothing announces either. An unoptimised binary produces numbers
+              that look like numbers, and the only signal is two timeouts that
+              read as test failures rather than as a build directory that
+              changed underneath you. Foundation 2 of `CLAUDE.md` is that
+              nothing is believed without a measurement; this silently
+              invalidates the measurement instead of the belief.
+
+Decision:     `.vscode/settings.json`, which is tracked, pins
+              `cmake.buildDirectory` to `${workspaceFolder}/build-debug` and sets
+              `cmake.configureOnOpen` and `cmake.configureOnEdit` to false. The
+              extension keeps working and lands its Debug configuration in the
+              directory this project already reserves for asserts-on builds. The
+              agent found it and proposed the fix; the owner had asked for the
+              tool-config question to be settled.
+
+              `build/` was deleted and reconfigured from the command
+              `DEV_MANUAL.md` documents, so the injected `gcc-14` is gone:
+              Release, `/usr/bin/c++` at g++ 13.3.0, `/usr/bin/cc`. The
+              generator went from Ninja to Unix Makefiles as a consequence --
+              the documented command names no generator and the Ninja came from
+              the extension. Same compiler and same flags, so nothing measured
+              is affected.
+
+Rejected:     Leave it and remember to check. It was not noticed for a full gate
+              run and the second occurrence was 25 minutes after the first. A
+              hazard whose only symptom is two timeouts is not one a habit
+              catches.
+
+              Have CMake refuse to configure `build/` as anything but Release.
+              It would also refuse the debug and profiling directories unless
+              the check knew their names, which puts the directory layout into
+              `CMakeLists.txt` where it does not belong.
+
+              Uninstall or disable the extension. It is the owner's editor and
+              the C++ tooling around it is wanted; the defect is where it builds,
+              not that it builds.
+
+Consequences: A contributor opening this repository in VS Code no longer has
+              their editor rewrite the measured build directory, because the
+              setting is tracked rather than machine-local -- which is DEC-051's
+              rule applied the same day it was written. `build-debug` is now
+              shared between the extension and anyone configuring it by hand, so
+              its build type is whatever was set last; it carries no measurements
+              and `DEV_MANUAL.md` already calls it the asserts-on directory.
+
+              Any measurement taken from `build/` between 17:23 and this entry
+              was on an unoptimised binary. None was: S036 is a correctness step
+              and the only numbers it recorded are node counts, depths and the
+              suite's own wall clock, all of them re-taken green afterwards.

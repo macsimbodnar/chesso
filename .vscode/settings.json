@@ -1,4 +1,15 @@
 {
+  // CMake Tools defaults its build directory to ${workspaceFolder}/build and
+  // configures on open. That is the Release directory every measurement in this
+  // project comes from, and the extension rewrites it to Debug with
+  // CMAKE_C_COMPILER=gcc-14 against the g++ 13.3 DEC-049 pins. The symptom is
+  // two fast tests blowing their 60s timeout, which reads as test failures
+  // rather than as a build directory that changed underneath you. Point it at
+  // build-debug, which is the asserts-on directory anyway, and let it configure
+  // only when asked. DEC-052.
+  "cmake.buildDirectory": "${workspaceFolder}/build-debug",
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
   "cSpell.words": [
     "alphabeta",
     "bboard",
