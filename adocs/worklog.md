@@ -2603,3 +2603,37 @@ and the generated build system is byte-identical.
 `2026-08-13_adversarial-F09` stays `planned` until the audit is re-run.
 
 Commit: `8b006e4`.
+
+## 2026-08-13 — S043 fast check, the measurement the ledger had claimed
+
+Tier-1 review over `8b006e4` found the deletion inert — nothing in the tree
+reads `CMAKE_TOOLCHAIN_FILE`, no `ExternalProject`, no `FetchContent`, no
+`CMakePresets.json`, no second `project()`, no script or doc passing
+`--toolchain` — and found one claim that outran its evidence: the commit message
+said "the generated build system is unchanged" on a `CMakeCache.txt` diff alone,
+which does not cover the generated makefiles.
+
+Taken now rather than left standing. `diff -r` over both configure trees, 267
+files each, is identical after substituting exactly two things: the build
+directory name, and CMake's per-run random probe ids (`TryCompile-XXXXXX`,
+`cmTC_XXXXX`, `/tmp/ccXXXXXX.s`). Only `CMakeFiles/CMakeConfigureLog.yaml`
+carried those ids; every `build.make`, `flags.make`, `link.txt`,
+`cmake_install.cmake`, `CTestTestfile.cmake`, `Makefile` and
+`compile_commands.json` matched on the directory name alone. The claim was
+right; the evidence for it now exists.
+
+Two ledger rows added for it, the second criterion of the step (`no reference to
+toolchain.cmake remains`) having had none: `git grep` over everything the build
+reads returns nothing, and the survivors are prose in records that do not
+execute — this step file, both audit reports, the worklog. The stamp says "the
+audit report", singular; it is two, `2026-08-13_adversarial.md` and
+`2026-08-13_plan_review.md:427`. Corrected in the ledger, which is live, not in
+the stamp, which is not.
+
+Not fixed, and it cannot be: the step file in `plan_done/` states in its body
+that a fresh configure picks AppleClang 16.0.0 and states in its `done:` stamp
+that this is stale. Both sentences are now immutable history. The body was
+mutable while the step sat in `plan_todo/` and the false sentence should have
+been struck there instead of only refuted in the stamp.
+
+Files: `adocs/testing.md`, `adocs/worklog.md`.
