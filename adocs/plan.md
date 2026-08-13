@@ -72,7 +72,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-22. S035  restore fastchess.sh so a match actually runs, and stop the EXIT trap masking a failure as status 0
 23. S036  a go command with a 1 ms clock returns a bestmove instead of searching forever
 24. S044  plan.md and specs.md state the DEC-041 boundary: only S029's network training is owner-run
 25. S045  S024 distinguishes continuation history from the countermove heuristic and scopes the one-ply table first

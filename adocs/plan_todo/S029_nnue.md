@@ -16,8 +16,9 @@ done:
 - The accumulator is updated incrementally in `make_move`, popped per ply in the
   search stack rather than reverse-updated -- which is exactly what S008 and
   S014 already put in place.
-- Inference is integer SIMD. **This is where x86 stops being optional**: AVX2 and
-  VNNI are where the performance is and Apple Silicon has no equivalent.
+- Inference is integer SIMD. On this machine (DEC-049) that is AVX2, with VNNI
+  where it exists; the requirement is integer SIMD throughput, not x86 as such
+  -- published NNUE engines run the same inference on Apple Silicon via NEON.
 - Training is a separate program in Python or Rust, not part of the engine.
 
 ## Provenance constraint

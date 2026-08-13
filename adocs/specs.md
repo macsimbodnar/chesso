@@ -181,11 +181,12 @@ The order stands.
   than it does now. The rerun has not happened; it is folded into S022.
 - The S013 LMR SPRT was killed at 96 % LLR, +129.2 +/- 33.8 over 183 games. It
   was never formally concluded.
-- Measurement capacity is the binding constraint on the whole plan: at 10+0.2
-  with three usable cores an SPRT verdict costs about an hour, the opening book
-  is only `8moves_v3.pgn`, and this machine has a habit of running
-  `opendirectoryd` at half a core. An x86-64 Linux box resolves this and is
-  needed for S032 and S029 regardless.
+- Measurement capacity is the binding constraint on the whole plan: an SPRT
+  verdict costs three to four and a half hours at the DEC-048/DEC-050 settings
+  (all 12 threads of the DEC-049 machine), and the opening book is only
+  `8moves_v3.pgn`. (2026-08-13: rewritten for the DEC-049 move -- the old text
+  priced an hour on three Apple cores with `opendirectoryd` overhead and called
+  for an x86-64 box, which S032 and S029 now have.)
 - Phase two has no steps and should not get any until the engine is strong
   enough for an experiment to mean something. The transition gets a decision
   entry when it happens.

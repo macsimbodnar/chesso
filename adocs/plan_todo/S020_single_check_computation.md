@@ -11,9 +11,12 @@ done:
 
 ## Why
 
-`is_check` is about 12 % of the profile and is recomputed at every node in both
-`negamax` and `quiescence`. The value is a property of the node, not of the
-call site.
+`is_check` was about 12 % of the profile **on the Apple machine under Apple
+clang** -- a pre-DEC-049 figure that keeps its conditions attached and has not
+been re-taken here. Re-profile on this machine before starting: the ranking
+that placed this step was made from that number. The structural claim still
+holds at HEAD -- `is_check` is recomputed at every node in both `negamax` and
+`quiescence`, and the value is a property of the node, not of the call site.
 
 Behaviour-neutral by construction, so this needs a determinism check and not an
 SPRT -- see INV-6.

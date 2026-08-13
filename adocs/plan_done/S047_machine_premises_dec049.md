@@ -7,7 +7,7 @@ decisions:  DEC-049
 closes:     2026-08-13_plan_review-F04
 blocks:
 paused_by:
-done:
+done:      S032 reads measurable here with magics as the fallback that stays perft-verified; S029's inference bullet asks for integer SIMD rather than x86; S020's 12 % figure carries its Apple-clang condition and the step starts with a re-profile; specs.md open item describes the DEC-049 machine with a dated note. The verifying grep for the four retired premises exits empty. Gate green.
 
 ## What is there
 
@@ -26,3 +26,4 @@ conditions attached; `specs.md:181-185` still describes three usable cores
 and `opendirectoryd`.
 
 Full evidence: 2026-08-13_plan_review-F04.
+author:    Maksym Bodnar
