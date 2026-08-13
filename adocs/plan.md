@@ -77,7 +77,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-28. S048  plan.md's list rule names a real property and holds; stale harness and price prose refreshed
 29. S049  S039 cites the decision that governs the lazy margin, not the one-night fit delegation
 30. S050  S022 accepts one verdict per change instead of one run measuring two
 31. S051  S020 and S030 gates accept a measured zero and name the instrument

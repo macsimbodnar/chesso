@@ -1,8 +1,13 @@
 # Testing ledger
 
 Acceptance criteria with their covering tests. Rows are added together with the
-feature, never afterwards. Append only. A step cannot complete without a row
-referencing its id.
+feature, never afterwards. A step cannot complete without a row referencing its
+id. Appends only, with one pruning exception (2026-08-13): when the checker
+prunes a completed step's plan.md entry — it keeps the newest five completed
+entries listed — every ledger row all of whose step ids were pruned in that
+pass leaves with it. A row that also names a live step, an invariant or a
+decision stays; `plan_done/` keeps the step's stamp and git keeps every pruned
+row.
 
 Two kinds of row appear here, and the difference matters. A **test** row names
 something in `ctest` that fails on regression. A **measurement** row names a run
@@ -41,8 +46,8 @@ documents they replace; their test columns name tests that exist today.
 | S045 | S024 scopes continuation history as two tables with a verdict each, distinct from the countermove heuristic | `grep -n "countermove\|one-ply\|two SPRT" adocs/plan_todo/S024_continuation_history.md` — the note names the heuristic as present, history as absent, and the accepts asks one verdict per table; procedure, not a test | checked; before the step the note called the countermove table one-ply continuation history |
 | S046 | S030, S031 and S032 each carry an INV-6 discharge in their accepts | `grep -n "search_bench\|INV-6" adocs/plan_todo/S030_move_encoding_16_bit.md adocs/plan_todo/S031_single_side_to_move_key.md adocs/plan_todo/S032_pext_sliding_attacks.md` — all three accepts name search_bench identity, S030 carries the SPRT branch, S031 states the xor construction that makes hashes bit-identical; procedure, not a test | checked; before the step all three stopped at perft, which says nothing about the tree |
 | S047 | no pending step or spec line still describes the retired Apple machine as current | `grep -n "cannot be measured here\|Blocked on hardware\|opendirectoryd\|stops being optional" adocs/plan_todo/*.md adocs/specs.md` — the only hit is specs.md's dated 2026-08-13 note recording the replaced text; the 12 % is_check figure carries its Apple condition; procedure, not a test | checked; before the step S032 read blocked, S029 called x86 non-optional, specs priced SPRTs on three Apple cores |
-| S048 | plan.md's correspondence rule states the checker's real behaviour and holds of the file | every pending step file appears as a list entry and every entry names an existing file — both comm checks return empty; the rule text names the checker's pruning instead of INV-3; procedure, not a test | checked; before the step the rule cited the movegen partition invariant and 18 done files failed it |
 | S049 | S039 cites the decision that governs the lazy shortcut | `grep -n "DEC-" adocs/plan_todo/S039_lazy_margin_redecide.md` — decisions reads DEC-039, DEC-034 appears nowhere; procedure, not a test | checked; before the step it cited the one-night fit delegation, a DEC-034/S034 transposition |
 | S050 | S022 asks one verdict per change, and its accepts and body agree | `grep -n "two SPRT verdicts\|one at a time" adocs/plan_todo/S022_delta_pruning_quiescence.md` — the accepts asks two verdicts in either order, the body asks one at a time, no line asks one run to measure two changes; procedure, not a test | checked; before the step the accepts required "the same run" to re-measure S015, which its own body forbade |
 | S051 | S020 and S030 complete on a measurement, not on a positive gain | `grep -n "zero is recorded as zero" adocs/plan_todo/S020_single_check_computation.md adocs/plan_todo/S030_move_encoding_16_bit.md` — both gates ask for a number with its noise floor and a keep-or-revert call, S020 names hyperfine over interleaved fixed-depth runs; procedure, not a test | checked; before the step both required a gain larger than the resolution, which the modal honest outcome (DEC-019: 0, 0, slower) cannot satisfy |
 | S052 | S021 points at the file where iterative deepening lives | `grep -n "iterative" src/*.cpp adocs/plan_todo/S021_aspiration_windows.md` — the loop is src/chesso.cpp:544 and the touches line says so, agreeing with S037; procedure, not a test | checked; before the step it named src/search.cpp, disagreeing with S037 about the same loop |
+| S053 | the ledger's header states the checker's retention rule as the code implements it | prune_plan() in the installed moltke.py:1684-1727: plan.md keeps the newest PLAN_DONE_KEPT=5 completed entries, and a row leaves only when every S-id it mentions was pruned in that pass; the header paragraph states exactly that; procedure, not a test | checked; before the step the header said "Append only" while completions had pruned 84 rows the same day |
