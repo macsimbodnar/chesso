@@ -24,18 +24,19 @@ book="$(dirname "$0")/books/8moves_v3.pgn"
 candidate="$(dirname "$0")/build/src/chesso"
 tc="10+0.2"
 
-# Every core the machine has, efficiency cores included. DEC-048, which
-# supersedes DEC-042 on this point: measurement capacity is the binding
-# constraint on the whole plan and S027 spent about twenty hours of it on six
-# verdicts.
+# Every core the machine reports, whatever kind it is: efficiency cores on
+# Apple silicon (DEC-048, superseding DEC-042), SMT siblings on the Linux
+# machine (DEC-050, where `nproc` answers 12 for 6 physical cores). Measurement
+# capacity is the binding constraint on the whole plan and S027 spent about
+# twenty hours of it on six verdicts.
 #
-# What that buys and what it costs. Games are timed, so a game landing on an
-# efficiency core is played at roughly half speed. The scheduler decides which,
-# not the match, so over a run both engines are hit about equally and the effect
-# inflates variance rather than biasing the result -- but it is variance neither
-# engine controls and nothing corrects, so a run may need more games to reach
-# its bound. DEC-042 excluded them for exactly that reason and the owner
-# reversed it knowingly.
+# What that buys and what it costs. Games are timed, so a game sharing a
+# physical core -- or landing on an efficiency one -- is played slower than a
+# game that does not. The scheduler decides which, not the match, so over a run
+# both engines are hit about equally and the effect inflates variance rather
+# than biasing the result. It is still variance neither engine controls and
+# nothing corrects, so a run may need more games to reach its bound. Both
+# decisions were taken knowingly on that trade.
 #
 # CONCURRENCY still overrides, and it is the dial to reach for when a run has to
 # share the machine or when a result needs to be as clean as this setup can make
@@ -74,10 +75,19 @@ fi
 # and the result becomes a mixture of two versions. That has already happened
 # once. Copying it makes the match immune to whatever the working tree does
 # next.
-snapshot="$(mktemp -t chesso-candidate)"
+#
+# The template is spelled out rather than passed to `mktemp -t`, which is a
+# BSD-ism: GNU mktemp rejects a template with no X's in it and the script died
+# here on Linux, before a single game.
+snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-candidate.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
-trap 'rm -f "$snapshot"' EXIT
+
+# The trap saves and restores the status it was entered with. Left to itself it
+# ends in a successful `rm -f`, and a shell that takes the trap's status as the
+# script's then reports an abort as a clean exit -- which is how a broken
+# harness went a commit unnoticed (2026-08-13_adversarial-F01).
+trap 'status=$?; rm -f "$snapshot"; exit $status' EXIT
 candidate="$snapshot"
 
 # Build the reference from the ref, in its own worktree, once per ref.
@@ -90,7 +100,8 @@ if [[ ! -x "$reference" ]]; then
   git worktree add --detach "$ref_dir" "$ref_sha" > /dev/null
   cmake -S "$ref_dir" -B "$ref_dir/build" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache > /dev/null
-  cmake --build "$ref_dir/build" --target chesso -j"$(sysctl -n hw.logicalcpu)" > /dev/null
+  cmake --build "$ref_dir/build" --target chesso \
+    -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null
 fi
 
 # A busy machine invalidates a timed match, and it is worth knowing before
@@ -105,7 +116,7 @@ fi
 
 echo "candidate  $(git rev-parse --short HEAD)$(git diff --quiet || echo ' + uncommitted changes')"
 echo "reference  $ref_sha"
-echo "tc $tc  concurrency $concurrency  ($perf_cores performance cores)"
+echo "tc $tc  concurrency $concurrency of $all_cores cores"
 echo
 
 fastchess \

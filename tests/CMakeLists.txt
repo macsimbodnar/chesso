@@ -40,6 +40,16 @@ add_doctest_target(test_uci_surface)
 target_compile_definitions(test_uci_surface
      PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
+# The SPRT harness is a shell script, and until S035 nothing in tests/
+# exercised any shell script at all -- which is how a rename could break the
+# only tool that can decide a change (INV-6) and stay broken across a commit.
+# The smoke run plays no games: fastchess is a stub on PATH and the whole run
+# happens in a throwaway git repository.
+add_test(NAME test_fastchess_script
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_fastchess_script.sh
+                      ${CMAKE_SOURCE_DIR}/fastchess.sh)
+set_tests_properties(test_fastchess_script PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.

@@ -2235,3 +2235,52 @@ moved. No code changed.
 Tests: fast suite green, 8/8.
 
 Commit: `247c070`.
+
+## 2026-08-13 — S035, fastchess.sh repair
+
+The SPRT harness runs again. F01 named one defect and there were three, two of
+them Linux-only and neither visible from the audit's own reproduction:
+
+- `mktemp -t chesso-candidate` (line 77). `-t` with no X's is a BSD-ism and GNU
+  mktemp rejects it, so at `44877c4` the script died *before* F01's line 108 on
+  this machine. Now `mktemp "${TMPDIR:-/tmp}/chesso-candidate.XXXXXX"`.
+- `$perf_cores` (line 108), left behind by `44877c4`. Now
+  `tc $tc  concurrency $concurrency of $all_cores cores`.
+- `sysctl -n hw.logicalcpu` fed to `cmake --build -j` on the reference-build
+  path. Loud rather than broken on Linux — it prints a sysctl error and passes a
+  bare `-j` — and `.ref-builds/` was empty, so the next real SPRT was going to
+  hit it. Given the `|| nproc` fallback line 44 already had.
+
+The EXIT trap is hardened to `status=$?; rm -f "$snapshot"; exit $status`.
+**F01's masking half does not reproduce here**: bash 5.2.21 does not let an EXIT
+trap rewrite the status of a `set -u` abort, and the run the audit measured at
+0 exits 1 on this machine. The hardening is applied anyway and recorded as
+unverifiable rather than as a fix watched working.
+
+Guard: `tests/test_fastchess_script.sh`, the first test in the suite to exercise
+a shell script. Stub `fastchess` on `PATH`, stub candidate and reference, all
+inside a throwaway git repository, so `.ref-builds/` and `build/` are never
+touched. 0.09 s, `fast` label. Two cases: the script reaches the invocation, and
+an abort before it exits non-zero — the second refusing to pass unless the run
+really stopped at the injected line.
+
+Red observed twice at `44877c4`: as committed it fails on the `mktemp` abort,
+and with only `mktemp` repaired it prints `perf_cores: unbound variable`, which
+is the audit's evidence exactly.
+
+Beyond the accepts, a real match: reference `7b4d9a4` built into its worktree,
+`tc 10+0.2  concurrency 12 of 12 cores`, 30 games finished against the real
+`fastchess` binary, then killed. No verdict read — the candidate carries
+uncommitted changes.
+
+`moltke --step done` pruned S001 to S017 from `plan.md` and 43 of their rows
+from `testing.md`; `plan_done/` keeps them. Flagged to the owner rather than
+decided here.
+
+`DEV_MANUAL.md` updated with what the guard covers. `MANUAL.md` checked, no
+fastchess surface, no change. `README.md` checked, owner-written, no change.
+`2026-08-13_adversarial-F01` stays `planned` — the audit has not been re-run.
+
+Tests: fast suite 9/9 green, `clang-format.sh --check` clean.
+
+Commit: not made. Left unstaged for the owner.

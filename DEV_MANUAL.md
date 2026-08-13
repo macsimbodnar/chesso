@@ -76,6 +76,15 @@ is the one test binary that does not need to run from `tests/`. The `go` and
 `position` argument lists in it are maintained by hand and a newly added
 argument will not fail it — DEC-028 says why.
 
+`test_fastchess_script` is the smoke run over `fastchess.sh`, the only shell
+script any test touches. It plays no games: `fastchess` is a stub on `PATH`, the
+candidate and reference are one-line shell scripts, and the whole run happens
+inside a throwaway git repository, so `.ref-builds/` and `build/` are never
+read. It asserts two things — the script reaches the `fastchess` invocation, and
+a script that aborts before that point exits non-zero. It exists because
+`44877c4` left a renamed variable behind and the harness stopped running for a
+commit without anything noticing (S035, `2026-08-13_adversarial-F01`).
+
 ## Format
 
 ```bash

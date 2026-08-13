@@ -61,23 +61,6 @@ the order, and it is not checked. Every step file must appear as a list entry, a
 every list entry must have a step file — both are INV-3.
 
 <!-- 1. S001  short goal -->
-1. S001  generate_captures and generate_quiets partition generate_moves, so quiescence stops generating what it discards
-2. S002  make_move, unmake_move and generate_moves take colour as a template parameter
-3. S003  drop repetition_t and walk history.entries[].hash instead
-4. S004  specialise generate_moves on whether checkers or pins constrain the move list
-5. S005  remove the padding in board_t and put hash next to the scalars make_move writes
-6. S006  negamax searches the captures before generating the quiets
-7. S007  one process-wide copy of the attack tables instead of one per game_t
-8. S008  every piece change in make_move goes through add_piece, remove_piece, move_piece
-9. S009  king out of material, side-to-move-relative evaluate(), game_phase()
-10. S010  tapered piece-square tables and an insufficient-material draw rule
-11. S011  search the first move with a full window and the rest with a null window
-12. S012  give the opponent a free move and prune when the result still fails high
-13. S013  search late quiet moves at reduced depth and re-search when they beat alpha
-14. S014  maintain material, psqt and phase in make_move instead of recomputing them
-15. S015  exact see() and fast see_ge(), and decline losing captures in quiescence
-16. S016  turn a game into per-move cost from Stockfish instead of reading the move list
-17. S017  a test over the UCI command and option surface that fails when it changes
 18. S018  rank chesso's own errors by game phase over hundreds of games, from Stockfish
 19. S028  fit every evaluation constant at once against self-play game outcomes
 20. S034  compute the cheap evaluation terms first and skip the expensive ones when the score is already outside the window
