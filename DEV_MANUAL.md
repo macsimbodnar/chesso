@@ -385,10 +385,11 @@ build/tools/tuner --data .tuning/selfplay_v1.tsv \
 
 `datagen` writes `fen result score phase`, one line per position, where
 `result` is the game's outcome from White's point of view. It records only
-quiet positions — not in check, and the move the search chose is neither a
-capture nor a promotion — because `evaluate()` is only ever asked about
-positions quiescence has already resolved. Openings are 8 uniform random plies,
-discarded if the position is already scored past `--opening-limit`; games are
+quiet positions — not in check, the move the search chose neither a capture
+nor a promotion, no mate found, and the score inside `--quiet-limit`, 1000 by
+default — because `evaluate()` is only ever asked about positions quiescence
+has already resolved. Openings are 8 uniform random plies, discarded if the
+search found a mate or scored the position past `--opening-limit`; games are
 adjudicated once one side holds `--resign-score` for `--resign-plies`.
 
 Both default to every hardware thread, 12 here — DEC-050. Rate on the Apple
@@ -396,21 +397,37 @@ machine at three threads: 200 games at 100000 nodes per move in 61 s, about 77
 positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame. That
 figure has not been re-taken here, and DEC-049 says it does not carry.
 
-`tuner` fits 825 numbers so that a sigmoid of the evaluation predicts the game
+`tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
 them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn
-structure 6 and piece placement 8 at S027. It never calls the search: `tools/eval_model.hpp` is
-`evaluate()` written as a linear function of its own constants, which is what
-makes a full pass cheap, and `test_eval_model` is what stops that model drifting
-from the engine. It reports held-out error every `--report` epochs and keeps the
-best one, prints a warning if the fit never beats the constants it started from,
-and writes a header to paste in.
+structure 6, piece placement 8 and tempo 2 at S027. The count is
+`eval_model::PARAM_COUNT` and the run prints it on its first line, with the
+number the `--only` group left free beside it. It never calls the search:
+`tools/eval_model.hpp` is `evaluate()` written as a linear function of its own
+constants, which is what makes a full pass cheap, and `test_eval_model` is what
+stops that model drifting from the engine. It reports held-out error every
+`--report` epochs and keeps the best one, prints a warning if the fit never
+beats the constants it started from, and writes a header to paste in.
 
-**Paste target is two files.** The piece defines and the two tables go in
-`src/eval_tables.hpp`; the mobility, king safety, passed pawn, pawn structure
-and piece placement weights at the end of the emitted file go in
-`src/evaluation.cpp`. The header says so, because it is easy
-to miss and a fit that is half applied looks like a fit that did not work.
+**Paste target is two files, and this is every definition a fit writes.** In
+emitted order:
+
+| emitted | paste over |
+|---|---|
+| `PAWN`, `KNIGHT`, `BISHOP`, `ROOK`, `QUEEN` defines | `src/eval_tables.hpp` |
+| `psqt_mg[6][64]`, `psqt_eg[6][64]` | `src/eval_tables.hpp` |
+| `mobility_mg[4]`, `mobility_eg[4]` | `src/evaluation.cpp` |
+| `king_safety_mg[KS_FEATURE_COUNT]`, `king_safety_eg[KS_FEATURE_COUNT]` | `src/evaluation.cpp` |
+| `passed_pawn_mg[6]`, `passed_pawn_eg[6]` | `src/evaluation.cpp` |
+| `pawn_structure_mg[3]`, `pawn_structure_eg[3]` | `src/evaluation.cpp` |
+| `piece_placement_mg[4]`, `piece_placement_eg[4]` | `src/evaluation.cpp` |
+| `tempo_mg`, `tempo_eg`, two scalars and not an array | `src/evaluation.cpp` |
+
+The emitted header names both files too. Everything below the two tables is the
+54 parameters that do not live in `eval_tables.hpp`, and they are what gets left
+behind: a fit that is half applied looks like a fit that did not work, and a
+weight still holding the value the engine shipped is indistinguishable from a
+term the fit had nothing to say about.
 
 ```bash
 build/tools/tuner --data .tuning/selfplay_v1.tsv \
@@ -419,16 +436,20 @@ build/tools/tuner --data .tuning/selfplay_v1.tsv \
 
 `--only GROUP` fits one group and holds every other parameter at what the engine
 ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
-`king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, and the
-emitted header records which was used.
+`king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, `tempo`, and
+the emitted header records which was used. The eight named groups partition all
+827 parameters: 5, 768, 8, 18, 12, 6, 8, 2 in that order, which the run's first
+line reports as the free count.
 
 **Adding a group means re-ending the one before it.** Each group is a contiguous
 range and the last one runs to `PARAM_COUNT`, so a new group appended after it
 is silently swallowed unless the previous group's end moves. That has now
-happened three times — `king_safety` ran past the passed pawn weights,
+happened four times — `king_safety` ran past the passed pawn weights,
 `passed_pawns` past the pawn structure weights, `pawn_structure` past the piece
-placement weights — and none of them would fail a test. The symptom is a fit
-returning the new weights exactly as it was handed them.
+placement weights, `piece_placement` past the tempo weights — and none of them
+would fail a test. The symptom is a fit returning the new weights exactly as it
+was handed them. `tempo` is the group running to `PARAM_COUNT` today, so it is
+the one that swallows the fifth term.
 
 **This is an attribution tool, not a speed tool.** A joint fit of a new term
 also refits the constants that were already fitted, so the SPRT that follows
@@ -439,8 +460,9 @@ takes a step from a zero gradient.
 
 What the freeze costs is measurable and was measured at S027: king safety alone
 took held-out error 0.107413 to 0.107109, and fitting all 799 jointly reached
-0.106964 instead. The refit of the other 781 is worth 0.000145 and is a separate
-change.
+0.106964 instead — 799 because that was the whole vector when king safety was
+fitted, before the four terms and 28 parameters that followed it. The refit of
+the other 781 is worth 0.000145 and is a separate change.
 
 **The agent runs the fit**, and every test and measurement, without asking.
 DEC-041, which supersedes DEC-015 for tuning. A run of several hours is

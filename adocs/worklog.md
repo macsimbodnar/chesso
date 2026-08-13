@@ -2637,3 +2637,48 @@ mutable while the step sat in `plan_todo/` and the false sentence should have
 been struck there instead of only refuted in the stamp.
 
 Files: `adocs/testing.md`, `adocs/worklog.md`.
+
+## 2026-08-13 — S040, the DEV_MANUAL tuner section re-derived
+
+Closing `2026-08-13_adversarial-F06`, four claims in the tuner section of
+`DEV_MANUAL.md` re-derived from the code rather than from the finding. Every
+number was re-established before it was written, which mattered twice.
+
+The four: **825 becomes 827**, `eval_model::PARAM_COUNT` at
+`tools/eval_model.hpp:136-139`, and the breakdown gains tempo's 2. **`tempo` is
+added to the `--only` group list**, from `GROUP_LIST` at `tools/tuner.cpp:153-155`
+— not `:140-142` as the step file said. **The paste target is now a table of
+every definition a fit writes**, enumerated from the header `write_tables()`
+actually emitted on a run: five defines and two tables into
+`src/eval_tables.hpp`, then six weight-array pairs and the two `tempo` scalars
+into `src/evaluation.cpp`, 54 parameters in the second file. **Three
+group-swallowing occurrences become four**, the fourth being `piece_placement`
+past the tempo block at `tools/tuner.cpp:204-206`; `tempo` runs to `PARAM_COUNT`
+today, so it is the one that swallows a fifth.
+
+827 was confirmed from the code path and not only by arithmetic: nine runs of
+`build/tools/tuner` over a two-row TSV, one per group, printed `827 parameters`
+with free counts 827, 5, 768, 8, 18, 12, 6, 8, 2. The eight named groups
+partition the vector exactly, which is now in the manual as something a reader
+can check in one command.
+
+Two findings beyond F06. The datagen paragraph gave two of the four conditions
+`tools/datagen.cpp:254-256` actually applies and never mentioned `--quiet-limit`;
+corrected. And the manual's "passed pawns 12 at S027" is **right**, against
+`tools/eval_model.hpp:52`, `tools/tuner.cpp:8`, `:628` and `:669`, which all date
+passed pawns to S035 — a step whose subject is `fastchess.sh`. S027's own record
+lists passed pawns in its goal and describes the group-boundary bug hitting their
+twelve weights. Nearly propagated S035 into the manual on the strength of a code
+comment; the plan directory is what a step id means. The four comments are in
+`tools/`, which this step excludes, so they are reported and not touched.
+
+The step file's own pointers were stale and were corrected in place while it sat
+in `plan_current/`: `src/eval_model.hpp` for `tools/eval_model.hpp`, and four of
+its five code line ranges. `plan_done/` is immutable; `plan_current/` is not, and
+S043 sealed a false sentence next to its own refutation by forgetting that.
+
+Files: `DEV_MANUAL.md`, `adocs/plan_current/S040_dev_manual_tuner_refresh.md`
+(now `plan_done/`), `adocs/testing.md`, `adocs/worklog.md`. Six ledger rows.
+Gate: build clean, `ctest -L fast` 9/9, `clang-format.sh --check` clean.
+MANUAL.md checked — no tuner surface anywhere in it, no change. `README.md`
+checked, owner-written, no change needed.

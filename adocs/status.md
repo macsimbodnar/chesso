@@ -7,7 +7,7 @@ Updated: 2026-08-13 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S040
+- Next: S041
 - Blocked: none
 - Parked:
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
