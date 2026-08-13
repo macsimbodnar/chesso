@@ -405,18 +405,51 @@ build/tools/tuner --data .tuning/selfplay_v1.tsv \
 ```
 
 `datagen` writes `fen result score phase`, one line per position, where
-`result` is the game's outcome from White's point of view. It records only
-quiet positions — not in check, the move the search chose neither a capture
-nor a promotion, no mate found, and the score inside `--quiet-limit`, 1000 by
-default — because `evaluate()` is only ever asked about positions quiescence
-has already resolved. Openings are 8 uniform random plies, discarded if the
-search found a mate or scored the position past `--opening-limit`; games are
-adjudicated once one side holds `--resign-score` for `--resign-plies`.
+`result` is the game's outcome from White's point of view. Openings are 8
+uniform random plies, discarded if the search found a mate or scored the
+position past `--opening-limit`; games are adjudicated once one side holds
+`--resign-score` for `--resign-plies`.
 
-Both default to every hardware thread, 12 here — DEC-050. Rate on the Apple
-machine at three threads: 200 games at 100000 nodes per move in 61 s, about 77
-positions per game. 100000 nodes reaches depth 4 to 6 in a middlegame. That
-figure has not been re-taken here, and DEC-049 says it does not carry.
+**Four independent clauses decide whether a position is recorded**, and every
+run prints what each one cost:
+
+| clause | flag | default |
+|---|---|---|
+| the side to move is not in check | none, always applied | — |
+| the search found no mate | none, always applied | — |
+| `abs(score) < --quiet-limit` | `--quiet-limit N` | 1000 |
+| the search's chosen move is neither a capture nor a promotion | `--allow-tactical N` | 0 |
+
+`--allow-tactical` is a 0/1 switch and not a rate: **1** records a position
+whose best move is a capture or a promotion, **0** excludes it, which is what
+`selfplay_v1.tsv` was generated under. The clause was justified here by the
+claim that `evaluate()` is only asked about positions quiescence has already
+resolved. It is not — `src/search.cpp:125` calls `evaluate_lazy()` at the top
+of every quiescence node, before `generate_captures` at `:152` runs, and
+returns on that stand-pat score at `:136-137`. DEC-055 loosened it and left the
+other three alone; the numbers that decided each are in
+`adocs/plan_todo/S065_corpus_regen_loosened_filter.md`.
+
+The closing line of every run reads, and each figure is the number of positions
+that would have been recorded but for that one clause — a position failing two
+clauses is in neither count:
+
+```
+filter: 27839 considered, 17593 recorded; skipped in-check 1698,
+        tactical best move 4814, mate 0, score past 1000 1824
+```
+
+Both programs default to every hardware thread, 12 here — DEC-050. **Rate on
+this machine**, 12 threads, 100000 nodes per move, `--allow-tactical 1`: 600
+games in 143.93 s, 56304 positions — 4.169 games/s, 391.2 positions/s, 93.84
+positions per game, 64.15 bytes per row. Under the old filter, 73.3 positions
+per game. 100000 nodes reaches depth 4 to 6 in a middlegame. The Apple
+three-thread figure it replaces was 200 games in 61 s and about 77 positions
+per game, and DEC-049 says that one does not carry.
+
+`tuner` cost on the same machine, measured on a 56304-row corpus at 12 threads:
+0.29 s to load, 2.22 ms per epoch, 10.9 MB resident. All three scale with rows,
+and the whole corpus is held in memory.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of

@@ -10,11 +10,21 @@
 // and `phase` its game_phase(). The tuner needs the first two; the other two
 // are written so a dataset can be re-filtered without replaying anything.
 //
-// Only quiet positions are recorded: not in check, and the move the search
-// chose is neither a capture nor a promotion. A tuned evaluation is fitted to
-// what evaluate() returns, and evaluate() is only asked about a position that
-// quiescence has already resolved, so training it on positions in the middle of
-// an exchange fits it to noise it never sees in play.
+// Four independent filter clauses decide whether a position is recorded: the
+// side to move is not in check, the search found no mate, the score is inside
+// --quiet-limit, and -- unless --allow-tactical is set -- the move the search
+// chose is neither a capture nor a promotion.
+//
+// That fourth clause was justified here by the claim that evaluate() is only
+// ever asked about a position quiescence has already resolved. It is not:
+// src/search.cpp:125 calls evaluate_lazy() at the top of every quiescence node,
+// before a single capture is generated, and that stand-pat score is the bound
+// the node returns on. The static evaluation is asked at exactly the positions
+// this clause excludes, which is why it is a flag and no longer a rule.
+// DEC-055.
+//
+// Every run prints what each clause cost, so the next corpus is sized from a
+// measurement rather than from this comment.
 //
 // Nothing here reads another engine. The positions are chesso's own play and
 // the labels are game outcomes, which is what DEC-016 requires of training
@@ -58,6 +68,9 @@ struct options_t
   int resign_score = 2000;  // adjudicate once one side is this far ahead
   int resign_plies = 6;     // ... for this many plies in a row
   int quiet_limit = 1000;   // do not record a position scored beyond this
+  // 0 keeps the S028 behaviour: a position whose best move is a capture or a
+  // promotion is not recorded. 1 records it anyway. DEC-055.
+  int allow_tactical = 0;
   unsigned threads = default_threads();
   uint64_t seed = 1;
   int tt_mb = 16;
@@ -78,6 +91,18 @@ std::atomic_bool never_stop{false};
 std::mutex output_lock;
 std::atomic<uint64_t> games_done{0};
 std::atomic<uint64_t> positions_done{0};
+
+// What the filter threw away, counted per clause and printed at the end. The
+// clauses are independent tests, not a chain: each counter below is the number
+// of positions that would have been recorded but for that one clause, so it
+// prices exactly what loosening that clause alone would admit. A position
+// failing two clauses is in neither count. `considered` is every position a
+// completed search returned a move for.
+std::atomic<uint64_t> considered{0};
+std::atomic<uint64_t> skipped_check{0};
+std::atomic<uint64_t> skipped_tactical{0};
+std::atomic<uint64_t> skipped_mate{0};
+std::atomic<uint64_t> skipped_score{0};
 
 
 // Iterative deepening against a node budget, which is the same shape as the
@@ -250,10 +275,31 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
       const int white_score = white ? found.score : -found.score;
 
       // Quiet, and inside the band where the score means a position rather
-      // than a mate count.
-      const bool quiet = !is_check(&game) && !MOVE_CAPTURE(found.best_move) &&
-                         !MOVE_PROMOTED(found.best_move) && !found.mate_found &&
-                         std::abs(found.score) < opts.quiet_limit;
+      // than a mate count. Four independent clauses, kept apart so each one can
+      // be counted and so the score cap can move without touching the rest.
+      const bool not_in_check = !is_check(&game);
+      const bool move_is_quiet =
+          (opts.allow_tactical != 0) ||
+          (!MOVE_CAPTURE(found.best_move) && !MOVE_PROMOTED(found.best_move));
+      const bool no_mate = !found.mate_found;
+      const bool inside_band = std::abs(found.score) < opts.quiet_limit;
+
+      const bool quiet =
+          not_in_check && move_is_quiet && no_mate && inside_band;
+
+      considered++;
+      if (!not_in_check && move_is_quiet && no_mate && inside_band) {
+        skipped_check++;
+      }
+      if (not_in_check && !move_is_quiet && no_mate && inside_band) {
+        skipped_tactical++;
+      }
+      if (not_in_check && move_is_quiet && !no_mate && inside_band) {
+        skipped_mate++;
+      }
+      if (not_in_check && move_is_quiet && no_mate && !inside_band) {
+        skipped_score++;
+      }
 
       if (quiet) {
         samples.push_back(
@@ -318,6 +364,8 @@ void usage()
       "  --resign-score N   adjudicate at this margin (default 2000)\n"
       "  --resign-plies N   ... held for this many plies (default 6)\n"
       "  --quiet-limit N    do not record beyond this score (default 1000)\n"
+      "  --allow-tactical N 1 records a position whose best move is a capture\n"
+      "                     or a promotion, 0 excludes it (default 0)\n"
       "  --threads N        worker threads (default: every hardware thread)\n"
       "  --seed N           rng seed (default 1)\n"
       "  --hash N           transposition table MB per thread (default 16)\n");
@@ -364,6 +412,8 @@ int main(int argc, char** argv)
       opts.resign_plies = atoi(value.c_str());
     } else if (arg == "--quiet-limit") {
       opts.quiet_limit = atoi(value.c_str());
+    } else if (arg == "--allow-tactical") {
+      opts.allow_tactical = atoi(value.c_str());
     } else if (arg == "--threads") {
       opts.threads = static_cast<unsigned>(atoi(value.c_str()));
     } else if (arg == "--seed") {
@@ -391,8 +441,9 @@ int main(int argc, char** argv)
   fprintf(stderr,
           "datagen: %" PRIu64 " games, %" PRIu64
           " nodes per move, %u threads, "
-          "seed %" PRIu64 "\n",
-          opts.games, opts.nodes, opts.threads, opts.seed);
+          "seed %" PRIu64 ", quiet-limit %d, allow-tactical %d\n",
+          opts.games, opts.nodes, opts.threads, opts.seed, opts.quiet_limit,
+          opts.allow_tactical);
 
   // Built once, on this thread, before anything can race for them. The tables
   // are process-wide since S007 and every worker reads the same copy.
@@ -415,6 +466,18 @@ int main(int argc, char** argv)
 
   fprintf(stderr, "%" PRIu64 " games, %" PRIu64 " positions written to %s\n",
           games_done.load(), positions_done.load(), opts.out.c_str());
+
+  // What the filter cost, per clause. Each figure is what loosening that one
+  // clause alone would have admitted, which is the only form of the number that
+  // decides whether a clause is worth its exclusion.
+  fprintf(stderr,
+          "filter: %" PRIu64 " considered, %" PRIu64
+          " recorded; skipped "
+          "in-check %" PRIu64 ", tactical best move %" PRIu64 ", mate %" PRIu64
+          ", score past %d %" PRIu64 "\n",
+          considered.load(), positions_done.load(), skipped_check.load(),
+          skipped_tactical.load(), skipped_mate.load(), opts.quiet_limit,
+          skipped_score.load());
 
   return 0;
 }
