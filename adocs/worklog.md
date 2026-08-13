@@ -2565,3 +2565,41 @@ Tests: fast suite 9/9 green in 16.7 s, `clang-format.sh --check` clean after
 formatting. No SPRT — INV-6 says an identity makes one pointless.
 
 Commit: this one.
+
+## 2026-08-13 — S043, the dead CMAKE_TOOLCHAIN_FILE line
+
+`CMakeLists.txt:7` set `CMAKE_TOOLCHAIN_FILE` to a `toolchain.cmake` that has
+never existed in this tree, and set it *after* `project()`, where CMake has
+already read any toolchain file. Deleted. One line, nothing else in scope.
+
+The proof it was dead is in the cache: `CMAKE_TOOLCHAIN_FILE` appears in no
+`CMakeCache.txt`, before or after, because a non-`CACHE` `set()` after the first
+`project()` is read by nothing. Verified as a paired fresh configure in a
+throwaway directory outside the tree — `-DCMAKE_BUILD_TYPE=Release
+-DCMAKE_CXX_COMPILER_LAUNCHER=ccache`, once with the line and once without: both
+exit 0, both select `/usr/bin/c++` at GNU 13.3.0, and the two `CMakeCache.txt`
+files are byte-identical once the directory name is normalised. The repo's own
+`build/` holds the same compiler, which is what "the same compiler as before"
+means here (DEC-049).
+
+The step file was written on the Apple machine and claimed a fresh configure
+picks AppleClang 16.0.0. Stale since DEC-049; the completion stamp says so, and
+the criterion is met against g++ 13.3.0. `build/` was left in place and
+reconfigured in passing by the build gate: still Release, `/usr/bin/c++`,
+`compile_commands.json` regenerated, so nothing depending on that tree moved.
+
+`DEV_MANUAL.md` and `MANUAL.md` checked, no change needed — neither documents a
+CMake toolchain file. `README.md` checked, owner-written, no change. No
+`decisions.md` entry: the audit had already put deletion against adding a real
+toolchain file, and nothing new was chosen.
+
+Files: `CMakeLists.txt`, `adocs/testing.md`, `adocs/plan.md`,
+`adocs/status.md`, `adocs/plan_done/S043_cmake_toolchain_dead_line.md`.
+Ledger: one S043 row, a measurement row — the paired configure, not a `ctest`
+guard, since a deleted dead line has nothing to regress.
+Tests: `cmake --build build -j12` exit 0, fast suite 9/9 in 16.54 s,
+`clang-format.sh --check` clean. No SPRT: build configuration cannot alter play
+and the generated build system is byte-identical.
+`2026-08-13_adversarial-F09` stays `planned` until the audit is re-run.
+
+Commit: `8b006e4`.
