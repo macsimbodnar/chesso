@@ -86,7 +86,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-34. S043  delete the CMAKE_TOOLCHAIN_FILE line that names a file that does not exist
 35. S040  re-derive the DEV_MANUAL tuner section from tools/tuner.cpp and eval_model.hpp
 36. S041  a test that fails the moment a tuner group range is appended without re-ending the one before it
 37. S054  clang-format.sh --check sees untracked source files, so a step that adds a file cannot pass a vacuous format check
@@ -101,8 +100,9 @@ completions land. `plan_done/` and git history keep everything pruned.
 46. S020  compute the in-check state once per node instead of once per call site
 47. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
 48. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
-49. S029  a perspective network evaluation trained on chesso's own self-play
-50. S030  move_t drops the moving piece and becomes 16 bits
-51. S031  one unconditional xor for the side-to-move zobrist key instead of two
-52. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-53. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it
+49. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
+50. S029  a perspective network evaluation trained on chesso's own self-play
+51. S030  move_t drops the moving piece and becomes 16 bits
+52. S031  one unconditional xor for the side-to-move zobrist key instead of two
+53. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+54. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it

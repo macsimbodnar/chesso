@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -189,6 +190,33 @@ static const std::vector<std::string> positions = {
     // Black is the side holding all three.
     "r5k1/ppppRppp/8/8/8/8/PPP2PPP/3R2K1 w - - 0 1",
     "3r2k1/ppp2ppp/8/8/8/8/PPPPrPPP/R5K1 b - - 0 1",
+    // The truncation bound itself, added at S038. Everything above is
+    // hand-picked to reach a feature, and hand-picked positions are exactly the
+    // ones whose taperings happen to divide evenly: over the real corpus 3446
+    // of 200000 positions disagreed with the model by more than the 2.0 this
+    // file used to allow, and none of the twenty-six above did. These four are
+    // the positions the 2026-08-13 adversarial audit recorded, worst first, and
+    // they are here so the bound is exercised by the test rather than only by a
+    // corpus under `.tuning/` that is gitignored and does not exist on every
+    // machine. "the pinned positions reach the truncation bound" below is what
+    // says they still do.
+    "2r1r1k1/4Q1p1/p1P1p1q1/3p3p/1P1PpP2/4P2P/PB4P1/R4RK1 w - - 5 29",
+    "6k1/6p1/p7/2R5/2P3n1/P1N3P1/1rP4r/2R3K1 w - - 0 29",
+    "r1bqkb1r/1pp1pp1p/5n2/p2p4/3P3R/2N2N2/PP1PPPP1/R1BQKB2 b Qkq - 2 8",
+    "1k5r/pp3p2/5P2/q1pr4/4R2p/3B3P/P1P2QP1/1R4K1 w - - 6 26",
+};
+
+
+// The subset of `positions` pinned at S038 for the truncation bound rather than
+// for a feature count, in the order they are listed above. Named separately
+// because "the pinned positions reach the truncation bound" has to be able to
+// fail when *these* stop disagreeing with the model, which is a different
+// statement from the whole corpus agreeing within tolerance.
+static const std::vector<std::string> truncation_positions = {
+    "2r1r1k1/4Q1p1/p1P1p1q1/3p3p/1P1PpP2/4P2P/PB4P1/R4RK1 w - - 5 29",
+    "6k1/6p1/p7/2R5/2P3n1/P1N3P1/1rP4r/2R3K1 w - - 0 29",
+    "r1bqkb1r/1pp1pp1p/5n2/p2p4/3P3R/2N2N2/PP1PPPP1/R1BQKB2 b Qkq - 2 8",
+    "1k5r/pp3p2/5P2/q1pr4/4R2p/3B3P/P1P2QP1/1R4K1 w - - 6 26",
 };
 
 
@@ -290,11 +318,32 @@ TEST_SUITE("eval model: agrees with the engine")
 
       const double model = model_score_white(fen, params.data());
 
-      // evaluate() interpolates in integers and truncates towards zero. Since
-      // S034 it does that twice, once for the tables and once for mobility,
-      // each stage rounding on its own, so the arithmetic can differ by two
-      // centipawns rather than one. Anything beyond that is a difference in
-      // what is being computed, which is what this file is for.
+      // evaluate() interpolates in integers and truncates towards zero, and it
+      // does that four separate times, each rounding on its own, so the
+      // arithmetic alone can differ from the model's floating point by more
+      // than one centipawn. The four divisions by GAME_PHASE_MAX are, in the
+      // order they execute:
+      //
+      //   src/evaluation.cpp:640  the piece-square pair plus the pawn terms
+      //   src/evaluation.cpp:668  tempo
+      //   src/evaluation.cpp:951  mobility
+      //   src/evaluation.cpp:953  king safety
+      //
+      // Three of them can round today. Tempo ships at tempo_mg == tempo_eg == 0
+      // (src/evaluation.cpp:582-583), so its division truncates 0 / 24 exactly
+      // and contributes nothing, which puts the bound at 3 x 23/24 = 2.875 and
+      // this tolerance at 3. "the pinned positions reach the truncation bound"
+      // below asserts that premise, because fitting tempo makes the fourth
+      // division round too and the bound 4 x 23/24 = 3.833.
+      //
+      // The 2.0 this used to allow, with a comment claiming two divisions, was
+      // false arithmetic that only passed because the corpus above was
+      // hand-picked: the audit measured 3446 of 200000 real positions past it,
+      // worst exactly 2.875. Four of those positions are pinned above. S038,
+      // DEC-053.
+      //
+      // Anything beyond the bound is a difference in what is being computed,
+      // which is what this file is for.
       //
       // King safety and passed pawns are inside this number but say nothing
       // while their weights are zero: each contributes 0 on both sides however
@@ -310,8 +359,66 @@ TEST_SUITE("eval model: agrees with the engine")
       // the wrong field, or read it White relative when the engine reads it
       // side-to-move relative, fails here rather than on half the corpus by
       // luck.
-      CHECK(std::abs(model - engine_white) <= 2.0);
+      CHECK(std::abs(model - engine_white) <= 3.0);
     }
+  }
+
+  // Non-vacuous by construction, and the reason the tolerance above is a bound
+  // rather than a number someone widened until the suite went green. The
+  // twenty-six feature positions all divide evenly enough to agree within 2.0,
+  // so at that tolerance the case above was passing for a reason unconnected to
+  // the arithmetic it cites -- which is exactly how the real corpus came to
+  // violate it on 1.7 % of positions unnoticed. Each pinned position has to
+  // still disagree by more than the old 2.0, or the corpus has stopped
+  // exercising the bound and the tolerance is untested again.
+  //
+  // The precondition is the tempo weights, because the count of *effective*
+  // truncations depends on them: at tempo_mg == tempo_eg == 0 the tempo
+  // division truncates 0 / 24 exactly and three of the four divisions can
+  // round, bounding the disagreement at 3 x 23/24 = 2.875. Fit tempo to
+  // anything non-zero and the fourth division starts rounding too, the bound
+  // becomes 4 x 23/24 = 3.833, and the tolerance above has to go to 4. S038.
+  TEST_CASE_FIXTURE(model_fixture_t,
+                    "the pinned positions reach the truncation bound")
+  {
+    // As a variable because doctest decomposes the expression it is handed and
+    // refuses a `&&` inside one.
+    const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
+
+    CHECK_MESSAGE(tempo_unfitted,
+                  "tempo is fitted, so all four taperings can truncate: the "
+                  "bound is now 4 x 23/24 = 3.833 and the tolerance in \"the "
+                  "model reproduces evaluate() on every phase\" has to be 4");
+
+    std::vector<double> params(eval_model::PARAM_COUNT, 0.0);
+    eval_model::starting_params(params.data());
+
+    double worst = 0.0;
+
+    for (const std::string& fen : truncation_positions) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      const int engine_relative = evaluate(&game.board);
+      const int engine_white = (game.board.active_color == WHITE)
+                                   ? engine_relative
+                                   : -engine_relative;
+
+      const double model = model_score_white(fen, params.data());
+      const double difference = std::abs(model - engine_white);
+
+      worst = std::max(worst, difference);
+
+      CHECK_MESSAGE(difference > 2.0,
+                    (fen + ": difference " + std::to_string(difference) +
+                     ", no longer past the old 2.0 tolerance"));
+    }
+
+    // And one of them has to sit at the top of the range, not merely past 2.0,
+    // so the tolerance is pinned against the bound it claims rather than
+    // against whatever the mildest of these four happens to be.
+    CHECK_MESSAGE(worst > 2.8, ("worst pinned difference " +
+                                std::to_string(worst) + ", short of 2.875"));
   }
 
   // The king safety counts themselves, per colour, engine against model. This

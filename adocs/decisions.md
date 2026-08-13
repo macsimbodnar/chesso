@@ -2107,3 +2107,93 @@ Consequences: A contributor opening this repository in VS Code no longer has
               was on an unoptimised binary. None was: S036 is a correctness step
               and the only numbers it recorded are node counts, depths and the
               suite's own wall clock, all of them re-taken green afterwards.
+
+
+## DEC-053  2026-08-13  The tuner-model guard's slack is raised to the truncation bound, not earned back
+Tags:         evaluation, tuning, testing, measurement, truncation
+
+Context:      `tests/test_eval_model.cpp` asserted that `tools/eval_model.hpp`
+              reproduces `evaluate()` to within 2.0 cp, justified by a comment
+              saying `evaluate()` truncates "twice, once for the tables and once
+              for mobility". The 2026-08-13 adversarial audit (F04) measured
+              3446 of 200000 real corpus positions past that bound, worst
+              exactly 2.875. The test passed only because its corpus was 26
+              hand-picked FENs, every one of which happens to divide evenly
+              enough to agree within 2.
+
+              The comment was wrong and so was the audit's correction of it.
+              `evaluate()` divides by `GAME_PHASE_MAX` **four** times, not two
+              and not the three F04 counted: `src/evaluation.cpp:640` the
+              piece-square pair plus the pawn terms, `:668` tempo, `:951`
+              mobility, `:953` king safety. F04 missed tempo, which
+              `src/evaluation.cpp:647-670` documents at length as a deliberate
+              second truncation. Three of the four can round today because
+              tempo ships at `tempo_mg == tempo_eg == 0`
+              (`src/evaluation.cpp:582-583`), so its division truncates 0 / 24
+              exactly. That puts the bound at 3 x 23/24 = 2.875, which is why
+              F04's measured worst case was exactly 2.875 and not 3.833: the
+              arithmetic and the measurement agree, on a count of divisions
+              neither document had right.
+
+              This guard is the only thing stopping the model drifting from
+              `evaluate()`, and a fit is only as good as that correspondence.
+              Two routes existed, both of which make the guard honest.
+
+Decision:     Raise the slack to 3, correct the comment to name all four
+              divisions with their lines and to state which one is inert and
+              why, and pin the four FENs F04 recorded into the test corpus so it
+              stops being 26 positions chosen for feature coverage. The
+              one-division merge becomes S055, measured on its own SPRT, placed
+              after S042 and before S029 -- the tighter bound protects fits of
+              the hand-crafted evaluation and S029 is where the network takes
+              over from the HCE as the thing being fitted.
+
+              **Chosen by the owner** from the two routes and their costs as
+              supplied by the agent (AGENTS.md section 8). The agent also
+              re-derived the division count, which is how the audit's three
+              became four.
+
+              A new case, "the pinned positions reach the truncation bound",
+              asserts that each pinned position still disagrees by more than the
+              old 2.0 and that one of them still reaches 2.8, so the corpus
+              cannot quietly stop exercising the bound the tolerance claims. It
+              also asserts the tempo weights are zero, because that premise is
+              what makes the bound 2.875 rather than 3.833.
+
+Rejected:     Merge the taperings now, in this step. It spends a three to four
+              and a half hour SPRT slot on a change whose expected verdict is 0
+              -- pure rounding of at most 1 cp per position -- and measurement
+              capacity is the binding constraint on the whole plan. It also
+              bundles a behaviour change into a guard-honesty fix, against
+              one change at a time: with both in one commit, neither the verdict
+              nor the tolerance means anything on its own.
+
+              Raise the slack to 3 and never revisit. It concedes the saved
+              integer division and, more importantly, the tighter bound,
+              permanently. The bound is the part worth having.
+
+              Set the slack to 4, the general bound over all four divisions. It
+              is a centipawn of slack that today's code cannot produce, since
+              tempo's division is provably inert at zero weights, and a guard
+              is worth what it refuses.
+
+Consequences: Until S055 lands the guard cannot separate rounding from a real
+              model error of up to about 2.8 cp per position, which over a
+              1.49 M position fit is a systematic bias the fit would absorb
+              silently. That is the cost of the route taken and it is why S055
+              exists rather than being dropped.
+
+              The pinned corpus removes the test's dependence on gitignored
+              `.tuning/`, which does not exist on the DEC-049 machine at all --
+              F04's own reproduction cannot be re-run here, and the four FENs
+              are now the record of it inside the suite.
+
+              Fitting tempo to anything non-zero raises the bound to
+              4 x 23/24 = 3.833 and requires the tolerance to go to 4. The test
+              asserts the premise rather than trusting the comment, so that
+              change fails loudly with the arithmetic in the failure message.
+
+              Two comments in `src/evaluation.cpp` (`:638-639` "one-centipawn
+              slack", `:662` "test_eval_model allows two") are now false and
+              were left alone: S038's `excludes:` forbade touching the file so
+              that the evaluation's output stayed bit-identical. S055 owns them.
