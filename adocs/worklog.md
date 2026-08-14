@@ -3069,3 +3069,35 @@ itself out and `gradient()` divided by zero. Found by the step's own test.
 Also committed separately, `b894f0f`: the nine `2026-08-13_plan_review.2`
 findings moved from `open` to `planned`, status lines only. Each has a step whose
 `closes:` names it, S056 through S064.
+
+## 2026-08-14  S065 fit recap
+
+Step S065, still in `plan_current/`. The corpus was fitted, the constants were
+applied and verified, three guards fired, and the paste is reverted. No SPRT ran.
+
+The fit: `build/tools/tuner --data .tuning/selfplay_v2.tsv --out
+.tuning/tuned_v2.hpp --threads 12 --epochs 5000`, everything else default.
+11003693 positions, 119998 games, K = 0.7624 fitted from the train rows, held-out
+error 0.122560 → 0.117359 at epoch 4800, train 0.122741 → 0.117043, no refusal
+warning, 2082 s on 12 threads. A first run at `--epochs 20000` was killed by the
+harness at epoch 8500 having reached 0.117357 — 2e-06 better over 3700 more
+epochs, which is what chose the 5000 budget; the two logs are identical through
+epoch 5000, so the fit is deterministic.
+
+The paste: 827 of 827 parameters verified against the emitted header, values only,
+both files. `ctest -L fast` then 9 of 12. `tempo_mg = 39`, `tempo_eg = 21` fires
+the tolerance premise DEC-053 wrote for exactly this case; the four pinned FENs
+fall to 2.541667 / 1.250000 / 1.125000 / 2.416667, two under the `> 2.0`
+threshold; and `POSITIONAL_ROOM` fires because the fitted queen on d1 is worth 713
+against her own material value of 1152. Seven anchors moved and were re-derived by
+a second implementation of `evaluate()` that reproduces 8 of 8 shipped values on
+the shipped weights.
+
+Reverted rather than re-targeted: two of the three are guards whose numbers are
+evidence of the old weights, and S056 does not unblock them.
+
+Changed: `DEV_MANUAL.md` (the v2 corpus and its flags, the two tuner examples and
+the two `eval_spread` examples off the corpus that does not exist here, the fit's
+measured cost), `adocs/testing.md` (7 rows), `adocs/status.md`,
+`adocs/plan_current/S065_corpus_regen_loosened_filter.md`. No source change: the
+paste is out of the tree.

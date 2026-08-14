@@ -6,10 +6,25 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-14 by `moltke --step status`.
 
 - Last done: S053
-- In progress: none
+- In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
-- Blocked: none
+- Blocked: none by a step's `blocks:` field, but S065 cannot complete without a
+  decision — see the first Parked entry
 - Parked:
+  - **S065's corpus and fit are done and its paste is reverted, waiting on a
+    decision about two guards.** The fit over `.tuning/selfplay_v2.tsv` returned
+    K = 0.7624 and held-out error 0.122560 → 0.117359 at epoch 4800 with no
+    refusal warning, and all 827 constants were applied and verified. Three
+    guards then fired: the tempo tolerance, which DEC-053 already decided goes to
+    4 once tempo is fitted; `test_eval_model`'s four pinned FENs, whose residuals
+    are of the old weights and now read 2.541667 / 1.250000 / 1.125000 /
+    2.416667; and `test_evaluation`'s `POSITIONAL_ROOM`, where the fitted queen
+    on d1 is 439 off her own material value against a bound of 150. The last two
+    are guards whose thresholds are evidence, so re-targeting them is a decision
+    and not a paste, and **S056 does not unblock it** — S056 edits S055's step
+    file and excludes `tests/test_eval_model.cpp`. No SPRT has run; the emitted
+    header is `.tuning/tuned_v2.hpp`, sha256 `b60e7134…40bc4`, reproducible in
+    35 minutes because the fit is deterministic.
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
     95 of 160 moves unchanged, so the engine is evaluation-limited rather than

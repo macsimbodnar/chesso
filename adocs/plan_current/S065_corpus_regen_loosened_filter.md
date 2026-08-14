@@ -201,3 +201,127 @@ The corpus is also the input S039 has been missing: `eval_spread` reads the FEN
 as the first tab-separated field (`tools/eval_spread.cpp:163-165`), which is
 what `selfplay_v2.tsv` writes. Re-pointing S039 is S057's business, not this
 step's.
+
+## The corpus, as generated
+
+```
+datagen: 120000 games, 100000 nodes per move, 12 threads, seed 20260814, quiet-limit 1000, allow-tactical 1
+120000 games, 11003693 positions written to .tuning/selfplay_v2.tsv
+filter: 13759085 considered, 11003693 recorded; skipped in-check 957698, tactical best move 0, mate 0, score past 1000 1205452
+```
+
+11003693 positions from 120000 games, 715409623 bytes, 2026-08-14 01:05:11 to
+08:13:32 — **7 h 08 m**, 4.669 games/s, 428.2 positions/s, 91.70 positions per
+game, 65.0 bytes per row. The extrapolation from the 600-game smoke run asked for
+120067 games and 11.27 M positions; the run came in slightly faster per game and
+slightly thinner per game. `tactical best move 0` is the loosened clause switched
+off, so it rejects nothing and has nothing to count.
+
+## The fit, as run
+
+```bash
+build/tools/tuner --data .tuning/selfplay_v2.tsv --out .tuning/tuned_v2.hpp \
+    --threads 12 --epochs 5000
+```
+
+Everything else default: `--lr 1.0 --report 100 --patience 20 --validation 0.1
+--seed 1`, and `--k` left at 0 so K is fitted from the train rows.
+
+```
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, 827 free
+fitted K = 0.7624
+start: train 0.122741  validation 0.122560
+best: train 0.117043  validation 0.117359  (start 0.122741 / 0.122560)
+```
+
+**K = 0.7624**, fitted per corpus and not carried: S028's was 1.1141 over
+`selfplay_v1.tsv`. Best held-out error at **epoch 4800**, no refusal warning,
+2082 s of wall on 12 threads. Emitted header sha256
+`b60e71341ac42a1a71e683f9c74d87b56dafb329a8403ec2e2534dffb6440bc4`.
+
+The curve, held out: 0.118022 at 100 epochs, 0.117532 at 1000, 0.117424 at 2000,
+0.117380 at 3000, 0.117366 at 4000, 0.117359 at 4800. Five sixths of the gain is
+inside the first thousand epochs and the sixth decimal is where the last two
+thousand live.
+
+**Why 5000 epochs.** The first attempt ran at the default `--epochs 20000` and
+was killed by the harness at epoch 8500, before the header was written. It had
+reached held out **0.117357**, which is 2e-06 below the 4800 best over 3700
+further epochs. The re-run's log is identical to it line for line through epoch
+5000, so the fit is deterministic at a given seed and thread count and the budget
+does not change the curve, only where it stops. The tuner keeps the best held-out
+checkpoint, so a longer budget could only have bought that 2e-06.
+
+**The held-out figure cannot rank this fit against S028's** and is not offered as
+one: different corpus, different objective, K refitted per corpus, and S028's
+0.113852 → 0.108043 was measured under the row-level split S066 replaced. It is
+the tuner's own refusal gate and nothing more. The verdict is the SPRT.
+
+## The paste, and the three guards that stopped it
+
+Applied mechanically and verified rather than by eye: **827 parameters compared,
+827 identical** to the emitted header after the paste — the five defines and both
+tables into `src/eval_tables.hpp`, then `mobility_mg/eg`, `king_safety_mg/eg`,
+`passed_pawn_mg/eg`, `pawn_structure_mg/eg`, `piece_placement_mg/eg` and the two
+tempo scalars into `src/evaluation.cpp`, which is the 54 `DEV_MANUAL.md` warns are
+the half that gets left behind. `git diff` was values only, 111 lines each way.
+
+`ctest -L fast` then came back **9 of 12**, and each of the three is a guard
+placed by an earlier step firing on exactly what it was built to catch:
+
+| guard | what it says |
+|---|---|
+| `test_eval_model`, `CHECK(tempo_unfitted)` | `tempo_mg = 39`, `tempo_eg = 21`. All four taperings can now truncate, so the bound is 4 x 23/24 = **3.833** and the tolerance has to be 4. This is DEC-053's own stated consequence and the first fit to price tempo at all |
+| `test_eval_model`, the four pinned FENs | their residuals are of the **old** weights. Now 2.541667 / 1.250000 / 1.125000 / 2.416667 against 2.875 / 2.333333 / 2.25 / 2.125, so two fall under the `> 2.0` threshold and the worst under `> 2.8` |
+| `test_evaluation`, "removing a piece moves the score" | a white queen on d1 against bare kings is worth **713** where her own fitted material value is 1152 — **439** off, against `POSITIONAL_ROOM` 150. -354 of it is `psqt_eg[queen][d1]` at phase 4, -116 is `mobility_eg[queen]` over 17 squares, +28 is king safety |
+
+Seven value anchors moved with them, which is what anchors are for, and all seven
+were reproduced by a second implementation of `evaluate()` written from the
+specification: 88 → 148, 240 → 237, 325 → 283, 530 → 515 (cheap 524 → 536),
+1101 → 734, 0 → **21** (bare kings, which is tempo at phase 0), 266 → 251. That
+implementation reproduces 8 of 8 of the shipped values on the shipped weights,
+which is what says the new numbers are derived and not read off the engine.
+`test_search`'s two -491 cases moved to -454 and -503 and were not re-derived.
+
+**The paste is reverted and the tree is green.** The first guard is arithmetic
+DEC-053 already decided. The other two hold numbers that are evidence of the old
+weights, and re-targeting either is a decision rather than a paste:
+
+- the four pinned FENs were the worst residuals the 2026-08-13 audit found over
+  200000 positions **under the old weights**. Re-pinning them means measuring the
+  worst residuals under the new ones and deriving new thresholds from the 3.833
+  bound — S038's procedure, run again
+- `POSITIONAL_ROOM` is a property and not an anchor: it asserts a piece is worth
+  its material to within what one square's positional terms can say. Widening it
+  is weakening it, and what fires it is a real property of these constants
+
+**S056 does not unblock this.** Its `touches:` is
+`adocs/plan_todo/S055_taper_stage_two_once.md` and its `excludes:` forbids
+editing `tests/test_eval_model.cpp`, so it re-targets S055's acceptance text and
+changes no assertion in the suite.
+
+## One thing the guards found, as data
+
+The queen's two tables moved in opposite directions — `psqt_mg[queen]` by a mean
+of **+270** and `psqt_eg[queen]` by **-324**, with `QUEEN` 1067 → 1152 and
+`mobility_eg[queen]` 3 → **-9**. That is not the five-dimensional degeneracy the
+tables document, which needs the *same* constant added to both; it is a change in
+the shape of the taper, and it is the largest single movement in the fit.
+
+Measured coverage, one pass over all 11003693 rows: mean phase 13.06,
+`phase <= 4` on 19.264 % of rows, a queen anywhere on 50.1 % — and **a queen at
+`phase <= 4` on 9786 rows, 0.0889 %**. `phase <= 4` with a queen is one queen and
+no other piece, so the endgame end of that table is fitted from about ten thousand
+rows in eleven million. Data, not a chess judgement, and recorded because it is
+what `POSITIONAL_ROOM` fired on.
+
+## The SPRT, when there is something to run
+
+```bash
+REF=a2f0065 CONCURRENCY=12 nohup ./fastchess.sh > .tuning/sprt_s065_fit.log 2>&1 &
+```
+
+`a2f0065` is the constants shipping today. Detached, with a watcher that outlives
+the turn (AGENTS.md section 0). Nothing is kept without it and a verdict of zero
+is recorded as zero.
+author:    Maksym Bodnar

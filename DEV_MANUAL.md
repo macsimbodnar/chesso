@@ -214,8 +214,8 @@ Check the machine is idle first: `ps aux | sort -rnk3 | head`.
 ## Size the lazy evaluation margin
 
 ```bash
-build/tools/eval_spread --data .tuning/selfplay_v1.tsv            # 1.49 M positions, 2.4 s
-build/tools/eval_spread --data .tuning/selfplay_v1.tsv --limit 200000
+build/tools/eval_spread --data .tuning/selfplay_v2.tsv            # 11.0 M positions, 18.6 s
+build/tools/eval_spread --data .tuning/selfplay_v2.tsv --limit 200000
 ```
 
 Reads `tools/datagen`'s `fen result score phase` and uses only the FEN. Prints
@@ -226,7 +226,7 @@ and 400, then the worst position per term.
 
 Three terms and not one because a margin that binds on the sum and a margin that
 binds on a single term are different problems. `--limit N` stops after N
-positions; the corpus is 1.49 M lines and the first N are consecutive plies of
+positions; the corpus is 11003693 lines and the first N are consecutive plies of
 the same games, so a limited run is a smoke test and not a sample.
 
 **The unclamped number is not observable any other way.**
@@ -397,12 +397,37 @@ S028. Two programs: `datagen` plays chesso against itself and writes labelled
 positions, `tuner` fits the evaluation constants to those labels.
 
 ```bash
-build/tools/datagen --out .tuning/selfplay_v1.tsv \
-    --games 20000 --nodes 100000 --seed 20260810
+build/tools/datagen --out .tuning/selfplay_v2.tsv \
+    --games 120000 --nodes 100000 --threads 12 --seed 20260814 \
+    --allow-tactical 1
 
-build/tools/tuner --data .tuning/selfplay_v1.tsv \
-    --out .tuning/tuned_tables.hpp
+build/tools/tuner --data .tuning/selfplay_v2.tsv \
+    --out .tuning/tuned_v2.hpp --threads 12
 ```
+
+**The corpus on this machine is `.tuning/selfplay_v2.tsv`** and those are the
+flags that produced it, which the run's own log states rather than a comment
+here:
+
+```
+datagen: 120000 games, 100000 nodes per move, 12 threads, seed 20260814, quiet-limit 1000, allow-tactical 1
+120000 games, 11003693 positions written to .tuning/selfplay_v2.tsv
+filter: 13759085 considered, 11003693 recorded; skipped in-check 957698, tactical best move 0, mate 0, score past 1000 1205452
+```
+
+11003693 positions from 120000 games, 715409623 bytes, generated 2026-08-14
+between 01:05:11 and 08:13:32 — **7 h 08 m** on 12 threads, 4.669 games/s and
+428.2 positions/s, 91.70 positions per game, 65.0 bytes per row. Faster per game
+and slightly thinner per game than the 600-game smoke run below, which is the
+figure the size was extrapolated from. `tactical best move 0` is
+`--allow-tactical 1` doing its job: the clause is switched off, so it rejects
+nothing and the counter has nothing to count. S065, DEC-055.
+
+`.tuning/selfplay_v1.tsv` was S028's corpus — 1490839 positions from 20000 games
+at seed 20260810, under the old filter — and it **does not exist on this
+machine**: `.tuning/` is gitignored, the work moved machines at DEC-049, and the
+engine that generated it is seven steps behind the one that generated v2, so it
+is not regenerable identically either.
 
 `datagen` writes `fen result score phase`, one line per position, where
 `result` is the game's outcome from White's point of view. Openings are 8
@@ -454,6 +479,15 @@ threads, machine idle: **54 s to load and fit K, 0.35 s per epoch, 1.2 GB
 resident**, so 3000 epochs cost 1090.87 s. The per-epoch figure is the
 game-level split's; a fully shuffled row index costs 0.76 s instead, 2.14x, for
 the identical fit.
+
+S065's full fit over the same corpus took **2082 s for 5000 epochs** on the same
+12 threads — 0.41 s per epoch with the desktop otherwise in use, against the
+0.35 s above on an idle machine. Two runs at the same flags and seed printed
+identical epoch reports to six digits through epoch 5000, so the fit is
+deterministic and a shorter budget traces the same curve rather than a different
+one. **The constants that fit returned are not the ones in `eval_tables.hpp`**:
+`adocs/plan_current/S065_corpus_regen_loosened_filter.md` records what it
+produced, which three guards fired when it was applied, and what is outstanding.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
@@ -550,7 +584,7 @@ weight still holding the value the engine shipped is indistinguishable from a
 term the fit had nothing to say about.
 
 ```bash
-build/tools/tuner --data .tuning/selfplay_v1.tsv \
+build/tools/tuner --data .tuning/selfplay_v2.tsv \
     --out .tuning/tuned_ks_only.hpp --only king_safety
 ```
 
