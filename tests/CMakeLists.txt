@@ -1,6 +1,19 @@
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+# Measured on the DEC-049 machine, 2026-08-14: the whole "fast" label is 18 s
+# in Release and the two slowest binaries are 165 s and 216 s in Debug, so the
+# Debug budget is a little over twice the slowest of those and the Release one
+# is unchanged. A build type this does not name gets the Debug figure, which is
+# the safe direction: a wrong timeout that is too long only delays a hang
+# report, and one that is too short reports a failure that is not there.
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+     set(CHESSO_TEST_TIMEOUT 60)
+else()
+     set(CHESSO_TEST_TIMEOUT 600)
+endif()
+message("-- Test timeout ${CHESSO_TEST_TIMEOUT}s (build type ${CMAKE_BUILD_TYPE})")
+
 # Every doctest binary needs the same include paths and the same engine
 # library, and every one of them is expected to finish in seconds. Perft is the
 # exception and is registered separately with the "slow" label.
@@ -18,7 +31,18 @@ function(add_doctest_target name)
 
      # A fast test that stops making progress is a bug. Without an explicit
      # timeout it would burn CTest's 1500 second default before saying so.
-     set_tests_properties(${name} PROPERTIES LABELS "fast" TIMEOUT 60)
+     #
+     # It has to be the build's timeout and not one number, though. 60 s is
+     # right for the Release build the gate runs -- the whole label is 18 s --
+     # and impossible for the Debug one, where the assertions INV-2 and INV-4
+     # live in are on and the optimiser is off: `ctest --test-dir build-debug
+     # -L fast` reported Timeout on test_movegen and test_search until S067,
+     # and run directly they take 165.33 s and 215.91 s and pass, 14 of 14 and
+     # 44 of 44. So the only command that runs those two invariants reported a
+     # failure that was the clock rather than an assertion.
+     # 2026-08-14_test_review-F03.
+     set_tests_properties(${name}
+          PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_TEST_TIMEOUT})
 endfunction()
 
 add_doctest_target(test_chesso)

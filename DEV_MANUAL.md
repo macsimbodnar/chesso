@@ -52,11 +52,19 @@ ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
 Those 18 s assume `build/` was configured `Release`. Configured `Debug`, or with
-an empty `CMAKE_BUILD_TYPE`, the same suite takes 126 s and `test_movegen` and
-`test_search` blow the 60 s timeout every `fast` target carries — which reads as
-two test failures rather than as a wrongly configured build directory. Both
-happened on 2026-08-13, the second time because an editor rewrote the directory
-mid-session (DEC-052). Check it before believing either result:
+an empty `CMAKE_BUILD_TYPE`, the same suite takes about two minutes — the
+assertions are on and the optimiser is off — and `test_movegen` and
+`test_search` take 165 s and 216 s on their own. Until S067 every `fast` target
+carried a flat 60 s timeout, so a debug directory reported those two as
+`Timeout`, which reads as two test failures rather than as a wrongly configured
+build directory. It happened twice on 2026-08-13, the second time because an
+editor rewrote the directory mid-session (DEC-052).
+
+The timeout is now the build's: 60 s for `Release` and `MinSizeRel`, 600 s
+otherwise, printed at configure time as `-- Test timeout 60s (build type
+Release)`. A debug directory finishes rather than timing out, so the two
+invariants that live in its assertions have a working `ctest` invocation. Check
+the build type anyway before believing a timing:
 
 ```bash
 grep -E 'CMAKE_BUILD_TYPE|CMAKE_C_COMPILER:' build/CMakeCache.txt
@@ -82,10 +90,17 @@ hand. DEC-025.
 cd tests && ../build-debug/tests/test_movegen
 ```
 
+Or through ctest, which since S067 no longer times the debug build out:
+
+```bash
+cmake --build build-debug -j12 && ctest --test-dir build-debug -L fast
+```
+
 The debug build asserts `squares[]` against the bitboards and the evaluation
 accumulators against a full recomputation, on every make and unmake. Any change
 to `make_move`, `unmake_move` or the generator must be run through it. That is
-INV-2 and INV-4.
+INV-2 and INV-4. It is **not** in the `.moltke.json` gate and running it is
+still on you.
 
 `test_uci_surface` is the golden surface guard. It reads the command set out of
 `uci_command_names()` and the option lines out of the `uci` reply, then holds

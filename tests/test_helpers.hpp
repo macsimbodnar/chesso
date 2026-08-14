@@ -72,23 +72,53 @@ inline const std::vector<std::string>& all_test_fens()
 }
 
 
-// generate_moves() is pseudo-legal. This filters it down to the moves that
-// actually survive make_move().
+// generate_moves() is legal-only (INV-1), so there is nothing here to filter:
+// every move it produces survives make_move(), and make_move() has exactly one
+// way to refuse - the history stack overflow guard at src/bitboard.cpp:754,
+// which no test position can reach.
+//
+// The comment above this said the opposite until S067, and the body read as a
+// filter at all of its call sites. It asserts the property instead: a
+// regression to pseudo-legal generation fails here rather than being absorbed
+// silently everywhere this is called. 2026-08-14_test_review-F04.
 inline size_t legal_moves(game_t* game, move_t out[])
 {
   move_t pseudo[MAX_MOVES];
   const size_t count = generate_moves(game_tables(), &game->board, pseudo);
 
-  size_t legal = 0;
-
   for (size_t i = 0; i < count; ++i) {
-    if (make_move(game, pseudo[i])) {
-      unmake_move(game);
-      out[legal++] = pseudo[i];
-    }
+    REQUIRE_MESSAGE(
+        make_move(game, pseudo[i]),
+        ("generate_moves() produced a move make_move() refuses: " +
+         print_move(pseudo[i]) + " in " + generate_FEN(&game->board)));
+    unmake_move(game);
+    out[i] = pseudo[i];
   }
 
-  return legal;
+  return count;
+}
+
+
+// A position no legal game can reach. The side **not** to move must not be in
+// check: if it were, the previous move left its own king attacked, or was made
+// while it already was. Two kings on adjacent squares fail it in both
+// directions, and so does a position where the side to move can capture the
+// enemy king.
+//
+// Taken from the engine's own is_check() through a null move rather than from a
+// rule restated here, which is the same construction "a null move undoes itself
+// exactly" already relies on. CLAUDE.md: chess judgement comes from a tool.
+//
+// This is a precondition, not a property under test. Cases that use an illegal
+// position on purpose - a missing king, a capturable king - do not call it.
+// S067, 2026-08-14_test_review-F01 and -F02.
+inline bool position_is_reachable(game_t* game)
+{
+  make_null_move(game);
+  const bool other_side_in_check = is_check(game);
+  unmake_null_move(game);
+
+  return !other_side_in_check;
 }
 
 

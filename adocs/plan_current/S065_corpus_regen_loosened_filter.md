@@ -6,7 +6,7 @@ excludes:   changing which evaluation terms exist; any change to what `evaluate(
 decisions:  DEC-055, DEC-016, DEC-019, DEC-041, DEC-050
 closes:
 blocks:
-paused_by: S067  # 2026-08-14
+paused_by:
 done:
 
 ## Why this cuts the queue

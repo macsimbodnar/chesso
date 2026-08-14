@@ -139,9 +139,26 @@ TEST_SUITE("search: mate detection")
     }
   }
 
+  // The mate and the stalemate below are a matched pair: same bare material,
+  // same side with no move, and the only difference is whether that side is in
+  // check. Both positions have to be reachable or the pair separates nothing.
+  //
+  // The mate half used 7k/5Q1K/8/8/8/8/8/8 b until S067, where the *only*
+  // attacker of the black king was the white king on h7 - adjacent kings, which
+  // no legal game reaches, and a "check" delivered by a king rather than by a
+  // checking piece. It asserted mate in zero and passed, and would have gone on
+  // passing through a regression that only broke checks from real pieces.
+  // 2026-08-14_test_review-F02.
   TEST_CASE_FIXTURE(search_fixture_t, "a mated side reports mate in zero")
   {
-    const search_t result = search_fen("7k/5Q1K/8/8/8/8/8/8 b - - 0 1", 3);
+    const std::string fen = "7k/6Q1/6K1/8/8/8/8/8 b - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE_MESSAGE(position_is_reachable(&game),
+                    (fen + " is not a position a legal game can reach"));
+    REQUIRE(is_check(&game));
+
+    const search_t result = search_fen(fen, 3);
 
     REQUIRE(result.mate_found);
     REQUIRE_EQ(result.mate_in, 0);
@@ -151,7 +168,14 @@ TEST_SUITE("search: mate detection")
 
   TEST_CASE_FIXTURE(search_fixture_t, "stalemate scores zero, not mate")
   {
-    const search_t result = search_fen("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1", 3);
+    const std::string fen = "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE_MESSAGE(position_is_reachable(&game),
+                    (fen + " is not a position a legal game can reach"));
+    REQUIRE_FALSE(is_check(&game));
+
+    const search_t result = search_fen(fen, 3);
 
     REQUIRE_FALSE(result.mate_found);
     REQUIRE_EQ(result.score, 0);
@@ -345,7 +369,18 @@ TEST_SUITE("search: tactics")
       {"4k3/8/8/3q4/8/8/8/3RK3 w - - 0 1",       d1, d5, TO_NONE,  "take the hanging queen"},
       {"4k3/8/q7/1N6/8/8/8/4K3 w - - 0 1",       b5, c7, TO_NONE,  "fork the king and the queen"},
       {"4k3/8/8/8/8/8/4r3/4K1R1 w - - 0 1",      e1, e2, TO_NONE,  "the king takes the loose rook"},
-      {"2k5/8/8/8/8/8/1q6/K1R5 w - - 0 1",       a1, b2, TO_NONE,  "the king takes the loose queen"},
+      // The white king stands on e4 in the open on purpose. The position this
+      // case used to hold, 2k5/8/8/8/8/8/1q6/K1R5 w, had **one legal move** --
+      // and was not a legal position either: stockfish refused the FEN with
+      // "Unsupported position. King can be captured" and python-chess reported
+      // OPPOSITE_CHECK. It passed for the same reason any engine would.
+      //
+      // Here the king has somewhere to run, so taking the queen is chosen
+      // rather than forced: python-chess reports 3 legal moves and stockfish at
+      // depth 20 MultiPV 3 gives e4e3 mate 20, e4d5 mate -12, e4f5 mate -11.
+      // The rook on h1 is why: the same position without it is e4e3 cp 0 by the
+      // same measurement.
+      {"4k3/8/8/8/4K3/4q3/8/7R w - - 0 1",       e4, e3, TO_NONE,  "the king takes the loose queen"},
       // The black king stands on d8 rather than e8 on purpose. With the king on
       // e8 the queen is pinned to it by the rook on e2 and cannot leave the
       // file, so every white move wins it and the position has no unique
@@ -372,6 +407,28 @@ TEST_SUITE("search: tactics")
     // clang-format on
 
     for (const case_t& test : cases) {
+      // Preconditions, asserted before any search runs. A case whose position
+      // is unreachable is not about the search, and a case with one legal move
+      // is passed by any engine that returns a legal move at all - which is
+      // what "the king takes the loose queen" did on
+      // 2k5/8/8/8/8/8/1q6/K1R5 w - - 0 1 until S067. The class is what is
+      // closed here; the one instance was the symptom.
+      // 2026-08-14_test_review-F01.
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
+
+      REQUIRE_MESSAGE(position_is_reachable(&game),
+                      (test.title + ": " + test.fen +
+                       " is not a position a legal game can reach"));
+
+      move_t precondition_moves[MAX_MOVES];
+      const size_t choices = legal_moves(&game, precondition_moves);
+
+      REQUIRE_MESSAGE(
+          choices > 1,
+          (test.title + ": " + test.fen + " has " + std::to_string(choices) +
+           " legal move(s); a forced move asserts nothing about "
+           "which move the search prefers"));
+
       // Stable across depths, so a change of search depth cannot quietly turn
       // a solved position into an unsolved one.
       for (int depth = 4; depth <= 6; ++depth) {
@@ -445,8 +502,17 @@ TEST_SUITE("search: move ordering state")
   // Filling the tables is not the point: searching a smaller tree is. A
   // budget rather than a plain node count assertion, so a search that has
   // stopped ordering anything fails here instead of running until the test
-  // times out. Depth 5 on this position costs a few hundred thousand nodes
-  // today, so the budget leaves a wide margin.
+  // times out.
+  //
+  // The budget was 1000000 until S067 and the search costs 109575, so ordering
+  // had to get nine times worse before the case could fire. Measured rather
+  // than guessed: `CHECK(result.explored_nodes == 0)` in this case on
+  // 2026-08-14 reported `CHECK( 109575 == 0 )`, cold table, depth 5, this
+  // position. The budget is **4x** that, rounded, which fires on the kind of
+  // regression the case exists for while leaving room for the tree to move
+  // when the evaluation constants change - they order the moves, and S065 is a
+  // pending 827-constant paste. Tighten it when a fit lands, not before.
+  // 2026-08-14_test_review-F06.
   TEST_CASE_FIXTURE(search_fixture_t, "ordering keeps the tree small")
   {
     REQUIRE(load_FEN(TRICKY_POS, &game));
@@ -460,12 +526,21 @@ TEST_SUITE("search: move ordering state")
     search_state_t state = {};
     state.tt = &tt;
     state.stop = &never_stop;
-    state.node_limit = 1000000;
+    state.node_limit = 440000;
 
     const search_t result = search(5, &game, &state);
 
     REQUIRE_FALSE(state.aborted);
     REQUIRE(result.best_move != 0);
+
+    // The budget has to stay a bound on something, not a number nothing
+    // approaches: if the tree ever shrinks far below it the case has stopped
+    // discriminating and the budget wants re-measuring rather than leaving.
+    REQUIRE_MESSAGE(
+        result.explored_nodes > 20000,
+        ("depth 5 on TRICKY_POS cost " + std::to_string(result.explored_nodes) +
+         " nodes; the 440000 budget was set from 109575 and no "
+         "longer bounds anything - re-measure it"));
   }
 }
 
@@ -604,10 +679,18 @@ TEST_SUITE("search: quiescence")
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
-  // own: at depth zero it is the only thing that runs.
+  // own: at depth zero it is the only thing that runs. Same position as
+  // "a mated side reports mate in zero" and the same precondition on it, for
+  // the same reason. 2026-08-14_test_review-F02.
   TEST_CASE_FIXTURE(search_fixture_t, "mate is recognised at depth zero")
   {
-    const search_t result = search_fen("7k/5Q1K/8/8/8/8/8/8 b - - 0 1", 0);
+    const std::string fen = "7k/6Q1/6K1/8/8/8/8/8 b - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE_MESSAGE(position_is_reachable(&game),
+                    (fen + " is not a position a legal game can reach"));
+
+    const search_t result = search_fen(fen, 0);
 
     REQUIRE(result.mate_found);
     REQUIRE_EQ(result.mate_in, 0);
@@ -917,6 +1000,24 @@ TEST_SUITE("search: draws")
       {"7k/8/8/8/8/8/8/KR6 w - - 0 1",       false, "a rook mates"},
       {"7k/8/8/8/8/8/8/KQ6 w - - 0 1",       false, "a queen mates"},
       {"7k/8/8/8/8/8/P7/K7 w - - 0 1",       false, "a pawn can promote"},
+
+      // The boundary. is_insufficient_material() is count_bits(minors) <= 1
+      // once pawns, rooks and queens are excluded, so it answers false for
+      // every two-minor ending, and until S067 the case list had no
+      // bishop-against-bishop entry at all and no bishop-against-knight one.
+      // Both answers are pinned here in the direction the code takes today.
+      //
+      // The first of the three is the one where that is not the rule-following
+      // answer. Measured, not reasoned about: `python-chess`
+      // `Board.is_insufficient_material()` over these three FENs returns
+      // **True**, False, False, and its bishops are b1 and g2, both light.
+      // src/search.cpp:264 returns DRAW_SCORE off this function at every node
+      // above the root, so agreeing with the rule would change what the search
+      // scores and is an SPRT, not a test edit. S067 pins the disagreement
+      // rather than resolving it. 2026-08-14_test_review-F05.
+      {"7k/8/8/8/8/8/6b1/KB6 w - - 0 1",     false, "two bishops, same square colour: chesso says a mate is still possible, python-chess says dead"},
+      {"7k/8/8/8/8/8/7b/KB6 w - - 0 1",      false, "two bishops, opposite square colours"},
+      {"6nk/8/8/8/8/8/8/KB6 w - - 0 1",      false, "a bishop against a knight"},
     };
     // clang-format on
 

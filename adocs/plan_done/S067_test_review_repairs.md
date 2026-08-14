@@ -7,7 +7,19 @@ decisions:  DEC-058, DEC-019, DEC-023
 closes:     2026-08-14_test_review-F01, 2026-08-14_test_review-F02, 2026-08-14_test_review-F03, 2026-08-14_test_review-F04, 2026-08-14_test_review-F05, 2026-08-14_test_review-F06
 blocks:     S065
 paused_by:
-done:
+done:      2026-08-14. Six findings from adocs/audit/2026-08-14_test_review.md repaired, every one observed red first with the verbatim failure in adocs/testing.md.
+            
+            F01: 2k5/8/8/8/8/8/1q6/K1R5 w had one legal move and was OPPOSITE_CHECK; replaced by 4k3/8/8/8/4K3/4q3/8/7R w, which python-chess calls VALID with 3 legal moves and stockfish depth 20 MultiPV 3 scores e4e3 mate 20 against mate -12 and mate -11.
+            F02: 7k/5Q1K/8/8/8/8/8/8 b was mated by the adjacent white king, python-chess attackers ['h7:K']; replaced at both call sites by 7k/6Q1/6K1/8/8/8/8/8 b, VALID and is_checkmate().
+            The class is closed rather than the two instances: test_helpers gains position_is_reachable(), taken from the engine's own is_check() through a null move, and 'the winning move is found' asserts it plus more-than-one-legal-move before any search runs.
+            F03: the doctest TIMEOUT is the build's - 60 s Release and MinSizeRel, 600 s otherwise. ctest --test-dir build-debug -L fast was 10 of 12 on two Timeouts and is now 12 of 12 in 403.44 s, so INV-2's and INV-4's assertions have a working invocation.
+            F04: legal_moves() states INV-1 and asserts it at all 20 call sites instead of pretending to filter for it.
+            F05: three two-minor endings pinned in the direction the code answers today, with python-chess's disagreeing answer on the same-colour bishop pair recorded rather than resolved.
+            F06: the ordering budget is 440000, measured from 109575 rather than guessed, plus a lower bound so it cannot stop bounding anything.
+            
+            Gate: cmake --build build -j12 && ctest --test-dir build -L fast --output-on-failure exit 0, 12 of 12 in 17.16 s, && ./clang-format.sh --check exit 0. git diff src/ tools/ empty, so no play changed and no SPRT is owed. MANUAL.md checked, no surface change, no edit needed; DEV_MANUAL.md updated where it described the 60 s timeout the debug build could not meet.
+            
+            F01 to F06 are planned, not closed: AGENTS.md section 10 closes a finding only after the audit is re-run, and this step fixed rather than re-ran. F07 is accepted under DEC-058.
 
 ## Why this cuts the queue
 

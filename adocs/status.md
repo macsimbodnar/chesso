@@ -6,9 +6,9 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-14 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S067 repair the test defects the 2026-08-14 test review found, before any further measurement is taken
+- In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
-- Blocked: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it (paused by S067  # 2026-08-14)
+- Blocked: none
 - Parked:
   - **S065 has been fitted twice, both pastes are reverted, and it is now
     blocked on `POSITIONAL_ROOM` alone.** The second fit is DEC-057's: `tempo`

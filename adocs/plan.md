@@ -128,7 +128,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-36. S041  a test that fails the moment a tuner group range is appended without re-ending the one before it
 37. S054  clang-format.sh --check sees untracked source files, so a step that adds a file cannot pass a vacuous format check
 38. S038  the tuner-model guard states a tolerance the truncation arithmetic actually supports
 39. S066  hold out whole games from the fit, not rows, so the validation error is not shared with training
