@@ -212,10 +212,11 @@ filter: 13759085 considered, 11003693 recorded; skipped in-check 957698, tactica
 
 11003693 positions from 120000 games, 715409623 bytes, 2026-08-14 01:05:11 to
 08:13:32 — **7 h 08 m**, 4.669 games/s, 428.2 positions/s, 91.70 positions per
-game, 65.0 bytes per row. The extrapolation from the 600-game smoke run asked for
-120067 games and 11.27 M positions; the run came in slightly faster per game and
-slightly thinner per game. `tactical best move 0` is the loosened clause switched
-off, so it rejects nothing and has nothing to count.
+game, 65.0 bytes per row. The 600-game smoke run predicted 120067 games and
+11.27 M positions in eight hours; the 120000 games it was configured for finished
+in 7 h 08 m and produced 11.00 M -- faster per game, thinner per game.
+`tactical best move 0` is the loosened clause switched off, so it rejects nothing
+and has nothing to count.
 
 ## The fit, as run
 
@@ -240,9 +241,9 @@ best: train 0.117043  validation 0.117359  (start 0.122741 / 0.122560)
 `b60e71341ac42a1a71e683f9c74d87b56dafb329a8403ec2e2534dffb6440bc4`.
 
 The curve, held out: 0.118022 at 100 epochs, 0.117532 at 1000, 0.117424 at 2000,
-0.117380 at 3000, 0.117366 at 4000, 0.117359 at 4800. Five sixths of the gain is
-inside the first thousand epochs and the sixth decimal is where the last two
-thousand live.
+0.117380 at 3000, 0.117366 at 4000, 0.117359 at 4800. Against a total gain of
+0.005201, **87.3 % of it is inside the first 100 epochs and 96.7 % inside the
+first 1000**; the sixth decimal is where the last two thousand live.
 
 **Why 5000 epochs.** The first attempt ran at the default `--epochs 20000` and
 was killed by the harness at epoch 8500, before the header was written. It had

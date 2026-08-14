@@ -480,9 +480,10 @@ resident**, so 3000 epochs cost 1090.87 s. The per-epoch figure is the
 game-level split's; a fully shuffled row index costs 0.76 s instead, 2.14x, for
 the identical fit.
 
-S065's full fit over the same corpus took **2082 s for 5000 epochs** on the same
-12 threads — 0.41 s per epoch with the desktop otherwise in use, against the
-0.35 s above on an idle machine. Two runs at the same flags and seed printed
+S065's full fit over the same corpus took **2082 s** on the same 12 threads for
+the load, the K fit and 5000 epochs together — 0.42 s an epoch inclusive, against
+the 0.35 s above on an idle machine, this one sharing the machine with a desktop.
+Two runs at the same seed and thread count, differing only in `--epochs`, printed
 identical epoch reports to six digits through epoch 5000, so the fit is
 deterministic and a shorter budget traces the same curve rather than a different
 one. **The constants that fit returned are not the ones in `eval_tables.hpp`**:
