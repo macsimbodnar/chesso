@@ -2614,3 +2614,80 @@ Consequences: `tools/tuner.cpp` gains `--freeze LIST`, the inverse of `--only`:
               unfrozen one or against S028's. Different free-parameter sets over
               a corpus whose K is refitted per fit. Only the SPRT decides and a
               verdict of zero is recorded as zero. DEC-019, INV-6.
+
+## DEC-058  2026-08-14  repair the test defects now, ahead of S065's SPRT
+Tags:         testing, workflow, invariants, audit
+
+Context:     The owner asked for an investigation of the test suite: are the
+             tests correct, and are they in line with the published literature
+             and what other open-source engines test. The answer is recorded as
+             `adocs/audit/2026-08-14_test_review.md`, which is a review with the
+             blue team's knowledge rather than a clean-context adversarial run,
+             and says so.
+
+             The suite is green and every oracle value in it that has an
+             independent source is correct — 56 perft counts re-derived from
+             Stockfish, every published breakdown column matching the Chess
+             Programming Wiki, and 127 of 127 on `perftsuite.epd`, a suite six
+             times larger than the one in the repository. Seven findings came
+             out of it anyway, two of them cases that cannot fail for the reason
+             they exist.
+
+             S065 sat in `plan_current/` at the time, with an SPRT as the only
+             thing left in its `accepts:` and nothing measured yet.
+
+Decision:    The owner's, on the agent's analysis: fix them now, before that
+             SPRT. AGENTS.md section 0 — "a bug that has been found gets fixed
+             before anything else starts ... a known defect in the tree
+             contaminates every measurement taken after it" — makes the repair
+             precede S065's remaining work rather than follow it, so S067
+             carries `blocks: S065` and S065 is paused. The relationship is a
+             real one and not a device for getting a second step into the active
+             slot: S065 cannot complete without a green suite, and two of the
+             cases in that suite assert nothing while a third asserts a premise
+             that is false.
+
+             S067 closes F01 to F06. **F07 is accepted, not planned.** The
+             built-in `test` command prints seven expected best moves and a node
+             total and checks none of them; turning it into something that fails
+             is a UCI surface change covered by `test_uci_surface` and
+             `MANUAL.md`, and it is the same work as giving the engine a real
+             `bench` signature. That belongs in its own step with its own
+             surface rows, not inside a test repair.
+
+Rejected:    **Record the findings and carry them into S065.** Refused on the
+             rule above: the next thing S065 does is take a measurement.
+
+             **Fix only F01 and F02, the two vacuous cases.** Refused because
+             F03 is a `TIMEOUT` that the build it is written for cannot meet —
+             `ctest --test-dir build-debug -L fast` reports Timeout on
+             `test_movegen` and `test_search`, which run 165.33 s and 215.91 s
+             and pass when run directly — and that is what makes INV-2's and
+             INV-4's asserts unreachable through the normal command.
+
+             **Add the missing machinery in the same step: a bench signature, a
+             mate suite, sanitizers, CI.** Refused as scope. Those are the four
+             gaps against Stockfish's `tests/`, `TerjeKir/EngineTests` and
+             OpenBench that the review names, and every one of them is a new
+             instrument rather than a repair. They are steps of their own and
+             none has been decided.
+
+             **File the review as a plan review rather than an audit.** Refused:
+             it re-measured the code, not the documents, which is what section
+             10 means by an audit running against the code.
+
+Consequences: Two of the six invariants keep their current enforcement — INV-2's
+             and INV-4's asserts still live only in the debug build, and F03's
+             fix makes that build runnable under `ctest` without putting it in
+             the gate. Whether it joins the gate is undecided and unrecorded
+             either way.
+
+             The comparison against other engines is kept in the report rather
+             than promoted into `specs.md`: it describes what other projects do,
+             not what chesso must do, and nothing in it is an invariant until a
+             step is taken on it.
+
+             A test position added to this suite from here carries a legality
+             precondition. F01 and F02 were both illegal positions and both
+             passed for years, so the class is the finding rather than the two
+             instances.
