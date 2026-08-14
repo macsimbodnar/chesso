@@ -2506,3 +2506,111 @@ Consequences: `datagen`'s row order is now load-bearing. A change that
               S065's fit reads a held-out figure that is no longer shared with
               its training set. The verdict on the constants is still an SPRT
               and a verdict of zero is still recorded as zero.
+
+
+## DEC-057  2026-08-14  S065 re-fits with tempo and piece_placement frozen at zero
+Tags:         tuning, evaluation, tuner, testing, s065, s027, s038, dec-019,
+              dec-053, dec-055
+
+Context:      S065's first fit over `.tuning/selfplay_v2.tsv` freed all 827
+              parameters. It reported K = 0.7624 and held-out error 0.122560 to
+              0.117359 at epoch 4800 with no refusal warning, and every one of
+              the 827 constants was applied and verified. `ctest -L fast` then
+              came back 9 of 12, and each of the three failures was a guard an
+              earlier step had placed:
+
+              1. `test_eval_model`'s `CHECK(tempo_unfitted)`. Tempo fitted to
+                 39 / 21, so all four of `evaluate()`'s tapered divisions can
+                 truncate and the model-versus-engine bound moves from
+                 3 x 23/24 = 2.875 to 4 x 23/24 = 3.833, taking the tolerance
+                 from 3 to 4. DEC-053's own stated consequence.
+              2. The same case's four pinned FENs. Their residuals are of the
+                 old weights: 2.875 / 2.333333 / 2.25 / 2.125 became
+                 2.541667 / 1.250000 / 1.125000 / 2.416667, so two fell under
+                 the `> 2.0` per-position assertion and the worst under `> 2.8`.
+              3. `test_evaluation`'s "removing a piece moves the score". A white
+                 queen on d1 against bare kings evaluated 713 against her own
+                 fitted material value of 1152 — 439 off, against
+                 `POSITIONAL_ROOM` 150.
+
+              The paste was reverted and the tree left green. Two options were
+              put to the owner: accept the fit as fitted and re-target all three
+              guards, or re-fit with groups held.
+
+Decision:     **By the owner**, from options and measurements the agent
+              supplied: **re-fit with `tempo` and `piece_placement` both frozen
+              at zero**, and freeze them *during* the fit.
+
+              `piece_placement` because S027 measured it at **-5.48 +/- 11.46
+              Elo over 2284 games, H0 accepted**, and zeroed its weights
+              specifically so the compiler would delete the term —
+              `evaluate_cheap()` is the same 164 instructions either way
+              (`plan_done/S027_handcrafted_eval_terms.md:191-206`). Re-applying
+              it re-pays a measured 3.1-4.0 % search cost for a term measured at
+              zero.
+
+              `tempo` because holding it at zero keeps the truncation bound at
+              three effective divisions, 2.875, so guard 1 cannot fire and
+              `test_eval_model`'s tolerance stays 3.
+
+              **During the fit, not after.** With a parameter held, the
+              remaining 817 absorb what it would have taken. Fitting all 827 and
+              then zeroing two groups leaves the other 825 fitted against values
+              that are no longer there, which is a different and worse result
+              than a fit that never had them.
+
+              **Guard 2 is re-targeted, on the owner's authority**, which
+              AGENTS.md section 6 permits for a deliberate behaviour change
+              while forbidding relaxation. The four FENs were pinned to absolute
+              residuals of the old weights; the guard's purpose is that the
+              corpus contains positions that genuinely exercise the truncation
+              bound, so new positions are measured under the new weights and
+              pinned, and the threshold is re-derived from the arithmetic rather
+              than lowered to whatever came out.
+
+              **Guard 3 is not re-targeted and `POSITIONAL_ROOM` is not
+              touched.** How much positional room the evaluation legitimately
+              needs is a design question and the owner's call. If it fires, the
+              agent stops and reports.
+
+Rejected:     **Accept the fit as fitted and re-target all three guards.** The
+              cheaper option and the one that keeps the better held-out number.
+              Refused because two of the three thresholds would then be moved to
+              accommodate weights nothing had measured: `POSITIONAL_ROOM` is a
+              property rather than an anchor, and widening it is weakening it.
+              The tempo tolerance alone was already decided by DEC-053, so that
+              part of the option was never in question.
+
+              **Fit everything and zero the two groups afterwards.** Free, and
+              it produces a header with the same two groups at zero. Refused
+              because it is not the same fit: the other 825 parameters were
+              fitted against a tempo of 39 / 21 and a piece placement term that
+              is then removed from under them.
+
+              **Freeze `tempo` only.** Answers guard 1 and leaves guard 3
+              untouched, and would have kept the piece placement weights the fit
+              wanted. Refused on S027's measurement: the term is priced at zero
+              and costs 3.1-4.0 % of the search to compute.
+
+              **Keep the corpus and stop.** The corpus cost seven hours and its
+              only product so far is a reverted paste. Refused because a re-fit
+              is 35 minutes on the same data and needs no new games.
+
+Consequences: `tools/tuner.cpp` gains `--freeze LIST`, the inverse of `--only`:
+              a comma-separated subset of the same group names, held at what the
+              engine ships, with everything else fitted. Default empty, which is
+              the behaviour before it and was proved inert — identical epoch
+              reports and identical 827 constants through the pre-change binary.
+              `all` is refused and an unknown name refuses the whole list.
+              `tools/tuner_groups.hpp` holds it beside `free_mask` and does not
+              change the partition `test_tuner_groups` asserts, since it selects
+              among the ranges `free_mask` already defines.
+
+              `tempo_mg`, `tempo_eg` and the eight `piece_placement` weights
+              stay at zero through this fit and are not evidence of anything the
+              corpus says about them: they were held, not measured.
+
+              A held-out figure from this fit cannot be ranked against the
+              unfrozen one or against S028's. Different free-parameter sets over
+              a corpus whose K is refitted per fit. Only the SPRT decides and a
+              verdict of zero is recorded as zero. DEC-019, INV-6.

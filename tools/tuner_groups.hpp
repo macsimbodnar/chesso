@@ -106,4 +106,58 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
   return true;
 }
 
+
+// Holds the named groups at what the engine ships and leaves everything else as
+// the mask found it. The inverse of --only, which frees one group: this frees
+// all of them but a few. S065 needed "everything except tempo and
+// piece_placement" and --only could only say "tempo" or "piece_placement".
+//
+// It does not touch the partition above -- it selects among the same ranges
+// free_mask already defines, so test_tuner_groups' three properties are
+// unaffected by anything here. A name free_mask refuses is refused here too,
+// and an empty list is a no-op, which is what keeps the default behaviour of a
+// run that passes no --freeze byte-identical.
+//
+// Why freeze during the fit rather than zero two groups afterwards: with a
+// parameter held, the remaining 817 absorb what it would have taken. Fitting
+// all 827 and then zeroing two leaves the other 825 fitted against values that
+// are no longer there. DEC-057.
+inline bool freeze_mask(const std::string& groups, std::vector<uint8_t>* mask)
+{
+  if (mask->size() != PARAM_COUNT) { return false; }
+
+  std::string name;
+  std::vector<uint8_t> group_mask;
+
+  // One pass over the list, closing each name at a comma and at the end.
+  for (size_t i = 0; i <= groups.size(); ++i) {
+    const char c = (i < groups.size()) ? groups[i] : ',';
+
+    if (c == ' ') { continue; }
+
+    if (c != ',') {
+      name.push_back(c);
+      continue;
+    }
+
+    if (name.empty()) { continue; }
+
+    // `all` is accepted by free_mask and would freeze the whole vector, which
+    // is a run that fits nothing and reports the starting error. Refused here
+    // rather than obeyed, because nothing wants it and a typo that produces it
+    // is silent.
+    if (name == "all") { return false; }
+
+    if (!free_mask(name, &group_mask)) { return false; }
+
+    for (size_t j = 0; j < PARAM_COUNT; ++j) {
+      if (group_mask[j]) { (*mask)[j] = 0; }
+    }
+
+    name.clear();
+  }
+
+  return true;
+}
+
 }  // namespace tuner_groups

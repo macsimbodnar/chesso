@@ -80,6 +80,7 @@ using eval_model::TEMPO_MG_BASE;
 // tests/test_tuner_groups.cpp can reach them. Imported under their old names so
 // the call sites below are unchanged.
 using tuner_groups::free_mask;
+using tuner_groups::freeze_mask;
 using tuner_groups::GROUP_LIST;
 
 constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
@@ -153,7 +154,8 @@ struct options_t
   std::string data;
   std::string out = "tuned_tables.hpp";
   std::string only = "all";
-  double k = 0.0;  // 0 means fit it
+  std::string freeze;  // empty means nothing is held, the behaviour before S065
+  double k = 0.0;      // 0 means fit it
   double lr = 1.0;
   int epochs = 20000;
   int report = 100;
@@ -575,6 +577,7 @@ void write_tables(const std::string& path,
       ", lr %.3f, validation split %.2f\n"
       "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
       "// only       %s\n"
+      "// freeze     %s\n"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
@@ -587,7 +590,8 @@ void write_tables(const std::string& path,
       opts.seed, opts.lr, opts.validation, games, validation_rows,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
-      opts.only.c_str());
+      opts.only.c_str(),
+      opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -727,6 +731,9 @@ void usage()
           "  --out FILE       where the fitted constants are written\n"
           "  --only GROUP     fit only this group and hold the rest at what\n"
           "                   the engine ships: %s\n"
+          "  --freeze LIST    hold these groups instead, comma separated, and\n"
+          "                   fit everything else; not `all`. Applied after\n"
+          "                   --only, so the two intersect\n"
           "  --k VALUE        sigmoid scale; 0 fits it from the data\n"
           "  --lr VALUE       Adam step size (default 1.0)\n"
           "  --epochs N       maximum full-batch steps (default 20000)\n"
@@ -766,6 +773,8 @@ int main(int argc, char** argv)
       opts.out = value;
     } else if (arg == "--only") {
       opts.only = value;
+    } else if (arg == "--freeze") {
+      opts.freeze = value;
     } else if (arg == "--k") {
       opts.k = atof(value.c_str());
     } else if (arg == "--lr") {
@@ -801,9 +810,31 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  // --freeze applies after --only, so the two compose: --only psqt --freeze
+  // material frees the psqt block and nothing else, since material was already
+  // held. `all` is refused, as is any name free_mask does not know. S065.
+  if (!freeze_mask(opts.freeze, &mask)) {
+    fprintf(stderr,
+            "unusable --freeze list '%s'; it takes a comma-separated subset of "
+            "%s, and not `all`\n",
+            opts.freeze.c_str(), GROUP_LIST);
+    return 1;
+  }
+
   size_t free_count = 0;
   for (const uint8_t value : mask) {
     free_count += value;
+  }
+
+  // A --freeze that frees nothing would run every epoch and emit the constants
+  // it was handed. free_mask's own groups are non-empty, so this can only be
+  // reached by a --freeze that covers the --only group.
+  if (free_count == 0) {
+    fprintf(stderr,
+            "--only %s and --freeze %s leave no parameter free; nothing would "
+            "be fitted\n",
+            opts.only.c_str(), opts.freeze.c_str());
+    return 1;
   }
 
   dataset_t data;
@@ -828,11 +859,12 @@ int main(int argc, char** argv)
 
   fprintf(stderr,
           "%zu positions, %zu games, %zu train, %zu validation (%.4f%%), "
-          "%zu parameters, group %s, %zu free\n",
+          "%zu parameters, group %s, freeze %s, %zu free\n",
           data.size(), starts.size(), train_count, validation_count,
           100.0 * static_cast<double>(validation_count) /
               static_cast<double>(data.size()),
-          PARAM_COUNT, opts.only.c_str(), free_count);
+          PARAM_COUNT, opts.only.c_str(),
+          opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), free_count);
 
   // A held-out set of nothing reports an error of 0.000000, which reads as a
   // perfect fit rather than as an empty set. It happens when the corpus is one

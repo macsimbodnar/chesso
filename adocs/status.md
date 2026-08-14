@@ -9,22 +9,30 @@ Updated: 2026-08-14 by `moltke --step status`.
 - In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
 - Blocked: none by a step's `blocks:` field, but S065 cannot complete without a
-  decision — see the first Parked entry
+  decision on `POSITIONAL_ROOM` — see the first Parked entry
 - Parked:
-  - **S065's corpus and fit are done and its paste is reverted, waiting on a
-    decision about two guards.** The fit over `.tuning/selfplay_v2.tsv` returned
-    K = 0.7624 and held-out error 0.122560 → 0.117359 at epoch 4800 with no
-    refusal warning, and all 827 constants were applied and verified. Three
-    guards then fired: the tempo tolerance, which DEC-053 already decided goes to
-    4 once tempo is fitted; `test_eval_model`'s four pinned FENs, whose residuals
-    are of the old weights and now read 2.541667 / 1.250000 / 1.125000 /
-    2.416667; and `test_evaluation`'s `POSITIONAL_ROOM`, where the fitted queen
-    on d1 is 439 off her own material value against a bound of 150. The last two
-    are guards whose thresholds are evidence, so re-targeting them is a decision
-    and not a paste, and **S056 does not unblock it** — S056 edits S055's step
-    file and excludes `tests/test_eval_model.cpp`. No SPRT has run; the emitted
-    header is `.tuning/tuned_v2.hpp`, sha256 `b60e7134…40bc4`, reproducible in
-    35 minutes because the fit is deterministic.
+  - **S065 has been fitted twice, both pastes are reverted, and it is now
+    blocked on `POSITIONAL_ROOM` alone.** The second fit is DEC-057's: `tempo`
+    and `piece_placement` held at zero *during* the fit through a new
+    `--freeze LIST` flag, 817 free of 827, K = 0.7624, held out 0.122560 →
+    **0.118460** at epoch 5000, no refusal warning, 2329 s, emitted header
+    `.tuning/tuned_v2_frozen.hpp` sha256 `bb6c68b5…0ce54`. Applied and verified
+    827 of 827.
+
+    Of the three guards the first fit fired, freezing tempo answered one and
+    guard 2 was re-measured and re-targeted on the owner's authority — four new
+    positions pinned, every one at the arithmetic maximum 69/24 = 2.875 over all
+    11003693 rows, thresholds unchanged, verified green with the paste and red
+    without it. **`POSITIONAL_ROOM` fired again**: the refitted queen on d1
+    evaluates 716 against her own `QUEEN` of 1148, a gap of **432** against 150,
+    dominated by `psqt_eg[queen][d1]` = -485 at endgame weight 20/24 on a square
+    that 0.0889 % of the corpus constrains. Re-deriving that constant is a design
+    question and the owner's, so nothing was done to it and the guard-2 re-target
+    could not be committed either — it is pinned to constants that are not in the
+    tree (`.tuning/s065_guard2_retarget.patch`, and the four FENs are in the step
+    file). **No SPRT has run.** Measured, as data for that decision: the
+    material/psqt degeneracy `tools/tuner.cpp:26-30` documents moves this
+    residual from 432 to 1 while changing at most one centipawn of evaluation.
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
     95 of 160 moves unchanged, so the engine is evaluation-limited rather than

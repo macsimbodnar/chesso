@@ -208,3 +208,140 @@ TEST_CASE("the --only groups partition the parameter vector")
                           << ". A parameter block added without a group of its "
                              "own looks exactly like this");
 }
+
+
+// --freeze, added at S065. The inverse of --only: free everything except the
+// named groups. What it exists for is a fit that has to hold two groups at zero
+// while the other 817 parameters move, which --only cannot express -- it says
+// "fit only tempo", never "fit everything but tempo".
+//
+// The properties are the ones a wrong implementation would break silently. A
+// freeze that cleared one index too few leaves a parameter fitted that the run
+// meant to hold, and the emitted header looks exactly like a correct one: the
+// held value is simply not what was asked for, and nothing downstream can tell.
+TEST_CASE("--freeze clears exactly the named groups")
+{
+  const std::vector<std::string> groups = partition_groups();
+
+  REQUIRE(groups.size() >= 2);
+  REQUIRE(eval_model::PARAM_COUNT > 0);
+
+  std::vector<uint8_t> all;
+  REQUIRE(tuner_groups::free_mask("all", &all));
+  REQUIRE(all.size() == eval_model::PARAM_COUNT);
+
+  // One group at a time, against that group's own --only range. Freezing a
+  // group out of `all` and freeing it with --only have to be complements, which
+  // is the whole claim: the same range, once as what moves and once as what
+  // does not.
+  for (const std::string& name : groups) {
+    std::vector<uint8_t> only;
+    REQUIRE(tuner_groups::free_mask(name, &only));
+
+    const size_t in_group =
+        static_cast<size_t>(std::count(only.begin(), only.end(), uint8_t{1}));
+
+    // Precondition. A group freeing nothing would make every claim below hold
+    // over an empty set, which is the vacuous pass this file exists to refuse.
+    REQUIRE(in_group > 0);
+
+    std::vector<uint8_t> mask = all;
+    REQUIRE_MESSAGE(tuner_groups::freeze_mask(name, &mask),
+                    "freeze_mask refuses a group free_mask accepts: " << name);
+
+    size_t wrongly_frozen = 0;
+    size_t wrongly_free = 0;
+
+    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+      if (only[i] && mask[i]) { wrongly_free++; }
+      if (!only[i] && !mask[i]) { wrongly_frozen++; }
+    }
+
+    CHECK_MESSAGE(wrongly_free == 0,
+                  wrongly_free << " parameter(s) of group " << name
+                               << " are still free after freezing it");
+    CHECK_MESSAGE(wrongly_frozen == 0, wrongly_frozen
+                                           << " parameter(s) outside group "
+                                           << name << " were frozen with it");
+  }
+}
+
+
+TEST_CASE("--freeze takes a list, and refuses what it cannot honour")
+{
+  std::vector<uint8_t> all;
+  REQUIRE(tuner_groups::free_mask("all", &all));
+
+  std::vector<uint8_t> tempo;
+  std::vector<uint8_t> placement;
+  REQUIRE(tuner_groups::free_mask("tempo", &tempo));
+  REQUIRE(tuner_groups::free_mask("piece_placement", &placement));
+
+  const size_t tempo_count =
+      static_cast<size_t>(std::count(tempo.begin(), tempo.end(), uint8_t{1}));
+  const size_t placement_count = static_cast<size_t>(
+      std::count(placement.begin(), placement.end(), uint8_t{1}));
+
+  // Preconditions: two non-empty, disjoint groups, or "both were cleared" is
+  // not a stronger statement than "one was".
+  REQUIRE(tempo_count > 0);
+  REQUIRE(placement_count > 0);
+
+  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    // As a variable because doctest decomposes the expression it is handed and
+    // refuses a `&&` inside one.
+    const bool in_both = (tempo[i] != 0) && (placement[i] != 0);
+    REQUIRE_FALSE(in_both);
+  }
+
+  // The S065 run: everything free except tempo and piece placement, from one
+  // comma-separated argument.
+  std::vector<uint8_t> mask = all;
+  REQUIRE(tuner_groups::freeze_mask("tempo,piece_placement", &mask));
+
+  const size_t free_count =
+      static_cast<size_t>(std::count(mask.begin(), mask.end(), uint8_t{1}));
+  const size_t expected_free =
+      eval_model::PARAM_COUNT - tempo_count - placement_count;
+
+  CHECK(free_count == expected_free);
+
+  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+
+    if (tempo[i] || placement[i]) {
+      CHECK(mask[i] == 0);
+    } else {
+      CHECK(mask[i] == 1);
+    }
+  }
+
+  // Order and spacing are not part of the meaning.
+  std::vector<uint8_t> reversed = all;
+  REQUIRE(tuner_groups::freeze_mask("piece_placement, tempo", &reversed));
+  CHECK(reversed == mask);
+
+  // An empty list is what a run that passes no --freeze gets, and it has to be
+  // a no-op: this is what says the flag's default cannot change any earlier
+  // run's result.
+  std::vector<uint8_t> untouched = all;
+  REQUIRE(tuner_groups::freeze_mask("", &untouched));
+  CHECK(untouched == all);
+
+  // A name free_mask refuses is refused here too. Without this the loops above
+  // would pass on an implementation that silently ignored every name it did not
+  // recognise -- which is the one failure mode that costs a whole fit.
+  std::vector<uint8_t> bad = all;
+  CHECK_FALSE(tuner_groups::freeze_mask("not_a_group", &bad));
+
+  // And one good name beside one bad one is still refused, rather than the good
+  // half being applied.
+  std::vector<uint8_t> half = all;
+  CHECK_FALSE(tuner_groups::freeze_mask("tempo,not_a_group", &half));
+
+  // `all` is a name free_mask accepts and freeze_mask must not: it would fit
+  // nothing at all and report the error of the constants it started from, which
+  // reads as a fit that found nothing rather than as a run that never moved.
+  std::vector<uint8_t> everything = all;
+  CHECK_FALSE(tuner_groups::freeze_mask("all", &everything));
+}

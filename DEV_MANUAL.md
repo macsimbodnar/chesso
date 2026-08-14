@@ -486,9 +486,19 @@ the 0.35 s above on an idle machine, this one sharing the machine with a desktop
 Two runs at the same seed and thread count, differing only in `--epochs`, printed
 identical epoch reports to six digits through epoch 5000, so the fit is
 deterministic and a shorter budget traces the same curve rather than a different
-one. **The constants that fit returned are not the ones in `eval_tables.hpp`**:
-`adocs/plan_current/S065_corpus_regen_loosened_filter.md` records what it
-produced, which three guards fired when it was applied, and what is outstanding.
+one.
+
+S065's **second** fit over the same corpus, with `--freeze tempo,piece_placement`
+(DEC-057), took **2329 s** for 817 free parameters: the same K = 0.7624, held out
+0.122560 → **0.118460**, best at epoch 5000. It shared the machine with compiles
+and corpus scans for its first quarter, so the 247 s over the first fit is
+contention rather than the freeze.
+
+**Neither fit's constants are the ones in `eval_tables.hpp`.**
+`adocs/plan_current/S065_corpus_regen_loosened_filter.md` records what each
+produced, which guards fired when each was applied, and what is outstanding. The
+first paste fired three; the second fired one, `POSITIONAL_ROOM`, which is the
+owner's to re-derive and is why no SPRT has run.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
@@ -595,6 +605,40 @@ ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
 the emitted header records which was used. The eight named groups partition all
 827 parameters: 5, 768, 8, 18, 12, 6, 8, 2 in that order, which the run's first
 line reports as the free count.
+
+```bash
+build/tools/tuner --data .tuning/selfplay_v2.tsv \
+    --out .tuning/tuned_v2_frozen.hpp --threads 12 --epochs 5000 \
+    --freeze tempo,piece_placement
+```
+
+`--freeze LIST` is the inverse and the two compose. It takes a comma-separated
+subset of the same group names, holds each of them at what the engine ships, and
+fits everything `--only` left free beside them; the default is empty, which
+holds nothing. `all` is refused, as is any name `--only` does not know, and a
+name it does not know refuses the whole list rather than applying the half it
+recognised. The run's first line and the emitted header both carry it — `freeze
+tempo,piece_placement, 817 free` and `// freeze     tempo,piece_placement` —
+and `(nothing)` when no `--freeze` was passed. A `--only` and `--freeze` pair
+that between them leave no parameter free is refused rather than run.
+
+**At its default it changes nothing.** The pre-S065 binary and the post-S065 one
+over the same corpus at the same seed, thread count and epoch budget printed
+identical epoch reports and emitted all 827 constants identically; the only
+differences anywhere are the new `freeze` field on the first line and the new
+`// freeze` header comment.
+
+`--only` exists for attribution and `--freeze` for the case attribution cannot
+express: **hold two groups at zero while the other 817 parameters move.** S065
+needed exactly that — `tempo` frozen so the model-versus-engine truncation bound
+stays at three effective divisions, and `piece_placement` frozen because S027
+measured it at −5.48 +/- 11.46 and zeroed it so the compiler would delete it.
+`--only` can say "fit tempo" and never "fit everything but tempo". DEC-057.
+
+**Freeze during the fit, not afterwards.** Fitting all 827 and then zeroing two
+groups is a different and worse result: with a parameter held, the remaining 817
+absorb what it would have taken, so post-hoc zeroing leaves the other 825 fitted
+against a value that is no longer there.
 
 **Adding a group means re-ending the one before it.** Each group is a contiguous
 range and the last one runs to `PARAM_COUNT`, so a new group appended after it

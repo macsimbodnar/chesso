@@ -3101,3 +3101,43 @@ the two `eval_spread` examples off the corpus that does not exist here, the fit'
 measured cost), `adocs/testing.md` (7 rows), `adocs/status.md`,
 `adocs/plan_current/S065_corpus_regen_loosened_filter.md`. No source change: the
 paste is out of the tree.
+
+## 2026-08-14 — S065, the second fit: tempo and piece_placement frozen
+
+Step S065, still in `plan_current/` with `done:` empty. DEC-057 implemented, the
+constants applied and verified, one guard still fires, the paste is reverted, and
+no SPRT has run.
+
+`tools/tuner.cpp` gained `--freeze LIST`, the inverse of `--only`: a
+comma-separated subset of the same group names held at what the engine ships, with
+everything else fitted. `tools/tuner_groups.hpp` holds `freeze_mask` beside
+`free_mask` and changes no group range, so S041's three partition properties are
+untouched. Two new cases in `test_tuner_groups`, observed red with the
+implementation stubbed to `return true` — 2 of 4 cases, 22 assertions. Proved inert
+at its default against the pre-change binary: identical epoch reports, identical
+827 constants, one added header comment.
+
+The fit: `--threads 12 --epochs 5000 --freeze tempo,piece_placement`. 817 free,
+K = 0.7624 (identical to the unfrozen fit, same starting parameters and rows),
+held out 0.122560 → 0.118460 at epoch 5000, train 0.122741 → 0.118204, no refusal
+warning, 2329 s. Applied: 827 of 827 verified, `tempo_mg`, `tempo_eg` and all
+eight `piece_placement` weights read zero in the applied source, and the verifier
+was shown to fail when either is tampered with.
+
+Guards: `CHECK(tempo_unfitted)` **did not fire**, which is what freezing tempo was
+for and leaves the tolerance at 3 on a bound of 2.875. Guard 2 fired and was
+re-measured over all 11003693 rows — 175415 past 2.0, 32 positions exactly at
+69/24 = 2.875 — and four of those were pinned, spanning phase 5 to 23 with both
+sides to move, thresholds unchanged, with the arithmetic written into the file: two
+divisions cannot reach past 46/24, so a residual over 48/24 proves all three
+truncated. Verified 17 of 17 with the paste and red without it.
+`POSITIONAL_ROOM` fired: queen on d1 evaluates 716 against `QUEEN` 1148, gap 432,
+decomposed to -349 piece-square, -116 mobility, +33 king safety. Not touched — the
+owner's call — so both the paste and the guard-2 re-target are out of the tree.
+
+Changed: `tools/tuner.cpp`, `tools/tuner_groups.hpp`,
+`tests/test_tuner_groups.cpp`, `DEV_MANUAL.md`, `adocs/decisions.md` (DEC-057),
+`adocs/testing.md` (8 rows), `adocs/status.md`,
+`adocs/plan_current/S065_corpus_regen_loosened_filter.md`. No engine source
+change. `MANUAL.md` checked — no UCI surface change and no behaviour change, so no
+edit needed; `README.md` is owner-written and untouched.
