@@ -8,8 +8,7 @@ Updated: 2026-08-14 by `moltke --step status`.
 - Last done: S053
 - In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
-- Blocked: none by a step's `blocks:` field, but S065 cannot complete without a
-  decision on `POSITIONAL_ROOM` — see the first Parked entry
+- Blocked: none
 - Parked:
   - **S065 has been fitted twice, both pastes are reverted, and it is now
     blocked on `POSITIONAL_ROOM` alone.** The second fit is DEC-057's: `tempo`
