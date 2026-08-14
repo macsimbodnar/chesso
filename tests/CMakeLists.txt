@@ -41,6 +41,14 @@ target_include_directories(test_eval_model PRIVATE ../tools)
 add_doctest_target(test_tuner_groups)
 target_include_directories(test_tuner_groups PRIVATE ../tools)
 
+# S066: the tuner held out rows and datagen writes a game's rows contiguously,
+# so 99.5 % of games had rows on both sides of the validation split. The split
+# is cut between games now, and this is what holds it there. Its corpus is a
+# fixture it writes into the temp directory and removes again, so it is a fast
+# test like the rest.
+add_doctest_target(test_tuner_split)
+target_include_directories(test_tuner_split PRIVATE ../tools)
+
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
 # where that tree is. Nothing else in the tests looks outside its own directory.
 add_doctest_target(test_uci_surface)

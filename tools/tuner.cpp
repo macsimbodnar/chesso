@@ -48,6 +48,7 @@
 #include <vector>
 #include "eval_model.hpp"
 #include "tuner_groups.hpp"
+#include "tuner_split.hpp"
 
 namespace
 {
@@ -125,6 +126,12 @@ struct dataset_t
   // rather than take its first token and stop. int8 because the only two values
   // it ever holds are +1 and -1: 1.49 M rows cost 1.5 MB.
   std::vector<int8_t> tempo;
+
+  // The ply each position stands at, from the FEN's move number and side to
+  // move. Nothing in the model reads it: it is what tells one game's rows from
+  // the next's, and only the validation split needs that. S066. 11.0 M rows
+  // cost 44 MB.
+  std::vector<uint32_t> ply;
 
   size_t size() const { return phase.size(); }
 };
@@ -242,6 +249,17 @@ bool load(const std::string& path, dataset_t* data)
       return false;
     }
 
+    // The validation split is cut between games and the boundary is
+    // reconstructed from this, since the four-column format carries no game id.
+    // A row without a FEN move number is refused rather than guessed at: a row
+    // whose ply is unknown cannot be attributed to a game, and a split that
+    // guesses is the defect S066 exists to remove.
+    uint32_t ply = 0;
+    if (!tuner_split::row_ply(line, &ply)) {
+      fprintf(stderr, "row has no usable FEN move number: %s\n", line.c_str());
+      return false;
+    }
+
     data->pieces.insert(data->pieces.end(), pieces.begin(), pieces.end());
     data->offsets.push_back(static_cast<uint32_t>(data->pieces.size()));
 
@@ -261,6 +279,7 @@ bool load(const std::string& path, dataset_t* data)
       data->piece_placement.push_back(static_cast<int16_t>(count));
     }
     data->tempo.push_back(static_cast<int8_t>(tempo));
+    data->ply.push_back(ply);
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
   }
@@ -525,6 +544,8 @@ void write_tables(const std::string& path,
                   const double* params,
                   const options_t& opts,
                   size_t positions,
+                  size_t games,
+                  size_t validation_rows,
                   double train_error,
                   double validation_error)
 {
@@ -552,6 +573,7 @@ void write_tables(const std::string& path,
       "// error      %.6f train, %.6f validation\n"
       "// seed       %" PRIu64
       ", lr %.3f, validation split %.2f\n"
+      "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
       "// only       %s\n"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
@@ -562,7 +584,10 @@ void write_tables(const std::string& path,
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, opts.data.c_str(), opts.k, train_error, validation_error,
-      opts.seed, opts.lr, opts.validation, opts.only.c_str());
+      opts.seed, opts.lr, opts.validation, games, validation_rows,
+      100.0 * static_cast<double>(validation_rows) /
+          static_cast<double>(positions),
+      opts.only.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -707,9 +732,9 @@ void usage()
           "  --epochs N       maximum full-batch steps (default 20000)\n"
           "  --report N       report and checkpoint every N epochs (100)\n"
           "  --patience N     stop after this many reports without a new best\n"
-          "  --validation F   held-out fraction (default 0.1)\n"
+          "  --validation F   held-out fraction, whole games (default 0.1)\n"
           "  --threads N      worker threads (default: every hardware thread)\n"
-          "  --seed N         shuffle seed for the split (default 1)\n",
+          "  --seed N         seed the game-level split shuffles (default 1)\n",
           GROUP_LIST);
 }
 
@@ -788,27 +813,37 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  // Positions from one game are consecutive and share a label, so a split that
-  // cuts the file in two puts whole games on one side and correlates the
-  // validation set with nothing. Shuffling first is what makes the held-out
-  // error mean something.
-  std::vector<uint32_t> index(data.size());
-  for (size_t i = 0; i < index.size(); ++i) {
-    index[i] = static_cast<uint32_t>(i);
-  }
+  // Positions from one game are consecutive and share a label, so a row-level
+  // split holds out rows whose game is in the training set: 99.47 % of games
+  // landed on both sides of the cut and the held-out error was measuring
+  // memorisation. Whole games are held out instead, and tools/tuner_split.hpp
+  // is where the boundary between them comes from. S066.
+  std::vector<uint32_t> starts;
+  tuner_split::game_starts(data.ply, &starts);
 
-  std::mt19937_64 rng(opts.seed);
-  std::shuffle(index.begin(), index.end(), rng);
-
-  const size_t validation_count =
-      static_cast<size_t>(static_cast<double>(data.size()) * opts.validation);
-  const size_t train_count = data.size() - validation_count;
+  std::vector<uint32_t> index;
+  const size_t train_count = tuner_split::split(
+      starts, data.size(), opts.validation, opts.seed, &index);
+  const size_t validation_count = data.size() - train_count;
 
   fprintf(stderr,
-          "%zu positions, %zu train, %zu validation, %zu parameters, "
-          "group %s, %zu free\n",
-          data.size(), train_count, validation_count, PARAM_COUNT,
-          opts.only.c_str(), free_count);
+          "%zu positions, %zu games, %zu train, %zu validation (%.4f%%), "
+          "%zu parameters, group %s, %zu free\n",
+          data.size(), starts.size(), train_count, validation_count,
+          100.0 * static_cast<double>(validation_count) /
+              static_cast<double>(data.size()),
+          PARAM_COUNT, opts.only.c_str(), free_count);
+
+  // A held-out set of nothing reports an error of 0.000000, which reads as a
+  // perfect fit rather than as an empty set. It happens when the corpus is one
+  // game: a block is indivisible and the last one is never held out, so there
+  // is nothing to give. Say it here rather than leaving the zero to be read.
+  if (validation_count == 0 && opts.validation > 0.0) {
+    fprintf(stderr,
+            "WARNING: %zu game(s) in this corpus, so nothing could be held "
+            "out. Every validation figure below is over an empty set.\n",
+            starts.size());
+  }
 
   // Starting point is what the engine ships with, so a fit that finds nothing
   // reports the error of the hand-written constants rather than of noise.
@@ -903,8 +938,8 @@ int main(int argc, char** argv)
             "constants. Do not ship this.\n");
   }
 
-  write_tables(opts.out, best.data(), opts, data.size(), final_train,
-               best_validation);
+  write_tables(opts.out, best.data(), opts, data.size(), starts.size(),
+               validation_count, final_train, best_validation);
 
   return 0;
 }

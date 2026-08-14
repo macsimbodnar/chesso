@@ -2378,3 +2378,131 @@ Consequences: `--allow-tactical` exists in `tools/datagen.cpp` and is
               The datagen filter is no longer a rule with a rationale in a
               comment. It is four independent clauses, each with a measured
               marginal cost, and changing one is a run parameter.
+
+
+## DEC-056  2026-08-14  The tuner holds out whole games, and the boundary is reconstructed from the FEN
+Tags:         tuning, tuner, validation, datagen, corpus, s066, s065, dec-019,
+              dec-055
+
+Context:      `tools/tuner.cpp` shuffled a **row** index and held out the last
+              `--validation` of it. `tools/datagen.cpp` writes a game's rows
+              inside one `lock_guard` on `output_lock`, about 92 of them, and
+              gives every one the same label -- the game's result. Measured over
+              `.tuning/selfplay_v2.tsv`, 11003693 rows from 120000 games:
+              **119360 of 119999 games, 99.47 %, had rows on both sides of the
+              cut**. A held-out row whose game is in the training set measures
+              memorisation, so the held-out error was optimistic by an unknown
+              amount.
+
+              This decides no verdict -- every S027 and S028 verdict is an SPRT
+              and this touches no game. It decides an instrument the project
+              uses to **choose** what to run, and S027's carried-forward lesson
+              is that held-out error already predicts Elo poorly in either
+              direction (DEC-019). A split that shares games makes a weak
+              instrument weaker.
+
+              `S066` framed the choice as two shapes and left it to the step: a
+              game id as a fifth `datagen` column, or reconstruct the boundary
+              from the contiguity the file already has.
+
+Decision:     **Reconstruct**, taken by the agent under the delegation in the
+              step's own text ("Decide it in the step, and record it") with the
+              analysis and the measurements below supplied by the agent.
+
+              The boundary is the **ply**, `2 * (fullmove - 1) + (black to
+              move)`, in `tools/tuner_split.hpp`. `make_move` only ever advances
+              it (`src/bitboard.cpp:883`), so a row whose ply does not advance
+              on its predecessor cannot belong to the same game. The blocks are
+              shuffled, whole blocks are held out until `--validation` of the
+              rows are, and `--seed` seeds that shuffle.
+
+              The predicate is one-sided and the direction is the point. It
+              **never cuts a game in half**, because it only fires where a
+              within-game invariant is violated -- so zero games straddle the
+              split by construction rather than by a measurement that came out
+              well. It **can miss a boundary**, and a missed boundary merges two
+              games into one block that still lands wholly on one side: the cost
+              is granularity, not contamination. Measured: 119998 blocks against
+              120000 games, **at most 2 missed boundaries in 120000**, 0.0017 %.
+
+Rejected:     **A game id as a fifth `datagen` column.** The explicit format and
+              the right one long term. Rejected for this step because the corpus
+              that exists cost seven hours of generation and 11003693 rows, and
+              a column cannot be added to it retroactively; because it would
+              change what every reader of the four-column format sees,
+              `tools/eval_spread` included; and because the reconstruction is
+              exact where it matters, missing at most 2 boundaries in 120000 and
+              never splitting a game. It stays available as a separate step and
+              is not foreclosed.
+
+              **The FEN's move number alone**, which is what S066 proposed and
+              what was verified on the smoke corpus. Sound for the same reason
+              -- the move number never decreases inside a game -- but measured
+              **148 missed boundaries of 120000, 0.123 %**, sixty times the ply,
+              because a game ending with Black to move and the next starting at
+              the same move number is no descent. One extra bit, already parsed
+              by `load()` for the tempo term, buys all of it.
+
+              **A stronger predicate on top of the ply.** Adding "a piece
+              appeared, so a capture ran backwards" finds 119998 blocks --
+              exactly what the ply alone finds, 0 more. Adding "a castling right
+              came back, or the label changed" finds 119999, 1 more. Neither is
+              worth the code.
+
+              **Keep the row-level split and report it as optimistic.** Free,
+              and it leaves S065's held-out gate reading through an instrument
+              known to be wrong.
+
+              **Divide the last block to hit `--validation` exactly.** That is
+              the defect: one game on both sides. The fraction overshoots by up
+              to one block instead, measured at 1100388 rows against 1100369
+              asked for at seed 1, 10.0002 % against 10 %.
+
+Consequences: `datagen`'s row order is now load-bearing. A change that
+              interleaved two games' rows would leave the reconstruction
+              silently wrong, and `tests/test_tuner_split.cpp` holds the
+              splitter rather than the writer, so it could not see it.
+              `DEV_MANUAL.md` says so where the split is documented.
+
+              The held-out fraction is approximate, bounded above by the target
+              plus the largest block, and the run prints what it realised.
+
+              **A block is indivisible in both directions, so the last block is
+              never held out.** A corpus of one game cannot give up part of
+              itself, and giving up all of it left `gradient()` dividing by a
+              count of zero: a two-row corpus at `--validation 0.5` printed
+              `0 train, 2 validation (100.0000%)` and then `epoch 1  train
+              0.000000  validation -nan`. The failure mode came in with this
+              change -- a row-level split could always cut one row off a game --
+              and it is reachable, because a two-row corpus is how S040 and S041
+              measured the `--only` groups. It is clamped in `split()` rather
+              than refused up front, so every invocation that worked before this
+              change still works, and `main()` says out loud when nothing could
+              be held out rather than leaving a validation error of 0.000000 to
+              be read as a perfect fit. The defect was found by this step's own
+              test, before the commit.
+
+              **The held-out figure did not move measurably.** The corpus fitted
+              under both splitters at the same pinned K, seed and epoch budget
+              gave 0.117352 held out at row level against 0.117380 at game
+              level, a difference of 2.8e-05 -- against 3.7e-04 between the two
+              held-out sets at the untuned starting constants, thirteen times as
+              much. Recorded as zero. 827 parameters over 9.9 M rows have no
+              capacity to memorise a game, so this is the expected result and not
+              a reason to doubt the defect: the old split shared games by
+              construction and the number it produced was not interpretable,
+              whatever its value. The gap would widen with more parameters or
+              fewer rows, which is exactly where the project is going.
+
+              `tuner` now refuses a row whose FEN has no usable move number,
+              where before it read the row and ignored the field. Every one of
+              the 11003693 rows in `selfplay_v2.tsv` carries all six FEN fields.
+
+              A held-out figure from before this change and one from after are
+              not comparable: they are errors over different row sets. S028's
+              0.113852 to 0.108043 is a row-level figure, and K is refitted per
+              corpus regardless.
+
+              S065's fit reads a held-out figure that is no longer shared with
+              its training set. The verdict on the constants is still an SPRT
+              and a verdict of zero is still recorded as zero.

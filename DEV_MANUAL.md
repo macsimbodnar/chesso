@@ -449,7 +449,11 @@ per game, and DEC-049 says that one does not carry.
 
 `tuner` cost on the same machine, measured on a 56304-row corpus at 12 threads:
 0.29 s to load, 2.22 ms per epoch, 10.9 MB resident. All three scale with rows,
-and the whole corpus is held in memory.
+and the whole corpus is held in memory. On the real 11003693-row corpus, 12
+threads, machine idle: **54 s to load and fit K, 0.35 s per epoch, 1.2 GB
+resident**, so 3000 epochs cost 1090.87 s. The per-epoch figure is the
+game-level split's; a fully shuffled row index costs 0.76 s instead, 2.14x, for
+the identical fit.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
@@ -462,6 +466,68 @@ constants, which is what makes a full pass cheap, and `test_eval_model` is what
 stops that model drifting from the engine. It reports held-out error every
 `--report` epochs and keeps the best one, prints a warning if the fit never
 beats the constants it started from, and writes a header to paste in.
+
+**The validation split is cut between games, not between rows.** `--validation F`
+holds out that fraction of the corpus and `--seed N` seeds the shuffle; what is
+shuffled is whole games. Until S066 it was rows, and `datagen` writes a game's
+~92 rows contiguously and gives every one of them the same label — the game's
+result — so a row-level split put **119360 of 119999 games, 99.47 %**, on both
+sides of the cut over `selfplay_v2.tsv`. A held-out row whose game is in the
+training set measures memorisation.
+
+The corpus carries no game id, so the boundary is reconstructed from the FEN. The
+ply, `2 * (fullmove - 1) + (black to move)`, only ever advances inside a game
+(`src/bitboard.cpp:883`), so a row whose ply does not advance on its predecessor
+cannot belong to the same game. The predicate is one-sided and the direction is
+what makes the result exact:
+
+- it **never cuts a game in half**, because it only fires where a within-game
+  invariant is violated, so **zero games straddle the split by construction**
+- it **can miss a boundary**, when the next game's first recorded position stands
+  at a later ply than the previous game's last. The two games merge into one
+  block, and a merged block still lands wholly on one side — the cost is a
+  coarser split, not a contaminated one
+
+Measured on `selfplay_v2.tsv`: **119998 blocks against the 120000 games datagen
+reported**, so at most 2 missed boundaries in 120000, 0.0017 %. At most, because
+a game whose every position was filtered writes no rows and is indistinguishable
+from a merge. The FEN's move number on its own misses 148, 0.123 %, because a
+game ending with Black to move and the next starting at the same move number is
+no descent in the move number.
+
+A block is indivisible, so the held-out fraction overshoots `--validation` by up
+to the length of the last block taken: 1100388 rows against the 1100369 asked
+for at seed 1, 10.0002 % against 10 %. The run prints the game count and the
+realised fraction on its first line and the emitted header records both.
+
+Indivisibility binds at the other end too, so **the last block is never held
+out**. A corpus of one game holds nothing out and says so:
+
+```
+2 positions, 1 games, 2 train, 0 validation (0.0000%), 827 parameters, group all, 827 free
+WARNING: 1 game(s) in this corpus, so nothing could be held out. Every validation figure below is over an empty set.
+```
+
+Without that clamp the same two-row corpus at `--validation 0.5` held all of
+itself out and `gradient()` divided by zero — `0 train, 2 validation
+(100.0000%)`, then `epoch 1  train 0.000000  validation -nan`. Two-row corpora
+are a real case here: S040 and S041 both measured the `--only` groups over one.
+
+**Do not compare a held-out figure across the change.** The corpus was fitted
+under both splitters at the same pinned K, seed and epoch budget: 0.117352 held
+out at row level, 0.117380 at game level, a difference of 2.8e-05 against the
+3.7e-04 the two held-out **sets** already differ by at the untuned constants. The
+splitter was fixed because the old one shared games by construction, not because
+a number moved, and 827 parameters over 9.9 M rows have no capacity to memorise a
+game. The same two runs put the game-level index at **1090.87 s against 2333.91 s
+for 3000 epochs**, 2.14x, because a shuffled row index random-walks a 1.2 GB
+dataset every epoch and blocks walk it in near-file order.
+
+**This makes `datagen`'s row order load-bearing.** A game's rows are contiguous
+because the whole `samples` loop runs inside one `lock_guard` on `output_lock`,
+`tools/datagen.cpp:334-343`. A change that interleaved two games' rows would
+leave the reconstruction silently wrong and `tests/test_tuner_split.cpp` could
+not see it: it holds the splitter, not the writer.
 
 **Paste target is two files, and this is every definition a fit writes.** In
 emitted order:
@@ -540,7 +606,10 @@ said the rule did not fit.
 
 That fit is the one in `eval_tables.hpp` today: 1490839 positions, K = 1.1141
 fitted from the data, held-out error 0.113852 to 0.108043, stopped at epoch
-11200 on patience. It measured +188.74 +/- 32.21 Elo over 438 games.
+11200 on patience. It measured +188.74 +/- 32.21 Elo over 438 games. Both error
+figures were taken under the row-level split S066 replaced, so neither is
+comparable with a held-out figure from a fit run today (2026-08-14) — and K is
+refitted per corpus anyway.
 
 `.tuning/` is gitignored. Datasets are hundreds of megabytes and are not
 evidence in the sense `adocs/data/` is.

@@ -82,20 +82,24 @@ added with three lines over the column limit. It cuts the queue under the house
 rule that a found bug is fixed before anything else starts, because the defect
 is in the gate every step below it reports through.
 
-**S065 and S066 are at the front of the pending order and neither is an audit
-finding.** S065 regenerates the tuning corpus, which this machine does not have
-at all — `2026-08-13_plan_review.2-F02` established that `.tuning/` is
-gitignored, that the corpus did not survive the DEC-049 machine move, and that
-S027 and S028 make it unregenerable identically — with the one datagen filter
-clause the engine's own quiescence contradicts loosened behind a flag. DEC-055
-is the owner's decision to spend a night on it ahead of S033: it is tuning
-rather than a match, it needs no engine code, and a night holds one SPRT or
-eight hours of generation. S066 sits immediately ahead of it and costs minutes:
-the tuner shuffles rows and holds out 10 % of them, `datagen` writes about 94
-rows per game consecutively, and 99.5 to 99.8 % of games therefore land on both
-sides of the split. S065's own gate is a held-out figure, so the splitter is
-fixed before that figure is read. Neither alters play; S065 ends in an SPRT
-because 827 constants move at once.
+**S065 is at the front of the pending order and is not an audit finding.** It
+regenerates the tuning corpus, which this machine did not have at all —
+`2026-08-13_plan_review.2-F02` established that `.tuning/` is gitignored, that
+the corpus did not survive the DEC-049 machine move, and that S027 and S028 make
+it unregenerable identically — with the one datagen filter clause the engine's
+own quiescence contradicts loosened behind a flag. DEC-055 is the owner's
+decision to spend a night on it ahead of S033: it is tuning rather than a match,
+it needs no engine code, and a night holds one SPRT or eight hours of
+generation. It alters play and ends in an SPRT, because 827 constants move at
+once.
+
+**S066 came before it and is done.** The tuner shuffled rows and held out 10 %
+of them while `datagen` writes about 92 rows per game consecutively, so 119360
+of 119999 games — 99.47 % on the real corpus — had rows on both sides of the
+split. S065's own gate is a held-out figure, so the splitter was fixed before
+that figure is read. It changed a diagnostic and no game; DEC-056 records the
+reconstruction it uses and why a game-id column was not the answer for a corpus
+that already exists.
 
 S019 is retired. It was written from one game, DEC-032 showed the endgame is the
 cheapest phase per move, and DEC-033 showed endgame errors are the least
@@ -124,7 +128,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-35. S040  re-derive the DEV_MANUAL tuner section from tools/tuner.cpp and eval_model.hpp
 36. S041  a test that fails the moment a tuner group range is appended without re-ending the one before it
 37. S054  clang-format.sh --check sees untracked source files, so a step that adds a file cannot pass a vacuous format check
 38. S038  the tuner-model guard states a tolerance the truncation arithmetic actually supports
