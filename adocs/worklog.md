@@ -3039,3 +3039,33 @@ before each: build clean, `ctest -L fast` 11/11, `clang-format.sh --check` exit
 0. `MANUAL.md` checked, no change needed — it names no tool and no datagen flag,
 and the `cli` surface guard covers the engine's UCI surface, which this does not
 touch. `README.md` owner-written, untouched.
+
+## 2026-08-14  S066 recap
+
+Step S066, commit `7436c6a`. The tuner's validation split is cut between games
+instead of between rows.
+
+Changed: `tools/tuner_split.hpp` (new — `row_ply`, `game_starts`, `split`),
+`tools/tuner.cpp` (a `ply` per row in `dataset_t`, the split construction in
+`main()`, one line in the emitted header, two `usage()` lines),
+`tests/test_tuner_split.cpp` (new), `tests/CMakeLists.txt`, `DEV_MANUAL.md`,
+`adocs/testing.md`, `adocs/decisions.md` (DEC-056), `adocs/plan.md` prose.
+
+Tests added: `test_tuner_split`, 10 cases, 6513 assertions, label `fast`.
+Observed red three ways — the predicate forced to `true` (the pre-S066 row-level
+split): 30 of 30 fixture games straddle at every seed; the fixture shortened to
+one-row games: the non-vacuity guard fires; the clamp reverted: `0 >= 1` rows
+left to train on.
+
+Measured on `.tuning/selfplay_v2.tsv`, 11003693 rows: 119998 blocks against the
+120000 games datagen reported, at most 2 missed boundaries; 119360 of 119999
+games straddled the old split, 0 straddle the new one. Both splitters fitted at
+the same pinned K and seed: held out 0.117352 against 0.117380, recorded as zero.
+Training byte-identical to `dd57c3c`.
+
+One defect introduced and fixed inside the step: a one-game corpus held all of
+itself out and `gradient()` divided by zero. Found by the step's own test.
+
+Also committed separately, `b894f0f`: the nine `2026-08-13_plan_review.2`
+findings moved from `open` to `planned`, status lines only. Each has a step whose
+`closes:` names it, S056 through S064.
