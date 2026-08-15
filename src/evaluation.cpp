@@ -61,8 +61,8 @@ static constexpr int piece_values_abs[] = {
 // The term costs 4.5 % of a depth 12 search, measured with the weights forced
 // non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
 // of that: +17.34 +/- 13.51 Elo over 1584 games, H1 accepted.
-const int passed_pawn_mg[6] = {3, -16, 1, 10, 30, 2};
-const int passed_pawn_eg[6] = {-15, -4, 18, 28, 25, 8};
+const int passed_pawn_mg[6] = {-2, -6, -1, 22, 61, -1};
+const int passed_pawn_eg[6] = {19, 22, 46, 69, 93, 25};
 
 
 // The three pawn structure features, in the order their weights are indexed.
@@ -100,8 +100,8 @@ enum
 // term with the weights forced non-zero because at zero the compiler deletes
 // them, DEC-047. The SPRT was net of that: +13.05 +/- 11.15 Elo over 2290
 // games, H1 accepted.
-const int pawn_structure_mg[PS_FEATURE_COUNT] = {-2, 5, -4};
-const int pawn_structure_eg[PS_FEATURE_COUNT] = {-1, -34, -6};
+const int pawn_structure_mg[PS_FEATURE_COUNT] = {-9, -10, -12};
+const int pawn_structure_eg[PS_FEATURE_COUNT] = {-13, -27, -8};
 
 
 // The four piece placement features, in the order their weights are indexed.
@@ -687,8 +687,8 @@ int evaluate_cheap(const board_t* board)
 // two things that mattered -- a knight's mobility is worth nothing on top of
 // its piece-square table, and a rook's middlegame mobility is worth four times
 // what was guessed. DEC-040. No published table was consulted, DEC-016.
-const int mobility_mg[4] = {0, 5, 9, 2};  // knight bishop rook queen
-const int mobility_eg[4] = {-1, 6, 1, 3};
+const int mobility_mg[4] = {0, 6, 9, 4};  // knight bishop rook queen
+const int mobility_eg[4] = {-1, 4, -2, -9};
 
 
 // The four types every stage-two term iterates over, in the order the weight
@@ -730,10 +730,10 @@ static bb_t piece_attacks(const bb_tables_t* tables,
 // a count adds several to the incidence total -- so the fit splits one effect
 // across several parameters, exactly the way piece_value and the piece-square
 // tables are degenerate by five dimensions. What is fitted is the sum. DEC-044.
-const int king_safety_mg[KS_FEATURE_COUNT] = {23, 13, 4,   21, -16,
-                                              3,  2,  -33, -11};
-const int king_safety_eg[KS_FEATURE_COUNT] = {-8, -8, -2,  -34, 8,
-                                              -3, -8, -10, 10};
+const int king_safety_mg[KS_FEATURE_COUNT] = {22, 23, 25,  35, -30,
+                                              26, 13, -42, -27};
+const int king_safety_eg[KS_FEATURE_COUNT] = {-11, -15, -13, -57, 11,
+                                              -11, -11, -12, 26};
 
 
 // A king's own zone: its square and the eight around it. Empty when that king

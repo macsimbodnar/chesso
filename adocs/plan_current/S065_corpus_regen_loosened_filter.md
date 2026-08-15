@@ -549,4 +549,82 @@ and a verdict of zero is recorded as zero.
 **There is still nothing to run it on.** Both fits are reverted — the first
 because three guards fired, the second because one did, and that one is
 `POSITIONAL_ROOM`, which is not the agent's to re-derive.
+
+## The owner's answer, DEC-059, and the paste that landed
+
+**Re-anchor the queen.** `POSITIONAL_ROOM` stays 150 and
+`tests/test_evaluation.cpp` is not edited. The transformation, recorded here
+because `.tuning/` is gitignored and the emitted header does not survive in git:
+
+```
+QUEEN              1148  ->  716        # -432
+psqt_mg[queen][*]  +432  on all 64 squares
+psqt_eg[queen][*]  +432  on all 64 squares
+```
+
+129 numbers, applied to `.tuning/tuned_v2_frozen.hpp` to give
+`.tuning/tuned_v2_reanchored.hpp` — 17 lines different each way, `diff` clean
+everywhere else. Applied to the **emitted header before the paste**, never to the
+source after it, so `verify_fit.py` still compares the engine against one file:
+**827 compared, 827 identical**, and identical again after `clang-format.sh`
+reflowed the two king safety arrays.
+
+The largest single square this moves is the one that fired the guard:
+`psqt_eg[queen][d1]` **-485 -> -53**.
+
+### What it cost, measured rather than assumed
+
+`.tuning/anchors.py` gained the two positions no evaluation model covered, and
+then reproduced **10 of 10** on the constants shipping today — which is what
+makes it independent of the thing it anchors. Across the re-anchor:
+
+| position | frozen fit | re-anchored |
+|---|---|---|
+| pawn on e2 | 125 | 125 |
+| knight on b1 | 211 | 211 |
+| bishop on c1 | 279 | 279 |
+| rook on d1 | 509, cheap 524 | 509, cheap 524 |
+| queen on d1 | 716 | **715** |
+| bare kings | 0 | 0 |
+| black in check, Re8 | 224 | 224 |
+
+Six of seven identical, one moved by **1**, on a truncation towards zero that is
+not translation-invariant where the tapered numerator crosses zero. The guard's
+residual goes **432 -> 1** against 150.
+
+### The two values that were never re-derived, now derived
+
+`test_search`'s two -491 cases were recorded above as "not re-derived". Both are
+in `anchors.py` now.
+
+- `8/7k/8/8/8/8/R7/K7 b - - 3 2`, the position after Ra2-b2 Kh8-h7 Rb2-a2, is an
+  ordinary anchor. **-491 -> -537.**
+- `4rk2/8/8/8/8/8/8/4K3 w - - 0 1` is **not** an evaluation anchor and cannot be
+  derived as one. White is in check, so quiescence searches the evasions instead
+  of standing pat and the pinned number is a one-ply negamax. Derived as `max`
+  over the four king moves of `-evaluate(leaf)`, each leaf hand-derived — Black
+  to move, not in check, no capture available, so each leaf returns its own
+  stand pat. On the shipped weights that composite reproduces **-491** exactly,
+  as `max(-538, -491, -527, -502)`. At the re-anchored constants:
+  `max(-497, -446, -510, -461)` = **-446**, Ke1-d2 surviving either way.
+
+Both new numbers are what the engine printed, arrived at without reading them
+off it.
+
+### The gate
+
+`cmake --build build -j12`, `ctest -L fast --output-on-failure`,
+`./clang-format.sh --check`: **12 of 12, 0 failed, 20.57 s**, format clean. Three
+tests were red at the paste and every one was answered rather than relaxed — the
+anchor tables re-derived, and `test_eval_model`'s four pinned FENs re-targeted by
+`.tuning/s065_guard2_retarget.patch`, which this step measured but could not
+commit while it was pinned to constants that were not in the tree. **No threshold
+was lowered**: `POSITIONAL_ROOM` stays 150, `> 2.0` per position and
+`worst > 2.8` stay as they were.
+
+`piece_values_abs[]` (`src/evaluation.cpp:41`) is built from the `MVV_*`
+constants and is untouched, so the 100-point capture-to-killer band clearance
+cannot have moved. Checked before the paste, because that hazard shows up as a
+strength regression and never as a wrong node count.
+
 author:    Maksym Bodnar

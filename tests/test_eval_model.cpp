@@ -190,33 +190,45 @@ static const std::vector<std::string> positions = {
     // Black is the side holding all three.
     "r5k1/ppppRppp/8/8/8/8/PPP2PPP/3R2K1 w - - 0 1",
     "3r2k1/ppp2ppp/8/8/8/8/PPPPrPPP/R5K1 b - - 0 1",
-    // The truncation bound itself, added at S038. Everything above is
-    // hand-picked to reach a feature, and hand-picked positions are exactly the
-    // ones whose taperings happen to divide evenly: over the real corpus 3446
-    // of 200000 positions disagreed with the model by more than the 2.0 this
-    // file used to allow, and none of the twenty-six above did. These four are
-    // the positions the 2026-08-13 adversarial audit recorded, worst first, and
-    // they are here so the bound is exercised by the test rather than only by a
-    // corpus under `.tuning/` that is gitignored and does not exist on every
-    // machine. "the pinned positions reach the truncation bound" below is what
-    // says they still do.
-    "2r1r1k1/4Q1p1/p1P1p1q1/3p3p/1P1PpP2/4P2P/PB4P1/R4RK1 w - - 5 29",
-    "6k1/6p1/p7/2R5/2P3n1/P1N3P1/1rP4r/2R3K1 w - - 0 29",
-    "r1bqkb1r/1pp1pp1p/5n2/p2p4/3P3R/2N2N2/PP1PPPP1/R1BQKB2 b Qkq - 2 8",
-    "1k5r/pp3p2/5P2/q1pr4/4R2p/3B3P/P1P2QP1/1R4K1 w - - 6 26",
+    // The truncation bound itself, added at S038 and re-measured at S065.
+    // Everything above is hand-picked to reach a feature, and hand-picked
+    // positions are exactly the ones whose taperings happen to divide evenly:
+    // over the real corpus 175415 of 11003693 positions disagree with the model
+    // by more than the 2.0 this file used to allow, and none of the twenty-six
+    // above does. These four are here so the bound is exercised by the test
+    // rather than only by a corpus under `.tuning/` that is gitignored and does
+    // not exist on every machine. "the pinned positions reach the truncation
+    // bound" below is what says they still do.
+    //
+    // **A residual belongs to the weights, not to the position**, which is why
+    // this list is re-measured whenever the constants are refitted rather than
+    // carried forward. S038 pinned the four worst the 2026-08-13 audit found
+    // under the constants shipping then; S065's fit moved all four to between
+    // 0.25 and 1.25 and left the case asserting a property of weights that were
+    // no longer in the tree. Each of these four is at the arithmetic maximum,
+    // 69/24 = 2.875 exactly, measured over all 11003693 rows of
+    // `.tuning/selfplay_v2.tsv`, and they span the taper from phase 5 to phase
+    // 23 with both sides to move so that a model error confined to one end of
+    // it
+    // is still reachable. DEC-057 is the decision to re-measure; what it does
+    // not permit is lowering the thresholds below to whatever came out.
+    "8/5R2/2nk2K1/8/1r3P2/8/8/8 b - - 3 54",
+    "r3r1k1/p5p1/1p1Pb2p/5P2/8/7P/P2N1B2/bN3RK1 w - - 0 24",
+    "5rk1/5ppp/p1b4q/8/2QP2P1/5N1n/PP3P2/4RR1K w - - 2 26",
+    "r1bq1rk1/1ppp1p1p/n4np1/pNP3N1/4p2P/4P3/PBPP1PP1/R2QKB1R b KQ - 5 9",
 };
 
 
-// The subset of `positions` pinned at S038 for the truncation bound rather than
-// for a feature count, in the order they are listed above. Named separately
-// because "the pinned positions reach the truncation bound" has to be able to
-// fail when *these* stop disagreeing with the model, which is a different
-// statement from the whole corpus agreeing within tolerance.
+// The subset of `positions` pinned for the truncation bound rather than for a
+// feature count, in the order they are listed above. Named separately because
+// "the pinned positions reach the truncation bound" has to be able to fail when
+// *these* stop disagreeing with the model, which is a different statement from
+// the whole corpus agreeing within tolerance. S038, re-measured at S065.
 static const std::vector<std::string> truncation_positions = {
-    "2r1r1k1/4Q1p1/p1P1p1q1/3p3p/1P1PpP2/4P2P/PB4P1/R4RK1 w - - 5 29",
-    "6k1/6p1/p7/2R5/2P3n1/P1N3P1/1rP4r/2R3K1 w - - 0 29",
-    "r1bqkb1r/1pp1pp1p/5n2/p2p4/3P3R/2N2N2/PP1PPPP1/R1BQKB2 b Qkq - 2 8",
-    "1k5r/pp3p2/5P2/q1pr4/4R2p/3B3P/P1P2QP1/1R4K1 w - - 6 26",
+    "8/5R2/2nk2K1/8/1r3P2/8/8/8 b - - 3 54",
+    "r3r1k1/p5p1/1p1Pb2p/5P2/8/7P/P2N1B2/bN3RK1 w - - 0 24",
+    "5rk1/5ppp/p1b4q/8/2QP2P1/5N1n/PP3P2/4RR1K w - - 2 26",
+    "r1bq1rk1/1ppp1p1p/n4np1/pNP3N1/4p2P/4P3/PBPP1PP1/R2QKB1R b KQ - 5 9",
 };
 
 
@@ -368,9 +380,17 @@ TEST_SUITE("eval model: agrees with the engine")
   // twenty-six feature positions all divide evenly enough to agree within 2.0,
   // so at that tolerance the case above was passing for a reason unconnected to
   // the arithmetic it cites -- which is exactly how the real corpus came to
-  // violate it on 1.7 % of positions unnoticed. Each pinned position has to
+  // violate it on 1.6 % of positions unnoticed. Each pinned position has to
   // still disagree by more than the old 2.0, or the corpus has stopped
   // exercising the bound and the tolerance is untested again.
+  //
+  // 2.0 is the threshold the arithmetic gives and not a round number. Each of
+  // the three divisions loses less than one unit, at most 23/24, so two of them
+  // together cannot reach past 46/24 = 1.9167. A residual over 2.0 = 48/24 is
+  // therefore proof that all three divisions truncated on that position, which
+  // is what "this position exercises the bound" means; a position below it may
+  // be exercising only two. Every position pinned above sits at 69/24 = 2.875,
+  // all three losing their maximum at once.
   //
   // The precondition is the tempo weights, because the count of *effective*
   // truncations depends on them: at tempo_mg == tempo_eg == 0 the tempo

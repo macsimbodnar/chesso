@@ -509,11 +509,21 @@ S065's **second** fit over the same corpus, with `--freeze tempo,piece_placement
 and corpus scans for its first quarter, so the 247 s over the first fit is
 contention rather than the freeze.
 
-**Neither fit's constants are the ones in `eval_tables.hpp`.**
-`adocs/plan_current/S065_corpus_regen_loosened_filter.md` records what each
-produced, which guards fired when each was applied, and what is outstanding. The
-first paste fired three; the second fired one, `POSITIONAL_ROOM`, which is the
-owner's to re-derive and is why no SPRT has run.
+**The second fit's constants are the ones in `eval_tables.hpp`, re-anchored.**
+The first paste fired three guards and was reverted; the second fired one,
+`POSITIONAL_ROOM`, and DEC-059 answered it by spending the degeneracy
+`tools/tuner.cpp:26-30` documents rather than by widening the guard: 432 off
+`#define QUEEN` and 432 onto all 128 of her squares, which moves the evaluation
+by one centipawn on one of seven pinned positions and by nothing on the other
+six. `adocs/plan_current/S065_corpus_regen_loosened_filter.md` records the
+transformation and both fits' guard outcomes.
+
+**A fitted material value only means anything together with its own tables.**
+`QUEEN` reads 716 here against the 1067 that shipped before the fit and the 1148
+the fit itself produced, and none of the three is comparable with the others.
+
+**The SPRT that decides all 827 is what says whether any of it is kept.** Until
+it returns, the constants in the tree are a candidate and nothing more.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of

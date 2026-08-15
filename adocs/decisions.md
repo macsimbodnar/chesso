@@ -2691,3 +2691,102 @@ Consequences: Two of the six invariants keep their current enforcement — INV-2
              precondition. F01 and F02 were both illegal positions and both
              passed for years, so the class is the finding rather than the two
              instances.
+
+## DEC-059  2026-08-15  S065's queen is re-anchored through the degeneracy the tuner documents
+Tags:         tuning, evaluation, testing, s065, dec-019, dec-055, dec-057
+
+Context:      DEC-057's frozen re-fit cleared two of the three guards the first
+              fit fired and stopped on the third. `test_evaluation`'s "removing
+              a piece moves the score" asserts that taking a piece off the board
+              moves the score by its own material value to within
+              `POSITIONAL_ROOM` = 150 (`tests/test_evaluation.cpp:174,184`). The
+              refitted white queen on d1 against bare kings evaluates **716**
+              against her own fitted `QUEEN` of **1148** — a residual of
+              **432**, dominated by `psqt_eg[queen][d1]` = -485 at endgame
+              weight 20/24.
+
+              What constrains that square, measured over all 11003693 rows of
+              `.tuning/selfplay_v2.tsv`: a queen at `phase <= 4` appears on
+              **9786 rows, 0.0889 %**, and `phase <= 4` with a queen is one
+              queen and no other piece.
+
+              S065 stopped there rather than acting, because `POSITIONAL_ROOM`
+              is a property and not an anchor: what fires it is a real property
+              of these constants, and how much positional room the evaluation
+              legitimately needs is a design question.
+
+              Measured and put to the owner as data. `tools/tuner.cpp:26-30`
+              documents the parameterisation as degenerate: adding a constant to
+              every square of `psqt_mg[t]` and `psqt_eg[t]` and subtracting it
+              from `piece_value[t]` is the same evaluation. Measured on this
+              weight set, with 432 added to all 128 queen squares and subtracted
+              from `QUEEN`: **six of the seven pinned anchors are identical** and
+              the queen on d1 moves by **1**, 716 to 715, because that
+              position's tapered numerator crosses zero and truncation towards
+              zero is not translation-invariant across it. The guard's residual
+              becomes **1** against 150. In the opposite direction the same
+              shift takes the residual to 864 with all seven anchors unchanged,
+              which is what says the direction is the free parameter and not the
+              evaluation.
+
+Decision:     **By the owner**, from options and measurements the agent
+              supplied: **re-anchor the queen**. Subtract 432 from `QUEEN` and
+              add 432 to all 64 squares of `psqt_mg[queen]` and all 64 of
+              `psqt_eg[queen]`. `POSITIONAL_ROOM` stays 150 and
+              `tests/test_evaluation.cpp` is not edited.
+
+              The shift is applied to the tuner's emitted header **before** the
+              paste, never to the source after it, so `verify_fit.py` still
+              compares the engine against a single file and "827 of 827" keeps
+              meaning what it says.
+
+              **This amends S065's `excludes:`**, which forbids "any change to
+              what `evaluate()` computes". The re-anchor changes it by one
+              centipawn on one of the seven pinned positions and by nothing on
+              the other six. That clause exists to stop two changes arriving
+              behind one verdict; a shift the tuner documents as
+              evaluation-preserving, measured here at one centipawn, is not a
+              second change, and the SPRT that decides the paste decides this
+              with it.
+
+Rejected:     **Widen `POSITIONAL_ROOM` to 432 or more.** One line, and the
+              guard is weaker for every fit after this one. It asserts a piece
+              is worth its material to within what one square's positional terms
+              can say; the residual it fired on is real, and a threshold raised
+              to accommodate the weights that failed it stops being evidence.
+
+              **Reject the fit and keep the constants shipping today.** Would
+              close S065 on a negative verdict without ever putting
+              0.122560 -> 0.118460 in front of a match, and would spend the
+              corpus night for nothing. The held-out figure ranks nothing and
+              only the SPRT decides — which is the reason to run the SPRT, not
+              the reason to skip it.
+
+              **Re-fit a third time with the queen's endgame table regularised,
+              or with that square constrained.** A tuner change and another
+              night, against a residual the documented degeneracy already
+              answers for one centipawn.
+
+              **Skip or disable the failing case.** Not an option: section 11.
+
+Consequences: The queen's fitted material value now reads **716** in
+              `src/eval_tables.hpp` and is **not comparable** with the 1067
+              shipping today, with the unfrozen fit's 1152, or with any earlier
+              figure. A fitted material value is only meaningful together with
+              its own tables. This entry is the reason, and the same applies to
+              any future re-anchor of any piece.
+
+              `piece_values_abs[]` (`src/evaluation.cpp:41`) is built from the
+              `MVV_*` constants and is untouched, so the 100-point
+              capture-to-killer band clearance is unaffected. Checked before the
+              paste rather than after, because that hazard is silent — it shows
+              up as a strength regression and never as a wrong node count.
+
+              `.tuning/s065_guard2_retarget.patch` becomes committable. It
+              re-targets `test_eval_model`'s four pinned FENs and was pinned to
+              constants that were not in the tree, which is why S065 could not
+              commit it either.
+
+              The transformation is recorded in the step file as well as here,
+              because `.tuning/` is gitignored and the emitted header does not
+              survive in git.

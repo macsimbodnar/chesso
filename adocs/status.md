@@ -3,35 +3,45 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-14 by `moltke --step status`.
+Updated: 2026-08-15 by `moltke --step status`.
 
-- Last done: S053
+- Last done: S067
 - In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
 - Blocked: none
-- Parked:
-  - **S065 has been fitted twice, both pastes are reverted, and it is now
-    blocked on `POSITIONAL_ROOM` alone.** The second fit is DEC-057's: `tempo`
-    and `piece_placement` held at zero *during* the fit through a new
-    `--freeze LIST` flag, 817 free of 827, K = 0.7624, held out 0.122560 →
-    **0.118460** at epoch 5000, no refusal warning, 2329 s, emitted header
-    `.tuning/tuned_v2_frozen.hpp` sha256 `bb6c68b5…0ce54`. Applied and verified
-    827 of 827.
 
-    Of the three guards the first fit fired, freezing tempo answered one and
-    guard 2 was re-measured and re-targeted on the owner's authority — four new
-    positions pinned, every one at the arithmetic maximum 69/24 = 2.875 over all
-    11003693 rows, thresholds unchanged, verified green with the paste and red
-    without it. **`POSITIONAL_ROOM` fired again**: the refitted queen on d1
-    evaluates 716 against her own `QUEEN` of 1148, a gap of **432** against 150,
-    dominated by `psqt_eg[queen][d1]` = -485 at endgame weight 20/24 on a square
-    that 0.0889 % of the corpus constrains. Re-deriving that constant is a design
-    question and the owner's, so nothing was done to it and the guard-2 re-target
-    could not be committed either — it is pinned to constants that are not in the
-    tree (`.tuning/s065_guard2_retarget.patch`, and the four FENs are in the step
-    file). **No SPRT has run.** Measured, as data for that decision: the
-    material/psqt degeneracy `tools/tuner.cpp:26-30` documents moves this
-    residual from 432 to 1 while changing at most one centipawn of evaluation.
+  `moltke --step status` derives "last done" from the last completed entry in
+  `plan.md` list order, which is S053 at the end of the retention window. The
+  newest completion is S067, `d01e61c`. Corrected by hand; the derivation is
+  what S062 and S064 are about.
+- Parked:
+  - **S065's second fit is applied, the suite is green, and the SPRT is the only
+    thing left.** The fit is DEC-057's: `tempo` and `piece_placement` held at
+    zero *during* the fit through the `--freeze LIST` flag, 817 free of 827,
+    K = 0.7624, held out 0.122560 → **0.118460** at epoch 5000, no refusal
+    warning, 2329 s, emitted header `.tuning/tuned_v2_frozen.hpp` sha256
+    `bb6c68b5…0ce54`.
+
+    `POSITIONAL_ROOM` was what blocked it — the refitted queen on d1 evaluated
+    716 against her own `QUEEN` of 1148, a gap of **432** against 150. **DEC-059
+    is the owner's answer**: re-anchor rather than widen the guard. 432 off
+    `#define QUEEN` and 432 onto all 128 of her squares, which
+    `tools/tuner.cpp:26-30` documents as the same evaluation and which measures
+    at **one centipawn on one of seven pinned positions** — the residual goes
+    432 → 1 and the guard is untouched at 150. Applied to the emitted header
+    before the paste, verified **827 of 827**.
+
+    Everything the paste moved was re-derived by `.tuning/anchors.py` rather than
+    read off the engine, including `test_search`'s two -491 cases that earlier
+    runs left underived: it now reproduces **10 of 10** on the shipped weights.
+    The guard-2 re-target finally committed, its constants being in the tree at
+    last. Gate green — **12 of 12 fast plus `test_perft`, format clean**, and no
+    threshold anywhere was lowered.
+
+    **The SPRT is outstanding and nothing is decided until it returns.**
+    `REF=a2f0065 CONCURRENCY=12 ./fastchess.sh`, 3–4.5 h. 827 constants move at
+    once; a verdict of zero is recorded as zero and a negative one reverts the
+    paste (DEC-019, INV-6).
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
     95 of 160 moves unchanged, so the engine is evaluation-limited rather than

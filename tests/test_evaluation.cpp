@@ -211,6 +211,15 @@ TEST_SUITE("evaluation: score")
   // through the magic tables -- and not read off the engine, because an anchor
   // copied from the thing it anchors asserts nothing.
   //
+  // S065's fit then moved five of the six at once, which is what a fit over 827
+  // constants does. The queen is the one to read carefully: 1101 to 715 is not
+  // a claim that she lost 386 centipawns of value. DEC-059 re-anchored her,
+  // subtracting 432 from QUEEN and adding it back to all 128 of her squares,
+  // which tuner.cpp:26-30 documents as the same evaluation -- six of these
+  // seven positions came out identical either way and this one moved by one
+  // centipawn, 716 to 715, on a truncation that crosses zero. A fitted material
+  // value only means anything together with its own tables.
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -225,11 +234,11 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  88, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 240, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 530, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1101, "queen on d1"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 125, "pawn on e2"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 211, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 279, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 509, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 715, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on
