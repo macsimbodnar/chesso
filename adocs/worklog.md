@@ -3141,3 +3141,57 @@ Changed: `tools/tuner.cpp`, `tools/tuner_groups.hpp`,
 `adocs/plan_current/S065_corpus_regen_loosened_filter.md`. No engine source
 change. `MANUAL.md` checked — no UCI surface change and no behaviour change, so no
 edit needed; `README.md` is owner-written and untouched.
+
+## 2026-08-15 — S065: DEC-059, the re-anchor, and the paste that landed
+
+The owner's answer to `POSITIONAL_ROOM`, from options and measurements supplied:
+**re-anchor the queen, do not widen the guard.** DEC-059. 432 off `#define QUEEN`
+and 432 onto all 128 of her squares — the degeneracy `tools/tuner.cpp:26-30`
+documents. Rejected: widening the guard (weakens a property permanently),
+rejecting the fit (never measures 0.118460 in games), a third fit with the
+endgame table regularised (a tuner change and another night for a residual the
+degeneracy answers for one centipawn).
+
+Measured before applying, not after: six of the seven pinned anchors are
+identical across the shift and the queen on d1 moves **716 → 715**, on a
+truncation that crosses zero. Residual **432 → 1** against an untouched 150.
+Applied to the emitted header rather than to the source, so `verify_fit.py` still
+compares the engine against one file: **827 of 827**, and again after
+`clang-format.sh` reflowed the two king safety arrays.
+
+Checked the silent hazard first: `piece_values_abs[]` (`src/evaluation.cpp:41`)
+is built from `MVV_*` and is independent of `QUEEN`, so the 100-point
+capture-to-killer band clearance cannot have moved.
+
+`.tuning/anchors.py` gained the two positions no evaluation model covered, and
+now reproduces **10 of 10** on the shipped weights before being trusted on the
+new ones. `8/7k/8/8/8/8/R7/K7 b - - 3 2` is an ordinary anchor, -491 → **-537**.
+`4rk2/8/8/8/8/8/8/4K3 w - - 0 1` is not an anchor at all — White is in check, so
+quiescence searches evasions and the pinned number is a one-ply negamax; derived
+as `max` over the four king moves of `-evaluate(leaf)`, reproducing -491 on the
+shipped weights as `max(-538, -491, -527, -502)` and giving **-446** on the new
+ones, Ke1-d2 surviving either way. Both are what the engine printed, arrived at
+without reading them off it. Those two cases were recorded as "not re-derived"
+at the frozen fit; they are now.
+
+Guard 2's re-target, `.tuning/s065_guard2_retarget.patch`, applied clean and is
+committed at last — its constants are finally in the tree.
+
+Gate: **12 of 12 fast**, `test_perft` green in 55.21 s, `clang-format.sh --check`
+clean. No threshold anywhere was lowered.
+
+Changed: `src/eval_tables.hpp`, `src/evaluation.cpp` (values only, 827),
+`tests/test_evaluation.cpp`, `tests/test_search.cpp`, `tests/test_eval_model.cpp`,
+`DEV_MANUAL.md` (the "neither fit's constants are in `eval_tables.hpp`" paragraph
+was false and is rewritten), `adocs/decisions.md` (DEC-059),
+`adocs/testing.md` (5 rows), `adocs/status.md`,
+`adocs/plan_current/S065_corpus_regen_loosened_filter.md`. Commit `33aa3b4`.
+`MANUAL.md` checked — its score-reliability entry already declares its figures
+stale and gets a line when the verdict lands, not before; `README.md` is
+owner-written and untouched.
+
+**SPRT launched and outstanding**: `REF=a2f0065 CONCURRENCY=12 ./fastchess.sh`,
+candidate `33aa3b4` against `a2f0065`, 10+0.2, elo0=0 elo1=5, alpha=beta=0.05,
+12 of 12 cores, log `.tuning/sprt_s065_fit.log`, persistent watcher armed.
+Nothing is kept until it returns; zero is recorded as zero and a negative verdict
+reverts the paste. S065 stays in `plan_current/`.
