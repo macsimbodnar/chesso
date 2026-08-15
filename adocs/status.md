@@ -5,15 +5,10 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-15 by `moltke --step status`.
 
-- Last done: S067
+- Last done: S053
 - In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 - Next: S065
 - Blocked: none
-
-  `moltke --step status` derives "last done" from the last completed entry in
-  `plan.md` list order, which is S053 at the end of the retention window. The
-  newest completion is S067, `d01e61c`. Corrected by hand; the derivation is
-  what S062 and S064 are about.
 - Parked:
   - **S065's second fit is applied, the suite is green, and the SPRT is the only
     thing left.** The fit is DEC-057's: `tempo` and `piece_placement` held at
@@ -42,6 +37,16 @@ Updated: 2026-08-15 by `moltke --step status`.
     `REF=a2f0065 CONCURRENCY=12 ./fastchess.sh`, 3–4.5 h. 827 constants move at
     once; a verdict of zero is recorded as zero and a negative one reverts the
     paste (DEC-019, INV-6).
+  - **"Last done" above reads S053 and the newest completion is S067.** Not a
+    stale file: `moltke --step status` derives the field from the last completed
+    entry in `plan.md` **list order**, and the retention window leaves S053 at
+    position 66, after the parked S029, while S054, S038, S066 and S067 sit at
+    37 to 40. Hand-correcting the field puts the file back out of agreement with
+    its own generator, which the stop hook catches, so it is recorded here
+    instead. The newest completion is S067, `d01e61c`. Found while completing
+    the S065 paste. Parked, not planned: a step is created by a decision and
+    none has been taken on this, and S062 and S064 are the pending steps nearest
+    to it.
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
     95 of 160 moves unchanged, so the engine is evaluation-limited rather than
