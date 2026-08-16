@@ -522,8 +522,10 @@ transformation and both fits' guard outcomes.
 `QUEEN` reads 716 here against the 1067 that shipped before the fit and the 1148
 the fit itself produced, and none of the three is comparable with the others.
 
-**The SPRT that decides all 827 is what says whether any of it is kept.** Until
-it returns, the constants in the tree are a candidate and nothing more.
+**The SPRT decided it: +21.10 +/- 10.47 Elo, H1 accepted at LLR 2.95 over 3396
+games in 02:30:12**, candidate against `a2f0065` at 10+0.2 on 12 cores. The
+constants are kept. The held-out error ranked nothing and this is the figure
+that decided it.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of

@@ -3,50 +3,33 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-15 by `moltke --step status`.
+Updated: 2026-08-16 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S065 regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
-- Next: S065
+- In progress: none
+- Next: S033
 - Blocked: none
 - Parked:
-  - **S065's second fit is applied, the suite is green, and the SPRT is the only
-    thing left.** The fit is DEC-057's: `tempo` and `piece_placement` held at
-    zero *during* the fit through the `--freeze LIST` flag, 817 free of 827,
-    K = 0.7624, held out 0.122560 → **0.118460** at epoch 5000, no refusal
-    warning, 2329 s, emitted header `.tuning/tuned_v2_frozen.hpp` sha256
-    `bb6c68b5…0ce54`.
-
-    `POSITIONAL_ROOM` was what blocked it — the refitted queen on d1 evaluated
-    716 against her own `QUEEN` of 1148, a gap of **432** against 150. **DEC-059
-    is the owner's answer**: re-anchor rather than widen the guard. 432 off
-    `#define QUEEN` and 432 onto all 128 of her squares, which
-    `tools/tuner.cpp:26-30` documents as the same evaluation and which measures
-    at **one centipawn on one of seven pinned positions** — the residual goes
-    432 → 1 and the guard is untouched at 150. Applied to the emitted header
-    before the paste, verified **827 of 827**.
-
-    Everything the paste moved was re-derived by `.tuning/anchors.py` rather than
-    read off the engine, including `test_search`'s two -491 cases that earlier
-    runs left underived: it now reproduces **10 of 10** on the shipped weights.
-    The guard-2 re-target finally committed, its constants being in the tree at
-    last. Gate green — **12 of 12 fast plus `test_perft`, format clean**, and no
-    threshold anywhere was lowered.
-
-    **The SPRT is outstanding and nothing is decided until it returns.**
-    `REF=a2f0065 CONCURRENCY=12 ./fastchess.sh`, 3–4.5 h. 827 constants move at
-    once; a verdict of zero is recorded as zero and a negative one reverts the
-    paste (DEC-019, INV-6).
-  - **"Last done" above reads S053 and the newest completion is S067.** Not a
+  - **"Last done" above reads S053 and the newest completion is S065.** Not a
     stale file: `moltke --step status` derives the field from the last completed
     entry in `plan.md` **list order**, and the retention window leaves S053 at
-    position 66, after the parked S029, while S054, S038, S066 and S067 sit at
-    37 to 40. Hand-correcting the field puts the file back out of agreement with
+    position 66, after the parked S029, while S038, S066, S067 and S065 sit at
+    38 to 41. Hand-correcting the field puts the file back out of agreement with
     its own generator, which the stop hook catches, so it is recorded here
-    instead. The newest completion is S067, `d01e61c`. Found while completing
-    the S065 paste. Parked, not planned: a step is created by a decision and
-    none has been taken on this, and S062 and S064 are the pending steps nearest
-    to it.
+    instead. Found while completing S065. Parked, not planned: a step is created
+    by a decision and none has been taken on this, and S062 and S064 are the
+    pending steps nearest to it.
+  - **The corpus and the fit tooling are gitignored and do not survive a machine
+    move.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693 positions) and
+    the scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
+    `reanchor.py`, `diff_fit.py`. `anchors.py` in particular is now the only
+    executable record of how ten pinned test values are derived, including the
+    quiescence composite that no evaluation model can produce; the step file
+    records the transformations in prose but nothing re-runs them. This is the
+    same class of loss `2026-08-13_plan_review.2-F02` recorded when
+    `selfplay_v1.tsv` did not survive DEC-049, and it cost S065 a night of
+    regeneration. Found while completing S065. Parked, not planned: a step is
+    created by a decision and none has been taken on this.
   - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
     moves re-asked at 16 times the search removed 24.1 % of the error and left
     95 of 160 moves unchanged, so the engine is evaluation-limited rather than

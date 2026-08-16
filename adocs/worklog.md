@@ -3195,3 +3195,43 @@ candidate `33aa3b4` against `a2f0065`, 10+0.2, elo0=0 elo1=5, alpha=beta=0.05,
 12 of 12 cores, log `.tuning/sprt_s065_fit.log`, persistent watcher armed.
 Nothing is kept until it returns; zero is recorded as zero and a negative verdict
 reverts the paste. S065 stays in `plan_current/`.
+
+## 2026-08-16 — S065 complete: +21.10 Elo, H1 accepted
+
+`REF=a2f0065 CONCURRENCY=12 ./fastchess.sh`, candidate `33aa3b4` against the
+constants shipping at `a2f0065`, 10+0.2 on 12 of 12 cores.
+
+**H1 accepted at LLR 2.95 (100.3 %) against the 2.94 bound. Elo +21.10 +/-
+10.47**, nElo +23.61 +/- 11.69, LOS 100.00 %. 3396 games in 02:30:12: 1466 wins,
+1260 losses, 670 draws, 1801.0 points (53.03 %), draw ratio 35.51 %, pairs ratio
+1.27, `Ptnml(0-2) [235, 247, 603, 303, 310]`, WL/DD 9.05.
+
+Checked before the number was trusted. **Run integrity**: zero lines in the whole
+log matching illegal, disconnect, timed out, terminated, assertion or
+segmentation; every game ended in adjudication (2888), three-fold (257), fifty
+moves (134), insufficient material (115) or stalemate (3). **Attribution**
+(DEC-020): `git diff a2f0065 33aa3b4 -- src/` is fitted values only — five piece
+defines, both piece-square tables, mobility, king safety, passed pawns, pawn
+structure — and no other line of engine source differs. `tools/tuner.cpp` and
+`tools/tuner_groups.hpp` differ by the `--freeze` flag and neither links into the
+engine binary that plays.
+
+The paste is kept. The held-out error, 0.122560 → 0.118460, ranked nothing and
+still ranks nothing; this is the figure that decided it.
+
+Changed: `adocs/testing.md` (the verdict row), `DEV_MANUAL.md` (the "SPRT has not
+run" paragraph now carries the verdict), `MANUAL.md` (the score-reliability entry
+records that all 827 moved again on 2026-08-16 and that its phase-by-phase
+disagreement figures have **not** been re-measured against them),
+`adocs/plan_done/S065_corpus_regen_loosened_filter.md` with its completion stamp,
+`adocs/plan.md` and `adocs/status.md` by the checker. The retention window pruned
+S054's plan entry and its four ledger rows; `plan_done/` and git keep them.
+
+Gate at completion: **12 of 12 fast, 0 failed, format clean**, run by the
+checker's own `--step done` gate as well as by hand.
+
+Two things parked rather than acted on: the `moltke --step status` "last done"
+derivation, and that `.tuning/` — corpus and the whole fit toolchain, `anchors.py`
+included — is gitignored and does not survive a machine move.
+
+Next: **S033**, reverse futility pruning.
