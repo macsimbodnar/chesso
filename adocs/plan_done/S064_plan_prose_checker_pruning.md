@@ -7,7 +7,11 @@ decisions:
 closes:     2026-08-13_plan_review.2-F09
 blocks:
 paused_by:
-done:
+done:      plan.md's list rule and testing.md's header both state the retention the checker implements: the last five completed entries in list order, bin/moltke.py:1698-1700 with PLAN_DONE_KEPT = 5 at :1681.
+                Demonstrated on the live window: S067, S065, S033, S062, S053 are listed, and S053 completed at 18:42 on 2026-08-13 while S037 at 19:13, S043 at 19:29 and S066 the next day completed later and are pruned. S053 survives on position, not recency.
+                Second correction, same sentence, beyond what the finding recorded: the header claimed naming an invariant or a decision protects a row. The predicate is ids <= dropped_ids over S<nnn> alone, and git log shows 17 pruned rows naming an INV-n or a DEC-n, including S037's INV-6 row. Rows naming no step id are what actually stay.
+                Scope held: no checker change, no change to what is pruned, no ledger row added or removed beyond this step's own.
+                Gate: 12 of 12 fast, format clean, tools/plan_prose_check.py exit 0.
 
 ## What is there
 
@@ -40,3 +44,4 @@ its scope and which is the same sentence; it is corrected here rather than left
 to be found again.
 
 Full evidence: 2026-08-13_plan_review.2-F09.
+author:    Maksym Bodnar

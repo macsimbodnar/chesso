@@ -3347,3 +3347,36 @@ keep them.
 Gate: 12 of 12 fast, format clean, prose check exit 0.
 
 Next: **S064**.
+
+## 2026-08-16 — S064, the checker's retention is described as it behaves
+
+`plan.md`'s list rule said the checker "prunes the oldest completed entry" and
+`testing.md`'s header said it "keeps the newest five completed entries listed".
+Neither is what it does. `bin/moltke.py:1698-1700` collects completed entries by
+**position in the file** and drops all but the last `PLAN_DONE_KEPT` = 5, so an
+entry low in the list outlives newer completions.
+
+Demonstrated on the live window rather than argued: S053 completed at 18:42 on
+2026-08-13 and is still listed, while S037 (19:13), S043 (19:29), S066 and S067
+all completed later and are pruned. S053 is the last line of the list and every
+one of those four sat above it.
+
+A second error in the same header sentence, beyond what
+`2026-08-13_plan_review.2-F09` recorded: "a row that also names a live step, an
+invariant or a decision stays". The predicate is `ids <= dropped_ids` over
+`\bS\d{3}\b` alone, so an invariant or a decision protects nothing —
+`git log -p --follow -- adocs/testing.md` shows **17 pruned rows naming an
+`INV-n` or a `DEC-n`**, including S037's own INV-6 row. What actually keeps the
+`INV-1` to `INV-6` rows is that they name no step id at all.
+
+The step then demonstrated itself twice over: completing it pruned S067's entry,
+which had been in the window named in the ledger row written minutes earlier. The
+row now records the window before and after, because a sentence stating a live
+position goes stale by construction — the same lesson S062 ended on.
+
+Changed: `adocs/plan.md` (the list rule), `adocs/testing.md` (the header and one
+row). No checker change, no change to what is pruned.
+
+Gate: 12 of 12 fast, format clean, `tools/plan_prose_check.py` exit 0.
+
+Next: **S068**, the reverse futility margin.

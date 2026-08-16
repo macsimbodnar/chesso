@@ -124,12 +124,29 @@ Order is read from the list entries below, the lines starting `1.`, `-`, or `*`.
 An id named in a sentence anywhere else in this file is prose: it does not change
 the order, and it is not checked. Every pending step file must appear as a list
 entry and every list entry must name an existing step file; the workflow checker
-enforces the correspondence, adds an entry when a step is created, and prunes the
-oldest completed entry — taking its testing.md rows with it — as newer
-completions land. `plan_done/` and git history keep everything pruned.
+enforces the correspondence and adds an entry when a step is created.
+
+**It also prunes completed entries, and it keeps the last five in *list order*,
+not the five most recently completed.** `bin/moltke.py:1698-1700` collects the
+completed entries by position in the file and drops all but the final
+`PLAN_DONE_KEPT` of them, 5 at `:1681`. A step whose entry sits low in the list
+therefore outlives completions that came after it. S053 completed at 18:42 on
+2026-08-13 and is still listed; S037 at 19:13 and S043 at 19:29 the same evening
+are gone, and so is S066 from the day after. S053 survives because its entry is
+the last line of the list, appended at creation, not because it is recent.
+Retention is a window over positions and says nothing about when anything
+finished.
+
+A pruned entry takes ledger rows with it, and the rule there is narrower than it
+looks: a `testing.md` row leaves only when **every** `S<nnn>` it names was
+dropped in that same pass. Naming an invariant or a decision does not protect a
+row — the checker matches step ids and nothing else — and 17 rows naming an
+`INV-n` or a `DEC-n` have been pruned, `| S037 | the reporting change leaves the
+tree identical (INV-6) |` among them. A row naming no step id at all is never
+pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
+`plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-40. S067  repair the test defects the 2026-08-14 test review found, before any further measurement is taken
 41. S065  regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 42. S033  prune a node whose static score is already far enough above beta
 43. S062  plan.md's prose stops describing completed steps as pending instruments and next work
