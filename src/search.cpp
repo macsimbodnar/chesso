@@ -8,6 +8,7 @@
 #include "bitboard.hpp"
 #include "evaluation.hpp"
 #include "log.hpp"
+#include "search_params.hpp"
 #include "transposition_table.hpp"
 #include "utils.hpp"
 
@@ -16,35 +17,17 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-// Keeps an accumulated history score from ever outranking a killer.
-#define ORDER_HISTORY_MAX 600000
-
 static constexpr int MIN = -2000000000;
 static constexpr int MAX = 2000000000;
 
 
-// How deep quiescence may keep going on its own. Without a bound a string of
-// checks recurses forever, since an evasion is not a capture and does not
-// shorten the line.
-#define MAX_QSEARCH_DEPTH 8
+// ORDER_HISTORY_MAX, MAX_QSEARCH_DEPTH, RFP_MARGIN, RFP_MAX_DEPTH,
+// RFP_MIN_PLY, NULL_MOVE_BASE, NULL_MOVE_DIVISOR, LMR_BASE and LMR_DIVISOR are
+// in search_params.hpp with the rest of the tunable set, together with the
+// comment that says what each one is for. S073.
 
 
-// Reverse futility pruning. How much the opponent is assumed to be able to claw
-// back per remaining ply, and the deepest node the assumption is made at.
-//
-// Both are a first setting and neither is fitted: the margin is one pawn per
-// ply, the bound keeps the assumption to the last few plies where the static
-// score is close to what a search would return anyway. S033.
-#define RFP_MARGIN 100
-#define RFP_MAX_DEPTH 6
-
-// The top of the tree is searched properly. The root is exempt because its
-// answer is the one that gets played; ply 1 and ply 2 are exempt because a
-// static bound returned there is what the root compares against alpha, and a
-// mate two moves away lives exactly that far down. Measured, not assumed: at
-// ply 1 the mate cases in test_search go red, and buying the two plies back
-// costs 1.7 % of the nodes the rule saves. Exempting a third costs 27 %. S033.
-#define RFP_MIN_PLY 3
+using lmr_table_t = std::array<std::array<uint8_t, 64>, 64>;
 
 
 // How much depth a late quiet move gives up, by remaining depth and by how far
@@ -54,18 +37,33 @@ static constexpr int MAX = 2000000000;
 //
 // Built once rather than computed per move - two logarithms in the innermost
 // loop of the search is not a trade worth making.
-static const auto lmr_table = [] {
-  std::array<std::array<uint8_t, 64>, 64> table{};
+static lmr_table_t build_lmr_table()
+{
+  lmr_table_t table{};
 
   for (int depth = 1; depth < 64; ++depth) {
     for (int move_number = 1; move_number < 64; ++move_number) {
-      const double r = 0.75 + (std::log(depth) * std::log(move_number)) / 2.25;
+      const double r =
+          (LMR_BASE / 100.0) +
+          (std::log(depth) * std::log(move_number)) / (LMR_DIVISOR / 100.0);
       table[depth][move_number] = static_cast<uint8_t>(r);
     }
   }
 
   return table;
-}();
+}
+
+
+#ifdef CHESSO_TUNE
+// Mutable, and rebuilt by every setoption. A coefficient that moved without the
+// table being rebuilt would report success and change nothing.
+static lmr_table_t lmr_table = build_lmr_table();
+
+void search_params_rebuild_derived()
+{ lmr_table = build_lmr_table(); }
+#else
+static const lmr_table_t lmr_table = build_lmr_table();
+#endif
 
 
 static inline int lmr_reduction(int depth, int move_number)
@@ -74,6 +72,12 @@ static inline int lmr_reduction(int depth, int move_number)
   const int m = (move_number < 63) ? move_number : 63;
   return lmr_table[d][m];
 }
+
+
+#ifdef CHESSO_TUNE
+int search_lmr_reduction_probe(int depth, int move_number)
+{ return lmr_reduction(depth, move_number); }
+#endif
 
 
 // Selection sort, one step per visited move. Most nodes fail high on one of the
@@ -157,7 +161,10 @@ int quiescence(int alpha,
 
   // The depth bound applies to evasions as well, otherwise a perpetual check
   // would recurse without end. At the bound the static score is all there is.
-  if (qply >= MAX_QSEARCH_DEPTH) { return stand_pat; }
+  // The cast is the tune build's: a parameter is a plain int there and this
+  // counter is a size_t, so the comparison is signed against unsigned. Both
+  // sides are small and non-negative, so it is the same comparison either way.
+  if (static_cast<int>(qply) >= MAX_QSEARCH_DEPTH) { return stand_pat; }
 
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
@@ -335,8 +342,11 @@ int negamax(int alpha0,
   // +/-LAZY_EVAL_MARGIN. S033 measured five guards against that and none of
   // them worked; the depth and ply bounds are what contain it. A mate deeper
   // than ply 3 can still be missed for an iteration, and no test covers that.
-  if (!is_pv && !is_in_check && ply >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&
-      beta < MATE_MIN && beta > -MATE_MIN) {
+  //
+  // The cast on ply is the tune build's, for the reason quiescence's depth
+  // bound carries: a parameter is a plain int there and ply is a size_t.
+  if (!is_pv && !is_in_check && static_cast<int>(ply) >= RFP_MIN_PLY &&
+      depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
     const int static_score = evaluate(&game->board);
 
@@ -367,7 +377,7 @@ int negamax(int alpha0,
   //
   // Deeper searches can afford to give up more, since what is left is still
   // enough to answer the question.
-  const int null_reduction = 2 + (depth / 6);
+  const int null_reduction = NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR);
 
   // The reduced search has to keep at least one real ply. Let it fall to zero
   // and it becomes pure quiescence, which only looks at captures and therefore

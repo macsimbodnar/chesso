@@ -12,3 +12,11 @@ int quiescence(int alpha,
                size_t qply,
                game_t* game,
                search_state_t* state);
+
+#ifdef CHESSO_TUNE
+// The reduction the built table holds for a (depth, move number) pair. Tune
+// build only, and it exists for one test: LMR_BASE and LMR_DIVISOR are read
+// once, when the table is built, so a setoption that moved a coefficient
+// without rebuilding would be invisible from outside. S073.
+int search_lmr_reduction_probe(int depth, int move_number);
+#endif

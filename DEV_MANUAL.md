@@ -19,8 +19,10 @@ are in `CLAUDE.md`.
 | `.ref-builds/` | git worktrees created by `fastchess.sh`, gitignored |
 | tool config | tracked when it describes the project, ignored when it describes a machine. `CLAUDE.md` and `.cursor/rules/moltke.mdc` are the two agent pointers at `AGENTS.md`, `.vscode/` is the editor setup; `.claude/settings.local.json` is the one exception and is gitignored. DEC-051 |
 
-Three build directories, all with `ccache` wired in: `build` (Release, the one
-that gets measured), `build-debug` (asserts on), `build-prof` (RelWithDebInfo).
+Four build directories, all with `ccache` wired in: `build` (Release, the one
+that gets measured), `build-debug` (asserts on), `build-prof` (RelWithDebInfo),
+`build-tune` (Release with `-DCHESSO_TUNE=ON`, a tuning harness and **not** the
+binary anything is measured on — see "The tune build" below).
 
 Nothing may reconfigure `build` behind your back. VS Code's CMake Tools used to:
 it defaults to `${workspaceFolder}/build`, configures on open, and wrote Debug
@@ -39,10 +41,84 @@ Configure a directory that does not exist yet, with ccache:
 cmake -S . -B build       -DCMAKE_BUILD_TYPE=Release       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 cmake -S . -B build-prof  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+cmake -S . -B build-tune  -DCMAKE_BUILD_TYPE=Release        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCHESSO_TUNE=ON
 ```
 
 Do not point CMake at Homebrew clang. Different compiler, different codegen, and
 every recorded benchmark becomes incomparable.
+
+## The tune build
+
+`-DCHESSO_TUNE=ON`. Every parameter in `src/search_params.hpp` stops being an
+`inline constexpr int` the compiler folds and becomes a variable settable over
+UCI. S073 built it so the two hand-tunes still pending, S068 and S039, and the
+SPSA driver S084 need one build rather than one build per point measured. The
+sweeps in `adocs/data/S033_rfp_*.sh` recompiled per point with
+`-DRFP_MARGIN=$margin`, which `2026-08-16_plan_review-F04` found no longer
+builds; `setoption` replaces it and the scripts are historical evidence, not a
+method to re-run.
+
+**It is not the release binary and no strength number is ever taken on it.** A
+constant the compiler folds is not the same code as a variable it must load, and
+the difference shows up in a timed match rather than in a node count. S085 is
+where a tuned value comes back and is measured by an SPRT of the **shipping**
+build carrying it.
+
+```bash
+cmake --build build-tune -j12
+./build-tune/src/chesso
+setoption name RfpMargin value 120
+```
+
+The parameters, their defaults and their ranges are the table in `MANUAL.md`. An
+out-of-range value is refused and logged rather than clamped; an unknown name is
+ignored like any other unknown option.
+
+It works, and this is the measurement rather than the claim. The midgame
+position of `tools/search_bench.py` at depth 9, driven over UCI on
+`build-tune`: **292313 nodes at `RfpMargin` 100, 549374 at 300, 917971 at
+2000**, best move `c3d5` throughout. 292313 is what the release build reports,
+to the node.
+
+**Wait for `bestmove` when you script it.** `go` runs on its own thread, so
+`printf 'go depth 9\nquit\n' | ./build-tune/src/chesso` sends `quit` into a
+running search and reports the depth-1 count — 283 nodes on that position, from
+a search that was cut off rather than finished. `tools/search_bench.py` reads
+until `bestmove` and is the shape to copy.
+
+Configure time says which one you have:
+
+```
+-- Tune build ON: the search parameters are UCI options. NOT the release binary
+-- Tune build OFF
+```
+
+Two things about it are held by tests rather than by care:
+
+- `tests/test_search_params.cpp` compiles into **both** builds and holds each
+  one's live values against the rows `search_param_info()` returns from
+  `src/search_params.cpp`, which sit outside every `#ifdef CHESSO_TUNE` and are
+  therefore the same rows in both. A binary cannot be two builds at once, so
+  the two are compared through that common anchor: `live == defaults` in each
+  build gives `live == live` across them, member by member. It also pins each
+  default to the value that ships, so a step that changes one says so in the
+  same commit.
+- Every `setoption` rebuilds whatever was derived from a parameter.
+  `lmr_table` is built once from `LMR_BASE` and `LMR_DIVISOR`, so a setter that
+  moved a coefficient and left the table alone would report success and change
+  nothing; `search_lmr_reduction_probe()` exists in the tune build for the test
+  that would catch it.
+
+`test_uci_surface` grows one expected option line per parameter under
+`CHESSO_TUNE` and requires `MANUAL.md` to document every name, so a parameter
+added here cannot reach a tuner undocumented. The release build's three golden
+option lines are asserted to still be exactly three.
+
+Neutrality, measured at S073's commit against `e78faed`, all three positions at
+depth 9 and both configurations: **292313 / 1026739 / 103001 nodes, best moves
+`c3d5` / `e2a6` / `d7c8q`**, identical for `build` before the change, `build`
+after it, and `build-tune` with no `setoption` sent. That is INV-6 discharged;
+no SPRT is owed.
 
 ## Test
 

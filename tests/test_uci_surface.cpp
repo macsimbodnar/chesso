@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "uci.hpp"
 
@@ -51,6 +52,59 @@ static const std::vector<std::string> expected_option_lines = {
 static const std::vector<std::string> expected_option_names = {
   "Use Book", "Hash", "Threads",
 };
+// clang-format on
+
+
+// S073's tune build declares one spin option per search parameter and the
+// release build declares none, so the golden lists above are the release
+// surface and this is what the other configuration adds to them. Generated from
+// the same table the engine prints from, which makes the line comparison a
+// tautology there -- what is not a tautology is the MANUAL.md case below, which
+// requires every parameter name to be documented by hand.
+static std::vector<std::string> tune_option_lines()
+{
+  std::vector<std::string> lines;
+
+#ifdef CHESSO_TUNE
+  for (size_t i = 0; i < search_param_count(); ++i) {
+    const search_param_t& param = search_param_info(i);
+
+    lines.push_back("option name " + std::string(param.name) +
+                    " type spin default " +
+                    std::to_string(param.default_value) + " min " +
+                    std::to_string(param.min_value) + " max " +
+                    std::to_string(param.max_value));
+  }
+#endif
+
+  return lines;
+}
+
+
+static std::vector<std::string> tune_option_names()
+{
+  std::vector<std::string> names;
+
+#ifdef CHESSO_TUNE
+  for (size_t i = 0; i < search_param_count(); ++i) {
+    names.push_back(search_param_info(i).name);
+  }
+#endif
+
+  return names;
+}
+
+
+static std::vector<std::string> with_tune_options(
+    std::vector<std::string> release_surface,
+    const std::vector<std::string>& added)
+{
+  release_surface.insert(release_surface.end(), added.begin(), added.end());
+  return release_surface;
+}
+
+
+// clang-format off
 
 static const std::vector<std::string> expected_go_tokens = {
   "depth", "movetime", "nodes", "wtime", "btime", "winc", "binc", "movestogo",
@@ -263,9 +317,16 @@ TEST_SUITE("uci surface")
 
     REQUIRE(!actual.empty());
 
-    const std::string report =
-        set_difference_report(actual, expected_option_lines);
+    const std::string report = set_difference_report(
+        actual, with_tune_options(expected_option_lines, tune_option_lines()));
     CHECK_MESSAGE(report.empty(), report);
+
+    // The release build declares exactly the three golden lines and S073 did
+    // not move that. Stated as its own assertion because the comparison above
+    // grows a generated half in the tune build, and this half must not.
+    CHECK(expected_option_lines.size() == 3);
+    CHECK(actual.size() ==
+          expected_option_lines.size() + tune_option_lines().size());
 
     uci_shutdown();
   }
@@ -299,7 +360,8 @@ TEST_SUITE("uci surface")
                     ("MANUAL.md does not document the command [" + name + "]"));
     }
 
-    for (const std::string& name : expected_option_names) {
+    for (const std::string& name :
+         with_tune_options(expected_option_names, tune_option_names())) {
       CHECK_MESSAGE(manual_documents(manual, "", name),
                     ("MANUAL.md does not document the option [" + name + "]"));
     }

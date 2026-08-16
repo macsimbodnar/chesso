@@ -197,7 +197,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-45. S069  status.md's machine paragraph agrees with specs.md and its retention example is stated in positions
 46. S070  the terminal-position test asserts a legal mate or stalemate, not a king adjacent to a king
 47. S071  plan.md and testing.md cite the checker by version and symbol, not by a path this repository does not have
 48. S072  S068's sweep evidence lives in adocs/data/ and its columns are stated, so the next step argues from a tracked file

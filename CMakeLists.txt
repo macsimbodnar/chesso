@@ -8,6 +8,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(CHESSO_BUILD_GUI "Build the debug gui. Requires SDL2" OFF)
 option(SANITIZER "Enable address and undefined behavior sanitizer" OFF)
 
+# S073. ON turns every parameter in src/search_params.hpp from a constant the
+# compiler folds into a variable settable over UCI. It is a tuning harness and
+# NOT the release binary: the loads it adds cost time a fixed-depth node count
+# cannot see. Everything measured for strength is built with this OFF.
+option(CHESSO_TUNE "Expose the search parameters as UCI options. Not the release binary" OFF)
+
 # Add extra compiler checks
 if(MSVC)
      add_compile_options(/W4 /WX)

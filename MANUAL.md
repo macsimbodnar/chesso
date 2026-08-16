@@ -38,6 +38,51 @@ setoption name Hash value 256
 setoption name Use Book value true
 ```
 
+Those three are the whole option surface of the engine you get from
+`cmake --build build`. There is a second, separate build with more of them.
+
+### The tune build, which is not the release binary
+
+A build configured `-DCHESSO_TUNE=ON` exposes every search parameter as a spin
+option so an external tuner can set it without recompiling. **It is a
+measurement harness and not the engine you should play with.** In the release
+binary each of these is a constant the compiler folds into the instruction that
+uses it; in the tune build it is a variable the search has to load, and that
+costs time no fixed-depth node count can show you. Every strength measurement
+this project records is taken on the release build.
+
+Build it beside the normal one and it will not disturb it:
+
+```
+cmake -S . -B build-tune -DCMAKE_BUILD_TYPE=Release -DCHESSO_TUNE=ON
+cmake --build build-tune -j12
+```
+
+Set a parameter exactly like any other option, before or between searches:
+
+```
+setoption name RfpMargin value 120
+setoption name LmrDivisor value 210
+```
+
+A name that is not in the table is ignored, like any unknown option. A name that
+is, with a value outside the range below, is **refused and left unchanged** —
+not clamped — with the reason written to the log. Sent with no `setoption` at
+all, the tune build searches exactly what the release build searches.
+
+| name | default | range | effect |
+|---|---|---|---|
+| `OrderHistoryMax` | 600000 | 0 to 899999 | ceiling on an accumulated history score. The upper bound keeps it under a killer move's 900000, which is what the ceiling is for |
+| `MaxQsearchDepth` | 8 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
+| `RfpMargin` | 100 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
+| `RfpMaxDepth` | 6 | 0 to 63 | the deepest node reverse futility pruning is applied at. 0 switches it off |
+| `RfpMinPly` | 3 | 0 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly |
+| `NullMoveBase` | 2 | 0 to 16 | the constant part of the null move reduction |
+| `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
+| `LmrBase` | 75 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 75 is 0.75 |
+| `LmrDivisor` | 225 | 1 to 2000 | late move reduction, the divisor of the log term, in hundredths. 225 is 2.25 |
+| `LazyEvalMargin` | 150 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
+
 ## Commands
 
 Standard UCI: `uci`, `debug`, `isready`, `setoption`, `register`, `ucinewgame`,

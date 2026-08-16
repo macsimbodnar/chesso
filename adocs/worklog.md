@@ -3506,3 +3506,74 @@ no change needed; `MANUAL.md` and `DEV_MANUAL.md` checked, no change needed —
 `DEV_MANUAL.md:17` already delegates the file list to `adocs/data/README.md`.
 
 Next: **S073**, the search constants as one addressable parameter set.
+
+
+## 2026-08-16 — S073, the search constants as one addressable parameter set
+
+Ten search constants became one addressable set in `src/search_params.hpp`, and
+a second build configuration exposes them over UCI. The shipping binary is
+bit-unchanged: `tools/search_bench.py ./build/src/chesso 9` reports
+**292313 / 1026739 / 103001 nodes, best `c3d5` / `e2a6` / `d7c8q`** at `e78faed`,
+at this commit, and on `build-tune` with no `setoption` sent. INV-6 discharged by
+node identity; no SPRT is owed.
+
+The step file's body was wrong about the starting state and is corrected in
+place, `accepts:` untouched. It said "the values stay `constexpr` in the default
+build"; at `e78faed` eight are `#define` macros and four are literals inline in
+the code. So the default build's half was a **conversion** to
+`inline constexpr int`, not a preservation, and had to be proved neutral rather
+than assumed to fold.
+
+The set, and every use site checked before making anything a variable: none is
+an array dimension, a template argument, a `case` label or a `static_assert`
+operand. `MAX_QSEARCH_DEPTH` and `ORDER_HISTORY_MAX` — the two the brief flagged
+as likely — have one use each, both plain comparisons. Nothing resisted.
+
+**One single source of truth, two builds compared through it.** The defaults
+exist once, in an X-macro list, and both the folded constants and the variables
+are generated from it. `search_param_info()`'s rows are compiled outside every
+`#ifdef CHESSO_TUNE`, so each build holds its own live values against the same
+anchor and `live == defaults` twice gives `live == live` member by member. A
+second case pins each default to the number it ships at by hand, which catches
+the case the first cannot: a value changed in the list moves the engine and the
+anchor together.
+
+**The LMR rebuild trap, handled and tested.** `lmr_table` is built once from
+`LMR_BASE` and `LMR_DIVISOR`, so `search_param_set()` calls
+`search_params_rebuild_derived()` on every set, not only those two — a
+per-parameter list is a thing a later parameter gets added outside of.
+`search_lmr_reduction_probe()` exists in the tune build for the test, whose
+expectations are computed from the formula in the test rather than read off the
+engine.
+
+Red observed four times, verbatim in `testing.md`: a drifted tune-build default
+(`CHECK( 600001 == 600000 )` and nine more), a changed value in the list
+(`CHECK( 120 == 100 )`), the rebuild call removed (`CHECK( 6 == 11 )` and
+`CHECK( 6 == 7 )` — the stale table), the UCI dispatch short-circuited
+(`CHECK( 100 == 55 )`). A fifth was the documentation guard: before `MANUAL.md`
+gained the tune-build section, the tune build's `test_uci_surface` reported ten
+`MANUAL.md does not document the option [...]`.
+
+End to end on the real binary, outside any harness: `RfpMargin` 100 / 300 / 2000
+gives **292313 / 549374 / 917971** nodes on the midgame position at depth 9, best
+`c3d5` throughout, and 292313 is the release build's to the node.
+
+Two casts were forced by `-Wsign-compare` in the tune build, `src/search.cpp:167`
+and `:348`: `qply` and `ply` are `size_t` and a parameter is a plain `int` there.
+Both counters are small and non-negative and the node counts are what says the
+casts changed nothing.
+
+Changed: `src/search_params.hpp` and `src/search_params.cpp` (new),
+`tests/test_search_params.cpp` (new), `src/search.cpp`, `src/search.hpp`,
+`src/chesso.cpp`, `src/evaluation.hpp`, `CMakeLists.txt`, `src/CMakeLists.txt`,
+`tests/CMakeLists.txt`, `tests/test_uci_surface.cpp`, `MANUAL.md`,
+`DEV_MANUAL.md`, `adocs/specs.md`, `adocs/testing.md` (four rows),
+`adocs/plan.md`, `adocs/status.md`.
+
+Gate: **13 of 13 fast in 19.56 s on `build`, 13 of 13 in 19.68 s on
+`build-tune`**, `./clang-format.sh --check` exit 0, `moltke --validate` clean,
+`tools/plan_prose_check.py` 0 flagged. Additionally `ctest --test-dir
+build-debug -L fast` **13 of 13, 478.74 s** with the INV-2 and INV-4 assertions
+on. g++ 13.3.0, `-j12`. `README.md` owner-written, no change needed;
+`MANUAL.md` and `DEV_MANUAL.md` both updated — what the tune build is, that it
+is not the release binary, and how to set a parameter.

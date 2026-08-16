@@ -7,7 +7,25 @@ decisions:  DEC-019
 closes:
 blocks:
 paused_by:
-done:
+done:      2026-08-16. Ten search constants are one addressable set in src/search_params.hpp; -DCHESSO_TUNE=ON makes them UCI spin options and the release build folds them as before.
+            
+            INV-6, the whole point: tools/search_bench.py <binary> 9 reports 292313 / 1026739 / 103001 nodes and best moves c3d5 / e2a6 / d7c8q at e78faed, at this commit, and on build-tune with no setoption sent. Identical on all three positions and all three moves in all three runs. No SPRT is owed.
+            
+            Correction to this file's own body, written while doing the step: it said 'the values stay constexpr in the default build'. At e78faed they are not constexpr - eight are #define macros and four are literals inline in the code. The default build's half was a CONVERSION to inline constexpr int, not a preservation, and was proved neutral by the counts above rather than assumed to fold. accepts: is untouched.
+            
+            Use sites checked before anything became a variable: no member of the set is an array dimension, a template argument, a case label or a static_assert operand. MAX_QSEARCH_DEPTH and ORDER_HISTORY_MAX have one use each, both plain comparisons. Nothing resisted.
+            
+            Single source of truth: the defaults exist once, in an X-macro list, and both the folded constants and the tune variables are generated from it. search_param_info()'s rows are compiled outside every #ifdef CHESSO_TUNE, so each build holds its own live values against the same anchor - live == defaults twice gives live == live member by member. A second case pins each default to the number it ships at by hand.
+            
+            The LMR trap: search_param_set() calls search_params_rebuild_derived() on every set, not only the two coefficients the table is built from. search_lmr_reduction_probe() exists in the tune build for the test, whose expectations are computed from the formula in the test.
+            
+            Red observed five times, verbatim in testing.md: drifted tune default (CHECK( 600001 == 600000 ) and nine more), changed list value (CHECK( 120 == 100 )), rebuild call removed (CHECK( 6 == 11 ) and CHECK( 6 == 7 )), UCI dispatch short-circuited (CHECK( 100 == 55 )), MANUAL.md missing the option names (ten 'does not document the option').
+            
+            End to end on the real binary: RfpMargin 100 / 300 / 2000 gives 292313 / 549374 / 917971 nodes at depth 9, best c3d5 throughout.
+            
+            Two casts forced by -Wsign-compare in the tune build, src/search.cpp:167 and :348. Both counters small and non-negative; the node counts say the casts changed nothing.
+            
+            Gate: 13 of 13 fast in 19.56 s on build, 13 of 13 in 19.68 s on build-tune, ./clang-format.sh --check exit 0, moltke --validate clean, tools/plan_prose_check.py 0 flagged. Also ctest --test-dir build-debug -L fast 13 of 13, 478.74 s, INV-2 and INV-4 assertions on. g++ 13.3.0, -j12. testing.md carries four rows. README.md owner-written, no change needed; MANUAL.md and DEV_MANUAL.md both updated.
 
 ## Why this exists
 
@@ -58,9 +76,21 @@ Exposing the set in the release binary would make this step a play-altering
 change owing an SPRT for no gain -- the doc's own words are "produces no Elo by
 itself".
 
-So: the values stay `constexpr` in the default build and become variables only
-under `-DCHESSO_TUNE=ON`. The shipping binary is unchanged, which is what makes
-the INV-6 neutrality claim provable by identical node counts rather than argued.
+So: the values are a constant the compiler folds in the default build and become
+variables only under `-DCHESSO_TUNE=ON`. The shipping binary is unchanged, which
+is what makes the INV-6 neutrality claim provable by identical node counts
+rather than argued.
+
+**Correction, written while doing the step.** The sentence above said "the
+values stay `constexpr` in the default build". At `e78faed`, the commit this
+step started from, they are not `constexpr` — eight are `#define` macros and the
+other four are literals inline in the code (`2 + (depth / 6)` at
+`src/search.cpp:370` and `0.75` and `2.25` inside the `lmr_table` lambda at
+`:57`, both line numbers at `e78faed`). So the default build's half of this step
+is a **conversion** to `inline constexpr int`, not a preservation of one, and
+that conversion is itself a change that has to be proved neutral rather than
+assumed to fold identically. It was: the node counts are in `testing.md`.
+`accepts:` is untouched — a spec is not rewritten to fit its result.
 The cost is that SPSA measures a binary that is not bit-identical to the one that
 ships; S085 carries that and verifies its output with an SPRT of the **shipping**
 build carrying the new constants.
@@ -75,3 +105,4 @@ than trusting one definition to be included from the other.
 ## Cost
 
 No match. One build of each configuration and one `search_bench` comparison.
+author:    Maksym Bodnar

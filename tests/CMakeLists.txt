@@ -73,6 +73,12 @@ target_include_directories(test_tuner_groups PRIVATE ../tools)
 add_doctest_target(test_tuner_split)
 target_include_directories(test_tuner_split PRIVATE ../tools)
 
+# S073: the tunable search parameters. Compiled in both configurations and the
+# same file in both -- the release build and the tune build each hold their live
+# values against the one table that is outside every #ifdef, which is how two
+# builds are compared member by member from inside one binary.
+add_doctest_target(test_search_params)
+
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
 # where that tree is. Nothing else in the tests looks outside its own directory.
 add_doctest_target(test_uci_surface)

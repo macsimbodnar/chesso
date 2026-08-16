@@ -1,5 +1,6 @@
 #pragma once
 #include "data_structures.hpp"
+#include "search_params.hpp"  // LAZY_EVAL_MARGIN
 
 // Positive means the side to move is better, whatever colour that is. Callers
 // use the number as it comes; there is no sign to apply.
@@ -279,7 +280,10 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // shares the same budget. That figure is still the whole correction only
 // because king safety ships at zero weight; the margin is re-decided from
 // measured data once it is fitted, and tools/eval_spread is what measures it.
-#define LAZY_EVAL_MARGIN 150
+//
+// The value itself moved to src/search_params.hpp at S073, where it is one of
+// the parameters the tune build exposes over UCI. What it means stays here,
+// because it is a claim about the evaluation rather than about the search.
 
 // How far into the game the position is: 24 with a full set of pieces, 0 once
 // only kings and pawns remain. Tapered terms interpolate on it. Pawns and kings

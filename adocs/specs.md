@@ -58,6 +58,16 @@ Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
 
+There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the ten
+parameters in `src/search_params.hpp` from constants the compiler folds into
+variables settable over UCI, and adds one spin option per parameter. **No
+strength number is ever taken on it**: a constant that folds is not the same
+code as a variable that must be loaded, and the difference is a timing rather
+than a node count. The release build's option surface is the three lines it has
+always had, the two builds' defaults are held equal member by member by
+`test_search_params`, and `tools/search_bench.py` reports the same counts on
+both with no `setoption` sent. (2026-08-16, S073.)
+
 Engine state as of 2026-08-09, at commit `b6ef5c4`:
 
 | area | state |

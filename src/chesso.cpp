@@ -17,6 +17,7 @@
 #include "log.hpp"
 #include "openings.hpp"
 #include "search.hpp"
+#include "search_params.hpp"
 #include "transposition_table.hpp"
 #include "uci.hpp"
 #include "utils.hpp"
@@ -706,6 +707,19 @@ bool command_uci(std::queue<std::string>& args)
   uci_reply("option name Hash type spin default " + STR(TT_DEFAULT_MB) +
             " min " + STR(TT_MIN_MB) + " max " + STR(TT_MAX_MB));
   uci_reply("option name Threads type spin default 1 min 1 max 1");
+
+#ifdef CHESSO_TUNE
+  // Tune build only. The release binary's surface is the three lines above and
+  // S073 does not move it. tests/test_uci_surface.cpp holds both shapes.
+  for (size_t i = 0; i < search_param_count(); ++i) {
+    const search_param_t& param = search_param_info(i);
+
+    uci_reply("option name " + std::string(param.name) + " type spin default " +
+              STR(param.default_value) + " min " + STR(param.min_value) +
+              " max " + STR(param.max_value));
+  }
+#endif
+
   uci_reply("uciok");
 
   return true;
@@ -802,6 +816,35 @@ bool command_setoption(std::queue<std::string>& args)
     LOG_W << "Only one search thread is supported, ignoring Threads="
           << option_value << END_W;
   }
+
+#ifdef CHESSO_TUNE
+  // Tune build only, S073. A name that is not in the table falls through to the
+  // same silence every other unknown option gets; a name that is, with a value
+  // outside its declared range, is refused and logged rather than clamped,
+  // because a tuner that asked for something impossible should hear about it.
+  for (size_t i = 0; i < search_param_count(); ++i) {
+    if (option_name != search_param_info(i).name) { continue; }
+
+    // Changing a parameter under a live search would move the ground that
+    // search is standing on, for the same reason resizing the hash would.
+    stop_and_join_search();
+
+    try {
+      const int value = std::stoi(option_value);
+
+      if (!search_param_set(option_name.c_str(), value)) {
+        LOG_W << "Rejected " << option_name << "=" << value << ", outside ["
+              << search_param_info(i).min_value << ", "
+              << search_param_info(i).max_value << "]" << END_W;
+      }
+    } catch (...) {
+      LOG_W << option_name << " value is not a number: " << option_value
+            << END_W;
+    }
+
+    break;
+  }
+#endif
 
   return true;
 }
