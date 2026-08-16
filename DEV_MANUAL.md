@@ -351,6 +351,46 @@ The run itself survives — it is `nohup`'d — so the failure is silent and loo
 exactly like a match that has not finished yet. It happened twice in one
 session before the rule was written down. AGENTS.md carries it too.
 
+**The watcher also has to end by itself.** `persistent: true` outlives the turn
+and it outlives `/clear` as well: the context holding the task id goes, the
+process stays, and `TaskStop` is then unreachable — the only way out is `kill
+<pid>`. `tail -f` has no exit condition of its own, and `| grep -m 1 DONE` does
+not add one, because a log that goes quiet never makes `tail` write again and so
+never delivers it SIGPIPE. Give the run a terminal line and exit on it, with the
+failure signatures in the same alternation so a crash is an event and not
+silence:
+
+```bash
+# the detached run's last action
+echo DONE >> .tuning/sprt_<what>.log
+
+# the watcher, which exits when that line lands
+log=.tuning/sprt_<what>.log
+seen=0
+while true; do
+  tot=$(wc -l < "$log")
+  if [ "$tot" -gt "$seen" ]; then
+    sed -n "$((seen+1)),${tot}p" "$log" \
+      | grep -E "^Elo:|^LLR:|^DONE|Error|Killed|Aborted"
+    seen=$tot
+  fi
+  grep -q "^DONE" "$log" && break
+  sleep 30
+done
+```
+
+Poll, not `tail -f`: breaking out of a loop fed by `tail -f` leaves the `tail`
+behind for the same reason `-m 1` does not work. This loop leaves nothing.
+
+An S033 sweep that finished in nine minutes left a bare `tail -f` holding for two
+hours on an otherwise idle machine. DEC-061.
+
+To find one already armed:
+
+```bash
+ps -eo pid,ppid,etime,cmd | grep '[t]ail -f'
+```
+
 Progress without disturbing the match:
 
 ```bash

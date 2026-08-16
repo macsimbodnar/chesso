@@ -64,6 +64,15 @@ which is why they are stated here and not only in `decisions.md`.
   `Monitor` with `persistent: true`, which lives as long as the session. Any
   agent without that tool polls the log on its next turn instead and does not
   pretend a watcher is armed.
+- **A watcher ends when its run ends, and the run's own last line is what ends
+  it.** `persistent: true` outlives the turn *and* outlives `/clear`: the
+  context holding the task id is discarded, the process is not, so an orphaned
+  watcher can only be killed by pid. `tail -f` never exits on its own — a
+  9-minute sweep left one holding for two hours. So: the detached run prints a
+  terminal marker as its last action, and the watcher is a command that exits on
+  that marker rather than a bare `tail -f`, with the failure signatures in the
+  same alternation so a crash is not silence. `TaskStop` when the run is read is
+  the belt; the self-exit is the braces. DEC-061.
 
 Marker file: `.moltke.json` at repo root.
 Present with `"enabled": true` means these rules are active and enforced.

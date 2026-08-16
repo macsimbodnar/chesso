@@ -2922,3 +2922,61 @@ Consequences: `specs.md` moves reverse futility from the absent row to the searc
               actually measured at `c56ab41`. It now carries the commit each
               figure belongs to, because a baseline quoted without one is how
               this step nearly reported a 55 % saving against the wrong number.
+
+## DEC-061  2026-08-16  A watcher exits on the run's own last line, not on a turn boundary
+Tags:         tooling, monitor, workflow, agents-md, dec-048
+
+Context:      A `Monitor` armed with `persistent: true` was found running with
+              nothing under it. `tail -f
+              .../e6b3ca05-.../scratchpad/rfp_sweep.log | grep --line-buffered
+              -E "margin=|BUILD_FAIL|error"`, pid 844036, elapsed **2 h 02 m**.
+              The sweep it watched -- S033's RFP constant sweep, 56 builds --
+              wrote its last line at 13:17, nine minutes after the watcher was
+              armed. The machine showed no engine process, which is how the
+              owner noticed: a watcher with no load behind it.
+
+              Two failures stacked. The command is unbounded: `tail -f` has no
+              exit condition, so it holds whether or not anything will ever be
+              written again. And `persistent: true` outlives `/clear` -- the
+              context carrying the task id is discarded, the process is not --
+              so `TaskStop` was no longer reachable and the only way to end it
+              was `kill 844036`.
+
+              Nothing was lost. The sweep's results are in S033, committed as
+              `fca9522`. The cost was an idle process and the two hours in which
+              the session believed a run was still being watched.
+
+Decision:     Owner, on finding the process; analysis by the agent. A detached
+              run prints a terminal marker as its last action, and the watcher
+              is a command that **exits on that marker** -- not a bare `tail
+              -f`. Failure signatures go in the same alternation as the progress
+              lines, so a crash produces an event instead of silence. `TaskStop`
+              once the result is read stays the explicit close; the self-exit is
+              what covers the case where the reading turn never comes.
+
+              `AGENTS.md` carries this as a house rule next to the detach rule
+              it completes.
+
+Rejected:     Leave it and rely on `TaskStop`. It is exactly what failed: the
+              id lives in context and `/clear` outlives nothing.
+
+              Drop `persistent: true` and let `timeout_ms` expire. Caps the
+              orphan at an hour but also kills live watchers on real SPRTs,
+              which run three to four and a half hours -- the rule in DEC-048's
+              neighbourhood exists because those runs must be watched to the
+              end.
+
+              `tail -f log | grep -m 1 DONE`. Does not work: with the log gone
+              quiet after the match, `tail` never writes again, never receives
+              SIGPIPE, and the pipeline hangs anyway.
+
+Consequences: Sweep and match scripts under `tools/` and in scratchpads end with
+              an explicit `DONE` line so a watcher has something to exit on.
+
+              A watcher without an exit condition is a defect in the watcher,
+              found by `ps -eo pid,ppid,etime,cmd | grep 'tail -f'` when a
+              session is unsure what it left armed.
+
+              This says nothing about how long a run may take. Long runs are
+              still detached and still watched; only the watcher is now
+              required to end by itself.
