@@ -111,8 +111,9 @@ rewritten for DEC-049 and wins on precedence; S070 replaces an illegal FEN still
 live in `tests/test_engine.cpp` after S067 fixed the other two sites, in the
 suite every step completion reports through; S071 makes this file's citation of
 the workflow checker followable, since `bin/moltke.py` is not in this repository;
-and S072 gets S068's evidence out of a dead session's scratchpad, which is where
-the next step's entire argument currently lives. The other four sit immediately
+and S072 got S068's evidence out of a dead session's scratchpad, which is where
+the next step's entire argument had been living, into `adocs/data/`. The other
+four sit immediately
 ahead of the step each corrects: S078 before S060, S079 before S063, S080 before
 S057, S081 before S056. The tenth finding was the untracked strategy document and
 is answered by DEC-062 rather than by a step.
@@ -196,7 +197,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-44. S064  plan.md and testing.md describe the checker's retention as the last five completed entries in list order
 45. S069  status.md's machine paragraph agrees with specs.md and its retention example is stated in positions
 46. S070  the terminal-position test asserts a legal mate or stalemate, not a king adjacent to a king
 47. S071  plan.md and testing.md cite the checker by version and symbol, not by a path this repository does not have

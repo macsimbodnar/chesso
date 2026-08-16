@@ -1,0 +1,10 @@
+min_ply=1 margin=75 RED nodes=1190649 best=c3d5 e2a6 d7c8q 
+min_ply=1 margin=100 RED nodes=1398911 best=c3d5 e2a6 d7c8q 
+min_ply=2 margin=75 green nodes=1203441 best=c3d5 e2a6 d7c8q 
+min_ply=2 margin=100 green nodes=1408517 best=c3d5 e2a6 d7c8q 
+min_ply=3 margin=75 green nodes=1216123 best=c3d5 e2a6 d7c8q 
+min_ply=3 margin=100 green nodes=1422053 best=c3d5 e2a6 d7c8q 
+min_ply=4 margin=75 green nodes=1620811 best=c3d5 e2a6 d7c8q 
+min_ply=4 margin=100 green nodes=1781672 best=c3d5 e2a6 d7c8q 
+min_ply=5 margin=75 green nodes=1636863 best=c3d5 e2a6 d7c8q 
+min_ply=5 margin=100 green nodes=1895553 best=c3d5 e2a6 d7c8q 

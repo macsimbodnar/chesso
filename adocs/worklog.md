@@ -3446,3 +3446,63 @@ message naming only the report. Not rewritten: section 11 forbids it, and the
 report's own bytes are unchanged either way. The separation that matters is
 still intact — the report was written, and `--audit check` verified the tree
 untouched, before a single step file existed.
+
+---
+
+## 2026-08-16 — S072, S068's sweep evidence into adocs/data/
+
+Closes `2026-08-16_plan_review-F04`.
+
+Nine files copied out of a dead session's scratchpad into `adocs/data/` under an
+`S033_` prefix — `rfp_sweep`, `rfp_ply_sweep`, `rfp_guard_sweep`, each `.tsv`,
+`.sh` and `.log`. sha256-matched against a second copy before the copy, since
+the whole point is that one `rm -rf` was between the plan and its evidence. The
+`.log` files are in on purpose and `adocs/data/README.md` says why they are not
+the file to read: they are the console transcript and carry no column the `.tsv`
+lacks.
+
+The step file's premise was right and incomplete, and the fuller version is what
+went into the docs. The two tables disagree at margin 75 — green at 1216123,
+RED at 2886952 — because `min` is `RFP_MIN_DEPTH` and `min_ply` is
+`RFP_MIN_PLY`, but naming the columns is not enough to resolve it. What resolves
+it is the shape: over floors 1, 2, 3 the remaining-depth knob runs
+1190649 / 2142924 / 2886952 and the distance-from-root knob runs
+1190649 / 1203441 / 1216123, and they agree **to the node** at floor 1, where
+both mean "exempt nothing". That is what says the two tables are one code base
+measured twice rather than two runs that contradict each other.
+
+Two facts found beyond the step file, both verified over the whole history
+rather than read off prose:
+
+- The sweeps ran 13:08 to 13:28 against S033's **uncommitted** tree. `6bd650e`
+  landed at 13:40:34 and is the only commit that has ever touched `RFP_MARGIN`
+  in `src/`.
+- `RFP_MIN_DEPTH` and the `#ifndef` guards are in **no commit**.
+  `git log -S 'RFP_MIN_DEPTH' --all` returns only the audit report `e7aa98a`;
+  `git log -S '#ifndef RFP' --all` returns nothing.
+
+So `-D` did not regress — it was never in a committed tree — and
+`S033_rfp_sweep.tsv` is reproducible at HEAD by no hand edit at all, not merely
+"not by `-D`". Only `S033_rfp_ply_sweep.tsv` maps onto the shipping engine, and
+S068 now says so before it quotes either table.
+
+`-Werror` reproduced once, verbatim, g++ 13.3.0, probe build outside the repo
+tree and deleted after. Shipping row re-measured at `d7901e3`:
+292313 + 1026739 + 103001 = **1422053**, best `c3d5 e2a6 d7c8q`. Exact.
+
+The mechanical check caught this step's own gap: the guard sweep was uncited
+until the tracked-citation count came back 2 of 3.
+
+Changed: `adocs/data/` (9 new files, `README.md` rewritten below the table),
+`adocs/plan_todo/S068_rfp_margin_retune.md` (citations, two new sections),
+`adocs/testing.md` (one row), `adocs/plan.md` (S064 pruned by the checker, plus
+one tense claim about S072 that this step's own completion falsified),
+`adocs/status.md`.
+
+Gate: 12 of 12 fast in 19.72 s, `./clang-format.sh --check` exit 0,
+`moltke --validate` clean, `tools/plan_prose_check.py` 0 flagged. No `src/`
+change, per `excludes:`, so nothing is owed a verdict. `README.md` owner-written,
+no change needed; `MANUAL.md` and `DEV_MANUAL.md` checked, no change needed —
+`DEV_MANUAL.md:17` already delegates the file list to `adocs/data/README.md`.
+
+Next: **S073**, the search constants as one addressable parameter set.

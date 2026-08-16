@@ -1,0 +1,46 @@
+margin	min	max	suite	nodes_total	failed_cases
+75	1	4	RED	1196024	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	1	6	RED	1190649	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	1	8	RED	1190607	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	2	4	RED	2243139	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	2	6	RED	2142924	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	2	8	RED	2142794	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	3	4	RED	2948756	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	3	6	RED	2886952	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+75	3	8	RED	2886824	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	1	4	RED	1407547	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	1	6	RED	1398911	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	1	8	RED	1398907	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	2	4	RED	2482155	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	2	6	RED	2429232	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	2	8	RED	2429104	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;
+100	3	4	green	3142145	-
+100	3	6	green	3087303	-
+100	3	8	green	3087174	-
+150	1	4	green	1841669	-
+150	1	6	green	1834601	-
+150	1	8	green	1834601	-
+150	2	4	green	3037698	-
+150	2	6	green	2985781	-
+150	2	8	green	2985781	-
+150	3	4	green	3483844	-
+150	3	6	green	3450944	-
+150	3	8	green	3450944	-
+200	1	4	green	2057453	-
+200	1	6	green	2052814	-
+200	1	8	green	2052814	-
+200	2	4	green	3203273	-
+200	2	6	green	3162973	-
+200	2	8	green	3162973	-
+200	3	4	green	3556352	-
+200	3	6	green	3507810	-
+200	3	8	green	3507810	-
+300	1	4	green	2509134	-
+300	1	6	green	2509054	-
+300	1	8	green	2509054	-
+300	2	4	green	3341708	-
+300	2	6	green	3341233	-
+300	2	8	green	3341233	-
+300	3	4	green	3665824	-
+300	3	6	green	3664431	-
+300	3	8	green	3664431	-

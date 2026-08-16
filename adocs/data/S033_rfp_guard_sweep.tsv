@@ -1,0 +1,12 @@
+guard	margin	min	max	suite	nodes_total	failed_cases
+off	100	1	0	green	3752725	-
+0	100	1	6	RED	1398911	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;TEST CASE:  pruning does not hide a mate against the mate
+0	150	1	6	RED	1834601	TEST CASE:  pruning does not hide a mate against the material leader;
+1	100	1	6	RED	1497079	TEST CASE:  pruning does not hide a mate against the material leader;
+1	150	1	6	RED	1883320	TEST CASE:  pruning does not hide a mate against the material leader;
+2	100	1	6	RED	2665386	TEST CASE:  pruning does not hide a mate against the material leader;
+2	150	1	6	RED	2881798	TEST CASE:  pruning does not hide a mate against the material leader;
+3	100	1	6	RED	1398911	TEST CASE:  pruning does not hide a mate against the material leader;
+3	150	1	6	RED	1834601	TEST CASE:  pruning does not hide a mate against the material leader;
+4	100	1	6	RED	1398911	TEST CASE:  pruning does not hide a mate against the material leader;
+4	150	1	6	RED	1834601	TEST CASE:  pruning does not hide a mate against the material leader;

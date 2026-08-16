@@ -1,0 +1,11 @@
+min_ply	margin	max	suite	nodes_total	best_moves	failed_cases
+1	75	6	RED	1190649	c3d5 e2a6 d7c8q 	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;TEST CASE:  pruning does not hide a mate against the mate
+1	100	6	RED	1398911	c3d5 e2a6 d7c8q 	TEST CASE:  mate in two is found at the right distance;TEST CASE:  pruning does not hide a forced mate;TEST CASE:  pruning does not hide a mate against the mate
+2	75	6	green	1203441	c3d5 e2a6 d7c8q 	-
+2	100	6	green	1408517	c3d5 e2a6 d7c8q 	-
+3	75	6	green	1216123	c3d5 e2a6 d7c8q 	-
+3	100	6	green	1422053	c3d5 e2a6 d7c8q 	-
+4	75	6	green	1620811	c3d5 e2a6 d7c8q 	-
+4	100	6	green	1781672	c3d5 e2a6 d7c8q 	-
+5	75	6	green	1636863	c3d5 e2a6 d7c8q 	-
+5	100	6	green	1895553	c3d5 e2a6 d7c8q 	-
