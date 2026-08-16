@@ -3312,3 +3312,38 @@ one thing at a time. Placed ahead of S021 rather than last, where the checker
 appends, because a live step must not sit behind the parked S029.
 
 Step completed and moved to `plan_done/`. Next: **S062**.
+
+## 2026-08-16 — S062, plan.md's prose stops calling completed steps pending
+
+Five stale claims, two more than `2026-08-13_plan_review.2-F07` recorded: S037 as
+"the last of the three instruments still pending", S044 to S052 as "ahead of
+everything still pending", S054 as "first of everything pending", **S065 as "at
+the front of the pending order"** which the finding predates, and **S033 as "next
+in this order"** which this session's own completion created an hour earlier.
+
+That last one is the recurrence the step file predicted. `2026-08-13_plan_review-F05`
+was the same class, S048 cleared it, it came back four completions later, and it
+came back again while this session was working. So the check is now tracked:
+`tools/plan_prose_check.py`, resolving every id in the prose against the three
+plan directories and flagging any **sentence** that names a completed step
+alongside a pending claim. **5 flagged before, 0 after.**
+
+Sentence-wise and not line-wise, and that mattered: the first version was
+line-based and found only 3 of the 5, because the prose is hard-wrapped and an id
+and the claim about it sit on different lines.
+
+It then caught one more, inside this step: "S033 is done, so those two now lead
+what is left" was written while S062 was current and went stale the moment the
+checker moved S062 to `plan_done/`. A sentence that states a live queue position
+goes stale by construction, so the clause is gone and the phrasing is in the
+checker's list.
+
+Changed: `adocs/plan.md` (prose only — no list entry reordered, no id renumbered,
+no step file edited), `tools/plan_prose_check.py` (new), `DEV_MANUAL.md` (the tool
+and when to run it), `adocs/testing.md` (one row). The retention window pruned
+S033's plan entry and nine ledger rows including S033's own; `plan_done/` and git
+keep them.
+
+Gate: 12 of 12 fast, format clean, prose check exit 0.
+
+Next: **S064**.

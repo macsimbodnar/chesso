@@ -29,38 +29,39 @@ argument that a better score at the leaves is worth less when the tree above the
 is the wrong shape. That argument was tested: 160 expensive moves re-asked at 16
 times the search removed 24.1 % of the error, 10.3 cp per doubling, and 95 of the
 160 moves did not change at all. The engine mostly is not missing the refutation,
-it believes the move — and it believes it with material and a hand-written
-piece-square table that has never been fitted to anything. So the evaluation
-leads: **S028 fits the constants that already exist, S027 adds terms and fits
-them the same way.** The search and ordering block follows, still worth doing and
+it believes the move — and it believed it with material and a hand-written
+piece-square table that had never been fitted to anything. So the evaluation
+led: **S028 fitted the constants that already existed, S027 added terms and
+fitted them the same way, and S065 refitted the lot on a regenerated corpus.**
+All three are done. The search and ordering block follows, still worth doing and
 now with a number on what it is worth. S029 was the network the tuned
 hand-crafted evaluation would have floored and fed; it is parked, DEC-054, and
 what it was going to answer is now the hand-crafted work's to answer. S030 to S032
 are movegen work worth 1-3 % each — under 1 % for S031, its own file says — and
 are last because that is what they are worth.
 
-**S035 to S043 are the 2026-08-13 adversarial audit's nine findings, one step
+**S035 to S043 were the 2026-08-13 adversarial audit's nine findings, one step
 each, and seven of them cut ahead of S033.** Not out of politeness to the
 auditor: S035 was the SPRT harness, dead since `44877c4` with no verdict
 obtainable below it, repaired and smoke-tested first; S036 was a search that
-never returned on a 1 ms clock, corrupting the games beside it in a match; both
-are done. S037 is the node count that `search_bench.py` reads, which is how
-INV-6 is discharged — the last of the three instruments still pending. Those
-three are the measuring instruments, and the rest of this plan is measured with
-them. S043, S040, S041 and S038 follow because
+never returned on a 1 ms clock, corrupting the games beside it in a match. S037
+made the node count `search_bench.py` reads cumulative over the whole search,
+which is how INV-6 is discharged. All three are done, they are the measuring
+instruments, and the rest of this plan is measured with them. S043, S040, S041
+and S038 followed because
 they are cheap and each one removes a way for a later fit or a later
 neutrality claim to be quietly wrong. S039 and S042 cost an SPRT each and buy
 little, so they wait behind the search block rather than ahead of it.
 
-**S044 to S052 are the 2026-08-13 plan_review audit's nine findings, one step
-each, ahead of everything still pending: they are pure text, cost minutes
-each, and they correct the documents the pending steps execute against.** They
-correct the plan and its step files rather than the engine: S045, S046, S050
-and S051 each remove a way for a later step to alter play unmeasured or to
-record a verdict against the wrong thing; S044, S047 and S048 retire premises
-that DEC-041 and the DEC-049 machine move made false; S049 and S052 re-point
-one field each. All nine together cost less than one SPRT, and every step they
-correct sits behind them in this order.
+**S044 to S052 were the 2026-08-13 plan_review audit's nine findings, one step
+each, and all nine went ahead of everything then pending: they were pure text,
+cost minutes each, and they corrected the documents the pending steps execute
+against.** They corrected the plan and its step files rather than the engine:
+S045, S046, S050 and S051 each removed a way for a later step to alter play
+unmeasured or to record a verdict against the wrong thing; S044, S047 and S048
+retired premises that DEC-041 and the DEC-049 machine move made false; S049 and
+S052 re-pointed one field each. All nine together cost less than one SPRT, and
+every step they corrected still sits behind them in this order.
 
 **S056 to S064 are the 2026-08-13 plan_review re-run's nine findings, one step
 each, placed by what each corrects rather than as a block.** S044 to S052 went
@@ -69,29 +70,29 @@ against; these correct one pending step each, so each sits immediately ahead of
 the step it corrects and costs nothing until that step comes up: S060 before
 S026, S063 before S024, S061 before S023, S059 before S025, S057 before S039,
 S056 before S055, S058 before S030. S062 and S064 correct this file's own prose
-and go at the front of the pending list, behind S033 only — S033 is next in this
-order, no finding touches it, and displacing it would spend the queue on text.
-All nine are text, cost minutes each, and none of them alters play.
+and were queued behind S033 alone, because no finding touched S033 and
+displacing it would have spent the queue on text. All nine are text, cost
+minutes each, and none of them alters play.
 
-**S054 is first of everything pending, and it is not an audit finding.** It was
-found while completing S041: `clang-format.sh --check` selected tracked files
-only, so it was blind to a file a step had just added and not yet staged — and
-that check is one of the three commands in `.moltke.json`'s step-completion
+**S054 went first of everything then pending, and it was not an audit finding.**
+It was found while completing S041: `clang-format.sh --check` selected tracked
+files only, so it was blind to a file a step had just added and not yet staged —
+and that check is one of the three commands in `.moltke.json`'s step-completion
 gate. S041's own commit `96863ae` claimed the gate green over two files it had
-added with three lines over the column limit. It cuts the queue under the house
+added with three lines over the column limit. It cut the queue under the house
 rule that a found bug is fixed before anything else starts, because the defect
-is in the gate every step below it reports through.
+was in the gate every step below it reports through.
 
-**S065 is at the front of the pending order and is not an audit finding.** It
-regenerates the tuning corpus, which this machine did not have at all —
+**S065 cut ahead of S033 and was not an audit finding.** It regenerated the
+tuning corpus, which this machine did not have at all —
 `2026-08-13_plan_review.2-F02` established that `.tuning/` is gitignored, that
 the corpus did not survive the DEC-049 machine move, and that S027 and S028 make
 it unregenerable identically — with the one datagen filter clause the engine's
-own quiescence contradicts loosened behind a flag. DEC-055 is the owner's
+own quiescence contradicts loosened behind a flag. DEC-055 was the owner's
 decision to spend a night on it ahead of S033: it is tuning rather than a match,
 it needs no engine code, and a night holds one SPRT or eight hours of
-generation. It alters play and ends in an SPRT, because 827 constants move at
-once.
+generation. It altered play and ended in an SPRT, because 827 constants moved at
+once: **+21.10 +/- 10.47 Elo, H1 accepted**.
 
 **S066 came before it and is done.** The tuner shuffled rows and held out 10 %
 of them while `datagen` writes about 92 rows per game consecutively, so 119360
@@ -128,7 +129,6 @@ oldest completed entry — taking its testing.md rows with it — as newer
 completions land. `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-39. S066  hold out whole games from the fit, not rows, so the validation error is not shared with training
 40. S067  repair the test defects the 2026-08-14 test review found, before any further measurement is taken
 41. S065  regenerate the tuning corpus from today's engine with the tactical-move filter loosened, and fit it
 42. S033  prune a node whose static score is already far enough above beta

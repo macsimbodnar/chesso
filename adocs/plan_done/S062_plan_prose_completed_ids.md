@@ -7,7 +7,11 @@ decisions:
 closes:     2026-08-13_plan_review.2-F07
 blocks:
 paused_by:
-done:
+done:      plan.md's prose no longer describes a completed step as pending: tools/plan_prose_check.py reports 46 ids in prose, 25 completed, 0 sentences flagged, exit 0.
+                Observed red on the same check against git show HEAD:adocs/plan.md: 5 sentences flagged. Two more than 2026-08-13_plan_review.2-F07 recorded - S065 as 'at the front of the pending order', which the finding predates, and S033 as 'next in this order', which this session's own completion created.
+                The check is sentence-wise and not line-wise: a line-based first version missed two of the five, because the prose is hard-wrapped and an id and the claim about it sit on different lines.
+                Scope held: prose only. No list entry reordered, no id renumbered, no step file edited.
+                Gate: 12 of 12 fast, format clean.
 
 ## What is there
 
@@ -37,3 +41,4 @@ the next recurrence is part of the fix: at step completion, re-read the prose
 that names the completed id.
 
 Full evidence: 2026-08-13_plan_review.2-F07.
+author:    Maksym Bodnar

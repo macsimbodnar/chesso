@@ -121,6 +121,22 @@ a script that aborts before that point exits non-zero. It exists because
 `44877c4` left a renamed variable behind and the harness stopped running for a
 commit without anything noticing (S035, `2026-08-13_adversarial-F01`).
 
+`tools/plan_prose_check.py` is a plan-hygiene check and is **not** in the suite:
+
+```bash
+tools/plan_prose_check.py         # exits non-zero on a stale claim
+```
+
+`plan.md`'s ordered list is maintained by the workflow checker and the prose
+around it is not, so every completion can leave a sentence saying a finished
+step is next. It resolves every id in the prose against `plan_done/`,
+`plan_current/` and `plan_todo/`, then flags any **sentence** that names a
+completed step alongside a pending claim. Sentence-wise because the prose is
+hard-wrapped and an id and the claim about it usually sit on different lines. Run
+it when a step completes: this has now gone stale three times
+(`2026-08-13_plan_review-F05`, `2026-08-13_plan_review.2-F07`, and again the
+moment S033 finished), and S062 is the third repair.
+
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts
 five things in a throwaway git repository: a clean tree passes, a misformatted
