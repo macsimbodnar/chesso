@@ -3437,3 +3437,12 @@ verdict. `MANUAL.md` and `DEV_MANUAL.md` checked: no surface changed, no edit
 needed.
 
 Next: **S069**, status.md's machine paragraph.
+
+**Correction, same turn.** This turn was meant to land as two commits — the
+report alone, then the planning built on it — because AGENTS.md section 10 wants
+the report to be evidence of what was found rather than of what survived being
+fixed. `git add -A` staged both and `e7aa98a` carries all 25 files under a
+message naming only the report. Not rewritten: section 11 forbids it, and the
+report's own bytes are unchanged either way. The separation that matters is
+still intact — the report was written, and `--audit check` verified the tree
+untouched, before a single step file existed.
