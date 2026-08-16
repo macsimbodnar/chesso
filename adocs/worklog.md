@@ -3235,3 +3235,57 @@ derivation, and that `.tuning/` — corpus and the whole fit toolchain, `anchors
 included — is gitignored and does not survive a machine move.
 
 Next: **S033**, reverse futility pruning.
+
+## 2026-08-16 — S033, reverse futility pruning, code in and measured, SPRT running
+
+The rule went in as the step described it and turned two existing mate cases red
+on the first `ctest`. The guard the step file prescribed — `beta` against the
+mate band — is **not** what fires. A trace of every prune found the node:
+
+```
+RFP ply=1 depth=2 alpha=-965 beta=-964 eval=-764 ret=-964 fen=4K3/q7/4k3/8/8/8/8/8 w - - 1 2
+```
+
+A bare king losing by a queen, failing high because the parent was a null-window
+scout hunting a mate score and `beta` was -964. Ordinary score, mate-band guard
+irrelevant.
+
+Two sweeps, 56 builds, each run against the fast suite with `search_bench` at
+depth 9. **45 constant settings**: green arrives at margin 150 and it is
+arithmetic, not safety. **Five guards** — none; not losing on the static score;
+the parent's bound is not losing; the side to move still has a piece;
+`game_phase() >= 6` — **all five red**, and the last two do not move the bench
+node count by a single node, which is the measurement saying they never fire.
+
+A second mate position was built to test exactly that: `MATE_IN_2_B_POS` with
+White material added until White leads by 500, keeping a mate in two that no
+checking move also forces. `python-chess` exhaustively, `stockfish` at depth 18
+independently. It is **red at margin 150**, where the original cases pass.
+
+What works is a bound, not a guard. The root was already exempt; the exemption
+was one ply too narrow. Ply 2 costs 0.7 % of the saving, ply 3 costs 1.7 %, ply 4
+costs 27 %. Shipped at ply 3, margin 100, depth 6: **1422053 nodes against
+3752725**, 62.1 % fewer, same three best moves, and under iterative deepening
+both mate positions report `mate 2` at depth 3 exactly as `c56ab41` does.
+
+Baseline correction found on the way: `DEV_MANUAL.md` quoted 3136397, from before
+S065 refitted the constants. Actual `c56ab41` figure is 3752725, and a `-D` meant
+to compile the rule out silently stopped overriding once the define went back to
+plain — both fixed, and the baseline is now taken from a git worktree build.
+
+Changed: `src/search.cpp` (the rule and three constants), `tests/test_search.cpp`
+(the new mate case with two preconditions), `adocs/specs.md` (reverse futility
+moves from the absent row to the search row), `adocs/decisions.md` (DEC-060),
+`adocs/testing.md` (three rows), `MANUAL.md` (the known-bugs entry narrowed
+rather than removed), `DEV_MANUAL.md` (the stale baseline). Commit `6bd650e`.
+
+Gate: **12 of 12 fast green, format clean**, and the debug build 12 of 12 in
+487 s for INV-2 and INV-4.
+
+One aborted match on the record: the unbounded setting ran 87 games before the
+ply bound was found, +133.61 +/- 70.56 at 60 finished, stopped by hand,
+`.tuning/sprt_s033_unbounded_aborted.log`. Not a verdict and not the shipped
+engine.
+
+Open: `REF=HEAD~1 ./fastchess.sh` full bounds on the shipped setting. The step
+stays in `plan_current/` until it returns.
