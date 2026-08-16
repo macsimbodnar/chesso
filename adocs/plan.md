@@ -171,11 +171,16 @@ entry and every list entry must name an existing step file; the workflow checker
 enforces the correspondence and adds an entry when a step is created.
 
 **It also prunes completed entries, and it keeps the last five in *list order*,
-not the five most recently completed.** `bin/moltke.py:1698-1700` collects the
-completed entries by position in the file and drops all but the final
-`PLAN_DONE_KEPT` of them, 5 at `:1681`. A step whose entry sits low in the list
-therefore outlives completions that came after it. S053 completed at 18:42 on
-2026-08-13 and is still listed; S037 at 19:13 and S043 at 19:29 the same evening
+not the five most recently completed.** The checker is not in this tree. It is
+the moltke plugin, read here at **version 0.11.0**, where `prune_plan()`
+collects the completed entries by position in the file and drops all but the
+final `PLAN_DONE_KEPT` of them, `PLAN_DONE_KEPT = 5`. Follow it by those two
+symbols and not by a line number: they sat at `bin/moltke.py:1698-1700` and
+`:1681` in 0.11.0 and they move under any other version. The version is
+load-bearing rather than decoration — 0.1.0 is installed on this machine too and
+has neither symbol, so nothing in this paragraph is true of it. A step whose
+entry sits low in the list therefore outlives completions that came after it.
+S053 completed at 18:42 on 2026-08-13 and is still listed; S037 at 19:13 and S043 at 19:29 the same evening
 are gone, and so is S066 from the day after. S053 survives because its entry is
 the last line of the list, appended at creation, not because it is recent.
 Retention is a window over positions and says nothing about when anything
@@ -191,7 +196,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-43. S062  plan.md's prose stops describing completed steps as pending instruments and next work
 44. S064  plan.md and testing.md describe the checker's retention as the last five completed entries in list order
 45. S069  status.md's machine paragraph agrees with specs.md and its retention example is stated in positions
 46. S070  the terminal-position test asserts a legal mate or stalemate, not a king adjacent to a king

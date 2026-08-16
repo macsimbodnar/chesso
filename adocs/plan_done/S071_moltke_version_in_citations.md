@@ -7,7 +7,13 @@ decisions:
 closes:     2026-08-16_plan_review-F10
 blocks:
 paused_by:
-done:
+done:      Every bin/moltke.py citation in plan.md and testing.md now names moltke 0.11.0
+                and the symbols prune_plan() and PLAN_DONE_KEPT, with the line numbers kept but
+                demoted to 'at that version'. Paragraph-scoped check green, 0 bad blocks; red at
+                HEAD, 3. The version is load-bearing: 0.1.0 is also installed and has neither
+                symbol. status.md:25 and S069's ledger row re-pointed from plan.md:173-182 to
+                :173-187, since the paragraph grew. moltke --validate clean; ctest -L fast 12/12
+                in 20.07 s; clang-format.sh --check exit 0.
 
 ## Why this exists
 
@@ -42,3 +48,4 @@ remedy S079 applies to the step files' `src/` citations, for the same reason.
 ## Cost
 
 Minutes, no build, no match.
+author:    Maksym Bodnar

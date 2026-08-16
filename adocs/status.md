@@ -7,7 +7,7 @@ Updated: 2026-08-16 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S071
+- Next: S072
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
@@ -22,7 +22,7 @@ Updated: 2026-08-16 by `moltke --step status`.
     a stale file: `moltke --step status` derives the field from the last
     completed entry in `plan.md` **list order**, and retention is a window over
     list positions, so an entry sitting low in the list outlives completions that
-    came after it. `plan.md:173-182` states the rule against the code that
+    came after it. `plan.md:173-187` states the rule against the code that
     implements it, and this item does not restate the census: the window moves on
     every completion, so a worked example here reads as a measurement while being
     a memory. Hand-correcting the field puts the file back out of agreement with
