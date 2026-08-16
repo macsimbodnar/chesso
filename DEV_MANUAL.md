@@ -174,11 +174,17 @@ one number and not the other:
 tools/search_bench.py ./build/src/chesso 9
 ```
 
-Three positions: midgame, kiwipete, tactical. Depth 9 is 3136397 nodes and
-about 0.44 s for all three on this machine — raise the depth when a difference
-is small, and do not budget from the "about ten seconds per binary" this line
-used to claim, which was measured on the pre-DEC-049 machine and on an engine
-with less pruning in it.
+Three positions: midgame, kiwipete, tactical. Depth 9 is **1422053 nodes and
+about 0.23 s** for all three on this machine at S033 — raise the depth when a
+difference is small, and do not budget from the "about ten seconds per binary"
+this line used to claim, which was measured on the pre-DEC-049 machine and on an
+engine with less pruning in it.
+
+**That figure moves with every change to the search or to the evaluation, so
+quote it with the commit it was taken at.** It read 3136397 before S065 refitted
+the constants, 3752725 at `c56ab41` after that fit, and 1422053 once S033 added
+reverse futility pruning. A count from one of those is not a baseline for
+another.
 
 **The node count is printed next to the time on purpose.** A change meant to be
 a pure speed-up must leave it identical; if the node count moved, the search

@@ -990,6 +990,48 @@ TEST_SUITE("search: draws")
     }
   }
 
+  // The same hazard from the other side, and the one reverse futility pruning
+  // walks into. That rule returns a static score instead of searching whenever
+  // the score clears beta by its margin, and a static score is never a mate
+  // score - so a node whose true value is "mated in one" can fail high on
+  // material and take its whole subtree with it. S033.
+  //
+  // Three properties make the position bite, and the first two are asserted
+  // below rather than assumed:
+  //
+  //   the mated side is ahead   White leads by 500 cp after the key, which is
+  //                             what puts the node above beta
+  //   the key is quiet          a checking key would leave White in check,
+  //                             where the pruning is already forbidden and the
+  //                             case would prove nothing
+  //   the mate is inside the pruned depth   two moves, against a depth bound of
+  //                             several plies
+  //
+  // Built by adding White material to MATE_IN_2_B_POS until White led, keeping
+  // a mate in two that no checking move also forces. python-chess enumerated it
+  // exhaustively and Stockfish at depth 18 agrees: mate 2, key e5e6.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "pruning does not hide a mate against the material leader")
+  {
+    const std::string root = "4K1R1/q7/5P2/4k3/8/1P6/2P5/1B2N3 b - - 0 1";
+    const std::string after_key = "4K1R1/q7/4kP2/8/8/1P6/2P5/1B2N3 w - - 1 2";
+
+    // Precondition. Without these two the case would pass on an engine that
+    // never comes near the rule: the node has to be quiet, and its static score
+    // has to be high enough for a static cutoff to be possible at all.
+    REQUIRE(load_FEN(after_key, &game));
+    REQUIRE_FALSE(is_check(&game));
+    REQUIRE(evaluate(&game.board) > 300);
+
+    for (int depth = 3; depth <= 6; ++depth) {
+      const std::string title = "depth " + std::to_string(depth);
+      const search_t result = search_fen(root, depth);
+
+      REQUIRE_MESSAGE(result.mate_found, title);
+      REQUIRE_MESSAGE(result.mate_in == 2, title);
+    }
+  }
+
   TEST_CASE_FIXTURE(search_fixture_t, "which material can still mate")
   {
     struct case_t

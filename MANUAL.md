@@ -120,8 +120,11 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
-- **No aspiration windows, futility pruning, razoring or singular extensions.**
-  These are planned, not present; see `adocs/plan.md`.
+- **No aspiration windows, forward futility pruning, razoring or singular
+  extensions.** These are planned, not present; see `adocs/plan.md`. *Reverse*
+  futility pruning is present since S033 (2026-08-16): a node whose static score
+  is a margin clear of beta is not searched. It cannot see a mate — that is what
+  a static score is — so it is bounded to depth 6 and to ply 3 and below.
 - **The reported score is unreliable in both directions, and worst in pawn
   endgames.** Measured over 5582 moves in 98 games against Stockfish at 3000000
   nodes, after the evaluation constants were fitted (S028, 2026-08-11). Chesso's

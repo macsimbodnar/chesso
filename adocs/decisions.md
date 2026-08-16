@@ -2790,3 +2790,135 @@ Consequences: The queen's fitted material value now reads **716** in
               The transformation is recorded in the step file as well as here,
               because `.tuning/` is gitignored and the emitted header does not
               survive in git.
+
+## DEC-060  2026-08-16  Reverse futility is bounded by ply, because no guard makes it mate-safe
+Tags:         search, pruning, testing, mate, s033, dec-019, dec-033, inv-6
+
+Context:      S033's own hazard section named the trap it expected: "a node
+              holding a forced mate for the opponent can still have a static
+              score above beta and be pruned. Guard `beta` against the mate band
+              exactly as the null move guard does." That guard was written, and
+              it is not what fires.
+
+              The rule as first built -- non-PV, not in check, `ply > 0`,
+              `depth <= 6`, `beta` outside the mate band, `evaluate() - 100 *
+              depth >= beta` -- turned two existing cases red on the first
+              `ctest` run, both on `MATE_IN_2_B_POS` at fixed depth 3. A trace
+              of every prune found the node:
+
+                RFP ply=1 depth=2 alpha=-965 beta=-964 eval=-764 ret=-964
+                fen=4K3/q7/4k3/8/8/8/8/8 w - - 1 2
+
+              The side to move is a bare king losing by a queen. It fails high
+              because `beta` is **-964**: the parent is a null-window scout
+              hunting a mate score, and "I am only 764 behind" clears that bound
+              by exactly zero. `beta` is nowhere near the mate band, so the
+              guard the step prescribed does nothing. What the rule returns is a
+              lower bound on the node, and a forced mate is the one thing a
+              static bound cannot respect.
+
+              Two sweeps, 56 builds, each run against the fast search suite with
+              `tools/search_bench.py` at depth 9 for what the setting buys.
+              Baseline `c56ab41`, built from a worktree: **3752725 nodes**.
+
+              Constants first, margin x lower depth bound x upper depth bound.
+              Green arrives at margin 150 and it is arithmetic, not safety: the
+              harmful prune needs `-764 - 2 * margin >= -964`, true at 100 and
+              false at 150. A second position built to test exactly that --
+              `MATE_IN_2_B_POS` with White material added until White leads by
+              500, keeping a mate in two no checking move also forces, verified
+              by `python-chess` exhaustively and by `stockfish` at depth 18 --
+              is **red at margin 150**, where the original cases pass.
+
+              Then five guards, all at margin 100, depth 1..6: none; the side to
+              move is not losing on the static score; the parent's bound is not
+              a losing one; the side to move still has a piece; `game_phase() >=
+              6`. **All five red** on that second position. The last two do not
+              change the bench node count by a single node, which is the
+              measurement saying they never fire on a real position.
+
+              This is a property of the technique. A static evaluation is never
+              a mate score, and in this engine it provably cannot approach one:
+              `evaluate_expensive()` clamps the whole king-safety and mobility
+              correction to `+/-LAZY_EVAL_MARGIN`, 150 cp. The term is fitted and
+              non-zero since S065 and still bounded two orders of magnitude below
+              a mate.
+
+              What does work is not a guard but a bound. The rule already exempts
+              the root, because the root's answer is the one that gets played.
+              The trace says that exemption is one ply too narrow. Exempting the
+              first plies instead, at margin 100, depth 1..6:
+
+              | first ply pruned | nodes | cost | suite |
+              |---|---|---|---|
+              | 1 | 1398911 | -- | RED |
+              | 2 | 1408517 | +0.7 % | green |
+              | 3 | 1422053 | +1.7 % | green |
+              | 4 | 1781672 | +27.4 % | green |
+              | 5 | 1895553 | +35.5 % | green |
+
+Decision:     By the agent inside the step, on the measurements above, and open
+              to the owner's revision: **ship reverse futility bounded to ply 3
+              and below, margin 100, depth 6**, and record that the technique is
+              not mate-safe rather than pretending a guard made it so.
+
+              1422053 nodes against 3752725, **62.1 % fewer**, same three best
+              moves on the bench, 0.226 s against 0.470 s at fixed depth 9.
+              Nodes per second fall, 8283 to 6145 knps: the rule adds an
+              `evaluate()` at interior nodes and pays for it many times over in
+              nodes not visited. Under iterative deepening from a cold table both
+              mate positions report `mate 2` at depth 3, identical to `c56ab41`
+              at every iteration from 1 to 6.
+
+              The ply bound is set at 3 by the cliff and not by the greenness:
+              ply 2 is green as well and two plies of protection cost 1.7 %,
+              where a third costs 27 %.
+
+Rejected:     Dropping the feature and recording it as a negative result. The
+              precedent exists -- S005, S006 and S015 -- but it is for a
+              technique that measured zero, and this one has not been measured in
+              games yet at all. 62.1 % of the tree is not a zero to record.
+
+              Relaxing the mate cases to depths 4 to 6. Under the unbounded rule
+              both positions still report the mate under iterative deepening, one
+              iteration late, so the case for it was arguable: the fixed-depth
+              cold call the suite makes is stricter than the path the engine
+              plays through. It was rejected because the ply bound costs 1.7 %
+              and keeps the assertion, and a test that is relaxed once has been
+              relaxed. Section 6 permits re-targeting for a deliberate behaviour
+              change; it does not require accepting one that 1.7 % of the nodes
+              buys back.
+
+              Margin 150 or 200, which are green on the original two cases. They
+              are green by arithmetic and the second position shows it. Margin 75
+              at the same ply bound is green and saves more, 1216123 nodes, and
+              is **not** shipped: one change at a time, and the margin is a
+              tuning question for a later step with its own verdict.
+
+              A king-danger guard built on the king safety feature counts. It
+              would fire on both positions -- a queen bearing on the king zone is
+              exactly what both have -- but reading those counts in the search
+              needs a second instantiation of the collecting evaluation in the
+              hot path, which is the documented 21 % regression from S027. It is
+              a step of its own if anyone wants it, not a line in this one.
+
+Consequences: `specs.md` moves reverse futility from the absent row to the search
+              row with the bound and the blindness stated inline.
+
+              The suite now holds a position for the case the step file did not
+              predict: the mated side **ahead** on material, with a quiet-only
+              mating key. It is red at settings the two `MATE_IN_2_B_POS` cases
+              call green, which is why it exists.
+
+              A mate that first becomes visible below ply 3 can still be missed
+              for an iteration and nothing in the suite covers that. Stated, not
+              fixed.
+
+              The margin is unfitted and known to be improvable. Whatever the
+              SPRT returns, 75 is the first thing a follow-up step should try.
+
+              `DEV_MANUAL.md`'s depth-9 node figure was stale before this step --
+              3136397, from before S065 refitted the constants, against 3752725
+              actually measured at `c56ab41`. It now carries the commit each
+              figure belongs to, because a baseline quoted without one is how
+              this step nearly reported a 55 % saving against the wrong number.

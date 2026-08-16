@@ -29,6 +29,24 @@ static constexpr int MAX = 2000000000;
 #define MAX_QSEARCH_DEPTH 8
 
 
+// Reverse futility pruning. How much the opponent is assumed to be able to claw
+// back per remaining ply, and the deepest node the assumption is made at.
+//
+// Both are a first setting and neither is fitted: the margin is one pawn per
+// ply, the bound keeps the assumption to the last few plies where the static
+// score is close to what a search would return anyway. S033.
+#define RFP_MARGIN 100
+#define RFP_MAX_DEPTH 6
+
+// The top of the tree is searched properly. The root is exempt because its
+// answer is the one that gets played; ply 1 and ply 2 are exempt because a
+// static bound returned there is what the root compares against alpha, and a
+// mate two moves away lives exactly that far down. Measured, not assumed: at
+// ply 1 the mate cases in test_search go red, and buying the two plies back
+// costs 1.7 % of the nodes the rule saves. Exempting a third costs 27 %. S033.
+#define RFP_MIN_PLY 3
+
+
 // How much depth a late quiet move gives up, by remaining depth and by how far
 // down the move order it is. Both axes are logarithmic: the first few moves are
 // where the good ones live, so the penalty grows quickly at first and then
@@ -287,6 +305,45 @@ int negamax(int alpha0,
 
   // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
+
+  // Reverse futility pruning, also called static null move pruning. The null
+  // move observation without the null move: if the static score is so far
+  // above beta that the opponent cannot claw the difference back in the plies
+  // that are left, the node fails high and nothing below it is worth searching.
+  //
+  // Where null move pruning pays a reduced search to find that out, this pays
+  // one evaluate() and assumes RFP_MARGIN per ply. That is an assumption, not a
+  // proof, which is why the guards are the same ones and why the bound on depth
+  // is low - the further from the leaves, the less a static score says.
+  //
+  //   in check      the side to move is forced to reply, so "I could stop here"
+  //                 is not on offer and the static score bounds nothing
+  //   PV node       these lines get reported and played, and this returns a
+  //                 bound rather than a score
+  //   beta near mate  a fail-high against a mate bound would claim a mate this
+  //                 never proved. A static score is never a mate score
+  //   ply < 3       see RFP_MIN_PLY: the top of the tree decides the move
+  //
+  // Not guarded on game_phase: no pass is made here, so zugzwang does not enter
+  // it. It is guarded on depth instead, which null move pruning is not.
+  //
+  // What this rule cannot do, and no setting of it can. The bound it returns is
+  // a lower bound on the node, and a forced mate for the opponent is the one
+  // thing that bound cannot respect: a static evaluation is never a mate score,
+  // and in this engine it provably cannot approach one, because
+  // evaluate_expensive() clamps the whole king-safety correction to
+  // +/-LAZY_EVAL_MARGIN. S033 measured five guards against that and none of
+  // them worked; the depth and ply bounds are what contain it. A mate deeper
+  // than ply 3 can still be missed for an iteration, and no test covers that.
+  if (!is_pv && !is_in_check && ply >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&
+      beta < MATE_MIN && beta > -MATE_MIN) {
+    const int margin = RFP_MARGIN * depth;
+    const int static_score = evaluate(&game->board);
+
+    // Fail soft, and the bound returned is the one actually argued for: the
+    // static score minus everything the opponent was assumed able to win back.
+    if (static_score - margin >= beta) { return static_score - margin; }
+  }
 
   // Null move pruning. Give the opponent a free move; if the position is still
   // good enough to fail high after that, it is won by so much that searching it
