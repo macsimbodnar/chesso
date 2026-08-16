@@ -7,7 +7,11 @@ decisions:  DEC-033
 closes:
 blocks:
 paused_by:
-done:
+done:      SPRT +59.98 +/- 17.24 Elo, H1 accepted at LLR 2.95 against the 2.94 bound, 1012 games in 44 m 10 s, candidate 6bd650e against c56ab41 at 10+0.2 on 12 cores, zero integrity lines in the log.
+                62.1 % fewer nodes at depth 9, 1422053 against 3752725, same three best moves, 0.226 s against 0.470 s.
+                The mate requirement is met by a bound and not by the guard the step prescribed: the rule starts at ply 3, which costs 1.7 % of the saving, after five guards measured red or inert. DEC-060.
+                New fast-suite case 'pruning does not hide a mate against the material leader', red at the shipped margin without the ply bound and red at margin 150 where the two MATE_IN_2_B_POS cases pass. Two preconditions asserted before any search.
+                Gate: 12 of 12 fast, format clean, debug build 12 of 12 in 487 s for INV-2 and INV-4.
 
 ## Why this exists as its own step
 
@@ -228,6 +232,36 @@ is not the shipped engine -- it is the setting the mate cases call red -- and it
 is kept at `.tuning/sprt_s033_unbounded_aborted.log` only so the five minutes it
 took are on the record. It was stopped because a second SPRT on the shipped
 setting would have cost hours that stopping cost minutes.
+
+## The verdict
+
+`REF=HEAD~1 ./fastchess.sh`, full bounds, candidate `6bd650e` against
+`c56ab41`, 10+0.2, 12 of 12 cores.
+
+**+59.98 +/- 17.24 Elo, H1 accepted.** LLR 2.95 (100.0 %) against the 2.94
+bound, **1012 games in 44 m 10 s**. nElo +76.01 +/- 21.41, 419 wins, 246 losses,
+347 draws, 58.55 %, `Ptnml(0-2) [28, 80, 177, 133, 88]`, WL/DD 1.64. Zero
+integrity lines in the log; every game ended in adjudication, three-fold,
+insufficient material, fifty moves or stalemate. Attribution: `git diff c56ab41
+6bd650e -- src/` is `src/search.cpp` alone.
+
+The reported figure that made this the first search item to try was +57.1 +/-
+16.9 (Blunder, self-play). It is inside this interval, which is a coincidence
+worth exactly nothing under DEC-019 -- three earlier techniques were quoted at
+30 to 150 Elo and measured zero here -- and the number that counts is the one
+above.
+
+**It is also the first search change to clear the DEC-033 ceiling.** That
+measurement put the whole search block at about 10 cp per effective doubling on
+the errors that decide games, and this is 62.1 % of the tree removed for 60 Elo.
+The ceiling was on what depth buys, not on what a cheaper tree buys.
+
+## Cost of a verdict on this machine
+
+Two data points now, and DEV_MANUAL asked for them: S065 took 3396 games in
+2 h 30 m 12 s, this one 1012 games in 44 m 10 s. About **23 games a minute**
+either way at 12 cores and 10+0.2; what differs is games to a verdict, which is
+what the size of the effect decides.
 
 ## What is still true and untested
 

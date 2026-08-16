@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-16 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S033 prune a node whose static score is already far enough above beta
-- Next: S033
+- In progress: none
+- Next: S062
 - Blocked: none
 - Parked:
   - **"Last done" above reads S053 and the newest completion is S065.** Not a

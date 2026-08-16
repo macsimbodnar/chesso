@@ -3289,3 +3289,26 @@ engine.
 
 Open: `REF=HEAD~1 ./fastchess.sh` full bounds on the shipped setting. The step
 stays in `plan_current/` until it returns.
+
+### S033 verdict
+
+`REF=HEAD~1 ./fastchess.sh`, full bounds, `6bd650e` against `c56ab41`:
+**+59.98 +/- 17.24 Elo, H1 accepted**, LLR 2.95 against 2.94, **1012 games in
+44 m 10 s**, 419-246-347, 58.55 %, `Ptnml(0-2) [28, 80, 177, 133, 88]`. Zero
+integrity lines. Attribution is `src/search.cpp` alone, +57 lines.
+
+The reported figure that made this worth trying was +57.1 +/- 16.9 elsewhere and
+it lands inside this interval, which under DEC-019 is a coincidence and not a
+confirmation. It is the first search change to clear the DEC-033 ceiling: that
+number bounded what *depth* buys, not what a cheaper tree buys.
+
+Second data point on what a verdict costs here, which DEV_MANUAL asked for:
+about 23 games a minute at 12 cores in both this run and S065's, so
+games-to-verdict is the effect size and throughput is the machine.
+
+S068 created from DEC-060's open margin question — margin 75 is green on every
+mate case and visits 14.5 % fewer nodes, and did not ship because S033 changed
+one thing at a time. Placed ahead of S021 rather than last, where the checker
+appends, because a live step must not sit behind the parked S029.
+
+Step completed and moved to `plan_done/`. Next: **S062**.

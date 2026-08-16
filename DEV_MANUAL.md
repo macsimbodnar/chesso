@@ -310,9 +310,14 @@ games.
 
 Those figures do not carry to this machine — different cores, different
 compiler, DEC-049 — and neither does the four-core baseline they were taken
-against. **The cost of a verdict here is not known yet**: check the
-games-to-verdict figure of the first runs and record what happens rather than
-assuming the throughput was free.
+against.
+
+**The cost of a verdict here, measured, two runs at 12 cores and 10+0.2:**
+S065 accepted H1 in **3396 games, 2 h 30 m 12 s**; S033 accepted H1 in **1012
+games, 44 m 10 s**. That is about **23 games a minute** in both, so throughput is
+the machine and games-to-verdict is the size of the effect — a change worth 60
+Elo resolves at full bounds in under an hour, one worth 21 Elo took two and a
+half. Budget from games a minute, not from the wall clock of a previous run.
 
 ### Detach the run, and arm a watcher that outlives the turn
 
