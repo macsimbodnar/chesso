@@ -2980,3 +2980,105 @@ Consequences: Sweep and match scripts under `tools/` and in scratchpads end with
               This says nothing about how long a run may take. Long runs are
               still detached and still watched; only the watcher is now
               required to end by itself.
+
+## DEC-062  2026-08-16  The tuning strategy document is adopted as a plan input, and what it buys is nine steps
+Tags:         tuning, evaluation, search, spsa, datagen, planning, nnue,
+              book-learning, dec-014, dec-019, dec-054, s073, s075, s076, s077,
+              s082, s083, s084, s085, s086
+
+Context:      `adocs/eval_tuning_strategy.md` arrived as an untracked 529-line
+              summary of published technique in evaluation and search-parameter
+              tuning: Texel-style gradient fitting, NNUE, SPSA, TD and
+              TreeStrap, book learning, and the statistical gate around all of
+              them. It named itself an "input document for a development plan"
+              and nothing in the plan referenced it.
+
+              The 2026-08-16 plan_review audit recorded it as
+              `2026-08-16_plan_review-F08`: a plan input that is neither tracked
+              nor in the file map is the memory-outside-the-repository AGENTS.md
+              section 12 forbids, and its executive summary is a table of
+              published Elo figures presented as "Typical gain", which is the
+              exact shape DEC-019 exists to stop being read as a target.
+
+              Mapping it against the tree found most of section 2 already
+              built. The Texel fit, Adam, the fitted K, the held-out split by
+              game and the linear treatment of king safety are S027, S028,
+              S065, S066 and DEC-044. The pentanomial gate the document asks for
+              is already what `fastchess.sh` runs -- `model=normalized`, and
+              every recorded verdict carries an nElo figure. What is missing is
+              specific and is what the steps below are.
+
+Decision:     **By the owner, on the agent's analysis and options.** Track the
+              document under a file-map row, mark its Elo column as reported
+              figures per DEC-019, and create nine steps from it. Ordering, by
+              the owner's answer to three questions:
+
+              1. **Instrumentation first, then the cheap fits.** S073 exposes
+                 the search constants as one addressable set, settable in a tune
+                 build and unchanged in the shipping one, because the two
+                 pending hand-tunes S068 and S039 currently cost a source edit
+                 and a rebuild per point -- and `2026-08-16_plan_review-F04`
+                 found the sweep method no longer compiles at all. Then S075,
+                 S076 and S077, each a fit and at most one verdict. The search
+                 and ordering block keeps its place after them.
+              2. **Both compute-heavy items become steps, ordered last.** S083,
+                 a corpus past 50 M positions, and S085, the first SPSA run.
+                 Written down with their real cost stated; nothing derives them
+                 as next.
+              3. **Book learning is built, not rejected.** S086, behind a UCI
+                 option that ships off, last in the order.
+
+              S082 -- labelling the quiescence leaf rather than the root -- is
+              the document's own "critical design decision" and is placed with
+              the expensive band because it needs a regenerated corpus, ahead of
+              S083 so that what is being generated is settled before five nights
+              are spent generating it.
+
+Rejected:     **Online TD and TreeStrap weight updates** (document sections 5.1
+              and 5.2). The document deprioritises them itself: TreeStrap
+              converges to a fixed point of the engine's own search and is
+              sample-inefficient against fitting millions of stored positions
+              with known outcomes, and it is the right choice only "when no
+              dataset exists and none can be generated". A dataset exists,
+              `.tuning/selfplay_v2.tsv`, 11003693 positions.
+
+              **Any scheme that mutates shipped weights without an SPRT gate.**
+              This is INV-6 and is not negotiable in either direction.
+
+              **Reopening NNUE.** The document calls it the ceiling, +400 to
+              +700 over a tuned hand-crafted evaluation. DEC-054 is the owner's
+              decision that it is deferred, and a literature summary is not a
+              reason to reverse an owner's decision. S029 stays parked with its
+              file whole; the document's section 3 is a reference for it if it
+              resumes, and its Phase B data pipeline is shared work that S082,
+              S083 and S076 advance anyway.
+
+              **Deleting the document instead of tracking it.** It is the only
+              record of why these nine steps exist and of the figures that were
+              deliberately not taken as targets.
+
+Consequences: `adocs/eval_tuning_strategy.md` is tracked and gets a row in
+              AGENTS.md section 2's file map as research input. Its executive
+              summary carries a note that the Elo column is reported figures
+              which decide what to try and never what to conclude, DEC-019.
+              `2026-08-16_plan_review-F08` is resolved by this entry.
+
+              Nine new steps: S073, S075, S076, S077, S082, S083, S084, S085,
+              S086. Three of them owe no verdict at all -- S073 is neutral by
+              construction and proves it with identical node counts, S077 and
+              S084 touch nothing under `src/`. The rest owe one SPRT each, and
+              each of those steps says so in its own `accepts:` with the verdict
+              recorded whatever it is.
+
+              The document's multiple-comparison warning is now a standing
+              constraint on the tuning steps: a sweep is decided on held-out
+              error and exactly one candidate goes to a match. S075 and S083
+              both carry it in their gates. This is not a new project rule and
+              does not touch INV-6; it is how the three fit steps are written.
+
+              Measurement capacity stays the binding constraint. S083 is
+              several nights of generation and S085 is a night plus a
+              verification match, and they compete for the same nights as every
+              SPRT in the search block above them. Both are last in the order
+              for that reason, and starting either is a deliberate call rather
+              than a derivation.

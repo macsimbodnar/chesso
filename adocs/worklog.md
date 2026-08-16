@@ -3380,3 +3380,60 @@ row). No checker change, no change to what is pruned.
 Gate: 12 of 12 fast, format clean, `tools/plan_prose_check.py` exit 0.
 
 Next: **S068**, the reverse futility margin.
+
+---
+
+## 2026-08-16 — plan_review audit, and the tuning strategy document integrated
+
+Planning turn, no step started, no step completed.
+
+**The audit.** Third plan_review run, spawned cold on `02bb6a5` with the four
+things DEC-036 allows and nothing else. Ten findings:
+`adocs/audit/2026-08-16_plan_review.md`. One high, three medium, three low,
+three info. `--audit check` clean: the report is the only thing the run wrote.
+
+The high one is S057, the step that exists to hand S039 corrected evidence, and
+every load-bearing claim in it is false — it says the corpus does not exist, it
+is on disk with 11003693 rows, and its "re-measured at HEAD" figures predate
+S065's refit. The real spread is four times what S057 and S039 both record:
+1.558 % of positions past 150 against 0.364 %, worst 489 cp against 279.
+
+Two prior findings closed by this run: `2026-08-13_plan_review.2-F07` and
+`-F09`. `2026-08-14_test_review-F02` moves from fixed to **partially** fixed —
+the illegal mate-in-zero FEN is still live at `tests/test_engine.cpp:560`, which
+`stockfish` refuses to load.
+
+Also found: the citation rot the last run recorded at three sites is now 17
+across six step files, nine of them outside the reach of S063, the step created
+for it.
+
+**Homes.** Nine steps (S069 to S072, S074, S078 to S081), one decision
+(DEC-062 for F08, the untracked strategy document). Every finding referenced;
+`--audit list` exits clean.
+
+**The strategy document.** `adocs/eval_tuning_strategy.md` tracked, given a
+file-map row in AGENTS.md, and its Elo column marked as reported figures per
+DEC-019. Most of its section 2 turned out to be already built — Texel fit, Adam,
+fitted K, held-out split by game, king safety linear in its weights, and the
+pentanomial gate, since `fastchess.sh` runs `model=normalized` and every recorded
+verdict carries an nElo. Nine steps for what is missing: S073 (search constants
+as one settable set in a tune build), S075 (score/WDL blend), S076 (zobrist
+dedupe), S077 (fit provenance), S082 (label the quiescence leaf), S083 (50 M
+corpus), S084 and S085 (SPSA driver and first run), S086 (book learning). Owner
+answered three ordering questions; DEC-062 records them and what was rejected.
+
+**One thing the tooling caught and prose review would not have.** A hard wrap put
+`129. S039` at the start of a line in the new prose, which `plan_order()` reads
+as a list entry — `moltke --step status` then derived `Next: S039`. Rewrapped.
+This file's own rule about list entries is now load-bearing in both directions.
+
+Changed: `adocs/plan.md` (order and three new paragraphs), `adocs/decisions.md`
+(DEC-062), `adocs/status.md`, `AGENTS.md` (one file-map row),
+`adocs/eval_tuning_strategy.md` (tracked, one note), 18 new step files.
+
+Gate: 12 of 12 fast, format clean, `moltke --validate` clean,
+`tools/plan_prose_check.py` exit 0. No engine code touched, so nothing is owed a
+verdict. `MANUAL.md` and `DEV_MANUAL.md` checked: no surface changed, no edit
+needed.
+
+Next: **S069**, status.md's machine paragraph.

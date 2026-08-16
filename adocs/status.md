@@ -7,9 +7,17 @@ Updated: 2026-08-16 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S068
+- Next: S069
 - Blocked: none
 - Parked:
+  - **The 2026-08-16 plan_review findings are planned, not closed, and closing
+    them needs a re-run.** Ten findings, one high and three medium: nine went to
+    steps (S069 to S072, S074, S078 to S081) and F08 to DEC-062. A finding moves
+    to `closed` only when a re-run no longer reports it, so a fourth plan_review
+    is owed once those steps land — and the severity profile says the loop has
+    not reached its stopping condition, which is a re-run with no high and no
+    medium. The first parked item below is itself F05 and is S069's to fix, so
+    it is left standing rather than corrected here.
   - **"Last done" above reads S053 and the newest completion is S065.** Not a
     stale file: `moltke --step status` derives the field from the last completed
     entry in `plan.md` **list order**, and the retention window leaves S053 at

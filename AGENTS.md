@@ -127,6 +127,7 @@ Code that disagrees with specs is a bug or an unrecorded decision. It is never s
 | `adocs/decisions.md` | decision log, newest last | append only | before or alongside the change |
 | `adocs/worklog.md` | prompts and recaps | append by convention, not enforced | every prompt, recap on work turns |
 | `adocs/audit/` | adversarial, security, bug hunt reports | add files | per audit run |
+| `adocs/eval_tuning_strategy.md` | research input: published tuning technique, and what it does and does not decide | rewrite in place | when the literature summary changes. DEC-062 |
 
 `adocs/decisions.md` and `adocs/plan_done/` are never reordered, rewritten, or trimmed, and this is enforced: superseded content is marked, not deleted. The worklog follows the same habit but is not checked, so a genuine correction — a mistyped recap, a secret pasted into a prompt — is a normal edit rather than a rule violation.
 
