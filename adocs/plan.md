@@ -191,7 +191,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-42. S033  prune a node whose static score is already far enough above beta
 43. S062  plan.md's prose stops describing completed steps as pending instruments and next work
 44. S064  plan.md and testing.md describe the checker's retention as the last five completed entries in list order
 45. S069  status.md's machine paragraph agrees with specs.md and its retention example is stated in positions

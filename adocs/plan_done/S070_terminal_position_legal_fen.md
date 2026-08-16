@@ -7,7 +7,21 @@ decisions:
 closes:     2026-08-16_plan_review-F06
 blocks:
 paused_by:
-done:
+done:      2026-08-16. tests/test_engine.cpp:581 no longer loads 7k/5Q1K/8/8/8/8/8/8 b - - 0 1. The one illegal FEN is replaced by a matched pair verified by tool, not by reading (DEC-023): 7k/6Q1/6K1/8/8/8/8/8 b (mate) and 7k/5Q2/6K1/8/8/8/8/8 b (stalemate).
+            
+            Tools quoted into the case text. stockfish loads both and answers 'info depth 0 score mate 0' / 'bestmove (none)' and 'info depth 0 score cp 0' / 'bestmove (none)'. python-chess: both Status.VALID, legal_moves 0; is_checkmate True/False, is_stalemate False/True.
+            
+            Non-vacuity. Two preconditions run before the count, on the game_t copied out of uci_game(): position_is_reachable() - the engine's own is_check() through a null move, S067's predicate - then is_check(&game) == terminal.in_check, true for the mate and false for the stalemate. The case now fails if either position stops being terminal, or stops being the kind of terminal it claims.
+            
+            Observed red twice. Old FEN re-added as a third row: 'FATAL ERROR: REQUIRE( position_is_reachable(&game) ) is NOT correct!  values: REQUIRE( false )' / 'logged: 7k/5Q1K/8/8/8/8/8/8 b - - 0 1 is not a position a legal game can reach'. Stalemate's expected in_check flipped to true: 'FATAL ERROR: REQUIRE( is_check(&game) == terminal.in_check ) is NOT correct!  values: REQUIRE( false == true )' / 'logged: 7k/5Q2/6K1/8/8/8/8/8 b - - 0 1 is not in check as expected'.
+            
+            Fixed in scope, trivial: doctest stringifies a const char* as its address, so the first draft printed 'logged: 0x5f73d51210e4' and named nothing. The FEN reaches REQUIRE_MESSAGE as a std::string.
+            
+            grep -rn '7k/5Q1K' tests/ returns two comment lines only: test_search.cpp:146 (S067's, kept on purpose) and test_engine.cpp:559 (this step's).
+            
+            Gate: cmake --build build -j12 && ctest --test-dir build -L fast 12 of 12, 0 failed, 20.01 s; ./clang-format.sh --check clean. git diff -- src/ tools/ empty, so no play changed, no SPRT owed and INV-6 has nothing to discharge. README.md owner-written, no change needed; MANUAL.md and DEV_MANUAL.md checked, no surface change.
+            
+            2026-08-16_plan_review-F06 is planned, not closed: AGENTS.md section 10 closes a finding only after the audit is re-run, and this step fixed rather than re-ran.
 
 ## Why this exists
 
@@ -53,3 +67,4 @@ assert the count.
 ## Cost
 
 Minutes plus one `stockfish` invocation. No match.
+author:    Maksym Bodnar

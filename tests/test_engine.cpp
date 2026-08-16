@@ -551,18 +551,71 @@ TEST_SUITE("engine: uci layer")
     uci_shutdown();
   }
 
+  // Terminal means no legal move, and there are exactly two ways to get there:
+  // mate and stalemate. Both are here, because the count alone does not say
+  // which one it got, and an engine that stopped distinguishing them would
+  // still return 0 for both.
+  //
+  // This loaded 7k/5Q1K/8/8/8/8/8/8 b until S070. The only attacker of the
+  // black king there was the white king on h7 - adjacent kings, a position no
+  // legal game reaches. The case passed on a board that could not exist, which
+  // is why the legality precondition below runs before the count and not after
+  // it. 2026-08-14_test_review-F02, still open in this file as
+  // 2026-08-16_plan_review-F06.
+  //
+  // Both replacements were chosen by tool, not by reading the board:
+  //
+  //   $ stockfish
+  //   position fen 7k/6Q1/6K1/8/8/8/8/8 b - - 0 1
+  //   go depth 5
+  //   info depth 0 score mate 0
+  //   bestmove (none)
+  //   position fen 7k/5Q2/6K1/8/8/8/8/8 b - - 0 1
+  //   go depth 5
+  //   info depth 0 score cp 0
+  //   bestmove (none)
+  //
+  //   python-chess, both positions: status Status.VALID, legal_moves 0.
+  //   7k/6Q1/6K1 is_checkmate True, is_stalemate False.
+  //   7k/5Q2/6K1 is_checkmate False, is_stalemate True.
   TEST_CASE("first_legal_move reports nothing in a terminal position")
   {
-    uci_init();
-
+    struct terminal_case_t
     {
-      stdout_capture_t capture;
-      uci_process_line("position fen 7k/5Q1K/8/8/8/8/8/8 b - - 0 1");
+      const char* fen;
+      bool in_check;  // true for the mate, false for the stalemate
+    };
+
+    const terminal_case_t cases[] = {
+        {"7k/6Q1/6K1/8/8/8/8/8 b - - 0 1", true},
+        {"7k/5Q2/6K1/8/8/8/8/8 b - - 0 1", false},
+    };
+
+    for (const terminal_case_t& terminal : cases) {
+      // doctest stringifies a const char* as its address, so the FEN has to
+      // reach the message as a std::string or a failure names nothing.
+      const std::string fen(terminal.fen);
+
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position fen " + fen);
+      }
+
+      // uci_game() hands back a const view, so copy it to run the null move
+      // position_is_reachable() needs.
+      memcpy(&game, uci_game(), sizeof(game_t));
+
+      REQUIRE_MESSAGE(position_is_reachable(&game),
+                      (fen + " is not a position a legal game can reach"));
+      REQUIRE_MESSAGE(is_check(&game) == terminal.in_check,
+                      (fen + " is not in check as expected"));
+
+      REQUIRE_MESSAGE(first_legal_move() == 0, (fen + " has a legal move"));
+
+      uci_shutdown();
     }
-
-    REQUIRE_EQ(first_legal_move(), 0);
-
-    uci_shutdown();
   }
 
   // Regression: a one node budget aborts before the first root move finishes.
