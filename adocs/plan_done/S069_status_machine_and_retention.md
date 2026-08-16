@@ -7,7 +7,7 @@ decisions:
 closes:     2026-08-16_plan_review-F05
 blocks:
 paused_by:
-done:
+done:      2026-08-16. status.md's two disagreeing parked items rewritten from their sources: the machine item carries specs.md:189-194's figures (three to four and a half hours, DEC-048/DEC-050, 12 threads of the DEC-049 machine) and names no macOS daemon and no machine still to be acquired; the retention item states the window in list positions and cites plan.md:173-182 instead of a census that had gone stale in every number. grep for the five stale strings: 0 lines here, 5 at HEAD (:24-25, :62-64). moltke --validate clean, ctest -L fast 12 of 12 in 21.40 s. Closes 2026-08-16_plan_review-F05, planned until the re-run.
 
 ## Why this exists
 
@@ -45,3 +45,4 @@ on every completion is a maintenance cost with no reader.
 ## Cost
 
 Minutes, no build, no match. It alters nothing that plays.
+author:    Maksym Bodnar

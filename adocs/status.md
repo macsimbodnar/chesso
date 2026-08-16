@@ -7,7 +7,7 @@ Updated: 2026-08-16 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S069
+- Next: S070
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
@@ -16,17 +16,19 @@ Updated: 2026-08-16 by `moltke --step status`.
     to `closed` only when a re-run no longer reports it, so a fourth plan_review
     is owed once those steps land — and the severity profile says the loop has
     not reached its stopping condition, which is a re-run with no high and no
-    medium. The first parked item below is itself F05 and is S069's to fix, so
-    it is left standing rather than corrected here.
-  - **"Last done" above reads S053 and the newest completion is S065.** Not a
-    stale file: `moltke --step status` derives the field from the last completed
-    entry in `plan.md` **list order**, and the retention window leaves S053 at
-    position 66, after the parked S029, while S038, S066, S067 and S065 sit at
-    38 to 41. Hand-correcting the field puts the file back out of agreement with
+    medium. F05 was this file's own two parked items and S069 has rewritten
+    them; it is `planned` until the re-run, like the rest.
+  - **"Last done" above can name an older step than the newest completion.** Not
+    a stale file: `moltke --step status` derives the field from the last
+    completed entry in `plan.md` **list order**, and retention is a window over
+    list positions, so an entry sitting low in the list outlives completions that
+    came after it. `plan.md:173-182` states the rule against the code that
+    implements it, and this item does not restate the census: the window moves on
+    every completion, so a worked example here reads as a measurement while being
+    a memory. Hand-correcting the field puts the file back out of agreement with
     its own generator, which the stop hook catches, so it is recorded here
     instead. Found while completing S065. Parked, not planned: a step is created
-    by a decision and none has been taken on this, and S062 and S064 are the
-    pending steps nearest to it.
+    by a decision and none has been taken on this.
   - **The corpus and the fit tooling are gitignored and do not survive a machine
     move.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693 positions) and
     the scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
@@ -58,13 +60,15 @@ Updated: 2026-08-16 by `moltke --step status`.
     +129.2 +/- 33.8 over 183 games. The trend was unambiguous and the machine was
     needed elsewhere. Nothing depends on closing it; recorded so nobody reads
     "passed" into a run that was stopped.
-  - **Measurement capacity is the binding constraint on the whole plan.** At
-    10+0.2 with three usable cores an SPRT verdict costs about an hour, the
-    opening book is only `8moves_v3.pgn`, and this machine runs `opendirectoryd`
-    at half a core often enough to matter. An x86-64 Linux box fixes this and is
-    needed for S032 and S029 regardless. S028 spent 95 minutes generating data
-    and 75 minutes on its SPRT on the same three cores, and nothing could be
-    measured while either ran; S029 will want far more of both.
+  - **Measurement capacity is the binding constraint on the whole plan.** An
+    SPRT verdict costs three to four and a half hours at the DEC-048/DEC-050
+    settings — all 12 threads of the DEC-049 machine — and the opening book is
+    only `8moves_v3.pgn`. `specs.md:189-194` is the source; this restates it
+    because it is the paragraph a session reads before deciding whether it can
+    afford a measurement. A verdict that stops early is cheaper — S033's took
+    44 m 10 s for 1012 games, `S068:48` — and one that goes the distance costs
+    the full window. Nothing else is measured while a match runs, and data
+    generation and fits compete for the same machine.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
