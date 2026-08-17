@@ -74,7 +74,7 @@ all, the tune build searches exactly what the release build searches.
 |---|---|---|---|
 | `OrderHistoryMax` | 600000 | 0 to 899999 | ceiling on an accumulated history score. The upper bound keeps it under a killer move's 900000, which is what the ceiling is for |
 | `MaxQsearchDepth` | 8 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
-| `RfpMargin` | 100 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
+| `RfpMargin` | 75 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
 | `RfpMaxDepth` | 6 | 0 to 63 | the deepest node reverse futility pruning is applied at. 0 switches it off |
 | `RfpMinPly` | 3 | 0 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly |
 | `NullMoveBase` | 2 | 0 to 16 | the constant part of the null move reduction |

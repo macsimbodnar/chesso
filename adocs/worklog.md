@@ -3577,3 +3577,83 @@ build-debug -L fast` **13 of 13, 478.74 s** with the INV-2 and INV-4 assertions
 on. g++ 13.3.0, `-j12`. `README.md` owner-written, no change needed;
 `MANUAL.md` and `DEV_MANUAL.md` both updated — what the tune build is, that it
 is not the release binary, and how to set a parameter.
+
+## 2026-08-17 — S068, the reverse futility margin ships at 75, and the bounds lesson is DEC-063
+
+`RFP_MARGIN` 100 -> 75. `src/search_params.hpp:60` and the golden pin at
+`tests/test_search_params.cpp:43`, in the same commit, because that pin holds
+every default against the value the engine ships.
+
+**Two SPRTs, and the first one is in the record.** Same two Release builds --
+candidate 75 from the working tree, reference `7f15ac4` at 100 from
+`.ref-builds/` -- same book, `tc=10+0.2`, concurrency 12, adjudication and
+`model=normalized`. Bounds the only difference.
+
+Run 1, `elo0=0 elo1=5`, the `fastchess.sh` default: **no verdict**. 9066 games
+started, 9036 scored, 6 h 36 m 15 s, `Elo: 3.19 +/- 5.60`,
+`LLR: 0.59 (20.1%) (-2.94, 2.94) [0.00, 5.00]`, drifting 0.86 -> 0.59 over the
+final ten minutes, terminated deliberately. With the effect near +3 the truth
+lies between H0 and H1, neither can be accepted, and the LLR random-walks. The
+remaining 30934 games to the cap were 22.5 h for an answer that could not
+arrive. A bounds error, not a property of the change.
+
+Run 2, `elo0=-5 elo1=5`: **`SPRT ([-5.00, 5.00]) completed - H1 was accepted`**,
+`Total Time: 01:41:13`, 2312 games, `Elo: 12.18 +/- 11.12`,
+`nElo: 15.52 +/- 14.16`, `LLR: 2.97 (100.9%)`. Interpretation pre-registered in
+the script header before launch and honoured as written.
+
+**+12.18 is not the effect size.** An SPRT stops early when the observed effect
+runs favourable. Pooled over both runs, 11348 games, W3681 L3517 D4150: score
+50.72 %, point Elo **+5.02**, crude 95 % band Elo -1.37..+11.42, with run 2's
+share still carrying the stopping bias. Recorded verdict: a small positive
+effect, most likely 3 to 5 Elo, demonstrably not a regression of 5 Elo or more,
+with **14.5 % fewer nodes** at depth 9.
+
+**The shipping node count moves: 1422053 -> 1216123**, best moves
+`c3d5 e2a6 d7c8q` unchanged. Every pre-existing citation of 1422053 in
+`plan_done/`, `decisions.md`, `audit/` and earlier ledger rows is historical and
+untouched; the four live documents that quoted it or the old default were
+corrected.
+
+**DEC-063 is the step's most reusable output.** Bounds straddle the expected
+effect, they do not bracket it from one side. The warning already existed --
+`plan_todo/S021_aspiration_windows.md:12-17` prescribed `elo0=-5 elo1=5` and
+cited S006 random-walking for 340 games -- and sat in a step file nobody reads
+until that step comes up, which is why it is now in `decisions.md`. S021 cites
+it; it also binds S023, S024 and S026.
+
+Evidence: `adocs/data/S068_sprt_run1.{sh,log}`, `S068_sprt_run2.{sh,log}` and
+`S068_run2_match.pgn` (2312 games, 6.8 MB). **Run 1's 38 MB PGN was not
+committed** and the reasoning is in `adocs/data/README.md`: it is not an artifact
+of run 1 at all -- `fastchess.sh:133` appends to a fixed path, so the file held
+13468 games from three matches, 9055 of run 1 plus 3397 against `ref-a2f0065`
+and 1016 against `ref-c56ab41` -- and every number anything records comes from
+the committed transcript, which carries each game's result and adjudication
+reason. Only run 1's move lists are lost, and they were volatile.
+
+Three stale claims found and fixed while in `adocs/data/README.md`, all dated
+inline: the RFP constants cited at `src/search.cpp:38-39` and `:47`, moved to
+`src/search_params.hpp:60`, `:61` and `:70` by `7f15ac4`; the quiescence handoff
+and RFP check at `:304` and `:338`, now `:311` and `:348`; and "S073 is the step
+that makes `-D` work", which S073 landed and did not do -- `-DRFP_MARGIN=75`
+still fails to compile, now against the X macro's declaration, reproduced today.
+A fourth in `status.md`: its `specs.md:189-194` citation was correct at `e8a3dca`
+and stale by one commit after `7f15ac4` added ten lines above the paragraph, now
+`:199-204`. And `DEV_MANUAL.md:79`'s "292313 is what the release build reports,
+to the node" had stopped being true; re-measured over UCI on `build-tune`,
+**213509 at `RfpMargin` 75, 292313 at 100**, same pv.
+
+Changed: `src/search_params.hpp`, `tests/test_search_params.cpp`, `MANUAL.md`,
+`DEV_MANUAL.md`, `adocs/specs.md`, `adocs/decisions.md` (DEC-063),
+`adocs/testing.md` (four rows), `adocs/data/README.md`, `adocs/data/` (five new
+files), `adocs/plan_todo/S021_aspiration_windows.md`, `adocs/plan.md`,
+`adocs/status.md`, and the step file to `plan_done/`.
+
+Gate: **13 of 13 fast in 20.81 s on `build`**, **13 of 13 in 20.55 s on
+`build-tune`**, the six mate cases run on their own **6 passed / 160
+assertions** at the shipping margin including the DEC-060 material-leader case,
+`./clang-format.sh --check` exit 0, `moltke --validate` clean,
+`tools/plan_prose_check.py` 0 flagged. The golden pin observed red at the
+completing commit with the pin reverted to 100 and restored:
+`CHECK( 75 == 100 )`. g++ 13.3.0, `-j12`. `README.md` owner-written, no change
+needed; `MANUAL.md` and `DEV_MANUAL.md` both updated.

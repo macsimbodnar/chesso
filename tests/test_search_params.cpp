@@ -40,7 +40,7 @@ struct golden_param_t { const char* name; int value; };
 static const std::vector<golden_param_t> golden_defaults = {
   {"OrderHistoryMax", 600000},
   {"MaxQsearchDepth", 8},
-  {"RfpMargin",       100},
+  {"RfpMargin",       75},
   {"RfpMaxDepth",     6},
   {"RfpMinPly",       3},
   {"NullMoveBase",    2},

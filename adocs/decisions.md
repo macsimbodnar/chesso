@@ -3082,3 +3082,118 @@ Consequences: `adocs/eval_tuning_strategy.md` is tracked and gets a row in
               SPRT in the search block above them. Both are last in the order
               for that reason, and starting either is a deliberate call rather
               than a derivation.
+
+## DEC-063  2026-08-17  SPRT bounds straddle the expected effect, they do not bracket it from one side
+Tags:         sprt, measurement, bounds, s068, s021, dec-019, dec-041, dec-048
+
+Context:      S068 measured one constant -- `RFP_MARGIN` 75 against the shipping
+              100 -- twice, with the same two Release binaries, the same book,
+              the same 10+0.2 time control, the same 12-way concurrency and the
+              same adjudication. The only difference between the two runs was the
+              hypothesis pair.
+
+              | run | bounds | games | wall | outcome |
+              |---|---|---|---|---|
+              | 1 | `elo0=0 elo1=5` | 9036 scored | 6 h 36 m | no verdict, terminated |
+              | 2 | `elo0=-5 elo1=5` | 2312 | 1 h 41 m | **H1 accepted** |
+
+              Run 1 is `fastchess.sh`'s default (`fastchess.sh:58`). It did not
+              fail to reach a bound by bad luck. With the effect near +3 Elo the
+              truth lies **between** H0 and H1, so neither hypothesis is ever
+              the more likely one for long, and the log-likelihood ratio random
+              walks instead of climbing: it drifted 0.86 to 0.59 over the run's
+              final ten minutes, against a +/-2.94 bound, after six and a half
+              hours. At the measured 1371 games/h the remaining 30934 games to
+              the 40000-game cap were a further 22.5 h for an answer that could
+              not structurally arrive.
+
+              Run 2's bounds can terminate because H0 and H1 sit on opposite
+              sides of the observed effect. Same change, same binaries, a
+              quarter of the games, four times faster, and a verdict.
+
+              **The warning was already in the repository and was not applied.**
+              `adocs/plan_todo/S021_aspiration_windows.md:12-17`, written before
+              S068 ran, in full:
+
+                ## Expected
+
+                Small. One engine reported +9 with an error bar of +/-17, which is a reported
+                figure and therefore direction only (DEC-019). `elo0=0 elo1=10` cannot resolve
+                an effect this size -- use `elo0=-5 elo1=5` or similar or the run random-walks,
+                as S006's did for 340 games.
+
+              So this failure mode has now cost the project three runs -- S006's
+              340 games, S068's 9036 -- and had been correctly diagnosed and
+              prescribed against in a step file nobody reads until that step
+              comes up. That is why it is recorded here: a session about to spend
+              six hours greps `decisions.md`, not the pending step files of other
+              work.
+
+Decision:     By the owner's standing instruction to run measurements unasked
+              (DEC-041), on analysis supplied by the orchestrating agent inside
+              S068 (AGENTS.md section 8): **bounds are chosen to straddle the
+              effect the change is expected to have, and the expectation is
+              stated before the run.**
+
+              - A change expected to be small, which is most of them, gets
+                `elo0=-5 elo1=5`. H1 accepted then means "not a regression of 5
+                Elo or more", which is a real answer and is what a cheap
+                node-count saving needs.
+              - `elo0=0 elo1=5`, the script's default, is for a change expected
+                to clear 5 Elo. It asks "is this worth at least 5", and it can
+                only answer when the truth is not sitting inside the interval it
+                leaves undefended.
+              - The interpretation of each outcome is written down before the
+                run starts. S068's second run carries it in the script header
+                (`adocs/data/S068_sprt_run2.sh`), which is what makes "H1
+                accepted, therefore ship 75" a pre-registration rather than a
+                reading chosen after seeing +12.
+              - An SPRT that stops early has an upward-biased point estimate, so
+                the stopping run's Elo is not the effect size. S068 pools both
+                runs for the estimate and says which half carries the bias.
+
+Rejected:     Letting run 1 reach the 40000-game cap. 22.5 h more of the
+              binding constraint on the whole plan (`specs.md:199-204`) for an
+              answer the bounds cannot produce. The cost was not the objection
+              on its own -- a verdict is worth a night -- the objection is that
+              no number of games fixes a hypothesis pair that excludes the
+              truth.
+
+              `./fastchess.sh --fast`, `elo0=0 elo1=10` (`fastchess.sh:53`). The
+              same one-sided defect and a wider undefended interval: at +3 Elo
+              it random-walks for the same reason, and its looser alpha and beta
+              buy speed only on effects it can already resolve.
+
+              A third run at other bounds, or with the two pooled into a fresh
+              SPRT. Run 2's pre-registered text forbids it without a decision,
+              and re-running until a bound is hit is how an alpha of 0.05 stops
+              meaning 0.05.
+
+              Making `elo0=-5 elo1=5` the script's default in `fastchess.sh`.
+              Tempting and out of S068's scope: it changes the harness every
+              past verdict was taken with, and `--fast` and the full run would
+              then differ in more than width. It is a step of its own if anyone
+              wants it, and until then the bounds are named per run.
+
+Consequences: Every pending step whose expected effect is small now sizes its
+              bounds from that expectation rather than from the script default.
+              That is S021 explicitly, which prescribed this fix itself and now
+              cites this entry; S023 and S024, both move-ordering refinements
+              where DEC-019 has already measured two related techniques at zero
+              or worse; and S026, whose own literature figures are single
+              digits. None of them is expected to clear 5 Elo, so none of them
+              should be measured against a bound that assumes it.
+
+              DEC-019 gains a companion clause. "Published figures decide what
+              to try, never what to conclude" now also means **a published
+              figure sizes the bounds**: it is the only prior available before
+              the run, it is the number that says whether 5 Elo is a floor or a
+              ceiling, and it is still not evidence about the outcome.
+
+              A run that lowers `CONCURRENCY` already has to say why (AGENTS.md
+              section 0). A run that departs from `fastchess.sh`'s bounds now
+              says why as well, in the script that runs it, before it runs.
+
+              `fastchess.sh` is unchanged. Its default is still `elo0=0 elo1=5`,
+              so a step wanting straddling bounds writes its own invocation as
+              S068 did rather than editing the shared harness.

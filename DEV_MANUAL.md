@@ -51,8 +51,10 @@ every recorded benchmark becomes incomparable.
 
 `-DCHESSO_TUNE=ON`. Every parameter in `src/search_params.hpp` stops being an
 `inline constexpr int` the compiler folds and becomes a variable settable over
-UCI. S073 built it so the two hand-tunes still pending, S068 and S039, and the
-SPSA driver S084 need one build rather than one build per point measured. The
+UCI. S073 built it so the hand-tunes, S068 and S039, and the SPSA driver S084
+need one build rather than one build per point measured. S068 is done and used
+it for exactly one thing — node counts and suite runs, never a strength number,
+see the rule below. The
 sweeps in `adocs/data/S033_rfp_*.sh` recompiled per point with
 `-DRFP_MARGIN=$margin`, which `2026-08-16_plan_review-F04` found no longer
 builds; `setoption` replaces it and the scripts are historical evidence, not a
@@ -76,9 +78,11 @@ ignored like any other unknown option.
 
 It works, and this is the measurement rather than the claim. The midgame
 position of `tools/search_bench.py` at depth 9, driven over UCI on
-`build-tune`: **292313 nodes at `RfpMargin` 100, 549374 at 300, 917971 at
-2000**, best move `c3d5` throughout. 292313 is what the release build reports,
-to the node.
+`build-tune`: **213509 nodes at `RfpMargin` 75, 292313 at 100, 549374 at 300,
+917971 at 2000**, best move `c3d5` throughout. 213509 is what the release build
+reports, to the node — it is the shipping default since S068 (2026-08-17), and
+the 100 figure was the one that matched before that step. Both re-measured at
+S068's completing commit, same pv to the move.
 
 **Wait for `bestmove` when you script it.** `go` runs on its own thread, so
 `printf 'go depth 9\nquit\n' | ./build-tune/src/chesso` sends `quit` into a
@@ -266,17 +270,18 @@ one number and not the other:
 tools/search_bench.py ./build/src/chesso 9
 ```
 
-Three positions: midgame, kiwipete, tactical. Depth 9 is **1422053 nodes and
-about 0.23 s** for all three on this machine at S033 — raise the depth when a
+Three positions: midgame, kiwipete, tactical. Depth 9 is **1216123 nodes and
+about 0.19 s** for all three on this machine at S068 — raise the depth when a
 difference is small, and do not budget from the "about ten seconds per binary"
 this line used to claim, which was measured on the pre-DEC-049 machine and on an
 engine with less pruning in it.
 
 **That figure moves with every change to the search or to the evaluation, so
 quote it with the commit it was taken at.** It read 3136397 before S065 refitted
-the constants, 3752725 at `c56ab41` after that fit, and 1422053 once S033 added
-reverse futility pruning. A count from one of those is not a baseline for
-another.
+the constants, 3752725 at `c56ab41` after that fit, 1422053 once S033 added
+reverse futility pruning at margin 100, and 1216123 once S068 cut that margin to
+75 — 14.5 % of the tree, for the +5 Elo or so of DEC-063's pooled estimate. A
+count from one of those is not a baseline for another.
 
 **The node count is printed next to the time on purpose.** A change meant to be
 a pure speed-up must leave it identical; if the node count moved, the search

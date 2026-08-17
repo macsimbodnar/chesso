@@ -3,11 +3,11 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-16 by `moltke --step status`.
+Updated: 2026-08-17 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S068
+- Next: S074
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
@@ -22,8 +22,10 @@ Updated: 2026-08-16 by `moltke --step status`.
     a stale file: `moltke --step status` derives the field from the last
     completed entry in `plan.md` **list order**, and retention is a window over
     list positions, so an entry sitting low in the list outlives completions that
-    came after it. `plan.md:173-187` states the rule against the code that
-    implements it, and this item does not restate the census: the window moves on
+    came after it. `plan.md:174-188` states the rule against the code that
+    implements it — read `:173-187` until 2026-08-17, off by one at both ends: 173
+    is blank and 188 is the paragraph's last word — and this item does not restate
+    the census: the window moves on
     every completion, so a worked example here reads as a measurement while being
     a memory. Hand-correcting the field puts the file back out of agreement with
     its own generator, which the stop hook catches, so it is recorded here
@@ -63,12 +65,21 @@ Updated: 2026-08-16 by `moltke --step status`.
   - **Measurement capacity is the binding constraint on the whole plan.** An
     SPRT verdict costs three to four and a half hours at the DEC-048/DEC-050
     settings — all 12 threads of the DEC-049 machine — and the opening book is
-    only `8moves_v3.pgn`. `specs.md:189-194` is the source; this restates it
+    only `8moves_v3.pgn`. `specs.md:199-204` is the source; this restates it
     because it is the paragraph a session reads before deciding whether it can
-    afford a measurement. A verdict that stops early is cheaper — S033's took
-    44 m 10 s for 1012 games, `S068:48` — and one that goes the distance costs
-    the full window. Nothing else is measured while a match runs, and data
-    generation and fits compete for the same machine.
+    afford a measurement. (The citation read `:189-194` until 2026-08-17 and was
+    stale by one commit: it was correct when S069 wrote it at `e8a3dca` and
+    `7f15ac4` added ten lines above the paragraph.) A verdict that stops early is
+    cheaper — S033's took 44 m 10 s for 1012 games — and one that goes the
+    distance costs the full window. Nothing else is measured while a match runs,
+    and data generation and fits compete for the same machine.
+  - **The bounds decide whether a night buys a verdict at all, DEC-063.** S068
+    measured one constant twice with the same binaries: `elo0=0 elo1=5` ran
+    6 h 36 m over 9036 games and returned nothing, `elo0=-5 elo1=5` returned
+    H1 in 1 h 41 m over 2312. Both at 1371 games/h, so the cost of a verdict is
+    set by the hypothesis pair and not only by the hardware. Not parked as work:
+    it is a rule, and the pending steps it constrains are S021, S023, S024 and
+    S026.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`

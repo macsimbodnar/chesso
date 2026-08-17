@@ -21,6 +21,11 @@ recorded, so it is added, never edited.
 | `S033_rfp_guard_sweep.tsv` | 11 settings, five candidate guards x margin. The evidence that no guard works, DEC-060 |
 | `S033_rfp_*.sh` | the script that produced the table of the same name, verbatim as run. See "the scripts no longer run" below |
 | `S033_rfp_*.log` | the console transcript of that run. Carries no column the `.tsv` lacks -- read the `.tsv`; the log is here only to show the run went to completion in order |
+| `S068_sprt_run1.sh` | the script that ran S068's first SPRT, verbatim as run except for its filename (`run_s068_sprt.sh` in the session that ran it). `elo0=0 elo1=5`, the `fastchess.sh` default, which returned no verdict |
+| `S068_sprt_run1.log` | that run's full console, 21753 lines. Every game's result and adjudication reason, every periodic SPRT block, the deliberate `Terminated` and the wrapper's `elapsed_seconds=23775` / `status=143` |
+| `S068_sprt_run2.sh` | the script that ran the second SPRT (`run_s068_sprt2.sh` as run). `elo0=-5 elo1=5`. **Its header comment carries the pre-registered interpretation of each outcome and the bounds reasoning, written before the run started**, which is what makes S068's reading of the result a pre-registration rather than a choice made after seeing it. DEC-063 |
+| `S068_sprt_run2.log` | that run's full console, 5571 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 01:41:13` |
+| `S068_run2_match.pgn` | the 2312 games of run 2, the run that decided S068. One match, one reference, with per-move score, depth and time comments |
 
 `S018_raw.tsv` columns: `game ply phase cost ref own mate san fen`. `cost` is
 the reference's swing across the move and may be negative, which the profiler
@@ -63,9 +68,13 @@ two tables look like they contradict each other.
 | `min_ply` in `S033_rfp_ply_sweep.tsv` | `RFP_MIN_PLY` | **distance from the root**. The rule fires only at `ply >= min_ply`, so raising it switches pruning off at the top of the tree |
 | `max` in all three | `RFP_MAX_DEPTH` | remaining depth from above, `depth <= max` |
 
-Of the three, only `RFP_MAX_DEPTH` and `RFP_MARGIN` are in `src/search.cpp` at
-HEAD, at `:39` and `:38`. `RFP_MIN_PLY` is at `:47`. `RFP_MIN_DEPTH` is in no
-source file and no commit.
+Of the three, only `RFP_MAX_DEPTH` and `RFP_MARGIN` exist at HEAD, with
+`RFP_MIN_PLY`; `RFP_MIN_DEPTH` is in no source file and no commit. **2026-08-17:
+the three that exist are no longer in `src/search.cpp`** -- S073 moved every
+search constant into the X macro at `src/search_params.hpp:41-91`, where
+`RFP_MARGIN` is line `:60`, `RFP_MAX_DEPTH` line `:61` and `RFP_MIN_PLY` line
+`:70`. `src/search.cpp` now only reads them, at `:348-350`. The citations here
+said `src/search.cpp:38`, `:39` and `:47` and were correct until `7f15ac4`.
 
 ### Margin 75 is green in one table and RED in the other
 
@@ -98,8 +107,9 @@ That is the measurement that made S033 ship `RFP_MIN_PLY` and drop
 
 The two tables agree exactly where the knobs coincide, which is what says they
 are the same code measured twice. At floor 1 both mean "exempt nothing" --
-`depth >= 1` always holds where the rule is tested, since `src/search.cpp:304`
-hands anything below it to `quiescence()` before the check at `:338` is reached,
+`depth >= 1` always holds where the rule is tested, since `src/search.cpp:311`
+hands anything below it to `quiescence()` before the check at `:348` is reached
+(`:304` and `:338` at S033, moved by `7f15ac4`),
 and the rule already exempted the root -- so both must be the same binary at
 floor 1, and both report **1190649** at margin
 75 and **1398911** at margin 100. `S033_rfp_guard_sweep.tsv` row
@@ -107,10 +117,14 @@ floor 1, and both report **1190649** at margin
 
 ### What is reproducible at HEAD, and what is not
 
-`S033_rfp_ply_sweep.tsv` maps onto HEAD. HEAD is margin 100, `RFP_MIN_PLY` 3,
-`RFP_MAX_DEPTH` 6, which is its row `3 100 6` at **1422053** nodes -- reproduced
-2026-08-16 at `d7901e3` as 292313 + 1026739 + 103001, best moves
-`c3d5 e2a6 d7c8q`. Its other rows are one hand edit away.
+`S033_rfp_ply_sweep.tsv` maps onto HEAD. **Which row is HEAD moved on
+2026-08-17:** S068's verdict shipped margin 75, so HEAD is now its row `3 75 6`
+at **1216123** nodes -- reproduced at that commit as 213509 + 915091 + 87523,
+best moves `c3d5 e2a6 d7c8q`. Until then HEAD was the row `3 100 6` at
+**1422053** nodes, reproduced 2026-08-16 at `d7901e3` as
+292313 + 1026739 + 103001, same three best moves. Both rows of this table have
+now been checked against a committed tree and both are exact. Its other rows are
+one hand edit away.
 
 `S033_rfp_sweep.tsv` does not. It never varies the ply bound, so **none** of its
 45 rows is at the shipping configuration, and its `min` column sweeps a constant
@@ -131,8 +145,88 @@ Committed verbatim as evidence, not as tooling. Two traps:
 - `out=` is a hard-coded path into a scratchpad directory of a session that is
   gone. A re-run writes its table nowhere useful.
 - All three vary the constants with `-DRFP_MARGIN=...` on `CMAKE_CXX_FLAGS`,
-  which needs the `#ifndef` guards the pre-commit tree had. At HEAD the
-  constants are plain `#define`s, so `-D` collides with the definition and
-  `-Werror` fails the build. The scripts swallow a failed build into
-  `BUILD_FAIL` and keep going, so a re-run today produces a table of failures
-  rather than an error. S073 is the step that makes `-D` work.
+  which needs the `#ifndef` guards the pre-commit tree had. Without them `-D`
+  collides with the definition and the build fails. The scripts swallow a failed
+  build into `BUILD_FAIL` and keep going, so a re-run today produces a table of
+  failures rather than an error.
+
+  **2026-08-17: S073 has landed and `-D` still does not work**, so the line that
+  used to say "S073 is the step that makes `-D` work" was a prediction and it was
+  wrong. The constants are no longer `#define`s either -- S073 made each one a
+  row of an X macro in `src/search_params.hpp:41-91` expanded into an
+  `inline constexpr int` -- and the symbol a command-line macro now collides with
+  is the *declaration*:
+
+  ```
+  $ g++ -fsyntax-only -std=c++20 -Isrc -DRFP_MARGIN=75 src/search.cpp
+  <command-line>: error: expected unqualified-id before numeric constant
+  src/search_params.hpp:99:24: note: in definition of macro 'CHESSO_DECLARE_SEARCH_PARAM'
+     99 |   inline constexpr int sym = def;
+  src/search_params.hpp:60:5: note: in expansion of macro 'RFP_MARGIN'
+  ```
+
+  Reproduced 2026-08-17 at S068's completing commit, g++ 13.3.0. What S073
+  actually built is the other route: `-DCHESSO_TUNE=ON` makes every parameter an
+  `extern int` settable over UCI, so a *sweep* costs one build instead of one per
+  point. That build must never produce a strength number (`DEV_MANUAL.md:61`),
+  which is why S068's two SPRT binaries were both ordinary Release builds with
+  the default edited in the header.
+
+## S068's two SPRTs, and the 38 MB PGN that is not here
+
+Both runs measured the same one constant -- `RFP_MARGIN` 75 against the shipping
+100 -- with the same two Release binaries, book, time control, concurrency and
+adjudication. The bounds were the only difference and they decided everything:
+
+| run | bounds | games | wall | outcome |
+|---|---|---|---|---|
+| 1 | `elo0=0 elo1=5` | 9036 scored, 9066 started | 6 h 36 m 15 s | no verdict, terminated |
+| 2 | `elo0=-5 elo1=5` | 2312 | 1 h 41 m 13 s | **H1 accepted** |
+
+Both at about 1371 games/h. DEC-063 is the rule; S068 is the arithmetic. **Run 1
+is kept in full because a run that returned nothing is the evidence for that
+rule** -- delete it and DEC-063 becomes an assertion about a run nobody can
+inspect.
+
+The effect estimate is pooled over both, 11348 games, 3681-3517-4150: score
+50.72 %, point Elo **+5.02**. Run 2 stopped early and its point estimate
+(+12.18) is therefore upward-biased by optional stopping, so it is not quoted
+alone and its share of the pooling is flagged in the step file.
+
+### What is committed, and what was left out
+
+Committed: both scripts, both console transcripts, and run 2's PGN. 8.7 MB in
+total, against 2.7 MB for everything in this directory before it.
+
+**Not committed: run 1's PGN, 38 MB, 13468 games.** Two reasons, in order of
+weight.
+
+1. **It is not an artifact of run 1.** `fastchess.sh:133` passes a fixed
+   `-pgnout file=/tmp/fastchess_full.pgn` and fastchess *appends*, so the file is
+   an accumulation of every full-bounds match that machine has run: 9055 games of
+   S068's run 1 against `ref-7f15ac4`, 3397 against `ref-a2f0065` and 1016
+   against `ref-c56ab41`. Committing it as "S068's match PGN" would be filing
+   three matches under one step's name, and separating them needs a filter over
+   the `White`/`Black` tags.
+2. **Nothing recorded depends on it.** Every number S068 or DEC-063 states comes
+   from the console transcript, which is committed: `S068_sprt_run1.log` carries
+   every game's result and adjudication reason line by line, so the score, the
+   pentanomial pairs and the LLR trajectory are all re-derivable from it. What
+   the PGN adds is the move lists and the per-move score/depth/time comments --
+   input for `tools/error_profile.py` or `tools/analyse_game.py`, and no step
+   plans to profile them. These are two near-identical engines; S018's and
+   S028's PGNs are kept because they are games against a *stronger* opponent,
+   which is what an error profile needs.
+
+That PGN lived at
+`/tmp/claude-1000/-home-max-ws-chesso/15ad9dc1-2aed-4b32-aca7-69494270d848/scratchpad/S068_match.pgn`
+and is **volatile**: it is in a session scratchpad and will be gone, which is
+exactly the loss S072 exists because of. Run 1's move lists are the part of this
+step's evidence that was deliberately let go, and this paragraph is the record of
+the choice rather than a silence about it.
+
+Run 2's PGN is committed on the opposite reading of the same two tests: it is one
+match against one reference, it is the run that decided the step, and 6.8 MB
+insures 1 h 41 m of the constraint that binds the whole plan. `.git` is already
+321 MB, so neither file is decided by repository size alone -- the 38 MB one is
+decided by not being a clean artifact of anything.

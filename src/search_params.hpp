@@ -57,7 +57,7 @@
      Both are a first setting and neither is fitted: the margin is one pawn    \
      per ply, the bound keeps the assumption to the last few plies where the   \
      static score is close to what a search would return anyway. S033. */      \
-  X(RFP_MARGIN,        "RfpMargin",       100,    0, 2000)                     \
+  X(RFP_MARGIN,        "RfpMargin",       75,     0, 2000)                     \
   X(RFP_MAX_DEPTH,     "RfpMaxDepth",     6,      0, 63)                       \
                                                                                \
   /* The top of the tree is searched properly. The root is exempt because its  \
