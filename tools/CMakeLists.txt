@@ -19,6 +19,14 @@ add_executable(tuner tuner.cpp)
 target_include_directories(tuner PRIVATE ../src)
 target_link_libraries(tuner PRIVATE chesso_engine Threads::Threads)
 
+# S076. One row per distinct position in a tuning corpus. Links the engine
+# because the key it dedupes on is the engine's own zobrist key: a second
+# hashing scheme here would dedupe by a definition of "the same position" the
+# rest of the project does not use.
+add_executable(corpus_dedupe corpus_dedupe.cpp)
+target_include_directories(corpus_dedupe PRIVATE ../src)
+target_link_libraries(corpus_dedupe PRIVATE chesso_engine)
+
 # S034 feasibility probe. Prices a table access against the cost of calling
 # evaluate(), which is the question that decides whether caching the evaluation
 # can pay for itself. Kept rather than thrown away: the answer changes every

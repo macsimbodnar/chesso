@@ -48,3 +48,31 @@ why it is a tracked tool and not a shell pipeline in a scratchpad -- the shape
 A pass over 715 MB, minutes. One fit, minutes. One SPRT if the duplicate count
 justifies it, three to four and a half hours -- and if it does not, that is
 recorded as the result and no match is spent.
+
+## Pre-registered, before the count is known
+
+Written and committed before the tool was run on `selfplay_v2.tsv`, for the
+reason S075's sweep script states its rules before its first fit: the step's own
+body says a 0.1 % drop is not worth a match and a 20 % drop changes what the fit
+is fitting, and a threshold chosen after seeing the number is not a threshold.
+DEC-065 records the two design choices; these are the rules of the run.
+
+1. **The first row of a repeated position survives, in file order, and no label
+   is averaged.** DEC-065.
+2. **The drop rate decides whether a match is spent.** Under **1 %** of rows
+   dropped, no SPRT: the fit would be over essentially the same data and a
+   verdict would be measuring the noise floor S075 put at 4e-05 of held-out
+   error. At or above 1 %, exactly one candidate -- the vector the refit emits
+   -- plays one SPRT against the weights that ship.
+3. **A candidate that rounds to the incumbent does not play either.** If
+   `.tuning/diff_fit.py` reports no constant changed between the emitted table
+   and `src/eval_tables.hpp` plus `src/evaluation.cpp`, there is nothing for a
+   match to measure and the recorded result is the dedupe count.
+4. **No sweep.** One dedupe rule, one fit, at most one verdict. There is no
+   bake-off between keep-first and label-averaging, and no second fit at another
+   setting: that is the multiple-comparison shape S075's step file names, and
+   held-out error is not Elo (DEC-019).
+5. **The refit uses S065's and S075's settings**, so the only thing that moved
+   is the corpus: `--freeze tempo,piece_placement --seed 1 --validation 0.1
+   --threads 12`, K fitted from the data, `--lambda 0`.
+author:    Maksym Bodnar

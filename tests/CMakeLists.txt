@@ -80,6 +80,12 @@ target_include_directories(test_tuner_split PRIVATE ../tools)
 add_doctest_target(test_tuner_target)
 target_include_directories(test_tuner_target PRIVATE ../tools)
 
+# S076: the corpus dedupe pass. Its fixture is a handful of FENs in memory and
+# the key comes from the engine it already links, so it is a fast test like the
+# rest.
+add_doctest_target(test_corpus_dedupe)
+target_include_directories(test_corpus_dedupe PRIVATE ../tools)
+
 # S073: the tunable search parameters. Compiled in both configurations and the
 # same file in both -- the release build and the tune build each hold their live
 # values against the one table that is outside every #ifdef, which is how two

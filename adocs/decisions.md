@@ -3297,3 +3297,82 @@ Consequences: `--lambda 0` remains the default, so nothing changes for a run
               against a corpus, so the second rule reaches it as the general
               form it already obeys: loss ranks candidates, an SPRT decides one.
               DEC-019.
+
+## DEC-065  2026-08-17  the first row of a repeated position survives, and no label is averaged
+Tags:         tuning, corpus, dedupe, datagen, tuner, s076, dec-056, dec-019
+
+Context:      `adocs/eval_tuning_strategy.md` section 2.6 lists "deduplicate by
+              Zobrist key; heavily repeated positions bias the fit" among the
+              filters that matter, and S076 is that pass. The accepts fixes the
+              shape -- one row per distinct position, keyed on the engine's own
+              key -- and leaves two things the arithmetic has to decide.
+
+              **Which row survives.** `tools/datagen.cpp:337-341` gives every
+              row of a game the same label, the game's result, so two rows with
+              the same position can carry different labels: the same position
+              reached in two games that ended differently, and the same position
+              repeated inside one game on the way to a repetition draw.
+
+              **Whether the surviving label is one game's or the mean of them.**
+              A position seen n times with labels y_1..y_n contributes, in a
+              squared-error objective, n times the error against their mean plus
+              a constant. So the corpus as written already fits the mean, n times
+              over; dropping to one sample replaces that mean with one draw from
+              it, and averaging keeps it while dropping the repetition.
+
+Decision:     **Keep the first occurrence in file order and write the row
+              through unchanged.** Taken by the agent, with the analysis and the
+              options here, under the step's own delegation: its accepts names
+              the shape and not the tie-break.
+
+              The identity test is 64-bit key equality and nothing else. Over
+              11.0 M rows the birthday exposure is about 3e-06, so a collision
+              would drop one distinct position; the tool carries a `--verify`
+              mode that holds the four hashed FEN fields per distinct key and
+              counts key-equal rows that disagree on them, so the number is
+              measured on the real corpus rather than argued from the bound.
+
+Rejected:     **Average the labels over the duplicates.** The better estimator,
+              and it is what the objective is already computing. Refused for
+              three reasons, none of them statistical: it decouples the surviving
+              row's `result` from its own `score` and `phase`, which are the
+              first occurrence's and which S082's relabelling reads; it writes a
+              `result` no `datagen` run can produce, so the corpus stops being
+              readable as a record of games played; and it is a second change in
+              the same step, which is the one-change-at-a-time rule (`CLAUDE.md`
+              foundation 2, rule 6) -- a verdict would then price the dedupe and
+              the relabelling together. It is worth its own step if this one
+              measures a drop rate large enough for the difference to exist.
+
+              **Keep the last occurrence, or a random one.** Same information as
+              keep-first and none of it better. Keep-last costs a second pass or
+              a map holding the row text; a random one costs the determinism the
+              accepts asks for.
+
+              **Dedupe on the four hashed FEN fields as text.** Exact by
+              construction, no collision exposure at all, and refused by the step
+              itself: the FEN is written by `generate_FEN` from a board whose en
+              passant square is set whether or not a capture is available
+              (`2026-08-13_adversarial-F08`, S042 pending), so a text key
+              inherits the defect the plan is already fixing elsewhere and the
+              engine's key is the definition the rest of the project uses.
+
+Consequences: The dedupe is a pure row filter: every surviving line is a byte
+              copy of a line `datagen` wrote, so a deduplicated corpus stays
+              loadable by anything that reads the four-column format, and the
+              pass is deterministic without any tie-break state.
+
+              A position dropped here takes its game's label with it. The
+              surviving label is unbiased for that position and noisier than the
+              mean it replaces, which is the trade this decision makes and the
+              reason the paragraph above says the averaging variant is worth a
+              step of its own rather than being wrong.
+
+              `tools/tuner_split.hpp` reconstructs game boundaries from the ply,
+              and dedupe can only remove rows, never reorder them, so no game
+              gains a boundary and none is split. It can lose one: a game whose
+              first surviving row now stands at a later ply than the previous
+              game's last merges into that block. A merged block still lands
+              wholly on one side of the cut, so the cost is a coarser split and
+              not a contaminated one -- S066's own asymmetry, and S076 measures
+              the block count before and after.
