@@ -156,9 +156,10 @@ engines the public lists rate and solves it with `ordo` into an absolute figure
 on the CCRL Blitz scale, with an interval and a measured sensitivity to which
 reference is anchored. It buys zero Elo, which is the same trade S035 and S037
 made — and `plan.md` already records that the rest of this plan is measured with
-them. The reference binaries are built outside this repository and only a
-manifest is tracked, because Rustic is GPL-3 and the first foundation keeps that
-question out of this tree entirely. A short bracketing run at the repository's
+them. The reference binaries are compiled by the owner and installed in
+`/usr/games` beside `stockfish` and `fastchess`; nothing third-party enters this
+tree, and what is tracked is a manifest naming the version each result was
+played against. A short bracketing run at the repository's
 own `10+0.2` comes first and costs about thirteen minutes; what the rated run's
 time control is, and therefore whether it costs an hour or a night, is decided
 after it with a score in hand.

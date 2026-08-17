@@ -3466,8 +3466,8 @@ Consequences: The tuner takes one pass over the corpus before it loads it:
               changes says so, which is the case S065's and S076's pastes both
               passed through.
 
-## DEC-067  2026-08-17  chesso gets an absolute rating on the CCRL Blitz scale, and the reference binaries stay outside this repository
-Tags:         measurement, rating, gauntlet, ordo, licensing, s087, dec-016, dec-048, dec-050, dec-041
+## DEC-067  2026-08-17  chesso gets an absolute rating on the CCRL Blitz scale, from a gauntlet against engines the public lists rate
+Tags:         measurement, rating, gauntlet, ordo, s087, dec-016, dec-048, dec-050, dec-041
 
 Context:      Every strength number this project has ever recorded is a delta
               against an earlier chesso. `fastchess.sh` plays the working tree
@@ -3483,8 +3483,7 @@ Context:      Every strength number this project has ever recorded is a delta
               ratings, solved into an absolute rating by `ordo`, with a
               bracketing check before the expensive run and an anchor-sensitivity
               check after it. The document is sound on method. Four of its
-              specifics are wrong for this repository or this machine, and one
-              of its deliverables would put a GPL-3 binary inside this tree.
+              specifics are wrong for this repository or this machine.
 
               Verified on this machine before deciding: `ordo 1.2.6` is already
               installed at `/usr/local/bin/ordo`; `fastchess alpha 1.8.1`
@@ -3502,11 +3501,14 @@ Decision:     **Adopt the procedure as S087 and execute it next, ahead of
               the agent's; the four settings below were the owner's answers and
               the specification was the owner's.
 
-              **1. No third-party binary or source enters this repository.**
-              Reference engines are cloned and built under
-              `/home/max/ws/engines/<name>/`. What is tracked here is a
-              manifest: source URL, tag or commit, build command, binary
-              `sha256`, and the CCRL rating with the date it was read.
+              **1. The reference binaries live in `/usr/games`, beside
+              `stockfish` and `fastchess`, and nothing third-party enters this
+              repository.** Sources are cloned under `/home/max/ws/engines/`.
+              What is tracked here is a manifest naming each engine and the
+              exact version installed -- enough to attribute a result to a
+              specific opponent build, and no more. The CCRL rating used as each
+              anchor and the date it was read go in the per-run results file,
+              since they change between runs and the installed binary does not.
 
               **2. Concurrency stays at 12, DEC-050 unchanged.** The forfeit
               bias below is accepted and **detected** rather than avoided: the
@@ -3522,29 +3524,15 @@ Decision:     **Adopt the procedure as S087 and execute it next, ahead of
               **4. The book is `books/8moves_v3.pgn`**, the book behind every
               measurement on record here.
 
-              **5. The reference engines are built under the owner's
-              supervision.** The step carries the exact clone, checkout and
-              build commands; the owner runs them; the agent verifies each
-              binary answers `uci` and writes the manifest. This is narrower
-              than DEC-041, which hands the agent measurements and tuning, and
-              it is narrower by the owner's choice rather than by a rule.
+              **5. The owner compiles the reference engines and installs
+              them.** The step carries the exact clone, checkout, build and
+              install commands; the owner runs them; the agent verifies each
+              installed binary answers `uci` and records its version in the
+              manifest. This is narrower than DEC-041, which hands the agent
+              measurements and tuning, and it is narrower by the owner's choice
+              rather than by a rule.
 
-Rejected:     **The document's deliverable 2, a `references/` directory in this
-              repository holding the reference binaries.** Refused: Rustic is
-              GPL-3, and a GPL binary committed here is exactly the question
-              `CLAUDE.md`'s first foundation exists to keep out of this codebase
-              and any future network. A manifest carries the same provenance and
-              raises no licensing question at all. Running another engine's
-              binary as a tool is and remains encouraged, DEC-016.
-
-              **Installing the reference binaries into `/usr/games`**, beside
-              `stockfish` and `fastchess`. Refused: it needs `sudo`, and it puts
-              unversioned third-party binaries in a system directory where
-              nothing records which commit each one is -- an opponent binary is
-              a measurement instrument and an unidentifiable one contaminates
-              the result it produces.
-
-              **Concurrency 5 or 6, the document's own rule.** DEC-050's
+Rejected:     **Concurrency 5 or 6, the document's own rule.** DEC-050's
               justification is that oversubscription hits both sides about
               equally, so it inflates variance rather than biasing the result.
               That argument holds for chesso against chesso and does not
@@ -3588,13 +3576,15 @@ Consequences: The project gains a second measurement instrument with a different
               one script, which is what makes "chesso gained N Elo since S0nn"
               expressible on a public scale for the first time.
 
-              `/home/max/ws/engines/` becomes a machine-local asset that this
+              The `/usr/games` binaries become a machine-local asset this
               repository depends on and does not contain. It is the same class
               of loss `status.md` already parks for `.tuning/`: the manifest is
               the record that lets it be rebuilt, and it is tracked for that
-              reason.
+              reason. An opponent binary is a measurement instrument, so a
+              result is only attributable while the manifest names the version
+              it was played against -- which is what the manifest is for.
 
               Anchors are read from `https://computerchess.org.uk/ccrl/404/`,
               which 302s to `https://computerchess.org.uk/404/`, so the fetch
-              follows redirects. A rating is copied into the manifest with the
-              date it was read; nothing hardcodes one.
+              follows redirects. A rating is copied into the results file with
+              the date it was read; nothing hardcodes one.

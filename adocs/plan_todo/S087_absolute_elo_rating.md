@@ -1,8 +1,8 @@
 id:         S087
 goal:       an absolute rating for chesso on the CCRL Blitz scale, with an interval and a measured anchor sensitivity
-accepts:    a gauntlet of chesso against at least three reference engines carrying CCRL Blitz ratings read from the list at run time and never hardcoded; a bracketing pre-run establishes that chesso scores below 90 % against the strongest reference and above 10 % against the weakest, and the set is widened before the rated run is booked if it does not; the rated run returns a 95 % interval of +/- 30 Elo or tighter on chesso's solved rating; the PGN is checked for time forfeits and the count is reported, a single forfeit invalidating the run; the rating is re-solved anchoring each reference engine in turn and the full spread across anchors is reported, a spread above 30 Elo reported as soft rather than hidden; one script re-runs gauntlet and solve end to end; a tracked manifest names each reference engine's source, commit or tag, build command, binary sha256, and the CCRL rating with the date it was read; no third-party source or binary is added to this repository
+accepts:    a gauntlet of chesso against at least three reference engines carrying CCRL Blitz ratings read from the list at run time and never hardcoded; a bracketing pre-run establishes that chesso scores below 90 % against the strongest reference and above 10 % against the weakest, and the set is widened before the rated run is booked if it does not; the rated run returns a 95 % interval of +/- 30 Elo or tighter on chesso's solved rating; the PGN is checked for time forfeits and the count is reported, a single forfeit invalidating the run; the rating is re-solved anchoring each reference engine in turn and the full spread across anchors is reported, a spread above 30 Elo reported as soft rather than hidden; one script re-runs gauntlet and solve end to end; a tracked manifest names each reference engine and the exact version installed in /usr/games; no third-party source or binary is added to this repository
 touches:    a new run script beside fastchess.sh, a tracked reference manifest, adocs/data/ for the PGN and the results file, DEV_MANUAL.md
-excludes:   replacing fastchess.sh as the per-change SPRT gate; any edit under src/ or tests/; installing anything into /usr/games; installing the .NET SDK, which Leorik alone would need; assessing any position, move or game from the resulting PGN
+excludes:   replacing fastchess.sh as the per-change SPRT gate; any edit under src/ or tests/; compiling or installing the reference engines, which the owner does; installing the .NET SDK, which Leorik alone would need; assessing any position, move or game from the resulting PGN
 decisions:  DEC-067
 closes:
 blocks:
@@ -64,22 +64,21 @@ corrected versions.
 4. **`https://computerchess.org.uk/ccrl/404/` 302s** to
    `https://computerchess.org.uk/404/`. The fetch follows redirects.
 
-## The licensing boundary, DEC-067
+## Where the reference binaries live
 
-The specification's deliverable 2 asks for a `references/` directory in this
-repository holding the reference engine binaries. **It is not built that way
-here.** Rustic is GPL-3, and a GPL binary committed into this tree is exactly
-the question `CLAUDE.md`'s first foundation exists to keep out of this codebase
-and out of any future network.
+**In `/usr/games/`, beside `stockfish` and `fastchess`.** The owner compiles the
+reference engines and installs them there. Nothing third-party, source or
+binary, enters this repository.
 
-Instead: sources are cloned and built under `/home/max/ws/engines/<name>/`,
-outside the repository. What is tracked is a manifest with the same provenance
-content and no licensing question — source URL, tag or commit, build command,
-binary `sha256`, CCRL rating, and the date that rating was read.
+What is tracked here is a manifest naming each reference engine and the exact
+version installed — that is what makes a result attributable to a specific
+opponent build, and it is all the tracking the binaries need. The CCRL rating
+used as each anchor and the date it was read are recorded per run in the results
+file instead, because they change between runs and the installed binary does
+not.
 
 Running another engine's binary as a tool creates no derivative work and is
-encouraged. DEC-016. Compiling it outside the tree and recording what was
-compiled is the same act.
+encouraged. DEC-016.
 
 ## Concurrency: 12 stands, and the forfeit check is why
 
@@ -159,30 +158,40 @@ Which CCRL entry each build corresponds to is a manifest field, and the name in
 the manifest must be the name on the list — a tag built is not automatically the
 version rated.
 
-## Builds are supervised
+## The owner builds and installs
 
-The owner runs the builds; the agent writes the commands, verifies the result
-and writes the manifest. Nothing here needs `sudo` and nothing is installed.
+The owner compiles the reference engines and installs the binaries; the agent
+writes the commands, verifies each installed binary, and records its version in
+the manifest. `ordo` is already installed and needs no build.
+
+Sources are cloned under `/home/max/ws/engines/`, the owner's work directory.
+Verified against the repositories: Rustic's `Cargo.toml` names the binary
+`rustic` at both tags, and Blunder's main package is `./blunder`, not the module
+root.
 
 ```bash
 mkdir -p /home/max/ws/engines
 
-# Rustic (GPL-3) -- two tags from one clone, built into separate binaries
+# Rustic -- two tags from one clone
 git clone https://codeberg.org/mvanthoor/rustic.git /home/max/ws/engines/rustic
 cd /home/max/ws/engines/rustic
-git checkout alpha-1 && cargo build --release && cp target/release/rustic ../rustic-alpha-1
-git checkout alpha-2 && cargo build --release && cp target/release/rustic ../rustic-alpha-2
+git checkout alpha-1 && cargo build --release
+sudo install -m 0755 target/release/rustic /usr/games/rustic-alpha-1
+git checkout alpha-2 && cargo build --release
+sudo install -m 0755 target/release/rustic /usr/games/rustic-alpha-2
 
-# Blunder (MIT)
+# Blunder
 git clone https://github.com/algerbrex/blunder /home/max/ws/engines/blunder
 cd /home/max/ws/engines/blunder
-git checkout v3.0.0 && go build -o ../blunder-3.0.0 ./...
-git checkout v4.0.0 && go build -o ../blunder-4.0.0 ./...
+git checkout v3.0.0 && go build -o blunder ./blunder
+sudo install -m 0755 blunder /usr/games/blunder-3.0.0
+git checkout v4.0.0 && go build -o blunder ./blunder
+sudo install -m 0755 blunder /usr/games/blunder-4.0.0
 ```
 
-The binary paths and the `go build` package path are what the specification
-calls "compile from source where practical" — release downloads may be built
-for another microarchitecture, which on a timed match is a strength difference
+Compiled rather than downloaded, which is what the specification calls
+"compile from source where practical": a release binary may be built for
+another microarchitecture, and on a timed match that is a strength difference
 nobody asked for.
 
 Agent verification per binary, before it enters the manifest: it answers `uci`
@@ -221,11 +230,13 @@ printed.
    on a busy machine, prints what it is measuring and what it is measuring
    against, takes `CONCURRENCY` and a mode flag, and ends by counting forfeits
    and running the anchor sweep.
-2. A tracked manifest of the reference engines, as above. The binaries it
-   describes are not in this repository.
+2. A tracked manifest naming each reference engine and the exact version
+   installed in `/usr/games`. The binaries themselves are not in this
+   repository.
 3. A results file under `adocs/data/`: raw score per opponent, total games,
-   forfeit count, chesso's solved rating under each anchor choice, the spread
-   across anchors, and the interval — with its time control and its trinomial
+   forfeit count, the CCRL rating used for each anchor with the date it was
+   read, chesso's solved rating under each anchor choice, the spread across
+   anchors, and the interval — with its time control and its trinomial
    provenance stated beside it.
 
 ## Cost
