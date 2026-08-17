@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-17 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S075 the tuner fits a blend of the search score and the game result, the corpus column that is written and never read
-- Next: S075
+- In progress: none
+- Next: S076
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
