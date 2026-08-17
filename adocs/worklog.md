@@ -3696,3 +3696,65 @@ Gate: **13 of 13 fast in 20.85 s**, `./clang-format.sh --check` exit 0,
 change and no play change. `README.md` owner-written, no change needed;
 `MANUAL.md` checked -- `:168` still lists aspiration windows as absent, correct
 until S021 lands; `DEV_MANUAL.md` checked, no change needed.
+
+## S075 recap — the tuner's score/result blend, 2026-08-17
+
+`tools/tuner` gains `--lambda F`, fitting against
+`lambda * sigma(K * score) + (1 - lambda) * result` — `datagen`'s `score`
+column, written since S028 and read by nothing until now.
+
+**`--lambda 0` is the pre-S075 fit bit for bit.** Proved against the `0043c31`
+binary on a 1 M-row fixture at `--k 1.5`, where the fit moves on all 30 of its
+reports: identical 34-line logs and identical constants,
+`sha256 9bbf8112…`. `--lambda 0.7` emits `d0d4eb8a…` on the same fixture, which
+is what makes the equality evidence rather than a tautology.
+
+**Verdict: zero candidates, no SPRT, and the blend is not neutral but monotone
+harm.** Two scans over all 11003693 rows, 240 checkpoints per lambda. Best
+held-out error against the game result, incumbent 0.118457: lambda 0 **0.118452**
+(inside the noise), then **0.118530 / 0.118838 / 0.119014 / 0.119122 /
+0.119213** at 0.25 to 1.0. Ordered by lambda, established within five epochs,
+holding for 5000. The noise floor is the lambda 0 control's own 4e-05 wobble, so
+the smallest lambda is just under 2x it and everything from 0.5 up is 10 to 20x.
+
+The training-objective column runs the other way — 0.118452 down to 0.017945 —
+and would have ranked the worst vector first. That is DEC-064 measured rather
+than argued, and `eval_tuning_strategy.md` section 1's fixed point with it.
+
+No match was played because the sweep selected no candidate, which
+`S075_lambda_sweep.sh` rule 3 pre-registered before the first fit ran.
+`S075_sprt.sh` is committed unrun with its interpretation intact. The
+attribution limit it was written to carry dissolved before it was needed: the
+lambda 0 control moved held-out error by 3e-06 over 5000 epochs, so "the
+candidate is a refit as well as a changed label" stopped being a confound.
+
+The fine grid was added mid-step because `--report` sets the **checkpoint grid**
+and not only the log cadence — the coarse scan could only keep a vector it had
+sampled, and at lambda 0.25 the blend target absorbs nearly all its movement
+before epoch 100. Fifteen minutes, and it is the difference between a zero about
+the blend and a zero about the sampling.
+
+Two defects found and fixed inside the step, both red first. `.tuning/anchors.py`
+reproduced **2 of 10** suite anchors — its expectations were left behind by the
+S065 paste — and is the tool that derives new anchors for a paste; re-pointed at
+the assertion pinning each value, **10 of 10**. `clang-format.sh --check`
+selected this step's six emitted evidence headers as source, which would have
+made a step-completion failure unfixable without corrupting the record;
+`adocs/` is excluded by path, held by case 6 of the script's own test.
+
+New: `tools/tuner_target.hpp`, `tests/test_tuner_target.cpp` (7 cases, 418
+assertions, observed red three ways), `adocs/data/S075_lambda_sweep.sh`,
+`S075_lambda_fine_grid.sh`, `S075_sprt.sh`, twelve emitted fits under
+`S075_fits/` and `S075_fits_fine/`. Changed: `tools/tuner.cpp`,
+`tests/CMakeLists.txt`, `clang-format.sh`, `tests/test_clang_format_script.sh`,
+`DEV_MANUAL.md`, `adocs/data/README.md`, `adocs/decisions.md` (DEC-064),
+`adocs/testing.md` (five rows), `adocs/plan.md` (checker pruned S073's entry and
+four of its rows), `adocs/status.md`. Commits `8e29dd8`, `6f63be6`, `5129e49`,
+`e091c73`, `8f21f4b`, `a5924d7`, `580aa25`.
+
+Gate: **14 of 14 fast in 20.39 s**, `./clang-format.sh --check` exit 0,
+`moltke --validate` clean, `tools/plan_prose_check.py` 0 flagged. No `src/`
+change, no constant pasted, no play change. `README.md` owner-written, no change
+needed; `MANUAL.md` checked, no UCI surface change; `specs.md` checked, no
+change needed; `DEV_MANUAL.md` carries the flag, the two-metric rule and the
+measured table.
