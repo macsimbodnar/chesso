@@ -1,0 +1,308 @@
+S075 lambda fine grid, epochs 1..200 at report 5
+started   2026-08-17T17:40:38+02:00
+engine    a5924d7-dirty
+corpus    /home/max/ws/chesso/.tuning/selfplay_v2.tsv
+budget    --freeze tempo,piece_placement --seed 1 --validation 0.1
+        --epochs 200 --report 5 --patience 40 --threads 12
+incumbent wdl validation 0.118457 at the constants that ship
+
+=== lambda 0.0 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.118208  validation 0.118457
+epoch      5  train 0.118218  validation 0.118456  *
+epoch     10  train 0.118218  validation 0.118494
+epoch     15  train 0.118209  validation 0.118452  *
+epoch     20  train 0.118208  validation 0.118468
+epoch     25  train 0.118205  validation 0.118462
+epoch     30  train 0.118204  validation 0.118459
+epoch     35  train 0.118205  validation 0.118463
+epoch     40  train 0.118204  validation 0.118460
+epoch     45  train 0.118204  validation 0.118461
+epoch     50  train 0.118204  validation 0.118459
+epoch     55  train 0.118204  validation 0.118463
+epoch     60  train 0.118204  validation 0.118459
+epoch     65  train 0.118204  validation 0.118460
+epoch     70  train 0.118204  validation 0.118462
+epoch     75  train 0.118204  validation 0.118460
+epoch     80  train 0.118204  validation 0.118461
+epoch     85  train 0.118204  validation 0.118460
+epoch     90  train 0.118204  validation 0.118460
+epoch     95  train 0.118204  validation 0.118460
+epoch    100  train 0.118204  validation 0.118460
+epoch    105  train 0.118204  validation 0.118461
+epoch    110  train 0.118204  validation 0.118460
+epoch    115  train 0.118204  validation 0.118460
+epoch    120  train 0.118204  validation 0.118460
+epoch    125  train 0.118204  validation 0.118460
+epoch    130  train 0.118204  validation 0.118460
+epoch    135  train 0.118204  validation 0.118460
+epoch    140  train 0.118204  validation 0.118460
+epoch    145  train 0.118204  validation 0.118460
+epoch    150  train 0.118204  validation 0.118460
+epoch    155  train 0.118204  validation 0.118460
+epoch    160  train 0.118204  validation 0.118460
+epoch    165  train 0.118204  validation 0.118460
+epoch    170  train 0.118204  validation 0.118460
+epoch    175  train 0.118204  validation 0.118460
+epoch    180  train 0.118204  validation 0.118460
+epoch    185  train 0.118204  validation 0.118460
+epoch    190  train 0.118204  validation 0.118460
+epoch    195  train 0.118204  validation 0.118460
+epoch    200  train 0.118204  validation 0.118460
+best: train 0.118209  validation 0.118452  (start 0.118208 / 0.118457)
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l0_0.hpp
+elapsed 138s
+
+=== lambda 0.25 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.074006  validation 0.074249  wdl 0.118457
+epoch      5  train 0.073864  validation 0.074057  wdl 0.118579
+epoch     10  train 0.073823  validation 0.074032  wdl 0.118591
+epoch     15  train 0.073796  validation 0.073984  wdl 0.118539
+epoch     20  train 0.073783  validation 0.073958  wdl 0.118538
+epoch     25  train 0.073768  validation 0.073947  wdl 0.118530
+epoch     30  train 0.073758  validation 0.073940  wdl 0.118549
+epoch     35  train 0.073749  validation 0.073933  wdl 0.118565
+epoch     40  train 0.073742  validation 0.073924  wdl 0.118557
+epoch     45  train 0.073736  validation 0.073914  wdl 0.118567
+epoch     50  train 0.073732  validation 0.073913  wdl 0.118574
+epoch     55  train 0.073729  validation 0.073908  wdl 0.118579
+epoch     60  train 0.073725  validation 0.073904  wdl 0.118586
+epoch     65  train 0.073723  validation 0.073903  wdl 0.118590
+epoch     70  train 0.073721  validation 0.073901  wdl 0.118597
+epoch     75  train 0.073719  validation 0.073900  wdl 0.118600
+epoch     80  train 0.073718  validation 0.073898  wdl 0.118604
+epoch     85  train 0.073717  validation 0.073897  wdl 0.118607
+epoch     90  train 0.073715  validation 0.073896  wdl 0.118610
+epoch     95  train 0.073714  validation 0.073895  wdl 0.118613
+epoch    100  train 0.073714  validation 0.073894  wdl 0.118616
+epoch    105  train 0.073713  validation 0.073893  wdl 0.118618
+epoch    110  train 0.073712  validation 0.073893  wdl 0.118620
+epoch    115  train 0.073711  validation 0.073892  wdl 0.118621
+epoch    120  train 0.073711  validation 0.073892  wdl 0.118623
+epoch    125  train 0.073710  validation 0.073891  wdl 0.118624
+epoch    130  train 0.073710  validation 0.073891  wdl 0.118625
+epoch    135  train 0.073709  validation 0.073890  wdl 0.118626
+epoch    140  train 0.073709  validation 0.073890  wdl 0.118627
+epoch    145  train 0.073708  validation 0.073889  wdl 0.118628
+epoch    150  train 0.073708  validation 0.073889  wdl 0.118629
+epoch    155  train 0.073707  validation 0.073889  wdl 0.118630
+epoch    160  train 0.073707  validation 0.073888  wdl 0.118631
+epoch    165  train 0.073707  validation 0.073888  wdl 0.118632
+epoch    170  train 0.073706  validation 0.073888  wdl 0.118632
+epoch    175  train 0.073706  validation 0.073888  wdl 0.118633
+epoch    180  train 0.073706  validation 0.073887  wdl 0.118633
+epoch    185  train 0.073705  validation 0.073887  wdl 0.118634
+epoch    190  train 0.073705  validation 0.073887  wdl 0.118635
+epoch    195  train 0.073705  validation 0.073887  wdl 0.118635
+epoch    200  train 0.073705  validation 0.073886  wdl 0.118636
+no improvement in 40 reports, stopping
+best: train 0.074006  validation 0.074249  wdl 0.118457  (start 0.074006 / 0.074249  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l0_25.hpp
+elapsed 139s
+
+=== lambda 0.5 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.042536  validation 0.042760  wdl 0.118457
+epoch      5  train 0.042015  validation 0.042176  wdl 0.118838
+epoch     10  train 0.041921  validation 0.042076  wdl 0.119096
+epoch     15  train 0.041853  validation 0.042020  wdl 0.118997
+epoch     20  train 0.041797  validation 0.041956  wdl 0.118940
+epoch     25  train 0.041749  validation 0.041882  wdl 0.118904
+epoch     30  train 0.041714  validation 0.041837  wdl 0.118893
+epoch     35  train 0.041683  validation 0.041813  wdl 0.118897
+epoch     40  train 0.041654  validation 0.041787  wdl 0.118930
+epoch     45  train 0.041630  validation 0.041765  wdl 0.118961
+epoch     50  train 0.041609  validation 0.041740  wdl 0.118968
+epoch     55  train 0.041590  validation 0.041717  wdl 0.118965
+epoch     60  train 0.041573  validation 0.041700  wdl 0.118979
+epoch     65  train 0.041558  validation 0.041685  wdl 0.118992
+epoch     70  train 0.041545  validation 0.041670  wdl 0.119006
+epoch     75  train 0.041533  validation 0.041658  wdl 0.119022
+epoch     80  train 0.041522  validation 0.041647  wdl 0.119032
+epoch     85  train 0.041512  validation 0.041636  wdl 0.119042
+epoch     90  train 0.041503  validation 0.041627  wdl 0.119056
+epoch     95  train 0.041495  validation 0.041619  wdl 0.119068
+epoch    100  train 0.041488  validation 0.041612  wdl 0.119077
+epoch    105  train 0.041482  validation 0.041605  wdl 0.119089
+epoch    110  train 0.041476  validation 0.041599  wdl 0.119099
+epoch    115  train 0.041470  validation 0.041593  wdl 0.119108
+epoch    120  train 0.041465  validation 0.041589  wdl 0.119118
+epoch    125  train 0.041461  validation 0.041584  wdl 0.119127
+epoch    130  train 0.041457  validation 0.041580  wdl 0.119136
+epoch    135  train 0.041453  validation 0.041576  wdl 0.119144
+epoch    140  train 0.041449  validation 0.041573  wdl 0.119152
+epoch    145  train 0.041446  validation 0.041569  wdl 0.119160
+epoch    150  train 0.041443  validation 0.041566  wdl 0.119167
+epoch    155  train 0.041440  validation 0.041564  wdl 0.119174
+epoch    160  train 0.041438  validation 0.041561  wdl 0.119180
+epoch    165  train 0.041435  validation 0.041559  wdl 0.119186
+epoch    170  train 0.041433  validation 0.041557  wdl 0.119192
+epoch    175  train 0.041431  validation 0.041555  wdl 0.119197
+epoch    180  train 0.041429  validation 0.041553  wdl 0.119202
+epoch    185  train 0.041427  validation 0.041551  wdl 0.119207
+epoch    190  train 0.041425  validation 0.041549  wdl 0.119212
+epoch    195  train 0.041424  validation 0.041547  wdl 0.119216
+epoch    200  train 0.041422  validation 0.041546  wdl 0.119220
+no improvement in 40 reports, stopping
+best: train 0.042536  validation 0.042760  wdl 0.118457  (start 0.042536 / 0.042760  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l0_5.hpp
+elapsed 137s
+
+=== lambda 0.7 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.026528  validation 0.026729  wdl 0.118457
+epoch      5  train 0.025596  validation 0.025740  wdl 0.119014
+epoch     10  train 0.025421  validation 0.025544  wdl 0.119585
+epoch     15  train 0.025290  validation 0.025421  wdl 0.119602
+epoch     20  train 0.025207  validation 0.025344  wdl 0.119457
+epoch     25  train 0.025123  validation 0.025249  wdl 0.119405
+epoch     30  train 0.025055  validation 0.025163  wdl 0.119387
+epoch     35  train 0.025000  validation 0.025102  wdl 0.119380
+epoch     40  train 0.024953  validation 0.025058  wdl 0.119359
+epoch     45  train 0.024909  validation 0.025015  wdl 0.119391
+epoch     50  train 0.024870  validation 0.024976  wdl 0.119434
+epoch     55  train 0.024834  validation 0.024940  wdl 0.119467
+epoch     60  train 0.024802  validation 0.024906  wdl 0.119468
+epoch     65  train 0.024773  validation 0.024874  wdl 0.119481
+epoch     70  train 0.024746  validation 0.024846  wdl 0.119495
+epoch     75  train 0.024721  validation 0.024821  wdl 0.119509
+epoch     80  train 0.024699  validation 0.024797  wdl 0.119529
+epoch     85  train 0.024678  validation 0.024776  wdl 0.119548
+epoch     90  train 0.024658  validation 0.024756  wdl 0.119563
+epoch     95  train 0.024641  validation 0.024737  wdl 0.119577
+epoch    100  train 0.024624  validation 0.024720  wdl 0.119595
+epoch    105  train 0.024609  validation 0.024705  wdl 0.119611
+epoch    110  train 0.024595  validation 0.024690  wdl 0.119625
+epoch    115  train 0.024581  validation 0.024677  wdl 0.119640
+epoch    120  train 0.024569  validation 0.024664  wdl 0.119655
+epoch    125  train 0.024558  validation 0.024653  wdl 0.119669
+epoch    130  train 0.024548  validation 0.024642  wdl 0.119684
+epoch    135  train 0.024538  validation 0.024632  wdl 0.119698
+epoch    140  train 0.024529  validation 0.024623  wdl 0.119711
+epoch    145  train 0.024520  validation 0.024614  wdl 0.119724
+epoch    150  train 0.024512  validation 0.024606  wdl 0.119736
+epoch    155  train 0.024505  validation 0.024599  wdl 0.119749
+epoch    160  train 0.024498  validation 0.024592  wdl 0.119761
+epoch    165  train 0.024492  validation 0.024585  wdl 0.119772
+epoch    170  train 0.024486  validation 0.024579  wdl 0.119783
+epoch    175  train 0.024480  validation 0.024573  wdl 0.119794
+epoch    180  train 0.024474  validation 0.024568  wdl 0.119804
+epoch    185  train 0.024469  validation 0.024563  wdl 0.119813
+epoch    190  train 0.024464  validation 0.024558  wdl 0.119822
+epoch    195  train 0.024460  validation 0.024553  wdl 0.119831
+epoch    200  train 0.024455  validation 0.024549  wdl 0.119839
+no improvement in 40 reports, stopping
+best: train 0.026528  validation 0.026729  wdl 0.118457  (start 0.026528 / 0.026729  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l0_7.hpp
+elapsed 139s
+
+=== lambda 0.85 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.019869  validation 0.020047  wdl 0.118457
+epoch      5  train 0.018595  validation 0.018728  wdl 0.119122
+epoch     10  train 0.018312  validation 0.018421  wdl 0.119941
+epoch     15  train 0.018132  validation 0.018241  wdl 0.120137
+epoch     20  train 0.018006  validation 0.018121  wdl 0.119972
+epoch     25  train 0.017906  validation 0.018019  wdl 0.119861
+epoch     30  train 0.017809  validation 0.017912  wdl 0.119845
+epoch     35  train 0.017732  validation 0.017825  wdl 0.119843
+epoch     40  train 0.017665  validation 0.017759  wdl 0.119833
+epoch     45  train 0.017607  validation 0.017700  wdl 0.119808
+epoch     50  train 0.017552  validation 0.017646  wdl 0.119849
+epoch     55  train 0.017503  validation 0.017597  wdl 0.119898
+epoch     60  train 0.017458  validation 0.017551  wdl 0.119933
+epoch     65  train 0.017417  validation 0.017509  wdl 0.119943
+epoch     70  train 0.017378  validation 0.017469  wdl 0.119959
+epoch     75  train 0.017343  validation 0.017433  wdl 0.119977
+epoch     80  train 0.017310  validation 0.017399  wdl 0.119993
+epoch     85  train 0.017279  validation 0.017368  wdl 0.120012
+epoch     90  train 0.017251  validation 0.017338  wdl 0.120035
+epoch     95  train 0.017224  validation 0.017311  wdl 0.120055
+epoch    100  train 0.017199  validation 0.017286  wdl 0.120071
+epoch    105  train 0.017176  validation 0.017262  wdl 0.120090
+epoch    110  train 0.017154  validation 0.017240  wdl 0.120110
+epoch    115  train 0.017134  validation 0.017219  wdl 0.120127
+epoch    120  train 0.017115  validation 0.017200  wdl 0.120144
+epoch    125  train 0.017097  validation 0.017182  wdl 0.120162
+epoch    130  train 0.017080  validation 0.017165  wdl 0.120179
+epoch    135  train 0.017065  validation 0.017149  wdl 0.120196
+epoch    140  train 0.017050  validation 0.017134  wdl 0.120212
+epoch    145  train 0.017036  validation 0.017120  wdl 0.120229
+epoch    150  train 0.017023  validation 0.017107  wdl 0.120244
+epoch    155  train 0.017011  validation 0.017094  wdl 0.120260
+epoch    160  train 0.017000  validation 0.017083  wdl 0.120274
+epoch    165  train 0.016989  validation 0.017072  wdl 0.120289
+epoch    170  train 0.016979  validation 0.017062  wdl 0.120303
+epoch    175  train 0.016969  validation 0.017052  wdl 0.120316
+epoch    180  train 0.016960  validation 0.017043  wdl 0.120329
+epoch    185  train 0.016951  validation 0.017034  wdl 0.120341
+epoch    190  train 0.016943  validation 0.017026  wdl 0.120353
+epoch    195  train 0.016935  validation 0.017018  wdl 0.120364
+epoch    200  train 0.016928  validation 0.017010  wdl 0.120374
+no improvement in 40 reports, stopping
+best: train 0.019869  validation 0.020047  wdl 0.118457  (start 0.019869 / 0.020047  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l0_85.hpp
+elapsed 138s
+
+=== lambda 1.0 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.017794  validation 0.017945  wdl 0.118457
+epoch      5  train 0.016158  validation 0.016277  wdl 0.119213
+epoch     10  train 0.015720  validation 0.015819  wdl 0.120267
+epoch     15  train 0.015490  validation 0.015584  wdl 0.120700
+epoch     20  train 0.015309  validation 0.015405  wdl 0.120577
+epoch     25  train 0.015187  validation 0.015284  wdl 0.120408
+epoch     30  train 0.015067  validation 0.015162  wdl 0.120363
+epoch     35  train 0.014963  validation 0.015053  wdl 0.120366
+epoch     40  train 0.014875  validation 0.014964  wdl 0.120385
+epoch     45  train 0.014798  validation 0.014887  wdl 0.120350
+epoch     50  train 0.014728  validation 0.014817  wdl 0.120350
+epoch     55  train 0.014664  validation 0.014752  wdl 0.120389
+epoch     60  train 0.014605  validation 0.014693  wdl 0.120449
+epoch     65  train 0.014550  validation 0.014639  wdl 0.120481
+epoch     70  train 0.014500  validation 0.014588  wdl 0.120498
+epoch     75  train 0.014453  validation 0.014540  wdl 0.120520
+epoch     80  train 0.014409  validation 0.014496  wdl 0.120543
+epoch     85  train 0.014367  validation 0.014454  wdl 0.120562
+epoch     90  train 0.014329  validation 0.014415  wdl 0.120582
+epoch     95  train 0.014293  validation 0.014378  wdl 0.120606
+epoch    100  train 0.014259  validation 0.014344  wdl 0.120631
+epoch    105  train 0.014227  validation 0.014312  wdl 0.120650
+epoch    110  train 0.014197  validation 0.014281  wdl 0.120670
+epoch    115  train 0.014168  validation 0.014253  wdl 0.120692
+epoch    120  train 0.014142  validation 0.014226  wdl 0.120713
+epoch    125  train 0.014116  validation 0.014200  wdl 0.120732
+epoch    130  train 0.014093  validation 0.014176  wdl 0.120751
+epoch    135  train 0.014070  validation 0.014154  wdl 0.120771
+epoch    140  train 0.014049  validation 0.014132  wdl 0.120790
+epoch    145  train 0.014029  validation 0.014112  wdl 0.120809
+epoch    150  train 0.014011  validation 0.014093  wdl 0.120827
+epoch    155  train 0.013993  validation 0.014075  wdl 0.120845
+epoch    160  train 0.013976  validation 0.014058  wdl 0.120862
+epoch    165  train 0.013960  validation 0.014042  wdl 0.120879
+epoch    170  train 0.013945  validation 0.014027  wdl 0.120895
+epoch    175  train 0.013931  validation 0.014013  wdl 0.120911
+epoch    180  train 0.013917  validation 0.014000  wdl 0.120926
+epoch    185  train 0.013905  validation 0.013987  wdl 0.120940
+epoch    190  train 0.013893  validation 0.013975  wdl 0.120954
+epoch    195  train 0.013881  validation 0.013963  wdl 0.120967
+epoch    200  train 0.013871  validation 0.013953  wdl 0.120980
+no improvement in 40 reports, stopping
+best: train 0.017794  validation 0.017945  wdl 0.118457  (start 0.017794 / 0.017945  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits_fine/S075_fine_l1_0.hpp
+elapsed 137s
+
+finished  2026-08-17T17:54:26+02:00
+S075_FINE_DONE

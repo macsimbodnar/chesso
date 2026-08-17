@@ -126,3 +126,112 @@ elapsed 800s
 
 === lambda 0.7 ===
 11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.026528  validation 0.026729  wdl 0.118457
+epoch    100  train 0.024624  validation 0.024720  wdl 0.119595
+epoch    200  train 0.024455  validation 0.024549  wdl 0.119839
+epoch    300  train 0.024395  validation 0.024487  wdl 0.119910
+epoch    400  train 0.024370  validation 0.024462  wdl 0.119925
+epoch    500  train 0.024358  validation 0.024450  wdl 0.119943
+epoch    600  train 0.024344  validation 0.024436  wdl 0.119960
+epoch    700  train 0.024328  validation 0.024420  wdl 0.119977
+epoch    800  train 0.024313  validation 0.024406  wdl 0.119992
+epoch    900  train 0.024300  validation 0.024393  wdl 0.120008
+epoch   1000  train 0.024290  validation 0.024382  wdl 0.120024
+epoch   1100  train 0.024281  validation 0.024373  wdl 0.120040
+epoch   1200  train 0.024273  validation 0.024366  wdl 0.120055
+epoch   1300  train 0.024267  validation 0.024360  wdl 0.120069
+epoch   1400  train 0.024262  validation 0.024355  wdl 0.120088
+epoch   1500  train 0.024256  validation 0.024350  wdl 0.120096
+epoch   1600  train 0.024252  validation 0.024346  wdl 0.120107
+epoch   1700  train 0.024248  validation 0.024342  wdl 0.120118
+epoch   1800  train 0.024244  validation 0.024338  wdl 0.120129
+epoch   1900  train 0.024240  validation 0.024335  wdl 0.120136
+epoch   2000  train 0.024237  validation 0.024331  wdl 0.120144
+no improvement in 20 reports, stopping
+best: train 0.026528  validation 0.026729  wdl 0.118457  (start 0.026528 / 0.026729  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_7.hpp
+elapsed 800s
+
+=== lambda 0.85 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.019869  validation 0.020047  wdl 0.118457
+epoch    100  train 0.017199  validation 0.017286  wdl 0.120071
+epoch    200  train 0.016928  validation 0.017010  wdl 0.120374
+epoch    300  train 0.016846  validation 0.016928  wdl 0.120472
+epoch    400  train 0.016872  validation 0.016956  wdl 0.120544
+epoch    500  train 0.016877  validation 0.016962  wdl 0.120601
+epoch    600  train 0.016848  validation 0.016932  wdl 0.120620
+epoch    700  train 0.016816  validation 0.016900  wdl 0.120631
+epoch    800  train 0.016785  validation 0.016869  wdl 0.120639
+epoch    900  train 0.016755  validation 0.016838  wdl 0.120646
+epoch   1000  train 0.016726  validation 0.016809  wdl 0.120653
+epoch   1100  train 0.016699  validation 0.016781  wdl 0.120661
+epoch   1200  train 0.016675  validation 0.016756  wdl 0.120671
+epoch   1300  train 0.016653  validation 0.016735  wdl 0.120683
+epoch   1400  train 0.016634  validation 0.016716  wdl 0.120697
+epoch   1500  train 0.016619  validation 0.016701  wdl 0.120713
+epoch   1600  train 0.016607  validation 0.016688  wdl 0.120730
+epoch   1700  train 0.016597  validation 0.016678  wdl 0.120747
+epoch   1800  train 0.016589  validation 0.016670  wdl 0.120763
+epoch   1900  train 0.016582  validation 0.016663  wdl 0.120781
+epoch   2000  train 0.016576  validation 0.016657  wdl 0.120793
+no improvement in 20 reports, stopping
+best: train 0.019869  validation 0.020047  wdl 0.118457  (start 0.019869 / 0.020047  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_85.hpp
+elapsed 797s
+
+=== lambda 1.0 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.017794  validation 0.017945  wdl 0.118457
+epoch    100  train 0.014259  validation 0.014344  wdl 0.120631
+epoch    200  train 0.013871  validation 0.013953  wdl 0.120980
+epoch    300  train 0.013776  validation 0.013860  wdl 0.121122
+epoch    400  train 0.013872  validation 0.013957  wdl 0.121300
+epoch    500  train 0.013866  validation 0.013951  wdl 0.121375
+epoch    600  train 0.013822  validation 0.013907  wdl 0.121396
+epoch    700  train 0.013781  validation 0.013866  wdl 0.121407
+epoch    800  train 0.013741  validation 0.013825  wdl 0.121413
+epoch    900  train 0.013701  validation 0.013784  wdl 0.121416
+epoch   1000  train 0.013661  validation 0.013744  wdl 0.121418
+epoch   1100  train 0.013622  validation 0.013704  wdl 0.121418
+epoch   1200  train 0.013583  validation 0.013665  wdl 0.121420
+epoch   1300  train 0.013547  validation 0.013628  wdl 0.121422
+epoch   1400  train 0.013513  validation 0.013595  wdl 0.121423
+epoch   1500  train 0.013479  validation 0.013561  wdl 0.121434
+epoch   1600  train 0.013450  validation 0.013531  wdl 0.121444
+epoch   1700  train 0.013424  validation 0.013505  wdl 0.121456
+epoch   1800  train 0.013402  validation 0.013483  wdl 0.121472
+epoch   1900  train 0.013384  validation 0.013465  wdl 0.121489
+epoch   2000  train 0.013369  validation 0.013450  wdl 0.121507
+no improvement in 20 reports, stopping
+best: train 0.017794  validation 0.017945  wdl 0.118457  (start 0.017794 / 0.017945  wdl 0.118457)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+constants written to /home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l1_0.hpp
+elapsed 804s
+
+=== summary, best wdl validation per lambda ===
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_0.hpp:// error      0.118201 train, 0.118454 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_0.hpp:// lambda     0.0000  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_25.hpp:// error      0.074006 train, 0.074249 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_25.hpp:// lambda     0.2500  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_25.hpp:// wdl error  0.118457 validation, against 0.118457 at the constants this started
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_5.hpp:// error      0.042536 train, 0.042760 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_5.hpp:// lambda     0.5000  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_5.hpp:// wdl error  0.118457 validation, against 0.118457 at the constants this started
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_7.hpp:// error      0.026528 train, 0.026729 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_7.hpp:// lambda     0.7000  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_7.hpp:// wdl error  0.118457 validation, against 0.118457 at the constants this started
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_85.hpp:// error      0.019869 train, 0.020047 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_85.hpp:// lambda     0.8500  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_85.hpp:// wdl error  0.118457 validation, against 0.118457 at the constants this started
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l1_0.hpp:// error      0.017794 train, 0.017945 validation
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l1_0.hpp:// lambda     1.0000  target = lambda * sigma(K * score) + (1 - lambda) * result
+/home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l1_0.hpp:// wdl error  0.118457 validation, against 0.118457 at the constants this started
+
+finished  2026-08-17T17:40:29+02:00
+S075_SWEEP_DONE

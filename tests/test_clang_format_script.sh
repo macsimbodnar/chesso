@@ -18,6 +18,7 @@
 #   3. a misformatted UNTRACKED file exits non-zero and is named in the output
 #   4. a misformatted file inside a gitignored directory exits 0
 #   5. a file in the index but deleted from the worktree is not opened
+#   6. a code-shaped file under adocs/ is not scanned, tracked or not
 #
 # 4 is the negative half. Selecting the whole worktree instead of asking git
 # would pass 1 to 3 and fail this one, and would then try to format the
@@ -220,11 +221,37 @@ else
   fi
 fi
 
-# Non-vacuous by construction, once more: five cases were meant to run, and a
+# 6. adocs/ is evidence, not source, and is never formatted. S075.
+#
+# `tools/tuner` emits a pasteable C++ header, and a step that keeps one as
+# evidence keeps it under adocs/data/ -- six of them at S075. The value of that
+# file is that it is byte for byte what the tool wrote: reformatting it destroys
+# the thing it is kept for, and --check turns it into a step-completion failure
+# nobody can fix without corrupting the record. The tracked half matters as much
+# as the untracked one, since evidence is committed.
+#
+# Assertion 2 is this case's precondition: the same bytes in src/ exit non-zero,
+# so a zero here is the path being excluded rather than the fixture being
+# formatted or the check not running.
+adocs_dir="$(make_sandbox)"
+mkdir -p "$adocs_dir/adocs/data"
+misformatted "$adocs_dir/adocs/data/emitted_tracked.hpp"
+misformatted "$adocs_dir/adocs/data/emitted_untracked.hpp"
+git -C "$adocs_dir" add adocs/data/emitted_tracked.hpp
+git -C "$adocs_dir" commit -q -m evidence
+adocs_status="$(run_check "$adocs_dir")"
+
+if ((adocs_status != 0)); then
+  fail "a code-shaped file under adocs/ was scanned (exit $adocs_status);" \
+       "emitted evidence must not be reformatted"
+  show "$adocs_dir"
+fi
+
+# Non-vacuous by construction, once more: six cases were meant to run, and a
 # count below that means an assertion was skipped rather than satisfied.
 sandbox_count="$(find "$sandbox_root" -mindepth 1 -maxdepth 1 -type d | wc -l)"
-if ((sandbox_count != 5)); then
-  fail "$sandbox_count of 5 sandboxes were built; a case did not run"
+if ((sandbox_count != 6)); then
+  fail "$sandbox_count of 6 sandboxes were built; a case did not run"
 fi
 
 if ((failures > 0)); then

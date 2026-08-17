@@ -66,11 +66,18 @@ fi
 # .ref-builds/ out of the list. --cached can also name a file deleted from the
 # worktree but still in the index, which clang-format cannot open, so the list
 # is filtered to paths that exist.
+# S075: adocs/ is evidence and is never formatted, tracked or not. `tools/tuner`
+# emits a pasteable C++ header and a step that keeps one keeps it under
+# adocs/data/ -- what makes it evidence is that it is byte for byte what the tool
+# wrote. Formatting it destroys that, and --check turns it into a step-completion
+# failure that cannot be fixed without corrupting the record. The exclusion is by
+# path and not by extension, because the extension is exactly what is right about
+# those files.
 FILES=""
 while IFS= read -r FILE; do
     [ -f "$FILE" ] && FILES="$FILES $FILE"
 done < <(git ls-files --cached --others --exclude-standard |
-    grep -E '\.(c|cc|cpp|h|hpp|hh)$' | sort -u)
+    grep -E '\.(c|cc|cpp|h|hpp|hh)$' | grep -v -E '^adocs/' | sort -u)
 
 EXTRA_ARGS=""
 if [ "$1" == "--check" ]; then
