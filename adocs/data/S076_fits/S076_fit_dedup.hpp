@@ -1,57 +1,27 @@
-#pragma once
-#include "data_structures.hpp"
-
-// Evaluation tables and the incremental accumulator.
+// Fitted by tools/tuner from 10795695 self-play positions.
+// data       /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv
+// K          0.7801
+// error      0.118930 train, 0.119458 validation
+// seed       1, lr 1.000, validation split 0.10
+// split      by game, S066: 119978 games, 1079625 rows held out, 10.0005%
+// only       all
+// freeze     tempo,piece_placement
+// lambda     0.0000  target = lambda * sigma(K * score) + (1 - lambda) * result
 //
-// These live in a header rather than in evaluation.cpp because make_move()
-// updates the accumulator on every piece it touches, and a call across a
-// translation unit on that path would not inline. evaluate() was 40% of the
-// search when it rebuilt these numbers from the bitboards each time it was
-// asked; now it only interpolates what make_move already knows.
+// Paste over the corresponding definitions. The piece defines and the
+// two tables live in src/eval_tables.hpp; the mobility, king safety,
+// passed pawn, pawn structure, piece placement and tempo weights at
+// the end live in src/evaluation.cpp, a different file and easy to
+// miss.
+// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of
+// it is kept.
 
-// clang-format off
+#define PAWN    94
+#define KNIGHT  327
+#define BISHOP  308
+#define ROOK    487
+#define QUEEN   716
 
-#define PAWN   94
-#define KNIGHT 327
-#define BISHOP 308
-#define ROOK   487
-#define QUEEN  716
-
-// Material, White's point of view, indexed by piece type without the colour.
-// The king carries no value: both sides always have exactly one in a legal
-// position, so it can only cancel, and pricing it meant an illegal position
-// with an unbalanced king count produced a score larger than any mate.
-static constexpr int piece_value[6] = {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, 0};
-
-// Phase weights. Queens dominate, pawns and kings contribute nothing, and a
-// full set on both sides comes to GAME_PHASE_MAX.
-static constexpr int phase_value[6] = {0, 1, 1, 2, 4, 0};
-
-// Piece-square tables, written from White's point of view and read for Black
-// by mirroring the square vertically (sq ^ 56).
-//
-// Index 0 is a8 and index 63 is h1, matching bb_squares_t, so each table below
-// reads like a board seen from White: the top row is the eighth rank, where
-// White promotes, and the bottom row is White's own back rank.
-//
-// These numbers, and the five piece values above them, are fitted. S028 ran
-// tools/tuner over 1490839 quiet positions from 20000 self-play games at 100000
-// nodes a move, minimising the squared error of sigmoid(K * evaluate()) against
-// the result of the game each position came from, K = 1.1141 fitted from the
-// data. Held-out error 0.113852 before, 0.108043 after. They replaced a
-// hand-written set chosen from ordinary positional principles.
-//
-// Do not read meaning into an individual number. The parameterisation is
-// degenerate by five dimensions -- adding c to every square of psqt_mg[t] and
-// psqt_eg[t] is the same evaluation as adding c to piece_value[t] -- so the
-// split between a piece's value and its table is arbitrary and only the sum is
-// fitted. A pawn priced at 78 does not mean the tuner thinks a pawn is worth
-// less than a pawn.
-//
-// Nothing here is copied. The data is chesso's own self-play and no other
-// engine's evaluation, search or published table went into it. DEC-016.
-
-// clang-format off
 static constexpr int psqt_mg[6][64] = {
   {  // pawn
        0,    0,    0,    0,    0,    0,    0,    0,
@@ -177,64 +147,46 @@ static constexpr int psqt_eg[6][64] = {
       49,   20,   53,   61,   47,   43,   32,  -12
   }
 };
-// clang-format on
 
+// These eight live in src/evaluation.cpp, not eval_tables.hpp.
+const int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
+const int mobility_eg[4] = {0, 5, 0, -6};  // knight bishop rook queen
 
-// clang-format on
+const int king_safety_mg[KS_FEATURE_COUNT] = {
+    17,  // KS_KNIGHT_ATTACKERS
+    20,  // KS_BISHOP_ATTACKERS
+    19,  // KS_ROOK_ATTACKERS
+    34,  // KS_QUEEN_ATTACKERS
+    -27,  // KS_ZONE_ATTACKS
+    26,  // KS_SHIELD_NEAR
+    14,  // KS_SHIELD_FAR
+    -40,  // KS_OPEN_FILE
+    -25,  // KS_HALF_OPEN_FILE
+};
 
+const int king_safety_eg[KS_FEATURE_COUNT] = {
+    -6,  // KS_KNIGHT_ATTACKERS
+    -13,  // KS_BISHOP_ATTACKERS
+    -5,  // KS_ROOK_ATTACKERS
+    -61,  // KS_QUEEN_ATTACKERS
+    10,  // KS_ZONE_ATTACKS
+    -10,  // KS_SHIELD_NEAR
+    -10,  // KS_SHIELD_FAR
+    -14,  // KS_OPEN_FILE
+    22,  // KS_HALF_OPEN_FILE
+};
 
-// A black piece is worth what the same white piece would be worth on the
-// vertically mirrored square, and xor 56 is that mirror: it flips the rank bits
-// of the index and leaves the file alone.
-inline void eval_add_piece(board_t* board, piece_t piece, index_t square)
-{
-  if (piece < B_PAWN) {
-    board->material += piece_value[piece];
-    board->psqt_mg += psqt_mg[piece][square];
-    board->psqt_eg += psqt_eg[piece][square];
-    board->phase += phase_value[piece];
-  } else {
-    const int type = piece - B_PAWN;
-    const index_t mirrored = square ^ 56;
+const int passed_pawn_mg[6] = {0, -6, -4, 19, 59, -17};  // second rank .. seventh
 
-    board->material -= piece_value[type];
-    board->psqt_mg -= psqt_mg[type][mirrored];
-    board->psqt_eg -= psqt_eg[type][mirrored];
-    board->phase += phase_value[type];
-  }
-}
+const int passed_pawn_eg[6] = {15, 18, 46, 72, 96, 42};  // second rank .. seventh
 
+const int pawn_structure_mg[3] = {-10, -9, -11};  // isolated doubled backward
 
-inline void eval_remove_piece(board_t* board, piece_t piece, index_t square)
-{
-  if (piece < B_PAWN) {
-    board->material -= piece_value[piece];
-    board->psqt_mg -= psqt_mg[piece][square];
-    board->psqt_eg -= psqt_eg[piece][square];
-    board->phase -= phase_value[piece];
-  } else {
-    const int type = piece - B_PAWN;
-    const index_t mirrored = square ^ 56;
+const int pawn_structure_eg[3] = {-12, -32, -8};  // isolated doubled backward
 
-    board->material += piece_value[type];
-    board->psqt_mg += psqt_mg[type][mirrored];
-    board->psqt_eg += psqt_eg[type][mirrored];
-    board->phase -= phase_value[type];
-  }
-}
+const int piece_placement_mg[4] = {0, 0, 0, 0};  // pair, open, half open, seventh
 
+const int piece_placement_eg[4] = {0, 0, 0, 0};  // pair, open, half open, seventh
 
-// Rebuilds all four from the bitboards. Needed once when a position is loaded,
-// and by the assertion that checks the incremental path has not drifted.
-inline void eval_refresh(board_t* board)
-{
-  board->material = 0;
-  board->psqt_mg = 0;
-  board->psqt_eg = 0;
-  board->phase = 0;
-
-  for (index_t square = 0; square < 64; ++square) {
-    const piece_t piece = board->squares[square];
-    if (piece != EMPTY) { eval_add_piece(board, piece, square); }
-  }
-}
+const int tempo_mg = 0;
+const int tempo_eg = 0;

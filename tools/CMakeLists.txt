@@ -42,3 +42,12 @@ target_link_libraries(probe_cost PRIVATE chesso_engine)
 add_executable(eval_spread eval_spread.cpp)
 target_include_directories(eval_spread PRIVATE ../src)
 target_link_libraries(eval_spread PRIVATE chesso_engine)
+
+# S076. The positions that make evaluate()'s taper truncate hardest, which
+# tests/test_eval_model.cpp pins and which belong to the weights rather than to
+# the positions -- so the list is re-measured on every refit (DEC-057). Twice
+# done by hand from a scratchpad script that no longer exists; tracked from
+# here.
+add_executable(truncation_scan truncation_scan.cpp)
+target_include_directories(truncation_scan PRIVATE ../src)
+target_link_libraries(truncation_scan PRIVATE chesso_engine)

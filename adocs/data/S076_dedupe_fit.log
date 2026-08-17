@@ -14,3 +14,58 @@ start: train 0.119265  validation 0.119608
 epoch    100  train 0.119017  validation 0.119530  *
 epoch    200  train 0.118986  validation 0.119501  *
 epoch    300  train 0.118970  validation 0.119488  *
+epoch    400  train 0.118959  validation 0.119480  *
+epoch    500  train 0.118952  validation 0.119474  *
+epoch    600  train 0.118946  validation 0.119469  *
+epoch    700  train 0.118942  validation 0.119466  *
+epoch    800  train 0.118939  validation 0.119464  *
+epoch    900  train 0.118937  validation 0.119462  *
+epoch   1000  train 0.118936  validation 0.119463
+epoch   1100  train 0.118934  validation 0.119459  *
+epoch   1200  train 0.118932  validation 0.119459  *
+epoch   1300  train 0.118932  validation 0.119458  *
+epoch   1400  train 0.118931  validation 0.119458  *
+epoch   1500  train 0.118930  validation 0.119458  *
+epoch   1600  train 0.118930  validation 0.119458  *
+epoch   1700  train 0.118930  validation 0.119459
+epoch   1800  train 0.118929  validation 0.119458
+epoch   1900  train 0.118929  validation 0.119458
+epoch   2000  train 0.118929  validation 0.119458
+epoch   2100  train 0.118929  validation 0.119458
+epoch   2200  train 0.118929  validation 0.119458
+epoch   2300  train 0.118929  validation 0.119458
+epoch   2400  train 0.118930  validation 0.119459
+epoch   2500  train 0.118929  validation 0.119459
+epoch   2600  train 0.118928  validation 0.119459
+epoch   2700  train 0.118928  validation 0.119459
+epoch   2800  train 0.118928  validation 0.119458
+epoch   2900  train 0.118928  validation 0.119459
+epoch   3000  train 0.118928  validation 0.119459
+epoch   3100  train 0.118931  validation 0.119465
+epoch   3200  train 0.118928  validation 0.119459
+epoch   3300  train 0.118928  validation 0.119459
+epoch   3400  train 0.118928  validation 0.119459
+epoch   3500  train 0.118930  validation 0.119463
+epoch   3600  train 0.118928  validation 0.119459
+no improvement in 20 reports, stopping
+best: train 0.118930  validation 0.119458  (start 0.119265 / 0.119608)
+constants written to /home/max/ws/chesso/adocs/data/S076_fits/S076_fit_dedup.hpp
+
+elapsed 1378s
+
+=== emitted header ===
+// Fitted by tools/tuner from 10795695 self-play positions.
+// data       /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv
+// K          0.7801
+// error      0.118930 train, 0.119458 validation
+// seed       1, lr 1.000, validation split 0.10
+// split      by game, S066: 119978 games, 1079625 rows held out, 10.0005%
+// only       all
+// freeze     tempo,piece_placement
+// lambda     0.0000  target = lambda * sigma(K * score) + (1 - lambda) * result
+//
+// Paste over the corresponding definitions. The piece defines and the
+// two tables live in src/eval_tables.hpp; the mobility, king safety,
+
+finished  2026-08-17T19:00:42+02:00
+S076_FIT_DONE

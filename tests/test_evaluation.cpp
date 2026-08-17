@@ -220,6 +220,16 @@ TEST_SUITE("evaluation: score")
   // centipawn, 716 to 715, on a truncation that crosses zero. A fitted material
   // value only means anything together with its own tables.
   //
+  // S076's refit on the deduplicated corpus moved five of the six again -- 125,
+  // 211, 279, 509, 715 to 135, 244, 325, 563, 787, the bare kings still
+  // cancelling -- and every one of the five went **up** while `PAWN` fell by 1
+  // and `BISHOP` rose by 2. That is the same degeneracy read from the other
+  // side: what moved is the piece-square tables these pieces stand on, not the
+  // material defines. Each value below was re-derived by `.tuning/anchors.py`,
+  // the second implementation, and matched the engine on all ten of its cases
+  // before any of them was pasted here. Re-targeted, not relaxed: the
+  // assertion is the same exact equality it always was.
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -234,11 +244,11 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 125, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 211, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 279, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 509, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 715, "queen on d1"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 135, "pawn on e2"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 244, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 563, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 787, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on

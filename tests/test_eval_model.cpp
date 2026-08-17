@@ -190,32 +190,35 @@ static const std::vector<std::string> positions = {
     // Black is the side holding all three.
     "r5k1/ppppRppp/8/8/8/8/PPP2PPP/3R2K1 w - - 0 1",
     "3r2k1/ppp2ppp/8/8/8/8/PPPPrPPP/R5K1 b - - 0 1",
-    // The truncation bound itself, added at S038 and re-measured at S065.
-    // Everything above is hand-picked to reach a feature, and hand-picked
-    // positions are exactly the ones whose taperings happen to divide evenly:
-    // over the real corpus 175415 of 11003693 positions disagree with the model
-    // by more than the 2.0 this file used to allow, and none of the twenty-six
-    // above does. These four are here so the bound is exercised by the test
-    // rather than only by a corpus under `.tuning/` that is gitignored and does
-    // not exist on every machine. "the pinned positions reach the truncation
-    // bound" below is what says they still do.
+    // The truncation bound itself, added at S038 and re-measured at S065 and
+    // again at S076. Everything above is hand-picked to reach a feature, and
+    // hand-picked positions are exactly the ones whose taperings happen to
+    // divide evenly: over the real corpus 135399 of 10795695 positions disagree
+    // with the model by more than the 2.0 this file used to allow, and none of
+    // the twenty-six above does. These four are here so the bound is exercised
+    // by the test rather than only by a corpus under `.tuning/` that is
+    // gitignored and does not exist on every machine. "the pinned positions
+    // reach the truncation bound" below is what says they still do.
     //
     // **A residual belongs to the weights, not to the position**, which is why
     // this list is re-measured whenever the constants are refitted rather than
     // carried forward. S038 pinned the four worst the 2026-08-13 audit found
     // under the constants shipping then; S065's fit moved all four to between
-    // 0.25 and 1.25 and left the case asserting a property of weights that were
-    // no longer in the tree. Each of these four is at the arithmetic maximum,
-    // 69/24 = 2.875 exactly, measured over all 11003693 rows of
-    // `.tuning/selfplay_v2.tsv`, and they span the taper from phase 5 to phase
-    // 23 with both sides to move so that a model error confined to one end of
-    // it
-    // is still reachable. DEC-057 is the decision to re-measure; what it does
-    // not permit is lowering the thresholds below to whatever came out.
-    "8/5R2/2nk2K1/8/1r3P2/8/8/8 b - - 3 54",
-    "r3r1k1/p5p1/1p1Pb2p/5P2/8/7P/P2N1B2/bN3RK1 w - - 0 24",
-    "5rk1/5ppp/p1b4q/8/2QP2P1/5N1n/PP3P2/4RR1K w - - 2 26",
-    "r1bq1rk1/1ppp1p1p/n4np1/pNP3N1/4p2P/4P3/PBPP1PP1/R2QKB1R b KQ - 5 9",
+    // 0.25 and 1.25, and S076's fit moved *its* four to between 0.08 and 1.83,
+    // each time leaving the case asserting a property of weights no longer in
+    // the tree. Each of these four is at the arithmetic maximum, 69/24 = 2.875
+    // exactly, measured over all 10795695 rows of
+    // `.tuning/selfplay_v2_dedup.tsv` by `build/tools/truncation_scan` -- 30
+    // positions reach it and 69 more sit at 68/24 -- and they span the taper
+    // from phase 5 to phase 23 with both sides to move so that a model error
+    // confined to one end of it is still reachable. Phase 17 has no maximal
+    // position under these weights, so the middle two are 11 and 19. DEC-057 is
+    // the decision to re-measure; what it does not permit is lowering the
+    // thresholds below to whatever came out.
+    "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
+    "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
+    "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
+    "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
 };
 
 
@@ -223,12 +226,13 @@ static const std::vector<std::string> positions = {
 // feature count, in the order they are listed above. Named separately because
 // "the pinned positions reach the truncation bound" has to be able to fail when
 // *these* stop disagreeing with the model, which is a different statement from
-// the whole corpus agreeing within tolerance. S038, re-measured at S065.
+// the whole corpus agreeing within tolerance. S038, re-measured at S065 and at
+// S076.
 static const std::vector<std::string> truncation_positions = {
-    "8/5R2/2nk2K1/8/1r3P2/8/8/8 b - - 3 54",
-    "r3r1k1/p5p1/1p1Pb2p/5P2/8/7P/P2N1B2/bN3RK1 w - - 0 24",
-    "5rk1/5ppp/p1b4q/8/2QP2P1/5N1n/PP3P2/4RR1K w - - 2 26",
-    "r1bq1rk1/1ppp1p1p/n4np1/pNP3N1/4p2P/4P3/PBPP1PP1/R2QKB1R b KQ - 5 9",
+    "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
+    "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
+    "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
+    "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
 };
 
 

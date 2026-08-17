@@ -586,8 +586,12 @@ TEST_SUITE("search: quiescence")
     const int cheap_score = evaluate_cheap(&game.board);
     // S065's fit, DEC-059: 530 to 509. The cheap score does not move -- the
     // fit changed what the tables say, not the two terms evaluate_cheap() adds.
-    REQUIRE_EQ(static_score, 509);
-    REQUIRE_EQ(cheap_score, 524);
+    // S076's refit on the deduplicated corpus moved both: 509 to 563 and 524 to
+    // 567. Both re-derived by `.tuning/anchors.py`, which computes this
+    // position's evaluate() and evaluate_cheap() from the specification rather
+    // than from the engine.
+    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(cheap_score, 567);
 
     // The precondition for the shortcut. Without it the assertions below would
     // pass on a build where the shortcut never fires at all.
@@ -642,9 +646,11 @@ TEST_SUITE("search: quiescence")
     // -- come to 27 centipawns White-relative, which is 27 off Black's score,
     // and the last centipawn is the single truncating division evaluate_cheap()
     // does over the summed pair.
-    // S065's fit, DEC-059, then moved it again: 266 to 224.
+    // S065's fit, DEC-059, then moved it again: 266 to 224, and S076's refit on
+    // the deduplicated corpus to 198 -- the one anchor of the five that went
+    // down.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 224);
+    REQUIRE_EQ(black_static, 198);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -682,10 +688,12 @@ TEST_SUITE("search: quiescence")
     // check, quiescence searches the evasions instead of standing pat, so this
     // is a one-ply negamax. Each of the four leaves has Black to move, not in
     // check and with no capture, so each returns its own stand pat, and the
-    // root is the best of them. S065's fit, DEC-059: -491 to -446, derived leaf
-    // by leaf from the specification rather than read off the engine, and
-    // Ke1-d2 is still the evasion that survives.
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -446);
+    // root is the best of them. S065's fit, DEC-059: -491 to -446, and S076's
+    // refit on the deduplicated corpus to -505, derived leaf by leaf from the
+    // specification rather than read off the engine both times. Ke1-d2 is still
+    // the evasion that survives: the four leaves are -555, -505, -570 and -522
+    // from the root's side, so it is the best by 17 rather than by 1.
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -505);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -1120,8 +1128,9 @@ TEST_SUITE("search: draws")
     // Black is a rook down and Black is to move, and evaluate() answers from
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
-    // kings and the rook. S065's fit, DEC-059: -491 to -537.
-    REQUIRE_EQ(evaluate(&game.board), -537);
+    // kings and the rook. S065's fit, DEC-059: -491 to -537, and S076's refit
+    // on the deduplicated corpus to -569.
+    REQUIRE_EQ(evaluate(&game.board), -569);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;
