@@ -19,3 +19,52 @@ epoch    600  train 0.118203  validation 0.118459
 epoch    700  train 0.118203  validation 0.118459
 epoch    800  train 0.118203  validation 0.118459
 epoch    900  train 0.118203  validation 0.118459
+epoch   1000  train 0.118203  validation 0.118458
+epoch   1100  train 0.118203  validation 0.118458
+epoch   1200  train 0.118203  validation 0.118458
+epoch   1300  train 0.118202  validation 0.118458
+epoch   1400  train 0.118202  validation 0.118458
+epoch   1500  train 0.118202  validation 0.118458
+epoch   1600  train 0.118202  validation 0.118458
+epoch   1700  train 0.118202  validation 0.118458
+epoch   1800  train 0.118202  validation 0.118457
+epoch   1900  train 0.118202  validation 0.118458
+epoch   2000  train 0.118202  validation 0.118457  *
+epoch   2100  train 0.118202  validation 0.118457  *
+epoch   2200  train 0.118202  validation 0.118457  *
+epoch   2300  train 0.118202  validation 0.118457
+epoch   2400  train 0.118202  validation 0.118457
+epoch   2500  train 0.118202  validation 0.118457
+epoch   2600  train 0.118202  validation 0.118457
+epoch   2700  train 0.118202  validation 0.118457
+epoch   2800  train 0.118202  validation 0.118457
+epoch   2900  train 0.118202  validation 0.118457  *
+epoch   3000  train 0.118202  validation 0.118458
+epoch   3100  train 0.118202  validation 0.118457  *
+epoch   3200  train 0.118202  validation 0.118457
+epoch   3300  train 0.118202  validation 0.118457
+epoch   3400  train 0.118202  validation 0.118457
+epoch   3500  train 0.118202  validation 0.118457  *
+epoch   3600  train 0.118202  validation 0.118457  *
+epoch   3700  train 0.118202  validation 0.118456  *
+epoch   3800  train 0.118202  validation 0.118457
+epoch   3900  train 0.118202  validation 0.118457
+epoch   4000  train 0.118202  validation 0.118456
+epoch   4100  train 0.118202  validation 0.118457
+epoch   4200  train 0.118202  validation 0.118456  *
+epoch   4300  train 0.118203  validation 0.118456  *
+epoch   4400  train 0.118202  validation 0.118456
+epoch   4500  train 0.118202  validation 0.118456
+epoch   4600  train 0.118201  validation 0.118454  *
+epoch   4700  train 0.118202  validation 0.118456
+epoch   4800  train 0.118202  validation 0.118458
+epoch   4900  train 0.118202  validation 0.118456
+epoch   5000  train 0.118202  validation 0.118456
+best: train 0.118201  validation 0.118454  (start 0.118208 / 0.118457)
+constants written to /home/max/ws/chesso/adocs/data/S075_fits/S075_fit_l0_0.hpp
+elapsed 1950s
+
+=== lambda 0.25 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.074006  validation 0.074249  wdl 0.118457

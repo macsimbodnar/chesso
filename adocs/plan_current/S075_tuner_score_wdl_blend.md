@@ -54,4 +54,114 @@ not Elo, and the audit trail should show one verdict, not five.
 
 Fits are minutes each. One SPRT: three to four and a half hours at the DEC-048
 and DEC-050 settings.
+
+**"Minutes each" was wrong, and the figure is measured.** A fit over the whole
+11003693-row corpus at S065's budget is **0.40 s an epoch after a 55 s load and K
+fit**, so a run that goes the distance to 5000 epochs is about 35 minutes and the
+six-lambda sweep is around three and a half hours. That is a night's work by
+DEC-041's rule, not an afternoon's, and it is still an order of magnitude cheaper
+than one verdict.
+
+## What shipped in the code
+
+`tools/tuner_target.hpp` holds the target, and holds it as a header so a test can
+reach the same functions `tuner.cpp` calls -- `tuner_split.hpp` at S066 and
+`tuner_groups.hpp` at S041 are the same move for the same reason. `sigmoid` and
+`LN10_OVER_400` moved out of `tuner.cpp` into it, imported back under their old
+names, so the sigmoid the fit is scored through and the sigmoid the label is
+built from cannot drift apart.
+
+`--lambda F` refuses anything outside [0, 1], NaN included: `atof` answers 0.0 for
+a value it cannot read, which is the pure game outcome and would look like a run
+that worked.
+
+The `score` column is parsed strictly rather than through `atoi`, which answers 0
+for an unreadable field -- and 0 is a legal score meaning "the search called this
+equal". At any non-zero lambda an unreadable column would be a label saying every
+position is drawn, on a corpus nothing reported as broken. The whole corpus was
+scanned before the column was trusted: 11003693 rows, four fields each, scores in
+**-999 .. 999**, which is what makes `int16` the right store and `--quiet-limit`
+1000 visible in the data.
+
+## DEC-064, and the two questions the step file left open
+
+The accepts fixes the shape of the run and leaves two things the arithmetic
+decides. Both are DEC-064 and both are in `tuner_target.hpp` beside the code:
+
+1. **K is fitted against the game result alone, whatever `--lambda` says.** The
+   blend is built from K, so a K fitted against it fits to its own output and two
+   lambda runs would not share a scale.
+2. **Held-out error against the game result selects lambda, never the training
+   objective.** Two lambdas train against two different targets. Measured on the
+   fixture below at a deliberately wrong K of 1.5: lambda 0.7 reports held-out
+   `0.033419` against lambda 0's `0.120249` on the same rows and the same split, a
+   factor of 3.6 that is entirely the target moving under the metric. The tuner
+   prints the game-result error as a separate `wdl` column, keeps the checkpoint
+   and stops early on it, and stamps it into the emitted header.
+
+Applying rule 2 inside a run as well as across runs is the part that needed a
+choice. The alternative -- keep the checkpoint by the training objective and read
+the game-result error only at the end -- is purer as an experiment and was the
+first design. It was refused because the emitted vector could then sit past the
+point where outcome prediction began degrading, and a lambda would lose for a
+bookkeeping reason rather than for what it is. DEC-064 records it as rejected.
+
+## lambda 0 is the pre-S075 fit, bit for bit
+
+Proved against the pre-change binary, built from `0043c31` and stashed before the
+edit. Fixture is the first 1000000 rows of `selfplay_v2.tsv` at
+`--freeze tempo,piece_placement --seed 1 --validation 0.1 --threads 12`.
+
+The first attempt at this was weak and is recorded because it nearly passed for
+strong: at the fitted K the shipping weights are already near the optimum on any
+slice, held-out error worsens from the first report, `best` never leaves the
+starting constants, and an equality over the *starting* constants asserts nothing
+about the fit. The fixture was re-run at `--k 1.5`, where the fit improves on all
+30 of its reports (`0.129998 -> 0.120249`) and the emitted vector is a fitted one.
+
+| run | emitted constants, sha256 from the first `#define` |
+|---|---|
+| pre-change binary | `9bbf81126aa44f93c90dcc2bb08888183306c9e2717562e980bb5646a7dbdbaa` |
+| post-change, no `--lambda` | the same |
+| post-change, `--lambda 0` | the same |
+| post-change, `--lambda 0.7` | `d0d4eb8a7174995159a8687e7ef969348e92c328c09df130c2d9ddb8d1e0a040` |
+
+The 34-line logs are identical bar the `--out` path each was told to write, and
+the emitted file differs from the pre-change one by exactly one added line, the
+`// lambda` header. The fourth row is what makes the first three evidence rather
+than a tautology. Re-verified after `clang-format.sh` reflowed both files: same
+sha. The sweep then reproduced S065's split independently, to the row --
+`119998 games, 9903305 train, 1100388 validation (10.0002%)`.
+
+## The lambda 0 row is the control, and it came out as predicted
+
+The starting constants are S065's fit, so a lambda 0 refit has almost nowhere to
+go: held-out `0.118457` at the start, **`0.118454`** at its best over 5000 epochs
+in 1950 s, a move of 3e-06. `apply_fit.py --dry-run` over its emitted header
+places every definition and shows the drift for what it is, a handful of weights
+moving by one or two.
+
+That settles the confound this step was going to have to write down as a limit.
+The candidate the SPRT plays is a refit *and* a changed label, and the incumbent
+is neither, so a positive verdict could not separate the blend from the extra
+5000 epochs -- except that the extra epochs are now measured at 3e-06 of held-out
+error and a dozen weights of +/-1. Whatever a non-zero lambda buys or costs, more
+training is not the reason.
+
+## Found and fixed inside the step: anchors.py had gone stale
+
+`.tuning/anchors.py` is the second implementation of `evaluate()` that derives the
+suite's ten pinned absolute anchors, and its header states that running it against
+the shipped weights must reproduce every value the suite asserts. It printed
+**2 of 10**. The derivation was right and its stored expectations were not: they
+were the pre-S065 numbers (88, 240, 325, 530, 1101, 266, -491) while the suite
+pins 125, 211, 279, 509, 715, 224, -537 and the -446 quiescence composite. The
+S065 paste updated the tests and left the script behind.
+
+Re-pointed at the assertion that pins each value, with the file and line beside
+it; **10 of 10** now. It matters to this step rather than being a drive-by: it is
+the tool that derives the new anchors if a fit is pasted, and a self-check that
+cries wolf would have done so in the middle of the paste. `.tuning/` is
+gitignored, so the repair is recorded here and is not in a commit -- which is the
+parked `status.md` item about that directory, demonstrated once more.
 author:    Maksym Bodnar
