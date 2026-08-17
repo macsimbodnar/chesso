@@ -1,0 +1,16 @@
+S075 lambda sweep
+started   2026-08-17T16:01:26+02:00
+engine    8e29dd8
+corpus    /home/max/ws/chesso/.tuning/selfplay_v2.tsv
+rows      11003693
+budget    --freeze tempo,piece_placement --seed 1 --validation 0.1
+        --epochs 5000 --report 100 --patience 20 --threads 12
+
+=== lambda 0.0 ===
+11003693 positions, 119998 games, 9903305 train, 1100388 validation (10.0002%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7595
+start: train 0.118208  validation 0.118457
+epoch    100  train 0.118204  validation 0.118460
+epoch    200  train 0.118204  validation 0.118460
+epoch    300  train 0.118204  validation 0.118460
+epoch    400  train 0.118204  validation 0.118460
