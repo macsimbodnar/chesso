@@ -17,16 +17,49 @@ two paragraphs down, asks for something else: "a position with a forced mate
 inside the pruned depth, in the fast suite, before the feature is called done."
 
 The accepts asks that existing tests keep passing; the body asks for a new test
-aimed at the depth this step prunes. Nothing states that the existing cases —
-`tests/test_search.cpp:82` "mate in one" and `:124` "mate in two is found at the
-right distance" — sit inside the depth window futility and razoring prune, and
-no test name asserts it. The completion gate is the accepts, so S026 can
-complete on pre-existing coverage alone.
+aimed at the depth this step prunes. The general cases — `tests/test_search.cpp`
+"mate in one" and "mate in two is found at the right distance" — do not state
+that they sit inside the depth window futility and razoring prune, and neither
+title asserts it. The completion gate is the accepts, so S026 can complete on
+pre-existing coverage alone.
 
 The adjacent step with the identical hazard spells the requirement into its
-gate: `S033_reverse_futility_pruning.md:3` — "a position with a forced mate
-inside the pruned depth is in the fast suite and passes before the feature is
-called done". Two steps, one hazard, two different gates.
+gate: `adocs/plan_done/S033_reverse_futility_pruning.md:3` — "a position with a
+forced mate inside the pruned depth is in the fast suite and passes before the
+feature is called done". Two steps, one hazard, two different gates.
+
+## The shape to copy
+
+Do not invent one. S033 added `tests/test_search.cpp` "pruning does not hide a
+mate against the material leader" on 2026-08-16 (`6bd650e`, the implementation
+commit; S033 completed at `fca9522` the same day), against the same
+hazard: a static score is never a mate score, so a node whose true value is
+mated can fail high on material and take its whole subtree with it. Its comment
+names the three properties that make the position bite — the mated side is
+ahead by 500 cp after the key move, the key is quiet, and the mate is inside the
+pruned depth — and asserts the first two as preconditions rather than assuming
+them:
+
+```cpp
+REQUIRE(load_FEN(after_key, &game));
+REQUIRE_FALSE(is_check(&game));
+REQUIRE(evaluate(&game.board) > 300);
+```
+
+That is what makes it non-vacuous. Without those three lines the case passes on
+an engine that never comes near the rule: a checking key would leave the side to
+move in check, where the pruning is already forbidden, and a static score that
+never clears beta means no static cutoff was reachable in the first place. The
+mate is then asserted over a range of depths rather than one bound:
+
+```cpp
+for (int depth = 3; depth <= 6; ++depth)
+```
+
+S026's two cases copy that shape — a position, the preconditions that put the
+node where the rule fires, the mate asserted over a range of depths. The
+positions themselves are S026's to build; the form has already been through a
+review and does not need re-deriving.
 
 CLAUDE.md names pruning that hides a mate as the recurring bug in this engine —
 null move pruning reduced to depth 0, late move reduction reduced the mating

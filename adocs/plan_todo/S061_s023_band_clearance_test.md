@@ -20,9 +20,9 @@ capturing a pawn scores `ORDER_CAPTURE + MVV_PAWN - MVV_KING = 900100` against
 `ORDER_KILLER_0 = 900000` (`src/evaluation.cpp:20-36`, whose own comment says
 the symptom of losing it "is a strength regression, not a wrong node count").
 
-The only test over the bands is `tests/test_evaluation.cpp:643-704` "bands are
-strictly ordered", and it compares `a_capture` — whichever capture the generator
-returns first — against the killers. Measured in the position it loads
+The only test over the bands is `tests/test_evaluation.cpp` "bands are strictly
+ordered", and it compares `a_capture` — whichever capture the generator returns
+first — against the killers. Measured in the position it loads
 (`r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1`),
 re-run at HEAD against `libchesso_engine.a`:
 
