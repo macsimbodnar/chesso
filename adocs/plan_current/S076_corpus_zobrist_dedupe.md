@@ -75,4 +75,63 @@ DEC-065 records the two design choices; these are the rules of the run.
 5. **The refit uses S065's and S075's settings**, so the only thing that moved
    is the corpus: `--freeze tempo,piece_placement --seed 1 --validation 0.1
    --threads 12`, K fitted from the data, `--lambda 0`.
+
+## The count, which nobody had measured
+
+`.tuning/selfplay_v2.tsv`, 11003693 rows from 120000 games, through
+`build/tools/corpus_dedupe` in **19 s** and 1.0 GB resident:
+
+```
+11003693 rows read, 10795695 distinct positions written, 207998 dropped (1.8903%)
+repeats: 10733523 keys once, 35124 twice, 9585 three times, 10547 4-7, 4284 8-15, 2632 16 or more; most repeated 120
+```
+
+**1.8903 %**, which clears the pre-registered 1 % and buys the match. The step
+file's two illustrative extremes were 0.1 % and 20 %; the answer is an order of
+magnitude above the first and an order below the second.
+
+**The repeats are concentrated, not spread.** 10733523 of the 10795695 distinct
+positions occur exactly once, so 99.42 % of the corpus's positions are already
+unique and the whole 1.89 % comes from **62172** positions — 0.58 % of them —
+that repeat. The tail is what carries it: 2632 positions appear 16 times or
+more, one appears **120** times, and those 2632 alone account for at least 42112
+rows and so for at least 39480 of the drops — 19 % of everything dropped, from
+0.02 % of the positions. That is the shape the eval_tuning_strategy sentence
+describes -- "heavily repeated positions bias the fit" -- rather than a
+uniform thinning.
+
+## The pass is deterministic, and no collision hid inside the count
+
+Two runs over the same input, byte for byte:
+
+```
+0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f  .tuning/selfplay_v2_dedup.tsv
+0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f  .tuning/selfplay_v2_dedup_run2.tsv
+```
+
+Which is what the accepts asks for, and it is deterministic by construction
+rather than by luck: one thread, one pass, output in input order, and
+`init_zobrist()` is fixed-seed (`src/bitboard.cpp:2597`) so the keys are the
+same in every process.
+
+A third pass with `--verify`, 26.8 s and 1.9 GB resident, holds the four hashed
+FEN fields per key and compares them on every hit: **0 of the 207998 key-equal
+rows disagreed**. So the 1.8903 % is 207998 genuine repeats and not a birthday
+collision inflating the count. The exposure it rules out is small — about 3e-06
+over 11.0 M keys — and it is now measured instead of bounded.
+
+## What it cost the game-level split: 20 blocks of 119998
+
+DEC-065 predicted the direction and the tuner's own first line measures it.
+`tuner_split` reconstructs a game boundary from a ply that does not advance, so
+removing rows can never split a game and can only merge two — and the merged
+block still lands wholly on one side of the cut, which is S066's asymmetry.
+
+| corpus | rows | blocks | held out |
+|---|---|---|---|
+| `selfplay_v2.tsv` | 11003693 | 119998 | 1100388, 10.0002 % |
+| `selfplay_v2_dedup.tsv` | 10795695 | **119978** | 1079625, 10.0005 % |
+
+20 boundaries lost, 0.017 % of the blocks, against 120000 games datagen
+reported. The split is 20 games coarser and no more contaminated than it was.
 author:    Maksym Bodnar

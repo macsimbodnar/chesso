@@ -643,6 +643,44 @@ per game. 100000 nodes reaches depth 4 to 6 in a middlegame. The Apple
 three-thread figure it replaces was 200 games in 61 s and about 77 positions
 per game, and DEC-049 says that one does not carry.
 
+### Deduplicate a corpus by position
+
+S076. `datagen` never asks whether it has written a position before, so a
+position reached in two games — or repeated inside one game on the way to a
+repetition draw — carries its weight once per occurrence.
+
+```bash
+build/tools/corpus_dedupe --in .tuning/selfplay_v2.tsv \
+    --out .tuning/selfplay_v2_dedup.tsv
+```
+
+**Measured on `selfplay_v2.tsv`:** 11003693 rows in, 10795695 distinct
+positions out, **207998 dropped, 1.8903 %**, in 19 s and 1.0 GB resident. The
+repeats are concentrated rather than spread: 10733523 positions occur once,
+35124 twice, 9585 three times, 10547 four to seven times, 4284 eight to fifteen,
+2632 sixteen or more, and one position appears **120** times.
+
+The key is the engine's own zobrist — `load_FEN` then `board.hash` — so the four
+FEN fields it covers decide identity (placement, side to move, castling rights,
+en passant square) and the halfmove clock and move number do not. It is not the
+FEN text: two rows of the same position at different clocks are one position to
+`evaluate()`.
+
+The first row of a repeated position survives, byte for byte, and no label is
+averaged — DEC-065, which records the averaging variant as a separate change
+rather than as a better one folded in here. So the output is still exactly what
+`datagen` wrote and loads anywhere the four-column format does.
+
+`--verify` additionally holds the four hashed fields per key and counts
+key-equal rows that disagree on them, which is what a 64-bit collision looks
+like. It roughly doubles memory, 1.9 GB on this corpus, and reported **0** of
+the 207998. Two runs over the same input are byte identical:
+`0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`.
+
+A row that cannot be read — fewer than four fields, or a FEN that does not load
+— refuses the whole pass and removes the partial output. A filter that silently
+drops rows is what this tool exists to make visible.
+
 `tuner` cost on the same machine, measured on a 56304-row corpus at 12 threads:
 0.29 s to load, 2.22 ms per epoch, 10.9 MB resident. All three scale with rows,
 and the whole corpus is held in memory. On the real 11003693-row corpus, 12

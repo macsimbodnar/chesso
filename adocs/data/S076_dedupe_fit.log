@@ -1,0 +1,16 @@
+S076 dedupe refit
+started   2026-08-17T18:37:43+02:00
+engine    c7de570
+corpus    /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv
+rows      10795695
+sha256    0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f
+source    .tuning/selfplay_v2.tsv, 11003693 rows, 207998 dropped, 1.8903 %
+budget    --freeze tempo,piece_placement --seed 1 --validation 0.1
+        --epochs 5000 --report 100 --patience 20 --threads 12 --lambda 0
+
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 827 parameters, group all, freeze tempo,piece_placement, 817 free
+fitted K = 0.7801
+start: train 0.119265  validation 0.119608
+epoch    100  train 0.119017  validation 0.119530  *
+epoch    200  train 0.118986  validation 0.119501  *
+epoch    300  train 0.118970  validation 0.119488  *
