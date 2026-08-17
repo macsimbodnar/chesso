@@ -197,7 +197,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-51. S074  S021's accepts carries the fast suite's mate cases, as every other pending pruning step does
 52. S021  start the root search in a narrow window around the previous score
 53. S075  the tuner fits a blend of the search score and the game result, the corpus column that is written and never read
 54. S076  the fit runs on a corpus deduplicated by zobrist key, so a repeated position stops carrying repeated weight
