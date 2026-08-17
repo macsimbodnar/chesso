@@ -3197,3 +3197,103 @@ Consequences: Every pending step whose expected effect is small now sizes its
               `fastchess.sh` is unchanged. Its default is still `elo0=0 elo1=5`,
               so a step wanting straddling bounds writes its own invocation as
               S068 did rather than editing the shared harness.
+
+## DEC-064  2026-08-17  the blended target's K is fitted on the outcome, and the game result alone selects lambda
+Tags:         tuning, tuner, evaluation, measurement, s075, s082, s083, dec-019,
+              dec-041, dec-057
+
+Context:      S075 adds `--lambda F` to `tools/tuner`, fitting against
+
+                target = lambda * sigma(K * score) + (1 - lambda) * result
+
+              which is `adocs/eval_tuning_strategy.md` section 2.7. The step
+              file fixes the shape of the run -- a sweep decided on held-out
+              error, exactly one candidate to an SPRT -- and leaves two
+              questions open that the arithmetic forces an answer to. Both were
+              found while writing the code and neither is a matter of taste.
+
+              **1. K appears on both sides.** `fit_k()` fits the scale that maps
+              a centipawn to a win probability by minimising error against the
+              target. With a blended target, that target is itself built from K.
+              A K fitted against it is fitting to its own output, and two runs
+              at different lambdas would come back with different scales, so
+              their errors would not be comparable numbers.
+
+              **2. Every lambda trains against a different target, so training
+              error cannot rank them.** Lower error at lambda 1 means the fit
+              found the 2026-08-14 engine's search easier to predict than the
+              outcome of a game, which is true and says nothing about strength.
+              Measured on a 1 M-row slice at a deliberately wrong K of 1.5:
+              lambda 0.7 reports held-out 0.033419 against lambda 0's 0.120249
+              on the same rows and the same split -- a factor of 3.6 that is
+              entirely the target changing under the metric.
+
+Decision:     **By the agent, and recorded because S082, S083 and S085 inherit
+              it.** Two rules, both in `tools/tuner_target.hpp` beside the code
+              they constrain:
+
+              **K is fitted against the game result alone, whatever `--lambda`
+              says, and then held.** It belongs to the data rather than to the
+              objective. At lambda 0 this is what the tuner already did, so the
+              rule costs that path nothing.
+
+              **Held-out error against the game result selects lambda -- never
+              the training objective.** The tuner prints it as a separate `wdl`
+              column at every report, stamps it into the emitted header with the
+              figure at the constants the run started from, and the refusal
+              warning is tested against it. Applied inside a run as well as
+              across runs: the kept checkpoint and the early stop are decided on
+              it, so the vector a run emits is the best outcome predictor its
+              trajectory passed through, and a lambda is never rejected because
+              its own target's optimum sat a few hundred epochs away from the
+              game result's.
+
+              At lambda 0 both metrics are the same function. That is what keeps
+              the pre-S075 fit reproducible bit for bit -- proved against the
+              pre-change binary on a 1 M-row corpus, identical 50-report logs
+              and identical sha256 over the emitted constants,
+              `9bbf81126aa44f93c90dcc2bb08888183306c9e2717562e980bb5646a7dbdbaa`
+              -- and it is why S065's figures still stand.
+
+Rejected:     **Fit K against the blended target.** The scale would then be the
+              lambda's rather than the corpus's, and the sweep would be
+              comparing six different units. Refused on that alone.
+
+              **Rank lambdas by the training objective.** Free, and it is what a
+              tuner log invites a reader to do. Refused: the numbers measure
+              different things, and the 3.6x above is what reading them side by
+              side would have concluded.
+
+              **Keep the checkpoint by the training objective and report the
+              game-result error only at the end.** Purer as an experiment --
+              each run is then faithfully "descend this target" -- and it was
+              the first design. Refused because it decides the shipping question
+              on a vector nobody chose: the emitted constants could sit past the
+              point where outcome prediction started degrading, and a lambda
+              would then lose for a bookkeeping reason rather than for what it
+              is.
+
+              **Two verdicts, one against the incumbent and one against a
+              lambda 0 refit at the same budget.** The clean attribution, and it
+              is what would separate the blend from the extra epochs. Refused on
+              cost: a verdict is three to four and a half hours and the step
+              allows one. The limit is recorded in the step file instead, and
+              the lambda 0 refit's held-out figure carries the attribution as
+              loss rather than as Elo.
+
+Consequences: `--lambda 0` remains the default, so nothing changes for a run
+              that does not ask for the blend. The emitted header gains a
+              `lambda` line always and a `wdl error` line at a non-zero lambda,
+              which is what makes a fitted table say what it was fitted toward.
+
+              S082 and S083 both regenerate the corpus with the engine being
+              fitted, which is when the one thing keeping lambda 1 off
+              `eval_tuning_strategy.md` section 1's fixed point expires: the
+              scores in `selfplay_v2.tsv` are the 2026-08-14 engine's, from
+              before S065 moved 827 constants. Whoever runs a fit at a non-zero
+              lambda states the corpus's generating commit beside the lambda.
+
+              S085 fits search parameters by SPSA against playing strength, not
+              against a corpus, so the second rule reaches it as the general
+              form it already obeys: loss ranks candidates, an SPRT decides one.
+              DEC-019.

@@ -73,6 +73,13 @@ target_include_directories(test_tuner_groups PRIVATE ../tools)
 add_doctest_target(test_tuner_split)
 target_include_directories(test_tuner_split PRIVATE ../tools)
 
+# S075: the label the tuner fits against is now a blend of the game result and
+# datagen's score column, and `--lambda 0` has to be the pre-S075 fit bit for
+# bit. Needs no dataset -- it is arithmetic and one parser -- so it is a fast
+# test like the rest.
+add_doctest_target(test_tuner_target)
+target_include_directories(test_tuner_target PRIVATE ../tools)
+
 # S073: the tunable search parameters. Compiled in both configurations and the
 # same file in both -- the release build and the tune build each hold their live
 # values against the one table that is outside every #ifdef, which is how two

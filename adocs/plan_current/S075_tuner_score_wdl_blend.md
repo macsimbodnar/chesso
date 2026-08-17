@@ -54,3 +54,4 @@ not Elo, and the audit trail should show one verdict, not five.
 
 Fits are minutes each. One SPRT: three to four and a half hours at the DEC-048
 and DEC-050 settings.
+author:    Maksym Bodnar

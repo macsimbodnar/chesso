@@ -11,6 +11,16 @@
 // This is Texel tuning; the objective is the mean squared error of that
 // prediction.
 //
+// Since S075 the label is a blend rather than the outcome alone,
+//
+//   target = lambda * sigma(K * score) + (1 - lambda) * result
+//
+// with `--lambda 0`, the default, the pure game outcome this fitted before.
+// `tools/tuner_target.hpp` holds the target and the two rules that come with
+// it: K is fitted against the game result and held, and held-out error against
+// the game result -- not against the training objective -- is what compares one
+// lambda with another. DEC-064.
+//
 // It does not run the search. The model below reproduces evaluate() in floating
 // point, which is what makes the fit a linear problem and lets a full pass over
 // a million positions cost milliseconds instead of a million searches:
@@ -49,6 +59,7 @@
 #include "eval_model.hpp"
 #include "tuner_groups.hpp"
 #include "tuner_split.hpp"
+#include "tuner_target.hpp"
 
 namespace
 {
@@ -83,7 +94,12 @@ using tuner_groups::free_mask;
 using tuner_groups::freeze_mask;
 using tuner_groups::GROUP_LIST;
 
-constexpr double LN10_OVER_400 = 2.302585092994046 / 400.0;
+// Moved into tools/tuner_target.hpp at S075 so that the sigmoid the fit is
+// scored through and the sigmoid the blended label is built from are one
+// function. Imported under their old names so the call sites below are
+// unchanged.
+using tuner_target::LN10_OVER_400;
+using tuner_target::sigmoid;
 
 
 struct dataset_t
@@ -92,6 +108,13 @@ struct dataset_t
   std::vector<uint32_t> offsets;  // size = positions + 1
   std::vector<uint8_t> phase;
   std::vector<float> result;
+
+  // The engine's own score for the position, White relative, in centipawns --
+  // datagen's third column, written since S028 and read by nothing until S075.
+  // int16 because datagen bounds it by --quiet-limit and the whole 11003693-row
+  // `selfplay_v2.tsv` lies in -999 .. 999; parse_score() refuses a corpus that
+  // does not fit rather than truncating one. 11.0 M rows cost 22 MB.
+  std::vector<int16_t> score;
 
   // Mobility counts, White minus Black, four per position. A property of the
   // position rather than of the parameters, so it is extracted once here and
@@ -156,6 +179,7 @@ struct options_t
   std::string only = "all";
   std::string freeze;  // empty means nothing is held, the behaviour before S065
   double k = 0.0;      // 0 means fit it
+  double lambda = 0.0;  // 0 is the game outcome alone, the fit before S075
   double lr = 1.0;
   int epochs = 20000;
   int report = 100;
@@ -209,6 +233,18 @@ bool load(const std::string& path, dataset_t* data)
 
     if (result < 0.0 || result > 1.0 || phase < 0 || phase > GAME_PHASE_MAX) {
       fprintf(stderr, "bad row: %s\n", line.c_str());
+      return false;
+    }
+
+    // Strictly, and refused rather than defaulted: `atoi` answers 0 for a field
+    // it cannot read, and 0 is a legal score meaning "the search called this
+    // equal". A corpus whose third column is unreadable would fit at any
+    // non-zero --lambda against a label that says every position is drawn.
+    // S075.
+    int score = 0;
+    if (!tuner_target::parse_score(score_text, &score)) {
+      fprintf(stderr, "unusable score column '%s' in row: %s\n",
+              score_text.c_str(), line.c_str());
       return false;
     }
 
@@ -284,6 +320,7 @@ bool load(const std::string& path, dataset_t* data)
     data->ply.push_back(ply);
     data->phase.push_back(static_cast<uint8_t>(phase));
     data->result.push_back(static_cast<float>(result));
+    data->score.push_back(static_cast<int16_t>(score));
   }
 
   return data->size() > 0;
@@ -325,18 +362,17 @@ double evaluate_position(const dataset_t& data,
 }
 
 
-double sigmoid(double score, double k)
-{ return 1.0 / (1.0 + std::exp(-k * score * LN10_OVER_400)); }
-
-
-// Mean squared error over [first, last).
+// Mean squared error over [first, last), against `target`. Which target that is
+// is the caller's choice and it is load bearing: the blended one is what the
+// fit descends, the game result alone is what compares two lambdas. DEC-064.
 double error_range(const dataset_t& data,
                    const double* params,
                    double k,
                    const std::vector<uint32_t>& index,
                    size_t first,
                    size_t last,
-                   unsigned threads)
+                   unsigned threads,
+                   const std::vector<double>& target)
 {
   if (last <= first) { return 0.0; }
 
@@ -351,7 +387,7 @@ double error_range(const dataset_t& data,
       for (size_t i = first + t; i < last; i += threads) {
         const size_t position = index[i];
         const double s = evaluate_position(data, position, params);
-        const double diff = data.result[position] - sigmoid(s, k);
+        const double diff = target[position] - sigmoid(s, k);
         sum += diff * diff;
       }
 
@@ -372,7 +408,7 @@ double error_range(const dataset_t& data,
 }
 
 
-// One full-batch gradient over the training range.
+// One full-batch gradient over the training range, against the training target.
 void gradient(const dataset_t& data,
               const double* params,
               double k,
@@ -380,6 +416,7 @@ void gradient(const dataset_t& data,
               size_t first,
               size_t last,
               unsigned threads,
+              const std::vector<double>& target,
               std::vector<double>* out)
 {
   const size_t count = last - first;
@@ -400,8 +437,10 @@ void gradient(const dataset_t& data,
         const double s = evaluate_position(data, position, params);
         const double sig = sigmoid(s, k);
 
-        // d/ds of (r - sigma)^2, chained through the sigmoid.
-        const double outer = -2.0 * (data.result[position] - sig) * sig *
+        // d/ds of (target - sigma)^2, chained through the sigmoid. The target
+        // is a constant of the row whatever lambda built it from, so the blend
+        // changes this line's number and not its shape. S075.
+        const double outer = -2.0 * (target[position] - sig) * sig *
                              (1.0 - sig) * k * LN10_OVER_400;
 
         for (uint32_t j = data.offsets[position];
@@ -512,12 +551,17 @@ void gradient(const dataset_t& data,
 // K is the scale that turns a centipawn score into a win probability, and it
 // belongs to the data rather than to the evaluation: fit it once, on the
 // starting parameters, and hold it.
+//
+// `target` is the game result and never the blend, whatever --lambda says. The
+// blend is built *from* K, so fitting K against it would have K chasing itself,
+// and no two lambda runs would share a scale to be compared on. DEC-064.
 double fit_k(const dataset_t& data,
              const double* params,
              const std::vector<uint32_t>& index,
              size_t first,
              size_t last,
-             unsigned threads)
+             unsigned threads,
+             const std::vector<double>& target)
 {
   double low = 0.1;
   double high = 5.0;
@@ -528,8 +572,10 @@ double fit_k(const dataset_t& data,
     const double a = low + (high - low) / 3.0;
     const double b = high - (high - low) / 3.0;
 
-    const double ea = error_range(data, params, a, index, first, last, threads);
-    const double eb = error_range(data, params, b, index, first, last, threads);
+    const double ea =
+        error_range(data, params, a, index, first, last, threads, target);
+    const double eb =
+        error_range(data, params, b, index, first, last, threads, target);
 
     if (ea < eb) {
       high = b;
@@ -549,7 +595,9 @@ void write_tables(const std::string& path,
                   size_t games,
                   size_t validation_rows,
                   double train_error,
-                  double validation_error)
+                  double validation_error,
+                  double wdl_validation_error,
+                  double start_wdl_validation_error)
 {
   FILE* out = fopen(path.c_str(), "w");
 
@@ -567,6 +615,26 @@ void write_tables(const std::string& path,
       "KS_QUEEN_ATTACKERS",  "KS_ZONE_ATTACKS",     "KS_SHIELD_NEAR",
       "KS_SHIELD_FAR",       "KS_OPEN_FILE",        "KS_HALF_OPEN_FILE"};
 
+  // The number that compares this fit with a fit at another lambda, and the
+  // number it had to beat to be worth a match at all: the held-out error
+  // against the game result, at these constants and at the ones the run started
+  // from. Written only at a non-zero lambda, where it is a second number -- at
+  // lambda 0 the training objective is the game result and the `error` line
+  // above already reports it. DEC-064.
+  std::string wdl_line;
+
+  if (opts.lambda > 0.0) {
+    char text[256];
+    snprintf(
+        text, sizeof text,
+        "// wdl error  %.6f validation, against %.6f at the constants this "
+        "started\n"
+        "//            from. This selects lambda; loss is not Elo and an "
+        "SPRT decides.\n",
+        wdl_validation_error, start_wdl_validation_error);
+    wdl_line = text;
+  }
+
   fprintf(
       out,
       "// Fitted by tools/tuner from %zu self-play positions.\n"
@@ -578,6 +646,9 @@ void write_tables(const std::string& path,
       "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
       "// only       %s\n"
       "// freeze     %s\n"
+      "// lambda     %.4f  target = lambda * sigma(K * score) + (1 - lambda) * "
+      "result\n"
+      "%s"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
@@ -591,7 +662,8 @@ void write_tables(const std::string& path,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
       opts.only.c_str(),
-      opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str());
+      opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), opts.lambda,
+      wdl_line.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -726,23 +798,30 @@ void write_tables(const std::string& path,
 
 void usage()
 {
-  fprintf(stderr,
-          "tuner --data FILE [options]\n"
-          "  --out FILE       where the fitted constants are written\n"
-          "  --only GROUP     fit only this group and hold the rest at what\n"
-          "                   the engine ships: %s\n"
-          "  --freeze LIST    hold these groups instead, comma separated, and\n"
-          "                   fit everything else; not `all`. Applied after\n"
-          "                   --only, so the two intersect\n"
-          "  --k VALUE        sigmoid scale; 0 fits it from the data\n"
-          "  --lr VALUE       Adam step size (default 1.0)\n"
-          "  --epochs N       maximum full-batch steps (default 20000)\n"
-          "  --report N       report and checkpoint every N epochs (100)\n"
-          "  --patience N     stop after this many reports without a new best\n"
-          "  --validation F   held-out fraction, whole games (default 0.1)\n"
-          "  --threads N      worker threads (default: every hardware thread)\n"
-          "  --seed N         seed the game-level split shuffles (default 1)\n",
-          GROUP_LIST);
+  fprintf(
+      stderr,
+      "tuner --data FILE [options]\n"
+      "  --out FILE       where the fitted constants are written\n"
+      "  --only GROUP     fit only this group and hold the rest at what\n"
+      "                   the engine ships: %s\n"
+      "  --freeze LIST    hold these groups instead, comma separated, and\n"
+      "                   fit everything else; not `all`. Applied after\n"
+      "                   --only, so the two intersect\n"
+      "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
+      "                   the game result whatever --lambda says\n"
+      "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
+      "                   result, F in [0, 1]. 0, the default, is the game\n"
+      "                   outcome alone and is the fit before S075. Two\n"
+      "                   lambdas are compared on held-out error against\n"
+      "                   the game result, never on the training error\n"
+      "  --lr VALUE       Adam step size (default 1.0)\n"
+      "  --epochs N       maximum full-batch steps (default 20000)\n"
+      "  --report N       report and checkpoint every N epochs (100)\n"
+      "  --patience N     stop after this many reports without a new best\n"
+      "  --validation F   held-out fraction, whole games (default 0.1)\n"
+      "  --threads N      worker threads (default: every hardware thread)\n"
+      "  --seed N         seed the game-level split shuffles (default 1)\n",
+      GROUP_LIST);
 }
 
 }  // namespace
@@ -777,6 +856,8 @@ int main(int argc, char** argv)
       opts.freeze = value;
     } else if (arg == "--k") {
       opts.k = atof(value.c_str());
+    } else if (arg == "--lambda") {
+      opts.lambda = atof(value.c_str());
     } else if (arg == "--lr") {
       opts.lr = atof(value.c_str());
     } else if (arg == "--epochs") {
@@ -799,6 +880,14 @@ int main(int argc, char** argv)
 
   if (opts.data.empty() || opts.threads == 0) {
     usage();
+    return 1;
+  }
+
+  // Refused rather than clamped: a lambda outside [0, 1] is not a blend of two
+  // labels, and `atof` answers 0.0 for a value it cannot read -- which is the
+  // pure game outcome and would look like a run that worked. S075.
+  if (!tuner_target::valid_lambda(opts.lambda)) {
+    fprintf(stderr, "--lambda must be in [0, 1]\n");
     return 1;
   }
 
@@ -882,19 +971,62 @@ int main(int argc, char** argv)
   std::vector<double> params(PARAM_COUNT, 0.0);
   eval_model::starting_params(params.data());
 
+  // The game result, as a target vector. K is fitted against this and never
+  // against the blend, and every comparison between two lambdas is made on it.
+  // DEC-064. 11.0 M rows cost 88 MB.
+  std::vector<double> wdl_target(data.size());
+
+  for (size_t i = 0; i < data.size(); ++i) {
+    wdl_target[i] = data.result[i];
+  }
+
   if (opts.k <= 0.0) {
-    opts.k = fit_k(data, params.data(), index, 0, train_count, opts.threads);
+    opts.k = fit_k(data, params.data(), index, 0, train_count, opts.threads,
+                   wdl_target);
     fprintf(stderr, "fitted K = %.4f\n", opts.k);
   }
 
-  const double start_train = error_range(data, params.data(), opts.k, index, 0,
-                                         train_count, opts.threads);
+  // What the fit descends. At lambda 0 it is the game result and nothing else,
+  // by this copy rather than by arithmetic that happens to be exact -- blend()
+  // is exact there too, and the branch is what saves 11 M calls to exp().
+  std::vector<double> train_target = wdl_target;
+
+  if (opts.lambda > 0.0) {
+    for (size_t i = 0; i < data.size(); ++i) {
+      train_target[i] = tuner_target::blend(opts.lambda, data.score[i],
+                                            data.result[i], opts.k);
+    }
+  }
+
+  const double start_train =
+      error_range(data, params.data(), opts.k, index, 0, train_count,
+                  opts.threads, train_target);
   const double start_validation =
       error_range(data, params.data(), opts.k, index, train_count, data.size(),
-                  opts.threads);
+                  opts.threads, train_target);
 
-  fprintf(stderr, "start: train %.6f  validation %.6f\n", start_train,
-          start_validation);
+  // The selection metric at the constants the run started from. At lambda 0 the
+  // two targets are the same vector, so this is the same number and the same
+  // pass is not made twice.
+  const double start_wdl =
+      (opts.lambda > 0.0)
+          ? error_range(data, params.data(), opts.k, index, train_count,
+                        data.size(), opts.threads, wdl_target)
+          : start_validation;
+
+  // A `wdl` column only where there is a second number to print. At lambda 0 it
+  // would repeat `validation`, and every line this tuner has ever printed would
+  // have changed for nothing.
+  const auto wdl_column = [&](double value) {
+    if (opts.lambda <= 0.0) { return std::string(); }
+
+    char text[32];
+    snprintf(text, sizeof text, "  wdl %.6f", value);
+    return std::string(text);
+  };
+
+  fprintf(stderr, "start: train %.6f  validation %.6f%s\n", start_train,
+          start_validation, wdl_column(start_wdl).c_str());
 
   // Adam. Plain gradient descent needs a step size per parameter here: a pawn
   // square that appears in every position and a king square that appears in a
@@ -907,13 +1039,21 @@ int main(int argc, char** argv)
   const double beta2 = 0.999;
   const double epsilon = 1e-8;
 
+  // The checkpoint kept, and the early stop, are both decided on the held-out
+  // error against the **game result** rather than against the training target.
+  // That is DEC-064 applied inside a run as well as across runs: the vector
+  // this emits is the best outcome predictor the trajectory passed through, so
+  // a lambda is never rejected because its own target's optimum sat a few
+  // hundred epochs from the game result's. At lambda 0 the two are the same
+  // number and this is the selection the tuner has always made.
   std::vector<double> best = params;
   double best_validation = start_validation;
+  double best_wdl = start_wdl;
   int since_best = 0;
 
   for (int epoch = 1; epoch <= opts.epochs; ++epoch) {
     gradient(data, params.data(), opts.k, index, 0, train_count, opts.threads,
-             &grad);
+             train_target, &grad);
 
     const double correction1 = 1.0 - std::pow(beta1, epoch);
     const double correction2 = 1.0 - std::pow(beta2, epoch);
@@ -940,15 +1080,22 @@ int main(int argc, char** argv)
     if (epoch % opts.report != 0) { continue; }
 
     const double train = error_range(data, params.data(), opts.k, index, 0,
-                                     train_count, opts.threads);
+                                     train_count, opts.threads, train_target);
     const double validation =
         error_range(data, params.data(), opts.k, index, train_count,
-                    data.size(), opts.threads);
+                    data.size(), opts.threads, train_target);
+    const double wdl =
+        (opts.lambda > 0.0)
+            ? error_range(data, params.data(), opts.k, index, train_count,
+                          data.size(), opts.threads, wdl_target)
+            : validation;
 
-    fprintf(stderr, "epoch %6d  train %.6f  validation %.6f%s\n", epoch, train,
-            validation, (validation < best_validation) ? "  *" : "");
+    fprintf(stderr, "epoch %6d  train %.6f  validation %.6f%s%s\n", epoch,
+            train, validation, wdl_column(wdl).c_str(),
+            (wdl < best_wdl) ? "  *" : "");
 
-    if (validation < best_validation) {
+    if (wdl < best_wdl) {
+      best_wdl = wdl;
       best_validation = validation;
       best = params;
       since_best = 0;
@@ -958,20 +1105,27 @@ int main(int argc, char** argv)
     }
   }
 
-  const double final_train = error_range(data, best.data(), opts.k, index, 0,
-                                         train_count, opts.threads);
+  const double final_train =
+      error_range(data, best.data(), opts.k, index, 0, train_count,
+                  opts.threads, train_target);
 
-  fprintf(stderr, "best: train %.6f  validation %.6f  (start %.6f / %.6f)\n",
-          final_train, best_validation, start_train, start_validation);
+  fprintf(stderr,
+          "best: train %.6f  validation %.6f%s  (start %.6f / %.6f%s)\n",
+          final_train, best_validation, wdl_column(best_wdl).c_str(),
+          start_train, start_validation, wdl_column(start_wdl).c_str());
 
-  if (best_validation >= start_validation) {
+  // Against the selection metric, so a non-zero lambda is refused for failing
+  // to predict outcomes better than the constants it started from -- not for
+  // failing to predict its own target, which it always will.
+  if (best_wdl >= start_wdl) {
     fprintf(stderr,
             "WARNING: held-out error did not improve on the hand-written "
             "constants. Do not ship this.\n");
   }
 
   write_tables(opts.out, best.data(), opts, data.size(), starts.size(),
-               validation_count, final_train, best_validation);
+               validation_count, final_train, best_validation, best_wdl,
+               start_wdl);
 
   return 0;
 }
