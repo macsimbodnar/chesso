@@ -30,6 +30,11 @@ recorded, so it is added, never edited.
 | `S021_aspiration_sweep.tsv` | 21 schedules x 3 independent 100-position samples, node counts at depth 11. The evidence for the schedule S021 shipped, and for why one sample would have chosen a different one |
 | `S021_sprt.sh` | the script that ran S021's SPRT, verbatim as run. `elo0=-5 elo1=5` under DEC-063, with the pre-registered interpretation of each outcome in its header |
 | `S021_sprt.log` | that run's full console, 2001 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 00:36:41` |
+| `S076_dedupe_fit.sh` | S076's refit on the corpus `tools/corpus_dedupe` reduced to one row per distinct position, verbatim as run. **Its header carries the count that decided a match would be spent at all — 207998 of 11003693 rows dropped, 1.8903 %, against a 1 % threshold pre-registered in the step file before the tool was ever pointed at the corpus — and the rules of the run, all written before the fit** |
+| `S076_dedupe_fit.log` | that fit's console: 10795695 rows, 119978 blocks, `fitted K = 0.7801`, held-out error against the game result 0.119608 at the shipping constants to 0.119458, best at epoch 1600, stopped by patience at 3600, 1378 s |
+| `S076_fits/` | the constants that fit emitted, byte for byte as `tools/tuner` wrote them |
+| `S076_sprt.sh` | the script that ran S076's SPRT, verbatim as run. `elo0=-5 elo1=5` under DEC-063, with the pre-registered interpretation of each outcome and the attribution limit in its header |
+| `S076_sprt.log` | that run's full console |
 | `S021_sprt.pgn` | the 824 games of that run, 2.4 MB. One match, one reference, with per-move score, depth and time comments. Committed where S068's run 1 PGN was not, on the same two tests: it is a clean artifact of one run — the script writes its own `-pgnout` path rather than `fastchess.sh`'s shared, appended `/tmp/fastchess_full.pgn` — and it is the run that decided the step |
 
 `S018_raw.tsv` columns: `game ply phase cost ref own mate san fen`. `cost` is

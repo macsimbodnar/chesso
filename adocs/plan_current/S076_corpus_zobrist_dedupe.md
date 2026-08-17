@@ -134,4 +134,87 @@ block still lands wholly on one side of the cut, which is S066's asymmetry.
 
 20 boundaries lost, 0.017 % of the blocks, against 120000 games datagen
 reported. The split is 20 games coarser and no more contaminated than it was.
+
+## The refit, and the one number in it that is not about weights
+
+`adocs/data/S076_dedupe_fit.sh`, 1378 s, best at epoch 1600 and stopped by
+patience at 3600 of the 5000 allowed. Held-out error against the game result,
+over the deduplicated corpus's own held-out rows: **0.119608 at the shipping
+constants → 0.119458**, a move of 1.5e-04 against the 4e-05 noise floor S075
+measured. Not comparable with the 0.118457 the same constants score on the full
+corpus — a different row set is a different number, which the script says before
+the run rather than after it.
+
+**K fitted to 0.7801.** The comparison that makes this a measurement rather than
+a curiosity: S075's lambda 0 control fitted K on the *full* corpus from the
+*same* shipping constants and got **0.7595**. K is fitted at the starting
+parameters against the game result, so with the starting parameters held the
+only input that changed is the corpus. Removing 1.9 % of the rows moved the
+score-to-outcome scale by 2.7 %, which is what says the dropped rows were not a
+random 1.9 % — they are repetitions, and a position repeated on the way to a
+draw carries the label the search's score least agrees with.
+
+## The weights moved ten times further than the epochs alone move them
+
+Same budget, same seed, same freeze, same starting constants, and the only
+difference is the corpus. Against `git HEAD` before the paste:
+
+| | S075 lambda 0, full corpus, 5000 epochs | S076, deduplicated, 3600 epochs |
+|---|---|---|
+| material defines | `QUEEN` +15, rest ≤ +3 | `PAWN` -1, `BISHOP` +2, rest 0 |
+| psqt rook mg, mean | +2.3 | **-51.2** |
+| psqt rook eg, mean | -1.8 | **+59.9** |
+| largest single square | 74 | **761** |
+
+That is the attribution the SPRT script pre-registers, carried as loss and as
+weights rather than as a second verdict: more training on the same corpus does
+not do this, so the corpus did.
+
+The material defines barely moving while the tables move by tens is the
+degeneracy `tools/tuner.cpp:26-30` documents, read from the other side. What
+the fit did to the rook is a taper change and not a degeneracy shuffle: mg down
+51 and eg up 60 cannot be absorbed into a material constant, which only moves
+both together.
+
+## Re-anchoring, and the two guards the paste fired
+
+Pasting 827 constants fires the same two guards S065 met, and both are answered
+by re-derivation rather than by relaxing a threshold.
+
+**The ten pinned absolute anchors.** `.tuning/anchors.py` is a second
+implementation of `evaluate()` for these positions, written from the
+specification so that an anchor is never copied from the thing it anchors. Run
+against the pasted weights it derives 135, 244, 325, 563 (with `evaluate_cheap`
+567), 787, 0, 198, -569 and the -505 quiescence composite, and the suite's ten
+assertions now hold exactly those values: **10 of 10 reproduced**. Five of the
+six piece anchors went up while `PAWN` went *down* by one, which is the
+degeneracy again — the tables under those pieces moved, not what a piece is
+worth.
+
+**The truncation-bound guard.** `test_eval_model`'s pinned four have to
+disagree with the float model by more than 2.0, and one of them by more than
+2.8, or the tolerance in "the model reproduces evaluate() on every phase" is
+asserted against a corpus that no longer exercises it. S065's four fell to
+0.083, 0.958, 1.833 and 1.000 under the new weights — exactly the failure its
+own comment predicts, since **a residual belongs to the weights and not to the
+position** (DEC-057).
+
+Re-measured with `build/tools/truncation_scan`, new and tracked at this step
+because the same scan had been done by hand twice, at S038 and S065, from
+scripts in session scratchpads that no longer exist —
+`2026-08-16_plan_review-F04`'s shape. Over all 10795695 rows: 135399 past 2.0,
+99 past 2.8, and **30 at the arithmetic maximum 69/24 = 2.875**. The four pinned
+are chosen from those 30 to span the taper with both sides to move; phase 17 has
+no maximal position under these weights, so the middle two are phases 11 and 19
+where S065's were 11 and 17. The thresholds are untouched.
+
+The tool is checked against the test rather than trusted: on S065's four
+positions it prints 0.083333, 0.958333, 1.833333 and 1.000000, which is what
+`test_eval_model` printed when it went red, to six digits.
+
+**`piece_values_abs` is not affected.** The move-ordering bands clear each other
+by 100 points and a fitted material value can invert that silently — `CLAUDE.md`
+names it as a one-way door. It reads `MVV_*` and not the fitted defines
+(`src/evaluation.cpp:41-43`), so the paste cannot reach it. Checked, not
+assumed.
 author:    Maksym Bodnar
