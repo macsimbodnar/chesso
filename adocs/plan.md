@@ -147,6 +147,22 @@ first run; S086 is book learning behind a UCI option that ships off. NNUE is not
 reopened — DEC-054 stands, and a literature summary does not reverse an owner's
 decision.
 
+**S087 cuts ahead of S060 and is an instrument, not a strength change,
+DEC-067.** Every number this plan has produced is a delta against an earlier
+chesso: `fastchess.sh` plays the working tree against a `.ref-builds/` worktree
+and answers "is B stronger than A". Nothing here answers "how strong", and
+self-play cannot answer it at any game count. S087 plays a gauntlet against
+engines the public lists rate and solves it with `ordo` into an absolute figure
+on the CCRL Blitz scale, with an interval and a measured sensitivity to which
+reference is anchored. It buys zero Elo, which is the same trade S035 and S037
+made — and `plan.md` already records that the rest of this plan is measured with
+them. The reference binaries are built outside this repository and only a
+manifest is tracked, because Rustic is GPL-3 and the first foundation keeps that
+question out of this tree entirely. A short bracketing run at the repository's
+own `10+0.2` comes first and costs about thirteen minutes; what the rated run's
+time control is, and therefore whether it costs an hour or a night, is decided
+after it with a score in hand.
+
 S019 is retired. It was written from one game, DEC-032 showed the endgame is the
 cheapest phase per move, and DEC-033 showed endgame errors are the least
 depth-fixable of all. Its content belonged to S027 from the start. The id is not
@@ -201,32 +217,33 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 54. S076  the fit runs on a corpus deduplicated by zobrist key, so a repeated position stops carrying repeated weight
 55. S077  an emitted table names the engine commit and the corpus hash it was fitted from
 56. S078  S060 points at the mate-inside-the-pruned-depth test S033 added, and S061's citation names the case it means
-57. S060  S026's accepts carries the mate-inside-the-pruned-depth clause its own body demands, per technique
-58. S026  drop nodes near the horizon that cannot reach alpha
-59. S079  S063 covers every pending step file and cites symbols, and S058 stops requiring a literal line number
-60. S063  S024, S030 and S039 cite the src/evaluation.cpp lines that exist at HEAD
-61. S024  history indexed by the move played n plies ago and the current move
-62. S061  S023's disjoint-bands criterion names a test that exercises the 100-point capture-to-killer clearance
-63. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
-64. S059  S025's gate books the outcome its own evidence predicts: a timing that is worse is the recorded verdict
-65. S025  retry searching losing captures after the quiets, now that capture history exists
-66. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
-67. S020  compute the in-check state once per node instead of once per call site
-68. S080  S057 argues from the corpus on disk and the spread measured at HEAD, and S039's stale premise is named in full
-69. S057  S039's accepts names a corpus that exists in this tree, with its spread figures re-measured at HEAD
-70. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
-71. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
-72. S081  S056's four merged disagreements are measured on the pinned positions the test loads today
-73. S056  S055's accepts re-targets the pinned thresholds to the post-merge bound instead of asking for a suite state the merge makes unreachable
-74. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
-75. S058  S030's neutrality remedy separates sites keyed on the move from sites keyed on prev_move, and names the write site
-76. S030  move_t drops the moving piece and becomes 16 bits
-77. S031  one unconditional xor for the side-to-move zobrist key instead of two
-78. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-79. S082  the corpus labels the quiescence leaf rather than the root, which is the position evaluate() is asked about
-80. S083  a corpus past 50 M positions, and a measured answer on what nodes per move buys against volume
-81. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
-82. S085  the first SPSA run on the search parameters, and an independent SPRT of what it returns
-83. S086  per-position outcome statistics steer the opening choice, behind a UCI option that ships off
-84. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
-85. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it
+57. S087  an absolute rating for chesso on the CCRL Blitz scale, from a gauntlet against engines the public lists rate
+58. S060  S026's accepts carries the mate-inside-the-pruned-depth clause its own body demands, per technique
+59. S026  drop nodes near the horizon that cannot reach alpha
+60. S079  S063 covers every pending step file and cites symbols, and S058 stops requiring a literal line number
+61. S063  S024, S030 and S039 cite the src/evaluation.cpp lines that exist at HEAD
+62. S024  history indexed by the move played n plies ago and the current move
+63. S061  S023's disjoint-bands criterion names a test that exercises the 100-point capture-to-killer clearance
+64. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
+65. S059  S025's gate books the outcome its own evidence predicts: a timing that is worse is the recorded verdict
+66. S025  retry searching losing captures after the quiets, now that capture history exists
+67. S022  skip a quiescence capture that cannot reach alpha even if it wins outright
+68. S020  compute the in-check state once per node instead of once per call site
+69. S080  S057 argues from the corpus on disk and the spread measured at HEAD, and S039's stale premise is named in full
+70. S057  S039's accepts names a corpus that exists in this tree, with its spread figures re-measured at HEAD
+71. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
+72. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
+73. S081  S056's four merged disagreements are measured on the pinned positions the test loads today
+74. S056  S055's accepts re-targets the pinned thresholds to the post-merge bound instead of asking for a suite state the merge makes unreachable
+75. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
+76. S058  S030's neutrality remedy separates sites keyed on the move from sites keyed on prev_move, and names the write site
+77. S030  move_t drops the moving piece and becomes 16 bits
+78. S031  one unconditional xor for the side-to-move zobrist key instead of two
+79. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+80. S082  the corpus labels the quiescence leaf rather than the root, which is the position evaluate() is asked about
+81. S083  a corpus past 50 M positions, and a measured answer on what nodes per move buys against volume
+82. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
+83. S085  the first SPSA run on the search parameters, and an independent SPRT of what it returns
+84. S086  per-position outcome statistics steer the opening choice, behind a UCI option that ships off
+85. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
+86. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it

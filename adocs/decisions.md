@@ -3465,3 +3465,136 @@ Consequences: The tuner takes one pass over the corpus before it loads it:
               over tracked files. A fit run from a tree with uncommitted source
               changes says so, which is the case S065's and S076's pastes both
               passed through.
+
+## DEC-067  2026-08-17  chesso gets an absolute rating on the CCRL Blitz scale, and the reference binaries stay outside this repository
+Tags:         measurement, rating, gauntlet, ordo, licensing, s087, dec-016, dec-048, dec-050, dec-041
+
+Context:      Every strength number this project has ever recorded is a delta
+              against an earlier chesso. `fastchess.sh` plays the working tree
+              against a `.ref-builds/` worktree and runs an SPRT on the result,
+              which answers "is B stronger than A" and cannot answer "how
+              strong". The stated goal is the strongest open-source engine in
+              the world (`CLAUDE.md`, DEC-013) and there is no instrument in the
+              tree that measures the distance to it. Self-play cannot supply
+              one at any game count.
+
+              The owner supplied a specification for closing that gap: a
+              gauntlet against reference engines carrying published CCRL Blitz
+              ratings, solved into an absolute rating by `ordo`, with a
+              bracketing check before the expensive run and an anchor-sensitivity
+              check after it. The document is sound on method. Four of its
+              specifics are wrong for this repository or this machine, and one
+              of its deliverables would put a GPL-3 binary inside this tree.
+
+              Verified on this machine before deciding: `ordo 1.2.6` is already
+              installed at `/usr/local/bin/ordo`; `fastchess alpha 1.8.1`
+              supports `-tournament gauntlet -seeds N`; `cargo 1.95.0`,
+              `g++ 13.3` and `go1.22.2` cover the proposed starting set;
+              `dotnet` is **absent**, so Leorik cannot be built without adding a
+              dependency; `https://github.com/nescitus/sungorus` returns **404**;
+              Rustic's home is Codeberg, not GitHub, and is already cloned at
+              `/home/max/ws/rustic` with its alpha tags; the document's
+              `run_test.sh` does not exist here and the script it means is
+              `fastchess.sh`.
+
+Decision:     **Adopt the procedure as S087 and execute it next, ahead of
+              S060.** Analysis, the machine survey above and the options were
+              the agent's; the four settings below were the owner's answers and
+              the specification was the owner's.
+
+              **1. No third-party binary or source enters this repository.**
+              Reference engines are cloned and built under
+              `/home/max/ws/engines/<name>/`. What is tracked here is a
+              manifest: source URL, tag or commit, build command, binary
+              `sha256`, and the CCRL rating with the date it was read.
+
+              **2. Concurrency stays at 12, DEC-050 unchanged.** The forfeit
+              bias below is accepted and **detected** rather than avoided: the
+              run script counts time forfeits in the PGN and a single one
+              invalidates the run.
+
+              **3. Bracket cheap, then decide.** A short run at the repository's
+              own `10+0.2` establishes that the reference set brackets chesso
+              and that nothing forfeits, before any long run is booked. The
+              rated run's time control is chosen after that, with a score in
+              hand.
+
+              **4. The book is `books/8moves_v3.pgn`**, the book behind every
+              measurement on record here.
+
+              **5. The reference engines are built under the owner's
+              supervision.** The step carries the exact clone, checkout and
+              build commands; the owner runs them; the agent verifies each
+              binary answers `uci` and writes the manifest. This is narrower
+              than DEC-041, which hands the agent measurements and tuning, and
+              it is narrower by the owner's choice rather than by a rule.
+
+Rejected:     **The document's deliverable 2, a `references/` directory in this
+              repository holding the reference binaries.** Refused: Rustic is
+              GPL-3, and a GPL binary committed here is exactly the question
+              `CLAUDE.md`'s first foundation exists to keep out of this codebase
+              and any future network. A manifest carries the same provenance and
+              raises no licensing question at all. Running another engine's
+              binary as a tool is and remains encouraged, DEC-016.
+
+              **Installing the reference binaries into `/usr/games`**, beside
+              `stockfish` and `fastchess`. Refused: it needs `sudo`, and it puts
+              unversioned third-party binaries in a system directory where
+              nothing records which commit each one is -- an opponent binary is
+              a measurement instrument and an unidentifiable one contaminates
+              the result it produces.
+
+              **Concurrency 5 or 6, the document's own rule.** DEC-050's
+              justification is that oversubscription hits both sides about
+              equally, so it inflates variance rather than biasing the result.
+              That argument holds for chesso against chesso and does not
+              obviously hold against a foreign engine whose time management
+              differs: the side with the thinner safety margin forfeits more,
+              and a forfeit is a whole point rather than noise. Rejected anyway,
+              by the owner, for throughput -- measurement capacity is the
+              binding constraint -- with the forfeit count as the detector. If
+              the bracketing run shows any forfeit, the rated run drops to 6 and
+              this entry is superseded rather than reinterpreted.
+
+              **Running at CCRL Blitz `2+1` straight away.** It is the honest
+              time control for importing a CCRL anchor, and at 1000 games it is
+              roughly 8 h at concurrency 12 against roughly 1 h at `10+0.2`.
+              Refused as the *first* run only: a bracketing failure would spend
+              that night on a number the document itself calls unreliable.
+
+              **A UHO book**, as the document names. Refused for the first run:
+              it is a new variable in a run already introducing foreign engines,
+              and no chesso result on record used it.
+
+              **Leorik in the starting set.** `dotnet` is absent and
+              `CLAUDE.md` forbids the agent adding a dependency on its own. It
+              stays available as the upward expansion if bracketing fails high,
+              as an owner decision.
+
+              **`bayeselo` instead of `ordo`.** The document prefers Ordo for
+              cleaner anchoring and Ordo is already installed.
+
+              **Deriving an absolute figure from the self-play history.**
+              Self-play Elo measures progress within one version lineage and is
+              inflated; no game count converts it to a scale.
+
+Consequences: The project gains a second measurement instrument with a different
+              job from `fastchess.sh`, and `fastchess.sh` stays the per-change
+              gate. The two are not comparable: Ordo's intervals are trinomial
+              and the SPRT verdicts here run `model=normalized`, so an Ordo
+              interval is never quoted against an nElo figure.
+
+              A rated run is bookable after any milestone and re-derivable from
+              one script, which is what makes "chesso gained N Elo since S0nn"
+              expressible on a public scale for the first time.
+
+              `/home/max/ws/engines/` becomes a machine-local asset that this
+              repository depends on and does not contain. It is the same class
+              of loss `status.md` already parks for `.tuning/`: the manifest is
+              the record that lets it be rebuilt, and it is tracked for that
+              reason.
+
+              Anchors are read from `https://computerchess.org.uk/ccrl/404/`,
+              which 302s to `https://computerchess.org.uk/404/`, so the fetch
+              follows redirects. A rating is copied into the manifest with the
+              date it was read; nothing hardcodes one.
