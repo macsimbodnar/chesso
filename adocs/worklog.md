@@ -3657,3 +3657,42 @@ assertions** at the shipping margin including the DEC-060 material-leader case,
 completing commit with the pin reverted to 100 and restored:
 `CHECK( 75 == 100 )`. g++ 13.3.0, `-j12`. `README.md` owner-written, no change
 needed; `MANUAL.md` and `DEV_MANUAL.md` both updated.
+
+## 2026-08-17 — S074, S021's gate carries the fast suite's mate cases
+
+Prompt: `next`.
+
+Text only, `2026-08-16_plan_review-F07`. S021's `accepts:` was an SPRT clause and
+nothing else, alone among the pending steps that touch pruning: S033, S068 and
+S026 each carry a mate clause. It now also requires the fast suite's three mate
+cases -- "mate in one", "mate in two is found at the right distance" and
+"pruning does not hide a mate against the material leader" -- green at the window
+schedule that ships, checked **before** the verdict is read. The SPRT clause is
+kept verbatim as the prefix and DEC-063's bounds paragraph is untouched.
+
+A body section says why the clause belongs to this step rather than to pruning
+steps generally: DEC-060 measured that the exposure is a property of the bound
+the parent passes down, not of the static score -- the harmful prune fired at
+`alpha=-965 beta=-964` because the parent was a null-window scout hunting a mate
+score, so the mate-band guard on `beta` did nothing. Aspiration windows change
+exactly that quantity, and whether narrowing the root window moves any node into
+that shape is unmeasured. At the +9 +/- 17 the step expects, an SPRT cannot
+separate a missed mate from noise.
+
+Check is mechanical and non-vacuous by construction: it extracts every
+`TEST_CASE_FIXTURE` title from `tests/test_search.cpp` and refuses with exit 2
+unless all three are real cases, then requires each quoted verbatim in
+`accepts:`. **Green 3 of 3**; observed red against `git show HEAD:` the step
+file, **0 of 3 quoted with the precondition still 3 of 3**, so the red is the
+gate and not the extractor. The three cases were also run on their own as the
+baseline S021 inherits: **3 passed, 0 failed, 123 assertions**.
+
+Changed: `adocs/plan_todo/S021_aspiration_windows.md`, `adocs/testing.md` (one
+row), `adocs/plan.md` (checker pruned S071's entry), `adocs/status.md`, and the
+step file to `plan_done/`. Commit `cdfdf92`.
+
+Gate: **13 of 13 fast in 20.85 s**, `./clang-format.sh --check` exit 0,
+`moltke --validate` clean, `tools/plan_prose_check.py` 0 flagged. No `src/`
+change and no play change. `README.md` owner-written, no change needed;
+`MANUAL.md` checked -- `:168` still lists aspiration windows as absent, correct
+until S021 lands; `DEV_MANUAL.md` checked, no change needed.
