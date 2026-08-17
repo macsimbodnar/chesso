@@ -14,3 +14,7 @@ epoch    100  train 0.118204  validation 0.118460
 epoch    200  train 0.118204  validation 0.118460
 epoch    300  train 0.118204  validation 0.118460
 epoch    400  train 0.118204  validation 0.118460
+epoch    500  train 0.118203  validation 0.118459
+epoch    600  train 0.118203  validation 0.118459
+epoch    700  train 0.118203  validation 0.118459
+epoch    800  train 0.118203  validation 0.118459

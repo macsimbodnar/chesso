@@ -52,7 +52,7 @@ CASES = [
     dict(
         title="pawn on e2",
         fen="4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-        anchors={"evaluate": 88},
+        anchors={"evaluate": 125},   # test_evaluation.cpp:237
         stm="w",
         phase=0,
         material=[("PAWN", 1)],
@@ -70,7 +70,7 @@ CASES = [
     dict(
         title="knight on b1",
         fen="4k3/8/8/8/8/8/8/1N2K3 w - - 0 1",
-        anchors={"evaluate": 240},
+        anchors={"evaluate": 211},   # test_evaluation.cpp:238
         stm="w",
         phase=1,
         material=[("KNIGHT", 1)],
@@ -85,7 +85,7 @@ CASES = [
     dict(
         title="bishop on c1",
         fen="4k3/8/8/8/8/8/8/2B1K3 w - - 0 1",
-        anchors={"evaluate": 325},
+        anchors={"evaluate": 279},   # test_evaluation.cpp:239
         stm="w",
         phase=1,
         material=[("BISHOP", 1)],
@@ -100,7 +100,7 @@ CASES = [
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 530, "cheap": 524},
+        anchors={"evaluate": 509, "cheap": 524},   # test_evaluation.cpp:240
         stm="w",
         phase=2,
         material=[("ROOK", 1)],
@@ -115,7 +115,7 @@ CASES = [
     dict(
         title="queen on d1",
         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
-        anchors={"evaluate": 1101},
+        anchors={"evaluate": 715},   # test_evaluation.cpp:241
         stm="w",
         phase=4,
         material=[("QUEEN", 1)],
@@ -147,7 +147,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 266},
+        anchors={"evaluate": 224},   # test_search.cpp:647
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -174,7 +174,7 @@ CASES = [
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -491},
+        anchors={"evaluate": -537},  # test_search.cpp:1124
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -266,7 +266,7 @@ LEAVES = [
     ),
 ]
 
-QUIESCE_IN_CHECK = -491  # what test_search pins on the shipped weights
+QUIESCE_IN_CHECK = -446  # test_search.cpp:688, on the shipped weights
 
 
 def weights(source):
