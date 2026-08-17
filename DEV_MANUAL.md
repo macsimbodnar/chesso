@@ -52,13 +52,12 @@ every recorded benchmark becomes incomparable.
 `-DCHESSO_TUNE=ON`. Every parameter in `src/search_params.hpp` stops being an
 `inline constexpr int` the compiler folds and becomes a variable settable over
 UCI. S073 built it so the hand-tunes, S068 and S039, and the SPSA driver S084
-need one build rather than one build per point measured. S068 is done and used
-it for exactly one thing — node counts and suite runs, never a strength number,
-see the rule below. The
-sweeps in `adocs/data/S033_rfp_*.sh` recompiled per point with
-`-DRFP_MARGIN=$margin`, which `2026-08-16_plan_review-F04` found no longer
-builds; `setoption` replaces it and the scripts are historical evidence, not a
-method to re-run.
+need one build rather than one build per point measured. S068 is done and used it
+for exactly one thing — node counts and suite runs, never a strength number,
+which is the rule immediately below. The sweeps in `adocs/data/S033_rfp_*.sh`
+recompiled per point with `-DRFP_MARGIN=$margin`, which
+`2026-08-16_plan_review-F04` found no longer builds; `setoption` replaces it and
+the scripts are historical evidence, not a method to re-run.
 
 **It is not the release binary and no strength number is ever taken on it.** A
 constant the compiler folds is not the same code as a variable it must load, and

@@ -168,7 +168,10 @@ Committed verbatim as evidence, not as tooling. Two traps:
   Reproduced 2026-08-17 at S068's completing commit, g++ 13.3.0. What S073
   actually built is the other route: `-DCHESSO_TUNE=ON` makes every parameter an
   `extern int` settable over UCI, so a *sweep* costs one build instead of one per
-  point. That build must never produce a strength number (`DEV_MANUAL.md:61`),
+  point. That build must never produce a strength number -- `DEV_MANUAL.md`,
+  "The tune build", **"It is not the release binary and no strength number is
+  ever taken on it"**, cited by its sentence rather than by a line because that
+  section moves --
   which is why S068's two SPRT binaries were both ordinary Release builds with
   the default edited in the header.
 
