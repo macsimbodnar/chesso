@@ -7,7 +7,7 @@ decisions:  DEC-056
 closes:
 blocks:
 paused_by:
-done:
+done:      Dedupe by the engine's zobrist key dropped 207998 of 11003693 rows, 1.8903 %, clearing the 1 % pre-registered before the tool ran; two passes byte identical and --verify found 0 collisions among the 207998. The refit's K moved to 0.7801 from 0.7595 on the same starting constants, held-out 0.119608 -> 0.119458, and one SPRT accepted H1: Elo 26.68 +/- 16.40, LOS 99.93 %, 1044 games in 46 m 48 s. Constants kept. Ten anchors re-derived by anchors.py, 10 of 10, and the truncation-bound four re-measured with the new tracked tools/truncation_scan. DEC-065.
 
 ## Why this exists
 
@@ -217,4 +217,57 @@ by 100 points and a fitted material value can invert that silently — `CLAUDE.m
 names it as a one-way door. It reads `MVV_*` and not the fitted defines
 (`src/evaluation.cpp:41-43`), so the paste cannot reach it. Checked, not
 assumed.
+
+## The verdict: H1 accepted, and what that does and does not say
+
+One SPRT, `adocs/data/S076_sprt.sh`, candidate against `a579f46`:
+
+```
+Elo: 26.68 +/- 16.40, nElo: 34.44 +/- 21.08
+LOS: 99.93 %, DrawRatio: 35.63 %, PairsRatio: 1.40
+Games: 1044, Wins: 365, Losses: 285, Draws: 394, Points: 562.0 (53.83 %)
+Ptnml(0-2): [38, 102, 186, 134, 62], WL/DD Ratio: 1.35
+LLR: 2.95 (100.1%) (-2.94, 2.94) [-5.00, 5.00]
+SPRT ([-5.00, 5.00]) completed - H1 was accepted
+Total Time: 00:46:48
+```
+
+1044 games in 46 m 48 s, about 1338 games/h, which is the same throughput S021
+and S068 measured on these twelve threads. **The paste is kept**, which is what
+the script pre-registered for this outcome.
+
+**+26.68 is not the effect size.** An SPRT stops the moment the evidence crosses
+a bound, so it stops early exactly when the observed effect has run favourable
+and the stopping estimate is biased upward by that. This step has one run and
+nothing to pool it with, so the number stands with its bias named — S021 is the
+precedent and S068 is the case where two runs could be pooled and the point
+estimate fell from +12.18 to +5.02. What the run establishes is its
+pre-registered claim, **not a regression of 5 Elo or more**, and at LOS 99.93 %
+over 1044 games that the sign is positive.
+
+**The bounds bought the verdict.** `elo0=0 elo1=5` would have had the effect
+sitting inside its undefended interval, which is DEC-063 and S068's 6 h 36 m for
+nothing. This cost 47 minutes.
+
+**Attribution, as pre-registered.** The candidate is a refit *and* a changed
+corpus. The refit half is priced by S075's lambda 0 control at the same budget
+and seed on the full corpus — 3e-06 of held-out error and a largest single
+square move of 74, against this run's 1.5e-04 and 761. So the epochs are not
+what produced this, and no second verdict was spent to say so.
+
+**What it does not establish.** Why deduplication helps. The fit's own numbers
+suggest the mechanism is the label rather than the count: K moved 2.7 % on a
+1.9 % row change, so the rows removed were the ones whose scores and outcomes
+agreed least — repetitions, drawn by repetition, labelled with the game's
+result. That is a hypothesis this step does not test. S082 relabels at the
+quiescence leaf and S083 regenerates at scale; both re-ask it with the
+confounder gone.
+
+**Contamination checked before the number was read** (DEC-020): both
+`CMakeCache.txt`s carry `Release`, `-O3 -DNDEBUG`, `/usr/bin/c++` and
+`CHESSO_TUNE:BOOL=OFF`; the reference worktree is clean at `a579f46` and its
+`src/eval_tables.hpp` still reads `#define PAWN 95` against the candidate's 94;
+and the candidate snapshot the match played is md5-identical to
+`build/src/chesso` at the completing commit, so no rebuild swapped the engine
+mid-match.
 author:    Maksym Bodnar

@@ -34,7 +34,8 @@ recorded, so it is added, never edited.
 | `S076_dedupe_fit.log` | that fit's console: 10795695 rows, 119978 blocks, `fitted K = 0.7801`, held-out error against the game result 0.119608 at the shipping constants to 0.119458, best at epoch 1600, stopped by patience at 3600, 1378 s |
 | `S076_fits/` | the constants that fit emitted, byte for byte as `tools/tuner` wrote them |
 | `S076_sprt.sh` | the script that ran S076's SPRT, verbatim as run. `elo0=-5 elo1=5` under DEC-063, with the pre-registered interpretation of each outcome and the attribution limit in its header |
-| `S076_sprt.log` | that run's full console |
+| `S076_sprt.log` | that run's full console, 2537 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 00:46:48` |
+| `S076_sprt.pgn` | the 1047 games of that run, 3.0 MB, the run that decided S076. One match, one reference, committed on the same two tests as `S021_sprt.pgn` below |
 | `S021_sprt.pgn` | the 824 games of that run, 2.4 MB. One match, one reference, with per-move score, depth and time comments. Committed where S068's run 1 PGN was not, on the same two tests: it is a clean artifact of one run — the script writes its own `-pgnout` path rather than `fastchess.sh`'s shared, appended `/tmp/fastchess_full.pgn` — and it is the run that decided the step |
 
 `S018_raw.tsv` columns: `game ply phase cost ref own mate san fen`. `cost` is
@@ -361,3 +362,63 @@ engine — S082 or S083 — has the invocation ready.
 The emitted `.hpp` files are evidence and are byte for byte what `tools/tuner`
 wrote. `clang-format.sh` excludes `adocs/` by path for exactly that reason, held
 by case 6 of `tests/test_clang_format_script.sh`.
+
+## S076 — the corpus deduplicated by zobrist key
+
+`S076_dedupe_fit.sh` and `S076_dedupe_fit.log`, the emitted constants under
+`S076_fits/`, and `S076_sprt.sh`, `S076_sprt.log`, `S076_sprt.pgn`.
+
+**The count came before the threshold was allowed to matter.** The step file
+pre-registered 1 % of rows as the line between "refit and play one SPRT" and "no
+match is spent", and it was committed before `build/tools/corpus_dedupe` was
+pointed at the corpus. The pass then dropped **207998 of 11003693 rows,
+1.8903 %**, leaving 10795695 distinct positions. Two runs are byte identical and
+a `--verify` pass found **0** of those 207998 key-equal rows disagreeing on the
+four FEN fields the zobrist key covers, so the count is repeats rather than
+collisions.
+
+The fit that followed is one fit and one candidate, at S065's and S075's
+settings, so the corpus is the only thing that differs from the run that
+produced the shipping weights. Two numbers in `S076_dedupe_fit.log` carry the
+step:
+
+- `fitted K = 0.7801`, against the **0.7595** S075's lambda 0 control fitted
+  from the same starting constants on the full corpus. K is fitted at the
+  starting parameters against the game result, so with those held the corpus is
+  the only input that changed: removing 1.9 % of the rows moved the
+  score-to-outcome scale by 2.7 %.
+- held-out error against the game result **0.119608 → 0.119458** over the
+  deduplicated corpus's own held-out rows. Not comparable with the 0.118457 the
+  same constants score on the full corpus — a different row set is a different
+  number, which `S076_dedupe_fit.sh` says before the run rather than after it.
+
+**The attribution is in the weights, not in a second match.** Same budget, same
+seed, same freeze, same starting constants: S075's control on the full corpus
+moved psqt rook mg by +2.3 on the mean and 74 at its largest single square;
+this run moved -51.2 and 761. More training on the same corpus does not do that.
+
+## S076's SPRT, and a second point estimate that is not an effect size
+
+```
+Elo: 26.68 +/- 16.40, nElo: 34.44 +/- 21.08
+LOS: 99.93 %, DrawRatio: 35.63 %, PairsRatio: 1.40
+Games: 1044, Wins: 365, Losses: 285, Draws: 394, Points: 562.0 (53.83 %)
+Ptnml(0-2): [38, 102, 186, 134, 62], WL/DD Ratio: 1.35
+LLR: 2.95 (100.1%) (-2.94, 2.94) [-5.00, 5.00]
+SPRT ([-5.00, 5.00]) completed - H1 was accepted
+```
+
+46 m 48 s, 1044 games, about 1338 games/h — the same rate S021 measured at 1348
+and S068 at 1371 on these twelve threads. The bounds are why it cost 47 minutes:
+`elo0=0 elo1=5` puts an effect of this size inside its undefended interval,
+which is DEC-063 and S068's 6 h 36 m for nothing.
+
+**+26.68 is not the effect size**, for the reason S021's section above states:
+the run stopped early precisely because the observed effect had run favourable.
+The recorded verdict is the pre-registered one — not a regression of 5 Elo or
+more, sign positive at LOS 99.93 %.
+
+`S076_sprt.pgn` is committed on the same two tests S021's was: one match against
+one reference, written to its own `-pgnout` path rather than `fastchess.sh`'s
+shared appended file, and it is the run that decided the step. 3.0 MB, 1047
+games, every one of them naming `candidate-s076-dedupe`.

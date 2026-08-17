@@ -69,3 +69,2469 @@ Finished game 27 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adju
 Started game 36 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
 Finished game 23 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
 Started game 37 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 26 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 38 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 25 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 39 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 22 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 40 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 30 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 41 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 33 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 42 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 28 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 43 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 32 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 44 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 31 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 45 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 35 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 46 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 39 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 47 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 42 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 48 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 36 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 49 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 40 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 48.57 +/- 108.56, nElo: 53.21 +/- 113.49
+LOS: 82.09 %, DrawRatio: 27.78 %, PairsRatio: 1.17
+Games: 36, Wins: 16, Losses: 11, Draws: 9, Points: 20.5 (56.94 %)
+Ptnml(0-2): [1, 5, 5, 2, 5], WL/DD Ratio: 4.00
+LLR: 0.16 (5.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 50 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 37 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 51 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 43 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 52 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 34 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 53 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 38 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 54 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 44 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 55 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 46 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 56 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 47 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 57 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 45 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 58 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 48 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 59 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 41 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 60 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 49 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 61 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 51 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 62 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 50 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 63 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 56 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 64 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 58 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 65 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 64 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 66 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 53 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 67 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 52 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 68 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 55 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 69 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 61 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 70 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 54 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 71 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 62 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 72 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 60 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 73 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 66 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 74 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 59 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 17.39 +/- 77.33, nElo: 20.13 +/- 87.91
+LOS: 67.32 %, DrawRatio: 30.00 %, PairsRatio: 0.91
+Games: 60, Wins: 23, Losses: 20, Draws: 17, Points: 31.5 (52.50 %)
+Ptnml(0-2): [2, 9, 9, 4, 6], WL/DD Ratio: 3.50
+LLR: 0.10 (3.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 75 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 67 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 76 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 74 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 77 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 71 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 78 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 69 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 79 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 65 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 80 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 63 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 81 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 70 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 82 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 68 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 83 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 73 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 84 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 72 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 85 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 57 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 86 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 77 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 87 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 82 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 88 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 75 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 89 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 76 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 90 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 79 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 91 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 81 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 92 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 80 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.11 +/- 66.63, nElo: 30.32 +/- 76.13
+LOS: 78.24 %, DrawRatio: 32.50 %, PairsRatio: 1.08
+Games: 80, Wins: 31, Losses: 25, Draws: 24, Points: 43.0 (53.75 %)
+Ptnml(0-2): [3, 10, 13, 6, 8], WL/DD Ratio: 2.25
+LLR: 0.20 (6.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 93 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 78 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 94 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 83 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 95 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 88 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 96 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 85 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 97 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 93 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 98 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 96 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 99 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 90 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 100 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 89 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 101 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 87 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 102 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 84 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 103 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 91 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 104 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 94 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 105 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 86 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 106 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 92 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 107 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 95 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 108 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 101 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 109 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 103 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 110 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 99 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 111 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 106 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 112 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 97 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 113 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 100 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 17.74 +/- 57.33, nElo: 21.52 +/- 68.79
+LOS: 73.01 %, DrawRatio: 36.73 %, PairsRatio: 1.07
+Games: 98, Wins: 35, Losses: 30, Draws: 33, Points: 51.5 (52.55 %)
+Ptnml(0-2): [4, 11, 18, 8, 8], WL/DD Ratio: 1.57
+LLR: 0.18 (6.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 114 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 108 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 115 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 104 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 116 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 107 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 117 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 105 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 118 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 109 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 119 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 102 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 120 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 111 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 121 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 115 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 122 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 110 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 123 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 112 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 124 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 118 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 125 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 117 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 126 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 113 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 127 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 121 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 128 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 119 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 129 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 122 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 130 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 98 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 131 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 114 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 132 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 116 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 133 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 127 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 134 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 120 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 8.55 +/- 49.29, nElo: 10.76 +/- 61.65
+LOS: 63.39 %, DrawRatio: 37.70 %, PairsRatio: 0.90
+Games: 122, Wins: 42, Losses: 39, Draws: 41, Points: 62.5 (51.23 %)
+Ptnml(0-2): [4, 16, 23, 9, 9], WL/DD Ratio: 1.88
+LLR: 0.11 (3.7%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 135 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 129 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 136 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 126 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 137 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 123 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 138 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 130 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 139 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 132 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 140 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 125 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 141 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 128 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 142 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 124 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 143 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 133 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 144 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 131 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 145 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 136 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 146 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 135 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 147 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 141 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 148 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 137 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 149 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 144 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 150 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 134 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 151 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 139 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 152 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 138 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 153 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 142 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 154 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 140 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 2.45 +/- 45.50, nElo: 3.09 +/- 57.14
+LOS: 54.22 %, DrawRatio: 38.03 %, PairsRatio: 0.83
+Games: 142, Wins: 47, Losses: 46, Draws: 49, Points: 71.5 (50.35 %)
+Ptnml(0-2): [5, 19, 27, 10, 10], WL/DD Ratio: 1.70
+LLR: 0.04 (1.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 155 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 147 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 156 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 145 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 157 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 148 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 158 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 149 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 159 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 150 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 160 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 153 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 161 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 154 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 162 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 143 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 163 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 155 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 164 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 146 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 165 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 152 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 166 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 151 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 167 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 161 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 168 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 156 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 169 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 160 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 170 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 158 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 171 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 157 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 172 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 163 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 173 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 164 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 174 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 162 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 175 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 165 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 176 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 167 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 177 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 170 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 178 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 169 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 179 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 159 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -2.09 +/- 43.44, nElo: -2.56 +/- 52.85
+LOS: 46.22 %, DrawRatio: 34.94 %, PairsRatio: 0.80
+Games: 166, Wins: 53, Losses: 54, Draws: 59, Points: 82.5 (49.70 %)
+Ptnml(0-2): [7, 23, 29, 12, 12], WL/DD Ratio: 1.42
+LLR: -0.04 (-1.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 180 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 166 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 181 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 168 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 182 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 171 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 183 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 172 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 184 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 177 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 185 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 173 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 186 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 178 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 187 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 180 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 188 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 175 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 189 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 179 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -3.95 +/- 42.59, nElo: -4.78 +/- 51.33
+LOS: 42.76 %, DrawRatio: 35.23 %, PairsRatio: 0.78
+Games: 176, Wins: 57, Losses: 59, Draws: 60, Points: 87.0 (49.43 %)
+Ptnml(0-2): [8, 24, 31, 12, 13], WL/DD Ratio: 1.58
+LLR: -0.07 (-2.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 190 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 181 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 191 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 176 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 192 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 182 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 193 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 183 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 194 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 174 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 195 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 186 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 196 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 184 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 197 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 192 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 198 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 191 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 199 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 188 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 200 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 185 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 201 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 187 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 202 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 189 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 203 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 196 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 204 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 193 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 205 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 200 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 206 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 199 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -0.00 +/- 41.25, nElo: 0.00 +/- 49.14
+LOS: 50.00 %, DrawRatio: 35.42 %, PairsRatio: 0.82
+Games: 192, Wins: 64, Losses: 64, Draws: 64, Points: 96.0 (50.00 %)
+Ptnml(0-2): [9, 25, 34, 13, 15], WL/DD Ratio: 1.62
+LLR: -0.00 (-0.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 207 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 195 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 208 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 198 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 209 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 190 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 210 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 197 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 211 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 202 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 212 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 201 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 213 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 194 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 214 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 203 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 215 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 205 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 216 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 208 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 217 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 204 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 218 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 206 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 219 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 210 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 220 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 209 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 221 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 207 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 222 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 213 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 223 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 211 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 224 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 215 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 225 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 218 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 226 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 219 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 227 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 216 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 228 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 222 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 229 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 214 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 230 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 212 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 231 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 217 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 232 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 220 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 1.58 +/- 38.19, nElo: 1.91 +/- 45.91
+LOS: 53.24 %, DrawRatio: 36.36 %, PairsRatio: 0.84
+Games: 220, Wins: 75, Losses: 74, Draws: 71, Points: 110.5 (50.23 %)
+Ptnml(0-2): [10, 28, 40, 15, 17], WL/DD Ratio: 1.86
+LLR: 0.03 (1.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 233 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 224 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 234 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 223 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 235 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 229 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 236 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 221 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 237 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 227 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 238 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 226 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 239 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 232 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 240 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 225 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 241 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 231 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 242 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 239 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 243 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 233 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 244 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 230 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 245 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 236 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 246 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 235 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 247 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 237 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 248 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 234 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 249 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 238 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 250 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 228 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 251 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 244 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 252 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 241 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 253 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 240 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 7.24 +/- 36.12, nElo: 8.84 +/- 43.96
+LOS: 65.33 %, DrawRatio: 35.83 %, PairsRatio: 0.93
+Games: 240, Wins: 83, Losses: 78, Draws: 79, Points: 122.5 (51.04 %)
+Ptnml(0-2): [10, 30, 43, 19, 18], WL/DD Ratio: 1.87
+LLR: 0.18 (6.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 254 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 242 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 255 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 252 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 256 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 246 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 257 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 247 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 258 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 243 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 259 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 248 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 260 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 250 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 261 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 253 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 262 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 255 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 263 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 251 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 264 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 245 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 265 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 254 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 266 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 249 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 267 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 258 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 268 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 257 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 269 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 261 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 270 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 259 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 271 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 256 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 272 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 264 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 273 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 260 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 9.36 +/- 34.35, nElo: 11.55 +/- 42.23
+LOS: 70.40 %, DrawRatio: 35.38 %, PairsRatio: 0.95
+Games: 260, Wins: 89, Losses: 82, Draws: 89, Points: 133.5 (51.35 %)
+Ptnml(0-2): [10, 33, 46, 22, 19], WL/DD Ratio: 1.71
+LLR: 0.25 (8.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 274 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 265 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 275 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 262 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 276 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 263 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 277 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 266 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 278 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 270 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 279 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 268 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 280 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 274 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 281 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 267 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 282 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 276 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 283 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 277 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 284 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 271 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 285 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 275 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 286 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 278 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 287 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 269 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 288 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 272 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 289 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 279 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 290 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 283 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 291 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 273 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 292 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 285 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 293 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 282 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 294 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 281 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 295 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 280 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 9.86 +/- 32.66, nElo: 12.28 +/- 40.55
+LOS: 72.37 %, DrawRatio: 36.88 %, PairsRatio: 0.98
+Games: 282, Wins: 98, Losses: 90, Draws: 94, Points: 145.0 (51.42 %)
+Ptnml(0-2): [11, 34, 52, 24, 20], WL/DD Ratio: 1.89
+LLR: 0.29 (9.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 296 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 284 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 297 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 293 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 298 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 287 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 299 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 291 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 300 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 289 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 301 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 296 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 302 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 288 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 303 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 286 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 304 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 290 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 305 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 292 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 306 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 294 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 307 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 295 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 308 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 299 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 309 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 301 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 310 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 305 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 311 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 298 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 312 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 302 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 313 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 297 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 314 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 303 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 315 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 304 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 316 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 300 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 8.00 +/- 31.36, nElo: 10.00 +/- 39.06
+LOS: 69.21 %, DrawRatio: 36.84 %, PairsRatio: 1.00
+Games: 304, Wins: 105, Losses: 98, Draws: 101, Points: 155.5 (51.15 %)
+Ptnml(0-2): [13, 35, 56, 28, 20], WL/DD Ratio: 1.95
+LLR: 0.25 (8.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 317 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 311 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 318 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 306 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 319 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 310 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 320 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 307 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 321 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 312 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 322 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 308 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 323 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 313 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 324 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 314 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 325 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 309 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 326 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 316 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 327 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 315 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 328 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 321 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 329 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 317 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 330 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 318 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 331 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 322 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 332 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 320 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 333 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 330 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 334 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 323 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 335 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 319 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 9.71 +/- 31.08, nElo: 11.90 +/- 37.95
+LOS: 73.06 %, DrawRatio: 35.40 %, PairsRatio: 1.04
+Games: 322, Wins: 113, Losses: 104, Draws: 105, Points: 165.5 (51.40 %)
+Ptnml(0-2): [15, 36, 57, 31, 22], WL/DD Ratio: 2.00
+LLR: 0.32 (10.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 336 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 325 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 337 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 329 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 338 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 331 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 339 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 326 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 340 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 327 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 341 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 328 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 342 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 332 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 343 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 324 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 344 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 333 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 345 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 334 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 346 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 342 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 347 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 336 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 348 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 339 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 349 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 337 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 350 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 335 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 351 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 343 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 352 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 338 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 353 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 344 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 354 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 348 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 355 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 346 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 356 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 345 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 357 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 351 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 358 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 341 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 359 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 350 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 360 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 347 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 361 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 352 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 362 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 340 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 14.90 +/- 30.00, nElo: 18.14 +/- 36.40
+LOS: 83.57 %, DrawRatio: 34.86 %, PairsRatio: 1.07
+Games: 350, Wins: 124, Losses: 109, Draws: 117, Points: 182.5 (52.14 %)
+Ptnml(0-2): [15, 40, 61, 33, 26], WL/DD Ratio: 1.77
+LLR: 0.53 (17.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 363 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 355 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 364 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 354 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 365 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 353 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 366 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 358 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 367 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 360 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 368 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 357 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 369 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 349 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 370 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 363 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 371 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 356 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 372 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 359 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 13.52 +/- 29.96, nElo: 16.25 +/- 35.89
+LOS: 81.26 %, DrawRatio: 34.44 %, PairsRatio: 1.07
+Games: 360, Wins: 127, Losses: 113, Draws: 120, Points: 187.0 (51.94 %)
+Ptnml(0-2): [17, 40, 62, 34, 27], WL/DD Ratio: 1.70
+LLR: 0.49 (16.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 373 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 364 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 374 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 366 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 375 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 365 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 376 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 369 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 377 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 361 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 378 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 372 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 379 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 367 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 380 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 362 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 381 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 379 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 382 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 371 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 383 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 380 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 11.27 +/- 29.27, nElo: 13.67 +/- 35.40
+LOS: 77.55 %, DrawRatio: 35.14 %, PairsRatio: 1.03
+Games: 370, Wins: 128, Losses: 116, Draws: 126, Points: 191.0 (51.62 %)
+Ptnml(0-2): [17, 42, 65, 34, 27], WL/DD Ratio: 1.60
+LLR: 0.42 (14.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 384 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 373 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 385 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 375 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 386 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 374 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 387 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 378 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 388 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 368 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 389 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 377 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 390 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 385 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 391 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 370 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 392 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 384 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 393 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 382 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 394 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 376 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 395 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 381 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 396 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 383 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 397 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 386 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 398 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 387 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 399 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 388 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 400 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 389 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 401 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 390 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 402 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 394 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 403 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 392 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 404 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 397 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 405 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 396 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 406 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 399 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 407 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 393 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 408 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 391 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 409 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 395 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 410 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 401 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 411 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 403 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 412 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 398 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 413 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 400 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 8.69 +/- 27.71, nElo: 10.70 +/- 34.05
+LOS: 73.11 %, DrawRatio: 35.50 %, PairsRatio: 1.02
+Games: 400, Wins: 136, Losses: 126, Draws: 138, Points: 205.0 (51.25 %)
+Ptnml(0-2): [18, 46, 71, 38, 27], WL/DD Ratio: 1.63
+LLR: 0.36 (12.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 414 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 406 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 415 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 404 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 416 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 402 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 417 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 412 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 418 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 408 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 419 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 405 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 420 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 409 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 421 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 407 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 422 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 410 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 423 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 413 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 424 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 411 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 425 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 415 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 426 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 417 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 427 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 423 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 428 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 416 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 429 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 422 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 430 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 418 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 431 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 421 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 432 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 414 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 433 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 420 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 434 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 419 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 11.53 +/- 27.52, nElo: 13.93 +/- 33.15
+LOS: 79.49 %, DrawRatio: 33.65 %, PairsRatio: 1.06
+Games: 422, Wins: 146, Losses: 132, Draws: 144, Points: 218.0 (51.66 %)
+Ptnml(0-2): [20, 48, 71, 42, 30], WL/DD Ratio: 1.63
+LLR: 0.49 (16.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 435 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 425 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 436 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 424 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 437 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 430 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 438 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 426 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 439 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 428 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 440 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 436 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 441 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 427 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 442 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 431 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 443 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 437 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 444 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 432 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 445 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 439 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 446 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 434 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 447 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 435 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 448 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 429 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 449 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 433 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 450 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 442 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 451 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 440 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 11.11 +/- 26.70, nElo: 13.58 +/- 32.54
+LOS: 79.32 %, DrawRatio: 34.25 %, PairsRatio: 1.06
+Games: 438, Wins: 151, Losses: 137, Draws: 150, Points: 226.0 (51.60 %)
+Ptnml(0-2): [20, 50, 75, 44, 30], WL/DD Ratio: 1.68
+LLR: 0.49 (16.7%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 452 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 443 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 453 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 444 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 454 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 454 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 455 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 445 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 456 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 438 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 457 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 449 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 458 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 447 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 459 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 450 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 460 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 448 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 461 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 446 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 462 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 441 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 463 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 455 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 464 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 451 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 465 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 453 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 466 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 459 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 467 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 461 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 468 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 460 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 7.65 +/- 26.02, nElo: 9.42 +/- 31.96
+LOS: 71.83 %, DrawRatio: 33.92 %, PairsRatio: 1.00
+Games: 454, Wins: 153, Losses: 143, Draws: 158, Points: 232.0 (51.10 %)
+Ptnml(0-2): [20, 55, 77, 45, 30], WL/DD Ratio: 1.66
+LLR: 0.35 (12.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 469 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 452 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 470 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 458 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 471 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 463 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 472 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 462 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 473 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 465 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 474 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 467 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 475 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 464 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 476 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 470 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 477 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 468 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 478 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 457 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 479 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 474 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 480 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 456 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 481 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 469 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 482 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 466 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 483 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 473 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 484 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 475 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 485 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 471 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 486 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 472 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 487 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 477 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 488 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 480 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 489 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 483 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 490 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 482 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 491 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 478 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 492 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 479 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 12.36 +/- 25.39, nElo: 15.20 +/- 31.15
+LOS: 83.06 %, DrawRatio: 33.89 %, PairsRatio: 1.08
+Games: 478, Wins: 164, Losses: 147, Draws: 167, Points: 247.5 (51.78 %)
+Ptnml(0-2): [21, 55, 81, 50, 32], WL/DD Ratio: 1.61
+LLR: 0.60 (20.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 493 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 481 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 494 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 476 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 495 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 484 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 496 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 489 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 497 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 487 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 498 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 491 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 499 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 485 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 500 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 488 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 501 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 486 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 502 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 493 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 503 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 492 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 504 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 496 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 505 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 500 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 506 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 490 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 507 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 494 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 508 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 498 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 509 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 497 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 510 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 501 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 511 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 503 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 512 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 504 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 513 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 509 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 514 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 506 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 515 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 505 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 516 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 499 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 10.38 +/- 24.93, nElo: 12.69 +/- 30.39
+LOS: 79.34 %, DrawRatio: 33.86 %, PairsRatio: 1.07
+Games: 502, Wins: 172, Losses: 157, Draws: 173, Points: 258.5 (51.49 %)
+Ptnml(0-2): [24, 56, 85, 53, 33], WL/DD Ratio: 1.66
+LLR: 0.53 (17.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 517 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 502 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 518 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 495 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 519 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 507 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 520 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 513 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 521 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 510 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 522 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 516 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 523 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 511 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 524 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 508 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 525 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 515 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 526 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 518 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 527 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 517 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 528 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 512 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 529 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 522 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 530 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 520 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 531 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 521 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 532 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 514 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 533 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 525 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 534 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 519 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 9.99 +/- 24.26, nElo: 12.30 +/- 29.80
+LOS: 79.06 %, DrawRatio: 34.48 %, PairsRatio: 1.06
+Games: 522, Wins: 178, Losses: 163, Draws: 181, Points: 268.5 (51.44 %)
+Ptnml(0-2): [24, 59, 90, 54, 34], WL/DD Ratio: 1.65
+LLR: 0.53 (18.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 535 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 526 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 536 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 527 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 537 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 528 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 538 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 523 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 539 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 524 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 540 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 530 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 541 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 537 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 542 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 532 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 543 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 534 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 544 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 529 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 545 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 535 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 546 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 533 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 547 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 536 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 548 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 538 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 549 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 540 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 550 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 539 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 7.10 +/- 23.81, nElo: 8.78 +/- 29.36
+LOS: 72.10 %, DrawRatio: 34.57 %, PairsRatio: 1.02
+Games: 538, Wins: 181, Losses: 170, Draws: 187, Points: 274.5 (51.02 %)
+Ptnml(0-2): [25, 62, 93, 55, 34], WL/DD Ratio: 1.66
+LLR: 0.39 (13.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 551 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 545 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 552 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 531 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 553 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 543 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 554 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 541 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 555 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 547 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 556 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 549 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 557 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 551 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 558 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 542 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 559 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 546 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 560 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 544 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 561 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 553 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 562 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 548 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 563 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 550 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 564 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 560 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 565 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 552 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 566 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 558 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 567 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 555 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 568 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 554 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 569 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 556 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 570 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 561 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 571 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 559 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 11.83 +/- 23.46, nElo: 14.57 +/- 28.83
+LOS: 83.91 %, DrawRatio: 34.41 %, PairsRatio: 1.08
+Games: 558, Wins: 192, Losses: 173, Draws: 193, Points: 288.5 (51.70 %)
+Ptnml(0-2): [25, 63, 96, 58, 37], WL/DD Ratio: 1.67
+LLR: 0.67 (22.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 572 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 564 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 573 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 563 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 574 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 557 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 575 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 566 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 576 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 562 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 577 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 568 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 578 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 572 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 579 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 571 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 580 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 570 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 581 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 569 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 582 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 573 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 583 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 565 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 584 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 574 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 585 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 577 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 586 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 575 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 587 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 567 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 588 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 576 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 589 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 581 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 590 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 580 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 591 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 578 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 592 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 579 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 15.59 +/- 22.96, nElo: 19.25 +/- 28.28
+LOS: 90.90 %, DrawRatio: 34.48 %, PairsRatio: 1.13
+Games: 580, Wins: 200, Losses: 174, Draws: 206, Points: 303.0 (52.24 %)
+Ptnml(0-2): [25, 64, 100, 62, 39], WL/DD Ratio: 1.50
+LLR: 0.92 (31.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 593 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 590 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 594 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 584 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 595 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 585 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 596 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 583 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 597 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 582 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 598 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 586 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 599 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 588 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 600 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 591 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 601 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 589 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 602 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 587 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 603 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 598 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 604 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 592 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 605 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 596 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 606 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 593 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 607 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 597 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 608 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 594 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 609 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 600 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 610 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 603 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 611 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 602 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 612 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 599 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 15.70 +/- 22.41, nElo: 19.56 +/- 27.85
+LOS: 91.57 %, DrawRatio: 34.78 %, PairsRatio: 1.14
+Games: 598, Wins: 206, Losses: 179, Draws: 213, Points: 312.5 (52.26 %)
+Ptnml(0-2): [25, 66, 104, 65, 39], WL/DD Ratio: 1.54
+LLR: 0.97 (32.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 613 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 595 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 614 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 601 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 615 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 608 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 616 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 605 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 617 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 610 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 618 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 607 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 619 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 611 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 620 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 604 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 621 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 609 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 622 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 606 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 623 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 615 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 624 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 617 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 625 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 612 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 626 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 614 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 627 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 619 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 628 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 613 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 629 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 621 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 630 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 616 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 631 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 618 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 632 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 620 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 20.20 +/- 22.07, nElo: 25.12 +/- 27.35
+LOS: 96.41 %, DrawRatio: 34.52 %, PairsRatio: 1.21
+Games: 620, Wins: 219, Losses: 183, Draws: 218, Points: 328.0 (52.90 %)
+Ptnml(0-2): [25, 67, 107, 69, 42], WL/DD Ratio: 1.61
+LLR: 1.29 (43.7%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 633 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 626 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 634 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 622 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 635 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 625 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 636 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 629 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 637 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 623 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 638 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 624 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 639 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 627 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 640 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 628 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 641 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 631 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 642 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 630 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 643 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 633 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 644 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 637 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 645 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 640 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 646 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 632 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 647 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 638 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 648 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 634 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 649 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 643 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 650 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 635 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 651 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 639 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.26 +/- 21.78, nElo: 26.42 +/- 26.96
+LOS: 97.26 %, DrawRatio: 34.17 %, PairsRatio: 1.23
+Games: 638, Wins: 227, Losses: 188, Draws: 223, Points: 338.5 (53.06 %)
+Ptnml(0-2): [26, 68, 109, 73, 43], WL/DD Ratio: 1.66
+LLR: 1.39 (47.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 652 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 636 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 653 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 642 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 654 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 641 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 655 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 648 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 656 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 647 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 657 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 646 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 658 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 644 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 659 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 649 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 660 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 652 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 661 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 645 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 662 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 650 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 663 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 654 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 664 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 653 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 665 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 655 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 666 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 660 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 667 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 656 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 668 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 659 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.21 +/- 21.41, nElo: 26.44 +/- 26.59
+LOS: 97.44 %, DrawRatio: 34.15 %, PairsRatio: 1.25
+Games: 656, Wins: 234, Losses: 194, Draws: 228, Points: 348.0 (53.05 %)
+Ptnml(0-2): [27, 69, 112, 77, 43], WL/DD Ratio: 1.73
+LLR: 1.43 (48.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 669 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 651 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 670 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 662 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 671 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 657 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 672 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 664 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 673 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 661 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 674 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 658 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 675 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 665 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 676 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 666 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 677 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 663 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 678 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 675 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 679 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 667 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 680 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 671 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 681 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 672 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 682 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 673 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 683 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 668 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 684 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 669 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 685 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 670 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 686 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 683 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 687 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 684 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 688 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 677 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 689 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 682 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 690 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 676 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 691 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 679 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 692 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 680 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.55 +/- 20.85, nElo: 27.13 +/- 26.15
+LOS: 97.90 %, DrawRatio: 34.51 %, PairsRatio: 1.27
+Games: 678, Wins: 241, Losses: 199, Draws: 238, Points: 360.0 (53.10 %)
+Ptnml(0-2): [27, 71, 117, 81, 43], WL/DD Ratio: 1.72
+LLR: 1.52 (51.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 693 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 681 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 694 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 686 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 695 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 688 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 696 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 674 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 697 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 685 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 698 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 689 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 699 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 678 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 700 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 690 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 701 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 691 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 702 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 693 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 703 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 695 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 704 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 694 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 705 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 698 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 706 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 687 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 707 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 702 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 708 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 696 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 709 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 692 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 710 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 697 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 711 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 699 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 712 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 703 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 713 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 705 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 714 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 709 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 715 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 700 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 20.87 +/- 20.57, nElo: 26.21 +/- 25.74
+LOS: 97.70 %, DrawRatio: 34.57 %, PairsRatio: 1.27
+Games: 700, Wins: 247, Losses: 205, Draws: 248, Points: 371.0 (53.00 %)
+Ptnml(0-2): [29, 72, 121, 84, 44], WL/DD Ratio: 1.63
+LLR: 1.51 (51.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 716 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 701 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 717 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 706 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 718 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 704 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 719 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 710 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 720 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 708 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 721 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 707 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 722 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 720 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 723 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 712 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 724 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 711 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 725 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 719 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.44 +/- 20.25, nElo: 27.07 +/- 25.48
+LOS: 98.13 %, DrawRatio: 34.73 %, PairsRatio: 1.28
+Games: 714, Wins: 252, Losses: 208, Draws: 254, Points: 379.0 (53.08 %)
+Ptnml(0-2): [29, 73, 124, 87, 44], WL/DD Ratio: 1.64
+LLR: 1.59 (54.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 726 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 713 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 727 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 714 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 728 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 716 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 729 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 722 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 730 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 717 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 731 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 718 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 732 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 715 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 733 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 721 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 734 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 724 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 735 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 728 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 736 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 730 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 737 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 732 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 738 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 727 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 739 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 729 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 740 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 723 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 741 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 731 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 742 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 726 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 743 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 734 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 744 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 733 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 745 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 741 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 746 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 743 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 747 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 725 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 748 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 739 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 749 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 742 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 750 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 738 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 751 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 740 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.21 +/- 19.96, nElo: 26.73 +/- 25.07
+LOS: 98.17 %, DrawRatio: 34.69 %, PairsRatio: 1.27
+Games: 738, Wins: 259, Losses: 214, Draws: 265, Points: 391.5 (53.05 %)
+Ptnml(0-2): [30, 76, 128, 89, 46], WL/DD Ratio: 1.56
+LLR: 1.63 (55.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 752 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 735 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 753 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 737 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 754 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 745 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 755 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 746 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 756 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 749 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 757 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 736 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 758 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 752 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 759 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 748 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 760 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 757 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 761 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 758 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 762 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 747 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 763 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 754 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 764 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 750 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 765 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 751 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 766 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 744 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 767 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 759 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 768 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 753 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 769 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 755 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 770 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 761 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 771 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 756 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 772 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 764 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 773 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 760 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.43 +/- 19.58, nElo: 28.40 +/- 24.70
+LOS: 98.79 %, DrawRatio: 34.74 %, PairsRatio: 1.30
+Games: 760, Wins: 267, Losses: 218, Draws: 275, Points: 404.5 (53.22 %)
+Ptnml(0-2): [30, 78, 132, 93, 47], WL/DD Ratio: 1.54
+LLR: 1.78 (60.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 774 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 768 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 775 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 762 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 776 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 767 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 777 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 765 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 778 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 769 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 779 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 766 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 780 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 763 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 781 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 772 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 782 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 775 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 783 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 770 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 784 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 773 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 785 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 779 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 786 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 774 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 787 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 778 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 788 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 771 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 789 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 781 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 790 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 777 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 791 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 783 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 792 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 782 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 793 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 786 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 794 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 785 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 795 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 776 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 796 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 780 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 24.41 +/- 19.25, nElo: 30.98 +/- 24.32
+LOS: 99.37 %, DrawRatio: 34.69 %, PairsRatio: 1.33
+Games: 784, Wins: 278, Losses: 223, Draws: 283, Points: 419.5 (53.51 %)
+Ptnml(0-2): [30, 80, 136, 97, 49], WL/DD Ratio: 1.57
+LLR: 2.00 (67.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 797 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 784 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 798 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 787 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 799 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 788 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 800 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 793 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 801 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 790 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 802 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 795 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 803 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 791 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 804 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 797 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 805 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 796 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 806 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 789 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 807 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 792 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 808 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 794 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 809 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 799 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 810 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 801 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 811 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 805 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 812 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 798 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 813 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 809 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 814 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 802 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 815 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 800 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.99 +/- 19.09, nElo: 29.08 +/- 24.05
+LOS: 99.11 %, DrawRatio: 34.16 %, PairsRatio: 1.30
+Games: 802, Wins: 283, Losses: 230, Draws: 289, Points: 427.5 (53.30 %)
+Ptnml(0-2): [31, 84, 137, 99, 50], WL/DD Ratio: 1.58
+LLR: 1.92 (65.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 816 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 806 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 817 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 803 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 818 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 807 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 819 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 804 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 820 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 811 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 821 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 812 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 822 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 810 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 823 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 816 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 824 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 815 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 825 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 814 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 826 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 813 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 827 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 823 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 828 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 817 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 829 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 821 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 830 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 819 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 831 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 822 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 832 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 820 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.12 +/- 18.99, nElo: 27.82 +/- 23.81
+LOS: 98.90 %, DrawRatio: 33.99 %, PairsRatio: 1.29
+Games: 818, Wins: 288, Losses: 236, Draws: 294, Points: 435.0 (53.18 %)
+Ptnml(0-2): [33, 85, 139, 101, 51], WL/DD Ratio: 1.57
+LLR: 1.87 (63.7%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 833 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 824 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 834 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 825 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 835 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 826 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 836 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 818 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 837 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 828 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 838 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 808 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 839 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 827 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 840 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 832 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 841 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 834 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 842 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 838 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 843 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 837 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 844 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 841 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 845 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 829 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 846 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 833 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 847 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 835 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 848 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 840 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 849 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 839 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 24.20 +/- 18.76, nElo: 30.54 +/- 23.58
+LOS: 99.44 %, DrawRatio: 34.05 %, PairsRatio: 1.33
+Games: 834, Wins: 295, Losses: 237, Draws: 302, Points: 446.0 (53.48 %)
+Ptnml(0-2): [33, 85, 142, 105, 52], WL/DD Ratio: 1.54
+LLR: 2.09 (71.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 850 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 836 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 851 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 831 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 852 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 848 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 853 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 843 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 854 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 842 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 855 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 830 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 856 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 847 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 857 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 846 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 858 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 845 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 859 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 853 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 860 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 849 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 861 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 844 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 862 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 851 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 863 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 854 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 864 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 855 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 865 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 858 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 866 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 861 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 867 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 860 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 868 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 850 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 869 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 856 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 870 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 852 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 871 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 868 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 872 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 857 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 873 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 864 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 874 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 863 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 875 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 862 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 876 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 859 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 23.76 +/- 18.30, nElo: 30.21 +/- 23.17
+LOS: 99.47 %, DrawRatio: 34.49 %, PairsRatio: 1.34
+Games: 864, Wins: 304, Losses: 245, Draws: 315, Points: 461.5 (53.41 %)
+Ptnml(0-2): [34, 87, 149, 110, 52], WL/DD Ratio: 1.53
+LLR: 2.14 (72.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 877 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 866 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 878 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 865 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 879 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 870 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 880 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 873 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 881 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 875 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 882 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 874 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 883 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 867 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 884 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 877 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 885 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 878 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 886 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 869 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 887 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 876 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 888 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 872 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 889 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 882 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 890 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 880 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 891 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 886 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 892 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 879 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 23.78 +/- 18.12, nElo: 30.28 +/- 22.98
+LOS: 99.51 %, DrawRatio: 34.62 %, PairsRatio: 1.33
+Games: 878, Wins: 308, Losses: 248, Draws: 322, Points: 469.0 (53.42 %)
+Ptnml(0-2): [34, 89, 152, 111, 53], WL/DD Ratio: 1.49
+LLR: 2.19 (74.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 893 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 887 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 894 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 885 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 895 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 871 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 896 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 883 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 897 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 891 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 898 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 881 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 899 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 884 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 900 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 889 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 901 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 888 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 902 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 890 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 903 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 896 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 904 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 892 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 905 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 894 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 906 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 900 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 907 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 893 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 908 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 902 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 909 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 897 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 910 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 895 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 911 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 905 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 912 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 901 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 913 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 898 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 914 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 908 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 915 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 910 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 916 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 899 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 23.92 +/- 17.80, nElo: 30.60 +/- 22.67
+LOS: 99.59 %, DrawRatio: 34.81 %, PairsRatio: 1.35
+Games: 902, Wins: 315, Losses: 253, Draws: 334, Points: 482.0 (53.44 %)
+Ptnml(0-2): [35, 90, 157, 116, 53], WL/DD Ratio: 1.45
+LLR: 2.27 (77.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 917 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 903 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 918 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 904 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 919 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 914 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 920 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 907 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 921 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 909 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 922 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 911 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 923 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 912 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 924 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 919 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 925 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 913 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 926 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 906 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 927 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 918 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 928 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 923 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 929 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 921 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 930 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 916 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 931 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 917 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 932 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 926 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 933 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 920 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.74 +/- 17.68, nElo: 29.02 +/- 22.48
+LOS: 99.43 %, DrawRatio: 34.64 %, PairsRatio: 1.33
+Games: 918, Wins: 319, Losses: 259, Draws: 340, Points: 489.0 (53.27 %)
+Ptnml(0-2): [36, 93, 159, 117, 54], WL/DD Ratio: 1.45
+LLR: 2.19 (74.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 934 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 927 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 935 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 915 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 936 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 931 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 937 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 934 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 938 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 924 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 939 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 930 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 940 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 928 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 941 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 933 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 942 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 925 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 943 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 929 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 944 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 937 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 945 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 932 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 946 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 935 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 947 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 938 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 948 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 936 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 949 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 922 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 950 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 942 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 951 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 940 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 952 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 944 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 953 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 947 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 954 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 939 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 20.72 +/- 17.39, nElo: 26.55 +/- 22.21
+LOS: 99.04 %, DrawRatio: 35.11 %, PairsRatio: 1.29
+Games: 940, Wins: 323, Losses: 267, Draws: 350, Points: 498.0 (52.98 %)
+Ptnml(0-2): [37, 96, 165, 118, 54], WL/DD Ratio: 1.43
+LLR: 2.05 (69.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 955 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 945 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 956 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 943 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 957 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 941 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 958 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 949 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 959 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 946 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 960 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 950 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 961 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 953 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 962 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 955 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 963 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 956 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 964 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 952 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 965 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 948 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 966 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 958 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 967 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 957 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 968 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 959 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 969 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 960 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.20 +/- 17.20, nElo: 28.53 +/- 22.02
+LOS: 99.44 %, DrawRatio: 35.36 %, PairsRatio: 1.32
+Games: 956, Wins: 331, Losses: 270, Draws: 355, Points: 508.5 (53.19 %)
+Ptnml(0-2): [37, 96, 169, 121, 55], WL/DD Ratio: 1.45
+LLR: 2.24 (76.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 970 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 968 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 971 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 954 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 972 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 962 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 973 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 961 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 974 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 951 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 975 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 963 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 976 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 966 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 977 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 969 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 978 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 972 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 979 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 970 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 980 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 974 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 981 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 971 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 982 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 973 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 983 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 967 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 984 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 975 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 985 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 965 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by fifty moves rule}
+Started game 986 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 964 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 987 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 977 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 988 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 978 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 989 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 979 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 990 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 980 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 24.91 +/- 17.04, nElo: 31.96 +/- 21.77
+LOS: 99.80 %, DrawRatio: 35.17 %, PairsRatio: 1.37
+Games: 978, Wins: 341, Losses: 271, Draws: 366, Points: 524.0 (53.58 %)
+Ptnml(0-2): [37, 97, 172, 125, 58], WL/DD Ratio: 1.39
+LLR: 2.57 (87.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 991 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 983 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 992 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 981 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 993 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 982 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 994 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 987 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 995 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 991 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 996 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 990 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 997 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 976 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 998 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 985 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 999 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 986 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1000 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 989 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1001 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 995 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1002 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 992 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1003 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1000 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1004 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 984 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by fifty moves rule}
+Started game 1005 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 994 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1006 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 988 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 1007 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 999 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.26 +/- 16.91, nElo: 33.69 +/- 21.60
+LOS: 99.89 %, DrawRatio: 35.21 %, PairsRatio: 1.39
+Games: 994, Wins: 348, Losses: 273, Draws: 373, Points: 534.5 (53.77 %)
+Ptnml(0-2): [37, 98, 175, 127, 60], WL/DD Ratio: 1.36
+LLR: 2.75 (93.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 1008 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 997 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1009 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 993 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 1010 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 998 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1011 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1001 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1012 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1005 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1013 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1003 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1014 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1006 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1015 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1004 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by insufficient mating material}
+Started game 1016 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 996 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by stalemate}
+Started game 1017 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1009 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1018 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1002 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 1019 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1007 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 1020 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1010 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1021 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1013 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 1022 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1011 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 1023 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1014 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1024 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1017 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1025 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1008 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 1026 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1016 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1027 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1018 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1028 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1012 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by adjudication}
+Started game 1029 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1021 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1030 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1019 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 1031 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1022 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1032 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1023 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1033 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1015 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by adjudication}
+Started game 1034 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1026 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1035 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1032 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1036 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1025 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1037 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1028 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1038 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1027 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by insufficient mating material}
+Started game 1039 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1030 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1040 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1029 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1041 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1038 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1042 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1034 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1043 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1031 (candidate-s076-dedupe vs ref-a579f46): 0-1 {Black wins by adjudication}
+Started game 1044 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1024 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+Started game 1045 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1036 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1046 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1035 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1047 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1033 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1048 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1039 (candidate-s076-dedupe vs ref-a579f46): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1049 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1020 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 25.53 +/- 16.45, nElo: 32.98 +/- 21.16
+LOS: 99.89 %, DrawRatio: 35.71 %, PairsRatio: 1.38
+Games: 1036, Wins: 360, Losses: 284, Draws: 392, Points: 556.0 (53.67 %)
+Ptnml(0-2): [38, 102, 185, 132, 61], WL/DD Ratio: 1.34
+LLR: 2.80 (95.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 1050 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1037 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1051 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1045 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1052 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1044 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1053 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1046 (ref-a579f46 vs candidate-s076-dedupe): 1-0 {White wins by adjudication}
+Started game 1054 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1049 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1055 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1041 (candidate-s076-dedupe vs ref-a579f46): 1-0 {White wins by adjudication}
+Started game 1056 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1040 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.06 +/- 16.38, nElo: 33.71 +/- 21.10
+LOS: 99.91 %, DrawRatio: 35.70 %, PairsRatio: 1.39
+Games: 1042, Wins: 363, Losses: 285, Draws: 394, Points: 560.0 (53.74 %)
+Ptnml(0-2): [38, 102, 186, 134, 61], WL/DD Ratio: 1.35
+LLR: 2.88 (97.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 1057 of 40000 (candidate-s076-dedupe vs ref-a579f46)
+Finished game 1048 (ref-a579f46 vs candidate-s076-dedupe): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1058 of 40000 (ref-a579f46 vs candidate-s076-dedupe)
+Finished game 1042 (ref-a579f46 vs candidate-s076-dedupe): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s076-dedupe vs ref-a579f46 (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.68 +/- 16.40, nElo: 34.44 +/- 21.08
+LOS: 99.93 %, DrawRatio: 35.63 %, PairsRatio: 1.40
+Games: 1044, Wins: 365, Losses: 285, Draws: 394, Points: 562.0 (53.83 %)
+Ptnml(0-2): [38, 102, 186, 134, 62], WL/DD Ratio: 1.35
+LLR: 2.95 (100.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+SPRT ([-5.00, 5.00]) completed - H1 was accepted
+Finished match
+Total Time: 00:46:48 (hours:minutes:seconds)
+
+
+elapsed_seconds=2809
+S076_SPRT_DONE status=0

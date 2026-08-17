@@ -681,6 +681,26 @@ A row that cannot be read — fewer than four fields, or a FEN that does not loa
 — refuses the whole pass and removes the partial output. A filter that silently
 drops rows is what this tool exists to make visible.
 
+### Re-measure the truncation-bound positions after a fit
+
+S076. `tests/test_eval_model.cpp` pins four positions whose float model and
+integer engine scores disagree by 69/24 = 2.875, the maximum three truncating
+divisions can produce, so the tolerance in "the model reproduces evaluate() on
+every phase" is asserted against a corpus that reaches it. **A residual belongs
+to the weights, not to the position**, so those four stop qualifying every time
+the constants are refitted — DEC-057.
+
+```bash
+build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
+```
+
+Prints `difference, phase, side to move, fen` per hit and a summary line. 47 s
+over 10.8 M rows. At S076's constants: 135399 rows past 2.0, 99 past 2.8, **30
+at 2.875**, and the four pinned are drawn from those 30 to span the taper with
+both sides to move. It reproduces `test_eval_model`'s own numbers to six digits
+on whatever it is handed, because its model is that file's `model_score_white()`
+with the assertions removed.
+
 `tuner` cost on the same machine, measured on a 56304-row corpus at 12 threads:
 0.29 s to load, 2.22 ms per epoch, 10.9 MB resident. All three scale with rows,
 and the whole corpus is held in memory. On the real 11003693-row corpus, 12
@@ -711,7 +731,7 @@ The first paste fired three guards and was reverted; the second fired one,
 `tools/tuner.cpp:26-30` documents rather than by widening the guard: 432 off
 `#define QUEEN` and 432 onto all 128 of her squares, which moves the evaluation
 by one centipawn on one of seven pinned positions and by nothing on the other
-six. `adocs/plan_current/S065_corpus_regen_loosened_filter.md` records the
+six. `adocs/plan_done/S065_corpus_regen_loosened_filter.md` records the
 transformation and both fits' guard outcomes.
 
 **A fitted material value only means anything together with its own tables.**
@@ -722,6 +742,28 @@ the fit itself produced, and none of the three is comparable with the others.
 games in 02:30:12**, candidate against `a2f0065` at 10+0.2 on 12 cores. The
 constants are kept. The held-out error ranked nothing and this is the figure
 that decided it.
+
+**S076 refitted the same corpus deduplicated and those constants ship now.**
+Same settings, same seed, same freeze, `--lambda 0`; the only difference is
+1.8903 % fewer rows. 1378 s, best at epoch 1600, held-out error against the game
+result **0.119608 → 0.119458** over the deduplicated corpus's own held-out rows
+— which is not comparable with the 0.118460 above, because a different row set
+is a different number. **`fitted K = 0.7801` against 0.7595 for the same
+starting constants on the full corpus**, so removing the repeats moved the
+score-to-outcome scale itself by 2.7 %. The verdict: **+26.68 +/- 16.40 Elo,
+nElo 34.44, H1 accepted at LLR 2.95 over 1044 games in 00:46:48** against
+`a579f46`. Bias warning as always — a run that stops early stops when the
+observed effect has run favourable, so the recorded claim is "not a regression
+of 5 Elo or more, sign positive at LOS 99.93 %" rather than +26.68.
+
+**Refitting fires two guards, and both are answered by re-deriving rather than
+by relaxing.** `.tuning/anchors.py` recomputes the ten pinned absolute anchors
+from the specification — 10 of 10 at the new weights, and the suite asserts them
+as exact equalities. `build/tools/truncation_scan` re-measures the four
+positions `tests/test_eval_model.cpp` pins for the truncation bound, which
+belong to the weights and not to the positions (DEC-057): S065's four fell to
+between 0.08 and 1.83 under S076's constants, and 30 of the 10795695 rows reach
+the 2.875 maximum instead. Expect both on the next fit.
 
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of

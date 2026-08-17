@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-17 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S076 the fit runs on a corpus deduplicated by zobrist key, so a repeated position stops carrying repeated weight
-- Next: S076
+- In progress: none
+- Next: S077
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
