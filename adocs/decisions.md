@@ -3376,3 +3376,92 @@ Consequences: The dedupe is a pure row filter: every surviving line is a byte
               wholly on one side of the cut, so the cost is a coarser split and
               not a contaminated one -- S066's own asymmetry, and S076 measures
               the block count before and after.
+
+## DEC-066  2026-08-17  the corpus stamp is SHA-256 written out here, and the commit is stamped at build time
+Tags:         tuning, tuner, provenance, corpus, build, s077, dec-041, dec-049
+
+Context:      `adocs/eval_tuning_strategy.md` section 10 asks that a weight
+              vector name the engine commit and the dataset hash that produced
+              it. S077's accepts fixes what the header must carry and leaves
+              two implementation questions that decide whether the stamp is
+              worth carrying at all.
+
+              **Which hash.** Anything deterministic satisfies "hashing the same
+              file twice gives the same value".
+
+              **When the commit is read.** A sha is available at configure time,
+              at build time or at run time, and the three name different things.
+
+Decision:     **SHA-256, implemented in `tools/corpus_hash.hpp` from FIPS 180-4,
+              over the file's bytes exactly as they sit on disk**, and **the
+              commit stamped at build time** by `cmake/build_info.cmake` through
+              a custom target that rewrites its generated header only when the
+              value changes. Taken by the agent, with the analysis here, under
+              the step's own delegation and DEC-041.
+
+              The reason for SHA-256 specifically is that `sha256sum` is
+              everywhere and knows nothing about this project, so the value in
+              an emitted table is checkable by something that is not us.
+              Verified rather than asserted: the tuner printed
+              `ffdcd801ab59c58390503bfee468a5caeb71a6bb38c012904ec87675382533de`
+              for a 200000-row fixture and `sha256sum` printed the same.
+
+Rejected:     **A 64-bit hash of our own** -- FNV-1a or similar, ten lines
+              instead of a hundred and fast enough to be free. Refused because
+              its value is reproducible only by the binary that emitted it,
+              which is a strictly weaker claim than the one the step exists to
+              make, and because 64 bits over a directory of corpora is a
+              birthday argument nobody should have to make.
+
+              **Shell out to `sha256sum`.** No implementation to get wrong.
+              Refused: a fit that dies because a shell tool is missing or named
+              differently is a fit lost to provenance, and the failure is
+              silent-ish -- it appears at the end of a run that has already
+              spent its epochs.
+
+              **A crypto library.** `Never add a dependency on your own`
+              (`CLAUDE.md`), and this needs one function.
+
+              **The commit at configure time**, `-DCHESSO_GIT_SHA=` from
+              `CMakeLists.txt`. One line and it is what most projects do.
+              Refused because it is wrong in the direction that matters: `cmake
+              -S . -B build` runs once and the sha it captures goes stale on the
+              next commit, so an emitted table would name a commit that is not
+              the one its binary was built from. A wrong provenance line is
+              worse than none, because a reader trusts it.
+
+              **The commit at run time**, `git rev-parse` from inside the tuner.
+              Refused for the same reason from the other side: it names the
+              working tree at the moment of the fit, which is not what the
+              binary was compiled from -- exactly the case a rebuilt tree makes
+              wrong.
+
+Consequences: The tuner takes one pass over the corpus before it loads it:
+              **2.70 s over the 706 MB deduplicated corpus**, against 55 s to
+              load it and 0.4 s an epoch, so the stamp costs under a fifth of
+              one percent of a real fit. It is refused rather than skipped when
+              the file cannot be read.
+
+              `sha256sum` does the same file in 1.29 s, 2.1x faster, because
+              coreutils uses the CPU's SHA extensions and this does not. That
+              gap is the whole price of the decision and it buys the check:
+              both print
+              `0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`,
+              which is also the value S076's dedupe log recorded for that
+              corpus.
+
+              An emitted header gains three lines: `engine`, `corpus` and the
+              row and byte counts. `.tuning/apply_fit.py`, `verify_fit.py` and
+              `diff_fit.py` parse definitions and ignore comments, and were
+              re-run against a stamped header to confirm it.
+
+              Every table emitted before this step -- `.tuning/tuned_v2*.hpp`,
+              `adocs/data/S075_fits/`, `adocs/data/S076_fits/` -- carries no
+              stamp and is not regenerated. They are evidence and are byte for
+              byte what the tool wrote at the time; their provenance stays in
+              the step files and the run logs beside them.
+
+              `-dirty` follows the run scripts' convention, `git diff --quiet`
+              over tracked files. A fit run from a tree with uncommitted source
+              changes says so, which is the case S065's and S076's pastes both
+              passed through.

@@ -56,6 +56,8 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "chesso_build_info.hpp"
+#include "corpus_hash.hpp"
 #include "eval_model.hpp"
 #include "tuner_groups.hpp"
 #include "tuner_split.hpp"
@@ -170,6 +172,17 @@ unsigned default_threads()
   const unsigned reported = std::thread::hardware_concurrency();
   return (reported > 0) ? reported : 1;
 }
+
+
+// What the corpus was, rather than where it was read from. S077: a path has
+// already meant two different files here, and both S082 and S083 write another
+// one. Filled once, before the fit, and printed into the emitted header.
+struct corpus_id_t
+{
+  std::string sha256;
+  uint64_t bytes = 0;
+  uint64_t rows = 0;
+};
 
 
 struct options_t
@@ -591,6 +604,7 @@ double fit_k(const dataset_t& data,
 void write_tables(const std::string& path,
                   const double* params,
                   const options_t& opts,
+                  const corpus_id_t& corpus,
                   size_t positions,
                   size_t games,
                   size_t validation_rows,
@@ -638,7 +652,11 @@ void write_tables(const std::string& path,
   fprintf(
       out,
       "// Fitted by tools/tuner from %zu self-play positions.\n"
+      "// engine     %s, the commit this tuner was built from\n"
       "// data       %s\n"
+      "// corpus     sha256 %s\n"
+      "//            %" PRIu64 " rows, %" PRIu64
+      " bytes; `sha256sum` over the same file prints the same\n"
       "// K          %.4f\n"
       "// error      %.6f train, %.6f validation\n"
       "// seed       %" PRIu64
@@ -657,7 +675,8 @@ void write_tables(const std::string& path,
       "// miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
-      positions, opts.data.c_str(), opts.k, train_error, validation_error,
+      positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
+      corpus.rows, corpus.bytes, opts.k, train_error, validation_error,
       opts.seed, opts.lr, opts.validation, games, validation_rows,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
@@ -926,6 +945,23 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  // Before the fit, and refused rather than left blank: a table stamped with a
+  // corpus nobody could hash names a file that may not have been readable, and
+  // an empty provenance line reads as "no corpus" rather than as "not
+  // measured". S077.
+  corpus_id_t corpus;
+
+  if (!corpus_hash::hash_file(opts.data, &corpus.sha256, &corpus.bytes,
+                              &corpus.rows)) {
+    fprintf(stderr, "could not hash %s\n", opts.data.c_str());
+    return 1;
+  }
+
+  fprintf(stderr,
+          "engine %s, corpus sha256 %s, %" PRIu64 " rows, %" PRIu64 " bytes\n",
+          CHESSO_BUILD_COMMIT, corpus.sha256.c_str(), corpus.rows,
+          corpus.bytes);
+
   dataset_t data;
 
   if (!load(opts.data, &data)) {
@@ -1123,7 +1159,7 @@ int main(int argc, char** argv)
             "constants. Do not ship this.\n");
   }
 
-  write_tables(opts.out, best.data(), opts, data.size(), starts.size(),
+  write_tables(opts.out, best.data(), opts, corpus, data.size(), starts.size(),
                validation_count, final_train, best_validation, best_wdl,
                start_wdl);
 

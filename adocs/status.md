@@ -6,7 +6,7 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-17 by `moltke --step status`.
 
 - Last done: S053
-- In progress: none
+- In progress: S077 an emitted table names the engine commit and the corpus hash it was fitted from
 - Next: S077
 - Blocked: none
 - Parked:

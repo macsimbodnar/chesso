@@ -765,6 +765,46 @@ belong to the weights and not to the positions (DEC-057): S065's four fell to
 between 0.08 and 1.83 under S076's constants, and 30 of the 10795695 rows reach
 the 2.875 maximum instead. Expect both on the next fit.
 
+### What an emitted table says it came from
+
+S077. The header `tuner` writes names the engine commit and the corpus by
+content, not by path — `.tuning/selfplay_v2.tsv` has already meant two different
+files on two machines, and S082 and S083 write two more:
+
+```
+// Fitted by tools/tuner from 200000 self-play positions.
+// engine     d9fb0b2-dirty, the commit this tuner was built from
+// data       .tuning/selfplay_v2_dedup.tsv
+// corpus     sha256 ffdcd801ab59c58390503bfee468a5caeb71a6bb38c012904ec87675382533de
+//            200000 rows, 12995744 bytes; `sha256sum` over the same file prints the same
+```
+
+The same two lines are printed to stderr before the fit starts, so a run log
+carries them even when the emitted file is lost.
+
+**The hash is SHA-256 over the file's bytes, written from FIPS 180-4 in
+`tools/corpus_hash.hpp`, precisely so `sha256sum` can check it** — a hash only
+this binary can reproduce would not be provenance. Measured on the 706 MB
+deduplicated corpus: 2.70 s here against 1.29 s for `sha256sum`, which uses the
+CPU's SHA extensions, and both print
+`0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`. Against a
+55 s load and 0.4 s an epoch, the stamp is under a fifth of one percent of a
+fit. A corpus that cannot be hashed refuses the run rather than emitting a
+table with a blank provenance line. DEC-066.
+
+**The commit is stamped at build time, not at configure time.** `cmake
+-S . -B build` runs once, so a sha captured there goes stale on the next commit
+and the table would name a commit its binary was not built from.
+`cmake/build_info.cmake` runs on every build through the `chesso_build_info`
+target, writes `build/tools/generated/chesso_build_info.hpp` only when the value
+changes, and appends `-dirty` on the same `git diff --quiet` convention
+`fastchess.sh` uses. Nothing to do by hand; a rebuild after a commit picks it up
+without reconfiguring.
+
+Tables emitted before S077 carry no stamp — `.tuning/tuned_v2*.hpp` and
+everything under `adocs/data/S075_fits/` and `S076_fits/`. They are evidence,
+byte for byte what the tool wrote, and are not regenerated.
+
 `tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
 them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn

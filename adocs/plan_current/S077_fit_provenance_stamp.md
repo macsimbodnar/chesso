@@ -39,3 +39,4 @@ figures quoted from a run nobody could re-identify.
 
 Minutes. No fit, no match. The hash costs one pass over 715 MB at fit time,
 which is seconds against an epoch.
+author:    Maksym Bodnar

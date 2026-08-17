@@ -80,6 +80,14 @@ target_include_directories(test_tuner_split PRIVATE ../tools)
 add_doctest_target(test_tuner_target)
 target_include_directories(test_tuner_target PRIVATE ../tools)
 
+# S077: the SHA-256 an emitted weight table names its corpus by. Written from
+# FIPS 180-4 rather than taken from a library so the value is checkable by
+# `sha256sum`, which is only worth anything if the implementation is right.
+# Needs no dataset -- it writes its own fixtures into the temp directory -- so
+# it is a fast test like the rest.
+add_doctest_target(test_corpus_hash)
+target_include_directories(test_corpus_hash PRIVATE ../tools)
+
 # S076: the corpus dedupe pass. Its fixture is a handful of FENs in memory and
 # the key comes from the engine it already links, so it is a fast test like the
 # rest.

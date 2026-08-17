@@ -19,6 +19,25 @@ add_executable(tuner tuner.cpp)
 target_include_directories(tuner PRIVATE ../src)
 target_link_libraries(tuner PRIVATE chesso_engine Threads::Threads)
 
+# S077. The commit an emitted table names is stamped at **build** time, not at
+# configure time: a sha captured by `cmake -S . -B build` goes stale on the next
+# commit, and a table carrying the wrong commit is worse than one carrying none.
+# The script rewrites the header only when the value changes, so this costs one
+# `git rev-parse` per build and a recompile only when the commit moves.
+set(CHESSO_BUILD_INFO_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
+set(CHESSO_BUILD_INFO ${CHESSO_BUILD_INFO_DIR}/chesso_build_info.hpp)
+
+add_custom_target(chesso_build_info ALL
+     COMMAND ${CMAKE_COMMAND}
+          -DOUTPUT=${CHESSO_BUILD_INFO}
+          -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+          -P ${CMAKE_SOURCE_DIR}/cmake/build_info.cmake
+     BYPRODUCTS ${CHESSO_BUILD_INFO}
+     COMMENT "Stamping the engine commit for tools/tuner")
+
+add_dependencies(tuner chesso_build_info)
+target_include_directories(tuner PRIVATE ${CHESSO_BUILD_INFO_DIR})
+
 # S076. One row per distinct position in a tuning corpus. Links the engine
 # because the key it dedupes on is the engine's own zobrist key: a second
 # hashing scheme here would dedupe by a definition of "the same position" the
