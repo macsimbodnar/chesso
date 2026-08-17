@@ -197,7 +197,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-47. S071  plan.md and testing.md cite the checker by version and symbol, not by a path this repository does not have
 48. S072  S068's sweep evidence lives in adocs/data/ and its columns are stated, so the next step argues from a tracked file
 49. S073  the search constants become one addressable parameter set, settable in a tune build and unchanged in the shipping one
 50. S068  re-decide the reverse futility margin against a verdict, starting from the 75 that S033 left on the table

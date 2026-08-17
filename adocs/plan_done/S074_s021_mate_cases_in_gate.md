@@ -7,7 +7,7 @@ decisions:  DEC-060
 closes:     2026-08-16_plan_review-F07
 blocks:
 paused_by:
-done:
+done:      2026-08-17. S021_aspiration_windows.md's accepts: now names the three fast-suite mate cases by their test titles -- "mate in one", "mate in two is found at the right distance", "pruning does not hide a mate against the material leader" -- green at the window schedule that ships and checked before the SPRT verdict is read; the SPRT clause it already carried is kept verbatim as the prefix. A body section states why the clause belongs to this step in particular: DEC-060 measured that a pruning rule's mate exposure is a property of the bound the parent passes down (alpha=-965 beta=-964, a null-window scout hunting a mate score), and aspiration windows change exactly that quantity, unmeasured; at +9 +/- 17 an SPRT cannot separate a missed mate from noise. Mechanical check, non-vacuous by construction: it extracts every TEST_CASE_FIXTURE title from tests/test_search.cpp and refuses unless all three are real cases, then requires each quoted verbatim in accepts: -- green 3 of 3, observed red 0 of 3 against git show HEAD with the precondition still 3 of 3. The three cases run green at HEAD as S021's baseline: 3 passed, 0 failed, 123 assertions. Closes 2026-08-16_plan_review-F07. No code and no play change. moltke --validate clean; cmake --build build -j12 && ctest --test-dir build -L fast 13 of 13, 0 failed, 20.85 s; ./clang-format.sh --check exit 0; tools/plan_prose_check.py 0 flagged. README.md owner-written, no change needed; MANUAL.md checked -- :168 still lists aspiration windows as absent, correct until S021 lands; DEV_MANUAL.md checked, no change needed.
 
 ## Why this exists
 
@@ -48,3 +48,4 @@ a missed mate from noise.
 
 Minutes to edit the gate. The gate itself costs one `ctest -L fast` run inside
 S021, which S021 pays anyway.
+author:    Maksym Bodnar
