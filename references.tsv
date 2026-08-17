@@ -1,0 +1,30 @@
+# Reference engines for rating.sh -- S087, DEC-068.
+#
+# The binaries are NOT in this repository and never will be. This file is the
+# record of which build each result was played against; an opponent binary is a
+# measurement instrument and an unidentifiable one contaminates the result.
+#
+# uci_name must be exactly what the binary answers to `uci` with `id name`.
+# rating.sh asks every engine before it plays a game and refuses the run on a
+# mismatch. That check exists because the first install put the Rustic
+# workspace development build (`engine 3.99.36`) at /usr/games/rustic instead of
+# the alpha-3.0.6 tag build, which is a different file with a different name.
+#
+# ccrl_name must be exactly the CCRL Blitz list entry without its " 64-bit"
+# suffix. tools/ccrl_rating.py reads the anchor from the list at run time and
+# exits non-zero if the name is not there.
+#
+# OPEN, S087: the installed binary is Rustic Alpha 3.0.6 and CCRL rates
+# Rustic Alpha 3.0.0, six patch releases apart with nothing here measuring the
+# difference. Either alpha-3.0.0 gets built so the anchor names the binary that
+# earned it, or the low anchor is recorded as approximate. Owner's call. The
+# bracketing run needs no anchor and is not blocked by it.
+#
+# OPEN, S087: rustic's binary path is the build tree until the tag build is
+# installed as /usr/games/rustic-alpha-3.0.6. The md5 is recorded so the
+# installed file can be shown to be the same binary the bracketing run used.
+#
+# uci_name	binary	ccrl_name	source	tag	md5
+Leorik 1.0	/usr/games/Leorik-1.0	Leorik 1.0	/home/max/ws/Leorik	1.0	7243352345009b71747aaf33a1d51e87
+Blunder 5.0.0	/usr/games/blunder	Blunder 5.0.0	/home/max/ws/blunder	v5.0.0	6ce4f31aec967a7403a0840d95ef57ca
+Rustic Alpha 3.0.6	/home/max/ws/rustic/target/release/rustic-alpha	Rustic Alpha 3.0.0	/home/max/ws/rustic	alpha-3.0.6	ccb098df0b9b083ede15ab1bc6444b4b

@@ -487,6 +487,55 @@ grep -E "^Elo:|^LLR:" .tuning/sprt_<what>.log | tail -2
 grep -c "^Finished game" .tuning/sprt_<what>.log
 ```
 
+## Rate the engine against the public lists
+
+```bash
+./rating.sh --bracket           # ~204 games, checks the reference set brackets chesso
+./rating.sh                     # ~1002 games, solves an absolute rating with ordo
+TC=2+1 ./rating.sh              # pick the time control
+CONCURRENCY=6 ROUNDS=50 ./rating.sh
+```
+
+`fastchess.sh` answers "is this commit stronger than that one" and cannot answer
+"how strong", because both sides of it are chesso. `rating.sh` plays a gauntlet
+against engines with published CCRL Blitz ratings and solves the PGN into an
+absolute figure with `ordo`. It is not a gate: run it after a milestone, not
+before a commit. S087, DEC-067, DEC-068.
+
+**The two numbers are never quoted against each other.** `ordo`'s intervals are
+trinomial; every SPRT verdict here runs `model=normalized` and reports nElo.
+
+Opponents come from `references.tsv`. The binaries are not in this repository
+and never will be — the file records which build each result was played against.
+**Every engine is asked `uci` before a game is played** and the run refuses on a
+mismatch between `id name` and the manifest, because a filename is not evidence:
+the first install of this set put the Rustic workspace development build
+(`id name engine 3.99.36`) at `/usr/games/rustic`, which has no published rating
+and would have been anchored at the tag build's.
+
+Anchors are read from the CCRL Blitz list at run time, never hardcoded:
+
+```bash
+tools/ccrl_rating.py "Leorik 1.0" "Blunder 5.0.0" "Rustic Alpha 3.0.0"
+```
+
+It exits non-zero when a name is not on the list, so a missing anchor stops a
+rated run instead of silently dropping a reference.
+
+`option.Threads` is deliberately not sent. None of the reference engines exposes
+it — all are single-threaded by construction — and chesso's is `min 1 max 1`.
+`option.Hash=64` is inside every engine's maximum; the binding one is Blunder at
+256 MB.
+
+**A time forfeit invalidates the run.** The script asserts the set of
+`[Termination ...]` values actually present rather than grepping for a string it
+guessed, and also scans the fastchess log for disconnects, so a forfeit cannot
+hide behind an unanticipated spelling. On any hit it prints
+`RATING-RUN-INVALID` and exits non-zero; drop to `CONCURRENCY=6` and re-run.
+
+The run ends with `RATING-RUN-DONE <mode> <OK|INVALID> <outdir>` as its last
+line, which is the terminal marker a watcher exits on. DEC-061.
+
 ## Analyse a game
 
 Never by reading it. See `CLAUDE.md` and DEC-023.
@@ -1102,7 +1151,16 @@ sampling window cannot leave the phase being measured — a profile taken with
 `-r 12` once reported `generate_moves` at 41 % when the true figure was 20 %,
 and it reversed the conclusion of the work that followed.
 
-## Reference engines in `~/.local/bin`
+## Reference engines in `/usr/games`
+
+Not `~/.local/bin`, which on the DEC-049 machine holds no engine at all. What is
+in `/usr/games` here: `stockfish`, `sgambetto`, `sgambetto-native`, a fixed
+`chesso` (an old build — it exposes only `Use Book`, with no `Hash` or `Threads`
+option), and the `rating.sh` reference engines listed in `references.tsv`.
+
+The engines below are the *calibration and cross-check* opponents and are a
+different set from the rated ones. For the gauntlet that produces an absolute
+CCRL-scale figure, see "Rate the engine against the public lists".
 
 - **A fixed chesso build from `main`**, mailbox move generation. Two uses: an
   independent implementation to cross-check perft against, and a fixed rung to

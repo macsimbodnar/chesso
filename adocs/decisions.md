@@ -3588,3 +3588,85 @@ Consequences: The project gains a second measurement instrument with a different
               which 302s to `https://computerchess.org.uk/404/`, so the fetch
               follows redirects. A rating is copied into the results file with
               the date it was read; nothing hardcodes one.
+
+## DEC-068  2026-08-17  the reference set is Leorik 1.0, Blunder 5.0.0 and a Rustic Alpha 3, anchored at CCRL Blitz read on the day
+Tags:         measurement, rating, gauntlet, ccrl, anchors, s087, dec-067
+
+Context:      DEC-067 adopted the procedure with a provisional reference set --
+              Rustic `alpha-1` and `alpha-2`, Blunder `v3.0.0` and `v4.0.0` --
+              chosen because those were the toolchains present and Leorik could
+              not be built without `dotnet`. The owner then built and installed
+              a different and better set, which makes DEC-067's set and its
+              Leorik rejection both obsolete before either was used.
+
+              Installed, each identified by asking the binary rather than by
+              its filename:
+
+                  /usr/games/Leorik-1.0  -> id name Leorik 1.0
+                  /usr/games/blunder     -> id name Blunder 5.0.0
+                  /usr/games/rustic      -> id name engine 3.99.36
+
+              Sources at `/home/max/ws/Leorik`, `/home/max/ws/blunder` and
+              `/home/max/ws/rustic`, each a detached checkout of its tag.
+
+              CCRL Blitz, read from `rating_list_all.html` on 2026-08-17:
+              **Leorik 1.0 = 2102** +20/-20, **Blunder 5.0.0 = 2017** +20/-20,
+              **Rustic Alpha 3.0.0 = 1792** +16/-16. Also on the list and
+              relevant as expansions: Blunder 7.1.0 = 2389, Leorik 2.0.2 = 2538,
+              Rustic Alpha 2 = 1719, Blunder 4.0.0 = 1615, Rustic Alpha 1 = 1549.
+
+Decision:     **The reference set is Leorik 1.0, Blunder 5.0.0 and a Rustic
+              Alpha 3**, spanning 1792 to 2102 on the CCRL Blitz scale, 310 Elo.
+              The owner supplied the binaries; the agent identified them, read
+              the anchors and recorded this entry.
+
+              **Anchors are read at run time and copied into the results file
+              with the date.** The values above are planning figures, quoted to
+              show the set brackets; nothing hardcodes them.
+
+              **`option.Threads=1` is not sent.** None of the three references
+              exposes `Threads` -- all are single-threaded by construction, and
+              Rustic prints `Threads: 1 (unused, always 1)` -- while chesso
+              exposes it as `min 1 max 1`. The specification's single-thread
+              condition holds without the option, and sending an option an
+              engine does not have is a way to lose a game to a protocol error
+              rather than to strength.
+
+              **`option.Hash=64`**, which is inside every engine's maximum. The
+              binding one is Blunder at 256 MB; Leorik allows 2047, Rustic
+              65535, chesso 4096.
+
+Rejected:     **Anchoring on the installed `/usr/games/rustic`.** It reports
+              `engine 3.99.36` and is `md5` identical to
+              `/home/max/ws/rustic/target/release/rustic`, the workspace
+              development build -- not the tag build, which at `alpha-3.0.6` is
+              named `rustic-alpha` and reports `Rustic Alpha 3.0.6`. A
+              development build has no published rating, so anchoring it at 1792
+              would attach a number to a binary CCRL has never played. Refused;
+              the tag binary is installed instead.
+
+              **Blunder 6.1.0 at 2107 as a third or fourth engine.** It sits
+              five points from Leorik 1.0 and adds no reach to the bracket.
+
+              **Treating the 3.0.6-versus-3.0.0 gap as immaterial.** Six patch
+              releases separate the installed binary from the rated one and
+              nothing here measures them. It is either closed by building
+              `alpha-3.0.0` or recorded as an approximate low anchor; both are
+              honest and the choice is the owner's. Quietly using 1792 for 3.0.6
+              is not.
+
+Consequences: DEC-067's provisional set is superseded by this entry, and its
+              `Rejected` note that Leorik is out for want of `dotnet` no longer
+              describes the machine. DEC-067 is otherwise unchanged: the
+              procedure, the concurrency setting, the bracket-then-decide shape
+              and the book all stand.
+
+              The bracketing run needs no anchors and is unblocked by neither
+              open question. The rated run needs the tag binary installed and
+              the 3.0.x question settled.
+
+              A three-family set is a better spread than the two-family set
+              DEC-067 planned and is still three. The anchor-sensitivity sweep
+              shows the references disagreeing with each other; it cannot show
+              them jointly wrong. A fourth family is owed before the figure is
+              quoted outside this repository.

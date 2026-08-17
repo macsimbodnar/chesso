@@ -3,10 +3,10 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-17 by `moltke --step status`.
+Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
-- In progress: none
+- In progress: S087 an absolute rating for chesso on the CCRL Blitz scale, with an interval and a measured anchor sensitivity
 - Next: S087
 - Blocked: none
 - Parked:

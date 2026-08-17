@@ -3,7 +3,7 @@ goal:       an absolute rating for chesso on the CCRL Blitz scale, with an inter
 accepts:    a gauntlet of chesso against at least three reference engines carrying CCRL Blitz ratings read from the list at run time and never hardcoded; a bracketing pre-run establishes that chesso scores below 90 % against the strongest reference and above 10 % against the weakest, and the set is widened before the rated run is booked if it does not; the rated run returns a 95 % interval of +/- 30 Elo or tighter on chesso's solved rating; the PGN is checked for time forfeits and the count is reported, a single forfeit invalidating the run; the rating is re-solved anchoring each reference engine in turn and the full spread across anchors is reported, a spread above 30 Elo reported as soft rather than hidden; one script re-runs gauntlet and solve end to end; a tracked manifest names each reference engine and the exact version installed in /usr/games; no third-party source or binary is added to this repository
 touches:    a new run script beside fastchess.sh, a tracked reference manifest, adocs/data/ for the PGN and the results file, DEV_MANUAL.md
 excludes:   replacing fastchess.sh as the per-change SPRT gate; any edit under src/ or tests/; compiling or installing the reference engines, which the owner does; installing the .NET SDK, which Leorik alone would need; assessing any position, move or game from the resulting PGN
-decisions:  DEC-067
+decisions:  DEC-067, DEC-068
 closes:
 blocks:
 paused_by:
@@ -29,40 +29,36 @@ somebody else's engine.
 
 ## What is already on this machine
 
-Checked at `3e80a33`, not assumed:
+Checked at `ebb469f`, not assumed:
 
 | thing | state |
 |---|---|
 | `ordo` | **installed**, `1.2.6`, `/usr/local/bin/ordo` |
 | `fastchess` | `alpha 1.8.1 20260720-daa3ea2`, supports `-tournament gauntlet` and `-seeds N` |
-| `cargo` | `1.95.0` — Rustic builds |
-| `go` | `go1.22.2 linux/amd64` — Blunder builds |
-| `g++` | `13.3`, the DEC-049 reference compiler |
-| `dotnet` | **absent** — Leorik does not build here without a new dependency |
-| Rustic source | already cloned at `/home/max/ws/rustic`, tags `alpha-1` to `alpha-3.0.6` |
+| reference engines | **built and installed by the owner**, see the set below |
+| reference sources | `/home/max/ws/Leorik` at `1.0`, `/home/max/ws/rustic` at `alpha-3.0.6`, `/home/max/ws/blunder` at `v5.0.0`, each a detached checkout of the tag |
 | book | `books/8moves_v3.pgn`, 34700 openings |
+| `g++` | `13.3`, the DEC-049 reference compiler |
 
-So the tooling cost of this step is close to zero. What it costs is machine
-time and the reference builds.
+So the tooling cost of this step is zero. What it costs is machine time.
 
-## Four corrections to the source specification
+## Three corrections to the source specification
 
-The specification document is sound on method. These four of its specifics are
-wrong for this repository or this machine, and the step is written against the
-corrected versions.
+The specification document is sound on method. These of its specifics are wrong
+for this repository, and the step is written against the corrected versions.
 
 1. **`run_test.sh` does not exist here.** The script whose conventions are to be
    followed is `fastchess.sh`.
-2. **`https://github.com/nescitus/sungorus` returns 404.** Sungorus is not at
-   the URL given and was not located before this step was written; the GitHub
-   search API rate-limited during the attempt. Resolving it is execution work,
-   and the reference set below does not depend on it.
-3. **`dotnet` is absent, so Leorik is out of the starting set.** `CLAUDE.md`
-   forbids the agent adding a dependency on its own. Leorik stays available as
-   the upward expansion if bracketing fails high — as an owner decision, not a
-   drift.
-4. **`https://computerchess.org.uk/ccrl/404/` 302s** to
+2. **`https://github.com/nescitus/sungorus` returns 404**, and Sungorus is not
+   in the installed set. It is not needed: the three engines below span 310 Elo
+   of CCRL Blitz between them.
+3. **`https://computerchess.org.uk/ccrl/404/` 302s** to
    `https://computerchess.org.uk/404/`. The fetch follows redirects.
+
+A fourth correction has itself been overtaken: `dotnet` was absent when this
+step was written and Leorik was excluded for it. The owner has since built and
+installed Leorik 1.0, so Leorik is in the set. Recorded because DEC-067's
+`Rejected` still carries the old reason.
 
 ## Where the reference binaries live
 
@@ -126,78 +122,132 @@ night producing a number the specification itself calls unreliable, because the
 score sits in the tail of the logistic curve where the estimate is dominated by
 it.
 
-## The reference set
+## The reference set, as installed
 
-The specification's starting set is Rustic Alpha 2, Sungorus 1.4 and Blunder
-4.0. With Sungorus unlocated and Leorik unbuildable here, the set is built from
-**two repositories that are both reachable and both have their toolchain
-present**, plus Sungorus if it is found:
+The owner built and installed three engines. Each was checked by asking the
+binary itself what it is, not by trusting the filename — `printf 'uci\nquit\n' |
+<binary>`:
 
-| engine | source | tag | language | notes |
-|---|---|---|---|---|
-| Rustic Alpha 1 | `https://codeberg.org/mvanthoor/rustic.git` | `alpha-1` | Rust | low anchor; already cloned |
-| Rustic Alpha 2 | same | `alpha-2` | Rust | |
-| Blunder 3.0.0 | `https://github.com/algerbrex/blunder` | `v3.0.0` | Go | tag confirmed present |
-| Blunder 4.0.0 | same | `v4.0.0` | Go | tag confirmed present |
-| Sungorus 1.4 | **unresolved** | — | C++ | include if located |
+| binary | `id name` says | source checkout | CCRL Blitz |
+|---|---|---|---|
+| `/usr/games/Leorik-1.0` | `Leorik 1.0` | `/home/max/ws/Leorik` at tag `1.0` | **2102** +20/−20 |
+| `/usr/games/blunder` | `Blunder 5.0.0` | `/home/max/ws/blunder` at tag `v5.0.0` | **2017** +20/−20 |
+| `/usr/games/rustic` | **`engine 3.99.36`** — wrong binary, see below | `/home/max/ws/rustic` at tag `alpha-3.0.6` | Alpha 3.0.0 is **1792** +16/−16 |
 
-Rustic's home is Codeberg, not the GitHub URL the specification gives; the
-GitHub path resolves but the local clone at `/home/max/ws/rustic` already points
-at Codeberg.
+Ratings read from `https://computerchess.org.uk/ccrl/404/rating_list_all.html`
+on **2026-08-17**. The run script re-reads them; these are here to show the set
+brackets.
 
-**Residual risk to name rather than hide:** a set drawn from two engine families
-is narrower than one drawn from four. If chesso has some systematic property
-that both Rustic and Blunder share a weakness to, the estimate skews and no
-game count detects it. Two distinct authors, two distinct languages and two
-distinct evaluation designs is the mitigation; the anchor-sensitivity sweep in
-the accepts is what would show the references disagreeing internally. The
-figure gets one more reference family before it is quoted anywhere outside this
-repository.
+**The set spans 1792 to 2102, 310 Elo.** Against a 2000-rated engine that is a
+usable bracket in both directions. Against a much stronger one it is not, and
+the bracketing run is what decides which case this is. The cheap upward
+expansions, both from clones already on disk, are Blunder 7.1.0 at 2389 and
+Leorik 2.0.2 at 2538.
 
-Which CCRL entry each build corresponds to is a manifest field, and the name in
-the manifest must be the name on the list — a tag built is not automatically the
-version rated.
+### Two things block the rated run
 
-## The owner builds and installs
-
-The owner compiles the reference engines and installs the binaries; the agent
-writes the commands, verifies each installed binary, and records its version in
-the manifest. `ordo` is already installed and needs no build.
-
-Sources are cloned under `/home/max/ws/engines/`, the owner's work directory.
-Verified against the repositories: Rustic's `Cargo.toml` names the binary
-`rustic` at both tags, and Blunder's main package is `./blunder`, not the module
-root.
+**1. `/usr/games/rustic` is not Rustic Alpha 3.0.6.** It reports `id name engine
+3.99.36` and is `md5` identical to `/home/max/ws/rustic/target/release/rustic`,
+which is the workspace's development binary. The tag build is a *different
+file*: at `alpha-3.0.6` the package is named `rustic-alpha`, so `cargo build
+--release` writes `target/release/rustic-alpha`, and that binary reports
+`id name Rustic Alpha 3.0.6`. Both exist in `target/release/` and the wrong one
+was installed. One command fixes it:
 
 ```bash
-mkdir -p /home/max/ws/engines
-
-# Rustic -- two tags from one clone
-git clone https://codeberg.org/mvanthoor/rustic.git /home/max/ws/engines/rustic
-cd /home/max/ws/engines/rustic
-git checkout alpha-1 && cargo build --release
-sudo install -m 0755 target/release/rustic /usr/games/rustic-alpha-1
-git checkout alpha-2 && cargo build --release
-sudo install -m 0755 target/release/rustic /usr/games/rustic-alpha-2
-
-# Blunder
-git clone https://github.com/algerbrex/blunder /home/max/ws/engines/blunder
-cd /home/max/ws/engines/blunder
-git checkout v3.0.0 && go build -o blunder ./blunder
-sudo install -m 0755 blunder /usr/games/blunder-3.0.0
-git checkout v4.0.0 && go build -o blunder ./blunder
-sudo install -m 0755 blunder /usr/games/blunder-4.0.0
+sudo install -m 0755 /home/max/ws/rustic/target/release/rustic-alpha /usr/games/rustic-alpha-3.0.6
 ```
 
-Compiled rather than downloaded, which is what the specification calls
-"compile from source where practical": a release binary may be built for
-another microarchitecture, and on a timed match that is a strength difference
-nobody asked for.
+A development build has no published rating at all, so anchoring on it would
+attach 1792 to a binary CCRL has never played. This is the exact failure the
+manifest exists to catch, and it was caught before a game was played rather than
+after.
 
-Agent verification per binary, before it enters the manifest: it answers `uci`
-with `uciok`, it accepts `setoption name Hash value 16` and `setoption name
-Threads value 1` or documents that it does not, and it plays one game against
-itself without a forfeit.
+**2. CCRL lists Rustic Alpha 3.0.0, not 3.0.6.** The list carries
+`Rustic Alpha 3.0.0 64-bit 1792`, `Rustic Alpha 2 1719` and
+`Rustic Alpha 1 1549`, and no 3.0.x entry between them. Anchoring the installed
+3.0.6 at 3.0.0's rating imports six patch releases of unmeasured difference into
+the low anchor. Either build `alpha-3.0.0` so the anchor names the binary that
+earned it, or keep 3.0.6 and record the low anchor as approximate. Owner's call;
+it does not block the bracketing run, which needs score fractions and no anchors
+at all.
+
+### Bracketing run 1: FAILED, the set is too weak
+
+Run on 2026-08-18, 204 games, `10+0.2`, `Hash=64`, concurrency 12, book
+`8moves_v3.pgn`, 7 m 30 s. Evidence: `adocs/data/S087_bracket1.pgn`,
+`adocs/data/S087_bracket1_h2h.txt`.
+
+**Zero time forfeits.** 194 games ended `[Termination "adjudication"]`, 10
+`normal`, nothing else, and no line in the fastchess log matched a time loss or
+disconnect. So concurrency 12 against foreign engines produced no forfeit at
+this time control, which is the risk DEC-067 accepted and chose to detect. It is
+one run at one time control and does not license skipping the check.
+
+chesso's score against each reference, from `ordo -j`:
+
+| reference | CCRL Blitz | games | chesso score |
+|---|---|---|---|
+| Leorik 1.0 | 2102 | 68 | **90.4 %** |
+| Rustic Alpha 3.0.6 | (3.0.0 = 1792) | 68 | 94.9 % |
+| Blunder 5.0.0 | 2017 | 68 | 95.6 % |
+
+Overall 93.6 % over 204 games, +185 =12 -7.
+
+**The gate is "meaningfully below 90 % against the strongest reference". 90.4 %
+is not below 90 %, so the set does not bracket chesso and the rated run is not
+bookable against it.** Every score sits in the tail of the logistic curve where
+the estimate is dominated by the curve rather than by the games, which is the
+condition the specification calls unreliable.
+
+**No rating is claimed from this run and none can be.** That is the point of
+running it: it cost 7 m 30 s to learn that the ~2000 prior is wrong and that a
+night at `2+1` against this set would have bought a number in the tail. The
+prior was explicitly not to be assumed, and it was not.
+
+The set has to shift up. Both families are already cloned, so the cost is a
+checkout and a build per rung. From the same list read on 2026-08-17:
+
+| candidate | CCRL Blitz | family |
+|---|---|---|
+| Blunder 7.1.0 | 2389 | Go |
+| Blunder 7.4.0 | 2521 | Go |
+| Leorik 2.0.2 | 2538 | C# |
+| Leorik 2.1 | 2568 | C# |
+| Blunder 8.0.0 | 2651 | Go |
+| Blunder 8.5.5 | 2664 | Go |
+| Leorik 2.2 | 2689 | C# |
+| Leorik 2.4 | 2829 | C# |
+| Leorik 2.5 | 2917 | C# |
+
+Rustic is out of the set at any tag: its strongest rated build is Alpha 3.0.0 at
+1792. That retires both of this step's open Rustic questions — the wrong
+installed binary and the 3.0.6-versus-3.0.0 anchor gap — without either being
+answered, since neither engine is in the set any more.
+
+### Engine options
+
+None of the three references exposes `Threads` — all are single-threaded by
+construction, and Rustic prints `Threads: 1 (unused, always 1)`. chesso exposes
+`Threads` with `min 1 max 1`. So **`-each option.Threads=1` is wrong here** and
+the option is simply not sent; the single-thread condition holds by construction
+on all four.
+
+`Hash` exists on all four, and the binding maximum is Blunder's **256 MB**:
+Leorik 2047, Rustic 65535, chesso 4096. `option.Hash=64` is inside every one of
+them.
+
+chesso also exposes `Use Book`, default `false`. It must stay false — openings
+come from the book file, and an engine playing its own book is not playing the
+position it was dealt.
+
+**Residual risk to name rather than hide:** three engines from three authors and
+three languages is a better spread than the two-family set this step originally
+planned, but it is still three. If chesso has a systematic property all three
+share a weakness to, the estimate skews and no game count detects it. The
+anchor-sensitivity sweep in the accepts is what would show the references
+disagreeing internally; it is not proof they are jointly right. The figure gets
+a fourth family before it is quoted anywhere outside this repository.
 
 ## Solving with ordo
 
@@ -242,7 +292,8 @@ printed.
 ## Cost
 
 Bracketing run ~13 min. Rated run ~1 h at `10+0.2` or ~8 h at `2+1`, the choice
-made after the bracketing run. Builds are minutes. Measurement capacity is the
+made after the bracketing run. The builds are already done. Measurement capacity is the
 binding constraint on the whole plan (`specs.md`), and this step spends it on an
 instrument rather than on a strength change — deliberately, and the number it
 produces is re-derivable from one script after every later milestone.
+author:    Maksym Bodnar
