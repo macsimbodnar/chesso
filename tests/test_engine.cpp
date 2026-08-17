@@ -4,11 +4,14 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+#include <iterator>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
+#include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "transposition_table.hpp"
 #include "uci.hpp"
@@ -1226,6 +1229,160 @@ TEST_SUITE("engine: uci parsing")
     // Nothing on that square at all.
     REQUIRE_FALSE(
         check_move_legality(NEW_MOVE(a3, a4, W_PAWN, TO_NONE, 0, 0, 0, 0)));
+
+    uci_shutdown();
+  }
+}
+
+
+TEST_SUITE("engine: aspiration windows")
+{
+  // One iterative deepening search, with every info line it printed.
+  struct iteration_t
+  {
+    int depth;
+    std::string kind;  // "cp" or "mate"
+    int value;
+  };
+
+  static std::vector<iteration_t> deepen(const std::string& fen, int depth)
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen " + fen);
+    }
+
+    memcpy(&game, uci_game(), sizeof(game_t));
+    REQUIRE_MESSAGE(position_is_reachable(&game),
+                    (fen + " is not a position a legal game can reach"));
+
+    std::vector<std::string> lines;
+    {
+      // The search reports on stdout; keep it out of the test output and read
+      // it back rather than restating what the engine decided.
+      //
+      // Driven through [go] rather than by calling
+      // iterative_deepening_search() directly, because that function does not
+      // clear stop_search_signal - its comment says the caller does, and
+      // uci_shutdown() sets it. A direct call after any earlier case in this
+      // binary therefore aborts after its first iteration, which is what the
+      // first version of this test measured.
+      stdout_capture_t capture;
+      uci_process_line("go depth " + std::to_string(depth));
+      uci_wait_for_search();
+      lines = capture.lines();
+    }
+
+    std::vector<iteration_t> iterations;
+
+    for (const std::string& line : lines) {
+      std::istringstream stream(line);
+      std::vector<std::string> token{std::istream_iterator<std::string>(stream),
+                                     std::istream_iterator<std::string>()};
+
+      if (token.size() < 8 || token[0] != "info" || token[1] != "score") {
+        continue;
+      }
+
+      const auto depth_at = std::find(token.begin(), token.end(), "depth");
+      REQUIRE(depth_at != token.end());
+      REQUIRE(depth_at + 1 != token.end());
+
+      iterations.push_back(
+          {std::stoi(*(depth_at + 1)), token[2], std::stoi(token[3])});
+    }
+
+    return iterations;
+  }
+
+  // S021 and S074, and the case the three fast-suite mate cases cannot make.
+  // Those call search() directly at one depth (tests/test_search.cpp), so no
+  // window is ever narrowed in them; the schedule only exists inside
+  // iterative_deepening_search().
+  //
+  // Both positions were found by measurement, not chosen: the reference binary
+  // at 2b54a4f, which has no windows at all, was run over every FEN in
+  // tests/assets/test_jsons/ and asked where a mate first appears. These two
+  // score around ten centipawns-times-a-hundred for eight iterations and then
+  // report a mate at depth 9, which is the shape that matters here - the
+  // window is +/-AspirationDelta around a normal score when a mate score
+  // arrives, so the iteration must fail high and be repeated wide.
+  //
+  // Non-vacuous by construction, and the preconditions are the point:
+  //
+  //   1. the mate must first appear ABOVE AspirationMinDepth, or no window was
+  //      ever narrow when it did
+  //   2. the iteration before it must report a centipawn score, or the window
+  //      it was searched with was already the full one
+  //   3. the schedule must actually have failed and re-searched at least once
+  //
+  // Remove the widening from src/chesso.cpp and 3 still holds while the mate
+  // distance goes wrong, which is what this is here to catch.
+  TEST_CASE("a narrowed window still finds a mate that appears mid-search")
+  {
+    struct case_t
+    {
+      std::string fen;
+      int mate_in;
+      int first_mate_depth;
+    };
+
+    // clang-format off
+    const std::vector<case_t> cases = {
+      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
+      {"r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2",                             5, 9},
+    };
+    // clang-format on
+
+    for (const case_t& test : cases) {
+      const std::string title = "FEN: " + test.fen;
+      const std::vector<iteration_t> iterations = deepen(test.fen, 10);
+
+      REQUIRE_MESSAGE(iterations.size() == 10, title);
+
+      // Precondition 1. A mate first seen at or below AspirationMinDepth would
+      // have been found before any window was narrowed at all.
+      REQUIRE_MESSAGE(test.first_mate_depth > ASPIRATION_MIN_DEPTH, title);
+
+      // Precondition 2. The iteration below it scores in centipawns, so the
+      // window the mate had to arrive through was AspirationDelta wide and not
+      // the full one.
+      REQUIRE_MESSAGE(iterations[test.first_mate_depth - 2].kind == "cp",
+                      title);
+
+      // Precondition 3. The schedule was in force and did fail.
+      REQUIRE_MESSAGE(uci_last_aspiration_failures() > 0, title);
+
+      // And the answer. Every iteration from the first mate on reports the
+      // same distance: a window that hid the mate for an iteration would show
+      // up here as a centipawn score in the middle of the run.
+      for (size_t i = test.first_mate_depth - 1; i < iterations.size(); ++i) {
+        const std::string at = title + " depth " + std::to_string(i + 1);
+
+        REQUIRE_MESSAGE(iterations[i].kind == "mate", at);
+        REQUIRE_MESSAGE(iterations[i].value == test.mate_in, at);
+      }
+
+      uci_shutdown();
+    }
+  }
+
+  // The window is only ever built around a score the search actually returned.
+  // A fail-high or a fail-low returns a bound instead, and centring the next
+  // iteration on a bound would narrow the window around a number the search
+  // never claimed. Depth 1 has no previous iteration at all, which is why
+  // AspirationMinDepth cannot be set below 2.
+  TEST_CASE("the first iterations are searched with the full window")
+  {
+    // Not the start position: [go] with no node limit consults the opening
+    // book first, and a book answer would return before a single iteration.
+    const std::vector<iteration_t> iterations =
+        deepen("r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2", ASPIRATION_MIN_DEPTH - 1);
+
+    REQUIRE(iterations.size() == static_cast<size_t>(ASPIRATION_MIN_DEPTH - 1));
+    REQUIRE(uci_last_aspiration_failures() == 0);
 
     uci_shutdown();
   }

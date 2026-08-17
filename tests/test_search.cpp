@@ -8,6 +8,7 @@
 #include "data_structures.hpp"
 #include "evaluation.hpp"
 #include "search.hpp"
+#include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "transposition_table.hpp"
 
@@ -1433,5 +1434,99 @@ TEST_SUITE("search: see_ge agrees with see")
     }
 
     REQUIRE(checked > 10000);
+  }
+}
+
+
+TEST_SUITE("search: windowed root")
+{
+  // Regression, S021. search() now takes a window, so the root can fail high --
+  // with beta = MAX it never could. The cutoff `break` in negamax() jumps out
+  // before the block that maintains the principal variation, so a root that
+  // failed high published the move that caused the cutoff while the PV row
+  // still described whatever earlier move last beat alpha.
+  //
+  // Found by the Debug build's assert at the bottom of search(), which is the
+  // only thing that said so: the step-completion gate runs `ctest -L fast`
+  // against the Release build, where the assertion is compiled out. Reproduced
+  // there as `best=b1c3 pv0=d2d4 pvlen=5` at depth 5, alpha -32, beta 68,
+  // score 68, from `position startpos moves e2e4 e7e5` and `go nodes 20000`.
+  //
+  // The aspiration loop discards a failed-high result and re-searches, so
+  // nothing ever reached a GUI. This pins search()'s postcondition rather than
+  // any UCI output: the next caller to keep a windowed result is the one it
+  // protects, and the assert cannot protect it in the build the gate runs.
+  //
+  // The loop below is the engine's own, deliberately: one search_state_t and
+  // one warm transposition table across deepening iterations, with a window
+  // around the previous iteration's score. A single windowed search cannot
+  // produce the shape -- move ordering searches the best root move first, so it
+  // causes the cutoff before anything has beaten alpha, and the PV is empty.
+  // It takes an ordering that is good but not perfect, which is what a warm
+  // table across depths gives.
+  //
+  // Non-vacuous by construction: the case REQUIREs that the run actually
+  // reached a root that failed high while holding a non-empty PV. A run that
+  // never reaches it proves nothing and says so.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a root that fails high still starts its own pv")
+  {
+    // clang-format off
+    const std::vector<std::string> fens = {
+      DEFAULT_POSITION,
+      "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
+      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+    };
+    // clang-format on
+
+    static std::atomic_bool never_stop = false;
+    int fail_highs_with_a_pv = 0;
+
+    for (const std::string& fen : fens) {
+      REQUIRE(load_FEN(fen, &game));
+
+      never_stop = false;
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      int previous = 0;
+
+      for (int depth = 1; depth <= 8; ++depth) {
+        int alpha = -SEARCH_SCORE_INF;
+        int beta = SEARCH_SCORE_INF;
+
+        if (depth >= ASPIRATION_MIN_DEPTH) {
+          alpha = previous - ASPIRATION_DELTA;
+          beta = previous + ASPIRATION_DELTA;
+        }
+
+        const search_t result = search(depth, &game, &state, alpha, beta);
+
+        const std::string title = fen + " depth " + std::to_string(depth) +
+                                  " window [" + std::to_string(alpha) + ", " +
+                                  std::to_string(beta) + "]";
+
+        if (result.pv.length > 0) {
+          REQUIRE_MESSAGE(result.best_move == result.pv.table[0], title);
+
+          if (result.score >= beta) { fail_highs_with_a_pv++; }
+        }
+
+        // Only a score inside the window is a score; a bound is not a centre to
+        // build the next window around. Same rule the engine follows.
+        if (result.score > alpha && result.score < beta) {
+          previous = result.score;
+        }
+      }
+    }
+
+    // The precondition. Without it every assertion above is skippable by a run
+    // that never failed high at the root at all.
+    REQUIRE(fail_highs_with_a_pv > 0);
   }
 }

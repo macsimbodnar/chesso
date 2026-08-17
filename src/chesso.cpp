@@ -44,6 +44,13 @@ static std::mt19937_64 gen(rd());
 static bool is_debug = false;
 static bool running = true;
 
+// How many times the last iterative_deepening_search() had to widen an
+// aspiration window and repeat an iteration. Nothing in the engine reads it:
+// it exists so a test can assert that the window schedule was actually in
+// force, which a mate case driven through this function otherwise cannot tell
+// from a search that never narrowed anything. S021.
+static int last_aspiration_failures = 0;
+
 
 //-#############################   DECLARATIONS  ############################-//
 typedef bool (*process_func)(std::queue<std::string>&);
@@ -55,6 +62,10 @@ const game_t* uci_game()
 
 const transposition_table_t* uci_tt()
 { return &tt; }
+
+
+int uci_last_aspiration_failures()
+{ return last_aspiration_failures; }
 
 
 void uci_reply(const std::string& response)
@@ -566,6 +577,15 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   std::string last_score = "cp 0";
   int last_complete_depth = 0;
 
+  // The centre of the next iteration's aspiration window, and whether there is
+  // one to use. Set only from an iteration that finished inside its window: an
+  // aborted iteration's score is meaningless and a fail-high or fail-low one is
+  // a bound, so neither is a position estimate to build a band around. S021.
+  int aspiration_score = 0;
+  bool aspiration_ready = false;
+
+  last_aspiration_failures = 0;
+
   const int soft_percent =
       (conf.movetime_ms > 0) ? 100 : SEARCH_SOFT_LIMIT_PERCENT;
   const double soft_limit_ms =
@@ -585,7 +605,66 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       state.node_limit = conf.nodes - result.total_node_explored;
     }
 
-    const search_t search_result = search(current_depth, &game, &state);
+    // Aspiration windows. The previous iteration already answered "what is
+    // this position worth", and the answer rarely moves much in one ply, so
+    // the root is searched in a band around it instead of from -inf to +inf. A
+    // narrower window at the root is a narrower window at every node below it,
+    // and alpha-beta cuts off sooner the narrower the window is.
+    //
+    // The bet loses when the score does move. A score outside the band is only
+    // a bound - the search proved "at most alpha" or "at least beta" and
+    // nothing more - so the iteration is repeated with the failing side pushed
+    // out. Only the failing side: a fail-low says nothing about beta, and
+    // widening both would give back the cut-offs the other half is still
+    // earning.
+    //
+    // Widening doubles, and past ASPIRATION_MAX_DELTA it stops doubling and
+    // goes to the full window in one move. The schedule is 25, 50, 100, 200,
+    // 400, full at the shipping defaults, so the worst case is six searches at
+    // one depth and each one of them is rarer than the last.
+    //
+    // A mate score ends the schedule immediately. The band is centipawns wide
+    // and a mate score is tens of thousands away, so doubling towards it would
+    // pay several full searches to arrive where one gets to now.
+    //
+    // What this costs on the mate cases, which is the reason S074 put them in
+    // this step's gate: every node below the root inherits these bounds, and
+    // DEC-060 measured that a pruning rule's mate exposure is a property of
+    // the bound the parent passes down rather than of the static score. A mate
+    // appearing mid-iteration is a guaranteed fail-high here - that is what
+    // the re-search is for - and the fail-high path is what
+    // tests/test_engine.cpp holds the three fast-suite mate positions against.
+    int delta = ASPIRATION_DELTA;
+    int alpha = -SEARCH_SCORE_INF;
+    int beta = SEARCH_SCORE_INF;
+
+    if (aspiration_ready && current_depth >= ASPIRATION_MIN_DEPTH) {
+      alpha = aspiration_score - delta;
+      beta = aspiration_score + delta;
+    }
+
+    search_t search_result = search(current_depth, &game, &state, alpha, beta);
+
+    while (!state.aborted &&
+           (alpha > -SEARCH_SCORE_INF || beta < SEARCH_SCORE_INF) &&
+           (search_result.score <= alpha || search_result.score >= beta)) {
+      ++last_aspiration_failures;
+
+      const bool fail_low = (search_result.score <= alpha);
+
+      if (search_result.mate_found || delta > ASPIRATION_MAX_DELTA) {
+        alpha = -SEARCH_SCORE_INF;
+        beta = SEARCH_SCORE_INF;
+      } else if (fail_low) {
+        alpha = std::max(search_result.score - delta, -SEARCH_SCORE_INF);
+      } else {
+        beta = std::min(search_result.score + delta, SEARCH_SCORE_INF);
+      }
+
+      delta += delta;
+
+      search_result = search(current_depth, &game, &state, alpha, beta);
+    }
 
     // Timed from the start of the whole search, not of this iteration: it is
     // the number a GUI divides the node count below by. S037.
@@ -626,6 +705,13 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                        ? ("mate " + STR(search_result.mate_in))
                        : ("cp " + STR(search_result.score));
       last_complete_depth = current_depth;
+
+      // The loop above only exits without an abort once the score is inside
+      // the window, so this is a score and not a bound. A mate score is not a
+      // centre to build a centipawn-wide band around, so it disarms the next
+      // iteration's window rather than being used as one.
+      aspiration_score = search_result.score;
+      aspiration_ready = !search_result.mate_found;
     }
 
     // Reported whenever there is a line to report, aborted iteration included.

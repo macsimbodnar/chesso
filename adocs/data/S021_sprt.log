@@ -1,0 +1,2005 @@
+Indexing opening suite...
+Started game 1 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Started game 2 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 10 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 7 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Started game 4 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 6 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 3 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Started game 12 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 5 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Started game 8 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Started game 11 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Started game 9 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 8 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 13 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 1 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 14 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 7 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 15 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 10 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 16 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 4 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 17 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 11 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 18 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 12 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 19 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 9 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 20 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 2 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 21 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 13 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 22 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 3 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 23 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 16 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 24 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 6 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 25 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 5 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 26 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 20 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 27 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 18 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 28 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 15 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 29 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 19 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -21.74 +/- 73.54, nElo: -51.23 +/- 170.24
+LOS: 27.77 %, DrawRatio: 62.50 %, PairsRatio: 0.50
+Games: 16, Wins: 4, Losses: 5, Draws: 7, Points: 7.5 (46.88 %)
+Ptnml(0-2): [0, 2, 5, 1, 0], WL/DD Ratio: 1.50
+LLR: -0.07 (-2.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 30 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 17 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 31 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 25 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 32 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 14 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 33 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 29 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 34 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 27 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 35 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 21 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 36 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 22 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 37 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 30 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 38 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 26 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 39 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 28 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 40 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 23 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 41 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 24 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 42 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 31 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 43 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 34 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 44 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 32 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 45 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 33 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 46 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 39 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 47 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 36 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 48 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 35 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 49 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 42 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 50 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 38 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 51 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 41 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 52 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 40 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -43.66 +/- 74.01, nElo: -65.20 +/- 107.67
+LOS: 11.77 %, DrawRatio: 50.00 %, PairsRatio: 0.43
+Games: 40, Wins: 8, Losses: 13, Draws: 19, Points: 17.5 (43.75 %)
+Ptnml(0-2): [2, 5, 10, 2, 1], WL/DD Ratio: 0.67
+LLR: -0.20 (-6.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 53 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 44 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 54 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 43 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 55 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 46 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 56 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 45 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 57 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 50 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 58 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 37 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 59 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 49 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 60 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 48 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 61 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 47 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 62 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 61 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 63 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 52 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 64 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 60 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 65 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 55 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 66 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 53 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 67 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 57 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 68 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 56 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 69 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 54 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 70 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 51 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 71 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 59 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -5.99 +/- 63.92, nElo: -8.48 +/- 89.41
+LOS: 42.63 %, DrawRatio: 41.38 %, PairsRatio: 0.89
+Games: 58, Wins: 16, Losses: 17, Draws: 25, Points: 28.5 (49.14 %)
+Ptnml(0-2): [2, 7, 12, 6, 2], WL/DD Ratio: 1.00
+LLR: -0.04 (-1.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 72 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 58 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 73 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 62 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 74 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 67 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 75 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 64 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 76 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 69 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 77 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 71 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 78 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 68 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 79 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 63 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 80 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 70 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 81 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 74 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 82 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 72 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 83 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 73 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 84 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 65 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 85 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 66 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 86 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 75 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 87 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 76 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 88 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 77 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 89 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 78 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 90 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 83 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 91 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 80 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 92 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 79 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -0.00 +/- 64.43, nElo: 0.00 +/- 76.13
+LOS: 50.00 %, DrawRatio: 35.00 %, PairsRatio: 0.86
+Games: 80, Wins: 24, Losses: 24, Draws: 32, Points: 40.0 (50.00 %)
+Ptnml(0-2): [4, 10, 14, 6, 6], WL/DD Ratio: 0.75
+LLR: -0.00 (-0.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 93 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 85 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 94 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 82 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 95 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 84 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 96 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 81 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 97 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 88 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 98 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 91 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 99 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 86 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 100 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 87 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 101 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 89 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 102 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 92 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 103 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 94 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 104 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 98 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 105 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 96 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 106 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 95 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 107 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 97 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 108 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 93 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 109 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 100 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 110 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 99 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 17.74 +/- 56.44, nElo: 21.85 +/- 68.79
+LOS: 73.32 %, DrawRatio: 40.82 %, PairsRatio: 1.07
+Games: 98, Wins: 34, Losses: 29, Draws: 35, Points: 51.5 (52.55 %)
+Ptnml(0-2): [4, 10, 20, 7, 8], WL/DD Ratio: 1.22
+LLR: 0.18 (6.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 111 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 90 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 112 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 104 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 113 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 101 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 114 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 107 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 115 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 111 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 116 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 109 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 117 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 112 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 118 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 106 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 119 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 105 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 120 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 102 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 121 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 115 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 122 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 110 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 123 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 113 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 124 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 114 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 125 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 108 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 126 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 103 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 127 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 121 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 128 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 119 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 129 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 118 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 130 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 116 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 131 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 123 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 132 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 117 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 133 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 127 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 134 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 126 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 135 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 128 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 136 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 129 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 137 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 124 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 138 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 132 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 139 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 120 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -0.00 +/- 51.30, nElo: 0.00 +/- 61.15
+LOS: 50.00 %, DrawRatio: 38.71 %, PairsRatio: 0.90
+Games: 124, Wins: 39, Losses: 39, Draws: 46, Points: 62.0 (50.00 %)
+Ptnml(0-2): [7, 13, 24, 9, 9], WL/DD Ratio: 1.00
+LLR: -0.00 (-0.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 140 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 125 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 141 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 130 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 142 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 133 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 143 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 136 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 144 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 134 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 145 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 135 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 146 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 131 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 147 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 122 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 148 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 137 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 149 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 141 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 150 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 146 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 151 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 143 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 152 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 138 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 153 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 142 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 154 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 148 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 155 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 140 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 156 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 145 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 157 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 139 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 2.41 +/- 47.34, nElo: 2.91 +/- 56.75
+LOS: 54.00 %, DrawRatio: 41.67 %, PairsRatio: 0.91
+Games: 144, Wins: 45, Losses: 44, Draws: 55, Points: 72.5 (50.35 %)
+Ptnml(0-2): [8, 14, 30, 9, 11], WL/DD Ratio: 0.88
+LLR: 0.03 (1.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 158 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 151 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 159 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 155 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 160 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 150 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 161 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 144 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 162 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 154 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 163 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 147 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 164 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 152 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 165 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 158 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 166 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 160 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 167 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 153 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 168 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 157 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 169 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 156 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 170 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 149 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 171 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 162 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 172 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 163 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 173 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 168 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 174 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 167 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 175 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 159 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -6.43 +/- 44.93, nElo: -7.71 +/- 53.50
+LOS: 38.88 %, DrawRatio: 38.27 %, PairsRatio: 0.79
+Games: 162, Wins: 49, Losses: 52, Draws: 61, Points: 79.5 (49.07 %)
+Ptnml(0-2): [9, 19, 31, 10, 12], WL/DD Ratio: 0.94
+LLR: -0.10 (-3.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 176 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 165 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 177 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 161 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 178 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 169 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 179 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 164 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 180 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 171 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 181 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 176 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 182 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 174 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 183 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 172 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 184 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 179 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 185 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 166 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 186 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 177 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 187 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 178 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 188 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 170 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 189 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 175 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 190 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 180 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -5.86 +/- 41.21, nElo: -7.29 +/- 51.04
+LOS: 38.98 %, DrawRatio: 41.57 %, PairsRatio: 0.79
+Games: 178, Wins: 54, Losses: 57, Draws: 67, Points: 87.5 (49.16 %)
+Ptnml(0-2): [9, 20, 37, 11, 12], WL/DD Ratio: 1.06
+LLR: -0.11 (-3.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 191 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 173 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 192 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 183 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 193 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 184 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 194 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 186 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 195 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 185 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 196 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 181 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 197 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 182 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by stalemate}
+Started game 198 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 187 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 199 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 189 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 200 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 195 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 201 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 190 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 202 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 193 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 203 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 188 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 204 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 196 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 205 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 194 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 206 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 191 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 207 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 199 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 208 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 197 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 209 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 198 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 210 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 201 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 211 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 205 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 212 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 200 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: -0.00 +/- 39.69, nElo: 0.00 +/- 48.39
+LOS: 50.00 %, DrawRatio: 39.39 %, PairsRatio: 0.88
+Games: 198, Wins: 63, Losses: 63, Draws: 72, Points: 99.0 (50.00 %)
+Ptnml(0-2): [10, 22, 39, 14, 14], WL/DD Ratio: 1.17
+LLR: -0.00 (-0.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 213 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 203 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 214 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 206 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 215 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 202 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 216 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 208 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 217 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 204 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 218 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 209 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 219 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 192 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 220 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 207 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 221 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 211 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 222 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 212 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 223 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 210 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 224 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 213 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 225 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 218 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 226 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 214 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 227 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 223 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 228 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 216 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 229 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 219 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 230 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 220 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 11.26 +/- 38.10, nElo: 13.76 +/- 46.33
+LOS: 71.98 %, DrawRatio: 37.96 %, PairsRatio: 1.03
+Games: 216, Wins: 72, Losses: 65, Draws: 79, Points: 111.5 (51.62 %)
+Ptnml(0-2): [10, 23, 41, 18, 16], WL/DD Ratio: 1.16
+LLR: 0.25 (8.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 231 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 217 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 232 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 224 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 233 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 221 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 234 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 222 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 235 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 226 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 236 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 215 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 237 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 232 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 238 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 225 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 239 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 227 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 240 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 229 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 241 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 237 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 242 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 235 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 243 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 230 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 244 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 233 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 245 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 228 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 246 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 238 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 247 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 242 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 248 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 234 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 249 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 239 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 250 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 243 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 251 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 240 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 8.84 +/- 36.39, nElo: 10.81 +/- 44.33
+LOS: 68.36 %, DrawRatio: 37.29 %, PairsRatio: 1.00
+Games: 236, Wins: 78, Losses: 72, Draws: 86, Points: 121.0 (51.27 %)
+Ptnml(0-2): [11, 26, 44, 20, 17], WL/DD Ratio: 1.20
+LLR: 0.21 (7.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 252 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 241 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 253 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 231 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 254 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 236 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 255 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 244 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 256 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 249 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 257 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 247 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 258 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 248 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 259 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 245 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 260 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 251 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 261 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 246 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 262 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 252 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 263 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 255 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 264 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 250 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 265 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 253 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 266 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 254 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 267 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 257 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 268 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 256 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 269 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 262 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 270 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 259 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 271 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 260 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 17.52 +/- 35.19, nElo: 21.21 +/- 42.39
+LOS: 83.66 %, DrawRatio: 37.21 %, PairsRatio: 1.13
+Games: 258, Wins: 91, Losses: 78, Draws: 89, Points: 135.5 (52.52 %)
+Ptnml(0-2): [12, 26, 48, 23, 20], WL/DD Ratio: 1.40
+LLR: 0.45 (15.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 272 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 264 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 273 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 258 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 274 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 263 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 275 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 266 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 276 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 265 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 277 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 271 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 278 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 261 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 279 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 272 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 280 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 269 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 281 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 268 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 282 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 276 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 283 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 267 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 284 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 273 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 285 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 270 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 286 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 275 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 287 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 274 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 288 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 284 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 289 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 280 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 290 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 279 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.30 +/- 34.59, nElo: 31.27 +/- 40.84
+LOS: 93.33 %, DrawRatio: 34.53 %, PairsRatio: 1.27
+Games: 278, Wins: 102, Losses: 81, Draws: 95, Points: 149.5 (53.78 %)
+Ptnml(0-2): [13, 27, 48, 28, 23], WL/DD Ratio: 1.40
+LLR: 0.72 (24.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 291 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 283 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 292 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 282 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 293 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 278 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 294 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 285 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 295 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 277 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 296 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 281 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 297 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 286 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 298 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 288 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 299 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 290 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 300 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 293 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 301 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 287 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 302 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 291 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 303 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 294 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 304 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 292 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 305 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 297 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 306 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 295 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 307 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 296 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 308 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 299 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 309 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 289 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 310 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 300 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 23.35 +/- 33.47, nElo: 27.69 +/- 39.45
+LOS: 91.56 %, DrawRatio: 32.89 %, PairsRatio: 1.22
+Games: 298, Wins: 107, Losses: 87, Draws: 104, Points: 159.0 (53.36 %)
+Ptnml(0-2): [14, 31, 49, 31, 24], WL/DD Ratio: 1.33
+LLR: 0.68 (23.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 311 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 298 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 312 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 303 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 313 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 302 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 314 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 308 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 315 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 311 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 316 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 306 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 317 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 310 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 318 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 313 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 319 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 307 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 320 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 309 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 321 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 312 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 322 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 316 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 323 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 305 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 324 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 304 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 325 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 321 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 326 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 319 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 327 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 318 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 328 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 317 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 329 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 301 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 330 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 315 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 331 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 320 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 22.98 +/- 32.30, nElo: 27.32 +/- 38.19
+LOS: 91.96 %, DrawRatio: 32.70 %, PairsRatio: 1.23
+Games: 318, Wins: 113, Losses: 92, Draws: 113, Points: 169.5 (53.30 %)
+Ptnml(0-2): [15, 33, 52, 34, 25], WL/DD Ratio: 1.26
+LLR: 0.72 (24.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 332 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 327 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 333 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 324 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 334 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 325 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 335 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 326 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 336 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 314 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 337 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 329 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 338 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 322 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 339 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 330 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 340 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 328 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 341 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 323 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 342 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 332 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 343 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 335 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 344 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 336 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 345 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 334 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 346 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 331 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 347 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 333 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 348 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 337 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 349 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 338 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 350 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 341 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 351 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 343 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 352 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 339 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 353 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 347 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 354 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 340 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 27.65 +/- 31.36, nElo: 32.79 +/- 36.93
+LOS: 95.91 %, DrawRatio: 33.53 %, PairsRatio: 1.31
+Games: 340, Wins: 124, Losses: 97, Draws: 119, Points: 183.5 (53.97 %)
+Ptnml(0-2): [16, 33, 57, 36, 28], WL/DD Ratio: 1.28
+LLR: 0.92 (31.2%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 355 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 346 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 356 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 342 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 357 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 345 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 358 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 352 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 359 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 353 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 360 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 354 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 361 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 344 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 362 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 349 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 363 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 348 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 364 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 350 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 365 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 355 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 366 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 357 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 367 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 351 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 368 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 366 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 369 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 358 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 370 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 360 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 371 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 363 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 372 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 365 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 373 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 364 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 374 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 356 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 375 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 367 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 376 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 369 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 377 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 359 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.98 +/- 29.90, nElo: 26.38 +/- 35.69
+LOS: 92.63 %, DrawRatio: 34.07 %, PairsRatio: 1.22
+Games: 364, Wins: 126, Losses: 103, Draws: 135, Points: 193.5 (53.16 %)
+Ptnml(0-2): [17, 37, 62, 38, 28], WL/DD Ratio: 1.07
+LLR: 0.79 (26.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 378 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 368 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 379 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 362 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 380 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 370 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 381 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 373 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 382 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 361 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 383 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 371 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 384 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 372 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 385 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 375 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 386 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 378 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 387 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 376 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 388 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 381 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 389 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 380 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 390 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 379 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 21.28 +/- 29.73, nElo: 25.26 +/- 35.12
+LOS: 92.07 %, DrawRatio: 33.51 %, PairsRatio: 1.23
+Games: 376, Wins: 130, Losses: 107, Draws: 139, Points: 199.5 (53.06 %)
+Ptnml(0-2): [19, 37, 63, 40, 29], WL/DD Ratio: 1.03
+LLR: 0.78 (26.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 391 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 374 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 392 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 382 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 393 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 383 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 394 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 385 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 395 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 387 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 396 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 384 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 397 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 386 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 398 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 389 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 399 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 391 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 400 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 388 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 401 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 377 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 402 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 397 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 403 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 390 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 404 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 392 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 405 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 398 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 406 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 394 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 407 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 393 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 408 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 395 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 409 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 404 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 410 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 399 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 411 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 396 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 412 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 405 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 413 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 403 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 414 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 401 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 415 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 400 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 25.98 +/- 28.75, nElo: 30.87 +/- 33.96
+LOS: 96.26 %, DrawRatio: 32.84 %, PairsRatio: 1.29
+Games: 402, Wins: 142, Losses: 112, Draws: 148, Points: 216.0 (53.73 %)
+Ptnml(0-2): [19, 40, 66, 44, 32], WL/DD Ratio: 1.06
+LLR: 1.02 (34.7%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 416 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 402 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 417 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 407 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 418 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 411 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 419 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 409 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 420 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 406 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 421 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 410 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 422 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 417 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 423 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 408 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 424 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 412 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 425 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 413 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 426 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 415 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 427 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 422 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 428 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 420 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 429 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 421 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 430 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 414 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 431 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 424 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 432 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 418 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 433 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 416 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 434 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 427 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 435 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 419 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.40 +/- 27.75, nElo: 31.72 +/- 33.15
+LOS: 96.96 %, DrawRatio: 33.65 %, PairsRatio: 1.30
+Games: 422, Wins: 147, Losses: 115, Draws: 160, Points: 227.0 (53.79 %)
+Ptnml(0-2): [19, 42, 71, 46, 33], WL/DD Ratio: 0.97
+LLR: 1.10 (37.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 436 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 423 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 437 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 426 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 438 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 429 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 439 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 428 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 440 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 425 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 441 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 430 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 442 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 437 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 443 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 441 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 444 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 431 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 445 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 433 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 446 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 434 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 447 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 436 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 448 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 440 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 449 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 438 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 450 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 435 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 451 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 432 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 452 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 443 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 453 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 442 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 454 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 445 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 455 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 439 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 25.20 +/- 27.21, nElo: 30.16 +/- 32.39
+LOS: 96.60 %, DrawRatio: 34.84 %, PairsRatio: 1.29
+Games: 442, Wins: 155, Losses: 123, Draws: 164, Points: 237.0 (53.62 %)
+Ptnml(0-2): [21, 42, 77, 46, 35], WL/DD Ratio: 1.03
+LLR: 1.10 (37.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 456 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 447 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 457 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 448 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 458 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 457 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 459 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 449 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 460 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 450 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 461 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 453 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 462 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 446 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 463 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 454 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 464 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 451 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 465 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 452 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 466 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 459 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 467 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 444 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 468 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 458 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 469 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 461 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 470 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 456 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 471 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 463 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 472 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 465 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 473 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 455 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 474 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 464 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 475 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 466 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 476 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 462 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 477 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 467 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 478 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 468 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 479 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 469 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 480 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 470 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 481 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 471 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 482 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 472 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 483 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 479 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 484 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 460 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 29.51 +/- 26.18, nElo: 35.58 +/- 31.34
+LOS: 98.70 %, DrawRatio: 35.17 %, PairsRatio: 1.35
+Games: 472, Wins: 167, Losses: 127, Draws: 178, Points: 256.0 (54.24 %)
+Ptnml(0-2): [21, 44, 83, 50, 38], WL/DD Ratio: 0.98
+LLR: 1.38 (46.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 485 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 478 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 486 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 474 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 487 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 476 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 488 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 475 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 489 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 480 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 29.27 +/- 26.27, nElo: 35.00 +/- 31.21
+LOS: 98.60 %, DrawRatio: 34.87 %, PairsRatio: 1.35
+Games: 476, Wins: 169, Losses: 129, Draws: 178, Points: 258.0 (54.20 %)
+Ptnml(0-2): [22, 44, 83, 50, 39], WL/DD Ratio: 0.98
+LLR: 1.37 (46.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 490 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 477 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 491 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 485 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 492 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 484 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 493 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 473 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 494 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 488 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 495 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 490 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 496 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 483 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 497 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 482 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 498 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 486 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 499 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 487 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 500 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 489 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 501 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 491 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 502 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 481 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 503 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 492 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 504 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 497 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 505 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 494 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 506 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 496 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 507 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 501 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 508 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 493 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 509 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 495 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 510 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 500 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 511 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 506 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 512 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 505 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 513 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 502 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 514 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 504 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 515 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 498 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 516 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 509 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 517 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 503 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 518 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 516 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 519 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 510 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 520 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 512 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 521 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 508 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 522 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 517 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 523 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 513 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 524 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 499 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 27.41 +/- 25.20, nElo: 33.07 +/- 30.21
+LOS: 98.40 %, DrawRatio: 35.04 %, PairsRatio: 1.32
+Games: 508, Wins: 178, Losses: 138, Draws: 192, Points: 274.0 (53.94 %)
+Ptnml(0-2): [23, 48, 89, 54, 40], WL/DD Ratio: 0.98
+LLR: 1.38 (47.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 525 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 519 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 526 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 515 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 527 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 514 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 528 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 507 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 529 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 529 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 530 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 521 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 531 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 511 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 532 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 518 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 533 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 524 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 534 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 523 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 535 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 525 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 536 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 522 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 537 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 520 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 28.58 +/- 24.73, nElo: 34.59 +/- 29.75
+LOS: 98.87 %, DrawRatio: 34.73 %, PairsRatio: 1.34
+Games: 524, Wins: 184, Losses: 141, Draws: 199, Points: 283.5 (54.10 %)
+Ptnml(0-2): [23, 50, 91, 57, 41], WL/DD Ratio: 0.98
+LLR: 1.49 (50.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 538 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 527 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 539 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 526 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 540 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 531 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 541 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 534 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 542 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 532 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 543 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 538 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 544 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 537 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 545 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 530 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 546 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 533 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 547 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 536 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 548 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 535 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 549 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 546 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 550 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 539 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 551 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 528 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 552 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 542 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 553 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 543 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 554 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 540 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 26.43 +/- 24.13, nElo: 32.27 +/- 29.30
+LOS: 98.46 %, DrawRatio: 35.19 %, PairsRatio: 1.30
+Games: 540, Wins: 187, Losses: 146, Draws: 207, Points: 290.5 (53.80 %)
+Ptnml(0-2): [23, 53, 95, 58, 41], WL/DD Ratio: 0.98
+LLR: 1.44 (48.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 555 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 541 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 556 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 545 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 557 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 544 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 558 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 547 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 559 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 548 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 560 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 550 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 561 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 549 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 562 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 553 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 563 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 551 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 564 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 552 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 565 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 559 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 566 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 555 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 567 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 558 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 568 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 561 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 569 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 556 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 570 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 560 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 29.44 +/- 23.67, nElo: 36.15 +/- 28.88
+LOS: 99.29 %, DrawRatio: 35.25 %, PairsRatio: 1.37
+Games: 556, Wins: 193, Losses: 146, Draws: 217, Points: 301.5 (54.23 %)
+Ptnml(0-2): [23, 53, 98, 62, 42], WL/DD Ratio: 0.92
+LLR: 1.65 (56.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 571 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 562 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 572 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 563 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 573 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 554 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 574 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 557 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 575 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 566 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 576 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 569 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 577 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 565 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 578 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 567 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 579 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 564 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 580 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 568 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 581 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 574 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 582 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 576 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 583 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 570 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 584 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 571 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 585 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 577 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 586 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 578 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 587 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 572 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 588 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 581 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 589 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 575 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 590 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 579 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 591 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 584 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 592 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 583 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 593 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 582 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 594 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 590 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 595 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 573 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 596 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 585 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 597 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 587 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 598 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 586 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 599 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 588 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 600 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 580 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 31.40 +/- 22.96, nElo: 38.68 +/- 28.08
+LOS: 99.65 %, DrawRatio: 35.03 %, PairsRatio: 1.42
+Games: 588, Wins: 205, Losses: 152, Draws: 231, Points: 320.5 (54.51 %)
+Ptnml(0-2): [24, 55, 103, 68, 44], WL/DD Ratio: 0.91
+LLR: 1.86 (63.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 601 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 589 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 602 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 596 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 603 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 597 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 604 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 591 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 605 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 593 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 606 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 595 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 607 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 602 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 608 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 594 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 609 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 601 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 610 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 592 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 611 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 598 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 612 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 607 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 613 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 599 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 614 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 600 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 30.09 +/- 22.57, nElo: 37.24 +/- 27.75
+LOS: 99.57 %, DrawRatio: 34.88 %, PairsRatio: 1.39
+Games: 602, Wins: 209, Losses: 157, Draws: 236, Points: 327.0 (54.32 %)
+Ptnml(0-2): [24, 58, 105, 70, 44], WL/DD Ratio: 0.94
+LLR: 1.84 (62.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 615 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 603 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 616 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 604 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 617 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 610 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 618 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 606 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 619 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 605 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 620 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 611 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 621 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 608 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 622 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 609 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 623 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 612 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 624 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 613 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 625 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 614 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 626 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 617 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 627 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 615 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 628 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 619 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 629 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 616 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 630 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 622 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 631 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 621 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 632 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 618 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 633 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 623 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 634 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 624 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 635 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 626 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 636 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 628 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 637 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 625 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 638 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 630 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 639 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 629 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 640 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 636 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 641 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 631 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 642 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 620 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 31.62 +/- 22.08, nElo: 39.19 +/- 27.17
+LOS: 99.76 %, DrawRatio: 35.03 %, PairsRatio: 1.40
+Games: 628, Wins: 221, Losses: 164, Draws: 243, Points: 342.5 (54.54 %)
+Ptnml(0-2): [24, 61, 110, 72, 47], WL/DD Ratio: 1.00
+LLR: 2.02 (68.6%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 643 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 633 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 644 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 638 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 645 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 635 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 646 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 641 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 647 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 632 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 648 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 634 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 649 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 637 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 650 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 639 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 651 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 640 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 30.57 +/- 21.92, nElo: 37.85 +/- 26.96
+LOS: 99.70 %, DrawRatio: 34.80 %, PairsRatio: 1.36
+Games: 638, Wins: 223, Losses: 167, Draws: 248, Points: 347.0 (54.39 %)
+Ptnml(0-2): [24, 64, 111, 72, 48], WL/DD Ratio: 0.98
+LLR: 1.99 (67.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 652 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 643 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 653 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 627 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by fifty moves rule}
+Started game 654 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 642 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 655 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 644 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 656 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 649 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 657 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 645 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 658 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 651 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 659 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 650 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 660 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 647 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 661 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 648 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 662 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 646 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 663 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 652 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 664 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 656 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 665 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 653 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 666 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 655 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 667 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 654 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 668 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 664 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 669 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 657 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 670 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 658 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 671 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 660 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 672 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 659 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 29.02 +/- 21.32, nElo: 36.30 +/- 26.51
+LOS: 99.64 %, DrawRatio: 35.45 %, PairsRatio: 1.34
+Games: 660, Wins: 228, Losses: 173, Draws: 259, Points: 357.5 (54.17 %)
+Ptnml(0-2): [24, 67, 117, 74, 48], WL/DD Ratio: 0.98
+LLR: 1.97 (67.0%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 673 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 666 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 674 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 662 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 675 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 667 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 676 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 665 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 677 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 663 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 678 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 669 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 679 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 673 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 680 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 661 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 681 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 675 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 682 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 668 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 683 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 670 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 684 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 677 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 685 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 671 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 686 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 676 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 687 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 672 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 688 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 674 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 689 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 679 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 690 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 685 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 691 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 680 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 31.34 +/- 20.97, nElo: 39.34 +/- 26.15
+LOS: 99.84 %, DrawRatio: 35.10 %, PairsRatio: 1.39
+Games: 678, Wins: 237, Losses: 176, Draws: 265, Points: 369.5 (54.50 %)
+Ptnml(0-2): [24, 68, 119, 79, 49], WL/DD Ratio: 1.02
+LLR: 2.19 (74.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 692 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 678 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 693 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 681 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 694 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 690 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 695 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 686 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 696 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 689 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 697 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 691 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 698 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 688 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 699 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 695 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 700 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 687 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 701 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 682 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 702 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 683 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 703 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 694 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 704 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 684 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 705 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 693 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 706 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 698 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 707 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 692 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 708 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 696 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 709 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 706 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 710 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 701 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 711 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 697 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 712 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 700 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 713 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 699 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 32.86 +/- 20.70, nElo: 41.15 +/- 25.74
+LOS: 99.91 %, DrawRatio: 34.86 %, PairsRatio: 1.43
+Games: 700, Wins: 247, Losses: 181, Draws: 272, Points: 383.0 (54.71 %)
+Ptnml(0-2): [25, 69, 122, 83, 51], WL/DD Ratio: 1.03
+LLR: 2.36 (80.3%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 714 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 704 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 715 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 708 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 716 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 702 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 717 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 707 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 718 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 709 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 719 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 705 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 720 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 703 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 721 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 712 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 722 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 710 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 723 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 713 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 724 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 717 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 725 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 716 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 726 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 718 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 727 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 714 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 728 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 720 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 729 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 715 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 730 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 722 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 731 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 719 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 32.52 +/- 20.56, nElo: 40.48 +/- 25.41
+LOS: 99.91 %, DrawRatio: 34.26 %, PairsRatio: 1.43
+Games: 718, Wins: 253, Losses: 186, Draws: 279, Points: 392.5 (54.67 %)
+Ptnml(0-2): [27, 70, 123, 87, 52], WL/DD Ratio: 1.02
+LLR: 2.38 (80.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 732 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 723 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 733 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 721 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 734 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 728 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 735 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 727 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 736 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 725 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 737 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 730 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 738 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 724 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 739 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 711 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 740 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 733 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 741 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 726 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 742 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 731 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 743 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 732 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 744 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 734 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 745 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 729 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 746 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 739 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 747 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 738 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 748 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 737 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 749 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 736 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 750 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 735 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 751 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 746 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 752 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 745 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 753 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 748 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 754 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 740 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 30.99 +/- 20.30, nElo: 38.41 +/- 25.00
+LOS: 99.87 %, DrawRatio: 33.69 %, PairsRatio: 1.39
+Games: 742, Wins: 259, Losses: 193, Draws: 290, Points: 404.0 (54.45 %)
+Ptnml(0-2): [28, 75, 125, 89, 54], WL/DD Ratio: 0.98
+LLR: 2.34 (79.5%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 755 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 744 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 756 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 743 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 757 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 741 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 758 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 747 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 759 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 750 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 760 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 742 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 761 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 754 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 762 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 751 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 763 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 755 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 764 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 756 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 765 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 749 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 766 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 752 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 767 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 757 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 768 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 760 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 769 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 761 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 770 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 753 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 771 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 764 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 772 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 762 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 773 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 758 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by adjudication}
+Started game 774 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 768 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 775 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 765 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 776 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 763 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 777 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 766 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 778 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 772 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 779 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 770 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 780 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 767 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 781 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 769 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 782 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 775 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 783 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 759 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 31.67 +/- 19.99, nElo: 39.15 +/- 24.54
+LOS: 99.91 %, DrawRatio: 33.51 %, PairsRatio: 1.39
+Games: 770, Wins: 270, Losses: 200, Draws: 300, Points: 420.0 (54.55 %)
+Ptnml(0-2): [29, 78, 129, 92, 57], WL/DD Ratio: 0.98
+LLR: 2.48 (84.1%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 784 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 774 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 785 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 771 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 786 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 777 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 787 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 773 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 788 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 776 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 789 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 778 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 790 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 781 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 791 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 780 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 792 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 784 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 793 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 779 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 32.61 +/- 19.78, nElo: 40.48 +/- 24.38
+LOS: 99.94 %, DrawRatio: 33.59 %, PairsRatio: 1.42
+Games: 780, Wins: 275, Losses: 202, Draws: 303, Points: 426.5 (54.68 %)
+Ptnml(0-2): [29, 78, 131, 95, 57], WL/DD Ratio: 1.02
+LLR: 2.59 (87.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 794 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 783 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 795 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 782 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 796 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 785 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 797 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 786 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 798 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 790 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 799 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 787 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 800 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 795 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 801 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 793 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 802 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 792 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 803 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 797 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 804 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 794 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 805 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 788 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 806 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 796 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 807 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 789 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 808 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 798 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 809 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 805 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 810 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 799 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 811 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 801 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 812 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 803 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 813 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 804 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 814 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 791 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 815 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 806 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 816 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 802 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 817 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 807 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 818 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 808 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 819 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 809 (candidate-s021-asp vs ref-2b54a4f-noasp): 0-1 {Black wins by adjudication}
+Started game 820 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 812 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+Started game 821 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 813 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 822 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 800 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 33.64 +/- 19.21, nElo: 42.26 +/- 23.96
+LOS: 99.97 %, DrawRatio: 34.90 %, PairsRatio: 1.46
+Games: 808, Wins: 285, Losses: 207, Draws: 316, Points: 443.0 (54.83 %)
+Ptnml(0-2): [29, 78, 141, 98, 58], WL/DD Ratio: 1.01
+LLR: 2.80 (94.9%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 823 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 811 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 824 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 810 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 825 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 817 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 826 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 815 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 827 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 818 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 828 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 816 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 829 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 822 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+Started game 830 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 814 (ref-2b54a4f-noasp vs candidate-s021-asp): 1/2-1/2 {Draw by insufficient mating material}
+Started game 831 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 819 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 832 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 823 (candidate-s021-asp vs ref-2b54a4f-noasp): 1-0 {White wins by adjudication}
+Started game 833 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 820 (ref-2b54a4f-noasp vs candidate-s021-asp): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 34.43 +/- 19.12, nElo: 43.14 +/- 23.78
+LOS: 99.98 %, DrawRatio: 34.63 %, PairsRatio: 1.46
+Games: 820, Wins: 291, Losses: 210, Draws: 319, Points: 450.5 (54.94 %)
+Ptnml(0-2): [29, 80, 142, 99, 60], WL/DD Ratio: 1.03
+LLR: 2.90 (98.4%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+Started game 834 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 825 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 835 of 40000 (candidate-s021-asp vs ref-2b54a4f-noasp)
+Finished game 821 (candidate-s021-asp vs ref-2b54a4f-noasp): 1/2-1/2 {Draw by adjudication}
+Started game 836 of 40000 (ref-2b54a4f-noasp vs candidate-s021-asp)
+Finished game 826 (ref-2b54a4f-noasp vs candidate-s021-asp): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s021-asp vs ref-2b54a4f-noasp (10+0.2, 1t, 16MB, 8moves_v3.pgn):
+Elo: 35.12 +/- 19.06, nElo: 44.04 +/- 23.72
+LOS: 99.99 %, DrawRatio: 34.47 %, PairsRatio: 1.48
+Games: 824, Wins: 293, Losses: 210, Draws: 321, Points: 453.5 (55.04 %)
+Ptnml(0-2): [29, 80, 142, 101, 60], WL/DD Ratio: 1.03
+LLR: 2.97 (100.8%) (-2.94, 2.94) [-5.00, 5.00]
+--------------------------------------------------
+SPRT ([-5.00, 5.00]) completed - H1 was accepted
+Finished match
+Total Time: 00:36:41 (hours:minutes:seconds)
+
+
+elapsed_seconds=2202
+S021_SPRT_DONE status=0

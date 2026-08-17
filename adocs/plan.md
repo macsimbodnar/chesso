@@ -197,7 +197,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-48. S072  S068's sweep evidence lives in adocs/data/ and its columns are stated, so the next step argues from a tracked file
 49. S073  the search constants become one addressable parameter set, settable in a tune build and unchanged in the shipping one
 50. S068  re-decide the reverse futility margin against a verdict, starting from the 75 that S033 left on the table
 51. S074  S021's accepts carries the fast suite's mate cases, as every other pending pruning step does

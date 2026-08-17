@@ -17,8 +17,10 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-static constexpr int MIN = -2000000000;
-static constexpr int MAX = 2000000000;
+// The full window, named once in search.hpp because a caller now has to be
+// able to ask for it explicitly.
+static constexpr int MIN = -SEARCH_SCORE_INF;
+static constexpr int MAX = SEARCH_SCORE_INF;
 
 
 // ORDER_HISTORY_MAX, MAX_QSEARCH_DEPTH, RFP_MARGIN, RFP_MAX_DEPTH,
@@ -604,7 +606,30 @@ int negamax(int alpha0,
   // Only the root knows which move the caller is allowed to play. Publishing
   // from every ply meant an aborted search handed back a move belonging to a
   // deep node, and usually to the other side.
-  if (ply == 0) { state->best_move = best_move; }
+  if (ply == 0) {
+    state->best_move = best_move;
+
+    // A root fail-high leaves the two disagreeing, and S021 is what made a root
+    // fail-high reachable: before aspiration windows the root was always
+    // searched with beta = MAX and `score >= beta` could not happen there.
+    //
+    // The cutoff `break` above jumps out before the `score > alpha` block, so
+    // the PV row still describes whatever earlier move last beat alpha while
+    // best_move is the move that caused the cutoff. Measured, not reasoned
+    // about: `position startpos moves e2e4 e7e5` then `go nodes 20000` reported
+    // `best=b1c3 pv0=d2d4 pvlen=5` at depth 5, alpha -32, beta 68, score 68.
+    //
+    // The line is replaced rather than repaired because there is no line to
+    // repair. A fail-high proves one thing about this node -- that best_move is
+    // worth at least beta -- and nothing whatever about the continuation, so
+    // one move is exactly what is known. The alternative, leaving the row
+    // alone, is what shipped a `bestmove` that did not start the `pv` beside
+    // it.
+    if (best_so_far >= beta) {
+      state->pv_table[0][0] = best_move;
+      state->pv_length[0] = 1;
+    }
+  }
 
   const int to_store = normalize_score(best_so_far, ply);
   tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move);
@@ -613,18 +638,23 @@ int negamax(int alpha0,
 }
 
 
-search_t search(int depth, game_t* game, search_state_t* state)
+search_t search(int depth,
+                game_t* game,
+                search_state_t* state,
+                int alpha,
+                int beta)
 {
   assert(game != nullptr);
   assert(state != nullptr);
   assert(state->stop != nullptr);
   assert(state->tt != nullptr);
+  assert(alpha < beta);
 
   search_t search_result = {};
 
   state->aborted = false;
 
-  int score = negamax(MIN, MAX, depth, 0, game, state, 0, true);
+  int score = negamax(alpha, beta, depth, 0, game, state, 0, true);
 
   search_result.best_move = state->best_move;
 

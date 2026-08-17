@@ -7,7 +7,7 @@ Updated: 2026-08-17 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S021
+- Next: S075
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing

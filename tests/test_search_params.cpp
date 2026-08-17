@@ -48,6 +48,9 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"LmrBase",         75},
   {"LmrDivisor",      225},
   {"LazyEvalMargin",  150},
+  {"AspirationMinDepth", 5},
+  {"AspirationDelta",    50},
+  {"AspirationMaxDelta", 400},
 };
 // clang-format on
 

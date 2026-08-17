@@ -108,3 +108,9 @@ uci_search_result_t iterative_deepening_search(
 const game_t* uci_game();
 const transposition_table_t* uci_tt();
 void uci_wait_for_search();
+
+// Aspiration window failures in the last iterative_deepening_search(). Test
+// instrumentation, and the precondition a mate case driven through that
+// function needs: without it the case cannot tell a narrow window that held
+// from a window schedule that never engaged. S021.
+int uci_last_aspiration_failures();

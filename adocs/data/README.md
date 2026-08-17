@@ -26,6 +26,11 @@ recorded, so it is added, never edited.
 | `S068_sprt_run2.sh` | the script that ran the second SPRT (`run_s068_sprt2.sh` as run). `elo0=-5 elo1=5`. **Its header comment carries the pre-registered interpretation of each outcome and the bounds reasoning, written before the run started**, which is what makes S068's reading of the result a pre-registration rather than a choice made after seeing it. DEC-063 |
 | `S068_sprt_run2.log` | that run's full console, 5571 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 01:41:13` |
 | `S068_run2_match.pgn` | the 2312 games of run 2, the run that decided S068. One match, one reference, with per-move score, depth and time comments |
+| `S021_aspiration_sweep.py` | the aspiration window sweep, and **the first script here that still runs** -- it sets parameters over UCI against the tune build instead of rebuilding per point, so it needs no source edit and no `-D`. See "the scripts no longer run" above for what it replaces |
+| `S021_aspiration_sweep.tsv` | 21 schedules x 3 independent 100-position samples, node counts at depth 11. The evidence for the schedule S021 shipped, and for why one sample would have chosen a different one |
+| `S021_sprt.sh` | the script that ran S021's SPRT, verbatim as run. `elo0=-5 elo1=5` under DEC-063, with the pre-registered interpretation of each outcome in its header |
+| `S021_sprt.log` | that run's full console, 2001 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 00:36:41` |
+| `S021_sprt.pgn` | the 824 games of that run, 2.4 MB. One match, one reference, with per-move score, depth and time comments. Committed where S068's run 1 PGN was not, on the same two tests: it is a clean artifact of one run — the script writes its own `-pgnout` path rather than `fastchess.sh`'s shared, appended `/tmp/fastchess_full.pgn` — and it is the run that decided the step |
 
 `S018_raw.tsv` columns: `game ply phase cost ref own mate san fen`. `cost` is
 the reference's swing across the move and may be negative, which the profiler
@@ -233,3 +238,86 @@ match against one reference, it is the run that decided the step, and 6.8 MB
 insures 1 h 41 m of the constraint that binds the whole plan. `.git` is already
 321 MB, so neither file is decided by repository size alone -- the 38 MB one is
 decided by not being a clean artifact of anything.
+
+## S021's aspiration sweep, and why three samples
+
+`S021_aspiration_sweep.tsv` has a `sample` column and it is the point of the
+file. Each sample is 100 positions drawn from `S018_raw.tsv` -- four per value
+of the engine's own `game_phase()`, stratified so the middlegame does not answer
+for the endgame -- and the three differ only in where in each phase's list the
+pick starts (`offset` 0, 37 and 71, the script's third argument). Every row is
+one schedule measured over one of those samples at depth 11, through
+`build-tune`, so all 21 schedules and all three samples come from one binary and
+no rebuild sits between any two numbers.
+
+The `rel` column is that row's nodes over the `min_depth=64` row of the **same**
+sample, which is the feature switched off: no iteration below depth 64 gets a
+window, so it is this binary searching what the shipping one searches without
+aspiration.
+
+**One sample would have picked a different schedule, and would have been wrong
+about how much it buys.**
+
+| schedule | sample 0 | sample 37 | sample 71 | pooled |
+|---|---|---|---|---|
+| min 5, delta 50 | 0.8728 | 0.9863 | 0.9174 | **0.9248** |
+| min 4, delta 12 | 0.9075 | 1.0063 | 1.0661 | 0.9916 |
+| min 3, delta 12 | 0.9716 | 1.0497 | 1.0568 | 1.0250 |
+
+On sample 0 alone, `delta` 12 at `min_depth` 4 reads 0.9075 and looks like the
+second best schedule swept. It is the fourth *worst* pooled, and on sample 71 it
+costs 6.6 % more nodes than having no windows at all. The shipping row is best
+pooled and is best or second on every sample individually, which is a different
+and much weaker claim than the 12.7 % sample 0 reports for it.
+
+`max_delta` is flat: 0.9636 to 0.9708 pooled across 100, 200, 400, 800 and 2000
+at `min_depth` 4, `delta` 25. It was left at 400 rather than fitted, and nothing
+here says 400 is better than 800.
+
+Nodes at a fixed depth are not Elo. The sweep chose what the SPRT then measured,
+and the SPRT is the verdict -- DEC-019, and three techniques that reported Elo
+and measured none.
+
+## S021's SPRT, and a point estimate that is not the effect size
+
+One run, `elo0=-5 elo1=5` under DEC-063, and it terminated:
+
+```
+Elo: 35.12 +/- 19.06, nElo: 44.04 +/- 23.72
+LOS: 99.99 %, DrawRatio: 34.47 %, PairsRatio: 1.48
+Games: 824, Wins: 293, Losses: 210, Draws: 321, Points: 453.5 (55.04 %)
+Ptnml(0-2): [29, 80, 142, 101, 60], WL/DD Ratio: 1.03
+LLR: 2.97 (100.8%) (-2.94, 2.94) [-5.00, 5.00]
+SPRT ([-5.00, 5.00]) completed - H1 was accepted
+```
+
+36 m 41 s, 824 games, about 1348 games/h -- the same rate S068 measured at 1371,
+on the same twelve threads.
+
+**+35.12 is not the effect size.** An SPRT stops as soon as the evidence crosses
+a bound, so it stops early precisely when the observed effect has run
+favourable, and the stopping run's point estimate is biased upward by exactly
+that. S068 could pool two runs and quote +5.02 from 11348 games; this step has
+one run and nothing to pool it with, so the number stands with its bias named
+rather than being averaged away. What the run establishes is its pre-registered
+claim -- **not a regression of 5 Elo or more** -- and, at `LOS: 99.99 %` over
+824 games, that the sign is positive.
+
+The bounds are the reason it cost 36 minutes rather than a night. The expected
+effect written into the step file before the run was +9 +/- 17, which is inside
+`elo0=0 elo1=5`'s undefended interval and would have random-walked the way
+S068's first run did for 6 h 36 m. DEC-063 was written from that run and this is
+the first step to spend it.
+
+### What was checked before the verdict was read
+
+A +35 from a 5-line diff is the shape of a contaminated match (DEC-020), so the
+two binaries were compared before the number was recorded rather than after:
+
+- both `CMakeCache.txt`s carry `CMAKE_BUILD_TYPE=Release`,
+  `CMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG`, `CMAKE_CXX_COMPILER=/usr/bin/c++` and
+  `CHESSO_TUNE:BOOL=OFF`. Neither side is the tune build
+- `.ref-builds/2b54a4f` is clean at `2b54a4f` and `grep -c ASPIRATION` over its
+  `src/search_params.hpp` returns 0
+- the candidate snapshot the match played is md5-identical to `build/src/chesso`
+  at the completing commit, so no rebuild swapped the engine mid-match

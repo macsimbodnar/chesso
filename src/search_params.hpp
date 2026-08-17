@@ -88,7 +88,41 @@
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \
-  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  150,    0, 2000)
+  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  150,    0, 2000)                     \
+                                                                               \
+  /* Aspiration windows. The root of an iteration is searched in a band around \
+     the previous iteration's score instead of from -inf to +inf, and the band \
+     is widened and the iteration repeated when the score falls outside it.    \
+                                                                               \
+     ASPIRATION_MIN_DEPTH is the first depth that gets a band. Below it there  \
+     is nothing worth aspirating: the iterations are microseconds and the      \
+     score is still moving. The floor is 2 because depth 1 has no previous     \
+     score to build a band around, so a value of 1 would be a setting the      \
+     search cannot honour rather than a narrower one.                          \
+                                                                               \
+     ASPIRATION_DELTA is the band's half-width in centipawns at the first      \
+     attempt, and ASPIRATION_MAX_DELTA is where widening stops and the full    \
+     window is used instead. The upper bound on the latter is arithmetic: past \
+     MATE_MIN a band is wider than every non-mate score and can never fail, so \
+     a value there switches the feature off by making it inert rather than by  \
+     saying so.                                                                \
+                                                                               \
+     Chosen by measurement, adocs/data/S021_aspiration_sweep.tsv: 300          \
+     positions over three independent 100-position samples of                  \
+     adocs/data/S018_raw.tsv, stratified by game_phase(), node counts at depth \
+     11 through the tune build. Pooled, this setting costs 0.9248 of the nodes \
+     the feature switched off costs and no other setting swept is below        \
+     0.9439. The third number is flat from 100 to 2000 and is left where it    \
+     was.                                                                      \
+                                                                               \
+     One sample would have chosen wrongly. On the first alone this row reads   \
+     0.8728, but delta 12 reads 0.9075 there and 1.0661 on the third: the      \
+     ranking between settings is a property of the sample until the samples    \
+     are pooled. Nodes at a fixed depth are not Elo, so what the sweep chose   \
+     is what the SPRT then measured. S021. */                                  \
+  X(ASPIRATION_MIN_DEPTH, "AspirationMinDepth", 5,   2, 64)                    \
+  X(ASPIRATION_DELTA,     "AspirationDelta",    50,  1, 2000)                  \
+  X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 400, 1, 48000)
 // clang-format on
 
 

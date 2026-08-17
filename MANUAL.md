@@ -82,6 +82,9 @@ all, the tune build searches exactly what the release build searches.
 | `LmrBase` | 75 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 75 is 0.75 |
 | `LmrDivisor` | 225 | 1 to 2000 | late move reduction, the divisor of the log term, in hundredths. 225 is 2.25 |
 | `LazyEvalMargin` | 150 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
+| `AspirationMinDepth` | 5 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
+| `AspirationDelta` | 50 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
+| `AspirationMaxDelta` | 400 | 1 to 48000 | where widening stops doubling and the iteration is repeated with the full window instead |
 
 ## Commands
 
@@ -165,11 +168,14 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
-- **No aspiration windows, forward futility pruning, razoring or singular
-  extensions.** These are planned, not present; see `adocs/plan.md`. *Reverse*
+- **No forward futility pruning, razoring or singular extensions.** These are
+  planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score
   is a margin clear of beta is not searched. It cannot see a mate — that is what
   a static score is — so it is bounded to depth 6 and to ply 3 and below.
+  *Aspiration windows* are present since S021 (2026-08-17): from depth 5 the
+  root is searched in a band around the previous iteration's score, widened and
+  repeated when the score falls outside it.
 - **The reported score is unreliable in both directions, and worst in pawn
   endgames.** Measured over 5582 moves in 98 games against Stockfish at 3000000
   nodes, after the evaluation constants were fitted (S028, 2026-08-11). Chesso's
