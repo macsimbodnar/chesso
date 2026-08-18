@@ -4587,3 +4587,99 @@ Consequences: The step file is amended in the same commit as the verdict. No
               behaviour changes and no test is weakened -- the clause is
               satisfied more strongly than it asked, in the file where it was
               already satisfied.
+
+## DEC-079  2026-08-19  S094's three commits are kept at a measured zero, and the win is elsewhere
+Tags:         search, quiescence, transposition, measurement, s094, s092, s099, inv-4, inv-6, dec-071
+
+Context:      S094 split into three commits so each change could be measured
+              separately, as its `accepts:` demands. Two verdicts and one
+              neutrality proof came back:
+
+                  f1e6d24  quiescence probes and stores at TT_DEPTH_QS = -1
+                           3000 games, 2 h 07 m, NO BOUND REACHED, LLR -1.32
+                           Elo -0.23 +/- 9.32, nElo -0.31 +/- 12.43, 49.97 %
+                  7d2da9d  entry carries int16_t eval, read by nothing
+                           BEHAVIOUR-NEUTRAL, INV-6: identical node counts
+                           164123 / 670488 / 84351 and identical best moves
+                           c3d5 / e2a6 / d7c8q, verified independently
+                  22a74f2  quiescence stands pat on the stored value
+                           H0 accepted, 1954 games, 1 h 23 m, LLR -2.21
+                           Elo -6.40 +/- 11.42, nElo -8.64 +/- 15.40, 49.08 %
+
+              0 time forfeits in either match, checked from each run's own PGN.
+
+              **The hazard the step names has no referent.** It warned that
+              widening the entry changes entries-per-bucket and therefore
+              replacement. The table is direct-mapped -- one entry per slot, no
+              buckets -- and `tt_resize()` floors the count to a power of two,
+              which absorbs any entry size from 17 to 32 bytes: 4 MB buys 131072
+              entries at 20, 24 and 32 alike. `sizeof(tt_entry_t)` stayed **24**
+              because `eval` landed in padding the key's alignment already
+              reserved.
+
+              **Why zero was the right answer and was predictable.** Of 2530591
+              quiescence nodes reaching the probe, only **19901, 0.79 %**, found
+              an entry: depth-preferred replacement evicts a `TT_DEPTH_QS` entry
+              whenever any main-search store lands on the slot. Of those, 11882
+              carried an evaluation, and the stored value differed from a fresh
+              `evaluate_lazy()` on **163 of 310197 nodes, 0.05 %**.
+
+Decision:     **All three commits are kept, with the verdict recorded as zero.**
+              The house rule is explicit that a verdict of zero is recorded as
+              zero and the feature may still be kept with the reason stated;
+              S005, S006 and S015 are the precedent. The reasons here are
+              specific rather than sentimental:
+
+              **1. `f1e6d24` is not only the probe.** It fixed two real defects.
+              `de_normalize_score()` excluded `+/-MATE_MAX`, so a mate with no
+              legal reply -- which quiescence is the first code to reach --
+              normalised to exactly `-MATE_MAX` and never turned back into a
+              distance. Four whole-search mate cases were observed red,
+              `REQUIRE( 0 == 2 )` at depth 3 and `REQUIRE( 4 == 5 )` at depth 9.
+              Reverting the commit would revert that. `tt_store_entry()` also
+              asserted a non-zero move, which standing pat has not.
+
+              **2. `7d2da9d` is the substrate two later steps consume.** S092's
+              improving flag compares a static score across plies and S099 learns
+              a correction from the difference between the static score and what
+              the search returned. Both want the value in the entry. It is
+              behaviour-neutral and costs no table entries, so it carries no risk
+              to hold.
+
+              **3. `22a74f2` measured "not a +10 improvement", which a true zero
+              satisfies.** -6.40 +/- 11.42 does not establish a regression, and
+              the 0.05 % of nodes that differ says one is not there to find.
+
+              Taken by the agent under DEC-041 and the record-a-zero rule. The
+              owner may prefer to revert `22a74f2`, which is the one commit whose
+              removal costs nothing downstream.
+
+Rejected:     **Reverting `f1e6d24` because the probe is worth nothing.** It
+              would take the mate-score fix with it. If the probe is ever removed
+              on its own, that fix and its four red cases stay.
+
+              **Spending a third SPRT to separate the probe from the store within
+              `f1e6d24`.** Two verdicts already cost 3 h 30 m and both landed on
+              zero; a third would resolve a component of a zero.
+
+              **Declining SPRT B on the node-count evidence**, the way S075
+              declined a match on a vector already measured worse. It was the
+              cheaper argument and it was not taken: the machine was idle, the
+              step asks for a verdict per change, and buying the verdict cost
+              less than the amendment for not buying it would have.
+
+Consequences: **The win this step found is in none of its commits.** The
+              reverse-futility site already had the stored value on **105612 of
+              its 1074051 `evaluate()` calls, 9.8 %, and 0 of them disagreed**
+              with a fresh call. Reading it there is a pure speed-up on the full
+              evaluation -- 83.35 ns a call on this machine -- and is
+              dischargeable by INV-6 node counts rather than owing a verdict. It
+              is one change at a time and it is not S094's. **S103 is created for
+              it.**
+
+              INV-4 still holds and was checked rather than argued: the stored
+              number is `evaluate_cheap() + evaluate_expensive()`, derived from
+              the accumulators `make_move` maintains, and nothing stopped
+              maintaining them. The debug build, which asserts the accumulators
+              against a full recomputation on every make and unmake, is green at
+              all three commits.

@@ -327,9 +327,23 @@ difference being claimed. The scores and a checksum are printed before any
 timing, so a build that evaluates differently says so instead of quietly being
 timed as though it were the same function.
 
-Today's evaluation is **1.31 ns per call, 762 M calls per second**. Recomputed
-mobility measured 15.93 ns, 12.2 times more, and cost 33 % of nodes per second
-in a real search at depth 12 — worse than the 25 % S014 removed. DEC-036.
+Today's evaluation is **83.35 ns per call, 12.0 M calls per second**, measured
+2026-08-19 by `./build/tests/bench_eval` on the DEC-049 machine, 4000000 calls a
+sweep over 7 sweeps, spread 2.2 %, printed resolution 0.0 %.
+
+**The figure here read 1.31 ns / 762 M until 2026-08-19 and does not reproduce.**
+It came from DEC-036, dated 2026-08-11 — two days before DEC-049 moved this
+project off Apple silicon — and the evaluation has since gained S027's terms and
+S065's refit of 827 constants. Both the machine and the function changed, so the
+old absolute number is not comparable and is not restated as though it were.
+**DEC-036's argument is unaffected**: it rests on the *ratio* between recomputed
+mobility at 15.93 ns and the evaluation beside it, 12.2 times, both measured in
+the same run on the same machine, and on the 33 % of nodes per second that ratio
+cost in a real search at depth 12 — worse than the 25 % S014 removed.
+
+The lesson is the one this file already gives about `-n`: **an absolute timing is
+a property of a machine and a build, and only a ratio measured in one run
+travels.**
 
 A/B timing with statistics, always interleaved so machine drift cancels:
 
