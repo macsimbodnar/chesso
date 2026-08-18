@@ -24,6 +24,19 @@ record and `./rating.sh` re-derives it. S087, DEC-067 to DEC-069. Before this
 every strength figure in the project was a delta against an earlier chesso and
 the distance to the goal above was unknown.
 
+**The target is at least 3000 on that scale, and it is pursued without a
+network.** DEC-071, 2026-08-18, the owner's decision. It is a goal and not an
+invariant: nothing fails a test for being below it. Reachability was checked
+against the same list, single-CPU entries read 2026-08-18 -- Stockfish 11 at
+3565, Komodo 14.1 at 3482, Xiphos 0.6 at 3356, Ethereal 11.75 at 3346 and six
+more above 3130, every one a hand-crafted evaluation one version below that
+engine's first network -- and against the Leorik 2.x line on this machine, which
+carries no network file at any tag and reaches 2917. DEC-054 stands: S029 is
+parked and NNUE is not reopened. `./rating.sh` is re-run at milestones, after
+any landed step an SPRT credits with 20 Elo or more, because every other figure
+here is self-play against an earlier chesso and the factor between the two
+scales is not yet measured.
+
 ## Prime directive
 
 Chesso never plays or accepts an illegal move and never corrupts its own board
@@ -215,9 +228,11 @@ The order stands.
 - Phase two has no steps and should not get any until the engine is strong
   enough for an experiment to mean something. The transition gets a decision
   entry when it happens.
-- The "absent, machinery" row above has no plan steps behind it. Late move
-  pruning, check and singular extensions, a quiescence transposition probe, a
-  static evaluation in the table entry, an `improving` flag, history malus and
-  ageing, and correction history are all standard and all missing. They were
-  found while measuring DEC-033 and are parked rather than planned, because a
-  step is created by a decision and no decision has been taken on them.
+- ~~The "absent, machinery" row above has no plan steps behind it.~~
+  **Discharged 2026-08-18 by DEC-071**, which is the decision that was missing.
+  Late move pruning is S090, check extensions S096, singular extensions S097,
+  the quiescence transposition probe and the static evaluation in the entry
+  S094, the `improving` flag S092, history malus and ageing S093, correction
+  history S099; SEE pruning in the main search is S091, internal iterative
+  reduction S095 and reduction refinement S098. Time management, which no row
+  here listed at all, is S089.

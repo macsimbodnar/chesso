@@ -7,8 +7,12 @@ Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S060
+- Next: S088
 - Blocked: none
+- Target: **at least 3000 CCRL Blitz, without a network.** DEC-071, 2026-08-18.
+  Measured today: 2570 +/-25 and soft. S088 fixes the instrument before the
+  climb; S089 to S102 are the climb. `specs.md` carries the reachability
+  evidence.
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
     them needs a re-run.** Ten findings, one high and three medium: nine went to
@@ -49,11 +53,6 @@ Updated: 2026-08-18 by `moltke --step status`.
     S027 follows it, and the search block follows that with a measured ceiling
     of about 10 cp per effective doubling. S033 was created for reverse futility
     pruning, which the plan did not contain at all.
-  - **Standard search machinery with no step behind it.** Late move pruning,
-    check and singular extensions, a quiescence transposition probe, a static
-    evaluation in the table entry, an `improving` flag, history malus and
-    ageing, correction history. Found while measuring DEC-033. Parked, not
-    planned: a step is created by a decision and none has been taken on these.
   - **S015's quiescence SEE pruning has never been re-measured.** It returned
     0 Elo when `see()` cost 12.1 % more than it does now, so the same feature is
     a cheaper trade today than when it was judged. Folded into S022 rather than
@@ -109,7 +108,8 @@ Updated: 2026-08-18 by `moltke --step status`.
     Parked is not retired — `plan_todo/S029_nnue.md` is kept whole, its id is
     not reused, and its plan.md entry moved to the end of the pending order
     marked parked, so nothing derives it as the next step. Resuming it is a
-    decision, not a drift. This makes the "standard search machinery" list above
-    the place the next steps have to come from; it still has no step behind it,
-    on the same rule, and DEC-033's finding that the engine is
-    evaluation-limited now has to be answered by hand-crafted terms and fits.
+    decision, not a drift. The standard search machinery that used to be parked
+    beside it is no longer: **DEC-071 is the decision that was missing**, and
+    S089 to S099 are one step per technique, with S100 to S102 answering
+    DEC-033's finding that the engine is evaluation-limited from hand-crafted
+    terms and fits.

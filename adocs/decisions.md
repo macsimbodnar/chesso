@@ -3831,3 +3831,155 @@ Consequences: No measurement was affected and none needed re-running. `tail -f`
               terminal marker was implemented in `rating.sh` for this rule, in
               the same session, by the same agent that then armed four watchers
               which could not act on it.
+
+## DEC-071  2026-08-18  the target is 3000 CCRL Blitz without a network, and the plan is restructured around what is missing
+Tags:         planning, rating, search, evaluation, nnue, dec-054, dec-019, s087
+
+Context:      S087 gave the project its first absolute figure -- **2570 CCRL
+              Blitz, 95 % +/-25, soft**. The owner then set the next goal: at
+              least **3000**, and asked whether the published literature says
+              that is reachable without NNUE, which DEC-054 defers.
+
+              **It is, with about 500 Elo of headroom.** From the same list
+              chesso is rated on, single-CPU entries, read 2026-08-18:
+              Stockfish 11 **3565**, Komodo 14.1 3482, Xiphos 0.6 3356,
+              Ethereal 11.75 3346, rofChade 2.3 3322, Laser 1.7 3294,
+              Defenchess 2.2 3281, Booot 6.3.1 3266, Texel 1.07 3130. Each is a
+              hand-crafted evaluation and each is one version below that
+              engine's first network release.
+
+              The nearest proof needed no web claim and is on this machine.
+              `/home/max/ws/Leorik` has **zero** files matching
+              `nnue|network|neural|\.nn` at every 2.x tag and four at 3.0, and
+              CCRL rates that line 2.0.2 = 2538, 2.1 = 2568, 2.2 = 2689,
+              2.4 = 2829, **2.5 = 2917**. One author, hand-crafted throughout,
+              +379 Elo from a point 32 Elo *below* where chesso is now. Blunder
+              is the same story to 2664 with no network file at any tag. Only
+              filenames were listed; no source was read (DEC-016).
+
+              So the ceiling is not the constraint. The plan is.
+
+              `src/search.cpp` at HEAD has alpha-beta, transposition table,
+              quiescence, PVS, aspiration windows, null move pruning, late move
+              reduction, reverse futility pruning, staged generation, killers,
+              history, countermoves, and `see_ge` in quiescence alone. Missing
+              entirely, with **no step behind any of it**: late move pruning,
+              extensions of any kind, SEE pruning in the main search, internal
+              iterative reduction, an `improving` flag, history malus and
+              ageing and persistence across `go`, a quiescence transposition
+              probe, a static evaluation in the table entry, correction history,
+              and any refinement of the reduction itself. `specs.md` calls that
+              list parked, and parked meant nothing could derive a step from it.
+
+              **Time management was not even parked.** `chesso.cpp:405-410`
+              allocates `remaining_ms / movestogo + increment_ms / 2` with
+              `DEFAULT_MOVES_TO_GO 20` (`uci.hpp:13`) and a soft-limit
+              percentage that decides whether to start another iteration.
+              Nothing scales the budget by best-move stability or by a score
+              that is falling.
+
+              Speed is not the problem. **5.95 Mnps single-thread, depth 16
+              from the start position in 3 s**, measured at HEAD on 2026-08-18,
+              which is the same order as the engines listed above.
+
+              Five standard evaluation terms -- bishop pair, rook on an open
+              file, rook on a half-open file, rook on the seventh, tempo --
+              ship at zero weight because they measured zero at S027. Every
+              engine in the table above carries all five.
+
+Decision:     **By the owner**: the target is **at least 3000 on the CCRL Blitz
+              scale, pursued without NNUE**. DEC-054 stands unamended and S029
+              stays parked. The agent supplied the feasibility evidence, the
+              gap inventory and the step list; the goal and the restructure are
+              the owner's.
+
+              Three parts, agreed as one plan:
+
+              **1. The instrument is fixed before the target is read off it.**
+              2570 is soft -- 83.1 Elo of anchor spread against the 30 the
+              procedure allows, isolated to Leorik 2.1. A finish line cannot be
+              read from an instrument that loose. A fourth engine family joins
+              the reference set and the rating is re-solved. **S088**, and it
+              goes first.
+
+              **2. The parked machinery gets steps, one technique each.**
+              **S089 to S099**: time management, late move pruning, SEE pruning
+              in the main search, the `improving` flag, history malus and
+              ageing and persistence, the quiescence transposition probe with a
+              static evaluation in the entry, internal iterative reduction,
+              check extensions, singular extensions, reduction refinement,
+              correction history. Three evaluation steps follow, **S100 to
+              S102**: the five zero-weight terms re-examined at the current
+              fit, threat terms, and outposts with space.
+
+              **3. Time management moves ahead of the movegen micro-steps.**
+              S030 to S032 are worth 1-3 % each by their own files -- under 1 %
+              for S031 -- and sat at positions 77 to 79 while the flat
+              allocation above had no step at all.
+
+              And one rule rather than a step: **the rating is re-run at
+              milestones**, with `./rating.sh`, so the factor between a
+              self-play SPRT and a point on the public scale becomes measured
+              rather than assumed. Every Elo figure this project holds is
+              self-play against an earlier chesso; 2570 is external. The two
+              diverge and nothing here knows by how much. The trigger is any
+              landed step that an SPRT credited with 20 Elo or more, and the
+              cost is about an hour.
+
+Rejected:     **Reopening NNUE.** It is the highest-ceiling technique on record
+              -- `eval_tuning_strategy.md` reports +400 to +700 over a tuned
+              hand-crafted evaluation, and Leorik's own 3.0 to 3.2 line at 3493
+              is that gain measured on the engine quoted above. It is also not
+              the question the owner asked, DEC-054 is the owner's decision, and
+              the evidence above says the target does not need it.
+
+              **Taking the reported per-technique figures as a budget.** They
+              sum to roughly the size of the gap at their midpoints, which is
+              the only reason to believe the list is long enough. They are not a
+              forecast: this engine has taken three of them at face value and
+              measured 0, 0 and *slower*. DEC-019 is unchanged and each of the
+              fifteen steps owes its own verdict.
+
+              **Banding the missing techniques into three or four steps to save
+              SPRTs.** It is the obvious way to buy back machine time and it
+              destroys attribution -- two changes at once and neither number
+              means anything. The cost is accepted instead.
+
+              **Starting on the features and fixing the instrument later.** The
+              anchor spread is 83 Elo; a run that lands 40 Elo of real strength
+              cannot be distinguished from one that lands nothing on an
+              instrument that wide, and the reference set would then have to be
+              changed *during* the climb, invalidating comparison across it.
+
+              **Reordering the whole pending list by expected Elo.** The
+              existing order encodes reasons -- corrections sit ahead of the
+              step each corrects, S087 was an instrument, S065 was a corpus. The
+              new block is inserted; the list is not re-derived.
+
+Consequences: **Fifteen new steps, S088 to S102**, all in `plan_todo/`. Fourteen
+              of them alter play and owe an SPRT each; S088 owes a rating run
+              instead and touches nothing under `src/`.
+
+              **The cost is the whole measurement budget for months.** Roughly
+              40 to 60 verdicts once failures and retunes are counted, at three
+              to four and a half hours each, is 150 to 250 machine hours -- six
+              to ten weeks of nights at DEC-048/DEC-050. Measurement capacity is
+              the binding constraint on the plan (`specs.md`) and this decision
+              spends all of it.
+
+              **The "absent, machinery" parked item is discharged.** It appears
+              in `status.md` and in `specs.md`'s Open items as a list with no
+              steps behind it, on the rule that a step is created by a decision.
+              This is that decision.
+
+              **`specs.md` gains the target**, dated, beside the measured 2570
+              it is a distance from. The 3000 figure is a goal and not an
+              invariant: nothing fails a test for being below it.
+
+              **Eval retuning is expected to follow the search block, not to
+              precede it.** `eval_tuning_strategy.md` section 0 states that eval
+              parameters are only optimal relative to the search that uses them
+              and that any material change to pruning, reductions or quiescence
+              invalidates the tuning. Eleven such changes are now queued, so
+              S100 to S102 sit after them and a refit after the block is normal
+              rather than a discovery.
