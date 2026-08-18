@@ -113,7 +113,6 @@ void tt_store_entry(transposition_table_t* tt,
 {
   assert(tt != nullptr);
   assert(board != nullptr);
-  assert(best_move != 0);
 
   if (tt->entries == nullptr) { return; }
 

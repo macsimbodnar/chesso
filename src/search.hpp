@@ -17,6 +17,19 @@ search_t search(int depth,
                 int alpha = -SEARCH_SCORE_INF,
                 int beta = SEARCH_SCORE_INF);
 
+// Whether a table entry answers this node outright, and with what score.
+// `depth` is what the caller needs to have been searched: negamax passes its
+// own remaining depth, quiescence passes TT_DEPTH_QS, and the comparison
+// against the entry's depth is the whole of the rule that keeps a quiescence
+// entry out of the main search. Split out of negamax and declared here so a
+// test can hold that rule directly rather than inferring it from a tree. S094.
+bool tt_entry_answers(const tt_entry_t* entry,
+                      int depth,
+                      size_t ply,
+                      int alpha,
+                      int beta,
+                      int* score);
+
 // The leaf search. Declared here only so the tests can drive it directly;
 // nothing outside search.cpp calls it.
 int quiescence(int alpha,

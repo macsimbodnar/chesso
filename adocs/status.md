@@ -6,9 +6,12 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S089 a time budget that scales with best-move stability and with a falling score, instead of remaining over a fixed movestogo plus half the increment
-- Next: S089
+- In progress: S094 quiescence probes and stores the transposition table, and an entry carries the static evaluation it was scored with
+- Next: S094
 - Blocked: none
+- Watching:
+  - watch outcome unacknowledged: success marker (exit 0) for SPRT-RUN-DONE in /tmp/S089_sprt.log; act on the result, then acknowledge it by deleting .git/moltke_watch/1787079756_1726275.json
+  - watch outcome unacknowledged: stopped (exit 143) for loses on time|time forfeit|disconnect in /tmp/fastchess_fast.log; act on the result, then acknowledge it by deleting .git/moltke_watch/1787079762_1726753.json
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
     them needs a re-run.** Ten findings, one high and three medium: nine went to

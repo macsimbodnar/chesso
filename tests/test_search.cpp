@@ -758,6 +758,120 @@ TEST_SUITE("search: quiescence")
 }
 
 
+// The rule that lets quiescence share one table with the main search: an
+// entry written by quiescence is stored below every depth the main search can
+// ask for, so it answers quiescence and nothing else. S094.
+TEST_SUITE("search: quiescence transposition entries")
+{
+  // MATE_MAX and MATE_MIN are search.cpp's, not exported, and the numbers are
+  // pinned here rather than shared so that a change to either is a visible
+  // disagreement instead of a silent agreement.
+  static constexpr int MATE_MAX_LOCAL = 49000;
+
+  TEST_CASE("a main-search node at depth 1 does not cut on a quiescence entry")
+  {
+    tt_entry_t entry = {};
+    entry.key = 0x1234ULL;
+    entry.type = TT_PV_NODE;
+    entry.score = 321;
+    entry.generation = 1;
+
+    int score = 0;
+
+    // Precondition, and the whole reason the rest is not vacuous: the same
+    // score in an entry the main search did write answers a depth 1 node. A
+    // probe that answered nothing at all would satisfy the assertions below
+    // without the depth rule existing.
+    entry.depth = 1;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 321);
+
+    // The same entry, stored the way quiescence stores it. Depth 1 and depth
+    // 0 are both main-search nodes: negamax probes before it decides to fall
+    // into quiescence, so depth 0 is a probe the main search really makes.
+    entry.depth = TT_DEPTH_QS;
+    score = 0;
+    REQUIRE_FALSE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_FALSE(tt_entry_answers(&entry, 0, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 0);
+
+    // And quiescence, which asks for TT_DEPTH_QS, still reads it.
+    REQUIRE(tt_entry_answers(&entry, TT_DEPTH_QS, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 321);
+  }
+
+
+  // Regression, S094. A mate with no legal reply is stored normalised as
+  // exactly -MATE_MAX, "mated here", and the de-normalisation that turns it
+  // back into a distance excluded that endpoint. Nothing reached it before
+  // quiescence started storing, because the main search returns from a mated
+  // node without storing anything.
+  TEST_CASE("a mate stored at its own position reads back at the right ply")
+  {
+    tt_entry_t entry = {};
+    entry.key = 0x2345ULL;
+    entry.type = TT_PV_NODE;
+    entry.depth = TT_DEPTH_QS;
+    entry.generation = 1;
+
+    // Precondition: one ply short of the endpoint is adjusted, so the case is
+    // about the endpoint and not about de-normalisation being absent.
+    entry.score = -(MATE_MAX_LOCAL - 1);
+    int score = 0;
+    REQUIRE(tt_entry_answers(&entry, TT_DEPTH_QS, 3, -100000, 100000, &score));
+    REQUIRE_EQ(score, -(MATE_MAX_LOCAL - 1) + 3);
+
+    entry.score = -MATE_MAX_LOCAL;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, TT_DEPTH_QS, 3, -100000, 100000, &score));
+    REQUIRE_EQ(score, -MATE_MAX_LOCAL + 3);
+
+    entry.score = MATE_MAX_LOCAL;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, TT_DEPTH_QS, 3, -100000, 100000, &score));
+    REQUIRE_EQ(score, MATE_MAX_LOCAL - 3);
+  }
+
+
+  // Without this, a quiescence that never stored anything would pass every
+  // other case in this file.
+  TEST_CASE_FIXTURE(search_fixture_t, "quiescence writes entries of its own")
+  {
+    const std::string fen =
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+
+    search_fen_with(fen, 5, &tt, true);
+
+    size_t quiescence_entries = 0;
+    size_t main_entries = 0;
+
+    for (size_t i = 0; i < tt.entry_count; ++i) {
+      if (tt.entries[i].generation == 0) { continue; }
+
+      if (tt.entries[i].depth == TT_DEPTH_QS) {
+        quiescence_entries++;
+      } else {
+        main_entries++;
+      }
+    }
+
+    // Precondition: the search wrote to the table at all. A table that was
+    // never allocated, or a search that stored nothing, would otherwise leave
+    // both counts at zero and the assertion below would be about nothing.
+    REQUIRE(main_entries > 0);
+    REQUIRE(quiescence_entries > 0);
+
+    // Every entry the main search wrote is at a depth that could not have come
+    // from quiescence, which is the storage half of the rule the first case in
+    // this suite holds on the reading side.
+    for (size_t i = 0; i < tt.entry_count; ++i) {
+      if (tt.entries[i].generation == 0) { continue; }
+      REQUIRE(tt.entries[i].depth >= TT_DEPTH_QS);
+    }
+  }
+}
+
+
 TEST_SUITE("search: transposition table")
 {
   // Quiet middlegame and endgame positions with no forced mate inside the

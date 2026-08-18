@@ -948,13 +948,22 @@ TEST_SUITE("engine: uci layer")
 
     SUBCASE("a score that fell buys time back")
     {
-      // The score at depth 6 here is 62 centipawns below the score at depth 5,
-      // and the best move has been stable for one iteration. The fall has to
-      // outweigh that discount or it is not reaching the scale at all.
+      // The score at depth 8 here is 29 centipawns below the score at depth 7,
+      // and the best move has been stable for three iterations. The fall has
+      // to outweigh that discount or it is not reaching the scale at all: 14
+      // points of grant against 12 of discount, so the scale lands at 102.
+      //
+      // Depth 6 until S094, where the score fell 62 between depths 5 and 6.
+      // The quiescence transposition probe changed the scores the search
+      // reports and this position no longer falls there -- -68 at both depths.
+      // Re-targeted rather than relaxed: same position, same assertions, a
+      // depth at which the precondition the case is about is really present.
+      // Measured at S094's first commit: cp -34 -34 -68 -59 -68 -68 -80 -109
+      // for depths 1 to 8, best move e2a6 from depth 5 on.
       const probe_t scaled = probe(
           "position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
           "R3K2R w KQkq - 0 1",
-          6, true);
+          8, true);
 
       // Precondition: the score actually fell. On a loop that passed a
       // constant zero for the fall this is what goes red.

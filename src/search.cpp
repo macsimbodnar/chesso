@@ -125,11 +125,66 @@ inline int normalize_score(int score, int ply)
 }
 
 
+// Inclusive at +/-MATE_MAX where normalize_score() is exclusive, and the
+// asymmetry is what makes the pair a round trip rather than nearly one.
+// normalize_score() maps "mate in p plies, seen from ply p" onto exactly
+// +/-MATE_MAX, so that is a value the table holds and this function has to
+// undo; on the way in the same value means "mate here", which is already
+// normalised and must be left alone. The bound was exclusive on both sides
+// until S094 and nothing reached it: the main search never stores +/-MATE_MAX,
+// because a mated node returns before it stores anything and a mating score at
+// ply p is at most MATE_MAX - (p + 1). Quiescence does store it -- it is the
+// only place a mate with no legal reply is both detected and written down --
+// and the whole mate distance came back three plies short.
 inline int de_normalize_score(int score, int ply)
 {
-  if (score > MATE_MIN && score < MATE_MAX) { return score - ply; }
-  if (score < -MATE_MIN && score > -MATE_MAX) { return score + ply; }
+  if (score > MATE_MIN && score <= MATE_MAX) { return score - ply; }
+  if (score < -MATE_MIN && score >= -MATE_MAX) { return score + ply; }
   return score;
+}
+
+
+// negamax's smallest depth. It recurses with depth - 1 and only from depth >=
+// 1, and every reduction is clamped to leave the child at least one ply, so no
+// probe from the main search ever asks for less than this. TT_DEPTH_QS sits
+// below it, which is what makes a quiescence entry unusable up there.
+static_assert(TT_DEPTH_QS < 0,
+              "a quiescence entry must not satisfy a main-search probe");
+
+
+bool tt_entry_answers(const tt_entry_t* entry,
+                      int depth,
+                      size_t ply,
+                      int alpha,
+                      int beta,
+                      int* score)
+{
+  assert(score != nullptr);
+
+  if (entry == nullptr || entry->depth < depth) { return false; }
+
+  // The stored score counts from the position it was stored at, so the
+  // distance to this node has to come back out of it before it means anything
+  // here. That is what "mate in N from here" costs, and it is the reason a
+  // mate score is never read straight out of the entry.
+  const int tt_score = de_normalize_score(entry->score, ply);
+
+  if (entry->type == TT_PV_NODE) {
+    *score = tt_score;
+    return true;
+  }
+
+  if (entry->type == TT_BETA_NODE && tt_score >= beta) {
+    *score = tt_score;
+    return true;
+  }
+
+  if (entry->type == TT_ALPHA_NODE && tt_score <= alpha) {
+    *score = tt_score;
+    return true;
+  }
+
+  return false;
 }
 
 
@@ -144,10 +199,37 @@ int quiescence(int alpha,
 
   state->explored_nodes++;
 
+  // The bound the node started with. What gets stored below is exact only if
+  // the node beat it; otherwise all the search established is a ceiling.
+  const int alpha0 = alpha;
+
+  // Probed before anything is computed, so a hit pays for neither the
+  // evaluation nor the move generation. TT_DEPTH_QS is below every entry in
+  // the table, so this accepts a main-search entry as well as its own -- a
+  // node searched with quiet moves has seen strictly more than this one needs.
+  // The main search asks for its own depth and therefore accepts none of
+  // these. S094.
+  //
+  // No PV guard, unlike negamax's probe. Quiescence is below the reported
+  // line: negamax clears pv_length[ply] and returns this score without
+  // touching the PV table, so there is no line here for a cutoff to chop.
+  {
+    int tt_score = 0;
+
+    if (tt_entry_answers(tt_get_entry(state->tt, &game->board), TT_DEPTH_QS,
+                         ply, alpha, beta, &tt_score)) {
+      return tt_score;
+    }
+  }
+
   // Lazy: quiescence is where the evaluation is called most, and most of those
   // nodes are nowhere near the window. S034.
   const int stand_pat = evaluate_lazy(&game->board, alpha, beta);
 
+  // Nothing below this line is stored when the search is being abandoned or
+  // truncated. An aborted node has no score, and a node that gave up on the
+  // ply cap returns a static number in place of a search - both would be read
+  // back later as though a search had produced them.
   if (check_limits(state)) { return stand_pat; }
   if (ply + 1 >= MAX_PLY) { return stand_pat; }
 
@@ -157,7 +239,16 @@ int quiescence(int alpha,
   // check: the side to move is forced to reply. So no early return on the
   // static score, and every evasion is searched rather than only the captures.
   if (!in_check) {
-    if (stand_pat >= beta) { return stand_pat; }
+    if (stand_pat >= beta) {
+      // The most common thing quiescence ever concludes, and it is worth
+      // keeping: evaluate_lazy() returns a genuine lower bound on this branch,
+      // and the option to stand pat makes it a lower bound on the node too,
+      // whatever the ply cap does below. There is no move to record with it.
+      tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
+                     normalize_score(stand_pat, ply), TT_BETA_NODE, 0);
+      return stand_pat;
+    }
+
     if (stand_pat > alpha) { alpha = stand_pat; }
   }
 
@@ -214,6 +305,10 @@ int quiescence(int alpha,
   int best_value = in_check ? MIN : stand_pat;
   int legal_moves = 0;
 
+  // Left at zero until a move actually beats what standing pat already gave,
+  // so a node that stood pat stores no move rather than an arbitrary one.
+  move_t best_move = 0;
+
   for (size_t i = 0; i < count; ++i) {
     pick_next_move(moves, scores, count, i);
 
@@ -228,16 +323,42 @@ int quiescence(int alpha,
 
     if (state->aborted) { return stand_pat; }
 
-    if (score >= beta) { return score; }
-    if (score > best_value) { best_value = score; }
+    if (score >= beta) {
+      tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
+                     normalize_score(score, ply), TT_BETA_NODE, moves[i]);
+      return score;
+    }
+
+    if (score > best_value) {
+      best_value = score;
+      best_move = moves[i];
+    }
+
     if (score > alpha) { alpha = score; }
   }
 
   // No legal reply to a check is mate. "No captures available" says nothing of
   // the sort, which is why this is guarded by in_check.
   if (in_check && legal_moves == 0) {
-    return -(MATE_MAX - static_cast<int>(ply));
+    const int mated = -(MATE_MAX - static_cast<int>(ply));
+
+    // Exact, and no truncation is hiding in it: there is no legal move, so
+    // there was nothing below this node to cut short. Stored normalised, which
+    // makes it -MATE_MAX in the table - "mated here" - and turns back into the
+    // right distance at whatever ply reads it.
+    tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
+                   normalize_score(mated, ply), TT_PV_NODE, 0);
+    return mated;
   }
+
+  // Exact only if something beat the bound this node was given; below it all
+  // that was established is a ceiling. The value is what quiescence resolves
+  // to and not what a full search would, since the losing captures were
+  // declined - but that is the number this node already hands its parent, so
+  // storing it adds no claim the search was not making already.
+  tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
+                 normalize_score(best_value, ply),
+                 (best_value > alpha0) ? TT_PV_NODE : TT_ALPHA_NODE, best_move);
 
   return best_value;
 }
@@ -298,13 +419,10 @@ int negamax(int alpha0,
   // the move is wanted for ordering even when no cutoff is taken.
   const move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
 
-  if (!is_pv && ply > 0 && tt_entry != nullptr && tt_entry->depth >= depth) {
-    const int tt_score = de_normalize_score(tt_entry->score, ply);
-    if (tt_entry->type == TT_PV_NODE) {
-      return tt_score;
-    } else if (tt_entry->type == TT_BETA_NODE && tt_score >= beta) {
-      return tt_score;
-    } else if (tt_entry->type == TT_ALPHA_NODE && tt_score <= alpha) {
+  if (!is_pv && ply > 0) {
+    int tt_score = 0;
+
+    if (tt_entry_answers(tt_entry, depth, ply, alpha, beta, &tt_score)) {
       return tt_score;
     }
   }

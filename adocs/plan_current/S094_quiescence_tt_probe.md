@@ -24,3 +24,4 @@ The entry layout is shared with the main search. Widening it changes how many
 entries fit a bucket and therefore the replacement behaviour, which alters play
 on its own. The step measures the layout change and the use of the new field
 separately, or states why it could not.
+author:    Maksym Bodnar
