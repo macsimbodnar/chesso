@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S087 an absolute rating for chesso on the CCRL Blitz scale, with an interval and a measured anchor sensitivity
-- Next: S087
+- In progress: none
+- Next: S060
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing

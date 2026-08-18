@@ -214,7 +214,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-53. S075  the tuner fits a blend of the search score and the game result, the corpus column that is written and never read
 54. S076  the fit runs on a corpus deduplicated by zobrist key, so a repeated position stops carrying repeated weight
 55. S077  an emitted table names the engine commit and the corpus hash it was fitted from
 56. S078  S060 points at the mate-inside-the-pruned-depth test S033 added, and S061's citation names the case it means

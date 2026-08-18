@@ -536,6 +536,16 @@ hide behind an unanticipated spelling. On any hit it prints
 The run ends with `RATING-RUN-DONE <mode> <OK|INVALID> <outdir>` as its last
 line, which is the terminal marker a watcher exits on. DEC-061.
 
+**The interval is set by game count and the anchor spread is not.** 1336 games
+gave ±34; 2672 gave ±25. Run twice and concatenate the PGNs when one run is not
+tight enough — `ordo` takes the combined file, and both runs must use the same
+binaries and the same time control. No number of games narrows a disagreement
+between the references themselves; that is what the anchor sweep reports.
+
+**Last result: chesso ≈ 2570 CCRL Blitz, ±25, soft** (2026-08-18, 2672 games at
+`10+0.2`). Record and caveats in
+`adocs/data/rating_2026-08-18_ccrl_blitz.md`.
+
 ## Analyse a game
 
 Never by reading it. See `CLAUDE.md` and DEC-023.

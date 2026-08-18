@@ -1,0 +1,86 @@
+# Combined solve, S087_rated1.pgn + S087_rated2.pgn, 2672 games
+# ordo 1.2.6 -s 1000 -F 95 -W -D, one solve per anchor
+
+--- anchored at 2389 ---
+
+   # PLAYER           :  RATING  ERROR  POINTS  PLAYED   (%)
+   1 Leorik 2.4       :  2812.7   38.4   540.0     668    81
+   2 Blunder 8.5.5    :  2648.7   35.2   417.0     668    62
+   3 Leorik 2.1       :  2634.8   35.4   404.5     668    61
+   4 chesso           :  2559.3   25.5  1126.5    2672    42
+   5 Blunder 7.1.0    :  2389.0   ----   184.0     668    28
+
+White advantage = 25.57 +/- 6.46
+Draw rate (equal opponents) = 21.94 % +/- 0.88
+
+
+--- anchored at 2568 ---
+
+   # PLAYER           :  RATING  ERROR  POINTS  PLAYED   (%)
+   1 Leorik 2.4       :  2745.9   37.1   540.0     668    81
+   2 Blunder 8.5.5    :  2581.9   34.2   417.0     668    62
+   3 Leorik 2.1       :  2568.0   ----   404.5     668    61
+   4 chesso           :  2492.5   24.1  1126.5    2672    42
+   5 Blunder 7.1.0    :  2322.2   35.4   184.0     668    28
+
+White advantage = 25.57 +/- 6.46
+Draw rate (equal opponents) = 21.94 % +/- 0.88
+
+
+--- anchored at 2664 ---
+
+   # PLAYER           :  RATING  ERROR  POINTS  PLAYED   (%)
+   1 Leorik 2.4       :  2828.0   37.6   540.0     668    81
+   2 Blunder 8.5.5    :  2664.0   ----   417.0     668    62
+   3 Leorik 2.1       :  2650.1   34.2   404.5     668    61
+   4 chesso           :  2574.6   24.4  1126.5    2672    42
+   5 Blunder 7.1.0    :  2404.3   35.2   184.0     668    28
+
+White advantage = 25.57 +/- 6.46
+Draw rate (equal opponents) = 21.94 % +/- 0.88
+
+
+--- anchored at 2829 ---
+
+   # PLAYER           :  RATING  ERROR  POINTS  PLAYED   (%)
+   1 Leorik 2.4       :  2829.0   ----   540.0     668    81
+   2 Blunder 8.5.5    :  2665.0   37.6   417.0     668    62
+   3 Leorik 2.1       :  2651.1   37.1   404.5     668    61
+   4 chesso           :  2575.6   28.3  1126.5    2672    42
+   5 Blunder 7.1.0    :  2405.3   38.4   184.0     668    28
+
+White advantage = 25.57 +/- 6.46
+Draw rate (equal opponents) = 21.94 % +/- 0.88
+
+
+--- head to head, anchored Blunder 8.5.5 ---
+Head to head statistics:
+
+1) Leorik 2.4    2828.0 :    668 (+486,=108,-74),  80.8 %
+
+   vs.                  :  games (   +,   =,  -),   (%) :    Diff
+   chesso               :    668 ( 486, 108, 74),  80.8 :  +253.4
+
+2) Blunder 8.5.5 2664.0 :    668 (+342,=150,-176),  62.4 %
+
+   vs.                  :  games (   +,   =,   -),   (%) :    Diff
+   chesso               :    668 ( 342, 150, 176),  62.4 :   +89.4
+
+3) Leorik 2.1    2650.1 :    668 (+332,=145,-191),  60.6 %
+
+   vs.                  :  games (   +,   =,   -),   (%) :    Diff
+   chesso               :    668 ( 332, 145, 191),  60.6 :   +75.5
+
+4) chesso        2574.6 :   2672 (+869,=515,-1288),  42.2 %
+
+   vs.                  :  games (   +,   =,    -),   (%) :    Diff
+   Leorik 2.4           :    668 (  74, 108,  486),  19.2 :  -253.4
+   Blunder 8.5.5        :    668 ( 176, 150,  342),  37.6 :   -89.4
+   Leorik 2.1           :    668 ( 191, 145,  332),  39.4 :   -75.5
+   Blunder 7.1.0        :    668 ( 428, 112,  128),  72.5 :  +170.3
+
+5) Blunder 7.1.0 2404.3 :    668 (+128,=112,-428),  27.5 %
+
+   vs.                  :  games (   +,   =,   -),   (%) :    Diff
+   chesso               :    668 ( 128, 112, 428),  27.5 :  -170.3
+

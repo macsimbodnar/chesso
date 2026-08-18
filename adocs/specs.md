@@ -14,6 +14,16 @@ Phase one is to reach the level the published literature describes, by reading
 documented technique and implementing it here. Phase two is to experiment.
 `adocs/plan.md` is phase one. DEC-014.
 
+**Measured strength, for the first time, 2026-08-18: chesso is approximately
+2570 on the CCRL Blitz scale, 95 % ±25, and the figure is soft.** Soft because
+the reference set disagrees internally by 83 Elo, above the 30 the procedure
+allows; approximate because the games were played at `10+0.2` rather than the
+list's time control. 2672 games against four rated engines, solved with `ordo`
+anchored on each in turn. `adocs/data/rating_2026-08-18_ccrl_blitz.md` is the
+record and `./rating.sh` re-derives it. S087, DEC-067 to DEC-069. Before this
+every strength figure in the project was a delta against an earlier chesso and
+the distance to the goal above was unknown.
+
 ## Prime directive
 
 Chesso never plays or accepts an illegal move and never corrupts its own board

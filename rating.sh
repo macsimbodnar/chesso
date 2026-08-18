@@ -71,9 +71,16 @@ command -v ordo > /dev/null || fail "ordo not on PATH"
 # 3.99.36`, has no published rating, and would have been anchored at the tag
 # build's 1792. A gauntlet whose opponent is not the engine the anchor belongs
 # to produces a number that looks fine and means nothing.
+# `|| true` is not swallowing an error, it is the point. Not every engine exits
+# on `quit` -- Blunder 8.5.5 does not -- so `timeout` returns 124 for a probe
+# that in fact succeeded and printed the name. Under `set -euo pipefail` that
+# 124 propagates out of the command substitution and kills the script with no
+# message and a zero-byte log, which is exactly what it did before this line
+# read the way it does now. The probe's real result is the string, and an empty
+# string is checked for by the caller.
 identify() {
-  printf 'uci\nquit\n' | timeout 15 "$1" 2> /dev/null \
-    | sed -n 's/^id name //p' | head -1 | tr -d '\r'
+  { printf 'uci\nquit\n' | timeout -k 1 5 "$1" 2> /dev/null \
+    | sed -n 's/^id name //p' | head -1 | tr -d '\r'; } || true
 }
 
 names=()
@@ -84,6 +91,7 @@ while IFS=$'\t' read -r uci_name binary ccrl_name _source _tag _md5; do
   [[ -z "${uci_name:-}" || "${uci_name:0:1}" == "#" ]] && continue
   [[ -x "$binary" ]] || fail "manifest names $binary, which is not executable"
   got="$(identify "$binary")"
+  [[ -n "$got" ]] || fail "$binary printed no 'id name' line within 5s of 'uci'"
   [[ "$got" == "$uci_name" ]] \
     || fail "$binary says 'id name $got', manifest says '$uci_name'"
   names+=("$uci_name")

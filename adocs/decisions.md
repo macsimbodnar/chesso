@@ -3670,3 +3670,85 @@ Consequences: DEC-067's provisional set is superseded by this entry, and its
               shows the references disagreeing with each other; it cannot show
               them jointly wrong. A fourth family is owed before the figure is
               quoted outside this repository.
+
+## DEC-069  2026-08-18  the agent builds the reference engines, they live in /home/max/ws/engines, and Leorik comes as a release binary
+Tags:         measurement, rating, gauntlet, references, toolchain, s087, dec-067, dec-068
+
+Context:      DEC-067 decision 5 made the reference builds the owner's, by the
+              owner's choice rather than by a rule. After bracketing run 1
+              failed -- the whole set was too weak, chesso scored 90.4 % against
+              the strongest of it -- the owner granted the builds to the agent:
+              "you can build the engines and at the version that you prefer".
+
+              Two facts on this machine constrain how that is done, both
+              measured rather than assumed:
+
+              **`sudo` requires a password**, so the agent cannot install into
+              `/usr/games` where DEC-067 decision 1 put the binaries.
+
+              **There is no .NET SDK.** `~/.dotnet` exists but holds only
+              `corefx`; there is no `dotnet` on `PATH` or anywhere under a
+              four-level search from `/`. Leorik is C#. `CLAUDE.md` forbids the
+              agent adding a dependency on its own, and an SDK is a dependency.
+
+Decision:     **The agent builds and places the reference engines under
+              `/home/max/ws/engines/`, and `references.tsv` points there.**
+              Granted by the owner; the constraints and this entry are the
+              agent's. DEC-067 decision 5 is superseded and its decision 1 is
+              narrowed to its principle -- nothing third-party in this
+              repository -- rather than to the `/usr/games` path.
+
+              **Blunder is built from source**, in `git worktree` checkouts off
+              `/home/max/ws/blunder` so that clone stays at `v5.0.0` and the
+              record of what bracketing run 1 played does not move under it.
+
+              **Leorik is the project's official `linux-x64` release binary**,
+              downloaded from its GitHub releases. The specification prefers
+              source "where practical" because a release may be built for
+              another microarchitecture; a .NET self-contained publish targets a
+              baseline rather than the host, so that concern is materially
+              weaker here than it would be for a C++ engine, and the alternative
+              is an SDK the agent may not install.
+
+              **The set is Blunder 7.1.0 (2389), Leorik 2.1 (2568), Blunder
+              8.5.5 (2664) and Leorik 2.4 (2829)**, CCRL Blitz, read 2026-08-17.
+              Four rungs, two families, spanning 440 Elo, chosen to bracket from
+              both sides an engine that beat 2102 at 90.4 %.
+
+Rejected:     **Installing into `/usr/games`.** It needs a password the agent
+              does not have. Not a preference -- the owner's own placement from
+              DEC-067 stands for binaries the owner installs.
+
+              **Installing the .NET SDK to build Leorik from source.**
+              `CLAUDE.md`: never add a dependency on your own. The release
+              binary answers `id name Leorik 2.1` and `Leorik 2.4`, which is
+              what the anchor needs.
+
+              **Keeping any of bracketing run 1's engines.** Leorik 1.0 at 2102
+              is the strongest of them and chesso scored 90.4 % against it, so
+              it is at the edge of the usable range and would spend games in the
+              tail. Rustic leaves at any tag: its strongest rated build is
+              Alpha 3.0.0 at 1792.
+
+              **Blunder 6.1.0 at 2107 and Blunder 7.4.0 at 2521.** The first
+              adds nothing over Leorik 1.0; the second sits between two rungs
+              already present and buys resolution the interval does not need.
+
+Consequences: The reference set is now four engines the agent can rebuild from
+              one command each, and `references.tsv` records the tag, the source
+              and the `md5` of every one. `/usr/games` still holds the owner's
+              original three; nothing removes them and nothing in this
+              repository points at them any more.
+
+              If bracketing run 2 also fails high, the next rungs are Leorik 2.5
+              at 2917 and Leorik 3.0 at 3266, both release binaries, both one
+              download.
+
+              Found while doing this and fixed in the same commit: `rating.sh`
+              probed each engine with `timeout 15`, and **Blunder 8.5.5 does not
+              exit on `quit`**. `timeout` then returned 124 for a probe that had
+              already printed the name, and under `set -euo pipefail` that 124
+              propagated out of the command substitution and killed the script
+              with no message and a zero-byte log. The probe now tolerates a
+              non-exiting engine and the caller checks for an empty name
+              instead, which is a real check rather than a swallowed error.

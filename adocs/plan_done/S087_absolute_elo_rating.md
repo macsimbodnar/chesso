@@ -7,7 +7,7 @@ decisions:  DEC-067, DEC-068
 closes:
 blocks:
 paused_by:
-done:
+done:      chesso ~= 2570 CCRL Blitz, 95 % +/-25, SOFT: 2672 rated games at 10+0.2 over four rated engines, anchor spread 83.1 Elo isolated to Leorik 2.1, 0 time forfeits in 3148 games. Full suite 19/19. Record adocs/data/rating_2026-08-18_ccrl_blitz.md
 
 ## Why this exists
 
@@ -224,6 +224,67 @@ Rustic is out of the set at any tag: its strongest rated build is Alpha 3.0.0 at
 1792. That retires both of this step's open Rustic questions — the wrong
 installed binary and the 3.0.6-versus-3.0.0 anchor gap — without either being
 answered, since neither engine is in the set any more.
+
+### Bracketing run 2: PASSED
+
+Run on 2026-08-18 against the DEC-069 set, 272 games, `10+0.2`, `Hash=64`,
+concurrency 12, 12 m 33 s. Evidence: `adocs/data/S087_bracket2.pgn`,
+`adocs/data/S087_bracket2_h2h.txt`.
+
+**Zero time forfeits** again: 228 `adjudication`, 44 `normal`, nothing else, no
+disconnect lines. Two runs, 476 games, no forfeit at concurrency 12.
+
+| reference | CCRL Blitz | games | chesso score |
+|---|---|---|---|
+| Leorik 2.4 | 2829 | 68 | **22.8 %** |
+| Blunder 8.5.5 | 2664 | 68 | 42.6 % |
+| Leorik 2.1 | 2568 | 68 | 36.0 % |
+| Blunder 7.1.0 | 2389 | 68 | **75.0 %** |
+
+Overall 44.1 % over 272 games, +92 =56 -124.
+
+**The gate passes in both directions.** 22.8 % against the strongest is well
+above 10 %; 75.0 % against the weakest is well below 90 %. No score is in the
+tail, so a rated run on this set is worth its hour.
+
+**One disagreement inside the reference set, visible before the solve.** chesso
+scores **42.6 % against Blunder 8.5.5 (2664)** and **36.0 % against Leorik 2.1
+(2568)** — better against the engine CCRL rates 96 points higher. On 68 games
+each that is within reach of noise, but it is the shape the anchor sweep exists
+to quantify: the references do not agree with each other about where chesso
+sits, and which one is anchored will move the answer. Recorded now so the sweep
+is read as a measurement of that, not as a formality.
+
+### The rated run, and the answer
+
+**chesso ≈ 2570 on the CCRL Blitz scale, 95 % ±25, reported SOFT.** Full write-up
+in `adocs/data/rating_2026-08-18_ccrl_blitz.md`; evidence in the four PGNs and
+`S087_combined_solve.txt` beside it.
+
+Two runs of 1336 games at `10+0.2`, 1 h 00 m each, combined to **2672**. Zero
+time forfeits across all 2672 — 2258 `adjudication`, 414 `normal`, nothing else.
+
+| anchor | CCRL | chesso | 95 % |
+|---|---|---|---|
+| Blunder 7.1.0 | 2389 | 2559.3 | ±25.5 |
+| Leorik 2.1 | 2568 | **2492.5** | ±24.1 |
+| Blunder 8.5.5 | 2664 | 2574.6 | ±24.4 |
+| Leorik 2.4 | 2829 | 2575.6 | ±28.3 |
+
+**The first 1336 games did not meet the interval criterion** — best ±34.0
+against the ±30 required — so the run was repeated and the PGNs combined rather
+than the criterion being quietly relaxed. At 2672 games every interval is inside
+±28.3.
+
+**The anchor-stability criterion failed and no game count fixes it.** Spread
+83.1 Elo against the ~30 allowed, so the result is soft *by the criterion's own
+instruction*. The cause is isolated rather than shrugged at: Blunder 7.1.0,
+Blunder 8.5.5 and Leorik 2.4 reproduce each other's CCRL ratings to within 16
+Elo across a 440-point span, while **Leorik 2.1 comes out about 82 Elo above its
+listed rating** whichever of the others is anchored. Six standard errors at 668
+games per pairing, so not noise; and not an ordo-versus-bayeselo scale artifact
+either, since a scale mismatch would grow monotonically with rating distance and
+the two extreme anchors agree to 16 Elo while the dissent sits mid-range.
 
 ### Engine options
 
