@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <bit>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -833,6 +834,63 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
+  // The entry carries the static evaluation the node was scored with, and
+  // carries it only where that number is the score rather than the bound the
+  // lazy shortcut returns in its place. A bound is true on one side of one
+  // window; the entry outlives the window. S094.
+  TEST_CASE_FIXTURE(
+      search_fixture_t,
+      "a quiescence entry carries the static score, never a bound")
+  {
+    // White is a rook up with nothing to capture, so quiescence stands pat and
+    // the number stored is the static evaluation of this position and nothing
+    // else. The two anchors are `a quiet position stands pat`'s, re-derived by
+    // .tuning/anchors.py from the specification rather than read off the
+    // engine.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    const int cheap_score = evaluate_cheap(&game.board);
+    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(cheap_score, 567);
+
+    static std::atomic_bool never_stop = false;
+
+    auto run = [&](int alpha, int beta) -> const tt_entry_t* {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+      tt_reset(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      quiescence(alpha, beta, 0, 0, &game, &state);
+
+      return tt_get_entry(&tt, &game.board);
+    };
+
+    // A window wide enough that the shortcut cannot fire: the score is the
+    // score, and it is what the entry holds.
+    const tt_entry_t* wide = run(-10000, 10000);
+    REQUIRE(wide != nullptr);
+    REQUIRE_EQ(wide->eval, static_score);
+
+    // The precondition for the other half, and without it the assertion below
+    // would pass on a build where the shortcut never fires at all.
+    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
+
+    // Beta far enough below that the expensive terms are never computed. What
+    // quiescence returned is a lower bound and not this position's score, so
+    // there is nothing here worth recording.
+    const tt_entry_t* narrow = run(0, 100);
+    REQUIRE(narrow != nullptr);
+    REQUIRE_EQ(narrow->type, TT_BETA_NODE);
+    REQUIRE_EQ(narrow->eval, TT_EVAL_NONE);
+  }
+
+
   // Without this, a quiescence that never stored anything would pass every
   // other case in this file.
   TEST_CASE_FIXTURE(search_fixture_t, "quiescence writes entries of its own")
@@ -1293,7 +1351,7 @@ TEST_SUITE("transposition table: storage")
     tt_new_search(&table);
 
     const board_t board = board_keyed(0x0123456789abcdefULL);
-    tt_store_entry(&table, &board, 7, -1234, TT_BETA_NODE, 0xabcd);
+    tt_store_entry(&table, &board, 7, -1234, TT_BETA_NODE, 0xabcd, 77);
 
     const tt_entry_t* entry = tt_get_entry(&table, &board);
 
@@ -1303,6 +1361,41 @@ TEST_SUITE("transposition table: storage")
     REQUIRE_EQ(entry->score, -1234);
     REQUIRE_EQ(entry->type, TT_BETA_NODE);
     REQUIRE_EQ(entry->best_move, 0xabcd);
+    REQUIRE_EQ(entry->eval, 77);
+
+    // A caller that never had a static score says so, and the sentinel is not
+    // a score anything could have produced. S094.
+    const board_t plain = board_keyed(0x0123456789abcdeeULL);
+    tt_store_entry(&table, &plain, 7, -1234, TT_BETA_NODE, 0xabcd);
+    REQUIRE_EQ(tt_get_entry(&table, &plain)->eval, TT_EVAL_NONE);
+
+    tt_free(&table);
+  }
+
+
+  // The hazard S094 names: the entry layout is shared with the main search, so
+  // widening it could change how many entries a given Hash buys and with them
+  // the replacement behaviour, which alters play on its own. It does not, and
+  // this is the measurement rather than the argument.
+  TEST_CASE("the static evaluation field costs no table entries")
+  {
+    // 20 bytes of content in 24 before the field, 22 in 24 after: it lands in
+    // padding the key's alignment was already reserving.
+    REQUIRE_EQ(sizeof(tt_entry_t), 24u);
+
+    // And the count is floored to a power of two, which absorbs the entry size
+    // entirely over the range this struct can plausibly occupy. Asserted at
+    // both ends of the range so the claim is about the flooring and not about
+    // one lucky size: 24 and 32 bytes an entry buy the same 131072 entries out
+    // of 4 MB, because 4 MB / 32 is already a power of two and 4 MB / 24 sits
+    // between it and the next one up.
+    transposition_table_t table = {};
+    tt_resize(&table, 4);
+
+    REQUIRE_EQ(table.entry_count, 131072u);
+    REQUIRE_EQ(std::bit_floor((4u * 1024 * 1024) / 32u), table.entry_count);
+    REQUIRE_EQ(std::bit_floor((4u * 1024 * 1024) / sizeof(tt_entry_t)),
+               table.entry_count);
 
     tt_free(&table);
   }

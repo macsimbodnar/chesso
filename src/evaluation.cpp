@@ -1022,9 +1022,13 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 }
 
 
-int evaluate_lazy(const board_t* board, int alpha, int beta)
+int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
 {
   const int cheap = evaluate_cheap(board);
+
+  // Set on both shortcut paths before either returns, so a caller reading it
+  // after a bound sees false rather than whatever it initialised.
+  if (exact != nullptr) { *exact = false; }
 
   // Both tests are one-sided on purpose. If the cheap score is already a
   // margin clear of beta then the full score is above beta too, so the caller
@@ -1034,6 +1038,11 @@ int evaluate_lazy(const board_t* board, int alpha, int beta)
   if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
   if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
 
+  if (exact != nullptr) { *exact = true; }
+
+  // Identical to evaluate() by construction: that function is these two terms
+  // added, so the number kept here is the static evaluation and not an
+  // approximation of it.
   return cheap + evaluate_expensive(board);
 }
 

@@ -32,7 +32,18 @@ int evaluate_cheap(const board_t* board);
 // that the true score is within a margin of it, so cheap can be up to
 // LAZY_EVAL_MARGIN better than the truth. Over the 2696 test positions the old
 // form claimed a bound it did not have on 2613 of them.
-int evaluate_lazy(const board_t* board, int alpha, int beta);
+//
+// `exact`, when a caller passes one, says which of the two it got: true for the
+// score, false for a bound the shortcut returned in its place. A caller that
+// only compares the number against its own window does not care -- both answers
+// decide the same way, which is the whole argument above. A caller that wants
+// to *keep* the number does: a bound is a true statement only on the side of
+// the window it was taken at, and anywhere it is read back from, the window
+// will be a different one. S094.
+int evaluate_lazy(const board_t* board,
+                  int alpha,
+                  int beta,
+                  bool* exact = nullptr);
 
 // The mobility weights, per piece type in knight, bishop, rook, queen order.
 // Exposed so that the tuner's model in tools/eval_model.hpp can start from what

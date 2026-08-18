@@ -344,6 +344,57 @@ TEST_SUITE("evaluation: score")
     REQUIRE(worst > 0);
   }
 
+  // A caller that keeps the number instead of only comparing it has to know
+  // which of the two it got, because a bound is true on one side of one window
+  // and a stored number is read back from other windows. The transposition
+  // entry's static evaluation is that caller. S094.
+  TEST_CASE_FIXTURE(eval_fixture_t, "the shortcut says when it took one")
+  {
+    size_t checked = 0;
+    size_t exact_runs = 0;
+    size_t bound_runs = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      const int full = evaluate(&game.board);
+      const int cheap = evaluate_cheap(&game.board);
+
+      // A window that contains the score. The flag says exact and the number
+      // is the one evaluate() returns, which is what makes it worth storing.
+      bool exact = false;
+      const int inside =
+          evaluate_lazy(&game.board, full - 1000, full + 1000, &exact);
+
+      REQUIRE_MESSAGE(exact, ("FEN: " + fen));
+      REQUIRE_MESSAGE(inside == full, ("FEN: " + fen));
+      exact_runs++;
+
+      // Both shortcut branches, and the flag has to be false on each. It is
+      // initialised true here on purpose: a function that never wrote it would
+      // pass on a variable that happened to start out right.
+      const int beta = cheap - LAZY_EVAL_MARGIN;
+      exact = true;
+      evaluate_lazy(&game.board, beta - 1000, beta, &exact);
+      REQUIRE_MESSAGE(!exact, ("FEN: " + fen + " at beta"));
+
+      const int alpha = cheap + LAZY_EVAL_MARGIN;
+      exact = true;
+      evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
+      REQUIRE_MESSAGE(!exact, ("FEN: " + fen + " at alpha"));
+      bound_runs++;
+
+      checked++;
+    }
+
+    REQUIRE(checked > 100);
+
+    // Non-vacuous by construction: both answers have to occur, or the case
+    // would pass on a flag stuck at either value.
+    REQUIRE(exact_runs > 0);
+    REQUIRE(bound_runs > 0);
+  }
+
   // The case above is about the decision the caller takes. This one is about
   // the number it carries away, and a shortcut can be right about the first and
   // wrong about the second.

@@ -224,7 +224,15 @@ int quiescence(int alpha,
 
   // Lazy: quiescence is where the evaluation is called most, and most of those
   // nodes are nowhere near the window. S034.
-  const int stand_pat = evaluate_lazy(&game->board, alpha, beta);
+  bool stand_pat_is_exact = false;
+  const int stand_pat =
+      evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);
+
+  // Only a number the shortcut did not replace with a bound is worth keeping:
+  // a bound holds on one side of one window and this entry will be read from
+  // others. Every store below carries it, so a later reader finds the static
+  // score wherever this node had one. Nothing reads it yet. S094.
+  const int stored_eval = stand_pat_is_exact ? stand_pat : TT_EVAL_NONE;
 
   // Nothing below this line is stored when the search is being abandoned or
   // truncated. An aborted node has no score, and a node that gave up on the
@@ -245,7 +253,8 @@ int quiescence(int alpha,
       // and the option to stand pat makes it a lower bound on the node too,
       // whatever the ply cap does below. There is no move to record with it.
       tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
-                     normalize_score(stand_pat, ply), TT_BETA_NODE, 0);
+                     normalize_score(stand_pat, ply), TT_BETA_NODE, 0,
+                     stored_eval);
       return stand_pat;
     }
 
@@ -325,7 +334,8 @@ int quiescence(int alpha,
 
     if (score >= beta) {
       tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
-                     normalize_score(score, ply), TT_BETA_NODE, moves[i]);
+                     normalize_score(score, ply), TT_BETA_NODE, moves[i],
+                     stored_eval);
       return score;
     }
 
@@ -347,7 +357,7 @@ int quiescence(int alpha,
     // makes it -MATE_MAX in the table - "mated here" - and turns back into the
     // right distance at whatever ply reads it.
     tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
-                   normalize_score(mated, ply), TT_PV_NODE, 0);
+                   normalize_score(mated, ply), TT_PV_NODE, 0, stored_eval);
     return mated;
   }
 
@@ -358,7 +368,8 @@ int quiescence(int alpha,
   // storing it adds no claim the search was not making already.
   tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
                  normalize_score(best_value, ply),
-                 (best_value > alpha0) ? TT_PV_NODE : TT_ALPHA_NODE, best_move);
+                 (best_value > alpha0) ? TT_PV_NODE : TT_ALPHA_NODE, best_move,
+                 stored_eval);
 
   return best_value;
 }
@@ -433,6 +444,13 @@ int negamax(int alpha0,
   // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
 
+  // The static evaluation of this node, where one was computed. Reverse
+  // futility below is the only place the main search asks for one, so this
+  // stays TT_EVAL_NONE at every other node rather than a call being added to
+  // fill it in -- adding one would be exactly the recomputation INV-4 exists
+  // to keep out of the hot path. Stored with the entry, read by nothing. S094.
+  int static_eval = TT_EVAL_NONE;
+
   // Reverse futility pruning, also called static null move pruning. The null
   // move observation without the null move: if the static score is so far
   // above beta that the opponent cannot claw the difference back in the plies
@@ -469,6 +487,8 @@ int negamax(int alpha0,
       depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
     const int static_score = evaluate(&game->board);
+
+    static_eval = static_score;
 
     // Fail soft, and the bound returned is the one actually argued for: the
     // static score minus everything the opponent was assumed able to win back.
@@ -750,7 +770,8 @@ int negamax(int alpha0,
   }
 
   const int to_store = normalize_score(best_so_far, ply);
-  tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move);
+  tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
+                 static_eval);
 
   return best_so_far;
 }

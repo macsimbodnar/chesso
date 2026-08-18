@@ -378,12 +378,35 @@ enum node_type_t
 };
 
 
+// No static evaluation was recorded with this entry, so a consumer has to
+// compute one or do without. INT16_MIN and not 0, because 0 is an ordinary
+// score: a balanced position evaluates to it several times a search.
+#define TT_EVAL_NONE INT16_MIN
+
 struct tt_entry_t
 {
   uint64_t key;
   int32_t score;
   move_t best_move;
   int16_t depth;
+
+  // The static evaluation of this position, or TT_EVAL_NONE where the node
+  // that wrote the entry never had one to record. Not the same number as
+  // `score`, which is what the search returned; this is what the position was
+  // worth before anything below it was looked at. S094.
+  //
+  // Free in space. The struct is 8-byte aligned for the key and was 20 bytes
+  // of content in 24, so this lands in padding that was already being paid
+  // for: sizeof(tt_entry_t) is 24 before and after, and the entry count for a
+  // given Hash is untouched. tt_resize() floors that count to a power of two
+  // as well, so anything from 17 to 32 bytes an entry would have produced the
+  // same count regardless.
+  //
+  // 16 bits is not a constraint anything real approaches. evaluate() is
+  // material plus tapered tables, and a board of nine queens comes to a few
+  // thousand centipawns against the 32767 this holds.
+  int16_t eval;
+
   uint8_t type;        // node_type_t
   uint8_t generation;  // search that wrote it; 0 means never written
 };

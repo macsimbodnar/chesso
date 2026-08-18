@@ -109,7 +109,8 @@ void tt_store_entry(transposition_table_t* tt,
                     int depth,
                     int score,
                     node_type_t type,
-                    move_t best_move)
+                    move_t best_move,
+                    int eval)
 {
   assert(tt != nullptr);
   assert(board != nullptr);
@@ -125,6 +126,18 @@ void tt_store_entry(transposition_table_t* tt,
     entry->score = score;
     entry->best_move = best_move;
     entry->depth = static_cast<int16_t>(depth);
+
+    // Clamped rather than truncated, and asserted rather than trusted. Nothing
+    // the evaluation can return comes near the bound (see tt_entry_t), so the
+    // clamp is there to make a future term that does a wrong score instead of
+    // a wrapped one.
+    assert(eval == TT_EVAL_NONE || (eval > TT_EVAL_NONE && eval <= INT16_MAX));
+    entry->eval =
+        (eval == TT_EVAL_NONE)
+            ? static_cast<int16_t>(TT_EVAL_NONE)
+            : static_cast<int16_t>(std::clamp(eval, TT_EVAL_NONE + 1,
+                                              static_cast<int>(INT16_MAX)));
+
     entry->type = static_cast<uint8_t>(type);
     entry->generation = tt->generation;
   }
