@@ -1,0 +1,36 @@
+mode        rated
+candidate   c2f1c43 + uncommitted changes
+opponents   Blunder 7.1.0 Leorik 2.1 Blunder 8.5.5 Stash v21.0 Leorik 2.4
+tc 10+0.2  hash 64MB  concurrency 12 of 12 cores
+rounds 334  -> 3340 games
+book        8moves_v3.pgn
+output      /tmp/chesso_rating_rated_S088
+
+Indexing opening suite...
+=== terminations ===
+   2829 [Termination "adjudication"]
+    508 [Termination "normal"]
+      3 [Termination "time forfeit"]
+
+=== the three time forfeits, all Stash v21.0 ===
+[WARN  ] [13:40:30.386047] <     130726743758528> fastchess --- Engine Stash v21.0 loses on time by 1118ms
+[WARN  ] [13:53:25.158358] <     130726615819968> fastchess --- Engine Stash v21.0 loses on time by 1309ms
+[WARN  ] [14:02:58.960071] <     130726640998080> fastchess --- Engine Stash v21.0 loses on time by 149ms
+
+[Round "619"]
+[White "Stash v21.0"]
+[Black "chesso"]
+[Result "0-1"]
+
+[Round "774"]
+[White "chesso"]
+[Black "Stash v21.0"]
+[Result "1-0"]
+
+[Round "884"]
+[White "chesso"]
+[Black "Stash v21.0"]
+[Result "1-0"]
+
+=== wall time ===
+Total Time: 02:27:28 (hours:minutes:seconds)

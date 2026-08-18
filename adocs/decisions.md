@@ -3983,3 +3983,569 @@ Consequences: **Fifteen new steps, S088 to S102**, all in `plan_todo/`. Fourteen
               invalidates the tuning. Eleven such changes are now queued, so
               S100 to S102 sit after them and a refit after the block is normal
               rather than a discovery.
+
+## DEC-072  2026-08-18  the third family is Stash 21.0, and the rated run is played fresh rather than spliced onto S087's
+Tags:         measurement, rating, gauntlet, references, ccrl, s088, dec-067, dec-069, dec-071
+
+Context:      S087 returned **2570 +/-25, SOFT**. The interval criterion was met;
+              the anchor-stability one was not. The spread across anchors was
+              **83.1 Elo** against the ~30 the procedure allows, and it was
+              isolated rather than diffuse: Blunder 7.1.0, Blunder 8.5.5 and
+              Leorik 2.4 reproduce each other's CCRL ratings to within 16 Elo
+              across a 440-point span, while Leorik 2.1 comes out about 82 Elo
+              above its listed rating under every other anchor -- six standard
+              errors at 668 games per pairing. **Two families cannot arbitrate a
+              disagreement between two families.**
+
+              DEC-071 then set the target at 3000, a 430 Elo climb. A finish
+              line cannot be read off an instrument 83 Elo wide, and changing
+              the reference set *during* the climb would make every reading
+              across it incomparable. So the set is fixed now and not later.
+
+              Candidates, all read from the CCRL Blitz list on 2026-08-18 (list
+              computed 2026-08-15) rather than from memory: **Stash 21.0 2713
+              +/-14**, Stash 25.0 2932 +/-18, Weiss 0.10 2847 +/-17, Weiss 1.0
+              2896 +/-18, Zurichess Neuchatel 2920 +/-9, Monolith 2 3011 +/-15.
+
+              One fact measured before deciding anything: `src/`, `tests/`,
+              `CMakeLists.txt` and `cmake/` are **byte-identical between
+              `a9f2b33`** -- S087's rated commit -- **and `c2f1c43`**, so S088
+              rates the same engine S087 rated and the two figures are directly
+              comparable rather than approximately so.
+
+Decision:     **The fifth rung and third family is Stash 21.0**, CCRL Blitz 2713
+              +/-14. Built by the agent from `gitlab.com/mhouppin/stash-bot` at
+              tag `v21.0` (`6dc8c9cd`) with the project's own
+              `utils/unix_build.sh` at `ARCH=x86-64-bmi2`, installed as
+              `/home/max/ws/engines/stash-21.0.bin`, recorded in
+              `references.tsv` with tag, source and md5 per DEC-069. Third
+              author, third language, third evaluation, so it votes on Leorik
+              2.1 independently of both incumbents.
+
+              **The rated run is a fresh 3340-game gauntlet** -- 334 rounds per
+              pairing, 668 games each, five pairings -- and `rating.sh`'s rated
+              default moves from 167 rounds to 334 to match. 668 is measured,
+              not chosen: S087 got +/-34 at 334 games per pairing and +/-24 to
+              +/-28 at 668. In a gauntlet only chesso plays everybody, so the
+              graph is a star and chesso's rating under a given anchor is fixed
+              by that one pairing alone; adding a rung adds an independent
+              estimate and narrows no existing one.
+
+              Taken by the agent, with the analysis here, under S088's own
+              delegation of the choice ("the choice is recorded in the results
+              file with the reason"), DEC-069's grant of the builds, and DEC-041.
+
+Rejected:     **Weiss 0.10 (2847), Weiss 1.0 (2896), Zurichess Neuchatel (2920),
+              Stash 25.0 (2932) and Monolith 2 (3011).** Every one sits at or
+              above 2847, at least 277 Elo above chesso's measured 2570, so
+              chesso's score against it would sit in the tail of the logistic
+              curve where the estimate is dominated by the curve rather than by
+              the games. That is the exact condition S087's bracketing run 1 was
+              rejected for, in the other direction. Zurichess is additionally
+              Go, the same language as Blunder, so it buys less independence per
+              rung than a third language does.
+
+              **Reusing S087's 2672 rated games and playing chesso against Stash
+              alone.** It costs about 30 minutes instead of two and a half
+              hours, the binary is provably the same one, and S087 itself set
+              the precedent by combining two PGNs. Refused because the run's
+              whole purpose is to arbitrate a disagreement *between references*,
+              and splicing one pairing played by itself at concurrency 12 onto
+              four pairings played interleaved introduces a per-pairing
+              difference in machine load precisely where that disagreement is
+              being measured. Buying two hours by contaminating the measurement
+              being taken is a bad trade, and `rating.sh` would have needed a
+              partial-run mode the step's `touches:` does not permit.
+
+              **Lowering `CONCURRENCY` below 12.** DEC-048 and DEC-050 stand.
+              S087 looked for forfeits in 3148 games across four runs and found
+              none; S088's bracketing run found none in 340 more. Detection
+              rather than avoidance, and one forfeit still invalidates a run.
+
+              **Adding two engines to reach four families.** One new family
+              satisfies the accepts -- at least three families, at least five
+              rungs -- and every further rung costs another 668 games, about
+              half an hour, on this run and on every milestone re-run after it.
+
+Consequences: The reference set is five engines, three families, three authors
+              and three languages, spanning 2389 to 2829 with chesso near the
+              middle. A rated run is now **3340 games and about two and a half
+              hours**, and `plan.md`'s rule that `./rating.sh` is re-run at
+              milestones costs that each time.
+
+              **Stash's md5 is an identity record and not a rebuild check.**
+              `utils/unix_build.sh` is a two-pass PGO build whose profile
+              counters vary run to run, so a rebuild from the same tag will not
+              reproduce the hash. Every other row's md5 does. `references.tsv`
+              says so at the row.
+
+              **Stash v21.0 carries a startup deadlock that cannot reach a
+              match, and it is recorded rather than assumed away.**
+              `engine_thread` parks on an unconditional `pthread_cond_wait` with
+              no predicate re-check, so a `go` arriving before the thread parks
+              loses the broadcast and the search never starts. Measured: 5/5
+              hangs from a shell `printf | engine`, 15/25 from
+              spawn-then-write-with-no-wait, **0/200 and 0/240 from anything
+              that waits for `uciok`** -- the last being 240 full GUI-paced
+              cycles at 12-way concurrency, which is the match condition.
+              fastchess waits, and `rating.sh`'s `identify()` sends only `uci`
+              and `quit`. If it ever did fire, the symptom would be a hung
+              engine scored as a time loss, which the forfeit check invalidates
+              the whole run on rather than averaging in.
+
+              **`uci_name` and `ccrl_name` differ for the first time**: the
+              binary answers `id name Stash v21.0` and the CCRL entry is `Stash
+              21.0`. Both columns already existed; this is the first row that
+              needs them apart, and the identity guard would refuse the run on
+              the wrong one.
+
+## DEC-073  2026-08-18  a rated run drops to concurrency 6, because oversubscription is not neutral across foreign engines
+
+**VOID as to its Decision, 2026-08-18 — superseded by DEC-075.** The owner
+reversed the concurrency drop: rating runs saturate the machine at 12. The
+*evidence* below is not void and is not restated elsewhere — the three forfeits,
+their millisecond overshoots, the 2.4 Elo measured impact of removing them, and
+the exact reproduction of S087's solve — so follow the pointer for the decision
+and read the numbers here. **One inference below is also wrong and DEC-075
+corrects it**: this entry blames the anchor shift on concurrency-12
+oversubscription, and S087 ran at concurrency 12 as well, so concurrency cannot
+explain a difference between the two runs.
+Tags:         measurement, rating, gauntlet, concurrency, forfeit, s088, dec-067, dec-048, dec-050, dec-072
+
+Context:      S088's rated run -- 3340 games, five engines, `10+0.2`,
+              concurrency 12, 2 h 27 m 28 s -- returned **RATING-RUN-INVALID**.
+              2829 `adjudication`, 508 `normal` and **3 `time forfeit`**, all
+              three Stash v21.0, losing by **1118 ms, 1309 ms and 149 ms** at
+              rounds 619, 774 and 884. All three games went to chesso.
+
+              **Not the startup deadlock** DEC-072 records: that hangs forever
+              and would fire at the first `go`, and these are millisecond
+              overshoots spread through the middle of the run.
+
+              The forfeits are the visible part. The rest is not visible and is
+              worse. Against the **same binaries and the same time control**,
+              chesso's solved rating moved from S087:
+
+                  anchor              S087      S088 @12    shift
+                  Blunder 7.1.0       2559.3    2546.4      -12.9
+                  Leorik 2.1          2492.5    2485.3       -7.2
+                  Blunder 8.5.5       2574.6    2623.7      +49.1
+                  Leorik 2.4          2575.6    2606.9      +31.3
+
+              The solve is not the difference: re-solving S087's own combined
+              PGN with the identical `ordo` command reproduces 2559.3 / 2492.5 /
+              2574.6 / 2575.6 and their intervals **exactly**. It is in the
+              games -- chesso scored **44.3 % against Blunder 8.5.5 against
+              S087's 37.6 %**, 6.7 points on 668 games each side, about 2.5
+              standard errors, while Leorik 2.1 and Blunder 7.1.0 moved under
+              1.5 points.
+
+              DEC-067 accepted concurrency 12 against foreign engines on the
+              argument that DEC-050's "oversubscription hits both sides equally"
+              may not hold when time management differs, and chose **detection
+              instead of avoidance**. It was detected.
+
+Decision:     **A rated `rating.sh` run drops to `CONCURRENCY=6`** -- one game
+              per physical core on the DEC-049 machine. DEC-067's "12 stands,
+              with detection instead of avoidance" is **superseded for
+              `rating.sh`**, exactly as DEC-067 itself instructed: "the rated run
+              drops to CONCURRENCY=6 and DEC-067 is superseded rather than
+              reinterpreted". The bracketing run showed no forfeit and the rated
+              run did; the remedy is the one that was pre-authorised.
+
+              **DEC-048 and DEC-050 stand unchanged for `fastchess.sh`.** There
+              both sides are the same binary, so oversubscription really does
+              hit them equally and inflates variance rather than biasing the
+              result. That argument is exactly what fails here.
+
+Rejected:     **Keeping concurrency 12 and dropping the three forfeit games.**
+              Measured rather than argued: removing them moves only Stash's
+              solve, 2590.7 -> 2588.3, **2.4 Elo**, and leaves the other four
+              anchors identical to a decimal. Refused because the forfeits are
+              evidence *about the other 3337 games*, not a defect confined to 3.
+              An engine that overshoots by 1.3 s three times has been late in
+              many more without crossing the line, and that damage is invisible,
+              unequal across engines, and lands on the anchors. The rule is zero
+              and one invalidates; this is the case it was written for.
+
+              **Raising Stash's `Move Overhead` from its default 20 ms.** It
+              targets the forfeits directly and would keep the 2 h 30 m
+              throughput. Refused on two grounds: it changes a reference
+              engine's configuration away from the default its CCRL rating was
+              earned at, and it treats the symptom -- the +49.1 on Blunder 8.5.5
+              is not a forfeit and would survive it untouched.
+
+              **Dropping Stash and choosing a different third family.** The
+              forfeits are Stash's, so removing Stash removes them. Refused
+              because the evidence says the load is the problem and Stash is
+              only where it broke the surface: the anchor shift is on Blunder
+              8.5.5 and Leorik 2.4, not on Stash, and an 83 Elo spread was
+              already present in S087 with no Stash in the set at all.
+
+              **A cheap bracketing run at concurrency 6 as insurance first.**
+              Refused on arithmetic. 3 forfeits in 668 Stash games is 0.45 %; a
+              340-game bracket contains 68 Stash games and expects **0.3**
+              forfeits, so a clean bracket would have proved essentially nothing
+              and cost 31 minutes. Cheap insurance that cannot fail informatively
+              is not insurance.
+
+              **Slowing the time control instead.** S088 excludes it: it would
+              make the figure incomparable with S087's, which is the comparison
+              the step exists to make.
+
+Consequences: **A rated run now costs about 5 hours instead of 2 h 30 m.**
+              `plan.md`'s rule that `./rating.sh` is re-run at milestones -- after
+              any landed step an SPRT credits with 20 Elo or more -- now costs a
+              night rather than an afternoon, against a plan expecting 40 to 60
+              SPRT verdicts. Measurement capacity was already the binding
+              constraint and this tightens it.
+
+              **S087's 2570 was measured at concurrency 12 and inherits this
+              doubt.** It is not withdrawn here and nothing is edited in
+              `plan_done/`: S088's valid run is what replaces it. But the two
+              were not taken with the same instrument, and any comparison
+              between them is between two instruments as well as two runs.
+
+              **`rating.sh`'s concurrency default is NOT changed in the same
+              turn as this entry, and the reason is a hazard worth recording:
+              bash reads a script lazily from disk while executing it**, so
+              editing `rating.sh` during the 5-hour run this decision launched
+              could corrupt it at any point. The edit is deferred to after the
+              run. This amends S088's `touches:`, which permitted a `rating.sh`
+              edit only where the set size is wired in; the concurrency default
+              is not set size, and the amendment is recorded here rather than
+              taken silently.
+
+              The invalid run's evidence is kept, not deleted --
+              `adocs/data/S088_rated_c12_INVALID_*`. It is the only measurement
+              this project has of what concurrency does to a foreign-engine
+              gauntlet, and the concurrency-6 run is its controlled comparison:
+              same five binaries, same book, same time control, same game count,
+              one variable.
+
+## DEC-074  2026-08-18  the rating gauntlet is re-run on substantial work, not on a 20 Elo threshold
+Tags:         measurement, rating, gauntlet, cadence, planning, s088, dec-071, dec-073, dec-067
+
+Context:      `plan.md` and `specs.md` both carried the same rule since DEC-071:
+              `./rating.sh` is re-run at milestones, **after any landed step an
+              SPRT credits with 20 Elo or more**, because every other figure this
+              project holds is self-play against an earlier chesso and the factor
+              between that scale and the CCRL one is unmeasured.
+
+              DEC-073 then doubled what that rule costs. A rated run went from
+              2 h 30 m to about 5 hours when concurrency dropped to 6, against a
+              plan expecting 40 to 60 SPRT verdicts. A 20 Elo threshold is not a
+              rare event in a 430 Elo climb, so the rule as written would have
+              spent a night on an absolute figure repeatedly, out of the same
+              budget the SPRTs come from.
+
+Decision:     **The gauntlet is re-run when substantial work has been done to
+              the engine, not on a numeric Elo threshold.** Per-change decisions
+              stay with the SPRT, which is what `fastchess.sh` is for and what
+              every step in the plan is gated on. **The owner's decision**,
+              given in this session: "the ELO re-check does not need to run that
+              often. We can use normal SPRT tests and run the ELO re-evaluation
+              only when substantial work was done to the engine."
+
+              **The trigger is deliberately not derivable and is not an agent's
+              to assume.** "Substantial" is the owner's judgement. An agent does
+              not book a five-hour gauntlet because it has totted up enough
+              landed steps; it proposes one, or runs one when asked. This is a
+              narrowing of DEC-041, which grants the agent measurements without
+              asking, and the narrowing is the point: the cost is now large
+              enough that the owner sets the cadence.
+
+Rejected:     **Keeping the 20 Elo threshold and paying the 5 hours.** It is the
+              rule DEC-071 wrote and it has an argument -- the two scales are
+              still unrelated by any measurement. Refused by the owner on cost:
+              the SPRT already decides every individual change, and the absolute
+              figure answers a different and less frequent question.
+
+              **Replacing 20 Elo with a larger threshold, say 50 or 100.** It
+              keeps the rule derivable, which the workflow generally prefers.
+              Not taken: any threshold sums self-play deltas that DEC-019 has
+              three times shown do not transfer, so the number would look
+              precise and rest on the quantity least trusted in this repository.
+
+              **Dropping the re-run rule entirely.** Refused: the whole point of
+              S087 and S088 is that the distance to 3000 cannot be read from
+              self-play, so the instrument has to be re-read sometimes. The
+              change is to the cadence, not to the instrument.
+
+Consequences: `plan.md` and `specs.md` lose the 20 Elo clause in the same commit
+              as this entry. DEC-073's consequence paragraph -- that a milestone
+              re-run "now costs a night rather than an afternoon" -- stands as
+              written and is **no longer a recurring cost**, because the
+              milestones are rarer. Nothing in DEC-073 is edited; it is
+              append-only and this entry is where the cadence changed.
+
+              The measurement budget goes back to the SPRTs, which is where the
+              plan's 40 to 60 verdicts and 150 to 250 machine hours were always
+              going to be spent.
+
+## DEC-075  2026-08-18  rating runs saturate the machine at concurrency 12, and a low time-forfeit rate is tolerated instead of voiding the run
+Tags:         measurement, rating, gauntlet, concurrency, forfeit, s088, dec-073, dec-067, dec-048, dec-050
+
+Context:      DEC-073 dropped rated `rating.sh` runs to concurrency 6 after three
+              Stash time forfeits voided a 3340-game run. The owner rejected the
+              premise: **"I do not understand why the cores are loaded only half.
+              We should always aim to saturate them, so on this machine you
+              should run at concurrency 12."**
+
+              Measured on the concurrency-6 run while it was in flight, rather
+              than argued: **6.2 of 12 threads busy**, `10.6 games/min` against
+              concurrency 12's `22.6`. A game runs two engine processes but only
+              the side to move thinks, so concurrency 6 leaves half the hardware
+              threads idle and costs **2.1x** throughput, not the ~1.3x an
+              SMT-only penalty would suggest. The owner is right on the load and
+              the size of it was understated.
+
+              **DEC-073 also contains a wrong inference, and it is the one the
+              decision leaned on.** It reads the +49.1 Elo shift on Blunder 8.5.5
+              between S087 and S088 as oversubscription damaging foreign engines
+              unequally. **S087 ran at concurrency 12 too.** Concurrency was
+              identical in both runs and cannot explain a difference between
+              them. What the evidence supports is narrower: the forfeits show
+              Stash is time-stressed at 12, and the anchor shift is
+              **unexplained**, its candidates being the set composition changing
+              from four engines to five and ordinary run-to-run variance at about
+              2.7 standard errors. The agent stated the stronger claim; this
+              entry withdraws it.
+
+Decision:     **1. Rating runs saturate the machine: `CONCURRENCY` returns to
+              `nproc`, 12 here.** DEC-073's drop to 6 is reversed and marked VOID
+              as to its decision. DEC-048 and DEC-050 apply to `rating.sh` as
+              they do to `fastchess.sh`. **The owner's decision.**
+
+              **2. A low time-forfeit rate is tolerated rather than voiding the
+              run.** The zero-forfeit rule stands as the thing that caught this
+              at all, but a forfeit is now weighed instead of being fatal.
+              **The owner's decision.**
+
+              **3. The concurrency-6 run in flight finishes, judged under the old
+              rule; the new rule applies from the next run.**
+              *(AMENDED 2026-08-18 by DEC-076: the tolerance applies to this run
+              too. This decision now concerns concurrency only.)* The owner's
+              instruction verbatim: "finish this run. You can apply this rule
+              from the next run." So S088's figure comes from a concurrency-6
+              run, and every run after it is at 12 -- which the results file
+              must state, because it makes S088's number and its successors
+              readings from two different instrument settings.
+
+              **4. The threshold and its denominator are the agent's proposal,
+              not the owner's**, and are stated here to be overridden rather than
+              discovered later in a script: a run is void above **1 % of an
+              individual engine's own games**, and any *non-forfeit* unexpected
+              termination -- crash, disconnect, illegal move, stall -- still
+              voids at **zero**.
+
+Rejected:     **A whole-run forfeit rate.** 3 forfeits in 3340 games is 0.09 %
+              overall but **0.45 % of Stash's 668**, so a 0.5 % whole-run
+              threshold would tolerate 16 forfeits concentrated on one engine
+              while reporting a comfortable number. The denominator has to be the
+              engine's own games or the rate hides exactly the case it is for.
+
+              **Treating a crash like a forfeit.** A time forfeit is a real game
+              result under time pressure and the loser earned it. A crash or a
+              disconnect is a broken instrument, and no rate of it is acceptable.
+              The two were one check; they are now two.
+
+              **Raising Stash's `Move Overhead`, dropping Stash, or excluding
+              forfeited games from the solve.** All three were offered and none
+              was chosen. Recorded because each remains available if the tolerated
+              rate is exceeded rather than approached.
+
+Consequences: A rated run costs about **2 h 30 m** again, and DEC-074's cadence
+              -- re-run on substantial work, the owner's judgement -- stands
+              unchanged on top of that. The two together undo DEC-073's
+              "a night rather than an afternoon" entirely.
+
+              **`rating.sh` must report what it now tolerates.** Counting
+              forfeits is no longer enough: the run has to print the per-engine
+              forfeit rate against the threshold, which side won the forfeited
+              games, and the solved rating with and without them, so a tolerated
+              forfeit is visible as a bias rather than absorbed as an average.
+              On the voided run that bias was measured at 2.4 Elo on one anchor;
+              nothing guarantees the next one is that small.
+
+              **The edit waits for the running match.** Bash reads a script
+              lazily from disk while executing it, so `rating.sh` is not touched
+              until the concurrency-6 run finishes. DEC-073 recorded that hazard
+              and it still binds.
+
+              **S088's `accepts:` is amended in the same commit.** It requires
+              "zero time forfeits, one invalidating the run", which is now false
+              as a rule. It stays true as the gate applied to S088's own figure,
+              per decision 3, and the step file states both.
+
+## DEC-076  2026-08-18  the forfeit tolerance applies to the run in flight, and a hang counts as a forfeit
+Tags:         measurement, rating, gauntlet, forfeit, hang, s088, dec-075, dec-072
+
+Context:      DEC-075 decision 3 said the concurrency-6 run in flight would be
+              judged under the **old** zero-forfeit rule, from the owner's
+              "finish this run. You can apply this rule from the next run." At
+              1269 of 3340 games that run took a forfeit, which under that
+              reading voided it and left about three hours still to play for
+              nothing -- and `rating.sh` exits on `RATING-RUN-INVALID` *before*
+              the anchor sweep, so it would have produced no solve at all.
+
+              **The forfeit is not what DEC-073 or DEC-075 assumed either.**
+              Round 624, Stash v21.0 as White, **274 plies**, 1 m 35 s of normal
+              play at about 0.2 s a move, and then at move 138 -- in a repetition
+              dance, `135. Ke4 Rh4+ 136. Ke3 Rh3+ 137. Ke4 Rh4+`, both engines
+              reporting `0.00` at depth 39 and 47 -- Stash **hung for 25360 ms**.
+              Not the DEC-072 startup deadlock, which fires at the first `go` and
+              never plays a move. Not a thin `Move Overhead` either: the three
+              concurrency-12 forfeits overran by 149 ms, 1118 ms and 1309 ms, and
+              this is twenty times the largest of them.
+
+              **And concurrency was never the cause.** Stash forfeited 3 of 668
+              games at concurrency 12, **0.45 %**, and 1 of 254 at concurrency 6,
+              **0.39 %**. Indistinguishable. DEC-073 dropped the concurrency to
+              fix this and it did not move.
+
+Decision:     **1. The tolerance of DEC-075 applies to the run in flight as
+              well.** It finishes and is judged by the 1 %-per-engine rate, not
+              by zero forfeits. DEC-075 decision 3 is amended to concern
+              concurrency only: this run stays at 6, every later run is at 12.
+              **The owner's decision**, asked with the three hours and the lost
+              anchor sweep on the table.
+
+              **2. A hang counts as a forfeit and is tolerated under the rate
+              threshold.** It is reported as a time loss and the game result is
+              real. DEC-075's carve-out -- crash, disconnect, illegal move and
+              stall void at zero -- is **not** widened to cover a hang that
+              fastchess scores as a time forfeit. **The owner's decision**,
+              against the agent's offered alternative of voiding on any overrun
+              past about 2 s.
+
+              **3. The results file must state that Stash's forfeits are hangs
+              rather than margin overruns**, so a reader of the rate does not
+              take it for ordinary time pressure.
+
+              **4. `rating.sh` exits before the sweep on an invalid run, so
+              S088's anchors are solved by hand** with the same
+              `ordo 1.2.6 -s 1000 -F 95 -n 12 -W -D` command the script issues.
+              The command is recorded in the results file so the figure is
+              reproducible without the script.
+
+Rejected:     **Killing the run and relaunching at concurrency 12**, which the
+              agent recommended: concurrency 6 bought nothing measurable, and a
+              valid figure was about 2 h 30 m away against roughly 3 h more for
+              this one. Not taken -- the owner kept the 1 h 40 m already spent.
+
+              **Dropping Stash for Weiss 0.10 (2847).** Stash hangs about 4 games
+              in 1000 from a defect in its own search, and a reference engine
+              that hangs is a poor instrument. Not taken: the rate is inside the
+              threshold and the third family is what S088 exists to add.
+
+              **Capping the tolerated overrun at about 2 s.** It would have kept
+              Stash usable for margin overruns while still catching a hang, and
+              it is the agent's proposal. Not taken; the rate is the only gate.
+
+Consequences: S088's `accepts:` is amended in this step's commit. It required
+              "zero time forfeits, one invalidating the run" and that is now
+              false for this step's own figure, which is exactly the case
+              AGENTS.md means by amending a plan rather than deviating from it
+              silently.
+
+              **S088's figure comes from concurrency 6 and every later one from
+              concurrency 12**, so the results file records the setting beside
+              the number. On the evidence above the two settings are not expected
+              to differ, but "not expected to" is not a measurement and the next
+              run is the first that could show it.
+
+              **Stash stays in the set with a known defect, recorded.** If its
+              rate ever crosses 1 % of its own games, DEC-075's threshold voids
+              the run and the rejected options above come back.
+
+## DEC-077  2026-08-18  the quoted figure is the five-anchor mean, and the third family did not close the spread
+Tags:         measurement, rating, gauntlet, anchors, ccrl, s088, dec-072, dec-071
+
+Context:      S088 added a third family to arbitrate S087's 83.1 Elo anchor
+              spread, on the premise that "two families cannot arbitrate a
+              disagreement between two families; a third can". The valid
+              concurrency-6 run, 3340 games, every interval inside the +/-30 the
+              procedure requires:
+
+                  anchor          CCRL    chesso    95 %
+                  Blunder 7.1.0   2389    2533.8    +/-24.8
+                  Leorik 2.1      2568    2476.7    +/-24.0
+                  Blunder 8.5.5   2664    2586.0    +/-23.7
+                  Stash v21.0     2713    2597.6    +/-24.4
+                  Leorik 2.4      2829    2598.5    +/-27.7
+
+              **The premise was wrong and the step's own goal is not met.**
+              Spread across five anchors is **121.8 Elo** against the ~30
+              allowed. Leorik 2.1 is still the low outlier and dropping it leaves
+              **64.7**, still more than twice the allowance. There is no single
+              dissenter to name.
+
+              **What the third family bought instead is the shape of the
+              disagreement.** With Leorik 2.1 set aside the solved rating rises
+              monotonically with the anchor's own rating -- 2389 -> 2533.8,
+              2664 -> 2586.0, 2713 -> 2597.6, 2829 -> 2598.5 -- and flattens at
+              the top. That is compression, not scatter: across a CCRL span of
+              440 Elo the measured differences span **375.3**, a ratio of
+              **0.853**. S087 argued a scale artifact was excluded because its
+              two extreme anchors agreed to 16 Elo; at 668 games a pairing with
+              a fifth rung, they disagree by 64.7 and that argument no longer
+              holds.
+
+Decision:     **The quoted figure is the five-anchor mean, `chesso ~= 2559 CCRL
+              Blitz, 95 % +/-25, SOFT`**, with the full spread of 121.8 Elo
+              printed beside it and the 64.7 ex-Leorik-2.1 figure of 2579
+              reported but not quoted.
+
+              The rule this follows is S087's own: dropping an inconvenient
+              reference is how a measurement gets talked into a nicer answer. The
+              quoted number is therefore the **lower** of the two and carries the
+              **larger** spread, which is what the step's `accepts` means by "a
+              recorded decision rather than the smaller number".
+
+              Taken by the agent under S088's delegation and DEC-041. It is the
+              project's headline strength figure and the owner may prefer 2579 or
+              a strength-matched anchor; this entry is written to be overridden.
+
+Rejected:     **Quoting 2579, the four-anchor mean without Leorik 2.1.** Leorik
+              2.1 really is anomalous -- CCRL rates it on 990 games against
+              2437 to 2502 for the two that agree, and it has now dissented in
+              two independent runs. But 64.7 Elo of residual spread means the
+              remaining four do not agree either, so dropping it buys a nicer
+              number rather than a sound one.
+
+              **Quoting 2594, the mean of the three anchors nearest chesso's own
+              strength.** It has the best argument on paper -- least
+              extrapolation across a compressed scale, and those three agree to
+              12.5 Elo. It is also the highest of the three candidates, chosen
+              after seeing the numbers, on a rule invented for this occasion.
+              Refused for exactly that reason.
+
+              **Reporting no figure at all until the spread is inside 30.** The
+              procedure calls a wide spread SOFT rather than fatal, and a figure
+              labelled soft with its spread printed is more useful than silence
+              to a plan whose target is 3000.
+
+Consequences: **chesso has not measurably moved.** `src/` is byte-identical to
+              S087's rated commit, and S087's 2570 sits between this run's 2559
+              and 2579. The instrument changed; the engine did not. That is the
+              right outcome for a step that added a reference engine.
+
+              **The spread is now a property of the scale, not of one engine, and
+              no reference set fixes it.** The largest uncounted term is the time
+              control: CCRL Blitz is "equivalent to 2'+1" on an i7-4770K" and
+              this runs at `10+0.2`. A step that wants the spread inside 30 has
+              to attack that, not add a sixth rung -- which is a decision for
+              whoever writes it, not this one.
+
+              **An open risk with numbers behind it, for the next run.** chesso
+              scored 37.6 % against Blunder 8.5.5 in S087 (4 engines,
+              concurrency 12), **44.3 %** in S088's voided run (5 engines,
+              concurrency 12) and 39.1 % in the valid one (5 engines, concurrency
+              6). The concurrency-12 five-engine run is the outlier of the three.
+              Stash is a PGO C engine at 3.76 Mnps sharing a pool with a .NET and
+              two Go engines, so more contention at 12 is a plausible mechanism
+              and single runs cannot establish it. DEC-075 puts every later run
+              at concurrency 12, so the next one is the test: if it reproduces
+              44 % against Blunder 8.5.5, the pool composition is real and
+              DEC-075 needs revisiting.

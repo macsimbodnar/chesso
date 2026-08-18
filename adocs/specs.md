@@ -14,15 +14,25 @@ Phase one is to reach the level the published literature describes, by reading
 documented technique and implementing it here. Phase two is to experiment.
 `adocs/plan.md` is phase one. DEC-014.
 
-**Measured strength, for the first time, 2026-08-18: chesso is approximately
-2570 on the CCRL Blitz scale, 95 % ±25, and the figure is soft.** Soft because
-the reference set disagrees internally by 83 Elo, above the 30 the procedure
-allows; approximate because the games were played at `10+0.2` rather than the
-list's time control. 2672 games against four rated engines, solved with `ordo`
-anchored on each in turn. `adocs/data/rating_2026-08-18_ccrl_blitz.md` is the
-record and `./rating.sh` re-derives it. S087, DEC-067 to DEC-069. Before this
-every strength figure in the project was a delta against an earlier chesso and
-the distance to the goal above was unknown.
+**Measured strength, 2026-08-18: chesso is approximately 2559 on the CCRL Blitz
+scale, 95 % ±25, and the figure is soft.** 3340 games against **five** rated
+engines from **three families**, solved with `ordo` anchored on each in turn.
+`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md` is the record and `./rating.sh`
+re-derives it. S088, DEC-072 and DEC-075 to DEC-077.
+
+Soft because the reference set disagrees internally by **121.8 Elo**, four times
+the 30 the procedure allows; approximate because the games were played at
+`10+0.2` rather than the list's "equivalent to 2'+1" on an i7-4770K". S087
+measured 2570 over four engines and two families (still recorded in
+`rating_2026-08-18_ccrl_blitz.md`), and **`src/` is byte-identical between the
+two runs** — the instrument changed, the engine did not.
+
+**Adding a third family did not close the spread; it identified it.** With
+Leorik 2.1 set aside the solved rating rises monotonically with the anchor's own
+rating and flattens at the top, so the disagreement is scale compression rather
+than one misrated engine: across a CCRL span of 440 Elo the measured differences
+span 375.3, a ratio of 0.853. No reference set fixes that. The leading candidate
+is the time control, and attacking it is nobody's step yet. DEC-077.
 
 **The target is at least 3000 on that scale, and it is pursued without a
 network.** DEC-071, 2026-08-18, the owner's decision. It is a goal and not an
@@ -32,10 +42,13 @@ against the same list, single-CPU entries read 2026-08-18 -- Stockfish 11 at
 more above 3130, every one a hand-crafted evaluation one version below that
 engine's first network -- and against the Leorik 2.x line on this machine, which
 carries no network file at any tag and reaches 2917. DEC-054 stands: S029 is
-parked and NNUE is not reopened. `./rating.sh` is re-run at milestones, after
-any landed step an SPRT credits with 20 Elo or more, because every other figure
-here is self-play against an earlier chesso and the factor between the two
-scales is not yet measured.
+parked and NNUE is not reopened. `./rating.sh` is re-run **when substantial work has been
+done to the engine**, which is the owner's judgement and not a threshold an
+agent derives (DEC-074, superseding DEC-071's "any landed step an SPRT credits
+with 20 Elo or more"). Per-change decisions stay with the SPRT. The gauntlet
+still has to be re-read sometimes, because every other figure here is self-play
+against an earlier chesso and the factor between the two scales is not yet
+measured; it costs about 5 hours a time since DEC-073.
 
 ## Prime directive
 

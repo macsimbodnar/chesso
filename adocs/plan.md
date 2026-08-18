@@ -229,10 +229,14 @@ constants every step above them adds, so they cannot precede them.
 **The cost is the whole measurement budget for months.** Fourteen of the fifteen
 alter play and owe an SPRT each; with failures and retunes that is 40 to 60
 verdicts, three to four and a half hours apiece, 150 to 250 machine hours. And
-one rule that is not a step: **`./rating.sh` is re-run at milestones**, after any
-landed step an SPRT credits with 20 Elo or more, because every Elo figure this
-project holds is self-play against an earlier chesso while 2570 is external, and
-nothing here yet knows the factor between them.
+one rule that is not a step: **`./rating.sh` is re-run when substantial work has
+been done to the engine** -- the owner's judgement, not a threshold an agent
+derives, DEC-074. Every Elo figure this project holds is self-play against an
+earlier chesso while 2570 is external and nothing here yet knows the factor
+between them, so the absolute figure has to be re-read sometimes; but the
+per-change decisions are the SPRT's, and at DEC-073's concurrency 6 a rated run
+costs about 5 hours out of the same budget. DEC-071's "any landed step an SPRT
+credits with 20 Elo or more" is superseded.
 
 S019 is retired. It was written from one game, DEC-032 showed the endgame is the
 cheapest phase per move, and DEC-033 showed endgame errors are the least
@@ -284,7 +288,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-54. S076  the fit runs on a corpus deduplicated by zobrist key, so a repeated position stops carrying repeated weight
 55. S077  an emitted table names the engine commit and the corpus hash it was fitted from
 56. S078  S060 points at the mate-inside-the-pruned-depth test S033 added, and S061's citation names the case it means
 57. S087  an absolute rating for chesso on the CCRL Blitz scale, from a gauntlet against engines the public lists rate

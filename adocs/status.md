@@ -6,13 +6,9 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
-- In progress: none
+- In progress: S088 a fourth engine family in the reference set and the rating re-solved, so the anchor spread is inside the 30 Elo the procedure allows
 - Next: S088
 - Blocked: none
-- Target: **at least 3000 CCRL Blitz, without a network.** DEC-071, 2026-08-18.
-  Measured today: 2570 +/-25 and soft. S088 fixes the instrument before the
-  climb; S089 to S102 are the climb. `specs.md` carries the reachability
-  evidence.
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
     them needs a re-run.** Ten findings, one high and three medium: nine went to

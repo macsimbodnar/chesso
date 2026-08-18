@@ -423,3 +423,53 @@ more, sign positive at LOS 99.93 %.
 one reference, written to its own `-pgnout` path rather than `fastchess.sh`'s
 shared appended file, and it is the run that decided the step. 3.0 MB, 1047
 games, every one of them naming `candidate-s076-dedupe`.
+
+## The rating gauntlets, S087 and S088
+
+Thirteen files here come from `rating.sh` rather than from `fastchess.sh`, and
+they answer a different question. Every other PGN in this directory is chesso
+against an earlier chesso and reports a *delta*. These are chesso against
+engines the public lists rate, solved by `ordo` into an *absolute* figure on the
+CCRL Blitz scale. The two are never quoted against each other: `ordo`'s
+intervals are trinomial, and every SPRT here runs `model=normalized` and reports
+nElo.
+
+**S087 committed its evidence and no index entry, so this section is written a
+step late.** `DEV_MANUAL.md:17` says this README says what each file is; for
+eleven of these it did not, and the omission matters most on the two files whose
+names differ by one character and whose results are opposite.
+
+### S087, the first absolute figure
+
+| file | what it is |
+|---|---|
+| `S087_bracket1.pgn`, `_h2h.txt` | **the reference set that FAILED.** Leorik 1.0 (2102), Blunder 5.0.0 (2017), Rustic Alpha 3.0.6. 204 games, 7 m 30 s. chesso scored 90.4 % against the strongest, which is not below 90 %, so every score sat in the tail of the logistic curve and no rating was claimable. Quoting a number from this file is a mistake |
+| `S087_bracket2.pgn`, `_h2h.txt` | the DEC-069 set that passed: Blunder 7.1.0, Leorik 2.1, Blunder 8.5.5, Leorik 2.4. 272 games, 12 m 33 s, 22.8 % against the strongest and 75.0 % against the weakest |
+| `S087_rated1.pgn`, `_h2h.txt`, `_report.txt` | first rated run, 1336 games, 1 h 00 m. **Not enough on its own** -- best interval +/-34.0 against the +/-30 required |
+| `S087_rated2.pgn`, `_report.txt` | the repeat, 1336 more games, same binaries and same time control, run because the criterion was not relaxed |
+| `S087_combined_solve.txt`, `S087_combined_h2h.txt` | the two rated PGNs concatenated and solved once per anchor. This is where 2570 comes from |
+| `rating_2026-08-18_ccrl_blitz.md` | the write-up: the number, the anchor sweep, the caveats in order of size, and why the result is labelled SOFT |
+
+The `_report.txt` files are 16 MB and 19 MB because `rating.sh` tees the whole
+fastchess stream, which includes a `Position;`/`Moves;` dump per adjudicated
+game.
+
+### S088, the third family
+
+| file | what it is |
+|---|---|
+| `S088_bracket.pgn`, `_h2h.txt` | the five-engine set bracketed, 340 games, 15 m 25 s, 0 forfeits. Adds Stash v21.0 (CCRL `Stash 21.0`, 2713) to the four above. chesso 19.1 % against the strongest and 71.3 % against the weakest, with the new rung at 30.9 % -- inside the 10-90 % band its own accepts clause requires |
+
+**S088 added five more files and one of them is a voided run kept on purpose:**
+
+| file | what it is |
+|---|---|
+| `S088_bracket.pgn`, `_h2h.txt` | the five-engine set bracketed, 340 games, 15 m 25 s, 0 forfeits |
+| `S088_rated_c12_INVALID.pgn`, `_h2h.txt`, `_summary.txt` | 3340 games at **concurrency 12**, voided by 3 Stash time forfeits. **No rating is claimable from it** and none is quoted. Kept because it is the only measurement this project has of what the opponent pool does to a foreign-engine gauntlet: chesso scored 44.3 % against Blunder 8.5.5 here against 37.6 % in S087 and 39.1 % in the valid run |
+| `S088_rated_c6.pgn` | 3340 games at **concurrency 6**, 5 h 02 m 49 s, 1 tolerated forfeit at 0.15 %. **This is the run behind the 2559 figure** |
+| `S088_solve.sh` | the anchor sweep by hand. `rating.sh` exits before the sweep on a voided run, and DEC-076 tolerated this one's forfeit after the fact, so the solve was reissued from here with the identical `ordo` command. Reads anchors from the CCRL list at run time and the name mapping from `references.tsv`, so it cannot drift from what was played |
+| `rating_2026-08-18_S088_ccrl_blitz.md` | the write-up. **Supersedes S087's as the current figure**, and does not replace it as a record |
+
+The two `rating_2026-08-18_*` files are one character apart in the middle of a
+long name and report different numbers from the same engine — 2570 over four
+engines, 2559 over five. `_S088_` is the current one.

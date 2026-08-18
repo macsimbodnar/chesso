@@ -490,8 +490,8 @@ grep -c "^Finished game" .tuning/sprt_<what>.log
 ## Rate the engine against the public lists
 
 ```bash
-./rating.sh --bracket           # ~204 games, checks the reference set brackets chesso
-./rating.sh                     # ~1002 games, solves an absolute rating with ordo
+./rating.sh --bracket           # 340 games, checks the reference set brackets chesso
+./rating.sh                     # 3340 games, solves an absolute rating with ordo
 TC=2+1 ./rating.sh              # pick the time control
 CONCURRENCY=6 ROUNDS=50 ./rating.sh
 ```
@@ -502,8 +502,26 @@ against engines with published CCRL Blitz ratings and solves the PGN into an
 absolute figure with `ordo`. It is not a gate: run it after a milestone, not
 before a commit. S087, DEC-067, DEC-068.
 
+**Run it when substantial work has been done to the engine, and not on a
+threshold.** DEC-074 is the owner's decision and it replaced DEC-071's "any
+landed step an SPRT credits with 20 Elo or more". Per-change decisions belong to
+the SPRT; a rated run costs about 5 hours since DEC-073 dropped it to
+concurrency 6, and "substantial" is the owner's judgement rather than something
+an agent totals up and books for itself.
+
 **The two numbers are never quoted against each other.** `ordo`'s intervals are
 trinomial; every SPRT verdict here runs `model=normalized` and reports nElo.
+
+**`ROUNDS` is rounds per pairing, and each round is two games.** The totals
+above are for the five engines in `references.tsv` today -- `rounds x pairings x
+2` -- so they move when the manifest does, and the run prints the derived total
+before it plays. The rated default is 334 rounds = **668 games per pairing**,
+which is measured and not chosen: S087 got +/-34 at 334 games per pairing and
++/-24 to +/-28 at 668. In a gauntlet only chesso plays everybody, so chesso's
+rating under a given anchor is fixed by that one pairing alone -- adding a rung
+adds an independent estimate and narrows none of the existing ones. Both
+defaults carried comments computing against three pairings until S088, and were
+already wrong for the four engines DEC-069 installed.
 
 Opponents come from `references.tsv`. The binaries are not in this repository
 and never will be — the file records which build each result was played against.
@@ -527,11 +545,36 @@ it — all are single-threaded by construction — and chesso's is `min 1 max 1`
 `option.Hash=64` is inside every engine's maximum; the binding one is Blunder at
 256 MB.
 
-**A time forfeit invalidates the run.** The script asserts the set of
+**A crash voids the run at zero; a time forfeit is weighed against a rate.**
+DEC-075 split what used to be one check.
+
+A termination outside `normal`, `adjudication` and `time forfeit`, or a log line
+matching `disconnect`, `stall`, `illegal move` or `crash`, is a broken instrument
+and **voids the run at zero**. The script still asserts the set of
 `[Termination ...]` values actually present rather than grepping for a string it
-guessed, and also scans the fastchess log for disconnects, so a forfeit cannot
-hide behind an unanticipated spelling. On any hit it prints
-`RATING-RUN-INVALID` and exits non-zero; drop to `CONCURRENCY=6` and re-run.
+guessed, so a failure cannot hide behind an unanticipated spelling.
+
+A **time forfeit** is a real game result and is tolerated up to `FORFEIT_MAX_PCT`
+(default **1.0**) of an **individual engine's own games**:
+
+```bash
+tools/forfeit_report.py <games.pgn> [--max-pct 1.0]   # 0 under, 1 over, 2 unreadable
+FORFEIT_MAX_PCT=0.5 ./rating.sh                       # tighten it for one run
+```
+
+**The denominator is the engine, not the run, and that is the whole point.** 3
+forfeits in 3340 games is 0.09 % overall but **0.45 % of Stash's 668**, so a
+whole-run threshold of 0.5 % would tolerate sixteen forfeits landing on one
+engine while printing a comfortable number.
+
+The report prints each overrun, because the rate alone cannot tell a thin
+`Move Overhead` from a broken search. S088 measured both: 149, 1118 and 1309 ms
+of ordinary margin overrun at concurrency 12, and a **25360 ms hang** after 137
+normal moves at concurrency 6. Raising `FORFEIT_MAX_PCT` above 1 needs a recorded
+decision, not a flag on a command line.
+
+On any failure the script prints `RATING-RUN-INVALID` with the reason and exits
+non-zero.
 
 The run ends with `RATING-RUN-DONE <mode> <OK|INVALID> <outdir>` as its last
 line, which is the terminal marker a watcher exits on. DEC-061.
@@ -542,9 +585,12 @@ tight enough — `ordo` takes the combined file, and both runs must use the same
 binaries and the same time control. No number of games narrows a disagreement
 between the references themselves; that is what the anchor sweep reports.
 
-**Last result: chesso ≈ 2570 CCRL Blitz, ±25, soft** (2026-08-18, 2672 games at
-`10+0.2`). Record and caveats in
-`adocs/data/rating_2026-08-18_ccrl_blitz.md`.
+**Last result: chesso ≈ 2559 CCRL Blitz, ±25, soft** (2026-08-18, 3340 games at
+`10+0.2`, five engines, three families). Record and caveats in
+`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md`; S087's four-engine 2570 is in
+`rating_2026-08-18_ccrl_blitz.md` and is not superseded as a record, only as the
+current figure. `src/` is byte-identical between the two, so the difference is
+the instrument and not the engine.
 
 ### Watching a rating run
 
@@ -559,6 +605,41 @@ grep -E "RATING-RUN-|unexpected terminations|^anchored on" "$log"
 `tail -f "$log" | grep RATING-RUN-DONE` looks equivalent and is not: it emits
 the marker as an event and then keeps running forever, because `tail -f` has no
 exit condition and a log that stops growing never delivers it SIGPIPE.
+
+**The marker is not the only way a run ends, so watch the process too.** A run
+that dies before printing its marker -- an OOM kill, a `fail()` on a path the
+`tee` never reaches -- leaves the loop above spinning on a log that will never
+change again, which is a leaked watcher by a different route. Add a liveness
+arm, and **capture the pid from `$!`**:
+
+```bash
+nohup env OUT=/tmp/rating_out ./rating.sh > "$log" 2>&1 &
+pid=$!                       # nohup, env and bash all exec in place, so this
+                             # is rating.sh's own pid
+while ! grep -qE "RATING-RUN-(DONE|FAILED|INVALID)" "$log" 2>/dev/null; do
+  kill -0 "$pid" 2>/dev/null || { echo "gone with no marker"; break; }
+  sleep 60
+done
+```
+
+**A `grep -c` guarded with `|| echo 0` produces `0\n0`, and every integer test
+against it is an error that evaluates false.** `grep -c` already prints `0` on no
+match -- it just exits 1 while doing it -- so the guard appends a second zero.
+The symptom is an alarm that never fires and a progress line reading
+`0\n0 forfeits`, which looks like good news. This was live for 45 minutes of
+S088's five-hour run: the early forfeit alarm could not have fired at all. Write
+it as `n=$(grep -c ... 2>/dev/null); n=${n:-0}` and **prove the alarm is
+non-vacuous by pointing it at a log that did forfeit** -- `adocs/data/` keeps
+one, and the expression must return 3 against
+`S088_rated_c12_INVALID`'s fastchess log before it is trusted to return 0
+against a live one.
+
+**Do not recover the pid with `pgrep -f 'bash ./rating.sh' | head -1` after the
+launch.** That was tried during S088 and it returned a pid that had already
+exited -- a transient in the `nohup`/`env` chain -- so the watcher declared the
+run dead **60 seconds in, while it was playing game 15 of 3340**. A false death
+is cheaper than a leak and it is still wrong: the next thing an agent does with
+that report is relaunch a two-and-a-half-hour match that is already running.
 
 **This is not hypothetical. It leaked a watcher for 10 h 46 m during S087.** All
 four of that step's watchers were armed as `tail -f | grep`, three were rescued

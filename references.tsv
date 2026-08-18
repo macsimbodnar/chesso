@@ -28,8 +28,38 @@
 # rather than the host microarchitecture, so the "compile from source where
 # practical" concern is weaker here than it would be for a C++ engine. DEC-069.
 #
+# THE FIFTH RUNG AND THE THIRD FAMILY IS STASH 21.0, added at S088, DEC-072.
+# Two families cannot arbitrate a disagreement between two families. S087
+# measured an anchor spread of 83.1 Elo isolated to Leorik 2.1; Stash is a third
+# author, a third language and a third evaluation, so it votes independently of
+# both incumbents.
+#
+# Three things about that row are unlike every row above it.
+#
+# Its uci_name and ccrl_name DIFFER: the binary answers `id name Stash v21.0`
+# and the CCRL entry is `Stash 21.0`. Both columns have always existed for this;
+# this is the first row that needs them apart.
+#
+# Its md5 does not reproduce. utils/unix_build.sh is a two-pass PGO build and
+# the profile counters vary run to run, so the hash identifies THIS binary and a
+# rebuild from the same tag will not match it. Every other row's md5 is a
+# rebuild check; this one is only an identity record.
+#
+# It has a startup deadlock, and it cannot reach a match. engine_thread parks on
+# an unconditional pthread_cond_wait with no predicate re-check, so a `go` that
+# arrives before the thread parks loses the broadcast and the search never
+# starts. It fires only when the commands are already in the pipe at exec time:
+# 5/5 hangs from a shell `printf | engine`, 15/25 from spawn-then-write-with-no-
+# wait, and 0/200 and 0/240 from anything that waits for uciok -- including 240
+# full GUI-paced cycles at 12-way concurrency, which is the match condition.
+# fastchess waits, so the window is shut. The identify() probe below sends only
+# `uci` and `quit` and is unaffected. Recorded because the symptom would be a
+# hung engine scored as a time loss, which the forfeit check catches rather than
+# quietly averaging in.
+#
 # uci_name	binary	ccrl_name	source	tag	md5
 Blunder 7.1.0	/home/max/ws/engines/blunder-7.1.0.bin	Blunder 7.1.0	/home/max/ws/engines/blunder-7.1.0	v7.1.0	294d3252a337c7b3814d169227de7082
 Leorik 2.1	/home/max/ws/engines/Leorik-2.1.bin	Leorik 2.1	https://github.com/lithander/Leorik/releases/tag/2.1	2.1	8300612936009ae7298aa1e59e6c3c7a
 Blunder 8.5.5	/home/max/ws/engines/blunder-8.5.5.bin	Blunder 8.5.5	/home/max/ws/engines/blunder-8.5.5	v8.5.5	e354234b0929cf9d8f2b42b149509065
+Stash v21.0	/home/max/ws/engines/stash-21.0.bin	Stash 21.0	/home/max/ws/engines/stash-21.0	v21.0	5117fbc26f9eb0b91480b8328985f435
 Leorik 2.4	/home/max/ws/engines/Leorik-2.4.bin	Leorik 2.4	https://github.com/lithander/Leorik/releases/tag/2.4	2.4	8e53f8903322383a831e1e0a8a8630bc
