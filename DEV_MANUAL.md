@@ -487,6 +487,35 @@ grep -E "^Elo:|^LLR:" .tuning/sprt_<what>.log | tail -2
 grep -c "^Finished game" .tuning/sprt_<what>.log
 ```
 
+### Two traps when reading a fastchess.sh result
+
+**`/tmp/fastchess_<tag>.pgn` is appended across runs, so a census over the whole
+file mixes them.** After S089's 500-game SPRT the file held **587** games, 87 of
+them against `ref-c56ab41` from an earlier run, and a straight
+`grep '^\[Termination'` reported 421/166 instead of the run's real 359/141.
+Filter on the reference name, which is unique per run:
+
+```bash
+python3 - <<'EOF'
+import re
+games = [g for g in re.split(r'\n(?=\[Event )', open('/tmp/fastchess_fast.pgn').read())
+         if 'ref-<sha>' in g]
+print(len(games), sum('time forfeit' in g for g in games))
+EOF
+```
+
+**`/tmp/fastchess_<tag>.log` is WARN-and-above and is routinely empty.**
+Measured: `-log file=X` over a 2-game match wrote **0 bytes**, the same match
+with `-log file=X level=trace` wrote **230 KB**. A time loss does appear at WARN
+— that is how `rating.sh` caught Stash — but an **empty log is
+indistinguishable from a log that was never written**, so grepping it for time
+losses is weak evidence and passes for free when the file is missing or stale.
+`/tmp/fastchess_fast.log` sat at 0 bytes dated two days earlier while a run
+completed against it.
+
+**Check the PGN, not the log**, whenever a step's hazard is losing on time. S089
+is the case this is written for.
+
 ## Rate the engine against the public lists
 
 ```bash

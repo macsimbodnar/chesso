@@ -288,7 +288,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-55. S077  an emitted table names the engine commit and the corpus hash it was fitted from
 56. S078  S060 points at the mate-inside-the-pruned-depth test S033 added, and S061's citation names the case it means
 57. S087  an absolute rating for chesso on the CCRL Blitz scale, from a gauntlet against engines the public lists rate
 58. S088  a fourth engine family in the reference set and the rating re-solved, so the anchor spread is inside the 30 Elo the procedure allows

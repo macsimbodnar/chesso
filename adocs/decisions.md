@@ -4549,3 +4549,41 @@ Consequences: **chesso has not measurably moved.** `src/` is byte-identical to
               at concurrency 12, so the next one is the test: if it reproduces
               44 % against Blunder 8.5.5, the pool composition is real and
               DEC-075 needs revisiting.
+
+## DEC-078  2026-08-18  S089's accepts named the wrong test file for the S036 case
+Tags:         planning, testing, s089, s036, dec-071
+
+Context:      S089's `accepts:` requires that "`tests/test_search.cpp` keeps a
+              case that a 1 ms clock returns a legal move, which is the S036
+              defect". `tests/test_search.cpp` has **no UCI-level time test and
+              never had one**. The case is `tests/test_engine.cpp:807`,
+              `a one millisecond clock answers without a stop`, inside the
+              `engine: uci layer` fixture -- which is the suite that owns
+              `require_playable()`, so it is also the only place the *legality*
+              half of that clause can be asserted.
+
+              Found by the implementing agent when the step met the code, and
+              reported rather than worked around.
+
+Decision:     **The `accepts:` clause is amended to name
+              `tests/test_engine.cpp`, and the test stays where it lives.** The
+              S036 case was kept and strengthened in place -- `go wtime 1
+              btime 1` added to `every kind of go answers with one legal
+              bestmove`, so the sudden-death path is covered by an assertion of
+              legality rather than of a non-null bestmove. Recorded by the agent
+              under DEC-041; the plan was wrong when it met the code, and
+              AGENTS.md requires an entry and an amendment rather than a silent
+              deviation.
+
+Rejected:     **Moving the test to `tests/test_search.cpp` to satisfy the text.**
+              It would put a UCI-level clock test in the search unit suite, away
+              from the fixture that can assert legality, to make a sentence true.
+
+              **Leaving the clause and quietly testing elsewhere.** That is the
+              silent deviation the rule exists to prevent, and the next reader
+              would have gone looking in the wrong file.
+
+Consequences: The step file is amended in the same commit as the verdict. No
+              behaviour changes and no test is weakened -- the clause is
+              satisfied more strongly than it asked, in the file where it was
+              already satisfied.
