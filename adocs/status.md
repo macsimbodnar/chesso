@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-18 by `moltke --step status`.
 
 - Last done: S053
-- In progress: S088 a fourth engine family in the reference set and the rating re-solved, so the anchor spread is inside the 30 Elo the procedure allows
-- Next: S088
+- In progress: S089 a time budget that scales with best-move stability and with a falling score, instead of remaining over a fixed movestogo plus half the increment
+- Next: S089
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing

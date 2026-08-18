@@ -122,7 +122,77 @@
      is what the SPRT then measured. S021. */                                  \
   X(ASPIRATION_MIN_DEPTH, "AspirationMinDepth", 5,   2, 64)                    \
   X(ASPIRATION_DELTA,     "AspirationDelta",    50,  1, 2000)                  \
-  X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 400, 1, 48000)
+  X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 400, 1, 48000)                 \
+                                                                               \
+  /* Time management. The clock is turned into an allocation for this move,    \
+     and the allocation into two limits: a soft one that decides whether to    \
+     begin another iteration, and a hard one a timer is armed at and which     \
+     stops the search inside an iteration. S089.                               \
+                                                                               \
+     TM_SOFT_PERCENT and TM_HARD_PERCENT are the two limits as a percentage    \
+     of that allocation. The soft one at 60 is what shipped. The hard one is   \
+     new: before S089 the timer was armed at the allocation itself, so an      \
+     iteration begun just under the soft limit was cut off at 1.67 times it    \
+     however close it was to finishing.                                        \
+                                                                               \
+     Bounds are arithmetic. Above 100 the soft limit is no longer the smaller  \
+     of the pair and the decision to begin an iteration is taken after the     \
+     allocation is already spent; at 0 no iteration after the first ever       \
+     begins. Below 100 the hard limit sits under the soft one, the soft one's  \
+     clamp drags it down to meet it, and the split is inert rather than        \
+     tighter. Past ten times the allocation only the clamp to the clock is     \
+     left binding and the setting stops being one. */                          \
+  X(TM_SOFT_PERCENT,   "TmSoftPercent",   60,  1,   100)                       \
+  X(TM_HARD_PERCENT,   "TmHardPercent",   300, 100, 1000)                      \
+                                                                               \
+  /* The allocation itself, at a sudden-death control. There is no time        \
+     control boundary to divide the clock by, and the number that used to be   \
+     divided by was DEFAULT_MOVES_TO_GO -- a fabricated 20, which made the     \
+     engine play as though a control sat twenty moves out however long the     \
+     game had left. A percentage of what is actually there claims nothing      \
+     about the move count and decays on its own: 5 % spent leaves 95 %, and    \
+     5 % of that is a smaller number without anything counting moves.          \
+                                                                               \
+     5 and 50 are what the old formula produced at movestogo 20, deliberately: \
+     this step is the soft/hard split and the scaling below, and moving the    \
+     base allocation in the same commit would put two changes in one SPRT.     \
+                                                                               \
+     The increment is spent rather than banked because it is replenished every \
+     move; the bound is that it cannot be spent twice. At 0 the sudden-death   \
+     allocation is the increment alone, which at no increment leaves only the  \
+     floor -- hence the floor of 1. */                                         \
+  X(TM_SUDDEN_DEATH_PERCENT, "TmSuddenDeathPercent", 5,  1, 100)               \
+  X(TM_INCREMENT_PERCENT,    "TmIncrementPercent",   50, 0, 100)               \
+                                                                               \
+  /* What the search buys back. The soft limit is scaled by a percentage that  \
+     starts at 100 and is moved by two things the previous iterations said.    \
+                                                                               \
+     A best move that has not changed for several iterations is unlikely to    \
+     change in the next one, so each unchanged iteration takes                 \
+     TM_STABILITY_PERCENT off, up to TM_STABILITY_MAX of them. The count       \
+     cannot exceed MAX_DEPTH iterations, which is the upper bound; 0 switches  \
+     the discount off. One iteration is not allowed to take more than half the \
+     allocation away by itself, and the product of the two is held off zero by \
+     TM_SCALE_MIN_PERCENT rather than by a bound this list cannot express.     \
+                                                                               \
+     A score that has fallen since the previous iteration means the position   \
+     is turning out worse than it looked, which is exactly when another        \
+     iteration is worth beginning. TM_FALLING_PERCENT is the whole grant and   \
+     TM_FALLING_MAX_CP is the fall that earns it, linear below and flat above. \
+     The divisor cannot be zero; twenty pawns is already every fall there is.  \
+     At the shipping TM_SOFT_PERCENT and TM_HARD_PERCENT the scaled soft limit \
+     reaches the hard limit at 400 and the clamp takes over, so that is the    \
+     top.                                                                      \
+                                                                               \
+     TM_SCALE_MIN_PERCENT is the floor on the result. At 0 the soft limit is   \
+     zero and no iteration after the first ever begins; at 100 the scale can   \
+     never fall below the unscaled allocation and the stability discount is    \
+     switched off. */                                                          \
+  X(TM_STABILITY_MAX,     "TmStabilityMax",     8,   0, 126)                   \
+  X(TM_STABILITY_PERCENT, "TmStabilityPercent", 4,   0, 50)                    \
+  X(TM_FALLING_MAX_CP,    "TmFallingMaxCp",     100, 1, 2000)                  \
+  X(TM_FALLING_PERCENT,   "TmFallingPercent",   50,  0, 400)                   \
+  X(TM_SCALE_MIN_PERCENT, "TmScaleMinPercent",  30,  1, 100)
 // clang-format on
 
 

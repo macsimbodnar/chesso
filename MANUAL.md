@@ -85,6 +85,15 @@ all, the tune build searches exactly what the release build searches.
 | `AspirationMinDepth` | 5 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
 | `AspirationDelta` | 50 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
 | `AspirationMaxDelta` | 400 | 1 to 48000 | where widening stops doubling and the iteration is repeated with the full window instead |
+| `TmSoftPercent` | 60 | 1 to 100 | time management: the soft limit, as a percentage of the allocation for this move. Another iteration is begun only below it |
+| `TmHardPercent` | 300 | 100 to 1000 | the hard limit, as a percentage of the same allocation. A timer is armed at it and it stops the search inside an iteration. Never above what the clock has |
+| `TmSuddenDeathPercent` | 5 | 1 to 100 | with no `movestogo` on the `go` line, the share of the remaining clock the allocation starts from |
+| `TmIncrementPercent` | 50 | 0 to 100 | how much of the increment is added to that allocation |
+| `TmStabilityMax` | 8 | 0 to 126 | the most consecutive iterations with an unchanged best move that the soft limit is discounted for. 0 switches the discount off |
+| `TmStabilityPercent` | 4 | 0 to 50 | how much each of those iterations takes off the soft limit |
+| `TmFallingMaxCp` | 100 | 1 to 2000 | the fall in score since the previous iteration that earns the whole extension. Linear below, flat above |
+| `TmFallingPercent` | 50 | 0 to 400 | the whole extension, as a percentage added to the soft limit |
+| `TmScaleMinPercent` | 30 | 1 to 100 | the floor on the scaled soft limit, as a percentage of the unscaled one. 100 switches the stability discount off |
 
 ## Commands
 

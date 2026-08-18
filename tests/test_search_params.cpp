@@ -51,6 +51,15 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"AspirationMinDepth", 5},
   {"AspirationDelta",    50},
   {"AspirationMaxDelta", 400},
+  {"TmSoftPercent",        60},
+  {"TmHardPercent",        300},
+  {"TmSuddenDeathPercent", 5},
+  {"TmIncrementPercent",   50},
+  {"TmStabilityMax",       8},
+  {"TmStabilityPercent",   4},
+  {"TmFallingMaxCp",       100},
+  {"TmFallingPercent",     50},
+  {"TmScaleMinPercent",    30},
 };
 // clang-format on
 
@@ -302,6 +311,43 @@ TEST_SUITE("search parameters")
 
     CHECK(search_lmr_reduction_probe(probe_depth, probe_move) ==
           expected(base_default, divisor_default, probe_depth, probe_move));
+  }
+
+
+  TEST_CASE("the time scale cannot be driven to zero")
+  {
+    // S089's floor. At the shipping defaults it does not bind -- eight stable
+    // iterations at 4 % each leaves 68 -- so the precondition has to be built
+    // here rather than assumed: a stability discount large enough to take the
+    // scale past zero on its own. Without moving the two parameters first this
+    // case would pass on a scale function with no floor in it at all, which is
+    // why it lives in the binary that can move a parameter.
+    const int max_index = index_of("TmStabilityMax");
+    const int percent_index = index_of("TmStabilityPercent");
+    const int floor_index = index_of("TmScaleMinPercent");
+
+    REQUIRE(max_index >= 0);
+    REQUIRE(percent_index >= 0);
+    REQUIRE(floor_index >= 0);
+
+    const search_param_t& max_param =
+        search_param_info(static_cast<size_t>(max_index));
+    const search_param_t& percent_param =
+        search_param_info(static_cast<size_t>(percent_index));
+
+    // Precondition: at the defaults the floor is not what is being observed.
+    REQUIRE(search_time_scale_percent(MAX_DEPTH, 0) > TM_SCALE_MIN_PERCENT);
+
+    REQUIRE(search_param_set(max_param.name, max_param.max_value));
+    REQUIRE(search_param_set(percent_param.name, percent_param.max_value));
+
+    // 126 iterations at 50 % each is 6300 taken off a scale that starts at
+    // 100, so nothing but the floor can be left.
+    CHECK_EQ(search_time_scale_percent(MAX_DEPTH, 0), TM_SCALE_MIN_PERCENT);
+    CHECK(search_time_scale_percent(MAX_DEPTH, 0) > 0);
+
+    REQUIRE(search_param_set(max_param.name, max_param.default_value));
+    REQUIRE(search_param_set(percent_param.name, percent_param.default_value));
   }
 
 

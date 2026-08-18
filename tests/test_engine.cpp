@@ -400,13 +400,17 @@ TEST_SUITE("engine: uci layer")
   // conformance is covered by test_uci.sh (fastchess --compliance); what is
   // here are the regressions that a compliance run does not exercise.
 
-  TEST_CASE("time budget never exceeds the clock")
+  // S089 split the single budget into a soft limit, which decides whether to
+  // begin another iteration, and a hard limit, which is what a timer is armed
+  // at and what stops the search inside one. The hard limit is the dangerous
+  // half: a forfeit is a whole point rather than noise.
+  TEST_CASE("the hard limit never exceeds the clock")
   {
     struct case_t
     {
       int remaining;
       int increment;
-      int movestogo;
+      int movestogo;  // 0 is sudden death - the GUI sent no [movestogo]
     };
 
     // clang-format off
@@ -419,6 +423,13 @@ TEST_SUITE("engine: uci layer")
       {60,     0,    1},
       {51,     0,    40},
       {300000, 5000, 1},
+      // Sudden death, which is what a match actually plays. Before S089 these
+      // reached the same formula with a fabricated movestogo of 20 in them.
+      {600000, 0,    0},
+      {100000, 1000, 0},
+      {10000,  200,  0},
+      {1000,   0,    0},
+      {100,    0,    0},
       // S036. Below 2 * MOVE_OVERHEAD_MS the cap goes negative and only the
       // floor is left; at remaining == 1 the floor halves to zero too. A zero
       // budget arms no timer, so the search never ends.
@@ -426,21 +437,28 @@ TEST_SUITE("engine: uci layer")
       {2,      0,    1},
       {1,      0,    20},
       {1,      100,  1},
+      {1,      0,    0},
+      {2,      100,  0},
     };
     // clang-format on
 
     for (const case_t& test : cases) {
-      const int budget = compute_search_time_ms(test.remaining, test.increment,
-                                                test.movestogo);
+      const search_time_budget_t budget = compute_search_time_budget(
+          test.remaining, test.increment, test.movestogo);
 
       const std::string title = "remaining " + std::to_string(test.remaining) +
                                 " inc " + std::to_string(test.increment) +
                                 " movestogo " + std::to_string(test.movestogo);
 
-      REQUIRE_MESSAGE(budget > 0, title);
+      REQUIRE_MESSAGE(budget.soft_ms > 0, title);
+      REQUIRE_MESSAGE(budget.hard_ms > 0, title);
+
+      // The soft limit decides whether to begin an iteration the hard limit
+      // will then cut off, so above the hard limit it decides nothing.
+      REQUIRE_MESSAGE(budget.soft_ms <= budget.hard_ms, title);
 
       // Never more than the clock.
-      REQUIRE_MESSAGE(budget <= test.remaining, title);
+      REQUIRE_MESSAGE(budget.hard_ms <= test.remaining, title);
 
       // Strictly less wherever a clock that size leaves room for it: something
       // has to be left for getting the move out of the door, or the flag falls
@@ -448,14 +466,107 @@ TEST_SUITE("engine: uci layer")
       // budget is strictly less, and the flag falls either way -- answering
       // late is a lost game, not answering hangs the match. S036.
       if (test.remaining > 1) {
-        REQUIRE_MESSAGE(budget < test.remaining, title);
+        REQUIRE_MESSAGE(budget.hard_ms < test.remaining, title);
       }
 
       // And a floor, so a nearly empty clock still buys a real search rather
       // than a move picked at depth one.
-      REQUIRE_MESSAGE(budget >= std::min(50, test.remaining / 2), title);
+      const int floor_ms = std::max(1, std::min(50, test.remaining / 2));
+
+      REQUIRE_MESSAGE(budget.hard_ms >= floor_ms, title);
+
+      // The whole move overhead, on every clock large enough to hold both it
+      // and the floor. Below that the floor is the only thing left and it wins
+      // on purpose, which is the S036 rows above.
+      if (test.remaining - MOVE_OVERHEAD_MS >= floor_ms) {
+        REQUIRE_MESSAGE(budget.hard_ms <= test.remaining - MOVE_OVERHEAD_MS,
+                        title);
+      }
     }
   }
+
+
+  // S089. Sudden death used to be handled by pretending the GUI had sent
+  // [movestogo 20], so the engine played every clock as though a time control
+  // boundary sat twenty moves out. What replaces it is a share of what is
+  // left, and the property that separates the two is the one below: a share is
+  // the same fraction of any clock and implies no boundary at all.
+  TEST_CASE("a sudden-death allocation is a share of the clock")
+  {
+    // Zero increment throughout, so every number here is the clock alone. With
+    // an increment folded in the ratio would not be constant and the case
+    // would prove nothing about the share.
+    const std::vector<int> clocks = {800000, 400000, 200000, 100000, 50000};
+
+    std::vector<double> shares;
+
+    for (const int clock : clocks) {
+      const search_time_budget_t budget =
+          compute_search_time_budget(clock, 0, 0);
+
+      shares.push_back(static_cast<double>(budget.hard_ms) / clock);
+    }
+
+    // Precondition: there are two shares to compare.
+    REQUIRE(shares.size() >= 2);
+
+    for (size_t i = 1; i < shares.size(); ++i) {
+      REQUIRE_MESSAGE(
+          std::abs(shares[i] - shares[0]) < 0.001,
+          ("the share moved with the clock: " + std::to_string(shares[0]) +
+           " then " + std::to_string(shares[i])));
+    }
+
+    // And it is small enough that one move cannot drain the clock, whatever
+    // the settings are moved to. This is the safety half of the same property.
+    REQUIRE(shares[0] > 0.0);
+    REQUIRE(shares[0] < 0.25);
+  }
+
+
+  // S089. The two factors, held against their own arithmetic. What this case
+  // cannot show is that the search calls the function at all, which is what
+  // the loop case below is for.
+  TEST_CASE("the time scale moves with stability and with a falling score")
+  {
+    // Precondition and the point every comparison below is measured from.
+    REQUIRE(search_time_scale_percent(0, 0) == 100);
+
+    // A best move that has survived an iteration buys less time, and each
+    // further iteration that keeps it buys a little less again.
+    REQUIRE(TM_STABILITY_PERCENT > 0);
+    CHECK(search_time_scale_percent(1, 0) < 100);
+    CHECK(search_time_scale_percent(2, 0) < search_time_scale_percent(1, 0));
+
+    // The discount stops counting at TM_STABILITY_MAX rather than running on
+    // to zero over the depths a real search reaches.
+    CHECK_EQ(search_time_scale_percent(TM_STABILITY_MAX, 0),
+             search_time_scale_percent(TM_STABILITY_MAX + 1, 0));
+    CHECK_EQ(search_time_scale_percent(TM_STABILITY_MAX, 0),
+             search_time_scale_percent(MAX_DEPTH, 0));
+
+    // A score that fell buys more, up to the whole grant at TM_FALLING_MAX_CP.
+    REQUIRE(TM_FALLING_PERCENT > 0);
+    CHECK(search_time_scale_percent(0, TM_FALLING_MAX_CP) > 100);
+    CHECK(search_time_scale_percent(0, TM_FALLING_MAX_CP) >
+          search_time_scale_percent(0, TM_FALLING_MAX_CP / 2));
+    CHECK_EQ(search_time_scale_percent(0, TM_FALLING_MAX_CP),
+             100 + TM_FALLING_PERCENT);
+
+    // And the grant stops there. A mate score on the other side of a trade is
+    // a fall of tens of thousands of centipawns and must not buy time without
+    // bound.
+    CHECK_EQ(search_time_scale_percent(0, TM_FALLING_MAX_CP),
+             search_time_scale_percent(0, 100000));
+
+    // The two are independent settings whose product no single range can
+    // bound, so the floor is what keeps the soft limit off zero. At the
+    // shipping defaults it does not bind; the case that builds the
+    // precondition for it lives in tests/test_search_params.cpp, which is the
+    // binary that can move a parameter.
+    CHECK(search_time_scale_percent(MAX_DEPTH, TM_FALLING_MAX_CP) > 0);
+  }
+
 
   TEST_CASE("uci_init leaves the engine on the start position")
   {
@@ -635,7 +746,6 @@ TEST_SUITE("engine: uci layer")
     uci_search_options_t options = {};
     options.depth = MAX_DEPTH;
     options.nodes = 1;
-    options.movestogo = DEFAULT_MOVES_TO_GO;
 
     uci_search_result_t result;
     {
@@ -667,7 +777,6 @@ TEST_SUITE("engine: uci layer")
     uci_search_options_t options = {};
     options.depth = MAX_DEPTH;
     options.nodes = 0;
-    options.movestogo = DEFAULT_MOVES_TO_GO;
     options.movetime_ms = 200;
     options.search_time_ms = 200;
 
@@ -750,6 +859,117 @@ TEST_SUITE("engine: uci layer")
     uci_shutdown();
   }
 
+
+  // S089. search_time_scale_percent() is a pure function and the search could
+  // compute it correctly on every iteration and never look at the answer, so
+  // what is pinned here is the loop: the stability it counted, the fall it
+  // measured and the scale it ended on have to be the same three numbers the
+  // function relates.
+  //
+  // Both runs are fixed-depth with no clock and no node budget, so nothing
+  // arms a timer, the iteration count is not whatever the machine got through,
+  // and every number below is the same on any machine.
+  TEST_CASE("the iteration loop scales its soft limit by what the search found")
+  {
+    struct probe_t
+    {
+      int stability;
+      int drop;
+      int scale;
+    };
+
+    auto probe = [](const std::string& position, int depth,
+                    bool scale_time) -> probe_t {
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line(position);
+
+        // [position] stops whatever was running, and [go] is the only path
+        // that clears the stop flag again - iterative_deepening_search
+        // documents that its caller has cleared it before the timer is armed.
+        // Without this the direct call below aborts after its first iteration.
+        // A depth-limited [go] arms no timer, so the flag stays clear.
+        uci_process_line("go depth 1");
+        uci_wait_for_search();
+      }
+
+      uci_search_options_t options = {};
+      options.depth = depth;
+      options.scale_time = scale_time;
+
+      uci_search_result_t result;
+      {
+        stdout_capture_t capture;
+        result = iterative_deepening_search(options);
+      }
+
+      REQUIRE(result.best_move != 0);
+
+      const probe_t out = {uci_last_best_move_stability(),
+                           uci_last_score_drop_cp(),
+                           uci_last_time_scale_percent()};
+
+      uci_shutdown();
+
+      return out;
+    };
+
+    SUBCASE("a settled best move ends up with less time than the allocation")
+    {
+      const std::string position =
+          "position fen r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/"
+          "RNB1K1NR b KQkq - 3 3";
+
+      const probe_t scaled = probe(position, 8, true);
+
+      // Preconditions. Without a run of iterations that kept the same move
+      // there is no discount to find, and with a fall in the last one the
+      // discount would not be the only thing moving the scale.
+      REQUIRE(scaled.stability > 0);
+      REQUIRE(scaled.drop == 0);
+
+      CHECK_EQ(scaled.scale,
+               search_time_scale_percent(scaled.stability, scaled.drop));
+      CHECK(scaled.scale < 100);
+
+      // And the search does not get to move a time the GUI named. Same
+      // position, same depth, same two inputs - the loop still records them -
+      // and no scaling, which is what [go movetime] and the no-limit fallback
+      // ask for. The run above is what makes this one non-vacuous: without it
+      // a scale that never moved at all would satisfy it.
+      const probe_t fixed = probe(position, 8, false);
+
+      REQUIRE(fixed.stability == scaled.stability);
+      REQUIRE(fixed.drop == scaled.drop);
+      CHECK_EQ(fixed.scale, 100);
+    }
+
+    SUBCASE("a score that fell buys time back")
+    {
+      // The score at depth 6 here is 62 centipawns below the score at depth 5,
+      // and the best move has been stable for one iteration. The fall has to
+      // outweigh that discount or it is not reaching the scale at all.
+      const probe_t scaled = probe(
+          "position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+          "R3K2R w KQkq - 0 1",
+          6, true);
+
+      // Precondition: the score actually fell. On a loop that passed a
+      // constant zero for the fall this is what goes red.
+      REQUIRE(scaled.drop > 0);
+
+      CHECK_EQ(scaled.scale,
+               search_time_scale_percent(scaled.stability, scaled.drop));
+
+      // Against the same position's own stability, so the comparison isolates
+      // the fall rather than reading a number that a settled move would have
+      // produced anyway.
+      CHECK(scaled.scale > search_time_scale_percent(scaled.stability, 0));
+    }
+  }
+
   // Regression, S037: the info line carried the *current iteration's* node
   // count, so `nodes` fell between depths and tools/search_bench.py - which
   // keeps the last info line and is how INV-6 is discharged for a change
@@ -784,7 +1004,6 @@ TEST_SUITE("engine: uci layer")
     // count is fixed rather than whatever the machine got through.
     uci_search_options_t options = {};
     options.depth = 6;
-    options.movestogo = DEFAULT_MOVES_TO_GO;
 
     uci_search_result_t result;
     std::vector<std::string> lines;
@@ -971,6 +1190,11 @@ TEST_SUITE("engine: uci go")
       "go movetime 100",
       "go wtime 1000 btime 1000 movestogo 20",
       "go wtime 1000 btime 1000 winc 50 binc 50",
+      // S036, and the legality half of it that the watchdog case above cannot
+      // reach from its own suite: a 1ms clock still answers with a move that
+      // can be played. Since S089 this is the sudden-death path, which used to
+      // be a fabricated [movestogo 20].
+      "go wtime 1 btime 1",
       "go depth 1",
       // No depth, no nodes, and a clock already at zero: the fallback budget
       // is the only thing that ends this one.

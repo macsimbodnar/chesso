@@ -51,6 +51,15 @@ static bool running = true;
 // from a search that never narrowed anything. S021.
 static int last_aspiration_failures = 0;
 
+// The time manager's state after the last completed iteration of the last
+// iterative_deepening_search(). Read by nothing in the engine, for the same
+// reason as above: the scale is a pure function and a loop that computed it
+// and ignored it would satisfy every test written against the function alone.
+// S089.
+static int last_best_move_stability = 0;
+static int last_score_drop_cp = 0;
+static int last_time_scale_percent = 100;
+
 
 //-#############################   DECLARATIONS  ############################-//
 typedef bool (*process_func)(std::queue<std::string>&);
@@ -66,6 +75,18 @@ const transposition_table_t* uci_tt()
 
 int uci_last_aspiration_failures()
 { return last_aspiration_failures; }
+
+
+int uci_last_best_move_stability()
+{ return last_best_move_stability; }
+
+
+int uci_last_score_drop_cp()
+{ return last_score_drop_cp; }
+
+
+int uci_last_time_scale_percent()
+{ return last_time_scale_percent; }
 
 
 void uci_reply(const std::string& response)
@@ -402,15 +423,42 @@ void stop_search_after_ms(uint64_t ms)
 }
 
 
-int compute_search_time_ms(int remaining_ms, int increment_ms, int movestogo)
+search_time_budget_t compute_search_time_budget(int remaining_ms,
+                                                int increment_ms,
+                                                int movestogo)
 {
-  assert(movestogo > 0);
+  assert(movestogo >= 0);
   assert(remaining_ms > 0);
+  assert(increment_ms >= 0);
 
-  int budget = (remaining_ms / movestogo) + (increment_ms / 2);
+  // The allocation this move is measured against, before either limit is taken
+  // from it. int64 throughout: remaining_ms is whatever the GUI sent, up to
+  // INT_MAX, and TM_HARD_PERCENT multiplies it.
+  //
+  // With a movestogo the clock has a boundary and the share is the obvious
+  // one. Without, there is no boundary, and the number that used to be divided
+  // by was a fabricated 20 - so a sudden-death game was played as though a
+  // control sat twenty moves out, at move 3 and at move 90 alike. A percentage
+  // of what is actually left claims nothing about the move count. S089.
+  const int64_t clock_part =
+      (movestogo > 0)
+          ? (static_cast<int64_t>(remaining_ms) / movestogo)
+          : ((static_cast<int64_t>(remaining_ms) * TM_SUDDEN_DEATH_PERCENT) /
+             100);
 
-  // Never budget more than is actually left
-  budget = std::min(budget, remaining_ms - MOVE_OVERHEAD_MS);
+  const int64_t base_ms =
+      clock_part +
+      ((static_cast<int64_t>(increment_ms) * TM_INCREMENT_PERCENT) / 100);
+
+  int64_t hard_ms = (base_ms * TM_HARD_PERCENT) / 100;
+  int64_t soft_ms = (base_ms * TM_SOFT_PERCENT) / 100;
+
+  // Never budget more than is actually left. This is the line between a late
+  // move and a lost game, so it is applied to the hard limit - the one a timer
+  // is armed at - and nothing downstream is allowed to raise it again: the
+  // scaling in iterative_deepening_search() moves the soft limit only.
+  hard_ms = std::min(hard_ms, static_cast<int64_t>(remaining_ms) -
+                                  static_cast<int64_t>(MOVE_OVERHEAD_MS));
 
   // The floor is half the clock, capped at 50ms, and below 2 * MOVE_OVERHEAD_MS
   // it is the only thing left holding the budget up - the cap above has already
@@ -418,9 +466,43 @@ int compute_search_time_ms(int remaining_ms, int increment_ms, int movestogo)
   // a zero budget arms no timer, so with no depth and no node limit nothing at
   // all bounds the search and the engine never answers. One millisecond loses
   // on time; silence hangs the match. S036.
-  budget = std::max(budget, std::max(1, std::min(50, remaining_ms / 2)));
+  const int64_t floor_ms = std::max(1, std::min(50, remaining_ms / 2));
 
-  return budget;
+  hard_ms = std::max(hard_ms, floor_ms);
+
+  // The soft limit is the smaller of the two by construction. On a clock short
+  // enough for the floor to be the whole budget the two meet, which is right:
+  // there is no second iteration to decide about.
+  soft_ms = std::max<int64_t>(std::min(soft_ms, hard_ms), 1);
+
+  return {static_cast<int>(soft_ms), static_cast<int>(hard_ms)};
+}
+
+
+int search_time_scale_percent(int best_move_stability, int score_drop_cp)
+{
+  assert(best_move_stability >= 0);
+  assert(score_drop_cp >= 0);
+
+  int scale = 100;
+
+  // A best move that has survived several iterations is unlikely to fall in
+  // the next one, so each unchanged iteration takes a slice off. Capped,
+  // because the confidence stops growing long before the iterations do.
+  const int stability = std::min(best_move_stability, TM_STABILITY_MAX);
+  scale -= stability * TM_STABILITY_PERCENT;
+
+  // A score that fell means the position is turning out worse than the
+  // previous iteration thought, which is exactly when the next iteration is
+  // worth beginning. Linear in the fall up to TM_FALLING_MAX_CP, flat above.
+  const int drop = std::min(score_drop_cp, TM_FALLING_MAX_CP);
+  scale += (drop * TM_FALLING_PERCENT) / TM_FALLING_MAX_CP;
+
+  // The two are independent settings and their product is not bounded by
+  // either range, so the floor is what keeps the soft limit off zero. Without
+  // it a stability discount large enough to go negative would end every search
+  // at depth one.
+  return std::max(scale, TM_SCALE_MIN_PERCENT);
 }
 
 
@@ -585,11 +667,29 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   bool aspiration_ready = false;
 
   last_aspiration_failures = 0;
+  last_best_move_stability = 0;
+  last_score_drop_cp = 0;
+  last_time_scale_percent = 100;
 
-  const int soft_percent =
-      (conf.movetime_ms > 0) ? 100 : SEARCH_SOFT_LIMIT_PERCENT;
-  const double soft_limit_ms =
-      (static_cast<double>(conf.search_time_ms) * soft_percent) / 100.0;
+  // The hard limit is armed as a timer by the caller, and it is what stops the
+  // search inside an iteration. What is decided down here is the other half:
+  // whether to begin another iteration at all. S089.
+  //
+  // A caller that fills in only the hard limit gets soft == hard, which is
+  // what the fixed-limit paths ([go movetime], the no-limit fallback) want.
+  const int64_t hard_limit_ms = conf.search_time_ms;
+  const int64_t soft_base_ms = (conf.search_soft_time_ms > 0)
+                                   ? conf.search_soft_time_ms
+                                   : conf.search_time_ms;
+
+  int64_t soft_limit_ms = soft_base_ms;
+
+  // The scale's two inputs: how many completed iterations in a row returned
+  // the same best move, and how far the score fell in the last one.
+  move_t previous_best_move = 0;
+  int best_move_stability = 0;
+  int previous_score = 0;
+  bool previous_score_ready = false;
 
   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
     // Iterative deepening
@@ -712,6 +812,43 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       // iteration's window rather than being used as one.
       aspiration_score = search_result.score;
       aspiration_ready = !search_result.mate_found;
+
+      // The time manager reads the iteration that just finished. An aborted
+      // one supplies nothing: its score is a bound at best and the loop is
+      // about to break on it anyway.
+      if (search_result.best_move != 0 &&
+          search_result.best_move == previous_best_move) {
+        ++best_move_stability;
+      } else {
+        best_move_stability = 0;
+      }
+
+      previous_best_move = search_result.best_move;
+
+      const int score_drop =
+          previous_score_ready
+              ? std::max(0, previous_score - search_result.score)
+              : 0;
+
+      previous_score = search_result.score;
+      previous_score_ready = true;
+
+      const int scale = conf.scale_time ? search_time_scale_percent(
+                                              best_move_stability, score_drop)
+                                        : 100;
+
+      soft_limit_ms = (soft_base_ms * scale) / 100;
+
+      // The hard limit is the ceiling on both. Scaling may bring the soft
+      // limit up to it and never past it, which is what keeps every promise
+      // compute_search_time_budget() made about the clock.
+      if (hard_limit_ms > 0) {
+        soft_limit_ms = std::min(soft_limit_ms, hard_limit_ms);
+      }
+
+      last_best_move_stability = best_move_stability;
+      last_score_drop_cp = score_drop;
+      last_time_scale_percent = scale;
     }
 
     // Reported whenever there is a line to report, aborted iteration included.
@@ -758,7 +895,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
               std::chrono::steady_clock::now() - beguine_of_the_search)
               .count();
 
-      if (elapsed_ms >= soft_limit_ms) { break; }
+      if (elapsed_ms >= static_cast<double>(soft_limit_ms)) { break; }
     }
   }
 
@@ -1104,10 +1241,15 @@ bool command_go(std::queue<std::string>& args)
   search_options.infinite = false;
   search_options.depth = MAX_DEPTH;
   search_options.nodes = 0;
-  search_options.movestogo = DEFAULT_MOVES_TO_GO;
+  // Not seeded with a move count. No [movestogo] on the line means sudden
+  // death, and compute_search_time_budget() allocates a share of the clock
+  // instead of dividing by a number nobody sent. S089.
+  search_options.movestogo = 0;
   search_options.winc_ms = 0;
   search_options.binc_ms = 0;
   search_options.search_time_ms = 0;
+  search_options.search_soft_time_ms = 0;
+  search_options.scale_time = false;
 
   const int int_max = std::numeric_limits<int>::max();
 
@@ -1174,7 +1316,9 @@ bool command_go(std::queue<std::string>& args)
     LOG_I << "Infinite search. Only [stop] ends it" << END_I;
 
   } else if (search_options.movetime_ms > 0) {
+    // The GUI named the time. Both limits are it, and nothing scales them.
     search_options.search_time_ms = search_options.movetime_ms;
+    search_options.search_soft_time_ms = search_options.movetime_ms;
     stop_search_after_ms(search_options.search_time_ms);
 
     LOG_I << "Movetime set. Search will stop in "
@@ -1188,16 +1332,26 @@ bool command_go(std::queue<std::string>& args)
         is_white ? search_options.winc_ms : search_options.binc_ms;
 
     if (remaining_ms > 0) {
-      search_options.search_time_ms = compute_search_time_ms(
+      const search_time_budget_t budget = compute_search_time_budget(
           remaining_ms, increment_ms, search_options.movestogo);
 
-      LOG_I << "Time budget " << search_options.search_time_ms << "ms out of "
-            << remaining_ms << "ms remaining" << END_I;
+      search_options.search_time_ms = budget.hard_ms;
+      search_options.search_soft_time_ms = budget.soft_ms;
+      search_options.scale_time = true;
+
+      LOG_I << "Time budget " << budget.soft_ms << "ms soft, " << budget.hard_ms
+            << "ms hard, out of " << remaining_ms << "ms remaining" << END_I;
 
     } else if (!depth_given && search_options.nodes == 0) {
       // Nothing bounds this search: no clock (or a clock already at zero), no
       // depth, no node budget. Answering late is bad, never answering is worse.
       search_options.search_time_ms = FALLBACK_SEARCH_TIME_MS;
+
+      // The same soft share the clock path takes, so this path keeps the shape
+      // it had before S089 split the limits: it is a safety net, not a control
+      // to react to, and it is not scaled.
+      search_options.search_soft_time_ms =
+          (FALLBACK_SEARCH_TIME_MS * TM_SOFT_PERCENT) / 100;
 
       LOG_W << "[go] carries no usable limit, falling back to "
             << search_options.search_time_ms << "ms" << END_W;

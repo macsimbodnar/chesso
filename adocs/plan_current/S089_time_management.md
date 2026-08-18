@@ -36,3 +36,4 @@ with nothing else queued, so its verdict is clean whenever it runs.
 The failure mode is losing on time, and a forfeit is a whole point rather than
 noise. The hard limit is asserted by a test, not by argument, and the SPRT log
 is checked for time losses before the verdict is read.
+author:    Maksym Bodnar
