@@ -280,7 +280,9 @@ quote it with the commit it was taken at.** It read 3136397 before S065 refitted
 the constants, 3752725 at `c56ab41` after that fit, 1422053 once S033 added
 reverse futility pruning at margin 100, 1216123 once S068 cut that margin to
 75 — 14.5 % of the tree, for the +5 Elo or so of DEC-063's pooled estimate —
-and 1225840 once S021 added aspiration windows. A count from one of those is
+and 1225840 once S021 added aspiration windows, **918962 once S094 gave
+quiescence a transposition probe** -- 164123 / 670488 / 84351 against 174078 /
+927856 / 92855, same best moves. A count from one of those is
 not a baseline for another.
 
 **S021 is the one that went the wrong way, and it is the reason three

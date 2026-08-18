@@ -891,6 +891,55 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
+  // And the field is read rather than only written: quiescence stands pat on
+  // the number the entry carries instead of computing one of its own. S094.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "quiescence stands pat on the stored static score")
+  {
+    // Nothing to capture, so the value quiescence returns is the stand pat and
+    // nothing else. Same anchor as the case above.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    auto run = [&]() -> int {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      return quiescence(-10000, 10000, 0, 0, &game, &state);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    // Precondition: with nothing in the table quiescence works the number out
+    // for itself. Without this the assertion below would pass on an engine
+    // that answered 363 for some unrelated reason.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE_EQ(run(), static_score);
+
+    // Now an entry for this position carrying a static evaluation that is not
+    // this position's. The stored *score* is different again and cannot answer
+    // the node -- an upper bound of -9999 against an alpha of -10000 -- so
+    // anything but 563 coming back has to have come from the eval field.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    REQUIRE(load_FEN(fen, &game));
+    const int planted = static_score - 200;
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_ALPHA_NODE, 0,
+                   planted);
+
+    REQUIRE_EQ(run(), planted);
+  }
+
+
   // Without this, a quiescence that never stored anything would pass every
   // other case in this file.
   TEST_CASE_FIXTURE(search_fixture_t, "quiescence writes entries of its own")

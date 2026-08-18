@@ -213,25 +213,43 @@ int quiescence(int alpha,
   // No PV guard, unlike negamax's probe. Quiescence is below the reported
   // line: negamax clears pv_length[ply] and returns this score without
   // touching the PV table, so there is no line here for a cutoff to chop.
+  const tt_entry_t* tt_entry = tt_get_entry(state->tt, &game->board);
+
   {
     int tt_score = 0;
 
-    if (tt_entry_answers(tt_get_entry(state->tt, &game->board), TT_DEPTH_QS,
-                         ply, alpha, beta, &tt_score)) {
+    if (tt_entry_answers(tt_entry, TT_DEPTH_QS, ply, alpha, beta, &tt_score)) {
       return tt_score;
     }
   }
 
   // Lazy: quiescence is where the evaluation is called most, and most of those
   // nodes are nowhere near the window. S034.
-  bool stand_pat_is_exact = false;
+  //
+  // Except where the entry above already carries the number. evaluate() is a
+  // function of the position alone and the key that matched covers every field
+  // it reads, so recomputing it would produce what is already here -- and the
+  // probe has been paid for whether or not it answered the node, which makes
+  // the field free to read. What is stored is the score and never a bound, so
+  // this is strictly the better of the two numbers: the shortcut would have
+  // handed back cheap +/- LAZY_EVAL_MARGIN at the same node.
+  //
+  // INV-4 is untouched by this. The number was derived from the accumulators
+  // make_move maintains, and nothing here stops maintaining them; what is
+  // avoided is the second and third call that would rebuild the same score
+  // from them. S094.
+  bool stand_pat_is_exact =
+      tt_entry != nullptr && tt_entry->eval != TT_EVAL_NONE;
+
   const int stand_pat =
-      evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);
+      stand_pat_is_exact
+          ? tt_entry->eval
+          : evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);
 
   // Only a number the shortcut did not replace with a bound is worth keeping:
   // a bound holds on one side of one window and this entry will be read from
   // others. Every store below carries it, so a later reader finds the static
-  // score wherever this node had one. Nothing reads it yet. S094.
+  // score wherever this node had one. S094.
   const int stored_eval = stand_pat_is_exact ? stand_pat : TT_EVAL_NONE;
 
   // Nothing below this line is stored when the search is being abandoned or
