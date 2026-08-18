@@ -52,6 +52,61 @@ measurement gets talked into a nicer answer.
 else, and no disconnect or time-loss line in either fastchess log. Any forfeit
 would have invalidated the run.
 
+## The reference engines, exactly
+
+Neither the binaries nor their sources are in this repository; `references.tsv`
+is the record and this table is a copy of it as it stood for this measurement.
+Every one was identified by asking it `uci` and reading `id name`, not by its
+filename — `rating.sh` refuses the run on a mismatch.
+
+| engine | `id name` | CCRL entry | tag | origin | md5 |
+|---|---|---|---|---|---|
+| Blunder 7.1.0 | `Blunder 7.1.0` | Blunder 7.1.0 64-bit | `v7.1.0` | built from source, worktree off `/home/max/ws/blunder` | `294d3252a337c7b3814d169227de7082` |
+| Leorik 2.1 | `Leorik 2.1` | Leorik 2.1 64-bit | `2.1` | official `linux-x64` release | `8300612936009ae7298aa1e59e6c3c7a` |
+| Blunder 8.5.5 | `Blunder 8.5.5` | Blunder 8.5.5 64-bit | `v8.5.5` | built from source, worktree off `/home/max/ws/blunder` | `e354234b0929cf9d8f2b42b149509065` |
+| Leorik 2.4 | `Leorik 2.4` | Leorik 2.4 64-bit | `2.4` | official `linux-x64` release | `8e53f8903322383a831e1e0a8a8630bc` |
+
+Blunder is built here; Leorik is not, because this machine has no .NET SDK and
+the agent may not add one. DEC-069.
+
+**Their CCRL rows as read**, so the anchors are auditable without re-fetching —
+rating, error, and the game count the list computed it from:
+
+| engine | rating | error | CCRL games |
+|---|---|---|---|
+| Leorik 2.4 | 2829 | ±11 | 2437 |
+| Blunder 8.5.5 | 2664 | ±11 | 2502 |
+| Leorik 2.1 | 2568 | ±18 | **990** |
+| Blunder 7.1.0 | 2389 | ±18 | 1049 |
+
+List header: "Ponder off, General book up to 12 moves, up to 6 piece EGTB",
+"Time control: Equivalent to 2'+1" on an Intel i7-4770K", "Computed on August
+15, 2026 with Bayeselo based on 2'074'932 games". Read 2026-08-18.
+
+## Tooling versions
+
+| | |
+|---|---|
+| `fastchess` | `alpha 1.8.1 20260720-daa3ea2` |
+| `ordo` | `1.2.6` |
+| compiler | `g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0`, DEC-049 |
+
+The match, as issued by `rating.sh`:
+
+```
+fastchess -engine cmd=<snapshot> name=chesso \
+  -engine cmd=... name="Blunder 7.1.0" ... \
+  -tournament gauntlet -seeds 1 \
+  -openings file=books/8moves_v3.pgn format=pgn order=random \
+  -each tc=10+0.2 option.Hash=64 \
+  -draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400 \
+  -rounds 167 -games 2 -repeat -concurrency 12 -recover
+```
+
+`option.Threads` is deliberately absent: no reference engine exposes it, all
+four are single-threaded by construction, and chesso's is `min 1 max 1`.
+DEC-068.
+
 ## chesso's score against each reference
 
 668 games against each, colours reversed:

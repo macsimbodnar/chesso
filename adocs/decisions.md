@@ -3752,3 +3752,82 @@ Consequences: The reference set is now four engines the agent can rebuild from
               with no message and a zero-byte log. The probe now tolerates a
               non-exiting engine and the caller checks for an empty name
               instead, which is a real check rather than a swallowed error.
+
+## DEC-070  2026-08-18  a watcher that only reports the terminal marker is not a watcher that ends, and one leaked for ten hours
+Tags:         process, watcher, monitoring, dec-061, s087, incident
+
+Context:      DEC-061 requires two independent ways for a watcher to end: the
+              detached run prints a terminal marker as its last action and the
+              watcher is a command that **exits on that marker** -- the braces --
+              with `TaskStop` when the result is read as the belt. `tail -f`
+              never exits on its own and is named in that entry as the thing not
+              to use.
+
+              S087 ran four detached matches. `rating.sh` was written to print
+              `RATING-RUN-DONE <mode> <OK|INVALID> <outdir>` as its last line,
+              deliberately, for this rule. Every one of the four watchers was
+              then armed as:
+
+                  tail -f <log> | grep -E --line-buffered "RATING-RUN-DONE|..."
+
+              That form *reports* the marker as an event. It does not exit on
+              it. So all four ran with the belt only, and the belt held three
+              times: `TaskStop` after bracket 1, bracket 2 and rated run 2.
+
+              After rated run 1 the marker fired, the transcript read the log
+              directly with `tail -25` to get the anchor sweep, and the next
+              action was launching rated run 2. `TaskStop` was skipped, because
+              having read the result felt like having closed the loop.
+
+              The watcher survived **10 h 46 m**, through the rest of the step,
+              its completion and its commit. It was found only when the owner
+              asked what was being monitored, having noticed the CPU was idle,
+              and it was killed by pid.
+
+Decision:     **A watcher for a run in this repository exits on the run's
+              terminal marker. `TaskStop` is the belt and never the only
+              mechanism.** Taken by the agent after the incident above; the
+              rule it restores is DEC-061's and was not new.
+
+              **`DEV_MANUAL.md` gains a ready-made self-exiting watcher for
+              `rating.sh`**, so the correct form is a copy rather than a
+              reconstruction. The generic pattern was already there and was not
+              reached for.
+
+              **Reading a run's result does not close its watcher.** The two
+              are separate actions and the first is the one that feels like
+              finishing.
+
+              **`ps -eo pid,etime,cmd | grep '[t]ail -f'` is run when a run's
+              result is taken**, not only when something looks wrong. It is
+              already in `DEV_MANUAL.md` as a diagnostic; it is now part of
+              taking a result.
+
+Rejected:     **Treating it as a one-off slip and not recording it.** The wrong
+              watcher form was used four times out of four, and three of those
+              were rescued by hand. That is a systematic error with a manual
+              workaround, which is exactly the shape that eventually fails.
+
+              **Blaming the missing `TaskStop`.** It is the proximate cause and
+              the least useful one. Had the braces been in place, forgetting the
+              belt would have cost nothing.
+
+              **Adding a cleanup sweep at step completion instead.** It would
+              have caught this one and would not fix the class: a watcher armed
+              after the last completion, or in a session that is then cleared,
+              is still unreachable. `/clear` discards the task id while the
+              process lives, so `TaskStop` stops being available at all and
+              `kill <pid>` is the only exit.
+
+Consequences: No measurement was affected and none needed re-running. `tail -f`
+              blocked on a file descriptor costs no CPU: load average was 0.29
+              with the leak still live, and rated run 2 and the combined solve
+              had the machine to themselves. The cost was one leaked process
+              and the risk that a `/clear` would have made it killable only by
+              pid, which is the state DEC-061 exists to prevent.
+
+              The general lesson, and the reason this is an entry rather than a
+              worklog line: **building a mechanism is not using it.** The
+              terminal marker was implemented in `rating.sh` for this rule, in
+              the same session, by the same agent that then armed four watchers
+              which could not act on it.

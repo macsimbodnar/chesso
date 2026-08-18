@@ -546,6 +546,34 @@ between the references themselves; that is what the anchor sweep reports.
 `10+0.2`). Record and caveats in
 `adocs/data/rating_2026-08-18_ccrl_blitz.md`.
 
+### Watching a rating run
+
+Use a watcher that **exits on the marker**, not one that merely reports it:
+
+```bash
+log=/tmp/chesso_rating.log
+until grep -qE "RATING-RUN-(DONE|FAILED|INVALID)" "$log" 2>/dev/null; do sleep 30; done
+grep -E "RATING-RUN-|unexpected terminations|^anchored on" "$log"
+```
+
+`tail -f "$log" | grep RATING-RUN-DONE` looks equivalent and is not: it emits
+the marker as an event and then keeps running forever, because `tail -f` has no
+exit condition and a log that stops growing never delivers it SIGPIPE.
+
+**This is not hypothetical. It leaked a watcher for 10 h 46 m during S087.** All
+four of that step's watchers were armed as `tail -f | grep`, three were rescued
+by a hand-typed `TaskStop`, and the fourth was skipped because reading the run's
+result felt like closing the loop. It was found when the owner noticed the CPU
+was idle and asked what was being monitored. `rating.sh` had printed the
+terminal marker the whole time — the mechanism was built in the same session and
+then not used. DEC-070, DEC-061.
+
+When you take a run's result, also check nothing is still watching it:
+
+```bash
+ps -eo pid,etime,cmd | grep '[t]ail -f'
+```
+
 ## Analyse a game
 
 Never by reading it. See `CLAUDE.md` and DEC-023.
