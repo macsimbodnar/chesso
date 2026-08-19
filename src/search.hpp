@@ -39,6 +39,20 @@ int quiescence(int alpha,
                game_t* game,
                search_state_t* state);
 
+// One interior node. Declared here for the same reason quiescence is: reverse
+// futility only fires at a non-PV node past RFP_MIN_PLY, which no call to
+// search() can place a test on directly. Already external linkage, so this
+// declaration changes no code the compiler emits. Nothing outside search.cpp
+// calls it. S103.
+int negamax(int alpha0,
+            int beta,
+            int depth,
+            size_t ply,
+            game_t* game,
+            search_state_t* state,
+            move_t prev_move,
+            bool is_pv);
+
 #ifdef CHESSO_TUNE
 // The reduction the built table holds for a (depth, move number) pair. Tune
 // build only, and it exists for one test: LMR_BASE and LMR_DIVISOR are read

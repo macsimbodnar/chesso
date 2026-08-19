@@ -4683,3 +4683,93 @@ Consequences: **The win this step found is in none of its commits.** The
               maintaining them. The debug build, which asserts the accumulators
               against a full recomputation on every make and unmake, is green at
               all three commits.
+
+## DEC-080  2026-08-19  S103's touches field was narrower than its own accepts, and two line-range citations had gone stale
+Tags:         planning, testing, documentation, measurement, s103, s094, inv-6, dec-041, dec-079
+
+Context:      Two things came up while S103 was executed, neither of them a
+              change to what the engine does.
+
+              **1. The `touches:` field could not satisfy the `accepts:`
+              field.** It read `src/search.cpp at the reverse futility site
+              only`. The `accepts:` field requires "a test that the value read
+              from the entry equals what a fresh evaluate() returns for that
+              position, observed red by planting a different value". Reverse
+              futility fires only at a node that is not the root, not on the PV,
+              at or past `RFP_MIN_PLY` and within `RFP_MAX_DEPTH`. **No call to
+              `search()` can place a test on such a node**: the root is ply 0
+              and is a PV node, and which of its descendants ends up non-PV at
+              ply 3 is not something a caller chooses. So the test has to drive
+              `negamax` directly, the way the S094 cases drive `quiescence`,
+              and that needs a declaration in `src/search.hpp` and a case in
+              `tests/test_search.cpp` -- neither of which the field allowed.
+
+              `negamax` already had external linkage; only the declaration was
+              missing. So the header change moves no code the compiler emits,
+              which matters here because the step's whole claim is neutrality
+              plus a timing.
+
+              **2. Three documented line ranges were stale, found by the
+              completion check rather than by a reader.** `DEV_MANUAL.md`'s tune
+              build section printed a four-point `RfpMargin` node sweep in the
+              present tense -- "213509 is what the release build reports, to the
+              node" -- measured at S068's completing commit and wrong from some
+              later step onward; the release build reports 164123. `plan.md`'s
+              retention paragraph named moltke **0.11.0** where
+              `installed_plugins.json` names 0.12.0, and located `prune_plan()`
+              and `PLAN_DONE_KEPT` at 0.11.0 line numbers. `status.md`'s two
+              parked items cited `plan.md:174-188` and `specs.md:199-204`; the
+              paragraphs are at `plan.md:265-282` and `specs.md:236-241`, and
+              both citations had already been corrected once before, on
+              2026-08-17.
+
+Decision:     **The `touches:` field is amended in place to name
+              `src/search.hpp` and `tests/test_search.cpp`, with the reason in
+              the field**, following DEC-078: the plan met the code and lost, so
+              it is amended rather than deviated from silently.
+
+              **The stale figures are re-measured rather than deleted, in the
+              same commit as the step.** `DEV_MANUAL.md` now carries 164123 /
+              223454 / 476911 / 743308 at `RfpMargin` 75 / 100 / 300 / 2000,
+              re-measured at S103's commit on `build-tune`, plus a paragraph
+              saying the numbers move with the search and have been stale once.
+              `plan.md` names 0.12.0 and both sets of line numbers. `status.md`
+              names the current ranges and records that a line range into a
+              growing file is a claim with a short life.
+
+              Taken by the agent under DEC-041. Neither item changes what the
+              engine does; S103's own verdict is separate and is INV-6 on node
+              counts.
+
+Rejected:     **Testing reverse futility through `search()` on a position
+              contrived so the site fires somewhere in the tree.** What it would
+              assert is a whole-search score, which the change does not move --
+              the node counts are identical -- so the test would pass equally on
+              the code without the read. Non-vacuity is the requirement, and
+              that shape cannot meet it.
+
+              **Making `negamax` `static` and testing through a shim.** It is
+              not static now, so this would be a codegen change made to satisfy
+              a field, in a step measuring a 2.5 % timing.
+
+              **Deleting the stale sweep from `DEV_MANUAL.md` instead of
+              re-measuring it.** The paragraph exists to show the tune build
+              honours a `setoption`, which is a real property, and it is the
+              only place that is demonstrated.
+
+              **Fixing the citations silently.** Both had been fixed once
+              already without anything recording that they go stale by
+              construction; the second repair is the evidence that the pattern
+              is the problem, not the two numbers.
+
+Consequences: `src/search.hpp` now declares `negamax`, with the same "tests only"
+              comment `quiescence` carries. Nothing outside `src/search.cpp`
+              calls either.
+
+              **A line-range citation is now known to be the least durable claim
+              in these documents** -- three of them stale at once, two of them
+              for the second time. Nothing enforces them; `tools/plan_prose_check.py`
+              checks step ids in prose and not line numbers. No step is created
+              for a checker: it would need to know which paragraph a range meant,
+              which is the thing the range fails to express. Prefer a quoted
+              phrase or a grep-able heading over a range when writing one.

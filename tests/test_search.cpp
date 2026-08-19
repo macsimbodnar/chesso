@@ -940,6 +940,76 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
+  // The main search reads the same field. Reverse futility asked evaluate()
+  // for a number the entry was already carrying on 9.8 % of the calls it made,
+  // and none of them disagreed; it now reads the entry. S103.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "reverse futility prunes on the stored static score")
+  {
+    // Nothing to capture and nothing in check, so what the node returns when
+    // reverse futility fires is the static score minus the margin and nothing
+    // else. Same anchor as the two cases above.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    // Below beta by more than the margin at every value the case plants, so
+    // the fail-high is never the thing under test. The node is not the root,
+    // is not on the PV, is at RFP_MIN_PLY and is within RFP_MAX_DEPTH, which
+    // is every guard the site carries.
+    constexpr int DEPTH = 1;
+    constexpr int BETA = 100;
+
+    auto run = [&](bool is_pv) -> int {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      return negamax(BETA - 1, BETA, DEPTH, RFP_MIN_PLY, &game, &state, 0,
+                     is_pv);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    const int pruned = static_score - RFP_MARGIN * DEPTH;
+    REQUIRE(pruned >= BETA);
+
+    // Precondition: with nothing in the table the site works the number out
+    // for itself, and the node returns the bound reverse futility argues for.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE_EQ(run(false), pruned);
+
+    // Second precondition, and the one that makes the number above reverse
+    // futility's rather than the search's. The same node as a PV node is the
+    // one place the site is not allowed to fire, and it does not return this.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE_NE(run(true), pruned);
+
+    // Now an entry for this position carrying a static evaluation that is not
+    // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
+    // on, so anything but 563 - margin coming back has to have come from the
+    // eval field.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    REQUIRE(load_FEN(fen, &game));
+    const int planted = static_score - 200;
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_ALPHA_NODE, 0,
+                   planted);
+
+    const int planted_pruned = planted - RFP_MARGIN * DEPTH;
+    REQUIRE(planted_pruned >= BETA);
+    REQUIRE_EQ(run(false), planted_pruned);
+  }
+
+
   // Without this, a quiescence that never stored anything would pass every
   // other case in this file.
   TEST_CASE_FIXTURE(search_fixture_t, "quiescence writes entries of its own")

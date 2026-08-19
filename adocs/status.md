@@ -7,7 +7,7 @@ Updated: 2026-08-19 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S103
+- Next: S092
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
@@ -22,10 +22,11 @@ Updated: 2026-08-19 by `moltke --step status`.
     a stale file: `moltke --step status` derives the field from the last
     completed entry in `plan.md` **list order**, and retention is a window over
     list positions, so an entry sitting low in the list outlives completions that
-    came after it. `plan.md:174-188` states the rule against the code that
+    came after it. `plan.md:265-282` states the rule against the code that
     implements it — read `:173-187` until 2026-08-17, off by one at both ends: 173
-    is blank and 188 is the paragraph's last word — and this item does not restate
-    the census: the window moves on
+    is blank and 188 is the paragraph's last word, and `:174-188` until 2026-08-19,
+    by which time the paragraph had moved bodily and the range named a sentence
+    about S087 — and this item does not restate the census: the window moves on
     every completion, so a worked example here reads as a measurement while being
     a memory. Hand-correcting the field puts the file back out of agreement with
     its own generator, which the stop hook catches, so it is recorded here
@@ -60,11 +61,14 @@ Updated: 2026-08-19 by `moltke --step status`.
   - **Measurement capacity is the binding constraint on the whole plan.** An
     SPRT verdict costs three to four and a half hours at the DEC-048/DEC-050
     settings — all 12 threads of the DEC-049 machine — and the opening book is
-    only `8moves_v3.pgn`. `specs.md:199-204` is the source; this restates it
+    only `8moves_v3.pgn`. `specs.md:236-241` is the source; this restates it
     because it is the paragraph a session reads before deciding whether it can
     afford a measurement. (The citation read `:189-194` until 2026-08-17 and was
     stale by one commit: it was correct when S069 wrote it at `e8a3dca` and
-    `7f15ac4` added ten lines above the paragraph.) A verdict that stops early is
+    `7f15ac4` added ten lines above the paragraph. It then read `:199-204` until
+    2026-08-19 and was stale the same way, by more commits. **A line range into a
+    growing file is a claim with a short life**, and both of this file's have now
+    been re-checked twice; check them, do not quote them.) A verdict that stops early is
     cheaper — S033's took 44 m 10 s for 1012 games — and one that goes the
     distance costs the full window. Nothing else is measured while a match runs,
     and data generation and fits compete for the same machine.

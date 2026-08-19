@@ -448,6 +448,12 @@ int negamax(int alpha0,
   // the move is wanted for ordering even when no cutoff is taken.
   const move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
 
+  // The static evaluation this position was already scored with, where an
+  // earlier node recorded one. Copied out here for the reason above and read
+  // by reverse futility below. TT_EVAL_NONE where there is nothing to read.
+  // S103.
+  const int tt_eval = (tt_entry != nullptr) ? tt_entry->eval : TT_EVAL_NONE;
+
   if (!is_pv && ply > 0) {
     int tt_score = 0;
 
@@ -466,7 +472,8 @@ int negamax(int alpha0,
   // futility below is the only place the main search asks for one, so this
   // stays TT_EVAL_NONE at every other node rather than a call being added to
   // fill it in -- adding one would be exactly the recomputation INV-4 exists
-  // to keep out of the hot path. Stored with the entry, read by nothing. S094.
+  // to keep out of the hot path. Stored with the entry, and read there by the
+  // same site on a later visit. S094, S103.
   int static_eval = TT_EVAL_NONE;
 
   // Reverse futility pruning, also called static null move pruning. The null
@@ -504,7 +511,23 @@ int negamax(int alpha0,
   if (!is_pv && !is_in_check && static_cast<int>(ply) >= RFP_MIN_PLY &&
       depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
-    const int static_score = evaluate(&game->board);
+
+    // The entry already has the number where the probe above found one. It is
+    // the same number: evaluate() is a function of the position alone, the key
+    // that matched covers every field it reads, and what is stored is always
+    // the score and never the bound the lazy shortcut hands back in its place.
+    // So this is a call skipped, not a value approximated. Instrumented and
+    // counted rather than argued: 3368027 of the 14589403 calls this site made
+    // over 300 positions at depth 10, 23.1 %, and 0 of them disagreed with a
+    // fresh call. The rate is a property of how warm the table is -- the same
+    // count over the three search_bench positions at depth 12 reads 173440 of
+    // 1617617, 10.7 %, and zero disagreements there too.
+    //
+    // INV-4 is untouched. The stored number was derived from the accumulators
+    // make_move maintains and nothing here stops maintaining them; what is
+    // avoided is rebuilding the same score from them a second time. S103.
+    const int static_score =
+        (tt_eval != TT_EVAL_NONE) ? tt_eval : evaluate(&game->board);
 
     static_eval = static_score;
 

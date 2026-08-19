@@ -77,11 +77,20 @@ ignored like any other unknown option.
 
 It works, and this is the measurement rather than the claim. The midgame
 position of `tools/search_bench.py` at depth 9, driven over UCI on
-`build-tune`: **213509 nodes at `RfpMargin` 75, 292313 at 100, 549374 at 300,
-917971 at 2000**, best move `c3d5` throughout. 213509 is what the release build
-reports, to the node — it is the shipping default since S068 (2026-08-17), and
-the 100 figure was the one that matched before that step. Both re-measured at
-S068's completing commit, same pv to the move.
+`build-tune`, **re-measured at S103's commit**: **164123 nodes at `RfpMargin`
+75, 223454 at 100, 476911 at 300, 743308 at 2000**, best move `c3d5`
+throughout, and 164123 again with no `setoption` sent at all. 164123 is what
+the release build reports, to the node — 75 is the shipping default since S068
+(2026-08-17), and the 100 figure was the one that matched before that step.
+
+**Those numbers move with the search and this paragraph has been stale once.**
+It read 213509 / 292313 / 549374 / 917971 from S068's completing commit until
+2026-08-19 — correct when written, and wrong by the time it was next read,
+because every step that changes the tree changes it and none of them came here.
+Which step first broke it is not recorded and was not dug out; S021 and S094
+both moved the release count. A number in this file is a claim about the
+current binary, so re-measure it rather than quote it, the same way
+`search_bench.py`'s own figures below carry the commit they were taken at.
 
 **Wait for `bestmove` when you script it.** `go` runs on its own thread, so
 `printf 'go depth 9\nquit\n' | ./build-tune/src/chesso` sends `quit` into a

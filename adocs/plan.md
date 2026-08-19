@@ -264,14 +264,18 @@ enforces the correspondence and adds an entry when a step is created.
 
 **It also prunes completed entries, and it keeps the last five in *list order*,
 not the five most recently completed.** The checker is not in this tree. It is
-the moltke plugin, read here at **version 0.11.0**, where `prune_plan()`
-collects the completed entries by position in the file and drops all but the
-final `PLAN_DONE_KEPT` of them, `PLAN_DONE_KEPT = 5`. Follow it by those two
-symbols and not by a line number: they sat at `bin/moltke.py:1698-1700` and
-`:1681` in 0.11.0 and they move under any other version. The version is
-load-bearing rather than decoration — 0.1.0 is installed on this machine too and
-has neither symbol, so nothing in this paragraph is true of it. A step whose
-entry sits low in the list therefore outlives completions that came after it.
+the moltke plugin, read here at **version 0.12.0**, the one
+`installed_plugins.json` names, where `prune_plan()` collects the completed
+entries by position in the file and drops all but the final `PLAN_DONE_KEPT` of
+them, `PLAN_DONE_KEPT = 5`. Follow it by those two symbols and not by a line
+number: they sat at `bin/moltke.py:1698-1700` and `:1681` in 0.11.0, at
+`:1947` and `:1928` in 0.12.0, and they move again under any other version. The
+version is load-bearing rather than decoration, and more than one copy is on
+this machine: `cache/moltke/moltke/0.11.0` is still on disk beside 0.12.0, and
+`~/ws/moltke` is a working tree. The one the hooks run is the path
+`installed_plugins.json` names, and that is where the version was read. A step
+whose entry sits low in the list therefore outlives completions that came after
+it.
 S053 completed at 18:42 on 2026-08-13 and is still listed; S037 at 19:13 and S043 at 19:29 the same evening
 are gone, and so is S066 from the day after. S053 survives because its entry is
 the last line of the list, appended at creation, not because it is recent.
@@ -288,7 +292,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-57. S087  an absolute rating for chesso on the CCRL Blitz scale, from a gauntlet against engines the public lists rate
 58. S088  a fourth engine family in the reference set and the rating re-solved, so the anchor spread is inside the 30 Elo the procedure allows
 59. S089  a time budget that scales with best-move stability and with a falling score, instead of remaining over a fixed movestogo plus half the increment
 60. S094  quiescence probes and stores the transposition table, and an entry carries the static evaluation it was scored with
