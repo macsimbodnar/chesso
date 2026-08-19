@@ -10,6 +10,23 @@ GUI at the binary, or type the protocol at it directly.
 Build it (see `DEV_MANUAL.md`) and use `build/src/chesso`. There is no installer
 and no packaged release.
 
+`build/src/chesso` is built `-march=native`. That is right for a binary you built
+on the machine you play on and wrong for one you copy anywhere else: it uses
+whatever instructions the building machine has, and on an older machine it stops
+with an illegal instruction rather than running slowly. **To move a binary to
+another machine, build one that targets an instruction set instead of a machine:**
+
+```
+./build_release.sh bmi2        # Intel Haswell (2013) onward, AMD Zen3 (2020) onward
+./build_release.sh avx2        # AMD Zen1 and Zen2
+./build_release.sh portable    # anything from about 2010 onward
+```
+
+Output is `build-release-<arch>/src/chesso`, profile-guided and the same engine —
+node for node the same search, so the three differ only in speed. `bmi2` is what
+gets played on a rating list. If you do not know which one, `portable` runs
+everywhere the other two do.
+
 In a GUI, add a new engine and give it the path to that binary. In a shell:
 
 ```

@@ -22,7 +22,9 @@ are in `CLAUDE.md`.
 Four build directories, all with `ccache` wired in: `build` (Release, the one
 that gets measured), `build-debug` (asserts on), `build-prof` (RelWithDebInfo),
 `build-tune` (Release with `-DCHESSO_TUNE=ON`, a tuning harness and **not** the
-binary anything is measured on — see "The tune build" below).
+binary anything is measured on — see "The tune build" below). `build_release.sh`
+adds `build-release-<arch>` per distributable target and `.pgo/` for the profile;
+both are gitignored and neither is what a local measurement runs.
 
 Nothing may reconfigure `build` behind your back. VS Code's CMake Tools used to:
 it defaults to `${workspaceFolder}/build`, configures on open, and wrote Debug
@@ -46,6 +48,137 @@ cmake -S . -B build-tune  -DCMAKE_BUILD_TYPE=Release        -DCMAKE_CXX_COMPILER
 
 Do not point CMake at Homebrew clang. Different compiler, different codegen, and
 every recorded benchmark becomes incomparable.
+
+## The instruction set, and which binary ships
+
+`-DCHESSO_ARCH=`, four values, and the default is the one that must never be
+distributed. `cmake/arch.cmake` is the table and every flag set in it is put to
+the compiler by `check_cxx_compiler_flag` before it is used — a silently dropped
+flag would leave a target named for an instruction set it does not target.
+
+| `CHESSO_ARCH` | flags | for |
+|---|---|---|
+| `bmi2` | `-march=x86-64-v3` | **the target that ships to a rating list.** Intel Haswell (2013) onward, AMD Zen3 (2020) onward |
+| `avx2` | `-march=x86-64-v3 -mno-bmi2` | Zen1 and Zen2, where PEXT and PDEP are microcoded at about 18 cycles against Intel's 3. `__BMI2__` is undefined here and that is the switch S032's magic path keys off |
+| `portable` | `-march=x86-64-v2` | the fallback. SSE4.2 and POPCNT, so Nehalem (2008) and Bulldozer (2011) onward |
+| `native` | `-march=native` | **this machine only, default, never distributed.** `build/` is the directory that gets measured and a local measurement wants the code the machine can run; the same file on anything older than this part raises SIGILL rather than running slowly. `build_release.sh` refuses the name |
+
+The step that added this is S104 and the reason it exists is one number: the
+release build carried **no** architecture flag, so `std::popcount` compiled to a
+software SWAR popcount and `objdump -d build/src/chesso | grep -c popcnt`
+returned **0** at `20d058a`. `count_bits` runs once per piece per evaluation in
+the mobility and king-safety loops, in `game_phase`, and throughout move
+generation. Configure time says which target you have:
+
+```
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Arch bmi2 (-march=x86-64-v3)
+```
+
+The arch flags are directory wide and set before any target exists, so the tests
+and the benchmarks are built for the same instruction set as the engine. A
+benchmark built for a different target is measuring a different binary.
+
+## The release build: profile-guided, one arch at a time
+
+```bash
+./build_release.sh bmi2        # ships. Output: build-release-bmi2/src/chesso
+./build_release.sh all         # bmi2, avx2, portable
+```
+
+Three passes — instrumented build, workload, optimised build — in **one** build
+directory, over a profile under `.pgo/<arch>` which is gitignored and regenerated
+per build. A profile is a property of one workload run against one source tree and
+a stale one reads as provenance while being noise, so `-Wcoverage-mismatch` is
+left as the error `-Werror` makes it: a profile that does not match these sources
+stops the build rather than being corrected past. The flags are scoped to
+`chesso_engine` and `chesso` rather than added directory wide, so `ctest` and the
+tuner stay out of a two-pass build they gain nothing from.
+
+**One directory, and it is load bearing.** GCC names a `.gcda` by mangling the
+absolute path of the object that wrote it —
+`#home#max#ws#chesso#build-release-bmi2#src#CMakeFiles#chesso_engine.dir#search.cpp.gcda`
+— and looks it up under the same name on the way back in. Two build directories
+give two different object paths, so every lookup misses, every translation unit
+compiles with no profile at all, and the binary is an ordinary `-O3` build wearing
+a PGO label. **That is not hypothetical: it is what the first version of this
+script did, and it measured as PGO being worth zero.** Pass 3 reconfigures the
+same directory.
+
+**`-Wmissing-profile` is the check that catches it, so nothing silences it
+tree-wide.** Under `-Werror` a missing profile stops the build, which is the right
+outcome — a binary that quietly is not profile-guided is worse than one that does
+not build. Blanket-silencing it was the first version of `cmake/pgo.cmake` and it
+is what let the two-directory bug hide. Exactly one translation unit is exempt, by
+name: every caller of `src/search_params.cpp` sits inside `#ifdef CHESSO_TUNE`
+(`src/chesso.cpp:934` and `:1043`), so a release link references none of its
+symbols, the linker drops the object out of the static library, its gcov
+constructor never runs and no `.gcda` can be written for it by any workload. Eight
+of the nine files in `src/` get a profile and the error stays live for all eight.
+
+**The workload is the part that decides whether PGO is worth anything.** It is a
+fixed-depth search — depth 10, `PGO_DEPTH` overrides — over **400 positions, 16
+from each of the 25 values of the engine's own `game_phase()`**, drawn from
+`adocs/data/S018_raw.tsv`, which is 13522 positions chesso actually reached in
+210 of its own games. 117329931 nodes, about 63 s instrumented. Two things it is
+deliberately not:
+
+- **not perft.** perft measures generate, make and unmake. It never evaluates,
+  never orders a move and never probes the table, so a profile taken from it
+  would tell the compiler that three quarters of the hot code is cold.
+- **not one position.** The branch that matters in an endgame is not the branch
+  that matters in a middlegame. Stratifying by phase is what stops the middlegame
+  answering for the endgame, the same sampling `adocs/data/S021_aspiration_sweep.py`
+  uses and for the same reason.
+
+It runs serially through one process, which is a choice against DEC-050's
+default: twelve concurrent instrumented processes would finish in a twelfth of
+the time, but `.gcda` merge-on-exit would then depend on the scheduler and the
+profile would stop being a function of the source tree. One process also leaves
+the transposition table warm across positions, which is the regime a game's
+later moves search in.
+
+The driver waits for `bestmove` between positions and that is not optional — see
+"Wait for `bestmove` when you script it" below. The first version of it did not,
+and the 400-position workload finished in under a second having profiled a
+depth-1 tree.
+
+**What it bought, measured 2026-08-19 against `20d058a`.** One interleaved run,
+10 rotating triples of base / arch-only / arch+PGO so a first-or-last bias
+cancels, each run 400 positions at depth 10 **that the profile was not trained
+on** — timing a profile-guided binary on its own workload is not a measurement of
+it:
+
+```
+base (no arch flag, no PGO)   median 17.409s   spread 6.70 %
+bmi2, no PGO                  median 15.432s   +12.62 %   CI +11.19 .. +14.06
+bmi2 + PGO, what ships        median 14.722s   +18.22 %   CI +16.19 .. +20.28
+```
+
+Ratio 0.8459 geometric mean, paired **t −21.90** over 10 pairs. The arch flag is
++12.62 % and the profile the remaining **+4.98 %**. At the published 1.43 Elo per
+percent that is **+26.1 Elo — a conversion, not a verdict**, and DEC-083 is why no
+SPRT is owed: the node count is identical, so the two binaries play identical
+games and a match between them measures nothing but the clock.
+
+**The overfit is small and was checked rather than assumed.** The same run over
+the 400 *training* positions reads +18.65 % (CI +18.47 .. +18.83) for the shipping
+build against +18.22 % held out — 0.43 points. That run also shows what a quiet
+machine looks like: spread 0.45 % against 6.70 % on the held-out run an hour
+earlier. **The pairing is what carries the result, not the timer.**
+
+Machine resolution beside it, same session: `bench_movegen` **814.3 ms** for 12 M
+perft nodes, **resolution 0.2 %**, spread 0.5 %; `bench_eval` **53.90 ns a call,
+resolution 0.2 %**, spread 3.9 %.
+
+`build_release.sh` builds `--target chesso` and nothing else, so the release
+directories carry no test binaries. To run the suite against the binary that
+ships, build the rest of that directory first — the tests are not profile-guided,
+only `chesso_engine` and `chesso` are, so this adds nothing to what ships:
+
+```bash
+cmake --build build-release-bmi2 -j12 && ctest --test-dir build-release-bmi2 -L fast
+```
 
 ## The tune build
 
@@ -284,6 +417,13 @@ difference is small, and do not budget from the "about ten seconds per binary"
 this line used to claim, which was measured on the pre-DEC-049 machine and on an
 engine with less pruning in it.
 
+**Every timing on this page taken before S104 is on a binary with no architecture
+flag and does not transfer**, the same way nothing before DEC-049 transfers across
+the machine move. `build/` is `-march=native` since 2026-08-19 and the same three
+positions at depth 9 read **0.149 s before the flag and 0.143 s after** — which is
+also a demonstration of why three positions do not time anything: the effect is
++18 % and this reads 4 %. Node counts are unaffected and stay comparable.
+
 **That figure moves with every change to the search or to the evaluation, so
 quote it with the commit it was taken at.** It read 3136397 before S065 refitted
 the constants, 3752725 at `c56ab41` after that fit, 1422053 once S033 added
@@ -336,9 +476,15 @@ difference being claimed. The scores and a checksum are printed before any
 timing, so a build that evaluates differently says so instead of quietly being
 timed as though it were the same function.
 
-Today's evaluation is **83.35 ns per call, 12.0 M calls per second**, measured
+Today's evaluation is **53.90 ns per call, 18.6 M calls per second**, measured
 2026-08-19 by `./build/tests/bench_eval` on the DEC-049 machine, 4000000 calls a
-sweep over 7 sweeps, spread 2.2 %, printed resolution 0.0 %.
+sweep over 7 sweeps, spread 3.9 %, printed resolution 0.2 %.
+
+**It read 83.35 ns / 12.0 M earlier the same day and the difference is S104, not
+the evaluation.** That figure is on a binary with no architecture flag, where
+`std::popcount` was a software SWAR popcount; `count_bits` runs once per piece per
+evaluation in the mobility and king-safety loops and in `game_phase`, so a third
+of the call went on it. The function did not change — `-march=native` did.
 
 **The figure here read 1.31 ns / 762 M until 2026-08-19 and does not reproduce.**
 It came from DEC-036, dated 2026-08-11 — two days before DEC-049 moved this

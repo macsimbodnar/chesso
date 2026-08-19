@@ -104,6 +104,41 @@ always had, the two builds' defaults are held equal member by member by
 `test_search_params`, and `tools/search_bench.py` reports the same counts on
 both with no `setoption` sent. (2026-08-16, S073.)
 
+**The binary that ships is not the binary that gets measured here, and both are
+new since 2026-08-19.** `-DCHESSO_ARCH=` has four values: **`bmi2`
+(`-march=x86-64-v3`) is the one that ships to a rating list**, `avx2` is the same
+level with `-mno-bmi2` for Zen1 and Zen2 where PEXT is microcoded, `portable` is
+`-march=x86-64-v2`, and `native` is the default because `build/` is the directory
+that gets measured. `build_release.sh` refuses `native` by name: a binary built
+for one machine raises SIGILL on an older one. Until S104 the release build
+carried **no** architecture flag at all, so `std::popcount` compiled to a software
+SWAR popcount — `objdump -d build/src/chesso | grep -c popcnt` returned **0** at
+`20d058a` and returns **159** now, **125** in a profile-guided release target.
+`build_release.sh` adds profile-guided optimisation on top, trained on a
+fixed-depth search over 400 positions stratified by the engine's own
+`game_phase()`, and the profile is regenerated per build and never committed.
+
+**Behaviour-neutral, so INV-6 is discharged on node counts and no SPRT is owed
+(DEC-083).** All four binaries return `164123 / 670488 / 84351` at depth 9 and
+`1162576 / 5167100 / 683367` at depth 12, best moves `c3d5 / e2a6 / d7c8q`,
+identical to `20d058a` to the node. **The shipping binary is +18.22 % faster**,
+95 % CI +16.19 to +20.28, ratio 0.8459 geometric mean over one interleaved run of
+10 rotating triples, paired t −21.90 — **+26.1 Elo at the published 1.43 per
+percent, which is a conversion and not a verdict.** The architecture flag is
++12.62 % of that and the profile the remaining +4.98 %. **Measured on 400
+positions the profile was not trained on**, because the same run over the training
+positions reads +18.65 % and timing a profile-guided binary on its own workload is
+not a measurement of it; the 0.43-point gap between the two is how small the
+overfit is.
+
+**Every timing and nps figure recorded before this step was taken on a binary
+with no architecture flag and is not comparable with one taken after it**, the
+same way DEC-049's machine move invalidated everything before it. Node counts are
+unaffected and stay comparable. The new baselines on the native `build/`:
+`bench_eval` **53.90 ns a call, 18.6 M calls per second**, against 83.35 and
+86.41 ns on 2026-08-19 before the flag; `bench_movegen` **814.3 ms** for 12 M
+perft nodes, resolution 0.2 %. (2026-08-19, S104.)
+
 Engine state as of 2026-08-09, at commit `b6ef5c4`:
 
 | area | state |
@@ -270,8 +305,3 @@ The order stands.
   costs 11.7 %. S039 re-decides the margin, S120 caches the score behind it, and
   S122 is the rebuild that needs both.
 
-- **The release build carries no architecture flag, so `count_bits` is a
-  software popcount.** `objdump -d build/src/chesso | grep -c popcnt` returns
-  **0** at `20d058a`; rebuilt with `-march=native` it returns 159, the node
-  count and PV at depth 14 are identical at 6730511, and the search runs
-  **16.7 % faster**. S104.

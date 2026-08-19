@@ -14,6 +14,13 @@ option(SANITIZER "Enable address and undefined behavior sanitizer" OFF)
 # cannot see. Everything measured for strength is built with this OFF.
 option(CHESSO_TUNE "Expose the search parameters as UCI options. Not the release binary" OFF)
 
+# S104. CHESSO_ARCH and CHESSO_PGO. The arch flags are directory wide and are set
+# before any target exists, so the tests and the benchmarks are built for the
+# same instruction set as the engine -- a benchmark built for a different target
+# is measuring a different binary. PGO is target scoped and comes after
+# add_subdirectory(src); cmake/pgo.cmake says why.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/arch.cmake)
+
 # Add extra compiler checks
 if(MSVC)
      add_compile_options(/W4 /WX)
@@ -41,5 +48,9 @@ endif()
 
 enable_testing()
 add_subdirectory(src)
+
+# After src, because it applies to chesso_engine and chesso by name.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pgo.cmake)
+
 add_subdirectory(tests)
 add_subdirectory(tools)

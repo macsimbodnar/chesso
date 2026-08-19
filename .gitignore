@@ -19,3 +19,9 @@ config.json
 .reprofile
 
 .claude/settings.local.json
+
+# S104. The PGO profile and its instrumented build directory. Regenerated per
+# build by build_release.sh and never committed: a profile is a property of one
+# workload run against one source tree, and a stale one reads as provenance.
+# build-release-<arch>/ is already covered by the build-* above.
+.pgo

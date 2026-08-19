@@ -44,13 +44,15 @@ search block leads and the evaluation block follows it. The evaluation was the
 constraint in 2026-08 and S028 (+188.74) and S065 (+21.10) are that conclusion
 already cashed.
 
-**Free speed was sitting on the floor.** The shipped binary contains **zero
-`popcnt` instructions**: `CMakeLists.txt` adds no architecture flag, so every
-`count_bits` in mobility, king safety, `game_phase` and move generation is a
-software popcount. Rebuilt with `-march=native`: **identical node counts and
-PV, 6730511 both, and +16.7 % nps** — 1170/1213/1222 ms against 991/1008 ms at
-depth 14. That is S104, it is one line of CMake, and under DEC-083 it owes a
-timing rather than a match.
+**Free speed was sitting on the floor, and S104 has picked it up.** The binary
+shipped at `20d058a` contained **zero `popcnt` instructions**: `CMakeLists.txt`
+added no architecture flag, so every `count_bits` in mobility, king safety,
+`game_phase` and move generation was a software popcount. **Done 2026-08-19:
++18.22 % on the shipping profile-guided `bmi2` target, 95 % CI +16.19 to +20.28,
+node-identical**, so DEC-083 took a timing and not a match. The architecture flag
+is +12.62 % of it and profile-guided optimisation the remaining +4.98 %. It was
+not "one line of CMake" as this paragraph predicted: three targets, a PGO driver,
+and a bug in the first design that made the profile silently unreachable.
 
 **The measurement instrument was set three ways that spend the budget.** The
 SPRT runs at `10+0.2` where the engines this plan reads from test at 8+0.08, at
@@ -117,7 +119,9 @@ and not only on the shortcut's. A mating attack is worth four to six hundred
 centipawns and this evaluation cannot say more than one hundred and fifty about
 the king and the mobility combined. Measured cost of removing it:
 `LazyEvalMargin` 0 / 150 / 2000 gives **6.55 / 5.46 / 4.82 Mnps** — full
-evaluation everywhere costs 11.7 %, which S104 has already more than paid. So
+evaluation everywhere costs 11.7 %, against the +18.22 % S104 has now measured.
+Those three figures predate S104 and are on the unflagged binary, so the ratio
+between them is what carries and not the absolute Mnps. So
 S039 moved from position 89 to just ahead of the king-safety rebuild, and it is
 no longer a micro-tune: it is the architectural prerequisite, with S120's
 evaluation cache buying back what it spends.
@@ -238,7 +242,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-1. S088  a fourth engine family in the reference set and the rating re-solved, so the anchor spread is inside the 30 Elo the procedure allows
 2. S089  a time budget that scales with best-move stability and with a falling score, instead of remaining over a fixed movestogo plus half the increment
 3. S094  quiescence probes and stores the transposition table, and an entry carries the static evaluation it was scored with
 4. S103  reverse futility reads the static evaluation already in the table entry instead of recomputing it
