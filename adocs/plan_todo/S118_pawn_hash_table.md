@@ -3,11 +3,22 @@ goal:       the pawn terms and the king shelter are computed once per pawn struc
 accepts:    an SPRT verdict if the tree changes and a node-identity check if it does not -- state which before the run; the key is a pawn-only zobrist maintained incrementally in add_piece, remove_piece and move_piece (INV-4), never recomputed in evaluate(); the hit rate is measured over a real search and recorded, not assumed; the table stores the mg/eg pawn score, the passed-pawn bitboard and **both kings' shelter and storm scores**, because the shelter is the expensive half of what this saves; a collision returns a recomputation rather than a wrong score, and a test forces one
 touches:    src/evaluation.cpp, src/data_structures.hpp, src/bitboard.cpp piece primitives
 excludes:   new pawn terms, which are S125; the passed pawn suite, which is S123
-decisions:  DEC-071
+decisions:  DEC-071, DEC-087
 closes:
 blocks:
 paused_by:
 done:
+
+## Moved out of the speed block, 2026-08-19, DEC-087
+
+The published record has a warning this step's old position walked into: an
+implementer who cached a still-cheap pawn evaluation measured a **10 %
+slowdown**, and the reported ~10 % speedups come from engines whose pawn terms
+were expensive first. chesso's three pawn terms share four bitboard fills and
+are cheap by construction (S027). So this step now lands in the evaluation
+block, after S123 and S125 have made the pawn evaluation worth caching, and
+directly before S122 reads the shelter and storm slots it adds. The hit-rate
+expectation stands: a few thousand entries buy >95 % on the published numbers.
 
 ## What it costs today
 

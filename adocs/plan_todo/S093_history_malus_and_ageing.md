@@ -1,9 +1,9 @@
 id:         S093
 goal:       history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
-accepts:    an SPRT verdict per change, measured separately -- malus, ageing and persistence are three changes and one at a time is the rule; the malus applies to the quiet moves searched before the cutoff move and not to the cutoff move itself, asserted by a unit test on the table rather than through a game; the ageing keeps every score inside ORDER_HISTORY_MAX so the move-ordering bands still clear each other by 100 points, with the band clearance asserted (CLAUDE.md hazard, S023, S061); history carried across `go` is cleared on `ucinewgame` and on a position that is not a descendant of the last one searched, with a test for both; the fast suite green
+accepts:    two SPRT verdicts: malus and gravity land together -- they are one published mechanism, `entry += bonus - entry * abs(bonus) / MAX`, and splitting them measures each against a table shape it will not ship with (DEC-087) -- and persistence across `go` lands second with its own verdict; the malus applies to the quiet moves searched before the cutoff move and not to the cutoff move itself, asserted by a unit test on the table rather than through a game; the gravity keeps every score inside ORDER_HISTORY_MAX so the move-ordering bands still clear each other by 100 points, with the band clearance asserted (CLAUDE.md hazard, S023, S061); history carried across `go` is cleared on `ucinewgame` and on a position that is not a descendant of the last one searched, with a test for both; the fast suite green
 touches:    src/search.cpp history update and the ordering scores, src/search_params.hpp, tests/test_search.cpp
 excludes:   capture history, which is S023; continuation history, which is S024; correction history, which is S099
-decisions:  DEC-071
+decisions:  DEC-071, DEC-087
 closes:
 blocks:
 paused_by:
@@ -27,8 +27,8 @@ mechanism.
 **Malus.** A quiet move that caused a cutoff gets a bonus today; every quiet
 that was tried at that node and failed gets nothing. Without a penalty, history
 is a monotone "moves that ever worked" counter rather than a signed preference.
-Reported **+37.49** in one engine -- the largest single history patch on record
-and larger than most features on this plan.
+Reported **+37.5 at Weiss and +28 at Lynx at ~2600** -- the largest single
+history patches on record and larger than most features on this plan.
 
 **Gravity instead of ageing.** `history += bonus - history * abs(bonus) / MAX`
 is self-normalising: entries asymptote to the bound, an unexpected cutoff moves

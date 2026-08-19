@@ -9,11 +9,16 @@ blocks:
 paused_by:
 done:
 
+## Reserve, 2026-08-19, DEC-087
+
+Demoted behind the 3000 push with S110: measured +1.8 to +4.6 per table and
+only above ~3100 in the surveyed record.
+
 ## The free second use
 
 Once the tables exist, `abs(correction)` is a complexity signal that costs
 nothing to read: a position the correction disagrees with the static score
 about is a position worth reducing less in and worth a wider reverse-futility
-margin at. Both are one-line consumers and both are reported as small positive.
-They belong to S098 rather than here, but they are the reason S098 is ordered
-after this and not before it.
+margin at. Both are one-line consumers and both are reported as small
+positive. They belong to S098, which now lands long before this step -- if
+this table ever ships, revisiting that consumer is part of its scope.

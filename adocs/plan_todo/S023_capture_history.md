@@ -13,6 +13,16 @@ blocks:
 paused_by:
 done:
 
+## Reserve, 2026-08-19, DEC-087
+
+Demoted behind the 3000 push by the second review. The band evidence is
+against it as an ordering term at this strength: Lynx failed four SPRTs on it
+at ~2600 (-35.8 to -11.1) and Weiss measured it -4.2 at short control, +3.7
+only at long. Its documented value arrives as an *input* -- reducing tacticals
+with bad capture history measured +7.2/+2.4 at Ethereal, and capture futility
+and SEE margins read it -- which is work for the 3000-plus phase this reserve
+exists for. The order note below stands for whenever it runs.
+
 ## Hazard
 
 The move-ordering bands clear each other by 100 points. A king capturing a pawn

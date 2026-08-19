@@ -4973,3 +4973,145 @@ Consequences: `plan_todo/` loses ten files and the corrections survive in the
               still owed; folding a finding into the step it corrects is
               answering it, not closing it, and closure still needs a re-run
               that no longer reports it.
+
+## DEC-087  2026-08-19  Second adversarial review: the block order holds, four techniques are demoted or retired, three cheap wins get steps
+Tags:         planning, search, evaluation, measurement
+Context:      The 2026-08-19 review (DEC-081 to DEC-086) was itself reviewed
+              against per-patch SPRT records of engines that passed through this
+              band -- Weiss, Lynx, Stash, Berserk and Ethereal commit logs and
+              release notes -- and against the CCRL conditions read from the
+              live pages. The four-block structure and the search-first order
+              survived; Ethereal's own feature-removal ledger (history -759,
+              LMR -249, quiet-pruning family -175, extensions -60, ProbCut -9)
+              is a third independent confirmation of DEC-081. Nine contents did
+              not survive, and two existence proofs sharpen the target: Weiss
+              1.2 sat at 3055 CCRL Blitz with a 301-line evaluation, no
+              capture, continuation or correction history, and the full pruning
+              stack; Stash crossed 3000 at v27 and reached 3424 with no NNUE.
+Decision:     By the owner, 2026-08-19, on the agent's second review.
+              (a) **S096 check extensions is retired** -- Ethereal removed check
+              extensions for +4.1/+4.5 and Stormphrax removed them as a
+              simplification; LMR here already exempts checking moves and S097
+              covers the forcing-line concern. The id is not reused.
+              (b) **S023, S025, S110 and S111 move to a reserve tail** behind
+              the 3000 push. Capture history failed four SPRTs at ~2600 (Lynx)
+              and was STC-negative at Weiss -- below 3000 it is ordering
+              overhead; its value returns as an input to reduction and pruning
+              margins. Non-pawn and continuation correction history measure +3
+              to +8 only above ~3100. **S099 stays**: pawn correction history
+              measured +11.4 at ~2850 (Lynx), the one correction table with
+              sub-3000 evidence.
+              (c) **Three new steps.** S130, quiescence stand-pat takes the
+              table score where the bound permits (Weiss +10.8/+12.1; S094
+              already pays the probe). S131, quiescence searches non-capture
+              queen promotions (this engine's own recorded TODO at the
+              quiescence generation filter). S132, the soft time limit scales
+              with the best root move's share of the nodes (Ethereal +9.9/+9.7,
+              Lynx +3.6).
+              (d) **S133 king-relative piece-square tables is added ahead of
+              S126** -- Leorik 2.5 ~+88 CCRL and Berserk 4.3 ~+65 estimated are
+              the largest documented evaluation item this plan had no step for.
+              It rebuilds the INV-4 accumulators and the owner approved that
+              cost explicitly.
+              (e) **S114 drops the null-move verification search** (no evidence
+              below 3000; the game_phase zugzwang guard stays) and keeps the
+              eval-scaled reduction (a deeper base R alone measured +12.3 at
+              Berserk). **S115 drops the volatility-based window width** (no
+              band-level evidence) and keeps fail-soft plumbing, the widening
+              schedule and the fail-high root reduction.
+              (f) **S083's 50 M floor is retired**: the corpus size is a
+              held-out-error decision under a stated datagen budget. The
+              published HCE sweet spot is 4.5 to 10 M resolved positions (Stash
+              retuned on 4.5 M and reports no overfit past 500 k), and 50 M at
+              S082's two-to-four rows a game is 12 to 25 M games of datagen.
+              (g) **S100 is diagnosis first**; its per-term fits and SPRTs move
+              into the evaluation block, except an extraction bug, which is
+              fixed on discovery under the house rule.
+              (h) **S118 moves from the speed block into the evaluation
+              block**, behind the expensive pawn terms -- caching a cheap pawn
+              evaluation measured a 10 % slowdown in the published record, and
+              S122 needs the shelter and storm slots it adds.
+              (i) **The evaluation block is ordered by the Stash ledger**:
+              mobility area (+20 class), passers with king distance (+22.3, the
+              largest single evaluation gain in that ledger),
+              connected/phalanx (+25.4), pawn hash, threats (+10), king safety
+              (+25 cumulative and the documented failure magnet, so it follows
+              the corpus work), endgame scaling (+4 to +8), outposts and space.
+              (j) **S093 lands malus and gravity as one verdict** -- they are
+              one published mechanism, `entry += bonus - entry*|bonus|/MAX` --
+              and persistence as a second.
+Rejected:     Keeping S096 and measuring it anyway -- the removal evidence is
+              two engines strong and the verdict hour buys more elsewhere.
+              Dropping S023/S025/S110/S111 outright -- the reserve keeps the
+              files and the evidence for the 3000-plus phase they belong to.
+              Splitting S109 into four steps on the Lynx small-positive
+              numbers -- four verdicts near the bounds cost more nights than the
+              attribution is worth (DEC-063), and a failing block is still
+              bisected.
+Consequences: plan.md is reordered and its cost line restated at the honest
+              verdict count (~42-47 plus two SPSA nights and the datagen).
+              DEC-082's "inert apart" wording is narrowed by this entry: Lynx
+              measured LMP and futility at +4.7 each alone, so the parts are
+              small-positive rather than inert, and S109's single verdict is
+              kept on measurement-budget grounds. Mate distance pruning and
+              quiet checks in quiescence were considered and left out -- ~0 and
+              no band evidence respectively. The Fathom option for S129 is on
+              the record: MIT-licensed, de Man's code granted unrestricted use,
+              shipped by MIT-licensed Arasan -- a licence-clean library route
+              the owner may take later instead of the from-scratch prober;
+              S129 is unchanged until then.
+
+## DEC-088  2026-08-19  The SPRT harness hash is 16 MB, matching table pressure rather than table size
+Tags:         measurement, tooling
+Context:      DEC-083 set `Hash=128` for the SPRT harness to match the rating
+              list's 128 to 256. Checked against practice and against
+              arithmetic, that matches the wrong invariant. Every OpenBench
+              engine preset tests STC at 8 to 32 MB -- Stash's preset is
+              exactly 8+0.08 with Hash=16 -- because what transfers across time
+              controls is table *pressure*, not table size. At the list's
+              2'+1" a game writes on the order of 660 M nodes against 5.6 to
+              11 M entries, roughly 60 to 120 overwrites per entry; 16 MB at
+              8+0.08 reproduces that ratio, 128 MB undershoots it about
+              eightfold and would flatter every table-hungry change S119 is
+              about to make.
+Decision:     By the owner, 2026-08-19. `fastchess.sh` runs **Hash=16** at
+              8+0.08. `rating.sh` keeps 128 or above, because the gauntlet's
+              job is to reproduce the list's absolute regime. This amends the
+              hash number in DEC-083; everything else in that entry stands,
+              including the time control, the unbalanced book and the
+              timing-not-SPRT rule for behaviour-neutral changes. S105 is
+              edited before it runs.
+Rejected:     Hash=128 as decided this morning -- it optimised absolute size
+              where the transferable quantity is overwrites per entry.
+              Hash=8 -- inside practice (Ethereal, Berserk) but further from
+              the list ratio than 16 on this engine's nps.
+Consequences: S119's SPRT clause changes from "at Hash 128" to "at the S105
+              harness setting, with the pressure ratio stated"; verdicts stay
+              comparable within the S105 regime as before.
+
+## DEC-089  2026-08-19  The CCRL Blitz list rates configurations, not engines; the target stays the 1CPU entry
+Tags:         planning, measurement, scope
+Context:      DEC-085 said "the list runs single CPU on its main table". Read
+              from the live conditions page instead: CCRL Blitz rates 1CPU,
+              4CPU and 8CPU builds of the same engine as **separate entries**
+              (Stockfish 17.1 8CPU sits at 3789 beside its 1CPU entry), ponder
+              off, own books disabled, 4-to-6-man tablebases allowed, hash 128
+              to 256. The premise was wrong; the conclusion survives for a
+              different reason: the 2559 anchor (S088) and DEC-071's
+              reachability table were both taken against **1CPU entries**, so
+              the 3000 target is defined on the 1CPU scale and a parallel
+              search buys zero toward it.
+Decision:     By the owner, 2026-08-19. The target remains **3000 on the CCRL
+              Blitz 1CPU scale**. Threading stays off phase one exactly as
+              DEC-085 concluded, with this entry as the corrected premise. For
+              the record: an 8-thread search is worth about +180 at LTC on the
+              Stockfish measurement (~60 per doubling), so a 4CPU or 8CPU
+              listing is a cheap later rating if the owner ever wants one --
+              that is a phase-two decision.
+Rejected:     Reopening threading now -- it moves a number the target is not
+              stated in, and the machine's 12 threads are already spent running
+              matches.
+Consequences: DEC-085's operative outcomes (S086 retired, threading off the
+              plan, concurrency decisions untouched) all stand. Any future
+              citation of the list's conditions cites this entry, not DEC-085's
+              context paragraph.

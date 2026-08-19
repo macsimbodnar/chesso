@@ -11,7 +11,11 @@ done:
 
 ## Why it comes after the history steps
 
-The refinement's largest single input is the move's history score, and there
-are three history tables queued ahead of it: S023 capture history, S024
-continuation history and S093 malus and ageing. Scaling a reduction by a table
-that is about to change means measuring it twice. It also wants S092's flag.
+The refinement's largest single input is the move's history score, and the
+tables it reads are queued ahead of it: S093 malus and gravity, then S024
+continuation history. Scaling a reduction by a table that is about to change
+means measuring it twice. The improving flag is S108's, ahead of it too.
+Capture history is **not** an input here -- this engine reduces only quiets --
+and S023 sits in the reserve tail (DEC-087); if it ever lands, reducing
+tacticals with bad capture history is its consumer, back in this file's scope
+at that time (Ethereal measured that consumer at +7.2/+2.4).

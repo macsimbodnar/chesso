@@ -12,6 +12,11 @@ blocks:
 paused_by:
 done:
 
+## Reserve, 2026-08-19, DEC-087
+
+Demoted with S023, which its own `excludes:` names as the precondition. It
+returns when S023 does.
+
 ## It was tried once and measured slower, three ways
 
 Depth 13, three positions, against the two-stage build:

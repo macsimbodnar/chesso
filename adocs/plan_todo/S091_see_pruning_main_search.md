@@ -23,11 +23,13 @@ and a verdict of zero here is recorded as zero as well.
 
 Quiet-move SEE pruning moved into S109, where it is one of four rules measured
 as a block (DEC-082). What is left here is the capture side plus the extra
-reduction for a negative-SEE move, and it is not a leftover: **the single
-largest documented version jump in this rating band was a release whose
-headline change was SEE used inside the main search rather than in quiescence
-alone -- +151 on the public list, one version.** That is why this sits near the
-top of the search block instead of at position 64.
+reduction for a negative-SEE move, and it is not a leftover: the +151 release
+this step's ordering rests on is Leorik 2.4. **The second review tempers the
+attribution (DEC-087): that release bundled SEE in the main search with a
+reverse-futility cutoff inside null move and with drawn-material recognition,
+so +151 is the bundle's number and not SEE's alone.** The step keeps its
+position -- Ethereal's removal ledger prices its SEE pruning at -41.5 on its
+own -- and DEC-019 keeps the expectation honest.
 
 The margins differ by move type in every implementation surveyed -- a margin
 scaled by depth for quiets, by depth squared for captures -- and both are ours

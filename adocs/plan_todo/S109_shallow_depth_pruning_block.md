@@ -3,7 +3,7 @@ goal:       late move pruning, futility pruning, history pruning and quiet SEE p
 accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, when the move gives check, or when alpha or beta is near mate, and the test asserts the precondition that would otherwise prune it; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   razoring, which is a node-level rule and is S116; SEE pruning of **captures** in the main search, which is S091; futility inside quiescence, which is S112; the improving flag, which S108 supplies and this step consumes
-decisions:  DEC-071, DEC-082, DEC-084
+decisions:  DEC-071, DEC-082, DEC-084, DEC-087
 closes:
 blocks:
 paused_by:
@@ -22,6 +22,14 @@ believing a real +60 to +120 does not exist.
 If the block fails, *then* it is bisected -- a failing block is evidence that
 one part is wrong, which is the attribution question the block form was not
 asked.
+
+**The second review corrected the evidence without changing the shape,
+DEC-087.** Lynx measured late move pruning and futility individually at
+**+4.7 each** when added to a tree without the others, so "inert apart" is too
+strong -- the parts are small-positive apart. The block is kept anyway, on
+measurement-budget grounds: four verdicts on true effects near +5 sit at the
+bounds and crawl (DEC-063), where one verdict on a +40 to +120 block resolves
+in an hour. The bisect-on-failure clause is unchanged.
 
 **This step absorbs S090 and S026, both retired.** Their ids are not reused.
 S090 was late move pruning alone; S026 was "drop nodes near the horizon that
