@@ -1,6 +1,11 @@
 id:         S024
 goal:       history indexed by the move played n plies ago and the current move
-accepts:    two SPRT verdicts, one per table: the one-ply table first, the two-ply follow-up second, each against the commit before it
+accepts:    two SPRT verdicts, one per table: the one-ply table first, the two-ply follow-up second, each against the commit before it; every src/ citation in this file names a symbol or a test title rather than a line range
+            (Folded in from the retired S063 by DEC-086. Offsets beyond two
+            plies are worth 1-3 Elo each at 3400 and are not part of this step.
+            The sentinel plies are the known crash: (ss-1) and (ss-2) must be
+            valid at ply 0 and ply 1, and a null move must still install a
+            continuation pointer or the child indexes garbage.)
 touches:    src/search.cpp, src/evaluation.cpp score_move, src/data_structures.hpp
 excludes:
 decisions:

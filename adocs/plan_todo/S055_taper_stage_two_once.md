@@ -1,6 +1,10 @@
 id:         S055
 goal:       taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
-accepts:    evaluate() performs one fewer integer division; the tuner-model tolerance returns to 2 and test_eval_model passes over the pinned corpus at that tolerance; SPRT verdict recorded, zero recorded as zero
+accepts:    evaluate() performs one fewer integer division; the tuner-model tolerance returns to 2; the pinned truncation thresholds in tests/test_eval_model.cpp are re-measured in this step's own commit and re-pinned to the post-merge bound of 2 x 23/24 = 1.917, and the tempo precondition message's arithmetic becomes 3 x 23/24 = 2.875 with its tolerance of 4 becoming 3 -- the thresholds are a non-vacuity guard on the pinned corpus and the guard is kept with new numbers rather than relaxed; SPRT verdict recorded, zero recorded as zero
+            (Folded in from the retired S056 and S081 by DEC-086. S056's four
+            merged-disagreement literals are deliberately not restated here:
+            they were measured before S065's refit and this step re-measures on
+            the truncation_positions the test loads at its own HEAD.)
 touches:    src/evaluation.cpp, tools/eval_model.hpp, tests/test_eval_model.cpp
 excludes:   any other evaluation term
 decisions:  DEC-053

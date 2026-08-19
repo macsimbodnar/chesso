@@ -7,7 +7,7 @@ Updated: 2026-08-19 by `moltke --step status`.
 
 - Last done: S053
 - In progress: none
-- Next: S092
+- Next: S104
 - Blocked: none
 - Parked:
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
@@ -22,8 +22,8 @@ Updated: 2026-08-19 by `moltke --step status`.
     a stale file: `moltke --step status` derives the field from the last
     completed entry in `plan.md` **list order**, and retention is a window over
     list positions, so an entry sitting low in the list outlives completions that
-    came after it. `plan.md:265-282` states the rule against the code that
-    implements it — read `:173-187` until 2026-08-17, off by one at both ends: 173
+    came after it. the paragraph beginning "It also prunes completed entries" in
+    `plan.md` states the rule against the code that implements it — read `:173-187` until 2026-08-17, off by one at both ends: 173
     is blank and 188 is the paragraph's last word, and `:174-188` until 2026-08-19,
     by which time the paragraph had moved bodily and the range named a sentence
     about S087 — and this item does not restate the census: the window moves on
@@ -43,13 +43,15 @@ Updated: 2026-08-19 by `moltke --step status`.
     `selfplay_v1.tsv` did not survive DEC-049, and it cost S065 a night of
     regeneration. Found while completing S065. Parked, not planned: a step is
     created by a decision and none has been taken on this.
-  - **The plan was reordered by DEC-033 and S019 is retired.** 160 expensive
-    moves re-asked at 16 times the search removed 24.1 % of the error and left
-    95 of 160 moves unchanged, so the engine is evaluation-limited rather than
-    depth-limited on the errors that decide games. S028 moved from 28th to next,
-    S027 follows it, and the search block follows that with a measured ceiling
-    of about 10 cp per effective doubling. S033 was created for reverse futility
-    pruning, which the plan did not contain at all.
+  - **DEC-033's ordering conclusion is superseded by DEC-081; its measurement
+    is not.** 160 expensive moves re-asked at 16 times the search removed 24.1 %
+    of the error and left 95 of 160 unchanged, and that is still true. What it
+    priced was *nodes*, and sixteen times the nodes is about four plies in this
+    tree: measured 2026-08-19, chesso reaches depth 12 on 1448572 nodes where
+    Stockfish reaches depth 15 to 16 on 158837. So the evaluation was the
+    binding constraint in 2026-08 — S028 at +188.74 and S065 at +21.10 are that
+    cashed — and the tree shape is the constraint now. The search block leads
+    the evaluation block. S019 is still retired.
   - **S015's quiescence SEE pruning has never been re-measured.** It returned
     0 Elo when `see()` cost 12.1 % more than it does now, so the same feature is
     a cheaper trade today than when it was judged. Folded into S022 rather than
@@ -58,20 +60,21 @@ Updated: 2026-08-19 by `moltke --step status`.
     +129.2 +/- 33.8 over 183 games. The trend was unambiguous and the machine was
     needed elsewhere. Nothing depends on closing it; recorded so nobody reads
     "passed" into a run that was stopped.
-  - **Measurement capacity is the binding constraint on the whole plan.** An
-    SPRT verdict costs three to four and a half hours at the DEC-048/DEC-050
-    settings — all 12 threads of the DEC-049 machine — and the opening book is
-    only `8moves_v3.pgn`. `specs.md:236-241` is the source; this restates it
-    because it is the paragraph a session reads before deciding whether it can
-    afford a measurement. (The citation read `:189-194` until 2026-08-17 and was
-    stale by one commit: it was correct when S069 wrote it at `e8a3dca` and
-    `7f15ac4` added ten lines above the paragraph. It then read `:199-204` until
-    2026-08-19 and was stale the same way, by more commits. **A line range into a
-    growing file is a claim with a short life**, and both of this file's have now
-    been re-checked twice; check them, do not quote them.) A verdict that stops early is
-    cheaper — S033's took 44 m 10 s for 1012 games — and one that goes the
-    distance costs the full window. Nothing else is measured while a match runs,
-    and data generation and fits compete for the same machine.
+  - **Measurement capacity is the binding constraint on the whole plan, and
+    S105 is the step that attacks it.** A verdict costs three to four and a half
+    hours at the settings that ship today — `tc=10+0.2`, `Hash=16`,
+    `8moves_v3.pgn`, all 12 threads of the DEC-049 machine. DEC-083 moves the
+    harness to `8+0.08`, `Hash=128` and an unbalanced book for roughly three
+    times the verdicts per night, and adds the rule that a behaviour-neutral
+    change is accepted on an interleaved timing rather than a match. **Until
+    S105 lands, the old figures still apply.** Find the source paragraph in
+    `specs.md` under "Open items" by the phrase "Measurement capacity is the
+    binding constraint" — this item carried a line range into that file three
+    times and it was stale all three times, which is why it is a phrase now.
+    A verdict that stops early is cheaper — S033's took 44 m 10 s for 1012
+    games — and one that goes the distance costs the full window. Nothing else
+    is measured while a match runs, and data generation and fits compete for the
+    same machine.
   - **The bounds decide whether a night buys a verdict at all, DEC-063.** S068
     measured one constant twice with the same binaries: `elo0=0 elo1=5` ran
     6 h 36 m over 9036 games and returned nothing, `elo0=-5 elo1=5` returned
@@ -110,6 +113,6 @@ Updated: 2026-08-19 by `moltke --step status`.
     marked parked, so nothing derives it as the next step. Resuming it is a
     decision, not a drift. The standard search machinery that used to be parked
     beside it is no longer: **DEC-071 is the decision that was missing**, and
-    S089 to S099 are one step per technique, with S100 to S102 answering
-    DEC-033's finding that the engine is evaluation-limited from hand-crafted
-    terms and fits.
+    the 2026-08-19 review (DEC-081 to DEC-086) is what ordered it — a search
+    block that leads, an evaluation block that follows it, and one step, S109,
+    where four pruning rules that are inert apart are measured together.

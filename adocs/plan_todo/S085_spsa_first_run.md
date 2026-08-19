@@ -1,5 +1,5 @@
 id:         S085
-goal:       the first SPSA run on the search parameters, and an independent SPRT of what it returns
+goal:       the first SPSA run, over the twenty search parameters that exist today, and an independent SPRT of what it returns
 accepts:    the run's parameter list, bounds, `c_end` per parameter, schedule constants, time control, opening book and game budget are written down before it starts and are not changed while it runs; the game budget is at least 30000 paired games or the run is not read at all; what it returns is rounded to the integers the shipping build uses and put through an SPRT of the **shipping** build against the commit before it, at a time control and an opening book the run did not use; the verdict is recorded whatever it is, including a rejection, and a rejected vector is kept in the step file rather than discarded
 touches:    src/search.cpp, src/evaluation.hpp, adocs/plan_done/ on completion
 excludes:   tuning the evaluation weights, which the Texel fit owns; adding parameters to the set, which is S073's; a second run, which is a new step if this one earns it
@@ -59,3 +59,20 @@ more written down than a second run started immediately.
 ## Cost
 
 A night for the run, three to four and a half hours for the verification SPRT.
+
+
+## Moved to the front, 2026-08-19
+
+The old plan put both SPSA steps last, on the argument that they tune what the
+steps above them add. That is right for S127 and wrong for this run: **the
+twenty parameters that exist today are demonstrably mis-set**, and the tuner is
+the cheapest way to find out which.
+
+The evidence, measured on the tune build at depth 12: `MaxQsearchDepth` is 8
+and the bound binds. At 16 the Ruy Lopez position after `e4 e5 Nf3 Nc6 Bb5 a6`
+drops from 1038972 nodes to 940880 -- 9.4 % fewer -- and its score moves from
+20 to 33 on a different line; kiwipete goes the other way, 5167100 to 6061763;
+an endgame position is unchanged at both. 16 and 32 are identical, so the
+natural depth is under 16. One untuned parameter, position-dependent, changing
+both the tree and the score. `ASPIRATION_DELTA` at 50 is the next candidate --
+the engines surveyed run 10 to 25 and widen.

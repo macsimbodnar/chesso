@@ -1,6 +1,9 @@
 id:         S025
 goal:       retry searching losing captures after the quiets, now that capture history exists
-accepts:    fixed-depth time is not worse than the two-stage build on all three search_bench positions; only then an SPRT
+accepts:    fixed-depth time measured against the two-stage build on all three search_bench positions with the benchmark's own reported resolution recorded; the SPRT is run only if that timing is not worse, and a timing that is worse is itself the recorded verdict and completes the step -- no clause here requires a non-worse timing to complete
+            (Folded in from the retired S059 by DEC-086: the gate is
+            outcome-neutral in the shape S051 gave S020 and S030, because this
+            step's own evidence predicts the timing may well be worse again.)
 touches:    src/search.cpp move picker and staging, src/evaluation.cpp score_move
 excludes:   attempting it before S023 and S024 exist, which is the whole reason it was set aside
 decisions:  DEC-022

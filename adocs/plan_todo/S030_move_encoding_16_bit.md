@@ -17,8 +17,26 @@ it touches six areas. Do it when the surrounding code has stopped moving, which
 is why it sits below the search work rather than above it.
 
 The neutrality hazard is move ordering, which reads the field being removed:
-`MOVE_PIECE` (`src/data_structures.hpp:86`) indexes `history_moves` and
-`counter_moves` in `score_move` (`src/evaluation.cpp:1092,1097`). Every such
-site must be re-pointed at `squares[from]`, and a slip there changes ordering
--- and so the tree -- with perft still green. That is why the accepts carries
-the search_bench identity clause and not perft alone.
+`MOVE_PIECE` indexes `history_moves` and `counter_moves` in `score_move`, and
+the killer, history and countermove writes in `negamax` index the same way.
+**The sites are not all the same site and they do not share a remedy** -- this
+is what the retired S058 and S079 corrected, folded in here by DEC-086.
+
+- **Sites keyed on the move being scored** take `board->squares[MOVE_FROM(move)]`.
+  The piece is still on the from-square at scoring time, so the substitution is
+  exact.
+- **Sites keyed on `prev_move`** cannot. `prev_move` has already been played, so
+  its from-square is empty and its to-square holds the piece -- these take
+  `board->squares[MOVE_TO(prev_move)]`, **and the promotion case is the trap**:
+  after a promotion the piece standing on the to-square is not the piece that
+  moved, so a countermove table keyed that way indexes a different row on the
+  read than it did on the write. Either exclude promotions from the countermove
+  key or key it on the promoted piece consistently on both sides.
+- **The write site** is the countermove store in `negamax`'s fail-high block,
+  which is keyed on `prev_move`; the read is in `score_move`. Both are named by
+  symbol rather than by line, because S023 and S024 add to this set.
+
+The site set is whatever `grep -n MOVE_PIECE src/` returns when the step
+starts, not the list above. A slip changes ordering -- and so the tree -- with
+perft still green, which is why the accepts carries the search_bench identity
+clause and not perft alone.

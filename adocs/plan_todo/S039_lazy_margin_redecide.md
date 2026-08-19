@@ -1,6 +1,12 @@
 id:         S039
 goal:       re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
-accepts:    the margin is chosen from an eval_spread run over the full corpus at current weights and the run is recorded; the comment at src/evaluation.hpp:274-282 describes the weights that ship; an SPRT against the preceding commit returns a verdict if the margin changes
+accepts:    the margin is chosen from an eval_spread run at the weights that ship at this step's own HEAD, over .tuning/selfplay_v2.tsv where it is on disk and over the tracked 5582-row corpus otherwise -- the file is gitignored and a machine move loses it again, so which corpus was read is recorded with the figures; the run is recorded in adocs/data/; the LAZY_EVAL_MARGIN comment in src/evaluation.hpp is re-measured for its mobility sentence as well as its king-safety sentence, cited by the symbol rather than by a line range; an SPRT against the preceding commit returns a verdict if the margin changes
+            (Folded in from the retired S057, S080 and S063 by DEC-086. The
+            figures those steps corrected -- 0.364 % past 150, worst 279 -- are
+            stale twice over: the real spread was four times that, and S065 has
+            since refitted 827 constants. Nothing here is taken on the old
+            numbers. This step is now a prerequisite for S122 rather than a
+            micro-tune: the clamp it sizes is what caps king safety.)
 touches:    src/evaluation.hpp LAZY_EVAL_MARGIN and its comment
 excludes:   the structure of the lazy shortcut itself, which is S034 and is done
 decisions:  DEC-039

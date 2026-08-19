@@ -4773,3 +4773,203 @@ Consequences: `src/search.hpp` now declares `negamax`, with the same "tests only
               for a checker: it would need to know which paragraph a range meant,
               which is the thing the range fails to express. Prefer a quoted
               phrase or a grep-able heading over a range when writing one.
+
+## DEC-081  2026-08-19  The tree shape is the binding constraint, not the evaluation; DEC-033's ordering conclusion is amended
+Tags:         planning, search, evaluation, measurement
+Context:      DEC-033 measured 160 expensive moves re-asked at 16 times the
+              search and concluded that chesso is evaluation-limited: sixteen
+              times the *nodes* removed 24.1 % of the error, 29.8 % after S028's
+              fit, and the plan's whole order followed from that. The
+              measurement is sound and is not withdrawn. What it does not say is
+              how many *plies* sixteen times the nodes buys, and in this tree
+              that is about four. Measured 2026-08-19 on one position after
+              `e4 e5 Nf3 Nc6 Bb5 a6`, `go movetime 250`: chesso reaches **depth
+              12 on 1448572 nodes**; Stockfish reaches **depth 15 to 16 on
+              158837 nodes**. Nine times the nodes, four plies shallower. So the
+              engine is not paying for depth at the market rate, and a node
+              doubling is the wrong unit to have priced the plan in.
+              Independently, the published record in this rating band says the
+              same thing from the other side: **Leorik 2.5 is 2917 CCRL Blitz
+              with less evaluation than chesso already ships** -- no king
+              safety, no threats, no outposts, no bishop pair, knight mobility
+              commented out -- and its single largest measured version jump,
+              2.0.2 at +436 CCRL, was four search features and no evaluation
+              change at all.
+Decision:     By the owner, 2026-08-19, on the agent's review. The search block
+              is ordered ahead of the evaluation block. DEC-033 is **not** VOID:
+              its measurement stands, and its conclusion is restated with the
+              period it applies to -- the evaluation *was* the binding
+              constraint in 2026-08, S028 (+188.74) and S065 (+21.10) are that
+              conclusion cashed, and what binds now is the shape of the tree
+              those weights are searched through.
+Rejected:     Keeping the evaluation-first order -- it was derived from a node
+              measurement and the plies are what the opponent sees. Re-measuring
+              in plies before deciding -- it costs hours to confirm a direction
+              two independent lines of evidence already agree on, and the
+              evaluation block is not cancelled, only sequenced second.
+Consequences: `plan.md` is reordered. The evaluation steps keep their ids and
+              their content and follow the search block, after the corpus work
+              they depend on. Any future claim that a category is "the binding
+              constraint" states the unit it was measured in.
+
+## DEC-082  2026-08-19  A technique whose parts are inert in isolation is one plan step and one SPRT
+Tags:         workflow, measurement, planning
+Context:      "One change at a time -- two at once and neither number means
+              anything" is a house rule and it exists because attribution is
+              what makes a verdict worth having. It collides with one documented
+              case. Stockfish's own removal test measures move-count pruning at
+              **~0 Elo alone** and the shallow-depth pruning block it belongs to
+              -- late move pruning, futility pruning, history pruning and quiet
+              SEE pruning, all gated on the reduction-adjusted depth -- at
+              **~204**. The parts prune overlapping sets of moves, so each one
+              measured against a tree the others are absent from returns
+              nothing. Four steps here would spend four verdicts to record four
+              zeros and would leave the plan believing a real +60 to +120 does
+              not exist.
+Decision:     By the owner, 2026-08-19. Where a technique's parts are inert in
+              isolation, **the parts are one plan step**, and that step is
+              measured once. The rule "one step, one test" is preserved rather
+              than excepted: what changes is where the step boundary is drawn,
+              not how many tests a step owes. The owner further authorises
+              postponing the per-part SPRT in any case of this shape. The step
+              file must name its parts in `goal` and state in `accepts` that
+              per-part attribution is deliberately forfeited, so the forfeit is
+              on the record and not discovered later. A block that fails is then
+              bisected, which is when the parts become separately measurable --
+              a failing block is evidence that one part is wrong, which is
+              exactly the attribution question the block form was not asked.
+Rejected:     Four steps and four zeros -- honest and expensive, and it loses the
+              Elo rather than measuring it. Landing the block and then
+              back-filling per-part step files -- the same forfeit with extra
+              paperwork and a false record of four measurements.
+Consequences: Applies to the shallow-depth pruning block, and to any later
+              technique that meets the same test. It is not a general licence to
+              batch: the qualifying condition is *published or measured evidence
+              that the parts are inert apart*, stated in the step file, not a
+              wish to go faster.
+
+## DEC-083  2026-08-19  The SPRT harness moves to the rating list's regime, and a pure speed-up is not measured in games
+Tags:         measurement, workflow, tooling
+Context:      Measurement capacity is the binding constraint on the whole plan
+              and the harness was set three ways that spend it. **The time
+              control is 10+0.2**, roughly twice the cost per game of the 8+0.08
+              and 10+0.1 the engines whose figures this plan reads from test at.
+              **The hash is 16 MB** in `fastchess.sh` and 64 MB in `rating.sh`,
+              while CCRL Blitz runs **128 to 256 MB** -- so every verdict is
+              taken in a table regime the rating list never runs, and the
+              difference is not small: measured 2026-08-19 on this machine,
+              16 MB against 512 MB at `go movetime 2000` from the start position
+              is **36 % fewer nodes and 21 % lower nps**. **The book is
+              balanced** (`8moves_v3.pgn`), which lowers the decisive-game rate
+              and lengthens every run. Separately, the published sensitivity
+              floor says a speed-up below about 0.7 % is invisible to an SPRT at
+              long time control and 0.24 % at short -- so an SPRT is the wrong
+              instrument for a change that leaves the node count identical.
+Decision:     By the owner, 2026-08-19. `fastchess.sh` moves to **tc 8+0.08**,
+              **Hash 128**, and an unbalanced opening book, after a time-forfeit
+              check at the faster control. And **a change that is
+              behaviour-neutral is accepted on an interleaved timing, never on
+              an SPRT**: identical node counts and best moves from
+              `tools/search_bench.py` discharge INV-6, and the strength claim is
+              the measured nps difference converted at the published 1.43 Elo
+              per percent at long time control, 2.10 at short, with the
+              conversion named as a conversion and not as a verdict.
+Rejected:     Leaving the harness alone to keep every verdict comparable with
+              the existing record -- verdicts are per-change and against a named
+              commit, so cross-comparability was never a property they had.
+              Changing hash and book only -- fixes the regime and leaves the
+              largest throughput term on the table.
+Consequences: Verdicts taken after this entry are not comparable in absolute
+              size with verdicts taken before it, which was already true across
+              the DEC-049 machine move. Roughly three times the verdicts per
+              night. The build step and the movegen micro-steps stop owing an
+              SPRT each, which removes about six runs from the plan outright.
+
+## DEC-084  2026-08-19  Published numbers are seeds and are refit; another engine's source and tables are not even seeds
+Tags:         licensing, provenance, evaluation, tuning
+Context:      DEC-016 forbids copying source and tables. This plan reads the
+              published record heavily -- Elo figures per technique, functional
+              forms, margin formulas, table shapes -- and the owner drew the
+              line more precisely than DEC-016 states it, twice, while the
+              review was running.
+Decision:     By the owner, 2026-08-19. Two rules, and they differ by source.
+              **From open literature -- papers, the wiki, articles, published
+              write-ups -- a number may be used as a starting point.** **From
+              another engine's source or tables, nothing is used, not even as a
+              starting point.** And in both cases **no constant ships
+              unfitted**: a seed is where our own tuner or SPSA run begins, and
+              what ships is what our fit returned on our own self-play data. A
+              fit that lands on the published value is a confirmation and a
+              perfectly good outcome; what is not acceptable is a published
+              number surviving into the binary because nobody refit it. The
+              owner's stated reason is that there must be no room for even the
+              suspicion that another person's work was taken.
+Rejected:     Treating published article numbers like engine source and refusing
+              them entirely -- it discards the direction the literature is read
+              for, which is DEC-014's whole method, and a seed that is refit
+              leaves no trace of itself. Allowing a seed to ship when the fit
+              agrees -- indistinguishable in the artefact from not having fitted
+              it, which is the thing being avoided.
+Consequences: Every step that takes a formula from the literature states the
+              seed, the source, and the fit that replaced it. This is why the
+              evaluation steps below all end in a fit and why the search steps
+              end in SPSA rather than in the margins their sources quote.
+              DEC-016 is unchanged and this entry is narrower than it, not an
+              exception to it.
+
+## DEC-085  2026-08-19  Book learning is retired and threading stays off the plan, because the rating list forbids one and ignores the other
+Tags:         planning, scope, measurement
+Context:      Two items were carried on the assumption that they buy strength on
+              the scale the goal is stated in. Checked against the CCRL Blitz
+              testing conditions rather than assumed: the list runs **single
+              CPU** on its main table, at **2 min + 1 s**, with **the engine's
+              own book disabled**, **ponder off**, and **book learning and
+              position learning off** -- an engine that cannot disable its own
+              book is not listed at all. So S086 is not a small win, it is a
+              rule violation with no upside, and Lazy SMP is worth **zero** to
+              the number DEC-071 sets the target in.
+Decision:     By the owner, 2026-08-19. **S086 is retired.** Its id is not
+              reused. **Threading is not a phase-one step** and gets no id; it
+              is reconsidered only if the goal is ever restated on a multi-CPU
+              scale. The concurrency decisions DEC-048, DEC-050 and DEC-073 are
+              untouched -- they are about running matches, not about the engine
+              searching on more than one thread.
+Rejected:     Keeping S086 behind a UCI option that ships off -- it would then be
+              dead code carrying a maintenance cost for a feature the target
+              scale forbids. Implementing Lazy SMP for testing throughput --
+              throughput comes from concurrent games, which the harness already
+              saturates, not from a parallel search.
+Consequences: The list of what CCRL actually runs is now on the record and is
+              the reference for any later "does this help the rating" question.
+              The tablebase question is separate and stays open: the list does
+              allow 4, 5 and 6 man tablebases, and the published gain for a
+              hand-crafted engine is about 13 Elo, which is why Syzygy sits last
+              and optional rather than retired.
+
+## DEC-086  2026-08-19  The ten correction steps are folded into the steps they correct, and retired
+Tags:         workflow, planning
+Context:      Three plan_review audits produced, among other things, ten steps
+              whose entire content is a correction to another step's `accepts`
+              or `touches` field: S056, S057, S058, S059, S060, S061, S063,
+              S079, S080 and S081. Each was placed immediately ahead of the step
+              it corrects. They are right about what they correct and they cost
+              zero Elo, and with the plan reordered around what the 3000 target
+              needs they now sit as ten separate gates in front of work that has
+              to happen. A correction to a step's acceptance criteria is not a
+              unit of work; it is an edit to that step's file.
+Decision:     By the owner, 2026-08-19. Each correction is **applied directly to
+              the step file it corrects**, in the same commit as this entry, and
+              the correcting step is retired. The ids are not reused. The
+              corrected step files carry a line naming the retired id, so the
+              audit finding remains followable from the step that answers it
+              rather than from a step file that no longer exists.
+Rejected:     Executing the ten as written -- ten commits and ten status
+              regenerations to make ten edits that fit in one. Dropping the
+              corrections with the steps -- the findings are correct and several
+              of them are the difference between a step measuring the right
+              thing and measuring nothing.
+Consequences: `plan_todo/` loses ten files and the corrections survive in the
+              steps that own them. The 2026-08-16 plan_review's parked re-run is
+              still owed; folding a finding into the step it corrects is
+              answering it, not closing it, and closure still needs a re-run
+              that no longer reports it.

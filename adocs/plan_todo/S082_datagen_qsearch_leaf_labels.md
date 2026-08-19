@@ -1,5 +1,5 @@
 id:         S082
-goal:       the corpus labels the quiescence leaf rather than the root, which is the position evaluate() is asked about
+goal:       the corpus labels a resolved position rather than the root -- the quiescence leaf, or the leaf reached by playing out a deep search's whole principal variation -- and samples few positions per game rather than many
 accepts:    `tools/datagen` records the position at the leaf quiescence resolves to, with the game result unchanged as the label, and states in its own output how often the leaf differs from the root; the tactical-move filter clause is retired rather than flagged, since its whole justification was that the root might not be quiet; a corpus is regenerated, refitted, and **one** candidate goes to an SPRT against the weights that ship, verdict recorded whatever it is; the leaf is verified to be quiet by construction -- a test asserts that the recorded position has no capture the quiescence search would still make, and fails if the walk is truncated by the depth bound instead
 touches:    tools/datagen.cpp, src/search.cpp or src/search.hpp for the leaf walk, tests/, .tuning/
 excludes:   the corpus size and the node budget, which are S083's; dedupe, which is S076's; the label blend, which is S075's; any change to what quiescence itself does
@@ -60,3 +60,25 @@ differ and only one of them is reproducible from the FEN alone.
 One night of generation, on the S065 precedent: 120000 games at 100000 nodes took
 about eight hours for 11.0 M rows. One fit, minutes. One SPRT, three to four and
 a half hours.
+
+
+## Widened 2026-08-19
+
+Two additions from the published method, both cheap once datagen is being
+changed anyway.
+
+**Resolve by playing out the principal variation.** Search the sampled position
+deeply, play the **whole** PV, and store the leaf. This makes the position
+quiet by construction rather than by filter, which is what the quiescence-leaf
+label is reaching for by a shorter route. It costs some label precision -- the
+game result is now attached to a position several plies from where it was
+sampled -- and the published assessment is that the diversity and the
+resolution are worth more than the precision.
+
+**Sample few positions per game.** The same source states plainly that many
+positions from one game **lowers** dataset quality. The corpus this engine
+fits on is about 92 rows per game by construction -- S066 fixed the splitter
+that this broke, and the underlying density was never revisited. Two to four
+rows a game is the published practice. That interacts with S083's fifty
+million: fifty million rows at four a game is twelve and a half million games,
+which is a datagen cost this step has to price before S083 commits to it.
