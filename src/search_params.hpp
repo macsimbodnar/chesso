@@ -60,13 +60,38 @@
   X(RFP_MARGIN,        "RfpMargin",       75,     0, 2000)                     \
   X(RFP_MAX_DEPTH,     "RfpMaxDepth",     6,      0, 63)                       \
                                                                                \
-  /* The top of the tree is searched properly. The root is exempt because its  \
-     answer is the one that gets played; ply 1 and ply 2 are exempt because a  \
-     static bound returned there is what the root compares against alpha, and  \
-     a mate two moves away lives exactly that far down. Measured, not          \
-     assumed: at ply 1 the mate cases in test_search go red, and buying the    \
-     two plies back costs 1.7 % of the nodes the rule saves. Exempting a       \
-     third costs 27 %. S033. */                                                \
+  /* The top of the tree is searched properly. Ply 1 and ply 2 are exempt      \
+     because a static bound returned there is what the root compares against   \
+     alpha, and a mate two moves away lives exactly that far down. Buying the  \
+     two plies back costs 1.7 % of the nodes the rule saves; exempting a third \
+     costs 27 %. S033.                                                         \
+                                                                               \
+     Two claims that stood here were wrong, and S085's run found them by       \
+     walking this axis down to 0. Both are corrected against the code:         \
+                                                                               \
+     The root is not exempt because of this parameter. The guard at            \
+     src/search.cpp:521 reads `!is_pv && ... ply >= RFP_MIN_PLY`, and search()  \
+     calls the root at :853 with ply 0 and is_pv true, so `!is_pv` is what     \
+     exempts the root and it does so at every setting of this. **0 and 1 are   \
+     therefore the same engine** -- byte-identical node counts and best moves  \
+     on every position driven, TRICKY 329568, CMK 260802, KILLER 53310 at      \
+     depth 8 -- so 0 is a value no tuner can tell from its neighbour.          \
+                                                                               \
+     And "at ply 1 the mate cases in test_search go red" was 3 of the 18, not  \
+     all of them: `mate in two is found at the right distance` (:125) and the  \
+     two pruning cases (:1887, :1926), each failing on its black or            \
+     material-leader arm at depth 3, and each asserting mate_found and a mate  \
+     distance rather than a move. The other 15 stay green at 0 and 1, as does  \
+     the 123769-assertion well-formedness sweep.                               \
+                                                                               \
+     **The tested floor is 2, not 3.** RFP does fire at ply 2 when this is set \
+     to 2 -- node counts differ from 3, TRICKY 329598 against 375687 -- and    \
+     every mate case still passes there. So the ply-2 exemption argued above   \
+     is one no test exercises, which src/search.cpp:517 already concedes in    \
+     its own words: "A mate deeper than ply 3 can still be missed for an       \
+     iteration, and no test covers that." The declared minimum stays 0 pending \
+     a decision on narrowing it to the tested 2 or the argued 3; what is not   \
+     in doubt is that 0 and 1 cannot ship. */                                  \
   X(RFP_MIN_PLY,       "RfpMinPly",       3,      0, 63)                       \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \

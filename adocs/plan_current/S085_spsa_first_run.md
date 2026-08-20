@@ -591,3 +591,57 @@ vector, shipping it with that one axis held at its safe floor -- which is then a
 vector nobody measured -- or narrowing the declared bound and owing a rerun, is
 a decision and not a judgement call, so it is written up for the owner rather
 than taken here.
+
+## What the `RfpMinPly` floor actually is, measured 2026-08-20 23:10
+
+Measured against `build-tune/src/chesso` over UCI and, independently, against
+`build-tune/tests/test_search` with `RFP_MIN_PLY` set through `gdb` at `main` --
+two mechanisms because `go depth N` is not what the tests do (UCI deepens 1..N
+with a warm table and aspiration from depth 5; the tests call `search(depth)`
+once from a cold one). Both agree. No build, no match, no timing: the SPSA run
+kept the machine throughout.
+
+| mate case in `tests/test_search.cpp` | `RfpMinPly` 0 | 1 | 2 | 3 |
+|---|---|---|---|---|
+| `mate in two is found at the right distance` :125 | FAIL | FAIL | pass | pass |
+| `pruning does not hide a forced mate` :1887 | FAIL | FAIL | pass | pass |
+| `pruning does not hide a mate against the material leader` :1926 | FAIL | FAIL | pass | pass |
+| the other 15 mate cases | pass | pass | pass | pass |
+| `search results are well formed everywhere` (123769 assertions) | pass | pass | pass | pass |
+
+**The tested floor is 2.** Three findings come with it, and two of them correct
+`src/search_params.hpp`, which is why that file was edited in the same commit.
+
+1. **0 and 1 are the same engine.** The guard is `!is_pv && ... ply >=
+   RFP_MIN_PLY` (`src/search.cpp:521`) and the root is entered at :853 with ply
+   0 and `is_pv` true, so `!is_pv` exempts the root at every setting and this
+   parameter never sees ply 0. Byte-identical node counts confirm it: TRICKY
+   329568, CMK 260802, KILLER 53310 at depth 8, both values. So the axis had a
+   duplicate value in it, and the comment's "the root is exempt because its
+   answer is the one that gets played" credited the wrong guard.
+2. **"the mate cases go red" was 3 of 18.** All three assert `mate_found` and a
+   mate distance, none asserts a move, and each fails on its black or
+   material-leader arm at depth 3. The material-leader position -- the one S033
+   wrote *for* this rule -- is the worst: no mate at any depth 3 through 6 at
+   `RfpMinPly` 0 or 1, and a different move played.
+3. **The ply-2 exemption has no test behind it.** RFP fires at ply 2 when the
+   setting is 2 -- TRICKY 329598 against 375687 at 3, so the tree really does
+   change -- and everything still passes. `src/search.cpp:517` already concedes
+   the gap: "A mate deeper than ply 3 can still be missed for an iteration, and
+   no test covers that."
+
+**Not fixed, because it is a decision.** The declared minimum stays 0. Narrowing
+it to 2 is measurement-backed and narrowing it to 3 matches the stated purpose
+while resting on an argument no test exercises -- and either way it is the
+owner's call, so it is banked rather than taken. What is settled is that 0 and 1
+cannot ship, which is what the rounded vector will be held against.
+
+`RFP_MAX_DEPTH` has the same shape and is softer: its comment says the bound
+"keeps the assumption to the last few plies", and a declared max of 63 permits
+the assumption at every depth in the tree. No red test and no number for "few",
+so it is recorded and not acted on. The tuner has walked this axis 6 -> 14.
+
+Checked and not findings: the other 20 rows hold, including three that needed
+arithmetic rather than reading -- `TmStabilityMax` 126 is `MAX_DEPTH`,
+`TmFallingPercent` 400 makes the scaled soft limit meet `TmHardPercent` exactly,
+`OrderHistoryMax` 899999 sits under the killer's 900000.

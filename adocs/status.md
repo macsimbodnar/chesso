@@ -12,6 +12,16 @@ Updated: 2026-08-20 by `moltke --step status`.
 - Watching:
   - watching: SPSA-(DONE|FAILED) in /home/max/ws/chesso/.tuning/spsa_S085.log, ceiling 18h, armed 2026-08-20T19:24:25+02:00 (.git/moltke_watch/1787246665_1476278.json)
 - Parked:
+  - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
+    minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
+    comment argues for, and **0 and 1 are the same engine** because `!is_pv`
+    exempts the root, not this parameter. 3 of 18 mate cases fail at 0 and 1;
+    all pass at 2. Narrowing to 2 is measurement-backed; narrowing to 3 matches
+    the stated purpose but rests on an argument no test exercises. The wrong
+    claims in `src/search_params.hpp` are corrected; the bound is left at 0
+    because changing it is a decision. `RFP_MAX_DEPTH` has the same shape and no
+    red test -- its comment says "the last few plies" and its max of 63 permits
+    every depth. Full measurement in S085's step file.
   - **Three questions banked for the owner while working overnight, 2026-08-20.**
     Asked here rather than blocking the run. (1) **Resume the SOTA enrichment
     pass?** 20 pending steps are still unenriched and it was stopped at S120 by
