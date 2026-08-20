@@ -7,7 +7,7 @@ decisions:  DEC-025
 closes:
 blocks:
 paused_by:
-done:
+done:      2026-08-20. Nothing found, and that is the recorded outcome. Every store and probe in both searches walked against the source: negamax's sole store, quiescence's four, tt_entry_answers() and the two probes. All eight correct. The exactness test in both searches is against the bound the node started with -- quiescence names alpha0 explicitly, negamax's first alpha-raise is against alpha0 in fact if not in name. de_normalize_score() runs before the bound comparison, so a mate bound is compared re-based. Quiescence's stand-pat lower bound holds because evaluate_expensive() is clamped to +/-LAZY_EVAL_MARGIN (evaluation.cpp:984), checked to its source rather than taken from the comment. Two properties the round trip rests on were checked and one of them was held by nothing: normalize_score() provably cannot lift a score above MATE_MAX (a mated node returns before storing, so the nearest storable mate is one ply below the storing node), and the mate band must exceed MAX_PLY or the ply term silently stops being applied -- now a static_assert beside the TT_DEPTH_QS one, observed red at MATE_MIN 48900. Nine tests left behind, each observed red under a stated mutation and each printout recorded in this file: swapped bound conditions, comparison-before-adjustment, all four ply terms dropped one at a time, draw tests moved below the probe, band closed. Store-side coverage is both searches -- quiescence for the negative arm, negamax for both -- driven directly at ply 3, which no call to search() can reach. The first version of three of those tests was vacuous and the mutants are what said so: a ply-0 precondition writes an exact entry, every probe accepts one, and the ply-3 drive answered out of the table without reaching a store site; tt_reset() per drive is the fix. Recorded as accepted, not fixed: quiescence probes with no draw checks (GHI, published practice, and excludes: puts a new search rule out of reach), and negamax can overwrite a stored eval with TT_EVAL_NONE, which S108 removes. One deviation from touches:, stated rather than silent -- src/data_structures.hpp's TT_PV_NODE comment carried a pasted copy of TT_ALPHA_NODE's text and was fixed; comment only. Behaviour-neutral and discharged on node counts, no SPRT owed or run: 164123 / 670488 / 84351 at depth 9 and 1162576 / 5167100 / 683367 at depth 12, c3d5 / e2a6 / d7c8q at both, identical to S103's record. ctest -L fast 16/16 in 11.34 s release and 219.34 s debug; clang-format clean. README.md is owner-written, no change needed; MANUAL.md unchanged -- no UCI surface moved; DEV_MANUAL.md unchanged -- no build, test or bench invocation moved.
 
 ## Why this is cheap insurance and goes early
 
@@ -257,3 +257,119 @@ from tools/search_bench.py plus an interleaved timing (INV-6, DEC-083).
 - Untraced: the 44.5 % -> 53.7 % / 2000-game / 64-Elo bound-inversion record
   and the "100+ Elo" mate-adjustment figure; searched 2026-08-19, not found
   in public records; flagged above, premise unaffected.
+author:    Maksym Bodnar
+
+## The sweep, walked (2026-08-20)
+
+Every store and every probe in both searches, against the source rather than
+against the step's own §2 line numbers, which had drifted. Verdict per item.
+
+| # | site | verdict |
+|---|---|---|
+| 1 | `negamax` sole store, `src/search.cpp:833-835` | correct. `type` starts `TT_ALPHA_NODE`, flips to `TT_BETA_NODE` on `score >= beta` and to `TT_PV_NODE` on `score > alpha`. The PV flip is against `alpha0` in fact if not in name: `alpha` is raised nowhere but inside that branch, so the *first* score to exceed it is exactly the first to exceed the node's original bound |
+| 2 | quiescence stand-pat cutoff, `:283-285` | correct, and the lower-bound claim checked to its source. `evaluate_lazy()` returns `cheap - LAZY_EVAL_MARGIN` on the fail-high branch (`src/evaluation.cpp:1038`) and `evaluate_expensive()` clamps its whole result to `+/-LAZY_EVAL_MARGIN` (`:984`), so the number returned is at or below `evaluate()`. A true lower bound, stored as one |
+| 3 | quiescence capture fail-high, `:363-367` | correct |
+| 4 | quiescence mate, `:387-388` | correct. The S094 endpoint, now held by a store-side test as well as a read-side one |
+| 5 | quiescence final store, `:397-400` | correct. `alpha0` is captured at `:204` before the stand-pat raise, and it is the only thing the exactness test compares against |
+| 6 | `tt_entry_answers()`, `:165-198` | correct, and the operation order with it: `de_normalize_score()` runs before the bound comparison, so a mate bound is compared re-based |
+| 7 | `negamax` probe, `:467-473` | correct. `!is_pv && ply > 0`, and the three draw tests run before it |
+| 8 | quiescence probe, `:216-224` | no draw checks, as the step's §5 predicted. Recorded as accepted, not fixed -- see below |
+
+Two further properties checked because the round trip rests on them:
+
+- **`normalize_score()` cannot lift a score out of the mate band on the way
+  in.** It maps `v -> v + ply` only for `MATE_MIN < v < MATE_MAX`, and
+  `de_normalize_score()` will only undo that for a result `<= MATE_MAX`. A
+  result above `MATE_MAX` would therefore be a value that goes in and never
+  comes back out. It is unreachable: a mated node returns before storing
+  anything, so the nearest mate a node at ply p can store is one ply below
+  itself, worth at most `MATE_MAX - (p + 1)`, normalising to at most
+  `MATE_MAX - 1`. The negative side is symmetric and lands exactly on
+  `-MATE_MAX`, which is why that endpoint is inclusive. Now held against the
+  table by a test rather than by this paragraph.
+- **The band has to exceed `MAX_PLY`**, or a mate at the deepest reachable ply
+  falls below `MATE_MIN` and neither function recognises it as a mate at all --
+  the ply term silently stops being applied. Held by nothing before this step;
+  now a `static_assert` beside the `TT_DEPTH_QS` one.
+
+**Nothing found.** No bound sign is inverted, no ply term is missing, and no
+store files a score under the wrong type. The step is recorded as the negative
+result its `accepts:` allows for, and the tests stay.
+
+### Recorded as accepted, not fixed
+
+- **Quiescence probes with no draw checks** (`:216-224`), and in-check evasions
+  make a repeated position reachable inside it. Path-dependent draw scores also
+  enter the table from below and the halfmove clock is not in the key. This is
+  the published state of the practice (CPW, Graph History Interaction) and any
+  change here is a new search rule, which `excludes:` puts out of reach. The
+  negamax half of the property -- draw tests before the probe -- was the one
+  thing worth pinning and now has a test.
+- **`negamax` can erase an `entry.eval`.** A node that does not reach the
+  reverse-futility site stores `TT_EVAL_NONE`, and the replacement policy will
+  let that overwrite an entry that carried a real evaluation. Not a bound or a
+  mate defect -- a hit rate lost, not a wrong answer -- and S108, which widens
+  the writers of that field to every non-check node, is where it stops being
+  reachable. Noted there rather than fixed here. Quiescence does not have the
+  problem: it writes back whatever eval it read.
+
+### One deviation from `touches:`
+
+`src/data_structures.hpp` is not in `touches:` and was edited anyway, for a
+comment. `TT_PV_NODE`'s doc block carried a pasted copy of `TT_ALPHA_NODE`'s
+text and described the opposite of what the constant means -- a doc claim about
+code that is wrong (§7), sitting exactly where a reader checking bound
+semantics would look. Comment only; no emitted code changes, which the node
+counts below confirm.
+
+## The tests, and the mutation each was observed red under
+
+Nine cases in `tests/test_search.cpp`, suite `search: transposition bounds and
+mate distance`. Every one was run against a deliberately broken engine and the
+printout is recorded beside it in the file. The mutations, and the assertion
+each killed:
+
+| mutation of `src/search.cpp` | first assertion to fail |
+|---|---|
+| swap the two bound conditions in `tt_entry_answers()` | `:1136 REQUIRE( tt_entry_answers(&entry, 1, 3, -100, 100, &score) )` -- `values: REQUIRE( false )` |
+| compare `entry->score` against the window, de-normalise after | `:1219 REQUIRE_FALSE( tt_entry_answers(&entry, 1, 3, -100000, MATE_MAX_LOCAL - 3, &score) )` -- `values: REQUIRE_FALSE( true )` |
+| drop `- ply` from `normalize_score()`'s negative arm | `:1281 REQUIRE_EQ( entry->score, -MATE_MAX_LOCAL )` -- `values: REQUIRE_EQ( -48997, -49000 )` |
+| drop `+ ply` from `normalize_score()`'s positive arm | `:1324 REQUIRE_EQ( entry->score, MATE_IN_ONE_PLY )` -- `values: REQUIRE_EQ( 48996, 48999 )` |
+| drop `- ply` from `de_normalize_score()`'s positive arm | `:833 REQUIRE_EQ( score, MATE_MAX_LOCAL - 3 )` -- `values: REQUIRE_EQ( 49000, 48997 )` (the S094 test) |
+| drop `+ ply` from `de_normalize_score()`'s negative arm | `:823 REQUIRE_EQ( score, -(MATE_MAX_LOCAL - 1) + 3 )` -- `values: REQUIRE_EQ( -48999, -48996 )` (the S094 test) |
+| move negamax's three draw tests below the probe | `:1542 REQUIRE_EQ( repeated, DRAW_SCORE_LOCAL )` -- `values: REQUIRE_EQ( 664, 0 )` |
+| `MATE_MIN 48000 -> 48900`, closing the band to 100 against `MAX_PLY` 128 | compile fails: `src/search.cpp:161:35: error: static assertion failed: a mate score must not decay out of the mate band` |
+
+The store-side cases cover **both searches**: `quiescence()` for the negative
+arm, `negamax()` for both arms, each driven directly at ply 3 because no call
+to `search()` can place a node there.
+
+### The first version of these tests was vacuous, and the mutants said so
+
+Written with a ply-0 precondition and a ply-3 case sharing one table, three of
+the store tests passed under the very mutation they were written for. The
+precondition's store is an exact entry, every probe accepts one, and the ply-3
+drive returned the de-normalised score out of the table without reaching a
+store site at all -- the case asserted a value the precondition had written.
+`tt_reset()` per drive is the fix and the comment in `node_fixture_t::load()`
+is the record. §6's "non-vacuous by construction" is not satisfied by writing a
+precondition; it is satisfied by watching the test fail.
+
+## Measurement
+
+Behaviour-neutral, and discharged on node counts rather than an SPRT (INV-6):
+the only changes to emitted code are a `static_assert`, which emits none, and a
+comment. `tools/search_bench.py ./build/src/chesso`:
+
+| depth | midgame | kiwipete | tactical | best moves |
+|---|---|---|---|---|
+| 9 | 164123 | 670488 | 84351 | `c3d5` / `e2a6` / `d7c8q` |
+| 12 | 1162576 | 5167100 | 683367 | `c3d5` / `e2a6` / `d7c8q` |
+
+Identical to the figures S103 recorded in `specs.md`. No SPRT owed and none
+run.
+
+Suites green both ways round: `ctest --test-dir build -L fast` 16/16 in
+11.34 s, and `ctest --test-dir build-debug -L fast` 16/16 in 219.34 s, which is
+where the new searches actually cost something and still nowhere near the 600 s
+debug timeout. `./clang-format.sh --check` clean.

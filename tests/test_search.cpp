@@ -1049,6 +1049,548 @@ TEST_SUITE("search: quiescence transposition entries")
 }
 
 
+// The two things a transposition table gets wrong without any test noticing:
+// which side of the window a bound is allowed to answer on, and whether a mate
+// score carries the ply it was seen at. Neither shows up as a wrong node count
+// or a crash -- a swapped bound condition is a pure strength loss, and a
+// dropped ply term is the published "announces mate and then shuffles"
+// symptom. S106 is the sweep; these are the tests it leaves behind, and each
+// one was observed red under a stated mutation of the code it covers.
+TEST_SUITE("search: transposition bounds and mate distance")
+{
+  // search.cpp's, pinned here rather than shared, for the reason the suite
+  // above pins them: a change to either should read as a disagreement.
+  static constexpr int MATE_MAX_LOCAL = 49000;
+  static constexpr int MATE_MIN_LOCAL = 48000;
+
+  // A mate delivered at ply 1 of a position, seen from that position. What
+  // negamax stores for a node one ply above a mate, once normalised.
+  static constexpr int MATE_IN_ONE_PLY = MATE_MAX_LOCAL - 1;
+
+  // Drives one node of the search directly at an arbitrary ply. Neither
+  // function is reachable at ply 3 through search(), and the ply is the whole
+  // subject here.
+  struct node_fixture_t : search_fixture_t
+  {
+    std::atomic_bool never_stop{false};
+    search_state_t state = {};
+
+    void load(const std::string& fen)
+    {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+      REQUIRE_MESSAGE(position_is_reachable(&game),
+                      (fen + " is not a position a legal game can reach"));
+
+      // Wiped every time, and that is what keeps the ply-0 precondition in
+      // each case below from answering the ply-3 drive out of the table
+      // instead of searching it. It does not: the entry the precondition
+      // writes is an exact one, every probe accepts it, and the second drive
+      // returns the de-normalised score without storing anything. The whole
+      // case then passes with the store arm never executed.
+      tt_reset(&tt);
+
+      never_stop = false;
+      state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+    }
+
+    // The entry the node just wrote for the position it was called on. The
+    // board is back where it started: make_move and unmake_move balance.
+    const tt_entry_t* stored() const { return tt_get_entry(&tt, &game.board); }
+  };
+
+
+  // Mutation: swap the two bound conditions in tt_entry_answers(), so a
+  // TT_BETA_NODE is tested against alpha and a TT_ALPHA_NODE against beta.
+  //
+  //   search: transposition bounds and mate distance
+  //    the bound conditions decide which side of the window may answer
+  //   REQUIRE( tt_entry_answers(&entry, 1, 3, -100, 100, &score) )
+  //   values: REQUIRE( false )
+  TEST_CASE("the bound conditions decide which side of the window may answer")
+  {
+    tt_entry_t entry = {};
+    entry.key = 0x3456ULL;
+    entry.depth = 1;
+    entry.generation = 1;
+
+    int score = 0;
+
+    // Precondition, and what stops the refusals below from being vacuous: an
+    // exact entry answers whatever the window is, so the probe is reaching
+    // these entries at all and the depth gate is not what is deciding.
+    entry.type = TT_PV_NODE;
+    entry.score = 50;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 50);
+    entry.score = 500;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 500);
+
+    // A lower bound answers a node whose beta it already clears, and the score
+    // comes back unclamped: this is a fail-soft engine and a stored value
+    // above the window is the normal case, not a corruption.
+    entry.type = TT_BETA_NODE;
+    entry.score = 500;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 500);
+
+    // Equality is a cutoff. "At least beta" is what a fail-high proved.
+    entry.score = 100;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 100);
+
+    // Inside the window it proves nothing this node can use: the true value is
+    // somewhere at or above 50 and may still be under beta.
+    entry.score = 50;
+    score = 0;
+    REQUIRE_FALSE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 0);
+
+    // A lower bound is never an answer at the alpha end, which is the half a
+    // swapped condition gets wrong in the direction that still looks plausible.
+    entry.score = -500;
+    score = 0;
+    REQUIRE_FALSE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 0);
+
+    // And the mirror image for a ceiling.
+    entry.type = TT_ALPHA_NODE;
+    entry.score = -500;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, -500);
+
+    entry.score = -100;
+    score = 0;
+    REQUIRE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, -100);
+
+    entry.score = 50;
+    score = 0;
+    REQUIRE_FALSE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 0);
+
+    entry.score = 500;
+    score = 0;
+    REQUIRE_FALSE(tt_entry_answers(&entry, 1, 3, -100, 100, &score));
+    REQUIRE_EQ(score, 0);
+  }
+
+
+  // The order of the two operations in tt_entry_answers() is load bearing and
+  // only a mate score can show it: for an ordinary score the ply term is zero
+  // and comparing before or after adjusting is the same comparison.
+  //
+  // Mutation: compare entry->score against the window and de-normalise the
+  // value afterwards.
+  //
+  //   search: transposition bounds and mate distance
+  //    a mate bound is compared after the ply adjustment, not before
+  //   REQUIRE_FALSE( tt_entry_answers(&entry, 1, 3, -100000, MATE_MAX_LOCAL -
+  //   3, &score) ) values: REQUIRE_FALSE( true )
+  TEST_CASE("a mate bound is compared after the ply adjustment, not before")
+  {
+    tt_entry_t entry = {};
+    entry.key = 0x4567ULL;
+    entry.depth = 1;
+    entry.generation = 1;
+    entry.type = TT_BETA_NODE;
+
+    // "At least a mate one ply from here". Read at ply 3 that is a mate at ply
+    // 4 of the search, worth MATE_MAX - 4.
+    entry.score = MATE_IN_ONE_PLY;
+
+    int score = 0;
+
+    // Precondition: the entry does answer a node it clears, and the value that
+    // comes back is the re-based one. Without this the refusal below would
+    // hold for an entry that answers nothing.
+    REQUIRE(
+        tt_entry_answers(&entry, 1, 3, -100000, MATE_MAX_LOCAL - 8, &score));
+    REQUIRE_EQ(score, MATE_MAX_LOCAL - 4);
+
+    // Against a beta that only a mate at ply 3 would clear, the entry must
+    // refuse: what it holds is a mate one ply further away. The raw stored
+    // number clears that beta, so a probe that compares first takes a cutoff
+    // it did not prove and claims a mate one ply sooner than exists.
+    score = 0;
+    REQUIRE_FALSE(
+        tt_entry_answers(&entry, 1, 3, -100000, MATE_MAX_LOCAL - 3, &score));
+    REQUIRE_EQ(score, 0);
+
+    // The mirror image on the ceiling: "at worst mated one ply from here".
+    entry.type = TT_ALPHA_NODE;
+    entry.score = -MATE_IN_ONE_PLY;
+
+    score = 0;
+    REQUIRE(
+        tt_entry_answers(&entry, 1, 3, -(MATE_MAX_LOCAL - 8), 100000, &score));
+    REQUIRE_EQ(score, -(MATE_MAX_LOCAL - 4));
+
+    score = 0;
+    REQUIRE_FALSE(
+        tt_entry_answers(&entry, 1, 3, -(MATE_MAX_LOCAL - 3), 100000, &score));
+    REQUIRE_EQ(score, 0);
+  }
+
+
+  // The store arm of the pair, in quiescence, which is the only writer that
+  // reaches the endpoint: a mate with no legal reply is stored as exactly
+  // -MATE_MAX, "mated here", whatever ply the node sits at. The score the node
+  // returns is the ply-relative one and the score it writes down is not, and
+  // that difference is the whole of normalize_score().
+  //
+  // Mutation: drop the `- ply` from normalize_score()'s negative arm.
+  //
+  //   search: transposition bounds and mate distance
+  //    quiescence stores a mate at its own position, not at the searching ply
+  //   REQUIRE( entry->score == -MATE_MAX_LOCAL )
+  //   values: REQUIRE( -48997 == -49000 )
+  TEST_CASE_FIXTURE(
+      node_fixture_t,
+      "quiescence stores a mate at its own position, not at the searching ply")
+  {
+    // In check with no legal reply. The same position the suite above uses for
+    // the reading half of this rule.
+    const std::string fen = "7k/6Q1/6K1/8/8/8/8/8 b - - 0 1";
+
+    // Precondition: at the root the two numbers coincide, so the case below is
+    // about the ply term and not about the store happening at all.
+    load(fen);
+    REQUIRE_EQ(
+        quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 0, 0, &game, &state),
+        -MATE_MAX_LOCAL);
+
+    const tt_entry_t* root_entry = stored();
+    REQUIRE(root_entry != nullptr);
+    REQUIRE_EQ(root_entry->score, -MATE_MAX_LOCAL);
+    REQUIRE_EQ(root_entry->type, TT_PV_NODE);
+    REQUIRE_EQ(root_entry->depth, TT_DEPTH_QS);
+
+    // The same node three plies down. What it returns moves with the ply and
+    // what it stores does not.
+    load(fen);
+    REQUIRE_EQ(
+        quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 3, 0, &game, &state),
+        -(MATE_MAX_LOCAL - 3));
+
+    const tt_entry_t* entry = stored();
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->score, -MATE_MAX_LOCAL);
+    REQUIRE_EQ(entry->type, TT_PV_NODE);
+    REQUIRE_EQ(entry->depth, TT_DEPTH_QS);
+  }
+
+
+  // The same store arm in the main search, on the positive side: a node one
+  // ply above a mate stores "mate in one ply from here" and not the distance
+  // it happened to see it from.
+  //
+  // Mutation: drop the `+ ply` from normalize_score()'s positive arm.
+  //
+  //   search: transposition bounds and mate distance
+  //    the main search stores a mate below it at the mate's own distance
+  //   REQUIRE( entry->score == MATE_IN_ONE_PLY )
+  //   values: REQUIRE( 48996 == 48999 )
+  TEST_CASE_FIXTURE(node_fixture_t,
+                    "the main search stores a mate below it at the mate's own "
+                    "distance")
+  {
+    // Qxg7 is mate. Verified with /usr/games/stockfish, depth 20: score mate 1,
+    // pv a7g7. A capture, so the main search reaches the mate at depth 1 and
+    // the ordinary mated-node return happens one ply below this one.
+    const std::string fen = "7k/Q5b1/6K1/8/8/8/8/8 w - - 0 1";
+
+    // Precondition: at the root the stored number and the returned number
+    // coincide, so the case below is about the ply term.
+    load(fen);
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 1, 0, &game, &state,
+                       0, false),
+               MATE_IN_ONE_PLY);
+
+    const tt_entry_t* root_entry = stored();
+    REQUIRE(root_entry != nullptr);
+    REQUIRE_EQ(root_entry->score, MATE_IN_ONE_PLY);
+
+    load(fen);
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 1, 3, &game, &state,
+                       0, false),
+               MATE_MAX_LOCAL - 4);
+
+    const tt_entry_t* entry = stored();
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->score, MATE_IN_ONE_PLY);
+    REQUIRE_EQ(entry->type, TT_PV_NODE);
+    REQUIRE_EQ(entry->depth, 1);
+  }
+
+
+  // And the negative side in the main search, which quiescence cannot produce:
+  // a node that has legal moves and loses to a mate anyway. negamax returns
+  // from a mated node before it stores anything, so this is the only way the
+  // main search ever writes a negative mate score.
+  //
+  // Mutation: drop the `- ply` from normalize_score()'s negative arm.
+  //
+  //   search: transposition bounds and mate distance
+  //    the main search stores a mate against it at the mate's own distance
+  //   REQUIRE( entry->score == -(MATE_MAX_LOCAL - 2) )
+  //   values: REQUIRE( -48995 == -48998 )
+  TEST_CASE_FIXTURE(node_fixture_t,
+                    "the main search stores a mate against it at the mate's "
+                    "own distance")
+  {
+    // MATE_IN_2_W_POS after e5e6, derived with python-chess rather than read
+    // off a board. Black is not in check, has exactly two legal moves, and
+    // both lose to a mate on the next ply: /usr/games/stockfish at depth 24
+    // gives the parent position mate 2 with pv e5e6 e8f8 a7f7.
+    const std::string fen = "4k3/Q7/4K3/8/8/8/8/8 b - - 1 1";
+
+    load(fen);
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 2, 0, &game, &state,
+                       0, false),
+               -(MATE_MAX_LOCAL - 2));
+
+    const tt_entry_t* root_entry = stored();
+    REQUIRE(root_entry != nullptr);
+    REQUIRE_EQ(root_entry->score, -(MATE_MAX_LOCAL - 2));
+
+    load(fen);
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 2, 3, &game, &state,
+                       0, false),
+               -(MATE_MAX_LOCAL - 5));
+
+    const tt_entry_t* entry = stored();
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->score, -(MATE_MAX_LOCAL - 2));
+    REQUIRE_EQ(entry->type, TT_PV_NODE);
+    REQUIRE_EQ(entry->depth, 2);
+  }
+
+
+  // The round trip the two arms exist for, end to end and through a real
+  // store: the same position written by a node at one ply and read by a node
+  // at another has to describe the same mate. The distance to the mate from
+  // the reading node is what must agree; the score does not, and cannot.
+  //
+  // Fails under any of the four mutations above.
+  TEST_CASE_FIXTURE(node_fixture_t,
+                    "a mate stored at one ply reads the same distance at "
+                    "another")
+  {
+    const std::string fen = "7k/Q5b1/6K1/8/8/8/8/8 w - - 0 1";
+
+    load(fen);
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 1, 3, &game, &state,
+                       0, false),
+               MATE_MAX_LOCAL - 4);
+
+    const tt_entry_t* entry = stored();
+    REQUIRE(entry != nullptr);
+
+    // Read back at every ply a search could reach this position at, including
+    // the one that wrote it. The distance to mate is measured from the reading
+    // node, which is what makes it the invariant.
+    for (size_t q = 0; q < 32; ++q) {
+      int score = 0;
+      REQUIRE_MESSAGE(tt_entry_answers(entry, 1, q, -SEARCH_SCORE_INF,
+                                       SEARCH_SCORE_INF, &score),
+                      ("ply " + std::to_string(q)));
+      REQUIRE_MESSAGE(
+          MATE_MAX_LOCAL - score - static_cast<int>(q) == 1,
+          ("ply " + std::to_string(q) + " score " + std::to_string(score)));
+    }
+  }
+
+
+  // The published symptom in miniature: an engine whose mate scores are not
+  // ply-adjusted in both directions announces a mate and then never converts
+  // it, because every position it reaches reports the distance the entry was
+  // written at. Here the table is warm and shared across the three searches,
+  // so every score after the first is read back at a ply it was not written
+  // at, and the distance has to fall by exactly the plies played.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the announced mate distance falls by one for every ply "
+                    "played")
+  {
+    // Mate in 2. /usr/games/stockfish at depth 24: score mate 2, pv e5e6 e8f8
+    // a7f7 -- three plies.
+    search_t result = search_fen_with(MATE_IN_2_W_POS, 5, &tt, true);
+
+    // Precondition: the mate is found at all. Everything below is about the
+    // distance and says nothing if there is no mate score to carry.
+    REQUIRE(result.mate_found);
+    REQUIRE_EQ(MATE_MAX_LOCAL - std::abs(result.score), 3);
+
+    static std::atomic_bool never_stop = false;
+
+    for (int played = 1; played <= 2; ++played) {
+      REQUIRE(result.pv.length >= 1);
+      REQUIRE(make_move(&game, result.pv.table[0]));
+
+      // Same table, no reset: a new search in the same game, which is the
+      // only condition under which the stale-distance bug is visible.
+      never_stop = false;
+      tt_new_search(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      result = search(5, &game, &state);
+
+      REQUIRE_MESSAGE(result.mate_found,
+                      ("after " + std::to_string(played) + " plies"));
+      REQUIRE_MESSAGE(MATE_MAX_LOCAL - std::abs(result.score) == 3 - played,
+                      ("after " + std::to_string(played) + " plies the score " +
+                       std::to_string(result.score) + " is " +
+                       std::to_string(MATE_MAX_LOCAL - std::abs(result.score)) +
+                       " plies from mate"));
+    }
+  }
+
+
+  // The ordering property the table depends on and no test held: a draw is a
+  // property of the path and the Zobrist key does not carry the path, so a
+  // position that has just repeated must be answered as a draw before the
+  // table is allowed to answer it as a win. The entry is not wrong -- the same
+  // position really is worth what it says down another path -- which is what
+  // makes probe-first a silent defect rather than a crash.
+  //
+  // Mutation: move the three draw tests in negamax below the probe.
+  //
+  //   search: transposition bounds and mate distance
+  //    a repetition is answered before the table is
+  //   REQUIRE_EQ( repeated, DRAW_SCORE_LOCAL )
+  //   values: REQUIRE_EQ( 664, 0 )
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a repetition is answered before the "
+                    "table is")
+  {
+    static constexpr int DRAW_SCORE_LOCAL = 0;
+
+    // Rook and king against a bare king: material that can still mate, so
+    // is_insufficient_material() does not answer this position and the draw
+    // that fires below is the repetition one.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R3K3 w - - 0 1", &game));
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    // Ply 1 rather than the root: the draw tests and the probe are both
+    // guarded on ply > 0, so the root would exercise neither.
+    const int fresh = negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 3, 1, &game,
+                              &state, 0, false);
+
+    // Preconditions, and what stops the assertion below from holding for a
+    // position that is worth nothing anyway or for an entry that answers
+    // nobody: the position is not a draw on its own, and the entry it wrote
+    // does answer the probe this node makes.
+    REQUIRE_NE(fresh, DRAW_SCORE_LOCAL);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+
+    int answered = 0;
+    REQUIRE(tt_entry_answers(entry, 3, 1, -SEARCH_SCORE_INF, SEARCH_SCORE_INF,
+                             &answered));
+    REQUIRE_EQ(answered, fresh);
+
+    // Ra1-a3-a1 around Ke8-d8-e8 puts the same position back on the board with
+    // the same side to move, and nothing irreversible happened in between.
+    const std::vector<std::pair<index_t, index_t>> line = {
+        {a1, a3}, {e8, d8}, {a3, a1}, {d8, e8}};
+
+    for (const auto& [from, to] : line) {
+      move_t moves[MAX_MOVES];
+      const size_t count = legal_moves(&game, moves);
+
+      bool played = false;
+
+      for (size_t i = 0; i < count; ++i) {
+        if (MOVE_FROM(moves[i]) == from && MOVE_TO(moves[i]) == to) {
+          REQUIRE(make_move(&game, moves[i]));
+          played = true;
+          break;
+        }
+      }
+
+      REQUIRE(played);
+    }
+
+    REQUIRE(is_position_repeated(&game.history, &game.board));
+
+    // Same table, deliberately not reset: the entry written above is still
+    // there and still answers, and the draw has to be decided first anyway.
+    never_stop = false;
+    state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int repeated = negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 3, 1,
+                                 &game, &state, 0, false);
+
+    REQUIRE_EQ(repeated, DRAW_SCORE_LOCAL);
+  }
+
+
+  // The store side of the round trip, over a real search rather than one node:
+  // normalize_score() adds the ply to a score already inside the mate band, so
+  // a value that leaves the band on the way in is one de_normalize_score()
+  // will not touch on the way out, and the mate distance stops being adjusted
+  // at all. The argument that it cannot happen is that a mate seen from ply p
+  // is worth at most MATE_MAX - (p + 1) -- a mated node returns before it
+  // stores anything, so the nearest a stored mate can be is one ply below the
+  // node storing it. This holds that argument against the table instead of
+  // against the reasoning, which is where S094's defect was hiding.
+  TEST_CASE_FIXTURE(search_fixture_t, "no stored score leaves the mate band")
+  {
+    // Two forced mates and two ordinary positions: the mates are what put
+    // scores in the band at all, the rest is volume.
+    const std::vector<std::pair<std::string, int>> positions = {
+        {MATE_IN_2_W_POS, 6},
+        {"7k/Q5b1/6K1/8/8/8/8/8 w - - 0 1", 6},
+        {DEFAULT_POSITION, 6},
+        {TRICKY_POS, 5},
+    };
+
+    size_t written = 0;
+    size_t in_band = 0;
+
+    for (const auto& [fen, depth] : positions) {
+      search_fen_with(fen, depth, &tt, /*reset=*/false);
+
+      for (size_t i = 0; i < tt.entry_count; ++i) {
+        const tt_entry_t& entry = tt.entries[i];
+
+        if (entry.generation == 0) { continue; }
+
+        written++;
+
+        if (std::abs(entry.score) > MATE_MIN_LOCAL) { in_band++; }
+
+        REQUIRE_MESSAGE(
+            std::abs(entry.score) <= MATE_MAX_LOCAL,
+            ("FEN: " + fen + " stored " + std::to_string(entry.score)));
+      }
+    }
+
+    // Preconditions. The sweep says nothing unless entries were written, and
+    // the band assertion says nothing unless something landed in the band.
+    REQUIRE(written > 0);
+    REQUIRE(in_band > 0);
+  }
+}
+
+
 TEST_SUITE("search: transposition table")
 {
   // Quiet middlegame and endgame positions with no forced mate inside the

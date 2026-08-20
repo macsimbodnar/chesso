@@ -151,6 +151,16 @@ inline int de_normalize_score(int score, int ply)
 static_assert(TT_DEPTH_QS < 0,
               "a quiescence entry must not satisfy a main-search probe");
 
+// The band the pair above recognises a mate score by. A mate at the deepest
+// ply the search can reach is worth MATE_MAX - MAX_PLY, and that has to stay
+// above MATE_MIN: below it, normalize_score() and de_normalize_score() stop
+// recognising the number as a mate score, silently leave the ply term off it,
+// and the distance stored is the distance seen from whichever node happened to
+// write it. Nothing held this before S106 -- the margin is wide today (1000
+// against 128) and it is a constant either side of it that would close it.
+static_assert(MATE_MAX - MATE_MIN > MAX_PLY,
+              "a mate score must not decay out of the mate band");
+
 
 bool tt_entry_answers(const tt_entry_t* entry,
                       int depth,

@@ -360,11 +360,13 @@ struct pv_t
 enum node_type_t
 {
   TT_EMPTY_NODE,
-  TT_PV_NODE,  // The stored score is EXACTLY that.
-               // Alpha node.  Every move you search will have a value less than
-               // or equal to alpha, meaning that none of the moves in here will
-               // be any good, probably because the starting position is bad for
-               // the side to move.
+  TT_PV_NODE,  // The stored score is EXACTLY that. Exact. The node's value
+               // landed strictly inside the window it was searched with, so
+               // there is a real score here and not a bound, and it answers
+               // whatever window a later node reads it from.
+               //
+               // The four lines that used to sit here were a pasted copy of
+               // TT_ALPHA_NODE's text, describing the opposite thing. S106.
 
   TT_ALPHA_NODE,  // The stored score was at most that. Upperbound. Fail-low
                   // Alpha node.  Every move you search will have a value less
