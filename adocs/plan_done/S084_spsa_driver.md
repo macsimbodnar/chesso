@@ -423,22 +423,6 @@ Resume is byte-identical, tested at both interruption points — after the
 checkpoint, and between the trajectory row and the checkpoint, which is the case
 that needs the tail truncated.
 
-## Two defects found reviewing the step's own diff, fixed in the next commit
-
-Both observed red before the fix.
-
-- **A config that would not load printed a traceback and no marker.** `Config`
-  was constructed outside the `try` that prints `SPSA-FAILED`, so the single
-  most likely way a detached run fails — a typo in the config — ended in a
-  traceback, and DEC-061's watcher would have sat until its ceiling instead of
-  exiting. Now inside it, for a missing file, unparseable JSON and a rejected
-  field alike.
-- **The resume digest covered the config and not the objective.** `--resume`
-  with a different simulator spec, or with `--flip-sign` added, continued the
-  trajectory without complaint. The sign case is the one that matters: a
-  half-flipped run is the only corruption whose trajectory looks entirely
-  normal. The digest now spans config, objective and sign.
-
 ## One deliberate deviation
 
 Checkpoint and trajectory `fsync` only when the objective is a real match. Two
