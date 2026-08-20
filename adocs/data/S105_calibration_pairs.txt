@@ -1,0 +1,34 @@
+=== adocs/data/S105_calibration_before.pgn ===
+games            1000
+draws            403, 40.3 %
+decisive         597, 59.7 %
+plies per game   mean 117.8, median 108
+seconds per game mean 30.4, median 29
+seconds per ply  0.2579
+complete pairs   500
+  pair score 0.0     30    6.0 %
+  pair score 0.5    123   24.6 %
+  pair score 1.0    208   41.6 %
+  pair score 1.5    110   22.0 %
+  pair score 2.0     29    5.8 %
+white won both   67 of 500, 13.4 %  (the pair Pohl's floor is about)
+pair score       mean 0.9850, variance 0.2343, sd 0.4840
+
+=== adocs/data/S105_calibration_after.pgn ===
+games            1000
+draws            295, 29.5 %
+decisive         705, 70.5 %
+plies per game   mean 98.0, median 89
+seconds per game mean 17.9, median 18
+seconds per ply  0.1831
+complete pairs   500
+  pair score 0.0     34    6.8 %
+  pair score 0.5    101   20.2 %
+  pair score 1.0    234   46.8 %
+  pair score 1.5     94   18.8 %
+  pair score 2.0     37    7.4 %
+white won both   99 of 500, 19.8 %  (the pair Pohl's floor is about)
+pair score       mean 0.9990, variance 0.2395, sd 0.4894
+
+pair variance    0.2343 +/- 0.0148  vs  0.2395 +/- 0.0152
+ratio            1.022

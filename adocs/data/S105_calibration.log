@@ -1,0 +1,73 @@
+S105 calibration, 9a063d3
+rounds 500 per run, concurrency 12, out /tmp/chesso_s105_calibration_20260820_100052
+
+=== before: tc=10+0.2 book=8moves_v3.pgn ===
+label        before
+tc           10+0.2
+book         8moves_v3.pgn
+fastchess    exit 0
+games        1000
+elapsed      2595s
+
+--- terminations ---
+    695 [Termination "adjudication"]
+    305 [Termination "normal"]
+
+draws        403 of 1000, 40.3 %
+decisive     597 of 1000, 59.7 %
+forfeits     0 of 1000, 0.00 %
+games/min    23.1
+games/hour   1387
+
+=== after: tc=8+0.08 book=UHO_Lichess_4852_v1.epd ===
+label        after
+tc           8+0.08
+book         UHO_Lichess_4852_v1.epd
+fastchess    exit 0
+games        1000
+elapsed      1550s
+
+--- terminations ---
+    771 [Termination "adjudication"]
+    229 [Termination "normal"]
+
+draws        295 of 1000, 29.5 %
+decisive     705 of 1000, 70.5 %
+forfeits     0 of 1000, 0.00 %
+games/min    38.7
+games/hour   2323
+
+=== summaries ===
+label        before
+tc           10+0.2
+book         8moves_v3.pgn
+fastchess    exit 0
+games        1000
+elapsed      2595s
+
+--- terminations ---
+    695 [Termination "adjudication"]
+    305 [Termination "normal"]
+
+draws        403 of 1000, 40.3 %
+decisive     597 of 1000, 59.7 %
+forfeits     0 of 1000, 0.00 %
+games/min    23.1
+games/hour   1387
+label        after
+tc           8+0.08
+book         UHO_Lichess_4852_v1.epd
+fastchess    exit 0
+games        1000
+elapsed      1550s
+
+--- terminations ---
+    771 [Termination "adjudication"]
+    229 [Termination "normal"]
+
+draws        295 of 1000, 29.5 %
+decisive     705 of 1000, 70.5 %
+forfeits     0 of 1000, 0.00 %
+games/min    38.7
+games/hour   2323
+S105-CALIBRATION-DONE /tmp/chesso_s105_calibration_20260820_100052

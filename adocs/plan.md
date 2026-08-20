@@ -67,7 +67,12 @@ time controls is table **pressure**, every OpenBench preset tests STC at 8 to
 where 128 MB undershoots them eightfold. `fastchess.sh` keeps Hash=16;
 `rating.sh` keeps the list's absolute regime. DEC-083's other rule stands: a
 behaviour-neutral change is accepted on an interleaved timing, never on a
-match. Together, roughly three times the verdicts per night.
+match. ~~Together, roughly three times the verdicts per night.~~ **Measured
+2026-08-20 when S105 landed: x1.67, 23.1 to 38.7 games a minute** -- x1.41 from
+the control and x1.20 from shorter games, with the book contributing nothing at
+the pair level (variance ratio 1.022). The three-times figure was a prediction
+and it was wrong; the machine-hours below were already priced near the measured
+number, so the order does not change.
 
 **The next step as it stood would have measured zero.** S092, the improving
 flag, was first in the pending order. It is a modifier of reverse futility, late
@@ -294,7 +299,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-2. S089  a time budget that scales with best-move stability and with a falling score, instead of remaining over a fixed movestogo plus half the increment
 3. S094  quiescence probes and stores the transposition table, and an entry carries the static evaluation it was scored with
 4. S103  reverse futility reads the static evaluation already in the table entry instead of recomputing it
 5. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it

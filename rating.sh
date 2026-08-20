@@ -25,7 +25,15 @@ book="$repo/books/8moves_v3.pgn"
 candidate="$repo/build/src/chesso"
 
 tc="${TC:-10+0.2}"
-hash_mb=64
+
+# 128 MB, deliberately unlike fastchess.sh's 16. The two scripts match
+# different invariants and S105 is where they parted. CCRL Blitz runs its
+# engines at 128 to 256 MB (DEC-089, read from the live conditions page), and
+# this script's whole job is to reproduce the list's absolute regime, so it
+# takes the list's number. fastchess.sh matches table *pressure* instead --
+# overwrites per entry at its own much shorter control -- which lands it at 16
+# (DEC-088). Raised here from 64, which matched neither.
+hash_mb=128
 
 # Every core the machine reports, DEC-050, exactly as fastchess.sh. CONCURRENCY
 # overrides.

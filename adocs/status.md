@@ -3,11 +3,11 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-19 by `moltke --step status`.
+Updated: 2026-08-20 by `moltke --step status`.
 
-- Last done: S104
+- Last done: S105
 - In progress: none
-- Next: S105
+- Next: S106
 - Blocked: none
 - Parked:
   - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
@@ -76,14 +76,17 @@ Updated: 2026-08-19 by `moltke --step status`.
     +129.2 +/- 33.8 over 183 games. The trend was unambiguous and the machine was
     needed elsewhere. Nothing depends on closing it; recorded so nobody reads
     "passed" into a run that was stopped.
-  - **Measurement capacity is the binding constraint on the whole plan, and
-    S105 is the step that attacks it.** A verdict costs three to four and a half
-    hours at the settings that ship today — `tc=10+0.2`, `Hash=16`,
-    `8moves_v3.pgn`, all 12 threads of the DEC-049 machine. DEC-083 moves the
-    harness to `8+0.08`, `Hash=128` and an unbalanced book for roughly three
-    times the verdicts per night, and adds the rule that a behaviour-neutral
-    change is accepted on an interleaved timing rather than a match. **Until
-    S105 lands, the old figures still apply.** Find the source paragraph in
+  - **Measurement capacity is still the binding constraint, and S105 bought
+    less than it was priced at.** Landed 2026-08-20: `tc=8+0.08`, `Hash=16`
+    (DEC-088, not DEC-083's 128), `UHO_Lichess_4852_v1.epd`, all 12 threads of
+    the DEC-049 machine. **Measured x1.67, 23.1 to 38.7 games a minute**,
+    against the x3 DEC-083 predicted — x1.41 from the control and x1.20 from
+    shorter games. **The unbalanced book bought nothing at the pair level**
+    (variance ratio 1.022) and Pohl's 45 % draw floor is unreachable at this
+    strength: the *balanced* book measured 40.3 % draws. It is kept on the
+    x1.20 and on DEC-083, and whether to keep it is the owner's to revisit —
+    the argument is in `adocs/data/S105_calibration_pairs.txt` and
+    `adocs/plan_done/S105_sprt_harness_regime.md`. Find the source paragraph in
     `specs.md` under "Open items" by the phrase "Measurement capacity is the
     binding constraint" — this item carried a line range into that file three
     times and it was stale all three times, which is why it is a phrase now.

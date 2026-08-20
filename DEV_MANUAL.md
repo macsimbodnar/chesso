@@ -15,7 +15,7 @@ are in `CLAUDE.md`.
 | `tools/` | measurement and analysis, not shipped with the engine |
 | `adocs/` | the workflow state: specs, plan, steps, decisions, testing ledger |
 | `adocs/data/` | raw output of runs a decision rests on, kept because regenerating it costs hours of reference search. `adocs/data/README.md` says what each file is |
-| `books/` | opening books for match play |
+| `books/` | opening books for match play. `8moves_v3.pgn` is committed and is what `rating.sh` plays; the unbalanced book `fastchess.sh` plays is 175 MB, gitignored, and fetched by `books/fetch_book.sh` against a pinned digest |
 | `.ref-builds/` | git worktrees created by `fastchess.sh`, gitignored |
 | tool config | tracked when it describes the project, ignored when it describes a machine. `CLAUDE.md` and `.cursor/rules/moltke.mdc` are the two agent pointers at `AGENTS.md`, `.vscode/` is the editor setup; `.claude/settings.local.json` is the one exception and is gitignored. DEC-051 |
 
@@ -551,9 +551,11 @@ measurement.
 ## Play games
 
 ```bash
-./fastchess.sh                  # full SPRT, elo0=0 elo1=5, runs for hours
+./fastchess.sh                  # gainer SPRT, elo0=0 elo1=5, runs for hours
 ./fastchess.sh --fast           # looser bounds, few hundred games
+./fastchess.sh --nonreg         # non-regression, elo0=-5 elo1=0
 REF=HEAD~1 ./fastchess.sh       # pick what to measure against
+OUT=<dir> ./fastchess.sh        # where the pgn and log land
 ```
 
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
@@ -561,10 +563,54 @@ a result is always attributable to a commit range, and the candidate binary is
 snapshotted before the first game. Both exist because an SPRT once reported
 +301 Elo and meant nothing — DEC-020.
 
-Games are played at a time control, so a change that makes the engine faster
-shows up and a change that only reorders equal work does not. Bounds must match
-the expected effect: `elo0=0 elo1=10` cannot resolve a small change, and one run
-random-walked for 340 games before being stopped.
+**Fetch the book first, once per machine.** `fastchess.sh` plays an unbalanced
+book that is 175 MB and therefore not committed:
+
+```bash
+./books/fetch_book.sh           # UHO_Lichess_4852_v1.epd, ~43 MB zipped
+./books/fetch_book.sh --list    # what is pinned
+```
+
+It checks the zip's sha256 and the unpacked file's, refuses on either, and is a
+no-op when the file is already there and matches. The source is
+`official-stockfish/books`, which is **CC0-1.0**; Stefan Pohl's own UHO pages
+state no usage licence, so nothing is taken from there. The script fails with
+`FETCH-BOOK-FAILED:` and `fastchess.sh` refuses to start without the file.
+
+### Not every change goes to a match
+
+**A change that leaves the node count identical is not sent to an SPRT.**
+DEC-083. An SPRT at short time control cannot see a speed-up below about
+0.24 %, and it costs a night to say so. Instead:
+
+1. `tools/search_bench.py` on both builds — identical node counts and identical
+   best moves discharge INV-6 and prove the change is behaviour-neutral.
+2. `hyperfine` or `bench_movegen` for the speed, interleaved, with the noise
+   floor read off the run rather than assumed.
+3. Convert if a strength number is wanted, and **name it as a conversion**:
+   the published figure is 1.43 Elo per percent of nps at long time control and
+   2.10 at short. It is not a verdict and is never written as one.
+
+An SPRT is for a change that alters play. That is what the rest of this section
+is about.
+
+### The regime, and why each part of it is what it is
+
+| | `fastchess.sh` | why |
+|---|---|---|
+| time control | `8+0.08` | what the engines this plan reads figures from test at, and about 29 s a game against 52 s at the old `10+0.2` — DEC-083 |
+| hash | `16` MB | matches table **pressure**, not table size: at the rating list's 2'+1" a game writes ~660 M nodes against 5.6–11 M entries, 60–120 overwrites per entry, and 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about eightfold — DEC-088 |
+| book | `UHO_Lichess_4852_v1.epd` | unbalanced. A balanced book draws about 91 % between engines of equal strength and a drawn pair carries no signal, so it spends the night to say less — DEC-083 |
+| threads | `1` | the target is the CCRL Blitz **1CPU** scale — DEC-089 |
+| concurrency | every core `nproc` reports | DEC-048, DEC-050 |
+| pairing | `-repeat` | paired colours. This is what makes an unbalanced book sound, and it is never dropped |
+| adjudication | `-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400` | unchanged by S105, deliberately: the book was the one variable moved |
+
+`rating.sh` deliberately does **not** match this. It runs `Hash=128` because
+its job is the rating list's absolute regime, and the list runs 128 to 256
+(DEC-089). The two scripts match different invariants and S105 is where they
+parted; `rating.sh`'s own time control is still `10+0.2` and is S128's
+question.
 
 **Concurrency is every core the machine reports**, whatever kind it is — 12 on
 this machine, which is 6 physical cores with SMT (DEC-050); efficiency cores on
@@ -578,22 +624,103 @@ Everything else that parallelises follows the same policy: `-j12` for a build,
 and `datagen` and `tuner` default to every hardware thread rather than to a
 number written into the source.
 
-**A verdict cost 3 to 4.5 hours at four cores** on the Apple machine. Measured
-across S027: 2024 games in 4 h 30 m accepting H0, 1300 games in 2 h 53 m
-accepting H1, and one run that exhausted 3000 games in about three hours without
-reaching either bound. Six verdicts came to roughly twenty hours and 13462
-games.
+### Which bounds
 
-Those figures do not carry to this machine — different cores, different
-compiler, DEC-049 — and neither does the four-core baseline they were taken
-against.
+The hypothesis pair sets the cost of a verdict as much as the hardware does,
+and this is measured, not argued. **S068 measured one constant twice with the
+same binaries**: `elo0=0 elo1=5` ran 6 h 36 m over 9036 games and returned
+nothing, `elo0=-5 elo1=5` returned H1 in 1 h 41 m over 2312 — both at 1371
+games/h. DEC-063.
 
-**The cost of a verdict here, measured, two runs at 12 cores and 10+0.2:**
-S065 accepted H1 in **3396 games, 2 h 30 m 12 s**; S033 accepted H1 in **1012
-games, 44 m 10 s**. That is about **23 games a minute** in both, so throughput is
-the machine and games-to-verdict is the size of the effect — a change worth 60
-Elo resolves at full bounds in under an hour, one worth 21 Elo took two and a
-half. Budget from games a minute, not from the wall clock of a previous run.
+| flag | bounds | for |
+|---|---|---|
+| *(none)* | `elo0=0 elo1=5`, α=β=0.05 | a change claimed to gain. The published band for an engine of this strength: CPW tabulates `{0,5}` for top-200 and `{0,10}` below it |
+| `--nonreg` | `elo0=-5 elo1=0`, α=β=0.05 | a change not expected to gain that must not cost — a simplification, a rewrite, a constant moved for another reason |
+| `--fast` | `elo0=0 elo1=10`, α=β=0.10 | a first look |
+
+Neither default brackets an effect from one side only, and a bound pair that
+cannot contain the truth random-walks to the round limit. When the expected
+effect is genuinely two-sided, edit the block for the run and record which pair
+ran — `adocs/data/S021_sprt.sh` and `S076_sprt.sh` are the two worked examples,
+both with the reading of all three outcomes written down *before* launch.
+
+**An SPRT stops early exactly when the observed effect has run favourable**, so
+its point estimate is biased upward and is never reported as the effect size.
+S068's pooled estimate fell from +12.18 to +5.02 on that correction.
+
+### What the run prints when it ends
+
+Every run writes to its own stamped directory — `/tmp/chesso_sprt_<tag>_<stamp>/`
+with `games.pgn` and `fastchess.log` in it, or wherever `OUT` points — and then
+counts the terminations, the draw and decisive rates and the time forfeits out
+of **that run's** PGN. The last line is `SPRT-RUN-DONE <tag> <dir>`, or
+`SPRT-RUN-FAILED:` on any abort, which is the terminal marker a watcher exits
+on (DEC-061).
+
+The census reports, it does not void the run: both sides are chesso, so a thin
+time-management margin costs both about equally. `rating.sh` is the one that
+voids, because there the margin is a foreign engine's too.
+
+**Watch the draw rate.** The unbalanced book is there to keep it down, but
+**below about 45 % draws is a failure mode, not a win** — at that point the
+opening is simply winning for one side and the pair scores 1:1 with no signal
+in it. That is Pohl's own floor for the book class.
+
+### What a verdict costs, measured
+
+**The regime change was calibrated before any verdict was taken with it**
+(2026-08-20, S105). Two A/A runs of 1000 games each, same machine, same hour,
+fixed rounds so both numbers share a denominator —
+`adocs/data/S105_calibration.sh` is the script and the PGNs are beside it.
+
+| | before: 10+0.2, `8moves_v3.pgn` | after: 8+0.08, UHO |
+|---|---|---|
+| games a minute | 23.1 | **38.7** |
+| seconds a game | 30.4 | 17.9 |
+| seconds a ply | 0.2579 | 0.1831 |
+| plies a game | 117.8 | 98.0 |
+| draws | 40.3 % | **29.5 %** |
+| time forfeits | 0 of 1000 | **0 of 1000** |
+| pair score variance | 0.2343 ± 0.0148 | 0.2395 ± 0.0152 |
+
+**Throughput went up ×1.67, not ×3.** DEC-083 priced the change at "roughly
+three times the verdicts per night"; measured, it is 23.1 → 38.7 games a
+minute. It decomposes cleanly: the control is ×1.41 (seconds a ply) and the
+book is ×1.20 (shorter games, from more resign adjudications), and 1.41 × 1.20
+= 1.69 against the 1.67 the wall clock says.
+
+**The book buys game length and nothing else.** Its stated purpose is to spend
+fewer games on draws that carry no signal, and at this engine's strength it
+does not do that. The pair score variance — the quantity that sets how many
+games a verdict costs at fixed Elo bounds — is **the same to within its own
+error bar**, ratio 1.022. What moved instead is the wrong way: pairs scoring
+1:1 went 41.6 % → 46.8 %, and pairs where whoever had white won **both** games
+went 13.4 % → 19.8 %. Those are exactly the pairs Pohl's ≥ 45 % draw floor
+exists to prevent.
+
+**And the floor was already unreachable here.** Pohl measured 91.6 % draws on a
+balanced book; chesso self-plays the same balanced book at **40.3 %**, below
+the floor before any book was changed. His bands were measured between engines
+600 points stronger, where a draw is the default outcome and an unbalanced
+opening is what breaks the tie. At 2559 the games are decisive on their own.
+The book is kept — it costs nothing measurable and buys ×1.20 — but the reason
+DEC-083 gives for it does not hold at this strength, and if the book ever comes
+up again this is the measurement to argue from. Re-run it with
+`adocs/data/S105_pairs.py`.
+
+**0 time forfeits in 1000 games at 8+0.08** was checked first, because the
+faster control leaves `MOVE_OVERHEAD_MS 50` about 2.5× less room per move.
+Both runs' `fastchess.log` files were **0 bytes** — the WARN-only default,
+again, which is why the count comes from the PGN.
+
+Budget from games a minute, not from the wall clock of a previous run. The
+pre-S105 record, for comparison: S065 accepted H1 in 3396 games and 2 h 30 m,
+S033 in 1012 games and 44 m 10 s, both at about 23 games a minute — so
+throughput is the machine and games-to-verdict is the size of the effect. A
+verdict cost 3 to 4.5 hours at four cores on the Apple machine (S027, six
+verdicts in roughly twenty hours over 13462 games); those figures do not carry
+here and neither does the four-core baseline they were taken against.
+
 
 ### Detach the run, and arm a watcher that outlives the turn
 
@@ -616,31 +743,34 @@ and it outlives `/clear` as well: the context holding the task id goes, the
 process stays, and `TaskStop` is then unreachable — the only way out is `kill
 <pid>`. `tail -f` has no exit condition of its own, and `| grep -m 1 DONE` does
 not add one, because a log that goes quiet never makes `tail` write again and so
-never delivers it SIGPIPE. Give the run a terminal line and exit on it, with the
-failure signatures in the same alternation so a crash is an event and not
-silence:
+never delivers it SIGPIPE. Use the primitive, which has four exits — marker,
+failure marker, watched process died, hard ceiling:
 
 ```bash
-# the detached run's last action
-echo DONE >> .tuning/sprt_<what>.log
+python3 <moltke>/bin/moltke.py --watch .tuning/sprt_<what>.log 'SPRT-RUN-DONE' \
+  --fail-re 'SPRT-RUN-FAILED|Killed|Aborted' --ceiling 8h --pid <pid>
+```
 
-# the watcher, which exits when that line lands
+`fastchess.sh` prints those markers itself, so nothing has to be appended to
+the log by hand any more. Without the primitive, poll — never follow:
+
+```bash
 log=.tuning/sprt_<what>.log
 seen=0
 while true; do
   tot=$(wc -l < "$log")
   if [ "$tot" -gt "$seen" ]; then
     sed -n "$((seen+1)),${tot}p" "$log" \
-      | grep -E "^Elo:|^LLR:|^DONE|Error|Killed|Aborted"
+      | grep -E "^Elo:|^LLR:|^SPRT-RUN-|Error|Killed|Aborted"
     seen=$tot
   fi
-  grep -q "^DONE" "$log" && break
+  grep -qE "^SPRT-RUN-(DONE|FAILED)" "$log" && break
   sleep 30
 done
 ```
 
-Poll, not `tail -f`: breaking out of a loop fed by `tail -f` leaves the `tail`
-behind for the same reason `-m 1` does not work. This loop leaves nothing.
+Breaking out of a loop fed by `tail -f` leaves the `tail` behind for the same
+reason `-m 1` does not work. This loop leaves nothing.
 
 An S033 sweep that finished in nine minutes left a bare `tail -f` holding for two
 hours on an otherwise idle machine. DEC-061.
@@ -658,34 +788,29 @@ grep -E "^Elo:|^LLR:" .tuning/sprt_<what>.log | tail -2
 grep -c "^Finished game" .tuning/sprt_<what>.log
 ```
 
-### Two traps when reading a fastchess.sh result
+### One trap when reading a fastchess.sh result
 
-**`/tmp/fastchess_<tag>.pgn` is appended across runs, so a census over the whole
-file mixes them.** After S089's 500-game SPRT the file held **587** games, 87 of
-them against `ref-c56ab41` from an earlier run, and a straight
-`grep '^\[Termination'` reported 421/166 instead of the run's real 359/141.
-Filter on the reference name, which is unique per run:
-
-```bash
-python3 - <<'EOF'
-import re
-games = [g for g in re.split(r'\n(?=\[Event )', open('/tmp/fastchess_fast.pgn').read())
-         if 'ref-<sha>' in g]
-print(len(games), sum('time forfeit' in g for g in games))
-EOF
-```
-
-**`/tmp/fastchess_<tag>.log` is WARN-and-above and is routinely empty.**
-Measured: `-log file=X` over a 2-game match wrote **0 bytes**, the same match
-with `-log file=X level=trace` wrote **230 KB**. A time loss does appear at WARN
-— that is how `rating.sh` caught Stash — but an **empty log is
-indistinguishable from a log that was never written**, so grepping it for time
-losses is weak evidence and passes for free when the file is missing or stale.
+**The `fastchess.log` is WARN-and-above and is routinely empty.** Measured:
+`-log file=X` over a 2-game match wrote **0 bytes**, the same match with
+`-log file=X level=trace` wrote **230 KB**. A time loss does appear at WARN —
+that is how `rating.sh` caught Stash — but an **empty log is indistinguishable
+from a log that was never written**, so grepping it for time losses is weak
+evidence and passes for free when the file is missing or stale.
 `/tmp/fastchess_fast.log` sat at 0 bytes dated two days earlier while a run
 completed against it.
 
-**Check the PGN, not the log**, whenever a step's hazard is losing on time. S089
-is the case this is written for.
+**Check the PGN, not the log**, whenever a step's hazard is losing on time.
+S089 is the case this is written for, and it is why the script now does the
+count itself.
+
+**The trap that used to sit beside it is gone.** Until S105 the PGN was a fixed
+`/tmp/fastchess_<tag>.pgn` and fastchess *appends*, so a census over the whole
+file mixed runs: after S089's 500-game SPRT the file held **587** games, 87 of
+them against `ref-c56ab41` from an earlier run, and a straight
+`grep '^\[Termination'` reported 421/166 instead of the run's real 359/141.
+The per-run stamped directory removes it by construction. Old PGNs written
+before S105 still have it, and `adocs/data/README.md` records which committed
+files came from a shared path.
 
 ## Rate the engine against the public lists
 

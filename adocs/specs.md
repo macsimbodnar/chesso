@@ -79,10 +79,15 @@ names and commit messages. Each one has a row in `testing.md`.
   side to move, so the score agrees rather than negates.
 - **INV-6 A change is retained only against a measurement.** A change claimed
   behaviour-neutral proves it with identical node counts and identical best
-  moves from `tools/search_bench.py`. A change that alters play is retained only
-  with an SPRT verdict against a named commit, and a verdict of zero is recorded
-  as zero. (2026-08-13, S037: the count the tool reads is the whole search's,
-  cumulative over every iteration, so the identity covers the whole tree.
+  moves from `tools/search_bench.py`, and **is not sent to a match**: an SPRT
+  cannot resolve a speed-up below about 0.24 % at short time control and spends
+  a night saying so, so the strength claim is the interleaved timing converted
+  at the published 1.43 Elo per percent of nps at long time control and 2.10 at
+  short, named as a conversion and never as a verdict (2026-08-19, DEC-083). A
+  change that alters play is retained only with an SPRT verdict against a named
+  commit, and a verdict of zero is recorded as zero. (2026-08-13, S037: the
+  count the tool reads is the whole search's, cumulative over every iteration,
+  so the identity covers the whole tree.
   Before S037 `info nodes` was the current iteration's own count and the tool
   compared the final iteration alone — about half the search — so a change that
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
@@ -270,12 +275,27 @@ The order stands.
   than it does now. The rerun has not happened; it is folded into S022.
 - The S013 LMR SPRT was killed at 96 % LLR, +129.2 +/- 33.8 over 183 games. It
   was never formally concluded.
-- Measurement capacity is the binding constraint on the whole plan: an SPRT
-  verdict costs three to four and a half hours at the DEC-048/DEC-050 settings
-  (all 12 threads of the DEC-049 machine), and the opening book is only
-  `8moves_v3.pgn`. (2026-08-13: rewritten for the DEC-049 move -- the old text
-  priced an hour on three Apple cores with `opendirectoryd` overhead and called
-  for an x86-64 box, which S032 and S029 now have.)
+- Measurement capacity is the binding constraint on the whole plan. The
+  harness runs the surveyed engines' regime since 2026-08-20 (S105, DEC-083,
+  DEC-088): `tc=8+0.08`, `Hash=16`, the unbalanced `UHO_Lichess_4852_v1.epd`,
+  all 12 threads of the DEC-049 machine. **Calibrated at 38.7 games a minute
+  against the old regime's 23.1, measured over two A/A runs of 1000 games each
+  in the same hour** -- so **x1.67, not the x3 DEC-083 priced**. It decomposes
+  as x1.41 from the control (0.2579 to 0.1831 seconds a ply) and x1.20 from
+  shorter games. **The unbalanced book buys the game length and nothing else**:
+  the pair score variance is unchanged within its error bar (0.2343 +/- 0.0148
+  against 0.2395 +/- 0.0152, ratio 1.022) while 1:1 pairs rose 41.6 % to 46.8 %
+  and pairs decided by the opening 13.4 % to 19.8 %. **Pohl's >= 45 % draw
+  floor is unreachable at this strength** and was already breached before the
+  change: chesso self-plays the *balanced* book at 40.3 % draws where Pohl
+  measured 91.6 % between engines 600 points stronger. The book is kept on the
+  x1.20 and on DEC-083; its stated reason does not hold here.
+  `adocs/data/S105_calibration*` is the evidence. **0 time forfeits in 1000
+  games at the faster control**, checked from the PGN before anything else was
+  read -- both `fastchess.log` files were 0 bytes, the WARN-only default again.
+  (2026-08-13: rewritten for the DEC-049 move -- the old text priced an hour on
+  three Apple cores with `opendirectoryd` overhead and called for an x86-64
+  box, which S032 and S029 now have.)
 - Phase two has no steps and should not get any until the engine is strong
   enough for an experiment to mean something. The transition gets a decision
   entry when it happens.

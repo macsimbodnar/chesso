@@ -46,7 +46,12 @@ make_sandbox()
 
   printf '#!/bin/sh\nexit 0\n' > "$tmp/build/src/chesso"
   chmod +x "$tmp/build/src/chesso"
-  : > "$tmp/books/8moves_v3.pgn"
+  # The book the script reads is 175 MB and gitignored (books/fetch_book.sh
+  # fetches it), so the sandbox seeds an empty file of the same name: the
+  # script checks that the path is readable, and fastchess is a stub that
+  # never opens it. The name has to track fastchess.sh -- a renamed book fails
+  # this test at the readability check rather than silently.
+  : > "$tmp/books/UHO_Lichess_4852_v1.epd"
 
   # The stub records that it ran and plays nothing. It reports its own
   # invocation through a file rather than through stdout, so the assertion
@@ -74,13 +79,15 @@ STUB
 }
 
 # Runs the sandboxed script and prints its exit status. Output lands in
-# out.txt inside the sandbox so a failing assertion can show it.
+# out.txt inside the sandbox so a failing assertion can show it, and OUT keeps
+# the per-run pgn/log directory inside the sandbox as well, so a smoke run
+# leaves nothing in /tmp.
 run_sandbox()
 {
   local tmp="$1"
   (
     cd "$tmp" || exit 127
-    PATH="$tmp/stub:$PATH" REF=HEAD ./fastchess.sh --fast
+    PATH="$tmp/stub:$PATH" REF=HEAD OUT="$tmp/out" ./fastchess.sh --fast
   ) > "$tmp/out.txt" 2>&1
   echo $?
 }

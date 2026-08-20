@@ -4881,9 +4881,20 @@ Rejected:     Leaving the harness alone to keep every verdict comparable with
               largest throughput term on the table.
 Consequences: Verdicts taken after this entry are not comparable in absolute
               size with verdicts taken before it, which was already true across
-              the DEC-049 machine move. Roughly three times the verdicts per
-              night. The build step and the movegen micro-steps stop owing an
-              SPRT each, which removes about six runs from the plan outright.
+              the DEC-049 machine move. ~~Roughly three times the verdicts per
+              night.~~ **Measured when S105 landed, 2026-08-20: x1.67**, 23.1
+              to 38.7 games a minute over two A/A runs of 1000 games in the
+              same hour -- x1.41 from the control, x1.20 from shorter games.
+              **And the book's stated reason does not hold at this engine's
+              strength**: the pair score variance is unchanged within its error
+              bar (ratio 1.022) while pairs decided by the opening rose 13.4 %
+              to 19.8 %, and chesso self-plays the *balanced* book at 40.3 %
+              draws -- already under Pohl's 45 % floor, where he measured
+              91.6 % between engines 600 points stronger. The book is kept on
+              the x1.20 it does buy. Evidence in `adocs/data/S105_calibration*`.
+              This corrects a predicted magnitude, not the decision. The build
+              step and the movegen micro-steps stop owing an SPRT each, which
+              removes about six runs from the plan outright.
 
 ## DEC-084  2026-08-19  Published numbers are seeds and are refit; another engine's source and tables are not even seeds
 Tags:         licensing, provenance, evaluation, tuning

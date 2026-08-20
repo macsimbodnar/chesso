@@ -25,3 +25,11 @@ config.json
 # workload run against one source tree, and a stale one reads as provenance.
 # build-release-<arch>/ is already covered by the build-* above.
 .pgo
+
+# S105. The unbalanced SPRT book. UHO_Lichess_4852_v1.epd is 175 MB and is
+# reproducible from a URL and two pinned digests, so books/fetch_book.sh
+# fetches it rather than the history carrying it -- the same trade .tuning/
+# makes. books/8moves_v3.pgn stays committed: it is 8.0 MB and rating.sh
+# still plays it.
+books/UHO_*
+books/*.zip

@@ -7,7 +7,61 @@ decisions:  DEC-083, DEC-088, DEC-048, DEC-050
 closes:
 blocks:
 paused_by:
-done:
+done:      2026-08-20. fastchess.sh plays 8+0.08, Hash=16 (DEC-088, not DEC-083's 128), and
+            the unbalanced UHO_Lichess_4852_v1.epd, fetched by books/fetch_book.sh against a
+            pinned zip and file sha256 from the CC0 official-stockfish/books repo and
+            gitignored at 175 MB. Both fetch paths exercised, including the refusal.
+            
+            Calibrated before any verdict was taken with it: two A/A runs of 1000 games,
+            fixed rounds, same machine and same hour (adocs/data/S105_calibration.sh, both
+            PGNs kept). Read in the order the accepts asks for.
+            
+            1. TIME FORFEITS FIRST: 0 of 1000 at 8+0.08, and 0 of 1000 at the old control,
+               counted from each run's own PGN. Non-vacuous -- the same pass classified all
+               1000 into 771 adjudication and 229 normal. Both fastchess.log files were 0
+               bytes, the WARN-only default S089 diagnosed, so the log would have passed for
+               free again.
+            2. THROUGHPUT: 23.1 to 38.7 games a minute, x1.67. DEC-083 predicted x3 and was
+               wrong; its Consequences and plan.md are corrected in this commit rather than
+               left standing. Decomposed from the PGN headers: x1.41 from the control
+               (0.2579 to 0.1831 s a ply), x1.20 from shorter games (117.8 to 98.0 plies).
+            3. DECISIVE RATE: 29.5 % draws, outside the 45-60 % band and below Pohl's floor
+               -- and the floor is unreachable at this strength, because the balanced book
+               measured 40.3 %, already under it, against the 91.6 % Pohl measured between
+               engines 600 points stronger. So the draw rate was checked against the thing
+               it is a proxy for (adocs/data/S105_pairs.py): THE BOOK BOUGHT NOTHING AT THE
+               PAIR LEVEL. Pair score variance 0.2343 +/- 0.0148 against 0.2395 +/- 0.0152,
+               ratio 1.022, while 1:1 pairs went 41.6 % to 46.8 % and pairs decided by the
+               opening 13.4 % to 19.8 %. Kept on the x1.20 in game length and on DEC-083;
+               the reason DEC-083 gives for it is recorded as not holding here. A negative
+               result recorded as negative, and the owner's to revisit.
+            
+            Bounds stated in the script header and DEV_MANUAL: gainers {0,5}, non-regressions
+            {-5,0} behind a new --nonreg, --fast {0,10}, each with DEC-063's 6 h 36 m against
+            1 h 41 m beside it. The negative pair was put through a live 2-game match rather
+            than read off the source: LLR: 0.00 (0.0%) (-2.94, 2.94) [-5.00, 0.00]. An
+            unknown argument now fails instead of silently running the full SPRT.
+            
+            Two defects closed in passing, both inside touches. The run writes to a stamped
+            per-run directory, which kills the S089 append trap by construction -- a fixed
+            /tmp/fastchess_<tag>.pgn held 587 games after a 500-game run and read 421/166
+            instead of 359/141 -- and it counts its own terminations, draws and forfeits out
+            of it. The run prints SPRT-RUN-DONE, and SPRT-RUN-FAILED on every abort path, so
+            a watcher has something to exit on without DEV_MANUAL telling anyone to append
+            echo DONE by hand (DEC-061); the trap's status guard is an if, so set -e cannot
+            turn a clean run into a failed one.
+            
+            rating.sh hash 64 to 128, deliberately unlike the SPRT's 16: the gauntlet
+            reproduces the list's absolute regime (DEC-089), the SPRT reproduces table
+            pressure at its own control (DEC-088), and 64 matched neither. Its time control
+            stays 10+0.2, which is S128's.
+            
+            tests/test_fastchess_script.sh green and observed red first: seeding the old book
+            name fails both assertions. ctest -L fast 16 of 16, clang-format --check clean.
+            README.md owner-written, no change needed; MANUAL.md checked, nothing playing or
+            surfacing changed. specs.md INV-6 now carries DEC-083's rule that a
+            behaviour-neutral change is not sent to a match, and its Open items paragraph
+            carries the measured regime. DEV_MANUAL "Play games" rewritten around it.
 
 ## The three mismatches, measured
 
@@ -221,3 +275,4 @@ pending needs to land first.
 - https://dannyhammer.github.io/engine-testing-guide/sprt.html — 8+0.08 Hash=16 preset; bounds by strength incl. non-regression {-5,0}/{-10,0}; timemargin=250 example.
 - https://www.chessprogramming.org/Sequential_Probability_Ratio_Test — bounds-by-strength table ({0,5} top-200, {0,10} otherwise); fastchess recommended for pentanomial stats.
 - `fastchess -help` on the installed 1.8.1 binary — epd/pgn books, -srand, timemargin, penta default, log levels, pgnout append/timeleft/latency.
+author:    Maksym Bodnar
