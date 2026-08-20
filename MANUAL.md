@@ -62,9 +62,10 @@ Those three are the whole option surface of the engine you get from
 this file mentions is written through the `LOG_*` macros, which compile to
 `if (false)` under `NDEBUG` (`src/log.hpp`), and the distributed binary is a
 release build. There is no log file either. So in the binary you actually run
-those cases are silent; build without `NDEBUG` and they go to stderr. The one
-exception is the tune build's `setoption` refusals below, which are UCI output
-and print in every build.
+those cases are silent; build without `NDEBUG` and they go to stderr. **These
+three options are log-only in every build, including the tune build** — the code
+that handles them is the release build's, and S137 did not touch it. The tune
+build's own options, below, are the exception and answer over UCI.
 
 ### The tune build, which is not the release binary
 
@@ -94,8 +95,9 @@ A name that is in the table, with a value outside the range below, is **refused
 and left unchanged** — not clamped. Sent with no `setoption` at all, the tune
 build searches exactly what the release build searches.
 
-**Every refusal is answered on stdout, since S137.** One `info string` line per
-refused `setoption`, in one of three shapes:
+**A parameter that cannot be set is answered on stdout, since S137**, and so is
+an option this build does not have at all. One `info string` line, in one of
+three shapes:
 
 ```
 info string refused [<name>] value <value>, outside [<min>, <max>]
@@ -103,13 +105,19 @@ info string refused [<name>] value <value>, not an integer, range [<min>, <max>]
 info string refused [<name>], unknown option
 ```
 
-A legal value prints nothing. So does the release build, in every one of the
-three cases: the parameters are not options there at all, and the lines are
-`CHESSO_TUNE` only.
+The whole value has to be an integer: `0x50`, `120.9` and `12x` are refused, not
+read up to the first character that does not fit. A number too large for the
+range, and one too large for any `int`, both get the first line.
 
-There is still **no readback** — `uci` re-prints each parameter's compiled
-default, not its live value — so silence after a `setoption` is the only
-confirmation the value was taken.
+Two things are outside this. `Use Book`, `Hash` and `Threads` are handled by
+code the release build shares, so a bad *value* for one of them is log-only as
+described above — only an unrecognised *name* is answered. And the release build
+prints nothing in any of the three cases: the parameters are not options there,
+and the lines are `CHESSO_TUNE` only.
+
+A legal value prints nothing, and there is still **no readback** — `uci`
+re-prints each parameter's compiled default, not its live value — so the absence
+of a refusal is the only confirmation the value was taken.
 
 | name | default | range | effect |
 |---|---|---|---|

@@ -599,16 +599,44 @@ TEST_SUITE("uci surface")
     // taking the value anyway.
     CHECK(search_param_value(index) == param.default_value);
 
-    const std::vector<std::string> not_a_number =
-        lines_from_setoption("setoption name RfpMargin value nonsense");
+    // Every token that is not an integer, not only one with no digits in it.
+    // std::stoi() was here and stops at the first character it cannot use
+    // without complaining, so `0x50` set 0, `120.9` set 120 and `12x` set 12,
+    // each of them silently -- the same failure S137 exists to remove, one
+    // layer down. Measured 2026-08-20 on build-tune.
+    for (const std::string& token :
+         {std::string("nonsense"), std::string("0x50"), std::string("120.9"),
+          std::string("12x"), std::string("+120"), std::string(""),
+          std::string("--120")}) {
+      const std::vector<std::string> not_a_number =
+          lines_from_setoption("setoption name RfpMargin value " + token);
 
-    REQUIRE(not_a_number.size() == 1);
-    CHECK(not_a_number.front() ==
-          "info string refused [RfpMargin] value nonsense, not an integer, "
-          "range " +
-              range);
+      REQUIRE_MESSAGE(not_a_number.size() == 1,
+                      ("[" + token + "] was answered with " +
+                       std::to_string(not_a_number.size()) + " lines"));
+      CHECK(not_a_number.front() == "info string refused [RfpMargin] value " +
+                                        token + ", not an integer, range " +
+                                        range);
 
-    CHECK(search_param_value(index) == param.default_value);
+      CHECK_MESSAGE(search_param_value(index) == param.default_value,
+                    ("[" + token + "] moved the parameter to " +
+                     std::to_string(search_param_value(index))));
+    }
+
+    // A well-formed integer no int can hold is out of range, not malformed:
+    // stoi() threw out_of_range and the single catch collapsed it into the
+    // wrong one of the two lines.
+    for (const std::string& token :
+         {std::string("99999999999"), std::string("-99999999999")}) {
+      const std::vector<std::string> too_big =
+          lines_from_setoption("setoption name RfpMargin value " + token);
+
+      REQUIRE(too_big.size() == 1);
+      CHECK(too_big.front() == "info string refused [RfpMargin] value " +
+                                   token + ", outside " + range);
+
+      CHECK(search_param_value(index) == param.default_value);
+    }
 
     // A misspelled name, which is the other half of DEC-093 and the one no
     // range check can catch.
@@ -637,6 +665,8 @@ TEST_SUITE("uci surface")
         "setoption name RfpMargin value 100",
         "setoption name RfpMargin value 999999",
         "setoption name RfpMargin value nonsense",
+        "setoption name RfpMargin value 0x50",
+        "setoption name RfpMargin value 99999999999",
         "setoption name Rfpmargin value 100",
         "setoption name NoSuchOption value 1",
         "setoption name Threads value 4",

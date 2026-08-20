@@ -220,10 +220,16 @@ info string refused [<name>], unknown option
 ```
 
 A legal value prints nothing, which is what makes a line evidence rather than
-narration. Until S137 the refusal went to `LOG_W` — `if (false) std::clog` under
-`NDEBUG` (`src/log.hpp`), and `build-tune` is a Release build — so a tuner that
-sent an impossible value or misspelled a name played its games against a
-compiled default and could not tell. DEC-093.
+narration. The whole value has to be an integer: `0x50`, `120.9` and `12x` are
+refused rather than read up to the first character that does not fit, which is
+what `std::stoi` did until the review of S137's own diff. `Use Book`, `Hash` and
+`Threads` are outside all of this — their handlers are the release build's, so a
+bad value for one of them is still log-only, which under `NDEBUG` is nothing.
+
+Until S137 the refusal went to `LOG_W` — `if (false) std::clog` under `NDEBUG`
+(`src/log.hpp`), and `build-tune` is a Release build — so a tuner that sent an
+impossible value or misspelled a name played its games against a compiled
+default and could not tell. DEC-093.
 
 There is still **no readback**: `uci` re-prints each parameter's compiled
 default, not its live value.

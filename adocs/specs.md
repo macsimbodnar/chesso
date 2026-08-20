@@ -111,15 +111,18 @@ both with no `setoption` sent. (2026-08-16, S073. The parameter count is
 deliberately not written here: it moves with every step that adds one, and
 `test_search_params` is where it is pinned.)
 
-**A `setoption` the tune build cannot honour answers with one `info string`
-line**, naming the parameter and its range for a value outside it or for a value
-that is not an integer, and naming the name for an option it does not have. A
-legal value prints nothing, and the release build prints nothing in any of the
-three cases. Before S137 all three were silent -- the refusal went to a macro
-that compiles to nothing under `NDEBUG` and `build-tune` is a Release build --
-so a tuner could spend a night playing games against a compiled default and read
-it as success. There is still no readback: `uci` re-prints each parameter's
-compiled default, not its live value. (2026-08-20, S137, DEC-093.)
+**A `setoption` naming a search parameter the tune build cannot honour answers
+with one `info string` line**, naming the parameter and its range for a value
+outside it or for a value that is not an integer in full, and naming the name for
+an option the build does not have. A legal value prints nothing, and the release
+build prints nothing in any of the three cases. `Use Book`, `Hash` and `Threads`
+are outside this: their handlers are the release build's, so a bad value for one
+of them stays log-only in both builds. Before S137 all three were silent -- the
+refusal went to a macro that compiles to nothing under `NDEBUG` and `build-tune`
+is a Release build -- so a tuner could spend a night playing games against a
+compiled default and read it as success. There is still no readback: `uci`
+re-prints each parameter's compiled default, not its live value.
+(2026-08-20, S137, DEC-093.)
 
 **The binary that ships is not the binary that gets measured here, and both are
 new since 2026-08-19.** `-DCHESSO_ARCH=` has four values: **`bmi2`

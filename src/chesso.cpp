@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <charconv>
 #include <future>
 #include <iostream>
 #include <limits>
@@ -1066,16 +1067,29 @@ bool command_setoption(std::queue<std::string>& args)
     // search is standing on, for the same reason resizing the hash would.
     stop_and_join_search();
 
-    try {
-      const int value = std::stoi(option_value);
+    // The whole token has to be consumed. std::stoi() was here and it stops at
+    // the first character it cannot use without complaining, so `0x50` set 0,
+    // `120.9` set 120 and `12x` set 12, each of them silently -- the same
+    // failure this step exists to remove, one layer down. Found reviewing
+    // S137's own diff.
+    int value = 0;
+    const char* const last = option_value.data() + option_value.size();
+    const std::from_chars_result parsed =
+        std::from_chars(option_value.data(), last, value);
 
-      if (!search_param_set(option_name.c_str(), value)) {
-        uci_reply("info string refused [" + option_name + "] value " +
-                  STR(value) + ", outside " + range);
-      }
-    } catch (...) {
+    if (parsed.ec == std::errc::result_out_of_range) {
+      // A well-formed integer that no int can hold is out of range, not
+      // malformed, whichever end it ran off.
+      uci_reply("info string refused [" + option_name + "] value " +
+                option_value + ", outside " + range);
+    } else if (parsed.ec != std::errc() || parsed.ptr != last) {
       uci_reply("info string refused [" + option_name + "] value " +
                 option_value + ", not an integer, range " + range);
+    } else if (!search_param_set(option_name.c_str(), value)) {
+      // The raw token rather than the parsed value, so the line quotes back
+      // exactly what was sent.
+      uci_reply("info string refused [" + option_name + "] value " +
+                option_value + ", outside " + range);
     }
 
     break;
