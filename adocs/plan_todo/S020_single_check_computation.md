@@ -20,3 +20,164 @@ holds at HEAD -- `is_check` is recomputed at every node in both `negamax` and
 
 Behaviour-neutral by construction, so this needs a determinism check and not an
 SPRT -- see INV-6.
+
+## Technical details (SOTA research, 2026-08-19)
+
+Line numbers read at `c0954ec`. This step lands after all of block 1, so every
+number below will have drifted -- re-locate by symbol, and re-sweep (section 7).
+
+### 1. State of the art
+
+The published shape is exactly this step's: the in-check state is a property
+of the node, consumed everywhere in it (evasion generation, extensions, no
+stand-pat in check -- CPW Check), computed by one of three routes: from the
+last move made, from incremental attack tables, or on the fly. The bitboard
+page prices them: with bitboards the by-last-move savings are called
+negligible, and the branch-less on-the-fly scan is preferred because the
+rook- and bishop-wise attack sets get reused for other purposes -- compute the
+attack set once, let every consumer read it. Neither page prescribes a cache
+structure; a function-local computed at node entry is the minimal form.
+
+### 2. Shape for chesso
+
+**The boolean is already once-per-function at HEAD**: negamax computes
+`is_in_check` once (src/search.cpp:469), quiescence `in_check` once (:262).
+The live duplication is one level down, in the king-attack scan itself.
+
+Per-node, negamax at position P:
+- :469 `is_check(game)` at entry. Readers: RFP :511, NMP :569, LMR :694,
+  mate-vs-stalemate :780 -- and after block 1 also S108's eval gate, S109's
+  rule guards, S114's NMP gate, S116's razor guard.
+- :614 `generate_captures` -> `generate_moves_impl` (src/bitboard.cpp:483)
+  recomputes `attackers_to(king)` (:504) plus snipers/pins (:516-531) for P.
+- :621 or :641 `generate_quiets` -> the same preamble again, same P. Every
+  node that opens the quiet stage pays checkers+pins twice.
+
+Per-node, quiescence at position P:
+- :262 `is_check(game)`. Readers: stand-pat gate :267, generation choice
+  :295, capture filter :310/:322, best_value init :332, mate :370.
+- :295-297 the generator -> preamble recomputes checkers+pins for P.
+
+Per-move -- a DIFFERENT node, never collapsible into P's flag:
+- :662 `is_check_move = is_capture ? false : is_check(game)`, post-make, the
+  child position P'. After S107 its sole reader is the LMR guard (:694), and
+  S107's accepts hands exactly that to this step to preserve; S109 adds
+  per-move gives-check exemptions reading the same value.
+
+Non-search callers stay untouched: SAN's +/# (src/bitboard.cpp:2172-2173),
+tools/datagen.cpp:201/:280, tests. `is_check` remains public.
+
+Cost path: `is_check` (src/bitboard.cpp:1433) = king lsb + `is_attacked` ->
+`is_attacked_with_occupancy` (:21): pawn/knight/king table ANDs with early
+exit, then bishop and rook magics against bishop|queen, rook|queen. Out of
+check no early exit fires, so all five lookups run -- the same five
+`attackers_to` (:68) does without exits; `is_attacked(sq,c)` iff
+`attackers_to(sq,c) != 0`, same tables, same occupancies[BOTH]. The generator
+preamble adds count_bits, the between-table mask, two empty-occupancy magic
+lookups for snipers, and the pin loop.
+
+Where the flag lives: a function-local const at node entry, where it already
+is. Every block-1 consumer reads it in the same function body. No per-ply
+array is warranted: S108's improving learns an ancestor's in-check state from
+the TT_EVAL_NONE sentinel in `static_evals[]`, not from a flag.
+
+### 3. Implementation sketch
+
+Each increment lands alone and proves itself node-identical first.
+
+- (a) **Share the preamble between the staged calls.** Extract a masks struct
+  {checkers, pinned, king_square} + a compute function from
+  generate_moves_impl:483-531; add generator entry points taking it
+  precomputed; the existing three signatures compute-then-forward, so every
+  non-search caller is untouched. negamax computes the masks once before :614
+  and hands them to :614/:621/:641 -- the board is provably back at P
+  everywhere they are read (the loop unmakes before :641 runs). Same values
+  reach generate_moves_body, INV-1/INV-3 untouched.
+- (b) **Unify the entry flag with the masks' checkers.** Replace :469/:262
+  with `checkers != 0` from an `attackers_to` at entry; pins stay deferred to
+  the generation site, because RFP/NMP (negamax) and the stand-pat cutoff and
+  qply cap (quiescence) return in between and must not pay for pins. Keep the
+  no-king guard both existing sites have.
+- (c) **Declined for the minimal shape**: passing the parent's :662 value
+  down as the child's entry flag. It stays inside search.cpp/hpp but changes
+  both signatures, covers quiet-move children only, and buys the stale-flag
+  risk class of section 5. Take it only if (a)+(b) measure zero and a fresh
+  profile still shows the entry scan.
+
+### 4. Constants and seeds
+
+None. No parameter, no number to fit; DEC-084 is satisfied vacuously.
+
+### 5. Pitfalls
+
+- **:662 is not this node.** It is the child's post-make state. Folding it
+  into P's flag is wrong by construction, and deleting it breaks the LMR
+  guard S107 explicitly preserved it for.
+- **Stale masks across make/unmake.** Masks are valid only at P. The board
+  leaves P at :656 and returns at :727; cached masks may be read only where
+  the board is provably back at P, and never from storage that outlives the
+  node's frame. A debug assert (recompute == cached) at the :641 read is
+  cheap insurance during the transition.
+- **Quiescence's structure differs.** Its commonest conclusion is the
+  stand-pat store-and-return (:268-277), which needs the flag and never the
+  pins -- hoisting the full preamble to :262 taxes exactly those nodes. Split
+  checkers (entry) from pins (generation) there too; the qply cap (:287) is
+  the other early return.
+- **The null-move child computes its own state.** No inference about
+  post-null check state -- any shortcut there is a semantic change, outside
+  `excludes:`.
+- **No pre-make gives-check predicate exists** (S109's inventory agrees) and
+  this step must not grow one; that is a behaviour question.
+
+### 6. Measurement
+
+DEC-083: no SPRT. Per increment, tools/search_bench.py identical node counts
+and best moves at depths 9 and 12 against the parent commit; then one
+interleaved fixed-depth timing -- hyperfine, alternating binaries, the
+S103/S104 pattern (geometric-mean ratio, paired t) -- with bench_movegen's
+resolution recorded first and `ps aux | sort -rnk3 | head` checked. Honest
+expectation: small. The work removed is one preamble per staged node plus one
+five-lookup scan per unified entry -- less per node than the evaluate() call
+S103 skipped at 23 % of RFP sites for +2.47 %. Low single digits is the
+ceiling; below the noise floor is a live outcome, and the accepts already
+makes the keep-or-revert call from the number. The Why's 12 % is a
+pre-DEC-049 Apple-clang figure -- re-profile on this machine first, as the
+file orders.
+
+### 7. Interactions
+
+Plan order lands S020 after all of block 1, so section 2's inventory is a
+floor, not the final sweep: by then S108/S109/S114/S116 read the entry flag,
+and S109's skip_quiets has rewired the staged-generation branch (:636-652)
+that increment (a) shares. Re-sweep at start with
+`grep -n "is_check\|in_check" src/search.cpp`. The order is right as it
+stands -- landing S020 first would mean rebasing it under every block-1 step;
+landing it last collects all their call sites in one sweep, and each block-1
+step needs only the local that already exists (S108's section 7 records "no
+conflict" with S020 explicitly). S107 (before): preserve `is_check_move` for
+LMR alone. S098 (before) owns the exemption semantics; S020 changes no
+eligibility. S042/S032/S030 (same block, after): movegen internals -- the
+masks seam from (a) lands first and neither side cares.
+
+### Scope concern
+
+Two, neither changing goal or accepts. (1) The Why's "recomputed at every
+node ... once per call site" is, for the boolean, already done at HEAD -- one
+call per function invocation. The step's real content is the attack-scan
+level: the generator preamble recomputed per call (twice per staged node) and
+the parent/child double scan. Read "in-check state" at that level and the
+goal stands; the expected effect is the plan's "nearly free", not the Why's
+12 %. (2) The highest-value increments (a) and (b) cross the search/movegen
+seam and must touch src/bitboard.cpp and .hpp, which `touches:` does not
+name. Confined to src/search.cpp alone, the step has almost nothing left to
+remove -- expect the field to grow at implementation, recorded, not silent.
+
+### 8. References
+
+- https://www.chessprogramming.org/Check -- detection by last move / attack
+  tables / on the fly; the flag's per-node consumers (evasions, extensions,
+  no stand-pat in check); no caching prescription.
+- https://www.chessprogramming.org/Checks_and_Pinned_Pieces_(Bitboards) --
+  checkers and pinned sets from attack lookups; "with bitboards the possible
+  savings to determine checks by last move seems negligible"; pins are what
+  legal generation needs anyway.

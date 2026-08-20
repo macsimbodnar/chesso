@@ -10,6 +10,22 @@ Updated: 2026-08-19 by `moltke --step status`.
 - Next: S105
 - Blocked: none
 - Parked:
+  - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
+    owner's instruction, 2026-08-20.** One research agent per pending step
+    appends a `## Technical details (SOTA research, 2026-08-19)` section —
+    published form, traced records, file:line grounding, seeds per DEC-084,
+    measurement plan per DEC-083/S105. Done: all of block 0 (commit 0edfd26)
+    and block 1 (commit c0954ec), plus S020, S055, S117, S120 of block 2 —
+    28 of 48. Not yet enriched: S119, S042, S032, S030, then blocks 3 and 4
+    (S082, S083, S039, S121, S123, S125, S118, S101, S122, S124, S102, S133,
+    S126, S127, S128, S129). Derivable from the filesystem:
+    `grep -L 'Technical details (SOTA research' adocs/plan_todo/*.md` names
+    the remainder (reserve S023/S025/S110/S111 and parked S029 were excluded
+    by design). Several sections flag scope concerns for owner decision — the
+    largest: S097's section notes Lynx's README self-rating (3144/3293)
+    against DEC-087's ~2850 banding of Lynx-derived records, and S109's
+    accepts contains a no-prune-when-giving-check clause its own section
+    argues is unenforceable as written.
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
     them needs a re-run.** Ten findings, one high and three medium: nine went to
     steps (S069 to S072, S074, S078 to S081) and F08 to DEC-062. A finding moves
