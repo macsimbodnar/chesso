@@ -299,7 +299,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-4. S103  reverse futility reads the static evaluation already in the table entry instead of recomputing it
 5. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it
 6. S104  the release build targets the machine's instruction set and is profile-guided, so count_bits stops being a software popcount
 7. S105  fastchess.sh plays the surveyed engines' testing regime -- 8+0.08, Hash 16, a UHO-class unbalanced book -- and a behaviour-neutral change is accepted on an interleaved timing instead of a match

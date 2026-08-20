@@ -501,6 +501,77 @@ TEST_SUITE("search: move ordering state")
     REQUIRE(counters > 0);
   }
 
+  // A quiet move that gives check was excluded from all three tables until
+  // S107 -- the same class of quiet the engine's own late move reduction
+  // refuses to reduce, on the grounds that those lines are forcing. Driven at
+  // a node rather than through search() because a countermove needs a non-zero
+  // prev_move and search() passes 0 at the root.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet move that gives check enters the ordering tables")
+  {
+    // Smothered mate: Black's own rook and pawns take every flight square, so
+    // the knight's quiet check is mate. Nf7 is the only mate in one here and
+    // it is not a capture -- from a tool, not from the board (CLAUDE.md).
+    // python-chess over the legal moves reported the whole mating set as
+    // `[('Nf7#', 'h6f7', False)]`, and /usr/games/stockfish on the position
+    // after `h6f7` answers `info depth 0 score mate 0` / `bestmove (none)`.
+    const std::string fen = "6rk/6pp/7N/8/8/8/8/6K1 w - - 0 1";
+
+    // The move that reached the position, so the countermove slot has an index
+    // to be written under. python-chess: legal in
+    // "5r1k/6pp/7N/8/8/8/8/6K1 b - - 0 1" and it lands on the FEN above.
+    const move_t prev_move = NEW_MOVE(f8, g8, B_ROOK, 0, 0, 0, 0, 0);
+
+    // Only a mate score clears this bound, so the move that fails high is the
+    // mate rather than whichever move the ordering tried first -- the case
+    // does not depend on move order and later ordering steps cannot move it.
+    // It also sits above search.cpp's MATE_MIN, which is what switches reverse
+    // futility and null move pruning off: neither may answer for this node.
+    constexpr int BETA = 48500;
+    constexpr int DEPTH = 1;
+    constexpr size_t PLY = 1;
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE(position_is_reachable(&game));
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int score =
+        negamax(BETA - 1, BETA, DEPTH, PLY, &game, &state, prev_move, false);
+
+    // Precondition, not the property under test: with no fail-high there is no
+    // update site at all, and every assertion below would pass or fail for a
+    // reason that has nothing to do with the check condition.
+    REQUIRE(score >= BETA);
+
+    const move_t killer = state.killer_moves[0][PLY];
+    REQUIRE(killer != 0);
+
+    // What the move is, rather than a literal it equals, so the case still
+    // states its own subject.
+    REQUIRE_FALSE(MOVE_CAPTURE(killer));
+    REQUIRE(MOVE_PROMOTED(killer) == TO_NONE);
+
+    REQUIRE(make_move(&game, killer));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+    REQUIRE(gives_check);
+
+    // Presence, never magnitude or formula: S093 replaces the bonus, the
+    // indexing and the ageing, and must not have to rewrite this case.
+    REQUIRE(state.history_moves[MOVE_PIECE(killer)][MOVE_TO(killer)] != 0);
+    REQUIRE_EQ(state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)],
+               killer);
+  }
+
   // Filling the tables is not the point: searching a smaller tree is. A
   // budget rather than a plain node count assertion, so a search that has
   // stopped ordering anything fails here instead of running until the test

@@ -667,7 +667,13 @@ int negamax(int alpha0,
 
     const bool is_capture = MOVE_CAPTURE(moves[i]);
 
-    // Only ever needed to decide whether a quiet move may become a killer, and
+    // The late move reduction guard below is the only consumer: a move that
+    // gives check is not reduced. It is deliberately *not* consulted by the
+    // fail-high block, which admits every quiet that caused a cutoff to the
+    // killer, history and countermove tables, checks included -- excluding
+    // them made the engine refuse to remember the one class of refutation its
+    // own reductions call forcing. S107.
+    //
     // is_check() is an attack scan - do not pay for it on captures.
     const bool is_check_move = is_capture ? false : is_check(game);
     legal_moves_counter++;
@@ -751,7 +757,7 @@ int negamax(int alpha0,
       type = TT_BETA_NODE;
 
       // Store killing move, history, and counter move
-      if (!is_capture && !is_check_move) {
+      if (!is_capture) {
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 
