@@ -58,6 +58,14 @@ setoption name Use Book value true
 Those three are the whole option surface of the engine you get from
 `cmake --build build`. There is a second, separate build with more of them.
 
+**"A warning in the log", here and below, means a debug build.** Every warning
+this file mentions is written through the `LOG_*` macros, which compile to
+`if (false)` under `NDEBUG` (`src/log.hpp`), and the distributed binary is a
+release build. There is no log file either. So in the binary you actually run
+those cases are silent; build without `NDEBUG` and they go to stderr. The one
+exception is the tune build's `setoption` refusals below, which are UCI output
+and print in every build.
+
 ### The tune build, which is not the release binary
 
 A build configured `-DCHESSO_TUNE=ON` exposes every search parameter as a spin
@@ -82,19 +90,26 @@ setoption name RfpMargin value 120
 setoption name LmrDivisor value 210
 ```
 
-A name that is not in the table is ignored, like any unknown option. A name that
-is, with a value outside the range below, is **refused and left unchanged** —
-not clamped. Sent with no `setoption` at all, the tune build searches exactly
-what the release build searches.
+A name that is in the table, with a value outside the range below, is **refused
+and left unchanged** — not clamped. Sent with no `setoption` at all, the tune
+build searches exactly what the release build searches.
 
-**Neither refusal says anything, and this paragraph claimed a log line until
-S084.** The refusal is written through a macro that compiles to nothing in a
-release build, which the tune build is, and `uci` re-prints each parameter's
-compiled default rather than its live value — so there is no message and no
-readback. A tuner that misspells a name or sends an out-of-range value gets the
-default and no indication of it. S137 is the step that makes the refusal
-visible; until then, check values against the ranges below before sending
-them.
+**Every refusal is answered on stdout, since S137.** One `info string` line per
+refused `setoption`, in one of three shapes:
+
+```
+info string refused [<name>] value <value>, outside [<min>, <max>]
+info string refused [<name>] value <value>, not an integer, range [<min>, <max>]
+info string refused [<name>], unknown option
+```
+
+A legal value prints nothing. So does the release build, in every one of the
+three cases: the parameters are not options there at all, and the lines are
+`CHESSO_TUNE` only.
+
+There is still **no readback** — `uci` re-prints each parameter's compiled
+default, not its live value — so silence after a `setoption` is the only
+confirmation the value was taken.
 
 | name | default | range | effect |
 |---|---|---|---|

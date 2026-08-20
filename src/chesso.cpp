@@ -1041,12 +1041,26 @@ bool command_setoption(std::queue<std::string>& args)
   }
 
 #ifdef CHESSO_TUNE
-  // Tune build only, S073. A name that is not in the table falls through to the
-  // same silence every other unknown option gets; a name that is, with a value
-  // outside its declared range, is refused and logged rather than clamped,
-  // because a tuner that asked for something impossible should hear about it.
+  // Tune build only, S073. A value outside a parameter's declared range is
+  // refused rather than clamped, because a tuner that asked for something
+  // impossible should hear about it.
+  //
+  // S137 is what makes it hear. The refusal used to go to LOG_W, which is
+  // `if (false) std::clog` under NDEBUG, and `build-tune` is a Release build --
+  // so both ways a tuner can be wrong, an impossible value and a misspelled
+  // name, were indistinguishable from success and a run could spend a night
+  // against a compiled default. One `info string` per refusal, on the channel
+  // that is legal UCI in every build state. DEC-093.
+  bool is_search_param = false;
+
   for (size_t i = 0; i < search_param_count(); ++i) {
     if (option_name != search_param_info(i).name) { continue; }
+
+    is_search_param = true;
+
+    const search_param_t& param = search_param_info(i);
+    const std::string range =
+        "[" + STR(param.min_value) + ", " + STR(param.max_value) + "]";
 
     // Changing a parameter under a live search would move the ground that
     // search is standing on, for the same reason resizing the hash would.
@@ -1056,16 +1070,25 @@ bool command_setoption(std::queue<std::string>& args)
       const int value = std::stoi(option_value);
 
       if (!search_param_set(option_name.c_str(), value)) {
-        LOG_W << "Rejected " << option_name << "=" << value << ", outside ["
-              << search_param_info(i).min_value << ", "
-              << search_param_info(i).max_value << "]" << END_W;
+        uci_reply("info string refused [" + option_name + "] value " +
+                  STR(value) + ", outside " + range);
       }
     } catch (...) {
-      LOG_W << option_name << " value is not a number: " << option_value
-            << END_W;
+      uci_reply("info string refused [" + option_name + "] value " +
+                option_value + ", not an integer, range " + range);
     }
 
     break;
+  }
+
+  // The other half: a name nothing above recognised. Kept as its own list
+  // rather than derived, because the three options that are not parameters are
+  // an if-chain with nothing to enumerate -- tests/test_uci_surface.cpp drives
+  // every name the `uci` reply advertises through here and fails if one of them
+  // comes back unknown.
+  if (!is_search_param && option_name != "Use Book" && option_name != "Hash" &&
+      option_name != "Threads") {
+    uci_reply("info string refused [" + option_name + "], unknown option");
   }
 #endif
 

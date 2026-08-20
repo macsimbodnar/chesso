@@ -99,7 +99,7 @@ Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
 
-There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the ten
+There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the
 parameters in `src/search_params.hpp` from constants the compiler folds into
 variables settable over UCI, and adds one spin option per parameter. **No
 strength number is ever taken on it**: a constant that folds is not the same
@@ -107,7 +107,19 @@ code as a variable that must be loaded, and the difference is a timing rather
 than a node count. The release build's option surface is the three lines it has
 always had, the two builds' defaults are held equal member by member by
 `test_search_params`, and `tools/search_bench.py` reports the same counts on
-both with no `setoption` sent. (2026-08-16, S073.)
+both with no `setoption` sent. (2026-08-16, S073. The parameter count is
+deliberately not written here: it moves with every step that adds one, and
+`test_search_params` is where it is pinned.)
+
+**A `setoption` the tune build cannot honour answers with one `info string`
+line**, naming the parameter and its range for a value outside it or for a value
+that is not an integer, and naming the name for an option it does not have. A
+legal value prints nothing, and the release build prints nothing in any of the
+three cases. Before S137 all three were silent -- the refusal went to a macro
+that compiles to nothing under `NDEBUG` and `build-tune` is a Release build --
+so a tuner could spend a night playing games against a compiled default and read
+it as success. There is still no readback: `uci` re-prints each parameter's
+compiled default, not its live value. (2026-08-20, S137, DEC-093.)
 
 **The binary that ships is not the binary that gets measured here, and both are
 new since 2026-08-19.** `-DCHESSO_ARCH=` has four values: **`bmi2`

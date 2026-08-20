@@ -51,15 +51,16 @@ the two apart would leave the constant meaning something else.
 doubles the step. The two are chosen together and frozen together in the config.
 
 WHAT THE ENGINE WILL NOT TELL YOU. `setoption` with a value outside a
-parameter's range is REFUSED, not clamped (src/search_params.hpp:231-239), and
-in the tune build the refusal is invisible: it goes to LOG_W, which compiles to
-`if (false) std::clog` under NDEBUG (src/log.hpp:35), and `uci` re-prints the
-compiled default rather than the live value. So a driver that fails to clamp
-plays its games against a silently-default parameter and converges confidently
-to nonsense. Every value is clamped here -- theta, and theta+c and theta-c
-separately -- and `check` compares the config's bounds against the binary's own
-`uci` listing before a single game, because that comparison is the only
-guard the engine side offers.
+parameter's range is REFUSED, not clamped (src/search_params.hpp, in
+search_param_set). Since S137 the tune build answers each refusal with one
+`info string refused [...]` line, so it is no longer silent -- but a line mid-run
+is a post-mortem, and `uci` still re-prints the compiled default rather than the
+live value, so there is no readback to check against. A driver that fails to
+clamp plays its games against a silently-default parameter and converges
+confidently to nonsense. Every value is clamped here -- theta, and theta+c and
+theta-c separately -- and `check` compares the config's bounds against the
+binary's own `uci` listing before a single game, so the run does not start wrong
+in the first place.
 
 Integers are floats internally and rounded only at the UCI boundary. An integer
 parameter with c_end < 0.5 is refused at config load: round(x+c) == round(x-c)
@@ -389,14 +390,14 @@ def read_engine_options(engine):
 
 
 def probe_nodes(engine, name, value, fen, depth):
-    """Node count at fixed depth with one option set. The only channel the tune
-    build offers for proving a `setoption` reached the search: the refusal is
-    compiled out of a Release build (src/log.hpp:35) and `uci` re-prints the
-    compiled default rather than the live value, so nothing else can be
-    observed. DEV_MANUAL's own RfpMargin figures are this measurement."""
+    """Node count at fixed depth with one option set. Proves a `setoption`
+    reached the search. S137 made a *refused* option observable, which this does
+    not replace: an accepted value still has no readback -- `uci` re-prints the
+    compiled default -- so the node count stays the only evidence the search is
+    using it. DEV_MANUAL's own RfpMargin figures are this measurement."""
     # Read to `bestmove` rather than piping the script in and closing stdin: the
     # engine takes EOF for `quit` and abandons the search part way, which
-    # reported 230 nodes at depth 9 against the 164123 DEV_MANUAL quotes and
+    # reported 230 nodes at depth 9 against the 164302 DEV_MANUAL quotes and
     # read as "setoption does not work" (2026-08-20). tools/search_bench.py
     # holds the pipe open for the same reason.
     proc = subprocess.Popen([engine], stdin=subprocess.PIPE,

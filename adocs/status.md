@@ -5,9 +5,9 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-20 by `moltke --step status`.
 
-- Last done: S084
+- Last done: S137
 - In progress: none
-- Next: S137
+- Next: S085
 - Blocked: none
 - Parked:
   - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the

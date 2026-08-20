@@ -206,31 +206,43 @@ setoption name RfpMargin value 120
 
 The parameters, their defaults and their ranges are the table in `MANUAL.md`. An
 out-of-range value is refused rather than clamped
-(`src/search_params.hpp:231-239`), and an unknown name is ignored like any other
-unknown option.
+(`src/search_params.hpp`, `search_param_set`), and so is a name that is not in
+the table.
 
-**Neither refusal is observable, and this paragraph said otherwise until S084.**
-The refusal is logged through `LOG_W`, which is `if (false) std::clog` under
-`NDEBUG` (`src/log.hpp:35`), and `build-tune` is a Release build — so nothing is
-printed, nothing reaches the log file, and `uci` re-prints the **compiled
-default** rather than the live value, which is not a readback either:
+**Both refusals are observable since S137, and this paragraph said otherwise
+twice before that.** Each one prints a single `info string` line on stdout, in
+the tune build only:
+
+```
+info string refused [<name>] value <value>, outside [<min>, <max>]
+info string refused [<name>] value <value>, not an integer, range [<min>, <max>]
+info string refused [<name>], unknown option
+```
+
+A legal value prints nothing, which is what makes a line evidence rather than
+narration. Until S137 the refusal went to `LOG_W` — `if (false) std::clog` under
+`NDEBUG` (`src/log.hpp`), and `build-tune` is a Release build — so a tuner that
+sent an impossible value or misspelled a name played its games against a
+compiled default and could not tell. DEC-093.
+
+There is still **no readback**: `uci` re-prints each parameter's compiled
+default, not its live value.
 
 ```
 setoption name RfpMargin value 120
 uci                     # still prints "default 75"
 ```
 
-So a tuner that sends an out-of-range value, or misspells a name, plays its
-games against a silently-default parameter and cannot tell. The consequence for
-`tools/spsa_driver.py` is that clamping is the driver's own job and its `check`
-mode compares the config's bounds against the binary's `uci` listing before a
-game is played. Making the refusal visible over UCI is S137.
+So the confirmation a value was taken is the absence of a refusal line plus the
+node count below, not a query. `tools/spsa_driver.py` clamps every value itself
+regardless — a driver that depends on the engine refusing correctly has moved
+its own correctness into the thing it is measuring.
 
 It works, and this is the measurement rather than the claim. The midgame
 position of `tools/search_bench.py` at depth 9, driven over UCI on
-`build-tune`, **re-measured at S103's commit**: **164123 nodes at `RfpMargin`
-75, 223454 at 100, 476911 at 300, 743308 at 2000**, best move `c3d5`
-throughout, and 164123 again with no `setoption` sent at all. 164123 is what
+`build-tune`, **re-measured at S137's commit**: **164302 nodes at `RfpMargin`
+75, 223857 at 100, 474204 at 300, 742729 at 2000**, best move `c3d5`
+throughout, and 164302 again with no `setoption` sent at all. 164302 is what
 the release build reports, to the node — 75 is the shipping default since S068
 (2026-08-17), and the 100 figure was the one that matched before that step.
 
@@ -304,12 +316,12 @@ tools/spsa_driver.py check tools/spsa_dryrun.json --engine build-tune/src/chesso
 ```
 
 That is not a formality. Every name is checked against the binary's own `uci`
-listing and every bound against the binary's, because **the engine cannot tell
-you it refused a value** — see the tune build section above. Then it proves
-`setoption` reaches the search at all, which is the only channel left: measured
-2026-08-20, `RfpMargin` 75 searched **164123** nodes and 2000 searched
-**743308** on the midgame position at depth 9, the same two figures this file
-quotes above.
+listing and every bound against the binary's, before any option is sent — the
+`info string` refusals S137 added are a backstop for a run already under way,
+not a substitute for validating a config that has not started. Then it proves
+`setoption` reaches the search at all: measured at S137's commit, `RfpMargin` 75
+searched **164302** nodes and 2000 searched **742729** on the midgame position
+at depth 9, the same two figures this file quotes above.
 
 Run it:
 

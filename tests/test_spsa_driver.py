@@ -174,8 +174,8 @@ class TestConvergence(unittest.TestCase):
 class TestClamp(unittest.TestCase):
     def test_optimum_outside_a_bound_pins_at_the_bound(self):
         """An out-of-range setoption is refused rather than clamped by the
-        engine, and in a Release tune build the refusal is invisible
-        (src/log.hpp:35), so an unclamped driver would play its games against a
+        engine. S137 makes the refusal audible over UCI, but only after the value
+        was sent, so an unclamped driver still plays its games against a
         silently-default parameter. Every recorded value stays in range and the
         axis whose optimum is unreachable sits on its bound."""
         sim = dict(SIM)

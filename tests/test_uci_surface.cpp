@@ -55,6 +55,21 @@ static const std::vector<std::string> expected_option_names = {
 // clang-format on
 
 
+// S137. The tune build answers a `setoption` it cannot honour with one
+// `info string` line, because the refusal used to go to a macro that compiles
+// to nothing in a release build and `build-tune` is one -- so a tuner sending a
+// misspelled name or an impossible value could not tell it apart from success
+// (DEC-093). The templates are what MANUAL.md documents; the concrete lines are
+// built from the parameter table below and compared verbatim, so a reworded
+// message fails both halves.
+static const std::vector<std::string> expected_refusal_templates = {
+    "info string refused [<name>] value <value>, outside [<min>, <max>]",
+    "info string refused [<name>] value <value>, not an integer, range [<min>, "
+    "<max>]",
+    "info string refused [<name>], unknown option",
+};
+
+
 // S073's tune build declares one spin option per search parameter and the
 // release build declares none, so the golden lists above are the release
 // surface and this is what the other configuration adds to them. Generated from
@@ -234,6 +249,40 @@ static std::vector<std::string> option_lines_from_uci()
   }
 
   return options;
+}
+
+
+// The names out of the engine's own `option` lines, which is the list a GUI or
+// a tuner reads and therefore the list `setoption` has to recognise.
+static std::vector<std::string> option_names_from_uci()
+{
+  const std::string prefix = "option name ";
+  std::vector<std::string> names;
+
+  for (const std::string& line : option_lines_from_uci()) {
+    const size_t type_at = line.find(" type ");
+
+    if (line.rfind(prefix, 0) != 0 || type_at == std::string::npos) {
+      continue;
+    }
+
+    names.push_back(line.substr(prefix.size(), type_at - prefix.size()));
+  }
+
+  return names;
+}
+
+
+// One setoption, and the lines it printed. Read back outside the capture scope
+// on purpose: doctest reports a failure on std::cout, which is exactly what
+// stdout_capture_t is holding, so an assertion made while the capture is alive
+// fails invisibly.
+static std::vector<std::string> lines_from_setoption(const std::string& line)
+{
+  stdout_capture_t capture;
+  uci_process_line(line);
+
+  return capture.lines();
 }
 
 
@@ -459,4 +508,150 @@ TEST_SUITE("uci surface")
 
     uci_shutdown();
   }
+
+
+  TEST_CASE("MANUAL.md documents the refusal lines")
+  {
+    const std::string manual = read_manual();
+
+    REQUIRE(manual.find("# Chesso") != std::string::npos);
+
+    for (const std::string& line : expected_refusal_templates) {
+      CHECK_MESSAGE(manual.find(line) != std::string::npos,
+                    ("MANUAL.md does not document the line [" + line + "]"));
+    }
+  }
+
+
+  TEST_CASE("what uci advertises, setoption recognises")
+  {
+    // command_setoption keeps its own list of the option names that are not
+    // search parameters, so an option added to [uci] and not to that list would
+    // be reported unknown to a tuner sending exactly what [uci] advertised.
+    // Sent with no value on purpose: every option refuses that, and what is
+    // asserted is only that none of them refuses it as an unknown *name*.
+    uci_init();
+
+    const std::vector<std::string> names = option_names_from_uci();
+
+    REQUIRE(!names.empty());
+
+#ifdef CHESSO_TUNE
+    // Non-vacuity. Only the tune build reports an unknown name at all, so this
+    // is where the assertion below can be shown to have something to fail on:
+    // a name that is not advertised does come back unknown.
+    REQUIRE(lines_from_setoption("setoption name NoSuchOption").size() == 1);
+#endif
+
+    for (const std::string& name : names) {
+      const std::vector<std::string> printed =
+          lines_from_setoption("setoption name " + name);
+
+      bool unknown = false;
+
+      for (const std::string& line : printed) {
+        if (line.find("unknown option") != std::string::npos) {
+          unknown = true;
+        }
+      }
+
+      CHECK_MESSAGE(!unknown, ("[uci] advertises [" + name +
+                               "] and [setoption] does not know it"));
+    }
+
+    uci_shutdown();
+  }
+
+
+#ifdef CHESSO_TUNE
+  TEST_CASE("a setoption the tune build cannot honour says so")
+  {
+    uci_init();
+
+    size_t index = search_param_count();
+
+    for (size_t i = 0; i < search_param_count(); ++i) {
+      if (std::string(search_param_info(i).name) == "RfpMargin") { index = i; }
+    }
+
+    REQUIRE(index < search_param_count());
+
+    const search_param_t& param = search_param_info(index);
+    const std::string range = "[" + std::to_string(param.min_value) + ", " +
+                              std::to_string(param.max_value) + "]";
+    const std::string too_high = std::to_string(param.max_value + 1);
+
+    // Precondition for all three cases below: a legal value prints nothing at
+    // all. Without it a line would only show that the engine narrates every
+    // setoption, which is not observability of a refusal.
+    CHECK(lines_from_setoption("setoption name RfpMargin value " +
+                               std::to_string(param.default_value))
+              .empty());
+
+    const std::vector<std::string> out_of_range =
+        lines_from_setoption("setoption name RfpMargin value " + too_high);
+
+    REQUIRE(out_of_range.size() == 1);
+    CHECK(out_of_range.front() == "info string refused [RfpMargin] value " +
+                                      too_high + ", outside " + range);
+
+    // The refusal is a refusal: the line is not a warning printed on the way to
+    // taking the value anyway.
+    CHECK(search_param_value(index) == param.default_value);
+
+    const std::vector<std::string> not_a_number =
+        lines_from_setoption("setoption name RfpMargin value nonsense");
+
+    REQUIRE(not_a_number.size() == 1);
+    CHECK(not_a_number.front() ==
+          "info string refused [RfpMargin] value nonsense, not an integer, "
+          "range " +
+              range);
+
+    CHECK(search_param_value(index) == param.default_value);
+
+    // A misspelled name, which is the other half of DEC-093 and the one no
+    // range check can catch.
+    const std::vector<std::string> unknown =
+        lines_from_setoption("setoption name Rfpmargin value 100");
+
+    REQUIRE(unknown.size() == 1);
+    CHECK(unknown.front() == "info string refused [Rfpmargin], unknown option");
+
+    uci_shutdown();
+  }
+#else
+  TEST_CASE("the release build answers an unknown option with silence")
+  {
+    // The other side of the pair. S137 is tune-build surface and the release
+    // binary's stdout is untouched by it: the parameter names are not options
+    // here at all, so the two cases the tune build reports are exactly the
+    // cases this build must stay quiet about.
+    uci_init();
+
+    // Precondition: this build does print on stdout when asked something it
+    // knows, so an empty capture below is silence rather than a dead stream.
+    CHECK(!lines_from_setoption("uci").empty());
+
+    const std::vector<std::string> commands = {
+        "setoption name RfpMargin value 100",
+        "setoption name RfpMargin value 999999",
+        "setoption name RfpMargin value nonsense",
+        "setoption name Rfpmargin value 100",
+        "setoption name NoSuchOption value 1",
+        "setoption name Threads value 4",
+    };
+
+    for (const std::string& command : commands) {
+      const std::vector<std::string> printed = lines_from_setoption(command);
+
+      CHECK_MESSAGE(
+          printed.empty(),
+          ("[" + command + "] printed [" +
+           (printed.empty() ? std::string() : printed.front()) + "]"));
+    }
+
+    uci_shutdown();
+  }
+#endif
 }
