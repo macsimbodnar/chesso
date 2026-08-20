@@ -5,12 +5,10 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-20 by `moltke --step status`.
 
-- Last done: S106
-- In progress: S107 a quiet move that gives check becomes eligible for the killer, history and countermove tables it is excluded from today
-- Next: S107
+- Last done: S107
+- In progress: none
+- Next: S100
 - Blocked: none
-- Watching:
-  - watching: SPRT-RUN-(DONE|FAILED) in /home/max/ws/chesso/.tuning/sprt_s107_checking_quiets.log, ceiling 9h, armed 2026-08-20T12:14:35+02:00 (.git/moltke_watch/1787220875_4007849.json)
 - Parked:
   - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
     owner's instruction, 2026-08-20.** One research agent per pending step

@@ -181,3 +181,30 @@ remove -- expect the field to grow at implementation, recorded, not silent.
   checkers and pinned sets from attack lookups; "with bitboards the possible
   savings to determine checks by last move seems negligible"; pins are what
   legal generation needs anyway.
+
+## What S107 left here, measured (2026-08-20)
+
+S107 removed the fail-high gate's `!is_check_move` term, so the flag now has
+exactly one consumer: the late move reduction guard at `src/search.cpp:710`,
+where `!is_check_move` is the **last** conjunct. That makes a second, cheaper
+saving available in the same neighbourhood as this step's, and it was counted
+rather than argued -- instrumented copy, kiwipete `go depth 11`:
+
+| site | calls |
+|---|---|
+| `is_check(game)` at `src/search.cpp:678` | 888738 |
+| the guard's cheap prefix true (`ply>0 && depth>=3 && legal_moves_counter>3 && !is_capture && !MOVE_PROMOTED && !is_in_check`) | 179590 |
+
+So the flag is consumed by about 20 % of the calls that compute it, and the
+other 709148 pay an attack scan per non-capture node for nothing. Computing it
+lazily behind that prefix is behaviour-neutral by short-circuit, which means it
+discharges on identical node counts and best moves exactly as this step's own
+accepts does -- no SPRT owed. The existing comment already makes the argument
+for captures ("is_check() is an attack scan - do not pay for it on captures");
+this is the same argument extended to the nodes that never reach the guard.
+
+Note the ordering constraint: `is_in_check` is the parent's state and
+`is_check_move` is the child's, taken after `make_move`. Deferring the child's
+scan is safe; conflating the two is not. Whether this lands as part of the
+single-computation restructure or as a separate conjunct reorder is this step's
+call, but the number above is what it is worth.
