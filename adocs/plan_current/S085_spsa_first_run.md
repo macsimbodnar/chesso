@@ -500,3 +500,25 @@ pairs, and this run has 30000 of them against the 20000 that calibrated 0.008.
   zip sha256 `62fe32cd...`, unpacked `419844f8...`, verified end to end through
   `books/fetch_book.sh` -- so the tuning book and the verification book are
   disjoint, which `adocs/eval_tuning_strategy.md` par.7 requires.
+
+### Where the time-control arithmetic came from, and where else it is
+
+The 2.4x error above was this file's own research section chaining two ratios
+off S033's 1375 games/h at 10+0.2 -- 8+0.08 at "about half a 10+0.2 game", then
+5+0.05 at "5/8 of that". The first link is DEC-083's, and **S105 already
+measured it wrong once**: DEC-083 predicted x3 and S105 measured **x1.67**,
+which is the parked item in `status.md`. So this is the second instance of one
+failure, not two failures.
+
+What generalises is the cause, and it is worth stating once: **a game's duration
+is set by its clock, not by how fast the engine searches.** Twelve games on
+twelve SMT threads each still spend `(base + moves*inc)*2` seconds, so a
+games-per-hour figure measured at one control cannot be scaled to another by any
+ratio -- it has to be measured. The wave times in the table above took four
+minutes to measure and would have cost nine hours to assume.
+
+Checked, so it is not left as a suspicion: `grep` over `adocs/plan_todo/` finds
+no other step carrying a chained throughput ratio. The one throughput figure
+there is S135's, and it uses S105's *measured* 23.1 to 38.7 games a minute at
+8+0.08, which is sound. S127 inherits this run's shape rather than an estimate,
+and S128 sets its own control by definition.
