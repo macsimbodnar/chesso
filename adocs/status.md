@@ -6,12 +6,24 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-20 by `moltke --step status`.
 
 - Last done: S137
-- In progress: S085 the first SPSA run, over the twenty search parameters that exist today, and an independent SPRT of what it returns
+- In progress: S085 the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, decided 2026-08-20, DEC-094 -- and an independent SPRT of what it returns
 - Next: S085
 - Blocked: none
 - Watching:
   - watching: SPSA-(DONE|FAILED) in /home/max/ws/chesso/.tuning/spsa_S085.log, ceiling 18h, armed 2026-08-20T19:24:25+02:00 (.git/moltke_watch/1787246665_1476278.json)
 - Parked:
+  - **`AGENTS.md` par.12 and the stop hook's own message both name
+    `bin/moltke.py`, which does not exist in this repository.** The tool ships
+    with the plugin, at
+    `~/.claude/plugins/cache/moltke/moltke/<version>/bin/moltke.py`, so every
+    command written the documented way fails at invocation -- it cost one failed
+    call at the start of the 2026-08-20 session and it is why plan_review F18
+    was filed against S085's copy of the same string. The S085 copy is corrected;
+    this one is not, because `AGENTS.md` is the moltke ruleset file that a plugin
+    upgrade rewrites, and par.0 already says local overrides there have to be
+    re-applied after an upgrade. Recorded rather than edited: whether to patch
+    the ruleset locally, or carry the real path in `.moltke.local.md` where a
+    machine-specific path belongs, is the owner's call. Parked, not planned.
   - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
     minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
     comment argues for, and **0 and 1 are the same engine** because `!is_pv`
