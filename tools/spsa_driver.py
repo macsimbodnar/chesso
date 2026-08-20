@@ -162,12 +162,19 @@ class Config:
         if len(set(names)) != len(names):
             raise ConfigError("a parameter name appears twice")
 
-    def digest(self):
-        """What a resume is allowed to continue. Config plus schedule, not the
-        run directory: resuming a checkpoint under a changed config would splice
-        two different runs into one trajectory."""
-        return hashlib.sha256(
-            json.dumps(self.raw, sort_keys=True).encode()).hexdigest()[:16]
+    def digest(self, sim_spec=None, flip_sign=False):
+        """What a resume is allowed to continue.
+
+        Everything that decides what the next iteration does: the config, the
+        objective, and whether the update is negated -- not the run directory.
+        Resuming under any of them changed would splice two different runs into
+        one trajectory and the file would not say so. The objective counts
+        because a simulator spec is as much the run as its bounds are, and the
+        sign because a half-flipped trajectory is the one result that looks like
+        a normal one."""
+        return hashlib.sha256(json.dumps(
+            [self.raw, sim_spec, bool(flip_sign)],
+            sort_keys=True).encode()).hexdigest()[:16]
 
     def warnings(self):
         out = []
@@ -515,8 +522,9 @@ def run(cfg, rundir, sim_spec=None, resume=False, flip_sign=False,
 
     # The frozen config, written before the run and never rewritten: what the
     # numbers in the trajectory are numbers about.
+    digest = cfg.digest(sim_spec, flip_sign)
     frozen = {"config": cfg.raw, "sim": sim_spec, "flip_sign": flip_sign,
-              "digest": cfg.digest()}
+              "digest": digest}
     if not resume:
         atomic_write(os.path.join(rundir, "run.json"),
                      json.dumps(frozen, indent=2, sort_keys=True) + "\n")
@@ -530,10 +538,10 @@ def run(cfg, rundir, sim_spec=None, resume=False, flip_sign=False,
             raise RunError(f"no checkpoint at {ck_path} to resume from")
         with open(ck_path) as fh:
             ck = json.load(fh)
-        if ck.get("digest") != cfg.digest():
+        if ck.get("digest") != digest:
             raise RunError(
-                "checkpoint was written under a different config; resuming would "
-                "splice two runs into one trajectory")
+                "checkpoint was written under a different config, objective or "
+                "update sign; resuming would splice two runs into one trajectory")
         k0 = int(ck["k"])
         theta = [float(x) for x in ck["theta"]]
         pairs_done = int(ck["pairs"])
@@ -585,7 +593,7 @@ def run(cfg, rundir, sim_spec=None, resume=False, flip_sign=False,
         atomic_write(ck_path, json.dumps({
             "k": k + 1, "theta": theta, "pairs": pairs_done,
             "rng": [state[0], list(state[1]), state[2]],
-            "digest": cfg.digest()}) + "\n", durable=durable)
+            "digest": digest}) + "\n", durable=durable)
 
         if crash_after == k and crash_phase == "checkpoint":
             os._exit(9)  # test hook: killed just after the checkpoint landed
@@ -621,8 +629,16 @@ def main(argv=None):
                    default="checkpoint", help="test hook: where to _exit")
 
     args = ap.parse_args(argv)
-    with open(args.config) as fh:
-        cfg = Config(json.load(fh))
+    # Inside the marker's reach: a config that will not load is the most likely
+    # way a detached run fails, and a traceback is not a line any watcher exits
+    # on -- it would sit until its ceiling (DEC-061).
+    try:
+        with open(args.config) as fh:
+            cfg = Config(json.load(fh))
+    except (OSError, ValueError, ConfigError) as exc:
+        print(f"ERROR: {args.config}: {exc}")
+        print("SPSA-FAILED")
+        return 1
 
     if args.cmd == "check":
         problems = check(cfg, args.engine)

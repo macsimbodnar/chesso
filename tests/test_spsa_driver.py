@@ -347,6 +347,53 @@ class TestResume(unittest.TestCase):
             self.assertIn("different config", proc.stdout)
             self.assertTrue(proc.stdout.strip().endswith("SPSA-FAILED"))
 
+    def test_resume_under_a_changed_objective_is_refused(self):
+        """The objective is as much the run as the bounds are, and a flipped sign
+        halfway through is the one corruption whose trajectory looks normal."""
+        with tempfile.TemporaryDirectory() as d:
+            cfg_path, sim_path = self._write(d)
+            for out, mutate in (("changed_sim", "sim"), ("changed_sign", "sign")):
+                out = os.path.join(d, out)
+                self._run(["run", cfg_path, "--out", out, "--sim", sim_path,
+                           "--crash-after", "20"], expect=9)
+                args = ["run", cfg_path, "--out", out, "--sim", sim_path,
+                        "--resume"]
+                if mutate == "sim":
+                    other = os.path.join(d, "other_sim.json")
+                    spec = dict(SIM)
+                    spec["optimum"] = [600.0] * 5
+                    with open(other, "w") as fh:
+                        json.dump(spec, fh)
+                    args[args.index(sim_path)] = other
+                else:
+                    args.append("--flip-sign")
+                proc = self._run(args, expect=1)
+                self.assertIn("different config", proc.stdout)
+                self.assertTrue(proc.stdout.strip().endswith("SPSA-FAILED"))
+
+    def test_an_unloadable_config_still_prints_the_marker(self):
+        """A detached run whose config will not parse must end in a line the
+        watcher exits on, not in a traceback it waits out to its ceiling."""
+        with tempfile.TemporaryDirectory() as d:
+            bad = os.path.join(d, "bad.json")
+            with open(bad, "w") as fh:
+                fh.write("{ not json")
+            proc = self._run(["run", bad, "--out", os.path.join(d, "x")],
+                             expect=1)
+            self.assertTrue(proc.stdout.strip().endswith("SPSA-FAILED"))
+            missing = os.path.join(d, "absent.json")
+            proc = self._run(["run", missing, "--out", os.path.join(d, "y")],
+                             expect=1)
+            self.assertTrue(proc.stdout.strip().endswith("SPSA-FAILED"))
+            with open(bad, "w") as fh:
+                json.dump({"iterations": 5, "pairs_per_iter": 1, "params": [
+                    {"name": "P", "start": 5, "min": 0, "max": 10,
+                     "c_end": 0.1}]}, fh)
+            proc = self._run(["run", bad, "--out", os.path.join(d, "z")],
+                             expect=1)
+            self.assertIn("0.5", proc.stdout)
+            self.assertTrue(proc.stdout.strip().endswith("SPSA-FAILED"))
+
     def test_resume_without_a_checkpoint_is_refused(self):
         with tempfile.TemporaryDirectory() as d:
             cfg_path, sim_path = self._write(d)
