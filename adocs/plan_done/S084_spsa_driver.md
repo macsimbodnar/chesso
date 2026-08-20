@@ -3,11 +3,11 @@ goal:       an SPSA driver over the exposed search parameters, verified against 
 accepts:    a tracked tool implements the Spall iteration -- `a_k = a/(k+1+A)^alpha`, `c_k = c/(k+1)^gamma`, Rademacher perturbation, two objective evaluations per iteration -- reads a parameter file naming each parameter, its bounds and its `c_end`, and drives paired games through `fastchess` against the tune build S073 produces; a test runs the driver against a synthetic noisy quadratic with a known optimum and asserts it converges to within a stated tolerance, and fails if the sign of the update is flipped; the driver checkpoints to disk every iteration so an interrupted run resumes rather than restarts; it prints a terminal marker as its last line, so a watcher exits on the run rather than on a turn boundary (DEC-061); nothing under `src/` changes and no verdict is owed
 touches:    tools/, tests/, DEV_MANUAL.md
 excludes:   running it on the engine, which is S085's; choosing which parameters to tune and their ranges, which S085 decides and records; any change to `src/`; CLOP, CMA-ES and every other black-box optimiser
-decisions:  DEC-019
+decisions:  DEC-019, DEC-093
 closes:
 blocks:
 paused_by:
-done:
+done:      tools/spsa_driver.py with a 22-assertion synthetic gate at 3.5 s in -L fast (18/18 green, format clean). Convergence 27.8 of 300 initial axis error and -0.86 Elo; the sign-flipped run 799 and -1594 Elo. r_end 0.002 measured 293 of 300, so 0.008 is used -- the seed constant is not inheritable (DEC-084). Four mutations of the driver checked, the fourth exposed a clamp test that only covered the sent integers and it now asserts the float theta. Dry run: 3 parameters, 2x2 pairs at 1+0.01, 8 games parsed, killed and resumed byte-identical, 0 forfeits; node probe 164123 -> 743308 proves setoption reaches the search. No src change, no SPRT owed. Two findings became S137: the tune build cannot report a refused setoption (LOG_W is compiled out of Release) and uci gives no readback, so MANUAL.md and DEV_MANUAL.md were both wrong and are corrected.
 
 ## Why this exists
 
@@ -296,3 +296,158 @@ discharge) and **no SPRT is owed** — S085 owes the SPRT of what a run returns.
   at the worker, TC-insensitivity experiments (20+0.2 down to 0.5+0.01).
 - Surfaced but **not read** (engine/framework source): zamar/spsa,
   fairy-stockfish/spsa, fishtest server code — DEC-084.
+author:    Maksym Bodnar
+
+## What landed
+
+- `tools/spsa_driver.py` — the driver. `check`, `run`, `run --resume`.
+- `tests/test_spsa_driver.py` — 22 assertions on a synthetic objective, no games.
+- `tests/CMakeLists.txt` — `test_spsa_driver`, label `fast`, timeout 120.
+- `tools/spsa_dryrun.json` — the smoke config, and the format DEV_MANUAL quotes.
+- `DEV_MANUAL.md` — "Tune search parameters with SPSA", and a correction to the
+  tune build section. `MANUAL.md` — the same correction to its own copy of it.
+- `.gitignore` — `.spsa`.
+- No change under `src/`. INV-6 has nothing to discharge and no SPRT is owed.
+
+## Two things the tune build will not tell you
+
+Both found here, both change what the step file planned, and together they are
+S137.
+
+**The refusal is invisible.** `setoption` with an out-of-range value is refused
+rather than clamped (`src/search_params.hpp:231-239`) and the refusal goes to
+`LOG_W`, which is `if (false) std::clog` under `NDEBUG` (`src/log.hpp:35`).
+`build-tune` is `CMAKE_BUILD_TYPE=Release`. So this step file's plan — "the
+dry-run mode should diff them against the `option name ...` lines" and "dry-run
+greps the engine log for `Rejected`" — is half unimplementable: there is no
+`Rejected` line to grep, in the log or on either stream.
+
+**There is no readback either.** `uci` re-prints the compiled default:
+
+```
+setoption name RfpMargin value 120
+uci                     # option name RfpMargin type spin default 75 ...
+```
+
+What replaced the grep, in `check`:
+
+1. every config name against the binary's own `uci` listing, and every bound
+   against the binary's bounds — the half of the plan that does work, and now
+   the only guard the engine side offers;
+2. a node-count probe, because it is the one remaining observable. Measured
+   2026-08-20: `RfpMargin` 75 searched **164123** nodes at depth 9 on the
+   `search_bench.py` midgame position and 2000 searched **743308** — the same
+   two figures DEV_MANUAL's tune build section quotes, so `setoption` demonstrably
+   reaches the search.
+
+The probe cost one bug of its own on the way: piping the script in and closing
+stdin makes the engine take EOF for `quit` and abandon the search, which
+reported **230** nodes at depth 9 and read exactly like "setoption does not
+work". `search_bench.py` holds the pipe open for the same reason.
+
+## The gate, and what it measures
+
+`ctest -R test_spsa_driver` — 22 assertions, **3.99 s**, inside `-L fast`
+(10.9 s before this step). It plays no games.
+
+The synthetic objective: 5 parameters on [0, 1000] starting at 500, optimum 300
+away in alternating directions, strength `-sum w_i ((theta_i - opt_i)/sigma_i)^2`
+with `w = 500` and `sigma = 1000`, so the start point is **225 Elo** below the
+optimum. Pairs are two games at a 50 % draw rate, giving a pair-score spread of
+about 1.0 — the real regime.
+
+**Convergence**, 5000 iterations x 4 pairs, `c_end = 50`, `r_end = 0.008`:
+worst axis error **27.8** of the 300 it started at, final strength **-0.86 Elo**.
+Over seeds 1 to 10 the worst case was **65.9** and **-3.96 Elo**, which is what
+the tolerances are set from (75, and 5 Elo) rather than from the seed the test
+happens to use. **Flipped sign**, same everything: every axis **799** off,
+strength **-1594 Elo**, pinned against the far bound. The two are not close.
+
+**`r_end` is not inheritable.** At 20000 pairs on this objective:
+
+| `r_end` | max axis error | final strength |
+|---|---|---|
+| 0.002 | 293 of 300 | -21.8 Elo |
+| 0.008 | 28 of 300 | -0.9 Elo |
+| 0.050 | 221 of 300 | -6.2 Elo |
+
+0.002 is the OpenBench and fishtest-era seed and it moves this objective **2 %**
+of the way — the "barely changing after a few thousand games" run the fishtest
+wiki calls useless, reproduced. The bottom row is RFC #535's divergence
+complaint: an oversized end value does not decay away, because the end-value
+parametrisation shrinks the step by only about 1.6x across a whole run (`r_k`
+*rises* by 1.74x while `c_k` falls by 2.72x). DEC-084 as intended: the seed
+chose what to try and the measurement chose what to use.
+
+**Iterations against pairs is close to a wash at a fixed game budget.** 20000
+pairs converged the same objective to comparable error as 20000x1, 10000x2,
+5000x4 and 2500x8 — max axis error 39.9, 49.2, 27.8, 32.8. That is what let the
+gate be a quarter of the wall time it started at, and it is a fact S085 can
+spend: pairs per iteration can be sized to fill the 12 threads without paying
+for it in convergence.
+
+## The gate was checked by breaking the driver
+
+Four mutations, each reverted:
+
+| mutation | caught |
+|---|---|
+| step ignores the perturbation direction (`* delta[i]` dropped) | yes, 2 failures |
+| `gamma` 0.101 -> 0.6, so `c_k` decays asymptotically | yes |
+| resume stops truncating the torn trajectory tail | yes |
+| clamp removed from the theta update | **no** |
+
+The last one is why the clamp test now asserts the **float** theta the run
+returns and not only the integers the trajectory records: `uci_value()` clamps
+at the boundary, so an internal value winding up thousands outside its range
+prints a tidy bound while the axis sits unresponsive for as many iterations as
+it took to drift out. With that assertion the mutation is caught.
+
+## The dry run, with real games
+
+`tools/spsa_dryrun.json`, 3 parameters, 2 iterations x 2 pairs at `tc=1+0.01`
+against `build-tune`:
+
+- `check` passed, including the node probe above.
+- 8 games played and parsed, `Games:` and `Ptnml(0-2):` both, from the real
+  `fastchess alpha 1.8.2 20260729-74deac2` — whose output block is pasted
+  verbatim into the test, so the parser is covered without playing anything.
+- killed after iteration 0 (`--crash-after 0`, exit 9), resumed from
+  `checkpoint.json` at k=1, finished. `tools/forfeit_report.py` over the run's
+  PGN: **0 forfeits of 8 games**.
+- **Nothing moved**, and that is correct: two iterations at `r_end` 0.002 step
+  `RfpMargin` by 0.02, which rounds back to 75. A smoke run is not a small
+  tuning run and cannot be read as one.
+
+Resume is byte-identical, tested at both interruption points — after the
+checkpoint, and between the trajectory row and the checkpoint, which is the case
+that needs the tail truncated.
+
+## One deliberate deviation
+
+Checkpoint and trajectory `fsync` only when the objective is a real match. Two
+fsyncs per iteration is 13 ms, which is nothing against a mini-match and is 26 s
+against 2000 simulated iterations — it would have kept the gate out of the fast
+suite. The atomic rename is unconditional, so a killed process still cannot
+leave a checkpoint that will not parse; what the fsync buys on top is the
+machine losing power mid-iteration, and a simulated iteration is reproducible
+from the seed anyway.
+
+## For S085
+
+- The live surface is **22** parameters, not the 20 its goal line says.
+- `r_end` and `pairs_per_iter` are chosen together: `(wins - losses)` is summed
+  over the iteration's pairs, so doubling the pairs doubles the step.
+- The trajectory TSV is what shows a stuck run and DEC-019 flatness. Copy the
+  one that decides anything into `adocs/data/`.
+- `c_end` below 0.5 is refused at config load. A narrow range relative to the
+  first iteration's `2c` warns rather than refuses.
+- S137 lands before it, so the run does not have to trust the driver's clamp
+  alone.
+
+## Documents
+
+`README.md` checked — owner-written, no change needed. `adocs/specs.md` checked:
+no behaviour changed, nothing under `src/` was touched, and it names no tooling
+this step alters. `MANUAL.md` and `DEV_MANUAL.md` both carried the claim that a
+refused value is logged; both corrected.

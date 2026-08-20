@@ -136,6 +136,24 @@ add_test(NAME test_clang_format_script
                       ${CMAKE_SOURCE_DIR}/clang-format.sh)
 set_tests_properties(test_clang_format_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S084: the SPSA driver. Python, and the first test in this directory that is
+# neither doctest nor shell -- the driver is a tool and the objective it has to
+# be right about is a noisy quadratic, not a chess position.
+#
+# It plays no games. The gate is a synthetic objective with a known optimum,
+# because a driver tested by playing games cannot tell a bug in itself from
+# noise in the objective at any budget this machine can afford: a sign error and
+# a parameter that does not matter produce the same flat trajectory. The
+# sign-flipped run is asserted to FAIL the criterion the honest one passes.
+#
+# ~4 s, which is a third of the fast suite as it stands, so the convergence runs
+# are sized by measurement rather than by preference: 5000 iterations x 4 pairs
+# converges the same objective as 20000 x 1 and costs a quarter of the wall
+# time. The system python3 is enough -- stdlib only, no python-chess.
+add_test(NAME test_spsa_driver
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_driver.py)
+set_tests_properties(test_spsa_driver PROPERTIES LABELS "fast" TIMEOUT 120)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.

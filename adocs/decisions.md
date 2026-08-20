@@ -5306,3 +5306,55 @@ Consequences: `test_eval_model`'s tolerance, its four pinned FENs and its
               reaches neither bound is recorded as unresolved **again** and the
               term stays at zero; that is a legitimate outcome and S027's row is
               its template.
+
+## DEC-093  2026-08-20  the tuner's option check is a bounds diff and a node probe, because the engine cannot report a refusal
+Tags:         tuning, spsa, uci, tooling, s084, s085, s137, dec-061, dec-084
+Context:      S084's `accepts` and its research section both planned the same
+              guard for the SPSA driver's dry run: send the perturbed options,
+              then grep the engine log for `Rejected` to prove none was refused.
+              `src/chesso.cpp:1058-1062` does write that line, so the plan was
+              written against real code. It is unreachable anyway. `LOG_W` is
+              `if (false) std::clog` under `NDEBUG` (`src/log.hpp:35`) and
+              `build-tune` is a Release build, so nothing is printed on any
+              stream or into any file. `uci` is not a fallback: it re-prints each
+              parameter's compiled default, not its live value, measured
+              2026-08-20.
+
+              So both ways a tuner can be wrong -- a value outside the range,
+              which is refused rather than clamped, and a misspelled name, which
+              is ignored like any unknown option -- are indistinguishable from
+              success, and a run can spend a night against a default parameter.
+Decision:     The driver's `check` mode replaces the grep with two things that
+              are observable: every configured name and both its bounds against
+              the binary's own `uci` listing, and a node-count probe proving
+              `setoption` reaches the search at all (`RfpMargin` 75 -> 164123
+              nodes, 2000 -> 743308, depth 9). The driver clamps theta and both
+              perturbed vectors itself, and the clamp is in the synthetic gate.
+
+              The engine side is **S137**, placed immediately before S085 rather
+              than left to the end of the plan, so the first real run does not
+              rest on the driver's clamp alone. It prints one `info string` per
+              refusal; it does not add a readback command, which is a larger
+              surface and a separate question.
+
+              `MANUAL.md` and `DEV_MANUAL.md` both claimed the refusal was
+              logged. Both corrected in S084's commit.
+Rejected:     **Make the tune build log to a file regardless of `NDEBUG`.**
+              Refused: `LOG_W`'s compiled-out form is deliberate and shared with
+              the release binary, and a tuner should not need a log file to read
+              a protocol answer. `info string` is legal UCI in every build.
+
+              **Leave it to the driver's clamp alone and skip S137.** Refused:
+              the defence is correct and it is not transferable -- the next tool
+              to drive this binary starts from the same silence, and the failure
+              is silent by construction.
+
+              **Treat it as a bug and fix it inside S084.** Refused on S084's own
+              `excludes:` -- no change under `src/` -- which is also what keeps
+              INV-6 trivially discharged for that step. A step, not a drive-by.
+Consequences: No tool may take an accepted `setoption` on trust until S137
+              lands. S085 runs `check` before its run and records that it did.
+              DEV_MANUAL's tune build section is now the place where the two
+              observability gaps are stated, and its `RfpMargin` node figures are
+              load-bearing rather than illustrative: the probe compares against
+              them.

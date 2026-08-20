@@ -1,0 +1,21 @@
+{
+  "iterations": 2,
+  "pairs_per_iter": 2,
+  "seed": 1,
+  "r_end": 0.002,
+  "match": {
+    "engine": "build-tune/src/chesso",
+    "tc": "1+0.01",
+    "book": "books/8moves_v3.pgn",
+    "book_format": "pgn",
+    "book_size": 34700,
+    "hash": 16,
+    "threads": 1,
+    "concurrency": 12
+  },
+  "params": [
+    { "name": "RfpMargin",       "start": 75,  "min": 0, "max": 2000, "c_end": 4 },
+    { "name": "LmrDivisor",      "start": 225, "min": 1, "max": 2000, "c_end": 8 },
+    { "name": "MaxQsearchDepth", "start": 8,   "min": 1, "max": 64,   "c_end": 1 }
+  ]
+}

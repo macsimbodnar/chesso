@@ -84,8 +84,17 @@ setoption name LmrDivisor value 210
 
 A name that is not in the table is ignored, like any unknown option. A name that
 is, with a value outside the range below, is **refused and left unchanged** —
-not clamped — with the reason written to the log. Sent with no `setoption` at
-all, the tune build searches exactly what the release build searches.
+not clamped. Sent with no `setoption` at all, the tune build searches exactly
+what the release build searches.
+
+**Neither refusal says anything, and this paragraph claimed a log line until
+S084.** The refusal is written through a macro that compiles to nothing in a
+release build, which the tune build is, and `uci` re-prints each parameter's
+compiled default rather than its live value — so there is no message and no
+readback. A tuner that misspells a name or sends an out-of-range value gets the
+default and no indication of it. S137 is the step that makes the refusal
+visible; until then, check values against the ranges below before sending
+them.
 
 | name | default | range | effect |
 |---|---|---|---|

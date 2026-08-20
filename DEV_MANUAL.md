@@ -205,8 +205,26 @@ setoption name RfpMargin value 120
 ```
 
 The parameters, their defaults and their ranges are the table in `MANUAL.md`. An
-out-of-range value is refused and logged rather than clamped; an unknown name is
-ignored like any other unknown option.
+out-of-range value is refused rather than clamped
+(`src/search_params.hpp:231-239`), and an unknown name is ignored like any other
+unknown option.
+
+**Neither refusal is observable, and this paragraph said otherwise until S084.**
+The refusal is logged through `LOG_W`, which is `if (false) std::clog` under
+`NDEBUG` (`src/log.hpp:35`), and `build-tune` is a Release build — so nothing is
+printed, nothing reaches the log file, and `uci` re-prints the **compiled
+default** rather than the live value, which is not a readback either:
+
+```
+setoption name RfpMargin value 120
+uci                     # still prints "default 75"
+```
+
+So a tuner that sends an out-of-range value, or misspells a name, plays its
+games against a silently-default parameter and cannot tell. The consequence for
+`tools/spsa_driver.py` is that clamping is the driver's own job and its `check`
+mode compares the config's bounds against the binary's `uci` listing before a
+game is played. Making the refusal visible over UCI is S137.
 
 It works, and this is the measurement rather than the claim. The midgame
 position of `tools/search_bench.py` at depth 9, driven over UCI on
@@ -264,6 +282,152 @@ depth 9 and both configurations: **292313 / 1026739 / 103001 nodes, best moves
 `c3d5` / `e2a6` / `d7c8q`**, identical for `build` before the change, `build`
 after it, and `build-tune` with no `setoption` sent. That is INV-6 discharged;
 no SPRT is owed.
+
+## Tune search parameters with SPSA
+
+`tools/spsa_driver.py`, S084. Simultaneous perturbation stochastic
+approximation over the tune build's UCI parameters: two objective evaluations
+per iteration whatever the dimensionality, so twenty-two parameters cost what
+one costs. The alternative is what S068 and S039 did — one step, one source
+edit, one rebuild and one SPRT per number.
+
+The installed `fastchess alpha 1.8.2 20260729-74deac2` has no tuning mode of its
+own, so the driver builds the match itself: one short `fastchess` run per
+iteration, theta+ as the first `-engine` and theta- as the second, `-games 2
+-repeat -rounds <pairs>`, no `-sprt`. `fastchess.sh` is untouched — that is the
+SPRT harness and this is not an SPRT.
+
+Validate a config before spending anything on it:
+
+```bash
+tools/spsa_driver.py check tools/spsa_dryrun.json --engine build-tune/src/chesso
+```
+
+That is not a formality. Every name is checked against the binary's own `uci`
+listing and every bound against the binary's, because **the engine cannot tell
+you it refused a value** — see the tune build section above. Then it proves
+`setoption` reaches the search at all, which is the only channel left: measured
+2026-08-20, `RfpMargin` 75 searched **164123** nodes and 2000 searched
+**743308** on the midgame position at depth 9, the same two figures this file
+quotes above.
+
+Run it:
+
+```bash
+tools/spsa_driver.py run <config.json> --out .spsa/<name>
+```
+
+`--resume` continues from the checkpoint. `.spsa/` is gitignored.
+
+### The config
+
+`tools/spsa_dryrun.json` is the smoke config and the format, verbatim:
+
+```json
+{
+  "iterations": 2,
+  "pairs_per_iter": 2,
+  "seed": 1,
+  "r_end": 0.002,
+  "match": {
+    "engine": "build-tune/src/chesso",
+    "tc": "1+0.01",
+    "book": "books/8moves_v3.pgn",
+    "book_format": "pgn",
+    "book_size": 34700,
+    "hash": 16,
+    "threads": 1,
+    "concurrency": 12
+  },
+  "params": [
+    { "name": "RfpMargin",       "start": 75,  "min": 0, "max": 2000, "c_end": 4 },
+    { "name": "LmrDivisor",      "start": 225, "min": 1, "max": 2000, "c_end": 8 },
+    { "name": "MaxQsearchDepth", "start": 8,   "min": 1, "max": 64,   "c_end": 1 }
+  ]
+}
+```
+
+`alpha` 0.602, `gamma` 0.101, `a_ratio` 0.1 and `r_end` 0.002 are the defaults
+and may be omitted. **`c_end` is the smallest change in that parameter that
+could plausibly matter**, and it is per parameter: below 0.5 the config is
+refused, because `round(x + c) == round(x - c)` and the axis would be perturbed
+and never move. `book_size` is the opening count, used to wrap a run that
+outlives the book — `grep -c '^\[Event' books/8moves_v3.pgn` is 34700 and
+`books/UHO_Lichess_4852_v1.epd` is 2632036 lines.
+
+`(wins - losses)` is summed over the iteration's pairs, so **doubling
+`pairs_per_iter` doubles the step**. The two are chosen together and frozen
+together.
+
+### What a run leaves behind
+
+`run.json` (the frozen config, written before the first game), `checkpoint.json`
+(rewritten atomically every iteration: k, the float theta, the RNG state, the
+pair count), `trajectory.tsv` (one row per iteration), `engine.snapshot` (the
+binary copied once, so a rebuild mid-run cannot swap the engine under it, which
+has already happened to the SPRT harness once), `games.pgn` and
+`fastchess.log`.
+
+The trajectory is what shows a run that is not working, and the two failure
+shapes look nothing alike:
+
+```
+k	pairs	c_scale	r_k	y	wins	losses	draws	ptnml	RfpMargin	LmrDivisor	MaxQsearchDepth
+0	2	1.072517	0.0025043399	2	3	1	0	0/0/1/0/1	75	225	8
+1	4	1.000000	0.002	-3	0	3	1	1/1/0/0/0	75	225	8
+```
+
+That is the dry run above, and **nothing moved** — correct, and the reason the
+smoke run cannot be read as a tuning result: two iterations at `r_end` 0.002
+step `RfpMargin` by 0.02, which rounds back to 75. A real run whose parameters
+are still barely moving after a few thousand games is not converging slowly, it
+is useless; a parameter that walks its whole range and settles nowhere is
+DEC-019's flatness, and its endpoint is noise.
+
+Count forfeits from the PGN, never from `fastchess.log`, which is WARN-only and
+comes back empty (S089):
+
+```bash
+tools/forfeit_report.py .spsa/<name>/games.pgn
+```
+
+### Detach it and watch the marker
+
+The last line is `SPSA-DONE` or `SPSA-FAILED`, both of them, so a watcher exits
+on the run rather than on a turn boundary (DEC-061):
+
+```bash
+nohup tools/spsa_driver.py run <config.json> --out .spsa/<name> > .spsa/<name>.log 2>&1 &
+```
+
+### What decides whether it worked
+
+`tests/test_spsa_driver.py`, in the fast suite, 22 assertions and about four
+seconds. It plays no games: the objective is a noisy quadratic with a known
+optimum, because a driver tested by playing games cannot tell a bug in itself
+from noise in the objective at any budget this machine can afford — a sign error
+and a parameter that does not matter produce the same flat trajectory. The
+sign-flipped run is asserted to **fail** the criterion the honest one passes.
+
+The constants are measured there, not inherited. On that objective, at 20000
+pairs, with the axis starting 300 units from its optimum:
+
+| `r_end` | max axis error | final strength |
+|---|---|---|
+| 0.002 | 293 of 300 | -21.8 Elo |
+| 0.008 | 28 of 300 | -0.9 Elo |
+| 0.050 | 221 of 300 | -6.2 Elo |
+
+0.002 is the OpenBench and fishtest-era seed and it moves that objective 2 % of
+the way. The bottom row is fishtest RFC #535's complaint measured here: an
+oversized end value does not decay away, because the end-value parametrisation
+shrinks the step by only about 1.6x across a whole run. **`r_end` is calibrated
+against the budget and the objective's steepness, not inherited** (DEC-084).
+
+Choosing which of the 22 parameters to tune, their bounds, their `c_end`s and
+the budget is S085's, recorded there. And the returned vector is a hypothesis:
+no strength number is taken on the tune build, so S085 SPRTs the **shipping**
+build carrying it.
 
 ## Test
 

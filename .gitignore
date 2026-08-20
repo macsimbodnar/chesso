@@ -33,3 +33,13 @@ config.json
 # still plays it.
 books/UHO_*
 books/*.zip
+
+# S084. SPSA run directories: the frozen config, the checkpoint, the trajectory,
+# the engine snapshot and the run's PGN. Same trade as .ref-builds/ and
+# .tuning/ -- reproducible from a committed config and a seed, and the engine
+# snapshot alone is 5 MB per run. A trajectory that decides anything is copied
+# into adocs/data/ by the step that reads it.
+.spsa
+
+# Python bytecode from the tools/ modules, which the tests import directly.
+__pycache__
