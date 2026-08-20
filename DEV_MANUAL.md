@@ -911,7 +911,10 @@ binaries and the same time control. No number of games narrows a disagreement
 between the references themselves; that is what the anchor sweep reports.
 
 **Last result: chesso ≈ 2559 CCRL Blitz, ±25, soft** (2026-08-18, 3340 games at
-`10+0.2`, five engines, three families). Record and caveats in
+`10+0.2`, **`Hash=64`**, five engines, three families). S105 raised this
+script's hash to 128 to match the list's own 128-to-256 (DEC-089), so the next
+run is not comparable in absolute size with the 2559 — the instrument moved,
+the way it moved at DEC-049. Record and caveats in
 `adocs/data/rating_2026-08-18_S088_ccrl_blitz.md`; S087's four-engine 2570 is in
 `rating_2026-08-18_ccrl_blitz.md` and is not superseded as a record, only as the
 current figure. `src/` is byte-identical between the two, so the difference is

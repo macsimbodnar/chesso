@@ -129,6 +129,12 @@ mkdir -p "$outdir"
 logfile="$outdir/fastchess.log"
 pgnfile="$outdir/games.pgn"
 
+# The stamp makes the default unique, but OUT is a name the caller chose and
+# can choose twice -- and that walks straight back into the trap above, since
+# fastchess appends. Refuse rather than mix two matches into one census.
+[[ ! -e "$pgnfile" ]] \
+  || fail "$pgnfile already exists; fastchess appends, so this run's census would mix it with an earlier match"
+
 [[ -x "$candidate" ]] || fail "no candidate at $candidate, build it first"
 [[ -r "$book" ]] || fail "no book at $book, fetch it with books/fetch_book.sh"
 
