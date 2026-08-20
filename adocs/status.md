@@ -12,6 +12,22 @@ Updated: 2026-08-20 by `moltke --step status`.
 - Watching:
   - watching: SPSA-(DONE|FAILED) in /home/max/ws/chesso/.tuning/spsa_S085.log, ceiling 18h, armed 2026-08-20T19:24:25+02:00 (.git/moltke_watch/1787246665_1476278.json)
 - Parked:
+  - **Three questions banked for the owner while working overnight, 2026-08-20.**
+    Asked here rather than blocking the run. (1) **Resume the SOTA enrichment
+    pass?** 20 pending steps are still unenriched and it was stopped at S120 by
+    your instruction earlier the same day; it is machine-free and parallelises
+    one agent per step, but it is not a plan step, so it did not fit the
+    instruction that plan steps run in sequence. (2) **S085's goal line says
+    "the twenty search parameters that exist today" and the frozen run is 12** --
+    your decision at freeze time, with the nine `Tm*` and `OrderHistoryMax`
+    excluded for reasons recorded in the step file. Amend the goal line, or let
+    the `done:` stamp carry the deviation? The step's own Scope concern already
+    flags that the live surface is 22 rather than the goal's twenty. (3) **The
+    fourth plan_review is running documents-and-citations only**, because its
+    method re-measures every numeric claim from the tool the step names and the
+    machine is committed to S085; each unverifiable number is being recorded as
+    deferred with the command that would settle it. Schedule the re-measurement
+    pass as its own run, or fold each deferred number into the step that owns it?
   - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
     owner's instruction, 2026-08-20.** One research agent per pending step
     appends a `## Technical details (SOTA research, 2026-08-19)` section —

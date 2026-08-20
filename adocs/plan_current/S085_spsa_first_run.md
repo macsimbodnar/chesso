@@ -522,3 +522,72 @@ no other step carrying a chained throughput ratio. The one throughput figure
 there is S135's, and it uses S105's *measured* 23.1 to 38.7 games a minute at
 8+0.08, which is sound. S127 inherits this run's shape rather than an estimate,
 and S128 sets its own control by definition.
+
+## Mid-run read at 39 %, 2026-08-20 22:39
+
+The pitfalls above ask for the trajectory to be read at about 25 % and 50 % and
+for a sick run to be stopped and recorded rather than adjusted. Read at 491 of
+1250 iterations, 11784 pairs, 3 h 16 m elapsed -- **23.96 s per iteration against
+the 23.47 measured, so the 8.15 h estimate holds** and the run is due at about
+03:43.
+
+**Not stuck and not diverged.** `c_scale` has decayed 2.055 -> 1.099 as designed.
+`y` over 491 iterations: mean -0.15, sd 7.22, range -33 to +24, first fifty
+-2.14 and last fifty +1.52 -- centred, with real spread, and no sign of the
+"barely changing" trajectory the fishtest wiki calls useless. Every one of the
+twelve axes has moved.
+
+| parameter | start | at 39 % | move / `c_end` | % of iterations at a bound |
+|---|---|---|---|---|
+| `MaxQsearchDepth` | 8 | 17 | +2.25 | 0.0 |
+| `RfpMargin` | 75 | 61 | -0.58 | 0.0 |
+| `RfpMaxDepth` | 6 | 14 | +2.00 | 0.0 |
+| `RfpMinPly` | 3 | **0** | -3.00 | **30.8** |
+| `NullMoveBase` | 2 | 3 | +1.00 | 0.0 |
+| `NullMoveDivisor` | 6 | 7 | +0.25 | 0.0 |
+| `LmrBase` | 75 | 68 | -0.29 | 0.0 |
+| `LmrDivisor` | 225 | 199 | -0.81 | 0.0 |
+| `LazyEvalMargin` | 150 | 170 | +0.83 | 0.0 |
+| `AspirationMinDepth` | 5 | 2 | -1.50 | 23.6 |
+| `AspirationDelta` | 50 | 24 | -1.62 | 0.0 |
+| `AspirationMaxDelta` | 400 | 454 | +1.69 | 0.0 |
+
+Two axes want reading rather than just recording. `MaxQsearchDepth` at 17
+agrees with this file's own pre-run measurement that the natural depth is above
+8 and under 16 -- and since 16 and 32 measured identical there, anything at or
+above 16 is the same engine, so 17 is that finding and not a contradiction of
+it. `AspirationDelta` at 24 has walked into the 10-25 band the surveyed engines
+use, which is an independent arrival at a published range from a noisy process
+that was told nothing about it.
+
+### The `RfpMinPly` problem, found by the run
+
+**`RfpMinPly` has walked to 0 and spends 30.8 % of its iterations at that
+bound.** `src/search_params.hpp` says the root, ply 1 and ply 2 are exempt from
+reverse futility pruning because "a mate two moves away lives exactly that far
+down", and records as measured fact that "at ply 1 the mate cases in test_search
+go red" (S033). A value below 3 is therefore a value the test suite rejects, and
+a step cannot complete on a red suite.
+
+So the declared minimum of 0 contradicts the sentence the same file writes two
+lines above it, and contradicts the list's own claim that every bound "is either
+arithmetic ... or the constant's own stated purpose ..., never a guess". For
+`RfpMinPly` the stated purpose implies a floor of 3; the declared bound is 0.
+The cost is already paid: about a third of one axis's gradient budget has been
+spent exploring values that cannot ship.
+
+`AspirationMinDepth` sitting at its bound 23.6 % of the time is **not** the same
+problem -- its declared floor of 2 is arithmetic ("depth 1 has no previous score
+to build a band around"), so 2 is admissible and the tuner simply wants
+aspiration windows from the shallowest depth that can have them.
+
+**Not acted on mid-run.** The accepts freeze the configuration and the pitfalls
+say a sick run is recorded, never re-tuned in flight, so nothing was touched.
+What this changes is the post-run handling: the safe floor for `RfpMinPly` is
+being measured separately against `build-tune` over UCI while the run continues,
+and if the rounded vector lands below it, the reading is recorded here and the
+axis is not shipped at an inadmissible value. Whether that means rejecting the
+vector, shipping it with that one axis held at its safe floor -- which is then a
+vector nobody measured -- or narrowing the declared bound and owing a rerun, is
+a decision and not a judgement call, so it is written up for the owner rather
+than taken here.
