@@ -1,0 +1,35 @@
+{
+  "iterations": 1250,
+  "pairs_per_iter": 24,
+  "seed": 85,
+  "alpha": 0.602,
+  "gamma": 0.101,
+  "a_ratio": 0.1,
+  "r_end": 0.004,
+  "match": {
+    "engine": "build-tune/src/chesso",
+    "tc": "2+0.02",
+    "book": "books/UHO_4060_v3.epd",
+    "book_format": "epd",
+    "book_size": 242201,
+    "hash": 16,
+    "threads": 1,
+    "concurrency": 12,
+    "extra": ["-draw", "movenumber=40", "movecount=8", "score=10",
+              "-resign", "movecount=3", "score=400"]
+  },
+  "params": [
+    { "name": "MaxQsearchDepth",    "start": 8,   "min": 1, "max": 64,    "c_end": 4 },
+    { "name": "RfpMargin",          "start": 75,  "min": 0, "max": 2000,  "c_end": 24 },
+    { "name": "RfpMaxDepth",        "start": 6,   "min": 0, "max": 63,    "c_end": 4 },
+    { "name": "RfpMinPly",          "start": 3,   "min": 0, "max": 63,    "c_end": 1 },
+    { "name": "NullMoveBase",       "start": 2,   "min": 0, "max": 16,    "c_end": 1 },
+    { "name": "NullMoveDivisor",    "start": 6,   "min": 1, "max": 64,    "c_end": 4 },
+    { "name": "LmrBase",            "start": 75,  "min": 0, "max": 400,   "c_end": 24 },
+    { "name": "LmrDivisor",         "start": 225, "min": 1, "max": 2000,  "c_end": 32 },
+    { "name": "LazyEvalMargin",     "start": 150, "min": 0, "max": 2000,  "c_end": 24 },
+    { "name": "AspirationMinDepth", "start": 5,   "min": 2, "max": 64,    "c_end": 2 },
+    { "name": "AspirationDelta",    "start": 50,  "min": 1, "max": 2000,  "c_end": 16 },
+    { "name": "AspirationMaxDelta", "start": 400, "min": 1, "max": 48000, "c_end": 32 }
+  ]
+}

@@ -40,9 +40,16 @@ default_book="UHO_Lichess_4852_v1.epd"
 # fetching the file, recording both digests, and saying in the step which
 # measurement adopted it -- not in advance, because an unverified pin is a
 # number nobody has checked.
+#
+# UHO_Lichess_4852_v1.epd is what fastchess.sh plays and every SPRT verdict is
+# taken on.  UHO_4060_v3.epd was added by S085: an SPSA run must not tune on
+# the book its verification match plays (eval_tuning_strategy.md par.7), and
+# 242201 openings is more than the 15000 rounds that run walks through, so it
+# never wraps.
 pinned="$(
   cat <<'PINS'
 UHO_Lichess_4852_v1.epd	4e298f11e8acfa106babe02968f2e61582145e7874c59284690b20b9650e0e07	7a7f6470615a69c6cf23d565417701d38732876f480af90d67b42abade35644a
+UHO_4060_v3.epd	62fe32cda02f605acd5938887d574730c91208812f2bb1e839f28eee10869af8	419844f8c43a9c1fa3e279518bb79e89a5ed3d181f27c180ea9eb7444a1b9885
 PINS
 )"
 

@@ -315,3 +315,188 @@ goal's letter reads as all of them; the owner decides at freeze time. Also:
 `touches` names `src/search.cpp` and `src/evaluation.hpp`, but since S073 the
 shipping defaults live in `src/search_params.hpp` -- the post-run edit lands
 there.
+author:    Maksym Bodnar
+
+## The frozen run configuration, 2026-08-20 19:45
+
+`tools/spsa_s085.json`, committed before the first game and not edited while the
+run is up (accepts). Every number below is measured here, not inherited: the
+step's own seeds were re-decided against the simulator and against this machine,
+and where a seed lost, the measurement that beat it is recorded beside it.
+
+**Parameter set: 12.** The owner's decision at freeze time, from the three
+options this file's research section left open. The 9 `Tm*` parameters are out
+(the published TC-overfit family, and this run deliberately tunes at a TC the
+verification does not share; they also have a fresh SPRT behind them from S089,
+and S127 retunes them at the S105 control). `OrderHistoryMax` is out: it binds
+only when history saturates, so it random-walks, and a meaningless endpoint
+would land in the shipping vector the SPRT judges.
+
+| parameter | start | min | max | `c_end` |
+|---|---|---|---|---|
+| `MaxQsearchDepth` | 8 | 1 | 64 | 4 |
+| `RfpMargin` | 75 | 0 | 2000 | 24 |
+| `RfpMaxDepth` | 6 | 0 | 63 | 4 |
+| `RfpMinPly` | 3 | 0 | 63 | 1 |
+| `NullMoveBase` | 2 | 0 | 16 | 1 |
+| `NullMoveDivisor` | 6 | 1 | 64 | 4 |
+| `LmrBase` | 75 | 0 | 400 | 24 |
+| `LmrDivisor` | 225 | 1 | 2000 | 32 |
+| `LazyEvalMargin` | 150 | 0 | 2000 | 24 |
+| `AspirationMinDepth` | 5 | 2 | 64 | 2 |
+| `AspirationDelta` | 50 | 1 | 2000 | 16 |
+| `AspirationMaxDelta` | 400 | 1 | 48000 | 32 |
+
+Bounds are the declared bounds from `src/search_params.hpp`, unnarrowed.
+
+**Schedule.** `alpha` 0.602, `gamma` 0.101, `a_ratio` 0.1 (S084's seeds, kept),
+`r_end` **0.004**, seed 85.
+
+**Shape.** 1250 iterations x 24 pairs = 30000 pairs = **60000 games**, twice the
+accepts' floor. `tc=2+0.02`, `Hash=16`, `Threads=1`, concurrency 12 (DEC-050),
+book `books/UHO_4060_v3.epd`, `fastchess.sh`'s adjudication verbatim. 30000
+rounds against 242201 openings, so the book never wraps.
+
+### What the simulator said, and what it overturned
+
+S084 left the driver verified on a 5-axis objective 225 Elo deep and said
+explicitly that its constants were not inheritable. Re-measuring them at this
+run's shape overturned three of the four numbers this file had seeded.
+
+**1. The budget floor is a resolution floor, and it is higher than the plan
+assumed.** 12 axes, each optimum `4*c_end` off, depth swept, 5 seeds, mean gain
+of what was available (`scratchpad/depth_grid.py`, 2500 x 6 pairs = 30000 games):
+
+| objective depth | `r_end` 0.002 | 0.008 | 0.032 | 0.128 |
+|---|---|---|---|---|
+| 6 Elo | -0.04 | -0.44 | -8.62 | -56.88 |
+| 15 Elo | +0.32 | **+2.34** | -6.97 | -45.18 |
+| 36 Elo | +5.91 | **+17.43** | +14.53 | -24.91 |
+| 96 Elo | +37.92 | **+80.20** | +80.14 | +37.47 |
+| 240 Elo | +179.55 | **+230.79** | +224.29 | +190.87 |
+
+30000 games resolves an objective about 36 Elo deep and up. At 15 Elo it
+recovers a sixth and goes backwards on an unlucky seed; at 6 Elo it does
+nothing at any step size, and the signal run and a zero-weight flat run drift
+by the same amount -- a walk with no gradient in it. The bottom row reproduces
+S084's own regime and its choice of `r_end`, which is the check that the
+simulator is the same one.
+
+**2. `c_end` was the largest lever, and the step's seeds were sized for the
+wrong thing.** The seeds (4-8 cp for margins, 0.5-1 for depths) are the smallest
+change that could matter -- endpoint precision. At a 15 Elo objective they get
++2.34 of 15. Four times larger gets **+10.54**, and at 4x the cost of sitting
+`+/-c` off the optimum is 1.25 Elo, which is fishtest's own "`+/-c` should cost a
+few Elo" rule arrived at from the other end.
+
+That result is width-dependent -- the best multiplier tracks a distance to the
+optimum nobody knows -- but the loss is asymmetric, and that is what decides it
+(`scratchpad/width_grid.py`, mean gain of 15.0):
+
+| width (in seed `c_end`) | 1x | 2x | 4x | 8x | 16x |
+|---|---|---|---|---|---|
+| 1 | +6.61 | +7.08 | +6.33 | **-38.97** | **-250.27** |
+| 2 | +6.64 | +9.54 | +9.81 | +2.10 | -51.44 |
+| 4 | +2.34 | +7.10 | +10.54 | +10.99 | -2.35 |
+| 8 | +0.21 | +2.87 | +8.21 | +11.31 | +10.13 |
+| 16 | -0.57 | +1.68 | +5.04 | +10.04 | +11.65 |
+
+A `c` too small costs a couple of Elo. A `c` too large costs tens, and the
+parameters most likely to be at width 1 are the ones already fitted or already
+swept -- `LmrBase` and `LmrDivisor` from the reduction table, `AspirationMaxDelta`
+which S021 measured flat from 100 to 2000. **4x is the only multiplier positive
+at every width**, and within about 2 Elo of the best where this project has any
+evidence about the width at all: `MaxQsearchDepth`'s optimum is between 8 and 16
+by the measurement in "Moved to the front" above, and `AspirationDelta` at 50
+against a surveyed 10-25, both of which are width 4 to 8.
+
+Two of the twelve are capped below 4x, for a cliff a quadratic objective cannot
+express. `RfpMinPly` 3 +/- 2 reaches ply 1, where S033 measured the mate cases in
+`test_search` going red -- a perturbation that makes the engine hide mates is not
+a worse engine, it is a broken one. `NullMoveBase` 2 +/- 2 spans its entire useful
+range in one perturbation. The capped list costs about 0.8 Elo at wide widths
+and buys 0.9 at width 1 against a blanket 4x (`scratchpad/verify_frozen.py`), so
+the caps are close to free.
+
+**3. The time control was arithmetic and the arithmetic was wrong by 2.4x.**
+This file priced 5+0.05 at ~4300 games/h by chaining two ratios off S033, giving
+30000 games in about 7 h. Measured: a 12-game wave at 5+0.05 takes 24.4 s, so
+2500 iterations is **17.0 h**, not 7. The cause is that a game's duration is set
+by its clock and not by how fast the engine is -- 12 games on 12 SMT threads each
+still spend `(base + moves*inc)*2` seconds -- so a ratio taken from a
+games-per-hour figure at another control does not transfer. Fixed cost per
+`fastchess` invocation is only 1.4 s, and the 16 MB book costs 0.05 s of it, so
+neither is worth attacking.
+
+Measured on this machine, 12-game waves, `Hash=16 Threads=1` concurrency 12:
+
+| tc | s per wave | median depth | p10 depth | 2500 iterations |
+|---|---|---|---|---|
+| 1+0.01 | 6.9 | 9 | 8 | 4.8 h |
+| 2+0.02 | 10.9 | 11 | 9 | 7.6 h |
+| 3+0.03 | 11.9 | 11 | 9 | 8.3 h |
+| 5+0.05 | 24.4 | 12 | 10 | 17.0 h |
+
+**2+0.02** is the choice: it reaches median depth 11 against 5+0.05's 12, so
+`RfpMaxDepth` 6 and `AspirationMinDepth` 5 are exercised either way, and RFC #535
+measured search-shape endpoints similar from 20+0.2 down to 0.5+0.01. 0 forfeits
+in 120 games at 2+0.02 and 120 at 3+0.03 (`tools/forfeit_report.py`). 1+0.01
+was refused rather than measured further: median depth 9 starts to compress the
+depth-gated parameters this run exists to move.
+
+**4. The batch size is decided at fixed wall clock, not fixed games, and that
+inverts the answer.** At a fixed game count the simulator prefers small batches
+-- 2 or 3 pairs beat 6 (+3.43 against +2.34) -- which is textbook SPSA. But the
+driver runs one `fastchess` per iteration and cannot finish until the slowest of
+its games does, so a small batch pays that straggler every iteration. Measured
+at 2+0.02, three reps each:
+
+| pairs | s/iteration | s/pair |
+|---|---|---|
+| 3 | 7.60 | 2.53 |
+| 6 | 9.14 | 1.52 |
+| 12 | 15.14 | 1.26 |
+| 24 | 23.47 | 0.98 |
+| 48 | 40.97 | 0.85 |
+
+More than half of a 6-pair iteration is waiting. Priced in 8 h of machine rather
+than in games (`scratchpad/shape_at_wallclock.py`, mean over widths 2, 4 and 8):
+
+| pairs | iterations | games | `r_end` 0.002 | 0.004 | 0.008 |
+|---|---|---|---|---|---|
+| 3 | 3789 | 22734 | -- | +9.48 | +9.11 |
+| 6 | 3150 | 37800 | -- | +10.32 | +9.45 |
+| 12 | 1902 | 45648 | +9.82 | +10.64 | +9.70 |
+| 24 | 1227 | 58896 | +11.07 | **+11.61** | +10.52 |
+| 48 | 702 | 67392 | +10.77 | +11.52 | +9.57 |
+
+24 pairs at `r_end` 0.004 is the optimum and 48 is tied with half the
+iterations, so the turnover is found rather than assumed. **1250 x 24 = 60000
+games in 8.15 h** -- one night, and twice the accepts' floor for the same
+machine time the old 30000-game plan at 5+0.05 would have spent twice over.
+
+`r_end` 0.004 rather than S084's 0.008 for the reason S084 wrote down: the step
+sums `(wins - losses)` over the iteration's pairs, so displacement tracks total
+pairs, and this run has 30000 of them against the 20000 that calibrated 0.008.
+
+### Pre-run gates, all green
+
+- S084's synthetic gate: `ctest --test-dir build -L fast` 18/18, `test_spsa_driver` 3.19 s.
+- `spsa_driver.py check --engine build-tune/src/chesso tools/spsa_s085.json`:
+  12 parameters accepted, no warnings, node probe `RfpMargin` 75 -> 164302
+  nodes, 2000 -> 742729, so `setoption` reaches the search.
+- **Bounds extremes.** All 24 corners -- every parameter at its min and at its
+  max -- sent over UCI to `build-tune`: **0 `info string refused` lines**, which
+  is what S137 made observable. Then `MaxQsearchDepth=64`,
+  `AspirationMaxDelta=48000`, `RfpMinPly=0` together, `go depth 10`: a legal
+  `bestmove`, empty stderr, exit 0.
+- **A game pair at the nastiest corner.** All 12 parameters at whichever bound
+  is worse, against the defaults, 6 games at 5+0.05: 0-5-1, no crash, and
+  **0 forfeits of 6** by `tools/forfeit_report.py`. The corner engine loses,
+  which is the point -- it does not fall over.
+- Machine idle (`load average: 0.55`, nothing above 4 % CPU), governor
+  `performance`.
+- Second book fetched and pinned: `books/UHO_4060_v3.epd`, 242201 openings,
+  zip sha256 `62fe32cd...`, unpacked `419844f8...`, verified end to end through
+  `books/fetch_book.sh` -- so the tuning book and the verification book are
+  disjoint, which `adocs/eval_tuning_strategy.md` par.7 requires.
