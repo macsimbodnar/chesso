@@ -5126,3 +5126,183 @@ Consequences: DEC-085's operative outcomes (S086 retired, threading off the
               plan, concurrency decisions untouched) all stand. Any future
               citation of the list's conditions cites this entry, not DEC-085's
               context paragraph.
+
+## DEC-090  2026-08-20  the two exactly-degenerate evaluation columns are deleted, their weights folded into the tables
+Tags:         evaluation, tuning, tuner, s100, s134, s123, s133, dec-057,
+              dec-059, inv-6
+Context:      S100 proved two exact linear dependencies among the fitted
+              parameters, from the indexing rather than from a correlation.
+              Index 0 is a8 and a black piece mirrors by `^56`, so a rook or a
+              pawn on its own seventh rank always occupies one of squares
+              8..15. Rook-on-the-seventh's differential is therefore
+              *identically* the signed sum of eight `psqt[ROOK][8..15]`
+              occupancy columns; and a pawn on its own seventh is a passer by
+              definition -- "ahead" is the enemy back rank and the extractor
+              refuses a pawn standing there -- so passer bucket 5 is identically
+              the signed sum of eight `psqt[PAWN][8..15]` columns. Measured:
+              R^2 exactly 1.000000 for both, 0 violations over 1264773 and
+              550880 non-zero rows of `.tuning/selfplay_v2_dedup.tsv`.
+
+              The consequence is that neither weight is identified. Across three
+              real fits on two corpora, passer buckets 0 to 4 move by at most 4
+              while bucket 5 reads +22, -1 and -17 -- the ridge, not the pawns.
+              A joint fit's value for either split is wherever the optimiser
+              stopped, and `passed_pawn_mg[5] = -17` is not a statement about
+              chess (DEC-023).
+Decision:     **By the owner**, from three options the agent supplied: **delete
+              both features and fold their weights into the eight piece-square
+              entries each is equivalent to.** S134 is the step; it blocks S135.
+
+              The engine-side identity is measured first. S100 proved it against
+              `tools/eval_model.hpp` and the stored columns, and the engine's own
+              `evaluate_pawns()` computes passers from bitboard fills whose
+              agreement is only tested over the curated positions. The argument
+              carries over and is not accepted in place of the number.
+
+              **The fold is bit-exact, and that is why the step ships on node
+              counts.** `evaluate_pawns()` sums all three pawn terms into
+              `pawn_mg` / `pawn_eg` and `src/evaluation.cpp:696-700` adds those
+              to the piece-square accumulator *before a single tapered
+              division*, so moving a weight from one summand to the other
+              changes no truncation. This is stronger than DEC-059's
+              re-anchoring, which moved the evaluation by one centipawn on one
+              of seven anchors; here the score is identical and INV-6 is
+              discharged on `search_bench` node counts with no SPRT owed.
+
+              **The passer half is not a no-op and the step says so.** S100's
+              first framing claimed both terms were already deleted by the
+              compiler at zero weights. True of `piece_placement`, whose four
+              weights are zero; **false of passer bucket 5, which ships mg -17
+              and eg +42**. Deleting it without folding would be a
+              play-altering change wearing a behaviour-neutral label.
+Rejected:     **Keep both and adopt a rule instead** -- refit only frozen-base,
+              and phrase every ledger row on the sum. Zero code change and it
+              preserves the small residual a frozen-base fit could still find on
+              top of the tables. Refused because the trap stays in the tree and
+              survives only as long as everyone remembers the rule, and because
+              S133 re-shapes the tables without removing the degeneracy: any
+              per-square table keeps it for any feature defined on one rank.
+
+              **Keep both, pinned at zero permanently.** Simplest and costs
+              nothing. Refused for the same reason plus one: it leaves two
+              columns in the parameter vector that every future fit spends a
+              gradient on and no future SPRT can attribute.
+Consequences: `PIECE_PLACEMENT_COUNT` 4 to 3, `PASSED_PAWN_COUNT` 6 to 5,
+              `PARAM_COUNT` 827 to 823, and every `eval_model.hpp` base after
+              them shifts -- which is the group-boundary hazard DEV_MANUAL
+              records four times, run backwards. `test_tuner_groups`'
+              disjointness and union properties are the guard and the red is
+              required first. S123 rebuilds the passer suite and inherits the
+              obligation: a new term defined on a single rank is degenerate with
+              the tables the same way, and `tools/feature_audit`'s identity
+              report is where that gets checked.
+
+## DEC-091  2026-08-20  piece placement is unfrozen and refitted as one bundle, with the bisect rule
+Tags:         evaluation, tuning, sprt, s100, s135, s027, dec-057, dec-063,
+              dec-082, dec-084
+Context:      DEC-057 froze `piece_placement` at zero on the strength of S027's
+              verdict: -5.48 +/- 11.46 Elo over 2284 games, H0 accepted. S100
+              found that verdict procedural. The four features shared **one**
+              SPRT at `--fast` bounds `elo0=0 elo1=10`, were then zeroed **by
+              hand**, and every fit since S065 has held them there rather than
+              fitted them to zero. Published figures for the parts are +8.2 for
+              the bishop pair and +9.86 for a rook file retune, which those
+              bounds cannot resolve (DEC-063, DEC-084).
+
+              S100 excluded every other cause for these features: the counts are
+              right over all 10795695 corpus rows, the gradient is the
+              derivative of the error to 4.9e-8 over all 827 parameters, the
+              pipeline recovers a planted vector end to end, coverage is 15.81 to
+              31.38 % of rows, and R^2 against the tables is 0.487, 0.265 and
+              0.168 -- far under redundancy. What remains open is the correlation
+              form of the corpus hypothesis, which is why the refit waits for
+              S082's corpus.
+Decision:     **By the owner**: unfreeze all of `piece_placement` and refit it,
+              **one bundled SPRT** over the group, on the corpus S082 and S083
+              produce. S135 is the step, and S134 lands first.
+
+              Two things make this bundle unlike S027's, and they are the
+              conditions the decision carries. S134 removes the one member that
+              was never an identified quantity, so the group is three
+              independent features and a bundled verdict is attributable. And
+              **a failing bundle is bisected, never zeroed by hand** -- DEC-082's
+              rule, and the hand revert is precisely what turned S027's result
+              into four unmeasured features.
+Rejected:     **Split the group: bishop pair alone first.** The agent's
+              recommendation and S027's own untested candidate. The pair is the
+              free feature -- the compiler rewrites `count_bits(x) >= 2` into
+              `x & (x - 1)` -- it carried the largest weight of the four, and the
+              three rook features cost 3.1 to 4.0 % of a search between them, so
+              a bundle prices a cheap term that may work together with expensive
+              ones that may not. **The owner chose the bundle and the concern is
+              recorded rather than re-argued**; the cost of the split was two
+              verdicts and a new `--only` group against one verdict.
+
+              **Leave it frozen until decided per term.** Refused: it leaves the
+              diagnosis unactioned and the freeze resting on a reason S100
+              voided.
+Consequences: The bundle's own speed cost is inside its verdict, measured with
+              the weights forced non-zero because at zero the compiler deletes
+              the term (DEC-047). Bounds are stated before the run and are not
+              `--fast`. If the verdict is zero it is recorded as zero and the
+              term may still be kept with the reason stated.
+
+## DEC-092  2026-08-20  tempo is unfrozen and the truncation guard is re-derived, not relaxed
+Tags:         evaluation, tuning, testing, sprt, s100, s136, s027, dec-053,
+              dec-057, dec-063
+Context:      This is the half of `--freeze tempo,piece_placement` whose reason
+              S100 did **not** void. DEC-057 froze tempo on a mechanical
+              consequence DEC-053 had stated in advance rather than on a verdict:
+              `evaluate()` taper-divides in integers and truncates toward zero,
+              and while `tempo_mg == tempo_eg == 0` the tempo division truncates
+              `0 / 24` exactly and contributes nothing. Three divisions can round,
+              the model-versus-engine bound is 3 x 23/24 = 2.875, and
+              `test_eval_model`'s tolerance is 3. Fit tempo and the fourth
+              division rounds too: bound 3.833, tolerance 4. It has already
+              happened once -- S065's first fit put tempo at 39 / 21 and
+              `ctest -L fast` came back 9 of 12 on that guard and its four
+              pinned FENs.
+
+              Tempo's own verdict is **unresolved and was recorded as
+              unresolved**: S027's SPRT ran the full 3000 games and reached
+              neither bound, LLR -1.46 against -2.20, for -0.69 +/- 9.64. S100
+              added the size of the signal: the term's whole contribution to a
+              WDL label is the mean-outcome gap between White-to-move and
+              Black-to-move rows, measured at 0.007878 over 10795695 rows, which
+              at the corpus mean and K = 0.7624 is a 7.26 cp score difference
+              between the groups and a tempo weight near 3.6 cp. Confounded, and
+              not an Elo figure. Against it, S027's fit said mg 10 and S065's
+              unfrozen fit said mg 39.
+Decision:     **By the owner**: unfreeze tempo and pay the guard cost. S136 is
+              the step.
+
+              The tolerance moves 3 to 4 **from the arithmetic** and the four
+              pinned FENs are re-measured under the new weights with
+              `build/tools/truncation_scan`, DEC-057 having pre-authorised
+              exactly this re-targeting. **This is a re-derivation and not a
+              relaxation**, and the clause that has to survive the edit is the
+              non-vacuity one: the per-position threshold exists so a pinned
+              position genuinely exercises every division that can truncate, so
+              it moves from `> 2.0 = 48/24` to `> 2.875 = 69/24` for the same
+              reason the bound moves.
+
+              The fit is `--only tempo` and the label is **WDL-heavy,
+              `--lambda 0` stated rather than defaulted**, because a score-blend
+              label cannot teach a term the current evaluator scores at zero.
+              Bounds resolve single digits and are stated in advance.
+Rejected:     **Keep frozen and accept unresolved permanently.** Defensible on
+              the numbers -- a few centipawns of label-side signal, a run that
+              reached neither bound over 3000 games, and DEC-081 saying the
+              search block leads. Refused: the question has been open since S027
+              and the instrument that failed to resolve it has since got 1.67x
+              cheaper (S105).
+
+              **Defer to when S082's corpus lands.** Refused as a decision
+              though not as scheduling: the step sits in the evaluation block
+              regardless, so deferring the decision bought nothing.
+Consequences: `test_eval_model`'s tolerance, its four pinned FENs and its
+              non-vacuity threshold all move in the same commit as the weights,
+              and `truncation_scan` is what re-derives them. A second run that
+              reaches neither bound is recorded as unresolved **again** and the
+              term stays at zero; that is a legitimate outcome and S027's row is
+              its template.
