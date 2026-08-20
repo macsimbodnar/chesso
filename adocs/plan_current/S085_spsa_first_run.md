@@ -1,10 +1,14 @@
 id:         S085
-goal:       the first SPSA run, over the twenty search parameters that exist today, and an independent SPRT of what it returns
+goal:       the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, decided 2026-08-20, DEC-094 -- and an independent SPRT of what it returns
 accepts:    the run's parameter list, bounds, `c_end` per parameter, schedule constants, time control, opening book and game budget are written down before it starts and are not changed while it runs; the game budget is at least 30000 paired games or the run is not read at all; what it returns is rounded to the integers the shipping build uses and put through an SPRT of the **shipping** build against the commit before it, at a time control and an opening book the run did not use; the verdict is recorded whatever it is, including a rejection, and a rejected vector is kept in the step file rather than discarded
-touches:    src/search.cpp, src/evaluation.hpp, adocs/plan_done/ on completion
+touches:    src/search_params.hpp -- where the defaults have lived since S073, and where the
+            post-run edit lands; tools/spsa_s085.json, books/fetch_book.sh, adocs/data/,
+            adocs/plan_done/ on completion. The original line named src/search.cpp and
+            src/evaluation.hpp, which only consume the parameters; corrected 2026-08-20 as
+            the S085 third of plan_review F06, whose other two steps S141 owns
 excludes:   tuning the evaluation weights, which the Texel fit owns; adding parameters to the set, which is S073's; a second run, which is a new step if this one earns it
 decisions:  DEC-019, DEC-041, DEC-048, DEC-050
-closes:
+closes:     2026-08-20_plan_review-F09, 2026-08-20_plan_review-F18
 blocks:
 paused_by:
 done:
@@ -177,8 +181,15 @@ DEC-050), A = 250. Throughput arithmetic: S033 measured 1375 games/h at
 night**. 60k is a night and a day; start at 30k and let the trajectory argue
 for a bigger second run (a new step per excludes). Detached overnight
 (DEC-041), `SPSA-DONE`/`SPSA-FAILED` marker last, watcher via
-`python3 bin/moltke.py --watch <log> 'SPSA-(DONE|FAILED)' --ceiling 14h --pid <pid>`
-(ceiling 2x the budget, AGENTS.md par.12, DEC-061).
+`python3 <moltke>/bin/moltke.py --watch <log> 'SPSA-(DONE|FAILED)' --ceiling <2x budget> --pid <pid>`
+(AGENTS.md par.12, DEC-061). **`bin/moltke.py` does not exist in this
+repository** -- corrected 2026-08-20, F18: AGENTS.md par.12 writes the command
+that way but the tool ships with the plugin, at
+`~/.claude/plugins/cache/moltke/moltke/<version>/bin/moltke.py`, and the literal
+path in this sketch would have failed at arm time. What was actually armed:
+that path, `--ceiling 18h --pid 1458253 --interval 60`, against the frozen
+8.15 h budget -- 2.2x, so the 2x rule holds for the run as frozen rather than
+for the 7 h the sketch had assumed.
 
 ### 3. Implementation sketch
 

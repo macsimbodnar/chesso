@@ -5358,3 +5358,42 @@ Consequences: No tool may take an accepted `setoption` on trust until S137
               observability gaps are stated, and its `RfpMargin` node figures are
               load-bearing rather than illustrative: the probe compares against
               them.
+
+## DEC-094  2026-08-20  S085 tunes 12 of the 22 live search parameters, not the goal line's twenty
+Tags:         tuning, spsa, s085, s089, s127, s073, dec-019, dec-084, plan
+Context:      S085's goal line was written when the exposed set was ten and says
+              "the twenty search parameters that exist today". The live surface
+              at freeze time is **22** (`src/search_params.hpp`): 13
+              search-shape parameters and the 9 `Tm*` entries S089 added after
+              the goal was written. So the goal's letter named a number that was
+              never the surface, and the 2026-08-20 plan_review filed it as
+              F09.
+
+              The step's own research section left the choice open for freeze
+              time and set out three options: all 22, the 13 search-shape, or
+              the 13 less `OrderHistoryMax`.
+Decision:     **12.** The nine `Tm*` parameters are excluded: they are the
+              published time-control-overfit family -- one record measures an
+              SPSA-tuned time manager at +23.8 Elo at 20+0.2 and **-22.9 at
+              10+0.1** -- and this run deliberately tunes at a control its
+              verification does not share, which is the worst regime for them.
+              They also carry the only fresh SPRT in the set behind their
+              current values (S089, H1 accepted 2026-08-18), and S127 retunes
+              everything at the S105 control after the search block.
+              `OrderHistoryMax` is excluded because it binds only when history
+              saturates (`src/search.cpp:752`), so it random-walks, and a
+              meaningless endpoint would land in the shipping vector the SPRT
+              judges. SPSA costs two objective evaluations per iteration
+              whatever the width, so dropping it saves no games -- it removes a
+              noise axis from the answer.
+
+              The goal line is amended to say what is frozen rather than left
+              to be contradicted by the stamp.
+Why:          A tuned time-management value is worth Elo at the control it was
+              tuned at and can be worth negative Elo elsewhere, and this run's
+              control is chosen for throughput rather than for shipping.
+Rejected:     All 22 -- the goal line's letter, and Kiiski co-tuned up to 35
+              variables -- because it buys TM values tuned at 2+0.02 for an
+              engine that plays every control, and it muddies the rejection
+              analysis if the SPRT says no. The 13 including
+              `OrderHistoryMax` -- rejected for the noise-axis reason above.
