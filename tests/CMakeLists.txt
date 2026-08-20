@@ -73,6 +73,16 @@ target_include_directories(test_tuner_groups PRIVATE ../tools)
 add_doctest_target(test_tuner_split)
 target_include_directories(test_tuner_split PRIVATE ../tools)
 
+# S100: the fit's two unchecked halves -- that the columns load() packs are the
+# columns evaluate_position() reads, and that gradient() is the derivative of
+# the error it descends. Nothing in tests/ could name either until S100 moved
+# dataset_t, load(), evaluate_position(), error_range() and gradient() out of
+# tools/tuner.cpp's anonymous namespace into tools/tuner_model.hpp. Its corpus
+# is a fixture it writes into the temp directory from the same curated FEN list
+# test_eval_model runs over, so it is a fast test like the rest.
+add_doctest_target(test_tuner_gradient)
+target_include_directories(test_tuner_gradient PRIVATE ../tools)
+
 # S075: the label the tuner fits against is now a blend of the game result and
 # datagen's score column, and `--lambda 0` has to be the pre-S075 fit bit for
 # bit. Needs no dataset -- it is arithmetic and one parser -- so it is a fast

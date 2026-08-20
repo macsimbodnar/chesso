@@ -55,6 +55,22 @@ static constexpr int piece_values_abs[] = {
 // almost nothing: the piece-square table has already paid for it. Reading
 // bucket 5 as "a passed pawn on the seventh is worth 2 centipawns" is the same
 // mistake as reading a pawn's fitted value of 83 as what a pawn is worth.
+//
+// **S100 proved that for bucket 5 and it is stronger than a residual.** A pawn
+// on its own seventh rank is a passer by *definition* -- "ahead" is the enemy
+// back rank and the extraction refuses a pawn standing there -- and in the
+// mirrored indexing it always occupies one of squares 8..15. So this bucket
+// *is* the signed sum of eight psqt[PAWN] columns: R^2 exactly 1.000000, 0
+// violations in 550880 non-zero corpus rows. It is an exact linear dependency,
+// not a correlation, so in a joint fit the split is an unidentified direction
+// and only the sum psqt[pawn][8..15] + passed_pawn[5] means anything. The
+// evidence that this is what happened: across three real fits buckets 0 to 4
+// move by at most 4 while bucket 5 reads +22, -1 and -17 -- a 39-point spread
+// that changes sign twice. A synthetic-label run makes it explicit: planted
+// {7,14,21,33,48,66}, the joint fit returns {7,14,21,33,48,24} at train error
+// exactly 0, and
+// `--only passed_pawns` returns all six exactly. Refit frozen-base, report the
+// sum.
 // Knight mobility fitted to nothing against this same effect at S034, DEC-040,
 // and DEC-044 records it for king safety's attacker counts.
 //
@@ -196,6 +212,30 @@ enum
 // already being better rather than a cause of becoming so. Reducing squared
 // error on that corpus and playing better are different objectives, and this is
 // the first term where they came apart.
+//
+// **S100 diagnosed the zero and it is not a result about these features.**
+// Three of the four causes are excluded: the counts are right (all 10795695
+// corpus rows re-extracted, 0 disagreements), the gradient is the derivative of
+// the error (worst 4.9e-8 against finite differences over all 827 parameters),
+// and the pipeline recovers a planted vector end to end. What is left is the
+// measurement: **one bundled SPRT for four features** at `--fast` bounds
+// `elo0=0 elo1=10`, against published figures of +8.2 for the pair and +9.86
+// for a rook file retune -- bounds that cannot resolve either (DEC-063,
+// DEC-084). Then the weights were zeroed by hand and every fit since S065 has
+// held them there with `--freeze piece_placement` (DEC-057), so they have not
+// been fitted to zero, they have been held at it.
+//
+// **Three of the four are the real candidates and one is not a quantity.**
+// R^2 of each column on the tables that could absorb it: bishop pair 0.487,
+// rook open 0.265 and rook half-open 0.168, all far under redundancy -- so
+// those three carry signal the tables do not. `PL_ROOK_SEVENTH` is different in
+// kind: index 0 is a8 and a black piece mirrors by xor 56, so a rook on its own
+// seventh always lands on squares 8..15 and this column *is* the signed sum of
+// eight psqt_mg[ROOK] columns. R^2 exactly 1.000000, 0 violations in 1264773
+// non-zero rows. Only the sum psqt[rook][8..15] + placement[seventh] is
+// identified; a joint fit's value for the split is wherever the optimiser
+// stopped on a ridge. Refit it frozen-base or not at all, and never read the
+// split as a valuation.
 const int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
 const int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
 
@@ -579,6 +619,23 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 // If this is ever revisited it needs tighter bounds than `--fast` gives, and
 // 3000 games at 10+0.2 is already three hours. A term this small is a thing to
 // measure when there is a faster machine, not a thing to argue about.
+//
+// **S100 left this unresolved, which is the same verdict and more evidence.**
+// The extraction, the gradient and the recovery are all clean -- `--only tempo`
+// on a synthetic corpus gets a planted 23/12 back exactly -- and the corpus
+// carries both sides to move, so there is nothing wrong with the machinery.
+// What S100 added is the size of the signal. Tempo's entire contribution to a
+// WDL label is the gap between the mean outcome of White-to-move and
+// Black-to-move rows, and over 10795695 rows that gap is **0.007878** (0.556559
+// against 0.548682). At the corpus mean and K = 0.7624 the sigmoid slope is
+// 0.00108502 per centipawn, so the gap is a 7.26 cp score difference between
+// the groups and a tempo weight near 3.6 cp. Confounded -- the two groups
+// differ in more than whose move it is, and datagen skips in-check positions,
+// which removes rows correlated with the mover standing worse -- so it is the
+// size of what is available, not a prediction. Against it, S027's --only fit
+// said mg 10 and the unfrozen S065 fit said mg 39: a fourfold disagreement on a
+// few centipawns of signal. Re-measuring this needs a WDL-heavy label and
+// bounds that can resolve single digits, not another 3000 games at --fast.
 const int tempo_mg = 0;
 const int tempo_eg = 0;
 

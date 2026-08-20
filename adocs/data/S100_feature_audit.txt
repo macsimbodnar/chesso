@@ -1,0 +1,35 @@
+corpus .tuning/selfplay_v2_dedup.tsv, 10795695 rows
+columns: 10795695 rows re-extracted, 0 disagreements
+identities: rook seventh == signed rook occupancy of squares 8..15: 1264773 rows non-zero, 0 violations
+identities: passer bucket 5 == signed pawn occupancy of squares 8..15: 550880 rows non-zero, 0 violations
+
+occurrence: percent of rows with a non-zero differential
+column                  all        0      1-4      5-8     9-12    13-16    17-20    21-24
+rows (millions)       10.80     0.05     1.87     2.21     1.33     0.96     1.29     3.08
+passer bucket 0       11.90    12.20    11.72    18.52    18.47    15.71    11.61     3.32
+passer bucket 1       11.69    16.35    15.66    20.20    16.77    12.83     8.57     1.83
+passer bucket 2       17.05    31.47    28.12    29.36    21.03    15.30    10.71     2.71
+passer bucket 3       14.47    27.76    25.20    22.42    15.94    12.61    10.45     3.64
+passer bucket 4        9.47    13.52    19.44    14.85     9.31     7.00     5.72     1.88
+passer bucket 5        5.10     3.43    11.50     8.89     4.80     3.22     2.16     0.47
+bishop pair           15.81     0.00     2.73     6.99    18.41    24.66    27.01    21.77
+rook open             31.38     0.00    35.43    47.72    46.40    38.76    31.40     8.86
+rook half-open        31.26     0.00    14.29    30.13    41.79    39.74    46.46    29.33
+rook seventh          11.72     0.00    15.22    26.52    16.68     8.21     5.30     0.77
+
+tempo: 5437085 rows White to move, mean result 0.556559
+tempo: 5358610 rows Black to move, mean result 0.548682
+tempo: gap 0.007878, White relative
+
+collinearity: R^2 of a term column on the piece-square columns it overlaps, 203693 rows (every 53th)
+bishop pair        R^2 0.486761  on bishop psqt, 64 columns
+rook open          R^2 0.265313  on rook+pawn psqt, 128 columns
+rook half-open     R^2 0.168362  on rook+pawn psqt, 128 columns
+rook seventh       R^2 1.000000  on rook psqt, 64 columns
+passer bucket 0    R^2 0.215745  on pawn psqt, 64 columns
+passer bucket 1    R^2 0.201678  on pawn psqt, 64 columns
+passer bucket 2    R^2 0.290187  on pawn psqt, 64 columns
+passer bucket 3    R^2 0.270118  on pawn psqt, 64 columns
+passer bucket 4    R^2 0.620476  on pawn psqt, 64 columns
+passer bucket 5    R^2 1.000000  on pawn psqt, 64 columns
+AUDIT-DONE

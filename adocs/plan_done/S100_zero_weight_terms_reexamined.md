@@ -7,7 +7,7 @@ decisions:  DEC-071, DEC-063
 closes:
 blocks:
 paused_by:
-done:
+done:      2026-08-20. Diagnosis, no weight shipped. Extraction, gradient and pipeline excluded for all six symptoms: 10795695 rows re-extracted for 0 disagreements, worst finite-difference error 4.9e-8 over all 827 parameters, a planted vector recovered at train error 0.000000 with 18 of 22 identified term parameters exact. Two symptoms are exact degeneracies, R^2 1.000000 with 0 violations in 1264773 and 550880 rows, and their splits are unidentified; the other four were never separately measured, three sharing one bundled SPRT at bounds that cannot resolve them and tempo reaching neither bound. Coverage refuted at 5.10 to 31.38 %, the correlation form recorded unresolved. One real defect found and fixed: three passed pawn middlegame parameters had no gradient from the test corpus at all. Fast suite 17 of 17 green, format clean, evaluation.cpp object code bit-identical.
 
 ## Why they are worth re-asking
 
@@ -289,3 +289,245 @@ unresolved, distinct from zero — tempo's S027 row is the template.
 - https://github.com/TerjeKir/weiss — commit messages 8bf33fde97 (Tempo #241, +12.99), b95caf73d1 (Tune Rook+Queen #231, +9.86); no source read.
 - https://github.com/lynx-chess/Lynx — PR #390 body (bishop pair +8.2/+9.5); no source read.
 - https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md — the Stash ledger entries the plan cites; prose only.
+author:    Maksym Bodnar
+
+
+## The diagnosis, 2026-08-20
+
+The step's product. Six symptoms, four candidate causes, one verdict per pair,
+with the evidence beside it. Unresolved is recorded as unresolved. **Nothing
+play-altering ships: all ten frozen parameters stay at zero and the compiler
+still deletes both terms.** No SPRT was run and none is owed.
+
+Headline: **the pipeline is exonerated and the pattern has two different
+explanations, not one.** Two of the six symptoms are exact algebraic
+degeneracies and their zeros carry no information at all. The other four were
+never separately measured — three of them shared one bundled SPRT under bounds
+that cannot resolve their published effect size, and the fifth reached neither
+bound. One real defect was found, in the test corpus rather than in the fit, and
+fixed here.
+
+### D0. What "zero" is, per term
+
+Not one thing. Three different states wear the same value.
+
+| symptom | S027 fit | S027 verdict | since S065 | unfrozen on the current corpus |
+|---|---|---|---|---|
+| bishop pair | mg 2, eg 55 | one bundled SPRT, −5.48 +/− 11.46, H0 | frozen | mg 25, eg 93 |
+| rook open | mg 32, eg −8 | same bundle | frozen | mg 72, eg −19 |
+| rook half-open | mg 8, eg 12 | same bundle | frozen | mg 25, eg 35 |
+| rook seventh | mg −26, eg 11 | same bundle | frozen | mg −6, eg 22 |
+| tempo | mg 10, eg 0 | **unresolved**, −0.69 +/− 9.64, LLR −1.46 vs −2.20 | frozen | mg 39, eg 21 |
+| passer bucket 5 | — | never separately measured | **not frozen, fitted** | see below |
+
+So four of the six carry a bundled H0, one carries no verdict at all, and all
+five have been **held** by `--freeze tempo,piece_placement` in every fit since
+S065 (DEC-057) rather than fitted to zero. The zeros were never a fit output.
+
+**A record correction.** The body reads `passed_pawn_mg[5] = −17` as a fit
+result. It is one of three, and the three do not agree:
+
+| bucket | S065 unfrozen | S065 frozen, re-anchored | S076, shipped | spread |
+|---|---|---|---|---|
+| 0 | −4 | −2 | 0 | 4 |
+| 1 | −8 | −6 | −6 | 2 |
+| 2 | −1 | −1 | −4 | 3 |
+| 3 | 22 | 22 | 19 | 3 |
+| 4 | 58 | 61 | 59 | 3 |
+| **5** | **+22** | **−1** | **−17** | **39** |
+
+Five buckets stable to within 4 across three fits; the sixth moves by 39 and
+changes sign twice. That is a parameter nothing constrains, and D4 says why.
+The shipped vector is S076's fit on the deduplicated corpus (commit `77d7450`),
+not S065's — `.tuning/` holds S065's emitted headers and S076's is gone, which
+is the `.tuning/` durability item already parked in `status.md`.
+
+### D1. Feature extraction — **refuted for all six**
+
+- **Corpus path.** `build/tools/feature_audit` re-extracts all 27 feature
+  columns from the FEN text of every row and compares against what `load()`
+  stored: **10795695 rows, 0 disagreements** (`adocs/data/S100_feature_audit.txt`).
+- **Dataset path.** `tests/test_tuner_gradient.cpp` holds the same comparison
+  per column, per row, plus the piece list, the offsets and the phase, as a fast
+  test. This is the guard that did not exist; the whole loader was unreachable
+  from `tests/`.
+- **Hand cases.** The accepts asked for an independent count test per term. The
+  audit found the existing ones adequate rather than circular: per-colour
+  hand-computed placement cases at `tests/test_eval_model.cpp:1015-1130`, an
+  engine differential sweep at `:933-958`, and non-vacuity counts at `:966-1000`.
+  The body's "circular guard" sentence undersold what was there. Tempo has no
+  count to check and never did — what stands in for it is the corpus carrying
+  both sides to move, which is asserted.
+
+None of this checks what a feature *means*: the re-extraction calls the same
+extractors, so a wrong definition agrees with itself. The engine differential and
+the hand cases are what hold the definitions, and they are green.
+
+### D2. The gradient — **refuted, and it found a defect**
+
+`gradient()` against central differences of `error_range()` for **all 827
+parameters**: worst relative error **4.9e-8** against a 1e-6 tolerance. `h = 0.01`
+was measured rather than picked — the sweep traces the O(h²) truncation law down
+to the cancellation floor near 0.005, and the first draft at h = 0.5 failed at
+5.7e-4 on `mobility_eg[2]` for exactly that reason.
+
+The one place `gradient()` is deliberately not the derivative is the lazy clamp,
+and that is now pinned from both sides: at the shipped constants the clamp binds
+on no fixture row, and with the king safety weights pushed +40 it binds on 3 of
+34, where the clamped block disagrees by 1.61 while everything outside it stays
+at 1.5e-7. The six symptoms all live outside the clamp.
+
+**The defect.** Non-vacuity — a parameter with no gradient is confirmed for
+free — turned up red on `PP_MG[2]`, `PP_MG[4]` and `PP_MG[5]`. Every position in
+the curated test corpus reaching passer buckets 2, 4 or 5 is a bare-pawn endgame
+at phase 0, so `mg_weight` is exactly 0 there and three of the twelve passed pawn
+parameters had no gradient at all — while every *count* column was covered, so no
+count test could see it. Four positions were added to
+`tests/test_eval_positions.hpp`, taking the term parameters to 54 of 54 and the
+occupied piece-square columns from 149 to 158. It is a test-corpus defect, not a
+fit defect; the real corpus reaches those buckets at every phase (D5).
+
+### D3. End-to-end recovery — **refuted, on every clause**
+
+Labels replaced by `sigmoid(K * model_score)` at planted non-zero weights over a
+203693-row strided slice, then fitted by the real `tuner` from the shipped start
+with freeze off.
+
+The joint fit reached **train error 0.000000** and recovered **18 of the 22
+identified term parameters exactly**: `passed_pawn_mg` planted
+`{7, 14, 21, 33, 48, 66}` came back `{7, 14, 21, 33, 48, 24}`,
+`piece_placement_mg` `{28, 17, 9, 13}` came back `{28, 17, 9, 5}`, tempo 23/12
+came back exactly.
+
+**Every single deviation is a documented null direction.** The four that miss are
+the two seventh-rank ones D4 proves. The tables came back uniformly shifted —
+pawn −5 per square against `PAWN +5`, rook −3 against `ROOK +3`, the
+material↔table degeneracy `tools/tuner.cpp:36-40` already names — so the
+seventh-rank **sums** are exact to the unit once that shift is added back, which
+is precisely the pass criterion this step set in advance.
+
+Frozen-base runs confirm the mechanism: `--only passed_pawns` recovers all twelve
+**exactly, bucket 5 included**, because holding the table resolves the
+degeneracy. `--only tempo` exact. `--only piece_placement` within ±1 on 3 of 8 at
+residual 0.000003, patience stopping the run one unit short.
+
+So a zero this pipeline returns is a result about the data, not an artefact.
+
+### D4. Collinearity — **confirmed exactly for two symptoms, refuted for four**
+
+Two exact identities, proven from the indexing and then checked on every row
+rather than argued. Index 0 is a8 and a black piece mirrors by `^56`, so a rook
+or pawn on its own seventh rank always lands on squares 8..15:
+
+| identity | rows non-zero | violations |
+|---|---|---|
+| rook seventh == signed rook occupancy of 8..15 | 1264773 | **0** |
+| passer bucket 5 == signed pawn occupancy of 8..15 | 550880 | **0** |
+
+R² of each term column on the tables that could absorb it, 203693 rows. The rook
+file features are regressed on **rook + pawn** columns, not rook alone, because
+an open file is a statement about the pawns as much as the rook:
+
+| column | R² | on |
+|---|---|---|
+| **rook seventh** | **1.000000** | rook, 64 columns |
+| **passer bucket 5** | **1.000000** | pawn, 64 columns |
+| passer bucket 4 | 0.620476 | pawn, 64 |
+| bishop pair | 0.486761 | bishop, 64 |
+| passer bucket 2 | 0.290187 | pawn, 64 |
+| passer bucket 3 | 0.270118 | pawn, 64 |
+| rook open | 0.265313 | rook+pawn, 128 |
+| passer bucket 0 | 0.215745 | pawn, 64 |
+| passer bucket 1 | 0.201678 | pawn, 64 |
+| rook half-open | 0.168362 | rook+pawn, 128 |
+
+The two 1.000000 rows are the regression validating itself against algebra
+already proven. Everything else is far under the 0.99 the step set as the
+redundancy threshold, on the *widest* right-hand side the model can offer.
+
+**Consequence, and it is the operative one.** For rook-on-the-seventh and passer
+bucket 5 only the **sums** `psqt[rook][8..15] + placement[seventh]` and
+`psqt[pawn][8..15] + pp[5]` are identified. A joint fit's value for either is a
+position on a ridge, chosen by the optimiser's path — which is exactly the 39-point
+spread in D0's table, and why `passed_pawn_mg[5] = −17` is not a statement about
+pawns and must not be read as one (DEC-023). Reading it as one is the mistake the
+body was about to make.
+
+### D5. Corpus composition
+
+**Coverage form — refuted for all six.** Every column is non-zero on 5.10 % to
+31.38 % of rows, three orders above starvation, and the per-phase-band table in
+`adocs/data/S100_feature_audit.txt` has no desert either: the thinnest live cell
+is bishop pair at 2.73 % in band 1–4, and the zeros in the phase-0 column are
+structural — a board with a bishop or a rook on it is not at phase 0.
+
+**Correlation form — unresolved, and recorded as unresolved.** The corpus is
+chesso's own self-play and chesso values four of these terms at zero weight; a
+feature the engine never plays for generates positions where it does not
+discriminate. Neither counting nor collinearity can decide that, and nothing here
+does. It is the documented failure mode (CPW's self-play caution, Blunder's
+mobility) and it is what S082's relabel at the resolved leaf and S083's rescale
+are for.
+
+**Tempo's label-side signal, measured.** Tempo's whole WDL signal is the gap
+between the mean outcome of white-to-move and black-to-move rows:
+
+```
+5437085 rows White to move, mean result 0.556559
+5358610 rows Black to move, mean result 0.548682
+gap 0.007878, White relative
+```
+
+At the corpus mean (0.552649) and K = 0.7624 the sigmoid slope is 0.00108502 per
+centipawn, so that gap corresponds to a **7.26 cp** score difference between the
+two groups and a tempo weight near **3.6 cp**. Confounded — the groups differ in
+more than whose move it is, and `datagen` skips in-check positions, which removes
+rows correlated with the mover standing worse — so this is the size of the signal
+available, not a prediction. Against it, S027's `--only tempo` fit produced mg 10
+and the unfrozen S065 fit mg 39: a fourfold disagreement on a term whose label-side
+signal is a few centipawns.
+
+### D6. The verdict ledger
+
+| symptom | extraction | gradient / pipeline | coverage | collinearity | measurement procedure | verdict |
+|---|---|---|---|---|---|---|
+| bishop pair | refuted | refuted | refuted, 15.81 % | refuted, R² 0.487 | **confirmed** — one bundled SPRT at `--fast` bounds against a published +8.2 | **never measured.** The strongest refit candidate: identified, not redundant, compile-free, largest fitted weight |
+| rook open | refuted | refuted | refuted, 31.38 % | refuted, R² 0.265 | **confirmed** — same bundle | **never measured**, and its speed cost is real (3.1–4.0 % shared with the two below) |
+| rook half-open | refuted | refuted | refuted, 31.26 % | refuted, R² 0.168 | **confirmed** — same bundle | **never measured** |
+| rook seventh | refuted | refuted | refuted, 11.72 % | **confirmed exactly**, R² 1.000000, 0 violations in 1264773 rows | confirmed — same bundle | **not identified.** Its split from the rook table is a ridge position. Only the sum means anything |
+| tempo | refuted | refuted | n/a, both sides present | n/a, not a board feature | **confirmed** — reached neither bound | **unresolved, not zero**, as S027 recorded. New: the label-side signal is ~3.6 cp, and two fits of it disagree fourfold |
+| passer bucket 5 | refuted | refuted | refuted, 5.10 % | **confirmed exactly**, R² 1.000000, 0 violations in 550880 rows | never measured alone | **not identified.** −17 is a ridge position, not a valuation. Three fits span 39 points where every other bucket spans ≤ 4 |
+
+**Cause 1 (extraction) and the pipeline are excluded for all six.** Cause 2's
+coverage form is excluded for all six; its correlation form is open for all six
+and is S082/S083's to answer. Cause 3 (a real zero) is the answer for **none** of
+them yet, because for four the measurement never happened and for two the
+quantity measured was not identified. Cause 4, measurement procedure — the fourth
+candidate the technical section added — is **the operative cause of the pattern**.
+
+### What follows, for the steps that consume this
+
+1. **The freeze has to be re-decided.** `--freeze tempo,piece_placement`
+   (DEC-057) rests on S027's verdict, and that verdict is procedural. A decision
+   is owed; this step does not take it and ships nothing.
+2. **Two parameters may never be fitted jointly and read as values.** Any refit
+   of rook-on-the-seventh or passer bucket 5 is frozen-base (`--only`), and any
+   ledger row about them names the sum or the frozen-base residual. S133's
+   king-relative tables re-shape the degeneracy without removing it: any table
+   with per-square pawn and rook entries keeps it.
+3. **The first refit is bishop pair alone**, which is S027's own untested
+   candidate and now has the evidence behind it. Then the two rook file features,
+   whose speed cost has to be inside their own verdict.
+4. **Bounds, not effort.** Published seeds for these are +8.2 and +9.86 (DEC-084,
+   order of magnitude only). `--fast` at `elo0=0 elo1=10` cannot resolve that, and
+   DEC-063 is the measurement: the same constant took 6 h 36 m for no verdict at
+   one bound pair and 1 h 41 m for H1 at another.
+5. **S082 gets two inputs.** The per-phase occurrence table and the tempo gap are
+   corpus-preparation evidence, and both re-run on the new corpus with the same
+   tool. And the label note stands: a score-blend label cannot teach a term the
+   current evaluator scores at zero, so a refit of these six wants WDL-heavy
+   labels.
+6. **`feature_audit` and `test_tuner_gradient` are the durable products.** The
+   corpus is about to be replaced; D1–D3 are corpus-independent, D4's identities
+   are definitional, and D4's R² and all of D5 are one command on whatever corpus
+   S082 and S083 produce.

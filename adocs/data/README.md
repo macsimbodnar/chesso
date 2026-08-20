@@ -479,3 +479,9 @@ game.
 The two `rating_2026-08-18_*` files are one character apart in the middle of a
 long name and report different numbers from the same engine — 2570 over four
 engines, 2559 over five. `_S088_` is the current one.
+
+### S100, the corpus feature audit
+
+| file | what it is |
+|---|---|
+| `S100_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` over all 10795695 rows, 2026-08-20. Four reports: every stored feature column re-extracted from the FEN text (**0 disagreements**), the two exact seventh-rank piece-square identities (**0 violations** in 1264773 and 550880 non-zero rows), per-column occurrence whole-corpus and by phase band, and R² of each term column on the tables that could absorb it — **rook seventh and passer bucket 5 at 1.000000, everything else 0.168 to 0.621**. The tempo lines are the term's whole label-side signal: mean result 0.556559 with White to move against 0.548682 with Black, gap 0.007878. Kept because it is the evidence behind S100's verdict ledger and because the corpus it describes is about to be replaced by S082 and S083; re-running it on the new corpus is one command |

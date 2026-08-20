@@ -342,6 +342,29 @@ a script that aborts before that point exits non-zero. It exists because
 `44877c4` left a renamed variable behind and the harness stopped running for a
 commit without anything noticing (S035, `2026-08-13_adversarial-F01`).
 
+`test_tuner_gradient` is the fit's own guard and covers two things nothing in
+`tests/` could reach before S100: that the columns `load()` packs are the columns
+`evaluate_position()` reads, and that `gradient()` is the derivative of the error
+it descends. All of `dataset_t`, `load()`, `evaluate_position()`, `error_range()`
+and `gradient()` lived in an anonymous namespace inside `tools/tuner.cpp`, so no
+test could name them; S100 moved them to `tools/tuner_model.hpp` for exactly this
+and the fit is unchanged — `tuner` over the same corpus at the same seed, thread
+count and epoch budget prints identical epoch reports and emits all 827 constants
+bit for bit. Its corpus is a fixture it writes into the temp directory from the
+same curated FEN list `test_eval_model` runs over, so it needs no dataset.
+
+The gradient check is Jon Dart's prescription: central differences against
+`gradient()` for all 827 parameters, tolerance 1e-6 relative. `h = 0.01` is
+measured and a comment in the file carries the sweep — the error follows the
+O(h²) truncation law down to a cancellation floor near 0.005, and h = 0.5 fails
+at 5.7e-4 on a mobility weight because mobility counts reach the tens. Two things
+it deliberately establishes rather than assumes: that the lazy clamp binds on no
+fixture row at the shipped constants, since `gradient()` ignores that clamp by
+design, and that **every one of the 54 term parameters has a gradient to check**
+at all. The second is what found a real gap — three passed pawn middlegame
+weights had none, because every position reaching their buckets was a phase-0
+endgame, and a feature-count test cannot see that.
+
 `tools/plan_prose_check.py` is a plan-hygiene check and is **not** in the suite:
 
 ```bash
@@ -1260,6 +1283,86 @@ positions `tests/test_eval_model.cpp` pins for the truncation bound, which
 belong to the weights and not to the positions (DEC-057): S065's four fell to
 between 0.08 and 1.83 under S076's constants, and 30 of the 10795695 rows reach
 the 2.875 maximum instead. Expect both on the next fit.
+
+### Audit what a corpus contains, per feature
+
+S100. Five evaluation terms shipped at zero and one passer bucket fitted below
+the bucket beneath it, and five terms at exactly zero is a pattern rather than
+five results. This is the tool that answers the corpus half of why.
+
+```bash
+build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000
+```
+
+Four reports off one load, each switchable off with `--no-columns`,
+`--no-identities`, `--no-occurrence`, `--no-collinearity`. About 4 minutes over
+10.8 M rows on 12 threads, most of it the load. `adocs/data/S100_feature_audit.txt`
+is the run S100 read.
+
+- **columns** re-extracts every stored feature column from the FEN text and
+  compares it against what `load()` kept: **10795695 rows, 0 disagreements**. It
+  calls the same extractors `load()` calls, so it is not a check of what a
+  feature *means* — `tests/test_eval_model.cpp` holds those against the engine's
+  own counts and against hand-computed placements. What it catches is a
+  misaligned base, a wrong stride, or a column pair stored in the other order.
+- **identities** checks two dependencies that are exact by construction. Index 0
+  is a8 and a black piece mirrors by `^56`, so a rook or a pawn on its own
+  seventh rank always lands on squares 8..15: the rook-on-the-seventh column *is*
+  the signed sum of eight rook piece-square columns, and passer bucket 5 *is* the
+  signed sum of eight pawn ones — a pawn on its seventh is a passer by
+  definition, because "ahead" is the enemy back rank and
+  `tools/eval_model.hpp:596` refuses a pawn standing there. **0 violations** in
+  1264773 and 550880 non-zero rows.
+- **occurrence** reports the share of rows where each column is non-zero, whole
+  corpus and by phase band. Split by band because a column can be well covered
+  overall and empty in the band whose weight it is: phase 0 has `mg_weight`
+  exactly 0, so a middlegame weight gets no gradient at all from those rows.
+  That is not hypothetical — it is what put three passed pawn parameters out of
+  reach of the whole test corpus until S100 added four positions.
+- **collinearity** regresses each term column on the piece-square columns that
+  could absorb it and prints R². The rook file features get **rook + pawn**
+  columns, 128 in all, because an open file is a statement about the pawns as
+  much as about the rook. Measured: rook seventh and passer bucket 5 at
+  **1.000000**, everything else between 0.168 and 0.621 — so the two exact
+  identities are the only redundancy, and the regression validating itself
+  against algebra already proven is the point of running it on them.
+
+`--plant` is the other half, and it is a writer rather than a report:
+
+```bash
+build/tools/feature_audit --data slice.tsv --plant planted.tsv \
+    --plant-group passed_pawns --no-columns --no-identities \
+    --no-occurrence --no-collinearity
+
+build/tools/tuner --data planted.tsv --out recovered.hpp \
+    --threads 12 --epochs 20000 --only passed_pawns
+```
+
+It copies the corpus with the result column replaced by
+`sigmoid(K * model_score)` at planted non-zero weights, so the labels come from a
+parameter vector that is known. A fit that cannot get it back has a defect; a fit
+that can has its pipeline vouched for end to end. Every planted number is printed
+into the run's own log and comes from nowhere outside this repository.
+
+**`--plant-group` matters and is not decoration.** `--only GROUP` holds every
+other parameter at what the engine ships, so a plant that moved three groups
+against a fit that frees one leaves the freed group absorbing the other two — a
+real disagreement with the planted vector that says nothing about the pipeline.
+Plant one group, free exactly that group. `all` is for the joint fit.
+
+What S100's four runs found: the joint fit reached **train error 0.000000** and
+returned 18 of the 22 identified term parameters exactly, with every deviation
+inside a documented null direction — the two seventh-rank ones above, plus the
+material-against-table one `tools/tuner.cpp:36-40` names, which showed up as the
+pawn table uniformly 5 low against `PAWN` 5 high. `--only passed_pawns` recovers
+all twelve exactly, bucket 5 included, because holding the table resolves the
+degeneracy.
+
+**Two parameters cannot be fitted jointly and read as values.** Only the sums
+`psqt[rook][8..15] + placement[seventh]` and `psqt[pawn][8..15] + pp[5]` are
+identified. Across three real fits on two corpora, passer buckets 0 to 4 moved by
+at most 4 and bucket 5 moved by 39 and changed sign twice — the ridge, not the
+pawns. A refit of either is frozen-base, and the ledger row names the sum.
 
 ### What an emitted table says it came from
 

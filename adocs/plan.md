@@ -177,10 +177,30 @@ rebuilt, S121 and S122, and neither had a step.
 Bishop pair, rook on an open file, rook on a half-open file, rook on the
 seventh, and tempo. Published fits of the same terms measure +16.7, +4.2, +9.2
 and +12.99. `passed_pawn_mg` is the fourth data point: `{0, -6, -4, 19, 59,
--17}`, seventh rank fitted below sixth and negative. Whatever causes it is also
-acting on the other 817 constants, so **S100 is a diagnostic and goes early**;
-its per-term refits follow in the evaluation block once the corpus they would
-be fitted on exists.
+-17}`, seventh rank fitted below sixth and negative. Whatever causes it might
+also be acting on the other 817 constants, so **S100 is a diagnostic and goes
+early**; its per-term refits follow in the evaluation block once the corpus they
+would be fitted on exists.
+
+**S100 answered it on 2026-08-20, and the premise above was half wrong.**
+Nothing is acting on the other 817 constants: the extraction, the gradient and
+the whole fit pipeline are clean, checked over all 10795695 corpus rows, against
+finite differences on all 827 parameters, and by recovering a planted vector end
+to end. The pattern has two causes and neither is a defect. **Two of the six
+symptoms are exact algebraic degeneracies** — rook-on-the-seventh against
+`psqt[rook][8..15]` and passer bucket 5 against `psqt[pawn][8..15]`, R² exactly
+1.000000 — so their split from the tables is not identified and `-17` is a ridge
+position rather than a valuation, which is why three fits put that one bucket at
++22, -1 and -17 while no other bucket moves by more than 4. **The other four were
+never separately measured**: three share one bundled SPRT at `--fast` bounds that
+cannot resolve their published effect size, tempo reached neither bound, and all
+five have been *held* at zero by `--freeze tempo,piece_placement` since S065
+rather than fitted to it. So the refits below are still owed, their shape is
+fixed — bishop pair alone first, frozen-base for the two degenerate ones, bounds
+that can resolve single digits — and **`--freeze tempo,piece_placement` (DEC-057)
+now rests on a verdict the diagnosis calls procedural, which is a decision the
+owner is owed.** `adocs/plan_done/S100_zero_weight_terms_reexamined.md` is the
+ledger.
 
 ## The order, in four blocks
 
@@ -299,7 +319,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-5. S053  testing.md's header states the checker's retention: a pruned plan entry takes its ledger rows with it
 6. S104  the release build targets the machine's instruction set and is profile-guided, so count_bits stops being a software popcount
 7. S105  fastchess.sh plays the surveyed engines' testing regime -- 8+0.08, Hash 16, a UHO-class unbalanced book -- and a behaviour-neutral change is accepted on an interleaved timing instead of a match
 8. S106  the transposition bound signs and the mate-score round trip are checked against a red test in both searches, not assumed
