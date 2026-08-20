@@ -6,9 +6,11 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-20 by `moltke --step status`.
 
 - Last done: S137
-- In progress: none
+- In progress: S085 the first SPSA run, over the twenty search parameters that exist today, and an independent SPRT of what it returns
 - Next: S085
 - Blocked: none
+- Watching:
+  - watching: SPSA-(DONE|FAILED) in /home/max/ws/chesso/.tuning/spsa_S085.log, ceiling 18h, armed 2026-08-20T19:24:25+02:00 (.git/moltke_watch/1787246665_1476278.json)
 - Parked:
   - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
     owner's instruction, 2026-08-20.** One research agent per pending step
