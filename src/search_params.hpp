@@ -48,17 +48,24 @@
      of checks recurses forever, since an evasion is not a capture and does    \
      not shorten the line. At 0 quiescence returns its stand-pat score and     \
      never generates, which is why the floor is 1. */                          \
-  X(MAX_QSEARCH_DEPTH, "MaxQsearchDepth", 8, 1, 64)                            \
+  X(MAX_QSEARCH_DEPTH, "MaxQsearchDepth", 19, 1, 64)                            \
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the deepest node the assumption is made  \
      at.                                                                       \
                                                                                \
-     Both are a first setting and neither is fitted: the margin is one pawn    \
-     per ply, the bound keeps the assumption to the last few plies where the   \
-     static score is close to what a search would return anyway. S033. */      \
-  X(RFP_MARGIN,        "RfpMargin",       75,     0, 2000)                     \
-  X(RFP_MAX_DEPTH,     "RfpMaxDepth",     6,      0, 63)                       \
+     Both were a first setting, one pawn per ply and the last few plies, and   \
+     **both are SPSA-tuned since S085**: 75 -> 63 and 6 -> 15 over 60000 games  \
+     at 2+0.02. The margin moved little. The depth bound moved a long way, and  \
+     it no longer means what the sentence above it meant: at 15 the assumption  \
+     is made at every depth this engine actually reaches -- median 11 at the    \
+     tuning control -- so reverse futility is now depth-unbounded in practice   \
+     rather than confined to the last few plies. That is what the tuner chose   \
+     and the mate tests still pass at it, but the bound has stopped being the   \
+     guard the comment describes, which is `RFP_MIN_PLY` and `beta < MATE_MIN`  \
+     below. S033 for the original derivation, S085 for the values. */           \
+  X(RFP_MARGIN,        "RfpMargin",       63,     0, 2000)                     \
+  X(RFP_MAX_DEPTH,     "RfpMaxDepth",     15,      0, 63)                       \
                                                                                \
   /* The top of the tree is searched properly. Ply 1 and ply 2 are exempt      \
      because a static bound returned there is what the root compares against   \
@@ -99,21 +106,26 @@
      Deeper searches can afford to give up more, since what is left is still   \
      enough to answer the question. A divisor of zero is a division by zero,   \
      which is the floor. */                                                    \
-  X(NULL_MOVE_BASE,    "NullMoveBase",    2,      0, 16)                       \
+  X(NULL_MOVE_BASE,    "NullMoveBase",    3,      0, 16)                       \
   X(NULL_MOVE_DIVISOR, "NullMoveDivisor", 6,      1, 64)                       \
                                                                                \
   /* The two coefficients of the late move reduction fit,                      \
      `r = LMR_BASE/100 + log(depth) * log(move_number) / (LMR_DIVISOR/100)`.   \
-     Hundredths because a UCI spin option is an integer and the fit is not:    \
-     75 and 225 are the 0.75 and 2.25 the table was built from, and both       \
-     divisions are exact in binary. Same floor reason as above. */             \
-  X(LMR_BASE,          "LmrBase",         75,     0, 400)                      \
-  X(LMR_DIVISOR,       "LmrDivisor",      225,    1, 2000)                     \
+     Hundredths because a UCI spin option is an integer and the fit is not.   \
+     75 and 225 were the 0.75 and 2.25 the table was built from, and both of   \
+     those divisions were exact in binary. **SPSA-tuned since S085**: 52 and   \
+     182, so 0.52 and 1.82, and neither is exact in binary any more. Nothing   \
+     depends on the exactness -- src/search.cpp:49-50 divides by 100.0 into a  \
+     double and the quotient is floored to a ply count -- but the old comment  \
+     claimed a property these values do not have, so it is withdrawn rather    \
+     than left standing. Same floor reason as above. */                        \
+  X(LMR_BASE,          "LmrBase",         52,     0, 400)                      \
+  X(LMR_DIVISOR,       "LmrDivisor",      182,    1, 2000)                     \
                                                                                \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \
-  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  150,    0, 2000)                     \
+  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
                                                                                \
   /* Aspiration windows. The root of an iteration is searched in a band around \
      the previous iteration's score instead of from -inf to +inf, and the band \
@@ -132,6 +144,14 @@
      a value there switches the feature off by making it inert rather than by  \
      saying so.                                                                \
                                                                                \
+     **SPSA-tuned since S085**, over 60000 games at 2+0.02: the first depth   \
+     5 -> 2, its arithmetic floor, where the tuner sat for 55.6 % of its       \
+     iterations; the half-width 50 -> 21, which is inside the 10 to 25 the     \
+     surveyed engines run and was arrived at knowing nothing about them; and   \
+     the stop 400 -> 437, which S021 measured as flat from 100 to 2000 and     \
+     left alone, so a 9 % move in it is consistent with flat and is not a      \
+     finding. What S021 measured, on the values S085 replaced:                 \
+                                                                               \
      Chosen by measurement, adocs/data/S021_aspiration_sweep.tsv: 300          \
      positions over three independent 100-position samples of                  \
      adocs/data/S018_raw.tsv, stratified by game_phase(), node counts at depth \
@@ -145,9 +165,9 @@
      ranking between settings is a property of the sample until the samples    \
      are pooled. Nodes at a fixed depth are not Elo, so what the sweep chose   \
      is what the SPRT then measured. S021. */                                  \
-  X(ASPIRATION_MIN_DEPTH, "AspirationMinDepth", 5,   2, 64)                    \
-  X(ASPIRATION_DELTA,     "AspirationDelta",    50,  1, 2000)                  \
-  X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 400, 1, 48000)                 \
+  X(ASPIRATION_MIN_DEPTH, "AspirationMinDepth", 2,   2, 64)                    \
+  X(ASPIRATION_DELTA,     "AspirationDelta",    21,  1, 2000)                  \
+  X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 437, 1, 48000)                 \
                                                                                \
   /* Time management. The clock is turned into an allocation for this move,    \
      and the allocation into two limits: a soft one that decides whether to    \

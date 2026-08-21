@@ -283,9 +283,12 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // than assumed -- see test_evaluation "the lazy shortcut cannot change a
 // decision".
 //
-// 150 is above the largest correction observed over 149084 positions of S028
-// self-play, where the tapered mobility term ran p50 19, p95 60, p99 81,
-// p99.9 107 and a maximum of 143 centipawns.
+// 184 since S085's SPSA run raised it from 150. Both are above the largest
+// correction observed over 149084 positions of S028 self-play, where the
+// tapered mobility term ran p50 19, p95 60, p99 81, p99.9 107 and a maximum of
+// 143 centipawns -- so the clamp still never binds on that corpus and the
+// shortcut's soundness argument is unchanged by the move. S039 re-decides this
+// number from measured spread and should expect the moved incumbent.
 //
 // It bounds the sum of every expensive term, not each one, so king safety now
 // shares the same budget. That figure is still the whole correction only

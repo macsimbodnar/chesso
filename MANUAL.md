@@ -122,18 +122,18 @@ of a refusal is the only confirmation the value was taken.
 | name | default | range | effect |
 |---|---|---|---|
 | `OrderHistoryMax` | 600000 | 0 to 899999 | ceiling on an accumulated history score. The upper bound keeps it under a killer move's 900000, which is what the ceiling is for |
-| `MaxQsearchDepth` | 8 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
-| `RfpMargin` | 75 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
-| `RfpMaxDepth` | 6 | 0 to 63 | the deepest node reverse futility pruning is applied at. 0 switches it off |
+| `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
+| `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
+| `RfpMaxDepth` | 15 | 0 to 63 | the deepest node reverse futility pruning is applied at. 0 switches it off |
 | `RfpMinPly` | 3 | 0 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly |
-| `NullMoveBase` | 2 | 0 to 16 | the constant part of the null move reduction |
+| `NullMoveBase` | 3 | 0 to 16 | the constant part of the null move reduction |
 | `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
-| `LmrBase` | 75 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 75 is 0.75 |
-| `LmrDivisor` | 225 | 1 to 2000 | late move reduction, the divisor of the log term, in hundredths. 225 is 2.25 |
-| `LazyEvalMargin` | 150 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
-| `AspirationMinDepth` | 5 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
-| `AspirationDelta` | 50 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
-| `AspirationMaxDelta` | 400 | 1 to 48000 | where widening stops doubling and the iteration is repeated with the full window instead |
+| `LmrBase` | 52 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 52 is 0.52 |
+| `LmrDivisor` | 182 | 1 to 2000 | late move reduction, the divisor of the log term, in hundredths. 182 is 1.82 |
+| `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
+| `AspirationMinDepth` | 2 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
+| `AspirationDelta` | 21 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
+| `AspirationMaxDelta` | 437 | 1 to 48000 | where widening stops doubling and the iteration is repeated with the full window instead |
 | `TmSoftPercent` | 60 | 1 to 100 | time management: the soft limit, as a percentage of the allocation for this move. Another iteration is begun only below it |
 | `TmHardPercent` | 300 | 100 to 1000 | the hard limit, as a percentage of the same allocation. A timer is armed at it and it stops the search inside an iteration. Never above what the clock has |
 | `TmSuddenDeathPercent` | 5 | 1 to 100 | with no `movestogo` on the `go` line, the share of the remaining clock the allocation starts from |

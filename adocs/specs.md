@@ -331,7 +331,7 @@ The order stands.
 - **The lazy-evaluation clamp is the ceiling on how much the evaluation is
   allowed to say, and no step addressed that until 2026-08-19.**
   `evaluate_expensive()` clamps mobility **plus** king safety to
-  `+/-LAZY_EVAL_MARGIN`, 150 centipawns for the two together, and `evaluate()`
+  `+/-LAZY_EVAL_MARGIN`, 184 centipawns for the two together since S085, and `evaluate()`
   is `evaluate_cheap() + evaluate_expensive()` — so the clamp binds the real
   score, not only the shortcut's. A king-safety term strong enough to price a
   mating attack cannot exist under it. Measured 2026-08-19, `go movetime 2000`
