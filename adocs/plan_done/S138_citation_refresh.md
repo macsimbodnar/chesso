@@ -7,7 +7,7 @@ decisions:  DEC-084
 closes:     2026-08-20_plan_review-F01, 2026-08-20_plan_review-F12, 2026-08-20_plan_review-F13
 blocks:
 paused_by:
-done:
+done:      107 of 201 gated code citations were stale, not the audit's 70 of 147, and all 107 are corrected -- 89 relocated mechanically with content-at-new-lines asserted byte-identical to content-at-old-lines, 24 resolved by hand with the cited lines asserted to contain what the sentence claims, none removed. tools/plan_prose_check.py --citations is the checker: BOUNDS, ANCHOR and DRIFT, exit 1 on a flag, verified red at 107 flagged against 04bcc43 and red again here on an injected :99999 with a BOUNDS diagnostic naming the file's real length, green either side. Eight steps pointed at the wrong mate test, not five: S095, S113 and S116 wrote it as a bare (:1274) continuation and the audit's grep missed them, and all three add pruning or a reduction. 13 sites re-pointed to :1887 and :1926 naming both TEST_CASE titles verbatim. F13 had five sites not four; F12's source is adocs/data/S018_raw.tsv via S021_aspiration_sweep.py, whose own docstring said 32 positions and is corrected to the 100 per sample its PER_PHASE and the corpus derive. Deliberately not in ctest: any source commit shifts lines under fifty step files, so gating the suite would make red normal and this check the thing weakened to clear it. 467 of 668 references are bare continuations that no checker can resolve without guessing a path, which is S144. Both suites 18/18, format clean, validate clean, README owner-written, MANUAL and DEV_MANUAL checked.
 
 ## Why this is first and why it is high
 

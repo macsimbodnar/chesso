@@ -323,7 +323,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-9. S107  a quiet move that gives check becomes eligible for the killer, history and countermove tables it is excluded from today
 10. S100  find out why five evaluation terms fit to exactly zero -- feature extraction, corpus composition or a real result -- before any further weight is fitted beside them
 11. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
 12. S137  a refused or unknown search parameter is observable over UCI, so a tuner cannot play games against a silently-default value
@@ -384,3 +383,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 67. S111  **reserve, DEC-087** — correction tables indexed by the move played two and four plies ago
 68. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
 69. S143  the completion gate builds and tests the tune build as well as the shipping one, so a change cannot leave build-tune broken unnoticed
+70. S144  a citation in a plan document carries its own path, so the 467 bare line references that inherit a path from prose become checkable

@@ -14,7 +14,10 @@ is what makes that possible; before it this was one cmake per row.
     cmake --build build-tune -j12
     adocs/data/S021_aspiration_sweep.py build-tune/src/chesso 11
 
-Positions are 32 sampled from adocs/data/S018_raw.tsv, which is 13522 positions
+Positions are 100 sampled from adocs/data/S018_raw.tsv, which is 13522 positions
+-- 4 per phase over the 25 distinct game_phase() values that have at least 4
+rows, and three offsets make the 300 that src/search_params.hpp quotes. The
+count read 32 until S138 derived it from PER_PHASE and the corpus,
 chesso actually reached in 210 games against sgambetto, stratified by the
 engine's own game_phase() so the middlegame does not answer for the endgame.
 The three tools/search_bench.py positions are three positions.
