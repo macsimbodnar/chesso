@@ -71,7 +71,7 @@
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
-     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:521,  \
+     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:522,  \
      so it is a distance to the leaves and not a distance from the root.       \
                                                                                \
      Both were a first setting, one pawn per ply and the last few plies, and   \
