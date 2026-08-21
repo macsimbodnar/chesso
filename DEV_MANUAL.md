@@ -439,8 +439,15 @@ as "the smallest change that could matter" -- endpoint precision -- the seeds go
 Elo" rule reached from the other end. The best multiplier tracks a
 distance-to-optimum nobody knows, but the loss is asymmetric and that is what
 decides it: too small costs a couple of Elo, **too large costs tens** -- 8x
-measured -39 and 16x measured -250 on an axis already near its optimum. 4x was
-the only multiplier positive at every distance tested. Cap it per parameter
+measured -39 and 16x measured -250 on an axis already near its optimum. 2x and
+4x were both positive at every distance tested; 4x is the recommendation because
+it stays within about 2.5 Elo of the best at every distance while 2x falls up to
+10 Elo behind once the optimum is more than a few `c_end` away (+1.68 against
++11.65 at the widest tested). S085's own outcome is evidence for the wide case:
+`MaxQsearchDepth` moved 2.75 `c_end` and `RfpMaxDepth` 2.25, so the real
+distances were not small. Note that S085's step file states this as "4x is the
+only multiplier positive at every width", which its own table contradicts --
+`adocs/plan_done/` is never rewritten, so the correction lives here. Cap it per parameter
 wherever a comment documents a behavioural cliff a quadratic objective cannot
 express.
 

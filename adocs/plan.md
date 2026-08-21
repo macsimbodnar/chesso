@@ -383,3 +383,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 66. S110  **reserve, DEC-087** — a second correction table keyed on the non-pawn structure, split by colour
 67. S111  **reserve, DEC-087** — correction tables indexed by the move played two and four plies ago
 68. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
+69. S143  the completion gate builds and tests the tune build as well as the shipping one, so a change cannot leave build-tune broken unnoticed

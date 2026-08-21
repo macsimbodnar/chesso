@@ -1028,8 +1028,12 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 // it the bound is an observation about the positions someone sampled, and a
 // position outside the sample silently breaks the shortcut -- which is not
 // hypothetical: the corpus contains 1Bk5/B1B5/1B1B4/B1B4B/8/B1B5/5K2/8, nine
-// white bishops from promotions, where mobility alone reached 155 against a
-// margin of 150 and the test caught it.
+// white bishops from promotions, where mobility alone reached 155 against the
+// margin of 150 that shipped then, and the test caught it. S085 raised the
+// margin to 184, so that position no longer binds and the incident is history
+// rather than a live demonstration -- the argument it supports is unchanged,
+// because whether the clamp is a guarantee or a hope does not depend on which
+// sampled position last exceeded it.
 //
 // It costs nothing in real play. Over 149084 positions of S028 self-play
 // mobility ran p99 81 and a maximum of 143, so the clamp does not bind there at

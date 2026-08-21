@@ -44,8 +44,8 @@ default_book="UHO_Lichess_4852_v1.epd"
 # UHO_Lichess_4852_v1.epd is what fastchess.sh plays and every SPRT verdict is
 # taken on.  UHO_4060_v3.epd was added by S085: an SPSA run must not tune on
 # the book its verification match plays (eval_tuning_strategy.md par.7), and
-# 242201 openings is more than the 15000 rounds that run walks through, so it
-# never wraps.
+# 242201 openings is more than the 30000 rounds that run walks through -- 1250
+# iterations of 24 pairs, one round per pair -- so it never wraps.
 pinned="$(
   cat <<'PINS'
 UHO_Lichess_4852_v1.epd	4e298f11e8acfa106babe02968f2e61582145e7874c59284690b20b9650e0e07	7a7f6470615a69c6cf23d565417701d38732876f480af90d67b42abade35644a

@@ -32,8 +32,9 @@
 // comparison above would still hold. This is the row that would go red.
 //
 // A step that deliberately changes a value updates this list in the same
-// commit, which is the point: S068, S039 and S085 each move exactly one number
-// and have to say so here.
+// commit, which is the point: S068 and S039 each move exactly one number and
+// have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
+// not a value -- and the rule is the same for a vector as for a number.
 // clang-format off
 struct golden_param_t { const char* name; int value; };
 

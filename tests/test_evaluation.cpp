@@ -405,7 +405,9 @@ TEST_SUITE("evaluation: score")
   // reads it back as one. What is actually known at that branch is only
   // `full >= cheap - LAZY_EVAL_MARGIN`; the true score can be anywhere up to
   // `cheap + LAZY_EVAL_MARGIN`. Returning `cheap` therefore claims a bound up
-  // to 150 centipawns better than anything the shortcut has established, and
+  // to LAZY_EVAL_MARGIN centipawns better than anything the shortcut has
+  // established -- 184 since S085, 150 before it, and stated symbolically here
+  // so the prose cannot go stale behind the constant again, and
   // nothing downstream can tell the difference. Mirrored at alpha, where the
   // number is an upper bound and the error runs the other way. S027.
   TEST_CASE_FIXTURE(eval_fixture_t,

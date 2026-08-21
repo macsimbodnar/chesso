@@ -1611,11 +1611,32 @@ TEST_SUITE("engine: aspiration windows")
   {
     // Not the start position: [go] with no node limit consults the opening
     // book first, and a book answer would return before a single iteration.
+    // The exempt region is ASPIRATION_MIN_DEPTH - 1 iterations wide, so this
+    // case is only as strong as that constant is large. S085's SPSA run took
+    // it from 5 to 2 -- its arithmetic floor -- which shrank this from four
+    // iterations to one without failing, and nothing said so. The floor is
+    // asserted rather than assumed, because at ASPIRATION_MIN_DEPTH == 1 the
+    // region would be empty and the case would pass while checking nothing.
+    //
+    // REQUIRE and not static_assert: the parameter is `inline constexpr int` in
+    // the shipping build but a plain `int` in the tune build, so a static
+    // assertion on it compiles in one and breaks the other -- and the suite
+    // gate only builds the shipping one, so it would have gone unnoticed.
+    REQUIRE(ASPIRATION_MIN_DEPTH >= 2);
+
     const std::vector<iteration_t> iterations =
         deepen("r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2", ASPIRATION_MIN_DEPTH - 1);
 
     REQUIRE(iterations.size() == static_cast<size_t>(ASPIRATION_MIN_DEPTH - 1));
     REQUIRE(uci_last_aspiration_failures() == 0);
+
+    // The count alone does not say the iterations were the expected ones. Every
+    // depth from 1 up to the exempt boundary has to be present and in order, so
+    // a search that reported the same number of iterations at the wrong depths
+    // fails here rather than passing on arithmetic.
+    for (size_t i = 0; i < iterations.size(); ++i) {
+      REQUIRE(iterations[i].depth == static_cast<int>(i) + 1);
+    }
 
     uci_shutdown();
   }
