@@ -50,3 +50,4 @@ degrades to something still findable rather than to something silently wrong.
 ## Cost
 
 No match, no verdict. Document work plus a checker, and the fast suite green.
+author:    Maksym Bodnar
