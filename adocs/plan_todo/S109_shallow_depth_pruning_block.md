@@ -157,7 +157,7 @@ clause from: :511-512 (`beta < MATE_MIN && beta > -MATE_MIN`).
 
 - **lmrDepth before S098**: the reduction today is the static table
   `lmr_reduction(depth, move_number)` (src/search.cpp:42-76), `LMR_BASE 52` /
-  `LMR_DIVISOR 182` (src/search_params.hpp:122-123), axes capped at 63. The
+  `LMR_DIVISOR 182` (src/search_params.hpp:158-159), axes capped at 63. The
   accepts' `lmr_depth = depth - lmr_reduction(depth, move_number)`, clamped
   to >= 0, computed per candidate move with `move_number =
   legal_moves_counter + 1` when testing before the counter increments. When
@@ -217,7 +217,7 @@ without taking strength numbers on the tune build (forbidden, S073):
    when `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`
    (power parameterised; linear is the one-line alternative).
 6. Tests red-first, per rule, before its rule lands:
-   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:1887)
+   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:1923)
      with a position whose mating move is a **late, low-history, negative-SEE
      quiet** inside the pruned depth -- observed red with the in-check and
      near-mate guards removed, printout recorded (accepts). Built the S033

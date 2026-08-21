@@ -5310,7 +5310,7 @@ Consequences: `test_eval_model`'s tolerance, its four pinned FENs and its
 Proposed:     **Agent proposal, S139, 2026-08-21 -- NOT owner-approved, nothing
               above is amended by it.** The arithmetic in `Context:` and
               `Decision:` is the count as it stands today, and the plan runs
-              **S055 before S136** (`adocs/plan.md:352` entry 39 against `:363`
+              **S055 before S136** (`adocs/plan.md:359` entry 39 against `:370`
               entry 50). S055 tapers mobility and king safety through one
               division instead of two and re-pins the guard in its own commit
               (`adocs/plan_todo/S055_taper_stage_two_once.md:3`: "the post-merge
