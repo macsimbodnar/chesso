@@ -688,6 +688,34 @@ side-to-move key "that was S031 -- retired, no successor step, 'under 1 % by its
 file, below every instrument here'", quoting `adocs/plan.md:110`, which is the only
 record of that retirement outside the retired-ids list -- no `decisions.md` entry
 names S031.
+Correction: two claims in the Applied note above are wrong, found by the Tier 1
+check over `373e953` and verified before this note was written. Appended rather
+than rewritten, per AGENTS.md 2.
+
+  1. **`DEC-081` does not record the S092 merge.** `awk` over that entry's whole
+     range returns no hit for S092 or S108, and the only mention of S092 in
+     `decisions.md` is DEC-079, where it is a *consumer* of the stored-eval
+     substrate rather than a retirement. The merge is recorded at
+     `adocs/plan.md:81` -- "S092 is retired into **S108**" -- in the prose the
+     2026-08-19 review (DEC-081 to DEC-086) produced. `S098_reduction_refinement.md:5`
+     now cites that and says no decisions entry records the merge. The adjacent
+     clause is unaffected: S090 into S109 by DEC-082 is correct.
+     Provenance worth keeping: this pairing was copied into S140 from this
+     report's own "Suggested resolution" above, unchecked. A wrong citation in a
+     finding propagates into the fix that closes it unless the fix re-derives it.
+
+  2. **"no `decisions.md` entry names S031" is false**, in this finding's own body
+     as well as in the Applied note. `grep -n S031 adocs/decisions.md` hits
+     DEC-071: "S030 to S032 are worth 1-3 % each by their own files -- under 1 %
+     for S031". DEC-071 does not *retire* it, so the substantive point stands and
+     the accurate claim is "no entry retires S031". The finding text is left as
+     written; `S042_en_passant_only_when_capturable.md:5` never carried the false
+     claim and needed no change.
+
+  Not repairable: `adocs/plan_done/S140_stale_cross_references.md:26` carries
+  claim 2 as well, and `plan_done/` is immutable (AGENTS.md 10, enforced by a
+  pre-write hook). A wrong claim written into a done stamp is permanent, which
+  is the argument for checking citations before `--step done` rather than after.
 
 **Evidence.**
 
@@ -735,7 +763,7 @@ two one-verdict steps, S134 owes none, and re-deriving its "six steps stop owing
 match" needs the enumeration behind that six, which is S150-class work and not this
 step's. Side effect, repaired in the same commit: the rewrite shifted the lines S125
 cites, so `S125:32` moves `:251-253` to `:260-262` and `S125:47` moves `:367-368` to
-`:375-376` -- the second was already one entry low, naming 55 and 56 where its own
+`:374-375` -- the second was already one entry low, naming 55 and 56 where its own
 sentence claims 54 and 55.
 
 **Evidence.**

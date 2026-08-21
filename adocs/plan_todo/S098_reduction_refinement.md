@@ -2,7 +2,7 @@ id:         S098
 goal:       the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
 touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
-excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108, DEC-081) and which is an input here
+excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md:81`; no `decisions.md` entry records that merge) and which is an input here
 decisions:  DEC-071
 closes:
 blocks:
@@ -181,8 +181,8 @@ Verdict 1 — history:
    asserted (it would be reduced but for `ply > 0`), built the S033 way
    (python-chess enumeration + Stockfish confirmation, DEC-023); both mate
    cases re-run -- "pruning does not hide a forced mate",
-   tests/test_search.cpp:1887 and "pruning does not hide a mate against the
-   material leader", tests/test_search.cpp:1926; fast suite. SPRT.
+   tests/test_search.cpp:1923 and "pruning does not hide a mate against the
+   material leader", tests/test_search.cpp:1962; fast suite. SPRT.
 
 Verdict 2 — node type:
 1. Thread `bool cut_node` through negamax per CPW Node Types (Garms's
