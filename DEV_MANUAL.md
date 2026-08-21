@@ -418,6 +418,78 @@ on the run rather than on a turn boundary (DEC-061):
 nohup tools/spsa_driver.py run <config.json> --out .spsa/<name> > .spsa/<name>.log 2>&1 &
 ```
 
+### Sizing a real run
+
+S084 built the driver; **S085 measured what a real run costs and overturned four
+of the constants the plan had seeded.** Read this before writing a config, and
+re-measure rather than inherit -- these are figures for this machine at 12
+concurrency (DEC-050).
+
+**The budget floor is a resolution floor.** On a 12-axis synthetic objective at
+2500 x 6 pairs, 30000 games resolves an objective about **36 Elo deep** and up.
+At 15 Elo it recovers a sixth of what is available and goes backwards on an
+unlucky seed; at 6 Elo it does nothing at any step size, and the signal run and
+a zero-weight flat run drift by the same amount. Below that, a run cannot tell
+you anything and the games are spent either way.
+
+**`c_end` is the largest lever, and the obvious reading of it is wrong.** Sized
+as "the smallest change that could matter" -- endpoint precision -- the seeds got
++2.3 Elo of an available 15. **Four times larger got +10.5**, which is where
+`+/-c` costs about 1 Elo, and that is fishtest's own "`+/-c` should cost a few
+Elo" rule reached from the other end. The best multiplier tracks a
+distance-to-optimum nobody knows, but the loss is asymmetric and that is what
+decides it: too small costs a couple of Elo, **too large costs tens** -- 8x
+measured -39 and 16x measured -250 on an axis already near its optimum. 4x was
+the only multiplier positive at every distance tested. Cap it per parameter
+wherever a comment documents a behavioural cliff a quadratic objective cannot
+express.
+
+**Never scale a games-per-hour figure between time controls.** A game's duration
+is set by its clock, not by how fast the engine searches: twelve games on twelve
+SMT threads each still spend `(base + moves*inc)*2` seconds. S085's plan chained
+two ratios off an older measurement and priced 5+0.05 at 7 h for 30000 games; it
+is **17 h**. Measured, 12-game waves:
+
+| tc | s per wave | median depth | p10 depth |
+|---|---|---|---|
+| 1+0.01 | 6.9 | 9 | 8 |
+| 2+0.02 | 10.9 | 11 | 9 |
+| 3+0.03 | 11.9 | 11 | 9 |
+| 5+0.05 | 24.4 | 12 | 10 |
+
+Depth is the thing to check, not the control: the depth-gated parameters have to
+be exercised. 2+0.02 reaches median 11 against 5+0.05's 12 for 45 % of the cost.
+0 forfeits in 120 games at 2+0.02 and at 3+0.03.
+
+**Size the batch at fixed wall clock, not fixed games -- it inverts the answer.**
+At a fixed game count the objective prefers small batches, 2 or 3 pairs over 6.
+But the driver runs one `fastchess` per iteration and cannot finish until the
+slowest of its games does, so a small batch pays that straggler every iteration.
+Measured at 2+0.02, three reps each:
+
+| pairs | s/iteration | s/pair |
+|---|---|---|
+| 3 | 7.60 | 2.53 |
+| 6 | 9.14 | 1.52 |
+| 12 | 15.14 | 1.26 |
+| 24 | 23.47 | 0.98 |
+| 48 | 40.97 | 0.85 |
+
+More than half of a 6-pair iteration is waiting. Priced in 8 h of machine, **24
+pairs at `r_end` 0.004 was the optimum** and 48 tied it with half the
+iterations, so the turnover is findable rather than assumed. `r_end` scales with
+*total pairs*, not with the split, because `(wins - losses)` is summed over the
+iteration's pairs.
+
+S085's frozen config is `tools/spsa_s085.json` and is the worked example: 12
+parameters, 1250 x 24 pairs, 60000 games in 8 h 21 m, 0 forfeits, verified at
++21.02 +/- 9.86 Elo.
+
+**Tune and verify on different openings and a different control.**
+`adocs/eval_tuning_strategy.md` par.7. `books/fetch_book.sh` pins a second
+UHO-class book, `UHO_4060_v3.epd`, for exactly this: the run tunes on it and
+`fastchess.sh` verifies on `UHO_Lichess_4852_v1.epd`.
+
 ### What decides whether it worked
 
 `tests/test_spsa_driver.py`, in the fast suite, 22 assertions and about four

@@ -3,14 +3,12 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-20 by `moltke --step status`.
+Updated: 2026-08-21 by `moltke --step status`.
 
-- Last done: S137
-- In progress: S085 the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, decided 2026-08-20, DEC-094 -- and an independent SPRT of what it returns
-- Next: S085
+- Last done: S085
+- In progress: none
+- Next: S138
 - Blocked: none
-- Watching:
-  - watching: SPSA-(DONE|FAILED) in /home/max/ws/chesso/.tuning/spsa_S085.log, ceiling 18h, armed 2026-08-20T19:24:25+02:00 (.git/moltke_watch/1787246665_1476278.json)
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships

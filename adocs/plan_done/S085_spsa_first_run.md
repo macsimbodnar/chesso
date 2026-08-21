@@ -11,7 +11,7 @@ decisions:  DEC-019, DEC-041, DEC-048, DEC-050
 closes:     2026-08-20_plan_review-F09, 2026-08-20_plan_review-F18
 blocks:
 paused_by:
-done:
+done:      60000 games in 8 h 21 m, 0 forfeits; verified +21.02 +/- 9.86 Elo, LOS 100 %, H1 accepted in 2946 games at 8+0.08 on a book and control the run never saw. Ten defaults moved. RfpMinPly returned 0, cannot ship (3 of 18 mate cases red; 0 is the same engine as 1), shipped held at 3 and its floor banked to S142. Four seeded constants overturned by measurement first. Fast suite 18/18, format clean, README checked owner-written.
 
 ## Why this exists
 
@@ -723,3 +723,44 @@ against reference `3488506`, the commit before the defaults edit. `tc=8+0.08`,
 at**, which is what `adocs/eval_tuning_strategy.md` par.7 requires. Machine idle
 at launch. DEC-063's warning applies: these bounds took 6 h 36 m over 9036 games
 to return nothing once, so a long run here is not a surprise and not a signal.
+
+## Verdict: H1 accepted, 2026-08-21 05:08
+
+`REF=HEAD~1 ./fastchess.sh`, candidate `21b4a21` against reference `3488506`.
+
+```
+Elo: 21.02 +/- 9.86, nElo: 26.81 +/- 12.55
+LOS: 100.00 %, DrawRatio: 35.78 %, PairsRatio: 1.31
+Games: 2946, Wins: 1088, Losses: 910, Draws: 948, Points: 1562.0 (53.02 %)
+Ptnml(0-2): [121, 289, 527, 363, 173], WL/DD Ratio: 2.56
+LLR: 2.95 (100.0%) (-2.94, 2.94) [0.00, 5.00]
+SPRT ([0.00, 5.00]) completed - H1 was accepted
+```
+
+**2946 games in 1 h 15 m 42 s, 0 forfeits of 2948.** 8+0.08, `Hash=16`,
+concurrency 12, `UHO_Lichess_4852_v1.epd` -- neither the control nor the book the
+run tuned at.
+
+**What is established and what is not.** H1 against `elo0=0` is that the change
+gains; the **magnitude is not established**, and the early stop biases the point
+estimate upward. DEC-063 is the precedent and it is not small: S068's pooled
+estimate fell from +12.18 to +5.02 under that correction. So +21.02 is the
+upper-biased reading of a gain whose sign is certain at LOS 100 %.
+
+DEC-063's other warning did not bite -- these bounds once spent 6 h 36 m over
+9036 games to return nothing, and this one resolved in 1 h 16 m, because the
+effect is large relative to the band.
+
+**This is the fourth published-Elo figure this project has checked and the first
+that transferred.** DEC-019's ledger was staged move generation quoted at 30-50
+and measured 0, SEE pruning in quiescence measured 0, capture ordering reported
+near 150 and measured slower. SPSA is quoted in the literature as worth tens of
+Elo on an untuned parameter set and it measured +21 here, on eleven axes, with
+the twelfth held back. The rule stands unchanged -- a reported figure decided
+what to try and the SPRT decided what to conclude -- and this time they agreed.
+
+**What the verdict does not settle.** The eleven values were tuned jointly with
+`RfpMinPly` near 0 and shipped with it at 3, so this measures the shipped
+configuration and not the tuner's answer. Whether the returned vector is worth
+*more* than +21 with the bound narrowed to its tested floor is unmeasured, and
+S142 is where that is decided.

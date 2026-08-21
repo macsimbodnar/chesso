@@ -323,7 +323,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-8. S106  the transposition bound signs and the mate-score round trip are checked against a red test in both searches, not assumed
 9. S107  a quiet move that gives check becomes eligible for the killer, history and countermove tables it is excluded from today
 10. S100  find out why five evaluation terms fit to exactly zero -- feature extraction, corpus composition or a real result -- before any further weight is fitted beside them
 11. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
