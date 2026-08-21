@@ -656,3 +656,70 @@ Checked and not findings: the other 20 rows hold, including three that needed
 arithmetic rather than reading -- `TmStabilityMax` 126 is `MAX_DEPTH`,
 `TmFallingPercent` 400 makes the scaled soft limit meet `TmHardPercent` exactly,
 `OrderHistoryMax` 899999 sits under the killer's 900000.
+
+## The run, and what it returned, 2026-08-21 03:44
+
+**1250 iterations, 30000 pairs, 60000 games in 8 h 21 m** (19:23 to 03:44:25,
+against the 8.15 h estimate). `tools/forfeit_report.py` over the run's PGN:
+**0 forfeits of 60000 on either side.** Trajectory and frozen config archived to
+`adocs/data/S085_spsa_trajectory.tsv` and `adocs/data/S085_spsa_run.json`.
+
+**Healthy by every reading the pitfalls ask for.** `y` by quarter: -0.35, +0.30,
+-0.34, +0.11, standard deviation 7.75 then 6.13, 6.23, 6.22 -- centred, and the
+early quarter wider because `c_scale` starts at 2.055 and decays to 1. The
+endpoints converged rather than walked: over the last 250 iterations the
+standard deviation is 0.00 for `NullMoveBase`, 0.51 for `RfpMaxDepth`, 0.55 for
+`MaxQsearchDepth`, and 2.2 to 4.8 on the centipawn axes whose `c_end` is 16 to
+32. Not the "barely changing" stuck run and not the pinned-at-a-bound divergence.
+
+| parameter | shipped | returned | shipped now | last-250 mean |
+|---|---|---|---|---|
+| `MaxQsearchDepth` | 8 | 19 | **19** | 19.9 |
+| `RfpMargin` | 75 | 63 | **63** | 65.4 |
+| `RfpMaxDepth` | 6 | 15 | **15** | 16.7 |
+| `RfpMinPly` | 3 | **0** | **3, held** | 0.0 |
+| `NullMoveBase` | 2 | 3 | **3** | 3.0 |
+| `NullMoveDivisor` | 6 | 6 | 6 | 6.6 |
+| `LmrBase` | 75 | 52 | **52** | 56.1 |
+| `LmrDivisor` | 225 | 182 | **182** | 181.6 |
+| `LazyEvalMargin` | 150 | 184 | **184** | 178.6 |
+| `AspirationMinDepth` | 5 | 2 | **2** | 2.2 |
+| `AspirationDelta` | 50 | 21 | **21** | 26.1 |
+| `AspirationMaxDelta` | 400 | 437 | **437** | 433.9 |
+
+**Two axes agree with numbers the run was told nothing about.**
+`MaxQsearchDepth` at 19 matches this file's own pre-run finding that the natural
+depth is above 8, and since 16 and 32 measured identical there, 19 is that
+finding rather than a contradiction of it. `AspirationDelta` at 21 is inside the
+10 to 25 the surveyed engines run, arrived at by a noisy process with no access
+to them. Neither is a verdict, and neither is nothing.
+
+### `RfpMinPly` came back at 0, and 0 cannot ship
+
+It sat there for **72.5 %** of its iterations, up from 30.8 % at the 39 % read.
+Three of the eighteen mate cases in `test_search` go red at 0, and 0 is
+byte-identically the same engine as 1. So the tuner's answer on this axis is that
+reverse futility at plies 1 and 2 wins games at 2+0.02, and the mate tests say it
+loses forced mates. Both can be true, and CLAUDE.md settles which wins: a test is
+never weakened to let a change pass.
+
+**What was shipped is the axis untouched at 3**, which is the null action rather
+than a choice. Selecting its floor -- the tested 2 or the argued 3 -- is a
+decision and S142 owns it.
+
+**This matters for reading the SPRT.** The other eleven values were tuned
+*jointly* with `RfpMinPly` near 0, so the vector under measurement is not the
+vector the tuner returned. If the verdict is negative, "the gain lived in the
+axis that cannot ship" is a live reading and not an excuse, and the honest
+follow-up is a rerun with the bound narrowed first -- which is why S142 sits
+directly after this step rather than somewhere later.
+
+### The verification match
+
+Launched 03:52, detached, watcher armed with a 13 h ceiling. Candidate `21b4a21`
+against reference `3488506`, the commit before the defaults edit. `tc=8+0.08`,
+`Hash=16`, concurrency 12, `elo0=0 elo1=5 alpha=0.05 beta=0.05`, book
+`UHO_Lichess_4852_v1.epd` -- **neither the control nor the book the run tuned
+at**, which is what `adocs/eval_tuning_strategy.md` par.7 requires. Machine idle
+at launch. DEC-063's warning applies: these bounds took 6 h 36 m over 9036 games
+to return nothing once, so a long run here is not a surprise and not a signal.
