@@ -6,7 +6,7 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-21 by `moltke --step status`.
 
 - Last done: S085
-- In progress: S138 every file:line citation and test title in a pending step file resolves to what it claims, and the five steps pointing at the wrong mate test are re-pointed
+- In progress: S138 every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed
 - Next: S138
 - Blocked: none
 - Parked:

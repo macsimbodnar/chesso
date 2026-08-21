@@ -83,18 +83,18 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 
 ### 2. Shape for chesso
 
-- R today: `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 2 + depth/6
-  (src/search.cpp:561; src/search_params.hpp:77-78, ranges 0..16, 1..64).
-  With the floor below, NMP fires from depth 4.
+- R today: `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6
+  (src/search.cpp:571; src/search_params.hpp:109-110, ranges 0..16, 1..64).
+  With the floor below, NMP fires from depth 5.
 - Conditions (:569-571): `!is_pv && !is_in_check && ply > 0 && prev_move != 0
   && depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
   game_phase(&game->board) > 0`. No eval gate, no eval term.
 - **The mate fix is the floor** `depth - 1 - null_reduction >= 1` (:570),
   comment :563-568: a depth-0 null search is pure quiescence, answers with
   the static score, and lost a mate in two at depth 4. Regression test:
-  "pruning does not hide a forced mate", tests/test_search.cpp:1274.
+  "pruning does not hide a forced mate", tests/test_search.cpp:1887.
 - **The zugzwang guard counts both colours**: `game_phase()`
-  (src/evaluation.cpp:1050) clamps `board->phase`, accumulated from
+  (src/evaluation.cpp:1111) clamps `board->phase`, accumulated from
   `phase_value[6] = {0,1,1,2,4,0}` (src/eval_tables.hpp:28) for every piece
   of either side -- "some knight/bishop/rook/queen exists on the board",
   weaker than the published side-to-move form. Kept as-is per the accepts.
@@ -120,7 +120,8 @@ One SPRT, as the accepts prices:
    published practice lands the family together (Weiss #127-#130) -- then
    one SPRT on the winner; S127 fits finals.
 4. Tests, red first, printouts recorded:
-   - :1274 stays green unmodified at every depth it runs.
+   - "pruning does not hide a forced mate", tests/test_search.cpp:1887 stays
+     green unmodified at every depth it runs.
    - New case built the S033 way (python-chess enumeration + Stockfish
      confirmation, DEC-023): one side ~20 pawns ahead statically, opponent
      holding a forced mate inside the null horizon -- the demolition target.
@@ -155,9 +156,9 @@ fitted/SPSA'd here** (DEC-084, S127):
   in a build where the floor is also gone (then :466 turns the null search
   into quiescence -- the shipped-twice bug). Ship floor + cap; the
   demolition build lifts both, watches the new mate case go red, restores.
-- **The floor bites the term at shallow depth**: with cap 3, depths 4..7 have
-  `depth - 1 - (2 + depth/6 + 3) < 1`, so a maxed term *skips* NMP where
-  today it fires with R=2..3 -- backwards from the term's intent. The sweep
+- **The floor bites the term at shallow depth**: with cap 3, depths 4..8 have
+  `depth - 1 - (3 + depth/6 + 3) < 1`, so a maxed term *skips* NMP where
+  today it fires with R=3..4 -- backwards from the term's intent. The sweep
   must see this; SF's alternative (null search falls to qsearch) is exactly
   what this repo's history forbids. If the sweep prefers a clamp
   (`null_depth = max(1, ...)`) over the skip, that is a recorded choice --

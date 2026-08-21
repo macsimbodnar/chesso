@@ -626,21 +626,47 @@ at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
-`tools/plan_prose_check.py` is a plan-hygiene check and is **not** in the suite:
+`tools/plan_prose_check.py` carries two plan-hygiene checks and is **not** in
+the suite:
 
 ```bash
-tools/plan_prose_check.py         # exits non-zero on a stale claim
+tools/plan_prose_check.py             # both, exits non-zero on either
+tools/plan_prose_check.py --prose     # plan.md's tense only
+tools/plan_prose_check.py --citations # pending step files' citations only
 ```
 
-`plan.md`'s ordered list is maintained by the workflow checker and the prose
-around it is not, so every completion can leave a sentence saying a finished
-step is next. It resolves every id in the prose against `plan_done/`,
+**`--prose`.** `plan.md`'s ordered list is maintained by the workflow checker
+and the prose around it is not, so every completion can leave a sentence saying
+a finished step is next. It resolves every id in the prose against `plan_done/`,
 `plan_current/` and `plan_todo/`, then flags any **sentence** that names a
 completed step alongside a pending claim. Sentence-wise because the prose is
 hard-wrapped and an id and the claim about it usually sit on different lines. Run
 it when a step completes: this has now gone stale three times
 (`2026-08-13_plan_review-F05`, `2026-08-13_plan_review.2-F07`, and again the
 moment S033 finished), and S062 is the third repair.
+
+**`--citations`.** Every `path:line` and `path:line-line` citation in
+`plan_todo/` and `plan_current/`, re-resolved against the working tree. Three
+failure classes, each an exact string comparison and none a judgement: `BOUNDS`
+(the path is absent, or the line is past the end of the file), `ANCHOR` (a
+doctest title quoted on the citing line or the line above it is not the test the
+cited lines open), `DRIFT` (the cited lines hold different text now than they
+held in the commit that last wrote the step file). Citations into `adocs/` and
+other `.md` files, and bare `:line` continuations whose path is inherited from
+prose, are counted and printed but do not fail the run — the first because those
+documents are rewritten at every completion by design, the second because the
+inheritance is not mechanically resolvable in these files. S138 is why it
+exists: `2026-08-20_plan_review-F01` measured 70 of 147 citations stale, and
+eight pending steps that each add pruning or a reduction told their implementer
+to extend the mate-safety gate at a line that had come to rest inside an
+unrelated test. The symptom of extending the wrong mate test is a strength
+regression, not a red test.
+
+Neither check is registered with ctest, and that is deliberate rather than an
+omission: any source commit shifts lines under fifty step files at once, so
+gating the suite on citation freshness would make a red suite the normal state
+of the repository and this check the thing that gets weakened to clear it. Run
+both at step completion, alongside `moltke --validate`.
 
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts

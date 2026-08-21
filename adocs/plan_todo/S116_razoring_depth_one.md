@@ -106,12 +106,14 @@ tests red-first.
 
 - **Mate case, built the S033 way** (python-chess enumeration + Stockfish
   confirmation, DEC-023, never a judged position): the razoring side far
-  behind on material at a depth-1 node yet mating with a **quiet** first move
-  -- out of check quiescence generates captures only (:295-297), so the drop
-  is blind to it by construction. Lands beside :1274 and :1314 in the fast
-  suite; observed red against the demolition build (verification arm removed,
-  i.e. the unconditional drop) and the printout recorded, per the accepts --
-  record which guard's removal reddens it.
+  behind on material at a depth-1 node yet mating with a **quiet** first
+  move -- out of check quiescence generates captures only (:295-297), so the
+  drop is blind to it by construction. Lands beside "pruning does not hide a
+  forced mate", tests/test_search.cpp:1887 and "pruning does not hide a mate
+  against the material leader", tests/test_search.cpp:1926 in the fast
+  suite; observed red against the demolition build (verification arm
+  removed, i.e. the unconditional drop) and the printout recorded, per the
+  accepts -- record which guard's removal reddens it.
 - **In-check exemption, non-vacuous** (S109's precondition pattern): a
   position where the condition would fire but for the check searches
   identically to the off build; the same shape out of check moves the counts.

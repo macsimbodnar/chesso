@@ -97,7 +97,7 @@ gain likely belongs to S108's consumer, not this one.
 
 Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
-- Probe already paid: `tt_get_entry` at src/search.cpp:216, outright answer
+- Probe already paid: `tt_get_entry` at src/search.cpp:226, outright answer
   via `tt_entry_answers` at :221-223. `tt_entry_answers` (:155-188):
   de-normalisation *before* comparison (:170), EXACT answers unconditionally
   (:172-175), `TT_BETA_NODE && s >= beta` (:177), `TT_ALPHA_NODE && s <=
@@ -118,7 +118,7 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
   else `evaluate_lazy()`; `stored_eval` fixed at :253 from the pre-substitution
   value. `stand_pat` is `const` (:244) and stops being so, or the substitution
   writes a successor variable.
-- Entry fields (src/data_structures.hpp:386-412): `int32_t score`
+- Entry fields (src/data_structures.hpp:388-414): `int32_t score`
   (search-backed, **ply-normalised on store** -- all four quiescence stores go
   through `normalize_score()`), `int16_t eval` (static only, never a bound or
   mate; assert at src/transposition_table.cpp:134), `uint8_t type`.

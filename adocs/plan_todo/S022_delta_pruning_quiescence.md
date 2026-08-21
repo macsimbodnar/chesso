@@ -80,7 +80,7 @@ symbol once S112/S131 have edited the function.
 
 - **Current truth: chesso has no delta pruning, in either form.** No delta
   test exists in `quiescence()` -- the only skips today are the non-capture
-  drop at src/search.cpp:310 and S015's SEE gate at :322-325 (`!in_check &&
+  drop at src/search.cpp:320 and S015's SEE gate at :332-335 (`!in_check &&
   !capture_cannot_lose && !see_ge(move, 0)`), and specs.md's "absent, search"
   row lists delta pruning absent. The goal's "deleting delta pruning"
   therefore means the trial add is reverted or never bought and the zero
@@ -107,9 +107,9 @@ symbol once S112/S131 have edited the function.
   pruned moves can exceed -- stored TT_ALPHA_NODE via the :387-390 pattern.
   A fired node is a certified fail-low, unlike the :287 cap return, which is
   a truncation and rightly stores nothing.
-- **Endgame disable**: `game_phase()` (src/evaluation.cpp:1050-1054, the
+- **Endgame disable**: `game_phase()` (src/evaluation.cpp:1111-1115, the
   INV-4 phase accumulator clamped to 24) is the O(1) predicate the null-move
-  zugzwang guard already keys on (`> 0`, src/search.cpp:571). Disable the
+  zugzwang guard already keys on (`> 0`, src/search.cpp:581). Disable the
   early-out at `game_phase() <= QS_DELTA_PHASE_MIN`, seed in section 4.
 
 ### 3. Implementation sketch -- the decision protocol
@@ -196,7 +196,9 @@ either order per the accepts. Recommended order, reason stated:
   business if delta ships.
 - **Two changes, one function, strict sequence.** Verdict 1's commit is only
   the gate deletion (or nothing); verdict 2's only the early-out. The fast
-  suite's mate-in-quiescence case gates each commit -- pruning hiding mate is
+  suite's two quiescence mate cases -- "a side in check may not stand pat"
+  (tests/test_search.cpp:701) and "mate is recognised at depth zero"
+  (tests/test_search.cpp:775) -- gate each commit; pruning hiding mate is
   the recurring bug -- and the early-out never fires in check by
   construction, so the :370 mate path stays reachable.
 

@@ -17,9 +17,9 @@ done:
 ## Note
 
 Chesso has the countermove *heuristic* and no continuation history at any
-depth. `move_t counter_moves[12][64]` (`src/data_structures.hpp:434`, written
-on beta cutoff at `src/search.cpp:507`, read as the fixed `ORDER_COUNTER` band
-at `src/evaluation.cpp:1091-1094`) remembers a single refutation move per
+depth. `move_t counter_moves[12][64]` (`src/data_structures.hpp:436`, written
+on beta cutoff at `src/search.cpp:517`, read as the fixed `ORDER_COUNTER` band
+at `src/evaluation.cpp:1152-1155`) remembers a single refutation move per
 (previous piece, target) and gives it a flat bonus — the countermove heuristic,
 Uiterwijk 1992.
 

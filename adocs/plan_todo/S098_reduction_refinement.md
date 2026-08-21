@@ -112,12 +112,12 @@ S023 sits in reserve), cutnode-with-no-TT-move (SF prose only; ~0 at Lynx).
 
 ### 2. Shape for chesso
 
-The whole feature is src/search.cpp:42-76 and :691-699:
+The whole feature is src/search.cpp:42-76 and :707-715:
 
 - Table: build_lmr_table :42-56, `r = LMR_BASE/100 + ln(depth) *
   ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
-  zero-initialised; `LMR_BASE 75` / `LMR_DIVISOR 225`
-  (src/search_params.hpp:85-86, ranges stated, both already in S085's SPSA
+  zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
+  (src/search_params.hpp:122-123, ranges stated, both already in S085's SPSA
   set). CHESSO_TUNE rebuilds it per setoption (:59-68); a test probe exists
   (search_lmr_reduction_probe, :79-82).
 - Eligibility :693-694: `ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
@@ -180,7 +180,9 @@ Verdict 1 — history:
    a mate at the root that is late, low-history and quiet, precondition
    asserted (it would be reduced but for `ply > 0`), built the S033 way
    (python-chess enumeration + Stockfish confirmation, DEC-023); both mate
-   suites re-run (tests/test_search.cpp:1274, :1313); fast suite. SPRT.
+   cases re-run -- "pruning does not hide a forced mate",
+   tests/test_search.cpp:1887 and "pruning does not hide a mate against the
+   material leader", tests/test_search.cpp:1926; fast suite. SPRT.
 
 Verdict 2 — node type:
 1. Thread `bool cut_node` through negamax per CPW Node Types (Garms's
@@ -225,7 +227,7 @@ All in src/search_params.hpp with stated ranges; every number below is a
 **seed — must be fitted/SPSA'd here (S127, DEC-084)**; off values sit inside
 the declared ranges.
 
-- `LMR_BASE 75` / `LMR_DIVISOR 225` ship already. Open-literature seeds if
+- `LMR_BASE 52` / `LMR_DIVISOR 182` ship already. Open-literature seeds if
   re-swept: Obsidian 0.99/3.14, Weiss quiet 1.35/2.75, Ethereal quiet
   0.7844/2.4696 (all CPW prose, DEC-084's allowed source). Weiss #481
   (+7.37 steepening the curve after history landed) says the pair goes
@@ -252,7 +254,7 @@ the declared ranges.
 ### 5. Pitfalls
 
 - **The repo's own bug class.** S013's LMR reduced the mating move at the
-  root; null move hid a mate in 2 (tests/test_search.cpp:1270-1291). The
+  root; null move hid a mate in 2 (tests/test_search.cpp:1883-1904). The
   accepts re-runs the mate case per adjustment and adds the root assertion
   with its precondition. The root exemption is not up for relaxation —
   Lynx measured LMR on the root's first move at **-35.47** (#1771).

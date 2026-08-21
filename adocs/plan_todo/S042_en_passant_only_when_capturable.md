@@ -11,7 +11,7 @@ done:
 
 ## What happens now
 
-`src/bitboard.cpp:824-833` sets `new_en_passant` after every double push with no
+`src/bitboard.cpp:825-834` sets `new_en_passant` after every double push with no
 test for an enemy pawn that could capture onto it. Two move orders reaching the
 same position hash differently:
 

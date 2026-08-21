@@ -23,8 +23,9 @@ ships at zero weight; the margin is re-decided from measured data once it is
 fitted, and tools/eval_spread is what measures it".
 
 King safety has not shipped at zero weight since S027
-(`src/evaluation.cpp:731-734`). The margin is still 150. The re-decision the
-comment promises has not happened.
+(`src/evaluation.cpp:788-791`). The margin is 184, moved by S085's SPSA and
+not by a spread measurement. The re-decision the comment promises has not
+happened.
 
 ## What it costs now
 

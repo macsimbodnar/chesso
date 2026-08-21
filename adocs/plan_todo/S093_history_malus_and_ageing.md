@@ -111,22 +111,22 @@ The step's two cited figures, traced to their public records:
 
 Today, one table and three sites:
 
-- `src/data_structures.hpp:448` -- `int history_moves[12][64]; // [piece][destination]`
+- `src/data_structures.hpp:450` -- `int history_moves[12][64]; // [piece][destination]`
   inside `search_state_t`, which is stack-allocated fresh per `go`
-  (`chesso.cpp:646`, `search_state_t state = {};`) -- so "zeroed on every go"
+  (`chesso.cpp:647`, `search_state_t state = {};`) -- so "zeroed on every go"
   is a lifetime accident, not a clear anyone wrote.
-- Write: `src/search.cpp:743-757`, fail-high block, after `unmake_move` at
+- Write: `src/search.cpp:759-773`, fail-high block, after `unmake_move` at
   727 (so `game->board.active_color` is the mover again). Gate at 744
   `if (!is_capture && !is_check_move)` -- S107 deletes the check term first.
   Bonus at 749 `depth * depth`, saturation at 752
   `std::min(history + bonus, ORDER_HISTORY_MAX)`. No malus, no decay, no
   halving anywhere (grepped).
-- Read: `src/evaluation.cpp:1108`, `score_move` returns the raw entry as the
+- Read: `src/evaluation.cpp:1169`, `score_move` returns the raw entry as the
   quiet's ordering score; bands at `evaluation.cpp:33-37` (TT 2000000,
   captures >= 900100 worst-case, killers 900000/800000, counter 700000),
   `ORDER_HISTORY_MAX` 600000 at `src/search_params.hpp:45`.
 
-**No tried-quiets list exists.** The move loop (search.cpp:635-663) keeps only
+**No tried-quiets list exists.** The move loop (search.cpp:645-679) keeps only
 `moves[]/scores[]` and `legal_moves_counter`; `moves[0..i-1]` is the tried
 prefix in search order but contains captures and pseudo-legal moves whose
 `make_move` failed (the `continue` at 656). So the malus needs a new local
@@ -145,8 +145,8 @@ countermoves stay per-`go`; the goal names quiet history only.
 
 Persistence: hoist the table out of `search_state_t` into a struct owned
 beside `tt` in chesso.cpp, wired as a pointer exactly like `state.tt = &tt`
-(chesso.cpp:646-647), so tests still own private instances.
-`command_ucinewgame` (chesso.cpp:1084) clears it alongside `tt_reset`.
+(chesso.cpp:647-648), so tests still own private instances.
+`command_ucinewgame` (chesso.cpp:1121) clears it alongside `tt_reset`.
 Descendant detection, decided at `go` time not `position` time (several
 `position` commands can arrive per `go`): remember the searched root's zobrist
 (`game->board.hash`, board_t at data_structures.hpp:298) when a search starts;
@@ -168,14 +168,14 @@ Verdict 1 lands as one commit (DEC-087 j), built and tested in this order:
    piece types on the same from/to share the butterfly cell but not
    `[piece][to]`), so accumulated scores differ, `pick_next_move` order
    differs, the tree differs. Play-altering; it rides in verdict 1. Re-target
-   the existing table reads in tests (test_evaluation.cpp:752 and :773,
+   the existing table reads in tests (test_evaluation.cpp:754 and :775,
    test_search.cpp:485-491) -- re-target, never weaken.
 2. **Gravity + malus**, extracted as a testable helper rather than inline:
    `history_gravity_update(int16_t& entry, int bonus)` (clamp bonus, then the
    CPW line) and `history_on_quiet_cutoff(state, side, cutoff_move,
    quiets_tried, n, depth)` applying `+bonus` to the cutoff move and `-malus`
    to every tried quiet -- the cutoff move is never in the list. Delete the
-   `std::min` saturation at search.cpp:752: gravity replaces it, and both
+   `std::min` saturation at search.cpp:768: gravity replaces it, and both
    together is the double-ageing bug (section 5).
 3. **Band-safety test, red first**: drive an entry to each asymptote through
    the helper (repeated max-depth updates -- the precondition, non-vacuous by

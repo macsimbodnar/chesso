@@ -145,7 +145,7 @@ LMP is the one rule with no per-move exemption list -- it ends a stage.
 
 ### 2. Shape for chesso
 
-The move loop: `for (size_t i = 0;; ++i)` at src/search.cpp:635; staged quiet
+The move loop: `for (size_t i = 0;; ++i)` at src/search.cpp:645; staged quiet
 generation inside it at :636-652 (`quiets_generated`, the branch the
 skip-quiets flag must gate); `pick_next_move` :654; `make_move` :656;
 `is_capture` :658; `is_check_move` :662 -- **computed only after make_move**,
@@ -156,8 +156,8 @@ fail-high update block :739-758; the no-legal-moves mate/stalemate return
 clause from: :511-512 (`beta < MATE_MIN && beta > -MATE_MIN`).
 
 - **lmrDepth before S098**: the reduction today is the static table
-  `lmr_reduction(depth, move_number)` (src/search.cpp:42-76), `LMR_BASE 75` /
-  `LMR_DIVISOR 225` (src/search_params.hpp:85-86), axes capped at 63. The
+  `lmr_reduction(depth, move_number)` (src/search.cpp:42-76), `LMR_BASE 52` /
+  `LMR_DIVISOR 182` (src/search_params.hpp:122-123), axes capped at 63. The
   accepts' `lmr_depth = depth - lmr_reduction(depth, move_number)`, clamped
   to >= 0, computed per candidate move with `move_number =
   legal_moves_counter + 1` when testing before the counter increments. When
@@ -217,7 +217,7 @@ without taking strength numbers on the tune build (forbidden, S073):
    when `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`
    (power parameterised; linear is the one-line alternative).
 6. Tests red-first, per rule, before its rule lands:
-   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:1274)
+   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:1887)
      with a position whose mating move is a **late, low-history, negative-SEE
      quiet** inside the pruned depth -- observed red with the in-check and
      near-mate guards removed, printout recorded (accepts). Built the S033

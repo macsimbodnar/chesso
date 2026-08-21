@@ -1,6 +1,6 @@
 id:         S131
 goal:       quiescence searches non-capture queen promotions instead of filtering them out
-accepts:    an SPRT verdict, recorded whatever it is; queen promotions pass the filter, underpromotions stay out unless a node-count sweep says otherwise, and the step states which was shipped and why; the filter comment in `quiescence()` is rewritten to describe what is searched now rather than what used to be; the mate-in-quiescence case in the fast suite still passes; the fast suite green
+accepts:    an SPRT verdict, recorded whatever it is; queen promotions pass the filter, underpromotions stay out unless a node-count sweep says otherwise, and the step states which was shipped and why; the filter comment in `quiescence()` is rewritten to describe what is searched now rather than what used to be; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (tests/test_search.cpp:701) and "mate is recognised at depth zero" (tests/test_search.cpp:775); the fast suite green
 touches:    src/search.cpp quiescence, tests/test_search.cpp
 excludes:   futility exemptions for promotions, which are S112's; the SEE treatment of promotions, unchanged here
 decisions:  DEC-071, DEC-087
@@ -63,7 +63,7 @@ is the whole content of the step.
 Line numbers at 0edfd26 (`src/` byte-identical to cf89e22). S112 edits the
 same filter loop first in plan order -- re-locate by symbol.
 
-- **The TODO.** The filter comment is src/search.cpp:303-307, the drop itself
+- **The TODO.** The filter comment is src/search.cpp:313-317, the drop itself
   :310 (`!in_check && !MOVE_CAPTURE` skips). Provenance verified with
   `git log -S "Letting them through"`: written at **S001** (1a42999,
   2026-08-08, the movegen split), not S094 as the prose above says -- same
@@ -75,20 +75,20 @@ same filter loop first in plan order -- re-locate by symbol.
   "Promotions count as captures whether or not anything is taken"
   (src/data_structures.hpp:130-133), the same fold every surveyed engine
   ships. The main search already searches them unfiltered through its
-  captures stage (src/search.cpp:614; no capture test in the :625-656 loop;
+  captures stage (src/search.cpp:624; no capture test in the :635-666 loop;
   LMR-exempt at :693-694). The out-of-check qsearch filter is the one place
   they are invisible, so the change is one condition at :310: drop only when
   `!MOVE_CAPTURE(m) && MOVE_PROMOTED(m) != TO_QUEEN` (TO_QUEEN,
   data_structures.hpp:148). A generator change instead would repartition
   INV-3 and move underpromotions between main-search stages for nothing.
 - **Ordering.** :327 scores survivors with capture_score()
-  (src/evaluation.cpp:1064-1074); an EMPTY victim reads the deliberate 13th
+  (src/evaluation.cpp:1125-1135); an EMPTY victim reads the deliberate 13th
   table entry, piece_values_abs[EMPTY] = 0 (evaluation.cpp:41-43;
   EMPTY = 12, data_structures.hpp:168), already exercised by quiet evasions
-  (search.cpp:299-301). A quiet queen promotion therefore scores 0 - 100 =
+  (search.cpp:309-311). A quiet queen promotion therefore scores 0 - 100 =
   **-100**: after every non-king capture, before a king capture. Ship that.
   The score_move mirror (ORDER_CAPTURE + promotion bonus,
-  evaluation.cpp:1090-1097) is not reachable from search.cpp --
+  evaluation.cpp:1151-1158) is not reachable from search.cpp --
   piece_values_abs is file-local, teaching capture_score the bonus would
   double-count inside score_move (:1094), and a second constant in search.cpp
   is the CLAUDE.md band hazard. At most pawns-on-the-seventh moves are
@@ -112,8 +112,8 @@ same filter loop first in plan order -- re-locate by symbol.
 
 ### 3. Implementation sketch
 
-One commit, tests first, using the tests/test_search.cpp:554-568 `quiesce()`
-helper and `state.explored_nodes` (incremented at search.cpp:200).
+One commit, tests first, using the tests/test_search.cpp:625-639 `quiesce()`
+helper and `state.explored_nodes` (incremented at search.cpp:210).
 
 1. **Red-first admission**: FEN `8/P6k/8/8/8/8/8/K7 w - - 0 1` -- no captures
    for either side, one quiet queen promotion; Stockfish plays **a7a8q**
@@ -134,8 +134,9 @@ helper and `state.explored_nodes` (incremented at search.cpp:200).
    gate is S022's business, excluded from this step.
 5. **The change**: extend :310; rewrite the :303-307 comment to describe what
    is searched now (the accepts names this). The in-check path is untouched,
-   so the fast-suite mate-in-quiescence case ("a side in check may not stand
-   pat", tests/test_search.cpp:630-664) gates as-is.
+   so the two fast-suite quiescence mate cases ("a side in check may not
+   stand pat", tests/test_search.cpp:701-735, and "mate is recognised at
+   depth zero", tests/test_search.cpp:775-787) gate as-is.
 6. **Perft unaffected by construction**: no movegen edit; perft reads
    generate_moves and INV-3 is untouched. tools/search_bench.py counts will
    change -- play-altering, no identity claim (INV-6's SPRT arm); record the
@@ -158,7 +159,7 @@ the captures; revisit only if the node sweep says the placement costs nodes.
   promotion status (-0.28 +/- 1.24 / +1.87 +/- 2.41 at Weiss).
 - **Explosion is bounded by construction.** Each admitted move consumes a
   pawn irreversibly (at most pawns-on-the-seventh per node) and the qply cap
-  at :287 (MAX_QSEARCH_DEPTH = 8, src/search_params.hpp:51) holds regardless.
+  at :287 (MAX_QSEARCH_DEPTH = 19, src/search_params.hpp:51) holds regardless.
   The published explosion warning attaches to checks (talkchess t=60962); no
   engine record of a promotion-specific depth guard was found.
 - **Accepts wording, verified consistent.** Capturing underpromotions pass

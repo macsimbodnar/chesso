@@ -2,7 +2,7 @@ id:         S091
 goal:       skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); separate margins for captures and for quiets, both constants in src/search_params.hpp with stated ranges (S073), and the depth scaling stated as what it is rather than as a flag; a position with a forced mate inside the pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; nothing is pruned at a PV node or while in check, with the precondition asserted; see() and see_ge() are unchanged and tests/test_search.cpp's exchange cases still pass unmodified; the fast suite green
 touches:    src/search.cpp negamax move loop, src/search_params.hpp, tests/test_search.cpp
-excludes:   any change to see() or see_ge() themselves; quiescence, where see_ge already declines losing captures at src/search.cpp:205; delta pruning, which is S022
+excludes:   any change to see() or see_ge() themselves; quiescence, where see_ge already declines losing captures at src/search.cpp:332-333; delta pruning, which is S022
 decisions:  DEC-071
 closes:
 blocks:
@@ -101,23 +101,25 @@ on record from the other side: Weiss #355 measured qsearch SEE pruning at
   `capture_cannot_lose` :1160 is the capture-only fast path quiescence tries
   first; the scale is `see_value[6] = {100,300,300,500,900,10000}` :1096.
 - **Test coverage**: suite "search: static exchange evaluation"
-  tests/test_search.cpp:1649 (six hand-valued cases, a quiet into an attack);
-  "search: see_ge agrees with see" :1741 sweeps every legal move of
-  `all_test_fens()` against 8 thresholds, >10000 assertions -- the corpus
-  carries EP-capture FENs (assets/test_jsons/pawns.json) and promotions
-  (promotions.json), so both special branches are exercised against exact
-  `see()`. No hand-valued EP or promotion case exists: the sweep catches the
-  two implementations diverging, not a shared model error (Pitfalls).
-- **Quiescence site today**: src/search.cpp:322-325 (`capture_cannot_lose`
-  then `see_ge(..., 0)`), not the :205 the excludes line names -- S094 grew
-  the function; the excludes' meaning is unchanged.
+  tests/test_search.cpp:2262 (six hand-valued cases, a quiet into an
+  attack); "search: see_ge agrees with see" tests/test_search.cpp:2354
+  sweeps every legal move of `all_test_fens()` against 8 thresholds, >10000
+  assertions -- the corpus carries EP-capture FENs
+  (assets/test_jsons/pawns.json) and promotions (promotions.json), so both
+  special branches are exercised against exact `see()`. No hand-valued EP or
+  promotion case exists: the sweep catches the two implementations
+  diverging, not a shared model error (Pitfalls).
+- **Quiescence site today**: src/search.cpp:332-335 (`capture_cannot_lose`
+  then `see_ge(..., 0)`), which is where the excludes line now points; it
+  read :205 until S138 re-anchored it, and the excludes' meaning is
+  unchanged either way -- S094 grew the function under the old number.
 - **The skip site**: the negamax move loop `for (size_t i = 0;; ++i)`
-  src/search.cpp:635; captures arrive from the first stage :614;
+  src/search.cpp:645; captures arrive from the first stage :624;
   `pick_next_move` :654, `make_move` :656, `is_capture` :658. `see_ge` reads
   the *parent* board, so the capture skip runs **pre-make**, between :654 and
   :656 -- the make is saved, unlike S109's post-make quiet rules. Guards:
   `!is_pv`, `!is_in_check` (:469), `legal_moves_counter >= 1` (the move
-  ordered first -- ORDER_TT_MOVE, evaluation.cpp:1084 -- is then structurally
+  ordered first -- ORDER_TT_MOVE, evaluation.cpp:1145 -- is then structurally
   exempt, and :779-781's false-mate return stays unreachable), alpha and beta
   outside the mate band (copy the guard row at :511-512), `depth <=` the gate.
 - **The reduction site**: :691-699. Today captures and promotions are never
@@ -162,7 +164,7 @@ never SPRT'd (S073).
 3. Tests red-first, before the guards land, printouts recorded (accepts):
    - a forced mate inside the pruned depth whose line runs through a
      negative-SEE capture, added to "pruning does not hide a forced mate"
-     (tests/test_search.cpp:1274), observed red with the in-check/near-mate
+     (tests/test_search.cpp:1887), observed red with the in-check/near-mate
      guards removed; built the S033 way -- python-chess enumeration plus
      Stockfish confirmation, never own judgement (DEC-023).
    - precondition tests (non-vacuous): a position where the skip fires (node
@@ -200,11 +202,11 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
   `see()` returned 400 for a 500 exchange on
   `3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR`; fixed in 63c9378, and the refusal to
   reinstate it is written at src/bitboard.cpp:1342-1348. What catches its
-  class today is the :1741 agreement sweep plus the hand-valued cases -- the
+  class today is the :2354 agreement sweep plus the hand-valued cases -- the
   accepts freezes both. S015 also logged an x-ray king bug and an inverted
   ternary in see_ge; all three lived in code this step must not touch.
 - **A shared model error is invisible to the agreement sweep**: see() and
-  see_ge() mishandling en passant *identically* would still pass :1741. If
+  see_ge() mishandling en passant *identically* would still pass :2354. If
   any doubt is raised, add one hand-valued EP case and one promotion case
   red-first -- cheap, and the suite has none today.
 - **Sacrifices pruned**: the mate case in the accepts is the enforcement;
@@ -216,7 +218,7 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
   ordering scale whose bands clear each other by 100 (CLAUDE.md hazard);
   `see_value` is the exchange scale. They share numbers today by
   coincidence, not by contract.
-- **Ordering interaction**: captures are MVV-LVA (evaluation.cpp:1064-1073)
+- **Ordering interaction**: captures are MVV-LVA (evaluation.cpp:1125-1134)
   inside the ORDER_CAPTURE band, so losing captures are *searched early*
   today (QxP defended orders above every quiet); the skip removes them at
   shallow depth regardless of order. S025 (retry losing captures after

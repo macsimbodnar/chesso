@@ -110,7 +110,7 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 - **The restricted move set exists**: generate its own capture list before
   the staged loop (the :614 stage regenerates later -- an accepted double
   generation every surveyed movepicker also pays), ordered by
-  `capture_score` (evaluation.hpp:305) through `pick_next_move` (:87). The
+  `capture_score` (evaluation.hpp:308) through `pick_next_move` (:87). The
   "good" filter is the predicate pair quiescence uses at :322-323,
   `capture_cannot_lose(...)` then `see_ge(..., 0)` (bitboard.cpp:1160,
   :1185) -- S015 machinery, nothing new. generate_captures also emits
@@ -151,14 +151,17 @@ One SPRT, as the accepts prices. Increments:
    - the accepts' mate case: a forced mate for the defender inside the
      pruned window behind a crushing-looking capture, built the S033 way --
      python-chess enumeration plus Stockfish confirmation, never own
-     judgement (DEC-023) -- added beside :1274, observed red with the
-     mate-band guard removed.
+     judgement (DEC-023) -- added beside "pruning does not hide a forced
+     mate", tests/test_search.cpp:1887, observed red with the mate-band
+     guard removed.
    - precondition tests, non-vacuous: a position where ProbCut fires (node
      counts move against the off value); then PV node, in check, depth
      below threshold, and a planted under-probBeta TT entry
      (tt_store_entry is public) each hold the counts still.
-   - both mate suites re-run (:1274, :1313); fast suite; search_bench 9/12
-     in the stamp.
+   - both mate cases re-run -- "pruning does not hide a forced mate",
+     tests/test_search.cpp:1887 and "pruning does not hide a mate against
+     the material leader", tests/test_search.cpp:1926; fast suite;
+     search_bench 9/12 in the stamp.
 
 ### 4. Constants and seeds
 

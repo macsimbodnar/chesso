@@ -69,7 +69,7 @@ unaffected.
 
 **Shape for chesso.** Every term is a separate mg/eg pair today.
 Storage: `psqt_mg[6][64]` / `psqt_eg[6][64]` (src/eval_tables.hpp:55, :118 --
-3072 B that become 1536), `passed_pawn_mg/eg[6]` (src/evaluation.cpp:64-65),
+3072 B that become 1536), `passed_pawn_mg/eg[6]` (src/evaluation.cpp:80-81),
 `pawn_structure_mg/eg[3]` (:103-104), `piece_placement_mg/eg[4]` (:199-200),
 `tempo_mg/eg` (:582-583), `mobility_mg/eg[4]` (:690-691),
 `king_safety_mg/eg[9]` (:733-736). **The INV-4 accumulators carry the pair
@@ -80,7 +80,7 @@ branch in `eval_add_piece`/`eval_remove_piece`/`eval_refresh`
 src/bitboard.cpp:687/:704/:727-728 and directly on the unmake paths at
 :937-938, :953-954, :967, :975-976, :982 -- packing halves the adds at the
 hottest sites in the engine. The debug INV-4 assert compares both fields
-(src/bitboard.cpp:596-604); INV-2's memcmp checks (tests/test_search.cpp:1264,
+(src/bitboard.cpp:596-604); INV-2's memcmp checks (tests/test_search.cpp:1877,
 tests/test_engine.cpp:48) survive any layout byte-identically. Accumulation in
 evaluation.cpp: `mg_sum/eg_sum` in evaluate_pawns (:423-424, fed at :435-436,
 :446-447, :476-477, :489-490), the pawn pair into evaluate_cheap (:631-633),
@@ -89,7 +89,7 @@ the four stage-two sums (:864-867, fed at :901-902, :910-911, :919-922,
 (exact while both weights are 0), :951-954 stage two -- one site after S055
 merges it. The collect path (S055's finding): :956-958 hands tapered mobility
 and safety back through evaluate_expensive_terms (:1005-1022) to
-tools/eval_spread.cpp:174, and tests/test_evaluation.cpp:464-496 REQUIREs
+tools/eval_spread.cpp:174, and tests/test_evaluation.cpp:466-498 REQUIREs
 `clamp(mobility + safety) == evaluate() - evaluate_cheap()` **exactly**
 (:481-484). Overflow headroom at the shipped weights: worst legal |mg| lane is
 about 9 queens x 793 + minors/rooks/king + enemy-king 179 + the pawn-term pair
@@ -141,7 +141,7 @@ the choice in the step stamp.
 - **Debug printability / the collect path**: eval_spread and the tests read
   *tapered ints* through the existing accessors, so packing is invisible to
   them if extraction stays at those interfaces; the S055 REQUIRE (term pair
-  sums to the merged total, test_evaluation.cpp:481-484) is the regression to
+  sums to the merged total, test_evaluation.cpp:483-486) is the regression to
   keep green, never weaken.
 - **The tuner's view is unchanged -- verified**: tools/tuner.cpp emits plain
   `const int *_mg/*_eg` arrays (write_tables, :735-811) and

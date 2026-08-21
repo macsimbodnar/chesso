@@ -328,7 +328,7 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 11. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
 12. S137  a refused or unknown search parameter is observable over UCI, so a tuner cannot play games against a silently-default value
 13. S085  the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, DEC-094 -- and an independent SPRT of what it returns
-14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the five steps pointing at the wrong mate test are re-pointed
+14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed
 15. S142  the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
 16. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
 17. S140  no plan, specs or status document routes work to a retired id, cites an invariant that is defined nowhere, or carries a census its own derivation contradicts

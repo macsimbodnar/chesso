@@ -1,6 +1,6 @@
 id:         S112
 goal:       quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
-accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the mate-in-quiescence case in the fast suite still passes
+accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (tests/test_search.cpp:701) and "mate is recognised at depth zero" (tests/test_search.cpp:775)
 touches:    src/search.cpp quiescence, src/search_params.hpp
 excludes:   delta pruning, which is S022 and is re-decided after this
 decisions:  DEC-019
@@ -101,7 +101,7 @@ zero still buys S022 its baseline.
 Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
 - Quiescence's capture handling is two loops: the **filter loop** at
-  src/search.cpp:308-330 compacts survivors (non-captures dropped at :310,
+  src/search.cpp:318-340 compacts survivors (non-captures dropped at :320,
   S015's SEE gate at :322-325: `!in_check && !capture_cannot_lose &&
   !see_ge(move, 0)` skips), then the **search loop** at :339-366.
   `best_value` is initialised at :332 (`in_check ? MIN : stand_pat`,
@@ -123,7 +123,7 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
   would silently move the prune. A dedicated `qs_futility_value[]` decouples
   all three; seed in section 4.
 - **Victim lookup mirrors capture_score's EP branch**
-  (src/evaluation.cpp:1064-1073): `board->squares[MOVE_TO(move)]` is EMPTY for
+  (src/evaluation.cpp:1125-1134): `board->squares[MOVE_TO(move)]` is EMPTY for
   en passant; the victim is a pawn. SF 725c504 shipped that wrong first.
 - **Promotions: exempt on the `MOVE_PROMOTED(move)` bit, before the victim
   arithmetic.** Capturing promotions are in the loop *today* (:310 keeps
@@ -132,7 +132,7 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
   Ethereal b7f142a is the recorded bug. The bit test also pre-answers S131
   (section 7).
 - **Gives-check exemption: no pre-make predicate exists.** The main search
-  learns it by `is_check(game)` *after* make_move (src/search.cpp:661-662),
+  learns it by `is_check(game)` *after* make_move (src/search.cpp:677-678),
   deliberately not on captures. Two routes: (a) for a capture futility wants
   to skip, pay make/is_check/unmake and keep it if it checks — exact, no new
   machinery, cost only on would-be-skipped moves, still saves the child call
@@ -161,9 +161,9 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
 One commit, one SPRT; tests first within it.
 
-1. **Red-first unit tests**, inlining the tests/test_search.cpp:554-568
+1. **Red-first unit tests**, inlining the tests/test_search.cpp:625-639
    `quiesce()` helper where node counts are needed (`state.explored_nodes`
-   counts entries, src/search.cpp:200). Windows are built from the engine's
+   counts entries, src/search.cpp:210). Windows are built from the engine's
    own numbers — `evaluate()` of the FEN, the margin, the table's victim
    value — never from a judged score (DEC-023):
    - *Skipped when it cannot reach alpha*: one-capture FEN, alpha =
@@ -186,8 +186,12 @@ One commit, one SPRT; tests first within it.
    the filter loop above :322: not promoted, not gives-check, victim from the
    dedicated table, skip and fold futility_value into a running maximum that
    :332 takes into best_value's initialisation.
-3. Fast suite green — the mate-in-quiescence case explicitly
-   (tests/test_search.cpp:630-664) — then the SPRT.
+3. Fast suite green -- the two quiescence mate cases explicitly
+   ("a side in check may not stand pat", tests/test_search.cpp:701-735,
+   which is the case where quiescence has to search evasions to reach a
+   mate, and "mate is recognised at depth zero",
+   tests/test_search.cpp:775-787, where the mate is already on the board)
+   -- then the SPRT.
 
 ### 4. Constants and seeds
 
@@ -219,7 +223,7 @@ One commit, one SPRT; tests first within it.
   the return either way). Asymmetry to know: the futility skip raises
   best_value, S015's skip today does not — changing S015's skip is S022's
   business, not this commit's.
-- **En passant**: victim is not on MOVE_TO; evaluation.cpp:1066-1069 is the
+- **En passant**: victim is not on MOVE_TO; evaluation.cpp:1127-1130 is the
   in-repo pattern, SF 725c504 the published bug.
 - **Promotions and S131**: the MOVE_PROMOTED exemption must precede the
   victim arithmetic. When S131 admits *non-capture* promotions they arrive

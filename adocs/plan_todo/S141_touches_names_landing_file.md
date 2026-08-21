@@ -16,7 +16,7 @@ whose goal is to change a constant and whose `touches:` omits the file holding
 that constant is a step that cannot be completed without violating its own
 scope. S039 is the sharp case: its whole goal is to re-decide
 `LAZY_EVAL_MARGIN` from measured spread, and the constant moved to
-`src/search_params.hpp:91` when S073 built the tune build. S085 has the same
+`src/search_params.hpp:98` when S073 built the tune build. S085 has the same
 defect for the same reason and its own research section already flagged it in a
 Scope concern -- which is evidence that catching this by reading does not scale,
 and that a check does.

@@ -100,10 +100,10 @@ Four pieces of plumbing, published separately, each with a traced record:
 
 ### 2. Shape for chesso
 
-Exists (S094/S103): entry field `int16_t eval`, src/data_structures.hpp:408,
+Exists (S094/S103): entry field `int16_t eval`, src/data_structures.hpp:410,
 sentinel `TT_EVAL_NONE = INT16_MIN` (:384); store clamps and asserts it, never
 a bound, never ply-normalised (src/transposition_table.cpp:134-139). Writers:
-quiescence's four stores pass `stored_eval` (src/search.cpp:253, exact-only);
+quiescence's four stores pass `stored_eval` (src/search.cpp:263, exact-only);
 negamax's one store (:813-815) passes `static_eval`, TT_EVAL_NONE except at an
 RFP node (:477, :532). Readers: quiescence stand-pat (:241-247) and the RFP
 site (:529-530) via the copied-out `tt_eval` (:455). The overwrite bug:
@@ -117,10 +117,10 @@ key-matched entry is same-side, INV-5's stm-relative value reads back with no
 sign applied; improving compares ply with ply-2, same side both ends.
 
 Missing:
-- **Per-ply eval array.** search_state_t (src/data_structures.hpp:439-458)
+- **Per-ply eval array.** search_state_t (src/data_structures.hpp:441-460)
   already holds per-ply arrays (killers :447, pv :453-454); add `int
   static_evals[MAX_PLY]` (:42). `search_state_t state = {}` is fresh per go
-  (src/chesso.cpp:646), but guard the no-data default by ply arithmetic
+  (src/chesso.cpp:647), but guard the no-data default by ply arithmetic
   (ply >= 2 / 4), never by sentinel-compare on an unwritten slot -- 0 is a
   real eval.
 - **Compute at every non-check node.** Today only inside the RFP guard. New

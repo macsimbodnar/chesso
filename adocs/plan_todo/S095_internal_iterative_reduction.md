@@ -79,7 +79,7 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 2. Shape for chesso
 
-- The condition: tt_get_entry (src/search.cpp:445) returns nullptr on a miss
+- The condition: tt_get_entry (src/search.cpp:455) returns nullptr on a miss
   (transposition_table.cpp:96-103), and :449 already computes
   `tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0`. **The probe
   exposes both variants today** — `tt_entry == nullptr` is entry-absent,
@@ -125,9 +125,11 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
      the "entry with a move must not be reduced" side, failing if the
      precondition is absent.
    - The accepts' mate case: a forced mate inside the reduced depth added
-     beside "pruning does not hide a forced mate" (:1274) and :1314, observed
-     red with the guard removed (threshold to 0 locally, observed, reverted —
-     the S033 protocol; cold fixed-depth search is where it bites).
+     beside "pruning does not hide a forced mate",
+     tests/test_search.cpp:1887 and "pruning does not hide a mate against
+     the material leader", tests/test_search.cpp:1926, observed red with the
+     guard removed (threshold to 0 locally, observed, reverted — the S033
+     protocol; cold fixed-depth search is where it bites).
    - Both existing mate suites re-run; fast suite green. Node counts move by
      construction — INV-6 takes the SPRT path; search_bench depths 9/12 in
      the stamp.

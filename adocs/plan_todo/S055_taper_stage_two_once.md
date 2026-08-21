@@ -16,12 +16,12 @@ done:
 ## What this is
 
 `evaluate_mobility_and_king_safety()` tapers its two terms separately, one
-integer division each (`src/evaluation.cpp:951` mobility, `:953` king safety),
+integer division each (`src/evaluation.cpp:1008` mobility, `:953` king safety),
 then sums them. Summing the two middlegame sums and the two endgame sums first
 and dividing once is the same term through one division instead of two.
 
 The same argument is already written in this file for the pawn terms, at
-`src/evaluation.cpp:635-639`: summed into the accumulated pair before the
+`src/evaluation.cpp:692-696`: summed into the accumulated pair before the
 interpolation rather than tapered on its own, "one integer division instead of
 two [...] and one truncation towards zero instead of two -- which is what keeps
 test_eval_model's one-centipawn slack against the tuner's floating-point model
@@ -56,7 +56,7 @@ anything, and do not let a sub-resolution number decide the step.
 
 `test_eval_model`'s tolerance is 3, because `evaluate()` divides by
 `GAME_PHASE_MAX` four times and three of them can round today
-(`src/evaluation.cpp:640` positional, `:668` tempo — exactly 0 while
+(`src/evaluation.cpp:697` positional, `:668` tempo — exactly 0 while
 `tempo_mg == tempo_eg == 0`, `:951` mobility, `:953` king safety), bounding the
 disagreement with `tools/eval_model.hpp` at 3 x 23/24 = 2.875. Removing one
 division puts the bound at 2 x 23/24 = 1.917, so the tolerance returns to 2.
@@ -102,7 +102,7 @@ file at all:
 ## Watch the clamp, not just the sum
 
 `evaluate_expensive()` clamps the summed stage-two score to
-+/-`LAZY_EVAL_MARGIN` (`src/evaluation.cpp:984`) and the model clamps in the
++/-`LAZY_EVAL_MARGIN` (`src/evaluation.cpp:1045`) and the model clamps in the
 same place. The clamp is applied after the taper on both sides today; merging
 the divisions must not move it to before, or the two implementations stop
 clamping the same quantity — which the model's own comments at
@@ -120,15 +120,15 @@ PHASE_MAX`, documented over a 0–256 phase with an optional half-denominator
 rounding add; chesso uses the common 24-point granularity (minor 1, rook 2,
 queen 4) with pure truncation. Per-term tapering is not the published shape.
 This step moves stage two to the canonical form that `evaluate_cheap()`
-(src/evaluation.cpp:640-643) and the float model (tools/eval_model.hpp:973-974)
+(src/evaluation.cpp:697-700) and the float model (tools/eval_model.hpp:973-974)
 already have. Division count is observable because C++ integer division
 truncates toward zero ([expr.mul]/4).
 
-**Shape for chesso.** The two sites: src/evaluation.cpp:951-952 (mobility) and
+**Shape for chesso.** The two sites: src/evaluation.cpp:1008-1009 (mobility) and
 :953-954 (king safety), each dividing a phase blend by `GAME_PHASE_MAX` = 24
-(src/evaluation.hpp:304); `phase = game_phase()` is `board->phase` clamped to
-[0,24] (src/evaluation.cpp:1050-1053). The guard today:
-tests/test_eval_model.cpp:378 `CHECK(|model - engine| <= 3.0)`, comment
+(src/evaluation.hpp:307); `phase = game_phase()` is `board->phase` clamped to
+[0,24] (src/evaluation.cpp:1111-1114). The guard today:
+tests/test_eval_model.cpp:277 `CHECK(|model - engine| <= 3.0)`, comment
 :337-359 naming the four divisions; the non-vacuity case :405-446 asserts the
 tempo-unfitted precondition (:410-415, message "4 x 23/24 = 3.833 ... has to
 be 4"), per-pin `difference > 2.0` (:436) and `worst > 2.8` (:444) over
@@ -168,7 +168,7 @@ to whatever came out — find positions that reach the new maximum.
 - **The collect path is the trap the file does not name.** `<collect=true>`
   hands back tapered mobility and safety separately (:956-958) through
   `evaluate_expensive_terms` (:1005) to tools/eval_spread.cpp:174 and
-  tests/test_evaluation.cpp:464-496, which REQUIREs
+  tests/test_evaluation.cpp:466-498, which REQUIREs
   `clamp(mobility + safety) == evaluate() - evaluate_cheap()` **exactly**
   (:481-484). Post-merge the reported pair must sum to the merged total: taper
   one term, hand back the other as `stage_two - that term`, and state which
