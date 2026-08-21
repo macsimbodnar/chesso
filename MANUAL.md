@@ -240,8 +240,9 @@ here as the FEN each one loads. A GUI never sends them.
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score
   is a margin clear of beta is not searched. It cannot see a mate — that is what
-  a static score is — so it is bounded to ply 3 and below and to depth 15. That
-  depth bound was 6 until S085 tuned it (2026-08-20); at 15 it no longer bounds
+  a static score is — so it is skipped at plies 0, 1 and 2,
+  applies from ply 3 down, and only where 15 or fewer plies remain. That depth
+  bound was 6 until S085 tuned it (2026-08-20); at 15 it no longer bounds
   anything this engine reaches, so the ply floor is the guard, and S145
   (2026-08-21) is the constructed set of 48 proved mates the floor is measured
   against: every mate in two is found immediately, half the mates in three are
