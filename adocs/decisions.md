@@ -5634,3 +5634,54 @@ Consequences: **DEC-063 now has a second confirming case, and it is the
               no longer one observation: when the expected effect is two-sided,
               the two-sided pair is both the correct test and the cheap one, and
               measurement capacity is the binding constraint on the plan.
+
+## DEC-100  2026-08-21  an accepts clause that names another step file is written against that step still being pending
+Tags:         workflow, plan, accepts, agent-proposal, s139, s141, dec-017
+
+Context:      S141's `accepts:` named three step files -- S039's, S085's and
+              S120's -- and required each to name the file its change lands in.
+              S085 completed at `43bf189` before S141 started, so its file was
+              in `adocs/plan_done/`, which AGENTS.md sec 10 hard-prohibits
+              writing and a `PreToolUse` hook refuses. One third of the accepts
+              was therefore unproducible by any means the step is allowed to
+              use, and had to be discharged in the stamp instead of satisfied.
+              It was also unnecessary: the edit had landed at `4fc359f` while
+              S085 was still current. This is the second occurrence -- S140 hit
+              the same wall and its `excludes:` now names `adocs/plan_done/`
+              outright -- and it is exactly the class S139 existed to remove,
+              simply not one of the five steps S139 covered.
+
+Decision:     **Agent proposal, S141, 2026-08-21 -- NOT owner-approved. Nothing
+              in the workflow changes until the owner takes it.** Proposed: when
+              an `accepts:` clause requires an edit to another step's file, the
+              writer checks that step is still in `plan_todo/` or
+              `plan_current/`, and names `adocs/plan_done/` in `excludes:` when
+              the finding it closes has a completed step among its subjects. A
+              clause that survives to a step's start with its subject already
+              completed is amended out and discharged in the stamp with the
+              reason, which is what S141 did.
+
+Why:          A completed step's `touches:` constrains nothing -- no further
+              change lands under it -- so the clause buys nothing even where it
+              could be produced.
+
+Rejected:     **Extending `tools/plan_prose_check.py` with the check.** The
+              mechanical part is trivial: an id in an `accepts:` whose file sits
+              in `plan_done/`. The judgement is not, and it is the whole of it.
+              An accepts may legitimately *reference* a completed step -- S120's
+              names S094 for a reason it records, S039's names S073 -- and only
+              a clause that demands a *change* to the completed file is a
+              defect. A check that cannot tell those apart flags every third
+              step, and the recorded failure mode of a noisy check in this
+              repository is that it gets switched off, not obeyed.
+              **Waiving the rule for `plan_done/` and editing it anyway.**
+              Refused outright: `plan_done/` is the project history and the
+              prohibition is a hard one, hook or no hook.
+
+Consequences: If taken: the writer of an `accepts:` owes one `ls adocs/plan_*`
+              per step id it names, and a finding split across steps at
+              different lifecycle stages -- `2026-08-20_plan_review-F06` was
+              split across two -- is written as separate clauses per step rather
+              than one clause naming all of them. If not taken: the discharge
+              route stays what S141 used, and the cost is one amended accepts
+              per occurrence.

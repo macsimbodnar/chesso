@@ -626,13 +626,15 @@ at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
-`tools/plan_prose_check.py` carries two plan-hygiene checks and is **not** in
-the suite:
+`tools/plan_prose_check.py` carries three plan-hygiene checks. One of the three,
+`--touches`, is in the fast suite as `test_plan_touches`; the other two are not,
+and the paragraph after them says why:
 
 ```bash
-tools/plan_prose_check.py             # both, exits non-zero on either
+tools/plan_prose_check.py             # all three, exits non-zero on any
 tools/plan_prose_check.py --prose     # plan.md's tense only
 tools/plan_prose_check.py --citations # pending step files' citations only
+tools/plan_prose_check.py --touches   # pending step files' touches only
 ```
 
 **`--prose`.** `plan.md`'s ordered list is maintained by the workflow checker
@@ -662,11 +664,34 @@ to extend the mate-safety gate at a line that had come to rest inside an
 unrelated test. The symptom of extending the wrong mate test is a strength
 regression, not a red test.
 
-Neither check is registered with ctest, and that is deliberate rather than an
-omission: any source commit shifts lines under fifty step files at once, so
-gating the suite on citation freshness would make a red suite the normal state
-of the repository and this check the thing that gets weakened to clear it. Run
-both at step completion, alongside `moltke --validate`.
+**`--touches`.** A step whose `goal:` names a code symbol that no file its
+`touches:` allows it to edit carries in code. `touches:` is the scope contract a
+diff is checked against, so a step whose goal is to change a symbol and whose
+`touches:` omits the file holding it cannot be completed without violating its
+own scope. S039 is the measured case and `2026-08-20_plan_review-F06` is the
+finding: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:` named
+`src/evaluation.hpp`, and the value moved to `src/search_params.hpp` at S073 —
+`src/evaluation.hpp` keeps only the comment saying what the number means. **A
+mention inside a comment is not a landing site**, which is the whole of that
+case, so files are comment-stripped before the match: C and C++ comments, and
+`#` comments in `.py` and `.sh`. Four symbol classes and no more — an ALL_CAPS
+name with an underscore, a call written with its parentheses, a `_t` type, and a
+UCI option name matched against the names `src/search_params.hpp` declares
+rather than against a CamelCase pattern. Two ungated note classes: a symbol that
+is in code nowhere, and a `touches:` naming a directory that already holds files
+of the symbol's kind, which cannot be resolved against the tree as it stands
+because a directory may grow a file. The script's own file is excluded from the
+corpus it searches, since its documentation names the symbols it is about.
+
+`--prose` and `--citations` are **not** registered with ctest, and that is
+deliberate rather than an omission: any source commit shifts lines under fifty
+step files at once, so gating the suite on citation freshness would make a red
+suite the normal state of the repository and this check the thing that gets
+weakened to clear it. Run both at step completion, alongside
+`moltke --validate`. That reason does not reach `--touches`, which holds no line
+numbers and moves only when a step file is written or a symbol changes file, so
+S141 put it in the fast suite where a broken scope contract fails at once
+instead of waiting for someone to run the tool.
 
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts

@@ -154,6 +154,23 @@ add_test(NAME test_spsa_driver
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_driver.py)
 set_tests_properties(test_spsa_driver PROPERTIES LABELS "fast" TIMEOUT 120)
 
+# S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
+# suite. The other two are not, and DEV_MANUAL.md says why: any source commit
+# shifts lines under fifty step files at once, so gating on citation freshness
+# would make red the normal state and this the check that gets weakened to clear
+# it. That reason does not reach here. `--touches` holds no line numbers: it
+# fires only when a step's goal names a code symbol that no file the step may
+# touch carries, which changes when a step file is written or a symbol changes
+# file, and both are rare and both are one line to fix.
+#
+# 0.2 s, no build products read, and it skips itself with exit 0 outside a git
+# checkout. 2026-08-20_plan_review-F06 is the finding; S039 is the case, and it
+# was observed red on that step before the repair.
+add_test(NAME test_plan_touches
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
+                         --touches)
+set_tests_properties(test_plan_touches PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.

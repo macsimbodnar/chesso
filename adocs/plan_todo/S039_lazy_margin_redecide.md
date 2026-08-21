@@ -7,7 +7,10 @@ accepts:    the margin is chosen from an eval_spread run at the weights that shi
             since refitted 827 constants. Nothing here is taken on the old
             numbers. This step is now a prerequisite for S122 rather than a
             micro-tune: the clamp it sizes is what caps king safety.)
-touches:    src/evaluation.hpp LAZY_EVAL_MARGIN and its comment
+touches:    src/search_params.hpp, where the value itself has lived since S073
+            and where a re-decision has to land; src/evaluation.hpp
+            LAZY_EVAL_MARGIN and its comment, which is what the number means;
+            adocs/data/S039_eval_spread.log for the run the accepts records
 excludes:   the structure of the lazy shortcut itself, which is S034 and is done
 decisions:  DEC-039
 closes:     2026-08-13_adversarial-F05

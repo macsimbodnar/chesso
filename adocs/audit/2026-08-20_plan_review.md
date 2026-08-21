@@ -437,7 +437,30 @@ the id.
 ### 2026-08-20_plan_review-F06 — medium — three pending steps' `touches:` omits the file the change has to land in
 
 Status: planned
-Planned in: S141; S085's own third of it fixed 2026-08-20
+Planned in: S141, landed 2026-08-21; S085's own third of it fixed 2026-08-20
+Applied: S039's `touches:` now names `src/search_params.hpp` as where the value has
+lived since S073 and where a re-decision has to land, keeps `src/evaluation.hpp` for
+the comment, and names `adocs/data/S039_eval_spread.log` for the run its accepts
+records. S120's now names `src/chesso.cpp` for the two clears its section 5 requires
+— beside `tt_reset` at `ucinewgame` (`src/chesso.cpp:1128`) and on the
+`LazyEvalMargin` setoption in the tune build (`command_setoption`, `src/chesso.cpp:986`)
+— and `tests/test_evaluation.cpp` for its section 3(a) red-first properties; its
+"`touches:` names evaluation files only" placement sentence was corrected with it, and
+the two `src/search_params.hpp:128` citations it carried were re-taken to `:164`
+before the edit reset their drift baseline. S085's third was already applied at
+`4fc359f`, while the step was in `plan_current/`; S141's accepts clause naming it was
+amended out and discharged in that step's stamp, since `adocs/plan_done/` is
+unwritable by AGENTS.md §10 and a completed step's `touches:` constrains no future
+diff. The class is now checked rather than read for: `tools/plan_prose_check.py
+--touches`, registered as `test_plan_touches` in the fast suite, reports a pending
+step whose `goal:` names a code symbol that no file its `touches:` allows it to edit
+carries **outside a comment** — which is exactly the S039 shape, since
+`src/evaluation.hpp` holds `LAZY_EVAL_MARGIN` in comments only. Observed red on S039
+before the repair, and on a constructed cut of S154's `touches:`. The audit's optional
+further suggestion, that S039's `accepts:` name the value and the comment as two
+obligations, was not taken: rewriting an `accepts:` is S139's class and S141's
+`excludes:` forbids implementing S039, and the existing accepts already presupposes
+the number moving ("an SPRT ... if the margin changes").
 
 **Evidence.**
 

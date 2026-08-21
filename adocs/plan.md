@@ -332,7 +332,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-15. S142  the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
 16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness -- **measured -11.02 +/- 10.53 Elo, H0 accepted, reverted; the duplication is kept and the test asserts it** (DEC-098)
 17. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
 18. S140  no plan, specs or status document routes work to a retired id, cites an invariant that is defined nowhere, or carries a census its own derivation contradicts

@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-"""Plan hygiene: stale tense in plan.md's prose, stale citations in step files.
+"""Plan hygiene: stale tense in plan.md, stale citations and touches in steps.
 
-Two checks over the plan documents, neither in the ctest suite. They report,
-they do not rewrite: which tense a sentence should take and which line a
-citation meant are judgements, and the fix belongs in the same commit as the
-landing that made it stale.
+Three checks over the plan documents. `--prose` and `--citations` report and do
+not rewrite -- which tense a sentence should take and which line a citation
+meant are judgements, and the fix belongs in the same commit as the landing that
+made it stale. Only `--touches` is in the ctest suite; the reason the other two
+are not is in DEV_MANUAL.md and does not apply to it.
 
-    tools/plan_prose_check.py             # both checks
+    tools/plan_prose_check.py             # all three checks
     tools/plan_prose_check.py --prose     # plan.md tense only
-    tools/plan_prose_check.py --citations # pending step files only
+    tools/plan_prose_check.py --citations # pending step files' citations only
+    tools/plan_prose_check.py --touches   # pending step files' touches only
     tools/plan_prose_check.py --prose adocs/plan.md          # explicit files
     tools/plan_prose_check.py --citations adocs/plan_todo/S091_*.md
 
-Exits non-zero when either check flags anything.
+Exits non-zero when any check flags anything.
 
 **--prose: a completed step described as pending.** plan.md is second in the
 reading order and its prose is what a cold session reads before the ordered
@@ -75,6 +77,61 @@ not fail the run. Those documents are rewritten at every completion, by design,
 so a line citation into one is stale by construction; the durable fix is to
 cite a section or an id, and gating on them would make this check permanently
 red and therefore ignored.
+
+**--touches: a step whose goal names a symbol no file it may touch carries.**
+`touches:` is the field that says where a change is allowed to land, so a step
+whose goal is to change a symbol and whose `touches:` omits the file holding
+that symbol cannot be completed without violating its own scope. S039 is the
+measured case: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:`
+named `src/evaluation.hpp`, and the constant moved to `src/search_params.hpp` at
+S073 -- `src/evaluation.hpp` keeps only the comment saying what it means.
+2026-08-20_plan_review-F06 found it by reading, S141 is the repair, and this is
+the check that stops the class recurring.
+
+    TOUCHES the goal names a symbol that lives in code somewhere in the
+            repository, and no file the step may touch carries it in code.
+
+**A mention inside a comment is not a landing site**, which is the whole of the
+S039 case and the reason the file contents are comment-stripped before the
+match. C and C++ comments and `#` comments in `.py` and `.sh` are stripped;
+`.md` and everything else is matched whole, since a document has no code to be
+outside of. A python docstring is a string and so counts as code -- it has never
+mattered here, and pretending otherwise would need a parser.
+
+**What counts as a symbol the goal names** -- deliberately narrow, because a
+checker that fires on prose nouns is one that gets switched off:
+
+  * an ALL_CAPS name with an underscore in it, `LAZY_EVAL_MARGIN`. The
+    underscore is what keeps `SPRT`, `UCI` and `NNUE` out.
+  * a call written with its parentheses, `search_param_info()`.
+  * a `_t`-suffixed type, `move_t`.
+  * a UCI option name, matched against the names `src/search_params.hpp`
+    actually declares rather than against a CamelCase pattern, so `Stockfish`
+    and `GitHub` cannot be read as symbols.
+
+What it therefore does not catch, stated so nobody trusts it further than it
+goes: a symbol named in prose without any of those markings (`tempo`,
+`piece_placement_mg`, `evaluate` without parentheses); a landing site no symbol
+points at, which is S120's defect -- its goal names nothing at all and the file
+it has to clear the cache from, `src/chesso.cpp`, was found by reading its own
+pitfalls; a step whose `touches:` names too much rather than too little; and any
+claim about `accepts:`, which is S139's and S140's ground.
+
+Two ungated classes print as notes rather than failing:
+
+  * the symbol appears in code nowhere in the repository. Then it is prose, or
+    it is a name the step is about to invent, and there is no file to demand.
+  * `touches:` names a directory that already holds files of the symbol's own
+    kind. A directory says "somewhere under here, possibly in a file that does
+    not exist yet", which no check over the tree as it stands can decide --
+    S150's tool lands in `tools/` and reads `search_param_info()` out of `src/`,
+    and its accepts says in as many words that nothing in `src/` changes.
+    Abstaining is the same call `--citations` makes on a bare `:line`: guessing
+    is worse. The kind test narrows the abstention rather than removing it: a
+    step naming `adocs/plan_todo/`, which holds `.md` and nothing else, still
+    answers for a C++ constant. It is not airtight -- `adocs/data/` holds
+    `.hpp`, because S075 dumped six fitted tables there, so naming that
+    directory does buy silence for a C++ symbol. Name files, not directories.
 """
 import os
 import re
@@ -409,6 +466,270 @@ def check_citations(path, tracked, byname):
     return len(flags)
 
 
+# ------------------------------------------------------------------ touches
+
+# A step file's fields are `name:` at column zero and wrap onto indented
+# continuation lines; this reads one field's whole value.
+FIELD = re.compile(r"^([a-z_]+):[ \t]*(.*)$")
+
+CONST_SYM = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
+CALL_SYM = re.compile(r"\b([a-z_][a-z0-9_]*)\(\)")
+TYPE_SYM = re.compile(r"\b[a-z][a-z0-9_]*_t\b")
+UCI_DECL = re.compile(r"X\(\s*[A-Z][A-Z0-9_]*\s*,\s*\"([A-Za-z][A-Za-z0-9]*)\"")
+
+# Where a symbol is looked for when deciding whether it exists in code at all.
+CODE_ROOTS = ("src/", "tools/", "tests/", "scripts/", "bin/")
+CODE_EXT = (".cpp", ".hpp", ".h", ".py", ".sh")
+
+# This file is not part of the corpus it searches. Its own documentation names
+# the symbols the check is about -- `LAZY_EVAL_MARGIN` and `search_param_info()`
+# are both in the docstring above -- and a python docstring is a string rather
+# than a comment, so leaving it in made the checker answer to its own prose:
+# S150's `tools/` came back satisfied by this paragraph.
+SELF = "tools/plan_prose_check.py"
+
+_stripped = {}
+
+
+def _strip_c(text):
+    """C and C++ comments blanked, newlines and string literals kept.
+
+    Newlines survive so a reported line number is the real one; string literals
+    survive because `X(LAZY_EVAL_MARGIN, "LazyEvalMargin", ...)` is where a UCI
+    option name is declared, not a place it is mentioned.
+    """
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in "\"'":
+            out.append(c)
+            i += 1
+            while i < n:
+                if text[i] == "\\":
+                    out.append(text[i:i + 2])
+                    i += 2
+                    continue
+                out.append(text[i])
+                i += 1
+                if text[i - 1] == c:
+                    break
+            continue
+        if c == "/" and text[i:i + 2] == "//":
+            while i < n and text[i] != "\n":
+                i += 1
+            continue
+        if c == "/" and text[i:i + 2] == "/*":
+            end = text.find("*/", i + 2)
+            end = n if end < 0 else end + 2
+            out.append("\n" * text.count("\n", i, end))
+            i = end
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def _strip_hash(text):
+    out = []
+    for line in text.split("\n"):
+        cut = line.find("#")
+        out.append(line if cut < 0 else line[:cut])
+    return "\n".join(out)
+
+
+def code_of(path):
+    """A tracked file's text with its comments blanked, or None if unreadable."""
+    if path not in _stripped:
+        lines = _at(None, path)
+        if lines is None:
+            _stripped[path] = None
+        else:
+            text = "\n".join(lines)
+            if path.endswith((".cpp", ".hpp", ".h")):
+                text = _strip_c(text)
+            elif path.endswith((".py", ".sh")):
+                text = _strip_hash(text)
+            _stripped[path] = text
+    return _stripped[path]
+
+
+def fields_of(text):
+    """{field name: value} for one step file, continuation lines joined."""
+    out, name = {}, None
+    for raw in text.split("\n"):
+        if raw.startswith("#"):
+            break
+        m = FIELD.match(raw)
+        if m:
+            name = m.group(1)
+            out[name] = m.group(2).strip()
+        elif name and raw.startswith((" ", "\t")):
+            out[name] = (out[name] + " " + raw.strip()).strip()
+        elif not raw.strip():
+            name = None
+    return out
+
+
+def uci_names():
+    """The UCI option names src/search_params.hpp declares."""
+    text = code_of("src/search_params.hpp") or ""
+    return set(UCI_DECL.findall(text))
+
+
+def symbols_in(goal, options):
+    """The code symbols a goal names, in the order they are written.
+
+    A match carrying a file extension is a path and not a symbol -- S157's goal
+    says "DEV_MANUAL.md says which scale the bounds are in", and DEV_MANUAL read
+    as a constant sent the check looking for a definition of it.
+    """
+    def is_path(text, end):
+        return re.match(r"\.[A-Za-z]", text[end:end + 2]) is not None
+
+    found = []
+    for regex in (CONST_SYM, CALL_SYM, TYPE_SYM):
+        for m in regex.finditer(goal):
+            if not is_path(goal, m.end()):
+                found.append((m.start(), m.group(0)))
+    for name in options:
+        for m in re.finditer(r"\b" + re.escape(name) + r"\b", goal):
+            if not is_path(goal, m.end()):
+                found.append((m.start(), name))
+    seen, out = set(), []
+    for _pos, sym in sorted(found):
+        if sym not in seen:
+            seen.add(sym)
+            out.append(sym)
+    return out
+
+
+def touches_paths(value, tracked, byname, dirs):
+    """(files, directories) named by a touches field.
+
+    Tokenised rather than pattern-matched, because the field is prose with paths
+    in it and the prose contains slashes of its own -- `src/bitboard.cpp
+    add_piece/remove_piece/move_piece` names one path and three functions. A
+    token counts only when the repository actually has it.
+    """
+    files, directories = [], []
+    for token in re.split(r"[\s,;()]+", value):
+        token = token.strip().strip(".`'\"")
+        if not token:
+            continue
+        if token in tracked:
+            files.append(token)
+        elif token.endswith("/") and token.rstrip("/") + "/" in dirs:
+            directories.append(token.rstrip("/") + "/")
+        elif "/" not in token and token in byname:
+            files.append(byname[token])
+    return files, directories
+
+
+def _homes(sym, tracked):
+    """`path:line` of the first code line carrying sym, one per file."""
+    word = re.compile(r"\b" + re.escape(sym.rstrip("()")) + r"\b")
+    out = []
+    for path in sorted(tracked):
+        if path == SELF or not path.endswith(CODE_EXT):
+            continue
+        if not (path.startswith(CODE_ROOTS) or "/" not in path):
+            continue
+        text = code_of(path)
+        if not text:
+            continue
+        m = word.search(text)
+        if m:
+            out.append(f"{path}:{text.count(chr(10), 0, m.start()) + 1}")
+    return out
+
+
+def could_host(directories, homes, under):
+    """The listed directories that might grow a file carrying this symbol.
+
+    A directory says "somewhere under here, possibly in a file that does not
+    exist yet", so it cannot be resolved against the tree as it stands -- but
+    only for a symbol of a kind it already holds. `tools/` holds C++ and so
+    might grow the definition of `search_param_info()`; `adocs/data/` holds
+    logs and tables and will never hold a C++ constant, so listing it buys no
+    silence. Without that second half a step could abstain from this check by
+    naming the directory it writes its measurements into.
+    """
+    kinds = {os.path.splitext(h.split(":")[0])[1] for h in homes}
+    return [d for d in directories
+            if kinds & {os.path.splitext(p)[1] for p in under.get(d, [])}]
+
+
+def carries(sym, path):
+    text = None if path == SELF else code_of(path)
+    if text is None:
+        return False
+    return re.search(r"\b" + re.escape(sym.rstrip("()")) + r"\b", text) is not None
+
+
+def check_touches(path, tracked, byname, dirs, options, under):
+    rel = os.path.relpath(os.path.abspath(path), REPO)
+    with open(path, encoding="utf-8") as fh:
+        fields = fields_of(fh.read())
+    goal = fields.get("goal", "")
+    syms = symbols_in(goal, options)
+    if not syms:
+        return 0, 0, 0
+
+    files, directories = touches_paths(
+        fields.get("touches", ""), tracked, byname, dirs)
+    listed = list(files)
+    for d in directories:
+        listed += under.get(d, [])
+
+    flags, notes = [], []
+    for sym in syms:
+        if any(carries(sym, p) for p in listed):
+            continue
+        homes = _homes(sym, tracked)
+        where = "in code at " + ", ".join(homes[:3]) + (
+            f" and {len(homes) - 3} more" if len(homes) > 3 else "")
+        hosts = could_host(directories, homes, under)
+        if not homes:
+            notes.append((sym, "not in code anywhere -- read as prose"))
+        elif hosts:
+            notes.append((sym, where + "; touches names " + " ".join(hosts)
+                          + ", which may grow a file for it"))
+        else:
+            flags.append((sym, where + "; touches names "
+                          + (", ".join(files + directories) or "nothing")))
+
+    print(f"{rel}: {len(syms)} symbol(s) in goal, {len(flags)} flagged"
+          + (f", {len(notes)} noted" if notes else ""))
+    for sym, why in flags:
+        print(f"  TOUCHES {rel}  {sym}  -- {why}")
+    for sym, why in notes:
+        print(f"  note    {rel}  {sym}  -- {why}")
+    return len(syms), len(flags), len(notes)
+
+
+def touches(paths, adocs):
+    tracked, byname = _tracked()
+    if not tracked:
+        print("touches: no tracked files, skipped (not a git checkout)")
+        return 0
+    dirs, under = set(), {}
+    for p in tracked:
+        parts = p.split("/")
+        for i in range(1, len(parts)):
+            d = "/".join(parts[:i]) + "/"
+            dirs.add(d)
+            under.setdefault(d, []).append(p)
+    options = uci_names()
+    files = paths or pending_step_files(adocs)
+    total = flagged = noted = 0
+    for f in files:
+        s, fl, n = check_touches(f, tracked, byname, dirs, options, under)
+        total, flagged, noted = total + s, flagged + fl, noted + n
+    print(f"touches flagged: {flagged} over {len(files)} files "
+          f"({total} symbols read, {noted} noted and ungated)")
+    return flagged
+
+
 def pending_step_files(adocs):
     out = []
     for d in ("plan_todo", "plan_current"):
@@ -431,24 +752,26 @@ def citations(paths, adocs):
 def main():
     adocs = os.path.join(REPO, "adocs")
     args = sys.argv[1:]
-    mode = "both"
-    if args and args[0] in ("--prose", "--citations"):
+    mode = "all"
+    if args and args[0] in ("--prose", "--citations", "--touches"):
         mode, args = args[0][2:], args[1:]
-    if mode == "both" and args:
+    if mode == "all" and args:
         # Refused rather than ignored: before the citation check existed a bare
         # path meant "check this plan file's prose", and silently dropping it
         # would report a green run over a file nobody looked at.
-        print("usage: plan_prose_check.py [--prose|--citations] [files...]",
-              file=sys.stderr)
+        print("usage: plan_prose_check.py [--prose|--citations|--touches] "
+              "[files...]", file=sys.stderr)
         print("  a file list needs the mode it belongs to", file=sys.stderr)
         return 2
 
     bad = 0
-    if mode in ("both", "prose"):
+    if mode in ("all", "prose"):
         prose = args or [os.path.join(adocs, "plan.md")]
         bad += sum(check(p, adocs) for p in prose)
-    if mode in ("both", "citations"):
+    if mode in ("all", "citations"):
         bad += citations(args if mode == "citations" else [], adocs)
+    if mode in ("all", "touches"):
+        bad += touches(args if mode == "touches" else [], adocs)
     return 1 if bad else 0
 
 

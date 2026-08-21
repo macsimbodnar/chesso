@@ -1,7 +1,11 @@
 id:         S120
 goal:       a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
 accepts:    an SPRT verdict, recorded whatever it is; the cache stores the **score and never a bound**, for the reason S094 records -- a bound is true on one side of one window and an entry outlives the window; the hit rate is measured over a real search and recorded; the step states whether the lazy shortcut is kept, narrowed or retired on the strength of the measured hit rate, and that statement is the input S039 and S122 read
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp,
+            src/chesso.cpp for the two clears section 5 requires -- beside
+            tt_reset at ucinewgame, and on the LazyEvalMargin setoption in the
+            tune build -- and tests/test_evaluation.cpp for section 3(a)'s
+            red-first properties
 excludes:   choosing LAZY_EVAL_MARGIN, which is S039; the king safety rebuild, which is S122
 decisions:  DEC-039
 closes:
@@ -80,7 +84,7 @@ Both preconditions hold today, measured. (1) `evaluate()` is
 `evaluate_cheap() + evaluate_expensive()` (src/evaluation.cpp:1051-1052),
 53.90 ns a call post-S104 (specs.md); the expensive half is mobility plus king
 safety clamped to +/-LAZY_EVAL_MARGIN inside evaluate_expensive()
-(src/evaluation.cpp:1045; the constant at src/search_params.hpp:128), and
+(src/evaluation.cpp:1045; the constant at src/search_params.hpp:164), and
 paying it everywhere costs the 11.7 % above. (2) The TT does not cover quiescence:
 S094 counted the quiescence probe finding **any** entry on 0.79 % of nodes
 (kiwipete depth 12, 16 MB table) -- TT_DEPTH_QS = -1 sits below every main
@@ -94,7 +98,7 @@ with S121/S122 about to raise it, the same arithmetic reopens it; the stamp
 should say so in one line.
 
 Placement: **inside the evaluation module, at evaluate_lazy(), not inside
-evaluate()**. Three reasons. `touches:` names evaluation files only and
+evaluate()**. Three reasons. `touches:` names no search file and
 quiescence already calls evaluate_lazy (src/search.cpp:257), so the mass of
 calls is covered without touching search.cpp. evaluate() must stay pure:
 bench_eval calls it in a loop over a fixed list (tests/bench_eval.cpp) and a
@@ -184,7 +188,7 @@ the stamp; S039 executes it.
   Every cached value carries the 150 clamp -- self-consistent, the cache
   mirrors the live evaluate(), and when S039 changes the margin that is a new
   binary and a fresh cache. The live path is the tune build, where
-  LazyEvalMargin is a setoption (src/search_params.hpp:128): clear the cache on
+  LazyEvalMargin is a setoption (src/search_params.hpp:164): clear the cache on
   that setoption, the same rule S108 records for the TT eval field. Were S039
   ever re-ordered ahead, nothing breaks -- the cache is indifferent to which
   margin it memoises.
