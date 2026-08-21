@@ -5307,6 +5307,34 @@ Consequences: `test_eval_model`'s tolerance, its four pinned FENs and its
               term stays at zero; that is a legitimate outcome and S027's row is
               its template.
 
+Proposed:     **Agent proposal, S139, 2026-08-21 -- NOT owner-approved, nothing
+              above is amended by it.** The arithmetic in `Context:` and
+              `Decision:` is the count as it stands today, and the plan runs
+              **S055 before S136** (`adocs/plan.md:352` entry 39 against `:363`
+              entry 50). S055 tapers mobility and king safety through one
+              division instead of two and re-pins the guard in its own commit
+              (`adocs/plan_todo/S055_taper_stage_two_once.md:3`: "the post-merge
+              bound of 2 x 23/24 = 1.917 ... the tempo precondition message's
+              arithmetic becomes 3 x 23/24 = 2.875 with its tolerance of 4
+              becoming 3"). So at the point S136 runs, two divisions can round
+              and not three, and the numbers this entry states are each one
+              division high. Proposed replacements: bound **2 x 23/24 = 1.917 to
+              3 x 23/24 = 2.875**, tolerance **2 to 3**, non-vacuity threshold
+              **`> 1.0` to `> 2.0 = 48/24`** (two divisions cannot reach past
+              46/24 = 1.9167). Taking the literals as written would raise the
+              tolerance a unit above what the arithmetic supports -- the
+              relaxation this entry forbids -- and set a threshold at 2.875 that
+              no position can reach when the bound is 2.875.
+
+              **The operative decision is unaffected**: unfreeze tempo, pay the
+              guard cost, re-derive and never relax, `--only tempo`, `--lambda
+              0`, bounds stated in advance. Only the literals move, and only if
+              S055 has landed. S136's `accepts:` was rewritten by S139 to derive
+              the count at its own HEAD with these numbers as the S055-landed
+              case, so the step is satisfiable either way; this block exists so
+              the entry and the step do not disagree in the meantime. Closes
+              half of `2026-08-20_plan_review-F03`.
+
 ## DEC-093  2026-08-20  the tuner's option check is a bounds diff and a node probe, because the engine cannot report a refusal
 Tags:         tuning, spsa, uci, tooling, s084, s085, s137, dec-061, dec-084
 Context:      S084's `accepts` and its research section both planned the same

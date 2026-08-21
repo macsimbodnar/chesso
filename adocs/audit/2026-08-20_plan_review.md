@@ -204,7 +204,12 @@ others.
 ### 2026-08-20_plan_review-F02 — high — S119's `accepts:` demands a verdict at Hash 128, which DEC-088 explicitly ordered removed and which the harness cannot produce
 
 Status: planned
-Planned in: S139
+Planned in: S139, landed 2026-08-21
+Applied: S119's accepts now reads "at the S105 harness setting, with the pressure
+ratio stated", DEC-088's `Consequences:` clause verbatim, with the 60-120 overwrites
+per entry named; the "regime S105 sets" attribution is gone. Traced to
+`fastchess.sh:225` (`option.Hash=16`, no override) and `rating.sh:36` (`hash_mb=128`,
+named in S119's body as the separate tool a rating-regime verdict would need).
 
 **Evidence.**
 
@@ -257,7 +262,16 @@ named as one, with `rating.sh` in `touches:`.
 ### 2026-08-20_plan_review-F03 — medium — S136's accepts arithmetic (and DEC-092's) is one taper division out at the point the plan runs it
 
 Status: planned
-Planned in: S139
+Planned in: S139, landed 2026-08-21
+Applied: half. S136's accepts is now derived -- N divisions can round at its own HEAD,
+unfreezing tempo makes it N+1 -- with the S055-landed case spelled out (N=2: bound
+1.917 to 2.875, tolerance 2 to 3, threshold `> 1.0` to `> 2.0 = 48/24`, worst-pin
+`> 1.9` to `> 2.8`), and a new section traces it to `adocs/plan.md:352,363`, S055's
+accepts and `tests/test_eval_model.cpp:242-249,277,311-314,335,343`. DEC-092's
+literals are owner text: S139 appended an explicitly unapproved `Proposed:` block
+rather than amending them. S136's `goal:` and `adocs/plan.md:363` still carry the
+pre-S055 count of three -- moving them needs `adocs/plan.md` in a `touches:` field,
+which S139 did not have.
 
 **Evidence.** The engine tapers through four integer divisions; three can round
 today because tempo ships at zero. `tests/test_eval_model.cpp` pins that:
@@ -332,7 +346,14 @@ name the other.
 ### 2026-08-20_plan_review-F04 — medium — S125's accepts requires S118, which the plan deliberately orders after it
 
 Status: planned
-Planned in: S139
+Planned in: S139, landed 2026-08-21
+Applied: the first of the two options. S125's accepts drops the S118 dependency and
+states that the terms are measured recomputed per call, the per-call cost recorded as
+the baseline S118 later reclaims; the plan order is unchanged. Decided on DEC-087 (h)
+and (i), `adocs/plan.md:143-145` and `:251-253`, and S118's own body
+(`S118_pawn_hash_table.md:15-19`, `:34-37`) -- all four order the terms before the
+cache, and a cache in front of a cheap computation is the published 10 % slowdown
+DEC-087 moved S118 to avoid.
 
 **Evidence.**
 
@@ -464,7 +485,14 @@ value and the comment as two separate obligations in two separate files.
 ### 2026-08-20_plan_review-F07 — medium — S109's accepts contains a clause that cannot bind one of the four rules it gates
 
 Status: planned
-Planned in: S139
+Planned in: S139, landed 2026-08-21
+Applied: S109's accepts now splits the clause. In check, PV, first move and near-mate
+bounds bind all four rules; the gives-check exemption binds futility, history and
+quiet SEE only, and explicitly does not bind LMP. Traced to `src/search.cpp:678`
+(`is_check_move` computed after `make_move`) with `grep -rn` over `src/` returning
+that line and its one consumer at `:710` and nothing else. Scope concern 2 is
+rewritten to the narrower owner question it leaves: whether to buy LMP the exemption
+with a post-make prune.
 
 **Evidence.**
 
@@ -804,7 +832,13 @@ against `ORDER_COUNTER` rather than against a killer.
 ### 2026-08-20_plan_review-F15 — low — S117's accepts admits a truncation change with "no SPRT owed", which INV-6 and its own body forbid
 
 Status: planned
-Planned in: S139
+Planned in: S139, landed 2026-08-21
+Applied: the "or" branch is gone. S117's accepts makes the identity a gate rather
+than a claim, requires the truncation behaviour unchanged, calls a moved bound a
+packing bug rather than a re-pinned tolerance, and says a truncation change retained
+deliberately owes an SPRT under INV-6 (`adocs/specs.md:80-87`). The "do S055 first or
+fold it in" open question in the body is closed to "S055 first", which its own
+Interactions section had already decided.
 
 **Evidence.**
 

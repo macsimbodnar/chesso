@@ -323,7 +323,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-13. S085  the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, DEC-094 -- and an independent SPRT of what it returns
 14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed
 15. S142  the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
 16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness -- **measured -11.02 +/- 10.53 Elo, H0 accepted, reverted; the duplication is kept and the test asserts it** (DEC-098)

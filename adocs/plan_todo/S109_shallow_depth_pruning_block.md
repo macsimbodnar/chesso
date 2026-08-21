@@ -1,6 +1,6 @@
 id:         S109
 goal:       late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
-accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, when the move gives check, or when alpha or beta is near mate, and the test asserts the precondition that would otherwise prune it; the fast suite green
+accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, or when alpha or beta is near mate -- all four rules, no exceptions; **the gives-check exemption binds the three per-move rules only** -- futility, history pruning and quiet SEE, which run after `make_move` where `is_check_move` exists (`src/search.cpp:678`) -- **and does not bind late move pruning**, whose skip-quiets flag is honoured at the generation stage before any move is made, where the engine has no pre-make gives-check predicate to consult and the published LMP form carries no such exemption; so LMP may end a quiet stage that still holds checking quiets, which is stated here rather than tested away, and buying it the exemption with a post-make prune is a departure from the published form and the owner's call, not the implementer's; for every rule, the test asserts the precondition that would otherwise prune the move, against the exemptions that bind that rule; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   razoring, which is a node-level rule and is S116; SEE pruning of **captures** in the main search, which is S091; futility inside quiescence, which is S112; the improving flag, which S108 supplies and this step consumes
 decisions:  DEC-071, DEC-082, DEC-084, DEC-087
@@ -356,13 +356,18 @@ values sit inside the declared ranges on purpose.
    move count). The accepts stands; but a failing block's bisection should
    include the gating axis, and the sketch's HP_MAX_DEPTH keeps raw depth
    one flip away.
-2. **The accepts' gives-check exemption cannot bind LMP as written.** "No
-   quiet is pruned ... when the move gives check" is testable for futility,
-   history and SEE (post-make `is_check_move`), and structurally impossible
-   for a skip-quiets flag honoured at the generation stage -- no pre-make
-   gives-check predicate exists, and the published LMP form carries no such
-   exemption. Read the clause as binding the three per-move rules; resolve
-   the LMP reading with the owner at implementation -- recorded, not silent.
+2. **The gives-check exemption binds three of the four rules, and since S139
+   the accepts says which.** It used to be one undivided clause over all four.
+   It is testable for futility, history and SEE, which run after `make_move`
+   where the flag exists -- `const bool is_check_move = is_capture ? false :
+   is_check(game);` at `src/search.cpp:678` -- and structurally impossible for
+   a skip-quiets flag honoured at the generation stage: `grep -rn
+   "gives_check\|is_check_move" src/` returns that line and its single
+   consumer, the LMR guard at `:710`, and nothing else, so there is no
+   pre-make predicate to gate generation on. The published LMP form carries no
+   such exemption either. What is left for the owner is the narrower question
+   the field now names: whether to buy LMP the exemption with a post-make
+   prune, which departs from the published form -- recorded, not silent.
 3. **"Quadratic in depth" is the >3000 form, not the entry form.** Both
    sub-3000 LMP passes traced (Weiss #104, formula unstated; Lynx #512,
    linear capped at depth 3) are conservative; every quadratic attempt at
