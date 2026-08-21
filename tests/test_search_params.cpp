@@ -45,13 +45,19 @@
 // 2026-08-20_plan_review-F08 and -F14, and both are now numbers a diff has to
 // change on purpose. What a bound *means* is not checkable here and is not
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
-// and OrderHistoryMax's ceiling by the band clearance in test_evaluation.
+// and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 // clang-format off
 struct golden_param_t { const char* name; int value; int min; int max; };
 
 static const std::vector<golden_param_t> golden_defaults = {
   //                       default   min      max
-  {"OrderHistoryMax",      600000,     0,  699900},
+  {"QuietHistoryMax",        8192,     1,   32767},
+  {"HistoryBonusQuad",          1,     0,    1024},
+  {"HistoryBonusLin",           0,     0,    4096},
+  {"HistoryBonusConst",         0, -32768,   32767},
+  {"HistoryMalusQuad",          1,     0,    1024},
+  {"HistoryMalusLin",           0,     0,    4096},
+  {"HistoryMalusConst",         0, -32768,   32767},
   {"MaxQsearchDepth",          19,     1,      64},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},

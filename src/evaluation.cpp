@@ -1165,6 +1165,11 @@ int score_move(const game_t* game,
     return ORDER_COUNTER;
   }
 
-  // Saturated on the way in, so it can never reach the killer band.
-  return state->history_moves[MOVE_PIECE(move)][MOVE_TO(move)];
+  // Signed since S093: a quiet that was tried and did not cut off carries a
+  // malus, so this band runs [-QuietHistoryMax, +QuietHistoryMax] rather than
+  // from zero. Gravity bounds it on the way in, so it can never reach the
+  // countermove band above, and nothing sits below it -- both edges are
+  // asserted in tests/test_evaluation.cpp.
+  return state
+      ->quiet_history[game->board.active_color][MOVE_FROM(move)][MOVE_TO(move)];
 }

@@ -23,10 +23,64 @@ static constexpr int MIN = -SEARCH_SCORE_INF;
 static constexpr int MAX = SEARCH_SCORE_INF;
 
 
-// ORDER_HISTORY_MAX, MAX_QSEARCH_DEPTH, RFP_MARGIN, RFP_MAX_DEPTH,
-// RFP_MIN_PLY, NULL_MOVE_BASE, NULL_MOVE_DIVISOR, LMR_BASE and LMR_DIVISOR are
-// in search_params.hpp with the rest of the tunable set, together with the
-// comment that says what each one is for. S073.
+// QUIET_HISTORY_MAX, the six HISTORY_BONUS_*/HISTORY_MALUS_* coefficients,
+// MAX_QSEARCH_DEPTH, RFP_MARGIN, RFP_MAX_DEPTH, RFP_MIN_PLY, NULL_MOVE_BASE,
+// NULL_MOVE_DIVISOR, LMR_BASE and LMR_DIVISOR are in search_params.hpp with the
+// rest of the tunable set, together with the comment that says what each one is
+// for. S073.
+
+
+void history_gravity_update(int16_t& entry, int bonus)
+{
+  const int max = QUIET_HISTORY_MAX;
+  const int clamped = std::clamp(bonus, -max, max);
+
+  assert(entry >= -max && entry <= max);
+
+  // Multiply before dividing. The other association, `entry * (|b| / max)`,
+  // truncates the whole decay term to zero at every bonus smaller than the
+  // bound -- which is all of them -- and gravity silently stops ageing while
+  // still looking like the published line.
+  //
+  // The interval is closed under this: `entry*(1 - |b|/max) + b` maps
+  // [-max, max] onto itself for |b| <= max, and truncation toward zero moves
+  // the result no further out than the exact value already is.
+  const int updated = entry + clamped - (entry * std::abs(clamped)) / max;
+
+  assert(updated >= -max && updated <= max);
+
+  entry = static_cast<int16_t>(updated);
+}
+
+
+void history_on_quiet_cutoff(search_state_t* state,
+                             color_t side,
+                             move_t cutoff_move,
+                             const move_t* quiets_tried,
+                             size_t quiets_tried_count,
+                             int depth)
+{
+  const int bonus = HISTORY_BONUS_QUAD * depth * depth +
+                    HISTORY_BONUS_LIN * depth + HISTORY_BONUS_CONST;
+  const int malus = HISTORY_MALUS_QUAD * depth * depth +
+                    HISTORY_MALUS_LIN * depth + HISTORY_MALUS_CONST;
+
+  // The maluses first, so that when two moves in the span share a butterfly
+  // cell with the cutoff move -- two promotions from the same square, say --
+  // the move that actually caused the cutoff is the one whose update lands
+  // last. Same cell, different moves, is what butterfly indexing costs.
+  for (size_t i = 0; i < quiets_tried_count; ++i) {
+    assert(quiets_tried[i] != cutoff_move);
+
+    history_gravity_update(state->quiet_history[side][MOVE_FROM(
+                               quiets_tried[i])][MOVE_TO(quiets_tried[i])],
+                           -malus);
+  }
+
+  history_gravity_update(
+      state->quiet_history[side][MOVE_FROM(cutoff_move)][MOVE_TO(cutoff_move)],
+      bonus);
+}
 
 
 using lmr_table_t = std::array<std::array<uint8_t, 64>, 64>;
@@ -603,6 +657,14 @@ int negamax(int alpha0,
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
 
+  // The quiets this node actually searched, in search order, for the malus.
+  // moves[0..i-1] is not that span: it holds captures, and it holds
+  // pseudo-legal moves whose make_move failed. Both are published bugs -- Lynx
+  // PR #610 charged the malus to illegal moves -- so the list is built at the
+  // one place where legality and eligibility are both already known.
+  move_t quiets_tried[MAX_MOVES];
+  size_t quiets_tried_count = 0;
+
   // Staged generation. Most nodes fail high on one of the first few captures
   // and never look at a quiet move, so the quiets are not generated until the
   // captures have been exhausted without a cutoff.
@@ -766,11 +828,11 @@ int negamax(int alpha0,
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 
-        // Saturating: an unbounded accumulator overflows in a long search.
-        const int bonus = depth * depth;
-        int& history =
-            state->history_moves[MOVE_PIECE(moves[i])][MOVE_TO(moves[i])];
-        history = std::min(history + bonus, ORDER_HISTORY_MAX);
+        // unmake_move ran above, so active_color is the side that played this
+        // move again -- the same side score_move indexed the table with when it
+        // ordered the node.
+        history_on_quiet_cutoff(state, game->board.active_color, moves[i],
+                                quiets_tried, quiets_tried_count, depth);
 
         if (prev_move != 0) {
           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
@@ -794,6 +856,20 @@ int negamax(int alpha0,
       memcpy(&state->pv_table[ply][1], state->pv_table[ply + 1],
              state->pv_length[ply + 1] * sizeof(move_t));
       state->pv_length[ply] = 1 + state->pv_length[ply + 1];
+    }
+
+    // Appended last, past the `break` a cutoff takes, so the move that caused
+    // the cutoff is structurally absent from the span the malus walks rather
+    // than excluded from it by an index. Lynx shipped the inverse off-by-one --
+    // dropping the last tried quiet to protect a cutoff move that was never in
+    // the list -- and the fix alone measured +12.89 (PR #1756).
+    //
+    // The gate is `!is_capture` and nothing else, exactly the gate the bonus
+    // uses above. An asymmetry between what can earn the bonus and what can
+    // earn the malus is a bias with no symptom.
+    if (!is_capture) {
+      assert(quiets_tried_count < MAX_MOVES);
+      quiets_tried[quiets_tried_count++] = moves[i];
     }
   }
 

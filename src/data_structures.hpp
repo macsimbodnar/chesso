@@ -447,7 +447,13 @@ struct search_state_t
   uint64_t explored_nodes;
   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
   move_t killer_moves[2][MAX_PLY];
-  int history_moves[12][64];  // [piece][destination]
+
+  // Butterfly history: [side to move][from][to], Hartmann 1988. It was
+  // [piece][destination] until S093, which conflates a knight on b1 with one on
+  // g1 going to the same square and separates two pieces of different type
+  // going the same way. int16_t because QuietHistoryMax bounds every entry to
+  // this type's range and 16 KB of table is cheaper to touch than 32.
+  int16_t quiet_history[2][64][64];
   transposition_table_t* tt;
   move_t best_move;
 

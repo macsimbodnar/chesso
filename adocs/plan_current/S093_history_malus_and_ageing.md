@@ -1,7 +1,7 @@
 id:         S093
 goal:       history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
 accepts:    two SPRT verdicts: malus and gravity land together -- they are one published mechanism, `entry += bonus - entry * abs(bonus) / MAX`, and splitting them measures each against a table shape it will not ship with (DEC-087) -- and persistence across `go` lands second with its own verdict; the malus applies to the quiet moves searched before the cutoff move and not to the cutoff move itself, asserted by a unit test on the table rather than through a game; the gravity keeps every score inside ORDER_HISTORY_MAX so the move-ordering bands still clear each other by 100 points, with the band clearance asserted (CLAUDE.md hazard, S023, S061); history carried across `go` is cleared on `ucinewgame` and on a position that is not a descendant of the last one searched, with a test for both; the fast suite green
-touches:    src/search.cpp history update and the ordering scores, src/search_params.hpp, tests/test_search.cpp
+touches:    src/search.cpp history update, src/search.hpp, src/evaluation.cpp score_move, src/data_structures.hpp search_state_t, src/search_params.hpp, src/chesso.cpp (verdict 2 only), tests/test_search.cpp, tests/test_evaluation.cpp, tests/test_search_params.cpp, MANUAL.md, adocs/specs.md
 excludes:   capture history, which is S023; continuation history, which is S024; correction history, which is S099
 decisions:  DEC-071, DEC-087
 closes:
@@ -111,29 +111,48 @@ The step's two cited figures, traced to their public records:
 
 Today, one table and three sites:
 
+**Every line number below was re-derived against `6e0afa0` on 2026-08-21 and
+six of them were wrong** -- the section was written before S107, S142, S149 and
+S141 landed. The corrected anchors, with what was there before in brackets:
+
 - `src/data_structures.hpp:450` -- `int history_moves[12][64]; // [piece][destination]`
   inside `search_state_t`, which is stack-allocated fresh per `go`
-  (`chesso.cpp:647`, `search_state_t state = {};`) -- so "zeroed on every go"
-  is a lifetime accident, not a clear anyone wrote.
+  (`src/chesso.cpp:647`, `search_state_t state = {};`) -- so "zeroed on every
+  go" is a lifetime accident, not a clear anyone wrote. Both correct.
 - Write: `src/search.cpp:759-773`, fail-high block, after `unmake_move` at
-  727 (so `game->board.active_color` is the mover again). Gate at 744
-  `if (!is_capture && !is_check_move)` -- S107 deletes the check term first.
-  Bonus at 749 `depth * depth`, saturation at 752
-  `std::min(history + bonus, ORDER_HISTORY_MAX)`. No malus, no decay, no
-  halving anywhere (grepped).
+  `:743` [was `:727`] so `game->board.active_color` is the mover again. Gate at
+  `:760` [was `:744`] and it reads `if (!is_capture)` alone -- S107 already
+  deleted the `!is_check_move` term this section said it would. Bonus at `:770`
+  [was `:749`] `depth * depth`, saturation at `:773` [was `:752` and again
+  `:768`] `std::min(history + bonus, ORDER_HISTORY_MAX)`. No malus, no decay,
+  no halving anywhere (grepped).
 - Read: `src/evaluation.cpp:1169`, `score_move` returns the raw entry as the
-  quiet's ordering score; bands at `evaluation.cpp:33-37` (TT 2000000,
-  captures >= 900100 worst-case, killers 900000/800000, counter 700000),
-  `ORDER_HISTORY_MAX` 600000 at `src/search_params.hpp:45`.
+  quiet's ordering score; bands at `src/evaluation.cpp:33-37` (TT 2000000,
+  captures >= 900100 worst-case, killers 900000/800000, counter 700000). Both
+  correct. `ORDER_HISTORY_MAX` is at `src/search_params.hpp:64` [was `:45`] and
+  its declared maximum is **699900**, not the 899999 quoted twice below: S142
+  narrowed it to 100 under `ORDER_COUNTER`. The default is still 600000.
 
-**No tried-quiets list exists.** The move loop (search.cpp:645-679) keeps only
-`moves[]/scores[]` and `legal_moves_counter`; `moves[0..i-1]` is the tried
-prefix in search order but contains captures and pseudo-legal moves whose
-`make_move` failed (the `continue` at 656). So the malus needs a new local
-`move_t quiets_tried[MAX_MOVES]` + count, appended only after `make_move`
-succeeds and the move passes the same eligibility as the bonus gate. That is
-the published shape twice over: Lynx's illegal-move span fix (PR #610) and its
-+12.89 off-by-one fix (PR #1756) are both bugs in exactly this list.
+**No tried-quiets list exists.** The move loop (`src/search.cpp:635-679`, the
+`for` opens at `:635` and not `:645`) keeps only `moves[]/scores[]` and
+`legal_moves_counter`; `moves[0..i-1]` is the tried prefix in search order but
+contains captures. So the malus needs a new local `move_t
+quiets_tried[MAX_MOVES]` + count, appended only after `make_move` succeeds and
+the move passes the same eligibility as the bonus gate.
+
+**One half of the published shape does not apply here and that is a correction
+to this section, not a finding in the tree.** Lynx's illegal-move span fix
+(PR #610) needs a pseudo-legal generator. chesso's is a *legal* generator --
+`generate_moves()` emits legal moves only (`src/bitboard.cpp:885`) and
+`make_move` returns false on exactly one path, a full game-history stack
+(`src/bitboard.cpp:752`), which the search cannot reach because it is bounded
+by `MAX_PLY`. So the `continue` at `src/search.cpp:666` [was `:656`] is dead
+for legality, no illegal move can enter the span whatever the list is built
+from, and a test asserting that none did would hold over an empty set. The list
+is still built after a successful `make_move`, because that costs nothing and
+is correct under either generator. Lynx's other bug, the +12.89 off-by-one of
+PR #1756, does apply and is what the append-after-the-cutoff-test placement is
+for.
 
 New shape: `int16_t quiet_history[2][64][64]` -- `[active_color][from][to]`,
 16 KB -- indexed by `game->board.active_color` at both sites (available at
@@ -168,15 +187,16 @@ Verdict 1 lands as one commit (DEC-087 j), built and tested in this order:
    piece types on the same from/to share the butterfly cell but not
    `[piece][to]`), so accumulated scores differ, `pick_next_move` order
    differs, the tree differs. Play-altering; it rides in verdict 1. Re-target
-   the existing table reads in tests (test_evaluation.cpp:754 and :775,
-   test_search.cpp:485-491) -- re-target, never weaken.
+   the existing table reads in tests -- `tests/test_evaluation.cpp:755` and
+   `:845` [was `:754` and `:775`], `tests/test_search.cpp:502` and `:606`
+   [was `:485-491`] -- re-target, never weaken.
 2. **Gravity + malus**, extracted as a testable helper rather than inline:
    `history_gravity_update(int16_t& entry, int bonus)` (clamp bonus, then the
    CPW line) and `history_on_quiet_cutoff(state, side, cutoff_move,
    quiets_tried, n, depth)` applying `+bonus` to the cutoff move and `-malus`
    to every tried quiet -- the cutoff move is never in the list. Delete the
-   `std::min` saturation at search.cpp:768: gravity replaces it, and both
-   together is the double-ageing bug (section 5).
+   `std::min` saturation at `src/search.cpp:773` [was `:768`]: gravity
+   replaces it, and both together is the double-ageing bug (section 5).
 3. **Band-safety test, red first**: drive an entry to each asymptote through
    the helper (repeated max-depth updates -- the precondition, non-vacuous by
    construction), then assert `|entry| <= HISTORY_MAX`,
@@ -222,8 +242,8 @@ ships as-is.
 - **The band, with the real numbers.** Bands clear by 100:
   `ORDER_CAPTURE + MVV_PAWN - MVV_KING = 1000000 + 100 - 100000 = 900100`
   against `ORDER_KILLER_0 = 900000` (evaluation.cpp:22, 33-37). History's own
-  clearance today is 100000 (600000 cap at search_params.hpp:45 against
-  counter 700000). Malus makes the quiet band `[-HISTORY_MAX, +HISTORY_MAX]`;
+  clearance today is 100000 (600000 cap at `src/search_params.hpp:64`
+  [was `:45`] against counter 700000). Malus makes the quiet band `[-HISTORY_MAX, +HISTORY_MAX]`;
   nothing sits below it today, but S025 (reserve) would put losing captures
   there -- the test pins both edges so that arrival fails loudly instead of
   silently.
@@ -305,3 +325,215 @@ is recorded as zero.
 - https://talkchess.com/viewtopic.php?t=85723 -- History Gravity Formula thread; no derivation or values beyond a 16-bit width remark.
 - https://talkchess.com/viewtopic.php?t=62676 -- cdani: clearing ordering tables at search start "probably is not worth it".
 - https://www.madchess.net/tag/history-heuristic/ -- depth-squared bonus in a devlog, [piece][to] indexing as the alternative lineage.
+## Verdict 1 as landed, 2026-08-21
+
+Butterfly reshape, gravity and malus in one change, per DEC-087 (j). Persistence
+is untouched and is verdict 2.
+
+### What was built, and where it departs from the sketch above
+
+**Table.** `int16_t quiet_history[2][64][64]` in `search_state_t`
+(`src/data_structures.hpp`), `[side to move][from][to]`, 16 KB against the old
+3 KB. `score_move` reads it at `src/evaluation.cpp:1173` indexed by
+`game->board.active_color`; the write site indexes by the same field after
+`unmake_move`, so both see the mover.
+
+**Helpers.** `history_gravity_update(int16_t&, int)` and
+`history_on_quiet_cutoff(state, side, cutoff_move, quiets_tried, n, depth)`, both
+declared in `src/search.hpp` so the tests drive them directly, both defined at
+the top of `src/search.cpp`. The update is the published line with the
+multiplication first, `entry + b - (entry * |b|) / MAX`, and two asserts: the
+precondition `|entry| <= MAX` and the postcondition. **Both configurations build
+with `-DNDEBUG`, so those two are documentation and not enforcement** -- what
+enforces the bound is the algebra and the unit case that drives 5000 updates into
+each asymptote and checks every intermediate. The `std::min` saturation is
+deleted, not kept beside the clamp.
+
+**Malus span.** A local `move_t quiets_tried[MAX_MOVES]` plus a count, appended
+to at the **bottom of the move loop**, past the `break` a cutoff takes. So the
+cutoff move is absent from the span structurally rather than by an index, which
+is the shape Lynx's +12.89 off-by-one (PR #1756) argues for; the alternative,
+appending on entry and excluding the last element, is the bug itself. The gate is
+`!is_capture` and nothing else, byte for byte the gate the bonus uses.
+`history_on_quiet_cutoff` charges the maluses first and credits the bonus last,
+so where two moves alias one butterfly cell -- two promotions from one square --
+the move that actually cut off is the one whose update lands.
+
+**Four departures from section 4, each with its reason:**
+
+1. `HISTORY_MAX` is spelled **`QUIET_HISTORY_MAX`** / `QuietHistoryMax`.
+   `HISTORY_MAX_SIZE` already exists in `src/data_structures.hpp:48` and is the
+   game move stack's length. Two names one token apart on unrelated quantities
+   is a mistake waiting to be made.
+2. Its **declared range is 1 to 32767 and both bounds are arithmetic**, not the
+   "power of two well inside int16" the section suggests. The floor is 1 because
+   the update divides by it; the ceiling is `INT16_MAX` because that is the
+   entry's type, and it doubles as the overflow guard -- the intermediate reaches
+   `MAX^2` and 32767^2 is 1.07e9, inside int32. Section 4's `HISTORY_MAX + 100 <=
+   700000` clearance is satisfied by six orders of magnitude and stops being the
+   binding constraint. **Default 8192**, 2^13.
+3. **`ORDER_HISTORY_MAX` is retired rather than repointed.** Its job was a
+   saturation ceiling on an unbounded accumulator and there is no unbounded
+   accumulator left. The tune build's option list loses `OrderHistoryMax` and
+   gains seven: `QuietHistoryMax` and the six coefficients. `MANUAL.md`,
+   `tests/test_search_params.cpp`'s golden rows and `test_uci_surface` follow.
+4. **The illegal-move test in step 3 of the sketch is not written**, because it
+   would be vacuous here. Section 2 above carries the correction: chesso's
+   generator is legal, so no illegal move can reach the span whatever builds it.
+
+### Red first, observed and recorded
+
+The structure landed first with a deliberately incomplete helper -- clamped to
+the `int16_t` range, no gravity, no malus -- so the three new cases could be seen
+failing against real numbers rather than against a missing symbol. Verbatim, from
+`build/tests/test_search`:
+
+    TEST CASE:  gravity holds a history entry inside the bound at both asymptotes
+    tests/test_search.cpp:644: FATAL ERROR: REQUIRE( rising <= max ) is NOT correct!
+      values: REQUIRE( 8208 <= 8192 )
+
+    TEST CASE:  a quiet cutoff maluses the quiets tried before it
+    tests/test_search.cpp:731: ERROR: CHECK( ... ) is NOT correct!
+      values: CHECK( 0 <  0 )
+      logged: A quiet tried before the cutoff scores 0 and not a malus.
+      [three times, once per tried quiet]
+
+    TEST CASE:  the cutoff move is credited and the quiets before it are charged
+    tests/test_search.cpp:844: ERROR: CHECK( state.quiet_history[WHITE][g1][g2] < 0 ) is NOT correct!
+      values: CHECK( 0 <  0 )
+    tests/test_search.cpp:845: ERROR: CHECK( state.quiet_history[WHITE][g1][h2] < 0 ) is NOT correct!
+      values: CHECK( 0 <  0 )
+
+    [doctest] test cases:   3 |   0 passed | 3 failed | 63 skipped
+    [doctest] assertions: 173 | 167 passed | 6 failed |
+
+Green after the real update, 20065 assertions over the same three cases.
+
+The third case is driven through `negamax` and is where the call site is held.
+Its position is `6rk/b5pp/7N/8/3N4/8/8/6K1 w - - 0 1` -- from a tool and not from
+the board (CLAUDE.md): python-chess reports `is_valid() True`, `is_check()
+False`, and the whole mating set as `[('Nf7#', 'h6f7')]`. Nf7 is also the first
+quiet the generator emits, so with a cold table the malus span would be empty and
+every assertion would hold vacuously; two seeded killers put two king moves in
+front of it, which is the case's stated precondition. `Nxg8` is a capture ordered
+ahead of all three and is asserted to earn neither bonus nor malus, which is what
+holds the gate mirror. Black's whole half of the table is asserted empty, which
+is what holds the colour axis.
+
+### Band clearance, now that history can be negative
+
+`tests/test_evaluation.cpp` "the declared history ceiling clears the band above
+it" was S142's and is re-targeted, never weakened. It reads `QuietHistoryMax`'s
+declared maximum out of `search_param_info()` and now drives the entry to **both**
+edges of the closed interval:
+
+- precondition 1, unchanged: the cheapest capture stands exactly 100 above the
+  first killer in this position, so the 100 asked for below is read off the code
+  and not copied out of a comment;
+- precondition 2, unchanged: the countermove band is the one immediately above
+  history;
+- precondition 3, **extended**: `score_move` returns `+declared_max` and
+  `-declared_max` unmodified. Without the second half a `score_move` that clamped
+  the malused half back to zero would make the floor assertion vacuous;
+- the ceiling: `s_counter - (+max) >= 100`;
+- the floor: `s_counter - (-max) >= 100`;
+- and the emptiness below quiets, which is the edge that did not exist before
+  this step: `min(capture, killer_0, killer_1, counter) - max >= 100`, so the
+  whole interval `[-max, +max]` stands clear of every other band. **What sits
+  below quiets today is nothing** -- `score_move`'s last branch is the table read
+  -- and S025's losing captures would arrive exactly there and fail here.
+
+### Measurement
+
+`tools/search_bench.py` at depth 13, two interleaved passes, node counts
+identical across passes:
+
+| position | reference `6e0afa0` | candidate | delta |
+|---|---|---|---|
+| midgame | 863774 | 944870 | +9.39 % |
+| kiwipete | 7248224 | 5202441 | -28.22 % |
+| tactical | 529142 | 533229 | +0.77 % |
+| total | 8641140 | 6680540 | **-22.69 %** |
+
+Best move unchanged at all three, `c3d5` / `e2a6` / `d7c8q`. Node throughput
+7816/7458/7627 knps against 7445/7233/7568 at depth 11, so **about 2 to 3 %
+slower per node** -- the malus loop and a 16 KB table against 3 KB -- and the
+wall clock over the three positions falls 1.194 s to 0.939 s regardless.
+
+Nothing here is behaviour-neutral, so INV-6 takes the SPRT path.
+
+**The mate suite did not move.** `tests/test_engine.cpp` "engine: mate safety",
+S145's 48 constructed forced mates: 16 of 16 mates in two exact at delay 0, 8 of
+8 mates in three against a floor of 7, 0 of 8 at four and five -- the same
+reading `src/search_params.hpp` records for the shipping bounds.
+
+### Gates
+
+- `cmake --build build -j12 && ctest --test-dir build -L fast` -- 19 of 19
+  passed, 15.5 s.
+- `cmake --build build-tune -j12 && ctest --test-dir build-tune -L fast` -- 19 of
+  19 passed, 15.7 s.
+- `./clang-format.sh --check` -- exit 0.
+- `tools/plan_prose_check.py --touches` -- 0 flagged over 65 files, unchanged.
+- `tools/plan_prose_check.py --citations` -- **42 flagged at `6e0afa0`, 84 in
+  this tree**, and the increase is the point rather than a regression to hide:
+  editing `src/search.cpp` and `tests/test_search.cpp` moved several hundred
+  lines, so every other step file citing a line below the edit now drifts. The
+  drift is mechanical, it is what the checker exists to report, and repairing 48
+  citations across fifteen other step files is not this step's change. This
+  step's own six flags are repaired rather than reset: see the note below.
+
+### The six citations this file was flagged for, and what happened to each
+
+Moving the file into `plan_current/` reset its drift baseline before a single
+character was edited, which is exactly the hazard S139 fell into -- the count
+falls and nothing was fixed. So each is named:
+
+| cited | held at baseline | true at `6e0afa0` | verdict |
+|---|---|---|---|
+| `search.cpp:759-773` | comment opener | opener right, range end had moved | not wrong, re-anchored anyway since the block is gone |
+| `search_params.hpp:45` (x2) | `ORDER_HISTORY_MAX ... 899999` | line 45 is prose; the row is `:64` and reads `699900` | **live-wrong**, corrected |
+| `test_evaluation.cpp:754` | the assignment | `:754` is the declaration, assignment is `:755` | **live-wrong**, corrected |
+| `test_search.cpp:485-491` | `size_t history_entries = 0;` | `:485-491` is the killer loop; history is `:497-505` | **live-wrong**, corrected |
+| `search.cpp:768` | the `std::min` | `:768` is `best_move = moves[i];`, the `std::min` is `:773` | **live-wrong**, corrected |
+
+Section 2 above carries the repairs and five more the checker never flagged
+because it only reports what changed since a baseline: `:656`, `:727`, `:744`,
+`:749` and the `for` opener at `:645`, all off by ten to sixteen lines.
+
+### SPRT
+
+`adocs/data/S093_sprt_v1.sh`, launched 2026-08-21 21:31, log
+`.tuning/sprt_s093_v1.log`. Bounds `elo0=0 elo1=5 alpha=0.05 beta=0.05`,
+fastchess.sh's default for a change claimed to gain, against reference
+`6e0afa0`. All three readings -- H1, H0, no verdict -- were pre-registered in the
+script header before the first game, and the no-verdict clause named DEC-063's
+hazard explicitly: the same pair random-walked 6 h 36 m over 9036 games for S068
+and returned nothing.
+
+**H1 accepted, 2026-08-22, in 2 h 43 m 59 s over 6412 games:**
+
+    Elo: 10.73 +/- 6.70, nElo: 13.63 +/- 8.50
+    LOS: 99.92 %, DrawRatio: 37.49 %, PairsRatio: 1.16
+    Games: 6412, Wins: 2309, Losses: 2111, Draws: 1992, Points: 3305.0 (51.54 %)
+    Ptnml(0-2): [307, 619, 1202, 725, 353], WL/DD Ratio: 2.71
+    LLR: 2.95 (100.2%) (-2.94, 2.94) [0.00, 5.00]
+    SPRT ([0.00, 5.00]) completed - H1 was accepted
+
+0 time forfeits in 6413 games, 68.9 % decisive. The pre-registered H1 clause
+governs: **the mechanism gains 5 Elo or more, and that is the claim -- not
+"+10.73".** The point estimate is biased upward by the early stop (DEC-063), so
+the magnitude is not what the run establishes. Kept.
+
+**The published figures did not transfer, and this is DEC-019's thesis in its
+milder form.** Weiss measured the quiet history malus at **+37.49 +- 12.19** over
+1228 games (commit c5d4921, PR #296) and Lynx at **+28.0 +- 10.3**, LOS 100 %
+(PR #610). Here it reads **+10.73 +- 6.70** over 6412 games -- roughly a third of
+either, on five times Weiss's sample and a comparable one to Lynx's, and the two
+published intervals do not overlap this one. The *direction* transferred and the
+*magnitude* did not. DEC-019's existing entries are the harsher case, where a
+published figure measured 0 or negative; this is the same lesson in the form that
+is easier to miss, because the change is a real gain and the number is still
+wrong. A published figure decided what to try. It did not decide what we got.
+
+author:    Maksym Bodnar

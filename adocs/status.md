@@ -6,7 +6,7 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-21 by `moltke --step status`.
 
 - Last done: S145
-- In progress: none
+- In progress: S093 history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
 - Next: S093
 - Blocked: none
 - Parked:

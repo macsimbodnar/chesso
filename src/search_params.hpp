@@ -48,20 +48,56 @@
 // kinds existed and named the wrong band for history.
 // clang-format off
 #define CHESSO_SEARCH_PARAMS(X)                                                \
-  /* Keeps an accumulated history score under every band above it. The band    \
-     immediately above is the countermove's 700000 and not a killer's 900000   \
-     (src/evaluation.cpp:33-37), and the bands clear each other by 100, so the \
-     declared maximum is that band minus that clearance: 699900.               \
+  /* The gravity bound on a quiet history entry. Every score the table can     \
+     hold lies in [-QuietHistoryMax, +QuietHistoryMax] by construction --      \
+     `entry + b - entry*|b|/MAX` with `|b| <= MAX` maps that interval onto     \
+     itself -- so this is the whole of the quiet ordering band, both edges.    \
                                                                                \
-     It read 899999 until S142, which is above the countermove band and above  \
-     the second killer slot, so a tuner sweeping this axis could have inverted \
-     both -- and the symptom of that is a strength regression rather than a    \
-     wrong node count (CLAUDE.md, S023). The clearance is asserted against     \
-     this declared bound rather than against the shipping 600000, in           \
-     tests/test_evaluation.cpp "the declared history ceiling clears the band   \
-     above it", so it is arithmetic that fails rather than a sentence that     \
-     stops being true. 2026-08-20_plan_review-F14. */                          \
-  X(ORDER_HISTORY_MAX, "OrderHistoryMax", 600000, 0, 699900)                   \
+     Both bounds are arithmetic. The floor is 1 because the update divides by  \
+     this value. The ceiling is INT16_MAX because the entry is an int16_t      \
+     (src/data_structures.hpp), and it doubles as the overflow guard the       \
+     update needs: the intermediate reaches MAX^2, and 32767^2 is 1.07e9,      \
+     inside int32 with room. Nothing here is a guess at where the good values  \
+     are -- S127 sweeps it.                                                    \
+                                                                               \
+     The band above is the countermove's 700000 and the bands clear each other \
+     by 100 (src/evaluation.cpp:33-37), so the ceiling has six orders of       \
+     clearance rather than the 100 the old ORDER_HISTORY_MAX had to be trimmed \
+     to. It is still asserted, in tests/test_evaluation.cpp "the declared      \
+     history ceiling clears the band above it", and now at both edges: the     \
+     malus makes a quiet score negative and nothing sits below quiets today,   \
+     so the case pins the floor as well so that an arrival there (S025's       \
+     losing captures) fails loudly. CLAUDE.md lists this as a one-way door --  \
+     the symptom of getting it wrong is a strength regression, not a wrong     \
+     node count. Replaces ORDER_HISTORY_MAX, whose 600000 was a saturation     \
+     ceiling on an unbounded accumulator; gravity bounds the table instead.    \
+     S093, 2026-08-20_plan_review-F14. */                                      \
+  X(QUIET_HISTORY_MAX, "QuietHistoryMax", 8192, 1, 32767)                      \
+                                                                               \
+  /* The bonus a quiet move that caused a cutoff is credited with, and the     \
+     malus every quiet tried before it at that node is charged, both as        \
+     `QUAD*depth*depth + LIN*depth + CONST` and both clamped to the bound      \
+     above before they reach the table.                                        \
+                                                                               \
+     Seeded as one form, `depth*depth`, which is what chesso already used and  \
+     is one of the two forms CPW publishes; the other, `300*depth - 250`, is   \
+     {0, 300, -250} here if the quadratic misfits. The bonus and the malus     \
+     carry separate coefficients because splitting them is the published       \
+     follow-up -- Weiss measured a split formula plus SPSA at +5.78 +/- 4.09   \
+     LTC (PR #695), Lynx moved to x^2+x+c split (PR #1818) -- but they ship    \
+     equal. This step does not claim the split; it leaves S127 the axes.       \
+                                                                               \
+     QUAD and LIN are non-negative because a negative one turns the bonus into \
+     a penalty as depth grows, which inverts the mechanism rather than tuning  \
+     it. Their ceilings are the overflow bound: at MAX_DEPTH 126 the three     \
+     terms sum to under 1.7e7, four orders inside int32. CONST spans the       \
+     entry's own type because the published linear form needs it negative. */  \
+  X(HISTORY_BONUS_QUAD,  "HistoryBonusQuad",  1, 0, 1024)                      \
+  X(HISTORY_BONUS_LIN,   "HistoryBonusLin",   0, 0, 4096)                      \
+  X(HISTORY_BONUS_CONST, "HistoryBonusConst", 0, -32768, 32767)                \
+  X(HISTORY_MALUS_QUAD,  "HistoryMalusQuad",  1, 0, 1024)                      \
+  X(HISTORY_MALUS_LIN,   "HistoryMalusLin",   0, 0, 4096)                      \
+  X(HISTORY_MALUS_CONST, "HistoryMalusConst", 0, -32768, 32767)                \
                                                                                \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \

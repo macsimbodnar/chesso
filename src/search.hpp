@@ -53,6 +53,32 @@ int negamax(int alpha0,
             move_t prev_move,
             bool is_pv);
 
+// The published history update, in one place because three tables will use it:
+// S024's continuation history and S023's capture history share the clamp, the
+// overflow discipline and the bonus/malus split with this one.
+//
+//   entry += clamp(bonus) - entry * |clamp(bonus)| / QUIET_HISTORY_MAX
+//
+// Two properties follow from the algebra and both are load-bearing. An entry in
+// [-MAX, MAX] stays there, which is what makes the ordering band a closed
+// interval rather than an accumulator that has to be saturated. And every
+// update shrinks the old value by (1 - |b|/MAX), so ageing is by construction
+// and a periodic halving on top of it would age twice.
+//
+// Declared here so a test can drive an entry to each asymptote directly. S093.
+void history_gravity_update(int16_t& entry, int bonus);
+
+// One fail-high on a quiet move: the bonus to the move that cut off, the malus
+// to every quiet tried at that node before it. `quiets_tried` never contains
+// `cutoff_move` -- the caller appends after the cutoff test, so the exclusion
+// is structural. S093.
+void history_on_quiet_cutoff(search_state_t* state,
+                             color_t side,
+                             move_t cutoff_move,
+                             const move_t* quiets_tried,
+                             size_t quiets_tried_count,
+                             int depth);
+
 #ifdef CHESSO_TUNE
 // The reduction the built table holds for a (depth, move number) pair. Tune
 // build only, and it exists for one test: LMR_BASE and LMR_DIVISOR are read

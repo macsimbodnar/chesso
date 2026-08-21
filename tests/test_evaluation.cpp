@@ -752,7 +752,8 @@ TEST_SUITE("evaluation: score_move ordering")
 
     // A plain quiet move only carries its history score.
     const move_t plain = quiets[3];
-    state.history_moves[MOVE_PIECE(plain)][MOVE_TO(plain)] = 42;
+    state.quiet_history[game.board.active_color][MOVE_FROM(plain)]
+                       [MOVE_TO(plain)] = 42;
 
     const move_t tt_move = a_capture;
 
@@ -778,14 +779,22 @@ TEST_SUITE("evaluation: score_move ordering")
 
 
   // S142. The case above orders the bands at one history value; this one orders
-  // them at the largest history value the parameter table admits, which is a
-  // different question and the one `OrderHistoryMax`'s upper bound exists to
-  // answer. It read 899999 until S142 -- above the countermove band and above
-  // the second killer slot, and settable over UCI on the tune build -- so the
-  // sentence beside it ("from ever outranking a killer") held for one of the
-  // two killers and for neither countermove. CLAUDE.md lists this as a one-way
-  // door: the symptom of getting it wrong is a strength regression, not a wrong
-  // node count, so nothing in the tree would say so out loud.
+  // them at the two extreme values the parameter table admits, which is a
+  // different question and the one `QuietHistoryMax`'s upper bound exists to
+  // answer. It was `OrderHistoryMax` and read 899999 until S142 -- above the
+  // countermove band and above the second killer slot, and settable over UCI on
+  // the tune build -- so the sentence beside it ("from ever outranking a
+  // killer") held for one of the two killers and for neither countermove.
+  // CLAUDE.md lists this as a one-way door: the symptom of getting it wrong is
+  // a strength regression, not a wrong node count, so nothing in the tree would
+  // say so out loud.
+  //
+  // **Both edges since S093.** The malus makes a quiet's history negative, so
+  // the band is the closed interval [-max, +max] and not [0, max]. Nothing in
+  // score_move() returns a value below a quiet's today, which is exactly why
+  // the floor is pinned here: S025 would put losing captures under this band,
+  // and the arrival has to fail loudly rather than silently overlap the
+  // malused half.
   //
   // The bound is read from search_param_info() rather than written here, so the
   // case follows the declared range instead of restating it, and the clearance
@@ -822,7 +831,7 @@ TEST_SUITE("evaluation: score_move ordering")
     int declared_max = -1;
 
     for (size_t i = 0; i < search_param_count(); ++i) {
-      if (std::string("OrderHistoryMax") == search_param_info(i).name) {
+      if (std::string("QuietHistoryMax") == search_param_info(i).name) {
         declared_max = search_param_info(i).max_value;
       }
     }
@@ -838,11 +847,14 @@ TEST_SUITE("evaluation: score_move ordering")
     const move_t prev_move = quiets[3];
     state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = quiets[2];
 
-    // The declared ceiling and not the shipping default. src/search.cpp:768
-    // saturates history at whatever ORDER_HISTORY_MAX holds, so the worst case
-    // the range admits is an entry sitting exactly on the bound.
+    // The declared ceiling and not the shipping default. history_gravity_update
+    // holds every entry inside whatever QuietHistoryMax is set to, so the two
+    // worst cases the range admits are an entry sitting exactly on each bound.
     const move_t plain = quiets[3];
-    state.history_moves[MOVE_PIECE(plain)][MOVE_TO(plain)] = declared_max;
+    int16_t& entry = state.quiet_history[game.board.active_color]
+                                        [MOVE_FROM(plain)][MOVE_TO(plain)];
+
+    entry = static_cast<int16_t>(declared_max);
 
     const int s_capture =
         score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
@@ -853,6 +865,10 @@ TEST_SUITE("evaluation: score_move ordering")
     const int s_counter =
         score_move(&game, &state, quiets[2], 0, ply, prev_move);
     const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
+
+    entry = static_cast<int16_t>(-declared_max);
+    const int s_history_malused =
+        score_move(&game, &state, plain, 0, ply, prev_move);
 
     // Precondition 1. The clearance the bands are built on, read off this
     // position: the cheapest capture stands exactly 100 above the first killer.
@@ -868,18 +884,50 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(s_killer0 > s_killer1);
     REQUIRE(s_killer1 > s_counter);
 
-    // Precondition 3. The bound is what reaches the score. A history entry is
-    // returned unmodified, so a case that asserted the clearance without this
-    // would pass on a score_move() that quietly capped the value itself.
+    // Precondition 3. The bound is what reaches the score, at both edges. A
+    // history entry is returned unmodified, so a case that asserted the
+    // clearance without this would pass on a score_move() that quietly capped
+    // the value itself -- or that clamped the malused half back to zero, which
+    // would make the floor assertion below vacuous.
     REQUIRE_EQ(s_history, declared_max);
+    REQUIRE_EQ(s_history_malused, -declared_max);
 
     CHECK_MESSAGE(
         s_counter - s_history >= 100,
-        ("OrderHistoryMax's declared maximum of " +
+        ("QuietHistoryMax's declared maximum of " +
          std::to_string(declared_max) + " scores " + std::to_string(s_history) +
          " against the countermove band's " + std::to_string(s_counter) +
          ", a clearance of " + std::to_string(s_counter - s_history) +
          " and not the 100 the ordering bands are spaced by."));
+
+    // The floor. Every branch score_move() can take other than the history one
+    // returns a band constant or a capture score, and the lowest of those is
+    // the countermove's -- so the malused half of the quiet band has to stand
+    // clear of it too, and by the same 100. This is the edge that did not exist
+    // before S093 and the edge S025 would arrive at.
+    CHECK_MESSAGE(
+        s_counter - s_history_malused >= 100,
+        ("QuietHistoryMax's declared minimum of " +
+         std::to_string(-declared_max) + " scores " +
+         std::to_string(s_history_malused) +
+         " against the countermove band's " + std::to_string(s_counter) +
+         ", a clearance of " + std::to_string(s_counter - s_history_malused) +
+         " and not the 100 the ordering bands are spaced by."));
+
+    // And nothing occupies the malused half. Every other band this position can
+    // produce stands above the whole closed interval, so a maximally malused
+    // quiet is the lowest score the ordering can hand out. A band added below
+    // history fails here.
+    const int lowest_other_band =
+        std::min({s_capture, s_killer0, s_killer1, s_counter});
+
+    CHECK_MESSAGE(
+        lowest_other_band - declared_max >= 100,
+        ("The lowest non-history band scores " +
+         std::to_string(lowest_other_band) +
+         ", which does not stand 100 clear of the whole quiet band [" +
+         std::to_string(-declared_max) + ", " + std::to_string(declared_max) +
+         "]."));
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")

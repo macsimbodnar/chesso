@@ -121,7 +121,13 @@ of a refusal is the only confirmation the value was taken.
 
 | name | default | range | effect |
 |---|---|---|---|
-| `OrderHistoryMax` | 600000 | 0 to 699900 | ceiling on an accumulated history score. The upper bound keeps it 100 clear of the countermove band at 700000 — the band immediately above history, and 100 is the spacing every ordering band has. It read 899999 until S142, which was above that band and above the second killer slot |
+| `QuietHistoryMax` | 8192 | 1 to 32767 | the gravity bound on a quiet history entry. Every score the table holds lies in `[-QuietHistoryMax, +QuietHistoryMax]`, which is the whole quiet ordering band, both edges. Both bounds are arithmetic: the update divides by this value, and the entry is an `int16_t`. Replaced `OrderHistoryMax` at S093, whose 600000 was a saturation ceiling on an unbounded accumulator |
+| `HistoryBonusQuad` | 1 | 0 to 1024 | the `depth * depth` coefficient of the bonus a quiet move that caused a cutoff is credited with |
+| `HistoryBonusLin` | 0 | 0 to 4096 | the `depth` coefficient of the same bonus |
+| `HistoryBonusConst` | 0 | -32768 to 32767 | the constant term of the same bonus. Negative is legal: the published linear form is `300 * depth - 250` |
+| `HistoryMalusQuad` | 1 | 0 to 1024 | the `depth * depth` coefficient of the malus every quiet tried before the cutoff move at that node is charged |
+| `HistoryMalusLin` | 0 | 0 to 4096 | the `depth` coefficient of the same malus |
+| `HistoryMalusConst` | 0 | -32768 to 32767 | the constant term of the same malus. The malus ships equal to the bonus; the split is what these three axes exist for |
 | `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
 | `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
 | `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice. 0 switches the rule off |

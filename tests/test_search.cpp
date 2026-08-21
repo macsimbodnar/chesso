@@ -499,8 +499,15 @@ TEST_SUITE("search: move ordering state")
 
     for (int piece = W_PAWN; piece <= B_KING; ++piece) {
       for (int square = 0; square < 64; ++square) {
-        if (state.history_moves[piece][square] != 0) { history_entries++; }
         if (state.counter_moves[piece][square] != 0) { counters++; }
+      }
+    }
+
+    for (int side = WHITE; side <= BLACK; ++side) {
+      for (int from = 0; from < 64; ++from) {
+        for (int to = 0; to < 64; ++to) {
+          if (state.quiet_history[side][from][to] != 0) { history_entries++; }
+        }
       }
     }
 
@@ -601,11 +608,260 @@ TEST_SUITE("search: move ordering state")
     unmake_move(&game);
     REQUIRE(gives_check);
 
-    // Presence, never magnitude or formula: S093 replaces the bonus, the
-    // indexing and the ageing, and must not have to rewrite this case.
-    REQUIRE(state.history_moves[MOVE_PIECE(killer)][MOVE_TO(killer)] != 0);
+    // Presence, never magnitude or formula: S093 replaced the bonus, the
+    // indexing and the ageing, and only the index moved here.
+    REQUIRE(state.quiet_history[game.board.active_color][MOVE_FROM(killer)]
+                               [MOVE_TO(killer)] != 0);
     REQUIRE_EQ(state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)],
                killer);
+  }
+
+
+  // S093. Gravity is what bounds the table now. The `std::min` saturation the
+  // old accumulator needed is gone, so the closed interval the ordering band
+  // rests on is a property of the update itself and not of a clamp at one call
+  // site. CLAUDE.md lists that band as a one-way door -- the symptom of getting
+  // it wrong is a strength regression, not a wrong node count -- so the entry
+  // is driven to each asymptote through the helper rather than assigned there.
+  // An assertion on a value the case wrote itself would pass on an update that
+  // cannot reach it.
+  TEST_CASE("gravity holds a history entry inside the bound at both asymptotes")
+  {
+    const int max = QUIET_HISTORY_MAX;
+    REQUIRE(max > 0);
+
+    // The precondition, non-vacuous by construction: a bonus small against the
+    // bound, applied often enough that the accumulator this replaced would be
+    // far outside it. 5000 cutoffs at depth 12 sum to 720000, 87 times the
+    // shipping bound.
+    const int bonus = 12 * 12;
+    REQUIRE(bonus * 5000 > 8 * max);
+
+    int16_t rising = 0;
+
+    for (int i = 0; i < 5000; ++i) {
+      history_gravity_update(rising, bonus);
+      REQUIRE(rising <= max);
+      REQUIRE(rising >= -max);
+    }
+
+    // Converged, not merely bounded. `entry + b - entry*b/MAX` has its fixed
+    // point at exactly MAX and integer truncation does not stop it arriving,
+    // so an asymptote that came out short would mean the decay term is being
+    // over-applied and the band is narrower than it is declared to be.
+    CHECK_EQ(rising, max);
+
+    int16_t falling = 0;
+
+    for (int i = 0; i < 5000; ++i) {
+      history_gravity_update(falling, -bonus);
+      REQUIRE(falling >= -max);
+      REQUIRE(falling <= max);
+    }
+
+    CHECK_EQ(falling, -max);
+
+    // The clamp is what closes the interval. Without it one deep cutoff puts
+    // an entry outside the band in a single update.
+    int16_t clamped = 0;
+    history_gravity_update(clamped, 100 * max);
+    CHECK_EQ(clamped, max);
+
+    // The two properties CPW states, which are one piece of algebra read
+    // twice: an unexpected cutoff moves the entry by the whole bonus, an
+    // expected one by nothing at all.
+    int16_t cold = 0;
+    history_gravity_update(cold, bonus);
+    CHECK_EQ(cold, bonus);
+
+    int16_t hot = static_cast<int16_t>(max);
+    history_gravity_update(hot, bonus);
+    CHECK_EQ(hot, max);
+  }
+
+
+  // S093. What the malus is charged to, held directly against the table rather
+  // than inferred from a game -- which is what this step's accepts demands.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet cutoff maluses the quiets tried before it")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[4] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 4; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 4);
+
+    const color_t side = game.board.active_color;
+
+    // Precondition: four distinct butterfly cells. Two quiets sharing a
+    // from-to pair share an entry, and the bonus and the malus would then be
+    // arguing over one number rather than over four.
+    for (size_t a = 0; a < 4; ++a) {
+      for (size_t b = a + 1; b < 4; ++b) {
+        const bool same_cell = MOVE_FROM(quiets[a]) == MOVE_FROM(quiets[b]) &&
+                               MOVE_TO(quiets[a]) == MOVE_TO(quiets[b]);
+        REQUIRE_FALSE(same_cell);
+      }
+    }
+
+    search_state_t state = {};
+
+    const move_t cutoff = quiets[0];
+    const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
+
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8);
+
+    CHECK(state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)] > 0);
+
+    // Every quiet tried before the cutoff, not all but the last one. Lynx
+    // shipped exactly that off-by-one -- sparing the last tried quiet to
+    // protect a cutoff move that was never in the span -- and removing it
+    // measured +12.89 +/- 5.46 on its own (PR #1756).
+    for (const move_t move : tried) {
+      CHECK_MESSAGE(
+          state.quiet_history[side][MOVE_FROM(move)][MOVE_TO(move)] < 0,
+          ("A quiet tried before the cutoff scores " +
+           std::to_string(
+               state.quiet_history[side][MOVE_FROM(move)][MOVE_TO(move)]) +
+           " and not a malus."));
+    }
+
+    // The mover indexes the table, so the other colour's half of the same
+    // from-to pairs is untouched. A butterfly board that dropped the colour
+    // axis would let White's cutoffs order Black's moves.
+    CHECK_EQ(state.quiet_history[!side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)], 0);
+  }
+
+
+  // S093. The malus span is built at the call site and not by the helper, so
+  // the case above cannot see the two things the call site decides: which moves
+  // enter the span, and whether the move that cut off is one of them. Driven
+  // through negamax for that reason.
+  //
+  // Lynx's other published bug in this list does not exist here and is
+  // deliberately not asserted. It charged the malus to moves whose make_move
+  // had failed (PR #610), which needs a pseudo-legal generator; chesso's
+  // generate_moves() emits legal moves only (src/bitboard.cpp:885) and
+  // make_move refuses only on a full game-history stack, which the search
+  // cannot reach. Building the span after a successful make_move is still the
+  // right shape and costs nothing, but a case asserting that no illegal move
+  // was malused would hold over an empty set and is not written.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the cutoff move is credited and the quiets before it are "
+                    "charged")
+  {
+    // Nf7 is mate, so the move that fails high is fixed and no later ordering
+    // change can move it. From a tool and not from the board (CLAUDE.md):
+    // python-chess over this FEN reports `is_valid() True`, `is_check() False`,
+    // and the whole mating set as `[('Nf7#', 'h6f7')]`. The knight on g8 is
+    // takeable, which is the second thing the position is for -- a capture is
+    // ordered ahead of every quiet and is tried before the cutoff without ever
+    // being eligible for the table.
+    const std::string fen = "6rk/b5pp/7N/8/3N4/8/8/6K1 w - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE(position_is_reachable(&game));
+
+    move_t captures[MAX_MOVES];
+    const size_t captures_count =
+        generate_captures(game_tables(), &game.board, captures);
+
+    // Precondition. Without a capture the node searches before the cutoff, the
+    // eligibility assertion below holds over an empty set.
+    REQUIRE_EQ(captures_count, 1);
+    REQUIRE_EQ(MOVE_FROM(captures[0]), h6);
+    REQUIRE_EQ(MOVE_TO(captures[0]), g8);
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t king_to_g2 = 0;
+    move_t king_to_h2 = 0;
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_FROM(moves[i]) != g1) { continue; }
+      if (MOVE_TO(moves[i]) == g2) { king_to_g2 = moves[i]; }
+      if (MOVE_TO(moves[i]) == h2) { king_to_h2 = moves[i]; }
+    }
+
+    REQUIRE(king_to_g2 != 0);
+    REQUIRE(king_to_h2 != 0);
+
+    // Only a mate score clears this bound, so the move that fails high is the
+    // mate and not whichever move the ordering happened to try first.
+    constexpr int BETA = 48500;
+    constexpr int DEPTH = 1;
+    constexpr size_t PLY = 1;
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    // The second precondition, and the reason this is not the S107 position.
+    // Nf7 is the first quiet the generator emits, so with a cold table it is
+    // also the first quiet searched and the malus span would be empty. Two
+    // killers put two king moves in front of it; neither can cut off, because
+    // neither is mate.
+    state.killer_moves[0][PLY] = king_to_g2;
+    state.killer_moves[1][PLY] = king_to_h2;
+
+    const int score =
+        negamax(BETA - 1, BETA, DEPTH, PLY, &game, &state, 0, false);
+
+    // Precondition: with no fail-high there is no update site at all.
+    REQUIRE(score >= BETA);
+
+    const move_t cutoff = state.killer_moves[0][PLY];
+    REQUIRE(cutoff != 0);
+    REQUIRE_EQ(MOVE_FROM(cutoff), h6);
+    REQUIRE_EQ(MOVE_TO(cutoff), f7);
+
+    // The cutoff move is credited and never charged. It is searched after two
+    // quiets that were, so an implementation that appended to the span before
+    // the cutoff test rather than after it would credit and charge this one
+    // cell and land it at or below zero.
+    CHECK(state.quiet_history[WHITE][h6][f7] > 0);
+
+    // The two quiets tried before it, both of them. Lynx spared the last tried
+    // quiet to protect a cutoff move that was never in the span, and removing
+    // that off-by-one measured +12.89 +/- 5.46 on its own (PR #1756).
+    CHECK(state.quiet_history[WHITE][g1][g2] < 0);
+    CHECK(state.quiet_history[WHITE][g1][h2] < 0);
+
+    // The capture searched before both of them earns neither. The span mirrors
+    // the bonus gate exactly -- `!is_capture` and nothing else -- because an
+    // asymmetry between what can earn the bonus and what can earn the malus is
+    // a bias with no symptom.
+    CHECK_EQ(state.quiet_history[WHITE][h6][g8], 0);
+
+    // Every child of this node is quiescence, which writes no history, so the
+    // whole table belongs to the side that moved here. A butterfly board that
+    // dropped the colour axis would fail here.
+    size_t black_entries = 0;
+
+    for (int from = 0; from < 64; ++from) {
+      for (int to = 0; to < 64; ++to) {
+        if (state.quiet_history[BLACK][from][to] != 0) { black_entries++; }
+      }
+    }
+
+    CHECK_EQ(black_entries, 0);
   }
 
   // Filling the tables is not the point: searching a smaller tree is. A
