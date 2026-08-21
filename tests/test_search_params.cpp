@@ -35,32 +35,44 @@
 // commit, which is the point: S068 and S039 each move exactly one number and
 // have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
 // not a value -- and the rule is the same for a vector as for a number.
+//
+// The ranges are held here too, since S142. They had nothing holding them at
+// all: the release build never reads a bound, the tune build's option lines are
+// generated from this same table so test_uci_surface compares it against
+// itself, and MANUAL.md's range column is prose no test parses. So a bound
+// could move -- or fail to move when the reason for it did -- and the whole
+// suite would stay green. Two of them were wrong on exactly that account,
+// 2026-08-20_plan_review-F08 and -F14, and both are now numbers a diff has to
+// change on purpose. What a bound *means* is not checkable here and is not
+// meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
+// and OrderHistoryMax's ceiling by the band clearance in test_evaluation.
 // clang-format off
-struct golden_param_t { const char* name; int value; };
+struct golden_param_t { const char* name; int value; int min; int max; };
 
 static const std::vector<golden_param_t> golden_defaults = {
-  {"OrderHistoryMax", 600000},
-  {"MaxQsearchDepth", 19},
-  {"RfpMargin",       63},
-  {"RfpMaxDepth",     15},
-  {"RfpMinPly",       3},
-  {"NullMoveBase",    3},
-  {"NullMoveDivisor", 6},
-  {"LmrBase",         52},
-  {"LmrDivisor",      182},
-  {"LazyEvalMargin",  184},
-  {"AspirationMinDepth", 2},
-  {"AspirationDelta",    21},
-  {"AspirationMaxDelta", 437},
-  {"TmSoftPercent",        60},
-  {"TmHardPercent",        300},
-  {"TmSuddenDeathPercent", 5},
-  {"TmIncrementPercent",   50},
-  {"TmStabilityMax",       8},
-  {"TmStabilityPercent",   4},
-  {"TmFallingMaxCp",       100},
-  {"TmFallingPercent",     50},
-  {"TmScaleMinPercent",    30},
+  //                       default   min      max
+  {"OrderHistoryMax",      600000,     0,  699900},
+  {"MaxQsearchDepth",          19,     1,      64},
+  {"RfpMargin",                63,     0,    2000},
+  {"RfpMaxDepth",              15,     0,      63},
+  {"RfpMinPly",                 3,     2,      63},
+  {"NullMoveBase",              3,     0,      16},
+  {"NullMoveDivisor",           6,     1,      64},
+  {"LmrBase",                  52,     0,     400},
+  {"LmrDivisor",              182,     1,    2000},
+  {"LazyEvalMargin",          184,     0,    2000},
+  {"AspirationMinDepth",        2,     2,      64},
+  {"AspirationDelta",          21,     1,    2000},
+  {"AspirationMaxDelta",      437,     1,   48000},
+  {"TmSoftPercent",            60,     1,     100},
+  {"TmHardPercent",           300,   100,    1000},
+  {"TmSuddenDeathPercent",      5,     1,     100},
+  {"TmIncrementPercent",       50,     0,     100},
+  {"TmStabilityMax",            8,     0,     126},
+  {"TmStabilityPercent",        4,     0,      50},
+  {"TmFallingMaxCp",          100,     1,    2000},
+  {"TmFallingPercent",         50,     0,     400},
+  {"TmScaleMinPercent",        30,     1,     100},
 };
 // clang-format on
 
@@ -143,6 +155,42 @@ TEST_SUITE("search parameters")
                      std::to_string(golden_defaults[i].value) +
                      " it shipped at. Changing a value is a step of its own "
                      "and updates this list in the same commit."));
+    }
+  }
+
+
+  TEST_CASE("the declared ranges are the ranges the engine ships")
+  {
+    // S142. A bound is metadata that only `search_param_set()` reads, so
+    // nothing else in the suite notices one moving -- see the note above the
+    // table. Held by name and not by position, like the defaults, so a
+    // reordering of the list is not a failure and a rename is.
+    REQUIRE(search_param_count() == golden_defaults.size());
+
+    for (size_t i = 0; i < golden_defaults.size(); ++i) {
+      const int index = index_of(golden_defaults[i].name);
+
+      REQUIRE_MESSAGE(index >= 0, ("No parameter named [" +
+                                   std::string(golden_defaults[i].name) + "]"));
+
+      const search_param_t& param =
+          search_param_info(static_cast<size_t>(index));
+
+      CHECK_MESSAGE(
+          param.min_value == golden_defaults[i].min,
+          ("[" + std::string(param.name) + "] declares a minimum of " +
+           std::to_string(param.min_value) + ", not the " +
+           std::to_string(golden_defaults[i].min) +
+           " this list holds. A bound is a claim about what the "
+           "parameter may be set to and moves in its own commit."));
+
+      CHECK_MESSAGE(
+          param.max_value == golden_defaults[i].max,
+          ("[" + std::string(param.name) + "] declares a maximum of " +
+           std::to_string(param.max_value) + ", not the " +
+           std::to_string(golden_defaults[i].max) +
+           " this list holds. A bound is a claim about what the "
+           "parameter may be set to and moves in its own commit."));
     }
   }
 

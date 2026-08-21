@@ -8,6 +8,7 @@
 #include "data_structures.hpp"
 #include "eval_tables.hpp"
 #include "evaluation.hpp"
+#include "search_params.hpp"
 #include "test_helpers.hpp"
 
 
@@ -773,6 +774,112 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(s_killer1 > s_counter);
     REQUIRE(s_counter > s_history);
     REQUIRE_EQ(s_history, 42);
+  }
+
+
+  // S142. The case above orders the bands at one history value; this one orders
+  // them at the largest history value the parameter table admits, which is a
+  // different question and the one `OrderHistoryMax`'s upper bound exists to
+  // answer. It read 899999 until S142 -- above the countermove band and above
+  // the second killer slot, and settable over UCI on the tune build -- so the
+  // sentence beside it ("from ever outranking a killer") held for one of the
+  // two killers and for neither countermove. CLAUDE.md lists this as a one-way
+  // door: the symptom of getting it wrong is a strength regression, not a wrong
+  // node count, so nothing in the tree would say so out loud.
+  //
+  // The bound is read from search_param_info() rather than written here, so the
+  // case follows the declared range instead of restating it, and the clearance
+  // it demands is derived from the bands in this position rather than quoted
+  // from the comment that states it. 2026-08-20_plan_review-F14.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the declared history ceiling clears the band above it")
+  {
+    // A rook for quiet moves and a king that can take a pawn. The cheapest
+    // capture there is is the dearest attacker taking the cheapest victim, and
+    // the whole band layout is spaced by the gap between that capture and the
+    // first killer -- so the position has to contain one, or the 100 below is a
+    // number copied out of a comment.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/4p3/R3K3 w - - 0 1", &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t king_takes_pawn = 0;
+    move_t quiets[4] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_CAPTURE(moves[i])) {
+        if (MOVE_PIECE(moves[i]) == W_KING) { king_takes_pawn = moves[i]; }
+      } else if (MOVE_PROMOTED(moves[i]) == TO_NONE && quiet_count < 4) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE(king_takes_pawn != 0);
+    REQUIRE_EQ(quiet_count, 4);
+
+    int declared_max = -1;
+
+    for (size_t i = 0; i < search_param_count(); ++i) {
+      if (std::string("OrderHistoryMax") == search_param_info(i).name) {
+        declared_max = search_param_info(i).max_value;
+      }
+    }
+
+    REQUIRE(declared_max > 0);
+
+    const size_t ply = 3;
+
+    search_state_t state = {};
+    state.killer_moves[0][ply] = quiets[0];
+    state.killer_moves[1][ply] = quiets[1];
+
+    const move_t prev_move = quiets[3];
+    state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = quiets[2];
+
+    // The declared ceiling and not the shipping default. src/search.cpp:768
+    // saturates history at whatever ORDER_HISTORY_MAX holds, so the worst case
+    // the range admits is an entry sitting exactly on the bound.
+    const move_t plain = quiets[3];
+    state.history_moves[MOVE_PIECE(plain)][MOVE_TO(plain)] = declared_max;
+
+    const int s_capture =
+        score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
+    const int s_killer0 =
+        score_move(&game, &state, quiets[0], 0, ply, prev_move);
+    const int s_killer1 =
+        score_move(&game, &state, quiets[1], 0, ply, prev_move);
+    const int s_counter =
+        score_move(&game, &state, quiets[2], 0, ply, prev_move);
+    const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
+
+    // Precondition 1. The clearance the bands are built on, read off this
+    // position: the cheapest capture stands exactly 100 above the first killer.
+    // Everything below asks history for the same 100, so if this ever stops
+    // being the spacing the case fails here rather than measuring against a
+    // number the code no longer uses.
+    REQUIRE_EQ(s_capture - s_killer0, 100);
+
+    // Precondition 2. The countermove band is the band immediately above
+    // history -- it is the last branch score_move() takes before returning the
+    // raw table entry -- and it is below both killers. Without this the
+    // clearance below could be measured against the wrong neighbour.
+    REQUIRE(s_killer0 > s_killer1);
+    REQUIRE(s_killer1 > s_counter);
+
+    // Precondition 3. The bound is what reaches the score. A history entry is
+    // returned unmodified, so a case that asserted the clearance without this
+    // would pass on a score_move() that quietly capped the value itself.
+    REQUIRE_EQ(s_history, declared_max);
+
+    CHECK_MESSAGE(
+        s_counter - s_history >= 100,
+        ("OrderHistoryMax's declared maximum of " +
+         std::to_string(declared_max) + " scores " + std::to_string(s_history) +
+         " against the countermove band's " + std::to_string(s_counter) +
+         ", a clearance of " + std::to_string(s_counter - s_history) +
+         " and not the 100 the ordering bands are spaced by."));
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")

@@ -791,6 +791,14 @@ reports the mate — is the reading a fixed-depth call cannot produce. `short` a
 readings, and both are 0 everywhere so far. The output is kept at
 `adocs/data/S145_rfp_sweep.log`.
 
+**The floor sweep now stops at 2**, because S142 made 2 `RfpMinPly`'s declared
+minimum on this sweep's own evidence and the tune build refuses anything below
+it — `info string refused [RfpMinPly] value 1, outside [2, 63]`. The script
+prints the settings it dropped and why rather than ending in the python-chess
+`EngineError` that a refused option raises; `adocs/data/S145_rfp_sweep.log` is
+the last reading that covered 0 and 1, and getting below 2 again means relaxing
+the bound in `src/search_params.hpp` and rebuilding.
+
 Two traps in running it, both hit once. **A fresh engine process per setting**,
 never `configure` on a live one: python-chess sends `setoption` for what it is
 given and leaves the rest alone, so a loop that reconfigures one option at a

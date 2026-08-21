@@ -77,9 +77,32 @@ def read_defaults(engine_path):
     with chess.engine.SimpleEngine.popen_uci(engine_path) as engine:
         for name, option in engine.options.items():
             if name.startswith("Rfp"):
-                out[name] = option.default
+                out[name] = (option.default, option.min, option.max)
 
     return out
+
+
+def admissible(values, bounds, axis):
+    """The requested settings the binary will actually accept.
+
+    S142 raised `RfpMinPly`'s declared minimum from 0 to 2 on this step's own
+    evidence, so FLOOR_VALUES asks for two settings the engine now refuses.
+    python-chess raises rather than sending them, which would end the sweep in a
+    traceback halfway through a table -- and the values that remain are still the
+    whole question, since the point of the floor is that below it the mate suite
+    is red. So they are dropped and named, never silently skipped: a row missing
+    from the table has to say why it is missing.
+    """
+    low, high = bounds[1], bounds[2]
+    keep = [v for v in values if low <= v <= high]
+    dropped = [v for v in values if v not in keep]
+
+    if dropped:
+        print("  %s: %s refused by the binary, declared range [%d, %d] since "
+              "S142; rebuild with the bound relaxed to sweep them"
+              % (axis, ", ".join(str(v) for v in dropped), low, high))
+
+    return keep
 
 
 def run_constructed(engine_path, options, rows):
@@ -194,20 +217,25 @@ def main():
     parser.add_argument("--mined-depth", type=int, default=10)
     args = parser.parse_args()
 
-    defaults = read_defaults(args.engine)
-    print("shipping defaults read from the binary: %s" % defaults)
+    declared = read_defaults(args.engine)
+    print("shipping defaults read from the binary: %s"
+          % {name: spec[0] for name, spec in declared.items()})
+    print("declared ranges: %s"
+          % {name: [spec[1], spec[2]] for name, spec in declared.items()})
 
     rows = constructed.read_tsv()
     mined_rows = mined.read_tsv() if args.mined else []
 
     if args.which in ("floor", "both"):
-        sweep(args.engine, "RfpMinPly", FLOOR_VALUES,
-              {"RfpMaxDepth": defaults["RfpMaxDepth"]},
+        sweep(args.engine, "RfpMinPly",
+              admissible(FLOOR_VALUES, declared["RfpMinPly"], "RfpMinPly"),
+              {"RfpMaxDepth": declared["RfpMaxDepth"][0]},
               rows, mined_rows, args.mined_depth)
 
     if args.which in ("ceiling", "both"):
-        sweep(args.engine, "RfpMaxDepth", CEILING_VALUES,
-              {"RfpMinPly": defaults["RfpMinPly"]},
+        sweep(args.engine, "RfpMaxDepth",
+              admissible(CEILING_VALUES, declared["RfpMaxDepth"], "RfpMaxDepth"),
+              {"RfpMinPly": declared["RfpMinPly"][0]},
               rows, mined_rows, args.mined_depth)
 
     return 0

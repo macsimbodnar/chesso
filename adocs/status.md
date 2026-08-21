@@ -6,8 +6,8 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-21 by `moltke --step status`.
 
 - Last done: S145
-- In progress: S142 the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
-- Next: S142
+- In progress: none
+- Next: S149
 - Blocked: none
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name

@@ -323,7 +323,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-11. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
 12. S137  a refused or unknown search parameter is observable over UCI, so a tuner cannot play games against a silently-default value
 13. S085  the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, DEC-094 -- and an independent SPRT of what it returns
 14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed

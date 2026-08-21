@@ -33,16 +33,35 @@
 
 // X(symbol, uci name, default, min, max)
 //
-// The ranges are new metadata and none of them narrows a value that ships. Each
-// bound is either arithmetic (a divisor cannot be zero) or the constant's own
-// stated purpose (history must stay under a killer), never a guess at where the
-// good values are -- that is what the tuner is for.
+// None of these ranges narrows a value that ships. A bound is one of three
+// things and never a guess at where the good values are -- that is what the
+// tuner is for:
+//
+//   arithmetic      a divisor cannot be zero
+//   stated purpose  a history score must stay clear of the band above it
+//   measured        RfpMinPly's floor of 2, the value below which the mate
+//                   suite goes red
+//
+// The third kind is only as good as the test that produced it, so it names the
+// step that measured it and the test that would go red. S142 set the first two
+// of those and corrected the sentence above, which claimed only the first two
+// kinds existed and named the wrong band for history.
 // clang-format off
 #define CHESSO_SEARCH_PARAMS(X)                                                \
-  /* Keeps an accumulated history score from ever outranking a killer. The     \
-     upper bound is that sentence: a killer scores 900000, so a history score  \
-     allowed past it would invert the ordering silently. */                    \
-  X(ORDER_HISTORY_MAX, "OrderHistoryMax", 600000, 0, 899999)                   \
+  /* Keeps an accumulated history score under every band above it. The band    \
+     immediately above is the countermove's 700000 and not a killer's 900000   \
+     (src/evaluation.cpp:33-37), and the bands clear each other by 100, so the \
+     declared maximum is that band minus that clearance: 699900.               \
+                                                                               \
+     It read 899999 until S142, which is above the countermove band and above  \
+     the second killer slot, so a tuner sweeping this axis could have inverted \
+     both -- and the symptom of that is a strength regression rather than a    \
+     wrong node count (CLAUDE.md, S023). The clearance is asserted against     \
+     this declared bound rather than against the shipping 600000, in           \
+     tests/test_evaluation.cpp "the declared history ceiling clears the band   \
+     above it", so it is arithmetic that fails rather than a sentence that     \
+     stops being true. 2026-08-20_plan_review-F14. */                          \
+  X(ORDER_HISTORY_MAX, "OrderHistoryMax", 600000, 0, 699900)                   \
                                                                                \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \
@@ -51,55 +70,72 @@
   X(MAX_QSEARCH_DEPTH, "MaxQsearchDepth", 19, 1, 64)                            \
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
-     claw back per remaining ply, and the deepest node the assumption is made  \
-     at.                                                                       \
+     claw back per remaining ply, and the largest **remaining** depth the      \
+     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:521,  \
+     so it is a distance to the leaves and not a distance from the root.       \
                                                                                \
      Both were a first setting, one pawn per ply and the last few plies, and   \
-     **both are SPSA-tuned since S085**: 75 -> 63 and 6 -> 15 over 60000 games  \
-     at 2+0.02. The margin moved little. The depth bound moved a long way, and  \
-     it no longer means what the sentence above it meant: at 15 the assumption  \
-     is made at every depth this engine actually reaches -- median 11 at the    \
-     tuning control -- so reverse futility is now depth-unbounded in practice   \
-     rather than confined to the last few plies. That is what the tuner chose   \
-     and the mate tests still pass at it, but the bound has stopped being the   \
-     guard the comment describes, which is `RFP_MIN_PLY` and `beta < MATE_MIN`  \
-     below. S033 for the original derivation, S085 for the values. */           \
+     **both are SPSA-tuned since S085**: 75 -> 63 and 6 -> 15 over 60000 games \
+     at 2+0.02. The margin moved little. The depth bound moved a long way and  \
+     stopped confining anything: at 15 the assumption is made at every depth   \
+     this engine actually reaches -- median 11 at the tuning control -- so     \
+     reverse futility is depth-unbounded in practice, and `RFP_MIN_PLY` below  \
+     is the guard that is left. Not `beta < MATE_MIN`, which S145 measured     \
+     inert: evaluate_expensive() is clamped to +/-LAZY_EVAL_MARGIN, so the     \
+     static score cannot approach the mate band and the condition never binds  \
+     (src/search.cpp:512-517 says the same in its own words).                  \
+                                                                               \
+     **The declared range stays 0 to 63 (DEC-095), and that is a decision.**   \
+     S145 swept the ceiling against 48 constructed forced mates with the floor \
+     held at 3: 34 of 48 exact at 0, 27 at S033's 6, 24 at the shipping 15 and \
+     24 at 63, with the mate in four and mate in five classes reading 4 of 8   \
+     and 3 of 8 at 0 against 0 and 0 from 10 up. So the deep classes belong to \
+     this bound and not to the floor -- but that is a case for re-measuring    \
+     the *default*, which alters play and is S148's, and it is not a defect in \
+     the declared range: 15 passes the whole mate suite. The tuner keeps every \
+     value. S033 for the derivation, S085 for the values,                      \
+     adocs/data/S145_rfp_sweep.log for the sweep. */                           \
   X(RFP_MARGIN,        "RfpMargin",       63,     0, 2000)                     \
-  X(RFP_MAX_DEPTH,     "RfpMaxDepth",     15,      0, 63)                       \
+  X(RFP_MAX_DEPTH,     "RfpMaxDepth",     15,     0, 63)                       \
                                                                                \
-  /* The top of the tree is searched properly. Ply 1 and ply 2 are exempt      \
-     because a static bound returned there is what the root compares against   \
-     alpha, and a mate two moves away lives exactly that far down. Buying the  \
-     two plies back costs 1.7 % of the nodes the rule saves; exempting a third \
-     costs 27 %. S033.                                                         \
+  /* The top of the tree is searched properly. Plies 0, 1 and 2 are exempt at  \
+     the shipping value, because a static bound returned there is what the     \
+     root compares against alpha and a mate two moves away lives exactly that  \
+     far down. Buying the two plies back costs 1.7 % of the nodes the rule     \
+     saves; exempting a third costs 27 %. S033.                                \
                                                                                \
-     Two claims that stood here were wrong, and S085's run found them by       \
-     walking this axis down to 0. Both are corrected against the code:         \
+     The root is not exempt because of this parameter, and that is still the   \
+     caveat to read the bound with. The guard at src/search.cpp:521 is         \
+     `!is_pv && ... ply >= RFP_MIN_PLY`, and search() calls the root at :853   \
+     with is_pv true, so `!is_pv` exempts it at every setting. **0 and 1 are   \
+     therefore the same engine** -- byte-identical node counts and best moves, \
+     TRICKY 329568, CMK 260802, KILLER 53310 at depth 8 (S085) -- so 0 was a   \
+     value no tuner could tell from its neighbour.                             \
                                                                                \
-     The root is not exempt because of this parameter. The guard at            \
-     src/search.cpp:521 reads `!is_pv && ... ply >= RFP_MIN_PLY`, and search()  \
-     calls the root at :853 with ply 0 and is_pv true, so `!is_pv` is what     \
-     exempts the root and it does so at every setting of this. **0 and 1 are   \
-     therefore the same engine** -- byte-identical node counts and best moves  \
-     on every position driven, TRICKY 329568, CMK 260802, KILLER 53310 at      \
-     depth 8 -- so 0 is a value no tuner can tell from its neighbour.          \
+     **The declared minimum is 2: DEC-095 decided it and S145 earned it.**     \
+     It stood at 0 until S142, and the evidence for raising it used to be      \
+     three hand-picked mates in two, two of which were picked for a different  \
+     engine. S145 replaced them with 48 constructed forced mates spanning      \
+     distances two to five, each proved by exhaustive enumeration and          \
+     corroborated by stockfish, asserted under the engine's own iterative      \
+     deepening in tests/test_engine.cpp's "engine: mate safety". Swept there   \
+     with RfpMaxDepth held at 15, and re-measured at S142 before this bound    \
+     was set: at 2 and above the mate in two class is whole and immediate,     \
+     **16 of 16 exact at delay 0**; at 1 and 0 it is **13 of 16 exact, with    \
+     delays reaching 7 iterations**. The suite asserts both halves -- the      \
+     distance and the iteration it first appears at -- so it goes red below 2, \
+     which is the value S085's run spent 906 of its 1250 iterations at. How    \
+     many of its assertions fail there is S154's to state; 13 of 16 is the     \
+     sweep's exact count and not that number.                                  \
+     adocs/data/S145_rfp_sweep.log; 2026-08-20_plan_review-F08.                \
                                                                                \
-     And "at ply 1 the mate cases in test_search go red" was 3 of the 18, not  \
-     all of them: `mate in two is found at the right distance` (:125) and the  \
-     two pruning cases (:1887, :1926), each failing on its black or            \
-     material-leader arm at depth 3, and each asserting mate_found and a mate  \
-     distance rather than a move. The other 15 stay green at 0 and 1, as does  \
-     the 123769-assertion well-formedness sweep.                               \
-                                                                               \
-     **The tested floor is 2, not 3.** RFP does fire at ply 2 when this is set \
-     to 2 -- node counts differ from 3, TRICKY 329598 against 375687 -- and    \
-     every mate case still passes there. So the ply-2 exemption argued above   \
-     is one no test exercises, which src/search.cpp:517 already concedes in    \
-     its own words: "A mate deeper than ply 3 can still be missed for an       \
-     iteration, and no test covers that." The declared minimum stays 0 pending \
-     a decision on narrowing it to the tested 2 or the argued 3; what is not   \
-     in doubt is that 0 and 1 cannot ship. */                                  \
-  X(RFP_MIN_PLY,       "RfpMinPly",       3,      0, 63)                       \
+     2 and 3 are indistinguishable on that set, 24 of 48 each, and on nodes,   \
+     1.0003 by sum over 6347 positions, so the choice between the tested floor \
+     and the argued one was free and was the owner's. History, kept because it \
+     is the reason the old text was wrong: "at ply 1 the mate cases in         \
+     test_search go red" was 3 of 18, and all three are the same mate-in-two   \
+     geometry, which is what S145 exists to have replaced. */                  \
+  X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)                       \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \

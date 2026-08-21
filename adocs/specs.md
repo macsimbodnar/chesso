@@ -109,7 +109,10 @@ always had, the two builds' defaults are held equal member by member by
 `test_search_params`, and `tools/search_bench.py` reports the same counts on
 both with no `setoption` sent. (2026-08-16, S073. The parameter count is
 deliberately not written here: it moves with every step that adds one, and
-`test_search_params` is where it is pinned.)
+`test_search_params` is where it is pinned.) **The declared ranges are pinned
+there too, since S142**: only the tune build reads a bound, so until then a
+bound could move -- or fail to move when its reason did -- with the whole suite
+staying green, and two of them had (2026-08-20\_plan\_review-F08 and -F14).
 
 **A `setoption` naming a search parameter the tune build cannot honour answers
 with one `info string` line**, naming the parameter and its range for a value

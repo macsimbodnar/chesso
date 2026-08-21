@@ -121,11 +121,11 @@ of a refusal is the only confirmation the value was taken.
 
 | name | default | range | effect |
 |---|---|---|---|
-| `OrderHistoryMax` | 600000 | 0 to 899999 | ceiling on an accumulated history score. The upper bound keeps it under a killer move's 900000, which is what the ceiling is for |
+| `OrderHistoryMax` | 600000 | 0 to 699900 | ceiling on an accumulated history score. The upper bound keeps it 100 clear of the countermove band at 700000 — the band immediately above history, and 100 is the spacing every ordering band has. It read 899999 until S142, which was above that band and above the second killer slot |
 | `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
 | `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
-| `RfpMaxDepth` | 15 | 0 to 63 | the deepest node reverse futility pruning is applied at. 0 switches it off |
-| `RfpMinPly` | 3 | 0 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly |
+| `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice. 0 switches the rule off |
+| `RfpMinPly` | 3 | 2 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly. The floor is 2 because the mate-safety suite goes red below it (S145, DEC-095), not for an arithmetic reason |
 | `NullMoveBase` | 3 | 0 to 16 | the constant part of the null move reduction |
 | `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
 | `LmrBase` | 52 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 52 is 0.52 |
