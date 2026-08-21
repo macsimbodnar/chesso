@@ -6,9 +6,9 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-21 by `moltke --step status`.
 
 - Last done: S138
-- In progress: none
+- In progress: S145 mate safety test set
 - Next: S142
-- Blocked: none
+- Blocked: S142 the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support (paused by S145  # 2026-08-21)
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships

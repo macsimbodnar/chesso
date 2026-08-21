@@ -5397,3 +5397,73 @@ Rejected:     All 22 -- the goal line's letter, and Kiiski co-tuned up to 35
               engine that plays every control, and it muddies the rejection
               analysis if the SPRT says no. The 13 including
               `OrderHistoryMax` -- rejected for the noise-axis reason above.
+
+## DEC-095  2026-08-21  RfpMinPly's floor is the tested 2, but the tests are re-derived before it is trusted
+Tags:         search, pruning, testing, rfp, s085, s142, s145, dec-016, dec-019
+Context:      S085's SPSA run walked `RFP_MIN_PLY` to 0 and sat there for 72.5 %
+              of its iterations. 0 cannot ship: three of the eighteen mate cases
+              in `tests/test_search.cpp` go red, and 0 is byte-identically the
+              same engine as 1 because `!is_pv` exempts the root and not this
+              parameter. Measured floor: **2** -- all eighteen pass there, RFP
+              really does fire at ply 2 (the tree changes, TRICKY 329598 against
+              375687 at 3), and the ply-2 exemption the comment argues for is an
+              argument no test exercises, which `src/search.cpp:517` already
+              concedes.
+Decision:     The floor is **2**, by the owner. But the owner's second point is
+              the operative one: **those three positions were hand-picked by the
+              owner for a different engine** -- the mailbox and bitboard branches
+              -- and they are now the gate standing between the tuner and a value
+              it pushed hard toward. A test set chosen for another engine is not
+              evidence about this one, and three positions is not a sample. So
+              **S145 re-derives the mate-safety test set before S142 sets the
+              bound**, and S142 is paused behind it.
+
+              `RFP_MAX_DEPTH`'s bound stays at 63. 15 passed the full mate suite,
+              so there is no demonstrated defect -- only a comment that stopped
+              describing its own value. The comment is corrected; the number is
+              not.
+Why:          A floor derived from a test set written for a different engine
+              could be blocking Elo the tuner correctly found, or permitting a
+              value that loses mates this engine actually reaches. Neither is
+              knowable from three hand-picked positions.
+Rejected:     3, the argued floor -- keeps the stated purpose but rests on an
+              untested claim and forecloses a notch the tuner wanted. Setting 2
+              immediately without re-deriving the tests -- it is the right number
+              from the wrong evidence, and the evidence is the part in question.
+              Re-running the SPSA on the narrowed bound now -- premature until
+              the bound is trustworthy; it stays available afterwards.
+
+## DEC-096  2026-08-21  the plan_review's deferred numbers close inside the steps that own them
+Tags:         audit, plan, measurement, dec-083, s085
+Context:      The 2026-08-20 plan_review ran documents-and-citations only,
+              because S085's SPSA run held all twelve threads for the night. Its
+              method re-measures every numeric claim from the tool the step
+              names, so each unverifiable figure was recorded as deferred with
+              the exact command that would settle it.
+Decision:     Each deferred figure is re-measured by the step whose `accepts`
+              depends on it, when that step runs -- not as a batch. No machine
+              time is booked for the audit's numeric half.
+Why:          Measurement capacity is the binding constraint on the plan, and a
+              batch run would spend it on figures belonging to steps far down the
+              order, some of which will be rewritten before they are reached.
+Rejected:     A dedicated re-measurement run -- buys a clean close on the audit
+              and costs machine time on numbers not yet needed. Accepting them
+              as permanently unverified -- cheapest, but leaves figures in the
+              plan that decide work and that nobody has confirmed.
+
+## DEC-097  2026-08-21  the SOTA enrichment pass resumes, in parallel, on nights
+Tags:         plan, research, process, dec-084, dec-041
+Context:      The enrichment pass appends a technical-details section per pending
+              step -- published form, traced records, `file:line` grounding, seeds
+              per DEC-084, measurement plan per DEC-083. It was stopped at S120
+              by the owner on 2026-08-20 with 28 of 48 done.
+Decision:     It resumes, one agent per step, in parallel. It needs no machine, so
+              it is the work that fits a night when a match or a fit holds the
+              hardware. It is not a plan step and does not enter the sequential
+              order -- plan steps still run one at a time.
+Why:          The research is free in the constraint that actually binds, and
+              S138 showed the cost of documents drifting behind the code: eight
+              pending steps were sending implementers to the wrong mate test.
+Rejected:     Leaving it stopped -- the enriched steps are the near ones and the
+              far ones would arrive unresearched. Enriching only the next few --
+              bounded, but it wastes the parallelism that makes this cheap.

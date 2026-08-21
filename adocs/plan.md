@@ -384,3 +384,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 68. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
 69. S143  the completion gate builds and tests the tune build as well as the shipping one, so a change cannot leave build-tune broken unnoticed
 70. S144  a citation in a plan document carries its own path, so the 467 bare line references that inherit a path from prose become checkable
+71. S145  mate safety test set
