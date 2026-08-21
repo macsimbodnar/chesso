@@ -385,3 +385,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 69. S143  the completion gate builds and tests the tune build as well as the shipping one, so a change cannot leave build-tune broken unnoticed
 70. S144  a citation in a plan document carries its own path, so the 467 bare line references that inherit a path from prose become checkable
 71. S145  mate safety test set
+72. S146  the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does

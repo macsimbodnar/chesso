@@ -5432,6 +5432,40 @@ Rejected:     3, the argued floor -- keeps the stated purpose but rests on an
               from the wrong evidence, and the evidence is the part in question.
               Re-running the SPSA on the narrowed bound now -- premature until
               the bound is trustworthy; it stays available afterwards.
+Amended:      2026-08-21, after S145's research. Two corrections, neither
+              reversing the decision.
+
+              **The provenance premise was wrong about one of the three
+              positions.** Only two are inherited -- `MATE_IN_2_W_POS` and
+              `MATE_IN_2_B_POS` enter at `3ed3b11`, 2025-04-20, and that commit
+              is on `master` and `bitboard` too. The material-leader position and
+              its test enter at `6bd650e`, 2026-08-16, **on `achesso` only**:
+              built during S033 for this hazard, by adding White material to
+              `MATE_IN_2_B_POS` until White led by 500, verified by exhaustive
+              enumeration and Stockfish. The objection holds for two positions,
+              not three -- and the one it does not hold for is the only one of
+              the three that carries the gate.
+
+              **The sentence given for leaving `RFP_MAX_DEPTH` alone was
+              incomplete.** "15 passed the full mate suite, so there is no
+              demonstrated defect" is true at every admissible floor and remains
+              true -- measured 2026-08-21 under iterative deepening on the
+              material-leader position, the mate is found at iteration 3 at both
+              `RfpMinPly` 2 and 3 with `RfpMaxDepth` at 6 or 15. What the
+              sentence should not be read as is evidence that 15 is safe *on its
+              own*. At `RfpMinPly` 1 the same position finds the mate at
+              iteration 8 with `RfpMaxDepth` 6 and **never, to depth 14, with
+              15**, playing `e5f6` instead of `e5e6`. So the two parameters are
+              substitutes for one guard, the suite cannot separate them, and 15
+              is untested in isolation. Published practice puts the load-bearing
+              guard on depth and not on ply -- zero of fourteen surveyed engines
+              has a ply floor on reverse futility -- and Stockfish measured
+              removing its depth limit as passing SPRT at both STC and LTC while
+              halving mate finding, 2427 to 1246 on ChestUCI at 1M nodes, which
+              is why its source has carried "The depth condition is important for
+              mate finding" ever since. The decision stands: the number is not
+              touched. S145 measures both parameters against its own test set and
+              S142 records the result.
 
 ## DEC-096  2026-08-21  the plan_review's deferred numbers close inside the steps that own them
 Tags:         audit, plan, measurement, dec-083, s085
