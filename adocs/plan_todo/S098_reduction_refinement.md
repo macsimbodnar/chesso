@@ -2,7 +2,7 @@ id:         S098
 goal:       the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
 touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
-excludes:   late move pruning, which is S090; the improving flag itself, which is S092 and is an input here
+excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108, DEC-081) and which is an input here
 decisions:  DEC-071
 closes:
 blocks:
@@ -117,7 +117,7 @@ The whole feature is src/search.cpp:42-76 and :707-715:
 - Table: build_lmr_table :42-56, `r = LMR_BASE/100 + ln(depth) *
   ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
   zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
-  (src/search_params.hpp:122-123, ranges stated, both already in S085's SPSA
+  (src/search_params.hpp:158-159, ranges stated, both already in S085's SPSA
   set). CHESSO_TUNE rebuilds it per setoption (:59-68); a test probe exists
   (search_lmr_reduction_probe, :79-82).
 - Eligibility :693-694: `ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
@@ -254,7 +254,8 @@ the declared ranges.
 ### 5. Pitfalls
 
 - **The repo's own bug class.** S013's LMR reduced the mating move at the
-  root; null move hid a mate in 2 (tests/test_search.cpp:1883-1904). The
+  root; null move hid a mate in 2 (tests/test_search.cpp:1919-1940, the
+  "pruning does not hide a forced mate" case). The
   accepts re-runs the mate case per adjustment and adds the root assertion
   with its precondition. The root exemption is not up for relaxation —
   Lynx measured LMR on the root's first move at **-35.47** (#1771).

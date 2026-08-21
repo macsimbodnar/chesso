@@ -7,7 +7,7 @@ Updated: 2026-08-21 by `moltke --step status`.
 
 - Last done: S145
 - In progress: none
-- Next: S140
+- Next: S141
 - Blocked: none
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
@@ -53,17 +53,26 @@ Updated: 2026-08-21 by `moltke --step status`.
     appends a `## Technical details (SOTA research, 2026-08-19)` section —
     published form, traced records, file:line grounding, seeds per DEC-084,
     measurement plan per DEC-083/S105. Done: all of block 0 (commit 0edfd26)
-    and block 1 (commit c0954ec), plus S020, S055, S117, S120 of block 2 —
-    28 of 48. Not yet enriched: S119, S042, S032, S030, then blocks 3 and 4
-    (S082, S083, S039, S121, S123, S125, S118, S101, S122, S124, S102, S133,
-    S126, S127, S128, S129). Derivable from the filesystem:
+    and block 1 (commit c0954ec), plus S020, S055, S117, S120 of block 2.
+    **The remainder is derived and is no longer enumerated here.** The
+    enumeration this item used to carry — "28 of 48" and twenty ids — was
+    already three steps stale the day after it was written, because both ends
+    move: every completion shrinks the denominator and every new step grows it.
+    The recipe is the answer and it is self-updating:
     `grep -L 'Technical details (SOTA research' adocs/plan_todo/*.md` names
-    the remainder (reserve S023/S025/S110/S111 and parked S029 were excluded
-    by design). Several sections flag scope concerns for owner decision — the
-    largest: S097's section notes Lynx's README self-rating (3144/3293)
-    against DEC-087's ~2850 banding of Lynx-derived records, and S109's
-    accepts contains a no-prune-when-giving-check clause its own section
-    argues is unenforceable as written.
+    what is left, `grep -l` the same pattern names what is done, and neither
+    reaches a step sitting in `plan_current/`. **Snapshot, 2026-08-21, stated
+    as a snapshot and not as a census: 22 enriched, 44 not, over the 66 files
+    in `plan_todo/`.** Of the 44, five are excluded by design (reserve
+    S023/S025/S110/S111 and parked S029) and nineteen are steps created after
+    the pass stopped — S134 to S136 and S141 onward — so what the pass itself
+    left behind is the other twenty. Several sections flag scope concerns for
+    owner decision — the largest: S097's section notes Lynx's README
+    self-rating (3144/3293) against DEC-087's ~2850 banding of Lynx-derived
+    records. S109's no-prune-when-giving-check clause was the other one and is
+    resolved: S139 split it, and what is left is the owner question the field
+    now states, whether to buy late move pruning the exemption with a post-make
+    prune.
   - **The 2026-08-16 plan_review findings are planned, not closed, and closing
     them needs a re-run.** Ten findings, one high and three medium: nine went to
     steps (S069 to S072, S074, S078 to S081) and F08 to DEC-062. A finding moves

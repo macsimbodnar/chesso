@@ -93,6 +93,18 @@ names and commit messages. Each one has a row in `testing.md`.
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
 
+**The numbering ends at INV-6 and there is no INV-7.** One commit cites one --
+`68a61d0`, *"Restore S084's landed step file (INV-7)"*, 2026-08-20 -- and it is
+the only record of the number anywhere outside git. What it enforced is a
+workflow rule rather than a property of the engine: its body is *"plan_done/ is
+append by move only"*, which is `AGENTS.md` section 2 (*"`adocs/plan_done/` is
+never rewritten or trimmed, and this is enforced: it is the project history"*)
+and section 10's hard prohibition on writing there. Read the commit as citing
+those two. The number is not allocated to it, because an invariant here is a
+testable property of the software with a row in `testing.md`, and a rule about
+which directories an agent may write to is neither. (2026-08-21, S140, closing
+`2026-08-20_plan_review-F17`.)
+
 ## Behaviour
 
 Chesso is a UCI engine. The protocol surface is the product surface, which is
@@ -319,7 +331,13 @@ The order stands.
   entry when it happens.
 - ~~The "absent, machinery" row above has no plan steps behind it.~~
   **Discharged 2026-08-18 by DEC-071** and re-ordered 2026-08-19 by DEC-081 to
-  DEC-086. Check extensions are S096, singular extensions S097, the quiescence
+  DEC-086. **Check extensions have no step and are not owed one**: S096 was
+  retired outright by DEC-087 (a), because Ethereal removed check extensions for
+  +4.1/+4.5 and Stormphrax removed them as a simplification, because the late
+  move reduction here already refuses to reduce a checking move
+  (`src/search.cpp:710`, `!is_in_check && !is_check_move`), and because S097
+  covers the forcing-line concern. The id is not reused. Singular extensions are
+  S097, the quiescence
   transposition probe and the static evaluation in the entry S094 (done),
   history malus, gravity and butterfly indexing S093, correction history S099,
   S110 and S111; SEE pruning of captures in the main search is S091, internal

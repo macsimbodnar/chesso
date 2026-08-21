@@ -390,7 +390,16 @@ reversal of DEC-087's ordering as a decision.
 ### 2026-08-20_plan_review-F05 — medium — `specs.md` still routes check extensions to S096, which DEC-087 retired
 
 Status: planned
-Planned in: S140
+Planned in: S140, landed 2026-08-21
+Applied: the sentence in `specs.md`'s "Open items" now opens **"Check extensions have
+no step and are not owed one"** and records S096 as retired outright by DEC-087 (a),
+with the id not reused and the three reasons named -- Ethereal +4.1/+4.5, Stormphrax
+as a simplification, and the reduction here already exempting a checking move. Traced
+to DEC-087 (a) read in full and to `src/search.cpp:710`
+(`!is_in_check && !is_check_move` in the LMR eligibility test), whose surrounding
+comment says the same in prose at `:700-702`. S097's `excludes:` is re-pointed in the
+same commit (F10) and now names the retirement rather than the id, so the three files
+the finding counted give one answer.
 
 **Evidence.**
 
@@ -644,7 +653,18 @@ entry, or record the deviation as a decision. Not both left implicit.
 ### 2026-08-20_plan_review-F10 — low — three `excludes:` fields route work to retired step ids
 
 Status: planned
-Planned in: S140
+Planned in: S140, landed 2026-08-21
+Applied: all three re-pointed, each to the document that decides it. S098 excludes
+"late move pruning, which is **S109** -- S090 was retired into it by DEC-082" and
+"the improving flag itself, which **S108** supplies two entries earlier in the order
+(S092 retired into S108, DEC-081)"; the order claim is `adocs/plan.md` entries 22
+(S108) and 24 (S109) against S098 at 26. S097 names the retirement: check extensions
+"retired outright by DEC-087 (a) and have no successor step", with `src/search.cpp:710`
+and "the forcing-line concern is this step". S042 names it too: the single
+side-to-move key "that was S031 -- retired, no successor step, 'under 1 % by its own
+file, below every instrument here'", quoting `adocs/plan.md:110`, which is the only
+record of that retirement outside the retired-ids list -- no `decisions.md` entry
+names S031.
 
 **Evidence.**
 
@@ -679,7 +699,21 @@ consumes"; S097 and S042 → name the retirement instead of the id.
 ### 2026-08-20_plan_review-F11 — low — `plan.md`'s block 3 prose omits all three of S134, S135 and S136
 
 Status: planned
-Planned in: S140
+Planned in: S140, landed 2026-08-21
+Applied: the block-3 paragraph is rewritten. The header range is **S134 to S126**,
+matching the list, and the paragraph now opens on S134 -- the fold of the two exact
+algebraic degeneracies S100 found, bit-exact and discharged on node counts under
+DEC-090, `PARAM_COUNT` to 823, and the one pending step that declares `blocks:`, which
+is why it precedes the corpus. S135 and S136 are named after S083 as the two
+zero-weight groups S100 showed were held at zero rather than measured to it, one
+bundled verdict each at bounds that can resolve single digits. "What this costs" is
+deliberately not touched: its "roughly 45 to 55 SPRT verdicts" is a range that absorbs
+two one-verdict steps, S134 owes none, and re-deriving its "six steps stop owing a
+match" needs the enumeration behind that six, which is S150-class work and not this
+step's. Side effect, repaired in the same commit: the rewrite shifted the lines S125
+cites, so `S125:32` moves `:251-253` to `:260-262` and `S125:47` moves `:367-368` to
+`:375-376` -- the second was already one entry low, naming 55 and 56 where its own
+sentence claims 54 and 55.
 
 **Evidence.**
 
@@ -873,7 +907,18 @@ which is what the body already says.
 ### 2026-08-20_plan_review-F16 — low — `status.md`'s enrichment census disagrees with the filesystem it says derives it
 
 Status: planned
-Planned in: S140
+Planned in: S140, landed 2026-08-21
+Applied: the suggested resolution, plus a dated snapshot. The twenty-id enumeration
+and "28 of 48" are gone and the item says why -- both ends move, every completion
+shrinking the denominator and every new step growing it. The `grep -L` recipe is kept
+as the answer, with `grep -l` named for the done side and the note that neither reaches
+a step sitting in `plan_current/`. One number is kept and labelled: **snapshot,
+2026-08-21, 22 enriched and 44 not over the 66 files in `plan_todo/`**, decomposed as
+five excluded by design (S023/S025/S110/S111 reserve, S029 parked) and nineteen created
+after the pass stopped (S134 to S136, S141 onward), leaving the twenty the pass itself
+did not reach. The item's closing sentence is also corrected: S109's
+no-prune-when-giving-check clause was resolved by S139 and the item now says what is
+left of it.
 
 **Evidence.**
 
@@ -908,7 +953,17 @@ item and keep only the `grep -L` recipe, which is correct and self-updating.
 ### 2026-08-20_plan_review-F17 — low — INV-7 is referenced by the repository's own history and defined nowhere
 
 Status: planned
-Planned in: S140
+Planned in: S140, landed 2026-08-21
+Applied: the second option -- the record is corrected, no INV-7 is allocated.
+`specs.md`'s Invariants section now closes with **"The numbering ends at INV-6 and
+there is no INV-7"**, naming `68a61d0` as the only citation of the number anywhere
+outside git and reading it as enforcing AGENTS.md section 2 and section 10 instead.
+Decided on the commit body, which was read before the edit: *"plan_done/ is append by
+move only: the file is the record of what the step was when it completed"* -- a rule
+about which directories an agent may write to, with no property of the engine in it.
+`git log --all --grep=INV-7` returns that one commit and no other. The first option
+was rejected for two reasons: an invariant here is a testable property with a
+`testing.md` row, and `adocs/testing.md` is not in S140's `touches:`.
 
 **Evidence.**
 

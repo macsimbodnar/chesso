@@ -2,7 +2,7 @@ id:         S097
 goal:       extend the one move a verification search says is singular, and take the multicut the same search offers
 accepts:    an SPRT verdict per change, measured separately -- the extension and the multicut are two changes off one verification search; the verification search excludes the table move, runs at a reduced depth against a window below the table score, and is skipped at the root and where the entry is too shallow or its bound is wrong, each condition asserted by a test that fails if the precondition is absent; the margins and the reduced depth are constants in src/search_params.hpp with stated ranges (S073); a position with a forced mate inside the multicut's pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
-excludes:   check extensions, which are S096; any extension not derived from the verification search
+excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp:710` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
 decisions:  DEC-071
 closes:
 blocks:

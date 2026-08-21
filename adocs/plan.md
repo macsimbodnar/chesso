@@ -242,11 +242,20 @@ speed number surveyed), the evaluation cache (S120), the table layout at the
 S105 pressure setting (S119), and the movegen work that was always correctly
 last (S042, S032, S030). The pawn hash left this block for block 3 (DEC-087).
 
-**Block 3, the corpus and the evaluation, S082 to S126.** Corpus first, because
+**Block 3, the corpus and the evaluation, S134 to S126.** It opens with the one
+step that fits nothing: S134 folds rook-on-the-seventh and passer bucket 5 into
+the piece-square tables, deleting the two exact algebraic degeneracies S100
+found, bit-exact and so discharged on node counts rather than on a match
+(DEC-090). It sets `PARAM_COUNT` to 823 and it `blocks:` S135, which is why it
+goes before the corpus rather than beside the refits. Then corpus, because
 fitting a term on a corpus about to be replaced is the trap
 `src/evaluation.cpp` already records against S027: leaf-resolved labels at a
 few rows per game (S082), then the size-versus-nodes answer under a stated
-budget (S083). Then the clamp decision (S039), then the terms in the order the
+budget (S083). Then the two zero-weight groups S100 showed were held at zero
+rather than measured to it, each one bundled verdict at bounds that can resolve
+single digits: the three remaining placement features (S135) and tempo (S136,
+which also re-derives the taper truncation guard its zero weight holds down).
+Then the clamp decision (S039), then the terms in the order the
 Stash ledger prices them: mobility area and curves (S121, +20 class), passed
 pawns with king distance (S123, +22.3 the largest single entry), the connected
 and phalanx pawn work (S125, +25.4 class), the pawn hash that makes them
@@ -323,7 +332,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed
 15. S142  the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
 16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness -- **measured -11.02 +/- 10.53 Elo, H0 accepted, reverted; the duplication is kept and the test asserts it** (DEC-098)
 17. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
@@ -359,7 +367,7 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 47. S082  the corpus labels a resolved position rather than the root -- the quiescence leaf, or the leaf reached by playing out a deep search's whole principal variation -- and samples few positions per game rather than many
 48. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, not by a volume target
 49. S135  unfreeze the piece placement group and refit it, one bundled SPRT over the three remaining features, by the owner's decision of 2026-08-20
-50. S136  unfreeze tempo, re-derive the truncation guard it was holding at three divisions, refit and resolve it at bounds that can
+50. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- at two divisions once S055 has landed -- refit and resolve it at bounds that can
 51. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
 52. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on
 53. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too

@@ -2,7 +2,7 @@ id:         S042
 goal:       set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
 accepts:    perft counts are identical over the existing suite; two move orders reaching the same position produce the same hash and the same FEN; generate_FEN's fourth field agrees with Stockfish over a corpus sample; an SPRT against the preceding commit returns a verdict
 touches:    src/bitboard.cpp make_move
-excludes:   any other zobrist change, and S031's side-to-move key
+excludes:   any other zobrist change, including the single side-to-move key that was S031 -- retired, no successor step, "under 1 % by its own file, below every instrument here" (`adocs/plan.md:110`)
 decisions:
 closes:     2026-08-13_adversarial-F08
 blocks:
