@@ -323,7 +323,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-10. S100  find out why five evaluation terms fit to exactly zero -- feature extraction, corpus composition or a real result -- before any further weight is fitted beside them
 11. S084  an SPSA driver over the exposed search parameters, verified against an objective whose optimum is known
 12. S137  a refused or unknown search parameter is observable over UCI, so a tuner cannot play games against a silently-default value
 13. S085  the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, DEC-094 -- and an independent SPRT of what it returns
@@ -386,3 +385,5 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 70. S144  a citation in a plan document carries its own path, so the 467 bare line references that inherit a path from prose become checkable
 71. S145  mate safety test set
 72. S146  the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does
+73. S147  a mate score is reported with a principal variation long enough to reach the mate it claims, so fastchess's -check-mate-pvs stops warning on a truncation
+74. S148  the reverse futility depth ceiling is re-decided against the deep mates S145 measured it losing, by SPRT and not by argument

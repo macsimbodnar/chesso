@@ -226,11 +226,26 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
+- **A mate score can come with a principal variation too short to reach it.**
+  The score is right; the line stops early. `pv` is filled from the main search,
+  so it holds at most one move per main-search ply, and a mate found inside
+  quiescence continues below the deepest ply the line can hold. Measured over 400
+  late-game positions at depth 8, with Stockfish at 300000 nodes as the truth:
+  31 `info` lines carried a mate score, **2 showed a line shorter than the
+  distance they claimed, and 0 claimed the wrong distance** (S145, 2026-08-21).
+  A GUI reading the score plays correctly; a GUI reading the line sees it stop
+  before the mate. `fastchess -check-mate-pvs` reports it as
+  `Incomplete mating PV`. S147 is the fix.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score
   is a margin clear of beta is not searched. It cannot see a mate — that is what
-  a static score is — so it is bounded to depth 6 and to ply 3 and below.
+  a static score is — so it is bounded to ply 3 and below and to depth 15. That
+  depth bound was 6 until S085 tuned it (2026-08-20); at 15 it no longer bounds
+  anything this engine reaches, so the ply floor is the guard, and S145
+  (2026-08-21) is the constructed set of 48 proved mates the floor is measured
+  against: every mate in two is found immediately, half the mates in three are
+  found late, and none of the mates in four or five is found at all.
   *Aspiration windows* are present since S021 (2026-08-17): from depth 5 the
   root is searched in a band around the previous iteration's score, widened and
   repeated when the score falls outside it.

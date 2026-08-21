@@ -18,7 +18,8 @@ tune build**, where S073 deliberately makes it a plain `int` so it can be set
 over UCI:
 
 ```
-tests/test_engine.cpp:1620: error: non-constant condition for static assertion
+error: non-constant condition for static assertion, at the
+  ASPIRATION_MIN_DEPTH REQUIRE in tests/test_engine.cpp
   the value of 'ASPIRATION_MIN_DEPTH' is not usable in a constant expression
 ```
 

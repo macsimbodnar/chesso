@@ -5,10 +5,10 @@ this file: on disagreement, `plan_current/` wins.
 
 Updated: 2026-08-21 by `moltke --step status`.
 
-- Last done: S138
-- In progress: S145 a mate-safety test set built for this engine, spanning the plies the guard actually covers, so the floor that fences the tuner rests on evidence rather than on three positions and one motif
+- Last done: S145
+- In progress: S142 the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
 - Next: S142
-- Blocked: S142 the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support (paused by S145  # 2026-08-21)
+- Blocked: none
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships

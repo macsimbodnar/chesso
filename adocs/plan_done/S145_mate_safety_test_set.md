@@ -1,13 +1,22 @@
 id:         S145
 goal:       a mate-safety test set built for this engine, spanning the plies the guard actually covers, so the floor that fences the tuner rests on evidence rather than on three positions and one motif
 accepts:    a constructed set of at least 20 positions, each a forced mate verified by **two** independent tools (exhaustive enumeration through `python-chess` and `stockfish`, or a Syzygy probe where the material allows) and each reachable by `position_is_reachable()`, spanning mate distances 2 through 5 so plies 1, 3 and 5 are exercised rather than ply 1 alone; every position built by the S033 method -- start from a verified short mate, add legal material to the mated side until its static score clears `RFP_MARGIN * depth`, keep the key move quiet -- and the construction recorded as a script under `adocs/data/`, not as a list of FENs whose derivation is lost; the set asserted **under iterative deepening at a depth above the minimum**, because a fixed-depth cold-table call at exactly `2m - 1` cannot tell a lost mate from a one-iteration delay and the existing cases conflate them; `RFP_MIN_PLY` and `RFP_MAX_DEPTH` each measured against the set **with the other held**, so the floor and the ceiling are separated rather than substituted; a mined breadth set built from `.spsa/S085/games.pgn` at one position per game, labelled by `stockfish`, scored as a **count with a floor** and not per-position pass/fail; `fastchess.sh` passes `-check-mate-pvs`; the fast suite green and no default changed
-touches:    tests/test_search.cpp, adocs/data/, fastchess.sh, DEV_MANUAL.md
+touches:    tests/test_engine.cpp, adocs/data/, fastchess.sh, DEV_MANUAL.md, MANUAL.md, adocs/specs.md, adocs/testing.md
+            # amended when the plan met the code, 2026-08-21. It said tests/test_search.cpp,
+            # and it could not be: the accepts requires the set asserted under iterative
+            # deepening, and iterative_deepening_search() lives in src/chesso.cpp and reaches
+            # a test only through the UCI surface, which test_search does not link. The new
+            # suite therefore sits beside the deepen() harness the aspiration cases already
+            # use in tests/test_engine.cpp. MANUAL.md, specs.md and testing.md are the
+            # completion checks landing, and the two documents each carried a stale reverse
+            # futility constant -- depth 6 and margin 75, both moved by S085 -- which this
+            # step's own subject made impossible to leave. This is the class S141 exists for.
 excludes:   changing `RFP_MIN_PLY`'s or `RFP_MAX_DEPTH`'s declared bounds, which is S142's and which this step supplies the evidence for; changing any default; mate distance pruning, which the research below shows is a speed and analysis feature and not a guard against this hazard, and which would need its own step and its own verdict; any external position file
 decisions:  DEC-095, DEC-016, DEC-019
 closes:
 blocks:     S142
 paused_by:
-done:
+done:      48 proved mates spanning distances 2 to 5, both oracles, verify clean; the floor separates at 2 and the deep classes belong to the ceiling; fast suite 18 of 18 in 14.89 s
 
 ## Why S142 is paused behind this
 
@@ -52,6 +61,18 @@ preference. And S085's verified +21.02 Elo was measured with `RfpMinPly` held at
 3 -- the tuner's own answer on this axis was never SPRT-tested.
 
 ### 2. A representative sample cannot decide this floor
+
+**Corrected by measurement, 2026-08-21.** This section was half right and the
+half that is wrong is worth stating plainly, because it was the argument for
+building the set. The claim "there is no sample size that fixes this" was
+reached from node counts and from a 61-position sensitivity frame, and it does
+not survive a mate-finding count: the mined set of 318 positions reads **146
+exact at `RfpMinPly` 2 and 3 and 139 at 1 and 0**, so a mined sample does see
+the boundary that matters. What it still cannot do is separate 2 from 3, which
+is the part below that holds. The constructed set is what separates the deep
+classes and what supplies the per-ply coverage, and that justification stands on
+its own -- the sample argument was not needed and should not have been stated as
+absolute.
 
 Measured, and it is the finding that shapes the whole step. The hazard needs a
 quiet non-PV node whose static score clears a displaced beta by
@@ -213,4 +234,7 @@ suite green. The measurements above are done and are not repeated.
   strength", helps analysis and mate solving.
 - https://www.chessprogramming.org/Test-Positions -- position testing has fallen
   out of favour against SPRT.
-- `fastchess --help`, installed alpha 1.8.2 -- `-check-mate-pvs`.
+- `fastchess --help`, installed **alpha 1.8.1 20260720-daa3ea2** -- the version
+  in this step's research was written as 1.8.2 and the binary reports 1.8.1;
+  `-check-mate-pvs` is present and was verified on a real match, not on `--help`
+  alone.

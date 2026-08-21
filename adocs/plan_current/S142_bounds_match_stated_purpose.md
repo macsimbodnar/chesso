@@ -6,7 +6,7 @@ excludes:   narrowing `RFP_MAX_DEPTH`'s bound, decided against on 2026-08-21 (DE
 decisions:  DEC-084, DEC-095
 closes:     2026-08-20_plan_review-F08, 2026-08-20_plan_review-F14
 blocks:
-paused_by: S145  # 2026-08-21
+paused_by:
 done:
 
 ## What was measured, and why the fix is a decision

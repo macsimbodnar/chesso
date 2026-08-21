@@ -1,0 +1,17 @@
+shipping defaults read from the binary: {'RfpMargin': 63, 'RfpMaxDepth': 15, 'RfpMinPly': 3}
+
+RfpMinPly swept, RfpMaxDepth held at 15, 48 constructed positions, depth 2m-1+8
+  RfpMinPly=0    exact 19/48  m2 13/16 d7  m3 6/16 d8  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMinPly=1    exact 19/48  m2 13/16 d7  m3 6/16 d8  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMinPly=2    exact 24/48  m2 16/16 d0  m3 8/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMinPly=3    exact 24/48  m2 16/16 d0  m3 8/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMinPly=4    exact 27/48  m2 16/16 d0  m3 11/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMinPly=5    exact 27/48  m2 16/16 d0  m3 11/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+
+RfpMaxDepth swept, RfpMinPly held at 3, 48 constructed positions, depth 2m-1+8
+  RfpMaxDepth=0  exact 34/48  m2 16/16 d0  m3 11/16 d4  m4 4/8 d7  m5 3/8 d8  short 0  sign 0
+  RfpMaxDepth=3  exact 32/48  m2 16/16 d0  m3 11/16 d5  m4 3/8 d7  m5 2/8 d7  short 0  sign 0
+  RfpMaxDepth=6  exact 27/48  m2 16/16 d0  m3 10/16 d7  m4 1/8 d8  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=10 exact 24/48  m2 16/16 d0  m3 8/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=15 exact 24/48  m2 16/16 d0  m3 8/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=63 exact 24/48  m2 16/16 d0  m3 8/16 d4  m4 0/8 d-  m5 0/8 d-  short 0  sign 0

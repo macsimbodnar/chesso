@@ -43,12 +43,93 @@ recorded, so it is added, never edited.
 | `S076_sprt.log` | that run's full console, 2537 lines, ending `SPRT ([-5.00, 5.00]) completed - H1 was accepted` and `Total Time: 00:46:48` |
 | `S076_sprt.pgn` | the 1047 games of that run, 3.0 MB, the run that decided S076. One match, one reference, committed on the same two tests as `S021_sprt.pgn` below |
 | `S021_sprt.pgn` | the 824 games of that run, 2.4 MB. One match, one reference, with per-move score, depth and time comments. Committed where S068's run 1 PGN was not, on the same two tests: it is a clean artifact of one run — the script writes its own `-pgnout` path rather than `fastchess.sh`'s shared, appended `/tmp/fastchess_full.pgn` — and it is the run that decided the step |
+| `S145_mate_set.py` | the construction and the two-oracle verifier for the mate-safety set, and **it runs**: `generate` rebuilds the file from a seeded sample, `verify` re-proves every row from scratch, `emit-cpp` prints the table `tests/test_engine.cpp` holds. The proof is an exhaustive AND/OR search over `python-chess`, iterative-deepening in the mate distance so the distance it returns is exact and not an upper bound; `stockfish` at a node limit is the second oracle and only ever proposes. Nothing is copied and nothing is derived from another engine's search (DEC-016) |
+| `S145_mate_set.tsv` | what it produced: one row per position with the proved distance, the mated side's material lead, the proof's node count, the quiet key, and the defender nodes at plies 1, 3, 5 and 7 that are the nodes actually under test. Regenerable, unlike every other file here, which is the point of keeping the script beside it |
+| `S145_mined_set.py` | the breadth set: one position per game -- the final one -- from `.spsa/S085/games.pgn`, labelled by `stockfish`, and a `score` mode that counts how many of them an engine finds at a stated depth and stated options. Scored as a count with a floor and never per position, for the reason its docstring gives |
+| `S145_mined_set.tsv` | that set, `fen distance game` |
+| `S145_rfp_sweep.py` | the floor and the ceiling measured against both sets on the tune build, one axis at a time with the other held at its shipping value read from the binary. Reports `found`, `exact` and `delay`, the last being iterations between `2m - 1` and the first iteration that reports the mate -- the reading a fixed-depth call cannot produce |
 | `S078_body_check.py` | S078's acceptance check over the two step bodies it rewrote, run from the repository root as `python3 adocs/data/S078_body_check.py adocs/plan_todo/S060_*.md adocs/plan_todo/S061_*.md`. Costs no run at all — it is here because it is the executable form of the claim, and because it stays runnable against S060 and S061 until both are done. Non-vacuous by construction: it extracts the `TEST_CASE_FIXTURE` titles and the four source lines from `tests/` first and exits **2** if any is not really there, so a rename in `tests/` turns it red on the precondition rather than on the gate. Exit 0 clean, 1 flagged, 2 precondition |
 
 `S018_raw.tsv` columns: `game ply phase cost ref own mate san fen`. `cost` is
 the reference's swing across the move and may be negative, which the profiler
 floors at zero before reporting; the spread of those negatives is the noise
 floor of the reference limit.
+
+## S145 — the mate-safety sets, and the sweep that separated the two bounds
+
+The reverse futility sweeps above were the evidence for S033's guard. S145 is the
+evidence for whether that guard is worth anything, measured on positions built
+for this engine instead of three picked for another one.
+
+### Why the positions are constructed
+
+Measured before anything was built: of 191 positions in a 6347-position sample
+where chesso says the side to move is mated within six, **one** has a
+non-negative score for the mated side and the median is **-1093**. The hazard
+reverse futility walks into needs the mated side to be *ahead*, so it is absent
+from the sample frame and no sample size fixes that. `S145_mate_set.py` builds it
+instead: a frozen defending army worth 760 centipawns more than the attacking
+king and queen, the attacker's moves quiet everywhere except the mate, and mate
+distances two to five so the guarded defender nodes land at plies 1, 3, 5 and 7.
+
+48 positions, all 13 pieces, all proved by exhaustive AND/OR enumeration —
+iterative-deepening in the distance, so every shorter distance is refuted rather
+than merely unfound.
+
+### Two things about the oracles, both learned the hard way
+
+**Stockfish corroborates; it does not decide.** At 4000000 nodes in its own
+process it agrees with 46 of the 48. Of the two it does not: one reads +1879 with
+no mate at all, one reads mate 6 against a proved 5. Both were re-proved and
+every shorter distance re-refuted. The cause is in the construction — a frozen
+army is a position class its network scores badly wrong, and it called the
+attacking side better while that side was 760 behind — so the disagreement is
+about stockfish's ordering, not about the claim. Only a *shorter* mate would
+falsify a proof, and that is the only direction `verify` treats as a failure.
+
+**A node-limited engine is reproducible only inside one identical call
+sequence.** The generator runs thousands of positions through one process, which
+is fine for a proposer and useless for a check: the first `verify` reported seven
+false failures purely because the hash was cold. `verify` now runs one process
+per position at ten times the budget.
+
+### The measurement, and it is per mate distance
+
+`S145_rfp_sweep.log`, the full table. One axis swept with the other held at its
+shipping value, because S145 measured the two substituting for each other. Every
+setting: **0 mate scores with the wrong sign and 0 closer than the proved
+minimum**, over twelve settings times 48 positions.
+
+| | exact | m2 | m3 | m4 | m5 |
+|---|---|---|---|---|---|
+| `RfpMinPly` 0 and 1 | 19/48 | 13/16, delay to 7 | 6/16 | 0/8 | 0/8 |
+| `RfpMinPly` 2 and 3 | 24/48 | **16/16, delay 0** | 8/16 | 0/8 | 0/8 |
+| `RfpMinPly` 4 and 5 | 27/48 | 16/16, delay 0 | 11/16 | 0/8 | 0/8 |
+| `RfpMaxDepth` 0 | 34/48 | 16/16 | 11/16 | **4/8** | **3/8** |
+| `RfpMaxDepth` 6, S033's | 27/48 | 16/16 | 10/16 | 1/8 | 0/8 |
+| `RfpMaxDepth` 15, shipping | 24/48 | 16/16 | 8/16 | 0/8 | 0/8 |
+
+Three readings come out of it. **The floor of 2 is exactly where every mate in
+two comes back immediately**, and 2 and 3 are indistinguishable across the whole
+set — which is DEC-095's decision resting on 48 proved positions instead of 3
+picked ones, and S142 is where it lands. **The deep classes belong to the
+ceiling, not the floor**, and S085 moved that ceiling from 6 to 15, which is
+S148. **And the old gate could not have seen either**, because all three of its
+cases were mates in two and the mate in two class is 16 of 16 at every setting of
+both bounds.
+
+### The mined set, scored differently on purpose
+
+`S145_mined_set.tsv`, 318 positions, the final position of one game each from
+6000 games of `.spsa/S085/games.pgn`, labelled by stockfish. Scored as a count
+with a floor and never per position: two of the seventeen engines S145 surveyed
+wrote per-position mate tests, watched their own pruning break them, and disabled
+the tests rather than the pruning.
+
+At depth 10 the shipping build finds 147 with the right sign, **146 exact**, 0
+wrong sign; at `RfpMinPly` 1 and 0 it reads 140 and 139. So this set does see the
+1-versus-2 boundary, which the earlier node-count work suggested it would not,
+and it does **not** see 2 versus 3. Floor 143, between the two.
 
 ## The reverse futility sweeps, S033
 

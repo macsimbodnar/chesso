@@ -5,12 +5,15 @@
 #include <chrono>
 #include <cstring>
 #include <iterator>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
+#include "evaluation.hpp"
 #include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "transposition_table.hpp"
@@ -1639,5 +1642,607 @@ TEST_SUITE("engine: aspiration windows")
     }
 
     uci_shutdown();
+  }
+}
+
+
+TEST_SUITE("engine: mate safety")
+{
+  // THE SET, AND WHY IT IS BUILT AND NOT CHOSEN. S145.
+  //
+  // Reverse futility pruning returns a static score instead of searching when
+  // that score is a margin clear of beta, and a static score is never a mate
+  // score - so a node whose true value is "mated" can fail high on material and
+  // take the mating line with it. S033 found that, contained it with a ply
+  // floor and a depth ceiling, and left one hand-built position behind as the
+  // gate.
+  //
+  // Three things were wrong with that gate, all measured in S145 rather than
+  // argued:
+  //
+  //   1. It was three cases over one geometry. tests/test_search.cpp's "mate in
+  //      two is found at the right distance" and "pruning does not hide a
+  //      forced mate" hold the same two FENs, and "pruning does not hide a mate
+  //      against the material leader" is the second of those with White
+  //      material added. All three are a mate in two, so all three exercise ply
+  //      1 and nothing else, and RFP_MIN_PLY's own comment concedes that no
+  //      test covers ply 2.
+  //   2. Two of the three were picked for a different engine. They enter at
+  //      3ed3b11 and are on master and bitboard as well, which is the owner's
+  //      objection in DEC-095 and the reason S142 waited for this step.
+  //   3. They are asserted by search() at a fixed depth from a cold table,
+  //   which
+  //      cannot tell a lost mate from a postponed one. Measured on the S033
+  //      position at RfpMinPly 1: the mate appears at iteration 8 with
+  //      RfpMaxDepth 6 and never at all with RfpMaxDepth 15. A call at exactly
+  //      2m - 1 reports both as "no mate".
+  //
+  // So the positions below are constructed, spanning mate distances two to five
+  // so the guarded defender nodes land at plies 1, 3, 5 and 7, and they are
+  // asserted through the engine's own iterative deepening at a depth above the
+  // minimum. Every one is a forced mate proved twice and by neither chesso: an
+  // exhaustive AND/OR enumeration over python-chess, iterative-deepening in the
+  // distance so the answer is exact rather than an upper bound, and stockfish
+  // at a node limit. adocs/data/S145_mate_set.py is the construction and
+  // adocs/data/S145_mate_set.tsv is what it produced; nothing here is a FEN
+  // whose derivation was lost.
+  //
+  // A sampled set cannot replace this and no sample size would. Of 191
+  // positions in a 6347-position sample where this engine says the side to move
+  // is mated within six, one has a non-negative score for the mated side and
+  // the median is -1093. The hazard needs the mated side to be *ahead*, and
+  // that does not occur in play. adocs/data/S145_mined_set.py covers breadth
+  // instead, scored as a count with a floor, because per-position pass/fail
+  // over mined mates is exactly what made two surveyed projects switch their
+  // mate tests off rather than their pruning.
+  struct mate_case_t
+  {
+    const char* root;      // the position under test, mating side to move
+    const char* nodes[4];  // the guarded defender nodes, plies 1, 3, 5, 7
+    int distance;          // proved, in moves
+    int lead;              // the mated side's material lead, standard cp
+    const char* family;
+  };
+
+  struct report_t
+  {
+    int depth;
+    bool is_mate;
+    int value;
+  };
+
+  // One iterative deepening search, every finished iteration's score.
+  //
+  // Driven through [go] and not by calling search() once per depth, because the
+  // aspiration schedule, the table carried across iterations and the bounds
+  // each iteration hands down are all part of what decides whether a mate
+  // survives - DEC-060 measured that a pruning rule's mate exposure is a
+  // property of the bound its parent passes down rather than of the static
+  // score. A loop over search() reproduces none of that.
+  static std::vector<report_t> deepen_scores(const std::string& fen, int depth)
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen " + fen);
+    }
+
+    std::vector<std::string> lines;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth " + std::to_string(depth));
+      uci_wait_for_search();
+      lines = capture.lines();
+    }
+
+    std::vector<report_t> out;
+
+    for (const std::string& line : lines) {
+      std::istringstream stream(line);
+      std::vector<std::string> token{std::istream_iterator<std::string>(stream),
+                                     std::istream_iterator<std::string>()};
+
+      if (token.size() < 8 || token[0] != "info" || token[1] != "score") {
+        continue;
+      }
+
+      const auto depth_at = std::find(token.begin(), token.end(), "depth");
+      REQUIRE(depth_at != token.end());
+      REQUIRE(depth_at + 1 != token.end());
+
+      out.push_back({std::stoi(*(depth_at + 1)), token[2] == "mate",
+                     std::stoi(token[3])});
+    }
+
+    return out;
+  }
+
+  // Eight iterations of slack above 2m - 1, and the number is measured. One
+  // position in the set is late by four at the shipping defaults and by eight
+  // at RfpMinPly 1, so a tighter window would report a postponed mate as a lost
+  // one
+  // - the exact conflation this step exists to remove. A whole search of one of
+  // these positions at depth 17 costs about 17 ms, so there is no reason to be
+  // tight.
+  static constexpr int MATE_DEPTH_SLACK = 8;
+
+  // WHAT IS ASSERTED, AND WHY IT IS NOT "EVERY MATE IS FOUND".
+  //
+  // Measured over these 48 positions on the shipping build at depth 2m - 1 + 8,
+  // and the answer is almost entirely a function of the mate distance:
+  //
+  //   mate in 2   16 of 16 exact, delay 0
+  //   mate in 3    8 of 16 exact, delay up to 4
+  //   mate in 4    0 of 8
+  //   mate in 5    0 of 8
+  //
+  // So the guard holds where the old three-position gate looked and nowhere
+  // else, because all three of those cases were mates in two. Asserting that
+  // every position is found would assert something this engine has never done
+  // and no setting of reverse futility makes true - with the rule switched off
+  // entirely it is 34 of 48, not 48. A test demanding it would be red on
+  // arrival and would be weakened to clear it, which is what happened to the
+  // two surveyed projects that wrote per-position mate tests.
+  //
+  // What is asserted instead is three things, in descending order of how
+  // provable they are.
+  //
+  // **Two properties that are defects at any count.** No mate score for the
+  // side being mated, and no mate score *closer* than the proved minimum. The
+  // second is what the exhaustive proof buys: the enumeration refuted every
+  // shorter distance, so a shorter claim is provably false rather than merely
+  // surprising, and it is the S094 class of bug - a mate score renormalised by
+  // the wrong number of plies. Measured 0 and 0 over twelve reverse-futility
+  // settings times these 48 positions.
+  //
+  // **Every mate in two, at the first iteration that can hold it.** This is the
+  // assertion that fences the tuner. At RfpMinPly 2 and above it is 16 of 16
+  // with delay 0; at 1 and 0 it is 13 of 16 with delays up to 7. 0 and 1 are
+  // the same engine - the root is exempted by !is_pv, not by this parameter -
+  // so this goes red at exactly the value S085's run spent 906 of 1250
+  // iterations at.
+  //
+  // **A floor on the mate in three count.** 8 of 16 at the shipping floor, 6 at
+  // RfpMinPly 1, 11 at RfpMinPly 4. The floor is 7, placed strictly between the
+  // shipping value and the removed-guard value so it fails when the guard fails
+  // and not when the tree shifts underneath it.
+  //
+  // The mate in four and five counts are **recorded and not asserted**: they
+  // are 0 of 8, and a floor of zero asserts nothing. What recovers them is the
+  // depth ceiling and not the ply floor - 4 of 8 and 3 of 8 at RfpMaxDepth 0,
+  // still 0 and 0 at 10 and above, and S085 tuned that ceiling from S033's 6
+  // to 15. That trade is a default change, so it is an SPRT and its own step;
+  // adocs/data/S145_rfp_sweep.log is the evidence.
+  static constexpr int MATE_IN_THREE_FLOOR = 7;
+
+  TEST_CASE_FIXTURE(engine_fixture_t,
+                    "a proved mate is never mis-scored, and every mate in two "
+                    "is found on time")
+  {
+    // clang-format off
+    // Generated by `S145_mate_set.py emit-cpp` from adocs/data/S145_mate_set.tsv.
+    // Do not edit here: edit the script, regenerate, re-emit.
+    const std::vector<mate_case_t> cases = {
+      {"1krbrb2/2p1p1p1/K1P1P1P1/8/8/2Q5/8/8 w - - 0 1",
+       {"1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2"},
+      {"2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1",
+       {"2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_flip"},
+      {"2brbr2/1p1p1p2/1P1P1P2/8/2Q5/5K1k/8/8 w - - 0 1",
+       {"2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_flip"},
+      {"2k1brbr/3p1p1p/3P1P1P/8/8/8/5QK1/8 w - - 0 1",
+       {"2k1brbr/Q2p1p1p/3P1P1P/8/8/8/6K1/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_flip"},
+      {"2k5/8/8/8/3q4/2p1p1p1/2P1P1P1/2RBRBK1 b - - 0 1",
+       {"2k4q/8/8/8/8/2p1p1p1/2P1P1P1/2RBRBK1 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_black"},
+      {"2rbrbk1/2p1p1p1/2P1P1P1/8/2Q5/8/8/2K5 w - - 0 1",
+       {"2rbrbk1/2p1p1p1/2P1P1P1/8/7Q/8/8/2K5 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2"},
+      {"3k4/8/K7/5q2/8/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"8/2k5/K7/5q2/8/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_flip_black"},
+      {"4K3/8/8/4k3/5q2/p1p1p3/P1P1P3/RBRB4 b - - 0 1",
+       {"4K3/8/4k3/8/5q2/p1p1p3/P1P1P3/RBRB4 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_black"},
+      {"4brbr/3p1p1p/3P1P1P/8/8/8/2Q1K3/6k1 w - - 0 1",
+       {"4brbr/3p1p1p/3P1P1P/8/8/5K2/2Q5/6k1 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_flip"},
+      {"4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1",
+       {"4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_flip_black"},
+      {"7q/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR b - - 0 1",
+       {"q7/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_flip_black"},
+      {"8/3k4/8/7q/8/1p1p1p2/1P1P1P2/1KBRBR2 b - - 0 1",
+       {"8/3k4/8/q7/8/1p1p1p2/1P1P1P2/1KBRBR2 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_flip_black"},
+      {"8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1",
+       {"8/8/5k2/8/6q1/p1p1p3/P1P1P3/RBRB1K2 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0_black"},
+      {"8/8/8/7q/8/2p1p1p1/2P1PkP1/K1RBRB2 b - - 0 1",
+       {"8/8/8/1q6/8/2p1p1p1/2P1PkP1/K1RBRB2 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift2_black"},
+      {"rbrb1K2/p1p1p3/P1P1P2k/Q7/8/8/8/8 w - - 0 1",
+       {"rbrb4/p1p1pK2/P1P1P2k/Q7/8/8/8/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0"},
+      {"rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/k7/2K5/1Q6/8/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 760, "shift0"},
+      {"1k6/8/8/8/8/1p1p1p2/1P1PqP2/2BRBRK1 b - - 0 1",
+       {"1k6/8/4q3/8/8/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2",
+        "1k6/8/8/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_flip_black"},
+      {"1krbrb1Q/2p1p1p1/2P1P1P1/2K5/8/8/8/8 w - - 0 1",
+       {"1krbrb2/2p1p1p1/2P1P1P1/2K5/7Q/8/8/8 b - - 1 1",
+        "k1rbrb2/2p1p1p1/2P1P1P1/2K5/1Q6/8/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift2"},
+      {"1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1",
+       {"1krbrb2/2p1p1p1/K1P1P1P1/7Q/8/8/8/8 b - - 1 1",
+        "k1rbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift2"},
+      {"2brbrk1/Qp1p1p2/1P1P1P2/8/8/1K6/8/8 w - - 0 1",
+       {"2brbrk1/1p1p1p2/1P1P1P2/Q7/8/1K6/8/8 b - - 1 1",
+        "2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/1K6/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_flip"},
+      {"4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"4K3/1q4k1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        "3K4/1q6/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_flip_black"},
+      {"4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1",
+       {"4brbr/3p1p1p/3P1P1P/8/1K6/8/3Q4/1k6 b - - 1 1",
+        "4brbr/3p1p1p/3P1P1P/8/8/2K5/3Q4/k7 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_flip"},
+      {"4brbr/3p1p1p/3P1P1P/8/8/2Q5/4k1K1/8 w - - 0 1",
+       {"4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1",
+        "4brbr/3p1p1p/3P1P1P/8/3Q4/5K2/8/4k3 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_flip"},
+      {"7K/8/3qk3/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"7K/5k2/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        "5k2/7K/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_flip_black"},
+      {"8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1",
+       {"8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2",
+        "8/4q3/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_black"},
+      {"8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1",
+       {"6q1/8/2k5/8/8/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2",
+        "1q6/8/2k5/8/8/2p1p1p1/2P1P1P1/K1RBRB2 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_black"},
+      {"8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1",
+       {"8/8/6q1/8/8/p1p1p3/P1P1P3/RBRBk2K w - - 1 2",
+        "8/8/6q1/8/8/p1p1p3/P1P1Pk1K/RBRB4 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift0_black"},
+      {"8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1",
+       {"8/8/7k/8/q7/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2",
+        "8/8/7k/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_flip_black"},
+      {"8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1",
+       {"8/8/8/5k2/7q/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2",
+        "8/8/8/5k2/1q6/2p1p1p1/K1P1P1P1/2RBRB2 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_black"},
+      {"Q1brbrk1/1p1p1p2/1P1P1P2/8/8/5K2/8/8 w - - 0 1",
+       {"2brbrk1/1p1p1p2/1P1P1P2/Q7/8/5K2/8/8 b - - 1 1",
+        "2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/5K2/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift2_flip"},
+      {"rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1",
+       {"rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1",
+        "rbrb2k1/p1p1p3/P1P1P1K1/8/8/7Q/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift0"},
+      {"rbrb4/p1p1p3/P1P1P3/8/8/8/5k1K/1Q6 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1",
+        "rbrb4/p1p1p3/P1P1P3/8/4Q3/6K1/8/5k2 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 760, "shift0"},
+      {"4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1",
+       {"4brbr/3p1p1p/3P1P1P/8/2QK4/8/1k6/8 b - - 1 1",
+        "4brbr/3p1p1p/3P1P1P/1Q6/3K4/k7/8/8 b - - 3 2",
+        "4brbr/3p1p1p/3P1P1P/1Q6/8/2K5/k7/8 b - - 5 3",
+        nullptr},
+       4, 760, "shift0_flip"},
+      {"7K/8/1q6/8/4k3/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        "6K1/2q5/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
+        "7K/2q5/6k1/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4",
+        nullptr},
+       4, 760, "shift0_flip_black"},
+      {"7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1",
+       {"7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2",
+        "6K1/8/5k2/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 3 3",
+        "7K/5k2/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 5 4",
+        nullptr},
+       4, 760, "shift0_black"},
+      {"8/8/8/8/7K/p1p1pq2/P1P1P3/RBRB1k2 b - - 0 1",
+       {"8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2",
+        "8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3",
+        "8/8/8/8/4q3/p1p1p2K/P1P1Pk2/RBRB4 w - - 5 4",
+        nullptr},
+       4, 760, "shift0_black"},
+      {"k1K5/8/8/4q3/8/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"k1K5/6q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        "3K4/1k4q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
+        "4K3/6q1/2k5/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4",
+        nullptr},
+       4, 760, "shift0_flip_black"},
+      {"k3brbr/3p1p1p/3P1P1P/8/K7/8/8/5Q2 w - - 0 1",
+       {"k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1",
+        "1k2brbr/3p1p1p/1K1P1P1P/8/8/8/8/5Q2 b - - 3 2",
+        "2k1brbr/3p1p1p/1K1P1P1P/8/8/5Q2/8/8 b - - 5 3",
+        nullptr},
+       4, 760, "shift0_flip"},
+      {"rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1",
+        "rbrb4/p1p1p3/P1P1P3/1k1K4/8/Q7/8/8 b - - 3 2",
+        "rbrb4/p1p1p3/PkP1P3/8/2K5/Q7/8/8 b - - 5 3",
+        nullptr},
+       4, 760, "shift0"},
+      {"rbrb4/p1p1p3/P1P1P3/k3K3/2Q5/8/8/8 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/k2K4/2Q5/8/8/8 b - - 1 1",
+        "rbrb4/p1p1p3/PkP1P3/3K4/8/8/4Q3/8 b - - 3 2",
+        "rbrb4/p1p1p3/P1P1P3/k1K5/8/8/4Q3/8 b - - 5 3",
+        nullptr},
+       4, 760, "shift0"},
+      {"2K5/7q/8/7k/8/p1p1p3/P1P1P3/RBRB4 b - - 0 1",
+       {"2K5/q7/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 1 2",
+        "3K4/1q6/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3",
+        "4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4",
+        "5K2/3q4/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5"},
+       5, 760, "shift0_black"},
+      {"4brbr/3p1p1p/1k1P1P1P/8/K1Q5/8/8/8 w - - 0 1",
+       {"4brbr/3p1p1p/1k1P1P1P/3Q4/K7/8/8/8 b - - 1 1",
+        "4brbr/k2p1p1p/3P1P1P/1K1Q4/8/8/8/8 b - - 3 2",
+        "1k2brbr/3p1p1p/1K1P1P1P/3Q4/8/8/8/8 b - - 5 3",
+        "2k1brbr/K2p1p1p/3P1P1P/3Q4/8/8/8/8 b - - 7 4"},
+       5, 760, "shift0_flip"},
+      {"4brbr/3p1p1p/3P1P1P/4Q3/k7/8/8/4K3 w - - 0 1",
+       {"4brbr/3p1p1p/3P1P1P/3Q4/k7/8/8/4K3 b - - 1 1",
+        "4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2",
+        "4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3",
+        "4brbr/1Q1p1p1p/3P1P1P/k7/8/2K5/8/8 b - - 7 4"},
+       5, 760, "shift0_flip"},
+      {"8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1",
+       {"8/1q6/8/3k4/8/3p1p1p/3P1P1P/K3BRBR w - - 1 2",
+        "8/1q6/8/8/2k5/3p1p1p/K2P1P1P/4BRBR w - - 3 3",
+        "8/8/8/8/2k5/K2p1p1p/3P1P1P/1q2BRBR w - - 5 4",
+        "1q6/8/8/8/K1k5/3p1p1p/3P1P1P/4BRBR w - - 7 5"},
+       5, 760, "shift0_flip_black"},
+      {"8/5q2/8/6K1/8/p1p1p2k/P1P1P3/RBRB4 b - - 0 1",
+       {"8/5q2/8/6K1/8/p1p1p1k1/P1P1P3/RBRB4 w - - 1 2",
+        "6q1/8/7K/8/8/p1p1p1k1/P1P1P3/RBRB4 w - - 3 3",
+        "6q1/8/8/7K/5k2/p1p1p3/P1P1P3/RBRB4 w - - 5 4",
+        "6q1/8/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5"},
+       5, 760, "shift0_black"},
+      {"8/8/4K3/8/3qk3/3p1p1p/3P1P1P/4BRBR b - - 0 1",
+       {"3q4/8/4K3/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2",
+        "3q4/5K2/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
+        "4q3/6K1/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 5 4",
+        "4q3/7K/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 7 5"},
+       5, 760, "shift0_flip_black"},
+      {"rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/6Q1/2K5/7k/8/8 b - - 1 1",
+        "rbrb4/p1p1p3/P1P1P3/3K2Q1/8/8/7k/8 b - - 3 2",
+        "rbrb4/p1p1p3/P1P1P3/6Q1/4K3/7k/8/8 b - - 5 3",
+        "rbrb4/p1p1p3/P1P1P3/6Q1/8/5K2/7k/8 b - - 7 4"},
+       5, 760, "shift0"},
+      {"rbrb4/p1p1p3/P1P1P3/8/1k6/8/2QK4/8 w - - 0 1",
+       {"rbrb4/p1p1p3/P1P1P3/8/1k6/4K3/2Q5/8 b - - 1 1",
+        "rbrb4/p1p1p3/P1P1P3/1k6/3K4/8/2Q5/8 b - - 3 2",
+        "rbrb4/p1p1p3/PkP1P3/8/2K5/8/2Q5/8 b - - 5 3",
+        "rbrb4/p1p1p3/P1k1P3/5Q2/2K5/8/8/8 b - - 1 4"},
+       5, 760, "shift0"},
+    };
+    // clang-format on
+
+    // The set has to be the set S145 describes, or the loop below is a weaker
+    // test than it reads as. Asserted, not assumed: twenty positions is the
+    // floor the step states, and the distances have to span two to five or the
+    // deeper plies are not exercised at all.
+    REQUIRE(cases.size() >= 20);
+
+    std::set<int> distances;
+    for (const mate_case_t& test : cases) {
+      distances.insert(test.distance);
+    }
+    REQUIRE(distances == std::set<int>({2, 3, 4, 5}));
+
+    std::map<int, int> exact_by_distance;
+    std::map<int, int> total_by_distance;
+
+    for (const mate_case_t& test : cases) {
+      const std::string title = std::string(test.family) + ", mate in " +
+                                std::to_string(test.distance) + ", " +
+                                test.root;
+
+      ++total_by_distance[test.distance];
+
+      // Precondition 1. A position no legal game reaches proves nothing about a
+      // search that only ever meets positions legal games reach.
+      REQUIRE_MESSAGE(load_FEN(test.root, &game), title);
+      REQUIRE_MESSAGE(position_is_reachable(&game), title);
+
+      const int minimum = 2 * test.distance - 1;
+
+      // Precondition 2, and this is the one that makes the case non-vacuous.
+      // Every guarded defender node on the mating line has to be a node reverse
+      // futility is allowed to fire at - not in check, or the rule is already
+      // off there and the node proves nothing - and at least one of them has to
+      // be a node it would actually fire at: a static score high enough that
+      // subtracting the margin the rule uses *at that node's own ply* still
+      // leaves it positive. Without the second half the case could pass on an
+      // engine that never comes near the rule at all.
+      //
+      // "At least one" and not "all", because the margin is RFP_MARGIN per
+      // remaining ply and therefore largest at ply 1: at the first iteration
+      // that can hold a mate in m, ply 1 has 2m - 2 plies left where the
+      // deepest guarded node has 2. One mate in four here scores 343 at ply 1
+      // against a 378 margin and clears its deepest node's 126 nearly
+      // threefold, so requiring every node would refuse a position whose hazard
+      // is real one ply further down. The number of guarded nodes is asserted
+      // too, so "this case reaches ply 7" is checked rather than inferred from
+      // the distance.
+      int guarded_nodes = 0;
+      bool reachable_cutoff = false;
+
+      for (int i = 0; i < 4; ++i) {
+        if (test.nodes[i] == nullptr) { break; }
+
+        const int ply = 2 * i + 1;
+        const std::string at = title + ", ply " + std::to_string(ply);
+
+        REQUIRE_MESSAGE(load_FEN(test.nodes[i], &game), at);
+        REQUIRE_MESSAGE(!is_check(&game), at);
+
+        ++guarded_nodes;
+
+        if (evaluate(&game.board) > RFP_MARGIN * (minimum - ply)) {
+          reachable_cutoff = true;
+        }
+      }
+
+      REQUIRE_MESSAGE(guarded_nodes == test.distance - 1, title);
+      REQUIRE_MESSAGE(reachable_cutoff, title);
+
+      const std::vector<report_t> iterations =
+          deepen_scores(test.root, minimum + MATE_DEPTH_SLACK);
+
+      REQUIRE_MESSAGE(
+          iterations.size() == static_cast<size_t>(minimum + MATE_DEPTH_SLACK),
+          title);
+
+      int first_exact = 0;
+
+      for (const report_t& iteration : iterations) {
+        if (!iteration.is_mate) { continue; }
+
+        const std::string at =
+            title + ", iteration " + std::to_string(iteration.depth);
+
+        // Never a mate for the side that is being mated.
+        REQUIRE_MESSAGE(iteration.value > 0, at);
+
+        // And never closer than the proved minimum. The enumeration refuted
+        // every shorter distance by exhausting the tree, so a shorter claim is
+        // false and not merely optimistic.
+        REQUIRE_MESSAGE(iteration.value >= test.distance, at);
+
+        if (iteration.value == test.distance && first_exact == 0) {
+          first_exact = iteration.depth;
+        }
+      }
+
+      const report_t& last = iterations.back();
+
+      if (last.is_mate && last.value == test.distance) {
+        ++exact_by_distance[test.distance];
+      }
+
+      // Every mate in two, at the first iteration that can hold it. This is the
+      // case that goes red when the ply floor drops below 2.
+      if (test.distance == 2) {
+        REQUIRE_MESSAGE(last.is_mate, title);
+        REQUIRE_MESSAGE(last.value == 2, title);
+        REQUIRE_MESSAGE(first_exact == minimum,
+                        (title + ", first reported at iteration " +
+                         std::to_string(first_exact) + " and not " +
+                         std::to_string(minimum)));
+      }
+
+      uci_shutdown();
+    }
+
+    // The two counts the guard does not reach are recorded rather than
+    // asserted, and the message carries them, so a change that improves them
+    // says so in the log instead of going silently green at the old number.
+    MESSAGE("mate in 4: " << exact_by_distance[4] << " of "
+                          << total_by_distance[4]
+                          << " exact, mate in 5: " << exact_by_distance[5]
+                          << " of " << total_by_distance[5]
+                          << " -- recovered by RfpMaxDepth and not by "
+                             "RfpMinPly; adocs/data/S145_rfp_sweep.log");
+
+    REQUIRE(exact_by_distance[2] == total_by_distance[2]);
+    REQUIRE(exact_by_distance[3] >= MATE_IN_THREE_FLOOR);
   }
 }

@@ -17,7 +17,7 @@ worth stating in full because they are decided already and simply not applied.
 
 **S119 asks for Hash 128.** `adocs/plan_todo/S119_tt_cluster_layout.md:3`
 demands "an SPRT verdict at **Hash 128** -- the regime S105 sets", and
-`fastchess.sh:203` hardcodes `option.Hash=16` with no override. DEC-088 is the
+`fastchess.sh:225` hardcodes `option.Hash=16` with no override. DEC-088 is the
 decision that *chose* 16 over 128, on the ground that what transfers across time
 controls is table pressure, and its own `Consequences:` line ordered this clause
 changed to "at the S105 harness setting". The edit never happened. 128 MB is

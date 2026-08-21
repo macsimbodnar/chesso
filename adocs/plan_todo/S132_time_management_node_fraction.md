@@ -121,11 +121,11 @@ Two increments, one verdict.
    clamp the combined product (par.5), tests, then the SPRT.
 
 Tests, all deterministic (fixed depth, no clock, the S089 probe pattern at
-tests/test_engine.cpp:863-978): the pure node-scale function is monotone
+tests/test_engine.cpp:866-981): the pure node-scale function is monotone
 decreasing in the fraction and matches the Lynx worked examples at the seed
 constants; the sum identity above; a stalemate-adjacent one-legal-move
 position drives the fraction to 100 % and the probe's reported scale below
-100; the product clamp — soft never exceeds hard (test_engine.cpp:446-530
+100; the product clamp — soft never exceeds hard (test_engine.cpp:449-533
 already asserts the budget side); `go movetime` unscaled (accepts).
 
 ### 4. Constants and seeds

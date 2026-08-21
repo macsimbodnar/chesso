@@ -82,6 +82,28 @@ concurrency="${CONCURRENCY:-$all_cores}"
 # adjudication cuts dead games, gets to a verdict faster
 adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"
 
+# THE FREE MATE CHECK. `-check-mate-pvs` makes fastchess verify, for every info
+# line that reports a mate score, that the principal variation has the length
+# the score claims and ends in checkmate. It costs nothing, it needs no
+# position file, and it is the one check on mate handling that a unit test
+# cannot reach: it runs over every position both engines actually meet, which
+# is tens of thousands a night rather than the twenty-odd a constructed set can
+# hold. S145.
+#
+# What it does and does not catch. It is a *consistency* check on what the
+# engine says about the mates it does find -- a wrong distance, a wrong sign, a
+# PV that does not end in mate -- and it is silent about a mate the engine
+# never reported at all. That second failure is the one reverse futility
+# causes, and it is what the constructed set in adocs/data/S145_mate_set.tsv is
+# for. The two do not overlap and neither substitutes for the other.
+#
+# Failures arrive as fastchess output on the run's stdout and stderr, which the
+# detached form of this script redirects into its own log. Verified against the
+# installed binary, alpha 1.8.1 20260720-daa3ea2: `-check-mate-pvs` is
+# accepted and documented as "Check that PVs for mate scores have the correct
+# length and end in checkmate."
+mate_pv_check="-check-mate-pvs"
+
 # A marker on every exit path, success and failure both, because a detached run
 # is watched by something that has to be able to stop (AGENTS.md 12, DEC-061).
 # `marked` keeps the trap from printing a second one after fail() has spoken.
@@ -203,6 +225,7 @@ fastchess \
   -each tc="$tc" option.Hash=16 option.Threads=1 \
   -sprt $sprt model=normalized \
   $adjudication \
+  $mate_pv_check \
   -rounds "$rounds" \
   -repeat \
   -concurrency "$concurrency" \

@@ -81,7 +81,7 @@ src/bitboard.cpp:687/:704/:727-728 and directly on the unmake paths at
 :937-938, :953-954, :967, :975-976, :982 -- packing halves the adds at the
 hottest sites in the engine. The debug INV-4 assert compares both fields
 (src/bitboard.cpp:596-604); INV-2's memcmp checks (tests/test_search.cpp:1877,
-tests/test_engine.cpp:48) survive any layout byte-identically. Accumulation in
+tests/test_engine.cpp:51) survive any layout byte-identically. Accumulation in
 evaluation.cpp: `mg_sum/eg_sum` in evaluate_pawns (:423-424, fed at :435-436,
 :446-447, :476-477, :489-490), the pawn pair into evaluate_cheap (:631-633),
 the four stage-two sums (:864-867, fed at :901-902, :910-911, :919-922,

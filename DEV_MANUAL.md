@@ -678,6 +678,132 @@ preconditions — without them a script that always fails, or a fixture that is
 not actually misformatted, would satisfy the rest by accident. See the `Format`
 section below for what the selection is (S054).
 
+### Mate safety: three instruments, and none of them substitutes for another
+
+Pruning that hides a mate is this engine's recurring bug — null move pruning hid
+a mate in 2 by reducing to depth 0, late move reduction reduced the mating move
+at the root, and reverse futility can return a static score at a node whose true
+value is "mated". All three were caught by a mate test and none by a benchmark
+or an SPRT. S145 rebuilt what that test is.
+
+**1. The constructed set.** `adocs/data/S145_mate_set.tsv`, asserted by
+`tests/test_engine.cpp`'s `engine: mate safety` suite in the fast suite.
+
+```bash
+~/.venv/chess/bin/python adocs/data/S145_mate_set.py verify    # both oracles, from scratch
+~/.venv/chess/bin/python adocs/data/S145_mate_set.py generate  # rebuild the file
+~/.venv/chess/bin/python adocs/data/S145_mate_set.py emit-cpp  # the table the test holds
+```
+
+Every row is a forced mate proved twice and by neither chesso: an exhaustive
+AND/OR enumeration over `python-chess`, iterative-deepening in the *distance* so
+the answer is exact and not an upper bound, and `stockfish` at a node limit.
+Stockfish only ever proposes — a candidate it calls a mate in four and the
+enumeration calls a mate in three is reported and the enumeration wins.
+
+Two properties make each row bite, and the test asserts both before searching
+anything. The defender is **materially ahead**, so its static score is high
+where its true value is lost — the shape no game position offers, which is why
+the set is built. And the mating side's moves are **quiet** everywhere except
+the mate itself, so the defender nodes are not in check and reverse futility is
+actually allowed to fire at them. Mate distances two to five put those nodes at
+plies 1, 3, 5 and 7.
+
+Asserted through the engine's own `iterative_deepening_search`, not through
+`search()` at one depth. That is the part the old three-position gate got wrong:
+a cold-table call at exactly `2m - 1` cannot tell a mate that is *gone* from a
+mate that is one iteration *late*, and postponement is what a removed guard
+actually causes.
+
+**What it asserts is not "every mate is found", because that is not true.** 48
+positions on the shipping build at depth `2m - 1 + 8`:
+
+| distance | exact at the final iteration | delay |
+|---|---|---|
+| mate in 2 | 16 of 16 | 0 |
+| mate in 3 | 8 of 16 | up to 4 |
+| mate in 4 | 0 of 8 | — |
+| mate in 5 | 0 of 8 | — |
+
+With reverse futility switched off entirely it is 34 of 48, not 48, so no
+setting makes the strong claim true. What is asserted is three things instead:
+**no mate score for the side being mated and none closer than the proved
+minimum** — both provably false claims, measured 0 and 0 over twelve
+reverse-futility settings; **every mate in two at the first iteration that can
+hold it**, which is the assertion that fences the tuner and goes red the moment
+the ply floor drops below 2; and **a floor of 7 on the mate in three count**,
+placed strictly between the shipping 8 and the 6 the removed guard produces. The
+mate in four and five counts are printed by the test as a `MESSAGE` rather than
+asserted, because a floor of zero asserts nothing. Observed red under a stated
+mutation: `RFP_MIN_PLY` 3 → 1 fails the mate-in-two timing at iteration 5
+against 3.
+
+**2. The mined breadth set.** `adocs/data/S145_mined_set.tsv`, one position per
+game from `.spsa/S085/games.pgn`, labelled by stockfish, **scored as a count
+with a floor and never per position**.
+
+```bash
+~/.venv/chess/bin/python adocs/data/S145_mined_set.py mine  --games 6000
+~/.venv/chess/bin/python adocs/data/S145_mined_set.py score --depth 10
+```
+
+The scoring rule is the whole point. A search is allowed to miss any particular
+deep mate, so a suite that forbids it is a suite that gets switched off — two of
+the seventeen engines S145 surveyed wrote exact mate-distance tests, watched
+their own pruning break them, and disabled the tests rather than the pruning. A
+count with a floor is a claim a search can keep.
+
+318 positions, mate in 1 to 10. At depth 10 the shipping build finds **147 with
+the right sign, 146 at the exact distance, 0 with the wrong sign**; the same run
+at `RfpMinPly` 1 and 0 reads 140 and 139. So the floor is 143 — between the
+shipping value and the removed-guard value — and `--floor 143` exits non-zero
+below it or on any wrong sign. Note what this set can and cannot separate: it
+sees the difference between a floor of 1 and a floor of 2, and it cannot tell 2
+from 3.
+
+**3. `-check-mate-pvs`, on every SPRT since S145.** `fastchess.sh` passes it. It
+verifies that every `info` line carrying a mate score has a principal variation
+of the right length ending in checkmate, over every position both engines
+actually meet — tens of thousands a night against the couple of dozen a
+constructed set can hold. It costs nothing and needs no position file.
+
+It is a **consistency** check and not a mate-finding one: it is silent about a
+mate the engine never reported, which is precisely the failure reverse futility
+causes, and that is what instrument 1 is for. Chesso trips it today on a known
+truncation — the score is right, the line stops at the iteration depth — which
+is S147.
+
+**Measuring the guard itself.** `adocs/data/S145_rfp_sweep.py` sweeps
+`RfpMinPly` and `RfpMaxDepth` against both sets on the tune build, one axis at a
+time with the other held at its shipping value, because S145 measured that the
+two substitute for each other and a sweep that moves both attributes nothing.
+
+```bash
+cmake --build build-tune -j12
+~/.venv/chess/bin/python adocs/data/S145_rfp_sweep.py both --mined
+```
+
+It reports `exact`, `delay`, `short` and `sign` per setting **and per mate
+distance**, because the answer turned out to be almost entirely a function of
+the distance. `delay` — iterations between `2m - 1` and the first iteration that
+reports the mate — is the reading a fixed-depth call cannot produce. `short` and
+`sign` are the two columns that are defects at any count rather than strength
+readings, and both are 0 everywhere so far. The output is kept at
+`adocs/data/S145_rfp_sweep.log`.
+
+Two traps in running it, both hit once. **A fresh engine process per setting**,
+never `configure` on a live one: python-chess sends `setoption` for what it is
+given and leaves the rest alone, so a loop that reconfigures one option at a
+time measures the union of every setting it has been through — that produced a
+table where turning null move pruning off appeared to fix a missed mate and it
+was reverse futility from the previous row. And **a node-limited stockfish is
+reproducible only inside one identical call sequence**, which is why the
+constructed set's `verify` mode runs one stockfish process per position at ten
+times the filter's budget, and why stockfish there corroborates rather than
+decides: it reports no mate on 1 of the 48 and a longer mate on another, both
+re-proved by enumeration, because a frozen defending army is a position class
+its network scores badly wrong.
+
 ## Format
 
 ```bash
