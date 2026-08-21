@@ -5501,3 +5501,108 @@ Why:          The research is free in the constraint that actually binds, and
 Rejected:     Leaving it stopped -- the enriched steps are the near ones and the
               far ones would arrive unresearched. Enriching only the next few --
               bounded, but it wastes the parallelism that makes this cheap.
+
+## DEC-098  2026-08-21  the two killer slots stay duplicated; CPW's replacement rule measured -11 Elo here
+Tags:         search, move-ordering, measurement, sprt, dec-019, s149, audit
+
+Context:      2026-08-21_adversarial-F01 found the killer store at
+              `src/search.cpp:761-762` shifting slot 0 into slot 1 with no
+              distinctness guard. A quiet that fails high twice at one ply
+              copies slot 0 onto itself, and `search_state_t state = {}` is
+              built once per `go` (`src/chesso.cpp:647`), so killers persist
+              across every iteration of iterative deepening and the repeat is
+              the common case: **351422 of 532133 stores, 66.0 %**, leaving both
+              slots equal on **5115505 of 11531069 negamax nodes, 44.4 %**, over
+              11 positions at depths 12 to 22. `score_move` tests slot 0 first,
+              so on those nodes no distinct move can reach `ORDER_KILLER_1` at
+              all. The Chess Programming Wiki's *Killer Heuristic* page states
+              the rule the code was missing: the replacement scheme ought to
+              ensure the available slots contain different moves.
+
+Decision:     Proposed by the agent from the measurement, taken under DEC-041's
+              standing delegation of measurement; **agent-proposed and open to
+              the owner's review or reversal.** The duplication is kept and the
+              guard is not. S149 implemented the published rule -- two lines,
+              guarding the shift -- and measured it: **H0 accepted** against
+              `elo0=-5 elo1=5` in **2522 games and 1 h 05 m** against `ac4c588`,
+              `LLR -2.97`, `Elo -11.02 +/- 10.53`, `nElo -14.21 +/- 13.56`,
+              `LOS 2.00 %`, 48.41 %, **0 time forfeits in 2524**. The guard did
+              what it claimed -- the same instrumentation reads 0 duplicated
+              nodes of 11146351 after it, negamax nodes -3.34 % and total nodes
+              -2.87 % -- and still lost. The two lines were reverted.
+
+              **This is DEC-019's fourth entry**, and the strongest of the four,
+              because the other three measured zero and this one measured
+              negative. Staged move generation, quoted 30-50 Elo, measured 0
+              (S006). SEE pruning in quiescence measured 0 (S015). Capture
+              ordering, reported around 150 Elo, measured slower (S025). CPW's
+              killer replacement rule measures **-11 Elo** here.
+
+Why:          The only number that counts is the one this engine measures on
+              this hardware against its own previous commit, and it said no.
+
+Rejected:     Keeping the guard because it is the published rule and the
+              mechanism is sound. That is precisely the failure mode DEC-019
+              exists to stop, and S149's own pre-registered H0 clause -- written
+              before a game was played -- forbids it by name.
+
+              Re-running at other bounds hoping for a different answer. `LLR
+              -2.97` against a `-2.94` boundary is a completed test, not a near
+              miss, and DEC-063 makes a bounds change a recorded decision rather
+              than a retry.
+
+              Reverting the test with the code. The defect F01 named in the test
+              is real and independent of the verdict: it counted slots that were
+              **non-zero**, which a slot 0 copied onto itself satisfies, so it
+              passed while describing a property that was false. It now counts
+              **duplicated** slots, asserts the behaviour that shipped, and
+              carries this number in its comment -- an agent who re-guards the
+              store goes red and finds the measurement.
+
+Consequences: `adocs/specs.md`'s ordering clause states the duplication and its
+              rate as engine behaviour rather than as a defect.
+              2026-08-21_adversarial-F01 closes as **accepted**, not fixed: the
+              defect is real and stays in the tree by measurement.
+
+              **What the number does not establish** is why. The unguarded shift
+              discards whatever slot 1 held on every repeat, so it is also an
+              ageing mechanism for the second slot, and the guard preserves a
+              stale killer for the whole of one `go`. That is a hypothesis, it
+              has not been measured, and it is S159 -- which, like S149, lands
+              before S093 rewrites this same block or is folded into it
+              deliberately.
+
+## DEC-099  2026-08-21  S149 ran at elo0=-5 elo1=5, and the two-sided pair paid for itself again
+Tags:         sprt, bounds, measurement, dec-063, dec-019, s149
+
+Context:      `fastchess.sh`'s default is `elo0=0 elo1=5`, the gainer form for a
+              change expected to gain. S149's change was not that. The mechanism
+              argued positive -- a band that could never fire would start firing
+              -- but DEC-019's ledger is three published figures that measured
+              0, 0 and *slower* on this code, so the effect was genuinely
+              two-sided and the default pair leaves the truth outside the
+              interval it defends.
+
+Decision:     Taken by the orchestrating agent on 2026-08-21, under DEC-063's
+              rule that bounds straddle the expected effect and DEC-041's
+              standing delegation of measurement; **agent-taken and open to the
+              owner's review or reversal.** S149 ran at `elo0=-5 elo1=5
+              alpha=0.05 beta=0.05`, recorded in `adocs/data/S149_sprt.sh` with
+              all three outcomes pre-registered in the header before launch.
+
+Why:          A bound pair that cannot contain the truth random-walks to the
+              round limit and spends the night to say nothing.
+
+Rejected:     The `elo0=0 elo1=5` default. DEC-063 measured it running 6 h 36 m
+              over 9036 games and returning nothing where `elo0=-5 elo1=5`
+              returned a verdict in 1 h 41 m over 2312, same binaries.
+              `--nonreg` at `elo0=-5 elo1=0`, which brackets from one side and
+              could not have separated a positive effect from zero.
+
+Consequences: **DEC-063 now has a second confirming case, and it is the
+              cheaper one.** S149 reached H0 in **1 h 05 m over 2522 games** --
+              a completed verdict, in the direction nobody predicted, for about
+              a sixth of what the default pair spent on nothing. The pattern is
+              no longer one observation: when the expected effect is two-sided,
+              the two-sided pair is both the correct test and the cheap one, and
+              measurement capacity is the binding constraint on the plan.

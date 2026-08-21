@@ -471,15 +471,27 @@ TEST_SUITE("search: move ordering state")
     state.tt = &tt;
     state.stop = &never_stop;
 
-    const search_t result = search(6, &game, &state);
+    // Depth 8 rather than the 6 this ran at before S149. The duplication
+    // assertion below is only as good as the number of second slots the search
+    // fills: depth 6 fills 3 and duplicates 1 of them, depth 8 fills 5 and
+    // duplicates 3, and it still costs 53 ms.
+    const search_t result = search(8, &game, &state);
     REQUIRE(result.best_move != 0);
 
     size_t killers_0 = 0;
     size_t killers_1 = 0;
+    size_t killers_1_duplicated = 0;
 
     for (size_t ply = 0; ply < MAX_PLY; ++ply) {
       if (state.killer_moves[0][ply] != 0) { killers_0++; }
-      if (state.killer_moves[1][ply] != 0) { killers_1++; }
+
+      if (state.killer_moves[1][ply] != 0) {
+        killers_1++;
+
+        if (state.killer_moves[1][ply] == state.killer_moves[0][ply]) {
+          killers_1_duplicated++;
+        }
+      }
     }
 
     size_t history_entries = 0;
@@ -495,8 +507,32 @@ TEST_SUITE("search: move ordering state")
     REQUIRE(killers_0 > 0);
 
     // The second slot only fills once a ply produces a second killer, which
-    // is what the shift down from slot 0 is for.
+    // is what the shift down from slot 0 is for. This is the precondition for
+    // the assertion below and not a property being tested: it says a second
+    // killer was written somewhere, so the next line cannot pass on a table
+    // that is simply empty.
     REQUIRE(killers_1 > 0);
+
+    // AND THE SECOND SLOT IS OFTEN A COPY OF THE FIRST, ON PURPOSE. This is a
+    // fence, not an endorsement, and it is here so the next agent to notice the
+    // duplication finds the measurement instead of repeating the night that
+    // produced it.
+    //
+    // The shift in negamax is unguarded, so a quiet that fails high twice at
+    // one ply copies slot 0 onto itself. Killers survive every iteration of one
+    // `go`, so the repeat is the common case: 2026-08-21_adversarial-F01
+    // counted 351422 of 532133 stores, 66.0 %, leaving both slots equal on
+    // 5115505 of 11531069 negamax nodes, 44.4 %. score_move tests slot 0 first,
+    // so on those nodes no distinct move can reach ORDER_KILLER_1 at all.
+    //
+    // CPW's Killer Heuristic replacement rule says the slots ought to hold
+    // different moves. S149 implemented exactly that -- two lines, guarding the
+    // shift -- and measured it: -11.02 +/- 10.53 Elo, nElo -14.21, over 2522
+    // games in 1 h 05 m against ac4c588, LLR -2.97 at [-5, 5], H0 accepted, 0
+    // forfeits. It cost about 3 % of the nodes and 11 Elo. The published rule
+    // does not transfer to this search (DEC-019), so the duplication is kept
+    // and the guard is not. Change this and the number is what you must beat.
+    REQUIRE(killers_1_duplicated > 0);
     REQUIRE(history_entries > 0);
     REQUIRE(counters > 0);
   }

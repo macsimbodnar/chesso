@@ -758,6 +758,11 @@ int negamax(int alpha0,
 
       // Store killing move, history, and counter move
       if (!is_capture) {
+        // The shift is deliberately unguarded, and that is a measured choice
+        // rather than an oversight. A repeat copies slot 0 onto itself, so both
+        // slots hold one move on 44 % of nodes and nothing distinct can reach
+        // ORDER_KILLER_1. CPW's replacement rule says to guard it; guarding it
+        // measured -11.02 +/- 10.53 Elo over 2522 games, H0 accepted. S149.
         state->killer_moves[1][ply] = state->killer_moves[0][ply];
         state->killer_moves[0][ply] = moves[i];
 

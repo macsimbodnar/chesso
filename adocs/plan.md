@@ -323,11 +323,10 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-12. S137  a refused or unknown search parameter is observable over UCI, so a tuner cannot play games against a silently-default value
 13. S085  the first SPSA run, over the search parameters the owner freezes from the set that exists today -- 12 of the live 22, DEC-094 -- and an independent SPRT of what it returns
 14. S138  every file:line citation and test title in a pending step file resolves to what it claims, and the eight steps pointing at the wrong mate test are re-pointed
 15. S142  the two declared parameter ranges that contradict the purpose stated beside them are narrowed to what that purpose and the tests support
-16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness
+16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness -- **measured -11.02 +/- 10.53 Elo, H0 accepted, reverted; the duplication is kept and the test asserts it** (DEC-098)
 17. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
 18. S140  no plan, specs or status document routes work to a retired id, cites an invariant that is defined nowhere, or carries a census its own derivation contradicts
 19. S141  every pending step's touches field names the file its change has to land in
@@ -396,3 +395,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 82. S156  the mined breadth set is either asserted as the count with a floor its accepts asked for, or the accepts is discharged in the stamp with the reason
 83. S157  every recorded conclusion that states an SPRT bound in plain Elo says nElo instead, and DEV_MANUAL.md says which scale the bounds are in
 84. S158  S146 carries the shipped book's digest and entry count so its origin can be searched for rather than guessed
+85. S159  measure whether the second killer slot wants ageing rather than distinctness: the unguarded shift discards slot 1 on every repeat, so S149's -11 Elo may be the guard preserving a stale killer for a whole go

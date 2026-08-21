@@ -88,7 +88,7 @@ code, so by the project's own rule it jumps ahead of S142.
 
 ### 2026-08-21_adversarial-F01 — high — a repeated fail-high destroys the second killer slot, on 44 % of nodes, and the test that exists to prove the slot works cannot see it
 
-Status: open
+Status: accepted — DEC-098, S149
 
 **The defect.** `src/search.cpp:761-762`, the whole store:
 
@@ -185,6 +185,27 @@ indexing), so the guard should land **before** S093 or be folded into it
 deliberately — not after, or S093's verdict is measured on top of an unfixed
 slot. And the test has to be re-targeted from "non-zero" to "distinct" in the
 same change, red first.
+
+**Resolution, appended 2026-08-21 — accepted, not fixed. DEC-098, S149.** The
+finding's mechanism reproduced exactly: the same four counters at the same
+placement, over the same 11 positions, read 351422/532133 stores and
+5115505/11531069 nodes at `ac4c588`, to the digit. The guard this finding asks
+for was implemented -- two lines, CPW's replacement rule -- and it worked: 0
+duplicated nodes of 11146351 after it, negamax nodes -3.34 %, total nodes
+-2.87 %. It then measured **-11.02 +/- 10.53 Elo, nElo -14.21, LLR -2.97 at
+[-5, 5], H0 accepted over 2522 games in 1 h 05 m, 0 forfeits**, and was
+reverted. The duplication is engine behaviour by measurement.
+
+The finding's second half stands and was acted on regardless of the verdict:
+the test counted **non-zero** slots and now counts **duplicated** ones,
+asserting what shipped and carrying the number that decided it, so an agent who
+re-guards the store goes red and finds this instead of repeating the night. Its
+non-vacuity was checked in both directions -- green on the shipped store, red
+under a re-applied guard.
+
+What the run did *not* establish is why 11 Elo. The unguarded shift also ages
+slot 1, discarding it on every repeat; the guard preserves a stale killer for a
+whole `go`. That is a hypothesis, unmeasured, and it is S159.
 
 ---
 
