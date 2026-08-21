@@ -434,11 +434,18 @@ def main():
     mode = "both"
     if args and args[0] in ("--prose", "--citations"):
         mode, args = args[0][2:], args[1:]
+    if mode == "both" and args:
+        # Refused rather than ignored: before the citation check existed a bare
+        # path meant "check this plan file's prose", and silently dropping it
+        # would report a green run over a file nobody looked at.
+        print("usage: plan_prose_check.py [--prose|--citations] [files...]",
+              file=sys.stderr)
+        print("  a file list needs the mode it belongs to", file=sys.stderr)
+        return 2
 
     bad = 0
     if mode in ("both", "prose"):
-        prose = args if mode == "prose" and args else [
-            os.path.join(adocs, "plan.md")]
+        prose = args or [os.path.join(adocs, "plan.md")]
         bad += sum(check(p, adocs) for p in prose)
     if mode in ("both", "citations"):
         bad += citations(args if mode == "citations" else [], adocs)
