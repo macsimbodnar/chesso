@@ -126,7 +126,7 @@ no ep capture generated) and are fix-agnostic.
 
 ### 2026-08-22_adversarial-F02  medium  fastchess.sh's default reference is a fixed 2026-08-08 commit, and CLAUDE.md's own instruction is the bare invocation that uses it
 
-Status: open
+Status: closed — S160
 Verification: statically confirmed.
 
 **Evidence.** `fastchess.sh:43`:

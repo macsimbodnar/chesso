@@ -4,10 +4,10 @@ set -euo pipefail
 # Plays the working tree against a reference build and runs an SPRT on the
 # result.
 #
-#   ./fastchess.sh                  gainer SPRT, elo0=0 elo1=5, runs for hours
-#   ./fastchess.sh --fast           looser bounds, few hundred games
-#   ./fastchess.sh --nonreg         non-regression, elo0=-5 elo1=0
-#   REF=HEAD~1 ./fastchess.sh       pick what to measure against
+#   ./fastchess.sh                  vs HEAD, gainer SPRT, elo0=0 elo1=5, hours
+#   ./fastchess.sh --fast           vs HEAD, looser bounds, few hundred games
+#   ./fastchess.sh --nonreg         vs HEAD, non-regression, elo0=-5 elo1=0
+#   REF=HEAD~1 ./fastchess.sh       measure against some other commit instead
 #   OUT=<dir> ./fastchess.sh        where the pgn and log land
 #
 # WHICH BOUNDS, AND WHY THE PAIR IS NOT A DETAIL. The hypothesis pair sets the
@@ -40,7 +40,25 @@ set -euo pipefail
 # change leaves the node count identical, this is the only tool that will see
 # it; if it changes the tree, expect the result to mix the two effects.
 
-REF="${REF:-7b4d9a4}"
+# THE DEFAULT REFERENCE IS HEAD, AND THE BANNER PRINTS IT. It used to be the
+# fixed sha 7b4d9a4 -- the 2026-08-08 pre-achesso baseline, set that day and
+# never moved -- which by the time it was found was several hundred Elo stale
+# (S028's evaluation fit alone measured +188.74 since it). A run that omitted
+# REF reached H1 at --fast bounds in minutes whatever the change under test
+# was: the DEC-020 class, armed in the default of the project's own per-change
+# instrument, while CLAUDE.md taught the bare form. HEAD keeps the bare
+# invocation meaningful -- it measures the uncommitted diff against the commit
+# the tree sits on, which is the working-tree-versus-reference contract this
+# header already describes. S160, 2026-08-22_adversarial-F02.
+#
+# ref_given separates "the caller chose HEAD" from "the default fired", which
+# is the difference between an A/A calibration and a run with nothing in it;
+# the guard below is where that matters. `:+` rather than `+` so an empty REF
+# reads as unset, matching the `:-` that defaults it.
+ref_given="${REF:+given}"
+REF="${REF:-HEAD}"
+head_sha="$(git rev-parse --short HEAD)"
+
 # THE BOOK IS UNBALANCED, AND THAT IS THE POINT. Between two builds of the
 # same engine a balanced book draws about 91 % (Pohl's measurement over the
 # book class), and a drawn pair carries no information about which side is
@@ -188,6 +206,18 @@ candidate="$snapshot"
 
 # Build the reference from the ref, in its own worktree, once per ref.
 ref_sha="$(git rev-parse --short "$REF")"
+
+# CANDIDATE AND REFERENCE AT THE SAME COMMIT, NOTHING UNCOMMITTED, ARE THE SAME
+# ENGINE. An SPRT between identical engines does not return zero: it
+# random-walks until a bound is crossed by luck, and at --fast alpha 0.10 that
+# is one run in ten reporting a gain that does not exist. So the case the HEAD
+# default newly makes reachable -- a bare run on a clean tree -- is refused
+# before a game is played. Passing REF=HEAD by hand is a caller asking for that
+# match on purpose, which is what an A/A calibration of the harness is, and it
+# proceeds. S160.
+if [[ -z "$ref_given" ]] && [[ "$ref_sha" == "$head_sha" ]] && git diff --quiet HEAD; then
+  fail "reference $ref_sha is HEAD and the tree is clean, so both sides are the same build and there is nothing to measure; change something, or pass REF=<sha>"
+fi
 ref_dir="$(git rev-parse --show-toplevel)/.ref-builds/$ref_sha"
 reference="$ref_dir/build/src/chesso"
 
@@ -210,8 +240,21 @@ if ((busy > 60)); then
   echo
 fi
 
-echo "candidate  $(git rev-parse --short HEAD)$(git diff --quiet || echo ' + uncommitted changes')"
-echo "reference  $ref_sha"
+# The commit date beside each sha is what makes a stale reference visible
+# before an hour is spent on it: a pair of shas says nothing about how far
+# apart the two sides are, and the old fixed default was two weeks and several
+# hundred Elo behind without one line of this banner saying so. S160.
+#
+# `git diff --quiet HEAD` and not a bare `git diff --quiet`: the bare form
+# compares the tree against the index, so a fully staged diff read as clean --
+# while the binary being played was built from that tree.
+commit_date()
+{
+  git show -s --date=short --format=%cd "$1"
+}
+
+echo "candidate  $head_sha  $(commit_date HEAD)$(git diff --quiet HEAD || echo '  + uncommitted changes')"
+echo "reference  $ref_sha  $(commit_date "$ref_sha")"
 echo "tc $tc  hash 16  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
 echo "bounds     $sprt"

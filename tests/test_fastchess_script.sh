@@ -2,10 +2,13 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Two properties, and the second is the one that stops the finding recurring:
+# Four properties. The second is the one that stops F01 recurring; the third
+# and fourth are the default reference, which is the trap S160 disarmed:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
+#   3. with REF unset the reference is HEAD, printed with both commit dates
+#   4. with REF unset and a clean tree the run is refused, not played
 #
 # No game is played and no engine is built. `fastchess` is a stub on PATH, the
 # candidate and the reference are one-line shell scripts, and the whole run
@@ -66,9 +69,14 @@ STUB
   cp "$script" "$tmp/fastchess.sh"
   chmod +x "$tmp/fastchess.sh"
 
+  # One tracked file, committed. Case 3 needs a sandbox whose working tree
+  # differs from HEAD, and only a tracked file can give it one: the script asks
+  # `git diff --quiet HEAD`, which untracked files never answer.
   git -C "$tmp" init -q
+  : > "$tmp/tracked.txt"
+  git -C "$tmp" add tracked.txt
   git -C "$tmp" -c user.email=smoke@example.invalid -c user.name=smoke \
-    commit -q --allow-empty -m smoke
+    commit -q -m smoke
   sha="$(git -C "$tmp" rev-parse --short HEAD)"
 
   mkdir -p "$tmp/.ref-builds/$sha/build/src"
@@ -82,12 +90,24 @@ STUB
 # out.txt inside the sandbox so a failing assertion can show it, and OUT keeps
 # the per-run pgn/log directory inside the sandbox as well, so a smoke run
 # leaves nothing in /tmp.
+#
+# The second argument is the REF to pass. With none, REF is left unset, which
+# is what cases 3 and 4 are about: the default is the thing under test, so it
+# cannot be supplied by the harness. It is unset explicitly rather than merely
+# not set, so a REF exported into the test's own environment cannot decide the
+# result.
 run_sandbox()
 {
-  local tmp="$1"
+  local tmp="$1" ref="${2-}"
   (
     cd "$tmp" || exit 127
-    PATH="$tmp/stub:$PATH" REF=HEAD OUT="$tmp/out" ./fastchess.sh --fast
+    export PATH="$tmp/stub:$PATH" OUT="$tmp/out"
+    if [[ -n "$ref" ]]; then
+      export REF="$ref"
+    else
+      unset REF
+    fi
+    ./fastchess.sh --fast
   ) > "$tmp/out.txt" 2>&1
   echo $?
 }
@@ -101,7 +121,7 @@ show()
 
 # 1. The script reaches the fastchess invocation.
 reached_dir="$(make_sandbox "$script_under_test")"
-reached_status="$(run_sandbox "$reached_dir")"
+reached_status="$(run_sandbox "$reached_dir" HEAD)"
 
 if [[ ! -e "$reached_dir/fastchess_invoked" ]]; then
   fail "fastchess was never invoked (exit status $reached_status)"
@@ -128,7 +148,7 @@ else
        { print }' "$script_under_test" > "$aborting"
 
   abort_dir="$(make_sandbox "$aborting")"
-  abort_status="$(run_sandbox "$abort_dir")"
+  abort_status="$(run_sandbox "$abort_dir" HEAD)"
   rm -f "$aborting"
 
   # Non-vacuous by construction. The status assertion below is only evidence
@@ -146,7 +166,55 @@ else
   fi
 fi
 
-rm -rf "$reached_dir"
+# 3. With REF unset the reference is HEAD, and the banner says so.
+#
+# The default it replaced was the fixed sha 7b4d9a4, the 2026-08-08 baseline: a
+# bare --fast run reached H1 in minutes whatever the change under test was
+# (S160, 2026-08-22_adversarial-F02). The assertion reads the banner because
+# the banner is all a run's reader has, and it pins the commit date beside each
+# sha -- a sha pair alone never showed how far apart the two sides were.
+#
+# The tracked file is modified first: REF unset on a clean tree is case 4's
+# refusal, so without a real diff this case would assert on the wrong path.
+default_dir="$(make_sandbox "$script_under_test")"
+echo change >> "$default_dir/tracked.txt"
+default_status="$(run_sandbox "$default_dir")"
+default_sha="$(git -C "$default_dir" rev-parse --short HEAD)"
+date_re='[0-9]{4}-[0-9]{2}-[0-9]{2}'
+
+if ((default_status != 0)); then
+  fail "REF unset: the script exited $default_status"
+  show "$default_dir"
+elif ! grep -qE "^reference  $default_sha  $date_re\$" "$default_dir/out.txt"; then
+  fail "REF unset: the banner does not name HEAD ($default_sha) and its date as the reference"
+  show "$default_dir"
+elif ! grep -qE "^candidate  $default_sha  $date_re  [+] uncommitted changes\$" "$default_dir/out.txt"; then
+  fail "REF unset: the banner does not name the candidate's sha, date and uncommitted diff"
+  show "$default_dir"
+fi
+
+# 4. With REF unset and nothing uncommitted, the run is refused.
+#
+# Both sides would be the same build, and an SPRT between identical engines
+# does not return zero -- it random-walks until a bound is crossed by luck. Case
+# 1 is this case's positive control: the same sandbox, the same clean tree, REF
+# passed by hand, and the stub is invoked. So the difference asserted here is
+# the default and nothing else.
+clean_dir="$(make_sandbox "$script_under_test")"
+clean_status="$(run_sandbox "$clean_dir")"
+
+if [[ -e "$clean_dir/fastchess_invoked" ]]; then
+  fail "REF unset on a clean tree played a match between two identical builds"
+  show "$clean_dir"
+elif ((clean_status == 0)); then
+  fail "REF unset on a clean tree exited 0 instead of refusing"
+  show "$clean_dir"
+elif ! grep -q 'SPRT-RUN-FAILED' "$clean_dir/out.txt"; then
+  fail "REF unset on a clean tree refused without an SPRT-RUN-FAILED marker"
+  show "$clean_dir"
+fi
+
+rm -rf "$reached_dir" "$default_dir" "$clean_dir"
 [[ -n "${abort_dir:-}" ]] && rm -rf "$abort_dir"
 
 if ((failures > 0)); then
@@ -154,4 +222,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: reaches fastchess, and an abort before it exits non-zero"
+echo "$script_under_test: reaches fastchess, aborts non-zero, defaults REF to HEAD, refuses a clean-tree A/A"

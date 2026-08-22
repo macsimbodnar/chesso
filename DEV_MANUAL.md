@@ -598,10 +598,14 @@ argument will not fail it — DEC-028 says why.
 script any test touches. It plays no games: `fastchess` is a stub on `PATH`, the
 candidate and reference are one-line shell scripts, and the whole run happens
 inside a throwaway git repository, so `.ref-builds/` and `build/` are never
-read. It asserts two things — the script reaches the `fastchess` invocation, and
-a script that aborts before that point exits non-zero. It exists because
-`44877c4` left a renamed variable behind and the harness stopped running for a
-commit without anything noticing (S035, `2026-08-13_adversarial-F01`).
+read. It asserts four things — the script reaches the `fastchess` invocation; a
+script that aborts before that point exits non-zero; with `REF` unset the
+banner names `HEAD` and both commit dates; and with `REF` unset on a clean tree
+the run is refused instead of played. The first two exist because `44877c4`
+left a renamed variable behind and the harness stopped running for a commit
+without anything noticing (S035, `2026-08-13_adversarial-F01`); the last two
+keep the default reference from silently freezing to a sha again (S160,
+`2026-08-22_adversarial-F02`).
 
 `test_tuner_gradient` is the fit's own guard and covers two things nothing in
 `tests/` could reach before S100: that the columns `load()` packs are the columns
@@ -1020,10 +1024,10 @@ measurement.
 ## Play games
 
 ```bash
-./fastchess.sh                  # gainer SPRT, elo0=0 elo1=5, runs for hours
-./fastchess.sh --fast           # looser bounds, few hundred games
-./fastchess.sh --nonreg         # non-regression, elo0=-5 elo1=0
-REF=HEAD~1 ./fastchess.sh       # pick what to measure against
+./fastchess.sh                  # vs HEAD, gainer SPRT, elo0=0 elo1=5, hours
+./fastchess.sh --fast           # vs HEAD, looser bounds, few hundred games
+./fastchess.sh --nonreg         # vs HEAD, non-regression, elo0=-5 elo1=0
+REF=HEAD~1 ./fastchess.sh       # measure against some other commit instead
 OUT=<dir> ./fastchess.sh        # where the pgn and log land
 ```
 
@@ -1031,6 +1035,36 @@ The reference is built from a git ref into a worktree under `.ref-builds/`, so
 a result is always attributable to a commit range, and the candidate binary is
 snapshotted before the first game. Both exist because an SPRT once reported
 +301 Elo and meant nothing — DEC-020.
+
+**`REF` defaults to `HEAD`, so the three bare forms measure the uncommitted
+diff.** The banner prints each side's short sha and its commit date before the
+first game:
+
+```
+candidate  eaad88b  2026-08-22  + uncommitted changes
+reference  eaad88b  2026-08-22
+```
+
+Both shas are the same one because that is what the default means: the diff on
+disk against the commit it sits on. A passed `REF` puts that commit and its own
+date on the reference line — `reference  7b4d9a4  2026-08-08` beside a candidate
+dated `2026-08-22` is the two-week gap the date column exists to show.
+
+It used to default to the fixed `7b4d9a4`, the 2026-08-08 pre-achesso baseline,
+set that day and never moved — several hundred Elo stale by the time it was
+found (S028's fit alone measured +188.74 since it). A bare `--fast` run reached
+H1 in minutes whatever the change under test was, which is DEC-020 armed in the
+default of the per-change instrument: S160, closing
+`2026-08-22_adversarial-F02`. Two consequences worth knowing:
+
+- With `REF` unset **and nothing uncommitted** both sides are the same build,
+  and the run is refused rather than played. An SPRT between identical engines
+  does not return zero; it random-walks until a bound is crossed by luck, which
+  at `--fast` alpha 0.10 is one run in ten reporting a gain that does not
+  exist.
+- Passing `REF=HEAD` by hand runs that match anyway. That is the A/A
+  calibration of the harness, and asking for it explicitly is how it is told
+  apart from a bare run with nothing in it.
 
 **Fetch the book first, once per machine.** `fastchess.sh` plays an unbalanced
 book that is 175 MB and therefore not committed:

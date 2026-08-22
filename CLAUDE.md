@@ -101,10 +101,13 @@ printing anything. A generator that loses moves is faster and wrong.
 counts and identical best moves from `tools/search_bench.py`. If they match, an
 SPRT is pointless — the engines play identical games. INV-6.
 
-**3. A change that alters play is decided by SPRT.** `./fastchess.sh --fast`, or
-`REF=<sha> ./fastchess.sh`. Not by argument, not by fixed-depth timing, not by
-how sound it sounds. DEC-020 is the contamination that made attribution
-necessary: one run reported +301 Elo and meant nothing.
+**3. A change that alters play is decided by SPRT.** `./fastchess.sh --fast`
+measures the working tree against `HEAD`, which is what `REF` defaults to;
+`REF=<sha> ./fastchess.sh` measures against any other commit. Either way the
+banner prints both shas with their commit dates before the first game, so what
+a run measures is on screen and not assumed. Not by argument, not by
+fixed-depth timing, not by how sound it sounds. DEC-020 is the contamination
+that made attribution necessary: one run reported +301 Elo and meant nothing.
 
 **4. Know the noise floor before believing a number.** `bench_movegen` reports
 its own resolution — the disagreement between the two halves of the run. It has
