@@ -584,7 +584,37 @@ int negamax(int alpha0,
       return DRAW_SCORE;
     }
 
-    if (game->board.halfmove_clock >= 100) { return DRAW_SCORE; }
+    // The clock alone is not a draw. FIDE 5.1.1 ends the game the moment
+    // checkmate is delivered, and 9.6.2 states the same exception for the
+    // 75-move rule in so many words, so the mate has to be ruled out before
+    // the 100th halfmove is allowed to score anything. Measured, not argued:
+    // on 7k/6pp/8/8/8/7n/6P1/R6K w - - 99 60 at depth 1 -- the clock reaches
+    // 100 on the mating move -- this engine reported cp 448 and played g2h3,
+    // discarding a mate in one it had already generated. Stockfish scores the
+    // same position Mate(+1). S162, 2026-08-22_adversarial-F03.
+    //
+    // generate_moves() emits legal moves only, so an empty list while in check
+    // is mate by definition and no per-move legality pass is wanted here.
+    // Neither call is paid at a node whose clock has not reached 100, which is
+    // every node any benchmark visits.
+    //
+    // A mated node falls through rather than returning a mate score computed
+    // here: the two sites that already know the distance -- negamax's own
+    // no-legal-move return and quiescence's, one of which every path below
+    // reaches -- are the tested ones, and a second copy of that arithmetic is
+    // the S094 bug class waiting to be written. The insufficient-material test
+    // immediately below cannot intercept it: over all 1700560 legal positions
+    // it calls a draw (two kings, with at most one knight or bishop, either
+    // side to move) exactly 0 are checkmate, enumerated with python-chess.
+    if (game->board.halfmove_clock >= 100) {
+      move_t replies[MAX_MOVES];
+
+      const bool is_mated =
+          is_check(game) &&
+          generate_moves(game_tables(), &game->board, replies) == 0;
+
+      if (!is_mated) { return DRAW_SCORE; }
+    }
 
     // Nothing on the board can force mate, so there is nothing below this node
     // worth looking at. The root is exempt: it still has to produce a move.

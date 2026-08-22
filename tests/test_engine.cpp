@@ -2245,4 +2245,114 @@ TEST_SUITE("engine: mate safety")
     REQUIRE(exact_by_distance[2] == total_by_distance[2]);
     REQUIRE(exact_by_distance[3] >= MATE_IN_THREE_FLOOR);
   }
+
+
+  // CHECKMATE OUTRANKS THE HUNDREDTH HALFMOVE. FIDE 5.1.1 ends the game the
+  // instant checkmate is delivered, and 9.6.2 spells the same exception out for
+  // the 75-move rule -- so a node whose clock has reached 100 is a draw only
+  // once mate has been ruled out. src/search.cpp returned DRAW_SCORE before
+  // generating a move, which scored a mate the engine had in hand as a draw
+  // and, wherever anything else on the board was worth more than nothing, threw
+  // the win away to take it.
+  //
+  // Observed red on the tree of 2026-08-22, before the fix, at depth 1:
+  //
+  //   7k/6pp/8/8/8/8/8/R6K w - - 99 60       info score cp 0   pv a1a8
+  //   7k/6pp/8/8/8/7n/6P1/R6K w - - 99 60    info score cp 448 pv g2h3
+  //
+  // The first is the scoring defect alone: every root move there reaches the
+  // clock, so every one of them scored zero and the mate was chosen by move
+  // order and nothing else. The second adds one capture that resets the clock,
+  // which is all it takes for the wrong score to become the wrong move -- the
+  // engine gave up a mate in one to win a knight.
+  //
+  // Neither FEN was read off a board. python-chess reports both VALID with
+  // exactly one mate in one, Ra8#, whose child carries a halfmove clock of
+  // exactly 100 and no legal reply; stockfish scores both Mate(+1) at
+  // `go depth 20`. S162, DEC-023.
+  TEST_CASE("checkmate outranks the hundredth halfmove")
+  {
+    struct clock_mate_case_t
+    {
+      const char* root;   // clock 99, the mating side to move
+      const char* mated;  // after the mating move: clock 100, no legal reply
+      const char* mate;   // the mating move, UCI
+    };
+
+    const clock_mate_case_t cases[] = {
+        {"7k/6pp/8/8/8/8/8/R6K w - - 99 60",
+         "R6k/6pp/8/8/8/8/8/7K b - - 100 60", "a1a8"},
+        {"7k/6pp/8/8/8/7n/6P1/R6K w - - 99 60",
+         "R6k/6pp/8/8/8/7n/6P1/7K b - - 100 60", "a1a8"},
+    };
+
+    for (const clock_mate_case_t& test : cases) {
+      const std::string title(test.root);
+
+      // The precondition, established rather than assumed: the child really is
+      // mate, really sits at a clock of exactly 100, and is a position a legal
+      // game can reach. Drop any one of the three and the case below asserts
+      // nothing -- S070 passed for months on a board with adjacent kings.
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line(std::string("position fen ") + test.mated);
+      }
+
+      memcpy(&game, uci_game(), sizeof(game_t));
+
+      REQUIRE_MESSAGE(position_is_reachable(&game), title);
+      REQUIRE_MESSAGE(int(game.board.halfmove_clock) == 100, title);
+      REQUIRE_MESSAGE(is_check(&game), title);
+
+      move_t replies[MAX_MOVES];
+      REQUIRE_MESSAGE(legal_moves(&game, replies) == 0, title);
+
+      uci_shutdown();
+
+      // Depth 1 is the tightest form available: the mate is one ply away, so
+      // what this asserts is the boundary node's own score and nothing about
+      // the search above it.
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line(std::string("position fen ") + test.root);
+      }
+
+      std::vector<std::string> lines;
+      {
+        stdout_capture_t capture;
+        uci_process_line("go depth 1");
+        uci_wait_for_search();
+        lines = capture.lines();
+      }
+
+      std::string score_line;
+      std::string best;
+
+      for (const std::string& line : lines) {
+        if (line.rfind("info score ", 0) == 0) { score_line = line; }
+
+        if (line.rfind("bestmove ", 0) == 0) {
+          best = line.substr(std::string("bestmove ").length());
+
+          // Strip a ponder move if one is ever attached.
+          const size_t space = best.find(' ');
+          if (space != std::string::npos) { best = best.substr(0, space); }
+        }
+      }
+
+      const std::string at = title + "\n" + score_line + "\nbestmove " + best;
+
+      // Both halves, because the defect could hide in either: the mate has to
+      // be scored as a mate at the right distance, and it has to be the move
+      // that comes back.
+      REQUIRE_MESSAGE(score_line.rfind("info score mate 1 ", 0) == 0, at);
+      REQUIRE_MESSAGE(best == std::string(test.mate), at);
+
+      uci_shutdown();
+    }
+  }
 }

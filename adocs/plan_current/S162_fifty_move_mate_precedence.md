@@ -25,3 +25,4 @@ directive ranks first, and the fix is a few characters of missing condition.
 
 Tiny search change, one tool-verified regression position, one insurance
 `--nonreg` run.
+author:    Maksym Bodnar
