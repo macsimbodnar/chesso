@@ -1,10 +1,10 @@
 id:         S146
 goal:       the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does
-accepts:    `src/openings.book`'s origin, author and licence are established and written down where a reader will find them, or -- if they cannot be established -- the file is replaced by a book this project can account for and the replacement's provenance is recorded the way `books/fetch_book.sh` records the match books, with both digests and the licence named; whichever way it goes is a recorded decision, because this is the owner's call and not an agent's; the engine's book behaviour is unchanged or its change is measured, since `Use Book` defaults false and a book swap only alters play when it is switched on; `MANUAL.md` documents what the shipped book is
+accepts:    `src/openings.book`'s origin, author and licence are established and written down where a reader will find them, or -- if they cannot be established -- the file is replaced by a book this project can account for and the replacement's provenance is recorded the way `books/fetch_book.sh` records the match books, with both digests and the licence named; whichever way it goes is a recorded decision, because this is the owner's call and not an agent's; the engine's book behaviour is unchanged or its change is measured, since `Use Book` defaults false and a book swap only alters play when it is switched on; `MANUAL.md` documents what the shipped book is; the `polyglot_randoms[781]` table (`src/openings.cpp:44`) gets the same owner ruling -- either format-defining constants are the published spec rather than a copied table, recorded as a decision and cited at the table, or the Polyglot path goes with the blob (2026-08-22_adversarial-F06)
 touches:    src/openings.book, src/openings.cpp, MANUAL.md, adocs/decisions.md
-excludes:   the match books under `books/`, which `books/fetch_book.sh` already pins with licences; book *format* work; making the engine read a book from disk instead of from the binary, which is a feature and would need its own step and verdict
+excludes:   the match books under `books/`, which `books/fetch_book.sh` already pins with licences; making the engine read a book from disk instead of from the binary, which is a feature and would need its own step and verdict
 decisions:  DEC-016
-closes:
+closes:     2026-08-22_adversarial-F06
 blocks:
 paused_by:
 done:
@@ -36,6 +36,20 @@ The same research pass priced the licence landscape for position data and found
 that the honest answer for almost every circulating collection is "no licence
 file, and a README that asserts a status it has no standing to assert". A book is
 the same class of artefact.
+
+## Amended 2026-08-22
+
+The audit found the step's own excludes left a second copied artifact out of
+scope: `excludes` said "book *format* work", and the `polyglot_randoms[781]`
+constant table at `src/openings.cpp:44` — verbatim, necessarily, GPL-origin
+via the PolyGlot adapter — is format work. So the 5.2 MB blob had a pending
+provenance step and the 781-constant table beside it had none
+(2026-08-22_adversarial-F06). The exclude is dropped and the table joins the
+accepts: same artifact family, same owner ruling, one step. There is a
+defensible reading — format-defining constants are the published spec itself,
+reproduced by the wiki, unavoidable for interoperability — but the rule says
+tables are copied never, not rarely, so the reading is the owner's to record,
+not an agent's to assume.
 
 ## What makes this cheap
 
