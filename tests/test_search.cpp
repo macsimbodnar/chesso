@@ -1581,6 +1581,101 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
+  // Every case above searches a window wide enough that the lazy shortcut
+  // cannot fire, so `static_eval` is the exact 563 in all of them and the
+  // substitution is only ever measured against a static score. It is not
+  // always one: where the probe carries no eval and the cheap score is already
+  // a margin clear of the window, evaluate_lazy() returns `cheap +/-
+  // LAZY_EVAL_MARGIN`, a bound. The audit verified the soundness argument for
+  // substituting against that bound case by case and found nothing wrong with
+  // it -- what it found was that no test reaches the input class, so a future
+  // edit that reorders the lazy call and the substitution, or flips one
+  // comparison on the bound path, stays green. The S106 failure class.
+  // 2026-08-22_adversarial-F07, S164.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a stand pat that is itself a bound is still capped")
+  {
+    // Nothing to capture and not in check, so the value the node returns is
+    // the stand pat and nothing else. Same anchor as the cases above.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    // Narrow, and on the beta side: cheap is 567, so 567 - 184 = 383 is
+    // already clear of a beta of 100 and the shortcut fires with a lower
+    // bound. That is the whole point of the window -- every case above uses
+    // (-10000, 10000), where neither test in evaluate_lazy() can pass.
+    constexpr int ALPHA = 0;
+    constexpr int BETA = 100;
+
+    // Above alpha, so tt_entry_answers() does not answer the node outright and
+    // the number has to arrive through the stand pat; below the lazy bound, so
+    // the cap fires.
+    constexpr int PLANTED = 200;
+
+    auto run = [&]() -> int {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      return quiescence(ALPHA, BETA, 0, 0, &game, &state);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+
+    // The preconditions, and without them the assertions below are vacuous:
+    // this window really does reach the shortcut, the number it hands back is
+    // a bound and not the static score, and the planted score sits between
+    // alpha and that bound.
+    bool exact = true;
+    const int lazy = evaluate_lazy(&game.board, ALPHA, BETA, &exact);
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(evaluate_cheap(&game.board), 567);
+    REQUIRE_EQ(lazy, 567 - LAZY_EVAL_MARGIN);
+    REQUIRE_EQ(lazy, 383);
+    REQUIRE_NE(lazy, evaluate(&game.board));
+    REQUIRE(PLANTED > ALPHA);
+    REQUIRE(PLANTED < lazy);
+    REQUIRE(PLANTED >= BETA);
+
+    // Precondition: with nothing planted the node stands pat on the bound
+    // itself, so anything other than 383 below came from the entry.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE_EQ(run(), lazy);
+
+    // An upper bound of 200 says the value is at most 200, which is less than
+    // the 383 the shortcut established as a lower bound on the static score --
+    // the two claims are about different things and both hold, the entry's
+    // being the tighter one. So the cap applies to a stand pat that is itself
+    // a bound, exactly as it applies to a static score.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE(load_FEN(fen, &game));
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, PLANTED, TT_ALPHA_NODE, 0,
+                   TT_EVAL_NONE);
+
+    CHECK_EQ(run(), PLANTED);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+
+    // 200 is still at or above beta, so the node fails high and stores a lower
+    // bound. It is sound on this path for the same reason as on the static
+    // one, and the reason is worth stating because `static_eval` is not exact
+    // here: the shortcut certified `value >= 383`, the cap only lowered the
+    // number to 200, and `value >= 200` follows. The eval field stays empty --
+    // no exact static score was ever computed at this node, and S094's
+    // semantics say only an exact one may be stored.
+    CHECK_EQ(entry->score, PLANTED);
+    CHECK_EQ(entry->type, TT_BETA_NODE);
+    CHECK_EQ(entry->eval, TT_EVAL_NONE);
+  }
+
+
   // The main search reads the same field. Reverse futility asked evaluate()
   // for a number the entry was already carrying on 9.8 % of the calls it made,
   // and none of them disagreed; it now reads the entry. S103.

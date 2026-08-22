@@ -335,7 +335,7 @@ its own line in that step's `accepts`.
 
 ### 2026-08-22_adversarial-F07  low  S130's substitution is untested against a lazy-bound stand pat, the one input class where its comparison runs on a bound instead of a score
 
-Status: open
+Status: planned — S164
 Verification: statically confirmed (test reading); the suggested test is the
 run.
 
