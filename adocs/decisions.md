@@ -5776,6 +5776,166 @@ Consequences: Quiet history is built fresh for every `go`, like the killers, the
               non-descendant position is discharged by this verdict: with no
               carried history there is nothing to clear.
 
+## DEC-102  2026-08-22  a step that consumes a table bound owns what it propagates; S130's excludes made it unsatisfiable
+Tags:         search, quiescence, transposition, soundness, bound-sign, scope,
+              plan, agent-proposal, s130, s106, dec-019
+
+Context:      S130 lets quiescence take a transposition entry's score as its
+              stand pat where the stored bound certifies the direction: a lower
+              bound may only raise it, an upper bound only lower it. The step
+              was written with `excludes: any change to what is stored`, and the
+              read side was implemented exactly to that contract.
+
+              **It is not sound inside that contract, and the SPRT measuring it
+              was killed at 103 games because of it.** Quiescence's final store
+              marks the entry `TT_PV_NODE` -- exact -- when `best_value >
+              alpha0`. Before S130 that is correct by quiescence's own
+              definition: the value of a node no capture improves is what
+              standing pat is worth. After S130 `best_value` can be the
+              substituted bound, so the node writes `value == s` on evidence
+              that says only `value >= s`, at the same key and the same depth,
+              over the very entry that certified it, where every later
+              quiescence probe answers an exact entry unconditionally.
+
+              The upper-bound mirror is unconditional rather than incidental. An
+              upper-bound entry only reaches the stand-pat site when its score
+              is above alpha -- `tt_entry_answers()` would have answered the
+              node otherwise -- and alpha at the probe is still `alpha0`. So a
+              cap always leaves `best_value > alpha0` and the store always chose
+              exact. Instrumented over three positions at depth 12, **386 of the
+              561 exact stores at that site were laundered bounds, 69 %**.
+
+              This is S106's bound-sign class from the propagation side. S106
+              swept the eight store and probe sites and found them correct; this
+              defect did not exist yet, because S130 is what creates a path from
+              a stored bound into a stand pat.
+
+Decision:     **Agent proposal, S130, 2026-08-22, under DEC-041 -- NOT
+              owner-approved. Nothing is settled until the owner takes it.** The
+              orchestrator amended the step in the working tree; this entry
+              records the amendment and the general rule for the owner to
+              accept or reverse.
+
+              Two parts.
+
+              **The general rule.** A step that consumes a transposition bound
+              also owns what it propagates. Reading a bound and writing the
+              result are one mechanism, and a step whose excludes separate them
+              is unsatisfiable as written rather than merely narrow. The
+              property to hold is one sentence: *a node never stores a claim
+              stronger than the weakest thing that produced its value.*
+
+              **The scope amendment.** S130's `excludes:` is amended to put the
+              store's node *type* in scope. The stored *score* and the entry's
+              `eval` field stay excluded and stay unchanged. A blocking child
+              step was considered and rejected: the correction is a no-op
+              without S130's substitution, so it cannot be measured on its own,
+              and splitting them would put an unsound engine through an SPRT.
+
+Rejected:     **Landing S130 as first written and letting the SPRT decide.**
+              This is the option that was actually running. It fails AGENTS.md
+              §0 -- a known defect contaminates every measurement taken after it
+              -- and it would have priced a mechanism that nobody would keep.
+
+              **A blocking child step under `--step block`.** The correct shape
+              when a discovery is separable. This one is not: with the
+              substitution removed the fix changes nothing, so it has no
+              measurable identity of its own and no verdict to record.
+
+              **Keeping the read side and deleting the substitution's effect on
+              the final store by not letting a substituted stand pat reach
+              `best_value`.** That is a different feature -- the fail-soft floor
+              is most of what the published technique does -- and it would
+              measure something other than what the literature priced.
+
+              **Storing nothing at all where the stand pat was substituted.**
+              Sound, and simpler than degrading the type. Rejected because it
+              throws away the node's work at exactly the nodes the table already
+              knows something about, and because the degraded store is
+              fixpoint-stable: a raise nothing beats re-stores the same
+              `TT_BETA_NODE(s)` it read, instead of upgrading its own evidence.
+
+              **Comparing `best_value` against `static_eval` at the store to
+              recover exactness where the cap did not actually hide anything.**
+              Tighter and provably sound, and it keeps a few more exact entries.
+              Rejected as an extra condition on a path that fires on 0.008 % of
+              stand-pat sites: one more place to get a bound sign wrong, bought
+              for nothing measurable.
+
+Consequences: Quiescence carries the stand pat's bound kind beside its number,
+              in `node_type_t` so it maps onto the store with no translation,
+              and the final store degrades rather than applying the window test
+              unconditionally. With no entry every branch reduces to the
+              pre-S130 code exactly, which is what keeps the no-table case
+              byte-identical.
+
+              One asymmetry is now load-bearing and has its own test. When a
+              searched move takes over the maximum, a *raised* floor leaves
+              nothing behind -- it sat above the static score, so a line that
+              beat it beat the static score too -- but a *lowered* floor does:
+              the static score it displaced may beat the winning line as well,
+              so the value is only bounded below. The obvious specification, "a
+              value a real capture search beat is exact", is wrong for the cap
+              direction, and the third test is the one that says so.
+
+              S130's `touches:` grows `adocs/specs.md`; the "absent, machinery"
+              row has to state the degraded store together with the
+              substitution, since neither is sound without the other. The
+              measured verdict now covers both, which is stated in the SPRT
+              script's pre-registration.
+
+## DEC-103  2026-08-22  S130 is kept at a measured zero, and the bound-type rule is the ground that carries it
+Tags:         search, quiescence, transposition, measurement, s130, s112, s022, s116, s119, s120, dec-019, dec-041, dec-063
+Context:      S130's SPRT against `293a45b` at `elo0=0 elo1=5` ran 16784 games
+              in 7 h 12 m and reached no bound: Elo 1.14 +/- 4.04, nElo 1.48
+              +/- 5.26, LOS 70.95 %, LLR -0.71 inside (-2.94, 2.94), 0 time
+              forfeits in 16788 games written to the PGN. It oscillated rather
+              than travelled -- over 839 samples the LLR stayed inside
+              [-1.71, +0.69] -- and the pre-registered no-verdict clause named
+              8000 games where this ran past twice that. The pre-registered
+              explanation holds: the substitution fires on 0.23 % of
+              quiescence stand-pat sites, too thin for +/-5 bounds to resolve.
+              The nearest-shaped published record, Lynx PR #1319
+              (qsearch-only, over an existing probe and eval-field read),
+              merged at about zero over 60152 games -- +1.14 +/- 4.04 is
+              Lynx's number -- while Weiss's +10.78/+12.09 and Ethereal's
+              +11.04 did not transfer: DEC-019, third time this session. An
+              earlier run was killed at 103 games because it was measuring the
+              unsound exact-store; the fix and its 69 % laundered-store count
+              are DEC-102's record.
+Decision:     Agent-proposed under DEC-041, annotated for the owner to
+              reverse. **Recorded as zero and kept**, on four grounds. The
+              point estimate is positive where S093 verdict 2's was negative
+              and reverted. The house rule keeps a measured zero with the
+              reason stated -- S005, S006 and S015 are the precedent. The thin
+              mechanism is itself a target: S119 and S120 both move the 1.12 %
+              probe hit rate the substitution is starved by -- the S015 shape,
+              forward-looking and labelled so, and this ground expires if
+              those steps land without moving the rate. And, load-bearing: the
+              bound-type rule -- a node never stores a claim stronger than the
+              weakest thing that produced its value -- is durable
+              infrastructure that S112, S022 and S116 each need before they
+              feed the same stand pat, since each written the natural way
+              re-introduces the laundering the killed run was measuring.
+              **No re-run at two-sided bounds**: +/- 4.04 over 16784 games is
+              tighter than most verdicts this project produces, and
+              [-2.9, +5.2] already excludes the 5-Elo loss a re-run would be
+              asked to exclude.
+Rejected:     Reverting the substitution and keeping only the store rule --
+              with no entry every branch reduces to the pre-S130 code exactly,
+              so the substitution costs nothing measurable and removing it
+              buys nothing measurable, and reverting deletes the consumer
+              S119 and S120 would re-price. Re-running two-sided to buy a
+              label for a number already in hand -- two more machine-hours,
+              DEC-063's lesson.
+Consequences: specs.md's "absent, machinery" row carries the layer, its
+              numbers and the degraded store. The stand pat carries its bound
+              kind and the final store degrades, which every later stand-pat
+              consumer (S112, S022, S116) inherits and must not remove. If
+              S119 and S120 land without moving the hit rate, ground three
+              expires without re-opening this entry -- ground four stands
+              alone.
+
 ## DEC-104  2026-08-22  The end goal, stated in full and in one place
 Tags:         project, identity, scope, licensing
 Context:      The goal had been written as "the strongest open-source chess

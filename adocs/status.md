@@ -7,7 +7,7 @@ Updated: 2026-08-22 by `moltke --step status`.
 
 - Last done: S145
 - In progress: none
-- Next: S130
+- Next: S160
 - Blocked: none
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name

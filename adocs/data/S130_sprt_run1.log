@@ -1,0 +1,431 @@
+Building reference 293a45b ...
+Preparing worktree (detached HEAD 293a45b)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Sanitizer OFF
+-- Tune build OFF
+-- PGO off
+-- Test timeout 60s (build type Release)
+-- Debug gui build disabled
+step       S130, quiescence stand pat from the table score
+candidate  293a45b + uncommitted changes
+reference  293a45b
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       UHO_Lichess_4852_v1.epd
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /tmp/chesso_sprt_s130_20260822_074255
+
+Indexing opening suite...
+Started game 1 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 2 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Started game 6 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Started game 3 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 7 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 11 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 4 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Started game 9 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 5 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Started game 10 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Started game 12 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Started game 8 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 11 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 13 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 8 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 14 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 7 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 15 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 12 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 16 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 1 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 17 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 3 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 18 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 9 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 19 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 14 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 20 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 2 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by adjudication}
+Started game 21 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 5 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by adjudication}
+Started game 22 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 10 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 23 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 6 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 24 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 4 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 25 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate -7 time 0 depth 1 nodes 3 nps 750000 pv b6b5 
+Position; fen r3k1nr/ppp2ppp/2npbq2/4p3/4P3/b1PP1Q1P/PP2BPP1/R1B1K1NR w KQkq - 0 8
+Moves; b2a3 f6g6 f3g3 g6g3 f2g3 g8f6 g1f3 h7h6 e1g1 d6d5 e4d5 f6d5 c1d2 e8c8 f3h4 d5e7 d2e3 g7g5 h4f3 h8g8 g1h2 e7f5 e3f2 d8d5 f3d2 d5a5 e2g4 c6e7 d2b3 a5a3 f2c5 a3a6 a1e1 a6a2 e1e5 h6h5 g4h5 e6b3 c5e7 f5e7 e5e7 b3d5 h5g4 c8b8 g4f3 d5e6 f3h5 e6d5 h5f3 d5e6 d3d4 e6c4 f1e1 a7a6 d4d5 g8d8 e7f7 c4d5 e1d1 c7c6 f3d5 d8d5 d1d5 c6d5 f7f5 a2d2 f5g5 a6a5 h3h4 a5a4 h4h5 a4a3 h5h6 a3a2 h6h7 a2a1q h7h8q b8a7 g5g8 a1b2 h2h3 a7b6 g8c8 b2c1 h8f8 b6a7 c8a8 a7b6 f8d6
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate -7 time 0 depth 2 nodes 44 nps 1100000 pv b6b5 d6b4 
+Position; fen r3k1nr/ppp2ppp/2npbq2/4p3/4P3/b1PP1Q1P/PP2BPP1/R1B1K1NR w KQkq - 0 8
+Moves; b2a3 f6g6 f3g3 g6g3 f2g3 g8f6 g1f3 h7h6 e1g1 d6d5 e4d5 f6d5 c1d2 e8c8 f3h4 d5e7 d2e3 g7g5 h4f3 h8g8 g1h2 e7f5 e3f2 d8d5 f3d2 d5a5 e2g4 c6e7 d2b3 a5a3 f2c5 a3a6 a1e1 a6a2 e1e5 h6h5 g4h5 e6b3 c5e7 f5e7 e5e7 b3d5 h5g4 c8b8 g4f3 d5e6 f3h5 e6d5 h5f3 d5e6 d3d4 e6c4 f1e1 a7a6 d4d5 g8d8 e7f7 c4d5 e1d1 c7c6 f3d5 d8d5 d1d5 c6d5 f7f5 a2d2 f5g5 a6a5 h3h4 a5a4 h4h5 a4a3 h5h6 a3a2 h6h7 a2a1q h7h8q b8a7 g5g8 a1b2 h2h3 a7b6 g8c8 b2c1 h8f8 b6a7 c8a8 a7b6 f8d6
+Finished game 15 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 26 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 17 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 27 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 16 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 28 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 22 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 29 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 21 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 30 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 13 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 31 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 23 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 32 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 20 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 33 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 18 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 34 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 25 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 35 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 24 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 36 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 19 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s130-qs-tt-stand-pat vs ref-293a45b (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: -0.00 +/- 147.22, nElo: 0.00 +/- 139.00
+LOS: 50.00 %, DrawRatio: 25.00 %, PairsRatio: 0.80
+Games: 24, Wins: 8, Losses: 8, Draws: 8, Points: 12.0 (50.00 %)
+Ptnml(0-2): [2, 3, 3, 1, 3], WL/DD Ratio: 0.50
+LLR: -0.00 (-0.1%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 37 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 28 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by adjudication}
+Started game 38 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 26 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 39 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 31 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 40 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 29 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by insufficient mating material}
+Started game 41 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 32 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 42 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 30 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 43 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 35 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 44 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 27 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by adjudication}
+Started game 45 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 1 nodes 17 nps 2833333 pv g5g8 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 2 nodes 61 nps 2440000 pv g5g8 f3f4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 3 nodes 108 nps 3000000 pv g5g8 f3f4 h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 4 nodes 183 nps 3452830 pv g5g8 f3f4 h2h3 f4f5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 5 nodes 260 nps 3768115 pv g5g8 f3f4 h2h3 f4f5 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 6 nodes 366 nps 4159090 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 7 nodes 480 nps 4363636 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 8 nodes 621 nps 4669172 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 9 nodes 860 nps 4751381 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 10 nodes 1841 nps 5128133 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 0 depth 11 nodes 2314 nps 4987068 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 1 depth 12 nodes 6905 nps 5287136 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -7 time 1 depth 13 nodes 9011 nps 5042529 pv g5g8 f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 h4h5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 1 nodes 29 nps 3222222 pv f3f4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 2 nodes 61 nps 2772727 pv f3f4 h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 3 nodes 122 nps 3210526 pv f3f4 h2h3 f4f5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 4 nodes 185 nps 3627450 pv f3f4 h2h3 f4f5 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 5 nodes 278 nps 3971428 pv f3f4 h2h3 f4f5 h3h2 f5e5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 6 nodes 384 nps 4173913 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 7 nodes 511 nps 4522123 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 8 nodes 641 nps 4748148 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 9 nodes 800 nps 4761904 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 10 nodes 1174 nps 4953586 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 0 depth 11 nodes 1525 nps 4935275 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from ref-293a45b
+Info; info score mate 7 time 1 depth 12 nodes 8046 nps 5137931 pv f3f4 h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 h4h5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 1 nodes 5 nps 1250000 pv h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 2 nodes 39 nps 1950000 pv h2h3 f4f5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 3 nodes 76 nps 2451612 pv h2h3 f4f5 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 4 nodes 139 nps 2957446 pv h2h3 f4f5 h3h2 f5e5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 5 nodes 205 nps 3360655 pv h2h3 f4f5 h3h2 f5e5 h2h3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 6 nodes 336 nps 3862068 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 7 nodes 438 nps 4093457 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 8 nodes 600 nps 4379562 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 9 nodes 805 nps 4626436 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 10 nodes 1056 nps 4756756 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Warning; Incomplete mating PV - from candidate-s130-qs-tt-stand-pat
+Info; info score mate -6 time 0 depth 11 nodes 1282 nps 4911877 pv h2h3 f4f5 h3h2 f5e5 h2h3 e5e6 g8g4 f2f3 h3h2 e6g4 h4h5 
+Position; fen r1b1k1nr/pp2ppbp/1qnp4/2p5/4P3/2P2N2/PP2BPPP/RNBQK2R w KQkq - 0 9
+Moves; e1g1 g8f6 b1d2 c6e5 d1c2 e8g8 f3e5 d6e5 d2c4 b6c6 e2d3 f6h5 a2a4 c6g6 c1e3 c8h3 f2f3 a8d8 f1d1 h5f4 d3f1 b7b6 d1d8 f8d8 e3f4 e5f4 a1d1 h3d7 c2d2 g6g5 d2d7 d8d7 d1d7 f7f5 d7a7 f5e4 c4d2 g7e5 d2e4 g5h4 a7b7 h7h5 f1c4 g8f8 h2h3 h4e1 g1h2 e1a1 b7b6 a1a4 b2b3 a4a1 b6g6 f8e8 g6g5 e5d6 g5h5 e8d8 e4c5 a1c3 c5b7 d8c7 b7d6 c7d6 h5h6 d6c5 h6g6 c3h8 c4f7 h8h7 g6g5 c5d4 f7c4 e7e5 g5g8 h7h4 g2g3 h4h7 h3h4 d4e3 h2h3 e3f3 g3f4 e5f4 g8g5 h7d7 h3h2 f3e4 g5g8 e4e3 h2g2 f4f3 g2g3 d7c6 g8g5 c6e4 g5g4 e4e5 g3h3 e5f5 b3b4 f3f2 c4f1 e3f3 f1g2 f3e2 h3g3 f5e5 g3h3 f2f1q g2f1 e2f1 g4g5 e5c3 h3h2 c3b4 g5f5 f1e2 h2g3 b4e4 f5g5 e4f3 g3h2 e2f2 g5g8 f3f4
+Finished game 33 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 46 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 39 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 47 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 34 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 48 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 36 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 49 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 37 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 50 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 38 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 51 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 42 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 52 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 43 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 53 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 41 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 54 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 40 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s130-qs-tt-stand-pat vs ref-293a45b (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: -8.27 +/- 98.47, nElo: -9.07 +/- 105.07
+LOS: 43.28 %, DrawRatio: 33.33 %, PairsRatio: 0.75
+Games: 42, Wins: 13, Losses: 14, Draws: 15, Points: 20.5 (48.81 %)
+Ptnml(0-2): [3, 5, 7, 2, 4], WL/DD Ratio: 0.75
+LLR: -0.02 (-0.7%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 55 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 47 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 56 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 44 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 57 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 45 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 58 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 46 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 59 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 55 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 60 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 48 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 61 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 49 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 62 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 53 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 63 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 51 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 64 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 50 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by insufficient mating material}
+Started game 65 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 57 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 66 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 59 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 67 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 52 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by adjudication}
+Started game 68 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 58 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 69 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 54 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 70 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 69 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 71 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 64 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 72 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 60 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate-s130-qs-tt-stand-pat vs ref-293a45b (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: -0.00 +/- 75.42, nElo: 0.00 +/- 89.41
+LOS: 50.00 %, DrawRatio: 34.48 %, PairsRatio: 0.90
+Games: 58, Wins: 18, Losses: 18, Draws: 22, Points: 29.0 (50.00 %)
+Ptnml(0-2): [3, 7, 10, 5, 4], WL/DD Ratio: 1.00
+LLR: -0.01 (-0.2%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 73 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 68 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 74 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 61 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by adjudication}
+Started game 75 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 63 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 76 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 66 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 77 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 65 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 78 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 67 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 79 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 70 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by adjudication}
+Started game 80 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 56 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by insufficient mating material}
+Started game 81 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 71 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 82 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 62 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by fifty moves rule}
+Started game 83 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 74 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 84 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 72 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 85 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 73 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 86 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 80 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 87 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 75 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 88 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 76 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 89 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 79 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s130-qs-tt-stand-pat vs ref-293a45b (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 8.91 +/- 62.37, nElo: 11.14 +/- 77.10
+LOS: 61.15 %, DrawRatio: 41.03 %, PairsRatio: 1.09
+Games: 78, Wins: 27, Losses: 25, Draws: 26, Points: 40.0 (51.28 %)
+Ptnml(0-2): [4, 7, 16, 7, 5], WL/DD Ratio: 1.67
+LLR: 0.03 (0.9%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 90 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 77 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 91 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 85 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 92 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 82 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 93 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 81 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 94 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 78 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 95 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 84 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 96 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 87 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 97 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 90 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 98 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 86 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 99 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 88 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 100 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 83 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by fifty moves rule}
+Started game 101 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 89 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 102 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 96 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 103 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 93 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 104 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 92 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1-0 {White wins by adjudication}
+Started game 105 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 95 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 106 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 97 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 107 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 99 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 108 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 94 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by insufficient mating material}
+Started game 109 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 91 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by insufficient mating material}
+Started game 110 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 100 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate-s130-qs-tt-stand-pat vs ref-293a45b (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 10.64 +/- 53.77, nElo: 13.73 +/- 68.79
+LOS: 65.22 %, DrawRatio: 40.82 %, PairsRatio: 1.07
+Games: 98, Wins: 34, Losses: 31, Draws: 33, Points: 50.5 (51.53 %)
+Ptnml(0-2): [4, 10, 20, 9, 6], WL/DD Ratio: 1.86
+LLR: 0.05 (1.6%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 111 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 101 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 0-1 {Black wins by adjudication}
+Started game 112 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 102 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 113 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 98 (ref-293a45b vs candidate-s130-qs-tt-stand-pat): 0-1 {Black wins by adjudication}
+Started game 114 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 105 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 115 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)
+Finished game 109 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 116 of 40000 (ref-293a45b vs candidate-s130-qs-tt-stand-pat)
+Finished game 103 (candidate-s130-qs-tt-stand-pat vs ref-293a45b): 1-0 {White wins by adjudication}
+Started game 117 of 40000 (candidate-s130-qs-tt-stand-pat vs ref-293a45b)

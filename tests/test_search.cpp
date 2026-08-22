@@ -1131,6 +1131,7 @@ TEST_SUITE("search: quiescence transposition entries")
   // pinned here rather than shared so that a change to either is a visible
   // disagreement instead of a silent agreement.
   static constexpr int MATE_MAX_LOCAL = 49000;
+  static constexpr int MATE_MIN_LOCAL = 48000;
 
   TEST_CASE("a main-search node at depth 1 does not cut on a quiescence entry")
   {
@@ -1288,18 +1289,295 @@ TEST_SUITE("search: quiescence transposition entries")
     REQUIRE_EQ(run(), static_score);
 
     // Now an entry for this position carrying a static evaluation that is not
-    // this position's. The stored *score* is different again and cannot answer
-    // the node -- an upper bound of -9999 against an alpha of -10000 -- so
-    // anything but 563 coming back has to have come from the eval field.
+    // this position's. The stored *score* is different again and has to be
+    // inert twice over, so that anything but 563 coming back has to have come
+    // from the eval field: a lower bound of -9999 does not answer the node
+    // against a beta of 10000, and it may not raise a stand pat of 563 either.
+    //
+    // It was an upper bound of -9999 until S130, which is inert on the first
+    // count and not on the second: an upper bound below the static score is
+    // exactly what the new substitution consumes, and this case answered -9999
+    // instead of 363. Re-targeted rather than relaxed -- the assertion is the
+    // same one, on an entry that still isolates the eval field.
     tt_reset(&tt);
     tt_new_search(&tt);
 
     REQUIRE(load_FEN(fen, &game));
     const int planted = static_score - 200;
-    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_ALPHA_NODE, 0,
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_BETA_NODE, 0,
                    planted);
 
     REQUIRE_EQ(run(), planted);
+  }
+
+
+  // The score field is read too, and only in the direction its bound
+  // certifies. A lower bound says the value is at least this, so it may raise
+  // the stand pat and never lower it; an upper bound says at most, so it may
+  // lower it and never raise it; an exact score is the value. Any other use
+  // consumes a claim the entry never made. S130.
+  //
+  // The two cases that hold the wrong direction shut are the point of the
+  // case, not padding: an inverted comparison leaves every node count and
+  // every other suite green and leaks nothing but strength.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "quiescence stands pat on the stored score where the bound "
+                    "allows it")
+  {
+    // Nothing to capture and not in check, so what quiescence returns is the
+    // stand pat and nothing else. Same anchor as the cases above.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    // Planted after the wipe, which is why this is not the suite's quiesce()
+    // helper: that one clears the table on the way in.
+    auto plant = [&](int score, node_type_t type) {
+      tt_reset(&tt);
+      tt_new_search(&tt);
+      REQUIRE(load_FEN(fen, &game));
+      tt_store_entry(&tt, &game.board, TT_DEPTH_QS, score, type, 0,
+                     TT_EVAL_NONE);
+    };
+
+    auto run = [&](int alpha, int beta) -> int {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      return quiescence(alpha, beta, 0, 0, &game, &state);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    // Precondition for every case below. With nothing planted the node works
+    // the number out for itself, so any other answer came from the entry and
+    // not from some unrelated property of the position.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE_EQ(run(-10000, 10000), static_score);
+
+    // A lower bound raises it. 600 is below beta, so the entry does not answer
+    // the node outright and the number has to arrive through the stand pat.
+    plant(600, TT_BETA_NODE);
+    CHECK_EQ(run(-10000, 10000), 600);
+
+    // And the raised number did not leak into the entry's static field. That
+    // field is this position's static score; an improved stand pat is not one,
+    // because it exists only where a bound held against this node's window and
+    // the entry outlives the window. S094's semantics, unchanged by S130.
+    const tt_entry_t* raised = tt_get_entry(&tt, &game.board);
+    REQUIRE(raised != nullptr);
+    CHECK_EQ(raised->score, 600);
+    CHECK_EQ(raised->eval, static_score);
+
+    // And never the other way. A lower bound of 500 says the value is at least
+    // 500, which is no reason to believe it is only 500.
+    plant(500, TT_BETA_NODE);
+    CHECK_EQ(run(-10000, 10000), static_score);
+
+    // An upper bound lowers it. alpha is 0, so 500 is above it and the entry
+    // again does not answer the node outright.
+    plant(500, TT_ALPHA_NODE);
+    CHECK_EQ(run(0, 10000), 500);
+
+    // And never the other way.
+    plant(600, TT_ALPHA_NODE);
+    CHECK_EQ(run(0, 10000), static_score);
+
+    // An exact score is the value and replaces it. Today the probe answers
+    // this node before a stand pat is ever computed, so the assertion is on
+    // what comes back and not on which path served it -- it holds unchanged if
+    // a later PV guard sends an exact entry down the stand-pat path instead.
+    plant(600, TT_PV_NODE);
+    CHECK_EQ(run(-10000, 10000), 600);
+  }
+
+
+  // A stand pat is a positional claim, and the fail-soft paths below it hand
+  // the number to the parent and store it. A mate distance entering there is a
+  // mate no search ever found: this project's recurring bug, seen from the
+  // side that invents one rather than the side that hides one. S130.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a mate score is never used as a stand pat")
+  {
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    auto plant = [&](int score, node_type_t type) {
+      tt_reset(&tt);
+      tt_new_search(&tt);
+      REQUIRE(load_FEN(fen, &game));
+      tt_store_entry(&tt, &game.board, TT_DEPTH_QS, score, type, 0,
+                     TT_EVAL_NONE);
+    };
+
+    auto run = [&]() -> int {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      // Wide enough that neither planted score answers the node outright, so
+      // each one reaches the stand pat and the band exclusion is the only
+      // thing that can stop it.
+      return quiescence(-100000, 100000, 0, 0, &game, &state);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    // A mating lower bound would raise the stand pat all the way to it, and
+    // this node would report a mate it never searched for. Without the band
+    // exclusion the answer here is 48995.
+    plant(MATE_MAX_LOCAL - 5, TT_BETA_NODE);
+    const int mating = run();
+    CHECK_EQ(mating, static_score);
+    CHECK(mating < MATE_MIN_LOCAL);
+
+    // And the mirror: a mated upper bound would drag it down to -48995.
+    plant(-(MATE_MAX_LOCAL - 5), TT_ALPHA_NODE);
+    const int mated = run();
+    CHECK_EQ(mated, static_score);
+    CHECK(mated > -MATE_MIN_LOCAL);
+  }
+
+
+  // A node must never store a claim stronger than the weakest thing that
+  // produced its value. Consuming a bound as the stand pat puts that bound
+  // into the maximum the node takes, and the entry it writes has to carry the
+  // bound out again -- otherwise a lower bound that only says `value >= s` is
+  // written back as `value == s`, at the same key, over the entry that
+  // certified it. S130, found by the coordinator before the first SPRT
+  // finished, DEC-102.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a substituted stand pat is stored as the bound it is")
+  {
+    // Nothing to capture and not in check, so the value the node stores is the
+    // stand pat and nothing else. Same anchor as the cases above.
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    auto plant = [&](int score, node_type_t type) {
+      tt_reset(&tt);
+      tt_new_search(&tt);
+      REQUIRE(load_FEN(fen, &game));
+      tt_store_entry(&tt, &game.board, TT_DEPTH_QS, score, type, 0,
+                     TT_EVAL_NONE);
+    };
+
+    auto run = [&](int alpha, int beta) -> const tt_entry_t* {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      quiescence(alpha, beta, 0, 0, &game, &state);
+
+      return tt_get_entry(&tt, &game.board);
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    // Precondition, and the whole reason the two assertions below are not
+    // vacuous: with nothing planted this node stores its stand pat **exact**,
+    // and that is correct -- the value of a quiescence node no capture
+    // improves is the static score, by quiescence's own definition. So the
+    // cases below are about the substitution and not about this site having
+    // stopped storing exact scores.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    const tt_entry_t* plain = run(-10000, 10000);
+    REQUIRE(plain != nullptr);
+    REQUIRE_EQ(plain->score, static_score);
+    REQUIRE_EQ(plain->type, TT_PV_NODE);
+
+    // A lower bound raised the stand pat, so all the node knows is that the
+    // value is at least 600. Storing exact would replace the very entry that
+    // certified `>= 600` with a flatter claim, at the same key and the same
+    // depth, where every later quiescence probe answers from it outright.
+    plant(600, TT_BETA_NODE);
+    const tt_entry_t* raised = run(-10000, 10000);
+    REQUIRE(raised != nullptr);
+    CHECK_EQ(raised->score, 600);
+    CHECK_EQ(raised->type, TT_BETA_NODE);
+
+    // The mirror, and this one is unconditional rather than incidental. An
+    // upper-bound entry only reaches the stand pat when its score is above
+    // alpha -- `tt_entry_answers()` would have answered the node otherwise --
+    // so the value it caps the stand pat to is always above `alpha0`, and the
+    // store's `best_value > alpha0` test therefore always chose exact.
+    plant(500, TT_ALPHA_NODE);
+    const tt_entry_t* capped = run(0, 10000);
+    REQUIRE(capped != nullptr);
+    CHECK_EQ(capped->score, 500);
+    CHECK_EQ(capped->type, TT_ALPHA_NODE);
+  }
+
+
+  // The third arm, and the one that is not symmetric. When a searched move
+  // beats the substituted stand pat, the stand pat drops out of the maximum --
+  // but only a *raised* one leaves nothing behind. A *lowered* one displaced a
+  // static score that was higher than it, and that static score may be higher
+  // than the winning move too, so the node's value is only bounded below.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capped stand pat beaten by a capture is still a bound")
+  {
+    // One capture available, and it is what the engine plays here at depth 6.
+    // The case asserts the shape of the store and never the worth of the move:
+    // that a move produced the value, that it beat the planted cap, and what
+    // the node is therefore allowed to claim.
+    const std::string fen = "4k3/8/8/8/3q4/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+
+    // Below the static score, so it caps, and above alpha, so the entry does
+    // not answer the node outright. Derived from the position rather than
+    // pinned, since nothing here depends on what the number is.
+    const int planted = static_score - 1000;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE(load_FEN(fen, &game));
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, planted, TT_ALPHA_NODE, 0,
+                   TT_EVAL_NONE);
+
+    never_stop = false;
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+    quiescence(-100000, 100000, 0, 0, &game, &state);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+
+    // Two preconditions. A move produced the value -- the store records one
+    // only where a move beat the stand pat -- and that value is above the cap,
+    // so the node really did take the maximum over a searched line rather than
+    // over the planted number.
+    REQUIRE_NE(entry->best_move, 0);
+    REQUIRE(entry->score > planted);
+
+    // The static score the cap displaced may still be higher than the line
+    // that won, so the value is a lower bound and not the node's value.
+    CHECK_EQ(entry->type, TT_BETA_NODE);
   }
 
 

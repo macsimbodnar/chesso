@@ -128,7 +128,7 @@ of a refusal is the only confirmation the value was taken.
 | `HistoryMalusQuad` | 1 | 0 to 1024 | the `depth * depth` coefficient of the malus every quiet tried before the cutoff move at that node is charged |
 | `HistoryMalusLin` | 0 | 0 to 4096 | the `depth` coefficient of the same malus |
 | `HistoryMalusConst` | 0 | -32768 to 32767 | the constant term of the same malus. The malus ships equal to the bonus; the split is what these three axes exist for |
-| `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it returns its static score |
+| `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it stops and returns its stand-pat score |
 | `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
 | `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice. 0 switches the rule off |
 | `RfpMinPly` | 3 | 2 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly. The floor is 2 because the mate-safety suite goes red below it (S145, DEC-095), not for an arithmetic reason |

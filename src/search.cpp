@@ -302,19 +302,70 @@ int quiescence(int alpha,
   // make_move maintains, and nothing here stops maintaining them; what is
   // avoided is the second and third call that would rebuild the same score
   // from them. S094.
-  bool stand_pat_is_exact =
+  bool static_eval_is_exact =
       tt_entry != nullptr && tt_entry->eval != TT_EVAL_NONE;
 
-  const int stand_pat =
-      stand_pat_is_exact
+  const int static_eval =
+      static_eval_is_exact
           ? tt_entry->eval
-          : evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);
+          : evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact);
 
   // Only a number the shortcut did not replace with a bound is worth keeping:
   // a bound holds on one side of one window and this entry will be read from
   // others. Every store below carries it, so a later reader finds the static
   // score wherever this node had one. S094.
-  const int stored_eval = stand_pat_is_exact ? stand_pat : TT_EVAL_NONE;
+  //
+  // Fixed from the static number and never from the stand pat below it. The
+  // substitution is window-relative -- it happens only where a bound held
+  // against this node's window -- and the entry outlives the window, which is
+  // the same reason a bound is never stored here. S130 changes nothing about
+  // what is written.
+  const int stored_eval = static_eval_is_exact ? static_eval : TT_EVAL_NONE;
+
+  // The entry did not answer the node outright, but its score is still a bound
+  // on this position, and a bound a search established beats a static guess.
+  // Which way it may move the stand pat is exactly what the entry's type
+  // certifies: a lower bound says the value is at least this and may only
+  // raise, an upper bound says at most and may only lower, an exact score is
+  // the value. Anything else consumes a claim the entry never made. S130.
+  int stand_pat = static_eval;
+
+  // And what the stand pat is worth as a *claim*, which is not the same
+  // question. The static score is exact by quiescence's own definition -- the
+  // value of a node no capture improves is what standing pat is worth -- so
+  // it starts exact and only the substitution can weaken it, to whichever
+  // bound the entry it came from carries. The store at the bottom reads this
+  // back, because a node must never write a claim stronger than the weakest
+  // thing that produced its value. DEC-102.
+  node_type_t stand_pat_type = TT_PV_NODE;
+
+  // Never a mate score, whichever bound carries it. A stand pat is a
+  // positional claim and every path below hands it to the parent or stores it:
+  // the fail-high store, the ply-cap return, the fail-soft floor. A mate
+  // distance entering there is a mate no search found, which is the recurring
+  // bug from the side that invents one rather than the side that hides one.
+  //
+  // Tested on the raw score, which is ply-independent: the band is 1000 wide
+  // against a MAX_PLY of 128, so de-normalisation cannot carry a score over
+  // either edge and the raw number is in the band exactly when the
+  // de-normalised one is. The static_assert above the probe holds that width.
+  if (tt_entry != nullptr && std::abs(tt_entry->score) <= MATE_MIN) {
+    const int tt_score = de_normalize_score(tt_entry->score, ply);
+
+    // The exact arm is unreachable under today's probe -- tt_entry_answers()
+    // returns an exact entry whatever the window is, so one never gets here.
+    // It is written anyway because the rule is stated by bound type and not by
+    // which arms the probe happens to leave over.
+    const bool substitutes =
+        tt_entry->type == TT_PV_NODE ||
+        (tt_entry->type == TT_BETA_NODE && tt_score > stand_pat) ||
+        (tt_entry->type == TT_ALPHA_NODE && tt_score < stand_pat);
+
+    if (substitutes) {
+      stand_pat = tt_score;
+      stand_pat_type = static_cast<node_type_t>(tt_entry->type);
+    }
+  }
 
   // Nothing below this line is stored when the search is being abandoned or
   // truncated. An aborted node has no score, and a node that gave up on the
@@ -334,6 +385,12 @@ int quiescence(int alpha,
       // keeping: evaluate_lazy() returns a genuine lower bound on this branch,
       // and the option to stand pat makes it a lower bound on the node too,
       // whatever the ply cap does below. There is no move to record with it.
+      //
+      // A lower bound is what this store claims, so a substitution cannot make
+      // it false. A raised stand pat is below beta by construction and never
+      // arrives here at all; a lowered one is below the static score, so
+      // `value >= stand_pat` follows from `value >= static_eval`, which is the
+      // claim the node was already making. DEC-102.
       tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
                      normalize_score(stand_pat, ply), TT_BETA_NODE, 0,
                      stored_eval);
@@ -396,6 +453,15 @@ int quiescence(int alpha,
   int best_value = in_check ? MIN : stand_pat;
   int legal_moves = 0;
 
+  // The floor the maximum below starts from, and what is known about it. In
+  // check the stand pat is not on offer, so it is not an input to the maximum
+  // and carries nothing into what this node may claim. DEC-102.
+  const node_type_t floor_type = in_check ? TT_PV_NODE : stand_pat_type;
+
+  // What the value currently held is worth as a claim. It follows best_value:
+  // while the floor is still the maximum, it is the floor's.
+  node_type_t value_type = floor_type;
+
   // Left at zero until a move actually beats what standing pat already gave,
   // so a node that stood pat stores no move rather than an arbitrary one.
   move_t best_move = 0;
@@ -424,6 +490,17 @@ int quiescence(int alpha,
     if (score > best_value) {
       best_value = score;
       best_move = moves[i];
+
+      // A searched line is the maximum now, and the two substitutions do not
+      // leave the same thing behind. A stand pat *raised* by a lower bound sat
+      // above the static score, so a line that beat it beat the static score
+      // too and the maximum is the one quiescence defines -- exact. A stand
+      // pat *lowered* by an upper bound sat below the static score, so the
+      // static score it displaced may beat this line as well; all that is
+      // established is that the value is at least this much. Computed from
+      // floor_type and never from itself, so a second improvement cannot
+      // launder the first. DEC-102.
+      value_type = (floor_type == TT_ALPHA_NODE) ? TT_BETA_NODE : TT_PV_NODE;
     }
 
     if (score > alpha) { alpha = score; }
@@ -448,9 +525,18 @@ int quiescence(int alpha,
   // to and not what a full search would, since the losing captures were
   // declined - but that is the number this node already hands its parent, so
   // storing it adds no claim the search was not making already.
+  //
+  // And exact only where nothing weaker went into it. The window test above is
+  // the right question once the value is known exactly; where the stand pat
+  // was a bound, that bound is the ceiling on what may be claimed here and the
+  // window test cannot raise it back. DEC-102.
+  const node_type_t stored_type =
+      (value_type == TT_PV_NODE)
+          ? ((best_value > alpha0) ? TT_PV_NODE : TT_ALPHA_NODE)
+          : value_type;
+
   tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
-                 normalize_score(best_value, ply),
-                 (best_value > alpha0) ? TT_PV_NODE : TT_ALPHA_NODE, best_move,
+                 normalize_score(best_value, ply), stored_type, best_move,
                  stored_eval);
 
   return best_value;

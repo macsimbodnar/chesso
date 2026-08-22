@@ -365,7 +365,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-17. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
 18. S140  no plan, specs or status document routes work to a retired id, cites an invariant that is defined nowhere, or carries a census its own derivation contradicts
 19. S141  every pending step's touches field names the file its change has to land in
 20. S093  history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
