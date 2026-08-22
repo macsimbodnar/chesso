@@ -167,6 +167,16 @@ normal search.
 followed by `moves`. A move in the `moves` list that does not parse or is not
 legal is skipped with a warning, and the rest of the list is still applied.
 
+A FEN carrying a castling right or an en-passant square the board cannot
+support is **accepted with that field cleared**, not refused. A right survives
+only if the king and that rook are still on their own squares, and an
+en-passant square survives only if it is on rank 6 for White to move or rank 3
+for Black, its own square is empty, and the enemy pawn that would be captured
+is standing behind it. Nothing is reported back over UCI; the position simply
+loads without the field. Stale rights and stale en-passant squares are common
+in books, converted games and GUI output, and until 2026-08-22 the engine
+believed them and corrupted its own board playing the moves they licensed.
+
 `ponderhit` is accepted; pondering itself is not implemented.
 
 `debug on` and `debug off` are accepted. The flag is recorded and currently

@@ -365,7 +365,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-19. S141  every pending step's touches field names the file its change has to land in
 20. S093  history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
 21. S130  quiescence takes the table score as its stand-pat where the stored bound allows it, instead of the static evaluation alone
 22. S160  a bare fastchess.sh run measures against HEAD, printed loudly, instead of silently against the 2026-08-08 baseline

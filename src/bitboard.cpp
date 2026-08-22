@@ -1839,6 +1839,59 @@ bool load_FEN(const std::string& FEN, game_t* game)
     return false;
   }
 
+  /***************************************************************************
+   * 6. Semantic sanitization
+   *
+   * Sections 2 and 3 validate syntax; nothing downstream validates anything.
+   * The castling block in generate_moves() emits from the hard-coded e1/e8 and
+   * castling_rook() answers from the king's *target* square rather than from
+   * the board, and the en-passant capture takes a pawn off a square it never
+   * inspects. Every piece update is an xor, so a field the position cannot
+   * support does not produce an illegal move -- it *creates pieces*. Debug
+   * catches that in squares_match_bitboards(); the Release build that ships
+   * and is measured runs on silently.
+   *
+   * So an unsupportable field is cleared here rather than rejected: GUIs, books
+   * and conversion tools send stale rights and stale ep squares, and the match
+   * harnesses sanitize the same input instead of refusing the position. A legal
+   * position can never trip this, so every valid FEN loads bit for bit as
+   * before (INV-6). Position legality at large -- pawn counts, two kings, the
+   * side not to move in check -- is deliberately not checked: only the two
+   * classes that corrupt. 2026-08-22_adversarial-F01, S161.
+   **************************************************************************/
+  if (board->squares[e1] != W_KING) { board->castling &= ~(WK | WQ); }
+  if (board->squares[h1] != W_ROOK) { board->castling &= ~WK; }
+  if (board->squares[a1] != W_ROOK) { board->castling &= ~WQ; }
+  if (board->squares[e8] != B_KING) { board->castling &= ~(BK | BQ); }
+  if (board->squares[h8] != B_ROOK) { board->castling &= ~BK; }
+  if (board->squares[a8] != B_ROOK) { board->castling &= ~BQ; }
+
+  if (board->en_passant != INVALID_INDEX) {
+    const bool white_to_move = (board->active_color == WHITE);
+
+    // The one rank a double push can leave a target square on, seen from the
+    // side that may capture it: rank 6 for White, rank 3 for Black. The check
+    // guards the victim index as much as the semantics -- off this rank,
+    // en_passant +/- 8 can leave the board, and squares[] would be read past
+    // its end.
+    const index_t rank_base = white_to_move ? a6 : a3;
+    const bool right_rank =
+        board->en_passant >= rank_base && board->en_passant < rank_base + 8;
+
+    bool supported = false;
+
+    if (right_rank) {
+      // Where our pawn lands, and where the capture's xor takes a pawn off.
+      const index_t victim = static_cast<index_t>(
+          white_to_move ? (board->en_passant + 8) : (board->en_passant - 8));
+
+      supported = board->squares[board->en_passant] == EMPTY &&
+                  board->squares[victim] == (white_to_move ? B_PAWN : W_PAWN);
+    }
+
+    if (!supported) { board->en_passant = INVALID_INDEX; }
+  }
+
   // Populate occupancies
   for (int piece = W_PAWN; piece <= W_KING; ++piece) {
     board->occupancies[WHITE] |= board->bitboards[piece];

@@ -1,10 +1,10 @@
-// AUDIT EVIDENCE — 2026-08-22_adversarial-F02. Written by the 2026-08-22
-// adversarial audit as the regression test for that finding. NOT registered in
-// tests/CMakeLists.txt and NOT executed by the audit: the audit ran while a
-// time-controlled match held every core, so it was static-only by constraint.
-// Register it with add_doctest_target(test_audit_fen_semantics) and run it
-// once the machine is free; by the analysis in the finding it is red on
-// `293a45b` plus the S130 working tree.
+// AUDIT EVIDENCE — 2026-08-22_adversarial-F01. Written by the 2026-08-22
+// adversarial audit as the regression test for that finding, static-only: the
+// audit ran while a time-controlled match held every core, so it registered
+// and ran nothing. S161 registered it and observed it red as predicted — 4 of
+// 4 cases failing on 0a274c9 — then fixed load_FEN. The audit cited its own
+// finding as F02 in this header and in the suite name; F02 is fastchess.sh's
+// default reference (S160), and the id is corrected here to F01.
 //
 // The finding: load_FEN() validates FEN syntax and not semantics. Two classes
 // of well-formed-but-illegal FEN are accepted, and the moves they license
@@ -66,7 +66,7 @@ size_t count_flagged(const game_t* game, bool castling, bool en_passant)
 }  // namespace
 
 
-TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F02)")
+TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F01)")
 {
   TEST_CASE_FIXTURE(fen_fixture_t,
                     "castling rights without the rook license no castle")
@@ -119,5 +119,98 @@ TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F02)")
     if (load_FEN(fen, &game)) {
       CHECK_EQ(count_flagged(&game, false, true), 0);
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // S161. The four cases above are negative assertions and every one of them
+  // would also pass if load_FEN cleared *all* castling rights and *every* ep
+  // square, which is a worse engine and a green test. These fix the fix from
+  // the other side: what a legal position carries has to survive untouched,
+  // and the clearing has to be per right rather than wholesale.
+  // ------------------------------------------------------------------------
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "a legal position keeps all four rights")
+  {
+    REQUIRE(
+        load_FEN("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1", &game));
+
+    CHECK_EQ(game.board.castling, WK | WQ | BK | BQ);
+    CHECK_EQ(count_flagged(&game, true, false), 2);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "a real ep square survives and is playable")
+  {
+    // Black has just played d7-d5. The target square is empty, the victim pawn
+    // stands on d5, and White's e5 pawn may take it.
+    REQUIRE(load_FEN("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1", &game));
+
+    CHECK_EQ(game.board.en_passant, d6);
+    CHECK_EQ(count_flagged(&game, false, true), 1);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "only the unsupported right is cleared")
+  {
+    // The a1 rook is there and the h1 rook is not, so WQ survives WK.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R3K3 w KQ - 0 1", &game));
+
+    CHECK_EQ(game.board.castling, WQ);
+    CHECK_EQ(count_flagged(&game, true, false), 1);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "the same holds for Black")
+  {
+    // Black claims both; only the h8 rook exists, so BK survives BQ.
+    REQUIRE(load_FEN("4k2r/8/8/8/8/8/8/4K3 b kq - 0 1", &game));
+
+    CHECK_EQ(game.board.castling, BK);
+    CHECK_EQ(count_flagged(&game, true, false), 1);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "a right with no king anywhere is cleared")
+  {
+    // Both white rooks in place, no white king at all. Nothing may be emitted
+    // from e1, and the rights must not survive to say otherwise.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R6R w KQ - 0 1", &game));
+
+    CHECK_EQ(game.board.castling, 0);
+    CHECK_EQ(count_flagged(&game, true, false), 0);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "an ep square on the mover's own rank goes")
+  {
+    // ep = d3 with White to move: rank 3 is the rank *Black* captures on, so
+    // this is White being offered its own double push back. The victim index
+    // for White would be d2, and there is a white pawn there -- which is how
+    // an unsanitized load turns this into a capture of one's own pawn.
+    REQUIRE(load_FEN("4k3/8/8/8/2p5/8/3P4/4K3 w - d3 0 1", &game));
+
+    CHECK_EQ(game.board.en_passant, INVALID_INDEX);
+    CHECK_EQ(count_flagged(&game, false, true), 0);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "an occupied ep target square goes")
+  {
+    // Victim present on e5 and a white rook standing on the target e6: the
+    // capture's move_piece() would xor a pawn onto a square already occupied.
+    REQUIRE(load_FEN("4k3/8/4R3/3Pp3/8/8/8/4K3 w - e6 0 1", &game));
+
+    CHECK_EQ(game.board.en_passant, INVALID_INDEX);
+    CHECK_EQ(count_flagged(&game, false, true), 0);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "a cleared field is cleared in the hash")
+  {
+    // The rights and the ep square are Zobrist inputs, so sanitizing after the
+    // fields are parsed but before compute_full_hash() is what keeps a
+    // sanitized position hashing as the position it actually is. Same board,
+    // one FEN carrying a right the board cannot support.
+    game_t plain = {};
+    initialize_game_const_data(&plain);
+
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/4K3 w K - 0 1", &game));
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/4K3 w - - 0 1", &plain));
+
+    CHECK_EQ(game.board.castling, plain.board.castling);
+    CHECK_EQ(game.board.hash, plain.board.hash);
   }
 }

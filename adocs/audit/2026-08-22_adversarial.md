@@ -65,7 +65,7 @@ tree, as expected for planned work.
 
 ### 2026-08-22_adversarial-F01  medium  load_FEN accepts semantically illegal castling rights and en-passant squares, and the moves they license corrupt the board in Release
 
-Status: open
+Status: planned — S161
 Verification: statically confirmed (mechanism); end-to-end demonstration is
 the written test, to be registered and run when the machine is free.
 

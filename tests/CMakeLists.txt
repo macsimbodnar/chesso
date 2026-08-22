@@ -104,6 +104,16 @@ target_include_directories(test_corpus_hash PRIVATE ../tools)
 add_doctest_target(test_corpus_dedupe)
 target_include_directories(test_corpus_dedupe PRIVATE ../tools)
 
+# S161: the FEN load boundary. 2026-08-22_adversarial-F01 -- load_FEN()
+# validated syntax and not semantics, so castling rights with no king or rook on
+# their squares, and en-passant squares with no victim, were accepted; the moves
+# they licensed xor pieces onto empty squares and corrupt the board silently in
+# Release. Perft (INV-1) cannot see it because every perft FEN is semantically
+# valid. The test file was written by the audit before the fix and observed red.
+# No dataset and no search -- it loads FENs and counts flags -- so it is a fast
+# test like the rest.
+add_doctest_target(test_audit_fen_semantics)
+
 # S073: the tunable search parameters. Compiled in both configurations and the
 # same file in both -- the release build and the tune build each hold their live
 # values against the one table that is outside every #ifdef, which is how two
