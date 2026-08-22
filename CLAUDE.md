@@ -25,7 +25,23 @@ already exists. That is a good way to learn and a poor way to arrive anywhere
 new. `achesso` is the answer to a different question: **what can AI-driven
 development actually build?**
 
-**The goal is the strongest open-source chess engine in the world.**
+**The end goal is the strongest CPU chess engine in the world, built by
+AI-driven development.** Stated in full (DEC-104):
+
+- **Open source under the MIT licence, and it stays MIT.** Nothing is
+  copy-pasted from another open-source project — not code, not tables, not
+  training data.
+- **The techniques are bleeding edge, never copied**: taken from the
+  literature and research, invented on the spot, or adapted — never
+  copy-pasted — from other open-source engines where their licence consents.
+- **Its own NNUE**, or whatever supersedes it, trained by this project on its
+  own data.
+- **Rigorous testing decides everything**: SPRT and the other modern methods,
+  with specialized tools taken where they exist and built ad hoc where they
+  do not — for training, fine-tuning and testing.
+
+"CPU engine" names the arena: it plays on CPUs, and a GPU may serve training,
+never play.
 
 This branch inherits exactly three things from `bitboard`: the bitboard engine
 as its foundation, the test framework and its tests, and the fastchess SPRT
@@ -58,7 +74,9 @@ engine's output.**
 
 Ideas, techniques and published articles are used freely — that is the entire
 plan. Source is not. Tables are not. NNUE training data derived from another
-engine's evaluation or search is not, ever.
+engine's evaluation or search is not, ever. Inspiration from another
+open-source engine is taken only where its licence consents, and it is
+adapted, never copy-pasted (DEC-104).
 
 This is the rule the branch exists to test. Copying is exactly what made the
 earlier work stop being interesting, and there is a licensing reason on top: the

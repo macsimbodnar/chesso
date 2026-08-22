@@ -5,10 +5,22 @@ disagrees with this file is a bug or an unrecorded decision.
 
 ## What is being built
 
-The strongest open-source chess engine in the world, built on the `achesso`
-branch — *agentic chesso* — to find out what AI-driven development can produce.
-It is founded on the owner's own bitboard engine, its test framework and its
-fastchess SPRT scripts, and on nothing else. DEC-013.
+**The end goal: the strongest CPU chess engine in the world, built by
+AI-driven development — open source under the MIT licence, and it stays MIT
+(DEC-104).** Nothing is copy-pasted from another open-source project. The
+techniques are bleeding edge: taken from the literature and research, invented
+on the spot, or adapted — never copy-pasted — from other open-source engines
+where their licence consents. The evaluation end-state is an own NNUE, or
+whatever supersedes it, trained by this project on its own data — parked while
+the 3000 mark is pursued without a network (DEC-054, DEC-071). Every change is
+decided by rigorous testing — SPRT and the other modern methods — with
+specialized tools taken where they exist and built ad hoc where they do not,
+for training, fine-tuning and testing. "CPU engine" names the arena: it plays
+on CPUs, and a GPU may serve training, never play.
+
+Built on the `achesso` branch — *agentic chesso* — to find out what AI-driven
+development can produce. It is founded on the owner's own bitboard engine, its
+test framework and its fastchess SPRT scripts, and on nothing else. DEC-013.
 
 Phase one is to reach the level the published literature describes, by reading
 documented technique and implementing it here. Phase two is to experiment.
@@ -285,7 +297,8 @@ The order stands.
   engine, no NNUE training data derived from another engine's evaluation or
   search. Ideas and published articles are used freely; that is the plan.
   Running another engine's binary as a tool creates no derivative work and is
-  encouraged. DEC-016.
+  encouraged. DEC-016. Inspiration from another open-source engine is taken
+  only where its licence consents, adapted and never copy-pasted. DEC-104.
 - **The agent does not run the NNUE network training.** It builds the trainer,
   prepares the data and states what the run should be; the owner executes that
   one run. Fits, measurements and evaluation tuning are the agent's to run.

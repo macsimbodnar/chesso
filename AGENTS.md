@@ -5,10 +5,13 @@ Claude Code entry point: `CLAUDE.md` containing `@AGENTS.md`.
 
 ## 0. Repository overrides — read before section 2
 
-This is the `achesso` branch — *agentic chesso*. The goal is the strongest
-open-source chess engine in the world, built to find out what AI-driven
-development can produce. `CLAUDE.md` is the full statement; DEC-013 is the
-decision.
+This is the `achesso` branch — *agentic chesso*. The end goal is the strongest
+CPU chess engine in the world — MIT-licensed and staying MIT, nothing
+copy-pasted from another open-source project, its own NNUE or whatever
+supersedes it, every change proved by SPRT and modern testing with specialized
+tools taken or built ad hoc — built to find out what AI-driven development can
+produce. `CLAUDE.md` is the full statement; DEC-013 and DEC-104 are the
+decisions.
 
 The rules below are house rules. They win over the stock ruleset wherever the
 two disagree. **A moltke upgrade that rewrites this file must re-apply them**,
@@ -18,8 +21,10 @@ which is why they are stated here and not only in `decisions.md`.
   another engine, no NNUE training data derived from another engine's evaluation
   or search. Ideas, techniques and published articles are used freely — reading
   the documented state of the art and implementing it here is the plan (DEC-014).
-  Copying it is not. Running another engine's *binary* as a tool creates no
-  derivative work and is encouraged. DEC-016.
+  Copying it is not; inspiration from another open-source engine is taken only
+  where its licence consents, adapted, never copy-pasted (DEC-104). Running
+  another engine's *binary* as a tool creates no derivative work and is
+  encouraged. DEC-016.
 - **The agent runs tests, measurements and evaluation tuning itself** (DEC-041),
   without asking, and schedules anything lasting several hours for the night if
   there is better work to do meanwhile. **NNUE training is still the owner's**:

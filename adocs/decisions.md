@@ -5772,3 +5772,46 @@ Consequences: Quiet history is built fresh for every `go`, like the killers, the
               S093 accepts clause requiring a clear on `ucinewgame` and on a
               non-descendant position is discharged by this verdict: with no
               carried history there is nothing to clear.
+
+## DEC-104  2026-08-22  The end goal, stated in full and in one place
+Tags:         project, identity, scope, licensing
+Context:      The goal had been written as "the strongest open-source chess
+              engine in the world" since DEC-013, and its full content --
+              the licence, the provenance rule, the evaluation end-state and
+              the measurement discipline -- lived scattered across CLAUDE.md,
+              specs.md, plan.md and four decisions. On 2026-08-22 the owner
+              restated it in full and asked that it be documented clearly,
+              with the history and the reasons left unchanged.
+Decision:     By the owner. The end goal is: the strongest CPU chess engine in
+              the world, built by AI-driven development, open source under the
+              MIT licence -- and it stays MIT. Nothing is copy-pasted from
+              another open-source project. The techniques are bleeding edge:
+              taken from the literature and research, invented on the spot, or
+              adapted -- never copy-pasted -- from other open-source engines
+              where their licence consents. The evaluation end-state is an own
+              NNUE, or whatever supersedes it, trained by this project on its
+              own data. Every change is decided by rigorous testing -- SPRT
+              and the other modern methods -- with specialized tools taken
+              where they exist and built ad hoc where they do not, for
+              training, fine-tuning and testing.
+
+              This sharpens the goal sentence -- "open-source" becomes "CPU",
+              the licence is named -- and changes no history and no reason.
+              Nothing is voided: DEC-013 (identity), DEC-014 (literature
+              first, experiment second), DEC-016 (nothing copied), DEC-015 as
+              amended by DEC-041 (the NNUE training run is the owner's), and
+              DEC-054 with DEC-071 (the 3000 mark is pursued without a
+              network) all stand.
+Rejected:     Leaving the goal implicit across three documents -- the wordings
+              had already drifted, and none carried the licence or the testing
+              discipline as part of the goal.
+              Reading "CPU" as a new constraint on the plan -- it is not: the
+              target scale was already the CCRL 1CPU entry (DEC-089) and no
+              GPU has ever been a runtime dependency. It names the arena the
+              claim is made in.
+Consequences: CLAUDE.md, adocs/specs.md and adocs/plan.md state the same goal
+              and cite this entry. One operative nuance is now written down:
+              inspiration from another open-source engine is taken only where
+              its licence consents, and it is adapted, never copy-pasted --
+              while copying stays banned in every form and another engine's
+              constants are not even seeds (DEC-016, DEC-084 untouched).

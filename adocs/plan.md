@@ -1,8 +1,9 @@
 # Plan
 
-The strongest open-source chess engine in the world, in C++20, bitboard based,
-built on the `achesso` branch to find out what AI-driven development can produce
-(DEC-013). See `specs.md` for what it must do and what it is today.
+The strongest CPU chess engine in the world — MIT-licensed, nothing
+copy-pasted, every change proved by SPRT — in C++20, bitboard based, built on
+the `achesso` branch to find out what AI-driven development can produce
+(DEC-013, DEC-104). See `specs.md` for what it must do and what it is today.
 
 **This whole list is phase one:** reach the level the published literature
 already describes, by reading documented technique and implementing it here —
