@@ -846,6 +846,60 @@ decides: it reports no mate on 1 of the 48 and a longer mate on another, both
 re-proved by enumeration, because a frozen defending army is a position class
 its network scores badly wrong.
 
+### Stress the stale-timer disarm
+
+`stop_search_after_ms()` arms a detached thread that raises the global stop flag
+when its sleep ends, unless the search session has moved on. A move normally
+ends at its soft limit, so the hard timer is still sleeping when the next `go`
+arrives: stale timers are one per move of every game, not an edge case. If the
+timer's session check and its store are not one decision, a timer preempted
+between them kills a search it was never armed for.
+
+```bash
+taskset -c 0 tools/timer_race_stress.py ./build/src/chesso --seconds 900
+```
+
+Each iteration sends `position fen`, then `go movetime 1` — which arms a timer
+and abandons it within a millisecond — then `go depth 6`, which carries no timer
+of its own and must reach depth 6. A `go depth` search that reports less was
+stopped by the previous iteration's timer, and the two commands land about a
+millisecond apart, which is where that timer expires. `taskset -c 0` is the
+point: affinity is inherited by the engine, so the timer thread and the UCI
+thread share one core. 571 to 589 iterations a second measured over two
+15-minute runs. Last line is `TIMER-RACE-CLEAN`, `TIMER-RACE-HIT` or
+`TIMER-RACE-FAILED`, exit 0, 1 or 2. All three are terminal, so a watcher armed
+on the alternation exits on a dead engine instead of waiting out its ceiling
+(§12).
+
+**The unwidened race did not fire in 513787 iterations of it against the
+pre-fix build, and that is S163's recorded outcome rather than a claim about the
+harness** — 15 minutes on one pinned core, 0 hits, against 530104 iterations and
+0 hits on the fixed build in the same 15 minutes. At 500 µs the hit rate was
+0.37 % of iterations and the real window is roughly four orders of magnitude
+narrower, so 0 over half a million iterations is the expected reading on both
+builds and separates nothing.
+
+What the harness does catch is the window made observable: a scratch 500 µs
+`sleep_for` between the session check and the store — widening a window that already existed, not inventing one
+— produced **46 hits in 12328 iterations** before the fix and **0 in 23651**
+after it, same harness, same widening. That pair is the evidence the fix rests
+on; the harness is kept as the net for the narrow case. The widening is four
+lines in `stop_search_after_ms()`, at the same source position on both builds,
+and it is not committed:
+
+```cpp
+    if (session_id == session) {
+      std::this_thread::sleep_for(std::chrono::microseconds(500));
+      stop_search_signal = true;
+    }
+```
+
+The widened hits report depth 5 and depth 4 rather than depth 1, because a store
+500 µs late lands inside the following search instead of before its first poll.
+In production the store lands at the session bump, which is where the audit's
+depth-1 instant reply comes from. The widening moves *when* the store lands, not
+whether.
+
 ## Format
 
 ```bash

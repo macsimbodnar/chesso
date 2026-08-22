@@ -378,7 +378,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-21. S130  quiescence takes the table score as its stand-pat where the stored bound allows it, instead of the static evaluation alone
 22. S160  a bare fastchess.sh run measures against HEAD, printed loudly, instead of silently against the 2026-08-08 baseline
 23. S161  load_FEN clears castling rights and en-passant squares the position on the board cannot support, so accepted input can no longer corrupt the board
 24. S162  the 100-halfmove draw is not returned when the side to move is checkmated, matching the laws of the game

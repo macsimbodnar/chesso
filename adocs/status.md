@@ -6,9 +6,11 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-23 by `moltke --step status`.
 
 - Last done: S145
-- In progress: none
+- In progress: S163 a hard-limit timer armed for a previous search can never stop the search that follows it
 - Next: S163
 - Blocked: none
+- Watching:
+  - watching: TIMER-RACE-(CLEAN|HIT) in /tmp/claude-1000/-home-max-ws-chesso/27e05264-079d-4e04-a479-d4f9ec4b0a3d/scratchpad/stress_fixed_unwidened.log, ceiling 30m, armed 2026-08-23T00:31:13+02:00 (.git/moltke_watch/1787437873_2967313.json)
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships

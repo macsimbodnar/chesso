@@ -34,6 +34,17 @@ static book_t opening_book;
 
 static std::atomic_bool stop_search_signal = false;
 static std::atomic_int session_id = 0;
+
+// stop_search_signal and session_id are one piece of state and are read and
+// written as one under this. Atomics on each separately are not enough: a
+// hard-limit timer that loads session_id, is preempted, and stores the stop
+// flag after the next [go] has bumped the session and cleared the flag kills a
+// search it was never armed for, and that search dies at its first poll -
+// depth 1, an instant reply for no reason. Stale timers are the normal case,
+// not the exceptional one: a move ends at its soft limit, so its hard timer is
+// still sleeping when the next [go] arrives, every move of every game. Held for
+// a compare and a store, never across a join or a search. S163.
+static std::mutex session_mutex;
 static transposition_table_t tt = {};
 
 static std::thread search_thread;
@@ -104,6 +115,19 @@ void stop_and_join_search()
   stop_search_signal = true;
 
   if (search_thread.joinable()) { search_thread.join(); }
+}
+
+
+// Opens a new search session: a fresh id and a cleared stop flag, published as
+// one. Every timer armed for an earlier search is disarmed by the id, and the
+// two stores are under session_mutex so a timer's check cannot straddle them.
+// Call after stop_and_join_search(), before arming a timer of your own. S163.
+void begin_search_session()
+{
+  const std::lock_guard<std::mutex> lock(session_mutex);
+
+  session_id++;
+  stop_search_signal = false;
 }
 
 
@@ -415,6 +439,9 @@ void stop_search_after_ms(uint64_t ms)
   std::thread job([ms, session = session_id.load()]() {
     std::chrono::milliseconds time_to_sleep(ms);
     std::this_thread::sleep_for(time_to_sleep);
+
+    // Check and store as one decision, so no [go] can slip between them.
+    const std::lock_guard<std::mutex> lock(session_mutex);
 
     if (session_id == session) { stop_search_signal = true; }
   });
@@ -1324,9 +1351,7 @@ bool command_go(std::queue<std::string>& args)
   }
 
   stop_and_join_search();
-
-  session_id++;
-  stop_search_signal = false;
+  begin_search_session();
 
   // Book is searched only if the command make sense
   if (!search_options.infinite && search_options.nodes == 0) {
@@ -1542,7 +1567,7 @@ bool command_test(std::queue<std::string>& args)
   total_timer.stop();
 
   stop_and_join_search();
-  stop_search_signal = false;
+  begin_search_session();
 
   for (auto const& entry : entries) {
     uci_reply("");
