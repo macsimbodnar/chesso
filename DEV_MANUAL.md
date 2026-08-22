@@ -598,14 +598,19 @@ argument will not fail it — DEC-028 says why.
 script any test touches. It plays no games: `fastchess` is a stub on `PATH`, the
 candidate and reference are one-line shell scripts, and the whole run happens
 inside a throwaway git repository, so `.ref-builds/` and `build/` are never
-read. It asserts four things — the script reaches the `fastchess` invocation; a
-script that aborts before that point exits non-zero; with `REF` unset the
-banner names `HEAD` and both commit dates; and with `REF` unset on a clean tree
-the run is refused instead of played. The first two exist because `44877c4`
-left a renamed variable behind and the harness stopped running for a commit
-without anything noticing (S035, `2026-08-13_adversarial-F01`); the last two
-keep the default reference from silently freezing to a sha again (S160,
-`2026-08-22_adversarial-F02`).
+read. It asserts eight things: the script reaches the `fastchess` invocation; a
+script that aborts before that point exits non-zero; with `REF` unset the banner
+names `HEAD`; each side's date comes from its own commit; a clean-tree A/A is
+refused however the ref is spelled, and leaves no output directory behind;
+`AA=1` reaches the match and says so; and a run outside a git checkout still
+prints a terminal marker. The first two exist because `44877c4` left a renamed
+variable behind and the harness stopped running for a commit without anything
+noticing (S035, `2026-08-13_adversarial-F01`). The rest keep the default
+reference from silently freezing to a sha again (S160,
+`2026-08-22_adversarial-F02`) and pin the four defects S160's own first attempt
+shipped, each reproduced before it was fixed — the date case is mutation-checked
+rather than merely green, because every case before it ran with the reference at
+`HEAD`, where printing `HEAD`'s date on the reference line is invisible.
 
 `test_tuner_gradient` is the fit's own guard and covers two things nothing in
 `tests/` could reach before S100: that the columns `load()` packs are the columns
@@ -1029,6 +1034,7 @@ measurement.
 ./fastchess.sh --nonreg         # vs HEAD, non-regression, elo0=-5 elo1=0
 REF=HEAD~1 ./fastchess.sh       # measure against some other commit instead
 OUT=<dir> ./fastchess.sh        # where the pgn and log land
+AA=1 ./fastchess.sh             # A/A: identical builds, calibrates the harness
 ```
 
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
@@ -1057,14 +1063,17 @@ H1 in minutes whatever the change under test was, which is DEC-020 armed in the
 default of the per-change instrument: S160, closing
 `2026-08-22_adversarial-F02`. Two consequences worth knowing:
 
-- With `REF` unset **and nothing uncommitted** both sides are the same build,
-  and the run is refused rather than played. An SPRT between identical engines
-  does not return zero; it random-walks until a bound is crossed by luck, which
-  at `--fast` alpha 0.10 is one run in ten reporting a gain that does not
-  exist.
-- Passing `REF=HEAD` by hand runs that match anyway. That is the A/A
-  calibration of the harness, and asking for it explicitly is how it is told
-  apart from a bare run with nothing in it.
+- **Whenever the reference resolves to `HEAD` and nothing is uncommitted** both
+  sides are the same build, and the run is refused rather than played. An SPRT
+  between identical engines does not return zero; it random-walks until a bound
+  is crossed by luck, which at `--fast` alpha 0.10 is one run in ten reporting a
+  gain that does not exist. The test is on that state, not on whether `REF` was
+  passed: `REF=$(git rev-parse HEAD)`, `REF=master` and a saved runner script
+  that pins the sha it was written at all reach it.
+- `AA=1` is how that match is asked for on purpose, and the run prints
+  `A/A CALIBRATION` before the banner. It measures the harness — pairing,
+  adjudication, forfeit rate, the variance floor concurrency leaves — and never
+  the engine.
 
 **Fetch the book first, once per machine.** `fastchess.sh` plays an unbalanced
 book that is 175 MB and therefore not committed:
@@ -1259,7 +1268,9 @@ the log by hand any more. Without the primitive, poll — never follow:
 
 ```bash
 log=.tuning/sprt_<what>.log
+pid=<the detached run's pid>
 seen=0
+end=$(($(date +%s) + 8 * 3600))
 while true; do
   tot=$(wc -l < "$log")
   if [ "$tot" -gt "$seen" ]; then
@@ -1268,9 +1279,18 @@ while true; do
     seen=$tot
   fi
   grep -qE "^SPRT-RUN-(DONE|FAILED)" "$log" && break
+  kill -0 "$pid" 2> /dev/null || { echo "watch: run $pid is gone"; break; }
+  [ "$(date +%s)" -ge "$end" ] && { echo "watch: 8h ceiling"; break; }
   sleep 30
 done
 ```
+
+**The last two conditions are not optional and this loop went without them.**
+AGENTS.md par.12 requires four exits, and a marker-only loop has one: a run
+killed by the OOM killer or by `kill -9` writes no marker, and the watcher then
+polls a finished log forever. The pid check is placed *after* the marker grep so
+a run that wrote `SPRT-RUN-DONE` and exited between two polls is read as done
+rather than as vanished.
 
 Breaking out of a loop fed by `tail -f` leaves the `tail` behind for the same
 reason `-m 1` does not work. This loop leaves nothing.

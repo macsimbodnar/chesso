@@ -9,6 +9,8 @@ set -euo pipefail
 #   ./fastchess.sh --nonreg         vs HEAD, non-regression, elo0=-5 elo1=0
 #   REF=HEAD~1 ./fastchess.sh       measure against some other commit instead
 #   OUT=<dir> ./fastchess.sh        where the pgn and log land
+#   AA=1 ./fastchess.sh             play an identical build against itself on
+#                                   purpose, to calibrate the harness
 #
 # WHICH BOUNDS, AND WHY THE PAIR IS NOT A DETAIL. The hypothesis pair sets the
 # cost of a verdict as much as the hardware does. S068 measured one constant
@@ -40,6 +42,48 @@ set -euo pipefail
 # change leaves the node count identical, this is the only tool that will see
 # it; if it changes the tree, expect the result to mix the two effects.
 
+# A MARKER ON EVERY EXIT PATH, SUCCESS AND FAILURE BOTH, because a detached run
+# is watched by something that has to be able to stop (AGENTS.md 12, DEC-061).
+# `marked` keeps the trap from printing a second one after fail() has spoken.
+#
+# Armed here, before the first git call, and not after the candidate snapshot
+# where it used to sit. S160 put `git rev-parse --short HEAD` above the old
+# trap, so a run launched outside a git checkout died `fatal: not a git
+# repository` with no marker at all -- and the fallback watcher DEV_MANUAL.md
+# teaches breaks only on SPRT-RUN-(DONE|FAILED), so it would have spun until
+# its ceiling. The snapshot is guarded by `-n` rather than removed
+# unconditionally: `rm -f ""` is itself an error on GNU coreutils, which would
+# make the trap fail on every path that exits before the snapshot exists.
+marked=0
+fail()
+{
+  marked=1
+  echo "SPRT-RUN-FAILED: $*" >&2
+  exit 1
+}
+
+trap 'status=$?
+      [[ -n "${snapshot:-}" ]] && rm -f "$snapshot"
+      if ((status != 0 && marked == 0)); then
+        echo "SPRT-RUN-FAILED: exited $status" >&2
+      fi
+      exit $status' EXIT
+
+# EVERY GIT CALL IS ANCHORED TO THE SCRIPT, NOT TO THE CALLER'S DIRECTORY. They
+# read cwd by default, so an absolute-path launch from inside another checkout
+# stamped the banner with *that* repository's sha and date, resolved the
+# reference against it and built a worktree from it -- while playing chesso's
+# binary. The paths derived from $0 were already immune; the git calls were not.
+#
+# Done with a wrapper rather than by adding -C at each site, so a git call added
+# later inherits the anchor instead of reintroducing the bug. Every `git ...`
+# below is this function; `command git` is the real one.
+repo="$(cd -- "$(dirname -- "$0")" && pwd)"
+git()
+{
+  command git -C "$repo" "$@"
+}
+
 # THE DEFAULT REFERENCE IS HEAD, AND THE BANNER PRINTS IT. It used to be the
 # fixed sha 7b4d9a4 -- the 2026-08-08 pre-achesso baseline, set that day and
 # never moved -- which by the time it was found was several hundred Elo stale
@@ -50,14 +94,7 @@ set -euo pipefail
 # invocation meaningful -- it measures the uncommitted diff against the commit
 # the tree sits on, which is the working-tree-versus-reference contract this
 # header already describes. S160, 2026-08-22_adversarial-F02.
-#
-# ref_given separates "the caller chose HEAD" from "the default fired", which
-# is the difference between an A/A calibration and a run with nothing in it;
-# the guard below is where that matters. `:+` rather than `+` so an empty REF
-# reads as unset, matching the `:-` that defaults it.
-ref_given="${REF:+given}"
 REF="${REF:-HEAD}"
-head_sha="$(git rev-parse --short HEAD)"
 
 # THE BOOK IS UNBALANCED, AND THAT IS THE POINT. Between two builds of the
 # same engine a balanced book draws about 91 % (Pohl's measurement over the
@@ -67,9 +104,9 @@ head_sha="$(git rev-parse --short HEAD)"
 # buy is measurement capacity, not strength, and nothing about the engine is
 # being flattered. It is 175 MB, gitignored, and fetched by books/fetch_book.sh
 # against a pinned digest. DEC-083, S105.
-book="$(dirname "$0")/books/UHO_Lichess_4852_v1.epd"
+book="$repo/books/UHO_Lichess_4852_v1.epd"
 book_format="epd"
-candidate="$(dirname "$0")/build/src/chesso"
+candidate="$repo/build/src/chesso"
 
 # 8+0.08, the control the engines this plan reads figures from test at, and
 # about 29 s a game against the 52 s of the 10+0.2 that ran until S105 -- the
@@ -122,17 +159,6 @@ adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score
 # length and end in checkmate."
 mate_pv_check="-check-mate-pvs"
 
-# A marker on every exit path, success and failure both, because a detached run
-# is watched by something that has to be able to stop (AGENTS.md 12, DEC-061).
-# `marked` keeps the trap from printing a second one after fail() has spoken.
-marked=0
-fail()
-{
-  marked=1
-  echo "SPRT-RUN-FAILED: $*" >&2
-  exit 1
-}
-
 case "${1:-}" in
   --fast)
     # few hundred games
@@ -156,6 +182,38 @@ case "${1:-}" in
     fail "unknown argument '$1'; expected --fast, --nonreg or nothing"
     ;;
 esac
+
+head_sha="$(git rev-parse --short HEAD)"
+ref_sha="$(git rev-parse --short "$REF")"
+
+# IS THE TREE DIRTY, ASKED ONCE. `git diff --quiet HEAD` and not a bare
+# `git diff --quiet`: the bare form compares the tree against the index, so a
+# fully staged diff read as clean -- while the binary being played was built
+# from that tree. Exit 1 is "dirty" and anything above it is git failing, which
+# must not read as clean: a fail-open here silently disarms the guard below.
+diff_status=0
+git diff --quiet HEAD || diff_status=$?
+((diff_status <= 1)) \
+  || fail "git diff --quiet HEAD exited $diff_status, so whether the tree is clean is unknown"
+
+# CANDIDATE AND REFERENCE AT THE SAME COMMIT, NOTHING UNCOMMITTED, ARE THE SAME
+# ENGINE. An SPRT between identical engines does not return zero: it
+# random-walks until a bound is crossed by luck, and at --fast alpha 0.10 that
+# is one run in ten reporting a gain that does not exist.
+#
+# The test is on state, not on who chose the reference. S160 asked whether REF
+# was passed, which let REF=<HEAD's own sha>, REF=master and REF=$(git rev-parse
+# HEAD) -- the form saved runner scripts use -- play the full A/A anyway, and
+# the refusal message said "pass REF=<sha>", walking the reader straight into
+# it. AA=1 is the opt-in instead, because an A/A calibration of the harness is a
+# thing somebody asks for by name, not something a ref spelling falls into.
+if [[ "$ref_sha" == "$head_sha" ]] && ((diff_status == 0)); then
+  [[ -n "${AA:-}" ]] \
+    || fail "reference $ref_sha is HEAD and the tree is clean, so both sides are the same build and there is nothing to measure; change something, or set AA=1 to calibrate the harness against itself on purpose"
+  echo "A/A CALIBRATION: both sides are $ref_sha with a clean tree, so this run"
+  echo "                 measures the harness and not the engine. AA is set."
+  echo
+fi
 
 # One directory per run, stamped, as rating.sh:72-77 already does. The old
 # fixed /tmp/fastchess_<tag>.pgn was appended to by every run that shared a
@@ -193,31 +251,14 @@ snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-candidate.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
 
-# The trap saves and restores the status it was entered with. Left to itself it
-# ends in a successful `rm -f`, and a shell that takes the trap's status as the
-# script's then reports an abort as a clean exit -- which is how a broken
-# harness went a commit unnoticed (2026-08-13_adversarial-F01).
-trap 'status=$?; rm -f "$snapshot"
-      if ((status != 0 && marked == 0)); then
-        echo "SPRT-RUN-FAILED: exited $status" >&2
-      fi
-      exit $status' EXIT
+# The trap that removes this is armed at the top of the script, before the first
+# git call, and it saves and restores the status it was entered with: left to
+# itself it would end in a successful `rm -f` and report an abort as a clean
+# exit, which is how a broken harness went a commit unnoticed
+# (2026-08-13_adversarial-F01).
 candidate="$snapshot"
 
 # Build the reference from the ref, in its own worktree, once per ref.
-ref_sha="$(git rev-parse --short "$REF")"
-
-# CANDIDATE AND REFERENCE AT THE SAME COMMIT, NOTHING UNCOMMITTED, ARE THE SAME
-# ENGINE. An SPRT between identical engines does not return zero: it
-# random-walks until a bound is crossed by luck, and at --fast alpha 0.10 that
-# is one run in ten reporting a gain that does not exist. So the case the HEAD
-# default newly makes reachable -- a bare run on a clean tree -- is refused
-# before a game is played. Passing REF=HEAD by hand is a caller asking for that
-# match on purpose, which is what an A/A calibration of the harness is, and it
-# proceeds. S160.
-if [[ -z "$ref_given" ]] && [[ "$ref_sha" == "$head_sha" ]] && git diff --quiet HEAD; then
-  fail "reference $ref_sha is HEAD and the tree is clean, so both sides are the same build and there is nothing to measure; change something, or pass REF=<sha>"
-fi
 ref_dir="$(git rev-parse --show-toplevel)/.ref-builds/$ref_sha"
 reference="$ref_dir/build/src/chesso"
 
@@ -245,15 +286,18 @@ fi
 # apart the two sides are, and the old fixed default was two weeks and several
 # hundred Elo behind without one line of this banner saying so. S160.
 #
-# `git diff --quiet HEAD` and not a bare `git diff --quiet`: the bare form
-# compares the tree against the index, so a fully staged diff read as clean --
-# while the binary being played was built from that tree.
+# The dirty flag is the one computed above, not a second `git diff`: two calls
+# can disagree if the tree changes mid-run, and the one the guard judged is the
+# one the banner has to report.
 commit_date()
 {
   git show -s --date=short --format=%cd "$1"
 }
 
-echo "candidate  $head_sha  $(commit_date HEAD)$(git diff --quiet HEAD || echo '  + uncommitted changes')"
+dirty=""
+((diff_status == 0)) || dirty="  + uncommitted changes"
+
+echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
 echo "reference  $ref_sha  $(commit_date "$ref_sha")"
 echo "tc $tc  hash 16  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
