@@ -6030,3 +6030,42 @@ Consequences: plan.md's DEC-084 paragraph, CLAUDE.md's first foundation,
               provenance and originality statement in MANUAL.md was proposed
               and is not yet written; it needs the owner's voice and blocks
               nothing.
+
+## DEC-106  2026-08-22  No rule demands a subagent; the Tier-1 review keeps the habit and drops the mechanism
+Tags:         workflow, review, tooling
+Amends:       AGENTS.md section 9's Tier-1 wording; section 10's permission is
+              untouched
+Context:      AGENTS.md section 9 required the Tier-1 fast check after every
+              `--step done` to run as "one small subagent over that step's
+              diff", while section 10 separately granted that subagents may be
+              spawned freely. The obligation is what broke: a harness can gate
+              the Agent tool -- this session's configuration forbade calling it
+              unless the user asked -- and a ruleset that *requires* a spawn
+              then leaves the agent choosing which instruction to violate. S160
+              hit it exactly: the step completed green and its Tier-1 review was
+              skipped and reported as skipped, because the two rules could not
+              both be obeyed. The check itself was never the problem; naming its
+              mechanism was.
+Decision:     By the owner, 2026-08-22, on being shown the collision: "i want to
+              allow subagents when you need them". Section 9's Tier-1 check
+              stays a habit after every `--step done` and no longer names a
+              mechanism -- a subagent where one earns its keep, inline over the
+              diff where it does not. Section 10's permission is the operative
+              half and is unchanged: spawn one freely whenever it is useful. The
+              rule removed is the obligation, not the practice and not the
+              permission. Restated as a section 0 house rule so a moltke
+              upgrade that rewrites AGENTS.md has to re-apply it.
+Rejected:     Removing Tier 1 altogether -- the fast check is cheap and it has
+              already caught a stale specs claim one commit after S130.
+              Banning subagents in this repository -- it would take
+              `/moltke:audit`'s adversarial_reviewer with it, and the audits are
+              where the found bugs come from: the 2026-08-22 report is the batch
+              S160 to S165 is working through.
+              Leaving the mandate and relaxing the harness instead -- the
+              ruleset should not depend on one machine's tool gating, and
+              section 0 exists precisely so repository rules survive it.
+Consequences: AGENTS.md section 0 carries the house rule and section 9's Tier-1
+              paragraph no longer says "subagent". A Tier-1 review is still
+              owed after every completion and its absence is still reported;
+              only the choice of instrument moved. S160's own skipped review is
+              still owed and is taken under this rule.

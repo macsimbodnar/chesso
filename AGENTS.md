@@ -48,6 +48,14 @@ which is why they are stated here and not only in `decisions.md`.
   noted, not scheduled, not carried into the next change. A known defect in the
   tree contaminates every measurement taken after it. This narrows section 3's
   "correctness jumps the queue" to: it jumps the queue *now*.
+- **No rule demands a subagent; subagents are allowed wherever they are
+  needed.** Section 9's Tier-1 fast check after every `--step done` stays a
+  habit, and how it runs is the agent's call — a subagent where one earns its
+  keep, inline over the diff where it does not. Section 10's permission is the
+  operative half and is unchanged: spawn one freely whenever it is useful, for
+  a review, an audit, or parallel exploration. What is gone is the obligation,
+  which made a mandated spawn collide with a harness that gates the tool.
+  Owner decision, DEC-106.
 - **`README.md` is written by hand by the repository owner. No agent writes in
   it, ever.** The developer-facing document section 2 and section 7 call
   `README.md` is `DEV_MANUAL.md` in this repository — same purpose, same rewrite
@@ -215,9 +223,10 @@ alongside the change, never after.
 
 ## 9. Review: fast check by habit, full audit by consent
 
-**Tier 1 — every chunk.** After each `--step done`, one small subagent over
-that step's diff: top real problems only, one screen, no writes, no report
-file. Trivial → fix now (§4); real → a step; nothing → one console line.
+**Tier 1 — every chunk.** After each `--step done`, a fast check over that
+step's diff: top real problems only, one screen, no writes, no report file.
+The mechanism is free — a subagent where one earns its keep, inline where it
+does not. Trivial → fix now (§4); real → a step; nothing → one console line.
 
 **Tier 2 — proposed.** On real risk (security-touching, public surface, long
 unaudited stretch) propose a full audit; the user accepts or postpones. A
