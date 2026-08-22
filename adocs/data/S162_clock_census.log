@@ -1,0 +1,17 @@
+games                       3356
+highest halfmove clock       100
+peak >= 80, branch runs      102  (3.0 %)
+checkmate at clock >= 100      0   <-- the only count an SPRT could see
+checkmate at clock 90-99       0
+
+  peak clock   0-  9 :   1313 games
+  peak clock  10- 19 :   1467 games
+  peak clock  20- 29 :    254 games
+  peak clock  30- 39 :     96 games
+  peak clock  40- 49 :     62 games
+  peak clock  50- 59 :     26 games
+  peak clock  60- 69 :     20 games
+  peak clock  70- 79 :     16 games
+  peak clock  80- 89 :     16 games
+  peak clock  90- 99 :     31 games
+  peak clock 100-109 :     55 games

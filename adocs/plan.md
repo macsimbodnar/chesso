@@ -221,8 +221,10 @@ violation found; S162 scores checkmate ahead of the 100-halfmove draw; S163
 removes the stale-timer race that can kill a fresh search at depth 1; S164
 pins S130's substitution on the lazy-bound path its tests do not reach; and
 S165 settles the null-move mate-band asymmetry, sweep first, guard or
-decision second. Only S162 and S165 owe a match at all, one `--nonreg`
-verdict each at most. The seventh finding, the verbatim Polyglot constant
+decision second. **S165 alone owes a match**, one `--nonreg` verdict: S162's insurance run was
+killed at 3304 games on a census of its own PGN -- 0 positions checkmate at a
+halfmove clock of 100 or more over 3356 games, so the only count it could have
+measured was zero -- and DEC-107 records the rule that came out of it. The seventh finding, the verbatim Polyglot constant
 table, folds into S146, whose own excludes had left it out of scope.
 
 **S166 was found by running the batch, not by the audit.** S162's accepts
@@ -376,7 +378,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-20. S093  history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
 21. S130  quiescence takes the table score as its stand-pat where the stored bound allows it, instead of the static evaluation alone
 22. S160  a bare fastchess.sh run measures against HEAD, printed loudly, instead of silently against the 2026-08-08 baseline
 23. S161  load_FEN clears castling rights and en-passant squares the position on the board cannot support, so accepted input can no longer corrupt the board

@@ -6069,3 +6069,67 @@ Consequences: AGENTS.md section 0 carries the house rule and section 9's Tier-1
               owed after every completion and its absence is still reported;
               only the choice of instrument moved. S160's own skipped review is
               still owed and is taken under this rule.
+
+
+## DEC-107  2026-08-23  S162's insurance SPRT is abandoned on a census: the changed path never fired in 3314 games
+Tags:         testing, measurement, sprt, workflow
+Amends:       S162's `accepts:`, which required one `--nonreg` verdict as
+              insurance
+Context:      S162 makes checkmate outrank the 100-halfmove draw. Its accepts
+              asked for one `--nonreg` verdict as insurance "since the change
+              does alter play in its class", with a null pre-declared as an
+              expected and acceptable outcome. The owner questioned the run
+              while it was in flight: no search rule and no evaluation term
+              moved, so what could it measure? The answer was taken from the
+              games the run had already played rather than from the argument.
+              **The clock zone is reached in real play, which is the half that
+              refutes the cheap dismissal**: over 3285 completed games at
+              8+0.08, 102 peaked at a halfmove clock of 80 or more -- the depth
+              this engine reaches means a root at 80 can see clock 100 inside
+              its tree -- and 55 reached clock 100 on the board itself. So the
+              new `is_check()` and move generation do execute in about 3 % of
+              games and the branch is not dead code. **The changed behaviour
+              still never fired**: of 3314 games, the positions that were
+              checkmate at a clock of 100 or more numbered **0**, and at 90 or
+              more also 0. The run agreed: 3304 games, `LLR 0.09`, 2.9 % of the
+              way to a bound, `Elo -1.37 +/- 8.67` -- a true zero on
+              `elo0=-5 elo1=0` sits on the H1 boundary and drifts, so the
+              likely ending was the 20000-round limit with no verdict after
+              another four hours of the plan's binding constraint.
+Decision:     Owner's, on the evidence above. The run is killed and no SPRT is
+              owed for S162. What replaces the verdict is stronger than the
+              verdict would have been and it is what the step stamp records:
+              the census (0 firings in 3314 games, 102 games entering the
+              zone), the unit case that pins the boundary node directly at
+              depth 1 on two tool-verified positions, INV-6-identical node
+              counts and best moves, and the 1700560-position enumeration
+              showing the insufficient-material test below cannot intercept a
+              mated node. **The general rule this sets: an insurance run whose
+              only reachable outcome is the outcome already pre-declared is not
+              a measurement, and a census over the games that would carry the
+              effect decides it in ninety seconds instead of four hours.** It
+              applies to a correctness fix on a rare boundary, not to a change
+              that alters the tree everywhere -- INV-6 is untouched and a
+              play-altering change is still decided by SPRT.
+Rejected:     Letting it finish -- at 2.9 % of a bound after 3304 games the
+              expected cost was hours for the pre-declared null.
+              Calling the change behaviour-neutral and discharging INV-6 on
+              node counts alone -- it is not: the census shows the branch
+              executing in about 3 % of games, and identical bench counts only
+              say no bench FEN approaches the boundary.
+              Restarting at wider bounds or a longer control -- a wider band
+              cannot resolve an effect the census measured at zero firings, and
+              the deeper the control the rarer the shuffle that reaches the
+              clock.
+              Constructing a book of high-clock positions to force the path --
+              that measures a distribution the engine does not play, so the
+              Elo it returns would not transfer (DEC-019's failure mode from
+              the other direction).
+Consequences: S162 completes with a census in place of a verdict, and
+              `adocs/specs.md` says so rather than pointing at a run. plan.md's
+              "Only S162 and S165 owe a match at all" becomes S165 alone.
+              S165's own `--nonreg` stands: its guard changes what null move
+              pruning does at every defender node inside a mate proof, which is
+              not a boundary the census can bound. The census script is one
+              python pass over a run's PGN and is worth reaching for again
+              before booking a night on a rare-path fix.
