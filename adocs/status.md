@@ -6,9 +6,11 @@ this file: on disagreement, `plan_current/` wins.
 Updated: 2026-08-22 by `moltke --step status`.
 
 - Last done: S145
-- In progress: none
+- In progress: S162 the 100-halfmove draw is not returned when the side to move is checkmated, matching the laws of the game
 - Next: S162
 - Blocked: none
+- Watching:
+  - watching: SPRT-RUN-(DONE|FAILED) in /home/max/ws/chesso/.tuning/sprt_S162.log, ceiling 9h, armed 2026-08-22T22:46:16+02:00 (.git/moltke_watch/1787431576_1475313.json)
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships
