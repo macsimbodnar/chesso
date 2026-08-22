@@ -250,8 +250,8 @@ build, machine idle.
 
 ### 2026-08-22_adversarial-F05  low  a stale hard-limit timer can kill the next search: the session check and the stop store are not atomic together
 
-Status: open
-Verification: statically confirmed (race window); reproduction needs-run.
+Status: planned — S163
+Verification: statically confirmed (race window); reproduction run — the unwidened race did not fire in 513787 iterations, the window widened 500 us fired 46 times in 12328. Closes on an audit re-run.
 
 **Evidence.** `src/chesso.cpp:413-424`:
 
