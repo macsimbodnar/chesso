@@ -4898,6 +4898,9 @@ Consequences: Verdicts taken after this entry are not comparable in absolute
 
 ## DEC-084  2026-08-19  Published numbers are seeds and are refit; another engine's source and tables are not even seeds
 Tags:         licensing, provenance, evaluation, tuning
+Amended:      2026-08-22 by DEC-105 -- the seed rule is provenance-based: a
+              number that originates as another engine's tuned output is not
+              "open literature", wherever it is republished.
 Context:      DEC-016 forbids copying source and tables. This plan reads the
               published record heavily -- Elo figures per technique, functional
               forms, margin formulas, table shapes -- and the owner drew the
@@ -5815,3 +5818,55 @@ Consequences: CLAUDE.md, adocs/specs.md and adocs/plan.md state the same goal
               its licence consents, and it is adapted, never copy-pasted --
               while copying stays banned in every form and another engine's
               constants are not even seeds (DEC-016, DEC-084 untouched).
+
+## DEC-105  2026-08-22  A seed's origin decides, not its venue: engine-tuned numbers are never seeds
+Tags:         provenance, licensing, tuning, identity
+Amends:       DEC-084, whose seed rule was stated by venue
+Context:      DEC-084 allows "a number from open literature -- papers, the
+              wiki, articles" to seed a fit, and forbids anything from another
+              engine's source or tables even as a starting point. Stated by
+              venue, that has a hole: the Chess Programming Wiki republishes
+              engine-tuned artifacts -- PeSTO's piece-square tables are
+              rofchade's tuned output and sit on the wiki's Piece-Square
+              Tables page -- so a venue rule launders exactly what the
+              provenance rule refuses. The owner raised the wider question on
+              2026-08-22: whether "not even as seeds" is the right rule at
+              all, given two goals -- never being accusable of AI-laundered
+              copying, and the engine being accepted as real work. The
+              community record answers it: Rybka was banned on semantic
+              equivalence of its evaluation, not on literal copying; Fat
+              Fritz 2 retrained its network and was condemned and recalled
+              anyway, because the artifact lineage and the originality claim
+              were false; TCEC acceptance runs on disclosure of code and
+              data provenance. The standard is stricter than copyright law,
+              and a seeded-then-refit vector converges near its seed by
+              construction, so "we refit it" is the defence that already
+              failed. The technical value of engine seeds here is near zero:
+              the fit is over chesso's own corpus, and S028 landed +188.74
+              from hand-written starting values.
+Decision:     By the owner. The seed rule is provenance-based. A number may
+              seed a fit or an SPSA run only if it originates in a
+              publication about the technique -- a paper, an article, the
+              wiki's own derivations and example formulas. A number that
+              originates as another engine's tuned output is never a seed,
+              wherever it is republished: a tuned table on the wiki is still
+              an engine's table. "Not even as seeds" is affirmed. One
+              relaxation stays on record without being policy: constants from
+              a permissively-licensed engine, taken with recorded
+              attribution, would be legally clean -- available only as a
+              per-case owner decision in the DEC-087 Fathom style, because it
+              trades away the originality claim the project exists to make.
+Rejected:     Keeping the venue wording -- it admits PeSTO-class laundering.
+              Permissive-licence constants as standing policy -- legally
+              sound, reputationally the exact "AI remixed other engines"
+              headline this project must never hand out.
+              Dropping "not even as seeds" -- the benefit is convergence
+              speed only; the cost is the provenance story that is the
+              project's strongest defence.
+Consequences: plan.md's DEC-084 paragraph, CLAUDE.md's first foundation,
+              AGENTS.md section 0 and specs.md's Non-goals all carry the
+              provenance form. DEC-084 itself carries an Amended pointer;
+              its "no constant ships unfitted" rule is untouched. A public
+              provenance and originality statement in MANUAL.md was proposed
+              and is not yet written; it needs the owner's voice and blocks
+              nothing.

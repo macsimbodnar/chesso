@@ -91,13 +91,15 @@ crawl at the bounds (DEC-063) where one verdict on +40 to +120 resolves in an
 hour — and a failing block is bisected. S090 and S026 stay retired into
 **S109**; one step still owes one test.
 
-**The literature is read for form, never for constants. DEC-084.** A number
-from an open paper, wiki page or article may seed a fit. Nothing from another
-engine's source or tables is used, not even as a seed. And **no constant ships
-unfitted** in either case — a seed is where our own tuner or SPSA begins, and a
-fit that lands on the published value is a confirmation and a good outcome.
-Every step below that takes a formula from the record ends in a fit for this
-reason.
+**The literature is read for form, never for constants. DEC-084, its seed rule
+made provenance-based by DEC-105.** A number may seed a fit only if it
+originates in a publication about the technique — a paper, an article, the
+wiki's own derivations. A number that originates as another engine's tuned
+output is never a seed, wherever it is republished: PeSTO's tables sit on the
+wiki and are still an engine's tables. And **no constant ships unfitted** in
+either case — a seed is where our own tuner or SPSA begins, and a fit that
+lands on the published value is a confirmation and a good outcome. Every step
+below that takes a formula from the record ends in a fit for this reason.
 
 **Two items were carried on a false premise. DEC-085, premise corrected by
 DEC-089.** The CCRL Blitz list rates 1CPU, 4CPU and 8CPU builds as separate

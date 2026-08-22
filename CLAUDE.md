@@ -76,7 +76,9 @@ Ideas, techniques and published articles are used freely — that is the entire
 plan. Source is not. Tables are not. NNUE training data derived from another
 engine's evaluation or search is not, ever. Inspiration from another
 open-source engine is taken only where its licence consents, and it is
-adapted, never copy-pasted (DEC-104).
+adapted, never copy-pasted (DEC-104). Another engine's constants are not even
+seeds for a fit, and republication does not change their origin: a tuned
+table on the wiki is still an engine's table (DEC-084 as amended by DEC-105).
 
 This is the rule the branch exists to test. Copying is exactly what made the
 earlier work stop being interesting, and there is a licensing reason on top: the

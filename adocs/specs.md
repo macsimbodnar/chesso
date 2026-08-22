@@ -299,6 +299,9 @@ The order stands.
   Running another engine's binary as a tool creates no derivative work and is
   encouraged. DEC-016. Inspiration from another open-source engine is taken
   only where its licence consents, adapted and never copy-pasted. DEC-104.
+  Another engine's constants are never seeds, and republication does not
+  change their origin — a tuned table on the wiki is still an engine's
+  table. DEC-084, DEC-105.
 - **The agent does not run the NNUE network training.** It builds the trainer,
   prepares the data and states what the run should be; the owner executes that
   one run. Fits, measurements and evaluation tuning are the agent's to run.

@@ -22,9 +22,10 @@ which is why they are stated here and not only in `decisions.md`.
   or search. Ideas, techniques and published articles are used freely — reading
   the documented state of the art and implementing it here is the plan (DEC-014).
   Copying it is not; inspiration from another open-source engine is taken only
-  where its licence consents, adapted, never copy-pasted (DEC-104). Running
-  another engine's *binary* as a tool creates no derivative work and is
-  encouraged. DEC-016.
+  where its licence consents, adapted, never copy-pasted (DEC-104). Another
+  engine's constants are never seeds, wherever they are republished (DEC-084
+  as amended by DEC-105). Running another engine's *binary* as a tool creates
+  no derivative work and is encouraged. DEC-016.
 - **The agent runs tests, measurements and evaluation tuning itself** (DEC-041),
   without asking, and schedules anything lasting several hours for the night if
   there is better work to do meanwhile. **NNUE training is still the owner's**:
