@@ -3,11 +3,11 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-21 by `moltke --step status`.
+Updated: 2026-08-22 by `moltke --step status`.
 
 - Last done: S145
-- In progress: S093 history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
-- Next: S093
+- In progress: none
+- Next: S130
 - Blocked: none
 - Parked:
   - **`AGENTS.md` par.12 and the stop hook's own message both name

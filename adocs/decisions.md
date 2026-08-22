@@ -5685,3 +5685,90 @@ Consequences: If taken: the writer of an `accepts:` owes one `ls adocs/plan_*`
               than one clause naming all of them. If not taken: the discharge
               route stays what S141 used, and the cost is one amended accepts
               per occurrence.
+
+
+---
+
+## DEC-101  2026-08-22  quiet history is not carried across `go`; the published +12.5 measured -1.65 here
+Tags:         search, move-ordering, history, measurement, sprt, dec-019,
+              agent-proposal, s093
+
+Context:      S093 verdict 1 shipped butterfly-indexed quiet history with a
+              malus and gravity ageing (`40f5b56`, H1, `Elo 10.73 +/- 6.70` over
+              6412 games). Verdict 2 was the second half of the same published
+              mechanism: keep the table from one `go` to the next inside a game
+              rather than rebuilding it, which is what every engine surveyed
+              does. Lynx PR #637 measured **+12.5 +/- 6.6 over 6419 games, LOS
+              100 %** for exactly that, and the same project's PR #457 measured
+              every alternative worse than keeping -- decay to 50 % between
+              searches -16.6, decay to 90 % -6.3, always clear -12.1.
+
+              Built and measured here as `adocs/data/S093_sprt_v2.sh` against
+              `40f5b56`, bounds `elo0=0 elo1=5`, all three readings
+              pre-registered before the first game. **H0 accepted in 6 h 35 m
+              over 15398 games: `Elo -1.65 +/- 4.22`, `nElo -2.14 +/- 5.49`,
+              `LOS 22.22 %`, `LLR -2.96`, 49.76 %, 0 forfeits in 15399.** That
+              is a well-measured null and not an ambiguous one: the interval
+              excludes the +5 the bounds were set to find and also excludes a
+              loss of 6 or more.
+
+Decision:     **Agent proposal, S093, 2026-08-22, under DEC-041 -- NOT
+              owner-approved. Nothing is settled until the owner takes it.**
+              Proposed: quiet history stays per-`go`, and verdict 2 is reverted
+              in full to `40f5b56`'s behaviour -- the hoist into
+              `quiet_history_t`, the pointer in `search_state_t`, the
+              descendant rule, the `ucinewgame` clear, the persistence tests and
+              the `MANUAL.md` paragraph on carried-history lifetime.
+
+              Three reasons. It does not gain, and the pre-registered H0 clause
+              says so. It is **two transfer failures in one step** -- verdict 1
+              measured a third of its own prior and verdict 2's prior came back
+              negative -- so keeping this on Lynx's number after measuring it
+              here is the precise move DEC-019 forbids. And the complexity has a
+              demonstrated cost: the hoist produced a `nullptr` dereference in
+              `tools/datagen.cpp` that compiled clean and that no fast-label
+              test caught, which is one silent defect bought for zero Elo.
+
+Rejected:     **Keeping the hoist alone and dropping only the persistence.** It
+              is the tempting middle: it turns an accidental lifetime into an
+              explicit one, and it is INV-6-provable against `40f5b56`. It loses
+              because with the table cleared every `go` again the descendancy
+              code is dead, the `ucinewgame` case is vacuous, and a refactor
+              with no behaviour change and no live tests is not worth the
+              surface it adds. Revisit it when S023's capture history or S099's
+              correction history needs the same lifetime for a reason that is
+              being measured.
+
+              **Keeping persistence anyway on the published figure.** AGENTS.md
+              does permit keeping a measured zero with the reason stated, and
+              S005, S006 and S015 all were. Those were kept because the feature
+              cost nothing and removed a state the design did not intend. This
+              one costs a table lifetime, a descendancy rule and a UCI-visible
+              contract, and the point estimate is negative.
+
+              **Re-running at other bounds.** 15398 games and +/- 4.22 is not a
+              resolution problem. There is nothing a wider pair would find.
+
+              **Blaming the descendant rule and re-running without it.** It was
+              named as a candidate explanation before the games were played, and
+              it is the honest one to check -- it is chesso's own hardening and
+              not what Lynx priced. It is not taken because the fastchess path
+              replays `position startpos moves ...` in full before every `go`,
+              so the previous root is always in the chain and the keep path
+              always engages, which `tests/test_engine.cpp` drove directly at
+              the time. Settling it properly means instrumenting how often the
+              keep path engages in a real match, which is a step and not a
+              re-run, and it is not worth one against a -1.65.
+
+Consequences: Quiet history is built fresh for every `go`, like the killers, the
+              countermoves and the PV. `search_state_t` owns it by value and its
+              lifetime is the search's. DEC-019 gains its next entry and its
+              second form: not "the figure measured zero here" but "the figure
+              measured a third here, and its sibling measured negative". The
+              design is not lost -- S093's step file keeps the three-stage
+              red-first evidence, the descendancy rule, the derived integration
+              bound and both verdicts with their figures, so reviving this means
+              re-measuring a finished design rather than rebuilding one. The
+              S093 accepts clause requiring a clear on `ucinewgame` and on a
+              non-descendant position is discharged by this verdict: with no
+              carried history there is nothing to clear.

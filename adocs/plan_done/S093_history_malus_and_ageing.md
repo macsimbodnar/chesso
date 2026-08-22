@@ -1,13 +1,25 @@
 id:         S093
 goal:       history gets a malus for the moves that were tried and failed, a gravity update that ages it by construction, butterfly indexing, and survives across go within one game
 accepts:    two SPRT verdicts: malus and gravity land together -- they are one published mechanism, `entry += bonus - entry * abs(bonus) / MAX`, and splitting them measures each against a table shape it will not ship with (DEC-087) -- and persistence across `go` lands second with its own verdict; the malus applies to the quiet moves searched before the cutoff move and not to the cutoff move itself, asserted by a unit test on the table rather than through a game; the gravity keeps every score inside ORDER_HISTORY_MAX so the move-ordering bands still clear each other by 100 points, with the band clearance asserted (CLAUDE.md hazard, S023, S061); history carried across `go` is cleared on `ucinewgame` and on a position that is not a descendant of the last one searched, with a test for both; the fast suite green
-touches:    src/search.cpp history update, src/search.hpp, src/evaluation.cpp score_move, src/data_structures.hpp search_state_t, src/search_params.hpp, src/chesso.cpp (verdict 2 only), tests/test_search.cpp, tests/test_evaluation.cpp, tests/test_search_params.cpp, MANUAL.md, adocs/specs.md
+            (**The persistence clause -- "history carried across `go` is
+            cleared on `ucinewgame` and on a position that is not a descendant
+            of the last one searched, with a test for both" -- is discharged,
+            2026-08-22, not produced.** It was produced while verdict 2 was in
+            the tree, both clauses observed red first and driven through the UCI
+            layer. Verdict 2 then measured `Elo -1.65 +/- 4.22` over 15398 games
+            and was reverted in full, DEC-101, so there is no carried history
+            for either rule to clear and neither test has a subject. See "The
+            accepts clause that cannot be satisfied, discharged" below.)
+touches:    src/search.cpp history update, src/search.hpp, src/evaluation.cpp score_move, src/data_structures.hpp search_state_t, src/search_params.hpp, src/chesso.cpp (verdict 2 only), tests/test_search.cpp, tests/test_evaluation.cpp, tests/test_search_params.cpp, MANUAL.md, adocs/specs.md,
+            adocs/decisions.md, adocs/testing.md; and, for verdict 2 before it
+            was reverted, src/uci.hpp, tests/test_engine.cpp and
+            tools/datagen.cpp
 excludes:   capture history, which is S023; continuation history, which is S024; correction history, which is S099
-decisions:  DEC-071, DEC-087
+decisions:  DEC-071, DEC-087, DEC-101
 closes:
 blocks:
 paused_by:
-done:
+done:      Verdict 1 kept: butterfly quiet history with a malus and gravity ageing, H1 accepted, Elo 10.73 +/- 6.70 over 6412 games against 6e0afa0, shipped at 40f5b56. Verdict 2 measured and reverted: persistence across go, H0 accepted, Elo -1.65 +/- 4.22 over 15398 games against 40f5b56, DEC-101. src/ tests/ tools/ MANUAL.md byte-identical to 40f5b56 by tree hash, search_bench 944870/5202441/533229 unchanged, datagen re-verified. The accepts clause on clearing carried history is discharged in the stamp: the verdict removed its subject. Both builds green, clang-format clean, --touches 0 flagged.
 
 ## The hazard is the band, not the search
 
@@ -535,5 +547,251 @@ published intervals do not overlap this one. The *direction* transferred and the
 published figure measured 0 or negative; this is the same lesson in the form that
 is easier to miss, because the change is a real gain and the number is still
 wrong. A published figure decided what to try. It did not decide what we got.
+
+## Verdict 2 as landed, 2026-08-22
+
+Persistence across `go` alone, against verdict 1's commit `40f5b56`.
+
+### What was built
+
+**The hoist.** `quiet_history_t` in `src/data_structures.hpp` -- the
+`int16_t entries[2][64][64]` board, plus the root it was learned from as
+`hash_t last_root` and a separate `bool has_last_root`. The flag is not a zero
+sentinel on the key: zero is a legal zobrist, and a sentinel that can occur is a
+sentinel that will. `search_state_t` now holds `quiet_history_t*`, wired exactly
+as `state.tt` is, so a test owns a private table. Killers, countermoves and the
+PV stay per-`go`; the goal names quiet history only.
+
+**The two clears, and nothing else clears it.** `command_ucinewgame` drops the
+table beside `tt_reset`, root included. `iterative_deepening_search` drops it
+when `history_keep_across_go()` says this root does not descend from the last
+one searched, then records the new root. **Decided at `go` time and never at
+`position` time**, because several `position` commands can arrive between two
+searches and the question is whether *this* root descends from the last one
+searched, not whether some position in between did.
+
+**The rule** is a pure function of the table and the game. It answers by looking
+for the remembered root's zobrist in `game.history`: `command_position` replays
+`position ... moves ...` from scratch through `try_move`, and each entry stores
+the key of the position its own move was played *from*, so that array is exactly
+the chain of ancestors. A jump to a bare FEN leaves the chain empty and the
+previous root absent.
+
+**Dropped rather than decayed**, which is measured and not a preference: Lynx
+PR #457 put decay-to-50 % between searches at **-16.6**, decay-to-90 % at
+**-6.3 (H0)** and always-clear at **-12.1 (H0)** against a keeping main.
+
+### A bug this step introduced and fixed before anything else
+
+`tools/datagen.cpp:117` built a `search_state_t` and never set the new pointer.
+It compiled clean, no test in the fast label drives datagen, and the first quiet
+move `score_move()` looked at would have dereferenced `nullptr`. AGENTS.md 0:
+found, so fixed first. The table is now owned by the worker at **game** scope --
+cleared in the same place `tt_reset` is, once per game, not once per move --
+which is the lifetime the UCI layer gives it, so the data generator plays the
+engine that ships rather than a variant of it. Proved by running it: 2 games,
+3000 nodes a move, 182 positions written, exit 0.
+
+### Red first, observed and recorded
+
+Three stages, because the rule has two directions and one stub cannot show both.
+
+**Stage 1 -- the hoist with the old policy** (drop the table at every `go`, no
+`ucinewgame` clear). This stage is byte-for-byte the shipping behaviour of
+`40f5b56` and was checked so: `search_bench` at depth 13 read 944870 / 5202441 /
+533229, identical. Then:
+
+    TEST CASE:  ucinewgame clears the quiet history it carries
+    tests/test_engine.cpp:1311: FATAL ERROR: REQUIRE( uci_quiet_history()->has_last_root ) is NOT correct!
+      values: REQUIRE( false )
+
+    TEST CASE:  quiet history crosses a go into a descendant and not into a stranger
+    tests/test_engine.cpp:1355: ERROR: CHECK( history_entries_filled(uci_quiet_history()) > 270 ) is NOT correct!
+      values: CHECK( 0 >  270 )
+
+The second is the carry itself: the descendant `go` found the table wiped.
+
+**Stage 2 -- persistence with both guards missing** (never drop, anywhere;
+`history_keep_across_go` stubbed to `return true`). The two clear clauses:
+
+    TEST CASE:  ucinewgame clears the quiet history it carries
+    tests/test_engine.cpp:1318: ERROR: CHECK_EQ( history_entries_filled(uci_quiet_history()), 0 ) is NOT correct!
+      values: CHECK_EQ( 439, 0 )
+    tests/test_engine.cpp:1322: ERROR: CHECK_FALSE( uci_quiet_history()->has_last_root ) is NOT correct!
+      values: CHECK_FALSE( true )
+
+    TEST CASE:  quiet history crosses a go into a descendant and not into a stranger
+    tests/test_engine.cpp:1367: ERROR: CHECK( history_entries_filled(uci_quiet_history()) <= 270 ) is NOT correct!
+      values: CHECK( 460 <= 270 )
+
+and the rule's three refusing branches:
+
+    tests/test_search.cpp:901: ERROR: CHECK_FALSE( history_keep_across_go(&history, &game) ) is NOT correct!
+      values: CHECK_FALSE( true )
+    tests/test_search.cpp:944: [same]
+    tests/test_search.cpp:951: [same]
+
+**Stage 2b -- `history_keep_across_go` stubbed to `return false`**, for the two
+branches stage 2 could not reach:
+
+    tests/test_search.cpp:908: ERROR: CHECK( history_keep_across_go(&history, &game) ) is NOT correct!
+      values: CHECK( false )
+    tests/test_search.cpp:925: [same]
+
+All five branches of the rule and both clear clauses observed failing. Green at
+stage 3.
+
+### Why the integration cases can be exact
+
+`MAX_MOVES` is the line between "the table survived a `go`" and "only this `go`
+wrote to it", and it is derived rather than chosen: at `go depth 1` every child
+of the root is quiescence, which writes no history, so the root node is the only
+writer and it writes at most one entry per quiet it has. The precondition is
+that one `go depth 10` fills **more** than that -- it fills 439 -- so the two
+sides cannot be confused. The stranger is given as a bare FEN, which is what
+empties the ancestor chain; the descendant is `position startpos moves ...` with
+one more move, which is the exact shape fastchess replays before every `go`.
+That shape is the one the pitfall list says must engage or the verdict measures
+nothing, and it is now a test rather than an argument.
+
+### Measurement
+
+`search_bench` at depth 13 is **unchanged: 944870 / 5202441 / 533229**, best move
+unchanged. That is the descendant rule working and not an absence of effect --
+the tool gives each of its three positions as a bare FEN, so each search
+correctly fails the descendant test and starts from an empty table. The effect
+this verdict measures exists only across the moves of one game, which no
+fixed-position benchmark can see. INV-6 is not available either way.
+
+### Gates
+
+- `cmake --build build -j12 && ctest --test-dir build -L fast` -- 19 of 19.
+- `cmake --build build-tune -j12 && ctest --test-dir build-tune -L fast` -- 19 of 19.
+- `./clang-format.sh --check` -- exit 0.
+- `tools/plan_prose_check.py --touches` -- 0 flagged over 65 files.
+- `--citations` unchanged in kind from verdict 1: line drift in other step
+  files, advisory, not swept (the coordinator decided against a sweep step --
+  the durable fix is anchoring to test titles and symbols, which is S144).
+
+### SPRT
+
+`adocs/data/S093_sprt_v2.sh`, launched 2026-08-22 00:37, log
+`.tuning/sprt_s093_v2.log`, out `/tmp/chesso_sprt_s093_v2_20260822_003734`.
+Bounds `elo0=0 elo1=5 alpha=0.05 beta=0.05` against reference `40f5b56`, verdict
+1's commit and not `6e0afa0`.
+
+All three readings are pre-registered in the script header before the first
+game, and **the no-verdict clause carries two named candidate explanations**
+rather than one: that the effect is simply smaller here than the published
++12.5 -- verdict 1 measured a third of its own prior, and a third of +12.5 is
+about +4, inside the indifference region -- and that the descendant rule, which
+is this step's own hardening and is **not** what Lynx PR #637's +12.5 +/- 6.6
+priced, is clearing a table the published change would have kept. The fastchess
+path argues the second cannot happen and `tests/test_engine.cpp` drives that
+shape, but an argument is not a measurement; settling it means instrumenting how
+often the keep path engages in a real match, not reasoning further.
+
+## Verdict 2's verdict, and the revert, 2026-08-22
+
+**H0 accepted in 6 h 35 m over 15398 games against `40f5b56`:**
+
+    Elo: -1.65 +/- 4.22, nElo: -2.14 +/- 5.49
+    LOS: 22.22 %, DrawRatio: 39.04 %, PairsRatio: 0.99
+    Games: 15398, Wins: 5231, Losses: 5304, Draws: 4863, Points: 7662.5 (49.76 %)
+    Ptnml(0-2): [764, 1591, 3006, 1630, 708], WL/DD Ratio: 2.66
+    LLR: -2.96 (-100.5%) (-2.94, 2.94) [0.00, 5.00]
+    SPRT ([0.00, 5.00]) completed - H0 was accepted
+
+0 forfeits in 15399 games. **A well-measured null and not an ambiguous one:**
+15398 games and a +/- 4.22 interval exclude the +5 the bounds were set to find
+and exclude a loss of 6 or more alike, the point estimate is negative and LOS is
+22 %. Against a published **+12.5 +/- 6.6 over 6419 games at LOS 100 %** (Lynx
+PR #637). The pre-registered H0 clause governs and it is recorded here as it
+stands.
+
+### Reverted in full, to `40f5b56`'s behaviour
+
+The coordinator's decision under the owner's delegation, taken on three grounds
+and written here so the owner can reverse it:
+
+1. **It does not gain**, and the clause pre-registered before the first game
+   says so.
+2. **Two transfer failures in one step.** Verdict 1 measured a third of its
+   prior; verdict 2's prior came back with the wrong sign. DEC-019 says a
+   published figure decides what to try and never what to conclude, and keeping
+   this on Lynx's number after measuring it here is the precise move that rule
+   forbids.
+3. **The complexity has a demonstrated cost.** The hoist produced a `nullptr`
+   dereference in `tools/datagen.cpp` that compiled clean and that no
+   fast-label test caught. One silent defect per zero Elo.
+
+**Considered and rejected: keeping the hoist alone.** It is the tempting middle
+-- it converts an accidental lifetime into an explicit one, and it is
+INV-6-provable against `40f5b56`. It loses because with the table cleared every
+`go` again the descendancy code is dead, the `ucinewgame` case is vacuous, and a
+refactor with no behaviour change and no live tests is not worth the surface it
+adds. AGENTS.md does permit keeping a zero with the reason stated -- S005, S006
+and S015 all were -- but those cost nothing and removed a state the design did
+not intend; this one costs a table lifetime, a descendancy rule and a
+UCI-visible contract. Revisit when S023 or S099 needs the same lifetime for a
+reason that is being measured. DEC-101.
+
+### The revert, shown rather than claimed
+
+`src/`, `tests/`, `tools/` and `MANUAL.md` are byte-identical to `40f5b56`,
+checked by tree hash and not by reading the diff:
+
+    src        bc18a356835c10e9cbd59e330025bca36b6fc6d8
+    tests      d868c4ed2daf114af4da8076b657dbaae3602230
+    tools      48c0724a55ff0d361a8523c9d4ffa406377c3416
+    MANUAL.md  217eae893d8e197433b7afc4c157f1dbe62767d7
+
+`grep` for `quiet_history_t`, `uci_quiet_history`, `history_keep_across_go` and
+`quiet_history_clear` over `src/ tests/ tools/ MANUAL.md` returns nothing.
+`search_bench` at depth 13 reproduces **944870 / 5202441 / 533229**, best move
+`c3d5` / `e2a6` / `d7c8q`, which is verdict 1's shipped engine exactly.
+
+**datagen checked rather than assumed**, since its bug existed only because of
+the hoist. `run_search` is back to its three-parameter form with no history
+argument, `search_state_t` owns the table by value so there is no pointer that
+can be null, and it runs: 2 games, 3000 nodes a move, **136 positions, exit 0**.
+The count is 136 and not the 182 the hoisted build wrote from the same seed,
+which is the second half of the check -- persistence changed which positions the
+filter kept, so the revert restored datagen's *behaviour* and not only its
+shape.
+
+### The accepts clause that cannot be satisfied, discharged
+
+> history carried across `go` is cleared on `ucinewgame` and on a position that
+> is not a descendant of the last one searched, with a test for both
+
+**Discharged, not dropped, and the verdict is the reason.** The clause is
+conditional on history being carried across `go`. It is not, as of this verdict:
+there is no carried history, so there is nothing for either rule to clear and
+neither test has a subject. It was satisfied while persistence was in the tree
+-- both clauses were driven through the UCI layer, both were observed red first,
+and the evidence is in the section above -- and it is unsatisfiable after the
+revert by construction rather than by omission. Same shape as S141's discharge
+of its S085 clause: the clause was produced, the ground moved, and the stamp
+says so instead of the plan quietly losing a line.
+
+Every other accepts clause holds and is verdict 1's: two SPRT verdicts, the
+malus reaching the quiets tried before the cutoff and not the cutoff move
+asserted by a unit test on the table, the gravity bound keeping every score
+inside `QuietHistoryMax` with the band clearance asserted at both edges, and the
+fast suite green.
+
+### What is kept
+
+Everything measured, which is the point. The three-stage red-first evidence, the
+descendancy design and its five branches, the derived `MAX_MOVES` integration
+bound and why it is exact, the datagen bug and its fix, and both verdicts with
+their figures and wall-clocks. Reviving this means re-measuring a finished
+design, not rebuilding one.
+
+## Cost
+
+Two SPRTs, 2 h 44 m and 6 h 35 m, 21810 games. One kept, one reverted. Both are
+results.
 
 author:    Maksym Bodnar

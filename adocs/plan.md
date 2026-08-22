@@ -220,8 +220,10 @@ misspelled name, are both indistinguishable from success. The driver defends
 itself against both; the binary should not need it to.
 
 **Block 1, the search, S093 to S132.** Ordered so each step's consumers exist
-before it, biggest evidence first. History malus and gravity (S093 — +37.5 and
-+28 reported, the largest history patches on record), the free quiescence
+before it, biggest evidence first. History malus and gravity (S093 — done:
++37.5 and +28 reported, **+10.73 ± 6.70 measured** and kept; persistence across
+`go` reported +12.5, **−1.65 ± 4.22 measured** and reverted, DEC-101), the free
+quiescence
 stand-pat consumer (S130), the static evaluation and improving flag the
 pruning needs (S108), continuation history (S024 — +44.7/+34.0 reported for
 the one-ply table, the largest ordering gain surveyed), the pruning block
@@ -279,11 +281,18 @@ whole with their evidence; they are 3100-band techniques by the record.
 ## What this costs
 
 The pending order owes **roughly 45 to 55 SPRT verdicts** once multi-verdict
-steps are counted honestly (S093 and S024 two each, S098 three, S097 and S022
-two each, the evaluation groups per-term), plus two SPSA nights, one to three
-datagen nights, and S128's five-hour gauntlet. At the S105 settings a typical
-verdict is 45 to 75 minutes, so **roughly 75 to 110 machine-hours** — against
-the 150 to 250 the pre-review plan priced for less ground. Six steps stop
+steps are counted honestly (S024 two, S098 three, S097 and S022 two each, the
+evaluation groups per-term), plus two SPSA nights, one to three datagen nights,
+and S128's five-hour gauntlet. At the S105 settings a typical verdict is 45 to
+75 minutes, so **roughly 75 to 110 machine-hours** — against the 150 to 250 the
+pre-review plan priced for less ground.
+
+**S093 is the first multi-verdict step to close and it cost more than that
+estimate, both in hours and in what it bought.** Its two verdicts took 2 h 44 m
+and 6 h 35 m over 21810 games, against the 45-to-75-minute typical — a null
+against `elo0=0 elo1=5` runs to the wall by construction, and the second verdict
+did. One of the two was kept. Read the estimate as verdicts owed, not as
+verdicts that will land. Six steps stop
 owing a match at all under DEC-083.
 
 **The Elo arithmetic is a range and not a forecast, and DEC-019 is why.**
@@ -332,7 +341,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-16. S149  the second killer slot holds a move distinct from the first, so a repeated fail-high stops destroying it, and the test asserts distinctness rather than non-zeroness -- **measured -11.02 +/- 10.53 Elo, H0 accepted, reverted; the duplication is kept and the test asserts it** (DEC-098)
 17. S139  every pending accepts field states something the harness can actually produce and the plan order can actually reach
 18. S140  no plan, specs or status document routes work to a retired id, cites an invariant that is defined nowhere, or carries a census its own derivation contradicts
 19. S141  every pending step's touches field names the file its change has to land in
