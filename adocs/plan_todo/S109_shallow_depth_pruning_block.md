@@ -247,7 +247,7 @@ without taking strength numbers on the tune build (forbidden, S073):
    when `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`
    (power parameterised; linear is the one-line alternative).
 6. Tests red-first, per rule, before its rule lands:
-   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:1923)
+   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:2808)
      with a position whose mating move is a **late, low-history, negative-SEE
      quiet** inside the pruned depth -- observed red with the in-check and
      near-mate guards removed, printout recorded (accepts). Built the S033
