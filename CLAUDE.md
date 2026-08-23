@@ -149,9 +149,18 @@ What to use instead:
 | question | tool |
 |---|---|
 | what did each move in this game cost | `tools/analyse_game.py` |
-| what is this position worth | `stockfish` on the FEN, `go depth 20` |
+| what is this position worth | `stockfish` at `go depth 20`, driven through `python-chess` |
 | is this endgame won | a tablebase, or Stockfish, never a rule you remember |
 | what are the legal moves here | the engine, not a mental board |
+
+**Read `TOOLCHAIN.md`'s "The chess oracle, and the one way to ask it that lies"
+before driving Stockfish by hand.** The obvious invocation is silently wrong:
+`printf '...\ngo depth 20\nquit\n' | stockfish` delivers `quit` the instant
+`go` is written, kills the search before it looks at a node, and answers
+`nodes 0` with the first root move — a draw score and a non-mating move for a
+position that is mate in one. That section has what it prints, why, and the two
+invocations that are safe. Found while doing S162, S166 is where it was written
+down.
 
 Getting a position onto a board is itself a tool job:
 `build/tools/pgn_to_positions` turns SAN into FENs using the engine's own

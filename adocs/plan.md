@@ -378,7 +378,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-24. S162  the 100-halfmove draw is not returned when the side to move is checkmated, matching the laws of the game
 25. S163  a hard-limit timer armed for a previous search can never stop the search that follows it
 26. S164  the S130 substitution is pinned by a unit case on the lazy-bound stand-pat path, the one input class its tests do not reach
 27. S165  null move pruning's missing negative mate-band guard is added and measured, or recorded as deliberate with defender-side evidence

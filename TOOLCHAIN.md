@@ -43,6 +43,7 @@ command -v c++                   # must stay /usr/bin/c++
 | `clang-tidy` | narrowing, sign and lifetime bugs | they surface later as a wrong perft count |
 | `llvm-mca` | is this loop front-end or dependency bound | hand-tuning blind |
 | `ctest`, `bench_movegen` | correctness, then speed | everything else is meaningless |
+| `stockfish` and `python-chess` | every chess question `CLAUDE.md` forbids the agent to answer itself | a confident wrong answer, DEC-023. **Driven wrong it also gives one** -- see the chess-oracle section below |
 
 ## ccache
 
@@ -171,6 +172,105 @@ CLANG_FORMAT_MAJOR=15 ./clang-format.sh --check
 On macOS it finds Homebrew's keg-only binary at
 `/opt/homebrew/opt/llvm/bin/clang-format` even when that is not on PATH. On
 Ubuntu it looks for `clang-format-22`.
+
+## The chess oracle, and the one way to ask it that lies
+
+`CLAUDE.md` forbids the agent from judging a position, a move, an ending or a
+material balance from its own reasoning, and names a tool per question. This
+section is about the tool, because the obvious way to drive it is silently
+wrong.
+
+**The trap.** Stockfish searches on its own thread and `quit` stops it. A pipe
+delivers every line at once, so `quit` arrives the instant `go` is written and
+the search is killed before it has looked at a node:
+
+```bash
+printf 'position fen 7k/6pp/8/8/8/8/8/R6K w - - 99 60\ngo depth 20\nquit\n' | stockfish
+```
+
+```
+info depth 1 seldepth 0 multipv 1 score cp 0 nodes 0 nps 0 hashfull 0 tbhits 0 time 1 pv
+bestmove a1b1
+```
+
+A **draw score and a non-mating move for a position that is mate in one**. The
+same pipe with `position startpos` and `go depth 8` answers `bestmove a2a3` with
+no depth-8 line at all. Note `nodes 0` and `depth 1`: nothing was searched, and
+the reply is the first root move. It is not a matter of giving it longer — the
+correct search of that position takes **320 nodes and 1 ms**, so any search
+loses this race however short it is.
+
+This is the failure mode the rule exists to prevent, arriving through the
+instrument the rule names: silent, confidently specific, and in the one tool the
+agent is supposed to defer to. Found while doing S162.
+
+**Chesso has the same shape**, so a chesso pipe read this way lies too:
+`command_quit` and `command_position` both call `stop_and_join_search()`
+(`src/chesso.cpp`), which is why a piped `position`/`go` loop aborts every
+search but the last. S165 read 1322 NMP-eligible nodes over 400 positions that
+way and 301620 with a driver that waits for `bestmove` — a factor of 228.
+
+**And that half was already written down**, which is the sharpest thing about
+this finding: `DEV_MANUAL.md`'s tune-build section has carried "Wait for
+`bestmove` when you script it" with its own 283-node example since S073. The
+trap was known for the engine being *measured* and unwritten for the oracle
+being *asked* — and the oracle is the one the agent is forbidden to
+second-guess, so a wrong answer from it is the one that survives. Two documents,
+one race, and the gap between them is what S162 walked into.
+
+**What is safe. 1. `python-chess`**, which reads until the search answers:
+
+```bash
+~/.venv/chess/bin/python -c '
+import chess, chess.engine
+with chess.engine.SimpleEngine.popen_uci("/usr/games/stockfish") as e:
+    info = e.analyse(chess.Board("7k/6pp/8/8/8/8/8/R6K w - - 99 60"),
+                     chess.engine.Limit(depth=20))
+    print(info["score"].relative, info["depth"], info["nodes"], info["pv"][:1])'
+```
+
+```
+#+1 20 320 [Move.from_uci('a1a8')]
+```
+
+**2. A shell pipe that does not send `quit` until the search has answered.**
+Correct, and worth having because it needs no python:
+
+```bash
+{ printf 'position fen 7k/6pp/8/8/8/8/8/R6K w - - 99 60\ngo depth 20\n'; sleep 3; echo quit; } | stockfish
+```
+
+```
+info depth 20 seldepth 2 multipv 1 score mate 1 nodes 320 nps 320000 hashfull 0 tbhits 0 time 1 pv a1a8
+bestmove a1a8
+```
+
+The `sleep` is a guess at how long the search takes and that is its weakness:
+too short and it is the trap again, only less obviously. Prefer python-chess for
+anything whose cost is not known. An interactive session has no race at all,
+because the next line is not typed until the reply is on screen.
+
+**3. What the repository already does correctly**, and the first thing to reach
+for rather than writing a new driver:
+
+| what | tool |
+|---|---|
+| a game's per-move cost against a reference | `tools/analyse_game.py`. Raw `subprocess`, not `python-chess`, and correct for the reason that matters: `evaluate()` reads until `bestmove` and `close()` is the only thing that sends `quit` |
+| SAN move list to FENs, parsed by the engine and not by hand | `build/tools/pgn_to_positions` |
+| a proved mate distance, no engine involved | `adocs/data/S145_mate_set.py`, exhaustive AND/OR enumeration over `python-chess` |
+| a mate set measured from the defender's side | `adocs/data/S165_nmp_defender_sweep.py` |
+
+**Two further traps in the oracle itself**, both paid for once and recorded in
+`adocs/plan_done/S145_mate_safety_test_set.md`. A node-limited stockfish is
+reproducible only inside one identical call sequence, so a loop that reuses one
+process is not comparable to one that does not. And a frozen defending army is a
+position class its network scores badly wrong — on S145's constructed set it
+reported no mate on 1 of 48 and a longer mate on another, both re-proved by
+enumeration, which is why it corroborates there and never decides.
+
+The binary paths above are this machine's. `.moltke.local.md` is where they are
+recorded per machine; the tools in the table take the engine as an argument and
+hardcode nothing.
 
 ## The rule the tools exist to serve
 
