@@ -252,6 +252,44 @@ bool tt_entry_answers(const tt_entry_t* entry,
 }
 
 
+bool improving_at(const search_state_t* state, size_t ply, bool in_check)
+{
+  assert(state != nullptr);
+  assert(ply < MAX_PLY);
+
+  // In check the node has no static score of its own, so there is nothing that
+  // could have improved. False rather than the no-data default: the node is
+  // forced, and the consumers at S109 should treat it as the worse case.
+  if (in_check) { return false; }
+
+  const int current = state->static_evals[ply];
+
+  // The offsets are even by necessity and not by taste. INV-5 values are
+  // relative to the side to move, so an odd offset would compare White's score
+  // against Black's; 2 is the nearest same-colour ancestor and 4 the next.
+  //
+  // Guarded on the ply and never on the value: the slot for a ply this search
+  // has not reached holds 0, and 0 is an ordinary evaluation. A node at ply p
+  // wrote its slot before it could recurse, so every slot below this one at
+  // the same parity has been written by an ancestor of this node.
+  if (ply >= 2 && state->static_evals[ply - 2] != TT_EVAL_NONE) {
+    return current > state->static_evals[ply - 2];
+  }
+
+  // The node two plies up was in check and left the sentinel, so the nearest
+  // ancestor carrying a number is four plies up. Without this the comparison
+  // above runs against INT16_MIN and answers "improving" for every real
+  // evaluation there is.
+  if (ply >= 4 && state->static_evals[ply - 4] != TT_EVAL_NONE) {
+    return current > state->static_evals[ply - 4];
+  }
+
+  // Nothing in reach to compare against, at the top of the tree or under two
+  // checks. True, per the reference definition.
+  return true;
+}
+
+
 int quiescence(int alpha,
                int beta,
                size_t ply,
@@ -648,13 +686,56 @@ int negamax(int alpha0,
   // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
 
-  // The static evaluation of this node, where one was computed. Reverse
-  // futility below is the only place the main search asks for one, so this
-  // stays TT_EVAL_NONE at every other node rather than a call being added to
-  // fill it in -- adding one would be exactly the recomputation INV-4 exists
-  // to keep out of the hot path. Stored with the entry, and read there by the
-  // same site on a later visit. S094, S103.
-  int static_eval = TT_EVAL_NONE;
+  // The static evaluation of this node, computed once here and read by
+  // everything below that wants one. Reverse futility was the only consumer
+  // until S108 and computed its own inside its guard; improving and the
+  // shallow-depth margins each need one at their own node, and every one of
+  // them has to be the same number, so it is computed at the top instead.
+  //
+  // In check there is no number to have. The side to move is forced, a static
+  // score bounds nothing, and evaluating a position whose king is attacked
+  // prices material that is about to move. The sentinel goes in the slot and
+  // improving_at() falls back four plies rather than two.
+  //
+  // evaluate() and never evaluate_lazy(): the lazy shortcut returns a bound
+  // that holds against one window, and this number is compared against another
+  // ply's and stored in an entry that outlives every window.
+  //
+  // The entry already has the number where the probe above found one. It is
+  // the same number: evaluate() is a function of the position alone, the key
+  // that matched covers every field it reads, and what is stored is always the
+  // score and never the bound the lazy shortcut hands back in its place. So
+  // this is a call skipped, not a value approximated. Instrumented and counted
+  // rather than argued, at the reverse futility site this read was hoisted
+  // out of: 3368027 of the 14589403 calls that site made over 300 positions at
+  // depth 10, 23.1 %, and 0 of them disagreed with a fresh call. The rate is a
+  // property of how warm the table is -- the same count over the three
+  // search_bench positions at depth 12 reads 173440 of 1617617, 10.7 %, and
+  // zero disagreements there too.
+  //
+  // INV-4 is untouched. The stored number was derived from the accumulators
+  // make_move maintains and nothing here stops maintaining them; what is
+  // avoided is rebuilding the same score from them a second time. S094, S103,
+  // S108.
+  const int static_eval =
+      is_in_check
+          ? TT_EVAL_NONE
+          : ((tt_eval != TT_EVAL_NONE) ? tt_eval : evaluate(&game->board));
+
+  // On every path that recurses, and before the first of them. A slot left
+  // unwritten holds whatever the last node at this ply put there, which is a
+  // different line, and improving would then compare against a position that
+  // is not this one's ancestor -- an error that costs Elo without ever
+  // crashing. Null move pruning below recurses before the move loop, so the
+  // write cannot wait for it. S108.
+  state->static_evals[ply] = static_eval;
+
+  // Transitional, and deleted in the commit that makes the entry carry this
+  // node's evaluation. For now the entry records exactly what it recorded
+  // before -- a number at a reverse futility node, the sentinel everywhere
+  // else -- so the stores are byte-identical and the hoist above is provably
+  // behaviour-neutral. S108.
+  int stored_eval = TT_EVAL_NONE;
 
   // Reverse futility pruning, also called static null move pruning. The null
   // move observation without the null move: if the static score is so far
@@ -692,28 +773,13 @@ int negamax(int alpha0,
       depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
 
-    // The entry already has the number where the probe above found one. It is
-    // the same number: evaluate() is a function of the position alone, the key
-    // that matched covers every field it reads, and what is stored is always
-    // the score and never the bound the lazy shortcut hands back in its place.
-    // So this is a call skipped, not a value approximated. Instrumented and
-    // counted rather than argued: 3368027 of the 14589403 calls this site made
-    // over 300 positions at depth 10, 23.1 %, and 0 of them disagreed with a
-    // fresh call. The rate is a property of how warm the table is -- the same
-    // count over the three search_bench positions at depth 12 reads 173440 of
-    // 1617617, 10.7 %, and zero disagreements there too.
-    //
-    // INV-4 is untouched. The stored number was derived from the accumulators
-    // make_move maintains and nothing here stops maintaining them; what is
-    // avoided is rebuilding the same score from them a second time. S103.
-    const int static_score =
-        (tt_eval != TT_EVAL_NONE) ? tt_eval : evaluate(&game->board);
-
-    static_eval = static_score;
+    // The number comes from the top of the node now. This site used to compute
+    // it, which is why the entry only ever carried one here. S103, S108.
+    stored_eval = static_eval;
 
     // Fail soft, and the bound returned is the one actually argued for: the
     // static score minus everything the opponent was assumed able to win back.
-    if (static_score - margin >= beta) { return static_score - margin; }
+    if (static_eval - margin >= beta) { return static_eval - margin; }
   }
 
   // Null move pruning. Give the opponent a free move; if the position is still
@@ -1043,7 +1109,7 @@ int negamax(int alpha0,
 
   const int to_store = normalize_score(best_so_far, ply);
   tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
-                 static_eval);
+                 stored_eval);
 
   return best_so_far;
 }

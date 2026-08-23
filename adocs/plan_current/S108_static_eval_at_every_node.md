@@ -305,3 +305,4 @@ satisfied vacuously.
 - https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+improving
   -- 0980488 bundles improving on NMP/LMR with "saved static evals in hash",
   no per-change number.
+author:    Maksym Bodnar

@@ -30,6 +30,17 @@ bool tt_entry_answers(const tt_entry_t* entry,
                       int beta,
                       int* score);
 
+// Whether the side to move is better off here than it was the last time it
+// moved. The comparison is against the static evaluation two plies up, four
+// when the node two plies up was in check and recorded no number, and it is
+// true when there is nothing to compare against.
+//
+// Declared here because S108 supplies the input and S109 supplies the
+// consumers: until then the only caller is the test that holds each branch of
+// the definition, and a broken improving calculation costs Elo without ever
+// crashing. S108.
+bool improving_at(const search_state_t* state, size_t ply, bool in_check);
+
 // The leaf search. Declared here only so the tests can drive it directly;
 // nothing outside search.cpp calls it.
 int quiescence(int alpha,

@@ -1785,6 +1785,114 @@ TEST_SUITE("search: quiescence transposition entries")
 }
 
 
+// The improving flag has no consumer until S109, so nothing in a game reads it
+// and nothing in a benchmark would notice it being wrong. A wrong improving
+// calculation is a pure strength loss: it never crashes, never changes a node
+// count on its own, and only shows up as a worse margin at every site that
+// eventually reads it. So every branch of the definition is held directly.
+//
+// The definition (CPW "Improving"): compare this node's static evaluation with
+// the one two plies up; if that node was in check and recorded none, with the
+// one four plies up; false while in check; true when there is nothing to
+// compare against. S108.
+TEST_SUITE("search: improving")
+{
+  // The array is what the search writes and the helper reads, so the cases
+  // plant it directly. A fresh state zeroes it, and 0 is an ordinary
+  // evaluation -- which is exactly why the helper may never treat an unwritten
+  // slot as absent data, and why every case below states each slot it depends
+  // on, including the ones it wants left at zero.
+  struct improving_fixture_t
+  {
+    search_state_t state = {};
+
+    void plant(size_t ply, int eval) { state.static_evals[ply] = eval; }
+  };
+
+
+  // No ancestor to compare against, so the flag is true by definition rather
+  // than by comparison. Plies 0 and 1 are the only two plies where this holds
+  // for the ply-2 reason; deeper nodes reach it only through the sentinels.
+  TEST_CASE_FIXTURE(improving_fixture_t, "no earlier node defaults to true")
+  {
+    plant(0, -400);
+    CHECK(improving_at(&state, 0, false));
+
+    plant(1, -400);
+    CHECK(improving_at(&state, 1, false));
+  }
+
+
+  // Strictly greater. An evaluation that has not moved has not improved, and
+  // the difference matters at exactly the nodes where it is easiest to get
+  // wrong: a shuffling line evaluates to the same number ply after ply.
+  TEST_CASE_FIXTURE(improving_fixture_t, "equal is not improving")
+  {
+    plant(2, 50);
+    plant(0, 49);
+    CHECK(improving_at(&state, 2, false));
+
+    plant(0, 50);
+    CHECK_FALSE(improving_at(&state, 2, false));
+
+    plant(0, 51);
+    CHECK_FALSE(improving_at(&state, 2, false));
+  }
+
+
+  // The fallback, and the case that fails against the obvious implementation.
+  // A node in check writes TT_EVAL_NONE, which is INT16_MIN, so a comparison
+  // that does not test for the sentinel answers "improving" for any real
+  // evaluation at all -- the flag would read true at every node two plies
+  // under a check. Observed red against exactly that form.
+  //
+  // So the case is built the only way that can tell the two apart: the ply-4
+  // evaluation is *above* this node's, which makes the correct answer false,
+  // while the sentinel comparison the broken form makes answers true.
+  TEST_CASE_FIXTURE(improving_fixture_t,
+                    "a checked node two plies up falls back four")
+  {
+    plant(4, 20);
+    plant(2, TT_EVAL_NONE);
+    plant(0, 300);
+
+    CHECK_FALSE(improving_at(&state, 4, false));
+
+    // And the fallback compares rather than defaulting: same shape, an
+    // ancestor this node has improved on.
+    plant(0, -300);
+    CHECK(improving_at(&state, 4, false));
+  }
+
+
+  // Both ancestors in check. There is no number in reach, which is the
+  // no-data case again and not a comparison against a sentinel.
+  TEST_CASE_FIXTURE(improving_fixture_t,
+                    "two checked ancestors default to true")
+  {
+    plant(4, -900);
+    plant(2, TT_EVAL_NONE);
+    plant(0, TT_EVAL_NONE);
+
+    CHECK(improving_at(&state, 4, false));
+  }
+
+
+  // In check the node has no static score of its own to have improved, and
+  // the answer is false rather than the default. The slot is planted with a
+  // number the ply-2 comparison would call improving, so the case fails on any
+  // implementation that reaches the comparison at all.
+  TEST_CASE_FIXTURE(improving_fixture_t, "in check is never improving")
+  {
+    plant(2, 500);
+    plant(0, -500);
+
+    REQUIRE(improving_at(&state, 2, false));
+    CHECK_FALSE(improving_at(&state, 2, true));
+  }
+}
+
+
 // The two things a transposition table gets wrong without any test noticing:
 // which side of the window a bound is allowed to answer on, and whether a mate
 // score carries the ply it was seen at. Neither shows up as a wrong node count

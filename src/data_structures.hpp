@@ -448,6 +448,17 @@ struct search_state_t
   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
   move_t killer_moves[2][MAX_PLY];
 
+  // The static evaluation of the node at each ply, TT_EVAL_NONE where the node
+  // was in check and never computed one. Written by every negamax node that
+  // recurses, so a node at ply p can read its own ancestors' numbers; the
+  // ancestor wrote its slot before it could reach the recursion that produced
+  // this node, which is what makes the ply arithmetic in improving_at() a
+  // sufficient guard.
+  //
+  // Never guard a read on the value: an unwritten slot holds 0 here, and 0 is
+  // an ordinary evaluation. Guard on the ply instead. S108.
+  int static_evals[MAX_PLY];
+
   // Butterfly history: [side to move][from][to], Hartmann 1988. It was
   // [piece][destination] until S093, which conflates a knight on b1 with one on
   // g1 going to the same square and separates two pieces of different type
