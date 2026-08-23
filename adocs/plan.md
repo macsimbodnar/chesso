@@ -304,10 +304,8 @@ work), endgame scaling (S124), outposts and space (S102), the king-relative
 tables (S133), and one full refit (S126), because every weight fitted before
 S109 was fitted against a tree that no longer exists.
 
-**Block 4, close, S127 to S129.** The full SPSA run over everything the search
-block added, the rated run at a control near the list's own — DEC-077 named the
-time control as the leading suspect for the 121.8 Elo anchor spread and it is
-S128 — and Syzygy last and optional, because the no-copy rule prices 13 to 25
+**Block 4, close, S127 and S129.** The full SPSA run over everything the search
+block added, and Syzygy last and optional, because the no-copy rule prices 13 to 25
 Elo at a from-scratch implementation of a compressed table format (the
 MIT-licensed Fathom route is on the record in DEC-087 if the owner ever wants
 it).
@@ -320,9 +318,9 @@ whole with their evidence; they are 3100-band techniques by the record.
 The pending order owes **roughly 45 to 55 SPRT verdicts** once multi-verdict
 steps are counted honestly (S024 two, S098 three, S097 and S022 two each, the
 evaluation groups per-term), plus two SPSA nights, one to three datagen nights,
-and S128's five-hour gauntlet. At the S105 settings a typical verdict is 45 to
-75 minutes, so **roughly 75 to 110 machine-hours** — against the 150 to 250 the
-pre-review plan priced for less ground.
+and S152's two five-hour gauntlets at the end. At the S105 settings a typical
+verdict is 45 to 75 minutes, so **roughly 75 to 110 machine-hours** — against
+the 150 to 250 the pre-review plan priced for less ground.
 
 **S093 is the first multi-verdict step to close and it cost more than that
 estimate, both in hours and in what it bought.** Its two verdicts took 2 h 44 m
@@ -338,16 +336,31 @@ support (~60 % sticks), and taking a fifth off for interaction: search +180 to
 +280, evaluation +90 to +160, speed +40 to +90, tuning +50 to +90, and S133 is
 +30 to +60 of margin on top. The midpoint clears 3000. Two things are not
 promised by that: the 2559 anchor is soft by 121.8 Elo of internal disagreement
-until S128 runs, and this project has taken three published figures at face
-value and measured 0, 0 and *slower*.
+until S152 runs, and this project has taken three published figures at face
+value and measured 0, 0 and *slower*. **And nothing between here and there
+measures the total.** DEC-108 is the owner's decision that the engine is re-rated
+once, near the goal, rather than at the block boundary S152 was written for:
+a checkpoint buys information and no strength, and no number it could return
+would reorder this list. So the evidence of progress until then is the
+per-change SPRT ledger and nothing else, which is what makes each run's
+pre-registered reading load-bearing rather than a formality. S128's
+anchor-spread question folds into S152's run, which therefore carries both
+controls: the spread is 121.8 Elo over five references and 64.7 without
+Leorik 2.1, against the 30 the procedure allows, and DEC-077 named the
+control as the leading candidate. Asked for an estimate on 2026-08-23 the honest answer was 2600 to
+2650: the kept positive point estimates since S088 sum to about +90, DEC-063's
+own correction factor cuts that to about +49, and S104's +18.22 % is unpriced
+because what a ply is worth here has never been measured. That is arithmetic,
+not a measurement, and 2559 +/-25 soft stays the engine's rating.
 
 ## How this file works
 
 Order lives here and nowhere else. Step detail lives in the step files under
 `plan_todo/`, `plan_current/`, and `plan_done/`. Ids are allocated in creation
 order and never renumbered or reused — including for the retired S019, S026,
-S031, S056 to S061, S063, S079 to S081, S086, S090, S092 and S096 — so
-reordering is a one-line edit to this list.
+S031, S056 to S061, S063, S079 to S081, S086, S090, S092 and S096, and for
+S128, folded into S152 by DEC-108 — so reordering is a one-line edit to this
+list.
 
 Order is read from the list entries below, the lines starting `1.`, `-`, or `*`.
 An id named in a sentence anywhere else in this file is prose: it does not change
@@ -423,7 +436,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 67. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
 68. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
 69. S127  an SPSA run over the whole search parameter set as it stands after the search block, and an independent SPRT of what it returns
-70. S128  the gauntlet is replayed at a time control near the rating list's own, to test whether the anchor spread is scale compression from 10+0.2
 71. S129  three, four and five man tablebase probing, written from the format description
 72. S023  **reserve, DEC-087** — history indexed by piece, target and victim, to order captures MVV-LVA rates equal
 73. S025  **reserve, DEC-087** — retry searching losing captures after the quiets, now that capture history exists
@@ -438,7 +450,6 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 82. S148  the reverse futility depth ceiling is re-decided against the deep mates S145 measured it losing, by SPRT and not by argument
 83. S150  a number stated in a plan or manual document about a search parameter is checked against search_param_info(), and the three values S085 left stale in specs.md and MANUAL.md are corrected
 84. S151  a change that moves a pruning or reduction parameter has its verdict re-taken at a control at least four times longer before the number is banked, starting with S085's shipped vector
-85. S152  the engine's absolute rating is re-measured once after the search block, before the speed block, so 45 to 55 verdicts are not accumulated without an end-to-end check
 86. S153  an agent-only step and a match-owning step may be active at once, so a document step does not leave the machine idle
 87. S154  the mate-in-three floor's tolerance to a neutral tree change is measured rather than asserted, and the RfpMinPly-1 mate-in-two count is restated as what the assertion actually fails
 88. S155  the constructed mate set's single motif is stated where its breadth is claimed, and what the gate therefore cannot catch is written down
@@ -446,3 +457,4 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 90. S157  every recorded conclusion that states an SPRT bound in plain Elo says nElo instead, and DEV_MANUAL.md says which scale the bounds are in
 91. S158  S146 carries the shipped book's digest and entry count so its origin can be searched for rather than guessed
 92. S159  measure whether the second killer slot wants ageing rather than distinctness: the unguarded shift discards slot 1 on every repeat, so S149's -11 Elo may be the guard preserving a stale killer for a whole go
+93. S152  **deferred, DEC-108** — the engine's absolute rating is re-measured once, near the 3000 mark rather than at a block boundary, at both time controls so S128's anchor-spread question is answered by the same run

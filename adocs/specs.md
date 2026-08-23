@@ -39,6 +39,20 @@ measured 2570 over four engines and two families (still recorded in
 `rating_2026-08-18_ccrl_blitz.md`), and **`src/` is byte-identical between the
 two runs** — the instrument changed, the engine did not.
 
+**And it stays the measured figure until the engine is near 3000, DEC-108.** The
+owner's decision on 2026-08-23: the rating is re-measured once, near the goal,
+and not at a block boundary — a checkpoint buys information and no strength, and
+no number it could return would reorder `plan.md`. S152 is that run and carries
+both time controls, S128's anchor-spread question having folded into it. So
+between here and there the evidence of progress is the per-change SPRT ledger
+and nothing else, which is what makes each run's pre-registered reading
+load-bearing rather than a formality. **An estimate is not a measurement and does
+not belong in this file**: asked on 2026-08-23, the kept positive point estimates
+since S088 summed to about +90, DEC-063's own correction factor cut that to
+about +49, and S104's +18.22 % was unpriced because what a ply is worth here has
+never been measured — so 2600 to 2650 was the honest answer and 2559 ±25 soft is
+still the number.
+
 **Adding a third family did not close the spread; it identified it.** With
 Leorik 2.1 set aside the solved rating rises monotonically with the anchor's own
 rating and flattens at the top, so the disagreement is scale compression rather

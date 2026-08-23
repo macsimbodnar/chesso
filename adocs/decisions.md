@@ -6133,3 +6133,64 @@ Consequences: S162 completes with a census in place of a verdict, and
               not a boundary the census can bound. The census script is one
               python pass over a run's PGN and is worth reaching for again
               before booking a night on a rare-path fix.
+
+## DEC-108  2026-08-23  The intermediate rating checkpoint is dropped; the engine is re-rated once, near the goal
+Tags:         measurement, rating, plan, machine-time
+Amends:       S152's `goal:` and its position in the pending order; folds S128's
+              calibration question into whatever the next rating run is
+Context:      S088 measured 2559 CCRL Blitz, 95 % +/-25, SOFT, on 2026-08-18.
+              Twenty-seven steps have completed since and six of them carried an
+              SPRT. Asked to estimate current strength, the agent could only
+              offer arithmetic: the kept positive point estimates sum to about
+              +90, which DEC-063's own correction factor -- S068's pooled
+              estimate falling from +12.18 to +5.02 -- cuts to about +49, and
+              S104's +18.22 % landed after the rating run and is unpriced
+              because what a ply is worth here has never been measured. So the
+              gap between +90 and +49 is real and a checkpoint would close it.
+              S152 exists for exactly that: "the engine's absolute rating is
+              re-measured once after the search block, before the speed block,
+              so 45 to 55 verdicts are not accumulated without an end-to-end
+              check."
+Decision:     The owner's, 2026-08-23, on being shown the estimate: do not
+              re-measure now. **The engine is re-rated once, when it is close to
+              the 3000 mark, and not at a block boundary.** S152 is re-targeted
+              to that trigger and moved to the end of the pending order so
+              nothing derives it as next-in-order; its id is not reused and its
+              file is kept whole. **S128 is folded into that same run** rather
+              than kept as a separate night: its question is whether S088's
+              **121.8 Elo anchor spread over five references** -- 64.7 without
+              Leorik 2.1, against the 30 the procedure allows -- is scale
+              compression from 10+0.2. DEC-077 named the control as the leading
+              candidate and priced the compression at a ratio of 0.853 across a
+              440-Elo CCRL span. That is a property of how the final number is
+              read, not of the current engine, so it is answered by running the
+              eventual gauntlet at two controls instead of by replaying the old
+              one now. S128's file is folded into S152's, DEC-086's precedent,
+              and its id is not reused.
+Rejected:     Keeping S152 at the block boundary -- it buys information and no
+              strength, and five hours of the binding constraint is the price.
+              The plan's own framing is that measurement capacity is what limits
+              it, and a checkpoint spends that on a number nobody acts on: a
+              disappointing checkpoint would not change the pending order, which
+              was itself set by an adversarial review against the published
+              record (DEC-081 to DEC-089).
+              Retiring S152 outright -- the end-to-end check is still owed
+              before the 3000 claim is made, and an absolute number is the only
+              thing that can falsify a chain of self-play verdicts. Deferred is
+              not retired.
+              Estimating strength from the SPRT sum instead and recording that
+              as the current rating -- it is arithmetic on early-stopped
+              estimates and it is not a measurement. The +90 figure in
+              particular is exactly the kind of number this project has been
+              wrong with before, and it is recorded in this session's transcript
+              as an estimate with its range and nowhere else.
+Consequences: The last measured rating stays 2559 +/-25 soft until the run near
+              the goal, and no document may quote anything else as the engine's
+              rating. An estimate may be given when asked, with its correction
+              and its unpriced terms stated, and it is never written into
+              `specs.md` as a measurement. Between here and there the evidence
+              of progress is the per-change SPRT ledger and nothing else, which
+              makes the pre-registered reading in each run's script the load
+              bearing artefact rather than a formality. When the run does come
+              it carries S128's second control, so budget two gauntlets and not
+              one.
