@@ -7,9 +7,85 @@ Updated: 2026-08-23 by `moltke --step status`.
 
 - Last done: S145
 - In progress: none
-- Next: S108
+- Next: S024
 - Blocked: none
 - Parked:
+  - **HANDOVER TO THE MACBOOK, 2026-08-23. Read this before anything else; it
+    is the only item in this file with a deadline, and it says where to start.**
+
+    **Start here, and it takes ten seconds.** Build, then run
+    `python3 tools/search_bench.py ./build/src/chesso 9` and the same at 12.
+    Expect **121512 / 800769 / 62907** at depth 9 and
+    **639228 / 3430710 / 367858** at depth 12, best moves `c3d5` / `e2a6` /
+    `d7c8q` at both, exactly. If they match, every deterministic figure this
+    repository records is valid on the MacBook **as written**, and nothing needs
+    regenerating. If they do not match, stop and read the next paragraph before
+    trusting any node count in any document.
+
+    **Why that check and not a re-baseline.** The numbers here fall into two
+    classes and only one of them is machine-bound. *Deterministic*: node counts,
+    best moves, perft, the reach counts, the counter tallies. At a fixed depth
+    with `Threads=1` these are properties of the algorithm and not of the
+    machine, so they carry across unchanged -- which is why one comparison
+    confirms the whole class instead of re-measuring it. *Time-based*: nps
+    ratios, games per hour, Elo verdicts, the CCRL estimate. Those cannot be
+    carried and **do not need regenerating either**: DEC-049 already decides it
+    -- comparability is a property of a (machine, compiler) pair, and the
+    TOOLCHAIN.md warning "bites only when a figure is carried across machines".
+    Every such figure stays attributed to the machine that produced it and
+    remains valid as that. No re-run makes S108 more honest than it is.
+
+    **The one thing that could break the deterministic class, stated so the
+    check has a purpose.** `build_lmr_table()` at `src/search.cpp:102` is the
+    engine's only floating-point path: `(LMR_BASE / 100.0) + log(depth) *
+    log(move_number) / (LMR_DIVISOR / 100.0)`, truncated to `uint8_t`. glibc's
+    `log` and Apple's are not bit-identical, and a 1-ULP difference where that
+    expression sits just under an integer flips one reduction by a ply, which
+    moves the tree and every node count with it. That is the entire portability
+    exposure and the search_bench comparison is what detects it. If it fires,
+    the fix is not to re-measure the documents: it is a decision about whether
+    the table is built from a portable integer approximation instead, and it
+    would be the first decision taken on the MacBook.
+
+    **The only figure the MacBook actually lacks is throughput**, games per hour
+    at `8+0.08`, needed for scheduling and nothing else. It arrives free from
+    the first hour of the next real SPRT -- do not spend a dedicated calibration
+    run on it. This machine did 2340 games/h on 12 threads for comparison.
+
+    **`.moltke.local.md` does not travel and the MacBook has none.** It is
+    machine-local and uncommitted by design, so write a fresh one there before
+    measuring anything: the tool paths, the core count, the concurrency default
+    and the compiler are all different. `TOOLCHAIN.md` is macOS throughout and
+    is *correct* there while being stale here, which is the reverse of the
+    situation its own Open note describes -- so on the MacBook TOOLCHAIN.md
+    becomes the reliable document and `.moltke.local.md`'s Linux notes are what
+    is gone.
+
+    **What does not survive the move at all.** `.tuning/` is 1.4 GB and
+    gitignored: `selfplay_v2.tsv` is 683 MB and regenerable at the cost of a
+    night, and the five fit scripts are **32 KB in total** -- `anchors.py` 16 K,
+    `apply_fit.py`, `verify_fit.py`, `reanchor.py`, `diff_fit.py` 4 K each.
+    `anchors.py` is still the only executable record of how ten pinned test
+    values are derived, including the quiescence composite no evaluation model
+    can produce. Committing 32 KB would end that exposure for good and it is the
+    owner's call, not the agent's, which is why it is written here and not done.
+    `.ref-builds/` is 2.2 GB of gitignored worktrees and is worth nothing --
+    `fastchess.sh` rebuilds them on demand.
+
+    **The commits must be pushed before the machine goes down.** AGENTS.md
+    par.5 is that the agent never pushes. At the time of writing `achesso` is
+    ahead of `origin/achesso` by three: `bbbd9f4` (DEC-108), `3b39e5a` (S108's
+    hoist) and S108's completing commit. Unpushed, the MacBook sees a branch
+    that ends at `77ecb6f` and none of S108 exists.
+
+    **Where the work stands.** **S108 is complete.** H1 accepted at `elo0=-5 elo1=0` in 12774 games and 5 h 26 m against `bbbd9f4`, `Elo 2.28 +/- 4.40`, `LLR 2.98`, 0 forfeits -- a regression of 5 Elo or more excluded, no gain claimed. The engine now computes a static evaluation at every non-check main-search node and the table entry carries it, which is the input S109 reads. The next step in plan.md order is
+    **S024**, continuation history -- not S109. It is play-altering and owes an
+    SPRT, so it is the step that wants the throughput figure above, and it is
+    the one to start with on the MacBook once the search_bench check above has
+    passed. **S109 sits behind it** and carries the layer S108 deferred -- a
+    direction-certified table score as a pruning margin's input, written up in
+    its step file under `## Inherited from S108` -- so that decision is waiting
+    where the step that takes it will be read, not here.
   - **`AGENTS.md` par.12 and the stop hook's own message both name
     `bin/moltke.py`, which does not exist in this repository.** The tool ships
     with the plugin, at

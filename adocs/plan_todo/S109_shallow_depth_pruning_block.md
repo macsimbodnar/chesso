@@ -64,6 +64,36 @@ This is the fourth, fifth, sixth and seventh pruning rule in the engine and
 they get the same treatment before any of them is called done -- the clause is
 in the `accepts:` above rather than left for a later step to add.
 
+## Inherited from S108: the table score as the margin's input
+
+**S108's layer (c) is deferred here by the owner's decision, 2026-08-23.** S108
+supplies the static evaluation at every non-check node; what it deliberately
+did not take is the next layer above it -- where the table entry's *score*
+certifies a direction, using that adjusted number as the input to a pruning
+margin instead of the raw static evaluation. The bound type is what licenses it:
+a `TT_BETA_NODE` whose de-normalised score is above the static evaluation may
+raise the input, a `TT_ALPHA_NODE` whose score is below it may lower it, and the
+mate band is excluded. The stack and the stored evaluation keep the raw static
+either way -- improving compares statics and never search scores, or the
+correction compounds through storage (S099 inherits the same rule).
+
+It is deferred rather than dropped because S108 already owed one verdict and
+one change at a time is the rule. It arrives here as this step's first line,
+which is the cheaper place for it: the margin consumers this step adds are what
+the adjusted input feeds, so it is measured with them present rather than
+against reverse futility alone.
+
+The published record prices the sites individually and far above 3000: Lynx
+#1973 measured the reverse-futility site alone at **+2.07 +/-1.50** over 80488
+games at 8+0.08, and #2055 the null-move condition at **+1.56 +/-1.27** over
+91990, after #1971 removed a global version and #1975's first null-move cut
+failed. Weiss cca90ea (#336, 2020) measured **+10.78/+12.09** for the family,
+scoped by its own message to "pruning heuristics". An effect of +2 is not
+resolvable by a run this harness can afford, which is the thing to settle before
+booking one: fold it into this step's single SPRT, or give it a non-regression
+pair of its own. S130 is the local precedent and it is not encouraging -- the
+quiescence half of the same idea measured no verdict over 16784 games.
+
 ## Technical details (SOTA research, 2026-08-19)
 
 Line numbers at `cf89e22`; re-locate by symbol if drifted. Every GitHub read

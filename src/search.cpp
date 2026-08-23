@@ -730,13 +730,6 @@ int negamax(int alpha0,
   // write cannot wait for it. S108.
   state->static_evals[ply] = static_eval;
 
-  // Transitional, and deleted in the commit that makes the entry carry this
-  // node's evaluation. For now the entry records exactly what it recorded
-  // before -- a number at a reverse futility node, the sentinel everywhere
-  // else -- so the stores are byte-identical and the hoist above is provably
-  // behaviour-neutral. S108.
-  int stored_eval = TT_EVAL_NONE;
-
   // Reverse futility pruning, also called static null move pruning. The null
   // move observation without the null move: if the static score is so far
   // above beta that the opponent cannot claw the difference back in the plies
@@ -772,10 +765,6 @@ int negamax(int alpha0,
   if (!is_pv && !is_in_check && static_cast<int>(ply) >= RFP_MIN_PLY &&
       depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
-
-    // The number comes from the top of the node now. This site used to compute
-    // it, which is why the entry only ever carried one here. S103, S108.
-    stored_eval = static_eval;
 
     // Fail soft, and the bound returned is the one actually argued for: the
     // static score minus everything the opponent was assumed able to win back.
@@ -1109,7 +1098,7 @@ int negamax(int alpha0,
 
   const int to_store = normalize_score(best_so_far, ply);
   tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
-                 stored_eval);
+                 static_eval);
 
   return best_so_far;
 }

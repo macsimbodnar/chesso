@@ -1,13 +1,23 @@
 id:         S108
 goal:       every node that is not in check computes its static evaluation once, stores it in its table entry and reads it back, so improving and the pruning margins have an input
 accepts:    an SPRT verdict, recorded whatever it is; `improving` is `static_eval(ply) > static_eval(ply - 2)`, falling back to ply-4 when the ply-2 node was in check and defaulting to true when neither exists -- and the fallback is **tested**, because a broken improving calculation costs Elo without ever crashing; the eval is computed once per node and never twice, and the table entry no longer overwrites a stored evaluation with TT_EVAL_NONE; INV-4 holds -- the number comes from the accumulators `make_move` maintains and nothing stops maintaining them; the nps cost is measured and recorded next to the verdict
-touches:    src/search.cpp negamax, src/transposition_table.cpp, src/data_structures.hpp
+touches:    src/search.cpp negamax, src/transposition_table.cpp, src/data_structures.hpp,
+            src/search.hpp, src/transposition_table.hpp, tests/test_search.cpp,
+            adocs/specs.md, adocs/testing.md, adocs/data/S108_sprt.sh,
+            adocs/data/S108_node_reach.py,
+            adocs/plan_todo/S109_shallow_depth_pruning_block.md
+            -- the two headers because `improving_at()` and `tt_eval_to_store()`
+            are both declared for tests that could not otherwise reach them, the
+            same reason `quiescence` and `negamax` are already declared there;
+            S109's step file because the owner's decision to defer layer (c)
+            lands as that step's first line and had to be written where the step
+            that takes it will be read
 excludes:   consuming improving, which is S109 and the reduction work; correction history, which is S099
 decisions:  DEC-071
 closes:
 blocks:
 paused_by:
-done:
+done:      H1 accepted at elo0=-5 elo1=0 in 12774 games and 5 h 26 m 38 s against bbbd9f4: LLR 2.98, Elo 2.28 +/- 4.40, nElo 3.13 +/- 6.03, LOS 84.58 %, 0 forfeits in 12776 -- a regression of 5 Elo or more excluded, no gain claimed. Static eval at every non-check node, stored and read back; the TT_EVAL_NONE overwrite removed; improving_at() with five branches red-first tested and no in-search caller. Hoist behaviour-neutral on node counts (INV-6) at -1.21 % nps. Fast suite 20/20, clang-format clean.
 
 ## Why this is a prerequisite and not a feature
 
@@ -306,3 +316,102 @@ satisfied vacuously.
   -- 0980488 bundles improving on NMP/LMR with "saved static evals in hash",
   no per-change number.
 author:    Maksym Bodnar
+
+## What was built, in two commits
+
+**(a) `3b39e5a`, the hoist. Behaviour-neutral and proved.** The compute-or-read
+moved to the top of the node, below the leaf test and the TT cutoff: the entry's
+number where the probe already paid for found one, a fresh `evaluate()`
+otherwise, `TT_EVAL_NONE` in check. `search_state_t` gained
+`int static_evals[MAX_PLY]`, written by every node that recurses and before the
+first recursion, null move included. `improving_at()` landed with no in-search
+call site. The *stored* value kept its old semantics through one transitional
+variable, so every store was byte-identical.
+
+Discharged on node counts per INV-6, not on an SPRT: `tools/search_bench.py`
+against `bbbd9f4` reads **121512 / 800769 / 62907** at depth 9 and
+**639228 / 3430710 / 367858** at depth 12, `c3d5` / `e2a6` / `d7c8q` at both,
+identical on every figure.
+
+**The cost of the hoist alone, which is the accepts' nps number: -1.21 %.**
+Sigma 0.96 % on the paired ratio over 12 interleaved pairs at
+`go movetime 3000` from the start position, medians 6.401 M against 6.320 M nps,
+the candidate faster in **1 pair of 12**. A sign test on 11 of 12 puts the
+direction at p ~ 0.006, so it is a real 1.2 % and not the noise floor -- which
+matters, because CLAUDE.md's rule 5 would call a bare -1.2 % noise and the
+pairing is what resolves it. About **-1.7 Elo** at DEC-083's 1.43 Elo/%
+conversion. This is the number the second commit has to earn back.
+
+**(b) the store, the read-back and the overwrite fix.** Every negamax store
+carries the node's evaluation; `tt_eval_to_store()` keeps an evaluation the slot
+already holds when the incoming one is `TT_EVAL_NONE` **and the key matches and
+the slot was ever written**. The generation test is not decoration: a fresh slot
+has key 0 and eval 0, and 0 is an ordinary evaluation, so a hash of 0 would
+otherwise inherit a zero nothing computed.
+
+## The prediction this step got wrong, and it is worth the section
+
+The step file's par.6 says the second commit's node counts "move by
+construction". **At the engine's default hash they do not move at all**: 60 book
+positions at depth 11 read **63680446 nodes on both sides, 0 node-count
+differences and 0 best-move differences**. A bench-sized sample would have
+called this behaviour-neutral, discharged it on INV-6, and skipped the run.
+
+At **Hash 16**, the hash the S105 regime plays at, the same comparison over 200
+positions at depth 12 reads **3 of 200 node counts differing** -- -4.0 %,
+-24.5 % and -2 nodes -- 0 best moves differing, and 347297369 -> 346772409
+total, **-0.15 %**. So the reach is a function of *replacement pressure* and not
+of depth or position count: the preserved evaluation is worth something exactly
+where entries are being evicted, and the default hash evicts almost nothing at
+these depths. `adocs/data/S108_node_reach.py` is the instrument and its
+docstring carries both readings.
+
+**The general lesson, which outlives this step:** INV-6's node-count discharge
+is only as strong as the pressure the sample puts on the table. A change to
+*replacement* or *storage* semantics must be sampled at the hash the match
+plays, or the discharge is measuring an engine nobody plays.
+
+## The reach, counted rather than argued
+
+Temporary counters, since removed, over the same 200 positions at depth 12 with
+Hash 16:
+
+| what | count | share |
+|---|---|---|
+| main-search stores carrying an evaluation | 92389379 of 159810384 | 57.8 % |
+| the preserve firing, a sentinel store kept | 259867 | |
+| quiescence stand-pat sites | 137392769 | |
+| ... reached with an entry carrying an evaluation | 794270 | 0.578 % |
+| ... of those, from a main-search entry | 313851 | 0.228 % |
+| ... of those, differing from `evaluate_lazy()` | 29492 | 0.021 % |
+
+The 0.021 % is the whole behavioural surface of the second commit: the number of
+quiescence stand-pats that are now an exact score where they were a lazy bound.
+S130's count over the three bench positions read 1821940 stand-pat sites and
+20432 entry hits, and this run reproduces the first figure exactly -- the same
+instrument, two steps apart.
+
+## Deviations recorded, not taken silently
+
+**1. The SPRT is booked against `bbbd9f4`, the step's parent, and not against
+the first commit as par.6 says.** The first commit is not independently
+keepable: it costs 1.21 % nps and buys nothing until the entry carries the
+number, so there is no outcome in which it ships alone. Booked against the first
+commit, the run reads the second commit's delta and the step still ships an
+unpriced -1.7 Elo. The full argument and the three pre-registered readings are
+in `adocs/data/S108_sprt.sh`, written before the first game.
+
+**2. Layer (c) is deferred to S109, by the owner's decision, 2026-08-23.** The
+step file required the choice to be explicit rather than silent. Using a
+direction-certified table *score* as the input to a pruning margin is now
+S109's first line and is written up in its step file under
+`## Inherited from S108`, with Lynx #1973's +2.07 +/-1.50 and #2055's
++1.56 +/-1.27, and with the open question stated: whether an effect of +2 is
+resolvable by any run this harness can afford.
+
+## Documentation checked
+
+`README.md` is owner-written and untouched (DEC-017). `DEV_MANUAL.md` and
+`MANUAL.md` were checked and need no change: the step adds no UCI option, no
+`info` field, no command and no build or test flag, and neither document
+describes the entry's eval field or the store's replacement semantics.

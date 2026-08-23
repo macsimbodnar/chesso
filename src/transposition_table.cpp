@@ -104,6 +104,37 @@ const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
 }
 
 
+int16_t tt_eval_to_store(const tt_entry_t* entry, uint64_t hash, int eval)
+{
+  assert(entry != nullptr);
+
+  // Clamped rather than truncated, and asserted rather than trusted. Nothing
+  // the evaluation can return comes near the bound (see tt_entry_t), so the
+  // clamp is there to make a future term that does a wrong score instead of a
+  // wrapped one.
+  assert(eval == TT_EVAL_NONE || (eval > TT_EVAL_NONE && eval <= INT16_MAX));
+
+  if (eval == TT_EVAL_NONE) {
+    // Nothing to record, so nothing is destroyed. The main search stores the
+    // sentinel at every node it was in check at and TT_DEPTH_QS sits below
+    // every main depth, so without this a check node wipes the number
+    // quiescence recorded for the same position -- which is what the field did
+    // from S094 until S108.
+    //
+    // Only for this same position, and generation is what says the slot was
+    // ever written: a fresh slot has key 0 and eval 0, and 0 is an ordinary
+    // evaluation. Preserving across a key change would hand a colliding
+    // position's number to the next reader, which is worse than having none.
+    const bool same_position = (entry->generation != 0 && entry->key == hash);
+
+    return same_position ? entry->eval : static_cast<int16_t>(TT_EVAL_NONE);
+  }
+
+  return static_cast<int16_t>(
+      std::clamp(eval, TT_EVAL_NONE + 1, static_cast<int>(INT16_MAX)));
+}
+
+
 void tt_store_entry(transposition_table_t* tt,
                     const board_t* board,
                     int depth,
@@ -120,6 +151,9 @@ void tt_store_entry(transposition_table_t* tt,
   const uint64_t hash = board->hash;
   tt_entry_t* entry = &tt->entries[hash & tt->index_mask];
 
+  // Decided before the key is overwritten, because the decision reads it.
+  const int16_t decided_eval = tt_eval_to_store(entry, hash, eval);
+
   // Depth-preferred inside one search, always replaceable across searches.
   if (entry->generation != tt->generation || depth >= entry->depth) {
     entry->key = hash;
@@ -127,16 +161,7 @@ void tt_store_entry(transposition_table_t* tt,
     entry->best_move = best_move;
     entry->depth = static_cast<int16_t>(depth);
 
-    // Clamped rather than truncated, and asserted rather than trusted. Nothing
-    // the evaluation can return comes near the bound (see tt_entry_t), so the
-    // clamp is there to make a future term that does a wrong score instead of
-    // a wrapped one.
-    assert(eval == TT_EVAL_NONE || (eval > TT_EVAL_NONE && eval <= INT16_MAX));
-    entry->eval =
-        (eval == TT_EVAL_NONE)
-            ? static_cast<int16_t>(TT_EVAL_NONE)
-            : static_cast<int16_t>(std::clamp(eval, TT_EVAL_NONE + 1,
-                                              static_cast<int>(INT16_MAX)));
+    entry->eval = decided_eval;
 
     entry->type = static_cast<uint8_t>(type);
     entry->generation = tt->generation;

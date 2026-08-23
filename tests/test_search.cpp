@@ -1746,6 +1746,154 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
+  // The main search now records the number it computed, and the field is no
+  // longer overwritten with the sentinel by a node that has one. Both halves
+  // were observed red: before S108 the main search passed TT_EVAL_NONE at
+  // every node but a reverse futility one, and tt_store_entry() wrote it over
+  // whatever the entry held.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a main-search store records this node's evaluation")
+  {
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+    REQUIRE_EQ(static_score, 563);
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    // A PV node, which is the one place reverse futility may not fire, so the
+    // node searches its moves and reaches the store at the bottom instead of
+    // returning a bound from the top.
+    auto run = [&]() {
+      REQUIRE(load_FEN(fen, &game));
+      never_stop = false;
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      negamax(-100000, 100000, 1, 1, &game, &state, 0, true);
+    };
+
+    run();
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    CHECK_EQ(entry->eval, static_score);
+  }
+
+
+  // And it records it once. A node that recomputed instead of reading the
+  // entry it already probed would store evaluate()'s number, so planting an
+  // evaluation this position does not have is what tells the two apart -- the
+  // same trick the reverse futility case above uses to prove the read.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a main-search node evaluates once and stores what it read")
+  {
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    static std::atomic_bool never_stop = false;
+
+    REQUIRE(load_FEN(fen, &game));
+    const int static_score = evaluate(&game.board);
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    // Stored at TT_DEPTH_QS with a score that answers nothing, so the entry
+    // reaches the node as an evaluation and never as a cutoff.
+    const int planted = static_score - 200;
+    REQUIRE_NE(planted, static_score);
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_ALPHA_NODE, 0,
+                   planted);
+
+    REQUIRE(load_FEN(fen, &game));
+    never_stop = false;
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    negamax(-100000, 100000, 1, 1, &game, &state, 0, true);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+
+    // Depth 1 replaced the depth -1 entry, so this is the main search's own
+    // store and not the planted one surviving.
+    REQUIRE_EQ(entry->depth, 1);
+    CHECK_EQ(entry->eval, planted);
+  }
+
+
+  // A store that carries no evaluation leaves the one already there alone. The
+  // main search stores the sentinel at every node it was in check at, and
+  // TT_DEPTH_QS sits below every main depth, so without this a check node
+  // wipes the number quiescence recorded for the same position.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a store with no evaluation keeps the one on the entry")
+  {
+    const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, 300, TT_PV_NODE, 0, 300);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->eval, 300);
+
+    // Deeper, so replacement fires and every other field is overwritten.
+    tt_store_entry(&tt, &game.board, 7, -50, TT_ALPHA_NODE, 0, TT_EVAL_NONE);
+
+    entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(entry->depth, 7);
+    REQUIRE_EQ(entry->score, -50);
+    CHECK_EQ(entry->eval, 300);
+  }
+
+
+  // The rule that keeps the line above from handing one position's evaluation
+  // to another. Held on the decision itself rather than through a store,
+  // because the collision it guards against -- two keys landing on one slot --
+  // is not constructible from a FEN on demand, and a rule that cannot be
+  // exercised is a rule that is not tested.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "an evaluation never survives a key change")
+  {
+    tt_entry_t entry = {};
+    entry.key = 0xfeedfacecafebeefULL;
+    entry.eval = 300;
+    entry.generation = 1;
+
+    // Same position, nothing to record: the number stays.
+    CHECK_EQ(tt_eval_to_store(&entry, entry.key, TT_EVAL_NONE), 300);
+
+    // A different position landing on this slot: the number is that other
+    // position's business and this one has none to offer.
+    CHECK_EQ(tt_eval_to_store(&entry, entry.key ^ 1ULL, TT_EVAL_NONE),
+             TT_EVAL_NONE);
+
+    // A real evaluation always wins, whichever position was here before.
+    CHECK_EQ(tt_eval_to_store(&entry, entry.key, -42), -42);
+    CHECK_EQ(tt_eval_to_store(&entry, entry.key ^ 1ULL, -42), -42);
+
+    // A slot that was never written has key 0 and eval 0, and 0 is an ordinary
+    // evaluation. Only the generation tells the two apart, so the preserve
+    // tests it: without that, a hash of 0 would inherit a zero that nothing
+    // ever computed.
+    tt_entry_t fresh = {};
+    CHECK_EQ(tt_eval_to_store(&fresh, 0, TT_EVAL_NONE), TT_EVAL_NONE);
+  }
+
+
   // Without this, a quiescence that never stored anything would pass every
   // other case in this file.
   TEST_CASE_FIXTURE(search_fixture_t, "quiescence writes entries of its own")

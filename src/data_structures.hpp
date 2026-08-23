@@ -392,10 +392,16 @@ struct tt_entry_t
   move_t best_move;
   int16_t depth;
 
-  // The static evaluation of this position, or TT_EVAL_NONE where the node
-  // that wrote the entry never had one to record. Not the same number as
-  // `score`, which is what the search returned; this is what the position was
-  // worth before anything below it was looked at. S094.
+  // The static evaluation of this position, or TT_EVAL_NONE where no node that
+  // wrote the entry ever had one to record. Not the same number as `score`,
+  // which is what the search returned; this is what the position was worth
+  // before anything below it was looked at. S094.
+  //
+  // "No node that wrote it" and not "the node that wrote it": a store carrying
+  // TT_EVAL_NONE over an entry for this same position keeps the number that is
+  // there rather than erasing it, since an evaluation is a property of the
+  // position and not of the visit that recorded it. Across a key change it is
+  // erased -- see tt_eval_to_store(). S108.
   //
   // Free in space. The struct is 8-byte aligned for the key and was 20 bytes
   // of content in 24, so this lands in padding that was already being paid
