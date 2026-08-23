@@ -734,7 +734,25 @@ int negamax(int alpha0,
   //   prev_move 0   the parent was itself a null move. Two passes in a row is
   //                 the same position with less depth
   //   beta near mate  a fail-high against a mate bound would return a mate
-  //                 score this search never proved
+  //                 score this search never proved. **Both** edges, and the
+  //                 negative one is the whole of S165: with beta <= -MATE_MIN
+  //                 the node is a defender node inside a mate proof, so beta
+  //                 is a mate bound against the side to move and any null
+  //                 result clears it. The node then fails high on a reduced
+  //                 search's word, and the reduced search is exactly the
+  //                 instrument that misses mates -- this rule hid a mate in
+  //                 two once already. Reverse futility guarded both edges from
+  //                 the start and no comment, decision or step ever said why
+  //                 this one did not. 2026-08-22_adversarial-F04.
+  //
+  //                 Measured before it was added, not argued: over 400 corpus
+  //                 positions at depth 10 the band is reached on **0 of
+  //                 301620** otherwise-eligible nodes, and over the 104
+  //                 proved defender nodes of adocs/data/S165_defender_set.tsv
+  //                 on **3079 of 6252, 49.2 %**. So it is inert in ordinary
+  //                 play and fires on half the eligible nodes of a mate proof,
+  //                 where it buys two more mates found on the defender sweep
+  //                 with no delay regression anywhere.
   //
   // Deeper searches can afford to give up more, since what is left is still
   // enough to answer the question.
@@ -747,7 +765,7 @@ int negamax(int alpha0,
   // two at depth 4, where this node had three plies left and the null search
   // had none.
   if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
-      depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
+      depth - 1 - null_reduction >= 1 && beta < MATE_MIN && beta > -MATE_MIN &&
       game_phase(&game->board) > 0) {
     const int reduction = null_reduction;
 

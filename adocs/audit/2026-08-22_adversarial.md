@@ -204,7 +204,7 @@ it with `stockfish` (`go depth 20`) before pinning it in a test.
 
 ### 2026-08-22_adversarial-F04  low  null move pruning has no negative mate-band guard, unlike reverse futility beside it, and the asymmetry is recorded nowhere
 
-Status: open
+Status: planned — S165
 Verification: statically confirmed (asymmetry); strength/mate-distance impact
 needs-run.
 

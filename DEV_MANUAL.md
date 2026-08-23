@@ -712,7 +712,7 @@ preconditions — without them a script that always fails, or a fixture that is
 not actually misformatted, would satisfy the rest by accident. See the `Format`
 section below for what the selection is (S054).
 
-### Mate safety: three instruments, and none of them substitutes for another
+### Mate safety: four instruments, and none of them substitutes for another
 
 Pruning that hides a mate is this engine's recurring bug — null move pruning hid
 a mate in 2 by reducing to depth 0, late move reduction reduced the mating move
@@ -806,6 +806,41 @@ mate the engine never reported, which is precisely the failure reverse futility
 causes, and that is what instrument 1 is for. Chesso trips it today on a known
 truncation — the score is right, the line stops at the iteration depth — which
 is S147.
+
+**4. The defender-side set.** `adocs/data/S165_defender_set.tsv`, swept by
+`adocs/data/S165_nmp_defender_sweep.py`. Instruments 1 and 2 both ask "does the
+engine find this mate", with the engine as the attacker. A guard on a mate
+*bound* is not reachable from there: `beta <= -MATE_MIN` happens where the
+engine is the side **being** mated, and that is what S165 needed and could not
+get from either set.
+
+```bash
+cmake --build build-tune -j12
+~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py generate   # re-prove the set
+~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep build-tune/src/chesso
+```
+
+The positions are not new — they are instrument 1's own `defender_nodes`
+column, the mating line at plies 1, 3, 5, 7. What is new is that each one's
+distance is **proved here rather than computed from the root's**, and the reason
+is a trap worth naming: `representative_line()` walks the attacker's first quiet
+mating move and the defender's **first legal reply**, not the reply that holds
+out longest, so `root_distance - (ply + 1) / 2` is wrong on **3 of the 104
+nodes**. Each distance is the smallest k with instrument 1's own
+`_and_mate(node, 2k)` true, iterative in k so every shorter distance is refuted,
+and stockfish at 4000000 nodes agrees on **104 of 104**.
+
+**A mate in k against the side to move is 2k plies, not `2k - 1`** — k defender
+moves and k attacker moves. `2k - 1` is the attacker-side formula, and using it
+here reads every node as one mate further away than it is; the first version of
+this sweep did, and reported 28 spurious `short` results before the arithmetic
+was checked against the enumeration.
+
+Reported per proved distance in instrument 1's sweep's shape. On the shipping
+build, 104 nodes at depth `2k + 8`: **82 of 104 exact**, m1 50/50 at delay 0,
+m2 29/31, m3 3/15, m4 0/8, `short 0` and `sign 0`. Without S165's guard the
+same sweep reads 80, m2 28/31 and m3 2/15 — so it separates two mates, which is
+what a 104-node set at this strength can resolve and not more.
 
 **Measuring the guard itself.** `adocs/data/S145_rfp_sweep.py` sweeps
 `RfpMinPly` and `RfpMaxDepth` against both sets on the tune build, one axis at a
