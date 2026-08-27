@@ -26,7 +26,7 @@
 // Adding a parameter here adds a UCI option to the tune build, which
 // tests/test_uci_surface.cpp will require MANUAL.md to document.
 //
-// Not in the set, on purpose: MATE_MAX, MATE_MIN, DRAW_SCORE, MIN, MAX and
+// Not in the set, on purpose: MATE_MAX, MATE_MIN, DRAW_SCORE, MIN and
 // GAME_PHASE_MAX are definitions and not settings, and the move-ordering band
 // constants are excluded because the bands clear each other by 100 points and
 // tuning them inverts a capture against a killer silently (CLAUDE.md, S023).

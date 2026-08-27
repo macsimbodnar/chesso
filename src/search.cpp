@@ -17,10 +17,10 @@
 #define MATE_MIN 48000
 #define DRAW_SCORE 0
 
-// The full window, named once in search.hpp because a caller now has to be
-// able to ask for it explicitly.
+// The bottom of the full window. Its counterpart is SEARCH_SCORE_INF itself,
+// named in search.hpp because a caller now has to be able to ask for it
+// explicitly.
 static constexpr int MIN = -SEARCH_SCORE_INF;
-static constexpr int MAX = SEARCH_SCORE_INF;
 
 
 // QUIET_HISTORY_MAX, the six HISTORY_BONUS_*/HISTORY_MALUS_* coefficients,
