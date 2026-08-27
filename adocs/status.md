@@ -3,15 +3,32 @@
 Convenience view, rewritten at the end of every work turn. The filesystem beats
 this file: on disagreement, `plan_current/` wins.
 
-Updated: 2026-08-23 by `moltke --step status`.
+Updated: 2026-08-27 by `moltke --step status`.
 
 - Last done: S145
 - In progress: none
 - Next: S024
 - Blocked: none
 - Parked:
-  - **HANDOVER TO THE MACBOOK, 2026-08-23. Read this before anything else; it
-    is the only item in this file with a deadline, and it says where to start.**
+  - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
+    what it explains, not as a thing to do.**
+
+    **The check passed to the node.** `search_bench` at depth 9 gives
+    121512 / 800769 / 62907 and at depth 12 gives 639228 / 3430710 / 367858,
+    best moves `c3d5` / `e2a6` / `d7c8q` at both, exactly as predicted below.
+    `build_lmr_table()`'s `log` was the stated portability exposure and Apple's
+    `log` does not move the tree, so every deterministic figure this repository
+    records is valid here as written and nothing was regenerated. Throughput in
+    games per hour is still unmeasured on this machine and still arrives free
+    from the first hour of the next real SPRT. `.moltke.local.md` is written.
+    The commits were pushed. What the move did break was two things the
+    handover did not predict, both found by running the check: the tree did not
+    compile under Apple clang's `-Werror`, and `fastchess.sh` could not complete
+    a run under bash 3.2 -- **S167** is both, and until it landed no SPRT could
+    have been taken here at all.
+
+    The original text follows, because its reasoning about which figures carry
+    and which do not is the standing rule, not a one-off.
 
     **Start here, and it takes ten seconds.** Build, then run
     `python3 tools/search_bench.py ./build/src/chesso 9` and the same at 12.

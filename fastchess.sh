@@ -55,6 +55,9 @@ set -euo pipefail
 # unconditionally: `rm -f ""` is itself an error on GNU coreutils, which would
 # make the trap fail on every path that exits before the snapshot exists.
 marked=0
+# Set beside SPRT-RUN-DONE at the end of the file. Read by the trap, which asks
+# whether the script reached that line rather than asking the shell how it died.
+completed=0
 fail()
 {
   marked=1
@@ -62,10 +65,19 @@ fail()
   exit 1
 }
 
+#
+# THE TRAP DOES NOT TRUST THE STATUS IT IS HANDED. macOS ships bash 3.2.57, and
+# there an EXIT trap reads `$? == 0` when the shell aborts on an unbound
+# variable under `set -u`; bash 5 reads 1. The `set -e` shape is unaffected, so
+# only the shape this trap was written for was masked -- the script printed no
+# marker and exited 0, and the watcher of a detached run would have spun to its
+# ceiling on that silence. Asking `completed` instead is version-independent.
+# S167.
 trap 'status=$?
       [[ -n "${snapshot:-}" ]] && rm -f "$snapshot"
-      if ((status != 0 && marked == 0)); then
+      if ((marked == 0 && (status != 0 || completed == 0))); then
         echo "SPRT-RUN-FAILED: exited $status" >&2
+        ((status != 0)) || status=1
       fi
       exit $status' EXIT
 
@@ -77,11 +89,20 @@ trap 'status=$?
 #
 # Done with a wrapper rather than by adding -C at each site, so a git call added
 # later inherits the anchor instead of reintroducing the bug. Every `git ...`
-# below is this function; `command git` is the real one.
+# below is this function; `$real_git` is the real one.
+#
+# The binary is resolved once instead of being reached through the `command`
+# builtin at each call, because bash 3.2 does not suppress errexit for `command`
+# on the left of `||`. The dirty-tree probe below is `git diff --quiet HEAD ||
+# diff_status=$?`, and git exits 1 there on every working-tree run -- which is
+# every --fast run -- so the script died at that line, before its banner, with
+# the trap above reporting success. A plain external command in the same
+# position is suppressed correctly. S167.
 repo="$(cd -- "$(dirname -- "$0")" && pwd)"
+real_git="$(command -v git)"
 git()
 {
-  command git -C "$repo" "$@"
+  "$real_git" -C "$repo" "$@"
 }
 
 # THE DEFAULT REFERENCE IS HEAD, AND THE BANNER PRINTS IT. It used to be the
@@ -365,4 +386,5 @@ if ((games > 0)); then
   }'
 fi
 
+completed=1
 echo "SPRT-RUN-DONE $tag $outdir"

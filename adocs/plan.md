@@ -391,10 +391,10 @@ pruned, which is why the `INV-1` to `INV-6` rows at the head of the ledger stay.
 `plan_done/` and git history keep everything pruned.
 
 <!-- 1. S001  short goal -->
-26. S164  the S130 substitution is pinned by a unit case on the lazy-bound stand-pat path, the one input class its tests do not reach
 27. S165  null move pruning's missing negative mate-band guard is added and measured, or recorded as deliberate with defender-side evidence
 28. S166  the documented stockfish invocation cannot silently answer without searching: TOOLCHAIN.md gains a chess-oracle section naming the quit-aborts-the-search trap, and CLAUDE.md's tool table points at it
 29. S108  every node that is not in check computes its static evaluation once, stores it in its table entry and reads it back, so improving and the pruning margins have an input
+- S167  fastchess.sh runs and reports failure correctly under bash 3.2, the macOS /bin/bash
 30. S024  history indexed by the move played n plies ago and the current move
 31. S109  late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
 32. S091  skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply
