@@ -59,8 +59,9 @@ fi
 
 # S054: `git ls-files` with no flags lists the index, so a source file that has
 # not been added yet is invisible to the check -- and --check is one of the three
-# commands in .moltke.json's step-completion gate, so every step that added a
-# file got a vacuous pass for exactly the files it added. --others adds the
+# commands in the step-completion gate (AGENTS.md's TESTS rule; it was
+# .moltke.json's until DEC-109), so every step that added a file got a vacuous
+# pass for exactly the files it added. --others adds the
 # untracked ones. --exclude-standard is load-bearing: it is what keeps the
 # generated sources under build*/ and the checked-out engine copies under
 # .ref-builds/ out of the list. --cached can also name a file deleted from the

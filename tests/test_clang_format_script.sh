@@ -4,8 +4,9 @@
 #
 # `git ls-files` with no flags lists the index, so before S054 the check was
 # blind to a source file that had not been added yet -- and it is one of the
-# three commands in .moltke.json's step-completion gate, so every step that
-# added a file got a vacuous pass for exactly the files it added. S041's
+# three commands in the step-completion gate (AGENTS.md's TESTS rule; it was
+# .moltke.json's until DEC-109), so every step that added a file got a vacuous
+# pass for exactly the files it added. S041's
 # completion commit sealed that claim over two files with lines past the column
 # limit.
 #
