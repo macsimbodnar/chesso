@@ -1,14 +1,17 @@
 # Status
 
-Convenience view, rewritten at the end of every work turn. The filesystem beats
-this file: on disagreement, `plan_current/` wins.
+Convenience view, rewritten by hand at the end of any turn that changed plan
+state. The filesystem beats this file: on disagreement, `plan_current/` wins.
+Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
+missed edit and not a tool's opinion.
 
-Updated: 2026-08-27 by `moltke --step status`.
+Updated: 2026-08-29, by hand.
 
-- Last done: S145
-- In progress: none
-- Next: S024
-- Blocked: none
+- Last done: S167
+- In progress: S024 history indexed by the move played n plies ago and the current move
+- Next: S024, then S109
+- Blocked: S024's first SPRT cannot restart until the machine is on mains power
+- Watching: nothing
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**
@@ -89,8 +92,8 @@ Updated: 2026-08-27 by `moltke --step status`.
     `.ref-builds/` is 2.2 GB of gitignored worktrees and is worth nothing --
     `fastchess.sh` rebuilds them on demand.
 
-    **The commits must be pushed before the machine goes down.** AGENTS.md
-    par.5 is that the agent never pushes. At the time of writing `achesso` is
+    **The commits must be pushed before the machine goes down.** The GIT rule
+    is that the agent never pushes. At the time of writing `achesso` is
     ahead of `origin/achesso` by three: `bbbd9f4` (DEC-108), `3b39e5a` (S108's
     hoist) and S108's completing commit. Unpushed, the MacBook sees a branch
     that ends at `77ecb6f` and none of S108 exists.
@@ -103,18 +106,6 @@ Updated: 2026-08-27 by `moltke --step status`.
     direction-certified table score as a pruning margin's input, written up in
     its step file under `## Inherited from S108` -- so that decision is waiting
     where the step that takes it will be read, not here.
-  - **`AGENTS.md` par.12 and the stop hook's own message both name
-    `bin/moltke.py`, which does not exist in this repository.** The tool ships
-    with the plugin, at
-    `~/.claude/plugins/cache/moltke/moltke/<version>/bin/moltke.py`, so every
-    command written the documented way fails at invocation -- it cost one failed
-    call at the start of the 2026-08-20 session and it is why plan_review F18
-    was filed against S085's copy of the same string. The S085 copy is corrected;
-    this one is not, because `AGENTS.md` is the moltke ruleset file that a plugin
-    upgrade rewrites, and par.0 already says local overrides there have to be
-    re-applied after an upgrade. Recorded rather than edited: whether to patch
-    the ruleset locally, or carry the real path in `.moltke.local.md` where a
-    machine-specific path belongs, is the owner's call. Parked, not planned.
   - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
     minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
     comment argues for, and **0 and 1 are the same engine** because `!is_pv`
@@ -174,20 +165,6 @@ Updated: 2026-08-27 by `moltke --step status`.
     not reached its stopping condition, which is a re-run with no high and no
     medium. F05 was this file's own two parked items and S069 has rewritten
     them; it is `planned` until the re-run, like the rest.
-  - **"Last done" above can name an older step than the newest completion.** Not
-    a stale file: `moltke --step status` derives the field from the last
-    completed entry in `plan.md` **list order**, and retention is a window over
-    list positions, so an entry sitting low in the list outlives completions that
-    came after it. the paragraph beginning "It also prunes completed entries" in
-    `plan.md` states the rule against the code that implements it — read `:173-187` until 2026-08-17, off by one at both ends: 173
-    is blank and 188 is the paragraph's last word, and `:174-188` until 2026-08-19,
-    by which time the paragraph had moved bodily and the range named a sentence
-    about S087 — and this item does not restate the census: the window moves on
-    every completion, so a worked example here reads as a measurement while being
-    a memory. Hand-correcting the field puts the file back out of agreement with
-    its own generator, which the stop hook catches, so it is recorded here
-    instead. Found while completing S065. Parked, not planned: a step is created
-    by a decision and none has been taken on this.
   - **The corpus and the fit tooling are gitignored and do not survive a machine
     move.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693 positions) and
     the scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
@@ -244,7 +221,7 @@ Updated: 2026-08-27 by `moltke --step status`.
   - **Steps S001 to S016 were retro-stamped at moltke adoption**, not completed
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
-    stamps as provenance, not as evidence that the gates of section 4 ran.
+    stamps as provenance, not as evidence that any completion gate ran.
   - **The `info` line is UCI surface that the golden guard does not cover.**
     `test_uci_surface` holds the command set, the option lines and the `go` and
     `position` tokens against `MANUAL.md`; the search output has never been in

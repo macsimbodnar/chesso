@@ -1,336 +1,234 @@
 # Agent operating rules
 
-Applies to any agent working in this repository. Additional to, not a replacement for, tool-level configuration.
-Claude Code entry point: `CLAUDE.md` containing `@AGENTS.md`.
+Applies to any agent working in this repository. `adocs/` is the project's
+memory; these rules say how to read it and how to keep it current. Nothing
+here is machine-enforced: the rules work because agents follow them, and a
+violation is visible in the diff. Set up by `/moltke:init`, which also wrote
+the `## Project rules` section at the end — the per-project answers that
+complete this generic base. Change those with `/moltke:rules`.
 
-## 0. Repository overrides — read before section 2
+Claude Code entry point: `CLAUDE.md` containing `@AGENTS.md`. Instructions
+layer, most specific wins: `.moltke.local.md` (machine-local, uncommitted)
+overrides `## Project rules`, which overrides the base ruleset above it.
 
-This is the `achesso` branch — *agentic chesso*. The end goal is the strongest
-CPU chess engine in the world — MIT-licensed and staying MIT, nothing
-copy-pasted from another open-source project, its own NNUE or whatever
-supersedes it, every change proved by SPRT and modern testing with specialized
-tools taken or built ad hoc — built to find out what AI-driven development can
-produce. `CLAUDE.md` is the full statement; DEC-013 and DEC-104 are the
-decisions.
+## Orient
 
-The rules below are house rules. They win over the stock ruleset wherever the
-two disagree. **A moltke upgrade that rewrites this file must re-apply them**,
-which is why they are stated here and not only in `decisions.md`.
+Start every session by reading, in this order:
 
-- **Nothing is copied. Ever.** No source from another engine, no tables from
-  another engine, no NNUE training data derived from another engine's evaluation
-  or search. Ideas, techniques and published articles are used freely — reading
-  the documented state of the art and implementing it here is the plan (DEC-014).
-  Copying it is not; inspiration from another open-source engine is taken only
-  where its licence consents, adapted, never copy-pasted (DEC-104). Another
-  engine's constants are never seeds, wherever they are republished (DEC-084
-  as amended by DEC-105). Running another engine's *binary* as a tool creates
-  no derivative work and is encouraged. DEC-016.
-- **The agent runs tests, measurements and evaluation tuning itself** (DEC-041),
-  without asking, and schedules anything lasting several hours for the night if
-  there is better work to do meanwhile. **NNUE training is still the owner's**:
-  the agent builds the trainer, prepares the data and states the run, and the
-  result comes back as a network measured by SPRT like any other change. The
-  line is *running the network training*, not writing it. DEC-015 as amended by
-  DEC-041.
-- **Chess judgement comes from a tool, never from the agent.** No agent assesses
-  a position, move, line or result from its own reasoning. This covers whether a
-  position is winning, whether a move is a blunder, whether an ending is
-  theoretically won, the material balance after a sequence, and opening
-  soundness. Getting a position onto a board is itself a tool job. See
-  `CLAUDE.md` for the tool per question, and DEC-023 for the failure that
-  produced the rule.
-- **A change that alters play is decided by SPRT, not by argument.** A change
-  claimed behaviour-neutral proves it with identical node counts and best moves
-  instead. INV-6. One change at a time — two at once and neither number means
-  anything. A verdict of zero is recorded as zero.
-- **A bug that has been found gets fixed before anything else starts.** Not
-  noted, not scheduled, not carried into the next change. A known defect in the
-  tree contaminates every measurement taken after it. This narrows section 3's
-  "correctness jumps the queue" to: it jumps the queue *now*.
-- **No rule demands a subagent; subagents are allowed wherever they are
-  needed.** Section 9's Tier-1 fast check after every `--step done` stays a
-  habit, and how it runs is the agent's call — a subagent where one earns its
-  keep, inline over the diff where it does not. Section 10's permission is the
-  operative half and is unchanged: spawn one freely whenever it is useful, for
-  a review, an audit, or parallel exploration. What is gone is the obligation,
-  which made a mandated spawn collide with a harness that gates the tool.
-  Owner decision, DEC-106.
-- **`README.md` is written by hand by the repository owner. No agent writes in
-  it, ever.** The developer-facing document section 2 and section 7 call
-  `README.md` is `DEV_MANUAL.md` in this repository — same purpose, same rewrite
-  discipline, same checks. `MANUAL.md` behaves exactly as the stock ruleset
-  describes. At step completion, "checked `README.md`, owner-written, no change
-  needed" is the expected outcome and a valid one. DEC-017.
-- **A match runs on every core the machine has.** `fastchess.sh` defaults to it
-  and the default is not lowered to be polite -- nothing else should be running
-  during a match anyway. Efficiency cores are included, knowingly: DEC-048
-  supersedes DEC-042 on that, trading some variance for throughput because
-  measurement capacity is the binding constraint on the plan and S027 spent
-  about twenty hours of it on six verdicts. `CONCURRENCY` overrides when a run
-  genuinely has to share the machine, and a run that lowers it says why.
-- **A long run is detached, and the thing watching it must outlive the turn.**
-  An SPRT takes three to four and a half hours here and a fit takes tens of
-  minutes, so both are started detached — `nohup ... &` — and never held open by
-  the turn that launched them. The watcher is the part that gets this wrong: a
-  backgrounded shell loop is scoped to its turn and dies the moment the user
-  types anything, silently, while the run itself carries on. In Claude Code use
-  `Monitor` with `persistent: true`, which lives as long as the session. Any
-  agent without that tool polls the log on its next turn instead and does not
-  pretend a watcher is armed.
-- **A watcher ends when its run ends, and the run's own last line is what ends
-  it.** `persistent: true` outlives the turn *and* outlives `/clear`: the
-  context holding the task id is discarded, the process is not, so an orphaned
-  watcher can only be killed by pid. `tail -f` never exits on its own — a
-  9-minute sweep left one holding for two hours. So: the detached run prints a
-  terminal marker as its last action, and the watcher is a command that exits on
-  that marker rather than a bare `tail -f`, with the failure signatures in the
-  same alternation so a crash is not silence. `TaskStop` when the run is read is
-  the belt; the self-exit is the braces. DEC-061.
+1. `adocs/status.md` — last done, in progress, next, blocked, parked.
+2. `adocs/plan.md` — what is being built, and the ordered open steps.
+3. `.moltke.local.md`, if present — machine-local notes, uncommitted.
 
-Marker file: `.moltke.json` at repo root.
-Present with `"enabled": true` means these rules are active and enforced.
-Present with `"enabled": false` means the user declined; do not ask again, do not scaffold.
-Absent: ask once whether to set the workflow up, then write the marker either way.
+That is enough to act on. Go deeper only on demand:
 
-```json
-{
-  "schema": 1,
-  "enabled": true,
-  "plan_active_max": 1,
-  "plan_stack_max": 3,
-  "surface_guard": "cli",
-  "test_command": "python3 -m unittest discover -s tests"
-}
-```
+- `adocs/specs.md` — what the project must do and never break. Read whole
+  before changing behaviour; it holds current state only.
+- `adocs/decisions.md` — why things are the way they are. Never read whole:
+  grep the index by id or topic.
+- `adocs/plan_done/` — one file per finished step. Read one when you need to
+  know how something got the way it is.
 
-`plan_active_max` counts per author. `surface_guard` is one of `cli`, `api`,
-`both`, `none` — `none` only alongside a `decisions.md` entry saying why.
-`test_command` is optional; set it and step completion runs it and refuses on
-failure.
+Precedence when they disagree: **specs > plan > status**. Filesystem beats
+prose: the plan directories are the state and `status.md` is a view of them —
+regenerate the view, never bend the directories to match it. Code that
+disagrees with specs is a bug or an unrecorded decision, never silently the
+new truth.
 
-## 1. Reading protocol and precedence
+## The plan
 
-The SessionStart hook injects the stack, the derived next step, any staleness,
-and the machine-local file. **A routine turn starts from that alone — zero
-document reads.** Enter the documents on demand, smallest sufficient scope
-first:
+One file per step. The file's directory is its state, and state changes by
+moving the file — by hand, deliberately:
 
-1. `adocs/status.md` and `adocs/plan.md` — read whole when orientation is
-   needed; both are small and bounded by construction.
-2. `adocs/specs.md` — read whole before changing behaviour; current state only.
-3. `adocs/decisions.md` — never read whole. Grep the index by id, tag, or topic.
+| Directory | Meaning |
+|---|---|
+| `adocs/plan_todo/` | agreed, not started |
+| `adocs/plan_current/` | in progress |
+| `adocs/plan_done/` | finished, `done:` stamp written last |
 
-Precedence when documents disagree: **specs > plan > status**. Code that
-disagrees with specs is a bug or an unrecorded decision, never silently the new
-truth. **Filesystem state beats prose**: on any disagreement `plan_current/`
-wins and `status.md` is regenerated. **Next is derivable, never asserted**: the
-next step is the first in `plan.md` order not in `plan_done/`.
-
-Instructions layer, most specific wins: `.moltke.local.md` (machine-local,
-uncommitted, created by the tool) overrides the `## Project rules` section at
-the end of this file, which overrides the base ruleset above it.
-
-## 2. File map and write discipline
-
-| Path | Purpose | Write mode |
-|---|---|---|
-| `README.md` | developer facing: layout, build, test, exact commands | rewrite; checked at every completion |
-| `MANUAL.md` | end user facing: install, operate, teams, known bugs | rewrite; checked at every completion |
-| `.moltke.local.md` | machine-local: tools, paths, per-platform directives; uncommitted, injected each session | edit freely, keep small |
-| `adocs/status.md` | last done, in progress, next, blocked, parked | regenerated by `--step status`; Parked block carried verbatim |
-| `adocs/specs.md` | prime directive, invariants, required behaviour — current state only | rewrite in same commit as any behaviour change |
-| `adocs/plan.md` | plan description and ordered open steps; done entries pruned to the last 5 | rewrite on any plan change |
-| `adocs/plan_todo/` `plan_current/` `plan_done/` | one file per step; the directories are the state machine | moved only by `--step` |
-| `adocs/testing.md` | acceptance notes, voluntary documentation; union-merged | append rows with the work |
-| `adocs/decisions.md` | living decisions with index, newest last | compact freely, ids stable, before or alongside the change |
-| `adocs/audit/` | audit reports and reviews, evidence before fixes | add files, never overwrite a report |
-
-`adocs/plan_done/` is never rewritten or trimmed, and this is enforced: it is
-the project history. Every other document holds current state and may be
-compacted — git is the archive.
-
-## 3. Prime directive and invariants
-
-`adocs/specs.md` opens with one **prime directive** and numbered **invariants**
-`INV-1`, `INV-2`, ... stated as testable properties, referenced by number from
-code, tests, and commits. Correctness outranks features: a reproduced defect
-jumps the queue.
-
-## 4. Plan lifecycle
-
-Step files are named `S<nnn>_short_name.md`; ids are allocated in creation
-order and **never reused or renumbered**. Fields: `id`, `goal`, `accepts`
-(testable), `touches`, `excludes`, `decisions`, `closes`, `blocks`,
-`paused_by`, `author`, `done` (stamp, written last).
-
-- The plan is common; anyone picks the derived next step. `--step start`
-  claims it: `author:` from `git config user.name`, and your own active steps
-  are what block you — a teammate's never do.
-- `plan_todo/` → `plan_current/` when work starts; `plan_current/` →
-  `plan_done/` only when code is complete, the suite is green, and README and
-  MANUAL were checked, and no watcher the step armed is still alive (§12).
-  The move is the last action of the step, then commit.
-- Work discovered mid-step: **trivial and in scope** — fix now, note it.
-  **Blocking** — `--step block <parent> <name>` creates the child and pauses
-  the parent; at most `plan_active_max` non-paused steps per author, stack
-  depth capped by `plan_stack_max`. **Independent** — `--step new` and leave
-  it in `plan_todo/`, however tempting.
-- When the plan meets the code and loses: stop, write a `decisions.md` entry,
-  amend the plan. Never deviate silently. A planning session ends in a commit.
-
-## 5. Git
-
-- The agent **never pushes**. The agent commits; the user pushes.
-- Commit on request, on step completion, and on any plan change. Every commit
-  is green: build, lint, full suite.
-- Imperative subject under 72 characters; body says **why**; reference the
-  step id and any `INV-n`.
-- No history rewriting, no force operations. Teams run branch-per-member;
-  merge semantics are in MANUAL's Teams section (union merges for `testing.md`
-  and `status.md`, regenerate status after merging, INV-6 catches id
-  collisions).
-
-## 6. Testing
-
-- **Red first.** A defect gets a minimized regression test before the fix, and
-  the failure is observed and recorded, not assumed.
-- **Non-vacuous by construction.** A test asserting X does not happen must
-  first establish the precondition that would make X happen.
-- Behaviour changes strengthen or re-target tests. Never relax one, never
-  delete one to get green — deleting is a recorded decision.
-- `test_command` in the marker is what enforces the green suite at completion;
-  `adocs/testing.md` rows are voluntary documentation of what covers what.
-
-## 7. Documentation
-
-**Doc claims are claims about code**: any statement about a flag, a default, or
-where output goes is traced to the code path producing it. At every completion
-README and MANUAL are **checked** — concluding neither needs a change is valid,
-not checking is not. A behaviour change updates `specs.md`'s current wording in
-the same commit; the narrative lives in the step stamp and the commit message.
-A golden test guards the public surface named by `surface_guard`; refresh it
-only after specs and MANUAL describe the change. Copy code, commands, flags,
-paths, and versions verbatim; never reword them.
-
-## 8. Decisions
-
-`adocs/decisions.md`, newest last, index on top. Stable ids `DEC-<nnn>`, topic
-tags. Format: heading, `Tags:`, `Decision:` (operative sentences), `Why:` (one
-line). Decisions belong to the user; agents propose. Supersede by rewrite or
-delete — ids never reused, git keeps every earlier version. Trigger: before or
-alongside the change, never after.
-
-## 9. Review: fast check by habit, full audit by consent
-
-**Tier 1 — every chunk.** After each `--step done`, a fast check over that
-step's diff: top real problems only, one screen, no writes, no report file.
-The mechanism is free — a subagent where one earns its keep, inline where it
-does not. Trivial → fix now (§4); real → a step; nothing → one console line.
-
-**Tier 2 — proposed.** On real risk (security-touching, public surface, long
-unaudited stretch) propose a full audit; the user accepts or postpones. A
-postponed proposal is one Parked line in `status.md`.
-
-**Tier 3 — on demand.** `/moltke:audit`: report file under `adocs/audit/`
-named `YYYY-MM-DD_type.md` (`.2` suffix same-day), never overwritten. The
-auditor runs on a **clean context** — repository path, commit, report path,
-type, scope, nothing else; the blue team does not brief the red team. Report
-written before any fix. Every finding gets an id, severity, and status
-(`open`/`planned`/`closed`/`accepted`), and ends in a step whose `closes:`
-names it or a decision. Findings close on a re-run that no longer reports
-them, or by recorded decision. Audits run against the code, not the specs.
-
-## 10. Hard prohibitions
-
-The agent does not:
-
-- push, force push, or rewrite git history
-- write to `adocs/plan_done/`
-- delete or weaken a test to make a change pass
-- create plan step files outside the three plan directories
-- claim a step complete before the suite is green
-- complete a step that another step still declares in `blocks:`
-- start independent work while one of its own paused steps sits in `plan_current/`
-- arm a watcher lacking a self-terminating exit path (§12)
-
-And one permission, stated so no rule above is misread as denying it:
-**subagents may be spawned freely whenever useful** — audits, fast checks,
-parallel exploration, anything. Nothing here requires or forbids spawning.
-
-## 11. Memory lives in the repository
-
-Nothing that matters may exist only in an agent's memory, transcript, or
-tool-local notes. State into `status.md`, intent into `specs.md`, reasoning
-into `decisions.md`, work into the plan directories, machine-specifics into
-`.moltke.local.md`. The repository is the memory; everything else is a cache.
-
-## 12. Watchers
-
-A watcher is any background command armed to wake the agent when something
-happens: a monitor over a log, a background shell loop, a tail in a pane.
-
-**A watcher terminates on its own on every path.** Four exits, all mandatory:
-success marker, failure marker, watched-process death, hard time ceiling. A
-manual stop is a belt, never load-bearing — a watcher whose only exit is a
-manual stop is a leak armed in advance. The ceiling bounds every mistake in the
-other three, so it is never optional.
-
-Arm through the primitive, never by hand:
+Step files are named `S<nnn>_short_name.md`:
 
 ```
-python3 bin/moltke.py --watch RUN_LOG 'RUN-(DONE|FAILED)' --ceiling 8h --pid 12345
+id:         S042
+goal:       one line
+accepts:    what proves it done, testable
+touches:    areas affected
+excludes:   explicitly out of scope
+closes:     <!-- audit finding ids, when any -->
+paused_by:  <!-- blocking child's id, only while paused -->
+author:     <!-- who claimed it, set on start -->
+done:       <!-- completion stamp: what proves it finished, written last -->
 ```
 
-- Exit 0 marker seen, line printed. 4 `--fail-re` matched. 3 the watched pid
-  died, checked once more against the log first. 124 ceiling reached.
-- The whole file is scanned each poll, so a marker written before arming is
-  still caught — the race a follow loses by construction.
-- It registers under `.git/moltke_watch/` on arm and writes its outcome there on
-  every exit path, kill included, so watch state is derivable from the
-  filesystem (§11). Acting on a result means deleting its record.
-- Ceiling at least 2x the expected run. The run prints its own terminal markers,
-  success and failure both, before the watcher exists: a watcher with nothing to
-  match is unbounded by construction. Prefer the harness's own background task
-  when it notifies on exit; a watcher is for runs the session does not own.
+A new id is one more than the highest ever allocated, across all three
+directories — ids are never reused or renumbered, even for a deleted step.
+Order lives in `plan.md`'s Open list and nowhere else; the next step is the
+first entry there.
 
-**Banned forms.** `tail -f LOG | grep RE` never exits: tail has no last line,
-and grep matching is not grep exiting. `tail -f LOG | grep -m1 RE` is worse —
-grep exits on match, tail learns only by SIGPIPE on its next write, and a
-finished log never writes again. In Claude Code both are refused at arm time,
-along with any persistent monitor that is not the primitive; the one escape is
-`MOLTKE_UNBOUNDED_OK` in the command, for a genuinely unbounded stream
-(per-occurrence events, a dev-server error tail). Arm the primitive
-`persistent`: the harness caps bounded monitors at an hour, so the `--ceiling`
-is the real timeout and the process still ends itself.
+- **Start**: move todo → current, set `author:`. Respect PLAN's active limit;
+  a paused step does not count against it.
+- **Discovered mid-step**: trivial and in scope — fix it now, note it in the
+  stamp. Blocking — create the blocker directly in `plan_current/`, set
+  `paused_by:` on the parent. Independent — a new step in `plan_todo/`,
+  however tempting.
+- **Finish**: `accepts` holds and the TESTS and DOCS rules are satisfied; then
+  write the `done:` stamp, move the file to `plan_done/`, update `plan.md`
+  (out of Open, into the last-five Done list) and `status.md`, and commit per
+  COMMITS. Completing a blocking child clears the parent's `paused_by:`.
+- `plan_done/` is history: never edit, rewrite, or delete anything in it. A
+  done step that got something wrong gets a new step or a decision, not an
+  edit.
+- When the plan meets reality and loses: stop, record a decision, amend the
+  plan. Never deviate silently.
 
-Without the primitive, fall back to a poll loop wrapped in `bash -c` so the
-interactive shell is irrelevant — never a follow:
+## Keep the memory current
 
-```
-timeout 8h bash -c '
-  until grep -qE "RUN-(DONE|FAILED)" "$1"; do
-    kill -0 "$2" 2>/dev/null || exit 3
-    sleep 30
-  done' _ RUN_LOG RUN_PID
-```
+- `status.md`: rewrite by hand at the end of any turn that changed plan
+  state. Everything under `Parked:` is human memory — carry it forward, prune
+  it only deliberately.
+- `specs.md`: a behaviour change updates its wording in the same commit.
+- `decisions.md`: a choice a future reader would re-derive gets a `DEC-<nnn>`
+  entry when it is made, not after. Index on top, newest entry last, ids never
+  reused. Format: heading, `Tags:`, `Decision:` (and by whom), `Why:` (one
+  line). Decisions belong to the user; agents propose.
+- Nothing that matters lives only in a transcript or an agent's memory. The
+  repository is the memory.
 
-`timeout` is coreutils on GNU userland. On BSD userland (macOS) there is none:
-inline the deadline — `end=$(($(date +%s)+SECS))` before the loop,
-`[ "$(date +%s)" -ge "$end" ] && exit 124` inside it. On Windows arm no
-persistent watchers at all; poll with scheduled wakeups.
+## Review and audit
 
-**Completion gate.** A step does not complete while a watcher it armed is still
-alive, and a result taken from a watcher is acknowledged before the turn ends.
-Session end asks: is anything still watching?
+- **Fast check**, when REVIEW says so: after a step completes, one small
+  subagent over that step's diff — top real problems only, one screen, no
+  writes. Trivial → fix now. Real → a new step. Nothing → one line, move on.
+- **Full audit**: `/moltke:audit` — an adversarial reviewer on a clean
+  context writes a dated report under `adocs/audit/`; findings become steps
+  or recorded decisions. Reports are evidence: never overwrite one, and the
+  only edit an earlier report takes is a finding's `Status:` line moving
+  (open → planned / closed / accepted).
 
 ## Project rules
 
-Rules written here override the base ruleset above, for this repository only.
-This section is committed and travels with the project; machine-specific
-instructions go in `.moltke.local.md` instead, which overrides both.
+Interview answers recorded by `/moltke:init`; change them with
+`/moltke:rules` (or edit by hand), and record every change as a decision.
+One line per rule, stable id first.
 
-<!-- Loosen, harden, or replace any rule above. Examples:
-     "The fast check after each step is skipped; this project reviews weekly."
-     "test_command is the smoke suite; the full suite runs in CI only."
-     Delete this comment when adding the first rule. -->
+These are the `achesso` branch's house rules — *agentic chesso*. The end goal
+is the strongest CPU chess engine in the world: MIT-licensed and staying MIT,
+nothing copy-pasted from another open-source project, its own NNUE or whatever
+supersedes it, every change proved by SPRT and modern testing with specialized
+tools taken or built ad hoc — built to find out what AI-driven development can
+produce. `CLAUDE.md` is the full statement; DEC-013 and DEC-104 are the
+decisions. They win over the base ruleset above wherever the two disagree, and
+**a moltke upgrade that rewrites this file must re-apply them** — which is why
+they are stated here and not only in `decisions.md`. They survived the v1
+migration that way (DEC-109).
+
+- GIT: commit freely; never push — the user pushes. No history rewriting, no
+  force operations.
+- COMMITS: commit at each completed step and at any plan change. Every commit
+  is green. Imperative subject under 72 characters; the body says **why** and
+  references the step id and any `INV-n`.
+- TESTS: the suite is green before a step is marked done —
+  `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check`
+  (`-j8`, the core count of the machine `.moltke.local.md` describes). A defect
+  gets a minimized failing test before its fix, and the failure is observed,
+  not assumed. Never relax a test, never delete one to get green — deleting is
+  a recorded decision. A test asserting X does not happen first establishes the
+  precondition that would make X happen.
+- DOCS: `README.md` is written by hand by the repository owner. **No agent
+  writes in it, ever.** The developer-facing document is `DEV_MANUAL.md`, and
+  it and `MANUAL.md` are checked at every step completion — concluding neither
+  needs a change is valid, not checking is not. A behaviour change updates
+  `specs.md`'s current wording in the same commit. Any statement about a flag,
+  a default or where output goes is traced to the code path producing it.
+  DEC-017.
+- SURFACE: `test_uci_surface` is the golden guard over the UCI surface;
+  refresh it only after `specs.md` and `MANUAL.md` describe the change.
+- AGENTS: subagents allowed freely — audits, fast checks, parallel exploration,
+  anything. Nothing requires or forbids spawning one; the Tier-1 check after a
+  completed step stays a habit and how it runs is the agent's call. DEC-106.
+- REVIEW: fast check after each completed step, over that step's diff.
+- AUDIT: on demand only — `/moltke:audit` when the user asks for it.
+- DEPS: never add a dependency without asking; state what it buys and what
+  writing it by hand costs, then let the user decide.
+- PLAN: one active, non-paused step per agent.
+- COPYING: **nothing is copied, ever.** No source from another engine, no
+  tables from another engine, no NNUE training data derived from another
+  engine's evaluation or search. Ideas, techniques and published articles are
+  used freely — reading the documented state of the art and implementing it
+  here is the plan (DEC-014). Copying it is not; inspiration from another
+  open-source engine is taken only where its licence consents, adapted, never
+  copy-pasted (DEC-104). Another engine's constants are never seeds, wherever
+  they are republished (DEC-084 as amended by DEC-105). Running another
+  engine's *binary* as a tool creates no derivative work and is encouraged.
+  DEC-016.
+- MEASUREMENT: **a change that alters play is decided by SPRT, not by
+  argument.** A change claimed behaviour-neutral proves it instead with
+  identical node counts and best moves from `tools/search_bench.py` (INV-6).
+  One change at a time — two at once and neither number means anything. A
+  verdict of zero is recorded as zero, and the feature may still be kept with
+  the reason stated.
+- MACHINE: a match runs on every core the machine has. `fastchess.sh` defaults
+  to it and the default is not lowered to be polite — nothing else should be
+  running during a match anyway. Efficiency cores are included knowingly
+  (DEC-048 supersedes DEC-042), trading variance for throughput because
+  measurement capacity is the binding constraint on the plan. `CONCURRENCY`
+  overrides when a run genuinely has to share the machine, and a run that
+  lowers it says why.
+- RUNS: the agent runs tests, measurements and evaluation tuning itself
+  (DEC-041), without asking, and schedules anything lasting several hours for
+  the night if there is better work to do meanwhile. **NNUE training is still
+  the owner's**: the agent builds the trainer, prepares the data and states the
+  run, and the result comes back as a network measured by SPRT like any other
+  change. The line is *running the network training*, not writing it. DEC-015
+  as amended by DEC-041.
+- CHESS: **chess judgement comes from a tool, never from the agent.** No agent
+  assesses a position, move, line or result from its own reasoning — whether a
+  position is winning, whether a move is a blunder, whether an ending is
+  theoretically won, the material balance after a sequence, opening soundness.
+  Getting a position onto a board is itself a tool job. `CLAUDE.md` has the
+  tool per question and `TOOLCHAIN.md` has the one Stockfish invocation that
+  lies; DEC-023 is the failure that produced the rule.
+- BUGS: **a bug that has been found gets fixed before anything else starts.**
+  Not noted, not scheduled, not carried into the next change. A known defect in
+  the tree contaminates every measurement taken after it.
+- WATCHERS: **a long run is detached and the thing watching it terminates on
+  its own.** An SPRT takes hours here and a fit takes tens of minutes, so both
+  start detached — `nohup ... &` — and are never held open by the turn that
+  launched them. The run prints a terminal marker as its last action, success
+  and failure both, before any watcher exists.
+
+  A watcher has four exits and all four are mandatory: success marker, failure
+  marker, watched-process death, hard time ceiling. A manual stop is a belt,
+  never load-bearing. **Banned forms:** `tail -f LOG | grep RE` never exits,
+  and `tail -f LOG | grep -m1 RE` is worse — grep exits on match, tail learns
+  only by SIGPIPE on its next write, and a finished log never writes again.
+  Poll the whole file instead, so a marker written before arming is still
+  caught.
+
+  moltke v1 ships no `--watch` primitive, so the mechanism is a poll loop
+  wrapped in `bash -c` — never a follow. macOS has no `timeout`, so the
+  deadline is inlined:
+
+  ```
+  bash -c '
+    end=$(($(date +%s)+32400))
+    until grep -qE "RUN-(DONE|FAILED)" "$1"; do
+      kill -0 "$2" 2>/dev/null || exit 3
+      [ "$(date +%s)" -ge "$end" ] && exit 124
+      sleep 30
+    done' _ RUN_LOG RUN_PID
+  ```
+
+  In Claude Code arm that through `Monitor` with `persistent: true`, which
+  outlives the turn; an agent without such a tool polls the log on its next
+  turn and does not pretend a watcher is armed. Ceiling at least 2x the
+  expected run — **and a ceiling is wall-clock only while the machine is
+  awake**: S024's first run hibernated for 42 hours with a 9 h ceiling armed
+  and the watcher did not fire. A step does not complete while a watcher it
+  armed is still alive, and a result taken from a watcher is acknowledged
+  before the turn ends. DEC-061, DEC-109.
+- POWER: **no timed match starts on battery.** `pmset -g ac` must report an
+  adapter first. S024's first run drained the machine from 78 % to 1 %,
+  hibernated mid-match, and produced 8 time forfeits and two halves that do not
+  look like the same experiment — 1132 pairs at -5.06 +/- 11.17 before the
+  sleep against 137 at +35.63 +/- 30.99 after. It was aborted rather than
+  reported. DEC-109.

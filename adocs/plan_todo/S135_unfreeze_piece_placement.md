@@ -1,7 +1,7 @@
 id:         S135
 goal:       unfreeze the piece placement group and refit it, one bundled SPRT over the three remaining features, by the owner's decision of 2026-08-20
 accepts:    S134 has landed first, so the group is three identified features and carries no unidentified column -- a bundled verdict over this bundle is at least attributable, which S027's was not; the fit is `--only piece_placement` on the corpus S082 and S083 produce, so the SPRT measures the term and not a joint refit of the other 820 constants; the SPRT bounds are chosen for the effect size and stated in advance, not `--fast` -- DEC-063 is the measurement that the pair and not the hardware sets the cost, and the published parts are +8.2 and +9.86 (DEC-084, order of magnitude only); the term's own speed cost is inside its verdict, measured with the weights forced non-zero because at zero the compiler deletes it (DEC-047); a verdict of zero is recorded as zero, and **if the bundle fails it is bisected** rather than zeroed by hand, which is the S027 failure this step exists not to repeat (DEC-082's bisect rule); the fast suite green
-touches:    src/evaluation.cpp piece_placement_mg/eg, the tuner's freeze list in whatever script runs the fit, adocs/testing.md
+touches:    src/evaluation.cpp piece_placement_mg/eg, the tuner's freeze list in whatever script runs the fit
 excludes:   tempo, which is S136; the seventh-rank feature, deleted at S134; any change to how the three features are computed
 decisions:  DEC-091, DEC-057, DEC-063, DEC-084
 closes:

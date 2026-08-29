@@ -85,7 +85,11 @@ feature item on the plan.
 ## Invariants
 
 Numbered, testable properties. Referenced by number from code comments, test
-names and commit messages. Each one has a row in `testing.md`.
+names and commit messages. What guards each one is the table below, moved here
+from `adocs/testing.md` when the moltke v1 migration deleted that ledger
+(DEC-109): the invariant and the test that fails when it breaks belong in one
+place, and the ledger's other 88 rows were per-step records already held by
+`plan_done/` and `decisions.md`.
 
 - **INV-1 Move generation is legal-only and exact.** Perft counts match an
   independent oracle at every tested position and depth. A generator that loses
@@ -119,6 +123,15 @@ names and commit messages. Each one has a row in `testing.md`.
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
 
+| invariant | what fails when it breaks |
+|---|---|
+| INV-1 | `test_movegen` *"shallow perft matches every column"*; `test_perft`, `ctest` label `slow`; `bench_movegen`, which verifies its counts before printing a single timing |
+| INV-2 | `test_engine` *"hash and board survive make/unmake"*; the debug build additionally asserts `squares[]` against the bitboards on every make and unmake |
+| INV-3 | `test_movegen` *"captures and quiets partition the list"*, 90.5 M assertions over a three-ply tree from every test FEN |
+| INV-4 | `assert(eval_accumulators_match(...))` at `src/bitboard.cpp:742`, `:875` and `:997`, debug build only -- the function itself is at `:596` |
+| INV-5 | `test_evaluation` *"colour symmetry over every test position"* and *"a mirrored start position is balanced"* |
+| INV-6 | no test: a procedure. `tools/search_bench.py` node counts and best moves for the neutral half, an SPRT against a named commit for the half that alters play |
+
 **The numbering ends at INV-6 and there is no INV-7.** One commit cites one --
 `68a61d0`, *"Restore S084's landed step file (INV-7)"*, 2026-08-20 -- and it is
 the only record of the number anywhere outside git. What it enforced is a
@@ -127,8 +140,8 @@ append by move only"*, which is `AGENTS.md` section 2 (*"`adocs/plan_done/` is
 never rewritten or trimmed, and this is enforced: it is the project history"*)
 and section 10's hard prohibition on writing there. Read the commit as citing
 those two. The number is not allocated to it, because an invariant here is a
-testable property of the software with a row in `testing.md`, and a rule about
-which directories an agent may write to is neither. (2026-08-21, S140, closing
+testable property of the software with a test that fails when it breaks, and a
+rule about which directories an agent may write to is neither. (2026-08-21, S140, closing
 `2026-08-20_plan_review-F17`.)
 
 ## Behaviour

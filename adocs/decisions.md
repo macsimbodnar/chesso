@@ -416,7 +416,7 @@ Context:      An agentic project has a specific failure mode: everything that
 Decision:     By the owner. The moltke workflow is adopted: `adocs/specs.md` for
               what must be true, `adocs/plan.md` and the step directories for
               what is being done and in what order, this file for why, and
-              `adocs/testing.md` for what proves it. Nothing that matters may
+              `adocs/specs.md` for what proves it. Nothing that matters may
               exist only in an agent's memory. `README.md` is written by hand by
               the owner and no agent writes in it; the developer-facing document
               the stock ruleset calls README is `DEV_MANUAL.md` here, and
@@ -6194,3 +6194,63 @@ Consequences: The last measured rating stays 2559 +/-25 soft until the run near
               bearing artefact rather than a formality. When the run does come
               it carries S128's second control, so budget two gauntlets and not
               one.
+
+## DEC-109  2026-08-29  moltke v1: the workflow becomes rules, and the house rules are re-applied by hand
+Tags:         workflow, moltke, watchers, measurement, documents
+Context:      The owner upgraded the moltke plugin from 0.13.0 to 1.0.0. v1
+              replaced the enforcement product with rules: no hooks, no
+              `bin/moltke.py`, no `--step`, `--validate` or `--watch`, no
+              `.moltke.json`, and no `step` skill -- only `init`, `rules` and
+              `audit` remain. `AGENTS.md` had to be replaced with the v1
+              template, and its own par.0 said a rewrite must re-apply the
+              house rules, which is the clause this migration exists to honour.
+              The plugin ships `adocs/migration_prompt.md` as the procedure and
+              it was followed, with three deviations decided by the owner.
+Decision:     Migrated, by the owner's instruction. `AGENTS.md` is the v1
+              template byte-for-byte above `## Project rules`, and all ten of
+              the old par.0 house rules are re-applied there as named rule
+              lines -- COPYING, MEASUREMENT, MACHINE, RUNS, CHESS, BUGS, DOCS,
+              AGENTS, plus GIT/COMMITS/TESTS/SURFACE/PLAN/DEPS from the
+              interview table. Two rules are new rather than carried:
+              **WATCHERS**, which keeps DEC-061's four mandatory exits and the
+              banned forms but replaces the deleted `--watch` primitive with
+              the `bash -c` poll loop and an inlined BSD deadline; and
+              **POWER**, which forbids starting a timed match on battery.
+              Deviations from the migration prompt, all three the owner's:
+              AUDIT is on demand only rather than propose-on-risk; the
+              `test_command` harvested from `.moltke.json` is corrected from
+              `-j12` to `-j8`, the core count of the machine now in use; and
+              `adocs/testing.md` is deleted after its only non-duplicated
+              content -- the six invariant-to-covering-test rows -- moved into
+              `specs.md` beside the invariants they guard. Deleted with it:
+              `.moltke.json`, `.git/moltke_watch/`,
+              `.git/moltke_audit_baseline.json`. `.moltke.local.md` moved from
+              `.git/info/exclude` to `.gitignore`. `plan.md` is reshaped into
+              `## Open` and `## Done recently`, both hand-maintained.
+Rejected:     Keeping 0.13.0 to preserve enforcement -- versions cannot coexist
+              in one Claude config root, so the choice was already made by the
+              upgrade, and hooks had stopped firing before this entry was
+              written.
+              Keeping `testing.md` untouched -- 88 of its 94 rows are per-step
+              records that `plan_done/` and `decisions.md` already hold in
+              full, and nothing prunes or appends it any more, so it would rot
+              from the moment the checker left.
+              Deleting `adocs/worklog.md` as well -- it is 208 KB of forensic
+              history that the 0.x hooks appended and nothing writes now. Kept
+              frozen: it costs nothing and it is the only record of some
+              sessions.
+Consequences: Nothing is machine-enforced any more. A step completes by hand --
+              write the `done:` stamp, move the file to `plan_done/`, move its
+              entry from `plan.md`'s Open list into `Done recently` and drop
+              the oldest of the five, rewrite `status.md`, commit -- and a
+              missed edit is a missed edit, visible only in the diff. Two
+              parked items in `status.md` died with the checker they described
+              and were removed: the `bin/moltke.py` path item, and the one
+              explaining why "last done" could name an older step than the
+              newest completion. That second behaviour is gone with its cause:
+              `Done recently` is now in completion order, so "last done" is
+              S167 and no longer S145. Watchers lose the primitive that
+              registered them under `.git/`, so a watcher's existence is no
+              longer derivable from the filesystem -- the WATCHERS rule
+              compensates by making the poll loop's four exits explicit, and
+              `status.md` carries a `Watching:` line that has to be true.

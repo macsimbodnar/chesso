@@ -43,3 +43,6 @@ books/*.zip
 
 # Python bytecode from the tools/ modules, which the tests import directly.
 __pycache__
+
+# Machine-local agent notes, uncommitted by design.
+.moltke.local.md

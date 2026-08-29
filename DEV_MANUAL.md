@@ -556,11 +556,16 @@ Piping `ctest` into `tail` or `head` hides its exit status behind the pipe, so a
 gate written that way reports success on a failed suite. Redirect to a file and
 read `$?`, or let `ctest` print in full.
 
-The step-completion gate in `.moltke.json` is:
+The step-completion gate is the TESTS rule in `AGENTS.md`:
 
 ```bash
-cmake --build build -j12 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check
+cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check
 ```
+
+It lived in `.moltke.json` and ran automatically until 2026-08-29; moltke v1
+has no hooks and no marker file, so it is a rule an agent follows and nothing
+runs it for you (DEC-109). `-j8` is this machine's core count -- the gate read
+`-j12` while the Linux machine DEC-049 names was the one in use.
 
 That gate is necessary and not sufficient. Deep perft, the debug-build
 assertions and any SPRT are named in each step's `accepts:` field and run by
@@ -581,8 +586,8 @@ cmake --build build-debug -j12 && ctest --test-dir build-debug -L fast
 The debug build asserts `squares[]` against the bitboards and the evaluation
 accumulators against a full recomputation, on every make and unmake. Any change
 to `make_move`, `unmake_move` or the generator must be run through it. That is
-INV-2 and INV-4. It is **not** in the `.moltke.json` gate and running it is
-still on you.
+INV-2 and INV-4. It is **not** in the gate above and running it is still on
+you.
 
 `test_uci_surface` is the golden surface guard. It reads the command set out of
 `uci_command_names()` and the option lines out of the `uci` reply, then holds
@@ -696,8 +701,7 @@ corpus it searches, since its documentation names the symbols it is about.
 deliberate rather than an omission: any source commit shifts lines under fifty
 step files at once, so gating the suite on citation freshness would make a red
 suite the normal state of the repository and this check the thing that gets
-weakened to clear it. Run both at step completion, alongside
-`moltke --validate`. That reason does not reach `--touches`, which holds no line
+weakened to clear it. Run both at step completion. That reason does not reach `--touches`, which holds no line
 numbers and moves only when a step file is written or a symbol changes file, so
 S141 put it in the fast suite where a broken scope contract fails at once
 instead of waiting for someone to run the tool.
@@ -1344,16 +1348,19 @@ and it outlives `/clear` as well: the context holding the task id goes, the
 process stays, and `TaskStop` is then unreachable — the only way out is `kill
 <pid>`. `tail -f` has no exit condition of its own, and `| grep -m 1 DONE` does
 not add one, because a log that goes quiet never makes `tail` write again and so
-never delivers it SIGPIPE. Use the primitive, which has four exits — marker,
-failure marker, watched process died, hard ceiling:
+never delivers it SIGPIPE.
 
-```bash
-python3 <moltke>/bin/moltke.py --watch .tuning/sprt_<what>.log 'SPRT-RUN-DONE' \
-  --fail-re 'SPRT-RUN-FAILED|Killed|Aborted' --ceiling 8h --pid <pid>
-```
+**There is no `--watch` primitive any more.** moltke v1 ships no tooling at all
+(DEC-109), so the poll loop below is the mechanism and not the fallback it used
+to be. It needs the same four exits the primitive had — success marker, failure
+marker, watched process died, hard ceiling — and `fastchess.sh` prints the
+markers itself, so nothing has to be appended to the log by hand.
 
-`fastchess.sh` prints those markers itself, so nothing has to be appended to
-the log by hand any more. Without the primitive, poll — never follow:
+**A ceiling is wall-clock only while the machine is awake.** S024's first run
+hibernated for 42 hours under a 9 h ceiling and the watcher did not fire, which
+is the one exit that is supposed to bound every mistake in the other three. On
+a laptop the POWER rule is what actually prevents this: no timed match starts
+on battery. Poll — never follow:
 
 ```bash
 log=.tuning/sprt_<what>.log
