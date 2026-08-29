@@ -15,13 +15,20 @@ Updated: 2026-08-29, by hand.
   counts and throughput, and the two remaining jobs.
 - Next: finish S024 -- verdict 1's SPRT, then verdict 2 (the two-ply follow-up)
   against verdict 1's commit. Then S109.
-- Blocked: **S024's SPRT will not start until the machine is on mains power.**
-  Not a preference: `adocs/data/S024_sprt.sh` tests `pmset` and exits
-  `SPRT-RUN-FAILED` on battery, because the first run drained the machine to
-  1 %, hibernated for 42 hours mid-match and had to be thrown away. Plug the
-  charger in and run
-  `nohup adocs/data/S024_sprt.sh > .tuning/sprt_s024_v1.log 2>&1 &`.
-- Watching: nothing
+- Blocked: nothing.
+- Watching: **S024 verdict 1, run 3 -- a RESUME of run 2, not a new match.**
+  `fastchess -config file=config.json` continues the interrupted tournament
+  with its stats intact, so run 2's 6054 games are pooled and `LLR 0.43`
+  carries forward instead of restarting from zero; the PGN appends to the same
+  file. Launched by `.tuning/S024_resume.sh`, pid 46158, log
+  `.tuning/sprt_s024_v1_run3.log`, watcher armed on
+  `RESUME-RUN-(DONE|FAILED)` with a 24 h ceiling. It waits for an 80 % charge
+  before the first game, because the battery was at 8 % when run 2 was stopped.
+  **The 60 W adapter is accepted and the run is not gated on it** (owner's
+  instruction, 2026-08-29): the adapter is the one available, a match is not
+  stopped for a discharge, and if the machine hibernates the tournament is
+  resumed again by the same script, pooling once more. What run 2 proved is
+  that resuming is what makes that cheap.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**

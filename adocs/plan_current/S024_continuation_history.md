@@ -395,6 +395,89 @@ it as a floor -- it was measured on battery with the display on.
 and the book was then fetched and both digests verified under `/bin/bash` 3.2.
 Same class as S167 and it blocked every SPRT on this machine.
 
+### Run 2 was also aborted, and the cause is the power adapter, not the battery
+
+Started 2026-08-29 19:35:57 **on mains power**, so the POWER rule's guard
+passed and was not the thing that failed. Killed by hand at 03:54:58 and 6054
+games, with `SIGINT`, at a measured 16 minutes from an empty battery.
+
+**The adapter negotiates 60 W and an eight-core match draws more than that.**
+`ioreg -rn AppleSmartBattery` names it `"96W USB-C Power Adapter"` and reports
+`"Watts" = 60` with `AdapterVoltage 20000` and `Current 3000` -- 20 V x 3 A.
+Under the match `InstantAmperage` read **-1058 mA at an 8 % charge** with
+`ExternalConnected = Yes` and `IsCharging = Yes`: the charging flag is not a
+statement about direction and must not be read as one. The battery covered the
+deficit for the whole run, falling 96 % to 8 % in 3 h 55 m, and `pmset` put it
+16 minutes from empty. Charging resumed the moment the match died --
+`ChargingCurrent 2127`, `NotChargingReason 0` -- which is what identifies the
+load rather than a fault as the cause.
+
+So the machine would have hibernated mid-match exactly as run 1 did, and
+`pmset -g ac` cannot see it coming: **the POWER rule's test is necessary and
+not sufficient on this machine.** A guard that reads the adapter's negotiated
+wattage, or the sign of `InstantAmperage` under load, is what would have
+refused this run at the start.
+
+**What the 6054 games say, and they are one experiment.** No time forfeits at
+all, against run 1's eight. `adocs/data/S024_pair_stats.py` over the run's own
+PGN:
+
+| block | pairs | Elo |
+|---|---|---|
+| whole run | 3027 | **+3.67 +/- 6.67** |
+| rounds 1-2400, battery 96 % to about 22 % | 2400 | +2.61 +/- 7.52 |
+| rounds 2401 on, battery about 22 % to 8 % | 627 | +7.76 +/- 14.46 |
+
+The two blocks overlap and sit about 0.3 sigma apart, against the 2.4 sigma and
+40 Elo that condemned run 1. Nothing here says the falling battery changed the
+experiment, and the last block is the one where throttling would show.
+
+**This is not a verdict and must not be read as one.** `LLR 0.43 (14.7 %)` in
+`(-2.94, 2.94)`, bounds `[0.00, 5.00]`: the interval `+3.67 +/- 6.67` contains
+both 0 and 5, so neither hypothesis is excluded and the pre-registered readings
+in `adocs/data/S024_sprt.sh` do not apply to it. The direction agrees with the
+published prior and that is all it does. Evidence kept at
+`.tuning/sprt_s024_v1_run2_partial.pgn`, `_partial.log` and
+`_partial_fastchess.log` -- **`.tuning/` is gitignored**, so the table above is
+the surviving record.
+
+### Run 3 is a resume, and how to pick it up from a cold session
+
+**Run 2's games are not lost and were never re-played.**
+`fastchess -config file=config.json` continues an interrupted tournament with
+its statistics intact -- the file carries `wins 2036 / losses 1972 /
+draws 2046` and `penta_WW 289 ... penta_LL 250` -- so the 6054 games pool and
+`LLR 0.43` carries forward instead of restarting at zero. The PGN appends to
+the same `/tmp/chesso_sprt_full_20260829_193557/games.pgn`. `config.json` sits
+in the repository root and is gitignored (`.gitignore:8`).
+
+Resuming needs the candidate binary back at the temp path `config.json` names,
+because `fastchess.sh` plays a `mktemp` snapshot and deletes it on exit. Copy
+`build/src/chesso` there. That is the same binary and not a rebuild whenever
+`git diff <candidate sha> -- src/ CMakeLists.txt` is empty and the file has not
+been relinked -- both held here, its mtime still reading Aug 27 22:21.
+
+`.tuning/S024_resume.sh` does all of it and is itself gitignored, so **this
+paragraph is the recipe if it is gone**: restore the snapshot, then
+`nohup caffeinate -is fastchess -config file=config.json &`.
+
+**The whole run is wrapped in `caffeinate -is`, not just the match.** The first
+version wrapped only `fastchess`, which left the script's charge-wait loop
+holding no sleep assertion at all (`pmset -g assertions` read
+`PreventSystemSleep 0`); the machine could idle-sleep during the wait and the
+match would never start. Wrapping the script instead reads
+`PreventSystemSleep 1` for the run's whole life. `caffeinate` still cannot stop
+a lid-close sleep -- that is not an assertion it can hold.
+
+**The power question is settled and it is not a stop condition** (owner, 2026-08-29):
+the 60 W adapter is the one available, a match is not stopped for a discharge,
+and no wattage or amperage guard is added to any script. If the machine
+hibernates mid-match, the answer is to resume again -- pooling once more -- and
+`adocs/data/S024_pair_stats.py` over the round ranges either side is what
+decides afterwards whether the blocks are the same experiment. Run 2's own
+split was clean: +2.61 +/- 7.52 against +7.76 +/- 14.46, about 0.3 sigma, where
+run 1's was 40 Elo and 2.4 sigma.
+
 ### What is left
 
 1. **Verdict 1's SPRT.** Blocked on one thing only: the machine must be on
