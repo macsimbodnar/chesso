@@ -719,7 +719,9 @@ TEST_SUITE("search: move ordering state")
     const move_t cutoff = quiets[0];
     const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
 
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8);
+    // Zero previous move: this case is about the butterfly table, and the
+    // continuation table it now shares the helper with has its own cases below.
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, 0);
 
     CHECK(state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)] > 0);
 
@@ -740,6 +742,176 @@ TEST_SUITE("search: move ordering state")
     // from-to pairs is untouched. A butterfly board that dropped the colour
     // axis would let White's cutoffs order Black's moves.
     CHECK_EQ(state.quiet_history[!side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)], 0);
+  }
+
+
+  // S024. The same fail-high, seen from the continuation table: one bonus, one
+  // malus per quiet tried before it, both conditioned on the move being
+  // replied to. Driven on the helper rather than through games -- the table is
+  // 589824 cells and a game says nothing about which one moved.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a fail-high credits the continuation cell of the move it "
+                    "replies to")
+  {
+    REQUIRE(
+        load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+                 "R3K2R w KQkq - 0 1",
+                 &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[5] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 5; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 5);
+
+    // Precondition: five distinct (piece, to) pairs. Two moves sharing one
+    // means two of the cells below are the same cell, and the bonus and the
+    // malus would be arguing over one number.
+    for (size_t a = 0; a < 5; ++a) {
+      for (size_t b = a + 1; b < 5; ++b) {
+        const bool same_key = MOVE_PIECE(quiets[a]) == MOVE_PIECE(quiets[b]) &&
+                              MOVE_TO(quiets[a]) == MOVE_TO(quiets[b]);
+        REQUIRE_FALSE(same_key);
+      }
+    }
+
+    const color_t side = game.board.active_color;
+    const move_t previous = quiets[0];
+    const move_t cutoff = quiets[1];
+    const move_t tried[3] = {quiets[2], quiets[3], quiets[4]};
+
+    search_state_t state = {};
+    continuation_history_t& table = *state.continuation_history;
+
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, previous);
+
+    CHECK(continuation_entry(table, previous, cutoff) > 0);
+
+    for (const move_t move : tried) {
+      CHECK_MESSAGE(continuation_entry(table, previous, move) < 0,
+                    ("A quiet tried before the cutoff scores " +
+                     std::to_string(continuation_entry(table, previous, move)) +
+                     " in the continuation table and not a malus."));
+    }
+
+    // The cell belongs to the pair. The same cutoff move under a different
+    // previous move is a different reply and was never played here.
+    CHECK_EQ(continuation_entry(table, cutoff, cutoff), 0);
+  }
+
+
+  // S024. The root has no move to reply to, and neither has the child of a null
+  // move -- negamax passes 0 for both. Indexing on 0 would land on the cell of
+  // whatever move encodes as zero and update it from every such node, which is
+  // silent: the wrong cell still holds a plausible number.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "no move to reply to leaves the continuation table "
+                    "untouched")
+  {
+    REQUIRE(
+        load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+                 "R3K2R w KQkq - 0 1",
+                 &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[3] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 3; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 3);
+
+    const color_t side = game.board.active_color;
+    const move_t tried[2] = {quiets[1], quiets[2]};
+
+    search_state_t state = {};
+
+    history_on_quiet_cutoff(&state, side, quiets[0], tried, 2, 8, 0);
+
+    // Precondition: the call did land, so an untouched continuation table is
+    // the guard working rather than the helper doing nothing at all.
+    REQUIRE(
+        state.quiet_history[side][MOVE_FROM(quiets[0])][MOVE_TO(quiets[0])] >
+        0);
+
+    const int16_t* cells = &state.continuation_history->table[0][0][0][0];
+    const size_t cell_count = 12 * 64 * 12 * 64;
+    size_t written = 0;
+
+    for (size_t i = 0; i < cell_count; ++i) {
+      if (cells[i] != 0) { written++; }
+    }
+
+    CHECK_EQ(written, 0u);
+  }
+
+
+  // S024. Gravity bounds each table's entry independently, so the sum the
+  // ordering sees is bounded by the number of tables that feed it. The band
+  // case in test_evaluation.cpp asserts the clearance that follows; this one
+  // asserts the bound itself, driven to the asymptote rather than assumed from
+  // the algebra.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the two quiet tables sum inside twice QuietHistoryMax")
+  {
+    REQUIRE(
+        load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+                 "R3K2R w KQkq - 0 1",
+                 &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[2] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 2; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 2);
+
+    const color_t side = game.board.active_color;
+    const move_t previous = quiets[0];
+    const move_t cutoff = quiets[1];
+    const int max = QUIET_HISTORY_MAX;
+
+    search_state_t state = {};
+
+    // Two hundred fail-highs at depth 16 is far past where gravity settles --
+    // each one closes 256/8192 of the remaining gap -- so the entries are at
+    // their asymptote and not on their way to it.
+    for (int i = 0; i < 200; ++i) {
+      history_on_quiet_cutoff(&state, side, cutoff, nullptr, 0, 16, previous);
+    }
+
+    const int butterfly =
+        state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)];
+    const int continuation =
+        continuation_entry(*state.continuation_history, previous, cutoff);
+
+    // Precondition: both terms are saturated, so the bound below is measured
+    // where it is tight rather than where it is trivially satisfied.
+    REQUIRE(butterfly > max / 2);
+    REQUIRE(continuation > max / 2);
+
+    CHECK(butterfly + continuation <= 2 * max);
   }
 
 

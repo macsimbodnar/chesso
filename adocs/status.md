@@ -8,9 +8,19 @@ missed edit and not a tool's opinion.
 Updated: 2026-08-29, by hand.
 
 - Last done: S167
-- In progress: S024 history indexed by the move played n plies ago and the current move
-- Next: S024, then S109
-- Blocked: S024's first SPRT cannot restart until the machine is on mains power
+- In progress: S024 -- verdict 1 (the one-ply continuation history) is built,
+  tested and committed; **no SPRT has run, so nothing is retained yet**. The
+  step file's "Where this stands, 2026-08-29" section is the handover: what is
+  in the tree, the four mutations each test was observed red under, the node
+  counts and throughput, and the two remaining jobs.
+- Next: finish S024 -- verdict 1's SPRT, then verdict 2 (the two-ply follow-up)
+  against verdict 1's commit. Then S109.
+- Blocked: **S024's SPRT will not start until the machine is on mains power.**
+  Not a preference: `adocs/data/S024_sprt.sh` tests `pmset` and exits
+  `SPRT-RUN-FAILED` on battery, because the first run drained the machine to
+  1 %, hibernated for 42 hours mid-match and had to be thrown away. Plug the
+  charger in and run
+  `nohup adocs/data/S024_sprt.sh > .tuning/sprt_s024_v1.log 2>&1 &`.
 - Watching: nothing
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
@@ -106,6 +116,15 @@ Updated: 2026-08-29, by hand.
     direction-certified table score as a pruning margin's input, written up in
     its step file under `## Inherited from S108` -- so that decision is waiting
     where the step that takes it will be read, not here.
+  - **`.tuning/` is gitignored and now holds the only copy of an aborted SPRT's
+    raw evidence.** `sprt_s024_v1_run1_aborted.log` and
+    `sprt_s024_run1_aborted.pgn` are S024's first run, killed for playing half
+    its games on a draining battery and half on mains. Every number that
+    decided that lives in the step file and in `adocs/data/S024_sprt.sh`'s
+    header, so nothing is lost when they go -- but `adocs/data/S024_pair_stats.py`
+    is committed and will reproduce them from any fastchess PGN, which is the
+    part worth keeping. Same exposure as the corpus item below, smaller stakes.
+    Recorded, not planned.
   - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
     minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
     comment argues for, and **0 and 1 are the same engine** because `!is_pv`

@@ -285,3 +285,141 @@ beside verdict 1.
 - https://github.com/lynx-chess/Lynx/pull/1182 — stale ply-stack entry, non-deterministic bench: the staleness bug class.
 - Stockfish commit messages, read as prose via the GitHub API, no source opened: 55905e5 movepick weights; 38e830a 3-ply at 1/4; 904a016 / 3d18ad7 / f6b0d53 5th-history churn; bb5589b in-check ss-4/ss-6 writes; 057046c qsearch (ss-1)/(ss-2) only; a3bb7e6 per-ply bonus factors; 389e607 post-LMR updates; d37de3c TC-sensitive cont-hist pruning; c44c62e futility threshold from cont-hist; 37c2b56 LMR stat sum; e90341f / 7d44b43 init practice; 5062aee huge pages +1.76 %; 8fadbcf Elo-info commit — its three fishtest links sit behind a bot check and were unreachable 2026-08-19.
 - Stash (mhouppin/stash-bot) commit messages: 829b256 countermove history; ca25c16 opponent's move plus our previous move; 660df34 4-ply +13.09 STC; 93a6d5f average-scaled updates +4.29 STC; 2138db2 post-LMR updates +2.20.
+author:    Maksym Bodnar
+
+## Where this stands, 2026-08-29
+
+**Verdict 1 is built, tested and unmeasured. Verdict 2 is not started.** The
+code is committed and the step is deliberately not done: no SPRT has produced
+a verdict, so nothing here is retained yet. If verdict 1 loses, the revert is
+one commit.
+
+### What shipped into the tree
+
+- `src/data_structures.hpp` -- `continuation_history_t`, an
+  `int16_t[12][64][12][64]`, 1.125 MiB, and the single `continuation_entry()`
+  helper that is the only place the (piece, to-square) convention is written
+  down. **It hangs off `search_state_t` behind a `std::unique_ptr` rather than
+  being embedded, and that is not a style choice**: `search_state_t` is a stack
+  object (`src/chesso.cpp`, `tools/datagen.cpp`, and every test) and the search
+  runs on a `std::thread`, whose stack is 512 KB on macOS. The struct measured
+  87600 bytes before this step; embedding the table would have overflowed that
+  stack on the first `go`. A default member initializer allocates it, so every
+  existing `search_state_t state = {};` in the tree keeps working untouched and
+  no read has to test the pointer.
+- `src/search.cpp` -- `history_on_quiet_cutoff()` takes `previous_move` and
+  applies the same bonus and the same malus, through the same
+  `history_gravity_update`, to the continuation cell of each quiet. Guarded on
+  `previous_move != 0` and nothing else.
+- `src/evaluation.cpp` -- `score_move`'s quiet return is butterfly plus
+  continuation, summed in `int` at equal weight.
+- **The table is per-`go`, not carried across one.** The step body above says
+  it joins "the struct S093 hoists beside `tt`"; that struct does not exist --
+  S093's verdict 2 measured persistence at `Elo -1.65 +/- 4.22` and was
+  reverted whole (DEC-101). This is the contingency par.7 of this file already
+  named: location changes, shape does not.
+- **No `moves_played[]` array yet.** `negamax` already carries `prev_move` as a
+  parameter and already passes 0 for the null-move child and at the root, so
+  verdict 1 needs no new state and cannot have the staleness bug par.5 warns
+  about. The array arrives with verdict 2, which is the first offset that
+  cannot be reached from a parameter.
+
+### The tests, and the mutation each one was observed red under
+
+Red-first on a new feature cannot mean "the test fails to compile", so each
+case was verified by mutating the shipped code and watching that case fail:
+
+| mutation | what went red |
+|---|---|
+| drop the `previous_move == 0` guard | `written == 3` against 0, "no move to reply to leaves the continuation table untouched" |
+| write the cell keyed on the cutoff move instead of the previous move | cutoff cell 0, and the control cell read 64 |
+| `score_move` stops adding the continuation term | `42` against `49`; and the band case `32767` against `65534` |
+| swap the index order inside `continuation_entry()` | **nothing, correctly** -- read and write both go through the helper, so swapping it is a symmetric relabel. It did expose a `const` overload that nothing could call, since `unique_ptr::operator*` returns a non-const reference through a const struct; the overload was deleted |
+
+The band case in `tests/test_evaluation.cpp` is re-pinned for the sum: both
+tables are driven to `QuietHistoryMax`'s declared maximum at once, so the quiet
+band is `[-2M, +2M]` and every clearance is measured against `2 * declared_max`
+rather than `declared_max`. That assertion is also what catches a sum
+accumulated in `int16_t`: two entries at 32767 wrap negative there, and the
+ceiling check would otherwise pass for the wrong reason.
+
+### Measured before any match
+
+Node counts move, so INV-6's node-count discharge is not available and the SPRT
+is the only thing that can decide this step. Best move unchanged at all three
+positions (`c3d5` / `e2a6` / `d7c8q`):
+
+| depth | reference 25998fe | candidate |
+|---|---|---|
+| 9 | 121512 / 800769 / 62907 | 122266 / 794014 / 63484 |
+| 13 | 944905 / 5228126 / 533227 | 875013 / 5210372 / 701417 |
+
+Throughput, two interleaved passes at depth 11 on kiwipete, the only position
+with enough work to read: **9655 / 9508 knps reference against 9518 / 9558
+candidate** -- inside the noise this machine resolves, so two extra dependent
+loads per scored quiet and a 1.125 MiB table are not visibly paid for at bench
+scale. `opendirectoryd` was taking about 17 % of a core throughout.
+
+### The first SPRT was aborted, and why
+
+Started 2026-08-27 22:33:38 **on battery**. It played for 1 h 28 m, hibernated
+at a 1 % charge, and woke 42 hours later still running. Killed at 2549 games
+rather than allowed to reach a bound. `adocs/data/S024_pair_stats.py` is the
+tool that decided it -- it reproduces fastchess's own printed figures exactly
+for the same sample, `ptnml [115, 256, 421, 237, 109]` and `Elo -4.73 +/-
+11.16` against its `-4.73 +/- 11.15`, which is why its other numbers are worth
+anything:
+
+- **the 8 time forfeits are not the reason.** All eight sit in rounds 1133 to
+  1137, the sleep boundary, four in each direction. Dropping all five pairs
+  moves the match from `Elo -0.41 +/- 10.51` to `-0.68 +/- 10.51`. A footnote.
+- **the two halves are the reason.** Rounds 1 to 1132, battery falling from
+  78 % to 1 %: 1132 pairs, `-5.06 +/- 11.17`. Rounds 1138 on, mains: 137 pairs,
+  `+35.63 +/- 30.99`. About 40 Elo apart at roughly 2.4 sigma, and the mean
+  game length moved with it, 100.0 plies to 92.9. Chance at 137 pairs and a
+  throttled machine both fit, and the run cannot separate them.
+
+The evidence is `.tuning/sprt_s024_v1_run1_aborted.log` and
+`.tuning/sprt_s024_run1_aborted.pgn` -- **`.tuning/` is gitignored, so those two
+files do not survive a machine move**; every number that matters from them is
+in this section and in the run script's header.
+
+It also produced the throughput figure this machine was missing:
+**about 1550 games/h at 8+0.08 on 8 cores**, from 2276 games in 1 h 28 m. Read
+it as a floor -- it was measured on battery with the display on.
+
+### Found and fixed on the way
+
+`books/fetch_book.sh` died `sha256sum: command not found` after downloading
+43 MB and verifying nothing: macOS has `shasum -a 256` instead. Fixed in place,
+and the book was then fetched and both digests verified under `/bin/bash` 3.2.
+Same class as S167 and it blocked every SPRT on this machine.
+
+### What is left
+
+1. **Verdict 1's SPRT.** Blocked on one thing only: the machine must be on
+   mains power. `adocs/data/S024_sprt.sh` refuses on battery by itself now and
+   prints `SPRT-RUN-FAILED` when it does, so the block is enforced rather than
+   remembered. Resume with:
+
+   ```
+   nohup adocs/data/S024_sprt.sh > .tuning/sprt_s024_v1.log 2>&1 &
+   ```
+
+   then arm a watcher per the WATCHERS rule -- the poll loop, ceiling 9h, on
+   `SPRT-RUN-(DONE|FAILED)`. The reference is pinned to `25998fe` inside the
+   script and its build already exists under `.ref-builds/`. The three readings
+   are pre-registered in that script's header; take the one the run lands on.
+
+2. **Verdict 2, the two-ply follow-up**, only after verdict 1 has a verdict and
+   a commit. Adds `moves_played[MAX_PLY]` to `search_state_t` written before
+   every child call including 0 before the null-move child, read at
+   `[ply - 2]` under `ply >= 2`; the `prev_move` parameter's readers then move
+   to `moves_played[ply - 1]` so there is one source of truth; same physical
+   table; the band case re-pinned for three terms; its own SPRT against verdict
+   1's commit.
+
+3. **Then the step completes by hand** -- moltke v1 has no `--step` (DEC-109):
+   write the `done:` stamp, move this file to `plan_done/`, move S024's entry
+   out of `plan.md`'s Open list into `Done recently` and drop the oldest of the
+   five, rewrite `status.md`, commit.

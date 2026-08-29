@@ -83,12 +83,18 @@ void history_gravity_update(int16_t& entry, int bonus);
 // to every quiet tried at that node before it. `quiets_tried` never contains
 // `cutoff_move` -- the caller appends after the cutoff test, so the exclusion
 // is structural. S093.
+//
+// `previous_move` is the move this node is replying to, 0 at the root and below
+// a null move. Every table this touches takes the same bonus and the same malus
+// from the same helper: updating one of them from the sum of the others is on
+// record as a loss (Lynx PR #2463). S024.
 void history_on_quiet_cutoff(search_state_t* state,
                              color_t side,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
-                             int depth);
+                             int depth,
+                             move_t previous_move);
 
 #ifdef CHESSO_TUNE
 // The reduction the built table holds for a (depth, move number) pair. Tune

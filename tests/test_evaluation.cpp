@@ -850,11 +850,19 @@ TEST_SUITE("evaluation: score_move ordering")
     // The declared ceiling and not the shipping default. history_gravity_update
     // holds every entry inside whatever QuietHistoryMax is set to, so the two
     // worst cases the range admits are an entry sitting exactly on each bound.
+    //
+    // Both entries, since S024: the quiet band is a sum of the butterfly table
+    // and the continuation table, so the worst case is both of them on the same
+    // bound at once and the band the clearance is measured against is twice as
+    // wide as the parameter.
     const move_t plain = quiets[3];
     int16_t& entry = state.quiet_history[game.board.active_color]
                                         [MOVE_FROM(plain)][MOVE_TO(plain)];
+    int16_t& continuation =
+        continuation_entry(*state.continuation_history, prev_move, plain);
 
     entry = static_cast<int16_t>(declared_max);
+    continuation = static_cast<int16_t>(declared_max);
 
     const int s_capture =
         score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
@@ -867,8 +875,13 @@ TEST_SUITE("evaluation: score_move ordering")
     const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
 
     entry = static_cast<int16_t>(-declared_max);
+    continuation = static_cast<int16_t>(-declared_max);
     const int s_history_malused =
         score_move(&game, &state, plain, 0, ply, prev_move);
+
+    // The width of the quiet band, and the number every clearance below is
+    // measured against. One term per table, summed at equal weight.
+    const int quiet_band_edge = 2 * declared_max;
 
     // Precondition 1. The clearance the bands are built on, read off this
     // position: the cheapest capture stands exactly 100 above the first killer.
@@ -884,20 +897,23 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(s_killer0 > s_killer1);
     REQUIRE(s_killer1 > s_counter);
 
-    // Precondition 3. The bound is what reaches the score, at both edges. A
-    // history entry is returned unmodified, so a case that asserted the
-    // clearance without this would pass on a score_move() that quietly capped
-    // the value itself -- or that clamped the malused half back to zero, which
-    // would make the floor assertion below vacuous.
-    REQUIRE_EQ(s_history, declared_max);
-    REQUIRE_EQ(s_history_malused, -declared_max);
+    // Precondition 3. The bound is what reaches the score, at both edges, and
+    // both terms reach it. A history entry is returned unmodified, so a case
+    // that asserted the clearance without this would pass on a score_move()
+    // that quietly capped the value itself -- or that clamped the malused half
+    // back to zero, which would make the floor assertion below vacuous. It is
+    // also what catches a sum accumulated in int16_t: two entries at 32767 wrap
+    // negative there and the ceiling assertion would pass for the wrong reason.
+    REQUIRE_EQ(s_history, quiet_band_edge);
+    REQUIRE_EQ(s_history_malused, -quiet_band_edge);
 
     CHECK_MESSAGE(
         s_counter - s_history >= 100,
         ("QuietHistoryMax's declared maximum of " +
          std::to_string(declared_max) + " scores " + std::to_string(s_history) +
-         " against the countermove band's " + std::to_string(s_counter) +
-         ", a clearance of " + std::to_string(s_counter - s_history) +
+         " summed over both quiet tables, against the countermove band's " +
+         std::to_string(s_counter) + ", a clearance of " +
+         std::to_string(s_counter - s_history) +
          " and not the 100 the ordering bands are spaced by."));
 
     // The floor. Every branch score_move() can take other than the history one
@@ -910,8 +926,9 @@ TEST_SUITE("evaluation: score_move ordering")
         ("QuietHistoryMax's declared minimum of " +
          std::to_string(-declared_max) + " scores " +
          std::to_string(s_history_malused) +
-         " against the countermove band's " + std::to_string(s_counter) +
-         ", a clearance of " + std::to_string(s_counter - s_history_malused) +
+         " summed over both quiet tables, against the countermove band's " +
+         std::to_string(s_counter) + ", a clearance of " +
+         std::to_string(s_counter - s_history_malused) +
          " and not the 100 the ordering bands are spaced by."));
 
     // And nothing occupies the malused half. Every other band this position can
@@ -922,13 +939,70 @@ TEST_SUITE("evaluation: score_move ordering")
         std::min({s_capture, s_killer0, s_killer1, s_counter});
 
     CHECK_MESSAGE(
-        lowest_other_band - declared_max >= 100,
+        lowest_other_band - quiet_band_edge >= 100,
         ("The lowest non-history band scores " +
          std::to_string(lowest_other_band) +
          ", which does not stand 100 clear of the whole quiet band [" +
-         std::to_string(-declared_max) + ", " + std::to_string(declared_max) +
-         "]."));
+         std::to_string(-quiet_band_edge) + ", " +
+         std::to_string(quiet_band_edge) + "]."));
   }
+
+  // S024. The band case above proves the sum cannot leave its band; this one
+  // proves there is a sum at all, and that the second term is conditioned on
+  // the move being replied to rather than added unconditionally.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "a quiet score sums the butterfly and continuation tables")
+  {
+    REQUIRE(
+        load_FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
+                 "R3K2R w KQkq - 0 1",
+                 &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[2] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 2; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 2);
+
+    const move_t plain = quiets[0];
+    const move_t previous = quiets[1];
+
+    // Precondition: the two moves index distinct continuation rows, so the
+    // last check below reads a cell the write could not have reached.
+    REQUIRE((MOVE_PIECE(plain) != MOVE_PIECE(previous) ||
+             MOVE_TO(plain) != MOVE_TO(previous)));
+
+    search_state_t state = {};
+
+    // Precondition: the move is a quiet that reaches the history branch at all,
+    // so a zero read below means the term was not added rather than that the
+    // function returned a band constant.
+    REQUIRE_EQ(score_move(&game, &state, plain, 0, 3, previous), 0);
+
+    state.quiet_history[game.board.active_color][MOVE_FROM(plain)]
+                       [MOVE_TO(plain)] = 42;
+    continuation_entry(*state.continuation_history, previous, plain) = 7;
+
+    CHECK_EQ(score_move(&game, &state, plain, 0, 3, previous), 49);
+
+    // The root has no move to reply to and neither does the child of a null
+    // move. Reading the table there would index the cell of whatever move
+    // happens to encode as 0, so the butterfly term stands alone.
+    CHECK_EQ(score_move(&game, &state, plain, 0, 3, 0), 42);
+
+    // And the term belongs to the pair, not to the move: a different previous
+    // move reads a different cell.
+    CHECK_EQ(score_move(&game, &state, plain, 0, 3, plain), 42);
+  }
+
 
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")
   {
