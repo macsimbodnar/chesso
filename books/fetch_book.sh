@@ -71,9 +71,22 @@ IFS=$'\t' read -r _ zip_sha file_sha <<< "$line"
 
 command -v unzip > /dev/null || fail "unzip is not on PATH"
 
+# GNU coreutils ships sha256sum; the BSD userland macOS ships does not, and has
+# `shasum -a 256` instead. Both print "<digest>  <name>", so the callers below
+# are unchanged. Found on the MacBook: without this the script died
+# `sha256sum: command not found` after the 43 MB download, having verified
+# nothing, which is the S167 class of portability failure and not a new one.
+if command -v sha256sum > /dev/null; then
+  sha256() { sha256sum "$1"; }
+elif command -v shasum > /dev/null; then
+  sha256() { shasum -a 256 "$1"; }
+else
+  fail "neither sha256sum nor shasum is on PATH; a book cannot be verified"
+fi
+
 target="$books/$book"
 if [[ -r "$target" ]]; then
-  got="$(sha256sum "$target" | cut -d' ' -f1)"
+  got="$(sha256 "$target" | cut -d' ' -f1)"
   if [[ "$got" == "$file_sha" ]]; then
     echo "$book is already here and matches its pin."
     exit 0
@@ -91,14 +104,14 @@ echo "fetching $book.zip from official-stockfish/books (CC0-1.0) ..."
 curl -fsSL -o "$tmp/book.zip" "$base_url/$book.zip" \
   || fail "download of $base_url/$book.zip failed"
 
-got="$(sha256sum "$tmp/book.zip" | cut -d' ' -f1)"
+got="$(sha256 "$tmp/book.zip" | cut -d' ' -f1)"
 [[ "$got" == "$zip_sha" ]] \
   || fail "zip sha256 is $got, pinned is $zip_sha"
 
 unzip -q -o -d "$tmp" "$tmp/book.zip" || fail "unzip failed"
 [[ -r "$tmp/$book" ]] || fail "the zip does not contain $book"
 
-got="$(sha256sum "$tmp/$book" | cut -d' ' -f1)"
+got="$(sha256 "$tmp/$book" | cut -d' ' -f1)"
 [[ "$got" == "$file_sha" ]] \
   || fail "unpacked sha256 is $got, pinned is $file_sha"
 
