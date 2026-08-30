@@ -162,7 +162,7 @@ versions and an unpinned formatter rewrites files nobody touched.
 ./clang-format.sh --check   # dry run, non-zero if anything is unformatted
 ```
 
-The script requires **major version 22** and refuses to run on anything else
+The script requires **major version 23** and refuses to run on anything else
 rather than silently reformatting the tree. Override for a different toolchain:
 
 ```bash
@@ -171,7 +171,7 @@ CLANG_FORMAT_MAJOR=15 ./clang-format.sh --check
 
 On macOS it finds Homebrew's keg-only binary at
 `/opt/homebrew/opt/llvm/bin/clang-format` even when that is not on PATH. On
-Ubuntu it looks for `clang-format-22`.
+Ubuntu it looks for `clang-format-23`.
 
 ## The chess oracle, and the one way to ask it that lies
 

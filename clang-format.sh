@@ -3,7 +3,7 @@
 # clang-format changes its output between major versions, so the version is
 # pinned rather than "whatever is on PATH". An unpinned formatter rewrites files
 # nobody touched and buries the real change in the diff.
-REQUIRED_MAJOR=${CLANG_FORMAT_MAJOR:-22}
+REQUIRED_MAJOR=${CLANG_FORMAT_MAJOR:-23}
 
 if [ $# -gt 0 -a "$1" != "--check" ]; then
     echo "Usage: $0 [--check]"

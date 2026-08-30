@@ -457,9 +457,7 @@ struct search_t
 // search runs on a std::thread, whose stack is 512 KB on macOS, and the state
 // is a stack object.
 struct continuation_history_t
-{
-  int16_t table[12][64][12][64];
-};
+{ int16_t table[12][64][12][64]; };
 
 
 // The one place the (piece, to-square) convention is written down. A promotion

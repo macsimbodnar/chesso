@@ -946,7 +946,7 @@ whether.
 ./clang-format.sh --check   # dry run, non-zero if anything is unformatted
 ```
 
-Pins clang-format major version 22 and refuses to run on anything else,
+Pins clang-format major version 23 and refuses to run on anything else,
 deliberately: clang-format changes its output between major versions and an
 unpinned formatter rewrites files nobody touched. Override with
 `CLANG_FORMAT_MAJOR=15 ./clang-format.sh --check`.

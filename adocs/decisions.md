@@ -6254,3 +6254,45 @@ Consequences: Nothing is machine-enforced any more. A step completes by hand --
               longer derivable from the filesystem -- the WATCHERS rule
               compensates by making the poll loop's four exits explicit, and
               `status.md` carries a `Watching:` line that has to be true.
+
+## DEC-110  2026-08-30  The clang-format pin moves from major 22 to major 23
+Tags:         toolchain, tests, gate, macos
+Context:      `ctest -L fast` went red on this machine with no code change
+              behind it. `test_clang_format_script` failed six assertions, all
+              of them because `clang-format.sh` resolves a binary and then
+              refuses it: "clang-format 22 not found. Found, but wrong version:
+              /opt/homebrew/opt/llvm/bin/clang-format (23.1.0)". Homebrew's
+              llvm keg was replaced by 23.1.0 on 2026-08-29 at 23:50, which is
+              after S024's code commit `e424032` (2026-08-27 22:21) and during
+              that step's SPRT runs. `brew list --versions llvm` reports 23.1.0
+              and the Cellar holds nothing else, so major 22 is not on the
+              machine and cannot be selected. The completion gate ends in
+              `./clang-format.sh --check`, so until this was settled no step
+              could be marked done here at all.
+Decision:     By the owner, asked directly. `REQUIRED_MAJOR` becomes 23.
+              `DEV_MANUAL.md` and `TOOLCHAIN.md` carry the new number, and
+              `TOOLCHAIN.md`'s Ubuntu package name becomes `clang-format-23`.
+              The escape hatch is unchanged: `CLANG_FORMAT_MAJOR` still
+              overrides, and the pin's reason -- output moves between major
+              versions, and an unpinned formatter rewrites files nobody touched
+              -- is unchanged and is why this is a decision rather than a
+              widened range.
+Rejected:     Installing clang-format 22 and keeping the pin. It preserves the
+              Linux workstation's toolchain untouched, but homebrew ships no 22
+              formula, so it means a versioned tap or a hand-built LLVM that
+              the owner would have to run, on a machine that is on vacation
+              duty for documents and short runs.
+              Widening the pin to a range, or dropping it. That is the failure
+              the pin was written against: two machines formatting the same
+              tree differently, and a real change buried in a reformat.
+Consequences: 23 reformats exactly one construct in this tree, and it is
+              S024's: `struct continuation_history_t` collapses from three
+              lines to one, because `AllowShortBlocksOnASingleLine` reaches a
+              single-member struct under 23 and did not under 22. That hunk
+              lands in this commit and is reverted with the rest of S024 in the
+              next one, so after the revert the tree is byte-identical under 22
+              and 23 and the pin move costs no reformatting at all. What it
+              does cost is the Linux workstation: it must have clang-format 23
+              before it can complete a step, and until it does, its gate fails
+              exactly the way this machine's just did. `.moltke.local.md`
+              records the version actually present here.
