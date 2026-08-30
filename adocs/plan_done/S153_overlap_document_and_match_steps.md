@@ -1,0 +1,26 @@
+id:         S153
+goal:       an agent-only step and a match-owning step may be active at once, so a document step does not leave the machine idle
+accepts:    `plan_active_max` permits two active steps per author with the stated rule that at most one of them may hold the machine, or the strict sequencing is kept and `adocs/decisions.md` records why -- either outcome closes this, and it is the owner's call and not the agent's; the cost being traded is stated from the measurement rather than argued: 15.1 h of exactly stamped runs in the 65.4 h since the S088 anchor, five SPRT verdicts at one per 13 h, against 45 to 55 verdicts still owed; INV-1 and `--validate` agree with whatever the marker ends up saying
+touches:    AGENTS.md, adocs/decisions.md  <!-- .moltke.json as written; deleted by moltke v1, DEC-109 -->
+excludes:   raising `plan_stack_max`, which is about blocking depth and not about idleness; running two match-owning steps at once, which contends for the machine and is what the concurrency default already settles; the SOTA enrichment pass, which is parked separately in `status.md`
+author:     claude (Opus 5), 2026-08-30
+decisions:  DEC-096, DEC-113
+closes:     2026-08-21_adversarial-F05
+blocks:
+paused_by:
+done:       2026-08-30. **The owner's call, asked directly and answered directly: allow any strictly necessary number of active steps, one per agent, with exactly one agent the coordinator and machine holder.** That is broader than either branch the `accepts` offered -- it does not raise a cap, it removes one -- and it is recorded as DEC-113. `AGENTS.md`'s PLAN rule is rewritten from "one active, non-paused step per agent" to say it, and it says three things the one-line answer implies: the coordinator alone starts a match, an SPSA, a fit or a timing; the shared documents (`plan.md`, `status.md`, `specs.md`, `decisions.md`) are written through it, because two agents stamping the same file is how the memory loses an edit; and *strictly necessary* means the machine would otherwise idle or an active step cannot advance, not that the Open list is long. The last two are the agent's reading of "coordinator" and DEC-113 marks them as such so the owner can correct them. **The `accepts` was written against tooling that no longer exists and three of its terms are void, not satisfied**: `plan_active_max` and `--validate` were deleted by moltke v1 (DEC-109), and there is no `.moltke.json` to configure -- DEC-112's own Consequences predicted exactly this and said the step starts by restating its acceptance in v1 terms. The marker is prose in `AGENTS.md` and nothing validates it; INV-1 is move-generation legality and never had anything to do with this step, which is a copy error in the `accepts` and is left standing rather than rewritten. **What the `accepts` does still bind is the cost figure, and it was re-checked term by term rather than repeated** -- the rule being that a number decides work only if someone confirmed it. From the `done:` stamps themselves: S089 21 m 59 s, S094 #1 2 h 07 m, S094 #2 1 h 23 m, S107 1 h 37 m 52 s, S085's SPSA 8 h 21 m, S085's verification SPRT 1 h 15 m. Sum **15.10 h**, which is the audit's 15.1 h to the digit, over a 65.4 h window from the S088 anchor: **23 %**, five verdicts, one per 13 h. The other half of the trade is re-derived rather than carried: **48 of the 60 files in `plan_todo/` name an SPRT or an `elo0` bound in their `accepts`**, which is where the audit's "45 to 55 verdicts owed" lands today. **Stated plainly because it changes nothing today: this buys zero for the next ten steps.** DEC-112's machine-light lane put ten match-free steps at the head of Open and this MacBook cannot take the heavy verdicts anyway, so there is no match for a document step to overlap. The lever is worth its 23 % when the workstation is back. Completion gate: build clean, `ctest -L fast` **20/20 in 26.63 s**, `clang-format.sh --check` exit 0. No code changed and no behaviour moved, so INV-6 does not apply and no node count was taken. Docs checked as DOCS requires: `README.md` owner-written, untouched; `MANUAL.md` unchanged -- no UCI command, option, default or output field moved; `DEV_MANUAL.md` unchanged -- no build, test, bench or SPRT invocation moved; `specs.md` unchanged -- it holds engine behaviour and this step is workflow. `2026-08-21_adversarial-F05` moves open to closed in its own report, which is the only edit an audit report takes.
+
+## The measurement
+
+DEC-096 protects machine time from document work, on the grounds that
+measurement capacity is the binding constraint. The converse is not recorded: an
+agent-only step leaves that same constraint idle, and the two classes contend for
+nothing. Positions 15 to 18 of the plan -- S142, S139, S140, S141 -- are four
+consecutive steps that owe no match, ahead of the whole search block.
+
+**Re-read after DEC-112.** The four consecutive zero-match steps this section
+names -- S142, S139, S140, S141 at positions 15 to 18 -- are the pre-DEC-112
+order, and the audit's evidence is quoted as it was written. The machine-light
+lane has since put ten such steps at positions 1 to 10, which makes the pattern
+larger rather than smaller and its cost temporarily zero: there is no match to
+overlap while the workstation is away.

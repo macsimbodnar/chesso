@@ -7,13 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-08-30, by hand.
 
-- Last done: S167. Two commits since it are not steps: the clang-format pin
-  move (DEC-110) and S024's erasure (DEC-111).
+- Last done: S153 -- the sequencing rule. **The plan no longer runs one step at
+  a time: DEC-113 allows as many active steps as are strictly necessary, one per
+  agent, with exactly one agent the coordinator and the only one that may hold
+  the machine.** `AGENTS.md`'s PLAN rule is rewritten and
+  `2026-08-21_adversarial-F05` is closed. It buys nothing until the workstation
+  is back -- there is no match here for a document step to overlap -- and the
+  cost it prices was re-checked from the `done:` stamps: 15.10 h of stamped run
+  in 65.4 h, 23 %, five verdicts at one per 13 h, against 48 of 60 pending steps
+  naming an SPRT in `accepts`.
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane. The owner is on vacation with the MacBook and
-  the Linux workstation is where the heavy runs go, so `plan.md` carries a
-  `## Machine scope` section and its Open list is temporarily reordered around
-  it (DEC-112). First entries are S153, S158, S157, S150.
+- Next: the machine-light lane continues (DEC-112). Open entries are S158, S157,
+  S150, S155.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

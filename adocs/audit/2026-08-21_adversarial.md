@@ -388,7 +388,7 @@ found 30 verdicts earlier than S128 would find it.
 
 ### 2026-08-21_adversarial-F05 — medium — the front of the queue is four consecutive zero-match steps, and the binding constraint is idle while they run
 
-Status: open
+Status: closed — DEC-113, S153
 
 **Evidence.** `plan.md`'s order, positions 15 to 19:
 

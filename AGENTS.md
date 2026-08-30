@@ -149,7 +149,17 @@ migration that way (DEC-109).
 - AUDIT: on demand only — `/moltke:audit` when the user asks for it.
 - DEPS: never add a dependency without asking; state what it buys and what
   writing it by hand costs, then let the user decide.
-- PLAN: one active, non-paused step per agent.
+- PLAN: **as many active, non-paused steps as are strictly necessary, one per
+  agent, and exactly one of those agents is the coordinator.** The coordinator
+  is the machine holder: a match, an SPSA run, a fit or a timing is started by
+  it and by nobody else, so the two classes of work never contend. It also owns
+  the shared documents -- `plan.md`, `status.md`, `specs.md` and
+  `decisions.md` are written through the coordinator, because two agents
+  stamping the same file is how the memory loses an edit. Every other active
+  step is agent-only work that owns no run and writes its own step file.
+  *Strictly necessary* is the bound and it is not "the list is long": a further
+  step starts because the machine would otherwise sit idle, or because an
+  active step cannot advance without it. DEC-113.
 - COPYING: **nothing is copied, ever.** No source from another engine, no
   tables from another engine, no NNUE training data derived from another
   engine's evaluation or search. Ideas, techniques and published articles are

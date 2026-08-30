@@ -6415,3 +6415,58 @@ Consequences: The next step is `plan.md` Open entry 1, S153, as always -- the
               terms. Restoring the block order when the workstation is back is
               a decision and not a tidy-up, so the reason the lane existed
               stays findable.
+
+## DEC-113  2026-08-30  Steps run concurrently, as many as are strictly necessary, with one coordinator that holds the machine
+Tags:         workflow, plan, measurement, moltke, s153, dec-096, dec-112
+Context:      DEC-096 protects machine time from document work, on the grounds
+              that measurement capacity is the binding constraint. The converse
+              was never recorded: an agent-only step leaves that same constraint
+              idle, and the two classes contend for nothing. The
+              2026-08-21 adversarial audit measured the cost from the project's
+              own `done:` stamps and S153 re-checked every term of it:
+              S089 21 m 59 s, S094 2 h 07 m, S094 1 h 23 m, S107 1 h 37 m 52 s,
+              S085's SPSA 8 h 21 m and its verification 1 h 15 m -- 15.10 h of
+              stamped run in the 65.4 h since the S088 anchor, 23 % of the
+              window, five SPRT verdicts at one per 13 h. Against that, 48 of
+              the 60 pending steps name an SPRT or a bound in `accepts`. At the
+              observed rate the remaining verdicts are weeks of calendar and
+              days of compute, and the gap is idle machine.
+Decision:     By the owner, asked directly while S153 was active: allow any
+              strictly necessary number of active steps, one per agent, with
+              exactly one agent the coordinator and machine holder. The
+              coordinator alone starts a match, an SPSA, a fit or a timing;
+              every other active step is agent-only work that owns no run.
+              AGENTS.md's PLAN rule is rewritten to say it. The audit's own
+              suggestion -- raise a cap from 1 to 2 -- is narrower than what was
+              chosen and the cap is gone rather than raised.
+              Two clauses are the agent's reading of "coordinator" and are
+              recorded as such so they can be corrected: the shared documents
+              (`plan.md`, `status.md`, `specs.md`, `decisions.md`) are written
+              through the coordinator, and *strictly necessary* means the
+              machine would otherwise idle or an active step cannot advance --
+              not that the Open list is long.
+Rejected:     Keeping the strict one-step sequencing and recording why. It is
+              the safer rule and it is what produced the measured 23 %; the
+              owner declined it.
+              The audit's literal suggestion, `plan_active_max: 2`. There is no
+              such knob to raise: moltke v1 ships no `.moltke.json` (DEC-109),
+              so the rule is prose in AGENTS.md and a number in it would be an
+              arbitrary ceiling on a bound the owner deliberately left open.
+              A per-step machine flag, so an agent could ask whether it may run.
+              Nothing enforces any of these rules; a second marker is a second
+              thing to keep true, and "the coordinator holds the machine" is one
+              sentence that needs no bookkeeping.
+Consequences: `plan_current/` may hold more than one file, and the `author:`
+              field is what says which agent owns which. The `done:` stamp, the
+              Open list edit and the `status.md` rewrite that finish a step all
+              go through the coordinator, so a concurrent agent finishes by
+              handing its stamp over rather than by writing plan.md itself.
+              MEASUREMENT is untouched and still binds: one change at a time in
+              the tree, whatever runs beside it, because a second play-altering
+              change landing mid-match makes both numbers meaningless -- what
+              overlaps a match is document and process work, not a second patch.
+              This buys nothing while DEC-112's machine-light lane is in force:
+              the first ten Open entries own no match and this MacBook cannot
+              take the heavy verdicts anyway. The lever is worth its 23 % when
+              the workstation is back, which is the situation it is recorded
+              for. `2026-08-21_adversarial-F05` is closed by this entry.
