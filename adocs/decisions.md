@@ -6356,3 +6356,62 @@ Consequences: `achesso`'s engine is byte-identical to `10c350a`'s in `src/` and
               runs again. The estimate is recorded in the step file with an
               explicit instruction not to use 2.87 as a prior that shortens the
               real run.
+
+## DEC-112  2026-08-30  The plan is scoped to the machine for the duration: a machine-light lane, temporarily at the head of Open
+Tags:         plan, machine, measurement, workflow
+Context:      The owner is on vacation with the MacBook and returns to the
+              Linux workstation, where the heavy runs belong. This machine now
+              has its own measurements rather than an estimate: 2700 games/h on
+              8 threads at 8+0.08, and two observed deaths after four to five
+              hours of a full-core match, which is what ended S024 here
+              (DEC-111). Read against the pending order, that is a machine
+              which can finish a document step, a behaviour-neutral change
+              discharged on node counts, or one short verdict -- and cannot
+              finish a step that owes three. Two hard limits sit underneath:
+              `_pext_u64` is BMI2 and this is an M1, so S032 cannot be measured
+              here at all; and `selfplay_v2.tsv` is 683 MB, gitignored, and
+              never made the machine move, so every fit and corpus step is on
+              the workstation by construction. Left alone, the plan's first
+              entry would have been a step this machine cannot complete, and
+              the alternative to scoping it is an idle machine for the
+              duration.
+Decision:     By the owner, who asked for exactly this: work that can be done
+              without a long SPRT, and a proposed plan modification rather than
+              a silent reordering. `plan.md` gains a `## Machine scope` section
+              stating what this machine can and cannot take, with the reason
+              per excluded step, and its Open list is **reordered, not
+              rewritten** -- fifteen machine-light entries lifted to the head,
+              everything else keeping the relative order the 2026-08-19 review
+              gave it. Ten of the fifteen touch no engine and own no match
+              (S153, S158, S157, S150, S155, S156, S154, S143, S144, S146),
+              three are behaviour-neutral and discharge on identical
+              `search_bench` node counts and best moves plus a timing (S147,
+              S020, S030), and two own one self-contained verdict each if a
+              short run is wanted (S148, S159). No id is renumbered, no step's
+              content changes, and the section says how to put the order back.
+Rejected:     Lifting S095, S131 or S116 into the lane because each is one
+              verdict. They sit inside the search block's dependency order --
+              "each step's consumers exist before it" -- and pulling one ahead
+              of S109 buys a verdict measured against a tree the plan is about
+              to change. S148 and S159 depend on nothing in that block, which
+              is why they are the two that can move.
+              Lifting S117 with the other speed steps. Its `accepts` reproduces
+              the taper exactly and after S055 that is one division rather than
+              two, so it follows S055, which owes its own SPRT.
+              Leaving the order alone and taking steps out of it by hand. The
+              plan says order lives in the Open list and nowhere else; an agent
+              picking a different entry each session is the drift the rule
+              exists against.
+              Waiting for the workstation. Fifteen steps' worth of work is
+              available that the workstation would otherwise spend its time on
+              instead of matches, which is the wrong way round: the machine
+              that can measure should be measuring.
+Consequences: The next step is `plan.md` Open entry 1, S153, as always -- the
+              rule does not change, only the list does. S153 is itself about
+              whether a document step and a match-owning step may be active at
+              once, and its `accepts` is stale: it names `.moltke.json`,
+              `plan_active_max` and `--validate`, all deleted by moltke v1
+              (DEC-109), so taking it starts by restating its acceptance in v1
+              terms. Restoring the block order when the workstation is back is
+              a decision and not a tidy-up, so the reason the lane existed
+              stays findable.
