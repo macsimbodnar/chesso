@@ -640,15 +640,17 @@ at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
-`tools/plan_prose_check.py` carries three plan-hygiene checks. One of the three,
-`--touches`, is in the fast suite as `test_plan_touches`; the other two are not,
-and the paragraph after them says why:
+`tools/plan_prose_check.py` carries four plan-hygiene checks. Two of the four,
+`--touches` and `--params`, are in the fast suite as `test_plan_touches` and
+`test_plan_params`; the other two are not, and the paragraph after them says
+why:
 
 ```bash
-tools/plan_prose_check.py             # all three, exits non-zero on any
+tools/plan_prose_check.py             # all four, exits non-zero on any
 tools/plan_prose_check.py --prose     # plan.md's tense only
 tools/plan_prose_check.py --citations # pending step files' citations only
 tools/plan_prose_check.py --touches   # pending step files' touches only
+tools/plan_prose_check.py --params    # doc numbers against the compiled params
 ```
 
 **`--prose`.** `plan.md`'s ordered list is maintained by the workflow checker
@@ -697,6 +699,52 @@ of the symbol's kind, which cannot be resolved against the tree as it stands
 because a directory may grow a file. The script's own file is excluded from the
 corpus it searches, since its documentation names the symbols it is about.
 
+**`--params`.** A document sentence that states a different number for a search
+parameter than the engine compiles. `2026-08-21_adversarial-F02` found three:
+`specs.md` gave the aspiration triple as 5 / 50 / 400 where the engine runs
+2 / 21 / 437, and `MANUAL.md` said aspiration windows start at depth 5 eleven
+lines below its own option table saying 2 — S085 retuned them and the prose did
+not follow, in the document the reading order puts first. Running the check
+found a fourth the audit had missed, `plan.md` saying `MaxQsearchDepth` **is**
+8. Nothing else in the tree can see this class: `--prose` and `--citations`
+compare prose to prose, `tests/test_uci_surface.cpp` builds its expected option
+lines *from* `search_param_info()` and requires MANUAL.md only to **name** each
+option, and `tests/test_search_params.cpp` holds the code against itself.
+
+The values come from `src/search_params.hpp`'s `X(symbol, name, default, min,
+max)` list, which is the single source `search_param_info()` is generated from
+in both builds — `tests/test_search_params.cpp` is what keeps those two equal,
+so reading the list is reading the function. A list that parses to nothing fails
+the check rather than passing it vacuously.
+
+Three rules, and **the third has a maintenance cost that is deliberately
+visible**:
+
+- `TABLE` — MANUAL.md's option table, `` | `Name` | default | min to max | `` .
+  All three numbers compared.
+- `NEAR` — a sentence that names the parameter and then gives a number in one of
+  a few tight forms: `` `Name` `` is N, ships at N, = N, default N, N as
+  shipped. Tight on purpose — "`LazyEvalMargin` at 0, 150 and 2000" is a sweep,
+  not a claim about the default, and a looser rule flags it.
+- `PHRASE` — a sentence that never names its parameter. **Two of F02's three
+  were of this kind**, so a name-adjacency scan alone would have missed them.
+  These are keyed on the wording, in `PARAM_PHRASES`, and a rule matching
+  nothing anywhere reports `STALE` instead of passing quietly.
+
+**What it does not cover, stated rather than implied.** The check is a net with
+a declared mesh, not a proof. A number stated about a parameter in prose that
+neither names the parameter nor matches a phrase rule is not checked and cannot
+be. Tense is not understood either, and that is load-bearing: `NEAR` keys on
+"is", "ships at", "=", "default", so `MaxQsearchDepth` **was** 8 reads as
+history and is left alone, which is how `plan.md`'s sentence was repaired
+without deleting what it records. Rewriting a keyed sentence retires its rule —
+`("MaxQsearchDepth", "quiescence is capped at (\d+) plies")` was F02's third
+case and is retired in the source with the reason, because `eaad88b` rewrote
+that sentence to name the parameter and `NEAR` covers it now. Default file set:
+`adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md`, `adocs/plan.md`;
+`adocs/plan_done/` is excluded because it is history and records what was true
+when it was written.
+
 `--prose` and `--citations` are **not** registered with ctest, and that is
 deliberate rather than an omission: any source commit shifts lines under fifty
 step files at once, so gating the suite on citation freshness would make a red
@@ -704,7 +752,9 @@ suite the normal state of the repository and this check the thing that gets
 weakened to clear it. Run both at step completion. That reason does not reach `--touches`, which holds no line
 numbers and moves only when a step file is written or a symbol changes file, so
 S141 put it in the fast suite where a broken scope contract fails at once
-instead of waiting for someone to run the tool.
+instead of waiting for someone to run the tool. It does not reach `--params`
+either, and for the same reason: it compares a number to a number and no source
+commit can shift it. S150 registered it as `test_plan_params`, 0.23 s.
 
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts

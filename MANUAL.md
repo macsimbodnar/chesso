@@ -263,9 +263,11 @@ here as the FEN each one loads. A GUI never sends them.
   (2026-08-21) is the constructed set of 48 proved mates the floor is measured
   against: every mate in two is found immediately, half the mates in three are
   found late, and none of the mates in four or five is found at all.
-  *Aspiration windows* are present since S021 (2026-08-17): from depth 5 the
+  *Aspiration windows* are present since S021 (2026-08-17): from depth 2 the
   root is searched in a band around the previous iteration's score, widened and
-  repeated when the score falls outside it.
+  repeated when the score falls outside it. The depth is `AspirationMinDepth`
+  and the option table above is where its live value is documented; S085
+  retuned it from the 5 S021 shipped.
 - **The reported score is unreliable in both directions, and worst in pawn
   endgames.** Measured over 5582 moves in 98 games against Stockfish at 3000000
   nodes, after the evaluation constants were fitted (S028, 2026-08-11). Chesso's

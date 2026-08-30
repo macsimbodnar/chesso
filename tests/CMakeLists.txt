@@ -181,6 +181,25 @@ add_test(NAME test_plan_touches
                          --touches)
 set_tests_properties(test_plan_touches PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S150: `--params`, the second mode in the suite. Same reasoning as `--touches`
+# and for the same reason it is not `--citations`: it holds no line numbers, so
+# an unrelated source commit cannot make it red. It fires only when a document
+# states a different number for a search parameter than src/search_params.hpp
+# compiles, which is exactly the class 2026-08-21_adversarial-F02 found -- three
+# values S085 retuned and the prose did not follow, in specs.md and MANUAL.md,
+# with specs.md first in the reading order. Observed red on all three before the
+# repair, the third against `eaad88b^:adocs/specs.md` where its wording still
+# lives.
+#
+# It can also go red on a rewrite rather than on a drift: PARAM_PHRASES keys on
+# the wording of sentences that never name their parameter, and a rule that
+# matches nothing reports STALE. That is the check's maintenance cost and it is
+# meant to be visible rather than silent.
+add_test(NAME test_plan_params
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
+                         --params)
+set_tests_properties(test_plan_params PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.

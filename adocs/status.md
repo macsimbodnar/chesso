@@ -7,32 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-08-30, by hand.
 
-- Last done: S157 -- **the SPRT bounds are normalized Elo and now say so.**
-  `fastchess.sh` and `DEV_MANUAL.md` state it beside the CPW table they are
-  taken from; `model=normalized` is unchanged and the reason is recorded (the
-  CPW rows are fishtest's bounds, which are nElo). Seven recorded conclusions
-  restated, each with the logistic figure from its own run's pair -- 5 nElo is
-  3.54 Elo at S165's 44.75 % draws and 3.87 to 3.99 at the lower draw rates of
-  S076, S107, S093 and S021. **The audit had the direction backwards and the
-  step corrects it**: non-regression conclusions are conservative, gainer
-  conclusions overstate by about 1.1 logistic Elo. Ten pre-registration scripts
-  under `adocs/data/` keep their wording -- evidence is appended to, never
-  edited -- and an appended section names them.
+- Last done: S150 -- **document numbers about search parameters are now checked
+  against the code.** `tools/plan_prose_check.py --params` is in the fast suite
+  as `test_plan_params` (0.23 s), with three rules: MANUAL's option table, a
+  tight name-adjacency scan, and a phrase table for the sentences that never
+  name their parameter -- which is two of the three cases the audit found. Red
+  observed on all three before repair, the quiescence one against
+  `eaad88b^:adocs/specs.md` where its wording still lives, and non-vacuity
+  proved by moving `AspirationMinDepth` in the header and watching all three
+  rule classes fire. **It found a fourth the audit missed**: `plan.md` said
+  `MaxQsearchDepth` *is* 8. All four corrected.
+  `2026-08-21_adversarial-F02` closed.
+- Before it: S157 -- the SPRT bounds are normalized Elo and now say so, in
+  `fastchess.sh` and `DEV_MANUAL.md`. Seven conclusions restated with the
+  logistic figure from each run's own pair. `model=normalized` deliberately
+  unchanged. The audit had the direction backwards: non-regression conclusions
+  are conservative, gainer conclusions overstate by about 1.1 logistic Elo.
   `2026-08-21_adversarial-F09` closed.
-- Before it: S158 -- the shipped opening book has identifiers to search on.
-  **2610256 bytes, 163141 Polyglot entries**, sha256 `47a8173504…78fb5`, all
-  recomputed rather than copied, written into S146 with two reproducers and the
-  introducing commit (`349f8cf`, 2025-05-12, message says nothing). `Use Book`
-  defaults false at `src/chesso.cpp:957`, not the `:930` the audit said.
-  `2026-08-21_adversarial-F10` closed.
-- And before that: S153 -- **the plan no longer runs one step at a time.**
-  DEC-113 allows as many active steps as are strictly necessary, one per agent,
-  with exactly one agent the coordinator and the only one that may hold the
-  machine. `AGENTS.md`'s PLAN rule is rewritten; `2026-08-21_adversarial-F05`
-  closed. It buys nothing until the workstation is back.
+- And before that: S158 (the shipped book's digest, `2026-08-21_adversarial-F10`
+  closed) and S153 (**the plan no longer runs one step at a time** -- DEC-113,
+  as many active steps as strictly necessary, one per agent, exactly one
+  coordinator holding the machine; `2026-08-21_adversarial-F05` closed).
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S150, S155,
-  S156, S154.
+- Next: the machine-light lane continues (DEC-112). Open entries are S155, S156,
+  S154, S143.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

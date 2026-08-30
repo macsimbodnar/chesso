@@ -211,7 +211,7 @@ whole `go`. That is a hypothesis, unmeasured, and it is S159.
 
 ### 2026-08-21_adversarial-F02 — medium — three parameter values S085 shipped are still stated at their old values in `specs.md` and `MANUAL.md`, and no check in the tree can catch that class
 
-Status: open
+Status: closed — S150
 
 **Evidence.** `src/search_params.hpp` is the single source of the defaults. The
 live values and the prose disagree in three places:

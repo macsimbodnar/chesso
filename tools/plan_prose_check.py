@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Plan hygiene: stale tense in plan.md, stale citations and touches in steps.
+"""Plan hygiene: stale tense, citations, touches, and doc numbers vs the code.
 
-Three checks over the plan documents. `--prose` and `--citations` report and do
+Four checks over the plan and manual documents. `--prose` and `--citations` report and do
 not rewrite -- which tense a sentence should take and which line a citation
 meant are judgements, and the fix belongs in the same commit as the landing that
 made it stale. Only `--touches` is in the ctest suite; the reason the other two
@@ -11,10 +11,50 @@ are not is in DEV_MANUAL.md and does not apply to it.
     tools/plan_prose_check.py --prose     # plan.md tense only
     tools/plan_prose_check.py --citations # pending step files' citations only
     tools/plan_prose_check.py --touches   # pending step files' touches only
+    tools/plan_prose_check.py --params    # doc numbers against search_param_info()
     tools/plan_prose_check.py --prose adocs/plan.md          # explicit files
     tools/plan_prose_check.py --citations adocs/plan_todo/S091_*.md
 
 Exits non-zero when any check flags anything.
+
+**--params: a document sentence that states a different number for a search
+parameter than the engine compiles.** 2026-08-21_adversarial-F02 found three:
+`specs.md` gave the aspiration triple as 5 / 50 / 400 where the engine runs
+2 / 21 / 437, and `MANUAL.md` said aspiration windows start at depth 5 eleven
+lines below its own option table saying 2. S085 retuned them and the prose did
+not follow. No existing check could see it: `--prose` and `--citations` compare
+prose to prose, `tests/test_uci_surface.cpp` builds its expected option lines
+*from* `search_param_info()` and only requires MANUAL.md to name each option,
+and `tests/test_search_params.cpp` holds the code against itself.
+
+The defaults come from `src/search_params.hpp`'s `X(symbol, name, default, min,
+max)` list, which is the single source `search_param_info()` is generated from
+in both builds -- `tests/test_search_params.cpp` is what keeps the two equal, so
+reading the list is reading the function.
+
+Three rules, and the third is the one with a maintenance cost:
+
+  TABLE   MANUAL.md's option table, `| `Name` | default | min to max | ... |`.
+          Compares all three numbers. test_uci_surface checks that the name is
+          documented and never what the row says about it.
+  NEAR    a sentence naming the parameter and then giving a number in one of a
+          few tight forms -- `Name` is N, ships at N, = N, default N, N as
+          shipped. Deliberately tight: "`LazyEvalMargin` at 0, 150 and 2000" is
+          a sweep, not a claim about the default, and a looser rule flags it.
+  PHRASE  a sentence that never names the parameter at all. Two of F02's three
+          were of this kind, so a name-adjacency scan alone would have missed
+          them. These are keyed on the wording, in PARAM_PHRASES below, and
+          that table is the maintenance cost of this check: rewrite the
+          sentence and the rule stops matching. A rule that matches nothing
+          anywhere is reported as STALE rather than passing silently, which is
+          what stops the cost from being paid invisibly.
+
+Coverage is what those three rules reach and nothing more. A number stated
+about a parameter in prose that neither names it nor matches a phrase rule is
+not checked and cannot be -- the check is a net with a stated mesh, not a
+proof. Default file set: `adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md` and
+`adocs/plan.md`. `adocs/plan_done/` is excluded on purpose: it is history and
+records what was true when it was written. S150, F02.
 
 **--prose: a completed step described as pending.** plan.md is second in the
 reading order and its prose is what a cold session reads before the ordered
@@ -749,18 +789,164 @@ def citations(paths, adocs):
     return flagged
 
 
+# --- params: document numbers against the compiled search parameters ---------
+
+PARAM_ROW = re.compile(
+    r"^\|\s*`([A-Za-z][A-Za-z0-9]*)`\s*\|\s*(-?\d+)\s*\|"
+    r"\s*(-?\d+)\s+to\s+(-?\d+)\s*\|")
+
+PARAM_DECL = re.compile(
+    r"X\(\s*[A-Z][A-Z0-9_]*\s*,\s*\"([A-Za-z][A-Za-z0-9]*)\"\s*,"
+    r"\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)")
+
+# A number close enough to the name to be a claim about the default. Tight on
+# purpose: `{n}` at 0, 150 and 2000 is a sweep and must not be flagged.
+PARAM_NEAR = (
+    r"`?{n}`?\s*(?:is|ships at|ships|=|default)\s+\*{{0,2}}(-?\d+)",
+    r"`?{n}`?[^.\n]{{0,30}}?\b(-?\d+)\s+as shipped",
+    r"`?{n}`?[^.\n]{{0,20}}?\bdefault\s+(-?\d+)",
+)
+
+# The sentences that state a parameter's value without ever naming it. Keyed on
+# the wording, which is the cost: rewrite the sentence and the rule goes STALE
+# rather than silently passing. Each entry is (UCI name, regex capturing the
+# number). F02's three cases are the first four rows.
+PARAM_PHRASES = (
+    ("AspirationMinDepth",
+     r"search the root of each iteration from depth (\d+)"),
+    ("AspirationDelta",
+     r"from depth \d+ in a band \*\*(\d+) centipawns\*\*"),
+    ("AspirationMaxDelta",
+     r"doubling the failing side alone and going to the full window past (\d+)"),
+    ("AspirationMinDepth",
+     r"\*Aspiration windows\* are present[^.]*?from depth (\d+)"),
+)
+
+# Retired, and the retirement is the maintenance cost being paid in the open:
+# ("MaxQsearchDepth", r"quiescence is capped at (\d+) plies") was F02's third
+# case and was observed red against `eaad88b^:adocs/specs.md`, which is where
+# that wording still lives. `eaad88b` rewrote the sentence to name the
+# parameter, so NEAR covers it now -- "`MaxQsearchDepth` plies, 19 as shipped"
+# -- and leaving the rule in would have printed STALE on every run until
+# somebody deleted it to get green. S150.
+
+PARAM_DOCS = ("adocs/specs.md", "MANUAL.md", "DEV_MANUAL.md", "adocs/plan.md")
+
+
+def search_params():
+    """{uci name: (default, min, max)} from src/search_params.hpp.
+
+    Empty is a failure and never a pass: a list that stopped parsing would make
+    every rule below vacuous, which is the trap this whole check exists against.
+    """
+    text = code_of("src/search_params.hpp") or ""
+    out = {m.group(1): (int(m.group(2)), int(m.group(3)), int(m.group(4)))
+           for m in PARAM_DECL.finditer(text)}
+    return out
+
+
+def _joined(text):
+    """(text with newlines as spaces, line number of each character).
+
+    The documents are hard-wrapped, so a sentence stating a number routinely
+    spans two lines -- MANUAL.md's aspiration claim does. Matching on the joined
+    text and mapping the offset back is what lets a rule be written as the
+    sentence reads.
+    """
+    flat, lines, line = [], [], 1
+    for ch in text:
+        if ch == "\n":
+            flat.append(" ")
+            lines.append(line)
+            line += 1
+        else:
+            flat.append(ch)
+            lines.append(line)
+    return "".join(flat), lines
+
+
+def check_params(path, params):
+    """Report every document number that disagrees with the compiled value."""
+    full = os.path.join(REPO, path)
+    try:
+        with open(full, encoding="utf-8") as handle:
+            text = handle.read()
+    except OSError:
+        return 0, set()
+
+    bad = 0
+    for number, line in enumerate(text.split("\n"), 1):
+        row = PARAM_ROW.match(line)
+        if row and row.group(1) in params:
+            name = row.group(1)
+            got = (int(row.group(2)), int(row.group(3)), int(row.group(4)))
+            if got != params[name]:
+                print("TABLE  {}:{}  {} documented {} default {} to {}, "
+                      "code {} default {} to {}".format(
+                          path, number, name, got[0], got[1], got[2],
+                          *params[name]))
+                bad += 1
+
+    flat, lineof = _joined(text)
+
+    for name, (default, _lo, _hi) in params.items():
+        for pattern in PARAM_NEAR:
+            for m in re.finditer(pattern.format(n=re.escape(name)), flat):
+                if int(m.group(1)) != default:
+                    print("NEAR   {}:{}  {} stated as {}, code {}".format(
+                        path, lineof[m.start()], name, m.group(1), default))
+                    bad += 1
+
+    fired = set()
+    for index, (name, pattern) in enumerate(PARAM_PHRASES):
+        if name not in params:
+            continue
+        for m in re.finditer(pattern, flat):
+            fired.add(index)
+            if int(m.group(1)) != params[name][0]:
+                print("PHRASE {}:{}  {} stated as {}, code {}".format(
+                    path, lineof[m.start()], name, m.group(1),
+                    params[name][0]))
+                bad += 1
+
+    return bad, fired
+
+
+def check_all_params(paths):
+    params = search_params()
+    if not params:
+        print("PARSE  src/search_params.hpp yielded no parameters -- the "
+              "check would pass vacuously, so it fails instead")
+        return 1
+
+    bad, fired = 0, set()
+    for path in paths or PARAM_DOCS:
+        count, hit = check_params(path, params)
+        bad += count
+        fired |= hit
+
+    for index, (name, pattern) in enumerate(PARAM_PHRASES):
+        if index not in fired:
+            print("STALE  PARAM_PHRASES[{}] for {} matched nothing: {}".format(
+                index, name, pattern))
+            bad += 1
+
+    return bad
+
+
 def main():
     adocs = os.path.join(REPO, "adocs")
     args = sys.argv[1:]
     mode = "all"
-    if args and args[0] in ("--prose", "--citations", "--touches"):
+    if args and args[0] in ("--prose", "--citations", "--touches", "--params"):
         mode, args = args[0][2:], args[1:]
     if mode == "all" and args:
         # Refused rather than ignored: before the citation check existed a bare
         # path meant "check this plan file's prose", and silently dropping it
         # would report a green run over a file nobody looked at.
-        print("usage: plan_prose_check.py [--prose|--citations|--touches] "
-              "[files...]", file=sys.stderr)
+        print("usage: plan_prose_check.py "
+              "[--prose|--citations|--touches|--params] [files...]",
+              file=sys.stderr)
         print("  a file list needs the mode it belongs to", file=sys.stderr)
         return 2
 
@@ -772,6 +958,8 @@ def main():
         bad += citations(args if mode == "citations" else [], adocs)
     if mode in ("all", "touches"):
         bad += touches(args if mode == "touches" else [], adocs)
+    if mode in ("all", "params"):
+        bad += check_all_params(args if mode == "params" else [])
     return 1 if bad else 0
 
 
