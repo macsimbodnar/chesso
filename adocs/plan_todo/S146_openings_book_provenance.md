@@ -62,3 +62,54 @@ indefinitely.
 ## Cost
 
 No match, no verdict. Research, a decision, and a documentation change.
+
+## Identifiers, so the origin can be searched for rather than guessed (S158, 2026-08-30)
+
+Computed from `src/openings.book` as it is tracked today, not carried from
+another document. The blob is a C header holding one hex string; every figure
+below is of the **decoded** book, which is what a published book would be
+compared against.
+
+| what | value |
+|---|---|
+| decoded size | **2610256 bytes** |
+| entries | **163141**, sixteen bytes each, no remainder |
+| sha256 of the decoded book | `47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5` |
+| first entry | key `00000883b144421f`, move `0dae`, weight 45, learn 0 |
+| sha256 of `src/openings.book` as tracked | `6fd66d8d86cce8e0c639f047d0d6d9cd42a06ca9ba3f91d01601c6ad7f84e026` |
+| source file size | 5220541 bytes (5220512 hex characters plus the 29-byte `#pragma once` / `#define BOOK` wrapper) |
+| introduced by | `349f8cf`, 2025-05-12, "Add openings book", on `bitboard`. The message is one line and says nothing about origin |
+
+**Reproducing the digest.** There is no `sha256sum` on the macOS machine
+(`.moltke.local.md`), so the pipeline uses `shasum -a 256`; the python form
+needs neither and also prints the counts:
+
+```sh
+sed -n 's/.*#define BOOK "\([0-9a-f]*\)".*/\1/p' src/openings.book \
+  | tr -d '\n' | xxd -r -p | shasum -a 256
+
+python3 -c 'import re,hashlib;h=re.search(r"\"([0-9a-f]*)\"",open("src/openings.book").read(),re.S).group(1);print(len(h)//2,"bytes",len(h)//32,"entries",hashlib.sha256(bytes.fromhex(h)).hexdigest())'
+```
+
+**The entry count is confirmed at runtime and not only by arithmetic.**
+`load_book_embedded` (`src/openings.cpp:358`) sets `num_of_positions` to
+`book.size() / sizeof(polyglot_entry_t)`, and the debug build prints it:
+`printf 'uci\nposition startpos\ngo depth 1\nquit\n' | ./build-debug/src/chesso`
+answers **"Opening book loaded correctly! 163141 entries."**. The shipping
+Release build cannot be asked -- `src/log.hpp:29` compiles `LOG_I` to
+`if (false) std::clog` under `NDEBUG` -- so the observation needs the debug
+binary.
+
+**Why this is a licence exposure and not a measurement contaminant.**
+`Use Book` is advertised as `default false` at `src/chesso.cpp:957`, and the
+state it advertises is real: `opening_book_enabled` is initialised `false` at
+`src/chesso.cpp:31` and moves only in the `setoption` handler at
+`src/chesso.cpp:1044-1052`. The book is loaded regardless -- and so is linked
+into every shipped binary -- but `search_random_move_in_book`
+(`src/chesso.cpp:606`) requires `opening_book_enabled`, so no SPRT taken so far
+has played a book move. Replacing the blob therefore costs no verdict and
+invalidates none.
+
+163141 entries and that decoded digest are what to search a candidate book on:
+a published book either matches the digest exactly or it is not this file, and
+the entry count alone narrows the field before any download.

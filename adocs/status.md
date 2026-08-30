@@ -7,18 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-08-30, by hand.
 
-- Last done: S153 -- the sequencing rule. **The plan no longer runs one step at
-  a time: DEC-113 allows as many active steps as are strictly necessary, one per
-  agent, with exactly one agent the coordinator and the only one that may hold
-  the machine.** `AGENTS.md`'s PLAN rule is rewritten and
-  `2026-08-21_adversarial-F05` is closed. It buys nothing until the workstation
-  is back -- there is no match here for a document step to overlap -- and the
-  cost it prices was re-checked from the `done:` stamps: 15.10 h of stamped run
-  in 65.4 h, 23 %, five verdicts at one per 13 h, against 48 of 60 pending steps
-  naming an SPRT in `accepts`.
+- Last done: S158 -- the shipped opening book now has identifiers to search on.
+  `src/openings.book` decodes to **2610256 bytes, 163141 Polyglot entries**,
+  sha256 `47a8173504…78fb5`, all five figures recomputed rather than copied from
+  the audit, written into S146 with two reproducer commands and the introducing
+  commit (`349f8cf`, 2025-05-12, message says nothing). `Use Book` defaults false
+  at `src/chesso.cpp:957`, not the `:930` the audit said, so no verdict is at
+  risk. `2026-08-21_adversarial-F10` closed.
+- Before it: S153 -- **the plan no longer runs one step at a time.** DEC-113
+  allows as many active steps as are strictly necessary, one per agent, with
+  exactly one agent the coordinator and the only one that may hold the machine.
+  `AGENTS.md`'s PLAN rule is rewritten; `2026-08-21_adversarial-F05` closed. It
+  buys nothing until the workstation is back -- there is no match here for a
+  document step to overlap -- and the cost it prices was re-checked from the
+  `done:` stamps: 15.10 h of stamped run in 65.4 h, 23 %, five verdicts at one
+  per 13 h, against 48 of 60 pending steps naming an SPRT in `accepts`.
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S158, S157,
-  S150, S155.
+- Next: the machine-light lane continues (DEC-112). Open entries are S157, S150,
+  S155, S156.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

@@ -615,7 +615,7 @@ saying the bounds are nElo, so the next reader does not redo this.
 
 ### 2026-08-21_adversarial-F10 — informational — the shipped opening book's digest, for S146
 
-Status: open
+Status: closed — S158
 
 **Evidence.** S146 records that `src/openings.book` is compiled into the shipped
 binary with no recorded origin or licence. The step needs an identifier to close
