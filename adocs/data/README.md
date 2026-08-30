@@ -570,3 +570,34 @@ engines, 2559 over five. `_S088_` is the current one.
 | file | what it is |
 |---|---|
 | `S100_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` over all 10795695 rows, 2026-08-20. Four reports: every stored feature column re-extracted from the FEN text (**0 disagreements**), the two exact seventh-rank piece-square identities (**0 violations** in 1264773 and 550880 non-zero rows), per-column occurrence whole-corpus and by phase band, and R² of each term column on the tables that could absorb it — **rook seventh and passer bucket 5 at 1.000000, everything else 0.168 to 0.621**. The tempo lines are the term's whole label-side signal: mean result 0.556559 with White to move against 0.548682 with Black, gap 0.007878. Kept because it is the evidence behind S100's verdict ledger and because the corpus it describes is about to be replaced by S082 and S083; re-running it on the new corpus is one command |
+
+### The bounds every `*_sprt.sh` here pre-registers are nElo (S157, 2026-08-30)
+
+Appended rather than applied: the pre-registration scripts in this directory are
+evidence of runs already taken and are never edited, so the sentences inside
+them stand as written. What they say is `elo0=-5 elo1=0` and then read the
+outcome as "not a regression of 5 **Elo** or more" -- `S021_sprt.sh:20`,
+`S076_sprt.sh:28`, `S075_sprt.sh:27`, `S108_sprt.sh:67`, `S149_sprt.sh:47`,
+`S165_sprt.sh:41`, and on the gainer side `S093_sprt_v1.sh:57`,
+`S093_sprt_v2.sh:52`, `S024_sprt.sh:71`, `S130_sprt.sh:106`.
+
+`fastchess.sh` passes `model=normalized`, whose `--help` gloss is "normalized --
+Uses nElo (default)", so **the bound is in normalized Elo and the logistic
+figure is smaller**. How much smaller is a property of the draw rate and is read
+off the run's own printed `Elo` / `nElo` pair, never from a constant: 5 nElo was
+3.54 logistic Elo at S165's 44.75 % draws and 3.87 to 3.99 at the lower draw
+rates of S076, S107 and S021.
+
+**No verdict is invalidated, and the two sides are wrong in opposite
+directions**, which is worth stating because the audit did not. `elo0` is
+scale-invariant at 0, so nothing hinges on the scale where a bound is zero. On
+the **non-regression** side the test rejected "effect at or below -5 nElo", so
+what it actually excluded is a regression of about 3.5 to 4.0 *logistic* Elo --
+which implies the recorded "5 Elo or more is excluded" and then some. Those
+sentences are conservative: true as written, understating what was shown. On the
+**gainer** side the asymmetry runs the other way: accepting H1 at `elo1=5`
+establishes a gain of 5 nElo, about 3.9 logistic Elo, so "gains 5 Elo or more"
+claims about 1.1 logistic Elo more than the run demonstrated. That is the half
+worth restating wherever it is quoted as current, and `specs.md`'s copy of it
+now is. `DEV_MANUAL.md`'s "Which bounds" section states the scale where the next
+pre-registration will be written from. 2026-08-21 adversarial F09.

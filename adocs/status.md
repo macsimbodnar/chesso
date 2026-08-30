@@ -7,24 +7,32 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-08-30, by hand.
 
-- Last done: S158 -- the shipped opening book now has identifiers to search on.
-  `src/openings.book` decodes to **2610256 bytes, 163141 Polyglot entries**,
-  sha256 `47a8173504…78fb5`, all five figures recomputed rather than copied from
-  the audit, written into S146 with two reproducer commands and the introducing
-  commit (`349f8cf`, 2025-05-12, message says nothing). `Use Book` defaults false
-  at `src/chesso.cpp:957`, not the `:930` the audit said, so no verdict is at
-  risk. `2026-08-21_adversarial-F10` closed.
-- Before it: S153 -- **the plan no longer runs one step at a time.** DEC-113
-  allows as many active steps as are strictly necessary, one per agent, with
-  exactly one agent the coordinator and the only one that may hold the machine.
-  `AGENTS.md`'s PLAN rule is rewritten; `2026-08-21_adversarial-F05` closed. It
-  buys nothing until the workstation is back -- there is no match here for a
-  document step to overlap -- and the cost it prices was re-checked from the
-  `done:` stamps: 15.10 h of stamped run in 65.4 h, 23 %, five verdicts at one
-  per 13 h, against 48 of 60 pending steps naming an SPRT in `accepts`.
+- Last done: S157 -- **the SPRT bounds are normalized Elo and now say so.**
+  `fastchess.sh` and `DEV_MANUAL.md` state it beside the CPW table they are
+  taken from; `model=normalized` is unchanged and the reason is recorded (the
+  CPW rows are fishtest's bounds, which are nElo). Seven recorded conclusions
+  restated, each with the logistic figure from its own run's pair -- 5 nElo is
+  3.54 Elo at S165's 44.75 % draws and 3.87 to 3.99 at the lower draw rates of
+  S076, S107, S093 and S021. **The audit had the direction backwards and the
+  step corrects it**: non-regression conclusions are conservative, gainer
+  conclusions overstate by about 1.1 logistic Elo. Ten pre-registration scripts
+  under `adocs/data/` keep their wording -- evidence is appended to, never
+  edited -- and an appended section names them.
+  `2026-08-21_adversarial-F09` closed.
+- Before it: S158 -- the shipped opening book has identifiers to search on.
+  **2610256 bytes, 163141 Polyglot entries**, sha256 `47a8173504…78fb5`, all
+  recomputed rather than copied, written into S146 with two reproducers and the
+  introducing commit (`349f8cf`, 2025-05-12, message says nothing). `Use Book`
+  defaults false at `src/chesso.cpp:957`, not the `:930` the audit said.
+  `2026-08-21_adversarial-F10` closed.
+- And before that: S153 -- **the plan no longer runs one step at a time.**
+  DEC-113 allows as many active steps as are strictly necessary, one per agent,
+  with exactly one agent the coordinator and the only one that may hold the
+  machine. `AGENTS.md`'s PLAN rule is rewritten; `2026-08-21_adversarial-F05`
+  closed. It buys nothing until the workstation is back.
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S157, S150,
-  S155, S156.
+- Next: the machine-light lane continues (DEC-112). Open entries are S150, S155,
+  S156, S154.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:
@@ -114,7 +122,7 @@ Updated: 2026-08-30, by hand.
     hoist) and S108's completing commit. Unpushed, the MacBook sees a branch
     that ends at `77ecb6f` and none of S108 exists.
 
-    **Where the work stands.** **S108 is complete.** H1 accepted at `elo0=-5 elo1=0` in 12774 games and 5 h 26 m against `bbbd9f4`, `Elo 2.28 +/- 4.40`, `LLR 2.98`, 0 forfeits -- a regression of 5 Elo or more excluded, no gain claimed. The engine now computes a static evaluation at every non-check main-search node and the table entry carries it, which is the input S109 reads. The next step in plan.md order is
+    **Where the work stands.** **S108 is complete.** H1 accepted at `elo0=-5 elo1=0` in 12774 games and 5 h 26 m against `bbbd9f4`, `Elo 2.28 +/- 4.40`, `LLR 2.98`, 0 forfeits -- a regression of 5 nElo or more excluded (**3.64 logistic Elo** at this run's own `nElo 3.13` against `Elo 2.28`; the bounds are normalized Elo, S157), no gain claimed. The engine now computes a static evaluation at every non-check main-search node and the table entry carries it, which is the input S109 reads. The next step in plan.md order is
     **S024**, continuation history -- not S109. It is play-altering and owes an
     SPRT, so it is the step that wants the throughput figure above, and it is
     the one to start with on the MacBook once the search_bench check above has

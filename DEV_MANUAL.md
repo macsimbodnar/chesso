@@ -1243,6 +1243,34 @@ games/h. DEC-063.
 | `--nonreg` | `elo0=-5 elo1=0`, α=β=0.05 | a change not expected to gain that must not cost — a simplification, a rewrite, a constant moved for another reason |
 | `--fast` | `elo0=0 elo1=10`, α=β=0.10 | a first look |
 
+**Those numbers are normalized Elo, not logistic Elo.** `fastchess.sh` passes
+`model=normalized`, which is fastchess's default and which its own `--help`
+glosses as "normalized — Uses nElo (default)". So `--nonreg` excludes a
+regression of 5 **nElo**, and the logistic figure that corresponds to is
+*smaller* and is not a constant: the ratio is a property of the draw rate, so it
+is read off each run's own printed `Elo` and `nElo` pair rather than converted
+with a fixed number. Four worked examples, all from runs recorded in
+`specs.md` — 5 nElo is **3.54** logistic Elo at S165's 44.75 % draws
+(`nElo 1.34` / `Elo 0.95`), **3.64** at S108's 42.20 % (`3.13` / `2.28`),
+**3.92** at S107's (`16.18` / `12.67`) and **3.99** at S021's
+(`44.04` / `35.12`). Quote the bound as nElo and, if a logistic figure is
+wanted, take the ratio from the run in hand.
+
+**The two sides are wrong in opposite directions if you forget this.** A
+non-regression verdict rejects "at or below `elo0`", so `--nonreg` excludes a
+regression of about 3.5 to 4.0 logistic Elo — which *implies* the looser "5 Elo
+or more is excluded" and then some, so that phrasing is merely conservative. A
+gainer verdict is the dangerous half: accepting H1 at `elo1=5` establishes a
+gain of 5 nElo, about 3.9 logistic Elo, so writing it up as "gains 5 Elo or
+more" claims about 1.1 logistic Elo the run did not demonstrate.
+
+**Do not "fix" this by switching to `model=logistic`.** The CPW table the row
+above cites states no scale of its own, but its Stockfish rows — STC `{0,2}`,
+LTC `{0.5,2.5}` — are fishtest's bounds, and fishtest expresses bounds in
+normalized Elo. `model=normalized` is what makes `{0,5}` mean what the source it
+was taken from means, and changing it would re-price every verdict this project
+has taken. 2026-08-21 adversarial F09, S157.
+
 Neither default brackets an effect from one side only, and a bound pair that
 cannot contain the truth random-walks to the round limit. When the expected
 effect is genuinely two-sided, edit the block for the run and record which pair
@@ -1869,7 +1897,9 @@ score-to-outcome scale itself by 2.7 %. The verdict: **+26.68 +/- 16.40 Elo,
 nElo 34.44, H1 accepted at LLR 2.95 over 1044 games in 00:46:48** against
 `a579f46`. Bias warning as always — a run that stops early stops when the
 observed effect has run favourable, so the recorded claim is "not a regression
-of 5 Elo or more, sign positive at LOS 99.93 %" rather than +26.68.
+of 5 **nElo** or more, sign positive at LOS 99.93 %" rather than +26.68 — and
+this run's own pair prices that bound at **3.87 logistic Elo** (`nElo 34.44`
+against `Elo +26.68`, ratio 1.29).
 
 **Refitting fires two guards, and both are answered by re-deriving rather than
 by relaxing.** `.tuning/anchors.py` recomputes the ten pinned absolute anchors

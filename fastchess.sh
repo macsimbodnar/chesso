@@ -21,6 +21,21 @@ set -euo pipefail
 #   default   elo0=0  elo1=5    a change claimed to gain. The published band
 #                               for an engine of this strength (CPW tabulates
 #                               {0,5} for top-200, {0,10} below it).
+#
+# THE BOUNDS ARE NORMALIZED ELO, NOT LOGISTIC ELO. `model=normalized` below is
+# fastchess's default and its --help says so in as many words: "normalized -
+# Uses nElo (default)". So elo0/elo1 above are nElo, and a verdict against
+# elo0=-5 excludes a regression of 5 *nElo*, which is smaller in logistic Elo
+# -- how much smaller depends on the draw rate and is read off each run's own
+# printed pair, not from a constant: measured 3.54 at 44.75 % draws (S165's
+# 18598 games) and 3.92 to 3.99 at the lower draw rates of S107, S085 and S021.
+#
+# The setting is deliberate and must not be changed to `logistic` to make the
+# numbers read as Elo. The CPW table cited above states no scale, but its rows
+# are Stockfish STC {0,2} and LTC {0.5,2.5}, which are fishtest's own bounds,
+# and fishtest expresses bounds in normalized Elo. `model=normalized` is what
+# makes {0,5} mean what the source it was taken from means. 2026-08-21
+# adversarial F09, S157.
 #   --nonreg  elo0=-5 elo1=0    a change that is not expected to gain and must
 #                               not cost -- a simplification, a rewrite, a
 #                               constant moved for another reason.

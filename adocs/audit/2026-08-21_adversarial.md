@@ -561,7 +561,7 @@ should say how, or the floor is owed. This is the class S139 exists for.
 
 ### 2026-08-21_adversarial-F09 — low — the SPRT bounds are normalized Elo, and eight recorded conclusions restate them as plain Elo
 
-Status: open
+Status: closed — S157
 
 **Evidence.** `fastchess.sh:226` passes `model=normalized`, and the installed
 binary documents what that means:
