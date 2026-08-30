@@ -58,8 +58,7 @@ void history_on_quiet_cutoff(search_state_t* state,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
-                             int depth,
-                             move_t previous_move)
+                             int depth)
 {
   const int bonus = HISTORY_BONUS_QUAD * depth * depth +
                     HISTORY_BONUS_LIN * depth + HISTORY_BONUS_CONST;
@@ -81,27 +80,6 @@ void history_on_quiet_cutoff(search_state_t* state,
   history_gravity_update(
       state->quiet_history[side][MOVE_FROM(cutoff_move)][MOVE_TO(cutoff_move)],
       bonus);
-
-  // The continuation table conditions the same two updates on the move being
-  // replied to, so it is only defined where there is one. The root has none and
-  // a null move leaves none behind: the guard is the move itself being zero,
-  // exactly the guard the countermove band in score_move already uses, and it
-  // needs no separate ply test. S024.
-  if (previous_move == 0) { return; }
-
-  continuation_history_t& continuation = *state->continuation_history;
-
-  // Maluses before the bonus, for the reason the butterfly loop above states:
-  // two moves in the span can share one cell, and the move that cut off has to
-  // be the one whose update lands last.
-  for (size_t i = 0; i < quiets_tried_count; ++i) {
-    history_gravity_update(
-        continuation_entry(continuation, previous_move, quiets_tried[i]),
-        -malus);
-  }
-
-  history_gravity_update(
-      continuation_entry(continuation, previous_move, cutoff_move), bonus);
 }
 
 
@@ -1043,8 +1021,7 @@ int negamax(int alpha0,
         // move again -- the same side score_move indexed the table with when it
         // ordered the node.
         history_on_quiet_cutoff(state, game->board.active_color, moves[i],
-                                quiets_tried, quiets_tried_count, depth,
-                                prev_move);
+                                quiets_tried, quiets_tried_count, depth);
 
         if (prev_move != 0) {
           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =

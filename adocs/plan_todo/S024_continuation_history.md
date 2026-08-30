@@ -287,47 +287,40 @@ beside verdict 1.
 - Stash (mhouppin/stash-bot) commit messages: 829b256 countermove history; ca25c16 opponent's move plus our previous move; 660df34 4-ply +13.09 STC; 93a6d5f average-scaled updates +4.29 STC; 2138db2 post-LMR updates +2.20.
 author:    Maksym Bodnar
 
-## Where this stands, 2026-08-29
+## The MacBook attempt, discarded 2026-08-30
 
-**Verdict 1 is built, tested and unmeasured. Verdict 2 is not started.** The
-code is committed and the step is deliberately not done: no SPRT has produced
-a verdict, so nothing here is retained yet. If verdict 1 loses, the revert is
-one commit.
+**Verdict 1 was built and tested here and never measured to a verdict, so it
+was never retained.** The owner's decision of 2026-08-30 (DEC-111): the work is
+discarded from `achesso` and redone on the Linux workstation, where a match can
+run to a bound. Nothing was found wrong with the code. The machine could not
+carry the run.
 
-### What shipped into the tree
+**The code and its tests are not lost.** Branch `s024_mac_attempt` holds
+`e424032` and `8610e08` with the clang-format pin move on top, plus 14 MB of
+run evidence under `adocs/data/S024_mac_attempt/` that was gitignored and would
+otherwise have died with the machine. Its README states what each file is, with
+digests. Cherry-pick `e424032`'s `src/` and `tests/` from that branch if the
+implementation still looks right, or write it again -- either way the verdict
+is taken from zero games. The branch is deleted once S024 lands.
+
+### What was built, for the reader who reimplements it
 
 - `src/data_structures.hpp` -- `continuation_history_t`, an
-  `int16_t[12][64][12][64]`, 1.125 MiB, and the single `continuation_entry()`
-  helper that is the only place the (piece, to-square) convention is written
-  down. **It hangs off `search_state_t` behind a `std::unique_ptr` rather than
-  being embedded, and that is not a style choice**: `search_state_t` is a stack
-  object (`src/chesso.cpp`, `tools/datagen.cpp`, and every test) and the search
-  runs on a `std::thread`, whose stack is 512 KB on macOS. The struct measured
-  87600 bytes before this step; embedding the table would have overflowed that
-  stack on the first `go`. A default member initializer allocates it, so every
-  existing `search_state_t state = {};` in the tree keeps working untouched and
-  no read has to test the pointer.
-- `src/search.cpp` -- `history_on_quiet_cutoff()` takes `previous_move` and
-  applies the same bonus and the same malus, through the same
-  `history_gravity_update`, to the continuation cell of each quiet. Guarded on
-  `previous_move != 0` and nothing else.
-- `src/evaluation.cpp` -- `score_move`'s quiet return is butterfly plus
-  continuation, summed in `int` at equal weight.
-- **The table is per-`go`, not carried across one.** The step body above says
-  it joins "the struct S093 hoists beside `tt`"; that struct does not exist --
-  S093's verdict 2 measured persistence at `Elo -1.65 +/- 4.22` and was
-  reverted whole (DEC-101). This is the contingency par.7 of this file already
-  named: location changes, shape does not.
-- **No `moves_played[]` array yet.** `negamax` already carries `prev_move` as a
-  parameter and already passes 0 for the null-move child and at the root, so
-  verdict 1 needs no new state and cannot have the staleness bug par.5 warns
-  about. The array arrives with verdict 2, which is the first offset that
-  cannot be reached from a parameter.
+  `int16_t[12][64][12][64]`, 1.125 MiB, reached only through a single
+  `continuation_entry()` helper so read and write cannot disagree on index
+  order. Heap-allocated behind a `unique_ptr`: the search runs on a
+  `std::thread` whose stack is 512 KB on macOS and the state is a stack object.
+- `src/search.cpp` -- the same gravity/bonus/malus update as S093, applied to
+  the table's own entry, guarded on `previous_move != 0`.
+- `src/evaluation.cpp` `score_move` -- the continuation term summed into the
+  quiet score at equal weight with main history, which is the published
+  combination.
 
 ### The tests, and the mutation each one was observed red under
 
-Red-first on a new feature cannot mean "the test fails to compile", so each
-case was verified by mutating the shipped code and watching that case fail:
+Reusable regardless of how the feature is written the second time. Red-first on
+a new feature cannot mean "the test fails to compile", so each case was
+verified by mutating the shipped code and watching that case fail:
 
 | mutation | what went red |
 |---|---|
@@ -336,16 +329,16 @@ case was verified by mutating the shipped code and watching that case fail:
 | `score_move` stops adding the continuation term | `42` against `49`; and the band case `32767` against `65534` |
 | swap the index order inside `continuation_entry()` | **nothing, correctly** -- read and write both go through the helper, so swapping it is a symmetric relabel. It did expose a `const` overload that nothing could call, since `unique_ptr::operator*` returns a non-const reference through a const struct; the overload was deleted |
 
-The band case in `tests/test_evaluation.cpp` is re-pinned for the sum: both
-tables are driven to `QuietHistoryMax`'s declared maximum at once, so the quiet
-band is `[-2M, +2M]` and every clearance is measured against `2 * declared_max`
-rather than `declared_max`. That assertion is also what catches a sum
-accumulated in `int16_t`: two entries at 32767 wrap negative there, and the
-ceiling check would otherwise pass for the wrong reason.
+The band case is re-pinned for the sum: both tables are driven to
+`QuietHistoryMax`'s declared maximum at once, so the quiet band is `[-2M, +2M]`
+and every clearance is measured against `2 * declared_max`. That assertion is
+also what catches a sum accumulated in `int16_t`: two entries at 32767 wrap
+negative there, and the ceiling check would otherwise pass for the wrong
+reason.
 
 ### Measured before any match
 
-Node counts move, so INV-6's node-count discharge is not available and the SPRT
+Node counts move, so INV-6's node-count discharge is not available and an SPRT
 is the only thing that can decide this step. Best move unchanged at all three
 positions (`c3d5` / `e2a6` / `d7c8q`):
 
@@ -354,146 +347,59 @@ positions (`c3d5` / `e2a6` / `d7c8q`):
 | 9 | 121512 / 800769 / 62907 | 122266 / 794014 / 63484 |
 | 13 | 944905 / 5228126 / 533227 | 875013 / 5210372 / 701417 |
 
-Throughput, two interleaved passes at depth 11 on kiwipete, the only position
-with enough work to read: **9655 / 9508 knps reference against 9518 / 9558
-candidate** -- inside the noise this machine resolves, so two extra dependent
-loads per scored quiet and a 1.125 MiB table are not visibly paid for at bench
-scale. `opendirectoryd` was taking about 17 % of a core throughout.
+Throughput, two interleaved passes at depth 11 on kiwipete: **9655 / 9508 knps
+reference against 9518 / 9558 candidate** -- inside the noise this machine
+resolves, so two extra dependent loads per scored quiet and a 1.125 MiB table
+are not visibly paid for at bench scale.
 
-### The first SPRT was aborted, and why
+### What the three runs cost and what they returned
 
-Started 2026-08-27 22:33:38 **on battery**. It played for 1 h 28 m, hibernated
-at a 1 % charge, and woke 42 hours later still running. Killed at 2549 games
-rather than allowed to reach a bound. `adocs/data/S024_pair_stats.py` is the
-tool that decided it -- it reproduces fastchess's own printed figures exactly
-for the same sample, `ptnml [115, 256, 421, 237, 109]` and `Elo -4.73 +/-
-11.16` against its `-4.73 +/- 11.15`, which is why its other numbers are worth
-anything:
+All three at `elo0=0 elo1=5`, all three against `25998fe`, none reaching a
+bound.
 
-- **the 8 time forfeits are not the reason.** All eight sit in rounds 1133 to
-  1137, the sleep boundary, four in each direction. Dropping all five pairs
-  moves the match from `Elo -0.41 +/- 10.51` to `-0.68 +/- 10.51`. A footnote.
-- **the two halves are the reason.** Rounds 1 to 1132, battery falling from
-  78 % to 1 %: 1132 pairs, `-5.06 +/- 11.17`. Rounds 1138 on, mains: 137 pairs,
-  `+35.63 +/- 30.99`. About 40 Elo apart at roughly 2.4 sigma, and the mean
-  game length moved with it, 100.0 plies to 92.9. Chance at 137 pairs and a
-  throttled machine both fit, and the run cannot separate them.
+| run | games | wall | outcome |
+|---|---|---|---|
+| 1 | 2582 | 1 h 28 m of play | aborted: started on battery, hibernated at 1 %, woke 42 hours later still running |
+| 2 | 6054 | 03:54:58 | interrupted, machine went down |
+| 3, a resume of 2 | 7988 | 05:12:29 | interrupted, machine went down |
 
-The evidence is `.tuning/sprt_s024_v1_run1_aborted.log` and
-`.tuning/sprt_s024_run1_aborted.pgn` -- **`.tuning/` is gitignored, so those two
-files do not survive a machine move**; every number that matters from them is
-in this section and in the run script's header.
+Run 1 is not pooled with the others: it spans a power transition and its two
+halves do not look like the same experiment -- 1132 pairs at `-5.06 +/- 11.17`
+before the sleep against 137 at `+35.63 +/- 30.99` after, about 40 Elo apart at
+roughly 2.4 sigma, with mean game length moving 100.0 plies to 92.9. Its 8 time
+forfeits all sit in rounds 1133 to 1137, the sleep boundary, and dropping all
+five pairs moves the match by 0.27 Elo -- a footnote, not the cause.
 
-It also produced the throughput figure this machine was missing:
-**about 1550 games/h at 8+0.08 on 8 cores**, from 2276 games in 1 h 28 m. Read
-it as a floor -- it was measured on battery with the display on.
+Runs 2 and 3 are one tournament: `fastchess -config file=config.json` continues
+an interrupted match with its statistics intact, which is what made run 3 cost
+nothing to start. Pooled:
 
-### Found and fixed on the way
+```
+Elo: 2.87 +/- 4.37, nElo: 3.78 +/- 5.75        Games: 14038
+Ptnml(0-2): [598, 1553, 2651, 1569, 648]       LLR: 0.74 (25.2%) (-2.94, 2.94)
+```
 
-`books/fetch_book.sh` died `sha256sum: command not found` after downloading
-43 MB and verifying nothing: macOS has `shasum -a 256` instead. Fixed in place,
-and the book was then fetched and both digests verified under `/bin/bash` 3.2.
-Same class as S167 and it blocked every SPRT on this machine.
+**That is evidence and not a verdict**, and the next reader is the one it can
+mislead. The interval contains both 0 and 5, so neither pre-registered reading
+applies. **Do not use 2.87 as a prior that shortens the real run**: bounds are
+chosen before the data or the error guarantee is gone.
 
-### Run 2 was also aborted, and the cause is the power adapter, not the battery
+### The lesson that transfers, and it is about bounds
 
-Started 2026-08-29 19:35:57 **on mains power**, so the POWER rule's guard
-passed and was not the thing that failed. Killed by hand at 03:54:58 and 6054
-games, with `SIGINT`, at a measured 16 minutes from an empty battery.
-
-**The adapter negotiates 60 W and an eight-core match draws more than that.**
-`ioreg -rn AppleSmartBattery` names it `"96W USB-C Power Adapter"` and reports
-`"Watts" = 60` with `AdapterVoltage 20000` and `Current 3000` -- 20 V x 3 A.
-Under the match `InstantAmperage` read **-1058 mA at an 8 % charge** with
-`ExternalConnected = Yes` and `IsCharging = Yes`: the charging flag is not a
-statement about direction and must not be read as one. The battery covered the
-deficit for the whole run, falling 96 % to 8 % in 3 h 55 m, and `pmset` put it
-16 minutes from empty. Charging resumed the moment the match died --
-`ChargingCurrent 2127`, `NotChargingReason 0` -- which is what identifies the
-load rather than a fault as the cause.
-
-So the machine would have hibernated mid-match exactly as run 1 did, and
-`pmset -g ac` cannot see it coming: **the POWER rule's test is necessary and
-not sufficient on this machine.** A guard that reads the adapter's negotiated
-wattage, or the sign of `InstantAmperage` under load, is what would have
-refused this run at the start.
-
-**What the 6054 games say, and they are one experiment.** No time forfeits at
-all, against run 1's eight. `adocs/data/S024_pair_stats.py` over the run's own
-PGN:
-
-| block | pairs | Elo |
-|---|---|---|
-| whole run | 3027 | **+3.67 +/- 6.67** |
-| rounds 1-2400, battery 96 % to about 22 % | 2400 | +2.61 +/- 7.52 |
-| rounds 2401 on, battery about 22 % to 8 % | 627 | +7.76 +/- 14.46 |
-
-The two blocks overlap and sit about 0.3 sigma apart, against the 2.4 sigma and
-40 Elo that condemned run 1. Nothing here says the falling battery changed the
-experiment, and the last block is the one where throttling would show.
-
-**This is not a verdict and must not be read as one.** `LLR 0.43 (14.7 %)` in
-`(-2.94, 2.94)`, bounds `[0.00, 5.00]`: the interval `+3.67 +/- 6.67` contains
-both 0 and 5, so neither hypothesis is excluded and the pre-registered readings
-in `adocs/data/S024_sprt.sh` do not apply to it. The direction agrees with the
-published prior and that is all it does. Evidence kept at
-`.tuning/sprt_s024_v1_run2_partial.pgn`, `_partial.log` and
-`_partial_fastchess.log` -- **`.tuning/` is gitignored**, so the table above is
-the surviving record.
-
-### Run 3 is a resume, and how to pick it up from a cold session
-
-**Run 2's games are not lost and were never re-played.**
-`fastchess -config file=config.json` continues an interrupted tournament with
-its statistics intact -- the file carries `wins 2036 / losses 1972 /
-draws 2046` and `penta_WW 289 ... penta_LL 250` -- so the 6054 games pool and
-`LLR 0.43` carries forward instead of restarting at zero. The PGN appends to
-the same `/tmp/chesso_sprt_full_20260829_193557/games.pgn`. `config.json` sits
-in the repository root and is gitignored (`.gitignore:8`).
-
-Resuming needs the candidate binary back at the temp path `config.json` names,
-because `fastchess.sh` plays a `mktemp` snapshot and deletes it on exit. Copy
-`build/src/chesso` there. That is the same binary and not a rebuild whenever
-`git diff <candidate sha> -- src/ CMakeLists.txt` is empty and the file has not
-been relinked -- both held here, its mtime still reading Aug 27 22:21.
-
-`.tuning/S024_resume.sh` does all of it and is itself gitignored, so **this
-paragraph is the recipe if it is gone**: restore the snapshot, then
-`nohup caffeinate -is fastchess -config file=config.json &`.
-
-**The whole run is wrapped in `caffeinate -is`, not just the match.** The first
-version wrapped only `fastchess`, which left the script's charge-wait loop
-holding no sleep assertion at all (`pmset -g assertions` read
-`PreventSystemSleep 0`); the machine could idle-sleep during the wait and the
-match would never start. Wrapping the script instead reads
-`PreventSystemSleep 1` for the run's whole life. `caffeinate` still cannot stop
-a lid-close sleep -- that is not an assertion it can hold.
-
-**The power question is settled and it is not a stop condition** (owner, 2026-08-29):
-the 60 W adapter is the one available, a match is not stopped for a discharge,
-and no wattage or amperage guard is added to any script. If the machine
-hibernates mid-match, the answer is to resume again -- pooling once more -- and
-`adocs/data/S024_pair_stats.py` over the round ranges either side is what
-decides afterwards whether the blocks are the same experiment. Run 2's own
-split was clean: +2.61 +/- 7.52 against +7.76 +/- 14.46, about 0.3 sigma, where
-run 1's was 40 Elo and 2.4 sigma.
+At the observed effect size `elo0=0 elo1=5` wanted roughly 56000 games, about
+21 hours at the 2700 games/h this machine did. The MacBook survived four to
+five hours of a full-core match, twice. The bound pair and the machine were
+incompatible, and no amount of resuming fixes that -- which is DEC-063 restated:
+the cost of a verdict is set by the hypothesis pair and not only by the
+hardware. Choose the pair against the machine that will run it, before the
+first game.
 
 ### What is left
 
-1. **Verdict 1's SPRT.** Blocked on one thing only: the machine must be on
-   mains power. `adocs/data/S024_sprt.sh` refuses on battery by itself now and
-   prints `SPRT-RUN-FAILED` when it does, so the block is enforced rather than
-   remembered. Resume with:
-
-   ```
-   nohup adocs/data/S024_sprt.sh > .tuning/sprt_s024_v1.log 2>&1 &
-   ```
-
-   then arm a watcher per the WATCHERS rule -- the poll loop, ceiling 9h, on
-   `SPRT-RUN-(DONE|FAILED)`. The reference is pinned to `25998fe` inside the
-   script and its build already exists under `.ref-builds/`. The three readings
-   are pre-registered in that script's header; take the one the run lands on.
-
+1. **Verdict 1's SPRT**, on the workstation, from zero games.
+   `adocs/data/S024_sprt.sh` is the runner and pins the reference; its header
+   carries the three pre-registered readings. Re-point it at whatever commit
+   the reimplementation sits on.
 2. **Verdict 2, the two-ply follow-up**, only after verdict 1 has a verdict and
    a commit. Adds `moves_played[MAX_PLY]` to `search_state_t` written before
    every child call including 0 before the null-move child, read at
@@ -501,7 +407,6 @@ run 1's was 40 Elo and 2.4 sigma.
    to `moves_played[ply - 1]` so there is one source of truth; same physical
    table; the band case re-pinned for three terms; its own SPRT against verdict
    1's commit.
-
 3. **Then the step completes by hand** -- moltke v1 has no `--step` (DEC-109):
    write the `done:` stamp, move this file to `plan_done/`, move S024's entry
    out of `plan.md`'s Open list into `Done recently` and drop the oldest of the

@@ -6296,3 +6296,63 @@ Consequences: 23 reformats exactly one construct in this tree, and it is
               before it can complete a step, and until it does, its gate fails
               exactly the way this machine's just did. `.moltke.local.md`
               records the version actually present here.
+
+## DEC-111  2026-08-30  S024's MacBook attempt is discarded from achesso and preserved on a branch
+Tags:         plan, measurement, sprt, machine, S024
+Context:      S024's one-ply continuation history was built, tested and
+              committed here on 2026-08-27 (`e424032`) and never measured to a
+              verdict. Three SPRT runs at `elo0=0 elo1=5` against `25998fe`
+              failed to reach a bound: run 1 aborted at 2582 games for spanning
+              a power transition, run 2 interrupted at 6054 games after
+              03:54:58, run 3 -- a resume of run 2, pooling its statistics --
+              interrupted at 7988 more after 05:12:29. The pooled estimate is
+              `Elo 2.87 +/- 4.37` over 14038 games, `LLR 0.74` of `+/-2.94`.
+              At that effect size the bound pair wants about 56000 games, some
+              21 hours at the 2700 games/h measured here, and this machine has
+              twice survived four to five hours of a full-core match. The owner
+              is away from the Linux workstation and returns to it; the code
+              was sitting unmeasured in the trunk in the meantime, which is
+              exactly what an SPRT-decided project does not do.
+Decision:     By the owner. The work is erased from `achesso` -- `e424032`'s
+              `src/` and `tests/` reverted, the step file moved back to
+              `plan_todo/` -- and S024 is redone properly on the Linux
+              workstation, from zero games, at a bound pair chosen before the
+              first game. `git revert`-equivalent and not a history rewrite:
+              the GIT rule forbids rewriting and unpushed does not exempt it,
+              and the two commits stay in the log.
+              **Nothing is thrown away.** Branch `s024_mac_attempt` carries the
+              implementation, its tests, and 14 MB of run evidence under
+              `adocs/data/S024_mac_attempt/` that was gitignored and would have
+              died with the machine: both PGNs, the three run logs, the
+              fastchess log, the resume config carrying the tournament's
+              statistics, and the resume script, each with its digest and a
+              README saying what it is. The branch is deleted once S024 lands.
+              The step file keeps the research, the design, the mutation each
+              test was observed red under, and the pre-match node counts, so
+              the reimplementation starts from knowledge rather than from
+              nothing.
+Rejected:     Resuming a fourth time. It is 15 hours from a verdict on a
+              machine that dies at five, and each resume re-opens the same
+              exposure.
+              Switching the bound pair to `-5/5` or `--nonreg` and pooling the
+              14038 games into it. That is choosing the hypothesis after seeing
+              the data: the SPRT's error guarantee assumes the pair is fixed
+              first, and the numbers would look like a verdict while being one
+              in name only.
+              Keeping the unmeasured feature in the trunk until the workstation
+              is available. A play-altering change with no verdict contaminates
+              every measurement taken on top of it, which is the BUGS rule's
+              reasoning applied to an unproven feature rather than a defect.
+              Dropping the two commits from history instead of reverting --
+              forbidden by the GIT rule, and it would have destroyed the record
+              of why the runs failed.
+Consequences: `achesso`'s engine is byte-identical to `10c350a`'s in `src/` and
+              `tests/`, so any measurement taken here from now on rests on a
+              tree with no unproven feature in it. S024 returns to
+              `plan_todo/`, and `plan_current/` is empty, which is what frees
+              the machine-light lane DEC-112 opens. `adocs/data/S024_sprt.sh`
+              stays committed and is marked stale at its head: its pinned `REF`
+              and its inherited bound pair must both be re-decided before it
+              runs again. The estimate is recorded in the step file with an
+              explicit instruction not to use 2.87 as a prior that shortens the
+              real run.

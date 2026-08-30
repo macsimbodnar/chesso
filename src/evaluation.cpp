@@ -1166,21 +1166,10 @@ int score_move(const game_t* game,
   }
 
   // Signed since S093: a quiet that was tried and did not cut off carries a
-  // malus, so this band runs [-QuietHistoryMax, +QuietHistoryMax] per term
-  // rather than from zero. Gravity bounds each term on the way in, so the sum
-  // can never reach the countermove band above, and nothing sits below it --
-  // both edges are asserted in tests/test_evaluation.cpp.
-  //
-  // Summed at equal weight, which is the published combination: every attempt
-  // on record to re-weight the terms against each other was closed without a
-  // gain. The sum is an int because two terms at the type's own bound overflow
-  // int16_t. S024.
-  int score = state->quiet_history[game->board.active_color][MOVE_FROM(move)]
-                                  [MOVE_TO(move)];
-
-  if (prev_move != 0) {
-    score += continuation_entry(*state->continuation_history, prev_move, move);
-  }
-
-  return score;
+  // malus, so this band runs [-QuietHistoryMax, +QuietHistoryMax] rather than
+  // from zero. Gravity bounds it on the way in, so it can never reach the
+  // countermove band above, and nothing sits below it -- both edges are
+  // asserted in tests/test_evaluation.cpp.
+  return state
+      ->quiet_history[game->board.active_color][MOVE_FROM(move)][MOVE_TO(move)];
 }

@@ -5,30 +5,17 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-08-29, by hand.
+Updated: 2026-08-30, by hand.
 
-- Last done: S167
-- In progress: S024 -- verdict 1 (the one-ply continuation history) is built,
-  tested and committed; **no SPRT has run, so nothing is retained yet**. The
-  step file's "Where this stands, 2026-08-29" section is the handover: what is
-  in the tree, the four mutations each test was observed red under, the node
-  counts and throughput, and the two remaining jobs.
-- Next: finish S024 -- verdict 1's SPRT, then verdict 2 (the two-ply follow-up)
-  against verdict 1's commit. Then S109.
+- Last done: S167. Two commits since it are not steps: the clang-format pin
+  move (DEC-110) and S024's erasure (DEC-111).
+- In progress: nothing. `plan_current/` is empty.
+- Next: the machine-light lane. The owner is on vacation with the MacBook and
+  the Linux workstation is where the heavy runs go, so `plan.md` carries a
+  `## Machine scope` section and its Open list is temporarily reordered around
+  it (DEC-112). First entries are S153, S158, S157, S150.
 - Blocked: nothing.
-- Watching: **S024 verdict 1, run 3 -- a RESUME of run 2, not a new match.**
-  `fastchess -config file=config.json` continues the interrupted tournament
-  with its stats intact, so run 2's 6054 games are pooled and `LLR 0.43`
-  carries forward instead of restarting from zero; the PGN appends to the same
-  file. Launched by `.tuning/S024_resume.sh`, pid 46158, log
-  `.tuning/sprt_s024_v1_run3.log`, watcher armed on
-  `RESUME-RUN-(DONE|FAILED)` with a 24 h ceiling. It waits for an 80 % charge
-  before the first game, because the battery was at 8 % when run 2 was stopped.
-  **The 60 W adapter is accepted and the run is not gated on it** (owner's
-  instruction, 2026-08-29): the adapter is the one available, a match is not
-  stopped for a discharge, and if the machine hibernates the tournament is
-  resumed again by the same script, pooling once more. What run 2 proved is
-  that resuming is what makes that cheap.
+- Watching: nothing. No match is running and no watcher is armed.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**
@@ -39,8 +26,9 @@ Updated: 2026-08-29, by hand.
     `build_lmr_table()`'s `log` was the stated portability exposure and Apple's
     `log` does not move the tree, so every deterministic figure this repository
     records is valid here as written and nothing was regenerated. Throughput in
-    games per hour is still unmeasured on this machine and still arrives free
-    from the first hour of the next real SPRT. `.moltke.local.md` is written.
+    games per hour was still unmeasured when this was written and is not any
+    more: **2700 games/h on 8 threads at 8+0.08**, from S024's run 3, which is
+    the one thing those aborted runs did buy. `.moltke.local.md` is written.
     The commits were pushed. What the move did break was two things the
     handover did not predict, both found by running the check: the tree did not
     compile under Apple clang's `-Werror`, and `fastchess.sh` could not complete
@@ -123,15 +111,17 @@ Updated: 2026-08-29, by hand.
     direction-certified table score as a pruning margin's input, written up in
     its step file under `## Inherited from S108` -- so that decision is waiting
     where the step that takes it will be read, not here.
-  - **`.tuning/` is gitignored and now holds the only copy of an aborted SPRT's
-    raw evidence.** `sprt_s024_v1_run1_aborted.log` and
-    `sprt_s024_run1_aborted.pgn` are S024's first run, killed for playing half
-    its games on a draining battery and half on mains. Every number that
-    decided that lives in the step file and in `adocs/data/S024_sprt.sh`'s
-    header, so nothing is lost when they go -- but `adocs/data/S024_pair_stats.py`
-    is committed and will reproduce them from any fastchess PGN, which is the
-    part worth keeping. Same exposure as the corpus item below, smaller stakes.
-    Recorded, not planned.
+  - **The gitignored-evidence exposure was real and S024's share of it is
+    discharged, DEC-111.** This item used to say `.tuning/` held the only copy
+    of S024's aborted run and that it would die with the machine. It would
+    have. All of it now sits on branch `s024_mac_attempt` under
+    `adocs/data/S024_mac_attempt/`, gzipped, with digests and a README: both
+    PGNs, the three run logs, the fastchess log, the resume config and the
+    resume script. The exposure itself is not discharged -- `.tuning/` is still
+    gitignored and still holds the corpus and the fit scripts the item below
+    describes, which are the larger stakes. What changed is that the pattern
+    has a worked example now: a branch nobody merges is a cheap place to put
+    evidence that must outlive a machine.
   - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
     minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
     comment argues for, and **0 and 1 are the same engine** because `!is_pv`

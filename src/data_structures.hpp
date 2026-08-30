@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstring>
 #include <list>
-#include <memory>
 #include <optional>
 #include <ostream>
 #include <stack>
@@ -445,34 +444,6 @@ struct search_t
 };
 
 
-// Continuation history: the graded counterpart of the countermove heuristic.
-// Indexed by (the piece that played the previous move, where it landed) x (the
-// piece playing this move, where it lands), it accumulates the same bonus and
-// malus every quiet move earns in `quiet_history`, conditioned on the move it
-// is replying to. One ply back is counter-move history; two plies back is
-// follow-up history, and both offsets share this one physical table -- the only
-// shape with a passing record behind it (Lynx PR #2459). S024.
-//
-// 1.125 MiB, which is why `search_state_t` holds it behind a pointer: the
-// search runs on a std::thread, whose stack is 512 KB on macOS, and the state
-// is a stack object.
-struct continuation_history_t
-{ int16_t table[12][64][12][64]; };
-
-
-// The one place the (piece, to-square) convention is written down. A promotion
-// indexes on the pawn that moved rather than on the piece that arrives, which
-// is the convention `counter_moves` already keys on; keeping read and write on
-// one helper is what stops the two sites drifting apart.
-inline int16_t& continuation_entry(continuation_history_t& history,
-                                   move_t previous,
-                                   move_t move)
-{
-  return history.table[MOVE_PIECE(previous)][MOVE_TO(previous)]
-                      [MOVE_PIECE(move)][MOVE_TO(move)];
-}
-
-
 struct search_state_t
 {
   std::atomic_bool* stop = nullptr;
@@ -509,10 +480,4 @@ struct search_state_t
 
   // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
   move_t counter_moves[12][64];
-
-  // Allocated rather than embedded, and always allocated: a null pointer here
-  // would put a branch on the hot ordering path, and every `search_state_t{}`
-  // in the tree -- including every test's -- gets a zeroed table for free.
-  std::unique_ptr<continuation_history_t> continuation_history =
-      std::make_unique<continuation_history_t>();
 };

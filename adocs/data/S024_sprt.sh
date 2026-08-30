@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 #
+# STALE SINCE 2026-08-30, AND KEPT FOR ITS REASONING RATHER THAN ITS PINS.
+# S024's MacBook attempt was discarded by DEC-111 and the candidate this script
+# was written to measure no longer exists on this branch -- it lives on branch
+# `s024_mac_attempt` with its run evidence. Two things here must be re-decided
+# before it is run again: REF, pinned below to a commit that is no longer the
+# reimplementation's parent, and the bound pair, which is fastchess.sh's
+# default and is the pair the three aborted runs proved this machine cannot
+# hold. Everything else -- the power guard, the pre-registered readings, the
+# marker discipline -- still applies.
+#
 # S024 verdict 1, the one-ply continuation history (counter-move history).
 # Candidate is the working tree; reference is PINNED to 25998fe, the step's
 # parent, and not left to fastchess.sh's HEAD default. Two things moved HEAD
@@ -114,9 +124,11 @@
 #      for, or a machine throttled at a 1 % battery playing a different time
 #      control in effect -- and this run cannot separate them. A verdict pooled
 #      over both blocks would be a number whose regime is unstated, which is
-#      what DEC-020 is about. The evidence is kept:
-#      `.tuning/sprt_s024_v1_run1_aborted.log` and
-#      `.tuning/sprt_s024_run1_aborted.pgn`.
+#      what DEC-020 is about. The evidence is kept, on branch
+#      `s024_mac_attempt` under `adocs/data/S024_mac_attempt/` --
+#      `S024_run1_aborted.log.gz` and `S024_run1_aborted.pgn.gz`. It was under
+#      the gitignored `.tuning/` until DEC-111 moved it somewhere that survives
+#      the machine.
 #
 # Run 2 is on mains power and holds the machine awake for the duration.
 # `caffeinate -i` prevents idle sleep and `-s` prevents sleep while on AC; the
