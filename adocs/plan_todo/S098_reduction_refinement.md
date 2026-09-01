@@ -41,7 +41,7 @@ this from a static reduction: Weiss #73 "Aggressive lmr" (fixed 1 ply → grows
 with depth and moves tried) **+48.44 +/-15.81**, then #76 (adopt Ethereal's
 log formula) **+20.28 +/-9.75** — both 2019-11, Weiss sub-3000 (1.2 = 3055
 came in 2021). **Chesso already ships this layer** — build_lmr_table at
-src/search.cpp:42-56 is exactly this form (S013, +129.2 +/-33.8 killed at
+src/search.cpp:96-110 is exactly this form (S013, +129.2 +/-33.8 killed at
 96 % LLR) — so layer (a) owes nothing here; its constants are S085/S127
 material.
 **(b) History scaling.** Reduce less for a quiet with high history, more with
@@ -112,12 +112,12 @@ S023 sits in reserve), cutnode-with-no-TT-move (SF prose only; ~0 at Lynx).
 
 ### 2. Shape for chesso
 
-The whole feature is src/search.cpp:42-76 and :707-715:
+The whole feature is src/search.cpp:96-130 and :707-715:
 
 - Table: build_lmr_table :42-56, `r = LMR_BASE/100 + ln(depth) *
   ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
   zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
-  (src/search_params.hpp:158-159, ranges stated, both already in S085's SPSA
+  (src/search_params.hpp:194-195, ranges stated, both already in S085's SPSA
   set). CHESSO_TUNE rebuilds it per setoption (:59-68); a test probe exists
   (search_lmr_reduction_probe, :79-82).
 - Eligibility :693-694: `ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
@@ -181,8 +181,8 @@ Verdict 1 — history:
    asserted (it would be reduced but for `ply > 0`), built the S033 way
    (python-chess enumeration + Stockfish confirmation, DEC-023); both mate
    cases re-run -- "pruning does not hide a forced mate",
-   tests/test_search.cpp:1923 and "pruning does not hide a mate against the
-   material leader", tests/test_search.cpp:1962; fast suite. SPRT.
+   tests/test_search.cpp:2808 and "pruning does not hide a mate against the
+   material leader", tests/test_search.cpp:2847; fast suite. SPRT.
 
 Verdict 2 — node type:
 1. Thread `bool cut_node` through negamax per CPW Node Types (Garms's
@@ -254,7 +254,7 @@ the declared ranges.
 ### 5. Pitfalls
 
 - **The repo's own bug class.** S013's LMR reduced the mating move at the
-  root; null move hid a mate in 2 (tests/test_search.cpp:1919-1940, the
+  root; null move hid a mate in 2 (tests/test_search.cpp:2804-2825, the
   "pruning does not hide a forced mate" case). The
   accepts re-runs the mate case per adjustment and adds the root assertion
   with its precondition. The root exemption is not up for relaxation —

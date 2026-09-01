@@ -7,27 +7,35 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-01, by hand.
 
-- Last done: S143 -- **the completion gate builds and tests `build-tune` too**.
-  It is one line in two places, `AGENTS.md`'s TESTS rule and DEV_MANUAL.md's
-  Test section, and they are identical:
-  `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`.
-  **The red was observed, not assumed**: with
-  `static_assert(ASPIRATION_MIN_DEPTH >= 2)` put back at
-  `tests/test_engine.cpp:1628` the old gate exits 0 and the extended gate
-  exits 2, at the `build-tune` compile -- `read of non-const variable
-  'ASPIRATION_MIN_DEPTH' is not allowed in a constant expression`. Reverted
-  after; nothing in `src/` or `tests/` changed.
-  **The gate roughly doubles and the figure is measured**: 22/22 in **45.9 s**
-  in the tune build against **42.4 s** in the shipping one -- the same 22 --
-  and building `build-tune` adds 0.46 s no-op, 1.38 s for a full rebuild with
-  its ccache warm, 18.03 s with `CCACHE_DISABLE=1`. **93.59 s end to end,
-  green, against about 45 s before.**
-  Two things the step file did not predict: `build/` is configured with **no
-  compiler launcher** where `build-tune/` has `ccache`, so only the tune build
-  has a warm-cache case; and DEV_MANUAL.md's Test section still said the fast
-  suite was "about 18 s" in two places when it is 42 s over 22 tests, corrected
-  in passing. DEC-118, amending DEC-025.
-- Before it: S168 (**the constructed mate set is three motifs and 82
+- Last done: S169 -- **the 97 stale citations in the pending step files are
+  re-anchored**, and it exists because doing S144 first would have erased them.
+  `--citations` reports **0 flagged**, from 97 (72 DRIFT, 25 ANCHOR, 0 BOUNDS)
+  over 20 of the 53 pending files. 94 citations rewritten, 3 held, nothing
+  deleted and no range widened.
+  **The checker's verdict is not the proof and cannot be.** DRIFT's baseline is
+  the commit that last wrote the step file, so after this commit every repaired
+  citation is green whether or not it was repaired. The evidence is
+  `adocs/data/S169_recitations.tsv`, 97 rows carrying both texts: **83 of 97
+  are identical on both sides**, and the 14 that are not are the TITLE, HAND
+  and HOLD rows whose reason column says what was read instead. **No BLOCK row
+  differs.** `adocs/data/S169_citations_before.txt` is the pre-repair run, kept
+  because it cannot be regenerated.
+  Method split, from `adocs/data/S169_recite.py`: **72 BLOCK** (the baseline
+  text occurs exactly once at HEAD), **6 TITLE**, **16 HAND**, **3 HOLD** (the
+  citation was right; the flag was a cosmetic edit to the cited text).
+  **The ANCHOR block was one repair repeated seven times**: S091, S095, S097,
+  S098, S113, S114 and S116 -- every one a pruning or a reduction step -- cited
+  the two mate-safety tests 921 lines short of where they open. That is
+  `2026-08-20_plan_review-F01`'s class returned after S138 repaired it once.
+  **Two citations were already wrong at their baseline, not drifted**: S020's
+  and S082's pointed at a blank line and a bare `}`, so nothing had ever
+  checked them. **S082 also says `MAX_QSEARCH_DEPTH` is 8 where the engine
+  compiles 19** (`src/search_params.hpp:106`) -- the citation is repaired and
+  the number is left, because numeric claims are the step's `excludes` and the
+  argument is S082's to remake. DEC-119.
+- Before it: S143 (**the completion gate builds and tests `build-tune`
+  beside `build`**, the red observed first, 45 s to 93.6 s; DEC-118), S168
+  (**the constructed mate set is three motifs and 82
   positions**, the mating piece enforced, `MATE_IN_THREE_FLOOR` re-derived at
   11; DEC-117), S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
   inert** -- 0 positions change verdict over seventeen commits and nine table
@@ -44,8 +52,11 @@ Updated: 2026-09-01, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: the machine-light lane continues (DEC-112). Open entries are S144 and
-  S146.
+- Next: S144, the step S169 cleared the board for -- the bare `:line`
+  continuations get a path of their own. **Its goal line and `plan.md` entry
+  both say 467 and the measured count today is 383** over 19 files; the two
+  ends move as steps complete, and the number is left for S144's own stamp to
+  restate rather than edited from outside the step. After it, S146.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

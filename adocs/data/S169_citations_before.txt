@@ -1,0 +1,161 @@
+# tools/plan_prose_check.py --citations at c2d8f81..cc99233, before S169 repaired anything.
+# Kept because it cannot be regenerated: repairing a step file moves its own
+# DRIFT baseline, so this run is unreproducible from the commit after it.
+
+adocs/plan_todo/S020_single_check_computation.md: 7 code citations, baseline 1cf9b26, 4 flagged (0 document and 39 loose, ungated)
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:44  src/search.cpp:469  -- held '' at 1cf9b26
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:67  src/bitboard.cpp:2172-2173  -- held 'const bool is_check =' at 1cf9b26
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:188  src/search.cpp:710  -- held '!MOVE_PROMOTED(moves[i]) && !is_in_check && !is_chec' at 1cf9b26
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:195  src/search.cpp:678  -- held 'const bool is_check_move = is_capture ? false : is_check' at 1cf9b26
+adocs/plan_todo/S022_delta_pruning_quiescence.md: 6 code citations, baseline 7b54f18, 4 flagged (0 document and 13 loose, ungated)
+  DRIFT  adocs/plan_todo/S022_delta_pruning_quiescence.md:83  src/search.cpp:320  -- held 'if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }' at 7b54f18
+  DRIFT  adocs/plan_todo/S022_delta_pruning_quiescence.md:112  src/search.cpp:581  -- held 'game_phase(&game->board) > 0) {' at 7b54f18
+  ANCHOR adocs/plan_todo/S022_delta_pruning_quiescence.md:200  tests/test_search.cpp:701  -- "a side in check may not stand pat" opens at tests/test_search.cpp:993
+  ANCHOR adocs/plan_todo/S022_delta_pruning_quiescence.md:201  tests/test_search.cpp:775  -- "mate is recognised at depth zero" opens at tests/test_search.cpp:1067
+adocs/plan_todo/S023_capture_history.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S024_continuation_history.md: 3 code citations, baseline a433433, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S025_bad_capture_ordering_retry.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S029_nnue.md: 0 code citations, baseline 190849c, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S030_move_encoding_16_bit.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S032_pext_sliding_attacks.md: 0 code citations, baseline 962ec3a, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S039_lazy_margin_redecide.md: 2 code citations, baseline ff3a9e0, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S042_en_passant_only_when_capturable.md: 1 code citations, baseline 373e953, 0 flagged (1 document and 0 loose, ungated)
+  note   DRIFT adocs/plan_todo/S042_en_passant_only_when_capturable.md:5  adocs/plan.md:110  -- held 'exists and sits last. **S031 is also retired** — under 1 % b' at 373e953
+adocs/plan_todo/S055_taper_stage_two_once.md: 14 code citations, baseline 7b54f18, 1 flagged (0 document and 20 loose, ungated)
+  DRIFT  adocs/plan_todo/S055_taper_stage_two_once.md:171  tests/test_evaluation.cpp:466-498  -- held 'TEST_CASE_FIXTURE(eval_fixture_t, "the unclamped terms are' at 7b54f18
+adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md: 2 code citations, baseline 38ad4fe, 2 flagged (0 document and 0 loose, ungated)
+  DRIFT  adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md:29  src/search.cpp:125  -- held '}' at 38ad4fe
+  DRIFT  adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md:48  src/search.cpp:29  -- held '// comment that says what each one is for. S073.' at 38ad4fe
+adocs/plan_todo/S083_corpus_scale_fifty_million.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S091_see_pruning_main_search.md: 12 code citations, baseline 7b54f18, 6 flagged (0 document and 24 loose, ungated)
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:5  src/search.cpp:332-333  -- held 'if (!in_check && !capture_cannot_lose(&game->board, move' at 7b54f18
+  ANCHOR adocs/plan_todo/S091_see_pruning_main_search.md:104  tests/test_search.cpp:2262  -- "search: static exchange evaluation" opens at tests/test_search.cpp:3183
+  ANCHOR adocs/plan_todo/S091_see_pruning_main_search.md:105  tests/test_search.cpp:2354  -- "search: see_ge agrees with see" opens at tests/test_search.cpp:3275
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:112  src/search.cpp:332-335  -- held 'if (!in_check && !capture_cannot_lose(&game->board, move' at 7b54f18
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:117  src/search.cpp:645  -- held 'for (size_t i = 0;; ++i) {' at 7b54f18
+  ANCHOR adocs/plan_todo/S091_see_pruning_main_search.md:167  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+adocs/plan_todo/S095_internal_iterative_reduction.md: 6 code citations, baseline 7b54f18, 4 flagged (0 document and 19 loose, ungated)
+  DRIFT  adocs/plan_todo/S095_internal_iterative_reduction.md:82  src/search.cpp:455  -- held 'const tt_entry_t* tt_entry = tt_get_entry(state->tt, &game' at 7b54f18
+  ANCHOR adocs/plan_todo/S095_internal_iterative_reduction.md:129  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S095_internal_iterative_reduction.md:130  tests/test_search.cpp:1926  -- "pruning does not hide a mate against the material leader" opens at tests/test_search.cpp:2847
+  DRIFT  adocs/plan_todo/S095_internal_iterative_reduction.md:167  transposition_table.cpp:124  -- held 'if (entry->generation != tt->generation || depth >= entry-' at 7b54f18
+adocs/plan_todo/S097_singular_extensions.md: 9 code citations, baseline 373e953, 8 flagged (0 document and 25 loose, ungated)
+  DRIFT  adocs/plan_todo/S097_singular_extensions.md:5  src/search.cpp:710  -- held '!MOVE_PROMOTED(moves[i]) && !is_in_check && !is_chec' at 373e953
+  DRIFT  adocs/plan_todo/S097_singular_extensions.md:124  src/search.hpp:47-54  -- held 'int negamax(int alpha0,' at 373e953
+  DRIFT  adocs/plan_todo/S097_singular_extensions.md:124  src/search.cpp:411-418  -- held 'int negamax(int alpha0,' at 373e953
+  DRIFT  adocs/plan_todo/S097_singular_extensions.md:125  src/data_structures.hpp:441-460  -- held 'struct search_state_t' at 373e953
+  DRIFT  adocs/plan_todo/S097_singular_extensions.md:138  src/data_structures.hpp:388-414  -- held 'struct tt_entry_t' at 373e953
+  ANCHOR adocs/plan_todo/S097_singular_extensions.md:206  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S097_singular_extensions.md:207  tests/test_search.cpp:1926  -- "pruning does not hide a mate against the material leader" opens at tests/test_search.cpp:2847
+  ANCHOR adocs/plan_todo/S097_singular_extensions.md:217  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+adocs/plan_todo/S098_reduction_refinement.md: 6 code citations, baseline 6e0afa0, 6 flagged (1 document and 18 loose, ungated)
+  DRIFT  adocs/plan_todo/S098_reduction_refinement.md:44  src/search.cpp:42-56  -- held 'static lmr_table_t build_lmr_table()' at 6e0afa0
+  DRIFT  adocs/plan_todo/S098_reduction_refinement.md:115  src/search.cpp:42-76  -- held 'static lmr_table_t build_lmr_table()' at 6e0afa0
+  DRIFT  adocs/plan_todo/S098_reduction_refinement.md:120  src/search_params.hpp:158-159  -- held 'X(LMR_BASE,          "LmrBase",         52,     0, 400)' at 6e0afa0
+  ANCHOR adocs/plan_todo/S098_reduction_refinement.md:184  tests/test_search.cpp:1923  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S098_reduction_refinement.md:185  tests/test_search.cpp:1962  -- "pruning does not hide a mate against the material leader" opens at tests/test_search.cpp:2847
+  DRIFT  adocs/plan_todo/S098_reduction_refinement.md:257  tests/test_search.cpp:1919-1940  -- held '// The reduced search a null move runs must keep at least' at 6e0afa0
+  note   DRIFT adocs/plan_todo/S098_reduction_refinement.md:5  adocs/plan.md:81  -- held 'computes only at reverse-futility nodes. S092 is retired int' at 6e0afa0
+adocs/plan_todo/S099_correction_history.md: 5 code citations, baseline 7b54f18, 2 flagged (0 document and 18 loose, ungated)
+  DRIFT  adocs/plan_todo/S099_correction_history.md:133  src/chesso.cpp:37  -- held 'static transposition_table_t tt = {};' at 7b54f18
+  DRIFT  adocs/plan_todo/S099_correction_history.md:143  src/search.cpp:479  -- held 'const bool is_in_check = is_check(game);' at 7b54f18
+adocs/plan_todo/S101_threat_terms.md: 0 code citations, baseline c2f1c43, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S102_outposts_and_space.md: 0 code citations, baseline c2f1c43, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S109_shallow_depth_pruning_block.md: 9 code citations, baseline af664a2, 0 flagged (0 document and 21 loose, ungated)
+adocs/plan_todo/S110_correction_history_non_pawn.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S111_correction_history_continuation.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S112_quiescence_move_futility.md: 17 code citations, baseline 7b54f18, 10 flagged (0 document and 19 loose, ungated)
+  ANCHOR adocs/plan_todo/S112_quiescence_move_futility.md:3  tests/test_search.cpp:701  -- "a side in check may not stand pat" opens at tests/test_search.cpp:993
+  ANCHOR adocs/plan_todo/S112_quiescence_move_futility.md:3  tests/test_search.cpp:775  -- "mate is recognised at depth zero" opens at tests/test_search.cpp:1067
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:104  src/search.cpp:318-340  -- held 'size_t count = 0;' at 7b54f18
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:117  src/search_params.hpp:29-32  -- held '// Not in the set, on purpose: MATE_MAX, MATE_MIN, DRAW_SCOR' at 7b54f18
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:135  src/search.cpp:677-678  -- held '// is_check() is an attack scan - do not pay for it on c' at 7b54f18
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:164  tests/test_search.cpp:625-639  -- held 'static int quiesce(const std::string& fen, int alpha, int' at 7b54f18
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:166  src/search.cpp:210  -- held 'state->explored_nodes++;' at 7b54f18
+  ANCHOR adocs/plan_todo/S112_quiescence_move_futility.md:190  tests/test_search.cpp:701-735  -- "a side in check may not stand pat" opens at tests/test_search.cpp:993
+  ANCHOR adocs/plan_todo/S112_quiescence_move_futility.md:193  tests/test_search.cpp:775-787  -- "mate is recognised at depth zero" opens at tests/test_search.cpp:1067
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:218  search_params.hpp:29-32  -- held '// Not in the set, on purpose: MATE_MAX, MATE_MIN, DRAW_SCOR' at 7b54f18
+adocs/plan_todo/S113_probcut.md: 7 code citations, baseline 7b54f18, 5 flagged (0 document and 18 loose, ungated)
+  DRIFT  adocs/plan_todo/S113_probcut.md:104  search.hpp:35-40  -- held 'int quiescence(int alpha,' at 7b54f18
+  DRIFT  adocs/plan_todo/S113_probcut.md:128  transposition_table.hpp:35-41  -- held 'void tt_store_entry(transposition_table_t* tt,' at 7b54f18
+  ANCHOR adocs/plan_todo/S113_probcut.md:155  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S113_probcut.md:162  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S113_probcut.md:163  tests/test_search.cpp:1926  -- "pruning does not hide a mate against the material leader" opens at tests/test_search.cpp:2847
+adocs/plan_todo/S114_null_move_refinements.md: 6 code citations, baseline 7b54f18, 4 flagged (0 document and 15 loose, ungated)
+  DRIFT  adocs/plan_todo/S114_null_move_refinements.md:87  src/search.cpp:571  -- held 'const int null_reduction = NULL_MOVE_BASE + (depth / NULL_' at 7b54f18
+  DRIFT  adocs/plan_todo/S114_null_move_refinements.md:87  src/search_params.hpp:109-110  -- held 'X(NULL_MOVE_BASE,    "NullMoveBase",    3,      0, 16)' at 7b54f18
+  ANCHOR adocs/plan_todo/S114_null_move_refinements.md:95  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  ANCHOR adocs/plan_todo/S114_null_move_refinements.md:123  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+adocs/plan_todo/S115_aspiration_refinements.md: 10 code citations, baseline 7b54f18, 8 flagged (0 document and 22 loose, ungated)
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:71  src/search.cpp:833  -- held 'return best_so_far;' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:108  search.cpp:804-826  -- held 'if (ply == 0) {' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:151  chesso.cpp:651  -- held 'tt_new_search(state.tt);' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:153  search.cpp:804-826  -- held 'if (ply == 0) {' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:157  chesso.cpp:820-852  -- held 'if (search_result.best_move != 0 &&' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:176  chesso.cpp:820-852  -- held 'if (search_result.best_move != 0 &&' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:189  search.cpp:833  -- held 'return best_so_far;' at 7b54f18
+  DRIFT  adocs/plan_todo/S115_aspiration_refinements.md:191  chesso.cpp:760  -- held 'alpha = std::max(search_result.score - delta, -SEARC' at 7b54f18
+adocs/plan_todo/S116_razoring_depth_one.md: 2 code citations, baseline 7b54f18, 2 flagged (0 document and 16 loose, ungated)
+  ANCHOR adocs/plan_todo/S116_razoring_depth_one.md:112  tests/test_search.cpp:1887  -- "pruning does not hide a forced mate" opens at tests/test_search.cpp:2808
+  DRIFT  adocs/plan_todo/S116_razoring_depth_one.md:113  tests/test_search.cpp:1926  -- held 'TEST_CASE_FIXTURE(search_fixture_t,' at 7b54f18
+adocs/plan_todo/S117_swar_packed_eval_score.md: 14 code citations, baseline be9a03a, 1 flagged (1 document and 33 loose, ungated)
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:97  tests/test_search.cpp:1913  -- held 'REQUIRE_MESSAGE(std::memcmp(&before, &game.board, size' at be9a03a
+  note   DRIFT adocs/plan_todo/S117_swar_packed_eval_score.md:26  adocs/specs.md:80-87  -- held '- **INV-6 A change is retained only against a measurement.**' at be9a03a
+adocs/plan_todo/S118_pawn_hash_table.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S119_tt_cluster_layout.md: 2 code citations, baseline 45a39a5, 1 flagged (0 document and 0 loose, ungated)
+  DRIFT  adocs/plan_todo/S119_tt_cluster_layout.md:17  fastchess.sh:225  -- held '-each tc="$tc" option.Hash=16 option.Threads=1 \\' at 45a39a5
+adocs/plan_todo/S120_eval_cache.md: 13 code citations, baseline ff3a9e0, 7 flagged (0 document and 6 loose, ungated)
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:87  src/search_params.hpp:164  -- held 'X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:102  src/search.cpp:257  -- held ': evaluate_lazy(&game->board, alpha, beta, &stand_' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:135  src/search.cpp:434  -- held 'if (ply + 1 >= MAX_PLY) { return evaluate(&game->board); }' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:150  src/search.cpp:243-245  -- held '// the field free to read. What is stored is the score and' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:191  src/search_params.hpp:164  -- held 'X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:206  src/chesso.cpp:1128  -- held 'tt_reset(&tt);' at ff3a9e0
+  DRIFT  adocs/plan_todo/S120_eval_cache.md:230  src/search.cpp:251-257  -- held 'bool stand_pat_is_exact =' at ff3a9e0
+adocs/plan_todo/S121_mobility_curves.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S122_king_safety_rebuild.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S123_passed_pawn_suite.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S124_endgame_scaling_factors.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S125_pawn_structure_completion.md: 0 code citations, baseline 373e953, 0 flagged (5 document and 0 loose, ungated)
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:32  adocs/plan.md:260-262  -- held 'pawns with king distance (S123, +22.3 the largest single ent' at 373e953
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:35  adocs/plan.md:143-145  -- held 'gravity as one verdict, persistence as a second; S118 moves' at 373e953
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:47  adocs/plan.md:374-375  -- held '54. S125  backward, phalanx, supported and weak unopposed pa' at 373e953
+adocs/plan_todo/S126_full_refit_after_search.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S127_spsa_full_parameter_run.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S129_syzygy_three_four_five.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S131_quiescence_promotions.md: 18 code citations, baseline 7b54f18, 10 flagged (0 document and 24 loose, ungated)
+  ANCHOR adocs/plan_todo/S131_quiescence_promotions.md:3  tests/test_search.cpp:701  -- "a side in check may not stand pat" opens at tests/test_search.cpp:993
+  ANCHOR adocs/plan_todo/S131_quiescence_promotions.md:3  tests/test_search.cpp:775  -- "mate is recognised at depth zero" opens at tests/test_search.cpp:1067
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:66  src/search.cpp:313-317  -- held '// The filter still runs when out of check: generate_captu' at 7b54f18
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:78  src/search.cpp:624  -- held 'size_t moves_count = generate_captures(game_tables(), &gam' at 7b54f18
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:88  search.cpp:309-311  -- held '// Compacted to the front of the same array: captures only' at 7b54f18
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:115  tests/test_search.cpp:625-639  -- held 'static int quiesce(const std::string& fen, int alpha, int' at 7b54f18
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:116  search.cpp:210  -- held 'state->explored_nodes++;' at 7b54f18
+  ANCHOR adocs/plan_todo/S131_quiescence_promotions.md:138  tests/test_search.cpp:701-735  -- "a side in check may not stand pat" opens at tests/test_search.cpp:993
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:139  tests/test_search.cpp:775-787  -- held 'TEST_CASE_FIXTURE(search_fixture_t, "mate is recognised at' at 7b54f18
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:162  src/search_params.hpp:51  -- held 'X(MAX_QSEARCH_DEPTH, "MaxQsearchDepth", 19, 1, 64)' at 7b54f18
+adocs/plan_todo/S132_time_management_node_fraction.md: 13 code citations, baseline 14748c9, 10 flagged (0 document and 30 loose, ungated)
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:74  src/chesso.cpp:427-480  -- held 'search_time_budget_t compute_search_time_budget(int remainin' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:84  src/search_params.hpp:190-240  -- held 'X(TM_SOFT_PERCENT,   "TmSoftPercent",   60,  1,   100)' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:87  src/data_structures.hpp:447  -- held 'uint64_t explored_nodes;' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:88  src/search.cpp:430  -- held 'state->explored_nodes++;' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:88  src/search.cpp:210  -- held 'state->explored_nodes++;' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:89  chesso.cpp:699  -- held 'state.explored_nodes = 0;' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:92  src/search.cpp:645-793  -- held 'for (size_t i = 0;; ++i) {' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:97  chesso.cpp:647  -- held 'search_state_t state = {};' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:108  chesso.cpp:60-82  -- held 'static int last_best_move_stability = 0;' at 14748c9
+  DRIFT  adocs/plan_todo/S132_time_management_node_fraction.md:191  chesso.cpp:837-852  -- held 'const int scale = conf.scale_time ? search_time_scale_' at 14748c9
+adocs/plan_todo/S133_king_relative_psqt.md: 0 code citations, baseline cf89e22, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S134_fold_degenerate_columns.md: 2 code citations, baseline da8b0df, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S135_unfreeze_piece_placement.md: 0 code citations, baseline a3d36d4, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S136_unfreeze_tempo.md: 1 code citations, baseline a3d36d4, 0 flagged (6 document and 0 loose, ungated)
+adocs/plan_todo/S144_citation_paths_are_explicit.md: 0 code citations, baseline 6759ae3, 0 flagged (0 document and 3 loose, ungated)
+adocs/plan_todo/S146_openings_book_provenance.md: 9 code citations, baseline 59d0b6e, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S147_mate_pv_completeness.md: 0 code citations, baseline 14748c9, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S148_rfp_ceiling_against_deep_mates.md: 0 code citations, baseline 14748c9, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S151_pruning_verdicts_at_longer_control.md: 0 code citations, baseline 8a3e3b2, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S152_rating_checkpoint_after_search_block.md: 0 code citations, baseline bbbd9f4, 0 flagged (0 document and 0 loose, ungated)
+adocs/plan_todo/S159_killer_slot_ageing.md: 2 code citations, baseline 229a309, 2 flagged (0 document and 0 loose, ungated)
+  DRIFT  adocs/plan_todo/S159_killer_slot_ageing.md:3  src/chesso.cpp:647  -- held 'search_state_t state = {};' at 229a309
+  DRIFT  adocs/plan_todo/S159_killer_slot_ageing.md:5  src/search_params.hpp:29  -- held '// Not in the set, on purpose: MATE_MAX, MATE_MIN, DRAW_SCOR' at 229a309
+citations flagged: 97 over 53 files

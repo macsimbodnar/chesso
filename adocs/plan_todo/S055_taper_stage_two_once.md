@@ -168,7 +168,7 @@ to whatever came out — find positions that reach the new maximum.
 - **The collect path is the trap the file does not name.** `<collect=true>`
   hands back tapered mobility and safety separately (:956-958) through
   `evaluate_expensive_terms` (:1005) to tools/eval_spread.cpp:174 and
-  tests/test_evaluation.cpp:466-498, which REQUIREs
+  tests/test_evaluation.cpp:467-499, which REQUIREs
   `clamp(mobility + safety) == evaluate() - evaluate_cheap()` **exactly**
   (:481-484). Post-merge the reported pair must sum to the merged total: taper
   one term, hand back the other as `stage_two - that term`, and state which

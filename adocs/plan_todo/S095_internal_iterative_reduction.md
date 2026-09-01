@@ -79,7 +79,7 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 2. Shape for chesso
 
-- The condition: tt_get_entry (src/search.cpp:455) returns nullptr on a miss
+- The condition: tt_get_entry (src/search.cpp:663) returns nullptr on a miss
   (transposition_table.cpp:96-103), and :449 already computes
   `tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0`. **The probe
   exposes both variants today** — `tt_entry == nullptr` is entry-absent,
@@ -126,8 +126,8 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
      precondition is absent.
    - The accepts' mate case: a forced mate inside the reduced depth added
      beside "pruning does not hide a forced mate",
-     tests/test_search.cpp:1887 and "pruning does not hide a mate against
-     the material leader", tests/test_search.cpp:1926, observed red with the
+     tests/test_search.cpp:2808 and "pruning does not hide a mate against
+     the material leader", tests/test_search.cpp:2847, observed red with the
      guard removed (threshold to 0 locally, observed, reverted — the S033
      protocol; cold fixed-depth search is where it bites).
    - Both existing mate suites re-run; fast suite green. Node counts move by
@@ -164,7 +164,7 @@ Both in src/search_params.hpp (the :41 X-macro) with stated ranges; each is a
   (:164) — and is not reduced. The loop terminates because every negamax
   store carries a move. Residual re-fire paths — a slot lost to a collision
   (key mismatch reads as no-entry), a quiescence store recapturing the slot
-  across a `go` boundary (in-generation it cannot: transposition_table.cpp:124
+  across a `go` boundary (in-generation it cannot: transposition_table.cpp:158
   replaces only at depth >= entry->depth, and TT_DEPTH_QS loses to any main
   depth) — cost 1 ply once per visit, bounded. The published mitigation for
   the saturated-table case is the depth threshold (Ed's stated concern on

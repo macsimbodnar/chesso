@@ -1,6 +1,6 @@
 id:         S112
 goal:       quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
-accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (tests/test_search.cpp:701) and "mate is recognised at depth zero" (tests/test_search.cpp:775)
+accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (tests/test_search.cpp:993) and "mate is recognised at depth zero" (tests/test_search.cpp:1067)
 touches:    src/search.cpp quiescence, src/search_params.hpp
 excludes:   delta pruning, which is S022 and is re-decided after this
 decisions:  DEC-019
@@ -101,7 +101,7 @@ zero still buys S022 its baseline.
 Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
 - Quiescence's capture handling is two loops: the **filter loop** at
-  src/search.cpp:318-340 compacts survivors (non-captures dropped at :320,
+  src/search.cpp:467-489 compacts survivors (non-captures dropped at :320,
   S015's SEE gate at :322-325: `!in_check && !capture_cannot_lose &&
   !see_ge(move, 0)` skips), then the **search loop** at :339-366.
   `best_value` is initialised at :332 (`in_check ? MIN : stand_pat`,
@@ -132,7 +132,7 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
   Ethereal b7f142a is the recorded bug. The bit test also pre-answers S131
   (section 7).
 - **Gives-check exemption: no pre-make predicate exists.** The main search
-  learns it by `is_check(game)` *after* make_move (src/search.cpp:677-678),
+  learns it by `is_check(game)` *after* make_move (src/search.cpp:928-929),
   deliberately not on captures. Two routes: (a) for a capture futility wants
   to skip, pay make/is_check/unmake and keep it if it checks — exact, no new
   machinery, cost only on would-be-skipped moves, still saves the child call
@@ -161,9 +161,9 @@ Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
 One commit, one SPRT; tests first within it.
 
-1. **Red-first unit tests**, inlining the tests/test_search.cpp:625-639
+1. **Red-first unit tests**, inlining the tests/test_search.cpp:917-931
    `quiesce()` helper where node counts are needed (`state.explored_nodes`
-   counts entries, src/search.cpp:210). Windows are built from the engine's
+   counts entries, src/search.cpp:302). Windows are built from the engine's
    own numbers — `evaluate()` of the FEN, the margin, the table's victim
    value — never from a judged score (DEC-023):
    - *Skipped when it cannot reach alpha*: one-capture FEN, alpha =
@@ -187,10 +187,10 @@ One commit, one SPRT; tests first within it.
    dedicated table, skip and fold futility_value into a running maximum that
    :332 takes into best_value's initialisation.
 3. Fast suite green -- the two quiescence mate cases explicitly
-   ("a side in check may not stand pat", tests/test_search.cpp:701-735,
+   ("a side in check may not stand pat", tests/test_search.cpp:993-1027,
    which is the case where quiescence has to search evasions to reach a
    mate, and "mate is recognised at depth zero",
-   tests/test_search.cpp:775-787, where the mate is already on the board)
+   tests/test_search.cpp:1067-1079, where the mate is already on the board)
    -- then the SPRT.
 
 ### 4. Constants and seeds

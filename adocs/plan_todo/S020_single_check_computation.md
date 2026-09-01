@@ -41,7 +41,7 @@ structure; a function-local computed at node entry is the minimal form.
 ### 2. Shape for chesso
 
 **The boolean is already once-per-function at HEAD**: negamax computes
-`is_in_check` once (src/search.cpp:469), quiescence `in_check` once (:262).
+`is_in_check` once (src/search.cpp:687), quiescence `in_check` once (:262).
 The live duplication is one level down, in the king-attack scan itself.
 
 Per-node, negamax at position P:
@@ -64,7 +64,7 @@ Per-move -- a DIFFERENT node, never collapsible into P's flag:
   S107's accepts hands exactly that to this step to preserve; S109 adds
   per-move gives-check exemptions reading the same value.
 
-Non-search callers stay untouched: SAN's +/# (src/bitboard.cpp:2172-2173),
+Non-search callers stay untouched: SAN's +/# (src/bitboard.cpp:2225-2226),
 tools/datagen.cpp:201/:280, tests. `is_check` remains public.
 
 Cost path: `is_check` (src/bitboard.cpp:1433) = king lsb + `is_attacked` ->
@@ -185,14 +185,14 @@ remove -- expect the field to grow at implementation, recorded, not silent.
 ## What S107 left here, measured (2026-08-20)
 
 S107 removed the fail-high gate's `!is_check_move` term, so the flag now has
-exactly one consumer: the late move reduction guard at `src/search.cpp:710`,
+exactly one consumer: the late move reduction guard at `src/search.cpp:961`,
 where `!is_check_move` is the **last** conjunct. That makes a second, cheaper
 saving available in the same neighbourhood as this step's, and it was counted
 rather than argued -- instrumented copy, kiwipete `go depth 11`:
 
 | site | calls |
 |---|---|
-| `is_check(game)` at `src/search.cpp:678` | 888738 |
+| `is_check(game)` at `src/search.cpp:929` | 888738 |
 | the guard's cheap prefix true (`ply>0 && depth>=3 && legal_moves_counter>3 && !is_capture && !MOVE_PROMOTED && !is_in_check`) | 179590 |
 
 So the flag is consumed by about 20 % of the calls that compute it, and the

@@ -109,8 +109,8 @@ tests red-first.
   behind on material at a depth-1 node yet mating with a **quiet** first
   move -- out of check quiescence generates captures only (:295-297), so the
   drop is blind to it by construction. Lands beside "pruning does not hide a
-  forced mate", tests/test_search.cpp:1887 and "pruning does not hide a mate
-  against the material leader", tests/test_search.cpp:1926 in the fast
+  forced mate", tests/test_search.cpp:2808 and "pruning does not hide a mate
+  against the material leader", tests/test_search.cpp:2847 in the fast
   suite; observed red against the demolition build (verification arm
   removed, i.e. the unconditional drop) and the printout recorded, per the
   accepts -- record which guard's removal reddens it.

@@ -2,7 +2,7 @@ id:         S097
 goal:       extend the one move a verification search says is singular, and take the multicut the same search offers
 accepts:    an SPRT verdict per change, measured separately -- the extension and the multicut are two changes off one verification search; the verification search excludes the table move, runs at a reduced depth against a window below the table score, and is skipped at the root and where the entry is too shallow or its bound is wrong, each condition asserted by a test that fails if the precondition is absent; the margins and the reduced depth are constants in src/search_params.hpp with stated ranges (S073); a position with a forced mate inside the multicut's pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
-excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp:710` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
+excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp:961` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
 decisions:  DEC-071
 closes:
 blocks:
@@ -121,8 +121,8 @@ and DEC-087's Lynx-based banding (S099's "+11.4 at ~2850" included) reads
 
 - **negamax is one function and has no excluded-move plumbing** — verified:
   signature `(alpha0, beta, depth, ply, game, state, prev_move, is_pv)`
-  (src/search.hpp:47-54, src/search.cpp:411-418); no per-ply search stack,
-  only per-ply arrays in search_state_t (src/data_structures.hpp:441-460).
+  (src/search.hpp:58-65, src/search.cpp:589-596); no per-ply search stack,
+  only per-ply arrays in search_state_t (src/data_structures.hpp:447-483).
   Published shape is a per-ply excludedMove (SF prose d6bdcec5 "(ss+1)->
   excludedMove ... reset right after singular search is finished"); chesso's
   natural form is one more parameter, `move_t excluded_move`, travelling
@@ -135,7 +135,7 @@ and DEC-087's Lynx-based banding (S099's "+11.4 at ~2850" included) reads
   MAX_DEPTH 126 (data_structures.hpp:42-43). An always-extending path
   terminates on the ply wall by construction; the published cap that keeps
   the wall theoretical is Lynx's `ply < 3 * depth` (#1768).
-- **TT entry fields suffice** — verified at src/data_structures.hpp:388-414:
+- **TT entry fields suffice** — verified at src/data_structures.hpp:388-420:
   `depth` int16_t, `type` uint8_t (TT_BETA_NODE = lower, TT_PV_NODE = exact,
   :360-378), `score` int32_t, `best_move`; probe :445, `tt_move` copied out
   :449. No change to the 24-byte layout is needed for V1/V2.
@@ -203,8 +203,8 @@ extension first, the multicut second, each its own SPRT.
    `depth - SE_TT_DEPTH_MARGIN` never does; a TT_ALPHA_NODE bound never
    does — observed via node counts moving only when the condition holds.
    Both mate cases re-run -- "pruning does not hide a forced mate",
-   tests/test_search.cpp:1887 and "pruning does not hide a mate against the
-   material leader", tests/test_search.cpp:1926; fast suite. SPRT.
+   tests/test_search.cpp:2808 and "pruning does not hide a mate against the
+   material leader", tests/test_search.cpp:2847; fast suite. SPRT.
 
 **V2 — multicut:**
 1. `vscore >= singular_beta && vscore >= beta && |vscore| < MATE_MIN &&
@@ -214,7 +214,7 @@ extension first, the multicut second, each its own SPRT.
    stated as a choice in the commit.
 2. The accepts' mate case: a forced mate inside the multicut's pruned depth
    added beside "pruning does not hide a forced mate",
-   tests/test_search.cpp:1887, observed red with the mate-range guard
+   tests/test_search.cpp:2808, observed red with the mate-range guard
    removed.
 3. SPRT; a random walk near +3 is terminated and recorded as zero (DEC-063),
    and dropping the multicut while keeping the extension is the default at

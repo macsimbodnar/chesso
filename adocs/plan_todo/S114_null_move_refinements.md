@@ -84,7 +84,7 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 ### 2. Shape for chesso
 
 - R today: `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6
-  (src/search.cpp:571; src/search_params.hpp:109-110, ranges 0..16, 1..64).
+  (src/search.cpp:814; src/search_params.hpp:181-182, ranges 0..16, 1..64).
   With the floor below, NMP fires from depth 5.
 - Conditions (:569-571): `!is_pv && !is_in_check && ply > 0 && prev_move != 0
   && depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
@@ -92,7 +92,7 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 - **The mate fix is the floor** `depth - 1 - null_reduction >= 1` (:570),
   comment :563-568: a depth-0 null search is pure quiescence, answers with
   the static score, and lost a mate in two at depth 4. Regression test:
-  "pruning does not hide a forced mate", tests/test_search.cpp:1887.
+  "pruning does not hide a forced mate", tests/test_search.cpp:2808.
 - **The zugzwang guard counts both colours**: `game_phase()`
   (src/evaluation.cpp:1111) clamps `board->phase`, accumulated from
   `phase_value[6] = {0,1,1,2,4,0}` (src/eval_tables.hpp:28) for every piece
@@ -120,7 +120,7 @@ One SPRT, as the accepts prices:
    published practice lands the family together (Weiss #127-#130) -- then
    one SPRT on the winner; S127 fits finals.
 4. Tests, red first, printouts recorded:
-   - "pruning does not hide a forced mate", tests/test_search.cpp:1887 stays
+   - "pruning does not hide a forced mate", tests/test_search.cpp:2808 stays
      green unmodified at every depth it runs.
    - New case built the S033 way (python-chess enumeration + Stockfish
      confirmation, DEC-023): one side ~20 pawns ahead statically, opponent

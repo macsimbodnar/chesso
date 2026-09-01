@@ -71,7 +71,7 @@ differs across engines and nothing in the record says it matters.
 ### 2. Shape for chesso
 
 **The base this scales** (all S089): `compute_search_time_budget()`
-src/chesso.cpp:427-480 — base = remaining/movestogo, or 5 % of remaining +
+src/chesso.cpp:454-507 — base = remaining/movestogo, or 5 % of remaining +
 50 % of increment at sudden death (:443-451); hard = 300 % clamped to
 `remaining - MOVE_OVERHEAD_MS` and floored (:453, :460-471); soft = 60 %
 clamped to hard (:454, :476). `search_time_scale_percent()` :482-506 is the
@@ -81,20 +81,20 @@ at `TM_SCALE_MIN_PERCENT` 30. Applied after each completed iteration at
 between iterations only, :892-899. `scale_time` is true only on the clock path
 (:1340); `go movetime` sets both limits to the named time and never scales
 (:1318-1322); `go ponder` is ignored (:1282-1286). The nine `Tm*` constants:
-src/search_params.hpp:190-240.
+src/search_params.hpp:262-312.
 
 **What per-root-move attribution needs.** The node counter is one global:
-`search_state_t::explored_nodes` (src/data_structures.hpp:447), incremented
-at negamax entry (src/search.cpp:430) and quiescence (src/search.cpp:210),
-reset per depth iteration (chesso.cpp:699), summed into
+`search_state_t::explored_nodes` (src/data_structures.hpp:453), incremented
+at negamax entry (src/search.cpp:608) and quiescence (src/search.cpp:302),
+reset per depth iteration (chesso.cpp:726), summed into
 `result.total_node_explored` (:777). There is no root loop of its own — the
 root is `ply == 0` inside negamax's shared move loop
-(src/search.cpp:645-793; root-only branches :785, :804). The counter
+(src/search.cpp:896-1063; root-only branches :785, :804). The counter
 arithmetic: at `ply == 0` only, snapshot `explored_nodes` before
 `make_move` (:656), take `after - before` past `unmake_move` (:727), add the
 delta to a bucket **keyed by the move** — `pick_next_move` (:654) reorders in
 place, so index i is not stable across iterations. Buckets live in
-`search_state_t`, which is constructed per `go` (chesso.cpp:647) and survives
+`search_state_t`, which is constructed per `go` (chesso.cpp:674) and survives
 iterations and aspiration re-searches (:746-767) — so they accumulate across
 both, the published reading. Residual per `search()` call: exactly the root's
 own +1 at :420 (NMP is gated `ply > 0`, :569; nothing else at the root counts
@@ -105,7 +105,7 @@ call's counter growth, so a later root-level feature breaks it loudly.
 bucket[search_result.best_move] / max(1, sum(buckets))`, integer like the rest
 of the TM code; multiply the node factor onto `scale`; the existing clamp to
 hard (:845-847) already bounds the top. Expose `uci_last_bestmove_node_percent`
-beside the S089 accessors (chesso.cpp:60-82, uci.hpp:144-153) for the probe.
+beside the S089 accessors (chesso.cpp:71-93, uci.hpp:144-153) for the probe.
 
 ### 3. Implementation sketch
 
@@ -188,7 +188,7 @@ figures decided what to try here, never what to conclude (DEC-019).
 ### 7. Interactions
 
 - **S089 (done)** is the base: this multiplies its two scalers and changes
-  neither, per excludes; the three meet at chesso.cpp:837-852.
+  neither, per excludes; the three meet at chesso.cpp:864-879.
 - **S115 (order 28, before this at 30):** re-sweeping the widening schedule
   changes how often the root is re-searched, which moves both bucket
   composition and denominator — land S115 first (plan order already does),

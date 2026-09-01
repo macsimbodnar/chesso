@@ -101,7 +101,7 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
   -- the SF placement, and a null-pruned node then never pays for captures.
   S097 lands earlier in plan order and its verification block sits in the
   same region; ProbCut goes first, same never-pays argument.
-- **qsearch is callable mid-node**: declared search.hpp:35-40, already
+- **qsearch is callable mid-node**: declared search.hpp:46-51, already
   called by negamax at :466. The preliminary is
   `-quiescence(-probBeta, -probBeta + 1, ply + 1, 0, game, state)` after
   `make_move` (illegal moves drop out via its false return, :656 pattern);
@@ -125,7 +125,7 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
   the bound for +4.99 STC, an S127-era sweep here.
 - **TT store exists**: `tt_store_entry(state->tt, &game->board, probDepth,
   normalize_score(value, ply), TT_BETA_NODE, moves[i], static_eval)`
-  (transposition_table.hpp:35-41); static_eval is whatever RFP left at
+  (transposition_table.hpp:49-55); static_eval is whatever RFP left at
   :532, TT_EVAL_NONE otherwise (S094: the score field, never a bound).
 - **Nothing from S097 is needed**: no excluded-move parameter, no cutoff or
   store suppression -- ProbCut excludes nothing and its sub-searches probe
@@ -152,15 +152,15 @@ One SPRT, as the accepts prices. Increments:
      pruned window behind a crushing-looking capture, built the S033 way --
      python-chess enumeration plus Stockfish confirmation, never own
      judgement (DEC-023) -- added beside "pruning does not hide a forced
-     mate", tests/test_search.cpp:1887, observed red with the mate-band
+     mate", tests/test_search.cpp:2808, observed red with the mate-band
      guard removed.
    - precondition tests, non-vacuous: a position where ProbCut fires (node
      counts move against the off value); then PV node, in check, depth
      below threshold, and a planted under-probBeta TT entry
      (tt_store_entry is public) each hold the counts still.
    - both mate cases re-run -- "pruning does not hide a forced mate",
-     tests/test_search.cpp:1887 and "pruning does not hide a mate against
-     the material leader", tests/test_search.cpp:1926; fast suite;
+     tests/test_search.cpp:2808 and "pruning does not hide a mate against
+     the material leader", tests/test_search.cpp:2847; fast suite;
      search_bench 9/12 in the stamp.
 
 ### 4. Constants and seeds

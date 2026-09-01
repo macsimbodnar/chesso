@@ -2,7 +2,7 @@ id:         S091
 goal:       skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); separate margins for captures and for quiets, both constants in src/search_params.hpp with stated ranges (S073), and the depth scaling stated as what it is rather than as a flag; a position with a forced mate inside the pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; nothing is pruned at a PV node or while in check, with the precondition asserted; see() and see_ge() are unchanged and tests/test_search.cpp's exchange cases still pass unmodified; the fast suite green
 touches:    src/search.cpp negamax move loop, src/search_params.hpp, tests/test_search.cpp
-excludes:   any change to see() or see_ge() themselves; quiescence, where see_ge already declines losing captures at src/search.cpp:332-333; delta pruning, which is S022
+excludes:   any change to see() or see_ge() themselves; quiescence, where see_ge already declines losing captures at src/search.cpp:481-482; delta pruning, which is S022
 decisions:  DEC-071
 closes:
 blocks:
@@ -101,20 +101,20 @@ on record from the other side: Weiss #355 measured qsearch SEE pruning at
   `capture_cannot_lose` :1160 is the capture-only fast path quiescence tries
   first; the scale is `see_value[6] = {100,300,300,500,900,10000}` :1096.
 - **Test coverage**: suite "search: static exchange evaluation"
-  tests/test_search.cpp:2262 (six hand-valued cases, a quiet into an
-  attack); "search: see_ge agrees with see" tests/test_search.cpp:2354
+  tests/test_search.cpp:3183 (six hand-valued cases, a quiet into an
+  attack); "search: see_ge agrees with see" tests/test_search.cpp:3275
   sweeps every legal move of `all_test_fens()` against 8 thresholds, >10000
   assertions -- the corpus carries EP-capture FENs
   (assets/test_jsons/pawns.json) and promotions (promotions.json), so both
   special branches are exercised against exact `see()`. No hand-valued EP or
   promotion case exists: the sweep catches the two implementations
   diverging, not a shared model error (Pitfalls).
-- **Quiescence site today**: src/search.cpp:332-335 (`capture_cannot_lose`
+- **Quiescence site today**: src/search.cpp:481-484 (`capture_cannot_lose`
   then `see_ge(..., 0)`), which is where the excludes line now points; it
   read :205 until S138 re-anchored it, and the excludes' meaning is
   unchanged either way -- S094 grew the function under the old number.
 - **The skip site**: the negamax move loop `for (size_t i = 0;; ++i)`
-  src/search.cpp:645; captures arrive from the first stage :624;
+  src/search.cpp:896; captures arrive from the first stage :624;
   `pick_next_move` :654, `make_move` :656, `is_capture` :658. `see_ge` reads
   the *parent* board, so the capture skip runs **pre-make**, between :654 and
   :656 -- the make is saved, unlike S109's post-make quiet rules. Guards:
@@ -164,7 +164,7 @@ never SPRT'd (S073).
 3. Tests red-first, before the guards land, printouts recorded (accepts):
    - a forced mate inside the pruned depth whose line runs through a
      negative-SEE capture, added to "pruning does not hide a forced mate"
-     (tests/test_search.cpp:1887), observed red with the in-check/near-mate
+     (tests/test_search.cpp:2808), observed red with the in-check/near-mate
      guards removed; built the S033 way -- python-chess enumeration plus
      Stockfish confirmation, never own judgement (DEC-023).
    - precondition tests (non-vacuous): a position where the skip fires (node

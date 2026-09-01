@@ -14,7 +14,7 @@ done:
 Applied by S139, and it is DEC-088's own `Consequences:` line rather than a new
 choice: *"S119's SPRT clause changes from 'at Hash 128' to 'at the S105 harness
 setting, with the pressure ratio stated'"*. The harness is what settles it --
-`fastchess.sh:225` is
+`fastchess.sh:348` is
 
 ```
   -each tc="$tc" option.Hash=16 option.Threads=1 \

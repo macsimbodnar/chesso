@@ -84,7 +84,7 @@ Both preconditions hold today, measured. (1) `evaluate()` is
 `evaluate_cheap() + evaluate_expensive()` (src/evaluation.cpp:1051-1052),
 53.90 ns a call post-S104 (specs.md); the expensive half is mobility plus king
 safety clamped to +/-LAZY_EVAL_MARGIN inside evaluate_expensive()
-(src/evaluation.cpp:1045; the constant at src/search_params.hpp:164), and
+(src/evaluation.cpp:1045; the constant at src/search_params.hpp:200), and
 paying it everywhere costs the 11.7 % above. (2) The TT does not cover quiescence:
 S094 counted the quiescence probe finding **any** entry on 0.79 % of nodes
 (kiwipete depth 12, 16 MB table) -- TT_DEPTH_QS = -1 sits below every main
@@ -99,7 +99,7 @@ should say so in one line.
 
 Placement: **inside the evaluation module, at evaluate_lazy(), not inside
 evaluate()**. Three reasons. `touches:` names no search file and
-quiescence already calls evaluate_lazy (src/search.cpp:257), so the mass of
+quiescence already calls evaluate_lazy (src/search.cpp:349), so the mass of
 calls is covered without touching search.cpp. evaluate() must stay pure:
 bench_eval calls it in a loop over a fixed list (tests/bench_eval.cpp) and a
 cache inside it turns the benchmark into a probe benchmark on the second
@@ -132,7 +132,7 @@ proven.** probe/store/clear in evaluation.cpp, declared in evaluation.hpp,
 entry type in data_structures.hpp (`touches:`). evaluate_lazy() probes
 **after** the shortcut tests (:1038-1039): a hit returns the stored full
 score, value-identical to :1046 by construction; a miss computes and stores.
-The bound paths store nothing. evaluate()'s direct callers (src/search.cpp:434,
+The bound paths store nothing. evaluate()'s direct callers (src/search.cpp:612,
 :529-530) neither probe nor fill -- they are TT-fed and rare. Tests,
 red-first: property over a position list -- empty cache, wide window, call
 twice, second equals fresh evaluate(); revisit through a made-and-unmade line
@@ -147,7 +147,7 @@ cheap stage having been paid for the shortcut test.
 (b) **Probe above the shortcut -- the SPRT.** Move the probe to the top of
 evaluate_lazy(): a hit now returns the exact score where the shortcut would
 have handed back cheap +/- margin -- the strictly-better-number argument
-S094's stand-pat read makes at src/search.cpp:243-245. Not arguable into
+S094's stand-pat read makes at src/search.cpp:335-337. Not arguable into
 neutrality: cutoff decisions cannot flip (full is on the bound's side of the
 window by the :1038 arithmetic) but the fail-soft values propagated differ,
 so node counts move by construction; a hit also sets `*exact`, so :253 writes
@@ -188,7 +188,7 @@ the stamp; S039 executes it.
   Every cached value carries the 150 clamp -- self-consistent, the cache
   mirrors the live evaluate(), and when S039 changes the margin that is a new
   binary and a fresh cache. The live path is the tune build, where
-  LazyEvalMargin is a setoption (src/search_params.hpp:164): clear the cache on
+  LazyEvalMargin is a setoption (src/search_params.hpp:200): clear the cache on
   that setoption, the same rule S108 records for the TT eval field. Were S039
   ever re-ordered ahead, nothing breaks -- the cache is indifferent to which
   margin it memoises.
@@ -203,7 +203,7 @@ the stamp; S039 executes it.
   static eval, never a wrong bound or a crash -- Hyatt: "a collision won't
   crash a thing". 48-bit tag over a 2^16 table discriminates on the full 64;
   the instrumentation's 0-disagreements count is the collision check in vivo.
-- **ucinewgame clears it** beside tt_reset (src/chesso.cpp:1128); a 512 KiB
+- **ucinewgame clears it** beside tt_reset (src/chesso.cpp:1155); a 512 KiB
   memset is free. Entries are position-pure, so persisting within a game is
   sound and published; clearing at game boundaries is the conservative form.
 - **No ply normalisation exists here.** The eval is ply-independent and
@@ -227,7 +227,7 @@ the stamp; S039 executes it.
 ### 7. Interactions
 
 - **S108 (before).** Complementary, not rival. Probe order at quiescence
-  stays TT first (src/search.cpp:251-257, probe already paid), cache second
+  stays TT first (src/search.cpp:343-349, probe already paid), cache second
   inside evaluate_lazy, compute third. S108 section 7 reserved exactly this:
   evictable opportunistic storage there, guaranteed storage here. Do not
   merge them.

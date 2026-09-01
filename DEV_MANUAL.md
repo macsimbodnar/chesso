@@ -715,6 +715,16 @@ to extend the mate-safety gate at a line that had come to rest inside an
 unrelated test. The symptom of extending the wrong mate test is a strength
 regression, not a red test.
 
+**Run it before editing a step file, not after.** DRIFT's baseline is the commit
+that last wrote the step file, so *any* edit to that file — for any reason, on
+any step — moves the baseline forward and every DRIFT flag it was carrying goes
+green without being repaired. Measured at S169: 97 flags stood at HEAD and 92 of
+them sat in the eighteen files S144 was about to rewrite for an unrelated
+reason, so running S144 first would have cleared them and printed a green run
+over a tree that had got no better. ANCHOR is the half that survives an edit, and
+it is the reason a citation is written with a `TEST_CASE` title beside it.
+DEC-119.
+
 **`--touches`.** A step whose `goal:` names a code symbol that no file its
 `touches:` allows it to edit carries in code. `touches:` is the scope contract a
 diff is checked against, so a step whose goal is to change a symbol and whose

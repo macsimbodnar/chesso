@@ -68,7 +68,7 @@ is a seed and must be swept or SPSA'd here.
 ### Shape for chesso -- today's loop
 
 The plumbing is **already fail-soft end to end**: negamax returns best_so_far
-(src/search.cpp:833), RFP returns `static_score - margin` (:546), null move
+(src/search.cpp:1103), RFP returns `static_score - margin` (:546), null move
 returns `null_score` (:586), TT cutoffs return the stored score, not the bound
 (:172-185), quiescence returns best_value (:392). Ethereal's +2.60/+5.07 for
 fail-soft pruning returns (a0d84b633e) is already banked here.
@@ -105,7 +105,7 @@ fail-low; (c) the widening schedule is re-swept under (a)+(b).
      later iteration reports the same mate distance;
    - a Release-visible engine-loop test in the S021 "windowed root" style: a
      root fail-high resolved by a *reduced* re-search must not lose the best
-     move -- assert bestmove/PV agree (search.cpp:804-826 is the recorded
+     move -- assert bestmove/PV agree (search.cpp:1074-1096 is the recorded
      failure shape);
    - loop termination: bounded number of fails to the full window, with (a)
      active.
@@ -148,13 +148,13 @@ fail-low; (c) the widening schedule is re-swept under (a)+(b).
   entries the failed attempt just wrote; the root never takes a TT cutoff
   (is_pv) but everything below does. Mate scores written during a fail are
   the recorded hazard (8acb1d7e4d, Lynx #2560). tt_new_search runs once per
-  go (chesso.cpp:651) -- do not age per re-search.
+  go (chesso.cpp:678) -- do not age per re-search.
 - **Root ordering across fails.** A root fail-high publishes the cutoff move
-  and a one-move PV (search.cpp:804-826, S021's bug fix); the reduced
+  and a one-move PV (search.cpp:1074-1096, S021's bug fix); the reduced
   re-search must find that move first via the TT root entry -- assert, not
   assume.
 - **Time management.** S089's scaler reads completed in-window iterations
-  only (chesso.cpp:820-852); fail events feed nothing. Keep it that way:
+  only (chesso.cpp:847-879); fail events feed nothing. Keep it that way:
   Lynx measured soft-limit checks inside the window loop at -7.4 to -94.5
   Elo, all rejected (#2212-#2214). A fail-low near the soft limit is stopped
   by the hard timer alone, today and after this step.
@@ -173,7 +173,7 @@ and the S074 mate cases green at the shipping schedule; the sweep over the
 
 - **S089 (done).** Verified: the budget does *not* react to fails -- its
   inputs are best-move stability and the completed iteration's score drop
-  (chesso.cpp:820-852). This step adds no mid-loop time checks (Lynx
+  (chesso.cpp:847-879). This step adds no mid-loop time checks (Lynx
   #2212-#2214 measured them negative).
 - **S132 (later).** Node-fraction soft-limit scaler, same function -- land
   S115 first as ordered; nothing here reads node shares.
@@ -186,9 +186,9 @@ and the S074 mate cases green at the shipping schedule; the sweep over the
 ### Scope concern
 
 The "What is there" paragraph implies the fail-soft plumbing is missing. It
-is not: every return path is already fail-soft (search.cpp:833, :546, :596,
+is not: every return path is already fail-soft (search.cpp:1103, :546, :596,
 :172-185, :392) and the failing bound has re-centered on the returned score
-since S021 (chesso.cpp:760, :762) -- Ethereal's +2.6/+5.1 rewarded fail-soft
+since S021 (chesso.cpp:787, :762) -- Ethereal's +2.6/+5.1 rewarded fail-soft
 *pruning returns*, which RFP and null move here already do. What remains of
 the goal's first clause is the re-sweep itself; the new behaviour is the
 midpoint pull and the root reduction. The goal's direction is the published

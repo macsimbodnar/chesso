@@ -130,7 +130,7 @@ check key-equals-recomputation in debug builds. Never rebuilt in `evaluate()`
 -- INV-4, and `excludes:` already bars touching `evaluate()` at all.
 
 **Table**: beside the TT per `touches:` -- a static next to `tt`
-(src/chesso.cpp:37), wired through `search_state_t` like `state.tt`
+(src/chesso.cpp:48), wired through `search_state_t` like `state.tt`
 (:646-647), surviving across `go` within a game, cleared in
 `command_ucinewgame` (:1084-1097) where `tt_reset` already runs. Shape as
 published FORM: `entry[stm][pawn_hash & (N-1)]`, N a power of two, int32
@@ -140,7 +140,7 @@ the diff is stm-relative and White's and Black's errors for one structure must
 not share a slot.
 
 **Where it applies, post-S108**: at S108's single compute-or-read site (top of
-node, after the in-check test at src/search.cpp:479 and the TT-cutoff return
+node, after the in-check test at src/search.cpp:687 and the TT-cutoff return
 at :460-463). `corrected = raw + correction(stm, pawn_hash)`, computed once.
 Consumers see **corrected**: the stack slot `static_evals[ply]` (so improving
 compares corrected values -- Lynx #1999 orders correction before improving,
