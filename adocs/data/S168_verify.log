@@ -1,0 +1,14 @@
+S168, 2026-09-01. Both oracles over the whole enlarged file, from scratch.
+
+  ~/.venv/chess/bin/python adocs/data/S145_mate_set.py verify
+
+Silence per position is the pass: verify prints only failures, then the
+summary. 82 of 82 re-proved by the AND/OR enumeration at exactly the
+recorded distance, every shorter distance re-refuted, every defender node
+reproduced and not in check, every material lead re-derived.
+
+
+82 positions, 0 checks failed, mate distances [2, 3, 4, 5]
+piece counts [13, 15, 16], so the Syzygy 3-4-5 tables cannot probe any of them
+stockfish corroborates 81 of 82 at 4000000 nodes; the rest are stated in this file's verify comment
+RUN-DONE

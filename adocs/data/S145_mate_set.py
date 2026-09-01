@@ -50,19 +50,36 @@ Immobility is a speed property and not a correctness one: it keeps the branching
 at defender nodes near one, which is what makes exhaustive proof affordable at
 mate in five. Nothing here trusts it. The mate distance is proved by search.
 
-ONE MOTIF, AND THAT IS WHAT THIS SCRIPT PRODUCES. S155. Everything above
-constrains the shape so hard that the 48 positions come out as a single motif:
-S155_motif_census.py counts two material signatures over the tracked TSV, one
-the colour mirror of the other, a lone queen as the mating force in 48 of 48,
-`lead` 760 in 48 of 48, and eight family labels that are one geometry under two
-file shifts, a mirror and a colour swap. Broad in mate distance, narrow in
-shape. So the gate this feeds cannot catch a rule that hides a back-rank mate,
-a smothered mate or any knight mate, a king hunt, an open-line mate, a
-promotion mate -- `S155_motif_census.py --moves` counts 1292 legal moves over
-the roots and defender nodes and 0 pawn moves among them -- or a mate in a
-position with a realistic material balance.
-A second motif with a different mating piece is worth building and is S168; it
-belongs beside these families here, not in place of them.
+THREE MOTIFS SINCE S168, AND THE COUNT IS S155_motif_census.py's OUTPUT. Over
+the 48 positions S145 built, everything above constrained the shape so hard that
+the census read a single motif: two material signatures, one the colour mirror
+of the other, a lone queen as the mating force in 48 of 48 and `lead` 760 in 48
+of 48. DEC-114 is the owner's decision that one mating piece across a gate built
+to catch mating-piece defects is not enough. Over the 82 the file carries since
+2026-09-01 the census reads **five material signatures, three mating forces --
+a queen in 48, a lone rook in 32, two knights in 2 -- and leads 760, 1160 and
+1020**.
+
+WHAT THE GATE STILL CANNOT CATCH, stated as a list and not implied. A rule that
+hides:
+
+  * a knight mate deeper than a mate in two. The knight motif is two positions
+    and both are mates in two, so the knight axis is exercised at ply 1 and
+    nowhere else,
+  * a smothered mate. The mated king here is pocketed by the attacker's pawns
+    and the wall, never by its own pieces,
+  * a king hunt, where the king is driven across the board instead of held in
+    a pocket,
+  * an open-line mate, or the sacrifice that opens the line -- every attacker
+    move on every proof tree here is quiet by construction,
+  * a promotion mate -- `S155_motif_census.py --moves` counts 1981 legal moves
+    over the 82 roots and the 186 guarded defender nodes, 2 pawn moves and 0
+    promotions,
+  * any mate in a position with a realistic material balance. The mated side is
+    ahead by 760, 1020 or 1160 in every row, which is what the hazard requires.
+
+What it now does catch that it did not: a defect that depends on the mating
+piece being a queen. That was the whole of DEC-114.
 
 TWO ORACLES, and neither of them is chesso.
 
@@ -87,6 +104,7 @@ whatever the licence says.
 import argparse
 import os
 import random
+import shutil
 import sys
 
 import chess
@@ -96,15 +114,41 @@ import chess.engine
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TSV = os.path.join(REPO, "adocs", "data", "S145_mate_set.tsv")
 
-STOCKFISH = "/usr/games/stockfish"
 STOCKFISH_OPTIONS = {"Threads": 1, "Hash": 16}
+
+
+def stockfish_path():
+    """Where the proposer lives, resolved rather than hard-coded.
+
+    `/usr/games/stockfish` is the Linux machine DEC-049 names and it is not a
+    path this machine has; the hard-coded constant made every command in this
+    docstring fail with a bare "no such file or directory" and nothing in the
+    suite reads these scripts, so nothing said so. $STOCKFISH overrides.
+    """
+    explicit = os.environ.get("STOCKFISH")
+    if explicit:
+        return explicit
+
+    for candidate in ("/usr/games/stockfish",
+                      os.path.expanduser("~/.local/bin/stockfish")):
+        if os.path.exists(candidate):
+            return candidate
+
+    found = shutil.which("stockfish")
+    if found is None:
+        raise SystemExit("stockfish not found; set $STOCKFISH to its path")
+
+    return found
 
 # The budget `verify` gives stockfish, per position and in its own process. Ten
 # times the filter's, because verification cannot borrow a warm hash: the filter
 # runs thousands of positions through one process and its answers depend on that
 # sequence, which is fine for a proposer and useless for a check. Measured over
-# the 48 positions, one fresh process each: 41 of 48 corroborate at 150000
-# nodes, 45 at 1000000, 46 at 4000000.
+# the 48 positions on the Linux machine DEC-049 names, one fresh process each:
+# 41 of 48 corroborate at 150000 nodes, 45 at 1000000, 46 at 4000000. Over the
+# 82 on the MacBook against stockfish dev-20260803-762dd1da: 81 of 82 at
+# 4000000. Neither number transfers to the other machine and neither has to --
+# corroboration is not what decides a distance here.
 VERIFY_NODES = 4_000_000
 
 # The filter budget, in nodes and not in plies. Measured: at `depth=14` a few
@@ -169,6 +213,62 @@ BASE_WALL = {
 # ahead, and a rook pair or a queen and a rook narrow the lead for nothing.
 BASE_MOBILE = ["K", "Q", "k"]
 
+# THE SECOND MOTIF, S168. One more wall and two more forces.
+#
+# The wall above plus a pawn pair on the h-file closes a pocket in the corner:
+#
+#   r b r b . . . .     as above, and
+#   p . p . p . . p     h7 defender pawn, blocked by h6 and with nothing to take
+#   P . P . P . . P     h6 attacker pawn, which also covers g7
+#
+# h and f are two apart, so the new pair takes no capture and gives none, the
+# same property the three original files have. What it buys is a corner the
+# defender king can be mated in without a queen: measured on this machine, a
+# king and two knights over the wall above accept **nothing** in 6000 tries and
+# accept four positions in 6000 tries over this one.
+#
+# DEC-114 asked for a mating piece that is not a queen and left the shape open;
+# the owner's answer on 2026-09-01 was both of the two that fill, over one wall:
+#
+#   knight%d     king and two knights, for the axis the 48 queen positions have
+#                none of: a mating piece that does not move on a line. The
+#                mating piece here is enforced and NOT given by the force --
+#                see `mates_with` and `line_mate_pieces()`. Twelve of the first
+#                fourteen positions this motif produced were mated by a pawn,
+#                because a knight standing beside a wall pawn unfreezes it and
+#                the freed pawn queens with check.
+#   rook%d       king and rook. A slider still, but a different one, and it is
+#                the force that fills every mate distance including two -- so
+#                the strongest assertion in the gate, every mate in two found
+#                at the first iteration that can hold it, gains a second
+#                mating piece. Named for the force and not for a geometry:
+#                the mate lands on the mated side's own back rank in 13 of
+#                the 32 and elsewhere in 19, measured, so calling the family
+#                "back rank" would have been a claim the file does not carry.
+#
+# Neither shift applies: the h-file pawns leave the board under a shift of two,
+# which `_shift_files` reports by returning None. So each of these motifs has
+# four families -- the base, its mirror, and the colour swap of both -- against
+# the first motif's eight.
+POCKET_WALL = dict(BASE_WALL)
+POCKET_WALL.update({"h7": "p", "h6": "P"})
+
+KNIGHT_MOBILE = ["K", "N", "N", "k"]
+ROOK_MOBILE = ["K", "R", "k"]
+
+# Every motif, in the order `families()` emits them. The order is load-bearing:
+# `sample()` seeds itself from a family's index, so appending a motif leaves
+# every earlier family drawing the sample it drew before, and inserting one
+# would redraw the whole file.
+MOTIFS = [
+    {"prefix": "shift", "wall": BASE_WALL, "mobile": BASE_MOBILE,
+     "shifts": (0, 2)},
+    {"prefix": "knight", "wall": POCKET_WALL, "mobile": KNIGHT_MOBILE,
+     "shifts": (0,), "mates_with": chess.KNIGHT},
+    {"prefix": "rook", "wall": POCKET_WALL, "mobile": ROOK_MOBILE,
+     "shifts": (0,)},
+]
+
 
 def _shift_files(layout, by):
     out = {}
@@ -200,29 +300,38 @@ def _swap_colours(layout):
 
 
 def families():
-    """Every family, derived from the one base layout.
+    """Every family, derived from the motif table.
 
-    Two file shifts, then the horizontal flip of each, then the colour swap of
-    all four. Eight families, and the colour swap is not decoration: it is the
-    one check that a mate-safety result is not an artefact of which side the
-    tables are written from.
+    Per motif: each file shift, then the horizontal flip of each, then the
+    colour swap of both. The colour swap is not decoration -- it is the one
+    check that a mate-safety result is not an artefact of which side the tables
+    are written from.
+
+    Sixteen families: eight for the queen motif, four for each of the two the
+    pocket wall carries. The names the first motif produces are unchanged, and
+    so is their order, because a family's index is its seed.
     """
     out = []
 
-    for shift in (0, 2):
-        shifted = _shift_files(BASE_WALL, shift)
-        if shifted is None:
-            continue
+    for motif in MOTIFS:
+        for shift in motif["shifts"]:
+            shifted = _shift_files(motif["wall"], shift)
+            if shifted is None:
+                continue
 
-        for flip in (False, True):
-            wall = _flip_files(shifted) if flip else shifted
+            for flip in (False, True):
+                wall = _flip_files(shifted) if flip else shifted
 
-            for swap in (False, True):
-                layout = _swap_colours(wall) if swap else wall
-                mobile = [p.swapcase() for p in BASE_MOBILE] if swap else BASE_MOBILE
-                name = "shift%d%s%s" % (shift, "_flip" if flip else "", "_black" if swap else "")
-                out.append({"name": name, "wall": layout, "mobile": mobile,
-                            "attacker": chess.BLACK if swap else chess.WHITE})
+                for swap in (False, True):
+                    layout = _swap_colours(wall) if swap else wall
+                    mobile = ([p.swapcase() for p in motif["mobile"]] if swap
+                              else motif["mobile"])
+                    name = "%s%d%s%s" % (motif["prefix"], shift,
+                                         "_flip" if flip else "",
+                                         "_black" if swap else "")
+                    out.append({"name": name, "wall": layout, "mobile": mobile,
+                                "attacker": chess.BLACK if swap else chess.WHITE,
+                                "mates_with": motif.get("mates_with")})
 
     return out
 
@@ -449,6 +558,78 @@ def _push_pop(board, move, thunk):
         board.pop()
 
 
+def promotions(board):
+    """Promotions either side could play here, which is what steals a mate.
+
+    Counted and not "pawn moves", and the difference was measured rather than
+    guessed. Over the fourteen knight-motif positions accepted before any of
+    this existed: **all fourteen** have pawn moves somewhere on their line, 4 to
+    12 of them, so refusing pawn moves refuses the motif outright. Promotions
+    separate perfectly -- the twelve mated by a pawn have 4 apiece and the two
+    mated by a knight have **0** -- because a pawn on this wall is three ranks
+    from queening and reaches the eighth only by the freeing capture that
+    unfroze it.
+    """
+    total = 0
+
+    for side in (chess.WHITE, chess.BLACK):
+        probe = board.copy()
+        probe.turn = side
+
+        # Flipping the turn can produce a position where the side now to move
+        # has the enemy king en prise; that is not a position and it is skipped
+        # rather than counted.
+        if probe.is_check() and side != board.turn:
+            continue
+
+        total += sum(1 for move in probe.legal_moves if move.promotion)
+
+    return total
+
+
+def line_mate_pieces(board, moves_left, memo, budget):
+    """What delivers mate at the end of the representative line, and whether a
+    promotion is available anywhere along it.
+
+    NOT A FORMALITY, and S168 paid to find that out. A motif whose whole point
+    is the mating piece has to enforce the mating piece, because the
+    construction does not give it for free: a mobile attacker knight standing
+    beside a wall pawn unfreezes the capture the non-adjacent files deny, and
+    the freed pawn queens with check. Of the first fourteen knight-motif
+    positions accepted without this check, **twelve ended in a pawn promotion**
+    and two in a knight check -- measured on the recorded line, over the file as
+    it stood on 2026-09-01 before this went in.
+
+    Returns (piece types that mate, promotions seen), or (None, n) where the
+    line does not reproduce.
+    """
+    walk = board.copy()
+    seen = 0
+
+    for remaining in range(moves_left, 1, -1):
+        seen += promotions(walk)
+
+        quiet = mating_moves(walk, remaining, memo, budget, quiet_only=True)
+        if not quiet:
+            return None, seen
+
+        walk.push(quiet[0])
+
+        replies = list(walk.legal_moves)
+        if not replies:
+            return None, seen
+
+        walk.push(replies[0])
+
+    seen += promotions(walk)
+    mates = mating_moves(walk, 1, memo, budget)
+
+    if not mates:
+        return None, seen
+
+    return ({walk.piece_type_at(move.from_square) for move in mates}, seen)
+
+
 def quiet_key(board, moves_left):
     """The move the representative line takes at the root, in UCI."""
     quiet = mating_moves(board, moves_left, quiet_only=True)
@@ -602,6 +783,16 @@ def sample(family, index, engine, report):
             memo, budget = {}, [PROOF_NODE_CAP]
             if not quiet_proof(board, distance, memo, budget):
                 continue
+
+            # A motif that declares its mating piece gets it enforced, over the
+            # line the file records: every move that mates at the end of it has
+            # to be that piece, and no promotion may be available anywhere along
+            # it. The second half is what keeps the first honest -- the mating
+            # node cannot be reached with a queening pawn in hand.
+            if family.get("mates_with") is not None:
+                pieces, freed = line_mate_pieces(board, distance, memo, budget)
+                if pieces != {family["mates_with"]} or freed:
+                    continue
         except BudgetExceeded:
             report("  %s: quiet proof past the %d node cap, skipped: %s"
                    % (family["name"], PROOF_NODE_CAP, board.fen()))
@@ -674,12 +865,43 @@ def read_tsv(path=TSV):
 
 
 def cmd_generate(args):
+    """Sample every family, or only the ones `--only` names and keep the rest.
+
+    WHY `--only` EXISTS, AND WHY IT IS NOT A CONVENIENCE. S168, 2026-09-01.
+
+    The proposer is version-bound and the proof is not. Re-running family
+    `shift0` on the MacBook against stockfish `dev-20260803-762dd1da` returned 6
+    of its 8 tracked rows and two different ones: same seed, same placements,
+    same enumeration, a different filter verdict at 150000 nodes, so a different
+    slice of placements ever reached the proof. Nothing is wrong with either
+    slice -- every row of both was proved a forced mate at its claimed distance
+    by the enumeration -- but a plain `generate` on a machine whose stockfish
+    differs would silently replace positions that S145 landed and S168's
+    `excludes` forbids replacing.
+
+    So a motif added later is added with `--only`, which regenerates the named
+    families and carries every other row through from the tracked file
+    unchanged. `verify` is what re-proves the whole file, and it needs no
+    stockfish agreement to do it: stockfish corroborates there and the
+    enumeration decides.
+    """
+    wanted = tuple(args.only.split(",")) if args.only else None
     rows = []
 
-    with chess.engine.SimpleEngine.popen_uci(STOCKFISH) as engine:
+    if wanted is not None:
+        rows = [r for r in read_tsv(args.out)
+                if not r["family"].startswith(wanted)]
+        print("%d rows kept from %s; regenerating %s\n"
+              % (len(rows), os.path.basename(args.out), ", ".join(wanted)),
+              flush=True)
+
+    with chess.engine.SimpleEngine.popen_uci(stockfish_path()) as engine:
         engine.configure(STOCKFISH_OPTIONS)
 
         for index, family in enumerate(families()):
+            if wanted is not None and not family["name"].startswith(wanted):
+                continue
+
             found = sample(family, index, engine, lambda m: print(m, flush=True))
 
             for distance in sorted(found):
@@ -707,7 +929,7 @@ def cmd_verify(args):
         # One process per position. Node-limited stockfish is reproducible only
         # within an identical call sequence, so a shared process makes the answer
         # a function of what ran before it.
-        with chess.engine.SimpleEngine.popen_uci(STOCKFISH) as engine:
+        with chess.engine.SimpleEngine.popen_uci(stockfish_path()) as engine:
             engine.configure(STOCKFISH_OPTIONS)
 
             board = chess.Board(row["fen"])
@@ -789,7 +1011,8 @@ def cmd_verify(args):
                 failures += 1
 
     spread = sorted({r["distance"] for r in rows})
-    counts = sorted({chess.Board(r["fen"]).occupied.bit_count() for r in rows})
+    counts = sorted({bin(chess.Board(r["fen"]).occupied).count("1")
+                     for r in rows})
     print("\n%d positions, %d checks failed, mate distances %s" %
           (len(rows), failures, spread))
 
@@ -839,6 +1062,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=["generate", "verify", "emit-cpp"])
     parser.add_argument("--out", default=TSV)
+    parser.add_argument("--only", default=None,
+                        help="comma-separated family name prefixes to "
+                             "regenerate; every other row is kept from --out")
     args = parser.parse_args()
 
     if args.command == "generate":

@@ -1,0 +1,66 @@
+S168, 2026-09-01. The reverse-futility floor re-taken over the 82.
+
+  python3 adocs/data/S154_floor_margin_sweep.py floor
+  python3 adocs/data/S154_floor_margin_sweep.py red
+
+The floor was 8 over S145's 48, where the ends were 9 shipping and 7 with
+the guard removed. Over the 82 the ends are 12 and 10, so the floor is 11.
+DEC-116 is why it is re-derived rather than re-read: it is the second
+re-derivation and both were forced by an end moving.
+
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S142 made it 2,
+so a shipping binary refuses 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 21/24 d7  m4  1/16 d4  m5  0/16 d-  short 0  sign 0
+                         m3 ##########..#########.##  churn -  13421420 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 21/24 d7  m4  1/16 d4  m5  1/16 d3  short 0  sign 0
+                         m3 ##########..#########.##  churn 0  14641093 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d8  m4  1/16 d4  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 9  10853623 nodes
+  RfpMinPly=2            m2 26/26 on-time 26 d0  m3 12/24 d8  m4  1/16 d4  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  10693885 nodes
+  RfpMinPly=1            m2 21/26 on-time 15 d7  m3 10/24 d8  m4  1/16 d4  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##........#.####.#..#  churn 2  9289954 nodes
+  RfpMinPly=0            m2 21/26 on-time 15 d7  m3 10/24 d8  m4  1/16 d4  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##........#.####.#..#  churn 0  9289954 nodes
+
+  floor, 11.3s
+RUN-DONE
+
+=== The red, observed and not argued ===
+
+The gate rebuilt in a throwaway worktree with RfpMinPly defaulting to 1 --
+a setoption cannot reach a test binary -- and the mate-in-two REQUIREs
+turned into CHECKs so the run reaches the floor. The test file is the
+working tree's, so the floor observed failing is the one being committed.
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /private/var/folders/km/c453fch54gs535r6rg0dqp2c0000gp/T/S154_sweep_wvl7qa8m/tests/test_engine.cpp:2551: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /private/var/folders/km/c453fch54gs535r6rg0dqp2c0000gp/T/S154_sweep_wvl7qa8m/tests/test_engine.cpp:2552: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 10 >= 11 )
+    [doctest] assertions: 3564 | 3541 passed | 23 failed |
+
+  red, 11.3s
+RUN-DONE
+
+=== The mates in three, split by motif ===
+
+Computed from the masks above against adocs/data/S145_mate_set.tsv in file
+order. 24 mates in three: 16 queen, 8 rook. Both knight rows are mates in two.
+
+  motif   n    shipping   RfpMinPly 1   RfpMinPly 5
+  queen   16      9            7             14
+  rook     8      3            3              7
+
+Two things follow. The queen rows reproduce S154's 9 / 7 / 14 exactly, so 34
+added positions moved none of the old verdicts -- the same inertness S154
+measured across seventeen commits and nine table sizes, seen here across a set
+change. And the rook rows add a constant 3 to both ends rather than widening
+the gap, so the floor moves from 8 to 11 while what it tolerates stays one loss.

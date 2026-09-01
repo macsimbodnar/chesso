@@ -779,7 +779,8 @@ or an SPRT. S145 rebuilt what that test is.
 
 ```bash
 ~/.venv/chess/bin/python adocs/data/S145_mate_set.py verify    # both oracles, from scratch
-~/.venv/chess/bin/python adocs/data/S145_mate_set.py generate  # rebuild the file
+~/.venv/chess/bin/python adocs/data/S145_mate_set.py generate  # rebuild the whole file
+~/.venv/chess/bin/python adocs/data/S145_mate_set.py generate --only knight,backrank
 ~/.venv/chess/bin/python adocs/data/S145_mate_set.py emit-cpp  # the table the test holds
 ```
 
@@ -794,21 +795,43 @@ the answer is exact and not an upper bound, and `stockfish` at a node limit.
 Stockfish only ever proposes — a candidate it calls a mate in four and the
 enumeration calls a mate in three is reported and the enumeration wins.
 
-**Broad in mate distance, narrow in shape, and the narrowness is counted.** The
-census above reports two material signatures over the 48 and one is the colour
-mirror of the other, a lone queen as the mating force in 48 of 48, `lead` 760 in
-48 of 48, a pawn wall on three non-adjacent files throughout, and eight family
-labels that are one geometry under two file shifts, a mirror and a colour swap.
-That is close to forced by the hazard rather than careless — see the two
-properties below — but it bounds what this gate can ever catch, and the list is
-explicit: **no back-rank mate, no smothered mate and no mate delivered by a
-knight, no king hunt, no open-line mate or line-opening sacrifice, no promotion
-mate, and no position with a realistic material balance.** The promotion clause
-is the generator's count and not an eyeball: over the 48 roots and the 104
-guarded defender nodes it emits 1292 legal moves, **0 of them pawn moves**,
-the pawns being mutually blocked on non-adjacent files. A pruning rule that
-hides a mate in one of those shapes passes the suite. S168 builds the second
-motif (S155, 2026-09-01).
+**Which is why a plain `generate` is not how a motif is added, and `--only` is.**
+The proposer is version-bound and the proof is not. Re-running family `shift0`
+here against stockfish `dev-20260803-762dd1da` returned 6 of its 8 tracked rows
+and two different ones — same seed, same placements, same enumeration, a
+different verdict at 150000 nodes, so a different slice of placements ever
+reached the proof. Both slices are sound and the difference is not a defect;
+what it means is that a full regeneration on a machine whose stockfish differs
+silently *replaces* positions rather than adding to them. `--only` regenerates
+the families it names and carries every other row through unchanged, and
+`verify` is what re-proves the file end to end — it needs no agreement from
+stockfish to do it (S168, 2026-09-01).
+
+**Broad in mate distance, narrower in shape, and the shape is counted.** The
+census above reported one motif over S145's 48 — two material signatures, each
+the colour mirror of the other, and a lone queen as the mating force in 48 of
+48. Over the 82 rows the file carries since 2026-09-01 it reports **five
+material signatures and three mating forces: a queen in 48, a lone rook in 32,
+two knights in 2**, with leads 760, 1160 and 1020. S168 added families and
+replaced none.
+
+**Two of S168's findings are worth more than its rows.** A king and two knights
+does not give a knight mate by construction — a knight standing beside a wall
+pawn unfreezes it and the freed pawn queens with check, which is how twelve of
+the first fourteen knight positions came out as pawn mates. The generator
+enforces the mating piece now (`mates_with`), and refuses any candidate whose
+line offers a promotion; under that rule three of the four knight families
+accept nothing and the fourth accepts two, so an all-quiet knight mate is rare
+and the count says so. And the rook families are named for their force, not for
+a geometry: the mate lands on the mated side's own back rank in 13 of 32.
+
+What the gate still cannot catch is explicit: **no knight mate deeper than a
+mate in two, no smothered mate, no king hunt, no open-line mate or line-opening
+sacrifice, no promotion mate, and no position with a realistic material
+balance.** The promotion clause is the generator's count and not an eyeball:
+over the 82 roots and the 186 guarded defender nodes it emits 1981 legal moves,
+of which **2 are pawn moves and 0 are promotions**. A pruning rule that hides a
+mate in one of those shapes passes the suite (S155, S168, 2026-09-01).
 
 Two properties make each row bite, and the test asserts both before searching
 anything. The defender is **materially ahead**, so its static score is high

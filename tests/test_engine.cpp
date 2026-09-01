@@ -1696,46 +1696,62 @@ TEST_SUITE("engine: mate safety")
   // over mined mates is exactly what made two surveyed projects switch their
   // mate tests off rather than their pruning.
   //
-  // ONE MOTIF, WHY THAT IS CLOSE TO FORCED, AND WHAT THIS GATE THEREFORE
-  // CANNOT CATCH. S155.
+  // THREE MOTIFS, WHY THE NARROWNESS IS CLOSE TO FORCED, AND WHAT THIS GATE
+  // THEREFORE STILL CANNOT CATCH. S155, S168.
   //
-  // The set is broad in mate distance and narrow in shape. Counted over the
-  // tracked TSV by adocs/data/S155_motif_census.py, not asserted: two material
-  // signatures and one is the colour mirror of the other - the mating side is
-  // a king, a queen and three pawns, the mated side a king, two rooks, two
-  // bishops and three pawns. The mating force is a lone queen in 48 of 48,
-  // `lead` is 760 in 48 of 48, the pawn wall stands on three non-adjacent
-  // files in every position, and the eight family labels are one geometry
-  // under two file shifts, a mirror and a colour swap.
+  // Counted over the tracked TSV by adocs/data/S155_motif_census.py, not
+  // asserted. S145's 48 were one motif: two material signatures, one the
+  // colour mirror of the other, a lone queen as the mating force in 48 of 48,
+  // `lead` 760 in 48 of 48. DEC-114 is the owner's decision that one mating
+  // piece across a gate whose purpose is mating-piece defects is not enough,
+  // and S168 is what it bought. The 82 rows below read **five material
+  // signatures and three mating forces - a queen in 48, a lone rook in 32, two
+  // knights in 2 - with leads 760, 1160 and 1020**.
   //
-  // That narrowness is close to forced by the hazard and is not a flaw in the
-  // set. The rule misfires only where the side to move is lost by force while
-  // its static score is a margin clear of beta, so the mated side has to be
-  // materially *ahead* and unable to use it - and a frozen clump behind a
-  // blocked pawn wall is close to the only way to build that, which is why
-  // every row reads the same lead. S033 built its one position by hand this
-  // way; the construction generalises that shape rather than picking it.
+  // The narrowness that remains is close to forced by the hazard and is not a
+  // flaw in the set. The rule misfires only where the side to move is lost by
+  // force while its static score is a margin clear of beta, so the mated side
+  // has to be materially *ahead* and unable to use it - and a frozen clump
+  // behind a blocked pawn wall is close to the only way to build that, which
+  // is why every row reads one of three leads. S033 built its one position by
+  // hand this way; the construction generalises that shape rather than picking
+  // it.
   //
-  // What it bounds is what this gate can ever catch. It cannot catch a rule
-  // that hides:
+  // TWO THINGS S168 MEASURED THAT THE ARGUMENT FOR IT GOT WRONG, both worth
+  // more than the rows they produced.
   //
-  //   * a back-rank mate,
-  //   * a smothered mate, or any mate delivered by a knight - the mating piece
-  //     here is a queen in all 48,
+  //   1. A king and two knights does NOT give a knight mate by construction.
+  //      A mobile knight standing beside a wall pawn unfreezes the capture the
+  //      non-adjacent files deny, and the freed pawn queens with check: of the
+  //      first fourteen knight-motif positions, twelve were mated by a pawn.
+  //      The generator now enforces the mating piece - `mates_with` and
+  //      `line_mate_pieces()` - and refuses a candidate whose line offers a
+  //      promotion anywhere. Under that rule three of the four knight families
+  //      accept nothing at all and the fourth accepts two, which is why the
+  //      knight force is 2 rows and not 14. A knight mate that is also
+  //      all-quiet is rare, and that is a measurement, not a shortfall.
+  //   2. The rook motif is named for its force because the geometry did not
+  //      survive being checked: the mate lands on the mated side's own back
+  //      rank in 13 of the 32 and elsewhere in 19. DEC-114 asked for "a
+  //      back-rank mate"; what the construction yields is a lone-rook mate
+  //      that is sometimes one.
+  //
+  // What this gate still cannot catch. A rule that hides:
+  //
+  //   * a knight mate deeper than a mate in two - both knight rows are mates
+  //     in two, so that axis is exercised at ply 1 and nowhere else,
+  //   * a smothered mate - the mated king is pocketed by the attacker's pawns
+  //     and by the wall, never by its own pieces,
   //   * a king hunt, where the king is driven across the board instead of held
   //     in a pocket,
-  //   * an open-line mate, or the sacrifice that opens the line,
-  //   * a promotion mate - the engine's own generator emits 1292 legal moves
-  //     over the 48 roots and the 104 guarded defender nodes and 0 of them is
-  //     a pawn move, the pawns being mutually blocked on non-adjacent files
-  //     (`S155_motif_census.py --moves`),
+  //   * an open-line mate, or the sacrifice that opens the line - every
+  //     attacker move on every proof tree here is quiet by construction,
+  //   * a promotion mate - the engine's own generator emits 1981 legal moves
+  //     over the 82 roots and the 186 guarded defender nodes, of which 2 are
+  //     pawn moves and 0 are promotions (`S155_motif_census.py --moves`),
   //   * any mate in a position with a realistic material balance.
   //
   // A future pruning rule that loses mates in those shapes passes this suite.
-  // Whether a second motif is worth constructing was asked and answered yes,
-  // by the owner on 2026-09-01: the two signatures above are the reason, and
-  // S168 is the step, because a new family owes its own two proofs and its own
-  // reverse-futility sweep rather than a paragraph here.
   struct mate_case_t
   {
     const char* root;      // the position under test, mating side to move
@@ -1809,8 +1825,11 @@ TEST_SUITE("engine: mate safety")
   // buys.** Widening it does not make the reading safer, it makes it a
   // different reading: at slack 12 the shipping guard and the removed guard
   // both find 10 of the 16 mates in three, so the separation the floor below
-  // rests on is gone entirely, and the whole 48-position pass costs 4.1 s
-  // against 0.7 s at 8. The mate in three count is therefore a reading of how
+  // rests on is gone entirely, and the whole 48-position pass cost 4.1 s
+  // against 0.7 s at 8. The 82-position pass costs 0.95 s at slack 8, three
+  // runs on an idle machine reading 0.97, 0.94 and 0.95, against 0.79 s for
+  // the 48 - so S168 bought 34 positions for about 0.16 s of a fast suite that
+  // runs 45 s. The mate in three count is therefore a reading of how
   // late a mate arrives under a fixed budget, not of whether it is lost. The
   // mate in two assertion is the one that does not depend on the window at
   // all, because it asks for the first iteration and not the last.
@@ -1819,26 +1838,28 @@ TEST_SUITE("engine: mate safety")
 
   // WHAT IS ASSERTED, AND WHY IT IS NOT "EVERY MATE IS FOUND".
   //
-  // Measured over these 48 positions on the shipping build at depth 2m - 1 + 8,
+  // Measured over these 82 positions on the shipping build at depth 2m - 1 + 8,
   // and the answer is almost entirely a function of the mate distance:
   //
-  //   mate in 2   16 of 16 exact, delay 0
-  //   mate in 3    9 of 16 exact, delay up to 8
-  //   mate in 4    0 of 8
-  //   mate in 5    0 of 8
+  //   mate in 2   26 of 26 exact, delay 0
+  //   mate in 3   12 of 24 exact, delay up to 8
+  //   mate in 4    1 of 16
+  //   mate in 5    0 of 16
   //
-  // Re-measured 2026-09-01 by S154. S145 read 8 of 16 at delay up to 4 for the
-  // mates in three; S165 guarded null move pruning at both edges of the mate
-  // band and moved both numbers, which is the only movement seventeen commits
-  // produced. The rest of this comment says how that was established.
+  // Re-taken 2026-09-01 by S168 over the enlarged set; the same sweep over
+  // S145's 48 read 16/16, 9/16, 0/8 and 0/8. S145 itself read 8 of 16 mates in
+  // three at delay up to 4, and S165 guarded null move pruning at both edges of
+  // the mate band and moved that number - the only movement seventeen commits
+  // produced, which S154 established by rebuilding at each of them.
   //
   // So the guard holds where the old three-position gate looked and nowhere
   // else, because all three of those cases were mates in two. Asserting that
   // every position is found would assert something this engine has never done
-  // and no setting of reverse futility makes true - with the rule switched off
-  // entirely it is 40 of 48, not 48. A test demanding it would be red on
-  // arrival and would be weakened to clear it, which is what happened to the
-  // two surveyed projects that wrote per-position mate tests.
+  // and no setting of reverse futility makes true - the mates in four and five
+  // are 1 of 16 and 0 of 16 with the guard at its strictest setting too. A test
+  // demanding it would be red on arrival and would be weakened to clear it,
+  // which is what happened to the two surveyed projects that wrote per-position
+  // mate tests.
   //
   // What is asserted instead is three things, in descending order of how
   // provable they are.
@@ -1848,56 +1869,65 @@ TEST_SUITE("engine: mate safety")
   // second is what the exhaustive proof buys: the enumeration refuted every
   // shorter distance, so a shorter claim is provably false rather than merely
   // surprising, and it is the S094 class of bug - a mate score renormalised by
-  // the wrong number of plies. Measured 0 and 0 over twelve reverse-futility
-  // settings times these 48 positions.
+  // the wrong number of plies. Measured 0 and 0 over six reverse-futility
+  // settings times these 82 positions, and before that over twelve settings
+  // times the 48.
   //
   // **Every mate in two, at the first iteration that can hold it.** This is the
   // assertion that fences the tuner, and it asks for two things where the
   // count alone asks for one: the mate is found, and `first_exact` is 2m - 1.
-  // At RfpMinPly 2 and above it is 16 of 16, found and on time. At 1 and 0 it
-  // is 13 of 16 found and only **9 of 16 on time**, so what goes red here is
-  // seven positions and not three - S145's log and step file characterise this
-  // row by the 13 and the fence is stronger than they say. 0 and 1 are the
-  // same engine - the root is exempted by !is_pv, not by this parameter - so
-  // this goes red at exactly the value S085's run spent 906 of 1250 iterations
-  // at.
+  // At RfpMinPly 2 and above it is 26 of 26, found and on time. At 1 and 0 it
+  // is 21 of 26 found and only **15 of 26 on time**, so what goes red here is
+  // eleven positions. 0 and 1 are the same engine - the root is exempted by
+  // !is_pv, not by this parameter - so this goes red at exactly the value
+  // S085's run spent 906 of 1250 iterations at. The clause got stronger when
+  // S168 enlarged the set: over the 48 it was 13 of 16 found and 9 on time,
+  // seven positions rather than eleven, and the ten mates in two S168 added -
+  // eight rook, two knight - are all found on time at the shipping defaults.
   //
-  // **A floor on the mate in three count.** 9 of 16 at the shipping floor, 7
-  // at RfpMinPly 1, 14 at RfpMinPly 4. The floor is 8, strictly between the
-  // shipping value and the removed-guard value.
+  // **A floor on the mate in three count.** 12 of 24 at the shipping floor, 10
+  // at RfpMinPly 1, 21 at RfpMinPly 4. The floor is 11, strictly between the
+  // shipping value and the removed-guard value, and it tolerates one loss.
   //
-  // **7 was the floor until S154 and it had stopped separating.** S145 placed
-  // it between 8 shipping and 6 with the guard removed; S165 lifted both ends
-  // to 9 and 7, and `7 >= 7` is green, so from 2026-08-23 this line could not
-  // fail for the reason it exists. The gate as a whole still caught the
-  // removed guard - the mate in two clause above is what caught it - but this
-  // assertion did not, which is why the number is re-derived and not merely
-  // re-read whenever either end moves. DEC-116.
+  // Split by motif, because the split says which rows carry the separation:
+  // the 16 queen mates in three read 9 shipping, 7 removed, 14 at RfpMinPly 5,
+  // which is S154's reading over the 48 reproduced exactly - 34 added positions
+  // moved none of the old verdicts. The 8 rook mates in three read 3, 3 and 7,
+  // so they lift both ends by a constant and do not widen the gap. The floor
+  // moved from 8 to 11 for that reason and not because the guard got easier to
+  // catch.
+  //
+  // **The floor is re-derived whenever either end of it moves, DEC-116, and
+  // this is the second time.** It was 7 while the ends were 9 and 7, where
+  // `7 >= 7` could not fail for the reason it exists; S154 re-derived it as 8
+  // on 2026-09-01, and S168's positions moved both ends the same day - 12 and
+  // 10 - so it is 11 now. The rule is the point: a set change or a search
+  // change that moves either end obliges the number to be taken again, not
+  // read again.
   //
   // **The claim that it fails when the guard fails and not when the tree
-  // shifts underneath it is now a measurement.** S154 ran this set through the
-  // binary built at every one of the seventeen commits that touched src/ since
-  // the floor was placed, and through nine transposition table sizes from 1 MB
-  // to 256 MB at the shipping tree. Positions changing verdict: **0**, at every
-  // step except S165, which moved exactly one and moved it upward. The table
-  // sweep moved the node total by 5.9 % over the whole set and 17 % over the
-  // mates in three, so the tree did shift and the verdicts did not follow it.
-  // Against that, one ply of the guard itself moves five positions - 3 to 4 is
-  // a churn of 5 - so the count is sensitive to the thing it fences and inert
-  // to everything else. What the floor tolerates is one loss, which is what the
-  // one position now sitting at the window edge can cost.
-  // adocs/data/S154_floor_margin_sweep.log.
+  // shifts underneath it is a measurement.** S154 ran the 48 through the binary
+  // built at every one of the seventeen commits that touched src/ since the
+  // floor was placed, and through nine transposition table sizes from 1 MB to
+  // 256 MB. Positions changing verdict: **0**, at every step except S165, which
+  // moved exactly one and moved it upward. The table sweep moved the node total
+  // by 5.9 % over the whole set and 17 % over the mates in three, so the tree
+  // did shift and the verdicts did not follow it. Against that, one ply of the
+  // guard itself moves nine positions over the enlarged set - 4 to 3 is a churn
+  // of 9 - so the count is sensitive to the thing it fences and inert to
+  // everything else. adocs/data/S154_floor_margin_sweep.log and
+  // adocs/data/S168_floor_sweep.log.
   //
-  // The mate in four and five counts are **recorded and not asserted**: they
-  // are 0 of 8, and a floor of zero asserts nothing. What recovers them is the
-  // depth ceiling and not the ply floor - 6 of 8 and 5 of 8 at RfpMaxDepth 0,
-  // still 0 and 0 at 10 and above, and S085 tuned that ceiling from S033's 6
-  // to 15. Those two were 4 and 3 when S145 measured them, so the ceiling is
-  // costing more now than the step that queued the question read; S148 is
-  // where it is re-decided, by SPRT and not here. That trade is a default
-  // change; adocs/data/S145_rfp_sweep.log holds S145's sweep and
+  // The mate in four and five counts are **recorded and not asserted**: 1 of 16
+  // and 0 of 16, and a floor of one asserts almost nothing. What recovers them
+  // is the depth ceiling and not the ply floor - over the 48 it was 6 of 8 and
+  // 5 of 8 at RfpMaxDepth 0, still 0 and 0 at 10 and above, and S085 tuned that
+  // ceiling from S033's 6 to 15. Those two were 4 and 3 when S145 measured
+  // them, so the ceiling is costing more now than the step that queued the
+  // question read; S148 is where it is re-decided, by SPRT and not here.
+  // adocs/data/S145_rfp_sweep.log holds S145's sweep and
   // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
-  static constexpr int MATE_IN_THREE_FLOOR = 8;
+  static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,
                     "a proved mate is never mis-scored, and every mate in two "
@@ -1913,6 +1943,12 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        2, 760, "shift2"},
+      {"1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1",
+       {"1r6/7K/5k2/8/8/p1p1p2p/P1P1P2P/RBRB4 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_black"},
       {"2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1",
        {"2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1",
         nullptr,
@@ -1961,6 +1997,18 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        2, 760, "shift0_flip"},
+      {"4brbr/p2p1p1p/P2P1P1P/2R5/8/8/4K3/7k w - - 0 1",
+       {"4brbr/p2p1p1p/P2P1P1P/2R5/8/8/5K2/7k b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_flip"},
+      {"4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1",
+       {"4brbr/p2p1p1p/P2P1P1P/2R5/8/K7/8/1k6 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_flip"},
       {"4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1",
        {"4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2",
         nullptr,
@@ -1979,6 +2027,36 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        2, 760, "shift2_flip_black"},
+      {"8/4k3/1r6/8/8/p1p1p2p/P1P1P2P/RBRB2K1 b - - 0 1",
+       {"8/4k3/5r2/8/8/p1p1p2p/P1P1P2P/RBRB2K1 w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_black"},
+      {"8/7r/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1",
+       {"8/2r5/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_flip_black"},
+      {"8/8/2n5/8/8/p1np1p1p/P2P1P1P/K1k1BRBR b - - 0 1",
+       {"8/8/8/8/3n4/p1np1p1p/P2P1P1P/K1k1BRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1020, "knight0_flip_black"},
+      {"8/8/3n4/8/8/pn1p1p1p/P2P1P1P/1k1KBRBR b - - 0 1",
+       {"8/8/8/8/2n5/pn1p1p1p/P2P1P1P/1k1KBRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1020, "knight0_flip_black"},
+      {"8/8/8/3r4/6k1/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1",
+       {"8/8/8/2r5/6k1/p2p1p1p/P2P1P1P/1K2BRBR w - - 1 2",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0_flip_black"},
       {"8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1",
        {"8/8/5k2/8/6q1/p1p1p3/P1P1P3/RBRB1K2 w - - 1 2",
         nullptr,
@@ -1997,6 +2075,18 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        2, 760, "shift0"},
+      {"rbrb1k2/p1p1p1Rp/P1P1P2P/8/8/2K5/8/8 w - - 0 1",
+       {"rbrb1k2/p1p1p2p/P1P1P2P/6R1/8/2K5/8/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0"},
+      {"rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1",
+       {"rbrb4/p1p1p2p/P1P1P2P/8/2K5/k7/2R5/8 b - - 1 1",
+        nullptr,
+        nullptr,
+        nullptr},
+       2, 1160, "rook0"},
       {"rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1",
        {"rbrb4/p1p1p3/P1P1P3/k7/2K5/1Q6/8/8 b - - 1 1",
         nullptr,
@@ -2027,6 +2117,12 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        3, 760, "shift2_flip"},
+      {"3kbrbr/p2p1p1p/P2P1P1P/8/8/8/8/2KR4 w - - 0 1",
+       {"3kbrbr/p2p1p1p/P2P1P1P/3R4/8/8/8/2K5 b - - 1 1",
+        "2k1brbr/p2p1p1p/P2P1P1P/1R6/8/8/8/2K5 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_flip"},
       {"4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1",
        {"4K3/1q4k1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2",
         "3K4/1q6/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
@@ -2051,12 +2147,30 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        3, 760, "shift0_flip_black"},
+      {"8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1",
+       {"3k4/8/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR w - - 1 2",
+        "3k4/8/8/8/2r5/p2p1p1p/P2P1P1P/1K2BRBR w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_flip_black"},
+      {"8/3r2k1/8/8/8/p1p1p2p/P1P1P2P/RBRBK3 b - - 0 1",
+       {"7k/3r4/8/8/8/p1p1p2p/P1P1P2P/RBRBK3 w - - 1 2",
+        "7k/6r1/8/8/8/p1p1p2p/P1P1P2P/RBRB1K2 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_black"},
       {"8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1",
        {"8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2",
         "8/4q3/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3",
         nullptr,
         nullptr},
        3, 760, "shift0_black"},
+      {"8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1",
+       {"6k1/8/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR w - - 1 2",
+        "6k1/8/8/8/1r6/p2p1p1p/P2P1P1P/2K1BRBR w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_flip_black"},
       {"8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1",
        {"6q1/8/2k5/8/8/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2",
         "1q6/8/2k5/8/8/2p1p1p1/2P1P1P1/K1RBRB2 w - - 3 3",
@@ -2075,6 +2189,12 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        3, 760, "shift2_flip_black"},
+      {"8/8/8/2r3k1/8/p1p1p2p/P1P1P2P/RBRB3K b - - 0 1",
+       {"8/8/7k/2r5/8/p1p1p2p/P1P1P2P/RBRB3K w - - 1 2",
+        "8/8/7k/5r2/8/p1p1p2p/P1P1P2P/RBRB2K1 w - - 3 3",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_black"},
       {"8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1",
        {"8/8/8/5k2/7q/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2",
         "8/8/8/5k2/1q6/2p1p1p1/K1P1P1P1/2RBRB2 w - - 3 3",
@@ -2087,6 +2207,12 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        3, 760, "shift2_flip"},
+      {"k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1",
+       {"k3brbr/p2p1p1p/P2P1P1P/5K2/8/8/8/R7 b - - 1 1",
+        "1k2brbr/p2p1p1p/P2P1P1P/5K2/8/8/8/2R5 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0_flip"},
       {"rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1",
        {"rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1",
         "rbrb2k1/p1p1p3/P1P1P1K1/8/8/7Q/8/8 b - - 3 2",
@@ -2099,12 +2225,54 @@ TEST_SUITE("engine: mate safety")
         nullptr,
         nullptr},
        3, 760, "shift0"},
+      {"rbrbk3/p1p1p2p/P1P1P2P/6K1/8/7R/8/8 w - - 0 1",
+       {"rbrbk3/p1p1p2p/P1P1P2P/7K/8/7R/8/8 b - - 1 1",
+        "rbrb1k2/p1p1p2p/P1P1P2P/7K/8/6R1/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0"},
+      {"rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1",
+       {"rbrbk3/p1p1p2p/P1P1P2P/5K2/1R6/8/8/8 b - - 1 1",
+        "rbrb1k2/p1p1p2p/P1P1P2P/5K2/6R1/8/8/8 b - - 3 2",
+        nullptr,
+        nullptr},
+       3, 1160, "rook0"},
+      {"1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1",
+       {"1K6/2r5/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 1 2",
+        "K7/2r5/2k5/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 3 3",
+        "1K6/2r5/1k6/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 5 4",
+        nullptr},
+       4, 1160, "rook0_flip_black"},
+      {"1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1",
+       {"1k2brbr/p2pKp1p/P2P1P1P/6R1/8/8/8/8 b - - 1 1",
+        "2k1brbr/p2pKp1p/P2P1P1P/7R/8/8/8/8 b - - 3 2",
+        "1k2brbr/p2pKp1p/P2P1P1P/2R5/8/8/8/8 b - - 5 3",
+        nullptr},
+       4, 1160, "rook0_flip"},
+      {"3k2K1/2r5/8/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1",
+       {"4k1K1/2r5/8/8/8/p1p1p2p/P1P1P2P/RBRB4 w - - 1 2",
+        "7K/2r2k2/8/8/8/p1p1p2p/P1P1P2P/RBRB4 w - - 3 3",
+        "8/5k1K/2r5/8/8/p1p1p2p/P1P1P2P/RBRB4 w - - 5 4",
+        nullptr},
+       4, 1160, "rook0_black"},
       {"4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1",
        {"4brbr/3p1p1p/3P1P1P/8/2QK4/8/1k6/8 b - - 1 1",
         "4brbr/3p1p1p/3P1P1P/1Q6/3K4/k7/8/8 b - - 3 2",
         "4brbr/3p1p1p/3P1P1P/1Q6/8/2K5/k7/8 b - - 5 3",
         nullptr},
        4, 760, "shift0_flip"},
+      {"4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1",
+       {"4brbr/p2p1p1p/P2P1P1P/8/1K6/1R6/k7/8 b - - 1 1",
+        "4brbr/p2p1p1p/P2P1P1P/8/8/1RK5/8/k7 b - - 3 2",
+        "4brbr/p2p1p1p/P2P1P1P/8/8/1R6/k1K5/8 b - - 5 3",
+        nullptr},
+       4, 1160, "rook0_flip"},
+      {"7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1",
+       {"7K/5k2/8/8/8/p1p1p2p/P1P1P2P/RBRB3r w - - 1 2",
+        "8/5k1K/8/8/8/p1p1p2p/P1P1P2P/RBRB1r2 w - - 3 3",
+        "7K/5k2/8/5r2/8/p1p1p2p/P1P1P2P/RBRB4 w - - 5 4",
+        nullptr},
+       4, 1160, "rook0_black"},
       {"7K/8/1q6/8/4k3/3p1p1p/3P1P1P/4BRBR b - - 0 1",
        {"7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2",
         "6K1/2q5/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3",
@@ -2117,6 +2285,12 @@ TEST_SUITE("engine: mate safety")
         "7K/5k2/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 5 4",
         nullptr},
        4, 760, "shift0_black"},
+      {"8/7K/8/2r4k/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1",
+       {"8/7K/8/6rk/8/p2p1p1p/P2P1P1P/4BRBR w - - 1 2",
+        "7K/8/6k1/6r1/8/p2p1p1p/P2P1P1P/4BRBR w - - 3 3",
+        "6K1/8/6k1/5r2/8/p2p1p1p/P2P1P1P/4BRBR w - - 5 4",
+        nullptr},
+       4, 1160, "rook0_flip_black"},
       {"8/8/8/8/7K/p1p1pq2/P1P1P3/RBRB1k2 b - - 0 1",
        {"8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2",
         "8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3",
@@ -2135,6 +2309,18 @@ TEST_SUITE("engine: mate safety")
         "2k1brbr/3p1p1p/1K1P1P1P/8/8/5Q2/8/8 b - - 5 3",
         nullptr},
        4, 760, "shift0_flip"},
+      {"rbrb4/p1p1p2p/P1P1P2P/8/7K/8/7k/6R1 w - - 0 1",
+       {"rbrb2R1/p1p1p2p/P1P1P2P/8/7K/8/7k/8 b - - 1 1",
+        "rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2",
+        "rbrb1R2/p1p1p2p/P1P1P2P/8/8/6K1/8/6k1 b - - 5 3",
+        nullptr},
+       4, 1160, "rook0"},
+      {"rbrb4/p1p1p2p/P1P1P2P/8/8/8/7R/1k1K4 w - - 0 1",
+       {"rbrb4/p1p1p2p/P1P1P2P/8/8/8/6R1/1k1K4 b - - 1 1",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/8/2K3R1/k7 b - - 3 2",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/6R1/k1K5/8 b - - 5 3",
+        nullptr},
+       4, 1160, "rook0"},
       {"rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1",
        {"rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1",
         "rbrb4/p1p1p3/P1P1P3/1k1K4/8/Q7/8/8 b - - 3 2",
@@ -2165,6 +2351,24 @@ TEST_SUITE("engine: mate safety")
         "4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3",
         "4brbr/1Q1p1p1p/3P1P1P/k7/8/2K5/8/8 b - - 7 4"},
        5, 760, "shift0_flip"},
+      {"4brbr/p2p1p1p/P2P1P1P/8/7K/6R1/8/7k w - - 0 1",
+       {"4brbr/p2p1p1p/P2P1P1P/7K/8/6R1/8/7k b - - 1 1",
+        "4brbr/p2p1p1p/P2P1P1P/8/6K1/6R1/7k/8 b - - 3 2",
+        "4brbr/p2p1p1p/P2P1P1P/8/8/5KR1/8/7k b - - 5 3",
+        "4brbr/p2p1p1p/P2P1P1P/8/8/6R1/5K1k/8 b - - 7 4"},
+       5, 1160, "rook0_flip"},
+      {"4brbr/p2p1p1p/P2P1P1P/8/8/4K3/7k/6R1 w - - 0 1",
+       {"4brbr/p2p1p1p/P2P1P1P/6R1/8/4K3/7k/8 b - - 1 1",
+        "4brbr/p2p1p1p/P2P1P1P/6R1/5K2/7k/8/8 b - - 3 2",
+        "4brbr/p2p1p1p/P2P1P1P/4R3/5K1k/8/8/8 b - - 5 3",
+        "4brbr/p2p1p1p/P2P1P1P/8/5K2/7k/4R3/8 b - - 7 4"},
+       5, 1160, "rook0_flip"},
+      {"7K/6r1/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1",
+       {"7K/5r2/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 1 2",
+        "6K1/4kr2/8/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 3 3",
+        "7K/5r2/5k2/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 5 4",
+        "6K1/5r2/6k1/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 7 5"},
+       5, 1160, "rook0_flip_black"},
       {"8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1",
        {"8/1q6/8/3k4/8/3p1p1p/3P1P1P/K3BRBR w - - 1 2",
         "8/1q6/8/8/2k5/3p1p1p/K2P1P1P/4BRBR w - - 3 3",
@@ -2183,6 +2387,36 @@ TEST_SUITE("engine: mate safety")
         "4q3/6K1/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 5 4",
         "4q3/7K/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 7 5"},
        5, 760, "shift0_flip_black"},
+      {"8/8/K7/5r2/k7/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1",
+       {"8/8/K7/1r6/k7/p1p1p2p/P1P1P2P/RBRB4 w - - 1 2",
+        "8/K7/8/kr6/8/p1p1p2p/P1P1P2P/RBRB4 w - - 3 3",
+        "K7/8/1k6/1r6/8/p1p1p2p/P1P1P2P/RBRB4 w - - 5 4",
+        "1K6/8/1k6/2r5/8/p1p1p2p/P1P1P2P/RBRB4 w - - 7 5"},
+       5, 1160, "rook0_black"},
+      {"K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1",
+       {"K3k3/7r/8/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 1 2",
+        "1K1k4/7r/8/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 3 3",
+        "K7/2k4r/8/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 5 4",
+        "8/K1k5/7r/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 7 5"},
+       5, 1160, "rook0_flip_black"},
+      {"K7/8/1r6/8/1k6/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1",
+       {"K7/8/8/1r6/1k6/p1p1p2p/P1P1P2P/RBRB4 w - - 1 2",
+        "8/K7/8/kr6/8/p1p1p2p/P1P1P2P/RBRB4 w - - 3 3",
+        "K7/8/1k6/1r6/8/p1p1p2p/P1P1P2P/RBRB4 w - - 5 4",
+        "1K6/8/1k6/2r5/8/p1p1p2p/P1P1P2P/RBRB4 w - - 7 5"},
+       5, 1160, "rook0_black"},
+      {"rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1",
+       {"rbrb4/p1p1p2p/P1P1P2P/8/8/8/1R6/3K3k b - - 1 1",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/8/1R6/4K1k1 b - - 3 2",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/8/1R3K2/7k b - - 5 3",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/1R6/5K1k/8 b - - 7 4"},
+       5, 1160, "rook0"},
+      {"rbrb4/p1p1p2p/P1P1P2P/8/8/8/1k1K4/2R5 w - - 0 1",
+       {"rbrb4/p1p1p2p/P1P1P2P/8/8/2R5/1k1K4/8 b - - 1 1",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/2R5/k1K5/8 b - - 3 2",
+        "rbrb4/p1p1p2p/P1P1P2P/2R5/8/8/2K5/k7 b - - 5 3",
+        "rbrb4/p1p1p2p/P1P1P2P/8/8/2R5/k1K5/8 b - - 7 4"},
+       5, 1160, "rook0"},
       {"rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1",
        {"rbrb4/p1p1p3/P1P1P3/6Q1/2K5/7k/8/8 b - - 1 1",
         "rbrb4/p1p1p3/P1P1P3/3K2Q1/8/8/7k/8 b - - 3 2",

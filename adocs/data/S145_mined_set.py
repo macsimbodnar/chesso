@@ -50,12 +50,16 @@ import chess
 import chess.engine
 import chess.pgn
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import S145_mate_set as constructed
+
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TSV = os.path.join(REPO, "adocs", "data", "S145_mined_set.tsv")
 PGN = os.path.join(REPO, ".spsa", "S085", "games.pgn")
 
-STOCKFISH = "/usr/games/stockfish"
+STOCKFISH = constructed.stockfish_path()
 STOCKFISH_OPTIONS = {"Threads": 1, "Hash": 16}
 LABEL_NODES = 200_000
 

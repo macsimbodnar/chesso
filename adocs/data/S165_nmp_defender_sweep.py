@@ -58,7 +58,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 TSV = os.path.join(HERE, "S165_defender_set.tsv")
 
-STOCKFISH = "/usr/games/stockfish"
+STOCKFISH = constructed.stockfish_path()
 
 # S145's corroboration budget for this position class, and its warning with it:
 # a node-limited stockfish is reproducible only inside one identical call

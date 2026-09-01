@@ -44,11 +44,14 @@ recorded, so it is added, never edited.
 | `S076_sprt.pgn` | the 1047 games of that run, 3.0 MB, the run that decided S076. One match, one reference, committed on the same two tests as `S021_sprt.pgn` below |
 | `S021_sprt.pgn` | the 824 games of that run, 2.4 MB. One match, one reference, with per-move score, depth and time comments. Committed where S068's run 1 PGN was not, on the same two tests: it is a clean artifact of one run — the script writes its own `-pgnout` path rather than `fastchess.sh`'s shared, appended `/tmp/fastchess_full.pgn` — and it is the run that decided the step |
 | `S145_mate_set.py` | the construction and the two-oracle verifier for the mate-safety set, and **it runs**: `generate` rebuilds the file from a seeded sample, `verify` re-proves every row from scratch, `emit-cpp` prints the table `tests/test_engine.cpp` holds. The proof is an exhaustive AND/OR search over `python-chess`, iterative-deepening in the mate distance so the distance it returns is exact and not an upper bound; `stockfish` at a node limit is the second oracle and only ever proposes. Nothing is copied and nothing is derived from another engine's search (DEC-016) |
-| `S145_mate_set.tsv` | what it produced: one row per position with the proved distance, the mated side's material lead, the proof's node count, the quiet key, and the defender nodes at plies 1, 3, 5 and 7 that are the nodes actually under test. Regenerable, unlike every other file here, which is the point of keeping the script beside it |
+| `S145_mate_set.tsv` | what it produced: one row per position with the proved distance, the mated side's material lead, the proof's node count, the quiet key, and the defender nodes at plies 1, 3, 5 and 7 that are the nodes actually under test. Regenerable, unlike every other file here, which is the point of keeping the script beside it — **but regenerate a motif at a time with `--only`**: the proposer is version-bound and a plain `generate` on a machine whose stockfish differs replaces rows rather than adding them, measured at 6 of 8 reproduced (S168) |
 | `S145_mined_set.py` | the breadth set: one position per game -- the final one -- from `.spsa/S085/games.pgn`, labelled by `stockfish`, and a `score` mode that counts how many of them an engine finds at a stated depth and stated options. Scored as a count with a floor and never per position, for the reason its docstring gives |
 | `S145_mined_set.tsv` | that set, `fen distance game` |
 | `S145_rfp_sweep.py` | the floor and the ceiling measured against both sets on the tune build, one axis at a time with the other held at its shipping value read from the binary. Reports `found`, `exact` and `delay`, the last being iterations between `2m - 1` and the first iteration that reports the mate -- the reading a fixed-depth call cannot produce |
 | `S154_floor_margin_sweep.py` | what the constructed set's counts tolerate, and **it runs**, on the standard library alone. Five modes: `hash` resizes the table and nothing else, `refs` rebuilds the engine at every commit that touched `src/` since the floor was placed, `floor` re-takes the `RfpMinPly` table with the declared minimum relaxed in a throwaway worktree, `slack` prices the gate's depth window, `red` rebuilds the gate with the guard weakened and requires it to fail. Every row carries a per-position mask and the Hamming distance from the row above it, because a net count that holds still while four positions swap is a coincidence and not a tolerance. It sends `isready` after its options and stops on `info string refused`, which is the silent-null failure S156 recorded turned into an error |
+| `S168_generate.log` | what each generation run measured while the second and third motifs were built: the four-candidate probe that chose the wall and the two forces, the first run whose knight rows came out 12 of 14 mated by a *pawn*, the rule that refused every knight family outright, and the rule that ships |
+| `S168_verify.log` | both oracles over all 82 rows from scratch, 0 checks failed, stockfish corroborating 81 of 82 at 4000000 nodes |
+| `S168_floor_sweep.log` | `S154_floor_margin_sweep.py floor` and `red` re-taken over the 82: the ends move to 12 shipping and 10 with the guard removed, so `MATE_IN_THREE_FLOOR` is 11, and `REQUIRE( 10 >= 11 )` is the red observed. Carries the per-motif split that says the queen rows reproduce S154's reading exactly |
 | `S154_floor_margin_sweep.log` | every mode's output at `fc5526e`, and the evidence for DEC-116. The count moves 0 positions over seventeen commits and nine table sizes, and 5 under one ply of the guard; the floor of 7 had stopped separating since `aa8c077` and is 8; `REQUIRE( 7 >= 8 )` is the red observed. Also carries the `RfpMaxDepth` sweep re-taken, because three numbers the test comment quoted from it had moved |
 | `S165_nmp_defender_sweep.py` | the same question from the defender's side, which is where a guard on a mate *bound* is reachable at all: `beta <= -MATE_MIN` happens where the engine is the side **being** mated, and every sweep above asserts from the attacker's. `generate` re-proves each distance rather than computing it from the root's -- `S145_mate_set.py`'s `representative_line()` walks the defender's *first legal reply*, so `root_distance - (ply + 1) / 2` is wrong on 3 of the 104 nodes -- and a mate in k against the side to move is **2k** plies, not the attacker-side `2k - 1` |
 | `S165_defender_set.tsv` | that set, `fen mated_in ply root_distance family root_fen`. 104 rows, each distance the smallest k with `_and_mate(node, 2k)` true and every shorter one refuted, corroborated by `stockfish` at 4000000 nodes on 104 of 104 |
@@ -74,18 +77,24 @@ where chesso says the side to move is mated within six, **one** has a
 non-negative score for the mated side and the median is **-1093**. The hazard
 reverse futility walks into needs the mated side to be *ahead*, so it is absent
 from the sample frame and no sample size fixes that. `S145_mate_set.py` builds it
-instead: a frozen defending army worth 760 centipawns more than the attacking
-king and queen, the attacker's moves quiet everywhere except the mate, and mate
+instead: a frozen defending army worth 760, 1020 or 1160 centipawns more than the
+attacking force, the attacker's moves quiet everywhere except the mate, and mate
 distances two to five so the guarded defender nodes land at plies 1, 3, 5 and 7.
 
-48 positions, all 13 pieces, all proved by exhaustive AND/OR enumeration —
-iterative-deepening in the distance, so every shorter distance is refuted rather
-than merely unfound.
+**82 positions since S168 (2026-09-01), three motifs**, all proved by exhaustive
+AND/OR enumeration — iterative-deepening in the distance, so every shorter
+distance is refuted rather than merely unfound. The mating force is a lone queen
+in 48, a lone rook in 32 and two knights in 2; `S155_motif_census.py` is the
+count. The knight row is thin because it is enforced: a motif may declare
+`mates_with`, and a candidate is refused unless every move that mates at the end
+of its line is that piece and no promotion is available anywhere along it —
+without which twelve of the first fourteen knight positions were pawn mates.
 
 ### Two things about the oracles, both learned the hard way
 
 **Stockfish corroborates; it does not decide.** At 4000000 nodes in its own
-process it agrees with 46 of the 48. Of the two it does not: one reads +1879 with
+process it agreed with 46 of the 48 on the Linux machine, and with 81 of the 82
+on the MacBook against `dev-20260803-762dd1da` (S168). Of the two it does not: one reads +1879 with
 no mate at all, one reads mate 6 against a proved 5. Both were re-proved and
 every shorter distance re-refuted. The cause is in the construction — a frozen
 army is a position class its network scores badly wrong, and it called the
@@ -104,7 +113,8 @@ per position at ten times the budget.
 `S145_rfp_sweep.log`, the full table. One axis swept with the other held at its
 shipping value, because S145 measured the two substituting for each other. Every
 setting: **0 mate scores with the wrong sign and 0 closer than the proved
-minimum**, over twelve settings times 48 positions.
+minimum**, over twelve settings times 48 positions and, since S168, six
+settings times 82.
 
 | | exact | m2 | m3 | m4 | m5 |
 |---|---|---|---|---|---|

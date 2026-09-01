@@ -6663,3 +6663,72 @@ Consequences: `tests/test_engine.cpp` asserts `>= 8`, observed failing at
               refuses a setting the engine declines: it sends `isready` and
               stops on `info string refused`, which is the failure S156
               recorded turned into an error instead of a silent null row.
+
+## DEC-117  2026-09-01  The constructed mate set carries three motifs, the mating piece is enforced rather than assumed, and a motif is regenerated with `--only`
+Tags:         testing, mates, rfp, s145, s155, s168, dec-114, dec-116, dec-095, toolchain
+Context:      DEC-114 is the owner's decision that one mating piece across a
+              gate built to catch mating-piece defects is not enough, and left
+              the shape open: "a smothered or otherwise knight-delivered mate,
+              or a back-rank mate". S168 built it, and three things the step was
+              queued on turned out to be false when measured.
+
+              **A candidate probe chose the wall and the forces.** Four walls
+              and forces, one family each at the tracked seed and budget: a king
+              and two knights over S145's wall accept **nothing** in 6000 tries;
+              over that wall plus an h-file pawn pair closing a corner they
+              accept four; a king and rook fills every mate distance over
+              either. So the pocket is what makes a non-queen mate constructible
+              at all, and it is a measurement rather than a preference.
+
+              **A king and two knights does not give a knight mate by
+              construction.** A mobile knight standing beside a wall pawn
+              unfreezes the capture the non-adjacent files deny and the freed
+              pawn queens with check: of the first fourteen knight positions,
+              **twelve were mated by a pawn**. Walking the same lines separates
+              the cases perfectly by *promotions available*, 4 apiece against 0
+              for the two real knight mates, where "pawn moves" does not
+              separate at all -- all fourteen have them.
+
+              **The geometry did not survive being checked either.** The rook
+              mate lands on the mated side's own back rank in **13 of 32**, so
+              "back-rank" would have been a label the file cannot carry.
+Decision:     By the owner on the probe, 2026-09-01: **both forces over the one
+              new wall**, giving three motifs -- a queen in 48 rows, a lone rook
+              in 32, two knights in 2. By the agent on the measurements: a motif
+              may declare `mates_with`, and a candidate is refused unless every
+              move that mates at the end of its line is that piece and no
+              promotion is available anywhere along it; the rook families are
+              named for their force and not for a geometry; and **`generate`
+              takes `--only`, which is now how a motif is added**, because the
+              stockfish proposer is version-bound -- re-running family `shift0`
+              here returned 6 of its 8 tracked rows and two different ones -- so
+              a plain regeneration on a second machine replaces positions that
+              S145 landed rather than adding to them.
+
+              `MATE_IN_THREE_FLOOR` is **11**, DEC-116's rule applied a second
+              time: the ends moved to 12 shipping and 10 with the guard removed,
+              and `REQUIRE( 10 >= 11 )` is the red observed in a worktree. Test
+              constants only; no engine source is touched and no SPRT is owed.
+Rejected:     One force rather than two. The knight covers the axis DEC-114
+              names first and the rook is the one that fills mate in two, so
+              taking one would have left either the non-sliding mating piece or
+              the gate's strongest assertion without a second piece.
+              Refusing a knight candidate whose line offers any pawn move.
+              Stricter, and it refuses the motif rather than the defect: all
+              four families accepted nothing out of 113 proposals, because every
+              knight line has pawn moves on it.
+              Keeping the `backrank` name with the 13-of-32 measurement recorded
+              beside it. A label that says what a reader would otherwise have to
+              check is worth more than a label that matches the step's title.
+              Regenerating the whole file. S168's `excludes` forbids replacing
+              the 48, and on this machine a full `generate` would have.
+Consequences: The gate is 82 positions and 0.95 s, against 48 and 0.79 s, in a
+              fast suite that runs 45 s. What it still cannot catch is a written
+              list in five places -- `tests/test_engine.cpp`, `adocs/specs.md`,
+              `DEV_MANUAL.md`, `MANUAL.md` and `adocs/data/S145_mate_set.py` --
+              and the list is shorter by one line and longer by another: a mate
+              delivered by a knight is covered at mate in two and nowhere else,
+              and a smothered mate, a king hunt, an open-line mate, a promotion
+              mate and any realistic material balance are still outside it.
+              `S155_motif_census.py` is the count and `adocs/data/S168_*.log`
+              is the evidence. DEC-114 is discharged.

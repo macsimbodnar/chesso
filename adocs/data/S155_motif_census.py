@@ -1,13 +1,30 @@
 #!/usr/bin/env python3
-"""S155. Census the constructed mate set, so its single motif is a measurement.
+"""S155. Census the constructed mate set, so its motif count is a measurement.
 
     python3 adocs/data/S155_motif_census.py
     python3 adocs/data/S155_motif_census.py --moves   # needs build/tests/debug_perft_app
 
-Reads adocs/data/S145_mate_set.tsv and prints what varies across the 48
-positions and what does not. The claim the test comment and specs.md carry --
-one motif, one material signature per colour, one mating piece -- is this
-script's output and not an assertion anybody has to trust.
+Reads adocs/data/S145_mate_set.tsv and prints what varies across the set and
+what does not. The claim the test comment and specs.md carry -- how many motifs,
+how many material signatures, how many mating pieces -- is this script's output
+and not an assertion anybody has to trust.
+
+WHAT IT SAID, AND WHAT IT SAYS NOW. Over the 48 positions S145 built it read one
+motif: two material signatures, each the colour mirror of the other, and a lone
+queen as the mating force in 48 of 48. That count is what DEC-114 was decided on
+and S168 is what it bought. Over the 82 the file carries since 2026-09-01 it
+reads **five material signatures, three mating forces -- a queen in 48, a lone
+rook in 32, two knights in 2 -- and three material leads, 760, 1160 and 1020**.
+Three motifs and the queen motif is unchanged: S168 added families and replaced
+none.
+
+The knight row is two positions and both are mates in two, which is a result and
+not an oversight: a knight-delivered mate that also satisfies this
+construction's all-quiet requirement is **rare**. Three of the four knight
+families accepted nothing at all from 80 proposals, and the fourth accepted two.
+`S145_mate_set.py`'s `mates_with` is what made the count honest -- before it,
+the same families produced fourteen rows of which **twelve were mated by a
+pawn**.
 
 The census itself reads the tracked TSV only. No engine, no oracle, no
 python-chess: the construction and its two proofs are S145_mate_set.py's, and
@@ -16,10 +33,13 @@ re-proving the set is that script's `verify`.
 `--moves` is the one part that asks a tool, because "no pawn here can promote"
 is a claim about legal moves and not about a file's columns. It runs the
 engine's own generator over every root and every guarded defender node at
-depth 1 and counts what comes back. Measured 2026-09-01 over 152 positions:
-1292 legal moves, **0 pawn moves and 0 promotions**. The pawns are mutually
-blocked on non-adjacent files, so neither side has a pawn move to make at any
-node the suite tests.
+depth 1 and counts what comes back. Measured 2026-09-01 over 268 roots and
+defender nodes: 1981 legal moves, **2 pawn moves and 0 promotions**, against
+1292 moves and 0 pawn moves over the 48. Both pawn moves are in the knight
+motif, where a mobile knight standing beside a wall pawn unfreezes the capture
+the blocked files deny. The promotion clause holds on the count and not on the
+geometry: no node the suite tests offers a promotion, and the generator refuses
+a knight candidate whose line offers one anywhere.
 """
 
 import collections
