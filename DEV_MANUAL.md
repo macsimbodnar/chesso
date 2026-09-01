@@ -529,18 +529,18 @@ build carrying it.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 18 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 42 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
-Those 18 s assume `build/` was configured `Release`. Configured `Debug`, or with
-an empty `CMAKE_BUILD_TYPE`, the same suite takes about two minutes — the
-assertions are on and the optimiser is off — and `test_movegen` and
-`test_search` take 165 s and 216 s on their own. Until S067 every `fast` target
-carried a flat 60 s timeout, so a debug directory reported those two as
-`Timeout`, which reads as two test failures rather than as a wrongly configured
-build directory. It happened twice on 2026-08-13, the second time because an
-editor rewrote the directory mid-session (DEC-052).
+Those 42 s -- 22 tests, measured 2026-09-01 -- assume `build/` was configured
+`Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
+suite takes about two minutes — the assertions are on and the optimiser is off
+— and `test_movegen` and `test_search` take 165 s and 216 s on their own. Until
+S067 every `fast` target carried a flat 60 s timeout, so a debug directory
+reported those two as `Timeout`, which reads as two test failures rather than
+as a wrongly configured build directory. It happened twice on 2026-08-13, the
+second time because an editor rewrote the directory mid-session (DEC-052).
 
 The timeout is now the build's: 60 s for `Release` and `MinSizeRel`, 600 s
 otherwise, printed at configure time as `-- Test timeout 60s (build type
@@ -556,16 +556,51 @@ Piping `ctest` into `tail` or `head` hides its exit status behind the pipe, so a
 gate written that way reports success on a failed suite. Redirect to a file and
 read `$?`, or let `ctest` print in full.
 
-The step-completion gate is the TESTS rule in `AGENTS.md`:
+The step-completion gate is the TESTS rule in `AGENTS.md`, and it covers
+**both** builds:
 
 ```bash
-cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check
+cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check
 ```
 
 It lived in `.moltke.json` and ran automatically until 2026-08-29; moltke v1
 has no hooks and no marker file, so it is a rule an agent follows and nothing
 runs it for you (DEC-109). `-j8` is this machine's core count -- the gate read
-`-j12` while the Linux machine DEC-049 names was the one in use.
+`-j12` while the Linux machine DEC-049 names was the one in use. It is `&&`
+throughout on purpose: every stage's exit status reaches the shell, and the
+first failure stops the chain.
+
+**Why `build-tune` is in it, S143 and DEC-118.** `src/search_params.hpp` is
+deliberately different code in the two builds -- `inline constexpr int` in the
+shipping one, a plain `int` settable over UCI in the tune one (S073) -- so they
+can diverge, and for the whole of the project's history only the shipping one
+was built here. A `static_assert(ASPIRATION_MIN_DEPTH >= 2)` added to
+`tests/test_engine.cpp` while fixing an S085 review finding compiled in `build`
+and did not compile in `build-tune`:
+
+```
+tests/test_engine.cpp:1628:19: error: static assertion expression is not an
+  integral constant expression
+  note: read of non-const variable 'ASPIRATION_MIN_DEPTH' is not allowed in a
+  constant expression
+```
+
+The old gate went green on that tree. `build-tune` is not a convenience: it is
+the binary every tuning run plays -- S085's SPSA drove it for 60000 games, S127
+will drive it again -- so a break in it surfaces whenever someone next tries to
+tune, which can be months after the commit that caused it.
+
+**What it costs, measured 2026-09-01 on the DEC-109 MacBook, 8 cores, on
+mains.** The tune build's `fast` label is **45.9 s over 22 tests**, against the
+shipping build's 42.4 s over the same 22; building `build-tune` adds **0.5 s**
+when nothing changed, **1.4 s** for a full rebuild with its ccache warm, and
+**18.0 s** for a full rebuild with `CCACHE_DISABLE=1`. So the gate roughly
+doubles: **93.6 s** end to end on a warm tree, against about 45 s before.
+`build/` is configured without a compiler launcher and `build-tune/` with
+`ccache`, which is why only the second figure has a warm-cache case.
+
+`build-tune/` is gitignored like every `build*` directory, so a fresh clone
+configures it once from the Build section above before the gate can run.
 
 That gate is necessary and not sufficient. Deep perft, the debug-build
 assertions and any SPRT are named in each step's `accepts:` field and run by

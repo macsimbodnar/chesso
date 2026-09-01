@@ -6732,3 +6732,55 @@ Consequences: The gate is 82 positions and 0.95 s, against 48 and 0.79 s, in a
               mate and any realistic material balance are still outside it.
               `S155_motif_census.py` is the count and `adocs/data/S168_*.log`
               is the evidence. DEC-114 is discharged.
+
+## DEC-118  2026-09-01  The completion gate covers both builds: `build-tune` is built and tested beside `build`
+Tags:         workflow, testing, tuning, moltke
+Amends:       DEC-025
+Context:      `src/search_params.hpp` is deliberately different code in the two
+              builds -- `inline constexpr int` in the shipping build, a plain
+              `int` settable over UCI under `CHESSO_TUNE=ON` (S073). The gate
+              DEC-025 fixed builds and tests only the shipping one, so the two
+              can diverge with the gate green. They did: a
+              `static_assert(ASPIRATION_MIN_DEPTH >= 2)` added to
+              `tests/test_engine.cpp` while fixing an S085 review finding
+              compiled in `build` and failed to compile in `build-tune`
+              (`read of non-const variable 'ASPIRATION_MIN_DEPTH' is not
+              allowed in a constant expression`), and the gate reported
+              success. `build-tune` is the binary every tuning run plays --
+              S085's SPSA drove it for 60000 games and S127 will drive it
+              again -- so a break in it is discovered whenever someone next
+              tries to tune, which can be months after the commit that caused
+              it.
+Decision:     Proposed by the agent, carried by S143, which the owner had
+              already agreed into the plan with exactly this in its `accepts:`.
+              The gate becomes
+              `cmake --build build -j8 && ctest --test-dir build -L fast
+              --output-on-failure && cmake --build build-tune -j8 && ctest
+              --test-dir build-tune -L fast --output-on-failure &&
+              ./clang-format.sh --check`.
+              The red was observed before the change, not assumed: with the
+              static assertion reintroduced the old gate exits 0 and the
+              extended gate exits 2 at the `build-tune` compile.
+              Measured cost on the DEC-109 MacBook, 8 cores, on mains: the tune
+              build's `fast` label is 45.9 s over the same 22 tests the
+              shipping build runs in 42.4 s, and building `build-tune` adds
+              0.5 s no-op, 1.4 s for a full rebuild with its ccache warm and
+              18.0 s with `CCACHE_DISABLE=1`. The gate roughly doubles: the
+              extended gate ran green end to end in 93.6 s on a warm tree,
+              against about 45 s before.
+Rejected:     Building `build-tune` without running its suite -- it catches the
+              compile break that prompted this and nothing else, and the two
+              builds differ at runtime as well as at compile time, which is the
+              divergence class a suite covers and a build does not. Adding a
+              script that runs the gate -- moltke v1 has no hooks and nothing
+              runs the gate for anyone (DEC-109), so a script would be a second
+              place for the command to drift from the rule that is the gate.
+              The PGO and portable release targets -- a separate question about
+              release coverage, S143's `excludes:` puts them out of scope.
+Consequences: A step completion pays about 94 s instead of about 45 s, and a
+              fresh clone configures `build-tune/` once from DEV_MANUAL.md's
+              Build section before the gate can run at all -- every `build*`
+              directory is gitignored. The gate command now lives in two places,
+              `AGENTS.md`'s TESTS rule and DEV_MANUAL.md's Test section, and
+              they are changed together. A green gate is still necessary and
+              never sufficient, unchanged from DEC-025.

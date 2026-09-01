@@ -126,9 +126,13 @@ migration that way (DEC-109).
 - COMMITS: commit at each completed step and at any plan change. Every commit
   is green. Imperative subject under 72 characters; the body says **why** and
   references the step id and any `INV-n`.
-- TESTS: the suite is green before a step is marked done —
-  `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check`
-  (`-j8`, the core count of the machine `.moltke.local.md` describes). A defect
+- TESTS: the suite is green before a step is marked done, in **both** builds —
+  `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`
+  (`-j8`, the core count of the machine `.moltke.local.md` describes). The tune
+  build is in the gate because `src/search_params.hpp` is *deliberately
+  different code* under `CHESSO_TUNE=ON` — a constant in one build and a
+  settable variable in the other — so the two can diverge, and a break there is
+  otherwise found months later by whoever next tries to tune (DEC-118). A defect
   gets a minimized failing test before its fix, and the failure is observed,
   not assumed. Never relax a test, never delete one to get green — deleting is
   a recorded decision. A test asserting X does not happen first establishes the

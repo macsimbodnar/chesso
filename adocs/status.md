@@ -7,43 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-01, by hand.
 
-- Last done: S168 -- **the constructed mate set is three motifs and 82
-  positions**, where it was one motif and 48. A lone rook mates in 32 of the new
-  rows and two knights in 2; the queen's 48 are untouched, because the step's
-  `excludes` forbade replacing them and a full regeneration here would have.
-  `adocs/data/S155_motif_census.py` now reports **five material signatures,
-  three mating forces and three leads -- 760, 1160, 1020**, which is what
-  DEC-114 asked for. `verify` re-proved all 82 from scratch with **0 checks
-  failed**, stockfish corroborating 81 of 82 at 4000000 nodes.
-  **`MATE_IN_THREE_FLOOR` is 11**, re-derived under DEC-116 because both ends
-  moved -- 12 at the shipping guard, 10 with it removed -- and
-  `REQUIRE( 10 >= 11 )` was observed red in a throwaway worktree. The
-  mate-in-two clause got stronger with the set: 26 of 26 found on time at the
-  shipping guard against 15 of 26 at `RfpMinPly` 1, so **eleven positions** fail
-  it where seven did. The gate costs **0.95 s against 0.79 s**, in a fast suite
-  of 42.49 s that is 22 of 22 green.
-  **Three arguments the step was queued on were refuted by measurement, and
-  those are worth more than the rows.** A king and two knights does *not* give a
-  knight mate by construction -- a knight beside a wall pawn unfreezes it and
-  the freed pawn queens with check, so **12 of the first 14 knight rows were
-  pawn mates**; the generator enforces `mates_with` now. Refusing any line with
-  a pawn move refuses the motif rather than the defect -- all four knight
-  families then accept nothing out of 113 proposals -- and *promotions*
-  separate perfectly, 4 apiece against 0. And the rook mate lands on the mated
-  side's own back rank in **13 of 32**, so DEC-114's "back-rank mate" is a
-  lone-rook mate that is sometimes one, and the families are named for the
-  force. An all-quiet knight mate is **rare**: three of four families accept
-  none and the fourth accepts two, both mates in two.
-  **Three portability bugs, all in `adocs/data/S145_mate_set.py`'s family, none
-  covered by any test**: `/usr/games/stockfish` hard-coded in three scripts, so
-  nothing in that family ran on this machine at all; `int.bit_count()`, which is
-  python 3.10 against this machine's 3.9.6, crashing `verify`'s summary after it
-  had passed; and a **version-bound proposer** -- re-running family `shift0`
-  here returns 6 of its 8 tracked rows and two different ones, so a plain
-  `generate` on a second machine replaces positions instead of adding them.
-  `generate --only` is the fix and is how a motif is added now. No engine source
-  touched, no default changed, no SPRT owed. DEC-117; DEC-114 discharged.
-- Before it: S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
+- Last done: S143 -- **the completion gate builds and tests `build-tune` too**.
+  It is one line in two places, `AGENTS.md`'s TESTS rule and DEV_MANUAL.md's
+  Test section, and they are identical:
+  `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`.
+  **The red was observed, not assumed**: with
+  `static_assert(ASPIRATION_MIN_DEPTH >= 2)` put back at
+  `tests/test_engine.cpp:1628` the old gate exits 0 and the extended gate
+  exits 2, at the `build-tune` compile -- `read of non-const variable
+  'ASPIRATION_MIN_DEPTH' is not allowed in a constant expression`. Reverted
+  after; nothing in `src/` or `tests/` changed.
+  **The gate roughly doubles and the figure is measured**: 22/22 in **45.9 s**
+  in the tune build against **42.4 s** in the shipping one -- the same 22 --
+  and building `build-tune` adds 0.46 s no-op, 1.38 s for a full rebuild with
+  its ccache warm, 18.03 s with `CCACHE_DISABLE=1`. **93.59 s end to end,
+  green, against about 45 s before.**
+  Two things the step file did not predict: `build/` is configured with **no
+  compiler launcher** where `build-tune/` has `ccache`, so only the tune build
+  has a warm-cache case; and DEV_MANUAL.md's Test section still said the fast
+  suite was "about 18 s" in two places when it is 42 s over 22 tests, corrected
+  in passing. DEC-118, amending DEC-025.
+- Before it: S168 (**the constructed mate set is three motifs and 82
+  positions**, the mating piece enforced, `MATE_IN_THREE_FLOOR` re-derived at
+  11; DEC-117), S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
   inert** -- 0 positions change verdict over seventeen commits and nine table
   sizes, 5 under one ply of the guard; `-F06` closed and reversed), S156 (**the
   mined breadth set is a gate now**, `test_mate_breadth` at depth 10 with a
@@ -58,8 +44,8 @@ Updated: 2026-09-01, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: the machine-light lane continues (DEC-112). Open entries are S143,
-  S144, S146.
+- Next: the machine-light lane continues (DEC-112). Open entries are S144 and
+  S146.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:
@@ -157,6 +143,14 @@ Updated: 2026-09-01, by hand.
     direction-certified table score as a pruning margin's input, written up in
     its step file under `## Inherited from S108` -- so that decision is waiting
     where the step that takes it will be read, not here.
+  - **Nothing checks that the two copies of the completion gate agree.** S143
+    put the command in `AGENTS.md`'s TESTS rule and in DEV_MANUAL.md's Test
+    section and made them identical; DEC-118 says they are changed together,
+    which is an assumption and not a guard. `tools/plan_prose_check.py
+    --params` is the precedent for turning exactly this class of prose drift
+    into a `fast` test -- it already reads documents and compares them to the
+    code. Parked, not planned: a step is created by a decision and none has
+    been taken on this.
   - **The gitignored-evidence exposure was real and S024's share of it is
     discharged, DEC-111.** This item used to say `.tuning/` held the only copy
     of S024's aborted run and that it would die with the machine. It would
