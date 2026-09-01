@@ -126,6 +126,35 @@ add_doctest_target(test_uci_surface)
 target_compile_definitions(test_uci_surface
      PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
+# S156: the mined breadth set, scored as a count with a floor. It reads
+# adocs/data/S145_mined_set.tsv out of the source tree, so it needs the same
+# definition test_uci_surface does.
+#
+# Its own binary and not another case inside test_engine, for one measured
+# reason: 318 positions at depth 10 cost 18.28 s in Release on the machine
+# .moltke.local.md describes, against 28.50 s for the whole fast label before
+# it. Folded into test_engine that would take its line from 3.19 s to 21.5 s
+# with nothing in the ctest output to say where the time went. A cost this size
+# is reported rather than absorbed.
+#
+# The timeout is its own for the same reason, and the Debug figure is why it
+# has to be: the same binary is 697 s in Debug, 38 times the Release one, so
+# the shared 60 s of add_doctest_target would report a failure that is the
+# clock. 1500 s is a little over twice the measured Debug run, which is the
+# rule the timeout block at the top of this file states, and 120 s is over six
+# times the Release one.
+add_doctest_target(test_mate_breadth)
+target_compile_definitions(test_mate_breadth
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+     set(CHESSO_MATE_BREADTH_TIMEOUT 120)
+else()
+     set(CHESSO_MATE_BREADTH_TIMEOUT 1500)
+endif()
+set_tests_properties(test_mate_breadth
+     PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_BREADTH_TIMEOUT})
+
 # The SPRT harness is a shell script, and until S035 nothing in tests/
 # exercised any shell script at all -- which is how a rename could break the
 # only tool that can decide a change (INV-6) and stay broken across a commit.

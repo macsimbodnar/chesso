@@ -849,9 +849,12 @@ against 3.
 
 **2. The mined breadth set.** `adocs/data/S145_mined_set.tsv`, one position per
 game from `.spsa/S085/games.pgn`, labelled by stockfish, **scored as a count
-with a floor and never per position**.
+with a floor and never per position**. In the fast suite as `test_mate_breadth`
+since S156; before that it was data nothing read
+(`2026-08-21_adversarial-F08`).
 
 ```bash
+./build/tests/test_mate_breadth                                  # the gate
 ~/.venv/chess/bin/python adocs/data/S145_mined_set.py mine  --games 6000
 ~/.venv/chess/bin/python adocs/data/S145_mined_set.py score --depth 10
 ```
@@ -862,13 +865,50 @@ the seventeen engines S145 surveyed wrote exact mate-distance tests, watched
 their own pruning break them, and disabled the tests rather than the pruning. A
 count with a floor is a claim a search can keep.
 
-318 positions, mate in 1 to 10. At depth 10 the shipping build finds **147 with
-the right sign, 146 at the exact distance, 0 with the wrong sign**; the same run
-at `RfpMinPly` 1 and 0 reads 140 and 139. So the floor is 143 — between the
-shipping value and the removed-guard value — and `--floor 143` exits non-zero
-below it or on any wrong sign. Note what this set can and cannot separate: it
-sees the difference between a floor of 1 and a floor of 2, and it cannot tell 2
-from 3.
+318 positions, mate in 1 to 10. The gate reads the tracked TSV, drives every
+position through the engine's own iterative deepening at depth 10, and asserts
+two things: **at least 143 at the exact distance stockfish labelled, and zero
+mate scores with the wrong sign**. The wrong-sign count is not a floor — a mate
+claimed for the side being mated is a defect at any total.
+
+Where 143 comes from, re-measured at S156's commit on the machine
+`.moltke.local.md` describes, depth 10, `Hash` at its default 16:
+
+| `RfpMinPly` | exact | right sign | wrong sign |
+|---|---|---|---|
+| 3, ships | 145 | 147 | 0 |
+| 2 | 145 | 147 | 0 |
+| 1 | 141 | 143 | 0 |
+| 0 | 141 | 143 | 0 |
+
+143 sits strictly between what ships and what the weakened guard gives, which
+is the property that matters: it goes red when the guard goes and not when the
+tree shifts under it. S145 placed the same floor on 146 against 139; the tree
+has moved since — S142, S149 and S165 all alter play — and the gap has narrowed
+from 7 to 4. Note what this set can and cannot separate: it sees the difference
+between a floor of 1 and a floor of 2, and it cannot tell 2 from 3.
+
+**Reproducing that table needs a patched tree, and the reason is S142.** It
+narrowed `RfpMinPly`'s minimum to 2, so `setoption name RfpMinPly value 1` is
+out of range, is ignored, and leaves the engine at its default — a sweep that
+does not notice reads a flat null and is wrong. `adocs/data/S156_mined_floor_sweep.py`
+builds a throwaway git worktree, relaxes the bound there, sweeps, then rebuilds
+the gate with the weakened value as its compiled-in *default* and runs it to
+observe the red. The tracked tree is never edited.
+
+```bash
+python3 adocs/data/S156_mined_floor_sweep.py            # sweep and observe red
+python3 adocs/data/S156_mined_floor_sweep.py --depth 8  # the cheaper reading
+```
+
+**It costs 18.28 s in Release**, measured directly on that machine, against
+28.50 s for the whole fast label before it — the largest single test in the
+gate, and its own binary for that reason, so the ctest output says where the
+time went. Depth is what it buys: the same 318 positions cost about 3 s at
+depth 8 and separate *wider* there, 113 against 101. Depth 10 is what the floor
+was placed at and what the owner chose to assert (2026-09-01), so that is what
+ships. Debug is another matter entirely — see the timeout note in
+`tests/CMakeLists.txt`.
 
 **3. `-check-mate-pvs`, on every SPRT since S145.** `fastchess.sh` passes it. It
 verifies that every `info` line carrying a mate score has a principal variation
@@ -942,6 +982,9 @@ prints the settings it dropped and why rather than ending in the python-chess
 `EngineError` that a refused option raises; `adocs/data/S145_rfp_sweep.log` is
 the last reading that covered 0 and 1, and getting below 2 again means relaxing
 the bound in `src/search_params.hpp` and rebuilding.
+`adocs/data/S156_mined_floor_sweep.py` is that relaxation automated for the
+mined set — a throwaway git worktree, patched and built there, so the tracked
+tree is never edited.
 
 Two traps in running it, both hit once. **A fresh engine process per setting**,
 never `configure` on a live one: python-chess sends `setoption` for what it is
