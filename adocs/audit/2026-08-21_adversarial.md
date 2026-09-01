@@ -531,7 +531,10 @@ those shapes passes this suite.
 
 ### 2026-08-21_adversarial-F08 — low — the mined breadth set the `accepts` asked for is not asserted anywhere
 
-Status: open
+Status: closed — S156, 2026-09-01. `tests/test_mate_breadth.cpp` scores all 318
+at depth 10 and asserts 143 exact plus zero wrong signs; the red was observed
+at `RfpMinPly` 1 from a patched worktree. The floor is owed, not discharged, so
+the second reading above is the one that was taken.
 
 **Evidence.** S145's `accepts` requires "a mined breadth set built from
 `.spsa/S085/games.pgn` at one position per game, labelled by `stockfish`, scored
