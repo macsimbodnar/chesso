@@ -6784,3 +6784,44 @@ Consequences: A step completion pays about 94 s instead of about 45 s, and a
               `AGENTS.md`'s TESTS rule and DEV_MANUAL.md's Test section, and
               they are changed together. A green gate is still necessary and
               never sufficient, unchanged from DEC-025.
+
+## DEC-119  2026-09-01  The stale citations are re-anchored in their own step, before S144 rewrites the files that hold them
+Tags:         workflow, documents, plan, tooling
+Context:      S144 converts the bare `:line` continuations in the pending step
+              files into full `path:line` citations. `baseline()` in
+              `tools/plan_prose_check.py` reads a step file's DRIFT baseline as
+              the commit that last wrote that file, so rewriting a file moves
+              its baseline and every citation in it is then compared against a
+              snapshot taken after the drift instead of before it. Measured at
+              HEAD on 2026-09-01: `--citations` flags 97 -- 72 DRIFT, 25
+              ANCHOR, 0 BOUNDS -- over 20 of the 53 pending step files, and 92
+              of those 97 sit in the 18 files S144 has to edit. Running S144
+              first would clear 92 live staleness reports without repairing
+              one, and the checker would print green over a tree that had got
+              no better. Among them is the class the tool was built for: seven
+              pruning and reduction steps cite the mate-safety gate at
+              `tests/test_search.cpp:1887` or `:1923` and it opens at 2808.
+Decision:     The owner's, chosen from four options put by the agent. The
+              repair is its own step, S169, and it lands before S144. Two
+              effects, two numbers: 97 flags to 0 at S169, 383 loose references
+              to zero or a stated remainder at S144. S169 is placed first in
+              the Open list and carries `blocks: S144`.
+Rejected:     Repairing inside S144 in one commit -- the same total work, but
+              one diff does both and neither number is separately attributable,
+              against the project's own rule that one change is measured at a
+              time. Recording the citations baseline in the step file so an
+              edit no longer relaxes the drift check -- it is the root cause
+              and it is worth doing, but it repairs nothing on its own: the 97
+              stay red afterwards and still need this step, so it is a
+              candidate for its own step and not a substitute for one.
+              Converting only and banking the 97 in `adocs/data/` as evidence
+              -- cheapest, and it takes the class out of the checker's reach so
+              that only someone reading that file would ever find it again.
+Consequences: A step that rewrites a pending step file for any reason moves
+              that file's DRIFT baseline, so the same laundering is available
+              to any future document step and is not special to S144. Nothing
+              in the tool stops it; what stops it here is that the exposure was
+              measured before the edit rather than after. S169's own proof
+              cannot be the checker's verdict for the same reason, so it ships
+              a tracked mapping of baseline text against text at the new range
+              instead.
