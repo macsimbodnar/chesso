@@ -1,7 +1,7 @@
 id:         S156
 goal:       the mined breadth set is either asserted as the count with a floor its accepts asked for, or the accepts is discharged in the stamp with the reason
 accepts:    `adocs/data/S145_mined_set.tsv` is either asserted in the suite as the count with a floor its `accepts` asked for -- with the floor placed from the measured 146 at `RfpMinPly` 2 and 3 against 139 at 1 and 0, and observed red below it -- or the clause is discharged in writing with the reason the measurement in the step body satisfies it; whichever way it goes, the file stops being data that nothing reads; if it is asserted, the cost it adds to the fast suite is measured and stated, since the suite runs at every step completion
-touches:    tests/test_mate_breadth.cpp, tests/CMakeLists.txt, adocs/data/, DEV_MANUAL.md, adocs/specs.md
+touches:    tests/test_mate_breadth.cpp, tests/CMakeLists.txt, adocs/data/, DEV_MANUAL.md, adocs/specs.md, MANUAL.md, adocs/decisions.md
             # amended when the plan met the code, 2026-09-01. It said
             # tests/test_engine.cpp, and the assertion did not go there. 318
             # positions at depth 10 cost 18.28 s in Release and 697 s in Debug;
@@ -11,14 +11,17 @@ touches:    tests/test_mate_breadth.cpp, tests/CMakeLists.txt, adocs/data/, DEV_
             # as a hang. So it is its own binary with its own measured timeout,
             # which is tests/CMakeLists.txt as well. DEV_MANUAL.md and
             # specs.md are the DOCS completion check landing: both carried the
-            # old 146 / 139 reading, which no longer reproduces.
+            # old 146 / 139 reading, which no longer reproduces. MANUAL.md's
+            # RfpMinPly row cites the constructed suite as the reason its floor
+            # is 2 and now cites this one beside it. DEC-115 is the depth-10
+            # choice, which is the owner's and would otherwise be re-derived.
 excludes:   the constructed set and its assertions, which S145 landed; per-position pass/fail over mined mates, which S145's research shows is what made two surveyed projects disable their tests; re-mining the set from a different game source
-decisions:  DEC-019
+decisions:  DEC-019, DEC-115
 closes:     2026-08-21_adversarial-F08
 blocks:
 paused_by:
 author:     agent, 2026-09-01
-done:
+done:      318 mined positions asserted at depth 10 as `test_mate_breadth`, floor 143 exact and 0 wrong signs; red observed at RfpMinPly 1 (141 exact) from a patched worktree; fast label 28.50 s over 21 tests to 45.92 s over 22, of which 18.28 s is this test and 697 s is its Debug figure
 
 ## The gap
 
@@ -84,7 +87,32 @@ is why the binary carries its own timeout of 1500 s rather than
 `add_doctest_target`'s shared 60. `ctest --test-dir build-debug -L fast` is
 now an eleven-minute-longer command, and that is stated rather than discovered.
 
-### 4. Two drivers, one count
+### 4. The red, observed
+
+`adocs/data/S156_mined_floor_sweep.py` at `b72f683`, output kept at
+`adocs/data/S156_mined_floor_sweep.log`. The sweep confirms the table above
+from a throwaway worktree with the bound relaxed to 0, and then rebuilds the
+gate itself with `RfpMinPly` defaulting to **1** and runs it:
+
+```
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    MESSAGE: mined set at depth 10: 141 exact, 143 right sign, 0 wrong sign
+    the mined set reads 141 exact at depth 10, under the 143 this engine held
+    when the floor was placed. Mate finding has cost something.
+```
+
+The bound alone cannot produce that reading. The gate is compiled against the
+default and not against a `setoption`, so the sweep patches the default too --
+which is also the honest model of the failure it guards, a code change that
+weakens the guard rather than a GUI sending an option.
+
+**One thing the sweep hit and it is written into the script.** `git submodule
+update --init` inside a linked worktree clones from the recorded URL, which is
+`git@github.com:` here, so it needs an ssh key and fails without one. The two
+header-only trees the test build reads are copied out of this checkout
+instead, 20 MB and a second.
+
+### 5. Two drivers, one count
 
 The gate scores in-process through the UCI layer in C++; `S145_mined_set.py`
 scores through python-chess in a subprocess, and python-chess is not installed

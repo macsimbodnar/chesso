@@ -6522,3 +6522,68 @@ Consequences: The written limits now say what this gate cannot speak for --
               lands, those five statements and the census's own expected output
               are what it must correct. `2026-08-21_adversarial-F07` is closed
               by S155.
+
+## DEC-115  2026-09-01  The mined breadth set is asserted at depth 10 and a floor of 143, not at the cheaper depth that separates wider
+Tags:         testing, mates, rfp, s145, s156, s142, suite-cost, dec-019
+Context:      S145 built `adocs/data/S145_mined_set.tsv` -- 318 positions taken
+              one per game from chesso's own SPSA games, labelled by stockfish
+              at a node limit -- and scored it once by hand. Nothing read it
+              afterwards, which `2026-08-21_adversarial-F08` found and S156 was
+              written to settle either way: assert it, or discharge the clause
+              in writing. Measured before deciding, at `120497e` on the machine
+              `.moltke.local.md` describes, exact counts against the value the
+              weakened guard gives:
+
+              | depth | ships | `RfpMinPly` 1 | gap | wall |
+              |---|---|---|---|---|
+              | 8 | 113 | 101 | 12 | 3.0 s |
+              | 9 | 143 | 135 | 8 | 7.4 s |
+              | 10 | 145 | 141 | 4 | 17.6 s |
+
+              The cheap depth separates three times wider at a sixth of the
+              cost, which is the opposite of what was expected and is why the
+              choice was put rather than taken.
+Decision:     By the owner. **Assert it, at depth 10 with a floor of 143** --
+              the depth and the floor S156's own `accepts` named -- as
+              `tests/test_mate_breadth.cpp` in the fast label, scoring the
+              whole set as a count with a floor plus zero mate scores with the
+              wrong sign. The depth 8 reading is recorded rather than used.
+Why:          The floor is the number a future red has to be judged against, so
+              it keeps the provenance it was placed with rather than being
+              re-derived at a depth chosen for cost.
+Rejected:     Depth 8 at a floor near 107. Wider separation and 3.0 s instead
+              of 18.28 s, and rejected because it re-places a floor that
+              already had a measured origin. It is the standing alternative to
+              lowering the floor the next time it goes red, and it is written
+              down in `DEV_MANUAL.md` and in S156's step file so it does not
+              have to be re-measured.
+              Discharging the clause in writing with no assertion. That leaves
+              the file as data nothing reads, which is the finding rather than
+              its answer.
+              Scoring through `adocs/data/S145_mined_set.py` from the suite.
+              It drives the engine through python-chess, which is deliberately
+              not a dependency of anything the fast label runs and is not
+              installed on this machine at all. The gate reads the same TSV
+              in-process instead, and its count was cross-checked against an
+              independent standard-library subprocess driver: both read 145
+              exact, 147 right sign, 0 wrong sign.
+Consequences: The fast label goes from 28.50 s over 21 tests to 45.92 s over
+              22, and `test_mate_breadth` is 18.28 s of it -- the largest
+              single line in the gate, which is why it is its own binary rather
+              than a case inside `test_engine`. In Debug it is 697 s, 38 times
+              the Release figure, so it carries its own measured timeout of
+              1500 s and `ctest --test-dir build-debug -L fast` is eleven
+              minutes longer than it was.
+              The floor's separation is narrower than S145 recorded -- 145
+              against 141 where S145 read 146 against 139, the gap down from 7
+              to 4 as S142, S149 and S165 moved the tree. 143 still sits
+              strictly between the two, and a re-measurement is owed whenever
+              it next goes red rather than a reflexive lowering.
+              Reaching the values below the floor needs a patched tree: S142
+              made 2 `RfpMinPly`'s declared minimum, so `setoption` is refused
+              and a sweep that does not notice measures one engine against
+              itself -- the first sweep taken for S156 did exactly that.
+              `adocs/data/S156_mined_floor_sweep.py` relaxes the bound in a
+              throwaway git worktree and rebuilds the gate there with the
+              weakened value as its compiled-in default, which is how the red
+              is observed.

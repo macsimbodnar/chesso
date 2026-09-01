@@ -219,10 +219,24 @@ def main():
         patch(tree, RELAXED, WEAKENED)
 
         # tests/doctest and tests/json are submodules and a fresh worktree gets
-        # them empty. The objects are already in this repository's store, so
-        # this is a checkout and not a fetch.
-        run(["git", "submodule", "update", "--init", "tests/doctest",
-             "tests/json"], tree)
+        # them empty. They are copied out of this checkout rather than
+        # initialised: `git submodule update --init` in a linked worktree
+        # clones from the recorded URL, which is `git@github.com:` here, so it
+        # needs an ssh key and fails without one. Both are header-only trees
+        # the build only reads, 20 MB together, and the copy is a second.
+        for module in ("tests/doctest", "tests/json"):
+            source = os.path.join(REPO, module)
+            target = os.path.join(tree, module)
+
+            if not os.path.isdir(os.path.join(source, ".git")) \
+                    and not os.path.isfile(os.path.join(source, ".git")):
+                raise SystemExit(
+                    "%s is not checked out in this repository, so there is "
+                    "nothing to copy into the worktree. Run `git submodule "
+                    "update --init` here first." % source)
+
+            shutil.rmtree(target, ignore_errors=True)
+            shutil.copytree(source, target)
 
         run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], tree)
         run(["cmake", "--build", "build", "-j%d" % args.jobs,

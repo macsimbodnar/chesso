@@ -1,0 +1,21 @@
+# adocs/data/S156_mined_floor_sweep.py, run at b72f683 on the machine
+# .moltke.local.md describes, 2026-09-01. The bound was relaxed to 0 in a
+# throwaway git worktree so RfpMinPly 1 and 0 are reachable at all -- S142 made
+# 2 the declared minimum and a shipping binary refuses anything below it. The
+# last block is the gate rebuilt with 1 as its compiled-in default and run:
+# it has to fail, and it does.
+
+318 positions, depth 10, ref HEAD
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     145          147            0   17.0s
+          2     145          147            0   16.7s
+          1     141          143            0   16.5s
+          0     141          143            0   16.1s
+
+  floor 143, asserted by tests/test_mate_breadth.cpp
+    shipping value 145, weakened-guard value 141, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /private/var/folders/km/c453fch54gs535r6rg0dqp2c0000gp/T/S156_sweep_5uunhoqk/tests/test_mate_breadth.cpp:215: MESSAGE: mined set at depth 10: 141 exact, 143 right sign, 0 wrong sign
+    logged: the mined set reads 141 exact at depth 10, under the 143 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down

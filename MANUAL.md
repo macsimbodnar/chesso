@@ -131,7 +131,7 @@ of a refusal is the only confirmation the value was taken.
 | `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it stops and returns its stand-pat score |
 | `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
 | `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice. 0 switches the rule off |
-| `RfpMinPly` | 3 | 2 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly. The floor is 2 because the mate-safety suite goes red below it (S145, DEC-095), not for an arithmetic reason |
+| `RfpMinPly` | 3 | 2 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly. The floor is 2 because the mate-safety suite goes red below it (S145, DEC-095), not for an arithmetic reason. Since S156 the mined breadth set says the same from the other side: 145 of its 318 mates found at the exact distance at 2 and 3, 141 at 1 and 0, against a floor of 143 |
 | `NullMoveBase` | 3 | 0 to 16 | the constant part of the null move reduction |
 | `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
 | `LmrBase` | 52 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 52 is 0.52 |

@@ -7,40 +7,44 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-01, by hand.
 
-- Last done: S155 -- **the constructed mate set is one motif, and that is now
-  counted rather than conceded.** `adocs/data/S155_motif_census.py` reads the
-  tracked TSV: **two material signatures over the 48 and one is the colour
-  mirror of the other**, a **lone queen as the mating force in 48 of 48**,
-  `lead` 760 in 48 of 48, a pawn wall on three non-adjacent files throughout,
-  eight family labels that are one geometry under two file shifts, a mirror and
-  a colour swap -- against real breadth in distance, 16 / 16 / 8 / 8. The
-  qualifier, the reason the narrowness is close to forced by the hazard, and the
-  explicit list of what the gate cannot catch (back-rank, smothered and any
-  knight mate, king hunt, open-line mate, promotion mate -- the generator emits
-  **1292 legal moves over the 48 roots and 104 defender nodes and 0 pawn
-  moves**, `--moves` -- and realistic material)
-  now stand in five places: `tests/test_engine.cpp`, `adocs/specs.md`,
-  `S145_mate_set.py`, `DEV_MANUAL.md` and `MANUAL.md` -- the last two outside
-  the step's `touches:`, recorded as a deviation. **No default changed, no
-  position removed, no assertion touched**, so no SPRT is owed.
-  `2026-08-21_adversarial-F07` closed.
-- The second-motif question S155 was told to answer either way is **answered
-  yes, by the owner, 2026-09-01**, and became **S168** in `plan_todo/` -- a
-  mating piece that is not a queen, built and proved by the same two oracles,
-  with its own reverse-futility sweep before the two floors can be restated. It
-  is machine-light and sits third in the lane, after S154.
-- Before it: S167 (fastchess.sh under bash 3.2) and S150 -- **document numbers
-  about search parameters are now checked against the code**,
-  `tools/plan_prose_check.py --params` in the fast suite as `test_plan_params`
-  (0.23 s); it found a fourth case the audit missed, `plan.md` saying
-  `MaxQsearchDepth` *is* 8. `2026-08-21_adversarial-F02` closed.
-- And before that: S157 (SPRT bounds say nElo, `2026-08-21_adversarial-F09`
-  closed), S158 (the shipped book's digest, `-F10` closed) and S153 (**the plan
-  no longer runs one step at a time** -- DEC-113, as many active steps as
-  strictly necessary, one per agent, exactly one coordinator holding the
-  machine; `-F05` closed).
+- Last done: S156 -- **the mined breadth set is a gate now, not data nothing
+  reads.** `tests/test_mate_breadth.cpp` reads the tracked
+  `adocs/data/S145_mined_set.tsv`, drives all **318 positions** through the
+  engine's own iterative deepening at **depth 10**, and asserts **at least 143
+  at the exact distance stockfish labelled, plus zero mate scores with the
+  wrong sign** -- never per position, which is what made two of the seventeen
+  engines S145 surveyed switch their mate tests off. Its own binary and its own
+  measured timeout because the cost is real: **18.28 s in Release against a
+  fast label that was 28.50 s over 21 tests and is now 45.92 s over 22**, and
+  **697 s in Debug**, 38 times that, so `ctest --test-dir build-debug -L fast`
+  is eleven minutes longer than it was. **Two things the step found.** The
+  floor's separation moved -- **145 exact at `RfpMinPly` 3 and 2 against 141 at
+  1 and 0**, where S145 read 146 against 139, so the gap narrowed from 7 to 4
+  as S142, S149 and S165 moved the tree; 143 still sits strictly between the
+  two. And the first sweep read a **perfect null and was wrong**: S142 made 2
+  the declared minimum, so `setoption name RfpMinPly value 1` is refused and
+  the engine stays at 3. `adocs/data/S156_mined_floor_sweep.py` relaxes the
+  bound in a throwaway git worktree, sweeps there, then rebuilds the gate with
+  the weakened value as its compiled-in default to observe the red. Depth 8 was
+  measured and rejected by the owner, and the reading is banked for whenever
+  the floor next goes red: **113 against 101, a gap of 12 at 3.0 s**, three
+  times the separation at a sixth of the cost. **No default changed and no
+  engine source touched**, so no SPRT is owed. `2026-08-21_adversarial-F08`
+  closed.
+- Before it: S155 (**the constructed mate set is one motif** -- a lone queen
+  against a frozen defender in 48 of 48, counted by
+  `adocs/data/S155_motif_census.py` and with the list of what the gate cannot
+  catch written in five places; `-F07` closed), S167 (fastchess.sh under
+  bash 3.2) and S150 (**document numbers about search parameters are checked
+  against the code**, `tools/plan_prose_check.py --params` in the fast suite as
+  `test_plan_params`; `-F02` closed).
+- The second-motif question is **answered yes, by the owner, 2026-09-01**
+  (DEC-114), and is **S168** in `plan_todo/`: a mating piece that is not a
+  queen, built and proved by the same two oracles, with its own
+  reverse-futility sweep before the two floors can be restated. Machine-light,
+  second in the lane now, after S154.
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S156, S154,
+- Next: the machine-light lane continues (DEC-112). Open entries are S154,
   S168, S143.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
