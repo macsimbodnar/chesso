@@ -6874,3 +6874,55 @@ Consequences: A wrong path is caught only when its line is past the end of
               the relocation could not separate -- a block that sits in both
               `quiescence()` and `negamax()`, or one that grew a comment under
               the citation -- carry their reason in the same file.
+
+## DEC-121  2026-09-02  The Polyglot 781-constant table is the published format specification, kept and cited
+Tags:         licensing, provenance, openings, polyglot
+Context:      `src/openings.cpp` carries `const uint64_t polyglot_randoms[781]`,
+              beginning `0x9D39247E33776D41`, the Zobrist constants that define
+              the Polyglot book key. They are verbatim and necessarily so: a
+              different table computes a different key and reads no published
+              book at all. The 2026-08-22 audit raised them as a copied
+              third-party table (finding F06) and noted S146's own `excludes`
+              had put them out of scope, so the 5.2 MB book had a pending
+              provenance step and the table beside it had none. COPYING says
+              tables are copied never, not rarely, and DEC-084 as amended by
+              DEC-105 says republication does not launder an engine's table --
+              so the exception, if there is one, has to be stated rather than
+              assumed.
+Decision:     By the owner, on the agent's research. The table is
+              **format-defining specification, not an engine's table**, and it
+              stays, with the specification cited at the table itself. The
+              evidence, checked rather than argued: all 781 constants appear,
+              in the same order, in the format description at
+              `https://hgm.nubati.net/book_format.html` -- the document
+              `src/openings.cpp:15-18` already cites -- and that document's own
+              note on copyright says the algorithm "may be freely implemented
+              by all GUIs, adapters and engines, including closed source ones",
+              that "Polyglot itself is GPL but the GPL only covers actual code
+              and not algorithms", and that "a table of random numbers cannot
+              be covered by copyright". Verified 2026-09-02 by extracting the
+              781 sixteen-digit constants from the live page (sha256
+              `bd95784721dbc0bfd4d734e87281b87f91e917886dc3b347f38f6e6bda5eb31b`)
+              and comparing them element by element against the array: equal at
+              every index.
+Rejected:     Deleting the Polyglot key path with the table -- it removes the
+              ability to read any published book in the format the rest of the
+              world uses, for a table whose own publisher disclaims copyright,
+              and it would take `get_key` and its nine pinned test keys
+              (`tests/test_openings.cpp`) with it. Re-deriving a private random
+              table -- the keys would be self-consistent and would match no
+              book anywhere, which is the whole point of a shared format.
+              Leaving the table uncited and relying on this entry alone -- the
+              next reader meets the constants in the source, not in
+              `decisions.md`, and F06 is exactly the finding that raises them
+              again.
+Consequences: The exception is narrow and stated so it cannot be stretched: it
+              covers constants that **define an interchange format**, published
+              in that format's own specification, where a different value
+              produces a non-interoperable result. It does not reach a tuned
+              table -- piece-square values, king-safety weights, reduction
+              tables -- whatever document republishes it. `src/openings.cpp`
+              carries the citation and the copyright note at the array, so the
+              ruling is where the constants are. The 5.2 MB book blob is a
+              separate artifact and a separate ruling; this entry says nothing
+              about it.

@@ -14,7 +14,7 @@
 
 /**
  * The Polyglot book format is used.
- * Description can be found here: http://hgm.nubati.net/book_format.html
+ * Description can be found here: https://hgm.nubati.net/book_format.html
  */
 
 
@@ -32,6 +32,16 @@ struct polyglot_entry_t
  * Random Castle    (offset: 768, length:   4)
  * Random EnPassant (offset: 772, length:   8)
  * Random Turn      (offset: 780, length:   1)
+ *
+ * These 781 constants are the format itself, not a table this project chose:
+ * a different value computes a different key and reads no published book. They
+ * are reproduced from the format description cited above, which states that
+ * the algorithm "may be freely implemented by all GUIs, adapters and engines,
+ * including closed source ones", that "Polyglot itself is GPL but the GPL only
+ * covers actual code and not algorithms", and that "a table of random numbers
+ * cannot be covered by copyright". Checked element by element against that
+ * page on 2026-09-02. DEC-121 is the ruling and states how narrow it is: it
+ * covers constants that define an interchange format, never a tuned table.
  */
 #define PIECE_SIZE 768
 #define CASTLING_OFFSET 768

@@ -7,6 +7,7 @@ decisions:  DEC-016
 closes:     2026-08-22_adversarial-F06
 blocks:
 paused_by:
+author:     agent (Claude Opus 5), coordinator, 2026-09-02
 done:
 
 ## What was found
@@ -113,3 +114,76 @@ invalidates none.
 163141 entries and that decoded digest are what to search a candidate book on:
 a published book either matches the digest exactly or it is not this file, and
 the entry count alone narrows the field before any download.
+
+## The search for the blob's origin, and what it returned (2026-09-02)
+
+Recorded because a negative result is the finding here, and because the next
+person to look should not repeat it.
+
+**Inside the repository the trail ends at the first commit.** `--follow` over
+the file reaches `628d827`, 2025-04-16, "Add book openings", where it is
+`src/book.hpp` and already a `#define BOOK "…hex…"` header. S158 named
+`349f8cf` (2025-05-12) as the introducing commit; that is the `bitboard`
+branch's copy, and `a809f0f` renamed `src/book.hpp` to `src/openings.book`
+along the way. The decoded sha256 at `628d827` is
+`47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5` -- the same
+digest S158 recorded for HEAD, so the bytes have never changed. The commit
+message is one line and the diff carries no URL, no attribution and no licence
+text; the only external reference anywhere in it is the format description
+(`src/openings.cpp:15-18`), which describes the format and not this book.
+
+**Outside it, four searches, no match.**
+
+| what was searched | result |
+|---|---|
+| the decoded sha256, on the open web | nothing; no index carries it |
+| GitHub code search for the hex prefix `00000883b144421f0dae002d`, and for `"#define BOOK"` | no chess result |
+| `michaeldv/donna_opening_books` by file size (gm2001 486656, komodo 9250016, rodent 2805680) | none is 2610256 |
+| `ChrisWhittington/polyglot-books`, `sakya/corechess`, `ulthiel/polyglot` trees | no `.bin` of that size |
+
+**The blob's own fingerprint, computed here, for whoever searches next.**
+163141 entries over **154916 distinct positions**, of which **148321 carry
+exactly one move** -- a narrow book, not a multi-choice one. The start position
+offers three moves, `d2d4`, `g1f3` and `e2e4`, at weight 54 each. Weights run
+1 to 305, sum 8980569, mean 55.05, and their histogram is bell-shaped around
+50 rather than flat or frequency-like -- so the weight is not a game count.
+Every `learn` field is zero. The entries are sorted by key, as the format
+requires.
+
+**What it costs while it stays.** `build/src/chesso` is 5529736 bytes and
+`strings -n 64` finds one 5220512-byte literal in it: the hex text of the book
+is **94.4 %** of the shipped binary, and it is the hex text rather than the
+2610256-byte book, because `load_book_embedded` (`src/openings.cpp:358`)
+decodes at startup rather than at compile time.
+
+## The table half is settled: DEC-121 (2026-09-02)
+
+The owner's ruling on `polyglot_randoms[781]`: **format-defining specification,
+kept, cited at the table**. All 781 constants were extracted from the live
+format description at `https://hgm.nubati.net/book_format.html` (page sha256
+`bd95784721dbc0bfd4d734e87281b87f91e917886dc3b347f38f6e6bda5eb31b`) and
+compared element by element against the array -- equal at every index, in
+order. That page's own note on copyright is what makes the ruling available:
+the algorithm "may be freely implemented by all GUIs, adapters and engines,
+including closed source ones", "Polyglot itself is GPL but the GPL only covers
+actual code and not algorithms", and "a table of random numbers cannot be
+covered by copyright".
+
+The citation and that note now sit above the array in `src/openings.cpp`, so
+the ruling is where the constants are and not only in `decisions.md` -- which
+is what 2026-08-22_adversarial-F06 asked for. The cited URL was corrected from
+`http` to `https` in the same edit; the site redirects.
+
+DEC-121 states the exception narrowly on purpose: constants that **define an
+interchange format**, published in that format's own specification, where a
+different value produces a non-interoperable result. It does not reach a tuned
+table, whatever republishes it -- DEC-084 as amended by DEC-105 is untouched.
+
+## The blob half is with the owner (2026-09-02)
+
+Asked and answered on 2026-09-02: of the four options put -- name the source,
+delete the book and the `Use Book` option, build a replacement from a
+permissively-licensed source, or keep it with provenance recorded as unknown --
+the owner took **the first: he names the source**. The name and its licence are
+his to supply; until they are here, the step cannot write them into `MANUAL.md`
+and cannot close.
