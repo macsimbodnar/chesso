@@ -381,11 +381,11 @@ enforces it but the diff.
 
 ## Done recently
 
+- S155  the constructed mate set is one motif -- a lone queen against a frozen defender, counted over the tracked TSV -- and what the gate therefore cannot catch is a written list
 - S167  fastchess.sh runs and reports failure correctly under bash 3.2, the macOS /bin/bash
 - S153  an agent-only step and a match-owning step may be active at once, so a document step does not leave the machine idle
 - S158  S146 carries the shipped book's digest and entry count so its origin can be searched for rather than guessed
 - S157  every recorded conclusion that states an SPRT bound in plain Elo says nElo instead, and DEV_MANUAL.md says which scale the bounds are in
-- S150  a number stated in a plan or manual document about a search parameter is checked against search_param_info(), and the three values S085 left stale in specs.md and MANUAL.md are corrected
 
 ## Machine scope, 2026-08-30 to whenever the workstation is back
 
@@ -405,8 +405,8 @@ structure in `## The order, in four blocks` above -- it still describes the
 real dependency order and this section does not supersede it.
 
 **The lane, entries 1 to 11.** Six steps that touch no engine and own no match
-(S155, S156, S154, S143, S144, S146 -- S153, S158, S157 and S150 are done),
-three that are
+(S156, S154, S168, S143, S144, S146 -- S153, S158, S157, S150 and S155 are
+done), three that are
 behaviour-neutral and discharged on identical `tools/search_bench.py` node
 counts and best moves plus a `hyperfine` timing (S147, S020, S030), and two
 that each own exactly one self-contained verdict if the owner wants a short run
@@ -431,9 +431,9 @@ reason the lane existed stays findable.
 
 ## Open
 
-1. S155  the constructed mate set's single motif is stated where its breadth is claimed, and what the gate therefore cannot catch is written down
-2. S156  the mined breadth set is either asserted as the count with a floor its accepts asked for, or the accepts is discharged in the stamp with the reason
-3. S154  the mate-in-three floor's tolerance to a neutral tree change is measured rather than asserted, and the RfpMinPly-1 mate-in-two count is restated as what the assertion actually fails
+1. S156  the mined breadth set is either asserted as the count with a floor its accepts asked for, or the accepts is discharged in the stamp with the reason
+2. S154  the mate-in-three floor's tolerance to a neutral tree change is measured rather than asserted, and the RfpMinPly-1 mate-in-two count is restated as what the assertion actually fails
+3. S168  a second mate motif, with a mating piece that is not a queen, joins the constructed set and is proved by the same two oracles
 4. S143  the completion gate builds and tests the tune build as well as the shipping one, so a change cannot leave build-tune broken unnoticed
 5. S144  a citation in a plan document carries its own path, so the 467 bare line references that inherit a path from prose become checkable
 6. S146  the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does

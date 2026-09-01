@@ -50,6 +50,18 @@ Immobility is a speed property and not a correctness one: it keeps the branching
 at defender nodes near one, which is what makes exhaustive proof affordable at
 mate in five. Nothing here trusts it. The mate distance is proved by search.
 
+ONE MOTIF, AND THAT IS WHAT THIS SCRIPT PRODUCES. S155. Everything above
+constrains the shape so hard that the 48 positions come out as a single motif:
+S155_motif_census.py counts two material signatures over the tracked TSV, one
+the colour mirror of the other, a lone queen as the mating force in 48 of 48,
+`lead` 760 in 48 of 48, and eight family labels that are one geometry under two
+file shifts, a mirror and a colour swap. Broad in mate distance, narrow in
+shape. So the gate this feeds cannot catch a rule that hides a back-rank mate,
+a smothered mate or any knight mate, a king hunt, an open-line mate, a
+promotion mate, or a mate in a position with a realistic material balance.
+A second motif with a different mating piece is worth building and is S168; it
+belongs beside these families here, not in place of them.
+
 TWO ORACLES, and neither of them is chesso.
 
   * `stockfish` proposes. It is fast, it is run at a fixed depth over sampled

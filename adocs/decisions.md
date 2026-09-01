@@ -6470,3 +6470,55 @@ Consequences: `plan_current/` may hold more than one file, and the `author:`
               take the heavy verdicts anyway. The lever is worth its 23 % when
               the workstation is back, which is the situation it is recorded
               for. `2026-08-21_adversarial-F05` is closed by this entry.
+
+## DEC-114  2026-09-01  A second mate motif is worth constructing, and it is its own step
+Tags:         testing, pruning, rfp, mates, s145, s155, s168, dec-095
+Context:      S145 replaced a three-position mate gate with 48 constructed
+              forced mates, and the 2026-08-21 audit's F07 said the replacement
+              carries the same monoculture. S155 counted it rather than argued
+              it: `adocs/data/S155_motif_census.py` over the tracked TSV reports
+              two material signatures and one is the colour mirror of the other,
+              a lone queen as the mating force in 48 of 48, `lead` 760 in 48 of
+              48, a pawn wall on three non-adjacent files throughout, and eight
+              family labels that are one geometry under two file shifts, a
+              mirror and a colour swap. Breadth in mate distance is real --
+              16 / 16 / 8 / 8 over distances two to five -- and breadth in shape
+              is absent. The narrowness is close to forced: reverse futility can
+              only hide a node that is lost by force while the side to move is
+              materially ahead, and a frozen clump behind a blocked pawn wall is
+              close to the only way to build that property. S155's `accepts`
+              required the second-motif question to be answered either way.
+Decision:     By the owner. **Yes, a second motif is worth constructing**, with
+              a mating piece that is not a queen -- a smothered or otherwise
+              knight-delivered mate, or a back-rank mate -- and it is **S168**,
+              its own step, not work folded into S155. S155 stays documentary
+              and closes: the qualifier, the reason the narrowness is forced,
+              and the explicit list of what the gate cannot catch are written
+              wherever the breadth is claimed.
+Why:          One mating piece across the whole set means a defect that depends
+              on the mating piece is invisible to the gate that exists to catch
+              exactly that class of defect.
+Rejected:     Answering no on S145's own measurement -- that the reading is
+              almost entirely a function of mate distance, 16 of 16 at two
+              against 0 of 8 at five. Defensible, and rejected because that
+              measurement is taken over one motif and therefore cannot say
+              whether shape matters.
+              Folding the construction into S155. A new family owes its own two
+              proofs, its own regeneration of the TSV and its own
+              reverse-futility sweep before `MATE_IN_THREE_FLOOR` and the
+              mate-in-two timing assertion can be restated; that is a step, and
+              carrying it here would have made a documentary step one that
+              cannot close.
+              Replacing the 48 rather than extending them. Every one was
+              independently re-proved a forced mate at its claimed distance;
+              they measure the hazard the rule actually has.
+Consequences: The written limits now say what this gate cannot speak for --
+              back-rank, smothered and any knight mate, king hunt, open-line
+              mate or line-opening sacrifice, promotion mate, and any position
+              with a realistic material balance -- in `tests/test_engine.cpp`,
+              `adocs/specs.md`, `adocs/data/S145_mate_set.py`, `DEV_MANUAL.md`
+              and `MANUAL.md`. S168 sits third in DEC-112's machine-light lane:
+              it owns no match, but it does own two oracles and a sweep. When it
+              lands, those five statements and the census's own expected output
+              are what it must correct. `2026-08-21_adversarial-F07` is closed
+              by S155.

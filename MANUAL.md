@@ -262,7 +262,10 @@ here as the FEN each one loads. A GUI never sends them.
   anything this engine reaches, so the ply floor is the guard, and S145
   (2026-08-21) is the constructed set of 48 proved mates the floor is measured
   against: every mate in two is found immediately, half the mates in three are
-  found late, and none of the mates in four or five is found at all.
+  found late, and none of the mates in four or five is found at all. Those 48
+  are one motif — a lone queen mating a defender that is materially ahead and
+  frozen behind a blocked pawn wall — so the shapes the suite cannot speak for
+  are listed in `DEV_MANUAL.md` (S155).
   *Aspiration windows* are present since S021 (2026-08-17): from depth 2 the
   root is searched in a band around the previous iteration's score, widened and
   repeated when the score falls outside it. The depth is `AspirationMinDepth`

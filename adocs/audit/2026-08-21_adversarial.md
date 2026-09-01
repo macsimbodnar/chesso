@@ -495,7 +495,7 @@ exists.
 
 ### 2026-08-21_adversarial-F07 — low — the S145 constructed set is 48 positions and one motif, which is the criticism the step was written to answer
 
-Status: open
+Status: closed (S155, 2026-09-01)
 
 **Evidence.** S145's goal line indicts the gate it replaced: "so the floor that
 fences the tuner rests on evidence rather than on **three positions and one

@@ -783,11 +783,28 @@ or an SPRT. S145 rebuilt what that test is.
 ~/.venv/chess/bin/python adocs/data/S145_mate_set.py emit-cpp  # the table the test holds
 ```
 
+```bash
+python3 adocs/data/S155_motif_census.py                        # what varies across the 48, and what does not
+```
+
 Every row is a forced mate proved twice and by neither chesso: an exhaustive
 AND/OR enumeration over `python-chess`, iterative-deepening in the *distance* so
 the answer is exact and not an upper bound, and `stockfish` at a node limit.
 Stockfish only ever proposes — a candidate it calls a mate in four and the
 enumeration calls a mate in three is reported and the enumeration wins.
+
+**Broad in mate distance, narrow in shape, and the narrowness is counted.** The
+census above reports two material signatures over the 48 and one is the colour
+mirror of the other, a lone queen as the mating force in 48 of 48, `lead` 760 in
+48 of 48, a pawn wall on three non-adjacent files throughout, and eight family
+labels that are one geometry under two file shifts, a mirror and a colour swap.
+That is close to forced by the hazard rather than careless — see the two
+properties below — but it bounds what this gate can ever catch, and the list is
+explicit: **no back-rank mate, no smothered mate and no mate delivered by a
+knight, no king hunt, no open-line mate or line-opening sacrifice, no promotion
+mate, and no position with a realistic material balance.** A pruning rule that
+hides a mate in one of those shapes passes the suite. S168 builds the second
+motif (S155, 2026-09-01).
 
 Two properties make each row bite, and the test asserts both before searching
 anything. The defender is **materially ahead**, so its static score is high

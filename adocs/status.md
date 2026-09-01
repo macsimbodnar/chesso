@@ -5,32 +5,41 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-08-30, by hand.
+Updated: 2026-09-01, by hand.
 
-- Last done: S150 -- **document numbers about search parameters are now checked
-  against the code.** `tools/plan_prose_check.py --params` is in the fast suite
-  as `test_plan_params` (0.23 s), with three rules: MANUAL's option table, a
-  tight name-adjacency scan, and a phrase table for the sentences that never
-  name their parameter -- which is two of the three cases the audit found. Red
-  observed on all three before repair, the quiescence one against
-  `eaad88b^:adocs/specs.md` where its wording still lives, and non-vacuity
-  proved by moving `AspirationMinDepth` in the header and watching all three
-  rule classes fire. **It found a fourth the audit missed**: `plan.md` said
-  `MaxQsearchDepth` *is* 8. All four corrected.
-  `2026-08-21_adversarial-F02` closed.
-- Before it: S157 -- the SPRT bounds are normalized Elo and now say so, in
-  `fastchess.sh` and `DEV_MANUAL.md`. Seven conclusions restated with the
-  logistic figure from each run's own pair. `model=normalized` deliberately
-  unchanged. The audit had the direction backwards: non-regression conclusions
-  are conservative, gainer conclusions overstate by about 1.1 logistic Elo.
-  `2026-08-21_adversarial-F09` closed.
-- And before that: S158 (the shipped book's digest, `2026-08-21_adversarial-F10`
-  closed) and S153 (**the plan no longer runs one step at a time** -- DEC-113,
-  as many active steps as strictly necessary, one per agent, exactly one
-  coordinator holding the machine; `2026-08-21_adversarial-F05` closed).
+- Last done: S155 -- **the constructed mate set is one motif, and that is now
+  counted rather than conceded.** `adocs/data/S155_motif_census.py` reads the
+  tracked TSV: **two material signatures over the 48 and one is the colour
+  mirror of the other**, a **lone queen as the mating force in 48 of 48**,
+  `lead` 760 in 48 of 48, a pawn wall on three non-adjacent files throughout,
+  eight family labels that are one geometry under two file shifts, a mirror and
+  a colour swap -- against real breadth in distance, 16 / 16 / 8 / 8. The
+  qualifier, the reason the narrowness is close to forced by the hazard, and the
+  explicit list of what the gate cannot catch (back-rank, smothered and any
+  knight mate, king hunt, open-line mate, promotion mate, realistic material)
+  now stand in five places: `tests/test_engine.cpp`, `adocs/specs.md`,
+  `S145_mate_set.py`, `DEV_MANUAL.md` and `MANUAL.md` -- the last two outside
+  the step's `touches:`, recorded as a deviation. **No default changed, no
+  position removed, no assertion touched**, so no SPRT is owed.
+  `2026-08-21_adversarial-F07` closed.
+- The second-motif question S155 was told to answer either way is **answered
+  yes, by the owner, 2026-09-01**, and became **S168** in `plan_todo/` -- a
+  mating piece that is not a queen, built and proved by the same two oracles,
+  with its own reverse-futility sweep before the two floors can be restated. It
+  is machine-light and sits third in the lane, after S154.
+- Before it: S167 (fastchess.sh under bash 3.2) and S150 -- **document numbers
+  about search parameters are now checked against the code**,
+  `tools/plan_prose_check.py --params` in the fast suite as `test_plan_params`
+  (0.23 s); it found a fourth case the audit missed, `plan.md` saying
+  `MaxQsearchDepth` *is* 8. `2026-08-21_adversarial-F02` closed.
+- And before that: S157 (SPRT bounds say nElo, `2026-08-21_adversarial-F09`
+  closed), S158 (the shipped book's digest, `-F10` closed) and S153 (**the plan
+  no longer runs one step at a time** -- DEC-113, as many active steps as
+  strictly necessary, one per agent, exactly one coordinator holding the
+  machine; `-F05` closed).
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S155, S156,
-  S154, S143.
+- Next: the machine-light lane continues (DEC-112). Open entries are S156, S154,
+  S168, S143.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

@@ -1695,6 +1695,44 @@ TEST_SUITE("engine: mate safety")
   // instead, scored as a count with a floor, because per-position pass/fail
   // over mined mates is exactly what made two surveyed projects switch their
   // mate tests off rather than their pruning.
+  //
+  // ONE MOTIF, WHY THAT IS CLOSE TO FORCED, AND WHAT THIS GATE THEREFORE
+  // CANNOT CATCH. S155.
+  //
+  // The set is broad in mate distance and narrow in shape. Counted over the
+  // tracked TSV by adocs/data/S155_motif_census.py, not asserted: two material
+  // signatures and one is the colour mirror of the other - the mating side is
+  // a king, a queen and three pawns, the mated side a king, two rooks, two
+  // bishops and three pawns. The mating force is a lone queen in 48 of 48,
+  // `lead` is 760 in 48 of 48, the pawn wall stands on three non-adjacent
+  // files in every position, and the eight family labels are one geometry
+  // under two file shifts, a mirror and a colour swap.
+  //
+  // That narrowness is close to forced by the hazard and is not a flaw in the
+  // set. The rule misfires only where the side to move is lost by force while
+  // its static score is a margin clear of beta, so the mated side has to be
+  // materially *ahead* and unable to use it - and a frozen clump behind a
+  // blocked pawn wall is close to the only way to build that, which is why
+  // every row reads the same lead. S033 built its one position by hand this
+  // way; the construction generalises that shape rather than picking it.
+  //
+  // What it bounds is what this gate can ever catch. It cannot catch a rule
+  // that hides:
+  //
+  //   * a back-rank mate,
+  //   * a smothered mate, or any mate delivered by a knight - the mating piece
+  //     here is a queen in all 48,
+  //   * a king hunt, where the king is driven across the board instead of held
+  //     in a pocket,
+  //   * an open-line mate, or the sacrifice that opens the line,
+  //   * a promotion mate - no pawn in this set can promote,
+  //   * any mate in a position with a realistic material balance.
+  //
+  // A future pruning rule that loses mates in those shapes passes this suite.
+  // Whether a second motif is worth constructing was asked and answered yes,
+  // by the owner on 2026-09-01: the two signatures above are the reason, and
+  // S168 is the step, because a new family owes its own two proofs and its own
+  // reverse-futility sweep rather than a paragraph here.
   struct mate_case_t
   {
     const char* root;      // the position under test, mating side to move
