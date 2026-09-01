@@ -5,7 +5,7 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-01, by hand.
+Updated: 2026-09-02, by hand.
 
 - Last done: S144 -- **a citation in a plan document carries its own path.**
   383 bare `:line` continuations over 19 of the 53 pending step files, 380
@@ -47,19 +47,36 @@ Updated: 2026-09-01, by hand.
   `MATE_IN_THREE_FLOOR` re-derived at 11; DEC-117), S154 (**the mate-in-three
   floor is 8 and re-derived, not 7 and inert**), S156 (**the mined breadth set
   is a gate now**, `test_mate_breadth` at depth 10 with a floor of 143).
-- In progress: nothing. `plan_current/` is empty.
+- In progress: **S146, and it is half done.** The `polyglot_randoms[781]`
+  table is settled -- DEC-121 rules it format-defining specification rather
+  than a copied table, kept, with the citation and the format description's
+  own copyright note now above the array in `src/openings.cpp`. The evidence
+  is element-by-element: all 781 constants extracted from the live page at
+  `https://hgm.nubati.net/book_format.html` are equal to the array at every
+  index, in order. That closes what 2026-08-22_adversarial-F06 asked for.
+  **The 5.2 MB blob is the other half and it waits on the owner.** Its origin
+  could not be established from here: the repository trail ends at `628d827`
+  (2025-04-16) with no URL, attribution or licence in the commit; the decoded
+  sha256, a GitHub code search on the hex prefix, and three public book
+  collections compared by file size all returned nothing. Of the four options
+  put on 2026-09-02 -- name the source, delete the book and the `Use Book`
+  option, build a replacement from a permissively-licensed source, or keep it
+  with provenance recorded as unknown -- the owner took **the first**. The
+  step cannot write `MANUAL.md` or close until he supplies the name and the
+  licence.
 - **`python-chess` was missing on this machine and is installed now**, at the
   owner's decision of 2026-09-01: 1.11.2 on python 3.9.6 in `~/.venv/chess`,
   the path `TOOLCHAIN.md` and every S145 script already name. It had not
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: S146, the opening book's origin and licence -- the 5.2 MB book compiled
-  into the shipped binary either gets a recorded provenance or is replaced by
-  one that does. It is the last document-only step at the head of the lane;
-  after it the machine-light entries are the behaviour-neutral three (S147,
-  S020, S030).
-- Blocked: nothing.
+- Next: finish S146 the moment the book's source is named. After it the
+  machine-light entries are the behaviour-neutral three (S147, S020, S030),
+  discharged on identical `tools/search_bench.py` node counts and best moves
+  plus a `hyperfine` timing.
+- Blocked: **S146's second half, on the owner naming where `src/openings.book`
+  came from.** Nothing else is blocked, and the rest of the lane does not
+  depend on it.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
