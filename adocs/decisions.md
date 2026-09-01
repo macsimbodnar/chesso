@@ -6587,3 +6587,79 @@ Consequences: The fast label goes from 28.50 s over 21 tests to 45.92 s over
               throwaway git worktree and rebuilds the gate there with the
               weakened value as its compiled-in default, which is how the red
               is observed.
+
+## DEC-116  2026-09-01  The mate-in-three floor is 8, and it is re-derived whenever either end of it moves
+Tags:         testing, mates, rfp, s145, s154, s156, s165, dec-019, dec-095
+Context:      `2026-08-21_adversarial-F06` said `MATE_IN_THREE_FLOOR` had one
+              position of margin with thirteen tree-reshaping steps queued
+              behind it, and that the comment's claim -- the floor "fails when
+              the guard fails and not when the tree shifts underneath it" --
+              was asserted and not measured. S154 measured it three ways at
+              `fc5526e`, on the machine `.moltke.local.md` describes.
+
+              **The claim is true, and by a wide margin.** The set was run
+              through the binary built at each of the seventeen commits that
+              touched `src/` since `14748c9` placed the floor, and through nine
+              transposition table sizes from 1 MB to 256 MB. Positions changing
+              verdict: **0**, everywhere except `aa8c077`, which moved one and
+              moved it upward. The table sweep moved the node total 5.9 % over
+              the set and 17 % over the mates in three, so the tree did shift
+              and the verdicts did not follow. One ply of the guard itself
+              moves five positions.
+
+              **The finding is the other one: 7 had stopped separating.** S145
+              placed it between 8 shipping and 6 with the guard removed.
+              `aa8c077` -- S165, null move pruning guarded at both edges of the
+              mate band -- lifted both ends to 9 and 7. `7 >= 7` is green, so
+              from 2026-08-23 to 2026-09-01 the assertion could not fail for
+              the reason it exists. The gate as a whole still caught a removed
+              guard, through the mate-in-two clause, which is why nothing was
+              red and nobody noticed.
+Decision:     **The floor is 8**, strictly between the 9 that ships and the 7 a
+              removed guard gives, by the agent on the measurement above. It is
+              a test constant and not an engine default, so no play changes and
+              no SPRT is owed; `tools/search_bench.py` is unaffected because no
+              engine source is touched.
+
+              The standing part is the second clause: **a floor is re-derived
+              from a fresh sweep whenever either end moves, never re-read.**
+              S156 wrote the same rule for the mined set's 143 and this is the
+              case that shows why -- there the floor was owed a re-derivation
+              after a red, here it was owed one after a green, and the green is
+              the harder one to notice.
+Rejected:     Keeping 7 with the measurement recorded beside it, which is what
+              the step's `accepts` anticipated. Rejected because the
+              measurement said the floor was inert, and recording that beside
+              an assertion that cannot fail is documentation of a defect rather
+              than a fix.
+
+              Widening `MATE_DEPTH_SLACK` past 8. The window looked like the
+              tighter fence -- one position now first reports its mate at
+              exactly the last iteration searched -- but at slack 12 the
+              shipping guard and the removed guard both find 10 of 16, so the
+              separation is gone entirely and the pass costs 4.1 s against
+              0.7 s. The window is a cost budget and the mate-in-three count is
+              a reading of lateness under it, not of loss.
+
+              A floor of 9. No margin at all: the one position sitting at the
+              window edge would redden it with no guard having failed, which is
+              the mechanism F06 was written about.
+Consequences: `tests/test_engine.cpp` asserts `>= 8`, observed failing at
+              `REQUIRE( 7 >= 8 )` with the default weakened to 1 in a throwaway
+              worktree. The mate-in-two clause is restated where it is
+              asserted: at `RfpMinPly` 1 it is 13 of 16 found and **9 of 16 on
+              time**, so what goes red there is seven positions and not three,
+              and `adocs/data/S145_rfp_sweep.log` carries a header saying so
+              rather than being rewritten.
+
+              Three numbers the comment quoted from the `RfpMaxDepth` axis had
+              also moved and are refreshed: 40 of 48 with the rule off against
+              34, and 6 of 8 and 5 of 8 mates in four and five at
+              `RfpMaxDepth` 0 against 4 and 3. The ceiling is costing more than
+              S148's question was queued on. That axis is still S148's and no
+              default was touched here.
+
+              `adocs/data/S154_floor_margin_sweep.py` is the harness and it
+              refuses a setting the engine declines: it sends `isready` and
+              stops on `info string refused`, which is the failure S156
+              recorded turned into an error instead of a silent null row.

@@ -1800,12 +1800,21 @@ TEST_SUITE("engine: mate safety")
   }
 
   // Eight iterations of slack above 2m - 1, and the number is measured. One
-  // position in the set is late by four at the shipping defaults and by eight
-  // at RfpMinPly 1, so a tighter window would report a postponed mate as a lost
-  // one
-  // - the exact conflation this step exists to remove. A whole search of one of
-  // these positions at depth 17 costs about 17 ms, so there is no reason to be
-  // tight.
+  // position in the set is late by eight at the shipping defaults - it was
+  // late by four when S145 chose this window and S165 moved it - so a tighter
+  // window would report a postponed mate as a lost one, the exact conflation
+  // S145 exists to remove.
+  //
+  // **The window is a budget and not a margin, and S154 measured what it
+  // buys.** Widening it does not make the reading safer, it makes it a
+  // different reading: at slack 12 the shipping guard and the removed guard
+  // both find 10 of the 16 mates in three, so the separation the floor below
+  // rests on is gone entirely, and the whole 48-position pass costs 4.1 s
+  // against 0.7 s at 8. The mate in three count is therefore a reading of how
+  // late a mate arrives under a fixed budget, not of whether it is lost. The
+  // mate in two assertion is the one that does not depend on the window at
+  // all, because it asks for the first iteration and not the last.
+  // adocs/data/S154_floor_margin_sweep.log, mode `slack`.
   static constexpr int MATE_DEPTH_SLACK = 8;
 
   // WHAT IS ASSERTED, AND WHY IT IS NOT "EVERY MATE IS FOUND".
@@ -1814,15 +1823,20 @@ TEST_SUITE("engine: mate safety")
   // and the answer is almost entirely a function of the mate distance:
   //
   //   mate in 2   16 of 16 exact, delay 0
-  //   mate in 3    8 of 16 exact, delay up to 4
+  //   mate in 3    9 of 16 exact, delay up to 8
   //   mate in 4    0 of 8
   //   mate in 5    0 of 8
+  //
+  // Re-measured 2026-09-01 by S154. S145 read 8 of 16 at delay up to 4 for the
+  // mates in three; S165 guarded null move pruning at both edges of the mate
+  // band and moved both numbers, which is the only movement seventeen commits
+  // produced. The rest of this comment says how that was established.
   //
   // So the guard holds where the old three-position gate looked and nowhere
   // else, because all three of those cases were mates in two. Asserting that
   // every position is found would assert something this engine has never done
   // and no setting of reverse futility makes true - with the rule switched off
-  // entirely it is 34 of 48, not 48. A test demanding it would be red on
+  // entirely it is 40 of 48, not 48. A test demanding it would be red on
   // arrival and would be weakened to clear it, which is what happened to the
   // two surveyed projects that wrote per-position mate tests.
   //
@@ -1838,24 +1852,52 @@ TEST_SUITE("engine: mate safety")
   // settings times these 48 positions.
   //
   // **Every mate in two, at the first iteration that can hold it.** This is the
-  // assertion that fences the tuner. At RfpMinPly 2 and above it is 16 of 16
-  // with delay 0; at 1 and 0 it is 13 of 16 with delays up to 7. 0 and 1 are
-  // the same engine - the root is exempted by !is_pv, not by this parameter -
-  // so this goes red at exactly the value S085's run spent 906 of 1250
-  // iterations at.
+  // assertion that fences the tuner, and it asks for two things where the
+  // count alone asks for one: the mate is found, and `first_exact` is 2m - 1.
+  // At RfpMinPly 2 and above it is 16 of 16, found and on time. At 1 and 0 it
+  // is 13 of 16 found and only **9 of 16 on time**, so what goes red here is
+  // seven positions and not three - S145's log and step file characterise this
+  // row by the 13 and the fence is stronger than they say. 0 and 1 are the
+  // same engine - the root is exempted by !is_pv, not by this parameter - so
+  // this goes red at exactly the value S085's run spent 906 of 1250 iterations
+  // at.
   //
-  // **A floor on the mate in three count.** 8 of 16 at the shipping floor, 6 at
-  // RfpMinPly 1, 11 at RfpMinPly 4. The floor is 7, placed strictly between the
-  // shipping value and the removed-guard value so it fails when the guard fails
-  // and not when the tree shifts underneath it.
+  // **A floor on the mate in three count.** 9 of 16 at the shipping floor, 7
+  // at RfpMinPly 1, 14 at RfpMinPly 4. The floor is 8, strictly between the
+  // shipping value and the removed-guard value.
+  //
+  // **7 was the floor until S154 and it had stopped separating.** S145 placed
+  // it between 8 shipping and 6 with the guard removed; S165 lifted both ends
+  // to 9 and 7, and `7 >= 7` is green, so from 2026-08-23 this line could not
+  // fail for the reason it exists. The gate as a whole still caught the
+  // removed guard - the mate in two clause above is what caught it - but this
+  // assertion did not, which is why the number is re-derived and not merely
+  // re-read whenever either end moves. DEC-116.
+  //
+  // **The claim that it fails when the guard fails and not when the tree
+  // shifts underneath it is now a measurement.** S154 ran this set through the
+  // binary built at every one of the seventeen commits that touched src/ since
+  // the floor was placed, and through nine transposition table sizes from 1 MB
+  // to 256 MB at the shipping tree. Positions changing verdict: **0**, at every
+  // step except S165, which moved exactly one and moved it upward. The table
+  // sweep moved the node total by 5.9 % over the whole set and 17 % over the
+  // mates in three, so the tree did shift and the verdicts did not follow it.
+  // Against that, one ply of the guard itself moves five positions - 3 to 4 is
+  // a churn of 5 - so the count is sensitive to the thing it fences and inert
+  // to everything else. What the floor tolerates is one loss, which is what the
+  // one position now sitting at the window edge can cost.
+  // adocs/data/S154_floor_margin_sweep.log.
   //
   // The mate in four and five counts are **recorded and not asserted**: they
   // are 0 of 8, and a floor of zero asserts nothing. What recovers them is the
-  // depth ceiling and not the ply floor - 4 of 8 and 3 of 8 at RfpMaxDepth 0,
+  // depth ceiling and not the ply floor - 6 of 8 and 5 of 8 at RfpMaxDepth 0,
   // still 0 and 0 at 10 and above, and S085 tuned that ceiling from S033's 6
-  // to 15. That trade is a default change, so it is an SPRT and its own step;
-  // adocs/data/S145_rfp_sweep.log is the evidence.
-  static constexpr int MATE_IN_THREE_FLOOR = 7;
+  // to 15. Those two were 4 and 3 when S145 measured them, so the ceiling is
+  // costing more now than the step that queued the question read; S148 is
+  // where it is re-decided, by SPRT and not here. That trade is a default
+  // change; adocs/data/S145_rfp_sweep.log holds S145's sweep and
+  // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
+  static constexpr int MATE_IN_THREE_FLOOR = 8;
 
   TEST_CASE_FIXTURE(engine_fixture_t,
                     "a proved mate is never mis-scored, and every mate in two "

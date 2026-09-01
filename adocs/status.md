@@ -7,31 +7,44 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-01, by hand.
 
-- Last done: S156 -- **the mined breadth set is a gate now, not data nothing
-  reads.** `tests/test_mate_breadth.cpp` reads the tracked
-  `adocs/data/S145_mined_set.tsv`, drives all **318 positions** through the
-  engine's own iterative deepening at **depth 10**, and asserts **at least 143
-  at the exact distance stockfish labelled, plus zero mate scores with the
-  wrong sign** -- never per position, which is what made two of the seventeen
-  engines S145 surveyed switch their mate tests off. Its own binary and its own
-  measured timeout because the cost is real: **18.28 s in Release against a
-  fast label that was 28.50 s over 21 tests and is now 45.92 s over 22**, and
-  **697 s in Debug**, 38 times that, so `ctest --test-dir build-debug -L fast`
-  is eleven minutes longer than it was. **Two things the step found.** The
-  floor's separation moved -- **145 exact at `RfpMinPly` 3 and 2 against 141 at
-  1 and 0**, where S145 read 146 against 139, so the gap narrowed from 7 to 4
-  as S142, S149 and S165 moved the tree; 143 still sits strictly between the
-  two. And the first sweep read a **perfect null and was wrong**: S142 made 2
-  the declared minimum, so `setoption name RfpMinPly value 1` is refused and
-  the engine stays at 3. `adocs/data/S156_mined_floor_sweep.py` relaxes the
-  bound in a throwaway git worktree, sweeps there, then rebuilds the gate with
-  the weakened value as its compiled-in default to observe the red. Depth 8 was
-  measured and rejected by the owner, and the reading is banked for whenever
-  the floor next goes red: **113 against 101, a gap of 12 at 3.0 s**, three
-  times the separation at a sixth of the cost. **No default changed and no
-  engine source touched**, so no SPRT is owed. `2026-08-21_adversarial-F08`
-  closed.
-- Before it: S155 (**the constructed mate set is one motif** -- a lone queen
+- Last done: S154 -- **the mate-in-three floor is 8 and re-derived, not 7 and
+  inert.** `2026-08-21_adversarial-F06` asked whether the floor's claim -- that
+  it "fails when the guard fails and not when the tree shifts underneath it" --
+  rests on a number. It does now, and the answer reversed the finding.
+  `adocs/data/S154_floor_margin_sweep.py` measures the 48-position constructed
+  set three ways at `fc5526e`: nine transposition table sizes from 1 MB to
+  256 MB, the binary **rebuilt at each of the seventeen commits that touched
+  `src/`** since `14748c9` placed the floor, and the `RfpMinPly` axis re-taken
+  with the declared minimum relaxed to 0 in a throwaway worktree. **Positions
+  changing verdict under a tree change with no guard in it: 0** -- at every
+  table size and every commit but one, against a node total that moved 5.9 %
+  over the set and **17 % over the mates in three**, so the tree shifted and the
+  verdicts did not follow. One ply of the guard itself moves **five**. Every row
+  carries a per-position mask and its Hamming distance from the row above,
+  because a net count that holds still while four positions swap is a
+  coincidence and not a tolerance. **The finding is the other one.** `aa8c077`
+  (S165) lifted both ends of the floor from 8 and 6 to **9 and 7** on
+  2026-08-23, `7 >= 7` is green, and from that day until today the assertion
+  **could not fail for the reason it exists** -- the gate still caught a removed
+  guard, through the mate-in-two clause, which is why nothing was red and nobody
+  noticed. The floor is **8**, observed red at `REQUIRE( 7 >= 8 )` with the
+  default weakened to 1 in a worktree. **The mate-in-two restatement is done**:
+  13 of 16 found but **9 of 16 on time**, so what the assertion fails at
+  `RfpMinPly` 1 is seven positions and not three -- corroborated by the real
+  gate logging seven `first reported at iteration` failures by name.
+  `adocs/data/S145_rfp_sweep.log` carries a header saying so and its table is
+  left as taken. **Widening `MATE_DEPTH_SLACK` was measured and rejected**: at
+  slack 12 the shipping guard and the removed one both find 10 of 16, so the
+  separation is gone entirely, at 4.1 s against 0.7 s. The window is a cost
+  budget and the mate-in-three count reads lateness under it. Three
+  `RfpMaxDepth` numbers the test comment quoted had also moved and are refreshed
+  -- 40 of 48, 6 of 8, 5 of 8 against 34, 4 and 3, which makes S148's question
+  larger than it was queued on; that axis stays S148's. **No engine source
+  touched, no default changed, no SPRT owed.** DEC-116. `-F06` closed.
+- Before it: S156 (**the mined breadth set is a gate now** -- `test_mate_breadth`
+  scores all 318 at depth 10 and asserts 143 exact plus zero wrong signs,
+  18.28 s of a fast label that was 28.50 s over 21 tests and is 45.92 s over 22;
+  `-F08` closed), S155 (**the constructed mate set is one motif** -- a lone queen
   against a frozen defender in 48 of 48, counted by
   `adocs/data/S155_motif_census.py` and with the list of what the gate cannot
   catch written in five places; `-F07` closed), S167 (fastchess.sh under
@@ -42,10 +55,18 @@ Updated: 2026-09-01, by hand.
   (DEC-114), and is **S168** in `plan_todo/`: a mating piece that is not a
   queen, built and proved by the same two oracles, with its own
   reverse-futility sweep before the two floors can be restated. Machine-light,
-  second in the lane now, after S154.
+  and first in the lane now that S154 is done. Both floors moved under it:
+  DEC-116 restated the constructed set's at 8 and DEC-115 owes the mined set's
+  a re-derivation, so S168 arrives with two numbers already in motion.
 - In progress: nothing. `plan_current/` is empty.
-- Next: the machine-light lane continues (DEC-112). Open entries are S154,
-  S168, S143.
+- **`python-chess` was missing on this machine and is installed now**, at the
+  owner's decision of 2026-09-01: 1.11.2 on python 3.9.6 in `~/.venv/chess`,
+  the path `TOOLCHAIN.md` and every S145 script already name. It had not
+  survived the move from the Linux workstation, so
+  `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
+  all and nothing said so. `.moltke.local.md` records it now.
+- Next: the machine-light lane continues (DEC-112). Open entries are S168,
+  S143, S144.
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

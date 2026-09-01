@@ -1,0 +1,179 @@
+# adocs/data/S154_floor_margin_sweep.py, every mode, run at fc5526e on the
+# machine .moltke.local.md describes, 2026-09-01. What it settles:
+#
+#   1. The comment beside MATE_IN_THREE_FLOOR claimed the floor "fails when the
+#      guard fails and not when the tree shifts underneath it" and asserted it.
+#      Measured: the count moves by 0 positions over the seventeen commits that
+#      touched src/ since the floor was placed, and by 0 over nine table sizes
+#      from 1 MB to 256 MB. One ply of the guard itself moves five. The claim
+#      is true and is now a number.
+#
+#   2. The floor of 7 had stopped separating. S145 placed it between 8 shipping
+#      and 6 with the guard removed. S165 lifted both ends to 9 and 7, so
+#      `7 >= 7` was green with the guard gone and the assertion could no longer
+#      fail for the reason it exists -- from 2026-08-23 until this run. The
+#      floor is 8 now, and the `red` block below is that failing as it must.
+#
+#   3. S145's log and step file characterise the RfpMinPly 1 row of the
+#      mate-in-two set as "13 of 16". The assertion also requires
+#      `first_exact == 2m - 1`, so what it fails there is 7 positions and not 3:
+#      9 of 16 are found on time. The `floor` block prints both numbers, and the
+#      `red` block's run of the real gate logs the seven by name.
+#
+# The engine is driven over UCI with the standard library alone; the set's
+# distances were proved once by S145's two oracles and are read from the TSV.
+# `git worktree` is used for every build and the tracked tree is never edited.
+# -Werror is dropped in those worktrees because pre-S167 commits do not compile
+# under Apple clang; it changes no codegen.
+
+=============================================================== hash
+Hash swept and nothing else. No rule changes and no parameter moves;
+only which nodes get a table hit. This is the noise floor under every other
+reading in this file.
+48 positions, depth 2m-1+8, per distance m2 16, m3 16, m4 8, m5 8
+
+  Hash=1                 m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn -  9760872 nodes
+  Hash=2                 m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9675505 nodes
+  Hash=4                 m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9349459 nodes
+  Hash=8                 m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9323285 nodes
+  Hash=16                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9220838 nodes
+  Hash=32                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9321744 nodes
+  Hash=64                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9421894 nodes
+  Hash=128               m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9322484 nodes
+  Hash=256               m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9323587 nodes
+
+  mate in three over 9 table sizes: min 9, max 9, spread 0
+
+  hash, 7.0s
+
+=============================================================== refs
+The same set through the binary built at each commit that touched src/
+since the floor was placed. -Werror is dropped in the worktree: pre-S167
+commits do not compile under Apple clang, and dropping it changes no codegen.
+48 positions, depth 2m-1+8, per distance m2 16, m3 16, m4 8, m5 8
+
+  14748c9                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn -  4822921 nodes   S145  the floor is placed here, at 8 of 16
+  ac4c588                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4822921 nodes   S142  RfpMinPly bounded at 2, history at its band
+  bfc0463                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4822921 nodes   S142  a citation is repointed  [control]
+  229a309                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4822921 nodes   S149  the duplicated killer slots are kept  [control]
+  40f5b56                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4743257 nodes   S093  quiet history malus, gravity, butterfly
+  8eb24e9                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4945058 nodes   S130  stand pat takes the table score
+  ecd735e                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4945058 nodes   S161  load_FEN clears unsupportable fields
+  ea9ba2c                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4945058 nodes   S162  checkmate outranks the hundredth halfmove
+  ba0194a                m2 16/16 on-time 16 d0  m3  8/16 d4  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.###..  churn 0  4945058 nodes   S163  a stale hard-limit timer is disarmed
+  aa8c077                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 1  9309821 nodes   S165  null move guarded at both mate edges
+  3b39e5a                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9309821 nodes   S108  the static evaluation is hoisted
+  b4d688b                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9220838 nodes   S108  the static evaluation is stored per node
+  672e35a                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9220838 nodes   S167  a dead constant is deleted  [control]
+  e424032                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  8466113 nodes   S024  one-ply continuation history, later reverted
+  cf5758d                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  8466113 nodes   DEC-110  the clang-format pin moves  [control]
+  a433433                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9220838 nodes   S024  the continuation history is reverted
+  fc5526e                m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9220838 nodes   the tree as it ships today
+
+  mate in three over 17 commits: min 8, max 9, spread 1
+
+  refs, 111.1s
+
+============================================================== floor
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S142 made it 2,
+so a shipping binary refuses 1 and 0 and answers with its default instead.
+48 positions, depth 2m-1+8, per distance m2 16, m3 16, m4 8, m5 8
+
+  RfpMinPly=5            m2 16/16 on-time 16 d0  m3 14/16 d7  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ########.######.  churn -  11063543 nodes
+  RfpMinPly=4            m2 16/16 on-time 16 d0  m3 14/16 d7  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ########.######.  churn 0  11057844 nodes
+  RfpMinPly=3            m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 5  9220838 nodes
+  RfpMinPly=2            m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn 0  9016811 nodes
+  RfpMinPly=1            m2 13/16 on-time  9 d7  m3  7/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 .#.#.....#.####.  churn 2  7764431 nodes
+  RfpMinPly=0            m2 13/16 on-time  9 d7  m3  7/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 .#.#.....#.####.  churn 0  7764431 nodes
+
+  floor, 10.1s
+
+============================================================== slack
+MATE_DEPTH_SLACK swept, at the shipping guard and at the weakened one.
+The wall column is the whole 48-position pass, which is what the gate pays.
+48 positions, depth 2m-1+8, per distance m2 16, m3 16, m4 8, m5 8
+
+  shipping slack=8       m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn -  9220838 nodes   0.9s
+  shipping slack=10      m2 16/16 on-time 16 d0  m3  9/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ##.#...#.#.####.  churn -  20179669 nodes   1.5s
+  shipping slack=12      m2 16/16 on-time 16 d0  m3 10/16 d12  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ####...#.#.####.  churn -  64231593 nodes   4.2s
+  shipping slack=14      m2 16/16 on-time 16 d0  m3 10/16 d12  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ####...#.#.####.  churn -  124102583 nodes   8.8s
+  RfpMinPly=1 slack=8    m2 13/16 on-time  9 d7  m3  7/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 .#.#.....#.####.  churn -  7764431 nodes   0.6s
+  RfpMinPly=1 slack=10   m2 13/16 on-time  9 d7  m3  7/16 d8  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 .#.#.....#.####.  churn -  16072145 nodes   1.2s
+  RfpMinPly=1 slack=12   m2 15/16 on-time  9 d12  m3 10/16 d12  m4  0/ 8 d-  m5  0/ 8 d-  short 0  sign 0
+                         m3 ####...#.#.####.  churn -  37580497 nodes   2.8s
+  RfpMinPly=1 slack=14   m2 15/16 on-time  9 d12  m3 10/16 d12  m4  1/ 8 d14  m5  0/ 8 d-  short 0  sign 0
+                         m3 ####...#.#.####.  churn -  119501622 nodes   9.3s
+
+  slack, 35.1s
+
+================================================================ red
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /private/var/folders/km/c453fch54gs535r6rg0dqp2c0000gp/T/S154_sweep_318z1sif/tests/test_engine.cpp:2328: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /private/var/folders/km/c453fch54gs535r6rg0dqp2c0000gp/T/S154_sweep_318z1sif/tests/test_engine.cpp:2329: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 8 )
+    [doctest] assertions: 2062 | 2047 passed | 15 failed |
+
+  red, 11.4s
+
+============================================================ ceiling
+# adocs/data/S145_rfp_sweep.py ceiling, re-taken here rather than
+# written over S145's log, which is the reading taken at 14748c9 and is
+# evidence. RfpMaxDepth is S148's to re-decide and is not touched by
+# S154; the sweep is re-run only because the test comment quotes three
+# of its numbers and all three had moved. 34 of 48 with the rule off is
+# 40 now, and the mate in four and five counts at RfpMaxDepth 0 are 6
+# and 5 against S145's 4 and 3 -- so the ceiling is costing more than
+# the step that queued the question read.
+
+shipping defaults read from the binary: {'RfpMargin': 63, 'RfpMaxDepth': 15, 'RfpMinPly': 3}
+declared ranges: {'RfpMargin': [0, 2000], 'RfpMaxDepth': [0, 63], 'RfpMinPly': [2, 63]}
+
+RfpMaxDepth swept, RfpMinPly held at 3, 48 constructed positions, depth 2m-1+8
+  RfpMaxDepth=0  exact 40/48  m2 16/16 d0  m3 13/16 d4  m4 6/8 d6  m5 5/8 d6  short 0  sign 0
+  RfpMaxDepth=3  exact 36/48  m2 16/16 d0  m3 14/16 d7  m4 5/8 d7  m5 1/8 d8  short 0  sign 0
+  RfpMaxDepth=6  exact 30/48  m2 16/16 d0  m3 12/16 d8  m4 2/8 d7  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=10 exact 25/48  m2 16/16 d0  m3 9/16 d8  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=15 exact 25/48  m2 16/16 d0  m3 9/16 d8  m4 0/8 d-  m5 0/8 d-  short 0  sign 0
+  RfpMaxDepth=63 exact 25/48  m2 16/16 d0  m3 9/16 d8  m4 0/8 d-  m5 0/8 d-  short 0  sign 0

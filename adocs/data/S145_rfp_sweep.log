@@ -1,3 +1,22 @@
+# adocs/data/S145_rfp_sweep.py, run at 14748c9 on the Linux machine DEC-049
+# names, 2026-08-21. This is the reading S145 took and it is left as it was
+# taken. Two things a later reader needs before using any number in it.
+#
+# **The RfpMinPly 1 and 0 rows say "m2 13/16" and the assertion fails seven,
+# not three.** The `exact` column asks only that the final iteration reports
+# the proved distance. tests/test_engine.cpp asks for that AND for
+# `first_exact == 2m - 1`, so the three positions the column counts as lost sit
+# beside four more that are found late -- 9 of 16 pass. The fence is stronger
+# than this table reads. Restated by S154 on 2026-09-01, which measured the
+# same split at HEAD and watched the real gate log the seven by name;
+# adocs/data/S154_floor_margin_sweep.log has both.
+#
+# **Every count below has moved.** S165 guarded null move pruning at both
+# edges of the mate band on 2026-08-23 and lifted the whole table: the mates in
+# three read 9 at the shipping floor and 7 with the guard removed, against the
+# 8 and 6 here, and the RfpMaxDepth 0 row reads 40 of 48 against 34. Use this
+# file for what S145 decided on and S154's log for what the engine does now.
+
 shipping defaults read from the binary: {'RfpMargin': 63, 'RfpMaxDepth': 15, 'RfpMinPly': 3}
 
 RfpMinPly swept, RfpMaxDepth held at 15, 48 constructed positions, depth 2m-1+8

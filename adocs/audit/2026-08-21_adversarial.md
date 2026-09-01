@@ -450,7 +450,18 @@ currently the largest single lever on the plan's calendar.
 
 ### 2026-08-21_adversarial-F06 — medium — `MATE_IN_THREE_FLOOR` has one position of margin, and thirteen tree-reshaping steps are queued next
 
-Status: open
+Status: closed — S154, 2026-09-01. The finding asked for the tolerance
+measurement and got it, and it reversed the reading. The count moves **0**
+positions over the seventeen commits that touched `src/` since the floor was
+placed and over nine table sizes from 1 MB to 256 MB, against a node total
+moving 17 % over the mates in three, and moves 5 under one ply of the guard —
+so the comment's claim held. What did not hold is the floor: `aa8c077` had
+lifted both ends from 8 and 6 to 9 and 7 on 2026-08-23, `7 >= 7` is green, and
+the assertion had been unable to fail for nine days. It is 8, observed red at
+`REQUIRE( 7 >= 8 )`. The "13 of 16" correction this report identified is
+confirmed and restated in three places: 9 of 16 pass, and the gate itself logs
+the seven failures by name. DEC-116,
+`adocs/data/S154_floor_margin_sweep.log`.
 
 **Evidence.** `tests/test_engine.cpp` sets `MATE_IN_THREE_FLOOR = 7` and asserts
 `exact_by_distance[3] >= MATE_IN_THREE_FLOOR`. The counts, from

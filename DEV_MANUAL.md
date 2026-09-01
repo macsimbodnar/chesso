@@ -830,22 +830,52 @@ positions on the shipping build at depth `2m - 1 + 8`:
 | distance | exact at the final iteration | delay |
 |---|---|---|
 | mate in 2 | 16 of 16 | 0 |
-| mate in 3 | 8 of 16 | up to 4 |
+| mate in 3 | 9 of 16 | up to 8 |
 | mate in 4 | 0 of 8 | — |
 | mate in 5 | 0 of 8 | — |
 
-With reverse futility switched off entirely it is 34 of 48, not 48, so no
-setting makes the strong claim true. What is asserted is three things instead:
-**no mate score for the side being mated and none closer than the proved
-minimum** — both provably false claims, measured 0 and 0 over twelve
+Re-measured 2026-09-01 by S154; S145 read 8 of 16 at delay up to 4 and S165
+moved both. With reverse futility switched off entirely it is 40 of 48, not 48,
+so no setting makes the strong claim true. What is asserted is three things
+instead: **no mate score for the side being mated and none closer than the
+proved minimum** — both provably false claims, measured 0 and 0 over twelve
 reverse-futility settings; **every mate in two at the first iteration that can
 hold it**, which is the assertion that fences the tuner and goes red the moment
-the ply floor drops below 2; and **a floor of 7 on the mate in three count**,
-placed strictly between the shipping 8 and the 6 the removed guard produces. The
+the ply floor drops below 2; and **a floor of 8 on the mate in three count**,
+placed strictly between the shipping 9 and the 7 the removed guard produces. The
 mate in four and five counts are printed by the test as a `MESSAGE` rather than
 asserted, because a floor of zero asserts nothing. Observed red under a stated
 mutation: `RFP_MIN_PLY` 3 → 1 fails the mate-in-two timing at iteration 5
-against 3.
+against 3, and the floor at `REQUIRE( 7 >= 8 )`.
+
+**The mate-in-two clause is stronger than a count and the difference is seven
+positions.** It asks that the mate be found *and* that `first_exact` be
+`2m - 1`. At `RfpMinPly` 1 the set reads 13 of 16 found but only **9 of 16 on
+time**, so the sweep logs' "13 of 16" understates what goes red. S145's log
+carries a header saying so; `adocs/data/S154_floor_margin_sweep.log` has the
+measurement and the gate's own seven failures by name.
+
+**The floor is re-derived whenever either end of it moves, never re-read**
+(DEC-116). 7 was placed between 8 and 6 by S145 and stopped separating on
+2026-08-23 when S165 lifted both ends to 9 and 7 — `7 >= 7` is green, so for
+nine days the line could not fail for the reason it exists. What the claim
+beside it asserts is now measured: over the seventeen commits that touched
+`src/` since the floor was placed, and over nine table sizes from 1 MB to
+256 MB, **0 positions change verdict**; one ply of the guard itself moves five.
+
+```bash
+python3 adocs/data/S154_floor_margin_sweep.py hash   # the noise floor: resize the table, change nothing else
+python3 adocs/data/S154_floor_margin_sweep.py refs   # the realised drift, one build per commit
+python3 adocs/data/S154_floor_margin_sweep.py floor  # the RfpMinPly table, bound relaxed in a worktree
+python3 adocs/data/S154_floor_margin_sweep.py slack  # what the depth window costs and what it buys
+python3 adocs/data/S154_floor_margin_sweep.py red    # rebuild the gate with the guard weakened; it must fail
+```
+
+`MATE_DEPTH_SLACK` is a cost budget and not a margin: at slack 12 the shipping
+guard and the removed one both find 10 of 16, so the separation is gone
+entirely, and the pass costs 4.1 s against 0.7 s. The mate-in-three count reads
+lateness under a fixed window; the mate-in-two clause is the one that does not
+depend on the window at all.
 
 **2. The mined breadth set.** `adocs/data/S145_mined_set.tsv`, one position per
 game from `.spsa/S085/games.pgn`, labelled by stockfish, **scored as a count
