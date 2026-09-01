@@ -1725,7 +1725,10 @@ TEST_SUITE("engine: mate safety")
   //   * a king hunt, where the king is driven across the board instead of held
   //     in a pocket,
   //   * an open-line mate, or the sacrifice that opens the line,
-  //   * a promotion mate - no pawn in this set can promote,
+  //   * a promotion mate - the engine's own generator emits 1292 legal moves
+  //     over the 48 roots and the 104 guarded defender nodes and 0 of them is
+  //     a pawn move, the pawns being mutually blocked on non-adjacent files
+  //     (`S155_motif_census.py --moves`),
   //   * any mate in a position with a realistic material balance.
   //
   // A future pruning rule that loses mates in those shapes passes this suite.

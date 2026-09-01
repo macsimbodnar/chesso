@@ -16,7 +16,9 @@ Updated: 2026-09-01, by hand.
   a colour swap -- against real breadth in distance, 16 / 16 / 8 / 8. The
   qualifier, the reason the narrowness is close to forced by the hazard, and the
   explicit list of what the gate cannot catch (back-rank, smothered and any
-  knight mate, king hunt, open-line mate, promotion mate, realistic material)
+  knight mate, king hunt, open-line mate, promotion mate -- the generator emits
+  **1292 legal moves over the 48 roots and 104 defender nodes and 0 pawn
+  moves**, `--moves` -- and realistic material)
   now stand in five places: `tests/test_engine.cpp`, `adocs/specs.md`,
   `S145_mate_set.py`, `DEV_MANUAL.md` and `MANUAL.md` -- the last two outside
   the step's `touches:`, recorded as a deviation. **No default changed, no

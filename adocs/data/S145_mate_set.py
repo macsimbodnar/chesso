@@ -58,7 +58,9 @@ the colour mirror of the other, a lone queen as the mating force in 48 of 48,
 file shifts, a mirror and a colour swap. Broad in mate distance, narrow in
 shape. So the gate this feeds cannot catch a rule that hides a back-rank mate,
 a smothered mate or any knight mate, a king hunt, an open-line mate, a
-promotion mate, or a mate in a position with a realistic material balance.
+promotion mate -- `S155_motif_census.py --moves` counts 1292 legal moves over
+the roots and defender nodes and 0 pawn moves among them -- or a mate in a
+position with a realistic material balance.
 A second motif with a different mating piece is worth building and is S168; it
 belongs beside these families here, not in place of them.
 

@@ -785,6 +785,7 @@ or an SPRT. S145 rebuilt what that test is.
 
 ```bash
 python3 adocs/data/S155_motif_census.py                        # what varies across the 48, and what does not
+python3 adocs/data/S155_motif_census.py --moves                # and what the generator says can move there
 ```
 
 Every row is a forced mate proved twice and by neither chesso: an exhaustive
@@ -802,7 +803,10 @@ That is close to forced by the hazard rather than careless — see the two
 properties below — but it bounds what this gate can ever catch, and the list is
 explicit: **no back-rank mate, no smothered mate and no mate delivered by a
 knight, no king hunt, no open-line mate or line-opening sacrifice, no promotion
-mate, and no position with a realistic material balance.** A pruning rule that
+mate, and no position with a realistic material balance.** The promotion clause
+is the generator's count and not an eyeball: over the 48 roots and the 104
+guarded defender nodes it emits 1292 legal moves, **0 of them pawn moves**,
+the pawns being mutually blocked on non-adjacent files. A pruning rule that
 hides a mate in one of those shapes passes the suite. S168 builds the second
 motif (S155, 2026-09-01).
 
