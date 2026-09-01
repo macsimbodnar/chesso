@@ -80,38 +80,36 @@ exits store nothing) are the closest prose. Measure it here.
 
 ### 2. Shape for chesso
 
-Both preconditions hold today, measured. (1) `evaluate()` is
-`evaluate_cheap() + evaluate_expensive()` (src/evaluation.cpp:1051-1052),
-53.90 ns a call post-S104 (specs.md); the expensive half is mobility plus king
-safety clamped to +/-LAZY_EVAL_MARGIN inside evaluate_expensive()
-(src/evaluation.cpp:1045; the constant at src/search_params.hpp:200), and
-paying it everywhere costs the 11.7 % above. (2) The TT does not cover quiescence:
-S094 counted the quiescence probe finding **any** entry on 0.79 % of nodes
-(kiwipete depth 12, 16 MB table) -- TT_DEPTH_QS = -1 sits below every main
-depth, so any main store over the slot evicts a quiescence entry -- while
-S103's 23.09 % warm hit rate is a main-search number. Chesso is
-also single-threaded (DEC-089's 1CPU scale), so Stockfish's SMP argument is
-vacuous here. DEC-039 retired exactly this cache once -- at 1.36 ns of
-accumulator-only evaluate() against a 0.36 ns probe into 256 KB
-(tools/probe_cost.cpp, pre-DEC-049 machine), a sub-1 % prize. At 53.90 ns,
-with S121/S122 about to raise it, the same arithmetic reopens it; the stamp
+Both preconditions hold today, measured. (1) `evaluate()` is `evaluate_cheap()
++ evaluate_expensive()` (src/evaluation.cpp:1051-1052), 53.90 ns a call
+post-S104 (specs.md); the expensive half is mobility plus king safety clamped
+to +/-LAZY_EVAL_MARGIN inside evaluate_expensive() (src/evaluation.cpp:1045;
+the constant at src/search_params.hpp:200), and paying it everywhere costs the
+11.7 % above. (2) The TT does not cover quiescence: S094 counted the quiescence
+probe finding **any** entry on 0.79 % of nodes (kiwipete depth 12, 16 MB table)
+-- TT_DEPTH_QS = -1 sits below every main depth, so any main store over the
+slot evicts a quiescence entry -- while S103's 23.09 % warm hit rate is a
+main-search number. Chesso is also single-threaded (DEC-089's 1CPU scale), so
+Stockfish's SMP argument is vacuous here. DEC-039 retired exactly this cache
+once -- at 1.36 ns of accumulator-only evaluate() against a 0.36 ns probe into
+256 KB (tools/probe_cost.cpp, pre-DEC-049 machine), a sub-1 % prize. At 53.90
+ns, with S121/S122 about to raise it, the same arithmetic reopens it; the stamp
 should say so in one line.
 
 Placement: **inside the evaluation module, at evaluate_lazy(), not inside
-evaluate()**. Three reasons. `touches:` names no search file and
-quiescence already calls evaluate_lazy (src/search.cpp:349), so the mass of
-calls is covered without touching search.cpp. evaluate() must stay pure:
-bench_eval calls it in a loop over a fixed list (tests/bench_eval.cpp) and a
-cache inside it turns the benchmark into a probe benchmark on the second
-sweep; eval_spread and the tuner's oracle (eval_model::evaluate,
-tools/eval_model.hpp:914, its own eval_model) stay untouched the same way.
-And the main search is already TT-fed: post-S108 every non-check main node
-reads or stores tt_eval, so the published division of labour lands as
-TT-eval for the main search, dedicated cache for quiescence -- Arasan's
-split. Key: `board->hash`, in hand at every
-call; it covers side to move (src/bitboard.cpp:878-880), so INV-5 reads back
-with no sign applied, S108's argument. Stored: the **raw clamped evaluate()
-output** -- what src/evaluation.cpp:1107 returns -- never the :1099-:1039
+evaluate()**. Three reasons. `touches:` names no search file and quiescence
+already calls evaluate_lazy (src/search.cpp:349), so the mass of calls is
+covered without touching search.cpp. evaluate() must stay pure: bench_eval
+calls it in a loop over a fixed list (tests/bench_eval.cpp) and a cache inside
+it turns the benchmark into a probe benchmark on the second sweep; eval_spread
+and the tuner's oracle (eval_model::evaluate, tools/eval_model.hpp:914, its own
+eval_model) stay untouched the same way. And the main search is already TT-fed:
+post-S108 every non-check main node reads or stores tt_eval, so the published
+division of labour lands as TT-eval for the main search, dedicated cache for
+quiescence -- Arasan's split. Key: `board->hash`, in hand at every call; it
+covers side to move (src/bitboard.cpp:878-880), so INV-5 reads back with no
+sign applied, S108's argument. Stored: the **raw clamped evaluate() output** --
+what src/evaluation.cpp:1107 returns -- never the src/evaluation.cpp:1099-1100
 bound (the accepts; S094's reason), and never a corrected value: S099 applies
 its correction after the read, at the search site, and its raw-in-storage rule
 covers this table too. Layering, bottom up: cache -> raw eval -> correction ->
@@ -130,34 +128,35 @@ untouched.
 (a) **Table + probe on the pay-the-expensive path -- behaviour-neutral,
 proven.** probe/store/clear in evaluation.cpp, declared in evaluation.hpp,
 entry type in data_structures.hpp (`touches:`). evaluate_lazy() probes
-**after** the shortcut tests (:1038-1039): a hit returns the stored full
-score, value-identical to :1046 by construction; a miss computes and stores.
-The bound paths store nothing. evaluate()'s direct callers (src/search.cpp:612,
-:529-530) neither probe nor fill -- they are TT-fed and rare. Tests,
-red-first: property over a position list -- empty cache, wide window, call
-twice, second equals fresh evaluate(); revisit through a made-and-unmade line
-(INV-2 pattern); shortcut path stores nothing (establish `*exact == false`
-first, then assert the probe misses -- non-vacuous); two keys sharing index
-bits and differing tags do not answer each other; the INV-5 mirror pair each
-equal their fresh call; clear() empties. Neutrality discharged per DEC-083:
-search_bench node-identical at depths 9 and 12, one interleaved timing
-recorded -- expect small, since a hit saves evaluate_expensive() only, the
-cheap stage having been paid for the shortcut test.
+**after** the shortcut tests (src/evaluation.cpp:1099-1100): a hit returns the
+stored full score, value-identical to src/evaluation.cpp:1107 by construction;
+a miss computes and stores. The bound paths store nothing. evaluate()'s direct
+callers (src/search.cpp:612, src/search.cpp:720-723) neither probe nor fill --
+they are TT-fed and rare. Tests, red-first: property over a position list --
+empty cache, wide window, call twice, second equals fresh evaluate(); revisit
+through a made-and-unmade line (INV-2 pattern); shortcut path stores nothing
+(establish `*exact == false` first, then assert the probe misses --
+non-vacuous); two keys sharing index bits and differing tags do not answer each
+other; the INV-5 mirror pair each equal their fresh call; clear() empties.
+Neutrality discharged per DEC-083: search_bench node-identical at depths 9 and
+12, one interleaved timing recorded -- expect small, since a hit saves
+evaluate_expensive() only, the cheap stage having been paid for the shortcut
+test.
 
 (b) **Probe above the shortcut -- the SPRT.** Move the probe to the top of
 evaluate_lazy(): a hit now returns the exact score where the shortcut would
-have handed back cheap +/- margin -- the strictly-better-number argument
-S094's stand-pat read makes at src/search.cpp:335-337. Not arguable into
-neutrality: cutoff decisions cannot flip (full is on the bound's side of the
-window by the :1038 arithmetic) but the fail-soft values propagated differ,
-so node counts move by construction; a hit also sets `*exact`, so :253 writes
-the score on to the TT -- consistent, both tables hold evaluate()'s output.
-Hit-rate instrumentation rides this commit: probe/hit/store/bound-skip
-counters in a throwaway or debug-flag build (S103's method), printed after
-`go`, run over S103's own protocol -- 300 positions at depth 10 in one
-process, plus the three search_bench positions at depth 12 -- and the
-disagreement count against a fresh evaluate(), which must be 0. bench_eval is
-not the vehicle; the accepts says a real search.
+have handed back cheap +/- margin -- the strictly-better-number argument S094's
+stand-pat read makes at src/search.cpp:335-337. Not arguable into neutrality:
+cutoff decisions cannot flip (full is on the bound's side of the window by the
+src/evaluation.cpp:1099 arithmetic) but the fail-soft values propagated differ,
+so node counts move by construction; a hit also sets `*exact`, so
+src/search.cpp:361 writes the score on to the TT -- consistent, both tables
+hold evaluate()'s output. Hit-rate instrumentation rides this commit:
+probe/hit/store/bound-skip counters in a throwaway or debug-flag build (S103's
+method), printed after `go`, run over S103's own protocol -- 300 positions at
+depth 10 in one process, plus the three search_bench positions at depth 12 --
+and the disagreement count against a fresh evaluate(), which must be 0.
+bench_eval is not the vehicle; the accepts says a real search.
 
 (c) **The statement S039 and S122 read.** With hit rate h, exact everywhere
 costs about (1-h) x 11.7 % of nps plus probe overhead. Write the
@@ -268,7 +267,8 @@ the stamp; S039 executes it.
   merge, +18, "frees two TT entry slots".
 - https://github.com/official-stockfish/Stockfish/commit/3cf64717 -- revert
   23 days later, -9 on re-test, cutechess bug named, per-thread vs shared TT.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+eval+cache
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+eval+cache
   -- the 2012 family (4e5d834e infrastructure, a5ea3a20, 9edc7d69).
 - https://talkchess.com/viewtopic.php?t=58758 -- Crafty: 65536 64-bit
   entries, 48-bit tag, store-full-only, collision prose, "a couple of elo".

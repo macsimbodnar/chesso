@@ -78,42 +78,44 @@ Stash #19 (+8.05/7424) and Lynx #429 (+13.5/4903).
 
 ### 2. Shape for chesso
 
-- **Site: after the RFP block (:479-537), before the null-move block
-  (:539-588).** Lynx #2180 measured razoring *before* RFP at -1.06 over 28174
-  games -- stay after. RFP is the mirror: a static bound returned when eval is
-  `RFP_MARGIN * depth` **above beta** (:536); razoring drops to quiescence
-  when eval is a margin **below alpha**. Non-PV windows are null (:706), so
-  the two conditions are disjoint by arithmetic -- the pair covers both tails
-  of the same eval.
+- - **Site: after the RFP block (src/search.cpp:733-772), before the null-move
+  block (src/search.cpp:774-841).** Lynx #2180 measured razoring *before* RFP
+  at -1.06 over 28174 games -- stay after. RFP is the mirror: a static bound
+  returned when eval is `RFP_MARGIN * depth` **above beta**
+  (src/search.cpp:771); razoring drops to quiescence when eval is a margin
+  **below alpha**. Non-PV windows are null (src/search.cpp:973), so the two
+  conditions are disjoint by arithmetic -- the pair covers both tails of the
+  same eval.
 - **Input**: post-S108 the static eval is computed-or-read at the top of the
   node; razoring reads the **raw static**, never a TT-score-adjusted value --
   Lynx merged removing TT-score-as-eval at +6.65 (#1971) and rejected
   re-adding it for razoring alone at -3.86 (#1974). Guard `!= TT_EVAL_NONE`,
   asserted not assumed (S114's sentinel rule).
-- **The exact form** (verified, per the accepts): at `!is_pv && !is_in_check
-  && depth <= RAZOR_DEPTH && alpha < MATE_MIN && alpha > -MATE_MIN` (:512 is
-  the guard row to mirror, alpha for beta; MATE_MIN 48000 at :17) and
-  `static_eval + RAZOR_MARGIN <= alpha`: `score = quiescence(alpha, beta,
-  ply, 0, game, state)` (:191 signature; :466 is the call pattern) -- **return
-  score only if `score <= alpha`**, else fall through to the move loop.
-  Fail-soft: return quiescence's own score, never alpha. The null window is
-  its own cheapest verification; no second windowing to get wrong.
+- - **The exact form** (verified, per the accepts): at `!is_pv && !is_in_check
+  && depth <= RAZOR_DEPTH && alpha < MATE_MIN && alpha > -MATE_MIN`
+  (src/search.cpp:766 is the guard row to mirror, alpha for beta; MATE_MIN
+  48000 at src/search.cpp:17) and `static_eval + RAZOR_MARGIN <= alpha`: `score
+  = quiescence(alpha, beta, ply, 0, game, state)` (src/search.cpp:293
+  signature; src/search.cpp:684 is the call pattern) -- **return score only if
+  `score <= alpha`**, else fall through to the move loop. Fail-soft: return
+  quiescence's own score, never alpha. The null window is its own cheapest
+  verification; no second windowing to get wrong.
 
 ### 3. Implementation sketch
 
-One commit, one SPRT: two constants, ~10 guarded lines between :537 and :539,
-tests red-first.
+One commit, one SPRT: two constants, ~10 guarded lines between
+src/search.cpp:772 and src/search.cpp:774, tests red-first.
 
-- **Mate case, built the S033 way** (python-chess enumeration + Stockfish
-  confirmation, DEC-023, never a judged position): the razoring side far
-  behind on material at a depth-1 node yet mating with a **quiet** first
-  move -- out of check quiescence generates captures only (:295-297), so the
+- - **Mate case, built the S033 way** (python-chess enumeration + Stockfish
+  confirmation, DEC-023, never a judged position): the razoring side far behind
+  on material at a depth-1 node yet mating with a **quiet** first move -- out
+  of check quiescence generates captures only (src/search.cpp:444-446), so the
   drop is blind to it by construction. Lands beside "pruning does not hide a
   forced mate", tests/test_search.cpp:2808 and "pruning does not hide a mate
-  against the material leader", tests/test_search.cpp:2847 in the fast
-  suite; observed red against the demolition build (verification arm
-  removed, i.e. the unconditional drop) and the printout recorded, per the
-  accepts -- record which guard's removal reddens it.
+  against the material leader", tests/test_search.cpp:2847 in the fast suite;
+  observed red against the demolition build (verification arm removed, i.e. the
+  unconditional drop) and the printout recorded, per the accepts -- record
+  which guard's removal reddens it.
 - **In-check exemption, non-vacuous** (S109's precondition pattern): a
   position where the condition would fire but for the check searches
   identically to the off build; the same shape out of check moves the counts.
@@ -144,10 +146,10 @@ Both in src/search_params.hpp's X-macro with ranges (the accepts):
 - **In check**: the node is forced, the static is meaningless, and the drop
   would answer an evasion node with zero real plies. Excluded by the accepts
   and by every published form.
-- **Alpha in the mate band**: a static eval provably cannot approach a mate
-  score here (the LAZY_EVAL_MARGIN clamp, S033's row), so with alpha near
-  +mate the condition is trivially true at every node and the whole subtree
-  under a mate-scored bound drops to quiescence. The :512 band guard, on
+- - **Alpha in the mate band**: a static eval provably cannot approach a mate
+  score here (the LAZY_EVAL_MARGIN clamp, S033's row), so with alpha near +mate
+  the condition is trivially true at every node and the whole subtree under a
+  mate-scored bound drops to quiescence. The src/search.cpp:766 band guard, on
   alpha.
 - **PV exemption**: Weiss #102 shipped "no razoring in pvnodes"; SF #4147
   removed the exemption at 3600 as a non-regression simplification. Keep it
@@ -163,9 +165,10 @@ Both in src/search_params.hpp's X-macro with ranges (the accepts):
   enforcement, not this comment.
 - **No TT-move gate**: razor-only-without-a-TT-move failed at Lynx (#1541,
   -4.71). Do not add conditions the record priced negative.
-- **Double node count, cosmetic**: negamax counts the node (:420) and the
-  razor's quiescence call counts it again (:200) -- Berserk #581 cleaned this
-  at ~0. The :466 leaf drop has the same property today, so search_bench
+- - **Double node count, cosmetic**: negamax counts the node
+  (src/search.cpp:608) and the razor's quiescence call counts it again
+  (src/search.cpp:302) -- Berserk #581 cleaned this at ~0. The
+  src/search.cpp:684 leaf drop has the same property today, so search_bench
   stays internally consistent; note it, do not fix it here.
 
 ### 6. Measurement
@@ -193,9 +196,10 @@ verdict recorded.
 - **S130 (before)**: the razor's quiescence call inherits the TT-tightened
   stand-pat -- cheaper verification, same answer.
 - **S109 (before)**: different mechanism, section 5; no shared lines.
-- **S113/S114 (just before, same 50 lines of negamax)**: both rewrite the
-  :539-588 neighbourhood first by plan order; this block lands between RFP
-  and null move afterwards -- rebase onto their shapes, cite symbols.
+- - **S113/S114 (just before, same 50 lines of negamax)**: both rewrite the
+  src/search.cpp:774-841 neighbourhood first by plan order; this block lands
+  between RFP and null move afterwards -- rebase onto their shapes, cite
+  symbols.
 - **S127 (if kept)**: RAZOR_MARGIN and RAZOR_DEPTH join the SPSA set; the
   deferred variants are priced there, not here -- Lynx #2039's
   skip-the-qsearch-when-a-TT-eval-certifies (+3.97 MTC) and any multi-depth
@@ -207,10 +211,12 @@ verdict recorded.
   variant, "~three pawns", Heinz limited razoring, the SF-2022 snapshot.
 - https://github.com/official-stockfish/Stockfish/pull/3921 -- the 2022
   reintroduction; verified-form sentence quoted; gainer runs, 339248 games.
-- https://api.github.com/search/issues?q=repo:official-stockfish/Stockfish+razoring+type:pr
+- -
+  https://api.github.com/search/issues?q=repo:official-stockfish/Stockfish+razoring+type:pr
   -- #3278 removal 2020 (128816 games, ~0); #4147 PV; #4196 depth condition;
   #5120; #7044.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+razoring
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+razoring
   -- 8cd5cb9 verification cuts >40%; 5d57bb4 depth-1 2018; d457594; 060eef4;
   e817a55; the 2024-2026 simplification stream.
 - https://github.com/official-stockfish/Stockfish/pull/2401 -- razoring is

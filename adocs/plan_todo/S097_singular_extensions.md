@@ -127,49 +127,50 @@ and DEC-087's Lynx-based banding (S099's "+11.4 at ~2850" included) reads
   excludedMove ... reset right after singular search is finished"); chesso's
   natural form is one more parameter, `move_t excluded_move`, travelling
   exactly as prev_move does. negamax is test-callable since S103.
-- **No extensions of any kind exist** (specs.md "absent, search"; S096
+- - **No extensions of any kind exist** (specs.md "absent, search"; S096
   retired by DEC-087), so this is the tree's first depth increase. Plumbing:
-  `child_depth = depth - 1` (:676); the singular move alone searches at
-  `child_depth + 1`. MAX_PLY walls carry it: negamax returns evaluate() at
-  `ply + 1 >= MAX_PLY` (:424), quiescence stand-pat at :260; MAX_PLY 128,
-  MAX_DEPTH 126 (data_structures.hpp:42-43). An always-extending path
-  terminates on the ply wall by construction; the published cap that keeps
-  the wall theoretical is Lynx's `ply < 3 * depth` (#1768).
-- **TT entry fields suffice** — verified at src/data_structures.hpp:388-420:
+  `child_depth = depth - 1` (src/search.cpp:943); the singular move alone
+  searches at `child_depth + 1`. MAX_PLY walls carry it: negamax returns
+  evaluate() at `ply + 1 >= MAX_PLY` (src/search.cpp:612), quiescence stand-pat
+  at src/search.cpp:413; MAX_PLY 128, MAX_DEPTH 126
+  (data_structures.hpp:42-43). An always-extending path terminates on the ply
+  wall by construction; the published cap that keeps the wall theoretical is
+  Lynx's `ply < 3 * depth` (#1768).
+- - **TT entry fields suffice** — verified at src/data_structures.hpp:388-420:
   `depth` int16_t, `type` uint8_t (TT_BETA_NODE = lower, TT_PV_NODE = exact,
-  :360-378), `score` int32_t, `best_move`; probe :445, `tt_move` copied out
-  :449. No change to the 24-byte layout is needed for V1/V2.
-- **The score read is a new de-normalize site.** entry->score is stored
-  normalized (:813); SE bypasses tt_entry_answers (it wants the value, not a
-  cutoff), so it calls `de_normalize_score(entry->score, ply)` (:139-144)
-  itself, then requires `|tt_score| < MATE_MIN` before deriving
-  singularBeta — S106's round-trip lesson applied at the new reader.
-- **TT while excluding, published practice:** at the excluded node take no
-  TT cutoff (Berserk e06b444 "Disable TT and NMP on singular search"; Lynx's
+  src/data_structures.hpp:360-380), `score` int32_t, `best_move`; probe
+  src/search.cpp:663, `tt_move` copied out src/search.cpp:667. No change to the
+  24-byte layout is needed for V1/V2.
+- - **The score read is a new de-normalize site.** entry->score is stored
+  normalized (src/search.cpp:1099); SE bypasses tt_entry_answers (it wants the
+  value, not a cutoff), so it calls `de_normalize_score(entry->score, ply)`
+  (src/search.cpp:193-198) itself, then requires `|tt_score| < MATE_MIN` before
+  deriving singularBeta — S106's round-trip lesson applied at the new reader.
+- - **TT while excluding, published practice:** at the excluded node take no TT
+  cutoff (Berserk e06b444 "Disable TT and NMP on singular search"; Lynx's
   merged branch literally named "no-tt-cutoffs") and **write no store** (SF
-  ebe021f6, "Don't update TT at excluded move ply") — gate :457-463 and
-  :813-815 on `excluded_move == 0`. The subtree below probes and stores
-  normally in every traced writeup. The alternative — hashing the exclusion
-  into the key so the verification owns a separate entry — is known practice
-  whose open prose this pass could not trace: **unknown, not taken**
-  (DEC-084 caution). Weiss #600 (SMP probe rule) and #644 (skip TB) are out
-  of scope here.
-- **Also suppressed at the excluded node:** NMP (same Berserk prose — a
-  null-move bound would answer the verification with no alternative
-  searched; gate it on excluded_move directly, never by abusing the
-  `prev_move != 0` gate at :569, since prev_move must keep flowing for
-  countermoves/S024) and SE itself (`excluded_move == 0` in the conditions —
-  no recursive exclusion, the published rule). Whether RFP (:511) needs
-  suppressing too has no traced prose: a static fail-high there answers
-  "not singular" without any move searched — decide with a test, record
-  which.
-- **The move loop under exclusion:** skip `moves[i] == excluded_move` before
-  make_move and before legal_moves_counter++ (:656-663). score_move still
-  ranks the excluded move first — one wasted pick, harmless. If no legal
-  alternative exists, :779-781 returns mate/draw: the mate side reads as
-  fail-low (singular — correct, it is the only legal move); the stalemate
-  DRAW_SCORE side reads as fail-high when singularBeta <= 0 — no traced
-  prose, decide and pin with a test.
+  ebe021f6, "Don't update TT at excluded move ply") — gate
+  src/search.cpp:675-681 and src/search.cpp:1099-1101 on `excluded_move == 0`.
+  The subtree below probes and stores normally in every traced writeup. The
+  alternative — hashing the exclusion into the key so the verification owns a
+  separate entry — is known practice whose open prose this pass could not
+  trace: **unknown, not taken** (DEC-084 caution). Weiss #600 (SMP probe rule)
+  and #644 (skip TB) are out of scope here.
+- - **Also suppressed at the excluded node:** NMP (same Berserk prose — a
+  null-move bound would answer the verification with no alternative searched;
+  gate it on excluded_move directly, never by abusing the `prev_move != 0` gate
+  at src/search.cpp:822, since prev_move must keep flowing for
+  countermoves/S024) and SE itself (`excluded_move == 0` in the conditions — no
+  recursive exclusion, the published rule). Whether RFP (src/search.cpp:765)
+  needs suppressing too has no traced prose: a static fail-high there answers
+  "not singular" without any move searched — decide with a test, record which.
+- - **The move loop under exclusion:** skip `moves[i] == excluded_move` before
+  make_move and before legal_moves_counter++ (src/search.cpp:917-930).
+  score_move still ranks the excluded move first — one wasted pick, harmless.
+  If no legal alternative exists, src/search.cpp:1065-1067 returns mate/draw:
+  the mate side reads as fail-low (singular — correct, it is the only legal
+  move); the stalemate DRAW_SCORE side reads as fail-high when singularBeta <=
+  0 — no traced prose, decide and pin with a test.
 
 ### 3. Implementation sketch
 
@@ -187,11 +188,12 @@ extension first, the multicut second, each its own SPRT.
    `singular_beta = tt_score - se_margin(depth)`;
    `vscore = negamax(singular_beta - 1, singular_beta, (depth - 1) / 2, ply,
    game, state, prev_move, false)` with excluded_move = tt_move; check
-   `state->aborted` before using vscore (:729's pattern).
+   `state->aborted` before using vscore (src/search.cpp:996's pattern).
    `vscore < singular_beta` → `se_extension = 1`.
-3. In the loop: the searched depth for `moves[i] == tt_move` becomes
-   `child_depth + se_extension`; the LMR clamp (:697) and S098-V3's deeper
-   cap follow the extended child depth — the edit S098 §5 assigns here.
+3. 3. In the loop: the searched depth for `moves[i] == tt_move` becomes
+   `child_depth + se_extension`; the LMR clamp (src/search.cpp:964) and
+   S098-V3's deeper cap follow the extended child depth — the edit S098 §5
+   assigns here.
 4. Tests, red first: **exclusion unit test through the negamax seam** — a
    tool-built mate-in-1 with exactly one mating move (python-chess
    enumeration + Stockfish confirmation, S033 protocol, DEC-023): with
@@ -207,11 +209,11 @@ extension first, the multicut second, each its own SPRT.
    material leader", tests/test_search.cpp:2847; fast suite. SPRT.
 
 **V2 — multicut:**
-1. `vscore >= singular_beta && vscore >= beta && |vscore| < MATE_MIN &&
-   !is_pv` → return vscore. Fail-soft score, not singularBeta (Lynx #1751
-   vs #1750); mate guard is #1761's; the !is_pv gate is the house pattern
-   for bound-returning prunes (RFP :511, NMP :569) — direct prose untraced,
-   stated as a choice in the commit.
+1. 1. `vscore >= singular_beta && vscore >= beta && |vscore| < MATE_MIN &&
+   !is_pv` → return vscore. Fail-soft score, not singularBeta (Lynx #1751 vs
+   #1750); mate guard is #1761's; the !is_pv gate is the house pattern for
+   bound-returning prunes (RFP src/search.cpp:765, NMP src/search.cpp:822) —
+   direct prose untraced, stated as a choice in the commit.
 2. The accepts' mate case: a forced mate inside the multicut's pruned depth
    added beside "pruning does not hide a forced mate",
    tests/test_search.cpp:2808, observed red with the mate-range guard
@@ -222,8 +224,9 @@ extension first, the multicut second, each its own SPRT.
 
 ### 4. Constants and seeds
 
-All in the src/search_params.hpp X-macro (:41) with stated ranges; every
-number is a **seed — must be fitted/SPSA'd here** (S127, DEC-084).
+All in the src/search_params.hpp X-macro (src/search_params.hpp:50) with stated
+ranges; every number is a **seed — must be fitted/SPSA'd here** (S127,
+DEC-084).
 
 - `SE_MIN_DEPTH` **8**, range 4..16 (SF prose 8e823459; Ethereal 8→10
   +12.68 up, Stash 8→7 +7.87 down, Weiss #639/#641 lower still at ~3300 —
@@ -247,22 +250,22 @@ number is a **seed — must be fitted/SPSA'd here** (S127, DEC-084).
 
 ### 5. Pitfalls
 
-- **Search explosion is the published hazard, not a hidden mate** — the
+- - **Search explosion is the published hazard, not a hidden mate** — the
   extension only adds depth. Caps: +1 once per node, no recursive exclusion,
-  `ply < SE_PLY_FACTOR * depth`, the MAX_PLY walls (:424, :260). §6's
-  fixed-node depth check is the instrument that catches a blowup before an
-  SPRT spends a night on it.
-- **TT pollution from the verification:** its result is computed with the
-  best move removed — stored, it poisons every later probe of the position.
-  The no-store gate (:813-815) is SF-prose-backed (ebe021f6); the no-cutoff
-  gate keeps the entry from answering its own verification (the entry's
-  lower bound >= singularBeta would multicut every time, vacuously).
-- **Mate scores.** De-normalize before deriving anything (S106's lesson;
-  tt_entry_answers does it at :170 for cutoffs, this is a second reader);
-  `|tt_score| < MATE_MIN` gates entry; singularBeta itself must stay out of
-  the mate band (Lynx #2559/#2560 — the merged guard measured ~0 but exists
-  to stop false mate reports); multicut never returns a mate-range value
-  (#1761). MATE_MIN/MATE_MAX are :16-17.
+  `ply < SE_PLY_FACTOR * depth`, the MAX_PLY walls (src/search.cpp:612,
+  src/search.cpp:413). §6's fixed-node depth check is the instrument that
+  catches a blowup before an SPRT spends a night on it.
+- - **TT pollution from the verification:** its result is computed with the
+  best move removed — stored, it poisons every later probe of the position. The
+  no-store gate (src/search.cpp:1099-1101) is SF-prose-backed (ebe021f6); the
+  no-cutoff gate keeps the entry from answering its own verification (the
+  entry's lower bound >= singularBeta would multicut every time, vacuously).
+- - **Mate scores.** De-normalize before deriving anything (S106's lesson;
+  tt_entry_answers does it at src/search.cpp:234 for cutoffs, this is a second
+  reader); `|tt_score| < MATE_MIN` gates entry; singularBeta itself must stay
+  out of the mate band (Lynx #2559/#2560 — the merged guard measured ~0 but
+  exists to stop false mate reports); multicut never returns a mate-range value
+  (#1761). MATE_MIN/MATE_MAX are src/search.cpp:16-17.
 - **IIR (S095, lands before) is disjoint by construction** — IIR fires on
   `tt_move == 0`, SE requires `tt_move != 0`; inside the verification node
   the probe still finds the entry, so IIR stays off there unless the
@@ -277,9 +280,9 @@ number is a **seed — must be fitted/SPSA'd here** (S127, DEC-084).
   matches nothing, the verification degenerates to a half-depth re-search
   and the extension never fires — harmless but wasted; gating on the move
   appearing in the list is one comparison if the waste shows in profiles.
-- **The abort path:** vscore from an aborted verification is garbage —
-  check state->aborted immediately (the :729 pattern) and take no decision
-  from it.
+- - **The abort path:** vscore from an aborted verification is garbage — check
+  state->aborted immediately (the src/search.cpp:996 pattern) and take no
+  decision from it.
 - **The repo gate:** both mate suites re-run per verdict (CLAUDE.md: any new
   pruning gets the mate treatment before it is called done — multicut is
   pruning); tune-build strength numbers forbidden (S073).
@@ -339,27 +342,79 @@ dropped it at ~3000). A stalled V2 near +3 straddles the {0,5} bounds
 
 ### 8. References
 
-- https://www.chessprogramming.org/Singular_Extensions — origin papers, Stockfish 1.6 lower-bound restriction, exact-bound relaxation, margin/depth experimentation space.
-- https://www.chessprogramming.org/Multi-Cut — Björnsson/Marsland papers, M/C/R parameters, the SE fold-in as modern practice.
-- Anantharaman, Campbell, Hsu 1988/1990; Anantharaman ICCA 14(1)/14(2) 1991; Hsu, Behind Deep Blue 2002 — cited via CPW's reference list, not fetched.
-- https://api.github.com/search/issues?q=repo:TerjeKir/weiss+singular+type:pr — #354 intro +11.52/+24.21; #639/#641 lower depths; #655 negative +2.66/+3.14; #656 double +11.52/+11.18; #600 SMP TT probing; #644 skip TB; #756 terminal-score condition; #781 negative-for-cutnodes +3.25/+3.55.
-- https://api.github.com/repos/TerjeKir/weiss/pulls/354 — "Code inspired by SF, Eth and many other engines"; the two SPRT blocks.
-- https://api.github.com/repos/TerjeKir/weiss/releases — v1.2 2020-10-17 "Singular Extension"; v1.1 2020-09-02.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+singular+type:pr — #1731 intro +20.53 LTC ("se-04-7-no-tt-cutoffs"); #2331 ttPv bonus +4.95; #2559/#2560 singularBeta mate guards.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+SE+in:title+type:pr — #1737 no check-ext in verification +1.14; #1734 IIR-during-SE +0.09 unmerged; #1844 no correcting on verification +0.49; #2423 double negext on cutnode +1.73.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+multicut+type:pr — #1751 singularScore +6.21 merged; #1750 singularBeta -0.84 unmerged; #1752 reduce-instead +0.78 unmerged; #1761 mate guard; #2450 fail-firm -0.75 unmerged.
-- https://api.github.com/repos/lynx-chess/Lynx/releases/tags/v1.10.0 — the SE block shipped whole: #1731/#1742/#1743/#1751/#1761/#1768/#1777.
-- https://api.github.com/repos/lynx-chess/Lynx/issues/1742 and /1743 — double ext +18.33 (margin 15), negative ext +11.99.
-- https://raw.githubusercontent.com/lynx-chess/Lynx/main/README.md — the version/rating table behind the band caution (1.8.0=3144, 1.10.0=3293).
-- https://api.github.com/search/commits?q=repo:jhonnold/berserk+singular — b0eea29 #42 intro; e06b444 #45 "Disable TT and NMP on singular search"; 60bcdd6 #102 double +2.90; 0e42746 #542 triple +6.73; 8cae7ac #424 negative reductions +2.13; 1b95cfe #198 eval reuse +1.22.
-- https://api.github.com/repos/jhonnold/berserk/pulls/42 — +19.82 +/-9.34 at 10+0.1, 2021-04-07.
-- https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?t=12771 — Berserk v1.2.0 ~2000, v2.0.0 ~2450 author estimates (2021-02/03): the introduction band anchor.
-- https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+singular — ad8a87c6 "no Multi-Cut this time" 2020-12; 2db36e4f retry 2021-02; dfa889e7 depth 8→7 +7.87/+4.97; c9238d02/df1e1c9b more SE +2.50/+6.27; 07b3c88e negative +2.66/+2.05; 343ed1c5 skip known win/loss +5.73; c34419cc quiet 3-ply 2025.
-- https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+singular — aa36bc09 2018-04 intro (+6.23/+3.46/+12.68); d397a7b5 multicut +5.74; 464fa339 quiet limit +10.82; f71ac476 negative +4.66.
-- https://api.github.com/repos/AndyGrant/Ethereal/releases — 11.16 "apply Singular Extensions aggressively"; 11.38 quiet limit; 12.08 "singular moves mistaken as MultiCut moves" fix; 13.76 singularity() simplification.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+excluded — ebe021f6 2017 "Don't update TT at excluded move ply"; d6bdcec5 excludedMove reset prose; 5bec768d/25c22ffe 2009 tte/ttMove condition prose.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+singular — 23cbb221 depth-dependent margin; 8e823459 threshold 6/8 prose; 30c58320 check-ext exclusivity; 16566a8f capture coupling; 4d0981fe mate-position revert; b34a690c/b1f52293 singular result reused by MCP.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22negative+extension%22 — e1f12aa 2022 intro; 39da50e/98dafda/a48573e 2023; c43425b 2024 simplify-away; c5aef2b 2026.
-- https://talkchess.com/forum3/viewtopic.php?t=38104 — edwardyu 2011: skip hashmove, sing_beta = value - margin, depth>=6, entry within 3 of depth; Dailey (Komodo "really big"), Hyatt (Crafty none).
-- https://www.talkchess.com/forum3/viewtopic.php?t=68290 — once-per-line/explosion discussion; Cardoso: "depth>8*ONE_PLY", node-count cost.
-- Unreachable this pass: ccrl.chessdom.com (DNS), computerchess.org.uk (403) — Weiss 1.1 / Berserk 3.x-4.x blitz numbers untraced, said so above.
+- - https://www.chessprogramming.org/Singular_Extensions — origin papers,
+  Stockfish 1.6 lower-bound restriction, exact-bound relaxation, margin/depth
+  experimentation space.
+- - https://www.chessprogramming.org/Multi-Cut — Björnsson/Marsland papers,
+  M/C/R parameters, the SE fold-in as modern practice.
+- - Anantharaman, Campbell, Hsu 1988/1990; Anantharaman ICCA 14(1)/14(2) 1991;
+  Hsu, Behind Deep Blue 2002 — cited via CPW's reference list, not fetched.
+- - https://api.github.com/search/issues?q=repo:TerjeKir/weiss+singular+type:pr
+  — #354 intro +11.52/+24.21; #639/#641 lower depths; #655 negative
+  +2.66/+3.14; #656 double +11.52/+11.18; #600 SMP TT probing; #644 skip TB;
+  #756 terminal-score condition; #781 negative-for-cutnodes +3.25/+3.55.
+- - https://api.github.com/repos/TerjeKir/weiss/pulls/354 — "Code inspired by
+  SF, Eth and many other engines"; the two SPRT blocks.
+- - https://api.github.com/repos/TerjeKir/weiss/releases — v1.2 2020-10-17
+  "Singular Extension"; v1.1 2020-09-02.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+singular+type:pr
+  — #1731 intro +20.53 LTC ("se-04-7-no-tt-cutoffs"); #2331 ttPv bonus +4.95;
+  #2559/#2560 singularBeta mate guards.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+SE+in:title+type:pr
+  — #1737 no check-ext in verification +1.14; #1734 IIR-during-SE +0.09
+  unmerged; #1844 no correcting on verification +0.49; #2423 double negext on
+  cutnode +1.73.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+multicut+type:pr
+  — #1751 singularScore +6.21 merged; #1750 singularBeta -0.84 unmerged; #1752
+  reduce-instead +0.78 unmerged; #1761 mate guard; #2450 fail-firm -0.75
+  unmerged.
+- - https://api.github.com/repos/lynx-chess/Lynx/releases/tags/v1.10.0 — the SE
+  block shipped whole: #1731/#1742/#1743/#1751/#1761/#1768/#1777.
+- - https://api.github.com/repos/lynx-chess/Lynx/issues/1742 and /1743 — double
+  ext +18.33 (margin 15), negative ext +11.99.
+- - https://raw.githubusercontent.com/lynx-chess/Lynx/main/README.md — the
+  version/rating table behind the band caution (1.8.0=3144, 1.10.0=3293).
+- - https://api.github.com/search/commits?q=repo:jhonnold/berserk+singular —
+  b0eea29 #42 intro; e06b444 #45 "Disable TT and NMP on singular search";
+  60bcdd6 #102 double +2.90; 0e42746 #542 triple +6.73; 8cae7ac #424 negative
+  reductions +2.13; 1b95cfe #198 eval reuse +1.22.
+- - https://api.github.com/repos/jhonnold/berserk/pulls/42 — +19.82 +/-9.34 at
+  10+0.1, 2021-04-07.
+- - https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?t=12771 —
+  Berserk v1.2.0 ~2000, v2.0.0 ~2450 author estimates (2021-02/03): the
+  introduction band anchor.
+- - https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+singular —
+  ad8a87c6 "no Multi-Cut this time" 2020-12; 2db36e4f retry 2021-02; dfa889e7
+  depth 8→7 +7.87/+4.97; c9238d02/df1e1c9b more SE +2.50/+6.27; 07b3c88e
+  negative +2.66/+2.05; 343ed1c5 skip known win/loss +5.73; c34419cc quiet
+  3-ply 2025.
+- - https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+singular —
+  aa36bc09 2018-04 intro (+6.23/+3.46/+12.68); d397a7b5 multicut +5.74;
+  464fa339 quiet limit +10.82; f71ac476 negative +4.66.
+- - https://api.github.com/repos/AndyGrant/Ethereal/releases — 11.16 "apply
+  Singular Extensions aggressively"; 11.38 quiet limit; 12.08 "singular moves
+  mistaken as MultiCut moves" fix; 13.76 singularity() simplification.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+excluded
+  — ebe021f6 2017 "Don't update TT at excluded move ply"; d6bdcec5 excludedMove
+  reset prose; 5bec768d/25c22ffe 2009 tte/ttMove condition prose.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+singular
+  — 23cbb221 depth-dependent margin; 8e823459 threshold 6/8 prose; 30c58320
+  check-ext exclusivity; 16566a8f capture coupling; 4d0981fe mate-position
+  revert; b34a690c/b1f52293 singular result reused by MCP.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22negative+extension%22
+  — e1f12aa 2022 intro; 39da50e/98dafda/a48573e 2023; c43425b 2024
+  simplify-away; c5aef2b 2026.
+- - https://talkchess.com/forum3/viewtopic.php?t=38104 — edwardyu 2011: skip
+  hashmove, sing_beta = value - margin, depth>=6, entry within 3 of depth;
+  Dailey (Komodo "really big"), Hyatt (Crafty none).
+- - https://www.talkchess.com/forum3/viewtopic.php?t=68290 —
+  once-per-line/explosion discussion; Cardoso: "depth>8*ONE_PLY", node-count
+  cost.
+- - Unreachable this pass: ccrl.chessdom.com (DNS), computerchess.org.uk (403)
+  — Weiss 1.1 / Berserk 3.x-4.x blitz numbers untraced, said so above.

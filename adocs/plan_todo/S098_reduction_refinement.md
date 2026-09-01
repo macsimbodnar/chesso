@@ -112,30 +112,33 @@ S023 sits in reserve), cutnode-with-no-TT-move (SF prose only; ~0 at Lynx).
 
 ### 2. Shape for chesso
 
-The whole feature is src/search.cpp:96-130 and :707-715:
+The whole feature is src/search.cpp:96-130 and src/search.cpp:958-966:
 
-- Table: build_lmr_table :42-56, `r = LMR_BASE/100 + ln(depth) *
-  ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
+- - Table: build_lmr_table src/search.cpp:96-110, `r = LMR_BASE/100 + ln(depth)
+  * ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
   zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
   (src/search_params.hpp:194-195, ranges stated, both already in S085's SPSA
-  set). CHESSO_TUNE rebuilds it per setoption (:59-68); a test probe exists
-  (search_lmr_reduction_probe, :79-82).
-- Eligibility :693-694: `ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
-  !is_capture && !MOVE_PROMOTED && !is_in_check && !is_check_move`. Root
-  exempt (S013's mate bug), first three moves exempt, **PV not exempt** —
-  chesso reduces at PV nodes from the same table. is_check_move (:662) is
-  post-make and survives S107 for exactly this guard. The 3 and the 3 are
-  hardcoded, not yet parameters.
-- Clamps :697-698: `int reduction` clamped to [0, child_depth - 1] — the
-  child keeps one real ply; new signed terms ride the same variable and the
-  same clamps.
-- Re-search structure :701-724 (PVS): first legal move full-window; others
-  zero-window at `child_depth - reduction` (:706); **reduced fail-high →
-  zero-window re-search at child_depth** (:712-715), verdict 3's site;
-  alpha < score < beta → full-window re-search, is_pv passed (:721-724).
-  `best_so_far` (:734) is the fail-soft base the deeper margin compares to.
-- Node type today: the `is_pv` parameter alone (:408). No cutnode, no ttPv.
-  `tt_move` is copied out at :449 — the TT-capture term's input exists.
+  set). CHESSO_TUNE rebuilds it per setoption (src/search.cpp:113-122); a test
+  probe exists (search_lmr_reduction_probe, src/search.cpp:133-136).
+- - Eligibility src/search.cpp:960-961: `ply > 0 && depth >= 3 &&
+  legal_moves_counter > 3 && !is_capture && !MOVE_PROMOTED && !is_in_check &&
+  !is_check_move`. Root exempt (S013's mate bug), first three moves exempt,
+  **PV not exempt** — chesso reduces at PV nodes from the same table.
+  is_check_move (src/search.cpp:929) is post-make and survives S107 for exactly
+  this guard. The 3 and the 3 are hardcoded, not yet parameters.
+- - Clamps src/search.cpp:964-965: `int reduction` clamped to [0, child_depth -
+  1] — the child keeps one real ply; new signed terms ride the same variable
+  and the same clamps.
+- - Re-search structure src/search.cpp:968-991 (PVS): first legal move
+  full-window; others zero-window at `child_depth - reduction`
+  (src/search.cpp:973); **reduced fail-high → zero-window re-search at
+  child_depth** (src/search.cpp:979-982), verdict 3's site; alpha < score <
+  beta → full-window re-search, is_pv passed (src/search.cpp:988-991).
+  `best_so_far` (src/search.cpp:1001) is the fail-soft base the deeper margin
+  compares to.
+- - Node type today: the `is_pv` parameter alone (src/search.cpp:596). No
+  cutnode, no ttPv. `tt_move` is copied out at src/search.cpp:667 — the
+  TT-capture term's input exists.
 - History after S093/S024: signed butterfly + continuation sum in [-3M, +3M]
   through one probe path, all pre-make inputs. Read the **raw sum**, never
   score_move's banded return (S109's trap). Gravity's fixed range is what
@@ -165,10 +168,10 @@ The whole feature is src/search.cpp:96-130 and :707-715:
 ### 3. Implementation sketch
 
 Verdict 1 — history:
-1. Factor `lmr_adjusted_reduction(...)`: raw table plus signed terms,
-   clamped at the call sites exactly as :697-698 today. With every new
-   constant at its off value it returns the raw table — the property that
-   makes the whole step inert-by-rebuild, S109's re-pointed gate included.
+1. 1. Factor `lmr_adjusted_reduction(...)`: raw table plus signed terms,
+   clamped at the call sites exactly as src/search.cpp:964-965 today. With
+   every new constant at its off value it returns the raw table — the property
+   that makes the whole step inert-by-rebuild, S109's re-pointed gate included.
 2. The term: `r -= clamp(hist_sum / LMR_HIST_DIV, +/-LMR_HIST_CLAMP)`,
    hist_sum through the S093/S024 probe path.
 3. Re-point S109's `lmr_depth` to the helper, stated in the commit; S109 is
@@ -204,14 +207,14 @@ Verdict 2 — node type:
    value, exempt variants search identically; mate suites re-run. SPRT.
 
 Verdict 3 — re-search rule:
-1. At :712-715 the re-search depth becomes `child_depth + 1` when the
-   reduced score clears `best_so_far + LMR_DEEPER_MARGIN` (the 65e2150
+1. 1. At src/search.cpp:979-982 the re-search depth becomes `child_depth + 1`
+   when the reduced score clears `best_so_far + LMR_DEEPER_MARGIN` (the 65e2150
    re-basing), `child_depth - 1` when it beat alpha by under
-   LMR_SHALLOWER_MARGIN; gate the deeper path on a real reduction
-   (`reduction >= 2` seed) — Lynx's bare form measured -7.07 and the
-   guarded one +3.11, and SF scales the bar with the reduction (061f98a,
-   a37b38b). Cap at child_depth + 1, floor at 1; the :721-724 full-window
-   re-search stays at child_depth — state that choice in the commit.
+   LMR_SHALLOWER_MARGIN; gate the deeper path on a real reduction (`reduction
+   >= 2` seed) — Lynx's bare form measured -7.07 and the guarded one +3.11, and
+   SF scales the bar with the reduction (061f98a, a37b38b). Cap at child_depth
+   + 1, floor at 1; the src/search.cpp:988-991 full-window re-search stays at
+   child_depth — state that choice in the commit.
 2. Tests: precondition test that the deeper path fires (node counts move
    against off = margin at range top) and never exceeds its cap or floor;
    mate suites re-run per the accepts. SPRT; a zero recorded as zero.
@@ -340,10 +343,10 @@ verdict in the stamp.
 
 ### Scope concerns
 
-1. **The in-check/gives-check exemptions have a contrary sub-3000 record.**
-   Lynx allowed LMR while in check at ~2700 (#702, v1.5.0) and re-forbidding
-   it later failed at -5.60 (#1800); Stash reduces all moves (663ddbc).
-   Chesso exempts both (:693-694). The goal names three scalings and no
+1. 1. **The in-check/gives-check exemptions have a contrary sub-3000 record.**
+   Lynx allowed LMR while in check at ~2700 (#702, v1.5.0) and re-forbidding it
+   later failed at -5.60 (#1800); Stash reduces all moves (663ddbc). Chesso
+   exempts both (src/search.cpp:960-961). The goal names three scalings and no
    eligibility change, so this step keeps the exemptions — the repo's mate
    history argues the same — but the record is on file: relaxation is a
    candidate fourth verdict or S127-era step, and it would change S107's
@@ -361,16 +364,65 @@ verdict in the stamp.
 
 ### 8. References
 
-- https://www.chessprogramming.org/Late_Move_Reductions — formula forms with named constants (Obsidian, Weiss, Ethereal, Halogen, Senpai, Fruit Reloaded), exemption list, the modern adjustment set, re-search depth adjustment noted as recent Stockfish practice.
-- https://www.chessprogramming.org/Node_Types — Knuth types; Garms's prediction rules (root PV; first child of PV is PV, others CUT; first child of CUT is ALL, others CUT; children of ALL are CUT); Kannan on re-search and null-move labels.
-- https://github.com/lynx-chess/Lynx/pull/613 — history in LMR, +11.40 +/-7.30 at 8+0.08, merged 2024-01-15 (v1.3.0, ~2600 era): verdict 1's sub-3000 record.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+LMR+in:title+type:pr — #1233 cutnode +9.34 / #1234 -17.62; #1135 !improving (#1134 inverse failed); #1529 TT-capture +1.87 (#706 no-op, #1241/#1243 failed); #1230 PV min moves; #1304 prediction fix +1.77; #1535 deeper/shallower -7.07 bare / +3.11 guarded; #1512/#1514 fractional +5.13; #1476 ttPv +9.39; #2256 not-only-quiets +3.50; #971 clamp ~0; #2253 no-TT-move -8.08; #2332/#2338 depth-0 -25.77/-25.92; #2378 newDepth overflow fix; #702/#1800 in-check; #1771 root -35.47; #2006/#2070/#2071/#2072 killers ~0; #2089/#2105/#2106/#2121/#2399 alpha-raises ~0; #1758/#2346/#2347 post-LMR conthist.
-- https://api.github.com/search/issues?q=repo:TerjeKir/weiss+LMR+in:title+type:pr — #73 +48.44 static→scaled (2019-11); #76 +20.28 Ethereal log formula (2019-11); #71 PV later +3.78; #451 history +/-2 +14.11 (2021-06); #452 +4.94; #482 +2.62/+4.79; #481 steeper post-history +7.37; #536/#666 ttcapture +3.33/+2.87; #607/#686 cutnode +2.27/+5.88; #675 do-deeper +2.36/+3.65 passed both, closed unmerged; #662 post-LMR conthist +2.61/+8.92; #701 bad-re-search malus; #665 killers simplified away; #540 root later +3.88.
-- https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+LMR — ae5c295 history in LMR (2021-02); bd9ecf5 introduce cutNodes +6.16; e35289f no depth 0 +3.14; 663ddbc LMR on all moves +2.95; 3e38519/1c8d87e/fecff93 log-formula tunes; 2138db2 post-LMR conthist +2.20; ad17dbd smaller-on-PV retune; 27d338f/3801c54 root LMR.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+doDeeperSearch — 061f98a threshold scales with reduction; 98965c1 doEvenDeeper; e4e61cd doShallower/extension interplay; f17db46, 4d4c6eb, 1047f84 simplifications; a37b38b d<newDepth guard.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22do+shallower%22 — 219fa2f do-shallower, "not too far from the current best search result".
-- https://api.github.com/search/commits?q=repo:jhonnold/berserk+LMR+history — f35db3a history LMR +3.11 (2021-05); 4f353c3 tactical-history LMR +2.26 (S023 consumer); f783f92 tweak +2.51 LTC; 4d94973 post-LMR conthist +1.40; c6e4d55 early bundled history reduction.
-- https://api.github.com/repos/AndyGrant/Ethereal/releases — V12.50 notes: "12.29: Use knowledge of fail-highs/fail-lows to tweak LMR" / "12.30: Revert all of the changes from V12.29"; V10.55 "10.06: Rewrite the Late Move Reductions from scratch"; V9.65 "9.33: Break LMR researches into 3 steps for PV nodes". The -249 removal ledger stays repo-recorded via DEC-087; primary URL untraced in this pass too.
-- https://api.github.com/repos/lynx-chess/Lynx/releases — v1.3.0 (2024-02, #613), v1.5.0 (2024-06, #702/#706), v1.8.0 (2024-12, #1135/#1233/#1230), v1.9.0 (2025-03, #1476/#1529/#1535/#1514/#1512/#1304), v0.7.0 (2021-11, #96 LMR added).
-- https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?t=13343 — Lynx on CCRL; 1.0.1 recalculated to 2432 (2024-01): the band anchor for #613.
-- Stockfish 37c2b56 (statScore sum in LMR), 389e607 (post-LMR updates, half bonus), d37de3c (TC-sensitivity) — commit messages re-cited from S024's research.
+- - https://www.chessprogramming.org/Late_Move_Reductions — formula forms with
+  named constants (Obsidian, Weiss, Ethereal, Halogen, Senpai, Fruit Reloaded),
+  exemption list, the modern adjustment set, re-search depth adjustment noted
+  as recent Stockfish practice.
+- - https://www.chessprogramming.org/Node_Types — Knuth types; Garms's
+  prediction rules (root PV; first child of PV is PV, others CUT; first child
+  of CUT is ALL, others CUT; children of ALL are CUT); Kannan on re-search and
+  null-move labels.
+- - https://github.com/lynx-chess/Lynx/pull/613 — history in LMR, +11.40
+  +/-7.30 at 8+0.08, merged 2024-01-15 (v1.3.0, ~2600 era): verdict 1's
+  sub-3000 record.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+LMR+in:title+type:pr
+  — #1233 cutnode +9.34 / #1234 -17.62; #1135 !improving (#1134 inverse
+  failed); #1529 TT-capture +1.87 (#706 no-op, #1241/#1243 failed); #1230 PV
+  min moves; #1304 prediction fix +1.77; #1535 deeper/shallower -7.07 bare /
+  +3.11 guarded; #1512/#1514 fractional +5.13; #1476 ttPv +9.39; #2256
+  not-only-quiets +3.50; #971 clamp ~0; #2253 no-TT-move -8.08; #2332/#2338
+  depth-0 -25.77/-25.92; #2378 newDepth overflow fix; #702/#1800 in-check;
+  #1771 root -35.47; #2006/#2070/#2071/#2072 killers ~0;
+  #2089/#2105/#2106/#2121/#2399 alpha-raises ~0; #1758/#2346/#2347 post-LMR
+  conthist.
+- -
+  https://api.github.com/search/issues?q=repo:TerjeKir/weiss+LMR+in:title+type:pr
+  — #73 +48.44 static→scaled (2019-11); #76 +20.28 Ethereal log formula
+  (2019-11); #71 PV later +3.78; #451 history +/-2 +14.11 (2021-06); #452
+  +4.94; #482 +2.62/+4.79; #481 steeper post-history +7.37; #536/#666 ttcapture
+  +3.33/+2.87; #607/#686 cutnode +2.27/+5.88; #675 do-deeper +2.36/+3.65 passed
+  both, closed unmerged; #662 post-LMR conthist +2.61/+8.92; #701 bad-re-search
+  malus; #665 killers simplified away; #540 root later +3.88.
+- - https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+LMR —
+  ae5c295 history in LMR (2021-02); bd9ecf5 introduce cutNodes +6.16; e35289f
+  no depth 0 +3.14; 663ddbc LMR on all moves +2.95; 3e38519/1c8d87e/fecff93
+  log-formula tunes; 2138db2 post-LMR conthist +2.20; ad17dbd smaller-on-PV
+  retune; 27d338f/3801c54 root LMR.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+doDeeperSearch
+  — 061f98a threshold scales with reduction; 98965c1 doEvenDeeper; e4e61cd
+  doShallower/extension interplay; f17db46, 4d4c6eb, 1047f84 simplifications;
+  a37b38b d<newDepth guard.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22do+shallower%22
+  — 219fa2f do-shallower, "not too far from the current best search result".
+- - https://api.github.com/search/commits?q=repo:jhonnold/berserk+LMR+history —
+  f35db3a history LMR +3.11 (2021-05); 4f353c3 tactical-history LMR +2.26 (S023
+  consumer); f783f92 tweak +2.51 LTC; 4d94973 post-LMR conthist +1.40; c6e4d55
+  early bundled history reduction.
+- - https://api.github.com/repos/AndyGrant/Ethereal/releases — V12.50 notes:
+  "12.29: Use knowledge of fail-highs/fail-lows to tweak LMR" / "12.30: Revert
+  all of the changes from V12.29"; V10.55 "10.06: Rewrite the Late Move
+  Reductions from scratch"; V9.65 "9.33: Break LMR researches into 3 steps for
+  PV nodes". The -249 removal ledger stays repo-recorded via DEC-087; primary
+  URL untraced in this pass too.
+- - https://api.github.com/repos/lynx-chess/Lynx/releases — v1.3.0 (2024-02,
+  #613), v1.5.0 (2024-06, #702/#706), v1.8.0 (2024-12, #1135/#1233/#1230),
+  v1.9.0 (2025-03, #1476/#1529/#1535/#1514/#1512/#1304), v0.7.0 (2021-11, #96
+  LMR added).
+- - https://kirill-kryukov.com/chess/discussion-board/viewtopic.php?t=13343 —
+  Lynx on CCRL; 1.0.1 recalculated to 2432 (2024-01): the band anchor for #613.
+- - Stockfish 37c2b56 (statScore sum in LMR), 389e607 (post-LMR updates, half
+  bonus), d37de3c (TC-sensitivity) — commit messages re-cited from S024's
+  research.

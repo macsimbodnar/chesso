@@ -11,14 +11,13 @@ done:
 
 ## Re-scoped 2026-08-19 by the second review, DEC-087
 
-Two halves, one kept and one dropped. **Kept:** the eval-scaled reduction --
-`R = base + depth/divisor + min((eval - beta)/scale, cap)` is the surveyed
-form, and a deeper base R alone measured **+12.3** at Berserk, with the
-eval-term cap worth a further +3.3/+2.3 at Ethereal. The static evaluation
-input exists since S108. **Dropped:** the verification search. No engine in
-this band shows a gain for it -- it is a Stockfish-depth device -- and this
-engine's zugzwang exposure is already guarded by `game_phase(&game->board) > 0`,
-which stays.
+Two halves, one kept and one dropped. **Kept:** the eval-scaled reduction -- `R
+= base + depth/divisor + min((eval - beta)/scale, cap)` is the surveyed form,
+and a deeper base R alone measured **+12.3** at Berserk, with the eval-term cap
+worth a further +3.3/+2.3 at Ethereal. The static evaluation input exists since
+S108. **Dropped:** the verification search. No engine in this band shows a gain
+for it -- it is a Stockfish-depth device -- and this engine's zugzwang exposure
+is already guarded by `game_phase(&game->board) > 0`, which stays.
 
 ## Technical details (SOTA research, 2026-08-19)
 
@@ -32,16 +31,16 @@ precedent.
 **Base R, as published.** CPW's record: Goetsch & Campbell 1988 ran recursive
 null move at R=1; Donninger 1993 ("Null Move and Deep Search", ICCA Journal
 16(3)) popularised it, his own R not stated on the page; "most typical engines
-use recursive null move with an R value of 2 or 3"; a "basic implementation
-... uses a fixed reduction of 3 or 4"; Fruit ran R=3 gated on static eval >
-beta; Heinz 1999 ("Adaptive Null-Move Pruning") is R=3 when depth > 6 else
-R=2 -- the first depth-scaled base. **Convention trap**: CPW's own examples mix
-`depth - R` and `depth - R - 1`; chesso searches `depth - 1 - R` (:576), so a
-quoted base transfers only next to its engine's depth arithmetic. Modern
-re-decides in prose: Weiss #746 "Reduce the depth of NMP searches more"
-(2024, +3.86); Lynx #2448 "5 + depth/5" failed STC -2.33 then #2620 passed
-the same form +2.89 bundled with an improving simplification; Berserk #552
-"less base reduction + more from depth/eval" 0.08/+1.89 at 3300+.
+use recursive null move with an R value of 2 or 3"; a "basic implementation ...
+uses a fixed reduction of 3 or 4"; Fruit ran R=3 gated on static eval > beta;
+Heinz 1999 ("Adaptive Null-Move Pruning") is R=3 when depth > 6 else R=2 -- the
+first depth-scaled base. **Convention trap**: CPW's own examples mix `depth -
+R` and `depth - R - 1`; chesso searches `depth - 1 - R` (src/search.cpp:829),
+so a quoted base transfers only next to its engine's depth arithmetic. Modern
+re-decides in prose: Weiss #746 "Reduce the depth of NMP searches more" (2024,
++3.86); Lynx #2448 "5 + depth/5" failed STC -2.33 then #2620 passed the same
+form +2.89 bundled with an improving simplification; Berserk #552 "less base
+reduction + more from depth/eval" 0.08/+1.89 at 3300+.
 
 **The eval-scaled term, traced.** CPW Advanced Tweaks, verbatim: "a factor
 scaled by the difference between (potentially TT-corrected) evaluation and
@@ -86,35 +85,39 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 - R today: `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6
   (src/search.cpp:814; src/search_params.hpp:181-182, ranges 0..16, 1..64).
   With the floor below, NMP fires from depth 5.
-- Conditions (:569-571): `!is_pv && !is_in_check && ply > 0 && prev_move != 0
-  && depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
+- - Conditions (src/search.cpp:822-824): `!is_pv && !is_in_check && ply > 0 &&
+  prev_move != 0 && depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
   game_phase(&game->board) > 0`. No eval gate, no eval term.
-- **The mate fix is the floor** `depth - 1 - null_reduction >= 1` (:570),
-  comment :563-568: a depth-0 null search is pure quiescence, answers with
-  the static score, and lost a mate in two at depth 4. Regression test:
-  "pruning does not hide a forced mate", tests/test_search.cpp:2808.
+- - **The mate fix is the floor** `depth - 1 - null_reduction >= 1`
+  (src/search.cpp:823), comment src/search.cpp:816-821: a depth-0 null search
+  is pure quiescence, answers with the static score, and lost a mate in two at
+  depth 4. Regression test: "pruning does not hide a forced mate",
+  tests/test_search.cpp:2808.
 - **The zugzwang guard counts both colours**: `game_phase()`
   (src/evaluation.cpp:1111) clamps `board->phase`, accumulated from
   `phase_value[6] = {0,1,1,2,4,0}` (src/eval_tables.hpp:28) for every piece
   of either side -- "some knight/bishop/rook/queen exists on the board",
   weaker than the published side-to-move form. Kept as-is per the accepts.
-- Mate-score clamp on the fail-high (:583-586) is published practice exactly
-  -- SF 42de93ac (2010) "Do not return unproven mate scores from null move
-  search"; Lynx #1790 +1.85. The fail-soft return of `null_score` matches
-  Ethereal 255c263 "Return value and not simply beta during NMP"
-  (+2.35/+1.47). Both stay.
-- No TT store on a null cutoff (:586 returns without storing); the Weiss
-  TT-skip entry condition (4596ecf, +4.01) is a deferred extra, not V1.
-- Input: post-S108 every non-check node has `static_evals[ply]`; today
-  `static_eval` is set only inside the RFP guard (:477, :532).
+- - Mate-score clamp on the fail-high (src/search.cpp:836-839) is published
+  practice exactly -- SF 42de93ac (2010) "Do not return unproven mate scores
+  from null move search"; Lynx #1790 +1.85. The fail-soft return of
+  `null_score` matches Ethereal 255c263 "Return value and not simply beta
+  during NMP" (+2.35/+1.47). Both stay.
+- - No TT store on a null cutoff (src/search.cpp:839 returns without storing);
+  the Weiss TT-skip entry condition (4596ecf, +4.01) is a deferred extra, not
+  V1.
+- - Input: post-S108 every non-check node has `static_evals[ply]`; today
+  `static_eval` is set only inside the RFP guard (src/search.cpp:720,
+  src/search.cpp:731).
 
 ### 3. Implementation sketch
 
 One SPRT, as the accepts prices:
-1. Two new constants beside :77-78 in the X-macro, ranges stated (section 4).
+1. 1. Two new constants beside src/search_params.hpp:181-182 in the X-macro,
+   ranges stated (section 4).
 2. Entry gains the gate `static_eval >= beta` (the term is then never
    negative); R gains `min((static_eval - beta) / NULL_MOVE_EVAL_MARGIN,
-   NULL_MOVE_EVAL_CAP)`; the floor at :570 tests the **full** R.
+   NULL_MOVE_EVAL_CAP)`; the floor at src/search.cpp:823 tests the **full** R.
 3. Base and divisor are re-decided by a node-count sweep over the 300
    positions (the S021/S068 instrument) with margin and cap alongside --
    published practice lands the family together (Weiss #127-#130) -- then
@@ -149,12 +152,12 @@ fitted/SPSA'd here** (DEC-084, S127):
 
 ### 5. Pitfalls
 
-- **The floor and the cap are different safety devices, and the demolition
-  only reddens if both are lifted.** With the floor kept and the term
-  uncapped, a +20-pawn node makes R huge, :570 fails, and NMP switches off
-  -- fail-safe, green, Elo quietly lost. "Reduces to depth 0" happens only
-  in a build where the floor is also gone (then :466 turns the null search
-  into quiescence -- the shipped-twice bug). Ship floor + cap; the
+- - **The floor and the cap are different safety devices, and the demolition
+  only reddens if both are lifted.** With the floor kept and the term uncapped,
+  a +20-pawn node makes R huge, src/search.cpp:823 fails, and NMP switches off
+  -- fail-safe, green, Elo quietly lost. "Reduces to depth 0" happens only in a
+  build where the floor is also gone (then src/search.cpp:684 turns the null
+  search into quiescence -- the shipped-twice bug). Ship floor + cap; the
   demolition build lifts both, watches the new mate case go red, restores.
 - **The floor bites the term at shallow depth**: with cap 3, depths 4..8 have
   `depth - 1 - (3 + depth/6 + 3) < 1`, so a maxed term *skips* NMP where
@@ -173,8 +176,9 @@ fitted/SPSA'd here** (DEC-084, S127):
   piece endgames (CPW's zugzwang set is mostly such positions); verification
   was dropped on Berserk's negative measurement. Do not add those positions
   as red tests -- they fail by design without verification.
-- **S113 merge care**: ProbCut's enrichment inserts its block right after
-  :588; this step rewrites :561-588. Land in plan order, rebase the later.
+- - **S113 merge care**: ProbCut's enrichment inserts its block right after
+  src/search.cpp:841; this step rewrites src/search.cpp:814-841. Land in plan
+  order, rebase the later.
 
 ### 6. Measurement
 
@@ -210,16 +214,16 @@ has measured three published figures at 0, 0 and slower.
 
 ### Scope concern
 
-Two, neither touching goal or accepts. (1) The accepts' "the cap is observed
-to be load-bearing by removing it and watching one go red" is unobservable
-with the :570 floor kept: cap removal alone fails *safe* (NMP skips; green).
-The red observation needs the demolition build to lift floor and cap
-together, or the load-bearing claim re-attached to the floor -- owner's
-wording call at implementation time; the section 5 arithmetic is the
-evidence. (2) DEC-087's "a deeper base R alone measured +12.3 at Berserk"
-was not re-traced through Berserk's PR/commit prose this pass; nearest traced
-is #286 "NMP returns null search score" +10.94 (with a non-pawn-material
-fix), which chesso's fail-soft return already covers.
+Two, neither touching goal or accepts. (1) The accepts' "the cap is observed to
+be load-bearing by removing it and watching one go red" is unobservable with
+the src/search.cpp:823 floor kept: cap removal alone fails *safe* (NMP skips;
+green). The red observation needs the demolition build to lift floor and cap
+together, or the load-bearing claim re-attached to the floor -- owner's wording
+call at implementation time; the section 5 arithmetic is the evidence. (2)
+DEC-087's "a deeper base R alone measured +12.3 at Berserk" was not re-traced
+through Berserk's PR/commit prose this pass; nearest traced is #286 "NMP
+returns null search score" +10.94 (with a non-pawn-material fix), which
+chesso's fail-soft return already covers.
 
 ### 8. References
 
@@ -235,11 +239,14 @@ fix), which chesso's fail-soft return already covers.
   #127, #128, #245, #422, #572, #643, #688.
 - https://api.github.com/search/commits?q=repo:TerjeKir/weiss+nmp -- d5fe301,
   4596ecf, ac11d26, c6ec34b, eca86285, a0c69ef (#746).
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+null+move+reduction
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+null+move+reduction
   -- 314faa9, 074c7a3, 7ed15af, 620cfbb, 08ac4e9.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+hash:9d4090e82685cca447265dcd7093d617cb34a107
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+hash:9d4090e82685cca447265dcd7093d617cb34a107
   -- the 2026 scaling commit, full message and both SPRT blocks.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+null+move+mate
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+null+move+mate
   -- 9a8dd81d revert with the mate-in-2 testcase, 42de93ac, a4fedd81.
 - https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+NMP --
   89ed7eb (the cap, +3.28/+2.32), 291b2f8, 255c263.

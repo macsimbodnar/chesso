@@ -7,44 +7,46 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-01, by hand.
 
-- Last done: S169 -- **the 97 stale citations in the pending step files are
-  re-anchored**, and it exists because doing S144 first would have erased them.
-  `--citations` reports **0 flagged**, from 97 (72 DRIFT, 25 ANCHOR, 0 BOUNDS)
-  over 20 of the 53 pending files. 94 citations rewritten, 3 held, nothing
-  deleted and no range widened.
-  **The checker's verdict is not the proof and cannot be.** DRIFT's baseline is
-  the commit that last wrote the step file, so after this commit every repaired
-  citation is green whether or not it was repaired. The evidence is
-  `adocs/data/S169_recitations.tsv`, 97 rows carrying both texts: **83 of 97
-  are identical on both sides**, and the 14 that are not are the TITLE, HAND
-  and HOLD rows whose reason column says what was read instead. **No BLOCK row
-  differs.** `adocs/data/S169_citations_before.txt` is the pre-repair run, kept
-  because it cannot be regenerated.
-  Method split, from `adocs/data/S169_recite.py`: **72 BLOCK** (the baseline
-  text occurs exactly once at HEAD), **6 TITLE**, **16 HAND**, **3 HOLD** (the
-  citation was right; the flag was a cosmetic edit to the cited text).
-  **The ANCHOR block was one repair repeated seven times**: S091, S095, S097,
-  S098, S113, S114 and S116 -- every one a pruning or a reduction step -- cited
-  the two mate-safety tests 921 lines short of where they open. That is
-  `2026-08-20_plan_review-F01`'s class returned after S138 repaired it once.
-  **Two citations were already wrong at their baseline, not drifted**: S020's
-  and S082's pointed at a blank line and a bare `}`, so nothing had ever
-  checked them. **S082 also says `MAX_QSEARCH_DEPTH` is 8 where the engine
-  compiles 19** (`src/search_params.hpp:106`) -- the citation is repaired and
-  the number is left, because numeric claims are the step's `excludes` and the
-  argument is S082's to remake. DEC-119.
-- Before it: S143 (**the completion gate builds and tests `build-tune`
-  beside `build`**, the red observed first, 45 s to 93.6 s; DEC-118), S168
-  (**the constructed mate set is three motifs and 82
-  positions**, the mating piece enforced, `MATE_IN_THREE_FLOOR` re-derived at
-  11; DEC-117), S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
-  inert** -- 0 positions change verdict over seventeen commits and nine table
-  sizes, 5 under one ply of the guard; `-F06` closed and reversed), S156 (**the
-  mined breadth set is a gate now**, `test_mate_breadth` at depth 10 with a
-  floor of 143; `-F08` closed), S155 (**the constructed set is one motif**,
-  counted, which is what DEC-114 was decided on; `-F07` closed), S167
-  (fastchess.sh under bash 3.2) and S150 (**document numbers about search
-  parameters are checked against the code**, `test_plan_params`; `-F02` closed).
+- Last done: S144 -- **a citation in a plan document carries its own path.**
+  383 bare `:line` continuations over 19 of the 53 pending step files, 380
+  converted; the three left are S144's own illustrations of the defect and left
+  the checked set with the file. `--citations` reports **0 flagged over 52
+  files**, and a bare continuation is a flag now (`BARE`) rather than a counted
+  line of output. The style rule is in `plan.md`'s "How this file works": a
+  citation repeats its path. DEC-120.
+  **The checker's green is not the proof, for the second step running.** A
+  wrong path is caught only when its line is past the end of that file or a
+  quoted test title contradicts it -- observed both ways before trusting it:
+  `src/search_params.hpp:181-182` mistyped as `src/search.hpp` gave
+  `BOUNDS ... has 99 lines`; the same range mistyped as `src/search.cpp`, in
+  range and wrong, passed green. The evidence is
+  `adocs/data/S144_pathings.tsv`: 380 rows carrying the baseline text and the
+  text at the new range, **343 identical on both sides and all 37 that differ
+  are hand rows** with their reason. No relocation row differs.
+  Method, from `adocs/data/S144_paths.py`: the path is **told** to it -- 77
+  paragraph assignments and 48 per-citation overrides read out of the citing
+  sentences -- and then falsified by relocating the cited text from the commit
+  that wrote that line (`git blame --ignore-rev fe25f46`, because a plain blame
+  answers S169's commit). **318 BLOCK, 4 SAME, 58 HAND.** The 58 are one of two
+  shapes: a block that sits in both `quiescence()` and `negamax()`, or a region
+  that grew a comment under the citation.
+  **One citation was malformed rather than pathless**: S120 read `:1099-:1039`,
+  a range whose second half carries its own colon, so nothing ever saw the
+  second number -- one half re-anchored, the other 60 lines stale. Repaired to
+  `src/evaluation.cpp:1099-1100`.
+  **Three sentences are stale in content and left that way** (`excludes:`):
+  S113, S114 and S099 each say the static evaluation is set inside the RFP
+  guard, which S108 stopped being true; the citations point at `:720` and
+  `:731` where it is set now, and restating the claim belongs to those steps.
+- Before it: S169 (**the 97 stale citations are re-anchored**, 72 by exact
+  block, 6 by title, 16 by hand, 3 held, with the mapping tracked because
+  repairing a step file makes the checker's verdict vacuous; DEC-119), S143
+  (**the completion gate builds and tests `build-tune` beside `build`**, the
+  red observed first, 45 s to 93.6 s; DEC-118), S168 (**the constructed mate
+  set is three motifs and 82 positions**, the mating piece enforced,
+  `MATE_IN_THREE_FLOOR` re-derived at 11; DEC-117), S154 (**the mate-in-three
+  floor is 8 and re-derived, not 7 and inert**), S156 (**the mined breadth set
+  is a gate now**, `test_mate_breadth` at depth 10 with a floor of 143).
 - In progress: nothing. `plan_current/` is empty.
 - **`python-chess` was missing on this machine and is installed now**, at the
   owner's decision of 2026-09-01: 1.11.2 on python 3.9.6 in `~/.venv/chess`,
@@ -52,11 +54,11 @@ Updated: 2026-09-01, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: S144, the step S169 cleared the board for -- the bare `:line`
-  continuations get a path of their own. **Its goal line and `plan.md` entry
-  both say 467 and the measured count today is 383** over 19 files; the two
-  ends move as steps complete, and the number is left for S144's own stamp to
-  restate rather than edited from outside the step. After it, S146.
+- Next: S146, the opening book's origin and licence -- the 5.2 MB book compiled
+  into the shipped binary either gets a recorded provenance or is replaced by
+  one that does. It is the last document-only step at the head of the lane;
+  after it the machine-light entries are the behaviour-neutral three (S147,
+  S020, S030).
 - Blocked: nothing.
 - Watching: nothing. No match is running and no watcher is armed.
 - Parked:

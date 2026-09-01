@@ -100,17 +100,34 @@ The grammar is the one the step files already use, not a new one: a full
 basename when that basename is unique in the repository.
 
 A bare `:line` continuation -- `(src/evaluation.cpp:951 mobility, :953 king
-safety)` -- is counted and skipped, because in these files it is not
-mechanically resolvable and guessing is worse than abstaining. Two measured
-reasons, both from the first runs of this check. S095 writes "returns nullptr
-on a miss (transposition_table.cpp:96-103), and :449 already computes", where
-:449 means src/search.cpp and the nearest named path is the other file. And
-S098's Stockfish-reading section carries a page of continuations whose subject
-was named paragraphs earlier, so :662 and :701-724 resolved onto a 288-line
-header. Between them they produced sixty impossible line numbers, and a check
-that prints garbage gets ignored rather than acted on. The repair pushes the
-other way: a citation that has to be survivable is written as a full path with
-a title beside it, which is exactly what brings it inside this check.
+safety)` -- is `BARE`, and it fails the run. **The check never resolves one**:
+it says the path is missing and stops, because in these files the inheritance
+is not mechanically resolvable and guessing is worse than abstaining. Two
+measured reasons, both from the first runs of this check. S095 wrote "returns
+nullptr on a miss (transposition_table.cpp:96-103), and :449 already computes",
+where :449 means src/search.cpp and the nearest named path is the other file.
+And S098's Stockfish-reading section carried a page of continuations whose
+subject was named paragraphs earlier, so :662 and :701-724 resolved onto a
+288-line header. Between them they produced sixty impossible line numbers, and
+a check that prints garbage gets ignored rather than acted on.
+
+So the repair is a rule about writing rather than a cleverer resolver, and
+`plan.md`'s "How this file works" states it: **a citation repeats its path**.
+S144 converted the 383 that existed -- reading each citing sentence, then
+relocating the text the citation was written against to prove the path -- and
+this flag is what stops the 384th. Until S144 these were counted as
+`loose, ungated` and reported, which is how they went stale in bulk with
+nothing saying so: S138 found eight pending steps pointing an implementer at
+the wrong mate-safety test, and the three the audit had missed were exactly the
+three that wrote it bare.
+
+**What a converted citation buys and what it does not.** BOUNDS catches a wrong
+path whose line is past the end of that file, and ANCHOR catches one whose
+quoted test title does not open there. A wrong path that is merely in range is
+caught by neither, and DRIFT cannot help on the commit that writes it -- the
+baseline is that commit. The evidence for a conversion is therefore the mapping
+it was made through, `adocs/data/S144_pathings.tsv`, and not this check's
+verdict. DEC-119, DEC-120.
 
 Citations into `adocs/` and other `.md` files are counted and printed but do
 not fail the run. Those documents are rewritten at every completion, by design,
@@ -448,15 +465,18 @@ def check_citations(path, tracked, byname):
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
     rev = baseline(rel)
-    counts = {"code": 0, "doc": 0, "loose": 0}
+    counts = {"code": 0, "doc": 0, "bare": 0}
     flags, notes = [], []
 
     for first, para in paragraphs(text):
         for line, spelled, resolved, a, b, kind in cites_in(
                 para, first, tracked, byname):
-            cite = f"{spelled}:{a}" + (f"-{b}" if b != a else "")
+            cite = (f"{spelled}:{a}" if spelled else f":{a}") \
+                + (f"-{b}" if b != a else "")
             if spelled is None:
-                counts["loose"] += 1
+                counts["bare"] += 1
+                flags.append((line, cite, "BARE",
+                              "a citation carries its own path (DEC-120)"))
                 continue
             if resolved is None:
                 counts["code"] += 1
@@ -498,7 +518,7 @@ def check_citations(path, tracked, byname):
     tag = rev[:7] if rev else "none (new or edited)"
     print(f"{rel}: {counts['code']} code citations, baseline {tag}, "
           f"{len(flags)} flagged "
-          f"({counts['doc']} document and {counts['loose']} loose, ungated)")
+          f"({counts['bare']} bare and {counts['doc']} document, ungated)")
     for line, cite, kind, why in flags:
         print(f"  {kind:6} {rel}:{line}  {cite}  -- {why}")
     for line, cite, kind, why in notes:

@@ -6825,3 +6825,52 @@ Consequences: A step that rewrites a pending step file for any reason moves
               cannot be the checker's verdict for the same reason, so it ships
               a tracked mapping of baseline text against text at the new range
               instead.
+
+
+## DEC-120  2026-09-01  A citation in a plan document repeats its path, and a bare `:line` is a flag
+Tags:         workflow, docs, tooling, plan
+Context:      S138 brought 201 full `path:line` citations inside
+              `tools/plan_prose_check.py --citations`. It could not reach the
+              other class: a bare `:line` continuation whose path is inherited
+              from an earlier sentence. The checker counted those and reported
+              them `loose, ungated` rather than resolving them, because
+              guessing the inherited path produced sixty impossible line
+              numbers when S138 tried it -- S095 wrote
+              `(transposition_table.cpp:96-103), and :449 already computes`
+              where `:449` means `src/search.cpp`, and S098 carried a page of
+              continuations whose subject was named paragraphs earlier. So the
+              class went stale in bulk with nothing saying so, which is not
+              hypothetical: of the eight pending steps that pointed an
+              implementer at the wrong mate-safety test, the three the
+              2026-08-20 review missed were exactly the three that wrote it
+              bare and the review grepped for the full path. Measured at S144:
+              383 of them over 19 of the 53 pending files.
+Decision:     The owner's, on the agent's proposal. Two halves. **The rule**: a
+              citation repeats its path, stated in `plan.md`'s "How this file
+              works" beside the ordering rules, so it is read before a step
+              file is written. **The enforcement**: `--citations` fails a bare
+              continuation as `BARE` instead of counting it, and never tries to
+              resolve one -- the abstention S138 measured stays, what changes
+              is that abstaining now costs a red run instead of a line of
+              output. S144 converted the 383 that existed.
+Rejected:     Teaching the checker to inherit the path from the nearest
+              preceding sentence -- the measurement says it gets it wrong, and
+              a check that prints garbage is a check that gets switched off.
+              Leaving the count as a report and trusting the rule -- the rule
+              was already implicit in S138's reasoning and 383 references were
+              written the other way after it. An allowlist for the
+              illustrations in S144's own file -- unnecessary, since a step
+              file leaves the checked set when it moves to `plan_done/`.
+Consequences: A wrong path is caught only when its line is past the end of
+              that file (BOUNDS) or a quoted `TEST_CASE` title contradicts it
+              (ANCHOR); an in-range wrong path is caught by neither, and DRIFT
+              is blind on the commit that writes the citation because that
+              commit becomes the baseline -- DEC-119 again. So the evidence for
+              a conversion is the mapping it was made through and not the
+              checker's verdict: `adocs/data/S144_pathings.tsv` carries, per
+              citation, the text the cited range held at the commit that wrote
+              the line and the text the new range holds at HEAD, and the two
+              are equal on every one of the 322 the relocation decided. The 58
+              the relocation could not separate -- a block that sits in both
+              `quiescence()` and `negamax()`, or one that grew a comment under
+              the citation -- carry their reason in the same file.

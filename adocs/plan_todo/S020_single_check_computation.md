@@ -24,7 +24,8 @@ SPRT -- see INV-6.
 ## Technical details (SOTA research, 2026-08-19)
 
 Line numbers read at `c0954ec`. This step lands after all of block 1, so every
-number below will have drifted -- re-locate by symbol, and re-sweep (section 7).
+number below will have drifted -- re-locate by symbol, and re-sweep (section
+7).
 
 ### 1. State of the art
 
@@ -41,40 +42,47 @@ structure; a function-local computed at node entry is the minimal form.
 ### 2. Shape for chesso
 
 **The boolean is already once-per-function at HEAD**: negamax computes
-`is_in_check` once (src/search.cpp:687), quiescence `in_check` once (:262).
-The live duplication is one level down, in the king-attack scan itself.
+`is_in_check` once (src/search.cpp:687), quiescence `in_check` once
+(src/search.cpp:415). The live duplication is one level down, in the
+king-attack scan itself.
 
 Per-node, negamax at position P:
-- :469 `is_check(game)` at entry. Readers: RFP :511, NMP :569, LMR :694,
-  mate-vs-stalemate :780 -- and after block 1 also S108's eval gate, S109's
-  rule guards, S114's NMP gate, S116's razor guard.
-- :614 `generate_captures` -> `generate_moves_impl` (src/bitboard.cpp:483)
-  recomputes `attackers_to(king)` (:504) plus snipers/pins (:516-531) for P.
-- :621 or :641 `generate_quiets` -> the same preamble again, same P. Every
-  node that opens the quiet stage pays checkers+pins twice.
+- - src/search.cpp:687 `is_check(game)` at entry. Readers: RFP
+  src/search.cpp:765, NMP src/search.cpp:822, LMR src/search.cpp:961,
+  mate-vs-stalemate src/search.cpp:1066 -- and after block 1 also S108's eval
+  gate, S109's rule guards, S114's NMP gate, S116's razor guard.
+- - src/search.cpp:875 `generate_captures` -> `generate_moves_impl`
+  (src/bitboard.cpp:483) recomputes `attackers_to(king)` (src/bitboard.cpp:504)
+  plus snipers/pins (src/bitboard.cpp:516-531) for P.
+- - src/search.cpp:882 or src/search.cpp:902 `generate_quiets` -> the same
+  preamble again, same P. Every node that opens the quiet stage pays
+  checkers+pins twice.
 
 Per-node, quiescence at position P:
-- :262 `is_check(game)`. Readers: stand-pat gate :267, generation choice
-  :295, capture filter :310/:322, best_value init :332, mate :370.
-- :295-297 the generator -> preamble recomputes checkers+pins for P.
+- - src/search.cpp:415 `is_check(game)`. Readers: stand-pat gate
+  src/search.cpp:420, generation choice src/search.cpp:454, capture filter
+  src/search.cpp:469/src/search.cpp:481, best_value init src/search.cpp:491,
+  mate src/search.cpp:549.
+- - src/search.cpp:454-456 the generator -> preamble recomputes checkers+pins
+  for P.
 
 Per-move -- a DIFFERENT node, never collapsible into P's flag:
-- :662 `is_check_move = is_capture ? false : is_check(game)`, post-make, the
-  child position P'. After S107 its sole reader is the LMR guard (:694), and
-  S107's accepts hands exactly that to this step to preserve; S109 adds
-  per-move gives-check exemptions reading the same value.
+- - src/search.cpp:929 `is_check_move = is_capture ? false : is_check(game)`,
+  post-make, the child position P'. After S107 its sole reader is the LMR guard
+  (src/search.cpp:961), and S107's accepts hands exactly that to this step to
+  preserve; S109 adds per-move gives-check exemptions reading the same value.
 
 Non-search callers stay untouched: SAN's +/# (src/bitboard.cpp:2225-2226),
-tools/datagen.cpp:201/:280, tests. `is_check` remains public.
+tools/datagen.cpp:201/tools/datagen.cpp:280, tests. `is_check` remains public.
 
 Cost path: `is_check` (src/bitboard.cpp:1433) = king lsb + `is_attacked` ->
-`is_attacked_with_occupancy` (:21): pawn/knight/king table ANDs with early
-exit, then bishop and rook magics against bishop|queen, rook|queen. Out of
-check no early exit fires, so all five lookups run -- the same five
-`attackers_to` (:68) does without exits; `is_attacked(sq,c)` iff
-`attackers_to(sq,c) != 0`, same tables, same occupancies[BOTH]. The generator
-preamble adds count_bits, the between-table mask, two empty-occupancy magic
-lookups for snipers, and the pin loop.
+`is_attacked_with_occupancy` (src/bitboard.cpp:21): pawn/knight/king table ANDs
+with early exit, then bishop and rook magics against bishop|queen, rook|queen.
+Out of check no early exit fires, so all five lookups run -- the same five
+`attackers_to` (src/bitboard.cpp:68) does without exits; `is_attacked(sq,c)`
+iff `attackers_to(sq,c) != 0`, same tables, same occupancies[BOTH]. The
+generator preamble adds count_bits, the between-table mask, two empty-occupancy
+magic lookups for snipers, and the pin loop.
 
 Where the flag lives: a function-local const at node entry, where it already
 is. Every block-1 consumer reads it in the same function body. No per-ply
@@ -85,24 +93,27 @@ the TT_EVAL_NONE sentinel in `static_evals[]`, not from a flag.
 
 Each increment lands alone and proves itself node-identical first.
 
-- (a) **Share the preamble between the staged calls.** Extract a masks struct
+- - (a) **Share the preamble between the staged calls.** Extract a masks struct
   {checkers, pinned, king_square} + a compute function from
   generate_moves_impl:483-531; add generator entry points taking it
   precomputed; the existing three signatures compute-then-forward, so every
-  non-search caller is untouched. negamax computes the masks once before :614
-  and hands them to :614/:621/:641 -- the board is provably back at P
-  everywhere they are read (the loop unmakes before :641 runs). Same values
-  reach generate_moves_body, INV-1/INV-3 untouched.
-- (b) **Unify the entry flag with the masks' checkers.** Replace :469/:262
-  with `checkers != 0` from an `attackers_to` at entry; pins stay deferred to
-  the generation site, because RFP/NMP (negamax) and the stand-pat cutoff and
-  qply cap (quiescence) return in between and must not pay for pins. Keep the
-  no-king guard both existing sites have.
-- (c) **Declined for the minimal shape**: passing the parent's :662 value
-  down as the child's entry flag. It stays inside search.cpp/hpp but changes
-  both signatures, covers quiet-move children only, and buys the stale-flag
-  risk class of section 5. Take it only if (a)+(b) measure zero and a fresh
-  profile still shows the entry scan.
+  non-search caller is untouched. negamax computes the masks once before
+  src/search.cpp:875 and hands them to
+  src/search.cpp:875/src/search.cpp:882/src/search.cpp:902 -- the board is
+  provably back at P everywhere they are read (the loop unmakes before
+  src/search.cpp:902 runs). Same values reach generate_moves_body, INV-1/INV-3
+  untouched.
+- - (b) **Unify the entry flag with the masks' checkers.** Replace
+  src/search.cpp:687/src/search.cpp:415 with `checkers != 0` from an
+  `attackers_to` at entry; pins stay deferred to the generation site, because
+  RFP/NMP (negamax) and the stand-pat cutoff and qply cap (quiescence) return
+  in between and must not pay for pins. Keep the no-king guard both existing
+  sites have.
+- - (c) **Declined for the minimal shape**: passing the parent's
+  src/search.cpp:929 value down as the child's entry flag. It stays inside
+  search.cpp/hpp but changes both signatures, covers quiet-move children only,
+  and buys the stale-flag risk class of section 5. Take it only if (a)+(b)
+  measure zero and a fresh profile still shows the entry scan.
 
 ### 4. Constants and seeds
 
@@ -113,16 +124,16 @@ None. No parameter, no number to fit; DEC-084 is satisfied vacuously.
 - **:662 is not this node.** It is the child's post-make state. Folding it
   into P's flag is wrong by construction, and deleting it breaks the LMR
   guard S107 explicitly preserved it for.
-- **Stale masks across make/unmake.** Masks are valid only at P. The board
-  leaves P at :656 and returns at :727; cached masks may be read only where
-  the board is provably back at P, and never from storage that outlives the
-  node's frame. A debug assert (recompute == cached) at the :641 read is
-  cheap insurance during the transition.
-- **Quiescence's structure differs.** Its commonest conclusion is the
-  stand-pat store-and-return (:268-277), which needs the flag and never the
-  pins -- hoisting the full preamble to :262 taxes exactly those nodes. Split
-  checkers (entry) from pins (generation) there too; the qply cap (:287) is
-  the other early return.
+- - **Stale masks across make/unmake.** Masks are valid only at P. The board
+  leaves P at src/search.cpp:917 and returns at src/search.cpp:994; cached
+  masks may be read only where the board is provably back at P, and never from
+  storage that outlives the node's frame. A debug assert (recompute == cached)
+  at the src/search.cpp:902 read is cheap insurance during the transition.
+- - **Quiescence's structure differs.** Its commonest conclusion is the
+  stand-pat store-and-return (src/search.cpp:421-436), which needs the flag and
+  never the pins -- hoisting the full preamble to src/search.cpp:415 taxes
+  exactly those nodes. Split checkers (entry) from pins (generation) there too;
+  the qply cap (src/search.cpp:446) is the other early return.
 - **The null-move child computes its own state.** No inference about
   post-null check state -- any shortcut there is a semantic change, outside
   `excludes:`.
@@ -148,16 +159,16 @@ file orders.
 
 Plan order lands S020 after all of block 1, so section 2's inventory is a
 floor, not the final sweep: by then S108/S109/S114/S116 read the entry flag,
-and S109's skip_quiets has rewired the staged-generation branch (:636-652)
-that increment (a) shares. Re-sweep at start with
-`grep -n "is_check\|in_check" src/search.cpp`. The order is right as it
-stands -- landing S020 first would mean rebasing it under every block-1 step;
-landing it last collects all their call sites in one sweep, and each block-1
-step needs only the local that already exists (S108's section 7 records "no
-conflict" with S020 explicitly). S107 (before): preserve `is_check_move` for
-LMR alone. S098 (before) owns the exemption semantics; S020 changes no
-eligibility. S042/S032/S030 (same block, after): movegen internals -- the
-masks seam from (a) lands first and neither side cares.
+and S109's skip_quiets has rewired the staged-generation branch
+(src/search.cpp:897-913) that increment (a) shares. Re-sweep at start with
+`grep -n "is_check\|in_check" src/search.cpp`. The order is right as it stands
+-- landing S020 first would mean rebasing it under every block-1 step; landing
+it last collects all their call sites in one sweep, and each block-1 step needs
+only the local that already exists (S108's section 7 records "no conflict" with
+S020 explicitly). S107 (before): preserve `is_check_move` for LMR alone. S098
+(before) owns the exemption semantics; S020 changes no eligibility.
+S042/S032/S030 (same block, after): movegen internals -- the masks seam from
+(a) lands first and neither side cares.
 
 ### Scope concern
 

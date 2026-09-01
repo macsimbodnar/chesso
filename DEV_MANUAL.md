@@ -700,20 +700,42 @@ moment S033 finished), and S062 is the third repair.
 
 **`--citations`.** Every `path:line` and `path:line-line` citation in
 `plan_todo/` and `plan_current/`, re-resolved against the working tree. Three
-failure classes, each an exact string comparison and none a judgement: `BOUNDS`
+failure classes are exact string comparisons and none is a judgement: `BOUNDS`
 (the path is absent, or the line is past the end of the file), `ANCHOR` (a
 doctest title quoted on the citing line or the line above it is not the test the
 cited lines open), `DRIFT` (the cited lines hold different text now than they
-held in the commit that last wrote the step file). Citations into `adocs/` and
-other `.md` files, and bare `:line` continuations whose path is inherited from
-prose, are counted and printed but do not fail the run — the first because those
-documents are rewritten at every completion by design, the second because the
-inheritance is not mechanically resolvable in these files. S138 is why it
-exists: `2026-08-20_plan_review-F01` measured 70 of 147 citations stale, and
+held in the commit that last wrote the step file). The fourth is a rule about
+writing rather than a comparison: `BARE`, a `:line` continuation with no path of
+its own. Citations into `adocs/` and other `.md` files are counted and printed
+but do not fail the run, because those documents are rewritten at every
+completion by design. S138 is why it exists:
+`2026-08-20_plan_review-F01` measured 70 of 147 citations stale, and
 eight pending steps that each add pruning or a reduction told their implementer
 to extend the mate-safety gate at a line that had come to rest inside an
 unrelated test. The symptom of extending the wrong mate test is a strength
 regression, not a red test.
+
+**`BARE`, and why the check refuses to resolve one.** `(src/evaluation.cpp:951
+mobility, :953 king safety)` — the second citation inherits its path from the
+first, and nothing mechanical can tell which sentence it inherits from. S138
+measured the attempt: guessing produced sixty impossible line numbers, because
+S095 wrote `(transposition_table.cpp:96-103), and :449 already computes` where
+`:449` means `src/search.cpp`. So the check states the path is missing and stops
+there. **The rule is that a citation repeats its path** — `plan.md`'s "How this
+file works" carries it — and this flag is its enforcement. S144 converted the
+383 that existed across 19 pending files, reading each citing sentence and then
+relocating the text the citation was written against to prove the path;
+`adocs/data/S144_pathings.tsv` is that mapping and `adocs/data/S144_paths.py`
+the generator. DEC-120.
+
+**What a converted citation is worth.** A wrong path is caught when its line is
+past the end of that file, or when a quoted `TEST_CASE` title contradicts it.
+An in-range wrong path is caught by neither, and DRIFT is blind on the commit
+that writes the citation, since that commit becomes the baseline. Observed both
+ways at S144: `src/search_params.hpp:181-182` mistyped as `src/search.hpp` gave
+`BOUNDS ... src/search.hpp has 99 lines`, and the same range mistyped as
+`src/search.cpp` — in range, wrong file — passed green. The mapping is the
+evidence; the green run is not.
 
 **Run it before editing a step file, not after.** DRIFT's baseline is the commit
 that last wrote the step file, so *any* edit to that file — for any reason, on

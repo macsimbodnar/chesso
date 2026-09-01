@@ -96,37 +96,40 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 
 ### 2. Shape for chesso
 
-- **Ladder site**: RFP :511-537, null move :561-588. ProbCut goes after the
-  null-move block's close (:588) and before `node_type_t type = ...` (:590)
+- - **Ladder site**: RFP src/search.cpp:765-772, null move
+  src/search.cpp:814-841. ProbCut goes after the null-move block's close
+  (src/search.cpp:841) and before `node_type_t type = ...` (src/search.cpp:843)
   -- the SF placement, and a null-pruned node then never pays for captures.
-  S097 lands earlier in plan order and its verification block sits in the
-  same region; ProbCut goes first, same never-pays argument.
-- **qsearch is callable mid-node**: declared search.hpp:46-51, already
-  called by negamax at :466. The preliminary is
-  `-quiescence(-probBeta, -probBeta + 1, ply + 1, 0, game, state)` after
-  `make_move` (illegal moves drop out via its false return, :656 pattern);
-  the shallow search is `-negamax(-probBeta, -probBeta + 1, probDepth,
-  ply + 1, game, state, moves[i], false)` -- prev_move flows as everywhere.
-- **The restricted move set exists**: generate its own capture list before
-  the staged loop (the :614 stage regenerates later -- an accepted double
-  generation every surveyed movepicker also pays), ordered by
-  `capture_score` (evaluation.hpp:308) through `pick_next_move` (:87). The
-  "good" filter is the predicate pair quiescence uses at :322-323,
-  `capture_cannot_lose(...)` then `see_ge(..., 0)` (bitboard.cpp:1160,
-  :1185) -- S015 machinery, nothing new. generate_captures also emits
-  non-capture promotions (:303-307 comment); ProbCut keeps them -- the
-  published set is "noisy" moves.
-- **TT probe already paid**: the entry is copied out at :445-455. The skip
-  reads the score through `de_normalize_score(entry->score, ply)` (:139) --
-  a **new de-normalize site, S106's lesson** -- and skips when the entry's
-  depth reaches probDepth and its score sits under probBeta with an
-  upper-bound or exact type. That is the honest V1 form: an ALPHA entry
-  under probBeta proves it, a BETA entry does not; Weiss #771 later ignores
-  the bound for +4.99 STC, an S127-era sweep here.
-- **TT store exists**: `tt_store_entry(state->tt, &game->board, probDepth,
+  S097 lands earlier in plan order and its verification block sits in the same
+  region; ProbCut goes first, same never-pays argument.
+- - **qsearch is callable mid-node**: declared search.hpp:46-51, already called
+  by negamax at src/search.cpp:684. The preliminary is `-quiescence(-probBeta,
+  -probBeta + 1, ply + 1, 0, game, state)` after `make_move` (illegal moves
+  drop out via its false return, src/search.cpp:917 pattern); the shallow
+  search is `-negamax(-probBeta, -probBeta + 1, probDepth, ply + 1, game,
+  state, moves[i], false)` -- prev_move flows as everywhere.
+- - **The restricted move set exists**: generate its own capture list before
+  the staged loop (the src/search.cpp:875 stage regenerates later -- an
+  accepted double generation every surveyed movepicker also pays), ordered by
+  `capture_score` (evaluation.hpp:308) through `pick_next_move`
+  (src/search.cpp:141). The "good" filter is the predicate pair quiescence uses
+  at src/search.cpp:481-482, `capture_cannot_lose(...)` then `see_ge(..., 0)`
+  (bitboard.cpp:1160, src/bitboard.cpp:1185) -- S015 machinery, nothing new.
+  generate_captures also emits non-capture promotions (src/bitboard.cpp:303-307
+  comment); ProbCut keeps them -- the published set is "noisy" moves.
+- - **TT probe already paid**: the entry is copied out at
+  src/search.cpp:663-673. The skip reads the score through
+  `de_normalize_score(entry->score, ply)` (src/search.cpp:193) -- a **new
+  de-normalize site, S106's lesson** -- and skips when the entry's depth
+  reaches probDepth and its score sits under probBeta with an upper-bound or
+  exact type. That is the honest V1 form: an ALPHA entry under probBeta proves
+  it, a BETA entry does not; Weiss #771 later ignores the bound for +4.99 STC,
+  an S127-era sweep here.
+- - **TT store exists**: `tt_store_entry(state->tt, &game->board, probDepth,
   normalize_score(value, ply), TT_BETA_NODE, moves[i], static_eval)`
   (transposition_table.hpp:49-55); static_eval is whatever RFP left at
-  :532, TT_EVAL_NONE otherwise (S094: the score field, never a bound).
+  src/search.cpp:731, TT_EVAL_NONE otherwise (S094: the score field, never a
+  bound).
 - **Nothing from S097 is needed**: no excluded-move parameter, no cutoff or
   store suppression -- ProbCut excludes nothing and its sub-searches probe
   and store normally. probDepth arithmetic: `probDepth = depth -
@@ -137,16 +140,17 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 
 One SPRT, as the accepts prices. Increments:
 
-1. Three constants in the search_params.hpp X-macro (:41), ranges stated.
-2. The block after :588. Entry: `!is_pv && !is_in_check && ply > 0 &&
-   depth >= PROBCUT_MIN_DEPTH && beta < MATE_MIN && beta > -MATE_MIN` (the
-   RFP guard row :511-512 is the house pattern), the TT skip above, and
-   `excluded_move == 0` once S097's parameter exists (section 5).
-3. The loop: captures generated and filtered, pick_next_move by
-   capture_score; per move make, preliminary qsearch, shallow search only
-   if the preliminary held, unmake; `state->aborted` checked after each
-   sub-search (:729 pattern) and nothing concluded from an aborted score.
-   On `value >= probBeta`: store as section 2, return value (fail-soft).
+1. 1. Three constants in the search_params.hpp X-macro
+   (src/search_params.hpp:50), ranges stated.
+2. 2. The block after src/search.cpp:841. Entry: `!is_pv && !is_in_check && ply
+   > 0 && depth >= PROBCUT_MIN_DEPTH && beta < MATE_MIN && beta > -MATE_MIN`
+   (the RFP guard row src/search.cpp:765-766 is the house pattern), the TT skip
+   above, and `excluded_move == 0` once S097's parameter exists (section 5).
+3. 3. The loop: captures generated and filtered, pick_next_move by
+   capture_score; per move make, preliminary qsearch, shallow search only if
+   the preliminary held, unmake; `state->aborted` checked after each sub-search
+   (src/search.cpp:996 pattern) and nothing concluded from an aborted score. On
+   `value >= probBeta`: store as section 2, return value (fail-soft).
 4. Tests, red first, printouts recorded:
    - the accepts' mate case: a forced mate for the defender inside the
      pruned window behind a crushing-looking capture, built the S033 way --
@@ -267,14 +271,35 @@ SPRT gain is the failure signature.
 
 ### 8. References
 
-- https://www.chessprogramming.org/ProbCut -- Buro citations, the linear model and cut condition, the Crafty history, "until Stockfish proved otherwise".
-- https://skatgame.net/mburo/ps/chessmpc.pdf -- Jiang, Buro, ACG 10, 2003; read in full: regression table, depth pairs, thresholds, match results, the mate-miss figure.
-- Buro, ICCA Journal 18(2) 1995; NECI TR 96, 1997 -- cited via CPW and https://skatgame.net/mburo/publications.html; probcut.pdf/improve.pdf not fetched.
-- https://api.github.com/repos/TerjeKir/weiss/pulls/283 -- the introduction body and both SPRT blocks.
-- https://api.github.com/search/issues?q=repo:TerjeKir/weiss+probcut+type:pr -- #312, #484, #567, #658, #685 lower the returned score +1.66/+1.53, #731, #771.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+probcut (and probCutBeta, "verify probcut", "Refine probcut", pre-2011 date filter) -- 3ef4fdea, fca0a2dd8, 33369631/62c0dc5d, 012f20d6, 6aa9308f, 1ceaea70, 71cc01c, 6edc29d7, f00d91f8, 7690fac5, 7c30091a, af181d9, d648350, bb4b01e3, 81c1d310, d5a36a3c -- message text only.
-- https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+probcut -- 744f902, 3eccbd0, da443c8, e56eda0, df97626, f4439e5, d01aa26, 891b458, 45851f3, ca739a0, c2f4305, a8c9baf.
-- https://api.github.com/search/issues?q=repo:jhonnold/berserk+probcut -- #215, #503, #507 with bodies.
-- https://api.github.com/repos/mhouppin/stash-bot/pulls/141 and https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+probcut -- #141, #142, #147, #148.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+probcut -- total_count 0, commits likewise: Lynx has none.
-- https://talkchess.com/forum3/viewtopic.php?t=67602 -- Ethereal version ledger, "9.74 ProbCut" (re-cited from S091's research pass).
+- - https://www.chessprogramming.org/ProbCut -- Buro citations, the linear
+  model and cut condition, the Crafty history, "until Stockfish proved
+  otherwise".
+- - https://skatgame.net/mburo/ps/chessmpc.pdf -- Jiang, Buro, ACG 10, 2003;
+  read in full: regression table, depth pairs, thresholds, match results, the
+  mate-miss figure.
+- - Buro, ICCA Journal 18(2) 1995; NECI TR 96, 1997 -- cited via CPW and
+  https://skatgame.net/mburo/publications.html; probcut.pdf/improve.pdf not
+  fetched.
+- - https://api.github.com/repos/TerjeKir/weiss/pulls/283 -- the introduction
+  body and both SPRT blocks.
+- - https://api.github.com/search/issues?q=repo:TerjeKir/weiss+probcut+type:pr
+  -- #312, #484, #567, #658, #685 lower the returned score +1.66/+1.53, #731,
+  #771.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+probcut
+  (and probCutBeta, "verify probcut", "Refine probcut", pre-2011 date filter)
+  -- 3ef4fdea, fca0a2dd8, 33369631/62c0dc5d, 012f20d6, 6aa9308f, 1ceaea70,
+  71cc01c, 6edc29d7, f00d91f8, 7690fac5, 7c30091a, af181d9, d648350, bb4b01e3,
+  81c1d310, d5a36a3c -- message text only.
+- - https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+probcut --
+  744f902, 3eccbd0, da443c8, e56eda0, df97626, f4439e5, d01aa26, 891b458,
+  45851f3, ca739a0, c2f4305, a8c9baf.
+- - https://api.github.com/search/issues?q=repo:jhonnold/berserk+probcut --
+  #215, #503, #507 with bodies.
+- - https://api.github.com/repos/mhouppin/stash-bot/pulls/141 and
+  https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+probcut --
+  #141, #142, #147, #148.
+- - https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+probcut --
+  total_count 0, commits likewise: Lynx has none.
+- - https://talkchess.com/forum3/viewtopic.php?t=67602 -- Ethereal version
+  ledger, "9.74 ProbCut" (re-cited from S091's research pass).

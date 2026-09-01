@@ -79,33 +79,35 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 2. Shape for chesso
 
-- The condition: tt_get_entry (src/search.cpp:663) returns nullptr on a miss
-  (transposition_table.cpp:96-103), and :449 already computes
+- - The condition: tt_get_entry (src/search.cpp:663) returns nullptr on a miss
+  (transposition_table.cpp:96-103), and src/search.cpp:667 already computes
   `tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0`. **The probe
   exposes both variants today** — `tt_entry == nullptr` is entry-absent,
-  non-null with `best_move == 0` is entry-present-move-empty — and
-  `tt_move == 0` is their union, the published winning condition, one
-  variable already in scope. Verified who writes moveless entries: negamax
-  never (assert :783, store :813-815); **quiescence does**, since S094
-  (:273-275 stand-pat beta, :377-378 mated, :387-390 fail-low), all at
-  TT_DEPTH_QS. So "entry with no move" concretely means "only quiescence has
-  resolved this position" — the unimportance signal the technique prices. The
-  goal's "table entry carries no move" is read as the union: a missing entry
-  carries no move either.
-- The site: node level, after the TT-cutoff block (:457-463) and the
-  quiescence drop (:466), before the RFP block (:511) — before all forward
-  pruning, the placement with the two positive records. Cut `depth` once;
-  everything downstream reads the reduced depth by construction: the RFP gate
-  (:512), the null-move formula (:561), S109's move-loop gates, S098's table
-  row via lmr_reduction(depth, ...) (:695), child_depth (:676), and the store
-  (:814), which then records the depth the node was actually searched to.
-- No ply guard: the root re-stores its entry with a move every iteration, so
-  from iteration 2 it has a TT move — and Lynx's allow-root record is +1.39.
-  No in-check condition either (the published simple form has none;
-  is_in_check :469 sits below the site anyway). Quiescence is untouched — no
-  depth to cut (qply cap only), and no published implementation reduces
-  there. No IID remnant exists in the tree (grepped; specs.md "absent,
-  search" lists IIR as absent) — the excludes line is scope, not a deletion.
+  non-null with `best_move == 0` is entry-present-move-empty — and `tt_move ==
+  0` is their union, the published winning condition, one variable already in
+  scope. Verified who writes moveless entries: negamax never (assert
+  src/search.cpp:1069, store src/search.cpp:1099-1101); **quiescence does**,
+  since S094 (src/search.cpp:432-434 stand-pat beta, src/search.cpp:556-557
+  mated, src/search.cpp:576-578 fail-low), all at TT_DEPTH_QS. So "entry with
+  no move" concretely means "only quiescence has resolved this position" — the
+  unimportance signal the technique prices. The goal's "table entry carries no
+  move" is read as the union: a missing entry carries no move either.
+- - The site: node level, after the TT-cutoff block (src/search.cpp:675-681)
+  and the quiescence drop (src/search.cpp:684), before the RFP block
+  (src/search.cpp:765) — before all forward pruning, the placement with the two
+  positive records. Cut `depth` once; everything downstream reads the reduced
+  depth by construction: the RFP gate (src/search.cpp:766), the null-move
+  formula (src/search.cpp:814), S109's move-loop gates, S098's table row via
+  lmr_reduction(depth, ...) (src/search.cpp:962), child_depth
+  (src/search.cpp:943), and the store (src/search.cpp:1100), which then records
+  the depth the node was actually searched to.
+- - No ply guard: the root re-stores its entry with a move every iteration, so
+  from iteration 2 it has a TT move — and Lynx's allow-root record is +1.39. No
+  in-check condition either (the published simple form has none; is_in_check
+  src/search.cpp:687 sits below the site anyway). Quiescence is untouched — no
+  depth to cut (qply cap only), and no published implementation reduces there.
+  No IID remnant exists in the tree (grepped; specs.md "absent, search" lists
+  IIR as absent) — the excludes line is scope, not a deletion.
 
 ### 3. Implementation sketch
 
@@ -136,8 +138,8 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 4. Constants and seeds
 
-Both in src/search_params.hpp (the :41 X-macro) with stated ranges; each is a
-**seed — must be fitted/SPSA'd here** (S127, DEC-084).
+Both in src/search_params.hpp (the src/search_params.hpp:50 X-macro) with
+stated ranges; each is a **seed — must be fitted/SPSA'd here** (S127, DEC-084).
 
 - `IIR_MIN_DEPTH` **4** — Lynx #507's introduction value; 4->5 +0.43 and
   5->6 0.08 say flat above it; CPW's "depth > 5, say"; SF deleted the
@@ -158,18 +160,18 @@ Both in src/search_params.hpp (the :41 X-macro) with stated ranges; each is a
   no edit. What is forbidden is a second per-move no-TT-move term inside
   LMR: Lynx measured that duplicate at **-8.08** with IIR present (#2253);
   S098's file carries the same warning from its side.
-- **Re-visits do not re-reduce forever here.** The reduced visit stores its
-  entry at the reduced depth *with a move* (:783); the next visit at the
-  same nominal depth finds the move — no cutoff, stored depth one short
-  (:164) — and is not reduced. The loop terminates because every negamax
-  store carries a move. Residual re-fire paths — a slot lost to a collision
-  (key mismatch reads as no-entry), a quiescence store recapturing the slot
-  across a `go` boundary (in-generation it cannot: transposition_table.cpp:158
-  replaces only at depth >= entry->depth, and TT_DEPTH_QS loses to any main
-  depth) — cost 1 ply once per visit, bounded. The published mitigation for
-  the saturated-table case is the depth threshold (Ed's stated concern on
-  talkchess), and S105's Hash 16 regime is deliberately high-pressure, so
-  the threshold is load-bearing here, not decorative.
+- - **Re-visits do not re-reduce forever here.** The reduced visit stores its
+  entry at the reduced depth *with a move* (src/search.cpp:1069); the next
+  visit at the same nominal depth finds the move — no cutoff, stored depth one
+  short (src/search.cpp:228) — and is not reduced. The loop terminates because
+  every negamax store carries a move. Residual re-fire paths — a slot lost to a
+  collision (key mismatch reads as no-entry), a quiescence store recapturing
+  the slot across a `go` boundary (in-generation it cannot:
+  transposition_table.cpp:158 replaces only at depth >= entry->depth, and
+  TT_DEPTH_QS loses to any main depth) — cost 1 ply once per visit, bounded.
+  The published mitigation for the saturated-table case is the depth threshold
+  (Ed's stated concern on talkchess), and S105's Hash 16 regime is deliberately
+  high-pressure, so the threshold is load-bearing here, not decorative.
 - **S097 needs a TT move by definition — no overlap.** Singular extension
   verifies a node whose entry has a move and sufficient depth/bound; IIR
   fires only where tt_move == 0 — mutually exclusive at a node. The one real
@@ -182,9 +184,9 @@ Both in src/search_params.hpp (the :41 X-macro) with stated ranges; each is a
   one iteration later; iterative deepening plus the stored move heal it in
   play, and the cold-table fixed-depth mate tests are where a wrong floor or
   threshold shows.
-- **Store the reduced depth.** Mutating `depth` before the loop makes :814
-  store it correctly; cutting a copy and storing the original would claim
-  depth the node never searched and poison deeper cutoffs.
+- - **Store the reduced depth.** Mutating `depth` before the loop makes
+  src/search.cpp:1100 store it correctly; cutting a copy and storing the
+  original would claim depth the node never searched and poison deeper cutoffs.
 
 ### 6. Measurement
 
@@ -207,16 +209,48 @@ and dropping three lines is the default outcome at zero (S005/S006/S015).
 
 ### 8. References
 
-- https://www.chessprogramming.org/Internal_Iterative_Reductions — lineage (Schroder, Rebel 2020), all-node-types origin, SF PV-only then Chaly cutnodes 2021, "depth > 5, say", the entry-depth refinement idea.
-- https://www.chessprogramming.org/Internal_Iterative_Deepening — Scott 1969, Anantharaman 1991, classical PV-only conditions, reduction amounts, Deep Thought's "washout on average".
-- https://talkchess.com/viewtopic.php?t=74769 — Ed Schroder, "An alternative to IID", 2020-08-13: +17/5000, full ply without research, ~2 plies depth gain, TT-saturation concern; silentshark +13/+14.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+IIR+in:title+type:pr — #507 +9.5 (min depth 4); #1516 !ttHit -> !ttHit||!ttMove +11.63; #2025 root +1.39; #2035 depth 4->5 +0.43; #2236 5->6 0.08; #1361/-12.38 and #2028/-46.23 reduce-2; #2024/#2026 PV-only -45/-47; #2027/#2220 pv||cut -20/-21; #1237 pv&&cut -6.73; #2195 after-pruning +0.44; #1734 SE +0.09; #1524..#1534 ttDepth offsets ~0.
-- https://api.github.com/repos/lynx-chess/Lynx/releases/tags/v1.1.0 — 2023-12-14, "Add Internal Iterative Reduction (IIR) (#507)".
-- https://api.github.com/search/issues?q=repo:TerjeKir/weiss+IIR+type:pr and +IID — #113 IID 2019 (~0/+4.11); #316 "Rebel IID" 2020-08-15 +8.02/+5.61/+3.83; #450 before-pruning +2.87/+2.37; #569 PV-only +1.67 STC, LTC unresolved.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22internal+iterative%22 — e64b957 2020-08-21 removes IID, "depth reduction if the position is not in TT and on the PV", non-regression; 8dea070 before-probcut 2023.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22IIR%22 — 6d0d430, db147fe, 55cb235 ("poor scaling"), 8b32e48, 40e0486, 9cc15b3, 3747a19 (depth condition simplified away), cc992e5 (entry depth >= search depth, reduce more).
-- https://api.github.com/search/commits?q=repo:jhonnold/berserk+IIR — 7ba082b #89 "Replace IID with Ed's IIR" +6.74 at 8+0.08; b81aa1d #91 disable during SE +3.64; 9c1b743 #140 before pruning +2.17.
-- https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+IIR — 3071b40 "Introduce cutnodes, and perform IIR on them" +4.39/+2.88 (2023-04); 0850fdd tt-depth lag +2.86/+3.31; 9243eae PV +1.37/+2.08.
-- https://api.github.com/repos/AndyGrant/Ethereal/releases — 11.16 (2019-01) "Remove Internal Iterative Deepening, apply Singular Extensions aggressively".
-- https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+%22iterative%22 — negative result: no IID/IIR commit traced.
-- https://rebel13.nl/prodeo/prodeo-3.0.html — unreachable this pass (HTTP 526); not used.
+- - https://www.chessprogramming.org/Internal_Iterative_Reductions — lineage
+  (Schroder, Rebel 2020), all-node-types origin, SF PV-only then Chaly cutnodes
+  2021, "depth > 5, say", the entry-depth refinement idea.
+- - https://www.chessprogramming.org/Internal_Iterative_Deepening — Scott 1969,
+  Anantharaman 1991, classical PV-only conditions, reduction amounts, Deep
+  Thought's "washout on average".
+- - https://talkchess.com/viewtopic.php?t=74769 — Ed Schroder, "An alternative
+  to IID", 2020-08-13: +17/5000, full ply without research, ~2 plies depth
+  gain, TT-saturation concern; silentshark +13/+14.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+IIR+in:title+type:pr
+  — #507 +9.5 (min depth 4); #1516 !ttHit -> !ttHit||!ttMove +11.63; #2025 root
+  +1.39; #2035 depth 4->5 +0.43; #2236 5->6 0.08; #1361/-12.38 and #2028/-46.23
+  reduce-2; #2024/#2026 PV-only -45/-47; #2027/#2220 pv||cut -20/-21; #1237
+  pv&&cut -6.73; #2195 after-pruning +0.44; #1734 SE +0.09; #1524..#1534
+  ttDepth offsets ~0.
+- - https://api.github.com/repos/lynx-chess/Lynx/releases/tags/v1.1.0 —
+  2023-12-14, "Add Internal Iterative Reduction (IIR) (#507)".
+- - https://api.github.com/search/issues?q=repo:TerjeKir/weiss+IIR+type:pr and
+  +IID — #113 IID 2019 (~0/+4.11); #316 "Rebel IID" 2020-08-15
+  +8.02/+5.61/+3.83; #450 before-pruning +2.87/+2.37; #569 PV-only +1.67 STC,
+  LTC unresolved.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22internal+iterative%22
+  — e64b957 2020-08-21 removes IID, "depth reduction if the position is not in
+  TT and on the PV", non-regression; 8dea070 before-probcut 2023.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22IIR%22
+  — 6d0d430, db147fe, 55cb235 ("poor scaling"), 8b32e48, 40e0486, 9cc15b3,
+  3747a19 (depth condition simplified away), cc992e5 (entry depth >= search
+  depth, reduce more).
+- - https://api.github.com/search/commits?q=repo:jhonnold/berserk+IIR — 7ba082b
+  #89 "Replace IID with Ed's IIR" +6.74 at 8+0.08; b81aa1d #91 disable during
+  SE +3.64; 9c1b743 #140 before pruning +2.17.
+- - https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+IIR —
+  3071b40 "Introduce cutnodes, and perform IIR on them" +4.39/+2.88 (2023-04);
+  0850fdd tt-depth lag +2.86/+3.31; 9243eae PV +1.37/+2.08.
+- - https://api.github.com/repos/AndyGrant/Ethereal/releases — 11.16 (2019-01)
+  "Remove Internal Iterative Deepening, apply Singular Extensions
+  aggressively".
+- -
+  https://api.github.com/search/commits?q=repo:mhouppin/stash-bot+%22iterative%22
+  — negative result: no IID/IIR commit traced.
+- - https://rebel13.nl/prodeo/prodeo-3.0.html — unreachable this pass (HTTP
+  526); not used.

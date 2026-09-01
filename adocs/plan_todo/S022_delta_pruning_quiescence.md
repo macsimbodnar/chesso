@@ -78,18 +78,19 @@ the precedent for keeping or dropping on a measured zero).
 Line numbers at 0edfd26 (`src/` byte-identical to cf89e22); re-locate by
 symbol once S112/S131 have edited the function.
 
-- **Current truth: chesso has no delta pruning, in either form.** No delta
+- - **Current truth: chesso has no delta pruning, in either form.** No delta
   test exists in `quiescence()` -- the only skips today are the non-capture
-  drop at src/search.cpp:469 and S015's SEE gate at :332-335 (`!in_check &&
-  !capture_cannot_lose && !see_ge(move, 0)`), and specs.md's "absent, search"
-  row lists delta pruning absent. The goal's "deleting delta pruning"
-  therefore means the trial add is reverted or never bought and the zero
-  recorded -- no shipped code comes out on that arm.
-- **The tree this step measures against**: after S112 (per-move futility in
-  the filter loop above :322, fail-soft raise into :332, promotion /
-  gives-check / in-check exemptions, QS_FUTILITY_MARGIN plus a dedicated
-  `qs_futility_value[]`) and S131 (quiet queen promotions pass :310). Both
-  land first in plan order, their verdicts recorded whatever they were.
+  drop at src/search.cpp:469 and S015's SEE gate at src/search.cpp:481-484
+  (`!in_check && !capture_cannot_lose && !see_ge(move, 0)`), and specs.md's
+  "absent, search" row lists delta pruning absent. The goal's "deleting delta
+  pruning" therefore means the trial add is reverted or never bought and the
+  zero recorded -- no shipped code comes out on that arm.
+- - **The tree this step measures against**: after S112 (per-move futility in
+  the filter loop above src/search.cpp:481, fail-soft raise into
+  src/search.cpp:491, promotion / gives-check / in-check exemptions,
+  QS_FUTILITY_MARGIN plus a dedicated `qs_futility_value[]`) and S131 (quiet
+  queen promotions pass src/search.cpp:469). Both land first in plan order,
+  their verdicts recorded whatever they were.
 - **The re-target's three configurations, named.** Baseline F+S = futility
   plus S015's SEE gate, as S112/S131 leave the loop. **Verdict 1** = delete
   the SEE gate: F vs F+S -- the S015 re-measure the accepts fold in.
@@ -97,16 +98,17 @@ symbol once S112/S131 have edited the function.
   winner: F+D vs F, or F+S+D vs F+S. Two sequential SPRTs, each against the
   commit before it (accepts; DEC-020), walk one path through the three; the
   third pairwise comparison is not bought and not owed.
-- **The early-out's site and arithmetic**: under `!in_check`, between the
-  qply cap at :287 and generation at :289. Reuse S112's numbers rather than
-  minting new ones: skip when `futility_base + qs_futility_value[QUEEN] +
-  promo_allowance <= alpha`, where promo_allowance = queen minus pawn from
-  the same table when a friendly pawn stands on the seventh, else 0.
-  Fail-soft return is that same ceiling -- the node-level analog of S112's
-  per-move raise; returning bare stand_pat would claim an upper bound the
-  pruned moves can exceed -- stored TT_ALPHA_NODE via the :387-390 pattern.
-  A fired node is a certified fail-low, unlike the :287 cap return, which is
-  a truncation and rightly stores nothing.
+- - **The early-out's site and arithmetic**: under `!in_check`, between the
+  qply cap at src/search.cpp:446 and generation at src/search.cpp:448. Reuse
+  S112's numbers rather than minting new ones: skip when `futility_base +
+  qs_futility_value[QUEEN] + promo_allowance <= alpha`, where promo_allowance =
+  queen minus pawn from the same table when a friendly pawn stands on the
+  seventh, else 0. Fail-soft return is that same ceiling -- the node-level
+  analog of S112's per-move raise; returning bare stand_pat would claim an
+  upper bound the pruned moves can exceed -- stored TT_ALPHA_NODE via the
+  src/search.cpp:576-578 pattern. A fired node is a certified fail-low, unlike
+  the src/search.cpp:446 cap return, which is a truncation and rightly stores
+  nothing.
 - **Endgame disable**: `game_phase()` (src/evaluation.cpp:1111-1115, the
   INV-4 phase accumulator clamped to 24) is the O(1) predicate the null-move
   zugzwang guard already keys on (`> 0`, src/search.cpp:824). Disable the
@@ -117,15 +119,15 @@ symbol once S112/S131 have edited the function.
 Two SPRTs, priced as two verdicts by plan.md ("S097 and S022 two each");
 either order per the accepts. Recommended order, reason stated:
 
-1. **Verdict 1, the S015 re-measure: delete the SEE gate** (:322-325, one
-   condition block, capture_cannot_lose's call goes with it). H1 at the
-   non-regression bounds -> deleted: the gate re-measured ~0 even with
-   futility present and a see() 12.1 % cheaper; specs' quiescence row and
-   its Open items entry are rewritten in the same commit, and a decisions.md
-   entry records the deletion superseding S015's kept-at-zero (AGENTS.md
-   section 8, before or alongside). H0 -> kept, now with a current number;
-   the open item is discharged either way. Run first so verdict 2's
-   condition is written against the loop that survived.
+1. 1. **Verdict 1, the S015 re-measure: delete the SEE gate**
+   (src/search.cpp:481-484, one condition block, capture_cannot_lose's call
+   goes with it). H1 at the non-regression bounds -> deleted: the gate
+   re-measured ~0 even with futility present and a see() 12.1 % cheaper; specs'
+   quiescence row and its Open items entry are rewritten in the same commit,
+   and a decisions.md entry records the deletion superseding S015's
+   kept-at-zero (AGENTS.md section 8, before or alongside). H0 -> kept, now
+   with a current number; the open item is discharged either way. Run first so
+   verdict 2's condition is written against the loop that survived.
 2. **Verdict 2, the delta early-out, on verdict 1's winner.** Before booking
    the match, the DEC-079/S094 pre-check: instrument the condition's fire
    rate over the three search_bench positions at depth 12 plus one kiwipete
@@ -182,25 +184,25 @@ either order per the accepts. Recommended order, reason stated:
   drops, the reason this owes an SPRT, and the first suspect if verdict 2
   reads negative -- the honest fallback is a wider margin or no ship, not a
   cheap gives-check oracle that does not exist (S112 section 2).
-- **The SEE skip must not take the futility raise.** Moves reaching :322
-  survived S112's test, so their futility_value exceeds alpha; raising
-  best_value to it on a SEE skip fakes a fail-high through the :387-390
-  store. S112's asymmetry -- futility skip raises, SEE skip does not -- is
-  correct, not an oversight. Verdict 1 deletes the gate or keeps it as-is;
-  "fixing" the raise is a bug, and this answers the question S112 section 5
-  deferred here.
-- **game_phase and the disable.** The phase is an INV-4 accumulator,
-  promotion-clamped at 24, already the zugzwang boundary at :571 -- reusing
-  it costs one compare. What it does not capture: low-material positions at
-  phase > 0 (minor-piece endings), which is the threshold's range and S127's
-  business if delta ships.
+- - **The SEE skip must not take the futility raise.** Moves reaching
+  src/search.cpp:481 survived S112's test, so their futility_value exceeds
+  alpha; raising best_value to it on a SEE skip fakes a fail-high through the
+  src/search.cpp:576-578 store. S112's asymmetry -- futility skip raises, SEE
+  skip does not -- is correct, not an oversight. Verdict 1 deletes the gate or
+  keeps it as-is; "fixing" the raise is a bug, and this answers the question
+  S112 section 5 deferred here.
+- - **game_phase and the disable.** The phase is an INV-4 accumulator,
+  promotion-clamped at 24, already the zugzwang boundary at src/search.cpp:824
+  -- reusing it costs one compare. What it does not capture: low-material
+  positions at phase > 0 (minor-piece endings), which is the threshold's range
+  and S127's business if delta ships.
 - **Two changes, one function, strict sequence.** Verdict 1's commit is only
   the gate deletion (or nothing); verdict 2's only the early-out. The fast
   suite's two quiescence mate cases -- "a side in check may not stand pat"
   (tests/test_search.cpp:993) and "mate is recognised at depth zero"
   (tests/test_search.cpp:1067) -- gate each commit; pruning hiding mate is
   the recurring bug -- and the early-out never fires in check by
-  construction, so the :370 mate path stays reachable.
+  construction, so the src/search.cpp:549 mate path stays reachable.
 
 ### 6. Measurement
 
@@ -259,7 +261,8 @@ messages -- are cited in S112's and S131's sections 8 and not re-fetched.
 - https://github.com/TerjeKir/weiss/pull/455 -- re-verified: "Remove delta
   pruning", 2021-06-25, +1.87 +/- 3.51 at 8+0.08 / +6.74 +/- 5.26 at 40+0.4,
   simplification bounds [-4.00, 1.00].
-- https://api.github.com/repos/official-stockfish/Stockfish/commits/3dfbc5de25705fadcb4b5b7a551eacb3eb75d171
+- -
+  https://api.github.com/repos/official-stockfish/Stockfish/commits/3dfbc5de25705fadcb4b5b7a551eacb3eb75d171
   -- "Remove non-pawn material check in qsearch pruning", 2025-02-05, passed
   simplification STC and LTC at <-1.75, 0.25>; message only.
 - https://talkchess.com/viewtopic.php?t=75059 -- hgm on delta pruning

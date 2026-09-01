@@ -41,9 +41,9 @@ cannot be satisfied. It is decided by `./fastchess.sh --fast`, or
 change is pure rounding of at most 1 cp per position; nothing about which move
 looks best is being altered on purpose. DEC-019 is the standing warning that a
 reported figure decides what to try and never what to conclude, and this one
-does not even have a reported figure behind it. A verdict of zero is recorded as
-zero, and the change may still be kept with the reason stated — S005, S006 and
-S015 all were.
+does not even have a reported figure behind it. A verdict of zero is recorded
+as zero, and the change may still be kept with the reason stated — S005, S006
+and S015 all were.
 
 **The saved division is not the prize either.** One integer division on a
 function the search calls once per non-shortcut node is far under the 3 % noise
@@ -63,9 +63,9 @@ division puts the bound at 2 x 23/24 = 1.917, so the tolerance returns to 2.
 
 That is worth a centipawn of guard resolution: the guard is the only thing
 stopping the model drifting from `evaluate()`, and at a tolerance of 3 a real
-model error of up to about 2.8 cp per position hides inside legitimate rounding.
-Over a 1.49 M position fit that is a systematic bias the fit absorbs silently.
-DEC-053 records the two routes and why the slack was raised first.
+model error of up to about 2.8 cp per position hides inside legitimate
+rounding. Over a 1.49 M position fit that is a systematic bias the fit absorbs
+silently. DEC-053 records the two routes and why the slack was raised first.
 
 **Ordering: after S042, before S029.** The tighter bound protects fits of the
 hand-crafted evaluation, and S029 is where the network takes over from the HCE
@@ -108,8 +108,8 @@ the divisions must not move it to before, or the two implementations stop
 clamping the same quantity — which the model's own comments at
 `tools/eval_model.hpp:987-1007` warn about term by term.
 
-S039 re-decides `LAZY_EVAL_MARGIN` and sits ahead of this step in plan order. If
-it changes the margin, nothing here has to change: this step alters what is
+S039 re-decides `LAZY_EVAL_MARGIN` and sits ahead of this step in plan order.
+If it changes the margin, nothing here has to change: this step alters what is
 clamped by at most 1 cp and not where the clamp is.
 
 ## Technical details (SOTA research, 2026-08-19)
@@ -124,61 +124,67 @@ This step moves stage two to the canonical form that `evaluate_cheap()`
 already have. Division count is observable because C++ integer division
 truncates toward zero ([expr.mul]/4).
 
-**Shape for chesso.** The two sites: src/evaluation.cpp:1008-1009 (mobility) and
-:953-954 (king safety), each dividing a phase blend by `GAME_PHASE_MAX` = 24
-(src/evaluation.hpp:307); `phase = game_phase()` is `board->phase` clamped to
-[0,24] (src/evaluation.cpp:1111-1114). The guard today:
-tests/test_eval_model.cpp:277 `CHECK(|model - engine| <= 3.0)`, comment
-:337-359 naming the four divisions; the non-vacuity case :405-446 asserts the
-tempo-unfitted precondition (:410-415, message "4 x 23/24 = 3.833 ... has to
-be 4"), per-pin `difference > 2.0` (:436) and `worst > 2.8` (:444) over
-`truncation_positions` (:231-236), four FENs at exactly 69/24 found by
+**Shape for chesso.** The two sites: src/evaluation.cpp:1008-1009 (mobility)
+and src/evaluation.cpp:1010-1011 (king safety), each dividing a phase blend by
+`GAME_PHASE_MAX` = 24 (src/evaluation.hpp:307); `phase = game_phase()` is
+`board->phase` clamped to [0,24] (src/evaluation.cpp:1111-1114). The guard
+today: tests/test_eval_model.cpp:277 `CHECK(|model - engine| <= 3.0)`, comment
+tests/test_eval_model.cpp:236-258 naming the four divisions; the non-vacuity
+case tests/test_eval_model.cpp:304-345 asserts the tempo-unfitted precondition
+(tests/test_eval_model.cpp:309-314, message "4 x 23/24 = 3.833 ... has to be
+4"), per-pin `difference > 2.0` (tests/test_eval_model.cpp:335) and `worst >
+2.8` (tests/test_eval_model.cpp:343) over `truncation_positions`
+(tests/test_eval_model.cpp:130-135), four FENs at exactly 69/24 found by
 `build/tools/truncation_scan` over `.tuning/selfplay_v2_dedup.tsv` (present on
 this machine). Transformation: sum the two mg halves and the two eg halves,
-blend once, divide once; the model changes nothing (:973-974 is already merged).
+blend once, divide once; the model changes nothing
+(tools/eval_model.hpp:973-974 is already merged).
 
-**Implementation sketch.** In `evaluate_mobility_and_king_safety`:
-`stage_two = ((mob_mg + saf_mg) * phase + (mob_eg + saf_eg) * endgame) / 24`.
-Rounding analysis: let A, B be the two integer blends, `r = x % 24` the
-toward-zero remainder (sign of dividend, |r| <= 23). The change is
-`d = trunc((A+B)/24) - trunc(A/24) - trunc(B/24) = (rA + rB - r(A+B))/24`, an
-integer. Same-sign blends: `d = sign` iff `|rA + rB| >= 24`, else 0 — merged
-loses less, score weakly farther from zero. Mixed signs: d in {-1, 0, +1},
-either direction. So **|d| <= 1 cp per position, no parity invariant**, and at
-phase 0 or 24 the blend is divisible by 24 and d = 0. Guard bound: after the
-merge two divisions round (:640-643 and the merged one; tempo still 0/24
-exact), each losing at most 23/24 toward zero, worst case aligned:
-**2 x 23/24 = 46/24 = 1.9167**, so 2 is the tightest integer tolerance the
-arithmetic can never legitimately exceed (headroom 0.083 cp dwarfs double
-rounding; today's is 3 - 2.875 = 0.125). Analog thresholds: per-pin `> 1.0`
-(one division alone loses < 23/24 < 1, so past 1.0 proves both truncated) and
-`worst > 1.9` (vs 1.9167); the tempo message becomes 3 x 23/24 = 2.875 with
-tolerance 3, as the accepts states. Re-pin by re-running `truncation_scan`
-with `--min` near 1.8 at this step's HEAD; DEC-057 forbids lowering thresholds
-to whatever came out — find positions that reach the new maximum.
+**Implementation sketch.** In `evaluate_mobility_and_king_safety`: `stage_two =
+((mob_mg + saf_mg) * phase + (mob_eg + saf_eg) * endgame) / 24`. Rounding
+analysis: let A, B be the two integer blends, `r = x % 24` the toward-zero
+remainder (sign of dividend, |r| <= 23). The change is `d = trunc((A+B)/24) -
+trunc(A/24) - trunc(B/24) = (rA + rB - r(A+B))/24`, an integer. Same-sign
+blends: `d = sign` iff `|rA + rB| >= 24`, else 0 — merged loses less, score
+weakly farther from zero. Mixed signs: d in {-1, 0, +1}, either direction. So
+**|d| <= 1 cp per position, no parity invariant**, and at phase 0 or 24 the
+blend is divisible by 24 and d = 0. Guard bound: after the merge two divisions
+round (src/evaluation.cpp:697-700 and the merged one; tempo still 0/24 exact),
+each losing at most 23/24 toward zero, worst case aligned: **2 x 23/24 = 46/24
+= 1.9167**, so 2 is the tightest integer tolerance the arithmetic can never
+legitimately exceed (headroom 0.083 cp dwarfs double rounding; today's is 3 -
+2.875 = 0.125). Analog thresholds: per-pin `> 1.0` (one division alone loses <
+23/24 < 1, so past 1.0 proves both truncated) and `worst > 1.9` (vs 1.9167);
+the tempo message becomes 3 x 23/24 = 2.875 with tolerance 3, as the accepts
+states. Re-pin by re-running `truncation_scan` with `--min` near 1.8 at this
+step's HEAD; DEC-057 forbids lowering thresholds to whatever came out — find
+positions that reach the new maximum.
 
 **Constants and seeds.** None. No weight moves, nothing to seed or refit
 (DEC-084 not engaged).
 
 **Pitfalls.**
-- Truncation is toward zero, so the loss direction flips with the blend's
-  sign, and the blends are routinely negative: knight mg is -1 (:690), queen
-  eg -6 (:691), and the sums are mover-signed (:901-902). The +/-1 lands on
-  most positions; direction depends on the sign mix, per the analysis above.
-- **The collect path is the trap the file does not name.** `<collect=true>`
-  hands back tapered mobility and safety separately (:956-958) through
-  `evaluate_expensive_terms` (:1005) to tools/eval_spread.cpp:174 and
-  tests/test_evaluation.cpp:467-499, which REQUIREs
-  `clamp(mobility + safety) == evaluate() - evaluate_cheap()` **exactly**
-  (:481-484). Post-merge the reported pair must sum to the merged total: taper
-  one term, hand back the other as `stage_two - that term`, and state which
-  term carries the +/-1 residue — do not weaken the test. eval_spread's
-  per-term worsts shift by <= 1 cp; S039 reads them.
-- The clamp stays after the taper (:984; model :976-977) — already stated above.
+- - Truncation is toward zero, so the loss direction flips with the blend's
+  sign, and the blends are routinely negative: knight mg is -1
+  (src/evaluation.cpp:747), queen eg -6 (src/evaluation.cpp:748), and the sums
+  are mover-signed (src/evaluation.cpp:958-959). The +/-1 lands on most
+  positions; direction depends on the sign mix, per the analysis above.
+- - **The collect path is the trap the file does not name.** `<collect=true>`
+  hands back tapered mobility and safety separately
+  (src/evaluation.cpp:1013-1015) through `evaluate_expensive_terms`
+  (src/evaluation.cpp:1066) to tools/eval_spread.cpp:174 and
+  tests/test_evaluation.cpp:467-499, which REQUIREs `clamp(mobility + safety)
+  == evaluate() - evaluate_cheap()` **exactly**
+  (tests/test_evaluation.cpp:484-487). Post-merge the reported pair must sum to
+  the merged total: taper one term, hand back the other as `stage_two - that
+  term`, and state which term carries the +/-1 residue — do not weaken the
+  test. eval_spread's per-term worsts shift by <= 1 cp; S039 reads them.
+- - The clamp stays after the taper (src/evaluation.cpp:1045; model
+  tools/eval_model.hpp:976-977) — already stated above.
 - INV-4: same loop, same accumulated sums, one arithmetic site changed, no
   recompute added; `evaluate_cheap()` untouched.
-- The stale comments at :638-639 and :662 are this step's to fix — DEC-053's
-  consequences say "S055 owns them".
+- - The stale comments at src/evaluation.cpp:695-696 and src/evaluation.cpp:719
+  are this step's to fix — DEC-053's consequences say "S055 owns them".
 
 **Measurement.** The accepts is unambiguous: **SPRT, zero recorded as zero.**
 DEC-083's timing-only lane requires identical node counts and best moves
@@ -207,8 +213,9 @@ division by constant 24 is already a multiply-shift, not a `div`).
   finalizer emits mg/eg halves, the merged blend survives; if it applies after
   the taper, this site is rewritten and S122 must re-derive the guard's
   division count. One line of rework either way.
-- **S039**: `evaluate_lazy()`'s shortcut (:1038) tapers nothing — it compares
-  the already-tapered cheap score against the window. Covered above.
+- - **S039**: `evaluate_lazy()`'s shortcut (src/evaluation.cpp:1099) tapers
+  nothing — it compares the already-tapered cheap score against the window.
+  Covered above.
 - Order note: this file's "after S042, before S029" is DEC-053-era prose;
   plan.md owns order and now lists S055 (entry 32) before S042 (entry 36),
   with S029 parked — DEC-054 says S055 "keeps its value and loses its

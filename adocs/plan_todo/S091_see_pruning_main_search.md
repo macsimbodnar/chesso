@@ -14,9 +14,9 @@ done:
 S015 measured quiescence SEE pruning at **0 Elo** and it was kept anyway with
 the reason recorded. That verdict was taken when `see()` cost 12.1 % more than
 it does today, and the main search is a different caller with a different
-alternative -- a move pruned here is not searched at all, where in quiescence it
-was only declined. So this is a new measurement and not a re-run of that one,
-and a verdict of zero here is recorded as zero as well.
+alternative -- a move pruned here is not searched at all, where in quiescence
+it was only declined. So this is a new measurement and not a re-run of that
+one, and a verdict of zero here is recorded as zero as well.
 
 
 ## Re-scoped 2026-08-19
@@ -95,11 +95,13 @@ on record from the other side: Weiss #355 measured qsearch SEE pruning at
 
 ### 2. Shape for chesso
 
-- **SEE API, frozen by the accepts**: `see()` exact at src/bitboard.cpp:1271,
-  `see_ge(board, move, threshold)` at :1185 -- handles en passant
-  (:1196-1201), promotions (:1209-1212), quiets (`captured == EMPTY`, gain 0);
-  `capture_cannot_lose` :1160 is the capture-only fast path quiescence tries
-  first; the scale is `see_value[6] = {100,300,300,500,900,10000}` :1096.
+- - **SEE API, frozen by the accepts**: `see()` exact at src/bitboard.cpp:1271,
+  `see_ge(board, move, threshold)` at src/bitboard.cpp:1185 -- handles en
+  passant (src/bitboard.cpp:1196-1201), promotions
+  (src/bitboard.cpp:1209-1212), quiets (`captured == EMPTY`, gain 0);
+  `capture_cannot_lose` src/bitboard.cpp:1160 is the capture-only fast path
+  quiescence tries first; the scale is `see_value[6] =
+  {100,300,300,500,900,10000}` src/bitboard.cpp:1096.
 - **Test coverage**: suite "search: static exchange evaluation"
   tests/test_search.cpp:3183 (six hand-valued cases, a quiet into an
   attack); "search: see_ge agrees with see" tests/test_search.cpp:3275
@@ -109,26 +111,29 @@ on record from the other side: Weiss #355 measured qsearch SEE pruning at
   special branches are exercised against exact `see()`. No hand-valued EP or
   promotion case exists: the sweep catches the two implementations
   diverging, not a shared model error (Pitfalls).
-- **Quiescence site today**: src/search.cpp:481-484 (`capture_cannot_lose`
-  then `see_ge(..., 0)`), which is where the excludes line now points; it
-  read :205 until S138 re-anchored it, and the excludes' meaning is
+- - **Quiescence site today**: src/search.cpp:481-484 (`capture_cannot_lose`
+  then `see_ge(..., 0)`), which is where the excludes line now points; it read
+  src/search.cpp:205 until S138 re-anchored it, and the excludes' meaning is
   unchanged either way -- S094 grew the function under the old number.
-- **The skip site**: the negamax move loop `for (size_t i = 0;; ++i)`
-  src/search.cpp:896; captures arrive from the first stage :624;
-  `pick_next_move` :654, `make_move` :656, `is_capture` :658. `see_ge` reads
-  the *parent* board, so the capture skip runs **pre-make**, between :654 and
-  :656 -- the make is saved, unlike S109's post-make quiet rules. Guards:
-  `!is_pv`, `!is_in_check` (:469), `legal_moves_counter >= 1` (the move
-  ordered first -- ORDER_TT_MOVE, evaluation.cpp:1145 -- is then structurally
-  exempt, and :779-781's false-mate return stays unreachable), alpha and beta
-  outside the mate band (copy the guard row at :511-512), `depth <=` the gate.
-- **The reduction site**: :691-699. Today captures and promotions are never
-  reduced (`!is_capture && !MOVE_PROMOTED`, :693-694). The extra ply is two
-  edits: quiets, `reduction += 1` after :695 when the shared see_ge result is
-  negative; captures, `reduction = 1` for a negative-SEE capture that
-  survived the skip (deeper than the gate), clamped by :697 as everything is.
-  `is_check_move` (:662) is hardcoded false for captures -- never reuse it
-  for capture logic; it exists for the killer path only.
+- - **The skip site**: the negamax move loop `for (size_t i = 0;; ++i)`
+  src/search.cpp:896; captures arrive from the first stage src/search.cpp:875;
+  `pick_next_move` src/search.cpp:915, `make_move` src/search.cpp:917,
+  `is_capture` src/search.cpp:919. `see_ge` reads the *parent* board, so the
+  capture skip runs **pre-make**, between src/search.cpp:915 and
+  src/search.cpp:917 -- the make is saved, unlike S109's post-make quiet rules.
+  Guards: `!is_pv`, `!is_in_check` (src/search.cpp:687), `legal_moves_counter
+  >= 1` (the move ordered first -- ORDER_TT_MOVE, evaluation.cpp:1145 -- is
+  then structurally exempt, and src/search.cpp:1065-1067's false-mate return
+  stays unreachable), alpha and beta outside the mate band (copy the guard row
+  at src/search.cpp:765-766), `depth <=` the gate.
+- - **The reduction site**: src/search.cpp:958-966. Today captures and
+  promotions are never reduced (`!is_capture && !MOVE_PROMOTED`,
+  src/search.cpp:960-961). The extra ply is two edits: quiets, `reduction += 1`
+  after src/search.cpp:962 when the shared see_ge result is negative; captures,
+  `reduction = 1` for a negative-SEE capture that survived the skip (deeper
+  than the gate), clamped by src/search.cpp:964 as everything is.
+  `is_check_move` (src/search.cpp:929) is hardcoded false for captures -- never
+  reuse it for capture logic; it exists for the killer path only.
 - **Boundary with S109, exactly.** S109 owns pruning of **quiets**
   (`!MOVE_CAPTURE && !MOVE_PROMOTED`): LMP, futility, history pruning, and
   quiet SEE pruning at a margin scaled by lmr_depth -- the quiet SEE margin
@@ -170,9 +175,9 @@ never SPRT'd (S073).
    - precondition tests (non-vacuous): a position where the skip fires (node
      counts move against the off value), then the exempt variants -- in
      check, PV node -- search identically to the off build.
-   - a position whose only legal moves are losing captures while not in
-     check: the `legal_moves_counter >= 1` guard keeps :779-781 unreachable,
-     asserted.
+   - - a position whose only legal moves are losing captures while not in
+     check: the `legal_moves_counter >= 1` guard keeps src/search.cpp:1065-1067
+     unreachable, asserted.
    - `see()`/`see_ge()` untouched; both exchange suites pass unmodified
      (accepts) -- nothing in src/bitboard.cpp changes.
 4. tools/search_bench.py at depths 9 and 12 before/after, numbers in the
@@ -197,18 +202,18 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
 
 ### 5. Pitfalls
 
-- **The repo's own SEE bug, S015-era** (CLAUDE.md's "shipped and pruned
-  quiescence on wrong values for two commits"): a speculative cutoff in
-  `see()` returned 400 for a 500 exchange on
-  `3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR`; fixed in 63c9378, and the refusal to
-  reinstate it is written at src/bitboard.cpp:1342-1348. What catches its
-  class today is the :2354 agreement sweep plus the hand-valued cases -- the
+- - **The repo's own SEE bug, S015-era** (CLAUDE.md's "shipped and pruned
+  quiescence on wrong values for two commits"): a speculative cutoff in `see()`
+  returned 400 for a 500 exchange on `3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR`; fixed
+  in 63c9378, and the refusal to reinstate it is written at
+  src/bitboard.cpp:1342-1348. What catches its class today is the
+  tests/test_search.cpp:3275 agreement sweep plus the hand-valued cases -- the
   accepts freezes both. S015 also logged an x-ray king bug and an inverted
   ternary in see_ge; all three lived in code this step must not touch.
-- **A shared model error is invisible to the agreement sweep**: see() and
-  see_ge() mishandling en passant *identically* would still pass :2354. If
-  any doubt is raised, add one hand-valued EP case and one promotion case
-  red-first -- cheap, and the suite has none today.
+- - **A shared model error is invisible to the agreement sweep**: see() and
+  see_ge() mishandling en passant *identically* would still pass
+  tests/test_search.cpp:3275. If any doubt is raised, add one hand-valued EP
+  case and one promotion case red-first -- cheap, and the suite has none today.
 - **Sacrifices pruned**: the mate case in the accepts is the enforcement;
   the near-mate-bounds guard protects the defender's nodes on a mating
   line, the depth gate bounds what an iteration can miss -- the S033
@@ -250,11 +255,11 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
   additive term or be folded into the new formula -- state which in S098,
   and S098's accepts re-runs the mate case per adjustment, re-covering this
   step's clause.
-- **S112/S022 (quiescence siblings)**: S112 puts per-move capture futility
-  *before* the SEE call at :322; S022 owes the S015 rerun and the delta
-  decision. SF da8513f0 (2023, "do less SEE pruning in qsearch", constant
-  negative threshold) and Lynx #1580/#1318/#1598 (qsearch SEE refinements,
-  all negative) are their material, not this step's.
+- - **S112/S022 (quiescence siblings)**: S112 puts per-move capture futility
+  *before* the SEE call at src/search.cpp:481; S022 owes the S015 rerun and the
+  delta decision. SF da8513f0 (2023, "do less SEE pruning in qsearch", constant
+  negative threshold) and Lynx #1580/#1318/#1598 (qsearch SEE refinements, all
+  negative) are their material, not this step's.
 - **S023 (reserve)**: the S023 order note already says capture history's
   value is "in the capture futility and capture SEE margins" -- when it
   lands, this step's threshold gains a history term; SF d3860f8 (2023,
@@ -279,17 +284,52 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
 
 ### 8. References
 
-- https://www.chessprogramming.org/Static_Exchange_Evaluation -- "linear depth margin for captures, and a quadratic depth margin for quiets"; SEE to reduce bad captures and checks.
-- https://www.chessprogramming.org/Late_Move_Reductions -- Uncommon Conditions: "Allowing reductions of 'bad' captures (SEE < 0)"; Weiss/Ethereal capture-reduction prose.
-- https://api.github.com/repos/lithander/Leorik/releases -- 2.4 notes: qsearch skip + "moves with a bad SEE score at a reduced depth in the main search"; RFP-inside-null; drawn-material recognition; ~2800 estimate.
-- https://api.github.com/repos/lynx-chess/Lynx/pulls/1521 -- PVS SEE pruning, merged 2025-03-01, +9.14 +/-4.55 STC (8+0.08) / +14.32 +/-5.57 LTC; body carries no mechanics.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+SEE+pruning+in:title+type:pr -- #565 -42.84/-31.3; #1077 -219..-23.58; #1144; #1066 +10 threshold -28.74; #987 -109 threshold -11.10; #1531 lmrDepth gate -0.36; #1921 ttPv -0.99; #1318 qs in-check -0.77; #1598 qs quiets -4.00; #1580 recaptures -8.7.
-- https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+%22negative+SEE%22+type:pr -- #2254 reduce-more for negative-SEE quiets, closed -5.04 +/-4.33.
-- https://api.github.com/search/issues?q=repo:TerjeKir/weiss+SEE+in:title+type:pr -- #355 qsearch SEE +35.73/+24.89; #590 tweak +2.55/+2.45; #589 separate SEE values +2.42/+3.93; #742 shared quiet/noisy threshold +1.44/+0.46; #658 SEE in ProbCut +5.37/+2.05.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22SEE+pruning%22 -- 10429dd 2013 depth increase +9.56; 714329d 2016 "threshold increasing with depth"; 57b6df4/335b57b5 2013 PV-node pruning +5.18/+4.31; 6ed81f0 2019 check-extension exemption; 46ce245 givesCheck speedup; b61759e promotions redundant in SF's see_ge; a834bfe quiet lmrDepth 9; d3860f8 2023 history in SEE thresholds.
-- https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22negative+SEE%22 -- 78eeba29 2019 simplify negative-SEE pruning; da8513f0 2023 qsearch constant negative threshold; a989aa18 2023 simplify.
-- https://talkchess.com/forum3/viewtopic.php?t=67602 -- Ethereal 10.00 version ledger: 9.70 SEE in QSearch; 9.71 prune captures and quiets in Search; 9.73 improving-node values; 9.74 ProbCut.
-- https://talkchess.com/forum3/viewtopic.php?t=75335 -- Ethereal 12.75 final thread: no removal ledger published there; capture-history-in-LMR line (S023 material).
-- https://github.com/official-stockfish/Stockfish/pull/2401 -- "value of early futility pruning increased significantly due to changes elsewhere in search" (re-cited from S109's research).
-- https://github.com/official-stockfish/Stockfish/pull/3868 -- SEE based pruning +9.10 in the 2021 removal re-run (re-cited from S109's research).
-- Ethereal removal ledger, SEE pruning -41.5 -- repo-recorded via DEC-087; primary URL untraced publicly in this pass.
+- - https://www.chessprogramming.org/Static_Exchange_Evaluation -- "linear
+  depth margin for captures, and a quadratic depth margin for quiets"; SEE to
+  reduce bad captures and checks.
+- - https://www.chessprogramming.org/Late_Move_Reductions -- Uncommon
+  Conditions: "Allowing reductions of 'bad' captures (SEE < 0)"; Weiss/Ethereal
+  capture-reduction prose.
+- - https://api.github.com/repos/lithander/Leorik/releases -- 2.4 notes:
+  qsearch skip + "moves with a bad SEE score at a reduced depth in the main
+  search"; RFP-inside-null; drawn-material recognition; ~2800 estimate.
+- - https://api.github.com/repos/lynx-chess/Lynx/pulls/1521 -- PVS SEE pruning,
+  merged 2025-03-01, +9.14 +/-4.55 STC (8+0.08) / +14.32 +/-5.57 LTC; body
+  carries no mechanics.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+SEE+pruning+in:title+type:pr
+  -- #565 -42.84/-31.3; #1077 -219..-23.58; #1144; #1066 +10 threshold -28.74;
+  #987 -109 threshold -11.10; #1531 lmrDepth gate -0.36; #1921 ttPv -0.99;
+  #1318 qs in-check -0.77; #1598 qs quiets -4.00; #1580 recaptures -8.7.
+- -
+  https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+%22negative+SEE%22+type:pr
+  -- #2254 reduce-more for negative-SEE quiets, closed -5.04 +/-4.33.
+- -
+  https://api.github.com/search/issues?q=repo:TerjeKir/weiss+SEE+in:title+type:pr
+  -- #355 qsearch SEE +35.73/+24.89; #590 tweak +2.55/+2.45; #589 separate SEE
+  values +2.42/+3.93; #742 shared quiet/noisy threshold +1.44/+0.46; #658 SEE
+  in ProbCut +5.37/+2.05.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22SEE+pruning%22
+  -- 10429dd 2013 depth increase +9.56; 714329d 2016 "threshold increasing with
+  depth"; 57b6df4/335b57b5 2013 PV-node pruning +5.18/+4.31; 6ed81f0 2019
+  check-extension exemption; 46ce245 givesCheck speedup; b61759e promotions
+  redundant in SF's see_ge; a834bfe quiet lmrDepth 9; d3860f8 2023 history in
+  SEE thresholds.
+- -
+  https://api.github.com/search/commits?q=repo:official-stockfish/Stockfish+%22negative+SEE%22
+  -- 78eeba29 2019 simplify negative-SEE pruning; da8513f0 2023 qsearch
+  constant negative threshold; a989aa18 2023 simplify.
+- - https://talkchess.com/forum3/viewtopic.php?t=67602 -- Ethereal 10.00
+  version ledger: 9.70 SEE in QSearch; 9.71 prune captures and quiets in
+  Search; 9.73 improving-node values; 9.74 ProbCut.
+- - https://talkchess.com/forum3/viewtopic.php?t=75335 -- Ethereal 12.75 final
+  thread: no removal ledger published there; capture-history-in-LMR line (S023
+  material).
+- - https://github.com/official-stockfish/Stockfish/pull/2401 -- "value of
+  early futility pruning increased significantly due to changes elsewhere in
+  search" (re-cited from S109's research).
+- - https://github.com/official-stockfish/Stockfish/pull/3868 -- SEE based
+  pruning +9.10 in the 2021 removal re-run (re-cited from S109's research).
+- - Ethereal removal ledger, SEE pruning -41.5 -- repo-recorded via DEC-087;
+  primary URL untraced publicly in this pass.

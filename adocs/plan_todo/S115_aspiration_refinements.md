@@ -68,24 +68,28 @@ is a seed and must be swept or SPSA'd here.
 ### Shape for chesso -- today's loop
 
 The plumbing is **already fail-soft end to end**: negamax returns best_so_far
-(src/search.cpp:1103), RFP returns `static_score - margin` (:546), null move
-returns `null_score` (:586), TT cutoffs return the stored score, not the bound
-(:172-185), quiescence returns best_value (:392). Ethereal's +2.60/+5.07 for
+(src/search.cpp:1103), RFP returns `static_score - margin`
+(src/search.cpp:771), null move returns `null_score` (src/search.cpp:839), TT
+cutoffs return the stored score, not the bound (src/search.cpp:236-249),
+quiescence returns best_value (src/search.cpp:580). Ethereal's +2.60/+5.07 for
 fail-soft pruning returns (a0d84b633e) is already banked here.
 
 The loop (src/chesso.cpp): init `aspiration_score +/- ASPIRATION_DELTA` from
-depth `ASPIRATION_MIN_DEPTH` (:737-744); re-search while the score is a bound
-(:748-767) -- fail-low `alpha = max(score - delta, -SEARCH_SCORE_INF)` (:759),
-fail-high `beta = min(score + delta, SEARCH_SCORE_INF)` (:761), so the failing
-side is already re-centered on the returned score; `delta += delta` (:764);
-re-search at the **same depth** (:766); mate or `delta > ASPIRATION_MAX_DELTA`
-jumps to the full window (:755-757). The resolved score becomes the next
-centre and a mate disarms the window (:803-814). `last_aspiration_failures` is
-test-only (:48-52, :76-77). **Missing: the opposite bound is never touched,
-and the root is never reduced.** The changes: (a) fail-low additionally sets
-`beta = (alpha + beta) / 2` before pushing alpha; (b) a consecutive-fail-high
-counter makes the re-search run at `max(1, current_depth - count)`, reset on
-fail-low; (c) the widening schedule is re-swept under (a)+(b).
+depth `ASPIRATION_MIN_DEPTH` (src/chesso.cpp:765-772); re-search while the
+score is a bound (src/chesso.cpp:776-795) -- fail-low `alpha = max(score -
+delta, -SEARCH_SCORE_INF)` (src/chesso.cpp:787), fail-high `beta = min(score +
+delta, SEARCH_SCORE_INF)` (src/chesso.cpp:789), so the failing side is already
+re-centered on the returned score; `delta += delta` (src/chesso.cpp:792);
+re-search at the **same depth** (src/chesso.cpp:794); mate or `delta >
+ASPIRATION_MAX_DELTA` jumps to the full window (src/chesso.cpp:783-785). The
+resolved score becomes the next centre and a mate disarms the window
+(src/chesso.cpp:831-842). `last_aspiration_failures` is test-only
+(src/chesso.cpp:60-64, src/chesso.cpp:88-89). **Missing: the opposite bound is
+never touched, and the root is never reduced.** The changes: (a) fail-low
+additionally sets `beta = (alpha + beta) / 2` before pushing alpha; (b) a
+consecutive-fail-high counter makes the re-search run at `max(1, current_depth
+- count)`, reset on fail-low; (c) the widening schedule is re-swept under
+(a)+(b).
 
 ### Implementation sketch
 
@@ -116,7 +120,7 @@ fail-low; (c) the widening schedule is re-swept under (a)+(b).
 |---|---|---|
 | midpoint-pull weight | none | 1/2 of the interval (SF prose in 57b32f3e60); SF 2025 runs 3/4 toward alpha -- seed 1/2 |
 | fail-high reduction | none | 1 ply per consecutive root fail-high, floor depth 1, reset on fail-low (SF 3a572ffb48); uncapped -- Lynx caps measured negative |
-| widening multiplier | x2 (:764) | x2 "exponential" (CPW); linear +delta/fail (SF 49dfc50b12, 2010); "reduce the rate" (Weiss #183) -- sweep x1.5/x2/x3 |
+| widening multiplier | x2 (src/chesso.cpp:792) | x2 "exponential" (CPW); linear +delta/fail (SF 49dfc50b12, 2010); "reduce the rate" (Weiss #183) -- sweep x1.5/x2/x3 |
 | depth gate | 5, measured (S021) | Weiss >6, Althoff/Buijs 4 -- keep 5 unless the sweep says otherwise |
 | initial delta | 50 (S021) | excluded: S085/S127 own it (for the record: 50 cp Althoff, 15 cp Buijs, "21 internal units" SF 2019 prose) |
 | max delta escape | 400 then full | keep; re-sweep confirms |
@@ -128,13 +132,14 @@ fail-low; (c) the widening schedule is re-swept under (a)+(b).
   infinite -- armed bounds are finite, but the full-window escape must bypass
   the pull. Lynx #1275 ("windows outside [MinEval, MaxEval] after overflow")
   is the published instance of getting this wrong.
-- **Mate-band windows.** MATE_MAX 49000 (search.cpp:16). Keep the existing
-  guards -- mate ends the schedule (:755) and disarms the next window (:814),
-  the published form (SF 1f73a9ed63: mate scores made "aspiration blow up in
-  a series of researches loops"; 8acb1d7e4d) -- and do not reduce the root
-  when the fail-high score is a mate: SF's opposite-bound patch was reverted
-  for a near-mate bug (fc54d87301), and Lynx #2560 added mate-range guards
-  after false mate reports "specially after being saved in TT".
+- - **Mate-band windows.** MATE_MAX 49000 (search.cpp:16). Keep the existing
+  guards -- mate ends the schedule (src/chesso.cpp:783) and disarms the next
+  window (src/chesso.cpp:842), the published form (SF 1f73a9ed63: mate scores
+  made "aspiration blow up in a series of researches loops"; 8acb1d7e4d) -- and
+  do not reduce the root when the fail-high score is a mate: SF's
+  opposite-bound patch was reverted for a near-mate bug (fc54d87301), and Lynx
+  #2560 added mate-range guards after false mate reports "specially after being
+  saved in TT".
 - **Fail-soft scores as re-centres.** SF 57b32f3e60's caution verbatim
   applies: the fail-low score is an untrusted upper bound (at this root it is
   the max over null-window children), so `beta = alpha` overshoots -- keep a
@@ -185,35 +190,57 @@ and the S074 mate cases green at the shipping schedule; the sweep over the
 
 ### Scope concern
 
-The "What is there" paragraph implies the fail-soft plumbing is missing. It
-is not: every return path is already fail-soft (search.cpp:1103, :546, :596,
-:172-185, :392) and the failing bound has re-centered on the returned score
-since S021 (chesso.cpp:787, :762) -- Ethereal's +2.6/+5.1 rewarded fail-soft
-*pruning returns*, which RFP and null move here already do. What remains of
-the goal's first clause is the re-sweep itself; the new behaviour is the
-midpoint pull and the root reduction. The goal's direction is the published
-one -- fail-low pulls **beta** toward alpha, `(alpha+beta)/2` -- confirmed by
-SF prose (57b32f3e60) and Weiss #183 ("lower beta when resolving fail lows").
-No change to goal or accepts is needed.
+The "What is there" paragraph implies the fail-soft plumbing is missing. It is
+not: every return path is already fail-soft (search.cpp:1103,
+src/search.cpp:771, src/search.cpp:839, src/search.cpp:236-249,
+src/search.cpp:580) and the failing bound has re-centered on the returned score
+since S021 (chesso.cpp:787, src/chesso.cpp:789) -- Ethereal's +2.6/+5.1
+rewarded fail-soft *pruning returns*, which RFP and null move here already do.
+What remains of the goal's first clause is the re-sweep itself; the new
+behaviour is the midpoint pull and the root reduction. The goal's direction is
+the published one -- fail-low pulls **beta** toward alpha, `(alpha+beta)/2` --
+confirmed by SF prose (57b32f3e60) and Weiss #183 ("lower beta when resolving
+fail lows"). No change to goal or accepts is needed.
 
 ### References (all read 2026-08-19, as prose)
 
-- https://www.chessprogramming.org/Aspiration_Windows -- sizes, exponential widening, the unchanged bound.
-- https://github.com/official-stockfish/Stockfish/commit/57b32f3e60 -- fail-low pull was (alpha+beta)/2, now (3a+b)/4; the distrust caution.
-- https://github.com/official-stockfish/Stockfish/commit/3a572ffb48 -- failedHighCnt: retry lower, reset on fail-low.
-- https://github.com/official-stockfish/Stockfish/commit/bfc7000597 and /commit/fc54d87301 -- both-sides weighted form, and its near-mate revert.
-- https://github.com/official-stockfish/Stockfish/commit/5c93616a3f -- 2025: narrow the window after fail-high.
-- https://github.com/official-stockfish/Stockfish/commit/b50eb6bea8 -- centre on the last returned score.
-- https://github.com/official-stockfish/Stockfish/commit/49dfc50b12 -- 2010 widening progression.
-- https://github.com/official-stockfish/Stockfish/commit/1f73a9ed63 and /commit/8acb1d7e4d -- mate scores versus the window loop.
-- https://github.com/official-stockfish/Stockfish/commit/0150da5c2b -- eval-scaled width (the DEC-087-dropped branch).
-- https://github.com/official-stockfish/Stockfish/issues/2169 -- repeated fail-high node waste in won positions.
-- https://talkchess.com/viewtopic.php?t=83781 -- why reduced-depth re-search after a root fail-high works.
-- https://talkchess.com/viewtopic.php?t=76115 -- 15-50 cp windows from depth 4; instability and cycle cautions.
-- https://github.com/lynx-chess/Lynx/pull/800 -- fail-high reduction +2.20/+4.82; /pull/1102 /pull/1103 /pull/1141 -- caps and conditions rejected.
-- https://github.com/lynx-chess/Lynx/pull/1275 -- overflow clamp; /pull/2560 -- mate-range guards and the TT interplay.
-- https://github.com/lynx-chess/Lynx/pull/2212 /pull/2213 /pull/2214 -- soft-time checks inside the loop, all negative.
-- https://github.com/TerjeKir/weiss/commit/b086028c3d -- Weiss #183, this step's bundle, +6.78/+8.19.
-- https://github.com/TerjeKir/weiss/commit/47896263c5 -- gate at depth > 6; /commit/3b553e9047 -- extreme-score adjustment removed.
-- https://github.com/AndyGrant/Ethereal/commit/a0d84b633e -- fail-soft pruning returns +2.60/+5.07; /commit/46d90fe649 -- cap reported bounds to [alpha, beta].
-- https://github.com/jhonnold/berserk/commit/0645ca1079 -- window entering qsearch fixed; /commit/99e178f97e -- windows off at |score| > 1000.
+- - https://www.chessprogramming.org/Aspiration_Windows -- sizes, exponential
+  widening, the unchanged bound.
+- - https://github.com/official-stockfish/Stockfish/commit/57b32f3e60 --
+  fail-low pull was (alpha+beta)/2, now (3a+b)/4; the distrust caution.
+- - https://github.com/official-stockfish/Stockfish/commit/3a572ffb48 --
+  failedHighCnt: retry lower, reset on fail-low.
+- - https://github.com/official-stockfish/Stockfish/commit/bfc7000597 and
+  /commit/fc54d87301 -- both-sides weighted form, and its near-mate revert.
+- - https://github.com/official-stockfish/Stockfish/commit/5c93616a3f -- 2025:
+  narrow the window after fail-high.
+- - https://github.com/official-stockfish/Stockfish/commit/b50eb6bea8 -- centre
+  on the last returned score.
+- - https://github.com/official-stockfish/Stockfish/commit/49dfc50b12 -- 2010
+  widening progression.
+- - https://github.com/official-stockfish/Stockfish/commit/1f73a9ed63 and
+  /commit/8acb1d7e4d -- mate scores versus the window loop.
+- - https://github.com/official-stockfish/Stockfish/commit/0150da5c2b --
+  eval-scaled width (the DEC-087-dropped branch).
+- - https://github.com/official-stockfish/Stockfish/issues/2169 -- repeated
+  fail-high node waste in won positions.
+- - https://talkchess.com/viewtopic.php?t=83781 -- why reduced-depth re-search
+  after a root fail-high works.
+- - https://talkchess.com/viewtopic.php?t=76115 -- 15-50 cp windows from depth
+  4; instability and cycle cautions.
+- - https://github.com/lynx-chess/Lynx/pull/800 -- fail-high reduction
+  +2.20/+4.82; /pull/1102 /pull/1103 /pull/1141 -- caps and conditions
+  rejected.
+- - https://github.com/lynx-chess/Lynx/pull/1275 -- overflow clamp; /pull/2560
+  -- mate-range guards and the TT interplay.
+- - https://github.com/lynx-chess/Lynx/pull/2212 /pull/2213 /pull/2214 --
+  soft-time checks inside the loop, all negative.
+- - https://github.com/TerjeKir/weiss/commit/b086028c3d -- Weiss #183, this
+  step's bundle, +6.78/+8.19.
+- - https://github.com/TerjeKir/weiss/commit/47896263c5 -- gate at depth > 6;
+  /commit/3b553e9047 -- extreme-score adjustment removed.
+- - https://github.com/AndyGrant/Ethereal/commit/a0d84b633e -- fail-soft
+  pruning returns +2.60/+5.07; /commit/46d90fe649 -- cap reported bounds to
+  [alpha, beta].
+- - https://github.com/jhonnold/berserk/commit/0645ca1079 -- window entering
+  qsearch fixed; /commit/99e178f97e -- windows off at |score| > 1000.
