@@ -173,6 +173,49 @@ both S145 sets -- 182 lines over the constructed set and 524 over the mined one
 at depth 8 -- because the truncation was a shallow-iteration effect that the
 last line of a search never shows.
 
+**The guarantee holds for a mate the search did not itself prove, since
+2026-09-02, S170.** S147 left a residue of 10 `Incomplete mating PV` lines in
+3000 games, and there was no walk that could close them: the score came from
+one surviving table entry and the plies below it were gone. Three causes were
+measured, and each has its own answer, all of them still reporting-only and all
+of them still all-or-nothing (DEC-122).
+
+- **A score inherited across searches.** `proven_mate_line_t` keeps the last
+  line the engine was shown to deliver, with the position each of its moves is
+  played from. A walk that stalls asks it for the move at this position *and at
+  this remaining distance*, so a line proving another distance cannot answer.
+  The store is the UCI layer's, cleared by `ucinewgame`, and null for any
+  caller that builds a `search_state_t` of its own -- which is every test that
+  drives `search()` directly, so their behaviour is untouched.
+- **A proof this search made and then overwrote.** Two plies from the mate with
+  nothing left to read, the defender's move is looked for instead of read, and
+  only when *every* legal reply is mated in one -- what the claimed distance
+  asserts about the position. Where it is not, the score is claiming a distance
+  the position is not at and the line stays short and visible.
+- **A score and a line from different iterations.** An aborted iteration
+  supplies the line that will be played while the score stays the last
+  completed one's, so the pair can claim a mate the line does not reach. The
+  line is completed against the score it is printed beside, not only against
+  the score its own iteration returned.
+
+`tests/test_mate_carry.cpp` is the guard, in the fast label: four games from
+S147's run replayed move by move through one process at fixed node budgets,
+which is the only shape that reproduces any of this -- `test_mate_pv` gives
+every case its own `ucinewgame`, and on a cold table none of the three exists.
+It asserts the mate lines it sees are complete, and asserts first that it saw
+any, so a case that stops reporting a mate fails loudly instead of passing
+vacuously.
+
+**The guarantee is over a mate distance the position holds, and there is a
+residual, DEC-125.** S170's own 3000-game run reports **5** `Incomplete mating
+PV` lines from one search, against **12** over three searches from S147's build
+and 138 from the engine before either. The one that is left is not a short
+line: the search reports `mate -9` where the same position asked on a cold
+table gives `mate -7` at depth 18 and holds it to depth 24, and `stockfish`
+says `#-7` at depth 30 and 36. No line of the claimed length exists, so the
+all-or-nothing rule refuses to publish one -- correctly. The mate distance is
+**S171**, which the BUGS rule puts first in the plan's Open list.
+
 **What is not covered, stated as a bound and not as an exception.** The
 guarantee is over a line the search itself produced. A mate score **read back
 from the transposition table** at an iteration too shallow to have found it is

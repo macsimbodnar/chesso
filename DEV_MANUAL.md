@@ -529,12 +529,15 @@ build carrying it.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 48 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 52 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
-Those 48 s -- 23 tests, measured 2026-09-02, up from 42 s over 22 when S147
-added `test_mate_pv` at 3.1 s -- assume `build/` was configured `Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
+Those 52 s -- 24 tests, measured 2026-09-02, against 48 s over 23 before S170
+added `test_mate_carry` at 6.6 s and 42 s over 22 before S147 added
+`test_mate_pv` at 3.1 s; the label total moves a second or two between runs, so
+read it as a size and not as a stopwatch -- assume `build/` was configured
+`Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
 suite takes about two minutes — the assertions are on and the optimiser is off
 — and `test_movegen` and `test_search` take 165 s and 216 s on their own. Until
 S067 every `fast` target carried a flat 60 s timeout, so a debug directory
@@ -593,10 +596,12 @@ tune, which can be months after the commit that caused it.
 **What it costs, measured 2026-09-01 on the DEC-109 MacBook, 8 cores, on
 mains.** The tune build's `fast` label is **45.9 s over 22 tests**, against the
 shipping build's 42.4 s over the same 22 — 48.8 s and 48.3 s over 23 since
-S147 added `test_mate_pv` on 2026-09-02; building `build-tune` adds **0.5 s**
+S147 added `test_mate_pv`, and **51.6 s and 51.5 s over 24** since S170 added
+`test_mate_carry`, both on 2026-09-02; building `build-tune` adds **0.5 s**
 when nothing changed, **1.4 s** for a full rebuild with its ccache warm, and
 **18.0 s** for a full rebuild with `CCACHE_DISABLE=1`. So the gate roughly
-doubles: **93.6 s** end to end on a warm tree, against about 45 s before.
+doubles: **107.9 s** end to end on a warm tree measured 2026-09-02 with S170's
+test in it, 93.6 s when S143 first measured it, against about 45 s before.
 `build/` is configured without a compiler launcher and `build-tune/` with
 `ccache`, which is why only the second figure has a warm-cache case.
 
@@ -1039,13 +1044,24 @@ constructed set can hold. It costs nothing and needs no position file.
 
 It is a **consistency** check and not a mate-finding one: it is silent about a
 mate the engine never reported, which is precisely the failure reverse futility
-causes, and that is what instrument 1 is for. S147 (2026-09-02) removed the
-truncation it used to trip on and did not silence it: over one 3000-game run the
-unfixed reference reported **138** `Incomplete mating PV` lines and the fixed
-candidate **10**. The residue is a different defect with the same signature --
-a mate score read back from the transposition table at an iteration far too
-shallow to hold its line, whose proof was overwritten moves ago -- so read a
-count against 10 in 3000 rather than a silent log, until a step closes it.
+causes, and that is what instrument 1 is for. Two steps have driven its count
+down and neither reached silence, so **read a count and not a silent log**:
+
+| build | `Incomplete mating PV` lines | distinct searches | over |
+|---|---|---|---|
+| before S147 | 138 | -- | 3000 games |
+| S147 | 10, later measured 12 | 3 | 3000 games each |
+| S170 | **5** | **1** | 3000 games |
+
+S147 (2026-09-02) removed the truncation of a line the search had just proved.
+S170 the same day removed three more ways a **true** mate score lost its line --
+a score inherited across searches, a proof this search made and overwrote, and
+a score printed beside a line from another iteration. What is left is not a
+line defect at all: one search in 3000 games reports a mate at a distance the
+same position does not hold, so there is no line of that length to publish and
+the all-or-nothing rule refuses. **The standing figure is 5 lines from 1 search
+in 3000 games**, and **S171** owns it and the run that removes it. Anything
+materially above that has found something new.
 
 The reproducible half of the same property is `test_mate_pv`, in the fast label
 since S147: every `info` line carrying a mate score over both S145 sets, 706 of

@@ -176,6 +176,30 @@ endif()
 set_tests_properties(test_mate_pv
      PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_PV_TIMEOUT})
 
+# S170: a mate score a search inherited -- from an entry an earlier move's
+# search wrote, or from a proof this search then overwrote -- still carries a
+# line that reaches it. Reads adocs/data/S170_cases.tsv out of the source tree,
+# so it needs the same definition test_mate_pv does.
+#
+# Its own binary because it is the only test here that replays whole games
+# through one process without a `ucinewgame` between the plies, which is the
+# only shape that reproduces the defect at all: test_mate_pv gives every case
+# a cold table and cannot see it. 146 searches over four games at their own
+# node budgets, 6.3 s in Release when the cases were chosen. The Debug ratio
+# test_mate_breadth measured (38x) is what sets the second timeout; neither is
+# tight.
+add_doctest_target(test_mate_carry)
+target_compile_definitions(test_mate_carry
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+     set(CHESSO_MATE_CARRY_TIMEOUT 120)
+else()
+     set(CHESSO_MATE_CARRY_TIMEOUT 1500)
+endif()
+set_tests_properties(test_mate_carry
+     PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_CARRY_TIMEOUT})
+
 # The SPRT harness is a shell script, and until S035 nothing in tests/
 # exercised any shell script at all -- which is how a rename could break the
 # only tool that can decide a change (INV-6) and stay broken across a commit.

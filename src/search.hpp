@@ -64,6 +64,28 @@ int negamax(int alpha0,
             move_t prev_move,
             bool is_pv);
 
+// Completes a reported mate line so that it reaches the mate it claims, and
+// keeps a line that does reach one for the searches that follow.
+//
+// ALL OR NOTHING (DEC-122): the line is replaced only when what is built is
+// legal from this position and ends in checkmate at exactly the distance
+// `mate_in` claims. Anything else leaves it exactly as it was -- short, and
+// visible to the checks that found the truncation in the first place.
+//
+// Reporting only: nothing here searches a node, counts one, or writes to the
+// transposition table, and `game` is left on the position it was called with.
+//
+// search() already calls it with the score it is about to return. It is
+// declared here for the one caller that cannot: the reporting layer prints the
+// last *completed* iteration's score beside an aborted iteration's line, and a
+// mate score paired with a line from another iteration has to be completed
+// against the score it is printed with, or it claims a mate that line does not
+// reach. S170.
+void complete_mate_pv(game_t* game,
+                      search_state_t* state,
+                      pv_t* pv,
+                      int mate_in);
+
 // The published history update, in one place because three tables will use it:
 // S024's continuation history and S023's capture history share the clamp, the
 // overflow discipline and the bonus/malus split with this one.

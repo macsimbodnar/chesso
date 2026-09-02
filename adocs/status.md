@@ -7,38 +7,39 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-02, by hand.
 
-- Last done: S147 -- **a mate line the search proved reaches its mate.**
-  `extend_mate_pv()` (`src/search.cpp:1139`) walks the transposition table from
-  the end of the stored line until the position has no legal reply, and the
-  last ply is looked for rather than read because quiescence stores no move for
-  a node it stood pat on. **All or nothing, DEC-122**: the line is extended only
-  when the walk reaches checkmate at exactly the claimed distance, so an evicted
-  entry leaves the short line rather than publishing a wrong one. Reporting
-  only -- nothing there searches a node, counts one, or writes to the table.
-  **54 short of 706 mate lines before, 0 after**, over both S145 sets at depth
-  8, reading every `info` line of every iteration and not the last one only;
-  the red was observed first and `tests/test_mate_pv.cpp` is that measurement
-  as a gate, its own binary at 3.1 s. INV-6 discharged on identical node counts
-  and best moves.
-  **The accepts was amended by the run, DEC-123.** One clean `--fast`, 3000
-  games in 1 h 55 m 30 s with 0 forfeits, reports **138** `Incomplete mating PV`
-  lines from the unfixed reference and **10** from this build where it asked for
-  none. The ten are a separate defect wearing the same signature -- a mate score
-  **read back from the table** at an iteration too shallow to have found it,
-  reproduced by replaying a game move by move through one process at `mate -8`
-  from depth 3 with 3 plies where 16 are needed, against the same position and
-  time on a cold table which reports no mate at all and `cp -725` at depth 15.
-  The proof was overwritten moves ago, so no walk recovers it. It is **S170**.
-  **An earlier `--fast` run was voided and is recorded as such**: the tree was
-  rebuilt while it played, and `fastchess.sh:145` points the candidate at
-  `build/src/chesso` itself. Log kept at `.tuning/S147_fast_void.log`.
-- Before it: S144 (**a citation in a plan document carries its own path**, 380
-  of 383 bare continuations converted, a bare `:line` a flag now; DEC-120),
-  S169 (**the 97 stale citations are re-anchored**; DEC-119), S143 (**the
-  completion gate builds and tests `build-tune` beside `build`**; DEC-118),
-  S168 (**the constructed mate set is three motifs and 82 positions**;
-  DEC-117), S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
-  inert**).
+- Last done: S170 -- **a mate score the search did not itself prove is
+  reported with a line that reaches it.** Three causes were measured where the
+  step file assumed one, each told apart by asking the same position on a cold
+  table: a score inherited across searches, a proof this search made and then
+  overwrote, and a score printed beside a line from an *aborted* iteration --
+  which is not a table effect at all. One fix each, all reporting-only and all
+  under DEC-122. `proven_mate_line_t` keeps the last delivered line together
+  with the position each of its moves is played from, and a stalled walk asks
+  it by key **and** by remaining distance; two plies from the mate the
+  defender's move is looked for and taken only when *every* legal reply is
+  mated in one; and `complete_mate_pv()` -- no longer static -- is called on
+  the line about to be printed, against the score printed beside it. Each part
+  was isolated by measurement: the store alone took 6 short lines to 4, the
+  two-ply completion closed case D, the printed-score completion closed exactly
+  the three duplicated-depth lines of A, B and C. `tests/test_mate_carry.cpp`
+  is the guard, red at 6 first and green at 0, 6.6 s, and it is the first test
+  here that replays whole games through one process -- on a cold table none of
+  the three causes exists, which is why `test_mate_pv` cannot see any of them.
+  INV-6 discharged on identical node counts and best moves.
+  **The accepts was amended by the run, DEC-125.** One clean `--fast`, 3000
+  games in 1 h 56 m 48 s with 0 forfeits: **12** `Incomplete mating PV` lines
+  over 3 distinct searches from `ref-b3f82eb` and **5** over **1** from this
+  build, where it asked for none. The five are one search whose mate *distance*
+  is wrong -- `mate -9` in the game where the same position on a cold table
+  gives `mate -7` at depth 18 and holds it to depth 24, and `stockfish` says
+  `#-7` at depth 30 and again at 36 -- so no line of the claimed length exists
+  and refusing to publish one is DEC-122 working. That is **S171**.
+- Before it: S147 (**a mate line the search proved reaches its mate**, 54 short
+  of 706 before and 0 after; DEC-122, DEC-123), S144 (**a citation in a plan
+  document carries its own path**; DEC-120), S169 (**the 97 stale citations are
+  re-anchored**; DEC-119), S143 (**the completion gate builds and tests
+  `build-tune` beside `build`**; DEC-118), S168 (**the constructed mate set is
+  three motifs and 82 positions**; DEC-117).
 - In progress: **S146, and it is half done.** The `polyglot_randoms[781]`
   table is settled -- DEC-121 rules it format-defining specification rather
   than a copied table, kept, with the citation and the format description's
@@ -62,13 +63,17 @@ Updated: 2026-09-02, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S170**, which S147 created and DEC-123 scoped -- carry the mating
-  line across searches so a table-inherited mate score can still be shown, and
-  the 10 in 3000 games go. It is machine-light except for the one `--fast` run
-  that decides it. S146 finishes the moment the book's source is named. After
-  them the machine-light entries are the behaviour-neutral pair (S020, S030),
-  discharged on identical `tools/search_bench.py` node counts and best moves
-  plus a `hyperfine` timing.
+- Next: **S171**, which S170 created and DEC-125 scoped -- a mate distance the
+  engine reports is one the position holds, so the 5 lines from 1 search in
+  3000 games go. **It is first in the Open list under the BUGS rule**: a found
+  defect goes before anything else, and this one sits in the score, which is
+  the input every later measurement in the search block is taken against. It
+  reproduces in about twelve seconds without a match:
+  `python3 adocs/data/S170_replay.py --cases adocs/data/S170_cases.tsv --only
+  E_mate_minus9 --go "nodes 1500000" --start-override 40`. S146 finishes the
+  moment the book's source is named. After them the machine-light entries are
+  the behaviour-neutral pair (S020, S030), discharged on identical
+  `tools/search_bench.py` node counts and best moves plus a `hyperfine` timing.
 - Blocked: **S146's second half, on the owner naming where `src/openings.book`
   came from.** Nothing else is blocked and the rest of the lane does not depend
   on it.

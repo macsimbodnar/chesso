@@ -47,6 +47,13 @@ static std::atomic_int session_id = 0;
 static std::mutex session_mutex;
 static transposition_table_t tt = {};
 
+// The last mate line the engine was shown to deliver, kept here because it has
+// to outlive a `go` and search_state_t does not: that struct is built fresh in
+// iterative_deepening_search() for every search, which is exactly why a mate
+// score read back from the table arrived with no line behind it. Reporting
+// state only -- nothing reads it to decide, order or prune a move. S170.
+static proven_mate_line_t proven_mate_line = {};
+
 static std::thread search_thread;
 static std::mutex output_mutex;
 
@@ -673,6 +680,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // armed. Clearing it here would race with the timer and with "stop".
   search_state_t state = {};
   state.tt = &tt;
+  state.proven_mate = &proven_mate_line;
   assert(state.tt != nullptr);
 
   tt_new_search(state.tt);
@@ -686,6 +694,13 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // depth that actually mean something alongside the line it will play.
   std::string last_score = "cp 0";
   int last_complete_depth = 0;
+
+  // The mate distance behind last_score, when it is a mate. Carried because the
+  // score printed and the line printed can come from different iterations, and
+  // the line then has to be completed against the score it is printed beside.
+  // S170.
+  bool last_score_is_mate = false;
+  int last_mate_in = 0;
 
   // The centre of the next iteration's aspiration window, and whether there is
   // one to use. Set only from an iteration that finished inside its window: an
@@ -832,6 +847,8 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       last_score = search_result.mate_found
                        ? ("mate " + STR(search_result.mate_in))
                        : ("cp " + STR(search_result.score));
+      last_score_is_mate = search_result.mate_found;
+      last_mate_in = search_result.mate_in;
       last_complete_depth = current_depth;
 
       // The loop above only exits without an abort once the score is inside
@@ -893,6 +910,19 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // is discharged - compared only the final iteration. The per-iteration
     // figure is the difference between two successive lines, so printing it as
     // well would add nothing. S037.
+    // An aborted iteration supplies the line that will be played while the
+    // score stays the last completed one's, so the two can describe different
+    // trees. That costs nothing while the score is centipawns and everything
+    // while it is a mate: the pair then claims a distance the line does not
+    // reach, which is the third of the three ways S170 measured a mate line
+    // going short. The line is completed against the score it is about to be
+    // printed beside, by the same all-or-nothing rule the search itself used
+    // (DEC-122), so a pair that cannot be made consistent stays visibly short
+    // rather than being papered over. S170.
+    if (state.aborted && has_result && last_score_is_mate) {
+      complete_mate_pv(&game, &state, &result.pv, last_mate_in);
+    }
+
     if (has_result || !state.aborted) {
       const auto elapsed_ms =
           std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
@@ -1153,6 +1183,7 @@ bool command_ucinewgame(std::queue<std::string>& args)
 
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
+  proven_mate_line.length = 0;
   still_in_opening = true;
 
   LOG_I << print_nice_board(&game.board) << END_I;

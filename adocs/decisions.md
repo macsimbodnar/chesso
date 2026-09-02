@@ -7003,3 +7003,126 @@ Consequences: `-check-mate-pvs` stops being a warning nobody reads and becomes a
               not deliver. `test_mate_pv` stays at zero tolerance because every
               case in it is `ucinewgame` and one search, which is a cold table
               by construction -- a test for S170 has to replay a game.
+
+
+## DEC-124  2026-09-02  A mate line the search cannot rebuild is carried, completed at two plies, and matched to the score it is printed with
+Tags:         search, uci, reporting, mate, transposition-table, measurement
+Context:      DEC-123 named the residual S147 could not close -- 10
+              `Incomplete mating PV` lines in 3000 games -- and made it S170,
+              whose step file called the cause "a score read back from the
+              table" and offered carrying the line as the leading candidate.
+              Reproducing all four games move by move through one process at
+              fixed node budgets (`adocs/data/S170_replay.py`, cases in
+              `adocs/data/S170_cases.tsv`) found **three** causes and not one,
+              and the third is not a table effect at all.
+              (1) A score inherited across searches. The one entry carrying it
+              survives; the line's worth of entries below it does not. Case C
+              reports `mate 7` at depth 11 warm and no mate at any depth cold,
+              `cp 885` at depth 13.
+              (2) A proof this search made and then overwrote. Case D reports
+              `mate -6` at depth 10 with 10 plies of 12 on a **cold** table, so
+              nothing was inherited: the mid-line entry was evicted between the
+              iteration that wrote it and the walk that wanted it.
+              (3) A score and a line from different iterations. An aborted
+              iteration supplies the line that will be played
+              (`src/chesso.cpp`, the `has_result` block) while the score stays
+              the last completed iteration's, so the printed pair can claim a
+              mate the printed line does not reach. Measured directly: with the
+              other two fixes in and this one out, exactly the three
+              duplicated-depth lines of cases A, B and C stay short, and case D
+              does not.
+Decision:     By the agent inside the step, on the measurements above and under
+              DEC-122, which every part of this obeys unchanged.
+              **The line is carried.** `proven_mate_line_t` keeps the last line
+              the engine was shown to deliver together with the position each
+              of its moves is played from, and a stalled walk asks it for the
+              move at this position *and at this remaining distance* -- the key
+              says where, the distance says the stored proof is of the mate
+              being claimed. The store lives in the UCI layer because it has to
+              outlive a `go`; `search_state_t` carries a pointer to it that is
+              null unless a caller supplies one, so every test that builds a
+              state of its own keeps exactly the behaviour it had.
+              **Two plies from the mate the defender's move is looked for**,
+              and only when *every* legal reply is mated in one. S147 priced
+              this and rejected it for want of evidence; case D is the evidence,
+              and the forcedness requirement is what keeps the published line a
+              principal variation rather than a defender's blunder that happens
+              to end in mate.
+              **A mate line is completed against the score it is printed
+              beside**, not only against the score its own iteration returned.
+Rejected:     Printing the aborted iteration's own score -- an unfinished
+              iteration's score is a bound and means nothing, which is the rule
+              `iterative_deepening_search()` already states. Printing the
+              completed iteration's line instead of the aborted one's -- the
+              line would then not start with the move that will be played, the
+              defect S021's root fail-high handling exists to prevent.
+              Withholding the aborted iteration's line -- it is the only thing
+              that tells a GUI what the engine is about to play. Taking the
+              first defence that ends in mate at two plies rather than
+              requiring every reply to be mated -- it would publish a line at a
+              distance the position is not at whenever the score is wrong,
+              which is precisely what DEC-122 exists to stop.
+              Holding transposition table entries longer so the walk finds
+              them -- it alters play and owes an SPRT of its own; S170's
+              `excludes` puts it out of reach.
+Consequences: The `pv` guarantee in `MANUAL.md` and `adocs/specs.md` now holds
+              for a mate score the search did not itself prove, and
+              `DEV_MANUAL.md`'s instrument 3 loses the "read a count against 10
+              in 3000" bound DEC-123 gave it. `-check-mate-pvs` is a zero-
+              tolerance check again, so the next `Incomplete mating PV` line in
+              any run is a new defect. The engine now carries reporting state
+              across searches for the first time -- one line, cleared by
+              `ucinewgame` -- and the rule that keeps it honest is that nothing
+              reads it to decide, order or prune a move. `tests/test_mate_carry.cpp`
+              is the guard and it is the first test here that replays whole
+              games through one process; it asserts a mate line was seen before
+              asserting none is short, because what a table holds at a given
+              ply is fragile and a vacuous pass would look like a green one.
+
+
+## DEC-125  2026-09-02  S170's guarantee is over a mate distance the position holds; a distance the table contradicts is a separate defect
+Tags:         plan, search, uci, reporting, mate, transposition-table, measurement
+Context:      S170's `accepts` asked for **no** `Incomplete mating PV` line from
+              a `fastchess.sh --fast` run. The three fixes landed and the run
+              was taken: 3000 games against S147's build `b3f82eb`, 1 h 56 m
+              48 s, 0 forfeits, `LLR -0.73` and no bound. **12 such lines over
+              3 distinct searches from the reference and 5 over 1 from the
+              candidate.** The five are one search, at depths 9 to 13 with
+              lines of 9 to 13 plies where 18 are needed, and the score is what
+              is wrong there rather than the line. Position
+              `8/4ppk1/2p2np1/p7/NPP1p3/P6q/3b4/1Q3R1K w - - 0 34`, 50 plies
+              into the game: reported `mate -9` in the game, and asked cold the
+              engine itself reports no mate until depth 18, then `mate -7` with
+              a complete 14-ply line held to depth 24 over 7.3 billion nodes.
+              `stockfish` says `#-7` at depth 30 and again at depth 36. So the
+              distance reported is not the distance the position holds, there
+              is no 18-ply line to publish, and the all-or-nothing rule
+              (DEC-122) refused -- correctly.
+Decision:     By the owner, on the agent's recommendation. **S170's guarantee is
+              over a mate score whose distance is the position's own value**:
+              such a score is reported with a line that reaches it, whether the
+              search proved it, inherited it from an earlier search, or lost
+              the proof to eviction. Held at zero by `tests/test_mate_carry.cpp`
+              over the four games S147's run produced, and measured at 12 lines
+              over 3 searches down to 5 over 1 in 3000 games. The mate distance
+              the table hands back and a deeper search of the same position
+              contradicts is a separate defect with its own number and becomes
+              **S171**, which the BUGS rule puts first in the Open list.
+Rejected:     Widening S170 to chase the distance -- its `excludes` forbids
+              changing any score, the reporting work is done and green, and a
+              search-correctness question owes an SPRT the reporting work does
+              not. A second `--fast` run before ruling -- the case reproduces
+              deterministically in about twelve seconds without a match, so two
+              more hours would confirm the rate and not the defect, and the
+              machine is the binding constraint on the plan. Recording the
+              wrong distance as a known limitation and creating no step -- the
+              BUGS rule is written against exactly that.
+Consequences: `-check-mate-pvs` is not yet the zero-tolerance check DEC-124
+              predicted: the standing figure is **5 lines from 1 search in 3000
+              games**, against S147's 10 and the unfixed engine's 138, and it
+              is stated in `adocs/specs.md` and beside instrument 3 in
+              `DEV_MANUAL.md` so neither document claims a silence the engine
+              does not deliver. S171 owns the number and the run that removes
+              it. `adocs/data/S170_cases.tsv` carries the case as a
+              reproduction with `guard: no`, because a test that asserted a
+              line for it would be asserting that a wrong score gets one.

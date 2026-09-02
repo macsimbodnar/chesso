@@ -196,7 +196,7 @@ bestmove c3d5
 |---|---|
 | `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |
 | `time` | milliseconds since this search started, not since this iteration started |
-| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything |
+| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair never claims a mate the line does not reach |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
 | `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate: 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate |
@@ -242,6 +242,15 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
+- **A mate distance can be inherited from the transposition table and be wrong,
+  and then the `pv` beside it is short.** Measured over 3000 games on
+  2026-09-02: one search in that run reported `mate -9` for a position the same
+  engine calls `mate -7` when asked with an empty table at depth 18, and holds
+  at 7 to depth 24. No line of the claimed length exists, so the engine reports
+  the short one rather than inventing a line — the `pv` guarantee below is
+  over a mate distance the position holds. The rate is **5 `info` lines from
+  1 search in 3000 games**, against 12 from 3 searches before S170 and 138
+  before S147. Being fixed as S171.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

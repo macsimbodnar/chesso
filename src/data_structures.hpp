@@ -357,6 +357,35 @@ struct pv_t
 };
 
 
+// The last mate line this engine has been shown to deliver, kept so that a
+// later search reporting the same mate can publish a line for it.
+//
+// It exists because a mate score outlives the line that proves it. The score
+// is one 32-bit field of one table entry and survives; the entries carrying
+// the plies below it are a whole line's worth of slots and are overwritten
+// within a search or two, so a search that reads the score back has nothing
+// left to walk. Measured in S147's 3000-game run: 10 `info` lines claiming a
+// mate whose line no table walk could complete.
+//
+// `keys[i]` is the position `moves[i]` is played from, which is what locates a
+// later root inside the line: a search standing on `keys[i]` and still owing
+// exactly `length - i` plies is on this line at that point, and the rest of it
+// is the line it owes. Both halves of that test matter -- the key says where,
+// the remaining length says the stored proof is of the distance being claimed
+// and not of another one.
+//
+// REPORTING STATE, NEVER SEARCH STATE. Nothing reads this to decide a move, to
+// order one, or to prune. It is written after a search returns and read only
+// while a reported line is being completed, and what it offers is put through
+// the same all-or-nothing gate a table move is (DEC-122). S170.
+struct proven_mate_line_t
+{
+  size_t length = 0;
+  hash_t keys[MAX_PLY];
+  move_t moves[MAX_PLY];
+};
+
+
 enum node_type_t
 {
   TT_EMPTY_NODE,
@@ -480,4 +509,12 @@ struct search_state_t
 
   // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
   move_t counter_moves[12][64];
+
+  // Where a proved mate line is left for the searches that come after this
+  // one. Null unless a caller supplies one, which keeps every direct caller of
+  // search() -- every test that builds a search_state_t of its own -- on
+  // exactly the behaviour it had before S170: nothing is stored and nothing is
+  // read back. The UCI layer owns the instance because the store has to
+  // outlive a `go`, which this struct does not.
+  proven_mate_line_t* proven_mate = nullptr;
 };

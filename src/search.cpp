@@ -1113,6 +1113,45 @@ static size_t plies_to_deliver(int mate_in)
 }
 
 
+// The move the stored line plays from this position, or 0 when this position
+// is not on it at this distance.
+//
+// The index falls out of the distance still owed: a line of `length` plies
+// that owes `remaining` of them is at index `length - remaining`. So the
+// lookup is one comparison and not a scan, and it cannot answer for a position
+// that is on the line at some other point -- which is what stops a repetition
+// inside a mating line from handing back the wrong remainder. S170.
+static move_t proven_mate_move(const proven_mate_line_t* line,
+                               hash_t key,
+                               size_t remaining)
+{
+  if (line == nullptr || remaining == 0 || remaining > line->length) {
+    return 0;
+  }
+
+  const size_t index = line->length - remaining;
+
+  return (line->keys[index] == key) ? line->moves[index] : 0;
+}
+
+
+// Keeps a line that has been shown to deliver its mate, replacing whatever was
+// there. The newest proof is the one a later search is most likely to be
+// standing on, and every line that reaches this has passed the same
+// all-or-nothing gate, so an older one is never the safer of the two. S170.
+static void record_mate_line(proven_mate_line_t* store,
+                             const hash_t* keys,
+                             const move_t* moves,
+                             size_t length)
+{
+  if (store == nullptr || length == 0 || length > MAX_PLY) { return; }
+
+  memcpy(store->keys, keys, length * sizeof(hash_t));
+  memcpy(store->moves, moves, length * sizeof(move_t));
+  store->length = length;
+}
+
+
 // Reporting only, and it must stay that way: nothing here searches a node,
 // counts one, or writes to the table.
 //
@@ -1122,12 +1161,16 @@ static size_t plies_to_deliver(int mate_in)
 // in S145: of 31 info lines carrying a mate score, 2 were short and 0 had the
 // wrong distance -- the score is right and the line is short.
 //
-// The repair walks the table from the end of the stored line, taking the move
-// each position's entry recorded, until the position has no legal reply.
-// Quiescence stores its nodes too (TT_DEPTH_QS), including the mated one, so
-// the plies the main search never reached are usually still there to be read.
-// The one ply that is looked for rather than read is the last, for the reason
-// the loop below records.
+// The repair walks from the end of the stored line, taking the move each
+// position offers, until the position has no legal reply. Two things offer
+// one. The transposition table, which stores its quiescence nodes too
+// (TT_DEPTH_QS) including the mated one, so the plies the main search never
+// reached are usually still there to be read. And the line this engine last
+// proved a mate on, which is what answers when the table no longer can --
+// S170, for the case S147 measured and could not close: a score read back from
+// an entry an earlier search wrote, whose line has been overwritten since. The
+// one ply that is looked for rather than read is the last, for the reason the
+// loop below records.
 //
 // ALL OR NOTHING, and that is the whole safety argument. The walk builds its
 // moves aside and the principal variation is only extended when the walk ends
@@ -1136,51 +1179,125 @@ static size_t plies_to_deliver(int mate_in)
 // mating line leaves the line exactly as the search produced it -- short, and
 // visible to the same check that found the truncation in the first place. It
 // can never publish a line that does not deliver the mate it claims. S147.
-static void extend_mate_pv(game_t* game,
-                           search_state_t* state,
-                           pv_t* pv,
-                           int mate_in)
+void complete_mate_pv(game_t* game,
+                      search_state_t* state,
+                      pv_t* pv,
+                      int mate_in)
 {
   const size_t needed = plies_to_deliver(mate_in);
 
-  if (pv->length == 0 || pv->length >= needed || needed >= MAX_PLY) { return; }
+  if (pv->length == 0 || needed == 0 || needed >= MAX_PLY) { return; }
 
-  move_t extension[MAX_PLY];
-  size_t extension_length = 0;
-  size_t made = 0;
+  // The line as it is being built, and the position each of its moves is
+  // played from. Kept aside from pv->table for the reason the all-or-nothing
+  // rule above states, and kept with its keys because a line that reaches its
+  // mate is stored for the searches that come after this one -- which is what
+  // makes it usable from a later root. S170.
+  hash_t keys[MAX_PLY];
+  move_t line[MAX_PLY];
+
+  size_t played = 0;
+  bool replayed = true;
   bool ends_in_mate = false;
 
-  for (; made < pv->length; ++made) {
-    if (!make_move(game, pv->table[made])) { break; }
+  const size_t from_pv = std::min(pv->length, needed);
+
+  for (size_t i = 0; i < from_pv; ++i) {
+    keys[i] = game->board.hash;
+    line[i] = pv->table[i];
+
+    if (!make_move(game, pv->table[i])) {
+      replayed = false;
+      break;
+    }
+
+    ++played;
   }
 
-  if (made == pv->length) {
-    while (true) {
+  if (replayed) {
+    while (played < needed) {
       move_t moves[MAX_MOVES];
       const size_t count = generate_moves(game_tables(), &game->board, moves);
 
-      // generate_moves() is legal-only (INV-1), so no legal reply while in
-      // check is checkmate and needs no per-move pass.
-      if (count == 0) {
-        ends_in_mate = is_check(game);
-        break;
+      // The line ran out of replies before the distance it claims. Nothing to
+      // extend and nothing to store: the length check below refuses it.
+      if (count == 0) { break; }
+
+      const size_t remaining = needed - played;
+
+      // The stored line is asked first, and it is asked with the distance
+      // still owed rather than only with the position: a line that proves a
+      // mate at another distance is not this one, even from the same square.
+      move_t next =
+          proven_mate_move(state->proven_mate, game->board.hash, remaining);
+
+      if (next == 0) {
+        const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
+        next = (entry != nullptr) ? entry->best_move : 0;
       }
 
-      if (pv->length + extension_length >= needed) { break; }
+      // Two plies from the mate with nothing left to read: the table's entry
+      // is gone and the stored line does not cover this position. What is
+      // missing is the defender's last move, and at this distance it can be
+      // looked for instead of read -- but only if *every* legal reply is mated
+      // in one, because that is what the claimed distance asserts about this
+      // position. Requiring all of them rather than taking the first one found
+      // is what keeps the published line a principal variation instead of a
+      // defender's blunder that happens to end in mate; where the requirement
+      // fails the score is claiming a distance this position is not at, and
+      // the line is left short and visible.
+      //
+      // Bounded by one move list inside one move list, run once per reported
+      // mate line and only where the walk has already stalled. S170, for the
+      // case S147 measured at depth 10 and could not close: a mate proved by
+      // this search whose mid-line entry was overwritten before the line could
+      // be walked, reproducible on a cold table and so not inherited from
+      // anywhere.
+      if (remaining == 2 && next == 0) {
+        move_t forced = 0;
 
-      const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
-      move_t next = (entry != nullptr) ? entry->best_move : 0;
+        for (size_t i = 0; i < count; ++i) {
+          if (!make_move(game, moves[i])) { continue; }
+
+          move_t replies[MAX_MOVES];
+          const size_t reply_count =
+              generate_moves(game_tables(), &game->board, replies);
+
+          bool mated = false;
+
+          for (size_t r = 0; r < reply_count && !mated; ++r) {
+            if (!make_move(game, replies[r])) { continue; }
+
+            move_t after[MAX_MOVES];
+            mated = (generate_moves(game_tables(), &game->board, after) == 0) &&
+                    is_check(game);
+
+            unmake_move(game);
+          }
+
+          unmake_move(game);
+
+          if (!mated) {
+            forced = 0;
+            break;
+          }
+
+          if (forced == 0) { forced = moves[i]; }
+        }
+
+        next = forced;
+      }
 
       // The last ply of a mating line is a mating move, and it is the ply the
       // table is least likely to answer for: it is scored inside quiescence,
       // which stores no move at all for a node it stood pat on and writes at
       // TT_DEPTH_QS, so it loses every collision. On that one ply the move is
       // looked for rather than read, and what is found wins over what the
-      // table said -- checkmate is decided by the generator here exactly as it
-      // is at every other site in the tree. Measured: without this, 1 line of
-      // 524 in the mined set stayed short, its entry gone from the table
-      // inside the same iteration that wrote it.
-      if (pv->length + extension_length + 1 == needed) {
+      // table or the stored line said -- checkmate is decided by the generator
+      // here exactly as it is at every other site in the tree. Measured:
+      // without this, 1 line of 524 in the mined set stayed short, its entry
+      // gone from the table inside the same iteration that wrote it.
+      if (remaining == 1) {
         for (size_t i = 0; i < count; ++i) {
           if (!make_move(game, moves[i])) { continue; }
 
@@ -1202,9 +1319,11 @@ static void extend_mate_pv(game_t* game,
 
       // A move out of the table is checked against the generator rather than
       // trusted: tt_get_entry() compares the full key, but a 64-bit key still
-      // collides and a stored move is not re-validated anywhere else. The scan
-      // above already produces a generated move and pays the check twice,
-      // which costs nothing on the one ply it runs on.
+      // collides and a stored move is not re-validated anywhere else. The same
+      // holds for a move out of the stored line, which is reached by a key
+      // comparison of its own. The scan above already produces a generated
+      // move and pays the check twice, which costs nothing on the one ply it
+      // runs on.
       bool playable = false;
       for (size_t i = 0; i < count; ++i) {
         if (moves[i] == next) {
@@ -1213,21 +1332,44 @@ static void extend_mate_pv(game_t* game,
         }
       }
 
-      if (!playable || !make_move(game, next)) { break; }
+      if (!playable) { break; }
 
-      ++made;
-      extension[extension_length++] = next;
+      keys[played] = game->board.hash;
+      line[played] = next;
+
+      if (!make_move(game, next)) { break; }
+
+      ++played;
+    }
+
+    if (played == needed) {
+      move_t replies[MAX_MOVES];
+
+      // generate_moves() is legal-only (INV-1), so no legal reply while in
+      // check is checkmate and needs no per-move pass.
+      ends_in_mate =
+          (generate_moves(game_tables(), &game->board, replies) == 0) &&
+          is_check(game);
     }
   }
 
-  for (size_t i = 0; i < made; ++i) {
+  for (size_t i = 0; i < played; ++i) {
     unmake_move(game);
   }
 
-  if (!ends_in_mate || pv->length + extension_length != needed) { return; }
+  if (!ends_in_mate) { return; }
 
-  memcpy(&pv->table[pv->length], extension, extension_length * sizeof(move_t));
-  pv->length += extension_length;
+  // The line delivers the mate it claims, so it is worth keeping for the
+  // searches that follow. A line the search produced whole is stored too, and
+  // that is where most of the value is: the search that proves a mate is
+  // usually not the one that ends up short of it.
+  record_mate_line(state->proven_mate, keys, line, needed);
+
+  if (pv->length < needed) {
+    memcpy(&pv->table[pv->length], &line[pv->length],
+           (needed - pv->length) * sizeof(move_t));
+    pv->length = needed;
+  }
 }
 
 
@@ -1279,7 +1421,7 @@ search_t search(int depth,
   // search state, and before the debug PV check below, so a walked line is held
   // to the same legality invariant a searched one is.
   if (search_result.mate_found) {
-    extend_mate_pv(game, state, &search_result.pv, search_result.mate_in);
+    complete_mate_pv(game, state, &search_result.pv, search_result.mate_in);
   }
 
 #ifndef NDEBUG
