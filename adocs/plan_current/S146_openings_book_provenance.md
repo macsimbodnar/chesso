@@ -187,3 +187,25 @@ permissively-licensed source, or keep it with provenance recorded as unknown --
 the owner took **the first: he names the source**. The name and its licence are
 his to supply; until they are here, the step cannot write them into `MANUAL.md`
 and cannot close.
+
+## The owner's first naming, and why it does not fit (2026-09-02)
+
+The owner named `books/8moves_v3.pgn`, from `https://github.com/official-stockfish/books`, as the source of the header blob. **It is not**, and that is measured rather than argued.
+
+| check, over `books/8moves_v3.pgn` as committed | the PGN | `src/openings.book` |
+|---|---|---|
+| distinct first moves | 13 (`e4` 12956, `d4` 12493, `c4` 4192, `Nf3` 4128, `g3` 579, `b3` 183, `f4` 107, `b4` 19, `Nc3` 15, `e3` 13, `a3` 7, `d3` 6, `c3` 2) | **3**: `d2d4`, `g1f3`, `e2e4`, weight 54 each |
+| positions of 300 of its games present in the book, ply 2 | all, by construction | 261 of 300 |
+| same at ply 15 | all | 25 of 300 |
+| the game's own move present in the book, ply 0 / ply 15 | all | 261 / 300, then 9 / 300 |
+
+A book compiled from that PGN would contain every one of its positions to ply 16 and the move played from each. Coverage instead decays to a quarter, which is the overlap any general opening book has with any collection of master openings. `official-stockfish/books` also ships no Polyglot `.bin` at all -- every entry in it is `.pgn` or `.epd` -- so nothing there is a candidate for a 16-byte-entry binary book in the first place.
+
+Reproduce with (`~/.venv/chess/bin/python`, `.moltke.local.md`): decode the hex, key the 16-byte entries by their big-endian `uint64`, and compare against `chess.polyglot.zobrist_hash` along each game. The Polyglot move field is `to_file | to_row<<3 | from_file<<6 | from_row<<9`; decoding it row-first silently drops the match rate to 35 of 4800 and looks like a refutation of everything, which is a trap worth naming.
+
+**What the naming did settle: the two match books under `books/`.** Both come from `official-stockfish/books`, which is **CC0-1.0** -- `LICENSE` is the CC0 1.0 Universal text and the GitHub licence API reports `spdx_id: CC0-1.0`.
+
+- `books/8moves_v3.pgn`, committed here, is byte-identical to the upstream file: zip sha256 `7e1e9dd118b4bb97d8a8b5b8a790c86e21f8509d59a27d2883767d94477be02e`, unpacked sha256 `5835239f88cc2c7511b177c32392a69f3ede21819cf0616f80a7f907cd21d17e`, which is the digest of the tracked copy. It had no recorded origin anywhere in the repository before this.
+- `books/UHO_Lichess_4852_v1.epd` needed no research: `books/fetch_book.sh` already pins both its digests and states the licence reasoning -- upstream is Stefan Pohl (SPCC), whose own pages carry a copyright line and no usage licence, so the CC0 redistribution is the source and his site is not.
+
+Those two are `excludes` for this step, so recording `8moves_v3.pgn`'s digest and licence beside the fetched books is a separate change. The blob remains what blocks S146.
