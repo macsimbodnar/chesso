@@ -40,23 +40,27 @@ Updated: 2026-09-02, by hand.
   re-anchored**; DEC-119), S143 (**the completion gate builds and tests
   `build-tune` beside `build`**; DEC-118), S168 (**the constructed mate set is
   three motifs and 82 positions**; DEC-117).
-- In progress: **S146, and it is half done.** The `polyglot_randoms[781]`
-  table is settled -- DEC-121 rules it format-defining specification rather
-  than a copied table, kept, with the citation and the format description's
-  own copyright note now above the array in `src/openings.cpp`. The evidence
-  is element-by-element: all 781 constants extracted from the live page at
-  `https://hgm.nubati.net/book_format.html` are equal to the array at every
-  index, in order. That closes what 2026-08-22_adversarial-F06 asked for.
-  **The 5.2 MB blob is the other half and it waits on the owner.** Its origin
-  could not be established from here: the repository trail ends at `628d827`
-  (2025-04-16) with no URL, attribution or licence in the commit; the decoded
-  sha256, a GitHub code search on the hex prefix, and three public book
-  collections compared by file size all returned nothing. Of the four options
-  put on 2026-09-02 -- name the source, delete the book and the `Use Book`
-  option, build a replacement from a permissively-licensed source, or keep it
-  with provenance recorded as unknown -- the owner took **the first**. The
-  step cannot write `MANUAL.md` or close until he supplies the name and the
-  licence.
+- In progress: **nothing.** `adocs/plan_current/` is empty. S146 was the last
+  entry there and it is parked at DEC-126.
+- **S146 is parked, not blocked (DEC-126, 2026-09-02).** Its first half landed:
+  `polyglot_randoms[781]` is DEC-121 -- format-defining specification, kept,
+  cited at the array, with all 781 constants verified element by element
+  against the live format description. Its second half, the 5.2 MB Polyglot
+  blob in `src/openings.book`, has no origin and will not get one here. The
+  owner named `books/8moves_v3.pgn` from `official-stockfish/books`; measured,
+  that PGN and the book share **11703 positions of the book's 154916 -- 7.6 %**,
+  and a converter cannot invent the 143213 the PGN never reaches. Asked again
+  he does not remember, has checked the history, and thinks the file may be on
+  his other computer. The step file is back in `adocs/plan_todo/`.
+- **What the episode did settle, and it is committed.** `books/8moves_v3.pgn`
+  is committed, played by `rating.sh`, and had no recorded origin anywhere. It
+  is byte-identical to the file in `official-stockfish/books`, which is
+  **CC0-1.0**, and is now pinned in `books/fetch_book.sh` by both digests --
+  zip `7e1e9dd1...`, unpacked `5835239f...` -- so one file answers where every
+  book here came from, and `./books/fetch_book.sh 8moves_v3.pgn` verifies the
+  tracked copy in place instead of downloading. `UHO_Lichess_4852_v1.epd`
+  needed nothing: that script already carried its digests and the licence
+  reasoning. `DEV_MANUAL.md` says the same.
 - **`python-chess` was missing on this machine and is installed now**, at the
   owner's decision of 2026-09-01: 1.11.2 on python 3.9.6 in `~/.venv/chess`,
   the path `TOOLCHAIN.md` and every S145 script already name. It had not
@@ -70,13 +74,13 @@ Updated: 2026-09-02, by hand.
   the input every later measurement in the search block is taken against. It
   reproduces in about twelve seconds without a match:
   `python3 adocs/data/S170_replay.py --cases adocs/data/S170_cases.tsv --only
-  E_mate_minus9 --go "nodes 1500000" --start-override 40`. S146 finishes the
-  moment the book's source is named. After them the machine-light entries are
+  E_mate_minus9 --go "nodes 1500000" --start-override 40`. After it the
+  machine-light entries are
   the behaviour-neutral pair (S020, S030), discharged on identical
   `tools/search_bench.py` node counts and best moves plus a `hyperfine` timing.
-- Blocked: **S146's second half, on the owner naming where `src/openings.book`
-  came from.** Nothing else is blocked and the rest of the lane does not depend
-  on it.
+- Blocked: **nothing.** S146 was the only entry here and it is parked rather
+  than blocked now (DEC-126): parking is what an unblocking event with no date
+  gets, so no slot is held against it.
 - Watching: nothing. The `--fast` run finished and its watcher exited on the
   marker.
 - Parked:

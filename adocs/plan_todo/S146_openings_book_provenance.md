@@ -209,3 +209,19 @@ Reproduce with (`~/.venv/chess/bin/python`, `.moltke.local.md`): decode the hex,
 - `books/UHO_Lichess_4852_v1.epd` needed no research: `books/fetch_book.sh` already pins both its digests and states the licence reasoning -- upstream is Stefan Pohl (SPCC), whose own pages carry a copyright line and no usage licence, so the CC0 redistribution is the source and his site is not.
 
 Those two are `excludes` for this step, so recording `8moves_v3.pgn`'s digest and licence beside the fetched books is a separate change. The blob remains what blocks S146.
+
+## Parked 2026-09-02, DEC-126
+
+The owner does not remember where the blob came from, has checked the history
+himself and found nothing, and thinks the file may be on his other computer.
+The step goes back to `adocs/plan_todo/` and its Open entry is tagged
+`parked, DEC-126`, beside S029's. It resumes when that machine can be searched
+or when one of the three standing options is taken instead: build a replacement
+from a nameable source, delete the book and the `Use Book` option, or keep the
+blob with provenance recorded as unknown.
+
+Everything the episode did settle is committed and does not need redoing:
+`polyglot_randoms[781]` under DEC-121, and `books/8moves_v3.pgn` pinned in
+`books/fetch_book.sh` by both digests against the CC0-1.0 upstream. What
+remains is one question -- the origin of `src/openings.book` -- and the
+fingerprint above is what answers it.

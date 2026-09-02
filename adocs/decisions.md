@@ -7126,3 +7126,50 @@ Consequences: `-check-mate-pvs` is not yet the zero-tolerance check DEC-124
               it. `adocs/data/S170_cases.tsv` carries the case as a
               reproduction with `guard: no`, because a test that asserted a
               line for it would be asserting that a wrong score gets one.
+
+
+## DEC-126  2026-09-02  S146 is parked: the header book's origin is not on this machine
+Tags:         plan, licensing, openings, provenance, parked
+Context:      S146 asked where `src/openings.book` -- 5.2 MB of Polyglot book
+              compiled into every shipped binary -- came from, and DEC-016's
+              first foundation is that nothing here is copied and nothing is
+              bundled whose licence is unstated. The agent's search found
+              nothing: the repository trail ends at `628d827` (2025-04-16) with
+              no URL, no attribution and no licence, and the decoded sha256,
+              a GitHub code search and three public book collections all
+              returned no match. The owner then named
+              `books/8moves_v3.pgn` from `official-stockfish/books`, and that
+              was refuted by measurement rather than by argument: the PGN holds
+              129613 distinct positions over 34700 sixteen-ply games, the book
+              holds 154916, and **11703 are shared -- 7.6 % of the book**. A
+              converter can drop positions; it cannot invent the 143213 the
+              PGN never reaches. Asked again, the owner does not remember, has
+              checked the history himself, and thinks the file may be on his
+              other computer.
+Decision:     By the owner. **S146 is parked**, its file moved back to
+              `adocs/plan_todo/` and its Open entry tagged `parked, DEC-126`
+              beside S029's. It resumes when the other machine can be searched,
+              or when the owner takes one of the three standing options instead
+              -- build a replacement from a source this project can name,
+              delete the book and the `Use Book` option, or keep the blob with
+              its provenance recorded as unknown.
+Rejected:     Recording `8moves_v3.pgn` as the origin because the owner named
+              it -- the numbers say it is not, and a false provenance in
+              `MANUAL.md` is worse than an admitted gap, which is the one thing
+              this step exists to prevent. Deleting the book now to close the
+              exposure -- that is the owner's call and he has not taken it;
+              `Use Book` defaults false, so nothing is measured through the
+              blob and the exposure is licensing, not strength. Leaving the
+              step in `plan_current/` as blocked -- it would hold a slot under
+              the PLAN rule against an unblocking event that has no date.
+Consequences: The blob ships and its origin stays unknown, stated here rather
+              than nowhere. What the episode did settle is recorded and
+              committed: the `polyglot_randoms[781]` table is DEC-121, and
+              `books/8moves_v3.pgn` -- committed, played by `rating.sh` and
+              previously unattributed -- is now pinned in `books/fetch_book.sh`
+              by both digests, verified byte-identical to the CC0-1.0 upstream
+              (zip `7e1e9dd1...`, file `5835239f...`). Whoever resumes S146
+              searches on the decoded book's own fingerprint: sha256
+              `47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5`,
+              2610256 bytes, 163141 entries, and a start position offering only
+              `d2d4`, `g1f3` and `e2e4` at weight 54 each.
