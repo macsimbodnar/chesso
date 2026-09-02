@@ -70,14 +70,33 @@ Updated: 2026-09-02, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: finish S146 the moment the book's source is named. After it the
-  machine-light entries are the behaviour-neutral three (S147, S020, S030),
-  discharged on identical `tools/search_bench.py` node counts and best moves
-  plus a `hyperfine` timing.
+- In progress, second: **S147, and it needs a decision.** The truncation it was
+  written against is gone -- `extend_mate_pv()` walks the transposition table
+  from the end of the stored line until the position has no legal reply, all or
+  nothing, and the last ply is looked for rather than read because quiescence
+  stores no move for a node it stood pat on. Over both S145 sets at depth 8,
+  every `info` line of every iteration: **54 short of 706 before, 0 after**, and
+  `tests/test_mate_pv.cpp` is that as a gate at 3.1 s. INV-6 discharged on
+  identical node counts and best moves. Committed at `4d0e926`.
+  **The accepts is not met.** A clean `--fast` run, 3000 games in 1 h 55 m with
+  0 forfeits, reports **138** `Incomplete mating PV` lines from the unfixed
+  reference and **10** from this build, where the accepts asks for none. The ten
+  are a different defect wearing the same signature: a mate score **read back
+  from the table** at an iteration too shallow to have found it. Reproduced by
+  replaying a game move by move through one process -- `mate -8` at depth 3 with
+  3 plies where 16 are needed -- against the same position and time on a cold
+  table, which reports no mate at all and `cp -725` at depth 15. The proof was
+  overwritten moves ago, so no walk recovers it and neither would extending the
+  line through quiescence. The options put to the owner are in the step file.
+- Next: finish S146 the moment the book's source is named, and take the S147
+  decision. After them the machine-light entries are the behaviour-neutral pair
+  (S020, S030), discharged on identical `tools/search_bench.py` node counts and
+  best moves plus a `hyperfine` timing.
 - Blocked: **S146's second half, on the owner naming where `src/openings.book`
-  came from.** Nothing else is blocked, and the rest of the lane does not
-  depend on it.
-- Watching: nothing. No match is running and no watcher is armed.
+  came from**, and **S147's close, on which of the four options below is taken.**
+  Nothing else is blocked and the rest of the lane depends on neither.
+- Watching: nothing. The `--fast` run finished and its watcher exited on the
+  marker.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**

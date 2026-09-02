@@ -211,3 +211,39 @@ test for this would have to do.
 
 **It needs a decision and the step stops here.** The accepts says no
 `Incomplete mating PV` line, and that is not met.
+
+## Four options, for the owner
+
+The agent's recommendation is **A**, with **B** raised as its own step if zero
+is what is wanted.
+
+**A. Amend the accepts to what a reporting-only fix can carry, and close.** The
+guarantee becomes: a mate line the search itself produced reaches its mate,
+asserted at zero by `test_mate_pv` over 706 lines; a mate score inherited from
+the table at an iteration too shallow to hold its line is a named residual,
+counted at 10 in 3000 games against the reference's 138 and re-counted whenever
+a run is taken. The residual becomes a new step. Cheapest, honest, and it stops
+`-check-mate-pvs` being a warning nobody reads -- 10 in 3000 games is a number
+that moves when something breaks, where 138 was not.
+
+**B. Carry the mating line across searches, as its own step.** When a search
+proves a mate it also holds the line; store it with the position it was proved
+from, and when a later search reports the same mate and the walk stalls, take
+the remainder of the stored line after the moves actually played. Validated by
+the same all-or-nothing gate -- legal from the current root, ending in
+checkmate at exactly the claimed distance -- so it cannot publish a wrong line
+either. This is the option that reaches zero. It is new engine state, it is
+reporting state and not search state, and it is not what this step's `excludes`
+scoped.
+
+**C. Do not report a mate score whose line cannot be shown.** Report the last
+non-mate score instead. Rejected on its face: the score is right and the line is
+not, so this throws away the true half. It also changes what is printed, which
+this step's `excludes` forbids.
+
+**D. Complete the line with a bounded mate search in the reporting path.** For
+the two deep cases -- 11 plies of 13, 10 of 12 -- a two-ply completion is a
+move list and a mate test, and it would close them. For the eight shallow ones
+it is a mate-in-8 solver run inside a time-controlled search. Rejected as
+priced: it buys 2 of 10 at a cost that is small, and the other 8 at a cost that
+is not.
