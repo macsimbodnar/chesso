@@ -15,7 +15,7 @@ are in `CLAUDE.md`.
 | `tools/` | measurement and analysis, not shipped with the engine |
 | `adocs/` | the workflow state: specs, plan, steps, decisions, testing ledger |
 | `adocs/data/` | raw output of runs a decision rests on, kept because regenerating it costs hours of reference search. `adocs/data/README.md` says what each file is |
-| `books/` | opening books for match play. `8moves_v3.pgn` is committed and is what `rating.sh` plays; the unbalanced book `fastchess.sh` plays is 175 MB, gitignored, and fetched by `books/fetch_book.sh` against a pinned digest |
+| `books/` | opening books for match play. `8moves_v3.pgn` is committed and is what `rating.sh` plays; the unbalanced book `fastchess.sh` plays is 175 MB, gitignored, and fetched by `books/fetch_book.sh` against a pinned digest. Every book here comes from `official-stockfish/books` (CC0-1.0) and every one of them, committed or fetched, is pinned by both digests in that script |
 | `.ref-builds/` | git worktrees created by `fastchess.sh`, gitignored |
 | tool config | tracked when it describes the project, ignored when it describes a machine. `CLAUDE.md` and `.cursor/rules/moltke.mdc` are the two agent pointers at `AGENTS.md`, `.vscode/` is the editor setup; `.claude/settings.local.json` is the one exception and is gitignored. DEC-051 |
 
@@ -1441,7 +1441,10 @@ book that is 175 MB and therefore not committed:
 It checks the zip's sha256 and the unpacked file's, refuses on either, and is a
 no-op when the file is already there and matches. The source is
 `official-stockfish/books`, which is **CC0-1.0**; Stefan Pohl's own UHO pages
-state no usage licence, so nothing is taken from there. The script fails with
+state no usage licence, so nothing is taken from there. The committed
+`8moves_v3.pgn` is pinned in the same table and comes from the same CC0
+repository -- `./books/fetch_book.sh 8moves_v3.pgn` verifies the tracked copy
+against upstream instead of downloading it. The script fails with
 `FETCH-BOOK-FAILED:` and `fastchess.sh` refuses to start without the file.
 
 ### Not every change goes to a match

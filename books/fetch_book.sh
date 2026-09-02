@@ -46,17 +46,28 @@ default_book="UHO_Lichess_4852_v1.epd"
 # the book its verification match plays (eval_tuning_strategy.md par.7), and
 # 242201 openings is more than the 30000 rounds that run walks through -- 1250
 # iterations of 24 pairs, one round per pair -- so it never wraps.
+#
+# 8moves_v3.pgn is the exception: it is 8.0 MB, committed rather than fetched
+# (.gitignore says why), and rating.sh plays it. It is pinned here anyway so
+# that one file answers where every book in this repository came from, and so
+# the committed copy can be checked against upstream without a download being
+# the only way to find out. Its origin was unrecorded until 2026-09-02, when
+# the owner named the source and the tracked file was compared against it: the
+# sha256 below is the tracked copy, byte for byte. Running the script on it
+# verifies rather than fetches, since the file is already in place.
 pinned="$(
   cat <<'PINS'
 UHO_Lichess_4852_v1.epd	4e298f11e8acfa106babe02968f2e61582145e7874c59284690b20b9650e0e07	7a7f6470615a69c6cf23d565417701d38732876f480af90d67b42abade35644a
 UHO_4060_v3.epd	62fe32cda02f605acd5938887d574730c91208812f2bb1e839f28eee10869af8	419844f8c43a9c1fa3e279518bb79e89a5ed3d181f27c180ea9eb7444a1b9885
+8moves_v3.pgn	7e1e9dd118b4bb97d8a8b5b8a790c86e21f8509d59a27d2883767d94477be02e	5835239f88cc2c7511b177c32392a69f3ede21819cf0616f80a7f907cd21d17e
 PINS
 )"
 
 fail() { echo "FETCH-BOOK-FAILED: $*" >&2; exit 1; }
 
 if [[ "${1:-}" == "--list" ]]; then
-  echo "pinned books, fetched into $books/ and gitignored there:"
+  echo "pinned books, in $books/ -- fetched and gitignored, except the"
+  echo "committed 8moves_v3.pgn, which is only verified against its pin:"
   awk -F'\t' '{ printf "  %s\n", $1 }' <<< "$pinned"
   echo "default: $default_book"
   exit 0
