@@ -150,6 +150,42 @@ Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
 
+**An `info` line that claims a mate shows the mate since 2026-09-02, S147**: a
+`score mate N` carries a `pv` of `2N - 1` plies where the side to move delivers
+it and `2|N|` where it receives it, and the position that line ends on is
+checkmate. `pv_table` holds one move per main-search ply, so a mate found inside
+quiescence used to stop the line at the iteration depth -- the score right, the
+line short, which is what `fastchess -check-mate-pvs` had been reporting as
+`Incomplete mating PV` on every SPRT since S145. The completion is **reporting
+only and all or nothing**: after the search, the transposition table is walked
+from the end of the stored line -- quiescence stores its nodes too -- and the
+line is extended only when the walk reaches checkmate at exactly the claimed
+distance, so a missing or overwritten entry leaves the short line rather than
+publishing a wrong one. The last ply is looked for rather than read, because it
+is the ply quiescence is least likely to have stored a move for: without that,
+1 line of 524 in the mined set stayed short, its entry evicted inside the
+iteration that wrote it. Nothing searches, counts a node or writes to the table
+there. Behaviour-neutral for play and discharged on node counts: 121512 /
+800769 / 62907 at depth 9 and 639228 / 3430710 / 367858 at depth 12, `c3d5` /
+`e2a6` / `d7c8q` at both, identical to `8736aec` (INV-6). `test_mate_pv` is the
+guard, in the fast label, asserting **every** mate line of every iteration over
+both S145 sets -- 182 lines over the constructed set and 524 over the mined one
+at depth 8 -- because the truncation was a shallow-iteration effect that the
+last line of a search never shows.
+
+**What is not covered, stated as a bound and not as an exception.** The
+guarantee is over a line the search itself produced. A mate score **read back
+from the transposition table** at an iteration too shallow to have found it is
+reported with the short line the iteration has: the score is right, having been
+proved by an earlier search of the same game, and the line that proved it has
+since been overwritten, so no walk can recover it. Measured over one 3000-game
+run at 8+0.08: `fastchess -check-mate-pvs` reported **138** such lines from the
+engine before S147 and **10** after, every one of the ten with a line exactly as
+long as its iteration was deep. Reproduced by replaying a game move by move
+through one process -- `mate -8` from depth 3 with three plies where sixteen are
+needed -- against the same position and time on a cold table, which reports no
+mate at any depth and `cp -725` at 15.
+
 There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the
 parameters in `src/search_params.hpp` from constants the compiler folds into
 variables settable over UCI, and adds one spin option per parameter. **No

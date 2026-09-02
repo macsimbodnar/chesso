@@ -199,7 +199,7 @@ bestmove c3d5
 | `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
-| `pv` | the line the engine will play, and `bestmove` is its first move |
+| `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate: 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate |
 
 `bestmove 0000` means no legal move at all. A search cut off before it finished
 even one move still answers with a legal one.
@@ -242,16 +242,6 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
-- **A mate score can come with a principal variation too short to reach it.**
-  The score is right; the line stops early. `pv` is filled from the main search,
-  so it holds at most one move per main-search ply, and a mate found inside
-  quiescence continues below the deepest ply the line can hold. Measured over 400
-  late-game positions at depth 8, with Stockfish at 300000 nodes as the truth:
-  31 `info` lines carried a mate score, **2 showed a line shorter than the
-  distance they claimed, and 0 claimed the wrong distance** (S145, 2026-08-21).
-  A GUI reading the score plays correctly; a GUI reading the line sees it stop
-  before the mate. `fastchess -check-mate-pvs` reports it as
-  `Incomplete mating PV`. S147 is the fix.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

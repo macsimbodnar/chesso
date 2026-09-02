@@ -529,12 +529,12 @@ build carrying it.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 42 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 48 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
-Those 42 s -- 22 tests, measured 2026-09-01 -- assume `build/` was configured
-`Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
+Those 48 s -- 23 tests, measured 2026-09-02, up from 42 s over 22 when S147
+added `test_mate_pv` at 3.1 s -- assume `build/` was configured `Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
 suite takes about two minutes — the assertions are on and the optimiser is off
 — and `test_movegen` and `test_search` take 165 s and 216 s on their own. Until
 S067 every `fast` target carried a flat 60 s timeout, so a debug directory
@@ -592,7 +592,8 @@ tune, which can be months after the commit that caused it.
 
 **What it costs, measured 2026-09-01 on the DEC-109 MacBook, 8 cores, on
 mains.** The tune build's `fast` label is **45.9 s over 22 tests**, against the
-shipping build's 42.4 s over the same 22; building `build-tune` adds **0.5 s**
+shipping build's 42.4 s over the same 22 — 48.8 s and 48.3 s over 23 since
+S147 added `test_mate_pv` on 2026-09-02; building `build-tune` adds **0.5 s**
 when nothing changed, **1.4 s** for a full rebuild with its ccache warm, and
 **18.0 s** for a full rebuild with `CCACHE_DISABLE=1`. So the gate roughly
 doubles: **93.6 s** end to end on a warm tree, against about 45 s before.
@@ -1038,9 +1039,20 @@ constructed set can hold. It costs nothing and needs no position file.
 
 It is a **consistency** check and not a mate-finding one: it is silent about a
 mate the engine never reported, which is precisely the failure reverse futility
-causes, and that is what instrument 1 is for. Chesso trips it today on a known
-truncation — the score is right, the line stops at the iteration depth — which
-is S147.
+causes, and that is what instrument 1 is for. S147 (2026-09-02) removed the
+truncation it used to trip on and did not silence it: over one 3000-game run the
+unfixed reference reported **138** `Incomplete mating PV` lines and the fixed
+candidate **10**. The residue is a different defect with the same signature --
+a mate score read back from the transposition table at an iteration far too
+shallow to hold its line, whose proof was overwritten moves ago -- so read a
+count against 10 in 3000 rather than a silent log, until a step closes it.
+
+The reproducible half of the same property is `test_mate_pv`, in the fast label
+since S147: every `info` line carrying a mate score over both S145 sets, 706 of
+them at depth 8, asserted for length and for ending on checkmate. The two are
+complementary and neither replaces the other — this one names the FEN and the
+depth and runs in the completion gate, `-check-mate-pvs` sees the positions two
+engines actually meet.
 
 **4. The defender-side set.** `adocs/data/S165_defender_set.tsv`, swept by
 `adocs/data/S165_nmp_defender_sweep.py`. Instruments 1 and 2 both ask "does the

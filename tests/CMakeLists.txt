@@ -155,6 +155,27 @@ endif()
 set_tests_properties(test_mate_breadth
      PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_BREADTH_TIMEOUT})
 
+# S147: every info line claiming a mate carries a line that reaches it. Reads
+# both S145 sets out of the source tree, so it needs the same definition
+# test_mate_breadth does.
+#
+# Its own binary for the same reason and at a fraction of the cost: 400
+# positions at depth 8, which is enough for both sets to report mates and does
+# not buy mate finding this file asserts nothing about. The Debug ratio
+# test_mate_breadth measured (38x) is what sets the second timeout; neither is
+# tight.
+add_doctest_target(test_mate_pv)
+target_compile_definitions(test_mate_pv
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+     set(CHESSO_MATE_PV_TIMEOUT 120)
+else()
+     set(CHESSO_MATE_PV_TIMEOUT 1500)
+endif()
+set_tests_properties(test_mate_pv
+     PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_PV_TIMEOUT})
+
 # The SPRT harness is a shell script, and until S035 nothing in tests/
 # exercised any shell script at all -- which is how a rename could break the
 # only tool that can decide a change (INV-6) and stay broken across a commit.

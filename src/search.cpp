@@ -1104,6 +1104,133 @@ int negamax(int alpha0,
 }
 
 
+// The plies a mate at this distance takes. The side to move delivering it
+// moves last, so its mate in N is 2N - 1 plies; one it receives is 2|N|.
+static size_t plies_to_deliver(int mate_in)
+{
+  return (mate_in > 0) ? static_cast<size_t>(2 * mate_in - 1)
+                       : static_cast<size_t>(-2 * mate_in);
+}
+
+
+// Reporting only, and it must stay that way: nothing here searches a node,
+// counts one, or writes to the table.
+//
+// A mate found inside quiescence puts a correct mate score at a node whose
+// line continues below the deepest main-search ply, and pv_table holds one
+// move per main-search ply, so the line stops where the table stops. Measured
+// in S145: of 31 info lines carrying a mate score, 2 were short and 0 had the
+// wrong distance -- the score is right and the line is short.
+//
+// The repair walks the table from the end of the stored line, taking the move
+// each position's entry recorded, until the position has no legal reply.
+// Quiescence stores its nodes too (TT_DEPTH_QS), including the mated one, so
+// the plies the main search never reached are usually still there to be read.
+// The one ply that is looked for rather than read is the last, for the reason
+// the loop below records.
+//
+// ALL OR NOTHING, and that is the whole safety argument. The walk builds its
+// moves aside and the principal variation is only extended when the walk ends
+// in checkmate at exactly the distance the score claims. A table entry that
+// was overwritten, a bound node with no move, or a walk that wanders off the
+// mating line leaves the line exactly as the search produced it -- short, and
+// visible to the same check that found the truncation in the first place. It
+// can never publish a line that does not deliver the mate it claims. S147.
+static void extend_mate_pv(game_t* game,
+                           search_state_t* state,
+                           pv_t* pv,
+                           int mate_in)
+{
+  const size_t needed = plies_to_deliver(mate_in);
+
+  if (pv->length == 0 || pv->length >= needed || needed >= MAX_PLY) { return; }
+
+  move_t extension[MAX_PLY];
+  size_t extension_length = 0;
+  size_t made = 0;
+  bool ends_in_mate = false;
+
+  for (; made < pv->length; ++made) {
+    if (!make_move(game, pv->table[made])) { break; }
+  }
+
+  if (made == pv->length) {
+    while (true) {
+      move_t moves[MAX_MOVES];
+      const size_t count = generate_moves(game_tables(), &game->board, moves);
+
+      // generate_moves() is legal-only (INV-1), so no legal reply while in
+      // check is checkmate and needs no per-move pass.
+      if (count == 0) {
+        ends_in_mate = is_check(game);
+        break;
+      }
+
+      if (pv->length + extension_length >= needed) { break; }
+
+      const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
+      move_t next = (entry != nullptr) ? entry->best_move : 0;
+
+      // The last ply of a mating line is a mating move, and it is the ply the
+      // table is least likely to answer for: it is scored inside quiescence,
+      // which stores no move at all for a node it stood pat on and writes at
+      // TT_DEPTH_QS, so it loses every collision. On that one ply the move is
+      // looked for rather than read, and what is found wins over what the
+      // table said -- checkmate is decided by the generator here exactly as it
+      // is at every other site in the tree. Measured: without this, 1 line of
+      // 524 in the mined set stayed short, its entry gone from the table
+      // inside the same iteration that wrote it.
+      if (pv->length + extension_length + 1 == needed) {
+        for (size_t i = 0; i < count; ++i) {
+          if (!make_move(game, moves[i])) { continue; }
+
+          move_t replies[MAX_MOVES];
+          const bool mates =
+              (generate_moves(game_tables(), &game->board, replies) == 0) &&
+              is_check(game);
+
+          unmake_move(game);
+
+          if (mates) {
+            next = moves[i];
+            break;
+          }
+        }
+      }
+
+      if (next == 0) { break; }
+
+      // A move out of the table is checked against the generator rather than
+      // trusted: tt_get_entry() compares the full key, but a 64-bit key still
+      // collides and a stored move is not re-validated anywhere else. The scan
+      // above already produces a generated move and pays the check twice,
+      // which costs nothing on the one ply it runs on.
+      bool playable = false;
+      for (size_t i = 0; i < count; ++i) {
+        if (moves[i] == next) {
+          playable = true;
+          break;
+        }
+      }
+
+      if (!playable || !make_move(game, next)) { break; }
+
+      ++made;
+      extension[extension_length++] = next;
+    }
+  }
+
+  for (size_t i = 0; i < made; ++i) {
+    unmake_move(game);
+  }
+
+  if (!ends_in_mate || pv->length + extension_length != needed) { return; }
+
+  memcpy(&pv->table[pv->length], extension, extension_length * sizeof(move_t));
+  pv->length += extension_length;
+}
+
+
 search_t search(int depth,
                 game_t* game,
                 search_state_t* state,
@@ -1147,6 +1274,13 @@ search_t search(int depth,
 
   memcpy(search_result.pv.table, state->pv_table[0],
          state->pv_length[0] * sizeof(move_t));
+
+  // After the copy, so the extension lands on the reported line and not on the
+  // search state, and before the debug PV check below, so a walked line is held
+  // to the same legality invariant a searched one is.
+  if (search_result.mate_found) {
+    extend_mate_pv(game, state, &search_result.pv, search_result.mate_in);
+  }
 
 #ifndef NDEBUG
   // The caller is allowed to keep the root result of an aborted iteration, so
