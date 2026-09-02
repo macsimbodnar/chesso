@@ -393,11 +393,11 @@ enforces it but the diff.
 
 ## Done recently
 
+- S147  a mate score the search proved is reported with a line that reaches it -- the table walked from the end of the stored line, all or nothing (DEC-122); 54 short of 706 mate lines before and 0 after, and the 10 a --fast run still reports are a table-inherited score and became S170 (DEC-123)
 - S144  a citation in a plan document carries its own path -- 383 bare continuations over 19 files, 380 converted (322 by relocating the text each was written against, 58 by hand) and 3 left as this step's own illustrations, which leave the checked set with it; a bare `:line` is a flag now (DEC-120)
 - S169  the 97 stale citations in the pending step files are re-anchored -- 72 by exact block, 6 by title, 16 by hand, 3 held -- with the mapping tracked, because repairing a step file makes the checker's verdict vacuous (DEC-119)
 - S143  the completion gate builds and tests build-tune beside build -- the red observed first, the gate 45 s to 93.6 s for it (DEC-118)
 - S168  the constructed mate set is three motifs and 82 positions -- a lone rook in 32 and two knights in 2 beside the queen's 48 -- the mating piece enforced rather than assumed, and MATE_IN_THREE_FLOOR re-derived at 11 (DEC-117)
-- S154  the mate-in-three floor is 8 and re-derived, not 7 and inert -- the count moves 0 positions over seventeen commits and nine table sizes and 5 under one ply of the guard (DEC-116)
 
 ## Machine scope, 2026-08-30 to whenever the workstation is back
 
@@ -444,7 +444,7 @@ reason the lane existed stays findable.
 ## Open
 
 1. S146  the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does
-2. S147  a mate score is reported with a principal variation long enough to reach the mate it claims, so fastchess's -check-mate-pvs stops warning on a truncation
+2. S170  a mate score read back from the transposition table is reported with a line that reaches it, closing the 10 `Incomplete mating PV` lines in 3000 games S147 left (DEC-123)
 3. S020  compute the in-check state once per node instead of once per call site
 4. S030  move_t drops the moving piece and becomes 16 bits
 5. S148  the reverse futility depth ceiling is re-decided against the deep mates S145 measured it losing, by SPRT and not by argument

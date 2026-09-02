@@ -7,46 +7,38 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-02, by hand.
 
-- Last done: S144 -- **a citation in a plan document carries its own path.**
-  383 bare `:line` continuations over 19 of the 53 pending step files, 380
-  converted; the three left are S144's own illustrations of the defect and left
-  the checked set with the file. `--citations` reports **0 flagged over 52
-  files**, and a bare continuation is a flag now (`BARE`) rather than a counted
-  line of output. The style rule is in `plan.md`'s "How this file works": a
-  citation repeats its path. DEC-120.
-  **The checker's green is not the proof, for the second step running.** A
-  wrong path is caught only when its line is past the end of that file or a
-  quoted test title contradicts it -- observed both ways before trusting it:
-  `src/search_params.hpp:181-182` mistyped as `src/search.hpp` gave
-  `BOUNDS ... has 99 lines`; the same range mistyped as `src/search.cpp`, in
-  range and wrong, passed green. The evidence is
-  `adocs/data/S144_pathings.tsv`: 380 rows carrying the baseline text and the
-  text at the new range, **343 identical on both sides and all 37 that differ
-  are hand rows** with their reason. No relocation row differs.
-  Method, from `adocs/data/S144_paths.py`: the path is **told** to it -- 77
-  paragraph assignments and 48 per-citation overrides read out of the citing
-  sentences -- and then falsified by relocating the cited text from the commit
-  that wrote that line (`git blame --ignore-rev fe25f46`, because a plain blame
-  answers S169's commit). **318 BLOCK, 4 SAME, 58 HAND.** The 58 are one of two
-  shapes: a block that sits in both `quiescence()` and `negamax()`, or a region
-  that grew a comment under the citation.
-  **One citation was malformed rather than pathless**: S120 read `:1099-:1039`,
-  a range whose second half carries its own colon, so nothing ever saw the
-  second number -- one half re-anchored, the other 60 lines stale. Repaired to
-  `src/evaluation.cpp:1099-1100`.
-  **Three sentences are stale in content and left that way** (`excludes:`):
-  S113, S114 and S099 each say the static evaluation is set inside the RFP
-  guard, which S108 stopped being true; the citations point at `:720` and
-  `:731` where it is set now, and restating the claim belongs to those steps.
-- Before it: S169 (**the 97 stale citations are re-anchored**, 72 by exact
-  block, 6 by title, 16 by hand, 3 held, with the mapping tracked because
-  repairing a step file makes the checker's verdict vacuous; DEC-119), S143
-  (**the completion gate builds and tests `build-tune` beside `build`**, the
-  red observed first, 45 s to 93.6 s; DEC-118), S168 (**the constructed mate
-  set is three motifs and 82 positions**, the mating piece enforced,
-  `MATE_IN_THREE_FLOOR` re-derived at 11; DEC-117), S154 (**the mate-in-three
-  floor is 8 and re-derived, not 7 and inert**), S156 (**the mined breadth set
-  is a gate now**, `test_mate_breadth` at depth 10 with a floor of 143).
+- Last done: S147 -- **a mate line the search proved reaches its mate.**
+  `extend_mate_pv()` (`src/search.cpp:1139`) walks the transposition table from
+  the end of the stored line until the position has no legal reply, and the
+  last ply is looked for rather than read because quiescence stores no move for
+  a node it stood pat on. **All or nothing, DEC-122**: the line is extended only
+  when the walk reaches checkmate at exactly the claimed distance, so an evicted
+  entry leaves the short line rather than publishing a wrong one. Reporting
+  only -- nothing there searches a node, counts one, or writes to the table.
+  **54 short of 706 mate lines before, 0 after**, over both S145 sets at depth
+  8, reading every `info` line of every iteration and not the last one only;
+  the red was observed first and `tests/test_mate_pv.cpp` is that measurement
+  as a gate, its own binary at 3.1 s. INV-6 discharged on identical node counts
+  and best moves.
+  **The accepts was amended by the run, DEC-123.** One clean `--fast`, 3000
+  games in 1 h 55 m 30 s with 0 forfeits, reports **138** `Incomplete mating PV`
+  lines from the unfixed reference and **10** from this build where it asked for
+  none. The ten are a separate defect wearing the same signature -- a mate score
+  **read back from the table** at an iteration too shallow to have found it,
+  reproduced by replaying a game move by move through one process at `mate -8`
+  from depth 3 with 3 plies where 16 are needed, against the same position and
+  time on a cold table which reports no mate at all and `cp -725` at depth 15.
+  The proof was overwritten moves ago, so no walk recovers it. It is **S170**.
+  **An earlier `--fast` run was voided and is recorded as such**: the tree was
+  rebuilt while it played, and `fastchess.sh:145` points the candidate at
+  `build/src/chesso` itself. Log kept at `.tuning/S147_fast_void.log`.
+- Before it: S144 (**a citation in a plan document carries its own path**, 380
+  of 383 bare continuations converted, a bare `:line` a flag now; DEC-120),
+  S169 (**the 97 stale citations are re-anchored**; DEC-119), S143 (**the
+  completion gate builds and tests `build-tune` beside `build`**; DEC-118),
+  S168 (**the constructed mate set is three motifs and 82 positions**;
+  DEC-117), S154 (**the mate-in-three floor is 8 and re-derived, not 7 and
+  inert**).
 - In progress: **S146, and it is half done.** The `polyglot_randoms[781]`
   table is settled -- DEC-121 rules it format-defining specification rather
   than a copied table, kept, with the citation and the format description's
@@ -70,31 +62,16 @@ Updated: 2026-09-02, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- In progress, second: **S147, and it needs a decision.** The truncation it was
-  written against is gone -- `extend_mate_pv()` walks the transposition table
-  from the end of the stored line until the position has no legal reply, all or
-  nothing, and the last ply is looked for rather than read because quiescence
-  stores no move for a node it stood pat on. Over both S145 sets at depth 8,
-  every `info` line of every iteration: **54 short of 706 before, 0 after**, and
-  `tests/test_mate_pv.cpp` is that as a gate at 3.1 s. INV-6 discharged on
-  identical node counts and best moves. Committed at `4d0e926`.
-  **The accepts is not met.** A clean `--fast` run, 3000 games in 1 h 55 m with
-  0 forfeits, reports **138** `Incomplete mating PV` lines from the unfixed
-  reference and **10** from this build, where the accepts asks for none. The ten
-  are a different defect wearing the same signature: a mate score **read back
-  from the table** at an iteration too shallow to have found it. Reproduced by
-  replaying a game move by move through one process -- `mate -8` at depth 3 with
-  3 plies where 16 are needed -- against the same position and time on a cold
-  table, which reports no mate at all and `cp -725` at depth 15. The proof was
-  overwritten moves ago, so no walk recovers it and neither would extending the
-  line through quiescence. The options put to the owner are in the step file.
-- Next: finish S146 the moment the book's source is named, and take the S147
-  decision. After them the machine-light entries are the behaviour-neutral pair
-  (S020, S030), discharged on identical `tools/search_bench.py` node counts and
-  best moves plus a `hyperfine` timing.
+- Next: **S170**, which S147 created and DEC-123 scoped -- carry the mating
+  line across searches so a table-inherited mate score can still be shown, and
+  the 10 in 3000 games go. It is machine-light except for the one `--fast` run
+  that decides it. S146 finishes the moment the book's source is named. After
+  them the machine-light entries are the behaviour-neutral pair (S020, S030),
+  discharged on identical `tools/search_bench.py` node counts and best moves
+  plus a `hyperfine` timing.
 - Blocked: **S146's second half, on the owner naming where `src/openings.book`
-  came from**, and **S147's close, on which of the four options below is taken.**
-  Nothing else is blocked and the rest of the lane depends on neither.
+  came from.** Nothing else is blocked and the rest of the lane does not depend
+  on it.
 - Watching: nothing. The `--fast` run finished and its watcher exited on the
   marker.
 - Parked:

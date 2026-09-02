@@ -6926,3 +6926,80 @@ Consequences: The exception is narrow and stated so it cannot be stretched: it
               ruling is where the constants are. The 5.2 MB book blob is a
               separate artifact and a separate ruling; this entry says nothing
               about it.
+
+
+## DEC-122  2026-09-02  A reported mate line is completed all or nothing, and never partially
+Tags:         search, uci, reporting, mate, transposition-table
+Context:      `state->pv_table` holds one move per main-search ply, so a mate
+              found inside quiescence was reported with a line that stopped at
+              the iteration depth -- the score right, the line short. S147
+              completes the line by walking the transposition table from the
+              end of the stored one. That walk can fail: an entry is evicted, a
+              bound node carries no move, or the moves it reads lead somewhere
+              other than the mate. What to do on a failed walk is the choice,
+              and it is not obvious -- a partial extension is longer than what
+              the search produced and looks like progress.
+Decision:     By the owner, on the agent's proposal. The walk builds its moves
+              **aside**, and the reported line is extended **only** when the
+              walk reaches checkmate at exactly the distance the score claims.
+              Anything else leaves the line exactly as the search produced it.
+              The rule is stated at `extend_mate_pv()` in `src/search.cpp`, in
+              `adocs/specs.md`'s Behaviour section, and here.
+Rejected:     Appending whatever the walk found -- it publishes a line the
+              engine cannot stand behind, and it converts a visible truncation
+              into an invisible wrong answer, which is worse: a short line is
+              caught by `-check-mate-pvs` and by `test_mate_pv`, and a
+              plausible wrong one is caught by nothing. Extending to the
+              claimed length without requiring checkmate at the end -- the
+              length is the symptom and the mate is the property. Falling back
+              to a search when the walk stalls -- a mate solver inside a
+              time-controlled search, priced and rejected in S147's step file.
+Consequences: The completion can never make the reported line worse than the
+              search made it, which is what allows it to run unconditionally on
+              every mate report without a measurement behind each case. It also
+              means the guarantee is one-sided: the line either reaches the
+              mate or is the short line, and a residue of short lines is
+              expected rather than a defect in the walk. DEC-123 is the size of
+              that residue and what is done about it.
+
+
+## DEC-123  2026-09-02  S147's guarantee is over a line the search produced; a table-inherited mate score is a separate defect
+Tags:         plan, search, uci, reporting, mate, measurement
+Context:      S147's `accepts` asked for **no** `Incomplete mating PV` line from
+              a `fastchess.sh --fast` run. The fix landed and the run was taken:
+              3000 games, 1 h 55 m 30 s, 0 forfeits, **138** such lines from the
+              unfixed reference `8736aec` and **10** from the fixed build. The
+              ten are not the defect S147 was written against. Each has a line
+              exactly as long as its iteration is deep, and the cause was
+              reproduced rather than argued: replaying a game move by move
+              through one engine process gives `mate -8` at depth 3 with 3
+              plies where 16 are needed, while the same position at the same
+              time with a **cold** table reports no mate at any depth and
+              `cp -725` at depth 15. The score is read back from the
+              transposition table, proved by an earlier search of the same
+              game, and the line that proved it has been overwritten since -- a
+              16 MB table is about a million entries and one 150 ms search
+              visits more nodes than that.
+Decision:     By the owner, on the agent's recommendation. **S147's guarantee is
+              over a mate line the search itself produced**, held at zero by
+              `test_mate_pv` over 706 mate lines of every iteration across both
+              S145 sets, and S147 closes on it. The table-inherited case is a
+              named residual with a number -- 10 in 3000 games against the
+              reference's 138 -- and becomes **S170**.
+Rejected:     Carrying the mating line across searches so a later search can
+              reuse it -- the option that reaches zero, kept as S170's leading
+              candidate rather than folded into a step whose `excludes` did not
+              scope new engine state. Reporting a non-mate score when the line
+              cannot be shown -- it discards a score that is right to fix a
+              line that is not. A bounded mate search in the reporting path --
+              it closes the two deep cases for a move list and a mate test and
+              the other eight only with a mate-in-8 solver inside a
+              time-controlled search.
+Consequences: `-check-mate-pvs` stops being a warning nobody reads and becomes a
+              count that moves: 10 in 3000 games is the standing figure, and a
+              run that reports materially more has found something. The bound is
+              stated in `adocs/specs.md` and in `DEV_MANUAL.md` beside the
+              instrument, so neither document claims a silence the engine does
+              not deliver. `test_mate_pv` stays at zero tolerance because every
+              case in it is `ucinewgame` and one search, which is a cold table
+              by construction -- a test for S170 has to replay a game.

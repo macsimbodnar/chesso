@@ -1,13 +1,14 @@
 id:         S147
 goal:       a mate score is reported with a principal variation long enough to reach the mate it claims, so fastchess's -check-mate-pvs stops warning on a truncation
-accepts:    an `info` line reporting `score mate N` carries a `pv` of at least `2N - 1` plies for a mate the engine delivers and `2|N|` plies for one it receives, and the last position of that line is checkmate; asserted over the constructed set in `adocs/data/S145_mate_set.tsv` and over the mined set in `adocs/data/S145_mined_set.tsv`, at every iteration from the first that reports a mate rather than at the last one only, because the truncation measured is a shallow-iteration effect; a run of `fastchess.sh --fast` produces no `Incomplete mating PV` line, which is the check `-check-mate-pvs` already performs on every SPRT since S145; behaviour-neutral for play, proven the S145 way -- identical node counts and identical best moves from `tools/search_bench.py`, since only what is printed changes; `tests/test_uci_surface.cpp` refreshed after MANUAL.md describes the new output; the known-bug entry S145 added to MANUAL.md removed in the same commit that removes the bug
-touches:    src/chesso.cpp, src/search.cpp, tests/test_engine.cpp, tests/test_uci_surface.cpp, MANUAL.md
+accepts:    an `info` line reporting `score mate N` carries a `pv` of at least `2N - 1` plies for a mate the engine delivers and `2|N|` plies for one it receives, and the last position of that line is checkmate; asserted over the constructed set in `adocs/data/S145_mate_set.tsv` and over the mined set in `adocs/data/S145_mined_set.tsv`, at every iteration from the first that reports a mate rather than at the last one only, because the truncation measured is a shallow-iteration effect; a run of `fastchess.sh --fast` produces no `Incomplete mating PV` line from a mate line the search itself produced, which is the check `-check-mate-pvs` already performs on every SPRT since S145 -- **amended 2026-09-02 by DEC-123**, the run having found that a mate score read back from the transposition table at an iteration too shallow to have found it is a separate defect no table walk reaches, counted at 10 in 3000 games against the reference's 138 and carried to S170; behaviour-neutral for play, proven the S145 way -- identical node counts and identical best moves from `tools/search_bench.py`, since only what is printed changes; `tests/test_uci_surface.cpp` refreshed after MANUAL.md describes the new output; the known-bug entry S145 added to MANUAL.md removed in the same commit that removes the bug
+touches:    src/search.cpp, tests/test_mate_pv.cpp, tests/CMakeLists.txt, MANUAL.md, DEV_MANUAL.md, adocs/specs.md, adocs/decisions.md
 excludes:   changing any search behaviour, any default or any score -- the distances are already right and this step must not move them; extending the principal variation through quiescence as a search feature rather than as a reporting one, if the measurement says a table walk is enough; `go mate N`, which is a separate missing feature listed in MANUAL.md
-decisions:  DEC-061
+decisions:  DEC-061, DEC-122, DEC-123
 closes:
 blocks:
 paused_by:
 author:     agent (Claude Opus 5), coordinator, 2026-09-02
+done:       2026-09-02. A mate line the search produced reaches its mate. `extend_mate_pv()` (`src/search.cpp:1139`) walks the transposition table from the end of the stored line until the position has no legal reply, all or nothing per DEC-122, with the last ply looked for rather than read because quiescence stores no move for a node it stood pat on. **54 short of 706 mate lines before, 0 after**, over both S145 sets at depth 8, reading every `info` line of every iteration and not the last one only; the red was observed first and `tests/test_mate_pv.cpp` is that measurement as a gate, its own binary at 3.1 s. INV-6 discharged: 121512 / 800769 / 62907 at depth 9 and 639228 / 3430710 / 367858 at depth 12, `c3d5` / `e2a6` / `d7c8q` at both, identical to `8736aec`. Gate green in both builds, 23 tests at 45.4 s and 48.4 s, `./clang-format.sh --check` clean. One clean `fastchess.sh --fast` run, 3000 games in 1 h 55 m 30 s with 0 forfeits: **138** `Incomplete mating PV` lines from the unfixed reference and **10** from this build, and the ten are a separate defect -- a mate score read back from the table at an iteration too shallow to have found it, reproduced against a cold table -- carried to **S170** by DEC-123, which is also what amends the `accepts` above. An earlier `--fast` run was voided: the tree was rebuilt while it played and `fastchess.sh:145` points the candidate at `build/src/chesso` itself; its log is kept at `.tuning/S147_fast_void.log`. Two deviations from `touches:`, both recorded rather than silent: the guard is a new binary `tests/test_mate_pv.cpp` with its `tests/CMakeLists.txt` entry rather than a case inside `tests/test_engine.cpp`, for the cost reason `test_mate_breadth` is its own binary; and `src/chesso.cpp` was not touched at all, the completion belonging where the line is built. `tests/test_uci_surface.cpp` checked and unmoved -- the surface is the command and option set, not the search output. Docs: `MANUAL.md`'s known-bug entry removed and its `pv` row now states the guarantee, `adocs/specs.md` and `DEV_MANUAL.md` carry the guarantee and the bound, gate timings corrected to 23 tests. `README.md` checked, human-owned, no change.
 
 ## What was measured, S145, 2026-08-21
 
@@ -247,3 +248,13 @@ move list and a mate test, and it would close them. For the eight shallow ones
 it is a mate-in-8 solver run inside a time-controlled search. Rejected as
 priced: it buys 2 of 10 at a cost that is small, and the other 8 at a cost that
 is not.
+
+## The decision, 2026-09-02
+
+The owner took **A**: the guarantee is over a mate line the search itself
+produced, held at zero by `test_mate_pv` over 706 lines; the table-inherited
+case is a named residual at 10 in 3000 games and becomes **S170**. The
+`accepts` above is amended in place to say so, and **DEC-123** is the record.
+**DEC-122** records the all-or-nothing completion rule the owner also asked to
+have written down, which is what makes the extension safe to run on every mate
+report without a measurement behind each case.
