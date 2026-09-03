@@ -443,7 +443,7 @@ reason the lane existed stays findable.
 
 ## Open
 
-1. S171  a mate distance the engine reports is one the position holds, closing the 5 `Incomplete mating PV` lines from 1 search in 3000 games S170 left -- first because the BUGS rule puts a found defect before anything else (DEC-125)
+1. S171  **in progress** -- a reported mate line reaches its mate even where the table has lost a slot the walk needs, closing the 5 `Incomplete mating PV` lines from 1 search in 3000 games S170 left. **Rescoped by DEC-127**: the wrong mate distance DEC-125 assumed does not exist -- the 18-ply line is legal and ends in checkmate and the engine prints it itself at `Hash=256` -- so this is a reporting step and not a score one, and the BUGS-rule urgency that put it first no longer applies. Fix in and green; its `--fast` run is owed, the machine having been on battery
 2. S020  compute the in-check state once per node instead of once per call site
 3. S030  move_t drops the moving piece and becomes 16 bits
 4. S148  the reverse futility depth ceiling is re-decided against the deep mates S145 measured it losing, by SPRT and not by argument

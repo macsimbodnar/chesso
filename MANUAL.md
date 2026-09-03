@@ -242,15 +242,16 @@ here as the FEN each one loads. A GUI never sends them.
 - **Single-threaded.** `Threads` exists but cannot be set above 1.
 - **No pondering.** `go ponder` is ignored and `ponderhit` does nothing useful.
 - **No mate search.** `go mate N` is ignored and becomes a normal search.
-- **A mate distance can be inherited from the transposition table and be wrong,
-  and then the `pv` beside it is short.** Measured over 3000 games on
-  2026-09-02: one search in that run reported `mate -9` for a position the same
-  engine calls `mate -7` when asked with an empty table at depth 18, and holds
-  at 7 to depth 24. No line of the claimed length exists, so the engine reports
-  the short one rather than inventing a line — the `pv` guarantee below is
-  over a mate distance the position holds. The rate is **5 `info` lines from
-  1 search in 3000 games**, against 12 from 3 searches before S170 and 138
-  before S147. Being fixed as S171.
+- **A reported mate distance can be longer than the position's own value.**
+  Measured over 3000 games on 2026-09-02: one search reported `mate -9` for a
+  position the same engine calls `mate -7` when asked with an empty table at
+  depth 18, and holds at 7 to depth 24. The distance is *deliverable* — an
+  18-ply line from that root ends in checkmate, and the engine prints it itself
+  when the table is large enough — it is simply not the fastest mate. A
+  depth-limited search naming a longer mate than the game value is ordinary,
+  and the `pv` guarantee below still holds over it: the line reaches the mate
+  the score claims. S171 and DEC-127 measured this; finding the *shortest* mate
+  is a search question and belongs to the reverse-futility entry further down.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

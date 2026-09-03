@@ -7082,6 +7082,10 @@ Consequences: The `pv` guarantee in `MANUAL.md` and `adocs/specs.md` now holds
 
 ## DEC-125  2026-09-02  S170's guarantee is over a mate distance the position holds; a distance the table contradicts is a separate defect
 Tags:         plan, search, uci, reporting, mate, transposition-table, measurement
+Corrected:    2026-09-03 by DEC-127, in one claim and not as a whole. "There is
+              no 18-ply line to publish" is false: such a line exists, and the
+              engine prints it itself at a larger Hash. Everything else here
+              stands -- the run, the counts, and the creation of S171.
 Context:      S170's `accepts` asked for **no** `Incomplete mating PV` line from
               a `fastchess.sh --fast` run. The three fixes landed and the run
               was taken: 3000 games against S147's build `b3f82eb`, 1 h 56 m
@@ -7173,3 +7177,65 @@ Consequences: The blob ships and its origin stays unknown, stated here rather
               `47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5`,
               2610256 bytes, 163141 entries, and a start position offering only
               `d2d4`, `g1f3` and `e2e4` at weight 54 each.
+
+
+## DEC-127  2026-09-03  `mate -9` is a sound distance, not a wrong one; S171 becomes a reporting step
+Tags:         search, uci, reporting, mate, transposition-table, measurement, plan
+Context:      S171 was created by DEC-125 as a wrong-score defect: one search in
+              S170's 3000-game run reported `mate -9` for
+              `8/4ppk1/2p2np1/p7/NPP1p3/P6q/3b4/1Q3R1K w - - 0 34` where the
+              same engine on a cold table says `mate -7` at depth 18 and
+              `stockfish` says `#-7` at depth 30 and 36, and DEC-125 concluded
+              that no line of the claimed length existed. **That conclusion was
+              never measured, and it is wrong.** The line exists: 18 plies from
+              that root, legal throughout, ending in checkmate, verified move by
+              move with python-chess. The engine publishes it itself -- the same
+              warm replay at `Hash=256` reports `mate -9` at depths 9 to 12 with
+              a complete 18-ply `pv` and warns about nothing. What differs at
+              `Hash=16` is only which entries survive.
+              `tools/mate_trace.cpp`, written for this, replays the game through
+              the real UCI layer and then walks the reported line printing the
+              table entry behind every position. It shows the whole chain: exact
+              entries of this search at plies 0 to 9, the score inherited at ply
+              11 from a generation-11 depth-7 entry claiming black mates in 4 --
+              which `stockfish` confirms at depth 30 -- and the completion walk
+              stalling at ply 13 on one missing slot, five plies short of the
+              mate, with the entry that certifies the continuation sitting in
+              that position's own children.
+              So `mate -9` is **sound but not optimal**: a mate at that distance
+              is deliverable, and the position's value is `mate -7`. A
+              depth-limited search naming a longer mate than the game value is
+              the search, not the report, and S148 and S154 own that ground.
+Decision:     By the owner, on the agent's recommendation. **S171 is rescoped
+              from the score to the line**, and its `excludes` is amended to
+              permit exactly the reporting change it forbade: when
+              `complete_mate_pv()`'s walk stalls with nothing to read, it looks
+              one ply down and takes the move whose child the table certifies
+              **exact** at the distance the line still owes. Reporting only, and
+              all-or-nothing per DEC-122 unchanged. `certified_mate_move()` in
+              `src/search.cpp` is that, and `adocs/data/S170_cases.tsv`'s
+              `E_mate_minus9` row becomes a guarded case rather than a bare
+              reproduction.
+Rejected:     Closing S171 as "not a defect" -- the short line is a real
+              reporting gap that fires in every match log, and leaving a warning
+              that fires on correct behaviour makes the instrument unreadable,
+              which is what DEV_MANUAL.md's "read a count and not a silent log"
+              already concedes. Keeping it as a score step -- that is mate
+              finding at shallow depth with a warm table, unbounded in cost, and
+              it owes an SPRT that a reporting fix does not. Accepting a bound
+              entry rather than an exact one in the lookahead -- a lower bound
+              of "mate in n" leaves a faster mate open, so a line built on one
+              can be a road the position would not take; the all-or-nothing gate
+              would catch a walk that fails to reach the mate but not one that
+              reaches it by a defender's blunder.
+Consequences: The BUGS-rule urgency that put S171 first in the Open list does
+              not apply, because the score was never the defect; the step keeps
+              its place because it is started and cheap, not because a bug is
+              open. `MANUAL.md`'s known-bug entry, `adocs/specs.md` and
+              `DEV_MANUAL.md`'s instrument 3 all state DEC-125's refuted claim
+              and are corrected in the same commit. The standing
+              `Incomplete mating PV` figure stays **5 lines from 1 search in
+              3000 games** until a `fastchess.sh --fast` run replaces it: the
+              machine was on battery when the fix landed and the POWER rule
+              forbids a timed match there, so the run is owed and named in the
+              step file rather than assumed.

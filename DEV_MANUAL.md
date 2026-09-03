@@ -1052,16 +1052,22 @@ down and neither reached silence, so **read a count and not a silent log**:
 | before S147 | 138 | -- | 3000 games |
 | S147 | 10, later measured 12 | 3 | 3000 games each |
 | S170 | **5** | **1** | 3000 games |
+| S171 | not yet measured | -- | run owed |
 
 S147 (2026-09-02) removed the truncation of a line the search had just proved.
 S170 the same day removed three more ways a **true** mate score lost its line --
 a score inherited across searches, a proof this search made and overwrote, and
-a score printed beside a line from another iteration. What is left is not a
-line defect at all: one search in 3000 games reports a mate at a distance the
-same position does not hold, so there is no line of that length to publish and
-the all-or-nothing rule refuses. **The standing figure is 5 lines from 1 search
-in 3000 games**, and **S171** owns it and the run that removes it. Anything
-materially above that has found something new.
+a score printed beside a line from another iteration. The five that were left
+were read at the time as a wrong mate distance; **S171 measured that reading and
+it is wrong (DEC-127)**. The distance is deliverable -- the 18-ply line exists
+and the same replay at `Hash=256` prints it -- and what failed was the walk,
+stalled five plies from the mate on one missing slot. `certified_mate_move()`
+now fills such a hole from the children of the position whose entry is gone.
+
+**The standing figure is still 5 lines from 1 search in 3000 games** until
+S171's own `--fast` run replaces it: the fix landed with the machine on battery
+and the POWER rule forbids a timed match there. Read a count against 5, and
+anything materially above it has found something new.
 
 The reproducible half of the same property is `test_mate_pv`, in the fast label
 since S147: every `info` line carrying a mate score over both S145 sets, 706 of
@@ -1069,6 +1075,29 @@ them at depth 8, asserted for length and for ending on checkmate. The two are
 complementary and neither replaces the other — this one names the FEN and the
 depth and runs in the completion gate, `-check-mate-pvs` sees the positions two
 engines actually meet.
+
+**When a count comes back above the standing figure**, the question is which
+table entry produced the score, and no cold search can answer it — a mate
+reported in a game comes out of entries earlier searches of that game wrote.
+`build/tools/mate_trace` is what asks:
+
+```
+build/tools/mate_trace --fen '<root fen>' --moves '<the game, uci>' \
+    --start 40 --warm 'nodes 1500000' --final 'depth 11' \
+    --line '<the pv it reported>' --needed 18
+```
+
+It replays the game through the real UCI layer — one process, one table, the
+shape `adocs/data/S170_replay.py` uses — and then walks the reported line over a
+board of its own, printing for each position the entry behind it: the score as
+stored, the score a reader at that distance from the root sees, the mate
+distance, the depth, the node type and the generation that wrote it. Past the
+line it follows the table's own best move, which is the walk
+`complete_mate_pv()` makes, so it stops where that walk stops; at a stall it
+prints every legal move and what the table holds one ply on, which is what says
+whether the hole is one a lookahead can fill. Nothing it does searches a node or
+writes an entry. `fastchess` prints the `Position;` and `Moves;` lines beside
+each warning, which is where its `--fen` and `--moves` come from. S171.
 
 **4. The defender-side set.** `adocs/data/S165_defender_set.tsv`, swept by
 `adocs/data/S165_nmp_defender_sweep.py`. Instruments 1 and 2 both ask "does the

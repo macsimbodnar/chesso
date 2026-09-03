@@ -81,3 +81,12 @@ target_link_libraries(truncation_scan PRIVATE chesso_engine)
 add_executable(feature_audit feature_audit.cpp)
 target_include_directories(feature_audit PRIVATE ../src)
 target_link_libraries(feature_audit PRIVATE chesso_engine Threads::Threads)
+
+# S171. What the table holds along a line the engine reported, after a game has
+# been replayed into it. Links the engine because the entry that answered is
+# the engine's own, in the state its own searches left it: nothing outside the
+# process can see it, which is why the reproduction that found the defect could
+# only say that the score was wrong and not where it came from.
+add_executable(mate_trace mate_trace.cpp)
+target_include_directories(mate_trace PRIVATE ../src)
+target_link_libraries(mate_trace PRIVATE chesso_engine)

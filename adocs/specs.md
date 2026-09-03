@@ -206,28 +206,40 @@ It asserts the mate lines it sees are complete, and asserts first that it saw
 any, so a case that stops reporting a mate fails loudly instead of passing
 vacuously.
 
-**The guarantee is over a mate distance the position holds, and there is a
-residual, DEC-125.** S170's own 3000-game run reports **5** `Incomplete mating
-PV` lines from one search, against **12** over three searches from S147's build
-and 138 from the engine before either. The one that is left is not a short
-line: the search reports `mate -9` where the same position asked on a cold
-table gives `mate -7` at depth 18 and holds it to depth 24, and `stockfish`
-says `#-7` at depth 30 and 36. No line of the claimed length exists, so the
-all-or-nothing rule refuses to publish one -- correctly. The mate distance is
-**S171**, which the BUGS rule puts first in the plan's Open list.
+**A fourth cause, and it is a hole in the table rather than a wrong score,
+since 2026-09-03, S171.** S170's own 3000-game run left **5** `Incomplete
+mating PV` lines from one search, against **12** over three searches from
+S147's build and 138 from the engine before either, and DEC-125 read that
+residual as a wrong distance. DEC-127 measured it and it is not: the reported
+`mate -9` is *deliverable* -- an 18-ply line from that root is legal throughout
+and ends in checkmate, and the same warm replay at `Hash=256` prints it and
+warns about nothing. The distance is sound and not optimal; the position's own
+value is `mate -7`, and naming a longer mate at depth 11 is the search and not
+the report. What went wrong at `Hash=16` was the walk: it stalled five plies
+from the mate on one missing slot.
+
+- **A slot the walk needs and the table has lost.** A collision takes one
+  position at a time and a mating line's nodes are scattered across the table,
+  so the children of a position whose entry is gone usually still have theirs.
+  When nothing can be read, `certified_mate_move()` looks one ply down and
+  takes the move whose child carries an **exact** score at exactly the distance
+  the line still owes. A bound is refused: a lower bound of "mate in n" leaves
+  a faster mate open, and a line built on one can be a road the position would
+  not take. `tools/mate_trace.cpp` is the instrument that found this -- it
+  replays a game through the UCI layer and prints the entry behind every
+  position on a reported line.
 
 **What is not covered, stated as a bound and not as an exception.** The
-guarantee is over a line the search itself produced. A mate score **read back
-from the transposition table** at an iteration too shallow to have found it is
-reported with the short line the iteration has: the score is right, having been
-proved by an earlier search of the same game, and the line that proved it has
-since been overwritten, so no walk can recover it. Measured over one 3000-game
-run at 8+0.08: `fastchess -check-mate-pvs` reported **138** such lines from the
-engine before S147 and **10** after, every one of the ten with a line exactly as
-long as its iteration was deep. Reproduced by replaying a game move by move
-through one process -- `mate -8` from depth 3 with three plies where sixteen are
-needed -- against the same position and time on a cold table, which reports no
-mate at any depth and `cp -725` at 15.
+guarantee is that a published mate line **reaches the mate its score claims**.
+It is not that the distance is the position's game-theoretic value: a
+depth-limited search can name a longer mate than the fastest one, and DEC-127
+is the measured case -- `mate -9`, an 18-ply line that does end in checkmate,
+for a position whose value is `mate -7`. Finding the shortest mate is a search
+property and belongs to the mate-breadth instruments, not here. The rate the
+line guarantee is measured at, over 3000-game runs at 8+0.08 with
+`fastchess -check-mate-pvs`: **138** lines from the engine before S147, **10**
+after it, **5** after S170. S171's own run is owed and the figure is not
+restated until it is taken.
 
 There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the
 parameters in `src/search_params.hpp` from constants the compiler folds into

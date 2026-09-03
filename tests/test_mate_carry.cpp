@@ -42,6 +42,10 @@
 // warm and no mate at any depth cold), and a mate proved inside this search
 // whose mid-line entry was evicted before the line could be walked (D --
 // reports `mate -6` cold as well).
+//
+// E is the fourth, added by S171: the walk stalls eight plies from the mate on
+// one missing slot, with the entry that certifies the continuation sitting in
+// the children of the position whose entry is gone.
 
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the case file"
@@ -63,11 +67,12 @@ struct case_t
   size_t start;
 
   // Whether this row is a case the guard asserts on. A row that is `no` is a
-  // reproduction kept for the step that owns it and not a property held here:
-  // `E_mate_minus9` reports `mate -9` where the engine's own cold search says
-  // the position is mate in 7 and stockfish agrees at depth 30 and 36, so
-  // there is no 18-ply line for it and refusing to publish one is correct.
-  // Asserting on it would be asserting that a wrong score gets a line.
+  // reproduction kept for the step that owns it and not a property held here.
+  // Every row is `yes` today: `E_mate_minus9` was the one exception, on the
+  // reading that its `mate -9` claimed a distance the position does not hold,
+  // and S171 measured that reading wrong -- an 18-ply mating line from that
+  // root exists and the engine publishes it once the walk can reach it.
+  // DEC-127.
   bool guard;
 };
 
@@ -257,6 +262,7 @@ static size_t expected_mate_lines(const std::string& name)
   if (name == "B_mate6_shallow") { return 7; }
   if (name == "C_mate7_depth11") { return 6; }
   if (name == "D_mate_minus6_depth10") { return 1; }
+  if (name == "E_mate_minus9") { return 9; }
 
   FAIL("unknown case " << name);
   return 0;

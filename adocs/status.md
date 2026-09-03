@@ -5,43 +5,49 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-02, by hand.
+Updated: 2026-09-03, by hand.
 
+- In progress: **S171**, in `adocs/plan_current/`. **Its premise was refuted by
+  its own first measurement and it is rescoped, DEC-127.** DEC-125 read S170's
+  residual -- 5 `Incomplete mating PV` lines from 1 search in 3000 games -- as a
+  mate distance the position does not hold. It is not: the reported `mate -9` is
+  *deliverable*, an 18-ply line from that root is legal throughout and ends in
+  checkmate (replayed with python-chess), and the **same warm replay at
+  `Hash=256` prints that line and warns about nothing**. The score is sound and
+  not optimal -- the position's value is `mate -7` -- and naming a longer mate at
+  depth 11 is the search, which is S148's and S154's ground. What failed at
+  `Hash=16` was the walk: it stalled five plies from the mate on one missing
+  slot. `tools/mate_trace.cpp` is the instrument that showed it -- it replays a
+  game through the real UCI layer and prints the table entry behind every
+  position on a reported line, following the table's own best move past the end
+  of it and, at a stall, printing what every child holds one ply on.
+  `certified_mate_move()` (`src/search.cpp`) is the fix: with nothing to read,
+  look one ply down and take the move whose child carries an **exact** score at
+  exactly the distance the line still owes. Reporting only, all-or-nothing per
+  DEC-122 unchanged. `tests/test_mate_carry.cpp` guards it with
+  `E_mate_minus9` promoted to `guard: yes` -- red first at `6 of 9 mate lines do
+  not reach their mate`, green at 0, 9 mate lines either way, 7.9 s. INV-6
+  discharged: 121512 / 800769 / 62907 at depth 9 and 639228 / 3430710 / 367858
+  at depth 12, `c3d5` / `e2a6` / `d7c8q` at both. Gate green in both builds,
+  24 tests, `./clang-format.sh --check` clean.
+- **What S171 still owes, and why it is not done.** One `fastchess.sh --fast`
+  run reporting **0** `Incomplete mating PV` lines. **`pmset -g ac` said "No
+  adapter attached"**, and the POWER rule forbids a timed match on battery
+  (DEC-109, and S024's drained run is why). So the run is owed, the standing
+  figure stays 5 lines from 1 search in 3000 games in `adocs/specs.md` and
+  beside instrument 3 in `DEV_MANUAL.md`, and neither document claims a silence
+  that has not been measured. Plug the machine in and it is the next thing.
 - Last done: S170 -- **a mate score the search did not itself prove is
-  reported with a line that reaches it.** Three causes were measured where the
-  step file assumed one, each told apart by asking the same position on a cold
-  table: a score inherited across searches, a proof this search made and then
-  overwrote, and a score printed beside a line from an *aborted* iteration --
-  which is not a table effect at all. One fix each, all reporting-only and all
-  under DEC-122. `proven_mate_line_t` keeps the last delivered line together
-  with the position each of its moves is played from, and a stalled walk asks
-  it by key **and** by remaining distance; two plies from the mate the
-  defender's move is looked for and taken only when *every* legal reply is
-  mated in one; and `complete_mate_pv()` -- no longer static -- is called on
-  the line about to be printed, against the score printed beside it. Each part
-  was isolated by measurement: the store alone took 6 short lines to 4, the
-  two-ply completion closed case D, the printed-score completion closed exactly
-  the three duplicated-depth lines of A, B and C. `tests/test_mate_carry.cpp`
-  is the guard, red at 6 first and green at 0, 6.6 s, and it is the first test
-  here that replays whole games through one process -- on a cold table none of
-  the three causes exists, which is why `test_mate_pv` cannot see any of them.
-  INV-6 discharged on identical node counts and best moves.
-  **The accepts was amended by the run, DEC-125.** One clean `--fast`, 3000
-  games in 1 h 56 m 48 s with 0 forfeits: **12** `Incomplete mating PV` lines
-  over 3 distinct searches from `ref-b3f82eb` and **5** over **1** from this
-  build, where it asked for none. The five are one search whose mate *distance*
-  is wrong -- `mate -9` in the game where the same position on a cold table
-  gives `mate -7` at depth 18 and holds it to depth 24, and `stockfish` says
-  `#-7` at depth 30 and again at 36 -- so no line of the claimed length exists
-  and refusing to publish one is DEC-122 working. That is **S171**.
+  reported with a line that reaches it.** Three causes, one fix each, all
+  reporting-only and all under DEC-122; `tests/test_mate_carry.cpp` is the
+  guard and `adocs/data/S170_replay.py` with `S170_cases.tsv` the
+  reproduction. Its own `--fast` run took 12 lines over 3 searches down to 5
+  over 1, and the 5 became S171 above.
 - Before it: S147 (**a mate line the search proved reaches its mate**, 54 short
   of 706 before and 0 after; DEC-122, DEC-123), S144 (**a citation in a plan
   document carries its own path**; DEC-120), S169 (**the 97 stale citations are
   re-anchored**; DEC-119), S143 (**the completion gate builds and tests
-  `build-tune` beside `build`**; DEC-118), S168 (**the constructed mate set is
-  three motifs and 82 positions**; DEC-117).
-- In progress: **nothing.** `adocs/plan_current/` is empty. S146 was the last
-  entry there and it is parked at DEC-126.
+  `build-tune` beside `build`**; DEC-118).
 - **S146 is parked, not blocked (DEC-126, 2026-09-02).** Its first half landed:
   `polyglot_randoms[781]` is DEC-121 -- format-defining specification, kept,
   cited at the array, with all 781 constants verified element by element
@@ -67,22 +73,15 @@ Updated: 2026-09-02, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S171**, which S170 created and DEC-125 scoped -- a mate distance the
-  engine reports is one the position holds, so the 5 lines from 1 search in
-  3000 games go. **It is first in the Open list under the BUGS rule**: a found
-  defect goes before anything else, and this one sits in the score, which is
-  the input every later measurement in the search block is taken against. It
-  reproduces in about twelve seconds without a match:
-  `python3 adocs/data/S170_replay.py --cases adocs/data/S170_cases.tsv --only
-  E_mate_minus9 --go "nodes 1500000" --start-override 40`. After it the
-  machine-light entries are
-  the behaviour-neutral pair (S020, S030), discharged on identical
-  `tools/search_bench.py` node counts and best moves plus a `hyperfine` timing.
+- Next: finish **S171** by taking its `--fast` run on mains power. After it the
+  machine-light entries are the behaviour-neutral pair (S020, S030), discharged
+  on identical `tools/search_bench.py` node counts and best moves plus a
+  `hyperfine` timing.
 - Blocked: **nothing.** S146 was the only entry here and it is parked rather
   than blocked now (DEC-126): parking is what an unblocking event with no date
   gets, so no slot is held against it.
-- Watching: nothing. The `--fast` run finished and its watcher exited on the
-  marker.
+- Watching: nothing. No run is armed; S171's is owed and cannot start on
+  battery.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**

@@ -1152,6 +1152,59 @@ static void record_mate_line(proven_mate_line_t* store,
 }
 
 
+// The score a node `ply` plies from the root carries while a mate is delivered
+// at ply `needed`. Two things decide it. The magnitude is the mate's distance
+// from the *root*, because that is what negamax returns and what the pair of
+// normalisation functions preserves. The sign alternates, because every score
+// in this tree is relative to the side to move, and the side that delivers the
+// mate is the one an odd number of plies away from it. S171.
+static int mate_score_at(size_t ply, size_t needed)
+{
+  const int value = MATE_MAX - static_cast<int>(needed);
+
+  return ((needed - ply) % 2 == 1) ? value : -value;
+}
+
+
+// The move whose child the table certifies at exactly the distance the line
+// still owes, or 0 when no child carries that claim.
+//
+// Reporting only, like everything else on this path: a generator, a make and
+// unmake per move and a probe. No store, no search, no node counted.
+//
+// Exact entries only. A bound is not a score -- a lower bound of "mate in n"
+// says the value is at least that and leaves open a faster mate, so a line
+// built on one can be a line the position does not play. The all-or-nothing
+// gate would catch a walk that fails to reach the mate, but not one that
+// reaches it at the claimed distance by a road the position would not take.
+// DEC-102 is the same rule on the other side of the table. S171.
+static move_t certified_mate_move(game_t* game,
+                                  const search_state_t* state,
+                                  const move_t* moves,
+                                  size_t count,
+                                  size_t played,
+                                  size_t needed)
+{
+  const int required = mate_score_at(played + 1, needed);
+
+  for (size_t i = 0; i < count; ++i) {
+    if (!make_move(game, moves[i])) { continue; }
+
+    const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
+
+    const bool certified =
+        entry != nullptr && entry->type == TT_PV_NODE &&
+        de_normalize_score(entry->score, played + 1) == required;
+
+    unmake_move(game);
+
+    if (certified) { return moves[i]; }
+  }
+
+  return 0;
+}
+
+
 // Reporting only, and it must stay that way: nothing here searches a node,
 // counts one, or writes to the table.
 //
@@ -1234,6 +1287,22 @@ void complete_mate_pv(game_t* game,
       if (next == 0) {
         const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
         next = (entry != nullptr) ? entry->best_move : 0;
+      }
+
+      // This position's entry is gone, but its children's need not be: a slot
+      // is lost to a collision one position at a time, and a mating line's
+      // nodes are scattered across the table rather than adjacent in it. So
+      // the move the missing entry would have named is looked for one ply
+      // down, in the children that still carry an exact score at the distance
+      // this line owes.
+      //
+      // S171, for the residual S170's own 3000-game run left: the walk stalled
+      // eight plies from the mate on a single missing slot, with the entry
+      // certifying the continuation sitting one ply below it. The claim it
+      // publishes is the table's own, at one more remove -- which is what the
+      // rest of this walk already does when it reads a best move.
+      if (next == 0) {
+        next = certified_mate_move(game, state, moves, count, played, needed);
       }
 
       // Two plies from the mate with nothing left to read: the table's entry
