@@ -1,6 +1,7 @@
 // S172. Builds a Polyglot opening book from a PGN, and reads one back.
 //
 //   make_book build <pgn> --out <bin> [--max-ply N] [--min-games N]
+//                   [--allow-cut-short]
 //   make_book dump  <bin> [--top N]
 //
 // Until this existed nothing in the repository could produce the book the
@@ -269,7 +270,30 @@ struct build_options_t
   std::string out;
   int max_ply = 16;
   uint32_t min_games = 1;
+  // S174. A game the parser could not follow to the end is a refusal by
+  // default: the positions after the bad token are unknown, and a count that
+  // is only reported is a count nobody reads. The flag turns it back into the
+  // report, for a collection where a few broken games are expected.
+  bool allow_cut_short = false;
 };
+
+
+// Says which game was cut and where, so the PGN can be fixed or the flag
+// passed knowingly. Capped: a collection with thousands of broken games is
+// answered by the count, not by a screen per game.
+void report_cut_short(uint64_t rejected_so_far,
+                      uint64_t game_number,
+                      const char* what)
+{
+  constexpr uint64_t REPORT_LIMIT = 20;
+
+  if (rejected_so_far <= REPORT_LIMIT) {
+    fprintf(stderr, "game %llu cut short: %s\n",
+            (unsigned long long)game_number, what);
+  } else if (rejected_so_far == REPORT_LIMIT + 1) {
+    fprintf(stderr, "further cut-short games not listed\n");
+  }
+}
 
 
 // Two for a win, one for a draw, nothing for a loss, all from the moving side's
@@ -328,13 +352,14 @@ int build(const build_options_t& options)
 
     if (!load_FEN(start, &game)) {
       ++rejected_games;
+      report_cut_short(rejected_games, games + 1, "the FEN tag does not load");
+      ++games;
       continue;
     }
 
     const std::vector<std::string> tokens = movetext_to_san(pgn_game.movetext);
 
     int ply = 0;
-    bool ok = true;
 
     for (const std::string& token : tokens) {
       if (ply >= options.max_ply) { break; }
@@ -346,7 +371,15 @@ int build(const build_options_t& options)
       if (move == 0 || !make_move(&game, move)) {
         // One unparseable token poisons every position after it, so the game is
         // dropped from that point rather than resynchronised at a wrong board.
-        ok = false;
+        // S174: before it, a token the parser could not read came back as a
+        // fabricated move in Release, so this branch never ran and the board
+        // was rewritten instead.
+        ++rejected_games;
+        report_cut_short(
+            rejected_games, games + 1,
+            (std::string(move == 0 ? "cannot parse '" : "cannot play '") +
+             token + "' at ply " + std::to_string(ply))
+                .c_str());
         break;
       }
 
@@ -358,9 +391,21 @@ int build(const build_options_t& options)
       ++plies;
     }
 
-    if (!ok) { ++rejected_games; }
-
     ++games;
+  }
+
+  // S174. The gate. Until now this was a line in the report, and a report of
+  // "0 games cut short" from a parser that could not fail was not evidence of
+  // anything; now a cut-short game refuses the build unless the caller has said
+  // that is acceptable, and the refusal happens before the output is touched.
+  if (rejected_games > 0 && !options.allow_cut_short) {
+    fprintf(stderr,
+            "%llu game(s) cut short -- book not written. Every position after "
+            "an unreadable token is unknown; fix the PGN, or pass "
+            "--allow-cut-short to drop each such game from that point and "
+            "build from the rest.\n",
+            (unsigned long long)rejected_games);
+    return 1;
   }
 
   // Sorted by key, which the format requires and the engine's binary search
@@ -582,6 +627,7 @@ void usage()
   fprintf(stderr,
           "usage:\n"
           "  make_book build <pgn> --out <bin> [--max-ply N] [--min-games N]\n"
+          "                  [--allow-cut-short]\n"
           "  make_book dump  <bin> [--top N]\n");
 }
 
@@ -619,9 +665,23 @@ int main(int argc, char** argv)
   build_options_t options;
   options.pgn = argv[2];
 
-  for (int i = 3; i + 1 < argc; i += 2) {
+  for (int i = 3; i < argc; ++i) {
     const std::string flag = argv[i];
-    const std::string value = argv[i + 1];
+
+    if (flag == "--allow-cut-short") {
+      options.allow_cut_short = true;
+      continue;
+    }
+
+    // Everything else takes a value. The old pairwise loop skipped a trailing
+    // flag with no value silently; a flag that is not read is a flag the caller
+    // believes was.
+    if (i + 1 >= argc) {
+      fprintf(stderr, "flag '%s' needs a value\n", flag.c_str());
+      return 1;
+    }
+
+    const std::string value = argv[++i];
 
     if (flag == "--out") {
       options.out = value;

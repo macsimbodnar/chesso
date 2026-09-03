@@ -1979,7 +1979,9 @@ and then finds nothing, silently — and it reads one back:
 
 ```bash
 # From a PGN. --max-ply is how deep a book line goes, --min-games how many
-# games a move needs before it is written at all.
+# games a move needs before it is written at all. A game the parser cannot
+# follow to its end refuses the whole build; --allow-cut-short drops such
+# games from the bad token on and builds from the rest.
 build/tools/make_book build books/8moves_v3.pgn --out /tmp/x.bin \
     --max-ply 16 --min-games 1
 
@@ -2000,6 +2002,22 @@ engine loaded it. `build` now checks the stream after the write, deletes the
 partial file and exits non-zero — but if a book reaches you by any other route,
 its digest is the only thing that says it is whole.
 
+**A cut-short game refuses the build, and `games cut short 0` is evidence
+since S174 and not before.** `algebraic_to_move` — the engine's SAN parser,
+which this tool and `pgn_to_positions` both read moves through — used to fail
+with `assert(false)` and no return, so the Release build handed back a
+fabricated move that `make_move` applied: at `1d8cbac`, `1. e4!? e5 2. Nf3
+Nc6 *` built a `loadable` book whose first entry was the start position with
+move `a8a7`, reported `games cut short 0` and exited 0
+(2026-09-03_adversarial-F02). The parser returns 0 for a token it cannot read
+and strips PGN suffix annotations (`!`, `?`, `!?`, `?!`, `!!`, `??`) as it
+strips `+` and `#`; `build` exits non-zero and writes nothing when any game was
+cut short, naming the game and the token on stderr (the first twenty).
+`--allow-cut-short` is the deliberate form of the old behaviour: such a game is
+dropped from the bad token on and the count is reported.
+`tests/test_make_book_tools.sh` holds all of it, and the shipped book rebuilt
+through the gated tool is byte-identical to the committed file.
+
 Weights are two for a win, one for a draw and nothing for a loss, from the
 moving side's point of view, summed over every game that played the move; an
 entry that ends at zero is dropped, since the engine's weighted draw could never
@@ -2010,7 +2028,9 @@ play it. Weights are clamped to 65535 and the build reports how many were.
 Never by reading it. See `CLAUDE.md` and DEC-023.
 
 ```bash
-# SAN moves, one per line or whitespace separated, no move numbers
+# SAN moves, one per line or whitespace separated, no move numbers. Suffix
+# annotations (e4!?) are fine; a token the parser cannot read exits 1 naming
+# the ply instead of printing a position that never occurred (S174).
 build/tools/pgn_to_positions < moves.txt > positions.tsv
 tools/analyse_game.py positions.tsv --engine ~/.local/bin/stockfish --depth 18
 ```

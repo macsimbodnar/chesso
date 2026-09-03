@@ -277,7 +277,14 @@ books/8moves_v3.pgn --out src/openings.bin` at the tool's defaults --
 because the output is sorted. The input is the committed CC0-1.0
 `books/8moves_v3.pgn`, pinned by both digests in `books/fetch_book.sh`; the SAN
 is read by the engine's own `algebraic_to_move` and keyed by its own `get_key`,
-so no other engine's code, table or binary is anywhere in the path. It replaced
+so no other engine's code, table or binary is anywhere in the path. **Since
+S174 that parser fails closed**: a SAN token it cannot read returns no move in
+every build instead of the fabricated one the Release build used to apply, PGN
+suffix annotations (`!`, `?` and their pairs) are ignored like `+` and `#`, and
+`make_book build` refuses to write when any game was cut short unless
+`--allow-cut-short` says to drop such games from the bad token on -- so the
+`games cut short 0` the digest above rests on is a gate and not a report
+(2026-09-03_adversarial-F02). It replaced
 a 2610256-byte, 163141-entry book inherited from the `bitboard` branch whose
 origin no document, commit or person could establish -- that book is deleted,
 which is the ruling DEC-131 records. `OwnBook` defaults false and no measurement

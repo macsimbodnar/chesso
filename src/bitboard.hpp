@@ -113,6 +113,8 @@ std::string move_to_algebraic(game_t* game,
                               move_t encoded_move,
                               const move_t moves[],
                               size_t moves_size);
+// SAN to a legal move in the current position, or 0 when the token does not
+// parse or matches no legal move. Trailing `+`, `#`, `!` and `?` are ignored.
 move_t algebraic_to_move(std::string notation, game_t* game);
 bool is_pv_legal(game_t* game, const pv_t* pv);
 

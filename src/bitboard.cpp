@@ -2267,9 +2267,13 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   // if (notation.back() == '+') { is_check = true; }
   // if (notation.back() == '#') { is_mate = true; }
 
-  // Remove any trailing check ('+') or checkmate ('#') symbols.
+  // Remove trailing check ('+'), checkmate ('#') and PGN suffix annotation
+  // ('!', '?') marks. None of them says anything about the move itself, and
+  // published PGN writes them in that order: `Qxf7+!?`. S174: before it, the
+  // annotation stayed in the token and the token matched no legal move.
   while (!notation.empty() &&
-         (notation.back() == '+' || notation.back() == '#')) {
+         (notation.back() == '+' || notation.back() == '#' ||
+          notation.back() == '!' || notation.back() == '?')) {
     notation.pop_back();
   }
 
@@ -2415,24 +2419,32 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   result.promoted_to = promo;
 
   // The destination square is the last two characters of the cleaned string.
+  //
+  // S174 (2026-09-03_adversarial-F02): every failure below returns 0, in every
+  // build. These paths used to be `assert(false)` with no return, so the
+  // Release build fell through to NEW_MOVE() with whatever the partial parse
+  // had left in `result` and the caller applied a fabricated move. A token
+  // that does not parse is input, not an invariant, and 0 is what every
+  // caller already tests for.
   if (cleaned.size() < 2) {
-    // Error: not enough characters to form a square.
-
     LOG_E << "Wrong formatting. Invalid Algebraic notation: "
           << original_notation << END_E;
-    assert(false);
+    return 0;
   }
 
-  std::string dest_square = cleaned.substr(cleaned.size() - 2, 2);
-  index_t to_index = str_to_index(dest_square);
-  result.to = to_index;
+  const std::string dest_square = cleaned.substr(cleaned.size() - 2, 2);
 
-  if (result.to >= INVALID_INDEX) {
+  // str_to_index() asserts its input is a square and, with the assert off,
+  // wraps an unsigned index off the board -- the same reason load_FEN() checks
+  // the en-passant field before calling it.
+  if (dest_square[0] < 'a' || dest_square[0] > 'h' || dest_square[1] < '1' ||
+      dest_square[1] > '8') {
     LOG_E << "Invalid destination square. Invalid Algebraic notation: "
           << original_notation << END_E;
-
-    assert(false);
+    return 0;
   }
+
+  result.to = str_to_index(dest_square);
 
   if (is_capture) {
     // Attempt to use the destination as capture piece
@@ -2483,8 +2495,7 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   if (!found) {
     LOG_E << "No legal move found. Invalid Algebraic notation: "
           << original_notation << END_E;
-
-    assert(false);
+    return 0;
   }
 
   return NEW_MOVE(result.from, result.to, result.piece, result.promoted_to,

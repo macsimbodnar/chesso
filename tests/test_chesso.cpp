@@ -290,6 +290,77 @@ TEST_SUITE("Test utils")
       REQUIRE(generated_move == move);
     }
   }
+
+  // S174, 2026-09-03_adversarial-F02. The parser's three failure paths used to
+  // be `assert(false)` with no return, so the Release build handed the caller a
+  // move built from the partial parse -- `from` 0, a piece letter, a `to` that
+  // could exceed 63 -- and make_move() applied it. Every caller tests for zero,
+  // so zero is the contract; an unparseable token is input, not an invariant.
+  TEST_CASE("algebraic_to_move returns 0 for what it cannot parse")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    SUBCASE("too short to hold a destination square")
+    {
+      CHECK(algebraic_to_move("N", &game) == 0);
+      CHECK(algebraic_to_move("e", &game) == 0);
+      CHECK(algebraic_to_move("x", &game) == 0);
+      CHECK(algebraic_to_move("", &game) == 0);
+      // Annotations only: stripping them leaves nothing.
+      CHECK(algebraic_to_move("!?", &game) == 0);
+    }
+
+    SUBCASE("a destination off the board")
+    {
+      CHECK(algebraic_to_move("Nz9", &game) == 0);
+      CHECK(algebraic_to_move("e9", &game) == 0);
+      CHECK(algebraic_to_move("i4", &game) == 0);
+      CHECK(algebraic_to_move("a0", &game) == 0);
+    }
+
+    SUBCASE("a well-formed token matching no legal move")
+    {
+      CHECK(algebraic_to_move("Qxf7", &game) == 0);
+      CHECK(algebraic_to_move("e5", &game) == 0);
+      CHECK(algebraic_to_move("Nf6", &game) == 0);
+      CHECK(algebraic_to_move("Ke2", &game) == 0);
+      CHECK(algebraic_to_move("Zf3", &game) == 0);
+    }
+  }
+
+  // PGN suffix annotations (`!`, `?`, `!?`, `?!`, `!!`, `??`) follow the check
+  // marker and are ordinary in published PGN. They mean nothing to the board
+  // and are stripped the way `+` and `#` are; before S174 `e4!?` was parsed
+  // with the annotation as part of the token and fabricated a move (F02).
+  TEST_CASE("algebraic_to_move ignores suffix annotations")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    const move_t e4 = algebraic_to_move("e4", &game);
+    REQUIRE(e4 != 0);
+
+    for (const char* annotated :
+         {"e4!", "e4?", "e4!?", "e4?!", "e4!!", "e4??"}) {
+      CAPTURE(annotated);
+      CHECK(algebraic_to_move(annotated, &game) == e4);
+    }
+
+    // With a check marker in front of the annotation, as PGN writes it. The
+    // position is reached through the engine's own parser and make_move(),
+    // never by hand.
+    for (const char* san : {"e4", "e5", "Qh5", "Nc6", "Bc4", "Nf6"}) {
+      const move_t move = algebraic_to_move(san, &game);
+      REQUIRE(move != 0);
+      REQUIRE(make_move(&game, move));
+    }
+
+    const move_t mate = algebraic_to_move("Qxf7#", &game);
+    REQUIRE(mate != 0);
+    CHECK(algebraic_to_move("Qxf7", &game) == mate);
+    CHECK(algebraic_to_move("Qxf7#!", &game) == mate);
+    CHECK(algebraic_to_move("Qxf7#!!", &game) == mate);
+    CHECK(algebraic_to_move("Qxf7+?!", &game) == mate);
+  }
 }
 
 

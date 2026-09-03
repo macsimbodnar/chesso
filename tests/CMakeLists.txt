@@ -220,6 +220,19 @@ add_test(NAME test_clang_format_script
                       ${CMAKE_SOURCE_DIR}/clang-format.sh)
 set_tests_properties(test_clang_format_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S174: the two tools that sit on algebraic_to_move(), run on fixture PGNs.
+# 2026-09-03_adversarial-F02 -- the parser's failure paths were `assert(false)`
+# with no return, so in Release an unparseable SAN token became a fabricated
+# move that make_move() applied, and make_book wrote a loadable book from a
+# rewritten board while pgn_to_positions -- the DEC-023 board tool -- printed
+# positions that never occurred, both with exit 0. Nothing in tests/ ran either
+# tool. Same shape as the script tests above: fixtures in a throwaway directory,
+# no engine searched. The binaries come from tools/, hence the target files.
+add_test(NAME test_make_book_tools
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_make_book_tools.sh
+                      $<TARGET_FILE:make_book> $<TARGET_FILE:pgn_to_positions>)
+set_tests_properties(test_make_book_tools PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S084: the SPSA driver. Python, and the first test in this directory that is
 # neither doctest nor shell -- the driver is a tool and the objective it has to
 # be right about is a noisy quadratic, not a chess position.

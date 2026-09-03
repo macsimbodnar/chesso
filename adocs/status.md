@@ -8,6 +8,32 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
+- Last done: **S174, 2026-09-04 -- the SAN parser fails closed and `make_book`
+  gates on it.** `algebraic_to_move()`'s three failure paths were `assert(false)`
+  with no return, so in Release a token it could not read became a fabricated
+  move that `make_move()` applied and the board was rewritten, not left illegal.
+  Now each returns 0 in every build, the destination square is range-checked
+  before `str_to_index()` (which asserts, and otherwise wraps), and PGN suffix
+  annotations (`!`, `?` and their pairs) are stripped in the same loop as
+  `+`/`#` -- in the parser, not in `make_book`'s tokenizer as the step first
+  said, because `pgn_to_positions` needs it too. `make_book build` refuses to
+  write when any game was cut short, names the game and the token on stderr,
+  and `--allow-cut-short` is the deliberate form of the old report; a trailing
+  flag with no value is an error now instead of silently skipped. **Red
+  observed first**: 23 assertions over 2 new `test_chesso` cases and 9 of the
+  fixture test's checks failed on the unfixed tree, green after; fast suite
+  25/25 in both builds. **INV-6 identical**: 121512 / 800769 / 62907 and
+  639228 / 3430710 / 367858, `c3d5` / `e2a6` / `d7c8q`. The shipped book is
+  untouched -- digest `3b89a4ad...15b873dd` -- and rebuilding it through the
+  gated tool is byte-identical with 0 games cut short, so S146's `0 cut short`
+  is a gate's word now. `DEV_MANUAL.md` and `adocs/specs.md` say so;
+  `MANUAL.md` needed nothing, no UCI surface moved.
+- **Discovered while doing S174, filed as S178, not folded in.** Run on the PGN
+  import form (`1.e4 e5 2.Nf3`, no space), the fixed tools refuse at ply 0 and
+  name the token -- honest, where before S174 the parser fabricated a move from
+  `1.e4` and built from a rewritten board. `movetext_to_san()` should split the
+  glued move number; `books/8moves_v3.pgn` has no such token (grep 0), so the
+  shipped book is unaffected and the step sits after the audit batch.
 - **Audit 2026-09-03, digested 2026-09-04
   (`adocs/audit/2026-09-03_adversarial.md`).** Adversarial, whole engine, cold
   context. **No high, 2 medium, 2 low**; fast suite 24/24 green and both
@@ -41,7 +67,7 @@ Updated: 2026-09-04, by hand.
   DEC-013, origin in git. Whether that wants a DEC-121-style provenance sentence
   at the table, a regeneration under a project seed, or nothing is the owner's
   call, asked and not decided.
-- Last done: **S146, 2026-09-03 -- the book the engine ships with is built by
+- Before S174: **S146, 2026-09-03 -- the book the engine ships with is built by
   this project, from a source it can account for.** The owner took the second of
   DEC-126's three standing options: the unaccounted blob is **deleted**, and
   `src/openings.bin` is now `build/tools/make_book build books/8moves_v3.pgn
@@ -178,12 +204,11 @@ Updated: 2026-09-04, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S174**, first of the 2026-09-03 audit batch -- the SAN parser fails
-  closed and `make_book` gates on it. Then S175 (Polyglot key and book rebuild,
-  which uses `make_book`), S176, S177. S020 resumes after the batch; it is
-  behaviour-neutral and discharges on identical `tools/search_bench.py` node
-  counts and best moves plus a `hyperfine` timing. **On the desktop
-  workstation, S171's census comes first.**
+- Next: **S175**, second of the audit batch -- `get_key()` finds the en-passant
+  capturer by file, the audit's red test is registered, `src/openings.bin` is
+  rebuilt through the now-gated `make_book` (the digest moves: 7 keys), and the
+  python-chess conformance script is committed. Then S176, S177; S020 resumes
+  after the batch. **On the desktop workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
