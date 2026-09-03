@@ -5,9 +5,42 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-03, by hand.
+Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
+- **Audit 2026-09-03, digested 2026-09-04
+  (`adocs/audit/2026-09-03_adversarial.md`).** Adversarial, whole engine, cold
+  context. **No high, 2 medium, 2 low**; fast suite 24/24 green and both
+  `search_bench` baselines reproduce to the node; the project's own rules turned
+  up nothing; every technique found behind the literature already has a step
+  (S114, S098, S109, S091, S095, S097, S099, S131, S112, S022, S119, S039, S121,
+  S122). Both mediums are in the code S172 and S146 shipped and were found by
+  re-deriving the shipped book independently with python-chess, not by reading
+  the stamps. **F01** `get_key()` wraps round the board edge for an en-passant
+  square on the a/h file -- 7 of 172232 shipped entries carry the wrong key, and
+  a third-party book is silently abandoned at any such position. **F02**
+  `algebraic_to_move()` fabricates a move instead of returning 0 in Release, so
+  `make_book` and `pgn_to_positions` (the DEC-023 board tool) run on silently
+  on a rewritten board -- `1. e4!? e5` builds a `loadable` book with move `a8a7`
+  from the start position, exit 0. The shipped book is nonetheless verified
+  correct move for move and weight for weight; only the 7 keys differ. **F03**
+  `rating.sh` and `build_release.sh` die on `nproc` before any marker is armed.
+  **F04** `position fen` drops a 4/5-field FEN silently, and a bad FEN resets to
+  the last FEN without its moves. **All four are steps, S174 to S177, at the
+  head of the Open list** (BUGS rule); none owes a match. Of 33 prior code-audit
+  findings, 27 are closed on re-measurement, 3 accepted, 3 planned in pending
+  steps; two earlier reports still read `planned`/`open` on items now closed
+  (2026-08-22 F01, F03), which a re-run records. The unregistered red test
+  `tests/test_audit_polyglot_key.cpp` is committed with the report and S175
+  registers it. `2026-08-13_plan_review.2-F06` had no trace in S023, whose
+  `accepts` already carries its resolution; `closes:` is set now.
+- **One owner question is open from the audit's clean list.** The 128 magic
+  constants in `src/bb_tables.hpp` were generated in-repo (`a5dbe68`,
+  2023-03-28) by a generator using the xorshift seed the `bitboard` series used,
+  so they coincide with that series' published set. Inherited foundation under
+  DEC-013, origin in git. Whether that wants a DEC-121-style provenance sentence
+  at the table, a regeneration under a project seed, or nothing is the owner's
+  call, asked and not decided.
 - Last done: **S146, 2026-09-03 -- the book the engine ships with is built by
   this project, from a source it can account for.** The owner took the second of
   DEC-126's three standing options: the unaccounted blob is **deleted**, and
@@ -145,12 +178,12 @@ Updated: 2026-09-03, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S020**, the first entry in `plan.md`'s Open list -- compute the
-  in-check state once per node instead of once per call site. It is
+- Next: **S174**, first of the 2026-09-03 audit batch -- the SAN parser fails
+  closed and `make_book` gates on it. Then S175 (Polyglot key and book rebuild,
+  which uses `make_book`), S176, S177. S020 resumes after the batch; it is
   behaviour-neutral and discharges on identical `tools/search_bench.py` node
-  counts and best moves plus a `hyperfine` timing, so it is machine-light and
-  does not want the idle machine S171 does. S030 is the other half of that
-  pair. **On the desktop workstation, S171's census comes first.**
+  counts and best moves plus a `hyperfine` timing. **On the desktop
+  workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran

@@ -8,7 +8,7 @@ accepts:    an SPRT returns a verdict; the ordering bands stay disjoint, dischar
 touches:    src/evaluation.cpp score_move, src/data_structures.hpp search_state_t
 excludes:
 decisions:
-closes:
+closes:     2026-08-13_plan_review.2-F06
 blocks:
 paused_by:
 done:
