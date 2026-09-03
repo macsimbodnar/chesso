@@ -1940,17 +1940,37 @@ ps -eo pid,etime,cmd | grep '[t]ail -f'
 Not the match books under `books/` — this is the book the *engine* plays from,
 off by default and enabled with `setoption name OwnBook value true`.
 
-`src/openings.bin` is the built-in one: 2610256 bytes, 163141 Polyglot entries,
-linked into the binary by `.incbin` from `src/openings_embedded.S`. It is the
-raw file, not a header — editing it and rebuilding is all it takes to ship a
-different book, and `OBJECT_DEPENDS` in `src/CMakeLists.txt` is what makes the
-rebuild happen. Its origin is still unrecorded and is S146's question, not this
-tooling's; the digest is what pins it:
+`src/openings.bin` is the built-in one: 2755712 bytes, 172232 Polyglot entries
+over 129613 positions, linked into the binary by `.incbin` from
+`src/openings_embedded.S`. It is the raw file, not a header — editing it and
+rebuilding is all it takes to ship a different book, and `OBJECT_DEPENDS` in
+`src/CMakeLists.txt` is what makes the rebuild happen.
+
+**This project builds it, and these two commands are the whole origin** (S146,
+DEC-131). The input is the committed CC0-1.0 `books/8moves_v3.pgn`, which
+`fetch_book.sh` pins by both digests; the moves are read by the engine's own
+`algebraic_to_move` and keyed by its own `get_key`, so nothing in the path comes
+from another engine:
 
 ```bash
+./books/fetch_book.sh 8moves_v3.pgn
+build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin
+
 shasum -a 256 src/openings.bin
-# 47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5
+# 3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd
 ```
+
+The build is deterministic — output is sorted by key and then by weight, so the
+digest above is reproducible from the PGN — and the defaults are the ones used:
+`--max-ply 16`, which is the full depth of every line in that PGN, and
+`--min-games 1`, which drops nothing. Because every game in it is recorded
+`1/2-1/2`, an entry's weight is exactly the number of book lines that played the
+move.
+
+The book this replaced was 2610256 bytes and 163141 entries, sha256
+`47a81735…ce78fb5`. It was inherited from the `bitboard` branch, no document or
+commit recorded where it came from, and the owner could not place it, so it was
+deleted rather than shipped unaccounted for.
 
 `build/tools/make_book` is the only thing in the tree that can produce such a
 file. It builds one from a PGN with the engine's own parser and the engine's own
@@ -1971,6 +1991,14 @@ build/tools/make_book dump src/openings.bin --top 10
 number of sixteen-byte entries, and the keys are sorted — and exits non-zero
 when either fails, so a book it calls `loadable` is a book `Book File` will
 accept.
+
+**`loadable` does not mean complete, and neither check can make it mean that.**
+Entries are 16 bytes and sorted, so *any prefix of a book is also a valid book*.
+Found while doing S146: writing the 2755712-byte book onto a 1 MB volume left
+901120 bytes, `dump` called the result `loadable` with 56320 entries, and the
+engine loaded it. `build` now checks the stream after the write, deletes the
+partial file and exits non-zero — but if a book reaches you by any other route,
+its digest is the only thing that says it is whole.
 
 Weights are two for a win, one for a draw and nothing for a loss, from the
 moving side's point of view, summed over every game that played the move; an

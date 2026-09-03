@@ -430,6 +430,20 @@ int build(const build_options_t& options)
                static_cast<std::streamsize>(bytes.size()));
   output.close();
 
+  // S146. A short write is the one failure this tool can survive and must not:
+  // the entries are 16 bytes each and sorted, so any prefix of them is also a
+  // whole number of sorted entries. `dump` called a truncated book loadable and
+  // the engine loaded it -- observed, writing 2755712 bytes onto a 1 MB volume
+  // produced 901120 bytes, 56320 entries, verdict `loadable`, exit 0. The
+  // partial file goes with the error for the same reason: a book that validates
+  // is one somebody will ship.
+  if (!output.good()) {
+    fprintf(stderr, "short write to '%s' -- book not written\n",
+            options.out.c_str());
+    std::remove(options.out.c_str());
+    return 1;
+  }
+
   printf("games read           %llu\n", (unsigned long long)games);
   printf("games cut short      %llu\n", (unsigned long long)rejected_games);
   printf("plies used           %llu\n", (unsigned long long)plies);

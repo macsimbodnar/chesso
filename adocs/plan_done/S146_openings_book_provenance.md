@@ -1,14 +1,24 @@
 id:         S146
 goal:       the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does
 accepts:    `src/openings.book`'s origin, author and licence are established and written down where a reader will find them, or -- if they cannot be established -- the file is replaced by a book this project can account for and the replacement's provenance is recorded the way `books/fetch_book.sh` records the match books, with both digests and the licence named; whichever way it goes is a recorded decision, because this is the owner's call and not an agent's; the engine's book behaviour is unchanged or its change is measured, since `Use Book` defaults false and a book swap only alters play when it is switched on; `MANUAL.md` documents what the shipped book is; the `polyglot_randoms[781]` table (`src/openings.cpp:44`) gets the same owner ruling -- either format-defining constants are the published spec rather than a copied table, recorded as a decision and cited at the table, or the Polyglot path goes with the blob (2026-08-22_adversarial-F06)
-touches:    src/openings.book, src/openings.cpp, MANUAL.md, adocs/decisions.md
+touches:    src/openings.bin, src/openings_embedded.S, src/openings.cpp, tools/make_book.cpp, tests/test_openings.cpp, MANUAL.md, DEV_MANUAL.md, adocs/specs.md, adocs/decisions.md
 excludes:   the match books under `books/`, which `books/fetch_book.sh` already pins with licences; making the engine read a book from disk instead of from the binary, which is a feature and would need its own step and verdict
 decisions:  DEC-016
 closes:     2026-08-22_adversarial-F06
 blocks:
 paused_by:
 author:     agent (Claude Opus 5), coordinator, 2026-09-02
-done:
+done:       2026-09-03. **The unaccounted book is deleted and the shipped one is built here.** The owner took the second of DEC-126's three standing options: `src/openings.bin` is now `build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin` at the tool's defaults -- **2755712 bytes, 172232 entries over 129613 positions, sha256 `3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`**. The input is the committed CC0-1.0 `books/8moves_v3.pgn`, already pinned by both digests in `books/fetch_book.sh` from this step's first half; the SAN is read by the engine's own `algebraic_to_move` and keyed by its own `get_key`, so no other engine's code, table or output is anywhere in the path. **The 163141-entry blob is gone from the tree**, recoverable from `62d07d4` and nowhere else. DEC-131 is the ruling. What unparked the step after one day was not new evidence about the blob -- DEC-126's refutation stands, the PGN shares only 7.6 % of the old book's positions and this is a different book, not a re-attribution -- it was S172 building `tools/make_book`, which is what "build a replacement" had always needed and never had.
+
+            **The build is reproducible and that is the property the old file could never have.** `make_book` sorts its output by key and then by weight, so the digest is a function of the PGN: two runs from the same input are byte-identical, verified with `cmp`. Defaults were used and both are the right ones rather than the convenient ones -- `--max-ply 16` is the full depth of every line in that PGN (**34700 games, 0 cut short, 555200 plies, exactly 34700 x 16**) and `--min-games 1` drops nothing, so the file represents the PGN faithfully and nothing was tuned into it. `make_book dump` reports `loadable`, and the engine plays from it both ways: `Best Book Move` true gives `e2e4`, the heaviest entry at weight 12956, and the weighted draw over twelve runs gave e2e4 6, d2d4 3, c2c4 2, b2b3 1.
+
+            **No SPRT is owed and the reasoning is S172's, not a shortcut.** `OwnBook` defaults false and S158 established that no measurement this project has ever taken played a book move, so a different book changes no verdict on record. **INV-6 discharged on the default configuration**: 121512 / 800769 / 62907 at depth 9 and 639228 / 3430710 / 367858 at depth 12, `c3d5` / `e2a6` / `d7c8q` at both, identical to the figures on record. Weight now means something it never did -- every game in that PGN is recorded `1/2-1/2`, so an entry's weight is the count of the 34700 lines that played the move.
+
+            **One defect found and fixed in scope, and it was worse than the report of it.** The step's fast check over S172's diff flagged that `make_book build` never checked its output stream. Reproduced rather than assumed, on a 1 MB HFS ram disk: the tool wrote **901120 of 2755712 bytes, printed `bytes 2755712 -> <path>` and exited 0**. The severity is the part the report missed -- entries are 16 bytes and sorted, so *any prefix of a book is also a valid book*: `make_book dump` called the truncated file **`loadable`** with 56320 entries, and the engine loaded it. Every validator in the tree accepted a book missing two thirds of its content. `build` now checks the stream after the write, deletes the partial file and exits 1 -- observed red before and green after on the same ram disk. It is not a ctest: there is no test target for the tool and forcing an `ofstream` short write is not portable (macOS has no `/dev/full`), so the reproduction is recorded here and the hazard is written into `DEV_MANUAL.md` where someone handed a book by another route will read it.
+
+            **The stale citations went with the blob**, which is the second thing this step was asked to settle. `src/openings.book` had not existed since `62d07d4` and this file's own reproduction commands still `sed`-ed a `#define BOOK` out of it. Re-anchored: `DEV_MANUAL.md` and `adocs/specs.md` carry the new figures and the two commands that reproduce them, `MANUAL.md` gains "The book it ships with", `src/openings_embedded.S` carries the origin at the bytes themselves, and the two "163141 entries" comments in `src/openings.cpp` and `tests/test_openings.cpp` are corrected. The `polyglot_randoms[781]` half of `accepts` needed nothing: it was settled at DEC-121 on 2026-09-02 and is untouched.
+
+            Completion gate, both builds green: `build` **24/24**, `build-tune` **24/24**, `./clang-format.sh --check` exit 0, machine load 2.4 on eight cores. `test_uci_surface` needed no refresh -- DEC-129's option names, types and defaults are unchanged and only the bytes behind `<embedded>` moved. `README.md` untouched.
 
 ## What was found
 
@@ -225,3 +235,54 @@ Everything the episode did settle is committed and does not need redoing:
 `books/fetch_book.sh` by both digests against the CC0-1.0 upstream. What
 remains is one question -- the origin of `src/openings.book` -- and the
 fingerprint above is what answers it.
+
+## Unparked and closed 2026-09-03, DEC-131
+
+The owner's ruling: delete the unaccounted book, build the shipped one here from
+`books/8moves_v3.pgn` with `tools/make_book`. What made it available was S172 —
+until 2026-09-03 nothing in this repository could produce a Polyglot book, so
+"build a replacement" named a tool that did not exist.
+
+**Everything above this heading is the search for the old blob's origin, and it
+is history now.** The commands in "Identifiers" that `sed` a `#define BOOK "…"`
+hex string out of `src/openings.book` do not run: that file was replaced by the
+raw `src/openings.bin` at `62d07d4` (S172) and its contents deleted here. The
+figures they produced — 2610256 bytes, 163141 entries, sha256 `47a81735…ce78fb5`
+— describe a file that is now only in git history. They are kept because they
+are what the search was conducted on, not because they describe anything
+shipped.
+
+The two commands that produce what *is* shipped:
+
+```bash
+./books/fetch_book.sh 8moves_v3.pgn            # verifies the tracked PGN in place
+build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin
+
+shasum -a 256 src/openings.bin
+# 3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd
+```
+
+Deterministic: the writer sorts by key and then by weight, so the digest is a
+function of the PGN and two runs are byte-identical.
+
+### The short-write defect, reproduced
+
+Found by this step's fast check over S172's diff. Not portable enough for a
+ctest, so the reproduction lives here:
+
+```bash
+DEV=$(hdiutil attach -nomount ram://2048)      # ~1 MB
+newfs_hfs -v tiny $DEV && mkdir -p /tmp/tiny && mount -t hfs $DEV /tmp/tiny
+build/tools/make_book build books/8moves_v3.pgn --out /tmp/tiny/book.bin
+```
+
+Before the fix: `bytes 2755712 -> /tmp/tiny/book.bin`, exit **0**, and 901120
+bytes on disk. `make_book dump` on that file: 56320 entries, verdict
+**`loadable`**. After: `short write to '…' -- book not written`, exit **1**, no
+file left behind.
+
+The reason it is worth this much text is the invariant that made it invisible.
+Entries are sixteen bytes and sorted by key, so **any prefix of a valid book is
+a valid book** — the size check and the sortedness check are both structurally
+incapable of noticing truncation, in `dump` and in the engine's loader alike.
+Only a digest distinguishes a whole book from most of one.

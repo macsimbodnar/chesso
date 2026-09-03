@@ -7177,6 +7177,14 @@ Consequences: The blob ships and its origin stays unknown, stated here rather
               `47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5`,
               2610256 bytes, 163141 entries, and a start position offering only
               `d2d4`, `g1f3` and `e2e4` at weight 54 each.
+Discharged:   **2026-09-03 by DEC-131**, not reversed -- the owner took the
+              second of the three standing options above and the blob was
+              deleted, so "the blob ships and its origin stays unknown" is
+              history and not current state. The parking held for one day; what
+              unparked it was S172 building `tools/make_book`, which is what
+              "build a replacement" had always needed and never had. The
+              fingerprint above is now the fingerprint of a file that is in no
+              working tree, only in `62d07d4`.
 
 
 ## DEC-127  2026-09-03  `mate -9` is a sound distance, not a wrong one; S171 becomes a reporting step
@@ -7427,3 +7435,65 @@ Consequences: **Measured, not asserted: startup is 4.7 ms +/- 0.4 before and
               reads a Polyglot key with an eight-byte load, and an `.incbin`
               lands wherever the previous section contents left off unless it
               is told otherwise.
+
+
+## DEC-131  2026-09-03  The unaccounted book is deleted and the shipped one is built here from the CC0 PGN
+Tags:         licensing, openings, provenance, plan, tooling
+Context:      DEC-126 parked S146 with three standing options and no date: search
+              the owner's other machine, build a replacement from a source this
+              project can name, or keep the blob with its provenance recorded as
+              unknown. Two things changed. The owner has since asked directly
+              for the second option. And S172 built `tools/make_book`, which is
+              what made it available at all -- until 2026-09-03 nothing in this
+              repository could produce a Polyglot book, so "replace it" named a
+              tool that did not exist. DEC-126's refutation still stands and is
+              why this is not a re-attribution: `books/8moves_v3.pgn` shares only
+              11703 of the old book's 154916 positions, 7.6 %, so the new file
+              is a different book and is not being passed off as the old one's
+              origin.
+Decision:     By the owner, 2026-09-03. **`src/openings.bin` is deleted and
+              rebuilt from `books/8moves_v3.pgn` with this project's own tool**,
+              at its defaults:
+
+                  ./build/tools/make_book build books/8moves_v3.pgn \
+                      --out src/openings.bin
+
+              2755712 bytes, 172232 entries over 129613 positions, sha256
+              `3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`.
+              The input is CC0-1.0 and pinned in `books/fetch_book.sh` by both
+              digests; the SAN is read by the engine's own `algebraic_to_move`
+              and keyed by its own `get_key`, so no other engine's code, table
+              or output is in the path. The old 163141-entry file is gone from
+              the tree, recoverable from `62d07d4` and from nowhere else. S146
+              is unparked and closed.
+Rejected:     Keeping the blob with its origin recorded as unknown -- the option
+              DEC-126 left open and the owner has now declined; DEC-016's first
+              foundation is that nothing ships here whose licence is unstated,
+              and an admitted gap is still a gap. Waiting for the other machine
+              -- an unblocking event with no date, and the replacement no longer
+              costs anything now that the tool exists. Deleting the book and the
+              option outright -- DEC-129 had just built the surface and a GUI
+              expects `OwnBook` to do something. Pruning with `--min-games` or a
+              shallower `--max-ply` -- both are choices that want a reason, and
+              there is none: 16 plies is the full depth of every line in that
+              PGN and `--min-games 1` drops nothing, so the defaults reproduce
+              the PGN faithfully and the digest above is what a reader checks.
+Consequences: **The book is reproducible from two committed inputs**, which is
+              the property the old one could never have: `make_book` sorts its
+              output by key and then by weight, so two runs are byte-identical
+              (verified) and anyone can regenerate the shipped file. **The book
+              is different and this changes play when it is switched on**:
+              172232 entries against 163141, lines 16 plies deep, and the start
+              position now offers e2e4 at weight 12956 and d2d4 at 12493 where
+              the old book offered `d2d4`, `g1f3` and `e2e4` at 54 each. **No
+              SPRT is owed** and this is the same discharge S172 took: `OwnBook`
+              defaults false, and S158 established that no measurement on record
+              has ever played a book move, so no verdict in this repository is
+              affected. INV-6 holds the default configuration to identical node
+              counts and best moves. **Weight now means something it never did**
+              -- every game in the PGN is recorded `1/2-1/2`, so an entry's
+              weight is the count of the 34700 lines that played the move, which
+              is what DEC-129's weighted draw selects on. **The engine leaves
+              the book by move 9**, which is shallower than the old blob went
+              and is a property to remember before reading anything into an
+              opening. `polyglot_randoms[781]` is untouched and stays DEC-121.

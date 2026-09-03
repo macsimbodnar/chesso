@@ -47,7 +47,7 @@ uciok
 | name | type | default | range | effect |
 |---|---|---|---|---|
 | `OwnBook` | check | `false` | — | play from the engine's own opening book when the position is in it. Only `true` and `false` are recognised; any other value leaves the setting unchanged. Was `Use Book` until S172 |
-| `Book File` | string | `<embedded>` | — | which book. `<embedded>` and an empty value both mean the book compiled into the binary; anything else is a path to a Polyglot `.bin`, loaded when the option is set. A file that does not open, is not a whole number of 16-byte entries, or whose keys are not sorted is **refused**, and the engine then plays with no book at all rather than falling back to the built-in one — the refusal and its reason are printed as `info string book [<path>] not loaded: <why>. Playing without a book`. The value runs to the end of the line, so a path with spaces in it needs no quoting |
+| `Book File` | string | `<embedded>` | — | which book. `<embedded>` and an empty value both mean the book compiled into the binary — see "The book it ships with" below; anything else is a path to a Polyglot `.bin`, loaded when the option is set. A file that does not open, is not a whole number of 16-byte entries, or whose keys are not sorted is **refused**, and the engine then plays with no book at all rather than falling back to the built-in one — the refusal and its reason are printed as `info string book [<path>] not loaded: <why>. Playing without a book`. The value runs to the end of the line, so a path with spaces in it needs no quoting |
 | `Best Book Move` | check | `false` | — | `false` draws among the position's book moves in proportion to their Polyglot weight; `true` always plays the heaviest entry. Before S172 the draw was uniform and the weight was never read |
 | `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Not honoured exactly — see known bugs. A non-numeric value is ignored with a warning in the log |
 | `Threads` | spin | 1 | 1 to 1 | present so GUIs that insist on setting it do not fail. **The search is single-threaded**; any value other than `1` is ignored with a warning in the log |
@@ -71,6 +71,24 @@ those cases are silent; build without `NDEBUG` and they go to stderr. **These
 three options are log-only in every build, including the tune build** — the code
 that handles them is the release build's, and S137 did not touch it. The tune
 build's own options, below, are the exception and answer over UCI.
+
+### The book it ships with
+
+172232 Polyglot entries over 129613 positions, 2755712 bytes, sha256
+`3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`. Lines run to
+16 plies and no further, so the engine leaves the book by move 9 at the latest.
+
+It is built by this project, from `books/8moves_v3.pgn` — 34700 balanced
+eight-move openings, published under CC0-1.0 and committed here with its
+digests — read through the engine's own move parser and keyed with the engine's
+own Zobrist. `build/tools/make_book` is the tool and `DEV_MANUAL.md` has the two
+commands that reproduce the file byte for byte. An entry's weight is the number
+of those 34700 lines that played the move, which is what `Best Book Move` and
+the weighted draw select on.
+
+Nothing in it comes from another engine. Before 2026-09-03 the shipped book was
+a 163141-entry file inherited from the `bitboard` branch that nobody could
+account for; it was deleted rather than shipped unattributed.
 
 ### The tune build, which is not the release binary
 

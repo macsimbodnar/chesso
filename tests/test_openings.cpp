@@ -89,9 +89,9 @@ TEST_SUITE("Test openings")
     REQUIRE(total > 0);
   }
 
-  // The binary search replaced a scan over all 163141 entries. It is only equal
-  // to the scan while the keys are sorted, which is why the loader checks, and
-  // this is the check that the two agree on the shipped book.
+  // The binary search replaced a scan over every entry in the book. It is only
+  // equal to the scan while the keys are sorted, which is why the loader
+  // checks, and this is the check that the two agree on the shipped book.
   TEST_CASE("Test the search finds what a scan finds")
   {
     book_t book;

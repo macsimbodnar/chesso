@@ -650,7 +650,7 @@ size_t get_book_moves_for_key(const book_t* book,
 
   // Binary search, not a scan. A book's entries are sorted by key -- the
   // format says so and the loader refuses one that is not -- and the built-in
-  // book is 163141 entries, so a scan read 2.6 MB per probe to answer a
+  // book is 172232 entries, so a scan read 2.8 MB per probe to answer a
   // question eighteen comparisons answer. Behaviour is unchanged: the same
   // entries are found and, because the walk below starts at the first of them
   // and goes forward, in the same order.

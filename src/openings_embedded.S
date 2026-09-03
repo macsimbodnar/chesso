@@ -1,6 +1,20 @@
 /*
  * S172. The built-in opening book, linked in as the raw Polyglot bytes.
  *
+ * S146. The bytes are this project's own, and `books/fetch_book.sh` plus
+ * `tools/make_book` are the whole recipe:
+ *
+ *   ./books/fetch_book.sh 8moves_v3.pgn
+ *   ./build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin
+ *
+ * 172232 entries over 129613 positions, 2755712 bytes, sha256
+ * 3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd. The input
+ * is the committed CC0-1.0 `books/8moves_v3.pgn`, pinned in `fetch_book.sh` by
+ * both digests; the moves are read by the engine's own `algebraic_to_move` and
+ * keyed by its own `get_key`, so no third-party book, table or binary is in
+ * the path. The book it replaced had no recorded origin and could not get one,
+ * which is what S146 was, and DEC-131 is the ruling.
+ *
  * It used to be `src/openings.book`, a 5220541-byte C header holding one
  * `#define BOOK "<hex>"` that every process decoded into a 2610256-byte heap
  * buffer at startup -- twice the tracked bytes, and an ASCII parse in front of

@@ -8,53 +8,67 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-03, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
-- Last done: **S172, 2026-09-03 -- an opening book is loadable over UCI, on the
-  option names the protocol actually uses.** Added and completed the same day on
-  the owner's instruction. `OwnBook` (check, default false), `Book File`
-  (string, default `<embedded>`) and `Best Book Move` (check, default false)
-  replace `Use Book`, which is removed and aliased nowhere because no script,
-  config or harness here ever set it. A named book that will not load leaves the
-  engine **bookless** -- never falling back to the built-in one -- and says so as
-  `info string book [<path>] not loaded: <why>`, on the UCI channel because
-  `LOG_E` is nothing under `NDEBUG`. Selection now follows the Polyglot
-  `weight`, which the engine had never read.
-- **What S172 fixed that had never run at all.** `load_book_from_file()` had sat
-  in `src/openings.cpp` since the `bitboard` branch with **no caller anywhere**;
-  `setoption` read **one token** as its value, so a path with a space arrived
-  truncated (observed red: `Args: ["name", "Book", "File", "value",
-  "/nonexistent", "dir/with", "spaces/book.bin"]`); and the probe **scanned all
-  163141 entries** where the format's key ordering makes a binary search exact.
-  All three are fixed, tested, and the loader now refuses a book that does not
-  open, is not a whole number of 16-byte entries, or is not sorted.
-- **The book's container changed and its contents did not, and the digest is
-  what proves it.** `src/openings.book` -- 5220541 bytes of hex decoded into the
-  heap at every startup -- is gone; `src/openings.bin` is the raw Polyglot file,
-  pulled in by `.incbin` from `src/openings_embedded.S`. **2610256 bytes, 163141
-  entries, sha256 `47a8173504...ce78fb5`, exactly S158's recomputed figures.**
-  Startup 4.7 ms +/- 0.4 to **2.8 ms +/- 0.1**, x1.67 +/- 0.15, `hyperfine -N`
-  over 574 and 976 runs. **So S146 is untouched**: the book's origin is still
-  unrecorded and still that step's question.
-- **`build/tools/make_book` is new and is the first thing in this repository
-  that can produce the book the engine ships with.** `build` reads a PGN through
-  the engine's own parser and keys it with the engine's own `get_key()`; `dump`
-  reports what a book holds and runs the loader's two checks, so a book it calls
-  loadable is one `Book File` will take. Proved against `books/8moves_v3.pgn`:
-  **34700 games, 0 cut short, 555200 plies -- exactly 34700 x 16** -- and the
-  engine plays `bestmove d2d4` out of the result.
-- **No SPRT is owed and that is not a shortcut.** `OwnBook` defaults false and
-  S158 established that no measurement this project has taken ever played a book
-  move, so the selection change alters no verdict on record. INV-6 discharged on
-  the default configuration: 121512 / 800769 / 62907 at depth 9 and
-  639228 / 3430710 / 367858 at depth 12, `c3d5` / `e2a6` / `d7c8q` at both.
-  DEC-129 (the surface) and DEC-130 (the embedding) are recorded.
+- Last done: **S146, 2026-09-03 -- the book the engine ships with is built by
+  this project, from a source it can account for.** The owner took the second of
+  DEC-126's three standing options: the unaccounted blob is **deleted**, and
+  `src/openings.bin` is now `build/tools/make_book build books/8moves_v3.pgn
+  --out src/openings.bin` at the tool's defaults -- **2755712 bytes, 172232
+  entries over 129613 positions, sha256 `3b89a4ad9146e266ae9296778067aaedcb7f57
+  f3cf0ff2086b9ae6df15b873dd`**. DEC-131 is the ruling.
+- **What made it possible was S172, not new evidence about the blob.** DEC-126's
+  refutation still stands -- `books/8moves_v3.pgn` shares only 11703 of the old
+  book's 154916 positions, 7.6 % -- so this is a **different book, not a
+  re-attribution**. What changed in a day is that S172 built `tools/make_book`;
+  until 2026-09-03 nothing in this repository could produce a Polyglot book, so
+  "build a replacement" had always named a tool that did not exist. The old
+  163141-entry file is recoverable from `62d07d4` and from nowhere else.
+- **The build is reproducible, which the old file could never be.** The writer
+  sorts by key then by weight, so the digest is a function of the PGN and two
+  runs are byte-identical (`cmp`, verified). Defaults were used and both are
+  right rather than convenient: `--max-ply 16` is the full depth of every line
+  in that PGN (**34700 games, 0 cut short, 555200 plies, exactly 34700 x 16**)
+  and `--min-games 1` drops nothing. The input is CC0-1.0 and pinned by both
+  digests in `books/fetch_book.sh`; the SAN is read by the engine's own
+  `algebraic_to_move` and keyed by its own `get_key`, so no other engine's code,
+  table or output is anywhere in the path.
+- **No SPRT is owed, on S172's reasoning and not a shortcut.** `OwnBook` defaults
+  false and S158 established that no measurement this project has taken ever
+  played a book move. **INV-6 discharged on the default configuration**:
+  121512 / 800769 / 62907 at depth 9 and 639228 / 3430710 / 367858 at depth 12,
+  `c3d5` / `e2a6` / `d7c8q` at both. Weight now means something it never did --
+  every game in that PGN is recorded `1/2-1/2`, so an entry's weight is the
+  count of the 34700 lines that played the move; `Best Book Move` true gives
+  `e2e4` at weight 12956.
+- **One defect found and fixed in scope, worse than the report of it.** The fast
+  check over S172's diff flagged that `make_book build` never checked its output
+  stream. Reproduced on a 1 MB HFS ram disk rather than assumed: the tool wrote
+  **901120 of 2755712 bytes, printed `bytes 2755712 -> <path>` and exited 0**.
+  The part the report missed is why it was invisible -- entries are sixteen
+  bytes and sorted, so **any prefix of a valid book is a valid book**, and
+  `make_book dump` called the truncated file **`loadable`** with 56320 entries
+  while the engine loaded it. Both of the loader's checks are structurally
+  incapable of noticing truncation; only a digest is. Fixed, red observed before
+  and green after; not a ctest, because the tool has no test target and macOS
+  has no `/dev/full`, so the reproduction is in the step file and the hazard is
+  in `DEV_MANUAL.md`.
+- **The stale citations went with the blob.** `src/openings.book` had not existed
+  since `62d07d4` and S146's own reproduction commands still `sed`-ed a
+  `#define BOOK` out of it. Re-anchored across `DEV_MANUAL.md`, `adocs/specs.md`,
+  `MANUAL.md` (new section "The book it ships with"), `src/openings_embedded.S`,
+  `src/openings.cpp` and `tests/test_openings.cpp`. `polyglot_randoms[781]`
+  needed nothing -- settled at DEC-121 on 2026-09-02, untouched.
+- **The fast check over S172 is done and it took two passes.** The first returned
+  "No issues" over 631 new lines of PGN parsing and a rewritten `setoption`; that
+  was not accepted, and a second pass answering six named questions with quoted
+  code returned the short-write finding above. Recorded because the lesson is
+  cheap: a clean review and a shallow one look identical until the questions are
+  specific.
 - **S171 is postponed to the desktop workstation (DEC-128), not blocked and not
   abandoned.** Its file is in `adocs/plan_todo/` and its Open entry is last in
   the list tagged `postponed`, so it derives as nobody's next step. **The fix is
   committed and green at `136b03f`** -- `certified_mate_move()` completes a mate
   line across a table slot the walk has lost, `tests/test_mate_carry.cpp` guards
-  it (red at `6 of 9 mate lines do not reach their mate`, green at 0, 9 lines
-  either way, 7.9 s), INV-6 discharged on the same node counts as above, gate
-  green in both builds, `./clang-format.sh --check` clean.
+  it, INV-6 discharged on the same node counts as above.
 - **What S171 owes is a machine, not a change.** One `fastchess.sh --fast`
   census, 3000 games at 8+0.08, about two hours, accepted at **0**
   `Incomplete mating PV` lines from the candidate:
@@ -63,17 +77,29 @@ Updated: 2026-09-03, by hand.
 
   `457e355` is the commit before the fix, so the reference prints its own count
   in the same match and nothing is compared across machines. Two attempts here
-  died on the machine: `pmset -g ac` said `No adapter attached` in the morning,
-  which the POWER rule forbids (DEC-109), and on mains in the afternoon
-  `fastchess.sh`'s own load guard reported `about 387% of a core is already
-  busy` -- Spotlight indexing PDFs through ten `CGPDFService` workers beside
-  `mds_stores`, about half of eight cores -- so the run was killed after a
-  minute with `games.pgn` at zero bytes. **That indexing is still running as of
-  2026-09-03 afternoon**: load average about 15 on eight cores while S172's gate
-  ran, which is why S172's one timing was taken with `hyperfine -N` and 1500
-  runs rather than a handful. The standing figure stays 5 lines from 1 search in
-  3000 games in `adocs/specs.md` and beside instrument 3 in `DEV_MANUAL.md`, and
-  neither claims a silence that has not been measured.
+  died on the machine: `pmset -g ac` said `No adapter attached`, which the POWER
+  rule forbids (DEC-109), and on mains `fastchess.sh`'s own load guard reported
+  `about 387% of a core is already busy` -- Spotlight indexing PDFs. **That
+  indexing has since finished**: load average was 2.4 on eight cores while
+  S146's gate ran, against about 15 earlier the same day. The standing figure
+  stays 5 lines from 1 search in 3000 games in `adocs/specs.md` and beside
+  instrument 3 in `DEV_MANUAL.md`, and neither claims a silence that has not
+  been measured.
+- Before S146: **S172, 2026-09-03 -- an opening book is loadable over UCI, on
+  the option names the protocol actually uses.** `OwnBook` (check, default
+  false), `Book File` (string, default `<embedded>`) and `Best Book Move`
+  (check, default false) replace `Use Book`, which is removed. A named book that
+  will not load leaves the engine **bookless** -- never falling back to the
+  built-in one -- and says so as `info string book [<path>] not loaded: <why>`
+  on the UCI channel. Selection follows the Polyglot `weight`, which the engine
+  had never read. Three things that had never run at all were fixed:
+  `load_book_from_file()` had **no caller anywhere** since the `bitboard`
+  branch; `setoption` read **one token** as its value, so a path with a space
+  arrived truncated; and the probe **scanned every entry** where the format's
+  key ordering makes a binary search exact. The container also changed --
+  `src/openings.bin` pulled in by `.incbin` instead of a 5.2 MB hex header
+  decoded at every startup, **4.7 ms +/- 0.4 to 2.8 ms +/- 0.1, x1.67 +/- 0.15**
+  over 574 and 976 `hyperfine -N` runs. DEC-129, DEC-130.
 - Before S172: S170 -- **a mate score the search did not itself prove is
   reported with a line that reaches it.** Three causes, one fix each, all
   reporting-only and all under DEC-122; `tests/test_mate_carry.cpp` is the guard
@@ -85,16 +111,13 @@ Updated: 2026-09-03, by hand.
   document carries its own path**; DEC-120), S169 (**the 97 stale citations are
   re-anchored**; DEC-119), S143 (**the completion gate builds and tests
   `build-tune` beside `build`**; DEC-118).
-- **S146 is parked, not blocked (DEC-126, 2026-09-02).** Its first half landed:
-  `polyglot_randoms[781]` is DEC-121 -- format-defining specification, kept,
-  cited at the array, with all 781 constants verified element by element
-  against the live format description. Its second half, the 5.2 MB Polyglot
-  blob in `src/openings.book`, has no origin and will not get one here. The
-  owner named `books/8moves_v3.pgn` from `official-stockfish/books`; measured,
-  that PGN and the book share **11703 positions of the book's 154916 -- 7.6 %**,
-  and a converter cannot invent the 143213 the PGN never reaches. Asked again
-  he does not remember, has checked the history, and thinks the file may be on
-  his other computer. The step file is back in `adocs/plan_todo/`.
+- **S146's first half was DEC-121 and it still stands**: `polyglot_randoms[781]`
+  is format-defining specification, kept, cited at the array, with all 781
+  constants verified element by element against the live format description.
+  The second half is closed above at DEC-131 and the blob is gone; DEC-126's
+  measurement of why the PGN was never the blob's origin -- **11703 positions of
+  the book's 154916, 7.6 %** -- is what keeps the replacement honest as a
+  replacement rather than an attribution.
 - **What the episode did settle, and it is committed.** `books/8moves_v3.pgn`
   is committed, played by `rating.sh`, and had no recorded origin anywhere. It
   is byte-identical to the file in `official-stockfish/books`, which is
@@ -118,8 +141,9 @@ Updated: 2026-09-03, by hand.
   pair. **On the desktop workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
-  a minute in and no watcher was ever armed for it; S172's gate ran in the
-  foreground of its own turn and is finished.
+  a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
+  in the foreground of their own turns and are finished, and S146's fast-check
+  subagent has reported and exited.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**

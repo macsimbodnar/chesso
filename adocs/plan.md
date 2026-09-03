@@ -225,7 +225,8 @@ decision second. **S165 alone owes a match**, one `--nonreg` verdict: S162's ins
 killed at 3304 games on a census of its own PGN -- 0 positions checkmate at a
 halfmove clock of 100 or more over 3356 games, so the only count it could have
 measured was zero -- and DEC-107 records the rule that came out of it. The seventh finding, the verbatim Polyglot constant
-table, folds into S146, whose own excludes had left it out of scope.
+table, folded into S146 and is settled at DEC-121: format-defining
+specification, kept and cited at the array.
 
 **S166 was found by running the batch, not by the audit.** S162's accepts
 requires its regression position to be tool-verified with `stockfish`, and the
@@ -393,11 +394,11 @@ enforces it but the diff.
 
 ## Done recently
 
+- S146  **the book the engine ships with is built by this project, from a source it can account for** -- the unaccounted 163141-entry blob inherited from the `bitboard` branch is deleted and `src/openings.bin` is now `make_book build books/8moves_v3.pgn` at the tool's defaults: 2755712 bytes, 172232 entries over 129613 positions, sha256 `3b89a4ad...15b873dd`, reproducible because the writer sorts. The input is the committed CC0-1.0 PGN pinned by both digests, read by the engine's own parser and keyed by its own `get_key`, so nothing in the path is another engine's. No SPRT owed -- `OwnBook` defaults false and S158 established no measurement here ever played a book move -- and INV-6 discharged on the default configuration. One defect fixed in scope: `make_book` never checked its output stream, and because any prefix of a sorted 16-byte-entry book is a valid book, a truncated 901120-byte write was called `loadable` by `dump` and loaded by the engine (red observed on a 1 MB ram disk) (DEC-131)
 - S172  **an opening book is loadable over UCI, on the option names the protocol uses** -- `OwnBook`, `Book File`, `Best Book Move`, replacing `Use Book`; a book that will not load leaves the engine bookless and says so on the UCI channel; selection follows the Polyglot weight where it used to draw uniformly and never read the field. The built-in book is the raw file `src/openings.bin` pulled in by `.incbin`, same 163141 entries and same sha256, startup 4.7 ms to 2.8 ms; `tools/make_book` builds one from a PGN and verifies one. Three defects fixed on the way: `load_book_from_file()` had never had a caller, `setoption` read one token so a path with a space arrived truncated (red observed), and the probe scanned all 163141 entries where the format guarantees a binary search (DEC-129, DEC-130)
 - S170  a mate score the search did not itself prove is reported with a line that reaches it -- three causes measured and one fix each: the last delivered line carried across searches, a two-ply completion where the defender's move is looked for, and the line completed against the score it is printed beside; 12 `Incomplete mating PV` lines over 3 searches down to 5 over 1 in 3000 games, and the one left is a wrong mate distance and became S171 (DEC-124, DEC-125)
 - S147  a mate score the search proved is reported with a line that reaches it -- the table walked from the end of the stored line, all or nothing (DEC-122); 54 short of 706 mate lines before and 0 after, and the 10 a --fast run still reports are a table-inherited score and became S170 (DEC-123)
 - S144  a citation in a plan document carries its own path -- 383 bare continuations over 19 files, 380 converted (322 by relocating the text each was written against, 58 by hand) and 3 left as this step's own illustrations, which leave the checked set with it; a bare `:line` is a flag now (DEC-120)
-- S169  the 97 stale citations in the pending step files are re-anchored -- 72 by exact block, 6 by title, 16 by hand, 3 held -- with the mapping tracked, because repairing a step file makes the checker's verdict vacuous (DEC-119)
 
 ## Machine scope, 2026-08-30 to whenever the workstation is back
 
@@ -417,8 +418,8 @@ structure in `## The order, in four blocks` above -- it still describes the
 real dependency order and this section does not supersede it.
 
 **The lane, entries 1 to 5.** No step in it touches no engine any more: S146
-was the one, and it is parked at DEC-126 with S144, S153, S156, S158, S157,
-S150, S155, S154, S168, S143 and S169 done. What is left is three that are
+was the one, and it is done at DEC-131 with S144, S153, S156, S158, S157,
+S150, S155, S154, S168, S143 and S169. What is left is three that are
 behaviour-neutral and discharged on identical `tools/search_bench.py` node
 counts and best moves plus a `hyperfine` timing (S147, S020, S030), and two
 that each own exactly one self-contained verdict if the owner wants a short run
@@ -491,7 +492,6 @@ reason the lane existed stays findable.
 46. S110  **reserve, DEC-087** — a second correction table keyed on the non-pawn structure, split by colour
 47. S111  **reserve, DEC-087** — correction tables indexed by the move played two and four plies ago
 48. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
-49. S146  **parked, DEC-126** — the 5.2 MB opening book compiled into the shipped binary has a recorded origin and licence, or it is replaced by one that does; the owner does not remember where the file came from, the repository history carries no trace of it, and the machine that might is not this one
-50. S151  a change that moves a pruning or reduction parameter has its verdict re-taken at a control at least four times longer before the number is banked, starting with S085's shipped vector
-51. S152  **deferred, DEC-108** — the engine's absolute rating is re-measured once, near the 3000 mark rather than at a block boundary, at both time controls so S128's anchor-spread question is answered by the same run
-52. S171  **postponed, DEC-128** — a reported mate line reaches its mate even where the table has lost a slot the walk needs; the fix is in and green at `136b03f` and what is owed is one `fastchess.sh --fast` census, 3000 games at 8+0.08, accepted at 0 `Incomplete mating PV` lines. Two attempts here died on the machine and not on the code -- battery first, then Spotlight holding about half the cores -- so it resumes on the owner's desktop workstation, where the run is the first thing taken. The run is written out in the step file
+49. S151  a change that moves a pruning or reduction parameter has its verdict re-taken at a control at least four times longer before the number is banked, starting with S085's shipped vector
+50. S152  **deferred, DEC-108** — the engine's absolute rating is re-measured once, near the 3000 mark rather than at a block boundary, at both time controls so S128's anchor-spread question is answered by the same run
+51. S171  **postponed, DEC-128** — a reported mate line reaches its mate even where the table has lost a slot the walk needs; the fix is in and green at `136b03f` and what is owed is one `fastchess.sh --fast` census, 3000 games at 8+0.08, accepted at 0 `Incomplete mating PV` lines. Two attempts here died on the machine and not on the code -- battery first, then Spotlight holding about half the cores -- so it resumes on the owner's desktop workstation, where the run is the first thing taken. The run is written out in the step file

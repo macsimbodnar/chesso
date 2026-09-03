@@ -245,7 +245,7 @@ restated until it is taken.
 names, since 2026-09-03, S172.** `OwnBook` (check, default false) enables it,
 `Book File` (string, default `<embedded>`) says which book, and
 `Best Book Move` (check, default false) says how a move is chosen among the
-entries for a position. `<embedded>` and an empty value both mean the 163141
+entries for a position. `<embedded>` and an empty value both mean the 172232
 Polyglot entries compiled into the binary; any other value is a path, loaded the
 moment the option is set. **A book that will not load leaves the engine with no
 book**, reported as `info string book [<path>] not loaded: <why>` on the UCI
@@ -254,7 +254,7 @@ because a harness that asked for one book and silently got another is measuring
 a configuration nobody chose. Loading refuses a file that does not open, whose
 size is not a whole number of sixteen-byte entries, or whose keys are not sorted;
 the ordering is the format's own requirement and the probe is a binary search
-over it, where until S172 it was a scan of all 163141 entries per position.
+over it, where until S172 it was a scan of every entry in the book per position.
 Selection follows the format: the default draws in proportion to an entry's
 `weight` and `Best Book Move` takes the heaviest, where before S172 the draw was
 uniform and the weight field was never read at all. **All of it is off by
@@ -266,12 +266,24 @@ containing a space arrived truncated, invisible while `Hash`, `Threads` and the
 search parameters were the only options there were. **The book is stored as the
 raw Polyglot file `src/openings.bin` and reaches the binary through `.incbin`
 from `src/openings_embedded.S`** rather than as a 5220541-byte hex string
-decoded into the heap at every startup; the bytes are byte-for-byte the ones the
-hex header decoded to, sha256
-`47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5`, so the
-container changed and the contents did not -- their origin is still unrecorded
-and still S146's. `tools/make_book` builds such a book from a PGN and verifies
-one. DEC-129, DEC-130.
+decoded into the heap at every startup. `tools/make_book` builds such a book
+from a PGN and verifies one. DEC-129, DEC-130.
+
+**The built-in book is built by this project from a source it can account for,
+since 2026-09-03, S146.** It is `build/tools/make_book build
+books/8moves_v3.pgn --out src/openings.bin` at the tool's defaults --
+2755712 bytes, 172232 entries over 129613 positions, sha256
+`3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`, reproducible
+because the output is sorted. The input is the committed CC0-1.0
+`books/8moves_v3.pgn`, pinned by both digests in `books/fetch_book.sh`; the SAN
+is read by the engine's own `algebraic_to_move` and keyed by its own `get_key`,
+so no other engine's code, table or binary is anywhere in the path. It replaced
+a 2610256-byte, 163141-entry book inherited from the `bitboard` branch whose
+origin no document, commit or person could establish -- that book is deleted,
+which is the ruling DEC-131 records. `OwnBook` defaults false and no measurement
+on record has ever played a book move, so the swap alters no verdict; INV-6
+holds it to that. `polyglot_randoms[781]` is unaffected and stays what DEC-121
+made it, format-defining specification rather than a copied table.
 
 There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the
 parameters in `src/search_params.hpp` from constants the compiler folds into
