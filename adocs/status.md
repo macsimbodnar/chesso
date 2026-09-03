@@ -57,6 +57,18 @@ Updated: 2026-09-03, by hand.
   `MANUAL.md` (new section "The book it ships with"), `src/openings_embedded.S`,
   `src/openings.cpp` and `tests/test_openings.cpp`. `polyglot_randoms[781]`
   needed nothing -- settled at DEC-121 on 2026-09-02, untouched.
+- **S146's own fast check produced one finding, which was wrong, whose fix is
+  right.** It reported that the new failure path's `std::remove` destroys a
+  pre-existing file at `--out`. It does not: `std::ofstream(path, binary)` opens
+  `"wb"` and truncates, so the contents are gone at the open -- verified, a bare
+  open with no write and no remove took a nine-byte file to zero. What is real
+  is that the whole replacement is not atomic: the tool destroys the old book
+  before it knows it can write the new one. **S173 is that fix** -- write beside
+  the destination, rename on success -- filed in `plan_todo/` and 49th in the
+  Open list, not urgent because `--out` points at `src/openings.bin` about once
+  and that file is in git. The other four answers checked out: `close()` then
+  `good()` is the right order, `std::remove` binds the `<cstdio>` overload
+  unambiguously, and the entry count and sha256 in the comments match the file.
 - **The fast check over S172 is done and it took two passes.** The first returned
   "No issues" over 631 new lines of PGN parsing and a rewritten `setoption`; that
   was not accepted, and a second pass answering six named questions with quoted
