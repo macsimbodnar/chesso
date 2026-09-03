@@ -14,6 +14,7 @@
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "evaluation.hpp"
+#include "openings.hpp"  // BOOK_FILE_EMBEDDED
 #include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "transposition_table.hpp"
@@ -643,8 +644,41 @@ TEST_SUITE("engine: uci layer")
     REQUIRE(capture.contains("id name Chesso"));
     REQUIRE(capture.contains("option name Hash type spin"));
     REQUIRE(capture.contains("option name Threads type spin"));
-    REQUIRE(capture.contains("option name Use Book type check"));
+    REQUIRE(capture.contains("option name OwnBook type check"));
+    REQUIRE(capture.contains("option name Book File type string"));
+    REQUIRE(capture.contains("option name Best Book Move type check"));
     REQUIRE(capture.contains("uciok"));
+
+    uci_shutdown();
+  }
+
+  // S172. `Book File` is the first option here whose value can contain a space,
+  // and setoption used to take the first token after `value` and drop the rest:
+  // `/Users/max/My Books/x.bin` reached the loader as `/Users/max/My`. Nothing
+  // caught it because Hash, Threads and the search parameters are all single
+  // tokens. The refusal names the path it tried, so it is what the test reads.
+  TEST_CASE("setoption carries a value containing spaces")
+  {
+    uci_init();
+
+    const std::string path = "/nonexistent dir/with spaces/book.bin";
+
+    stdout_capture_t capture;
+    uci_process_line("setoption name Book File value " + path);
+
+    REQUIRE(capture.contains("book [" + path + "] not loaded"));
+
+    // And the engine is bookless rather than back on the built-in book: a
+    // harness that asked for one book and silently got another is measuring
+    // something nobody configured.
+    uci_process_line("setoption name OwnBook value true");
+    uci_process_line("position startpos");
+    uci_process_line("go depth 1");
+
+    REQUIRE(!capture.contains("Found position in the opening book"));
+
+    uci_process_line("setoption name OwnBook value false");
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
 
     uci_shutdown();
   }

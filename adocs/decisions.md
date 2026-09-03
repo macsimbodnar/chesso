@@ -7305,3 +7305,125 @@ Consequences: The standing rate stays **5 `Incomplete mating PV` lines from 1
               read from a figure taken elsewhere, and DEC-049 is untouched. The
               standing 5 is this MacBook's and stays attributed to it. The next
               step in the Open list is S020.
+
+
+## DEC-129  2026-09-03  The opening book's UCI surface is the one Stockfish had, `Use Book` is removed, and a book that will not load leaves the engine bookless
+Tags:         uci, surface, openings, book, options, s172
+Context:      The owner asked for an opening book loadable over UCI "following
+              the same semantics of stockfish". Three things had to be settled
+              before any code was written. **What Stockfish's semantics are**:
+              modern Stockfish has no book at all -- removed in 2016 -- so the
+              reference is the surface it carried while it had one, which is
+              also the one the UCI specification itself describes. **What
+              happens to `Use Book`**, the name chesso has advertised since the
+              `bitboard` branch, which is not a UCI option name and which no
+              GUI looks for. **What a bad path does**, which had no answer
+              because no path could be given: `load_book_from_file()` had sat
+              in `src/openings.cpp` since the `bitboard` branch with no caller
+              anywhere in the tree and had therefore never run once.
+Decision:     By the owner, 2026-09-03, from three options put to him.
+
+              **1. The surface is `OwnBook` (check, default false), `Book File`
+              (string, default `<embedded>`) and `Best Book Move` (check,
+              default false).** `<embedded>` and an empty value both mean the
+              book compiled into the binary; anything else is a path to a
+              Polyglot `.bin`, loaded the moment the option is set.
+
+              **2. `Use Book` is removed, not aliased.** No script, config or
+              harness in this repository sets it -- `grep` over `*.sh`, `*.py`
+              and `*.json` finds it only in prose -- so nothing breaks that an
+              alias would have saved, and two names for one setting is the kind
+              of thing that is still there in five years.
+
+              **3. A book that will not load leaves the engine with no book**,
+              reported on the UCI channel as `info string book [<path>] not
+              loaded: <why>. Playing without a book`, in both builds. There is
+              no fallback to the built-in book. Loading refuses a file that
+              does not open, whose size is not a whole number of sixteen-byte
+              entries, or whose keys are not sorted.
+
+              **4. Selection is weight-proportional, and `Best Book Move` takes
+              the heaviest entry.** This changes play: the engine drew
+              uniformly among the position's entries and never read the
+              `weight` field at all, so a line the book gave one game of weight
+              was played as often as one it gave two hundred. That is neither
+              the Polyglot format's semantics nor Stockfish's.
+Why:          The option names are the protocol's, so a GUI's book checkbox
+              reaches the engine; the refusal is loud because the value is a
+              path a person typed; and the weight is what the format's weight
+              is for.
+Rejected:     Keeping `Use Book` as a hidden alias -- offered and declined; see
+              the grep above for why it costs nothing. Adding only `OwnBook`
+              and `Book File` and leaving selection uniform -- it would ship a
+              book reader that ignores the one field the format uses to say
+              which move it prefers. Falling back to the built-in book when a
+              named one fails -- a harness that asked for one book and silently
+              got another is measuring a configuration nobody chose, which is
+              the exact class of contamination DEC-020 cost this project a
+              night to learn. Logging the failure only -- `LOG_E` compiles to
+              `if (false) std::clog` under `NDEBUG` and the shipping binary is
+              a Release build, so a mistyped path would be answered by silence:
+              the same defect S137 removed one option along, and DEC-093 is its
+              ruling.
+Consequences: **No SPRT is owed and that is not a shortcut.** All of it is off
+              by default, and S158 established that no measurement this project
+              has ever taken played a book move, so the selection change alters
+              no verdict on record. DEC-085 is untouched: a rated CCRL run
+              requires own books disabled and `OwnBook` still defaults false.
+              The `setoption` value parser had to change with it -- it read one
+              token, so `Book File` was the first option here whose value could
+              contain a space and a path with one arrived truncated. That was a
+              defect before this step and it is now covered by a test observed
+              red against the old parser. `test_uci_surface` moves from three
+              golden option lines to five, after `MANUAL.md` and `specs.md`, per
+              the SURFACE rule. S146 is untouched: this changes which book can
+              be loaded, never where the built-in one came from.
+
+
+## DEC-130  2026-09-03  The built-in book is embedded as a raw binary through `.incbin`, not as a hex string or a generated array
+Tags:         build, openings, book, embedding, portability, s172
+Context:      `src/openings.book` was a 5220541-byte C header holding one
+              `#define BOOK "<hex>"`, decoded by `hex_string_to_vector()` into
+              a 2610256-byte heap buffer at every process start. So the
+              repository tracked twice the bytes it needed, and every one of
+              the thousands of engine processes a match night starts parsed
+              5.2 MB of ASCII to rebuild a constant. The owner asked whether
+              modern C++ offers something better, stating a preference for the
+              less complex and more performant option over the elegant one.
+Decision:     By the owner, 2026-09-03. The book is tracked as the raw Polyglot
+              file `src/openings.bin` and pulled into the binary by `.incbin`
+              from `src/openings_embedded.S`, a preprocessed assembler source
+              carrying one `#if defined(__APPLE__)` arm for Mach-O's symbol
+              underscore and section name. `enable_language(ASM)` and one
+              `set_source_files_properties` in `src/CMakeLists.txt` is the
+              whole build change. The engine probes the bytes where the linker
+              put them: nothing is decoded and nothing is copied.
+Why:          Half the tracked bytes, no startup work at all, and four lines of
+              assembler against a 16 MB generated source file.
+Rejected:     A generated `constexpr uint8_t[2610256]` header -- portable to
+              MSVC and needing no assembler, at the price of a 16 MB source
+              file that has to be compiled on every clean build. Keeping the
+              hex string and only adding the generator tool -- the smallest
+              diff, and it keeps both costs it exists to remove. C++23's
+              `#embed` -- this tree is C++20 and Apple clang does not have it;
+              it is what would replace this if the standard moves.
+Consequences: **Measured, not asserted: startup is 4.7 ms +/- 0.4 before and
+              2.8 ms +/- 0.1 after**, `hyperfine -N --warmup 50 -m 500` over
+              `printf 'uci\nquit\n' | chesso` against Release builds of
+              `32982a2` and the candidate, 574 and 976 runs, x1.67 +/- 0.15.
+              It is not a strength claim -- a match's time control does not
+              charge for process start -- and it is the whole reason the
+              embedding changed. **The contents did not change**: 2610256
+              bytes, 163141 entries, sha256 `47a817350459843da2a20e1d5cba2846
+              2d9df30bdb99c93097bd3cb66ce78fb5`, exactly the figures S158
+              recomputed from the hex header, so the book's unrecorded origin
+              is still S146's question and this step did not touch it. **The
+              MSVC arm is gone and was never used**: `MASM` has no `.incbin`,
+              so a Windows build would need the generated-array form; the tree
+              has an `if(MSVC)` in `CMakeLists.txt` and has never been built
+              with it. **The ELF arm of the `.S` was written blind** -- this
+              machine is the macOS one -- and is what a first Linux build will
+              exercise. `.balign 8` in that file is load-bearing: the probe
+              reads a Polyglot key with an eight-byte load, and an `.incbin`
+              lands wherever the previous section contents left off unless it
+              is told otherwise.

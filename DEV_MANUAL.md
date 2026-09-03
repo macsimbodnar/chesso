@@ -225,6 +225,9 @@ refused rather than read up to the first character that does not fit, which is
 what `std::stoi` did until the review of S137's own diff. `Use Book`, `Hash` and
 `Threads` are outside all of this — their handlers are the release build's, so a
 bad value for one of them is still log-only, which under `NDEBUG` is nothing.
+`Book File` is the one exception S172 added: a book it cannot load is reported
+as `info string book [<path>] not loaded: <why>` in both builds, because the
+value is a path a person typed and silence there reads as success.
 
 Until S137 the refusal went to `LOG_W` — `if (false) std::clog` under `NDEBUG`
 (`src/log.hpp`), and `build-tune` is a Release build — so a tuner that sent an
@@ -1931,6 +1934,48 @@ When you take a run's result, also check nothing is still watching it:
 ```bash
 ps -eo pid,etime,cmd | grep '[t]ail -f'
 ```
+
+## The engine's own opening book
+
+Not the match books under `books/` — this is the book the *engine* plays from,
+off by default and enabled with `setoption name OwnBook value true`.
+
+`src/openings.bin` is the built-in one: 2610256 bytes, 163141 Polyglot entries,
+linked into the binary by `.incbin` from `src/openings_embedded.S`. It is the
+raw file, not a header — editing it and rebuilding is all it takes to ship a
+different book, and `OBJECT_DEPENDS` in `src/CMakeLists.txt` is what makes the
+rebuild happen. Its origin is still unrecorded and is S146's question, not this
+tooling's; the digest is what pins it:
+
+```bash
+shasum -a 256 src/openings.bin
+# 47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5
+```
+
+`build/tools/make_book` is the only thing in the tree that can produce such a
+file. It builds one from a PGN with the engine's own parser and the engine's own
+`get_key()` — a book keyed by a second definition of "the same position" loads
+and then finds nothing, silently — and it reads one back:
+
+```bash
+# From a PGN. --max-ply is how deep a book line goes, --min-games how many
+# games a move needs before it is written at all.
+build/tools/make_book build books/8moves_v3.pgn --out /tmp/x.bin \
+    --max-ply 16 --min-games 1
+
+# What a book contains, and whether the engine can load it.
+build/tools/make_book dump src/openings.bin --top 10
+```
+
+`dump` runs the same two checks the engine's loader runs — the size is a whole
+number of sixteen-byte entries, and the keys are sorted — and exits non-zero
+when either fails, so a book it calls `loadable` is a book `Book File` will
+accept.
+
+Weights are two for a win, one for a draw and nothing for a loss, from the
+moving side's point of view, summed over every game that played the move; an
+entry that ends at zero is dropped, since the engine's weighted draw could never
+play it. Weights are clamped to 65535 and the build reports how many were.
 
 ## Analyse a game
 

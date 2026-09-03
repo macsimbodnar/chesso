@@ -28,7 +28,9 @@
 static game_t game = {};
 static std::string initial_position = DEFAULT_POSITION;
 static bool opening_book_loaded = false;
-static bool opening_book_enabled = false;
+static bool opening_book_enabled = false;                   // `OwnBook`
+static bool opening_book_best_move = false;                 // `Best Book Move`
+static std::string opening_book_file = BOOK_FILE_EMBEDDED;  // `Book File`
 static bool still_in_opening = true;  // Finish the opening line
 static book_t opening_book;
 
@@ -406,16 +408,40 @@ bool set_position(const std::string& fen)
 }
 
 
+// Loads whatever `Book File` currently names. A failure leaves the engine with
+// no book rather than falling back to the built-in one: a harness that asked
+// for a particular book and silently got a different one is measuring something
+// nobody configured. S172.
 void try_load_opening_book()
 {
-  opening_book_loaded = load_book_embedded(&opening_book);
+  opening_book = book_t{};
+
+  const bool embedded =
+      opening_book_file.empty() || opening_book_file == BOOK_FILE_EMBEDDED;
+
+  std::string reason;
+
+  opening_book_loaded =
+      embedded ? load_book_embedded(&opening_book)
+               : load_book_from_file(opening_book_file, &opening_book, &reason);
 
   if (opening_book_loaded) {
     LOG_I << "Opening book loaded correctly! " << opening_book.num_of_positions
           << " entries." << END_I;
-  } else {
-    LOG_E << "Failed to load the opening book." << END_E;
+    return;
   }
+
+  if (embedded) {
+    LOG_E << "Failed to load the built-in opening book." << END_E;
+    return;
+  }
+
+  // On the UCI channel and not only in the log. LOG_E compiles to
+  // `if (false) std::clog` under NDEBUG and the shipping binary is a Release
+  // build, so a mistyped path would otherwise be answered by silence -- the
+  // failure S137 removed for a refused search parameter, one option along.
+  uci_reply("info string book [" + opening_book_file +
+            "] not loaded: " + reason + ". Playing without a book");
 }
 
 
@@ -606,46 +632,95 @@ move_t validate_book_move(move_t book_move)
 }
 
 
-move_t search_random_move_in_book()
+// Picks a book move for the current position, or 0 when the book has nothing
+// playable here.
+//
+// Selection follows the Polyglot format's own semantics, which is what
+// Stockfish did while it had a book: an entry's `weight` is how often the book
+// wants that move played, so the default draws in proportion to weight and
+// `Best Book Move` takes the heaviest entry instead. Until S172 this drew
+// uniformly and never read the weight field at all, so a line the book gave one
+// game of weight was played as often as one it gave two hundred.
+move_t search_book_move()
 {
   move_t result = {};
 
-  if (opening_book_loaded && opening_book_enabled && still_in_opening) {
-    move_t moves[MAX_MOVES];
-    const size_t moves_cout =
-        get_book_moves_for_key(&opening_book, &game.board, moves);
+  if (!opening_book_loaded || !opening_book_enabled || !still_in_opening) {
+    return result;
+  }
 
-    // A book move is reported to the GUI as the best move without ever being
-    // searched or played, so nothing else would catch a bad one. A polyglot
-    // key collision or a malformed book used to forfeit the game outright.
-    move_t legal_moves[MAX_MOVES];
-    size_t legal_count = 0;
+  move_t moves[MAX_MOVES];
+  uint16_t weights[MAX_MOVES];
+  const size_t moves_cout =
+      get_book_moves_for_key(&opening_book, &game.board, moves, weights);
 
-    for (size_t i = 0; i < moves_cout; ++i) {
-      const move_t validated = validate_book_move(moves[i]);
+  // A book move is reported to the GUI as the best move without ever being
+  // searched or played, so nothing else would catch a bad one. A polyglot
+  // key collision or a malformed book used to forfeit the game outright.
+  move_t legal_moves[MAX_MOVES];
+  uint16_t legal_weights[MAX_MOVES];
+  size_t legal_count = 0;
 
-      if (validated != 0) { legal_moves[legal_count++] = validated; }
-    }
+  for (size_t i = 0; i < moves_cout; ++i) {
+    const move_t validated = validate_book_move(moves[i]);
 
-    if (legal_count != moves_cout) {
-      LOG_W << "Opening book returned " << (moves_cout - legal_count)
-            << " illegal move(s) for this position, discarded" << END_W;
-    }
-
-    if (legal_count > 0) {
-      // Extreme included
-      std::uniform_int_distribution<size_t> dist(0, legal_count - 1);
-
-      const size_t index = dist(gen);
-      assert(index < legal_count);
-      result = legal_moves[index];
-
-      LOG_I << "Found position in the opening book." << END_I;
-    } else {
-      // We finish the move lines or move not found, disabling it
-      still_in_opening = false;
+    if (validated != 0) {
+      legal_weights[legal_count] = weights[i];
+      legal_moves[legal_count++] = validated;
     }
   }
+
+  if (legal_count != moves_cout) {
+    LOG_W << "Opening book returned " << (moves_cout - legal_count)
+          << " illegal move(s) for this position, discarded" << END_W;
+  }
+
+  if (legal_count == 0) {
+    // We finish the move lines or move not found, disabling it
+    still_in_opening = false;
+    return result;
+  }
+
+  size_t index = 0;
+
+  if (opening_book_best_move) {
+    for (size_t i = 1; i < legal_count; ++i) {
+      if (legal_weights[i] > legal_weights[index]) { index = i; }
+    }
+  } else {
+    uint64_t total = 0;
+
+    for (size_t i = 0; i < legal_count; ++i) {
+      total += legal_weights[i];
+    }
+
+    if (total == 0) {
+      // Every entry here is weightless, which a hand-made book can be. There is
+      // no preference to honour, so the uniform draw is the whole distribution
+      // rather than a fallback that loses information.
+      std::uniform_int_distribution<size_t> dist(0, legal_count - 1);
+      index = dist(gen);
+    } else {
+      // Extreme excluded: `total` itself must land on no entry.
+      std::uniform_int_distribution<uint64_t> dist(0, total - 1);
+
+      uint64_t ticket = dist(gen);
+
+      for (size_t i = 0; i < legal_count; ++i) {
+        if (ticket < legal_weights[i]) {
+          index = i;
+          break;
+        }
+
+        ticket -= legal_weights[i];
+      }
+    }
+  }
+
+  assert(index < legal_count);
+  result = legal_moves[index];
+
+  LOG_I << "Found position in the opening book." << END_I;
 
   return result;
 }
@@ -984,7 +1059,9 @@ bool command_uci(std::queue<std::string>& args)
 
   uci_reply("id name Chesso");
   uci_reply("id author MazerFaker");
-  uci_reply("option name Use Book type check default false");
+  uci_reply("option name OwnBook type check default false");
+  uci_reply("option name Book File type string default " BOOK_FILE_EMBEDDED);
+  uci_reply("option name Best Book Move type check default false");
   uci_reply("option name Hash type spin default " + STR(TT_DEFAULT_MB) +
             " min " + STR(TT_MIN_MB) + " max " + STR(TT_MAX_MB));
   uci_reply("option name Threads type spin default 1 min 1 max 1");
@@ -1063,22 +1140,55 @@ bool command_setoption(std::queue<std::string>& args)
 
     if (!args.empty() && args.front() == "value") {
       args.pop();  // remove "value"
-      if (!args.empty()) {
-        option_value = args.front();
+
+      // Everything left, not the first token. UCI says a value runs to the end
+      // of the line, and `Book File` is the first option here whose value can
+      // contain a space: reading one token turned
+      // `/Users/max/My Books/x.bin` into `/Users/max/My` and reported nothing.
+      // The single space is what tokenize_input() split on, so this rebuilds
+      // the line as sent for every value that does not have repeated spaces in
+      // it. S172.
+      while (!args.empty()) {
+        if (!option_value.empty()) { option_value += " "; }
+
+        option_value += args.front();
         args.pop();
       }
     }
   }
 
   // Handle specific options
-  if (option_name == "Use Book" && option_value == "true") {
+  if (option_name == "OwnBook" && option_value == "true") {
     opening_book_enabled = true;
-    LOG_I << "Use Book ON" << END_I;
+    LOG_I << "OwnBook ON" << END_I;
   }
 
-  if (option_name == "Use Book" && option_value == "false") {
+  if (option_name == "OwnBook" && option_value == "false") {
     opening_book_enabled = false;
-    LOG_I << "Use Book OFF" << END_I;
+    LOG_I << "OwnBook OFF" << END_I;
+  }
+
+  if (option_name == "Best Book Move" && option_value == "true") {
+    opening_book_best_move = true;
+    LOG_I << "Best Book Move ON" << END_I;
+  }
+
+  if (option_name == "Best Book Move" && option_value == "false") {
+    opening_book_best_move = false;
+    LOG_I << "Best Book Move OFF" << END_I;
+  }
+
+  if (option_name == "Book File") {
+    // Reloading under a live search would free the bytes that search is
+    // probing, for the same reason resizing the hash would.
+    stop_and_join_search();
+
+    opening_book_file = option_value;
+    try_load_opening_book();
+
+    // A new book is a new set of lines, so a game that walked out of the old
+    // one is not out of this one.
+    still_in_opening = true;
   }
 
   if (option_name == "Hash") {
@@ -1153,12 +1263,13 @@ bool command_setoption(std::queue<std::string>& args)
   }
 
   // The other half: a name nothing above recognised. Kept as its own list
-  // rather than derived, because the three options that are not parameters are
+  // rather than derived, because the five options that are not parameters are
   // an if-chain with nothing to enumerate -- tests/test_uci_surface.cpp drives
   // every name the `uci` reply advertises through here and fails if one of them
   // comes back unknown.
-  if (!is_search_param && option_name != "Use Book" && option_name != "Hash" &&
-      option_name != "Threads") {
+  if (!is_search_param && option_name != "OwnBook" &&
+      option_name != "Book File" && option_name != "Best Book Move" &&
+      option_name != "Hash" && option_name != "Threads") {
     uci_reply("info string refused [" + option_name + "], unknown option");
   }
 #endif
@@ -1386,7 +1497,7 @@ bool command_go(std::queue<std::string>& args)
 
   // Book is searched only if the command make sense
   if (!search_options.infinite && search_options.nodes == 0) {
-    const move_t book_move = search_random_move_in_book();
+    const move_t book_move = search_book_move();
 
     if (book_move) {
       // We got book move, print and return straight away

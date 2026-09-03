@@ -1,8 +1,8 @@
 #include "openings.hpp"
 #include <cassert>
+#include <cstring>
 #include <fstream>
 #include "bitboard.hpp"
-#include "openings.book"
 #include "utils.hpp"
 
 
@@ -18,13 +18,17 @@
  */
 
 
-struct polyglot_entry_t
-{
-  uint64_t key;
-  uint16_t move;
-  uint16_t weight;
-  uint32_t learn;
-};
+/**
+ * A Polyglot entry is sixteen big-endian bytes: key (8), move (2), weight (2),
+ * learn (4). The fields are read out one at a time with memcpy rather than
+ * through a pointer cast to a struct: these bytes come straight out of the
+ * binary's read-only data or out of a file the user named, and a cast would be
+ * an alignment and an aliasing claim about memory this code does not own.
+ * At -O2 each read is the single load the cast would have been.
+ */
+#define POLYGLOT_ENTRY_BYTES 16
+#define POLYGLOT_MOVE_OFFSET 8
+#define POLYGLOT_WEIGHT_OFFSET 10
 
 
 /**
@@ -317,66 +321,6 @@ const uint64_t polyglot_randoms[RANDOM_SIZE] = {
 };
 
 
-// Function to convert a hex string to a byte array
-void hex_string_to_vector(const char* hex_string,
-                          size_t size,
-                          std::vector<uint8_t>& out)
-{
-  static constexpr uint8_t hex_map[256] = {
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF,
-  };
-
-  assert(size % 2 == 0);
-
-  out.clear();
-  out.resize(size / 2, 0);
-
-  for (size_t i = 0, c = 0; i < out.size(); ++i) {
-    const uint8_t c1 = hex_string[c++];
-    const uint8_t c2 = hex_string[c++];
-
-
-    assert(hex_map[c1] != 0xFF);
-    assert(hex_map[c2] != 0xFF);
-
-    out[i] = (hex_map[c1] * 16) + hex_map[c2];
-  }
-}
-
-
-bool load_book_embedded(book_t* book_out)
-{
-  assert(book_out != nullptr);
-  const size_t size = sizeof(BOOK) - 1;
-
-  hex_string_to_vector(BOOK, size, book_out->book);
-  book_out->num_of_positions = book_out->book.size() / sizeof(polyglot_entry_t);
-
-  return true;
-}
-
-
 inline uint16_t swap_endian(uint16_t num)
 {
   const uint16_t res = (num >> 8) | (num << 8);
@@ -416,17 +360,133 @@ inline uint64_t swap_endian(uint64_t num)
 }
 
 
-bool load_book_from_file(const std::string& file, book_t* book)
+// The two symbols src/openings_embedded.S puts around the built-in book.
+extern "C" const uint8_t chesso_embedded_book_begin[];
+extern "C" const uint8_t chesso_embedded_book_end[];
+
+
+static inline uint64_t entry_key(const uint8_t* data, size_t index)
+{
+  uint64_t big_endian = 0;
+  memcpy(&big_endian, data + (index * POLYGLOT_ENTRY_BYTES),
+         sizeof(big_endian));
+
+  return swap_endian(big_endian);
+}
+
+
+static inline uint16_t entry_field_16(const uint8_t* data,
+                                      size_t index,
+                                      size_t offset)
+{
+  uint16_t big_endian = 0;
+  memcpy(&big_endian, data + (index * POLYGLOT_ENTRY_BYTES) + offset,
+         sizeof(big_endian));
+
+  return swap_endian(big_endian);
+}
+
+
+/**
+ * A book is accepted only if it is a whole number of entries and its keys are
+ * non-decreasing. Both are the format's own requirements and both are load
+ * bearing here: the ordering is what makes the binary search in
+ * get_book_moves_for_key() legal, and without the size check the last entry
+ * would be read out of a truncated file.
+ *
+ * Refusing is the point. `Book File` hands this function a path a user typed,
+ * so it will be pointed at a PGN, at a JPEG and at a half-downloaded book, and
+ * a probe over arbitrary bytes does not fail -- it returns arbitrary moves that
+ * nothing downstream can tell from real ones. S172.
+ */
+static bool book_is_valid(const uint8_t* data,
+                          size_t bytes,
+                          size_t* entries_out,
+                          std::string* reason_out)
+{
+  assert(entries_out != nullptr);
+  assert(reason_out != nullptr);
+
+  if (bytes == 0) {
+    *reason_out = "the file is empty";
+    return false;
+  }
+
+  if (bytes % POLYGLOT_ENTRY_BYTES != 0) {
+    *reason_out = "its size " + std::to_string(bytes) +
+                  " is not a whole number of 16-byte Polyglot entries";
+    return false;
+  }
+
+  const size_t entries = bytes / POLYGLOT_ENTRY_BYTES;
+
+  for (size_t i = 1; i < entries; ++i) {
+    if (entry_key(data, i) < entry_key(data, i - 1)) {
+      *reason_out = "its keys are not sorted, at entry " + std::to_string(i);
+      return false;
+    }
+  }
+
+  *entries_out = entries;
+  return true;
+}
+
+
+bool load_book_embedded(book_t* book_out)
+{
+  assert(book_out != nullptr);
+
+  *book_out = book_t{};
+
+  const size_t bytes = static_cast<size_t>(chesso_embedded_book_end -
+                                           chesso_embedded_book_begin);
+
+  size_t entries = 0;
+  std::string reason;
+
+  // Checked like any other book although it is built in, because the check is
+  // what documents the two properties the probe depends on, and because the
+  // file the build embedded is regenerated by tools/make_book.
+  if (!book_is_valid(chesso_embedded_book_begin, bytes, &entries, &reason)) {
+    return false;
+  }
+
+  book_out->data = chesso_embedded_book_begin;
+  book_out->num_of_positions = entries;
+
+  return true;
+}
+
+
+bool load_book_from_file(const std::string& file,
+                         book_t* book,
+                         std::string* reason)
 {
   assert(book != nullptr);
 
+  *book = book_t{};
+
+  std::string local_reason;
+  std::string& why = (reason != nullptr) ? *reason : local_reason;
 
   std::ifstream input(file, std::ios::binary);
 
-  if (input.fail()) { return false; }
+  if (input.fail()) {
+    why = "it could not be opened";
+    return false;
+  }
 
-  book->book = std::vector<uint8_t>(std::istreambuf_iterator<char>(input), {});
-  book->num_of_positions = book->book.size() / sizeof(polyglot_entry_t);
+  std::vector<uint8_t> bytes(std::istreambuf_iterator<char>(input), {});
+
+  size_t entries = 0;
+
+  if (!book_is_valid(bytes.data(), bytes.size(), &entries, &why)) {
+    return false;
+  }
+
+  book->storage = std::move(bytes);
+  book->data = book->storage.data();
+  book->num_of_positions = entries;
 
   return true;
 }
@@ -574,60 +634,82 @@ promotion_t poly_promo_to_bb_promo(uint8_t poly_promotion)
 
 size_t get_book_moves_for_key(const book_t* book,
                               const board_t* board,
-                              move_t found_moves[])
+                              move_t found_moves[],
+                              uint16_t found_weights[])
 {
   assert(book != nullptr);
   assert(board != nullptr);
   assert(found_moves != nullptr);
+  assert(found_weights != nullptr);
 
-  size_t moves_count = 0;
+  if (book->num_of_positions == 0) { return 0; }
+
+  assert(book->data != nullptr);
+
   const uint64_t key = get_key(board);
 
-  const polyglot_entry_t* data_ptr =
-      reinterpret_cast<const polyglot_entry_t*>(book->book.data());
+  // Binary search, not a scan. A book's entries are sorted by key -- the
+  // format says so and the loader refuses one that is not -- and the built-in
+  // book is 163141 entries, so a scan read 2.6 MB per probe to answer a
+  // question eighteen comparisons answer. Behaviour is unchanged: the same
+  // entries are found and, because the walk below starts at the first of them
+  // and goes forward, in the same order.
+  size_t low = 0;
+  size_t high = book->num_of_positions;
 
-  for (size_t i = 0; i < book->num_of_positions && moves_count < MAX_MOVES;
-       ++i) {
-    const polyglot_entry_t& entry = data_ptr[i];
+  while (low < high) {
+    const size_t mid = low + ((high - low) / 2);
 
-
-    if (swap_endian(entry.key) == key) {
-      const uint16_t move = swap_endian(entry.move);
-
-      const uint8_t from_file = (move >> 6) & 7;
-      const uint8_t from_rank = (move >> 9) & 7;
-      const uint8_t to_file = (move >> 0) & 7;
-      const uint8_t to_rank = (move >> 3) & 7;
-
-      assert(from_file < 8);
-      assert(from_rank < 8);
-      assert(to_file < 8);
-      assert(to_rank < 8);
-
-      // Check if castling and adjust the move
-      // white short      e1h1
-      // black short      e8h8
-      // black long       e8a8
-      // white long       e1a1
-
-      // Handle movement
-      const index_t from = position_to_index(from_file, from_rank);
-      const index_t to = position_to_index(to_file, to_rank);
-      const piece_t piece = get_piece(board, from);
-      const piece_t target = get_piece(board, to);
-
-      // Handle promotion
-      const uint8_t poly_promo = (move >> 12) & 7;
-      const promotion_t promoted_to = poly_promo_to_bb_promo(poly_promo);
-
-      const move_t m =
-          NEW_MOVE(from, to, piece, promoted_to, (target != EMPTY), 0, 0, 0);
-
-      // Fix weirdo castling notation
-      found_moves[moves_count] = fix_weirdo_castling(board, m);
-
-      ++moves_count;
+    if (entry_key(book->data, mid) < key) {
+      low = mid + 1;
+    } else {
+      high = mid;
     }
+  }
+
+  size_t moves_count = 0;
+
+  for (size_t i = low; i < book->num_of_positions && moves_count < MAX_MOVES;
+       ++i) {
+    if (entry_key(book->data, i) != key) { break; }
+
+    const uint16_t move = entry_field_16(book->data, i, POLYGLOT_MOVE_OFFSET);
+
+    const uint8_t from_file = (move >> 6) & 7;
+    const uint8_t from_rank = (move >> 9) & 7;
+    const uint8_t to_file = (move >> 0) & 7;
+    const uint8_t to_rank = (move >> 3) & 7;
+
+    assert(from_file < 8);
+    assert(from_rank < 8);
+    assert(to_file < 8);
+    assert(to_rank < 8);
+
+    // Check if castling and adjust the move
+    // white short      e1h1
+    // black short      e8h8
+    // black long       e8a8
+    // white long       e1a1
+
+    // Handle movement
+    const index_t from = position_to_index(from_file, from_rank);
+    const index_t to = position_to_index(to_file, to_rank);
+    const piece_t piece = get_piece(board, from);
+    const piece_t target = get_piece(board, to);
+
+    // Handle promotion
+    const uint8_t poly_promo = (move >> 12) & 7;
+    const promotion_t promoted_to = poly_promo_to_bb_promo(poly_promo);
+
+    const move_t m =
+        NEW_MOVE(from, to, piece, promoted_to, (target != EMPTY), 0, 0, 0);
+
+    // Fix weirdo castling notation
+    found_moves[moves_count] = fix_weirdo_castling(board, m);
+    found_weights[moves_count] =
+        entry_field_16(book->data, i, POLYGLOT_WEIGHT_OFFSET);
+
+    ++moves_count;
   }
 
   return moves_count;

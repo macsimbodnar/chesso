@@ -90,3 +90,11 @@ target_link_libraries(feature_audit PRIVATE chesso_engine Threads::Threads)
 add_executable(mate_trace mate_trace.cpp)
 target_include_directories(mate_trace PRIVATE ../src)
 target_link_libraries(mate_trace PRIVATE chesso_engine)
+
+# S172. Builds the Polyglot book the engine embeds, and reads one back. Links
+# the engine because the key it writes has to be the key the engine probes with
+# and the moves have to come from the engine's own parser: a book built against
+# a second definition of "the same position" loads and then finds nothing.
+add_executable(make_book make_book.cpp)
+target_include_directories(make_book PRIVATE ../src)
+target_link_libraries(make_book PRIVATE chesso_engine)

@@ -5,7 +5,19 @@ file(GLOB SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 # doctest's own main.
 list(REMOVE_ITEM SRCS main.cpp)
 
-add_library(chesso_engine STATIC ${SRCS})
+# S172. The built-in opening book is the raw Polyglot file and reaches the
+# binary through .incbin, so the assembler is part of the engine's build. The
+# path is handed to the assembler as a define rather than written into the .S,
+# because `.incbin`'s own file search differs between toolchains; OBJECT_DEPENDS
+# is what makes a changed book reassemble, since neither cmake nor the
+# dependency scanner can see through a preprocessor macro to the file it names.
+set(CHESSO_BOOK ${CMAKE_CURRENT_SOURCE_DIR}/openings.bin)
+
+set_source_files_properties(openings_embedded.S PROPERTIES
+     COMPILE_DEFINITIONS CHESSO_BOOK_PATH=${CHESSO_BOOK}
+     OBJECT_DEPENDS ${CHESSO_BOOK})
+
+add_library(chesso_engine STATIC ${SRCS} openings_embedded.S)
 target_include_directories(chesso_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # PUBLIC, and it has to be: search_params.hpp declares a parameter as

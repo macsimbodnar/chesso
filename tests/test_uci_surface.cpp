@@ -44,13 +44,15 @@ static const std::vector<std::string> expected_commands = {
 // Verbatim, including every default and every range. A changed Hash range is a
 // changed surface and has to reach MANUAL.md like anything else.
 static const std::vector<std::string> expected_option_lines = {
-  "option name Use Book type check default false",
+  "option name OwnBook type check default false",
+  "option name Book File type string default <embedded>",
+  "option name Best Book Move type check default false",
   "option name Hash type spin default 16 min 1 max 4096",
   "option name Threads type spin default 1 min 1 max 1",
 };
 
 static const std::vector<std::string> expected_option_names = {
-  "Use Book", "Hash", "Threads",
+  "OwnBook", "Book File", "Best Book Move", "Hash", "Threads",
 };
 // clang-format on
 
@@ -370,10 +372,12 @@ TEST_SUITE("uci surface")
         actual, with_tune_options(expected_option_lines, tune_option_lines()));
     CHECK_MESSAGE(report.empty(), report);
 
-    // The release build declares exactly the three golden lines and S073 did
-    // not move that. Stated as its own assertion because the comparison above
-    // grows a generated half in the tune build, and this half must not.
-    CHECK(expected_option_lines.size() == 3);
+    // The release build declares exactly the five golden lines -- three until
+    // S172 added `Book File` and `Best Book Move` beside the renamed `OwnBook`
+    // -- and S073 did not move that. Stated as its own assertion because the
+    // comparison above grows a generated half in the tune build, and this half
+    // must not.
+    CHECK(expected_option_lines.size() == 5);
     CHECK(actual.size() ==
           expected_option_lines.size() + tune_option_lines().size());
 

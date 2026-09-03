@@ -393,11 +393,11 @@ enforces it but the diff.
 
 ## Done recently
 
+- S172  **an opening book is loadable over UCI, on the option names the protocol uses** -- `OwnBook`, `Book File`, `Best Book Move`, replacing `Use Book`; a book that will not load leaves the engine bookless and says so on the UCI channel; selection follows the Polyglot weight where it used to draw uniformly and never read the field. The built-in book is the raw file `src/openings.bin` pulled in by `.incbin`, same 163141 entries and same sha256, startup 4.7 ms to 2.8 ms; `tools/make_book` builds one from a PGN and verifies one. Three defects fixed on the way: `load_book_from_file()` had never had a caller, `setoption` read one token so a path with a space arrived truncated (red observed), and the probe scanned all 163141 entries where the format guarantees a binary search (DEC-129, DEC-130)
 - S170  a mate score the search did not itself prove is reported with a line that reaches it -- three causes measured and one fix each: the last delivered line carried across searches, a two-ply completion where the defender's move is looked for, and the line completed against the score it is printed beside; 12 `Incomplete mating PV` lines over 3 searches down to 5 over 1 in 3000 games, and the one left is a wrong mate distance and became S171 (DEC-124, DEC-125)
 - S147  a mate score the search proved is reported with a line that reaches it -- the table walked from the end of the stored line, all or nothing (DEC-122); 54 short of 706 mate lines before and 0 after, and the 10 a --fast run still reports are a table-inherited score and became S170 (DEC-123)
 - S144  a citation in a plan document carries its own path -- 383 bare continuations over 19 files, 380 converted (322 by relocating the text each was written against, 58 by hand) and 3 left as this step's own illustrations, which leave the checked set with it; a bare `:line` is a flag now (DEC-120)
 - S169  the 97 stale citations in the pending step files are re-anchored -- 72 by exact block, 6 by title, 16 by hand, 3 held -- with the mapping tracked, because repairing a step file makes the checker's verdict vacuous (DEC-119)
-- S143  the completion gate builds and tests build-tune beside build -- the red observed first, the gate 45 s to 93.6 s for it (DEC-118)
 
 ## Machine scope, 2026-08-30 to whenever the workstation is back
 

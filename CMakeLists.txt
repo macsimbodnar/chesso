@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(Chesso)
+# ASM because the built-in opening book is pulled into the binary by .incbin
+# from src/openings_embedded.S. S172, DEC-130.
+project(Chesso C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

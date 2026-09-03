@@ -34,7 +34,9 @@ $ ./build/src/chesso
 uci
 id name Chesso
 id author MazerFaker
-option name Use Book type check default false
+option name OwnBook type check default false
+option name Book File type string default <embedded>
+option name Best Book Move type check default false
 option name Hash type spin default 16 min 1 max 4096
 option name Threads type spin default 1 min 1 max 1
 uciok
@@ -44,7 +46,9 @@ uciok
 
 | name | type | default | range | effect |
 |---|---|---|---|---|
-| `Use Book` | check | `false` | — | play from the built-in opening book when the position is in it. Only `true` and `false` are recognised; any other value leaves the setting unchanged |
+| `OwnBook` | check | `false` | — | play from the engine's own opening book when the position is in it. Only `true` and `false` are recognised; any other value leaves the setting unchanged. Was `Use Book` until S172 |
+| `Book File` | string | `<embedded>` | — | which book. `<embedded>` and an empty value both mean the book compiled into the binary; anything else is a path to a Polyglot `.bin`, loaded when the option is set. A file that does not open, is not a whole number of 16-byte entries, or whose keys are not sorted is **refused**, and the engine then plays with no book at all rather than falling back to the built-in one — the refusal and its reason are printed as `info string book [<path>] not loaded: <why>. Playing without a book`. The value runs to the end of the line, so a path with spaces in it needs no quoting |
+| `Best Book Move` | check | `false` | — | `false` draws among the position's book moves in proportion to their Polyglot weight; `true` always plays the heaviest entry. Before S172 the draw was uniform and the weight was never read |
 | `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Not honoured exactly — see known bugs. A non-numeric value is ignored with a warning in the log |
 | `Threads` | spin | 1 | 1 to 1 | present so GUIs that insist on setting it do not fail. **The search is single-threaded**; any value other than `1` is ignored with a warning in the log |
 
@@ -52,10 +56,11 @@ Set them the usual way:
 
 ```
 setoption name Hash value 256
-setoption name Use Book value true
+setoption name OwnBook value true
+setoption name Book File value /Users/me/My Books/perfect.bin
 ```
 
-Those three are the whole option surface of the engine you get from
+Those five are the whole option surface of the engine you get from
 `cmake --build build`. There is a second, separate build with more of them.
 
 **"A warning in the log", here and below, means a debug build.** Every warning
@@ -109,9 +114,12 @@ The whole value has to be an integer: `0x50`, `120.9` and `12x` are refused, not
 read up to the first character that does not fit. A number too large for the
 range, and one too large for any `int`, both get the first line.
 
-Two things are outside this. `Use Book`, `Hash` and `Threads` are handled by
-code the release build shares, so a bad *value* for one of them is log-only as
-described above — only an unrecognised *name* is answered. And the release build
+Two things are outside this. `OwnBook`, `Book File`, `Best Book Move`, `Hash`
+and `Threads` are handled by code the release build shares, so a bad *value* for
+one of them is log-only as described above — only an unrecognised *name* is
+answered. `Book File` is the exception within the exception: a book it cannot
+load is reported on the UCI channel in both builds, because the value is a path
+a person typed and silence there reads as success. And the release build
 prints nothing in any of the three cases: the parameters are not options there,
 and the lines are `CHESSO_TUNE` only.
 

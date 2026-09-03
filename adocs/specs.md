@@ -241,13 +241,45 @@ line guarantee is measured at, over 3000-game runs at 8+0.08 with
 after it, **5** after S170. S171's own run is owed and the figure is not
 restated until it is taken.
 
+**The engine loads an opening book over UCI on the protocol's own option
+names, since 2026-09-03, S172.** `OwnBook` (check, default false) enables it,
+`Book File` (string, default `<embedded>`) says which book, and
+`Best Book Move` (check, default false) says how a move is chosen among the
+entries for a position. `<embedded>` and an empty value both mean the 163141
+Polyglot entries compiled into the binary; any other value is a path, loaded the
+moment the option is set. **A book that will not load leaves the engine with no
+book**, reported as `info string book [<path>] not loaded: <why>` on the UCI
+channel and not only in the log -- there is no fallback to the built-in book,
+because a harness that asked for one book and silently got another is measuring
+a configuration nobody chose. Loading refuses a file that does not open, whose
+size is not a whole number of sixteen-byte entries, or whose keys are not sorted;
+the ordering is the format's own requirement and the probe is a binary search
+over it, where until S172 it was a scan of all 163141 entries per position.
+Selection follows the format: the default draws in proportion to an entry's
+`weight` and `Best Book Move` takes the heaviest, where before S172 the draw was
+uniform and the weight field was never read at all. **All of it is off by
+default and no measurement this project has taken has ever played a book move**,
+which is why the selection change owes no SPRT (S158 established the same for
+the book's contents). The `setoption` value is everything after `value` to the
+end of the line, which it was not before S172 -- one token was read, so a path
+containing a space arrived truncated, invisible while `Hash`, `Threads` and the
+search parameters were the only options there were. **The book is stored as the
+raw Polyglot file `src/openings.bin` and reaches the binary through `.incbin`
+from `src/openings_embedded.S`** rather than as a 5220541-byte hex string
+decoded into the heap at every startup; the bytes are byte-for-byte the ones the
+hex header decoded to, sha256
+`47a817350459843da2a20e1d5cba28462d9df30bdb99c93097bd3cb66ce78fb5`, so the
+container changed and the contents did not -- their origin is still unrecorded
+and still S146's. `tools/make_book` builds such a book from a PGN and verifies
+one. DEC-129, DEC-130.
+
 There is one build that is not the product. `-DCHESSO_TUNE=ON` turns the
 parameters in `src/search_params.hpp` from constants the compiler folds into
 variables settable over UCI, and adds one spin option per parameter. **No
 strength number is ever taken on it**: a constant that folds is not the same
 code as a variable that must be loaded, and the difference is a timing rather
-than a node count. The release build's option surface is the three lines it has
-always had, the two builds' defaults are held equal member by member by
+than a node count. The release build's option surface is the five lines it has
+had since S172 -- three before it, the two builds' defaults are held equal member by member by
 `test_search_params`, and `tools/search_bench.py` reports the same counts on
 both with no `setoption` sent. (2026-08-16, S073. The parameter count is
 deliberately not written here: it moves with every step that adds one, and
@@ -260,9 +292,11 @@ staying green, and two of them had (2026-08-20\_plan\_review-F08 and -F14).
 with one `info string` line**, naming the parameter and its range for a value
 outside it or for a value that is not an integer in full, and naming the name for
 an option the build does not have. A legal value prints nothing, and the release
-build prints nothing in any of the three cases. `Use Book`, `Hash` and `Threads`
-are outside this: their handlers are the release build's, so a bad value for one
-of them stays log-only in both builds. Before S137 all three were silent -- the
+build prints nothing in any of the three cases. `OwnBook`, `Book File`,
+`Best Book Move`, `Hash` and `Threads` are outside this: their handlers are the
+release build's, so a bad value for one of them stays log-only in both builds --
+except a book `Book File` cannot load, which is reported on the UCI channel in
+both builds, S172. Before S137 all three were silent -- the
 refusal went to a macro that compiles to nothing under `NDEBUG` and `build-tune`
 is a Release build -- so a tuner could spend a night playing games against a
 compiled default and read it as success. There is still no readback: `uci`
