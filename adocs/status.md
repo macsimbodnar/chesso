@@ -7,42 +7,43 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-03, by hand.
 
-- In progress: **S171**, in `adocs/plan_current/`. **Its premise was refuted by
-  its own first measurement and it is rescoped, DEC-127.** DEC-125 read S170's
-  residual -- 5 `Incomplete mating PV` lines from 1 search in 3000 games -- as a
-  mate distance the position does not hold. It is not: the reported `mate -9` is
-  *deliverable*, an 18-ply line from that root is legal throughout and ends in
-  checkmate (replayed with python-chess), and the **same warm replay at
-  `Hash=256` prints that line and warns about nothing**. The score is sound and
-  not optimal -- the position's value is `mate -7` -- and naming a longer mate at
-  depth 11 is the search, which is S148's and S154's ground. What failed at
-  `Hash=16` was the walk: it stalled five plies from the mate on one missing
-  slot. `tools/mate_trace.cpp` is the instrument that showed it -- it replays a
-  game through the real UCI layer and prints the table entry behind every
-  position on a reported line, following the table's own best move past the end
-  of it and, at a stall, printing what every child holds one ply on.
-  `certified_mate_move()` (`src/search.cpp`) is the fix: with nothing to read,
-  look one ply down and take the move whose child carries an **exact** score at
-  exactly the distance the line still owes. Reporting only, all-or-nothing per
-  DEC-122 unchanged. `tests/test_mate_carry.cpp` guards it with
-  `E_mate_minus9` promoted to `guard: yes` -- red first at `6 of 9 mate lines do
-  not reach their mate`, green at 0, 9 mate lines either way, 7.9 s. INV-6
-  discharged: 121512 / 800769 / 62907 at depth 9 and 639228 / 3430710 / 367858
-  at depth 12, `c3d5` / `e2a6` / `d7c8q` at both. Gate green in both builds,
-  24 tests, `./clang-format.sh --check` clean.
-- **What S171 still owes, and why it is not done.** One `fastchess.sh --fast`
-  run reporting **0** `Incomplete mating PV` lines. **`pmset -g ac` said "No
-  adapter attached"**, and the POWER rule forbids a timed match on battery
-  (DEC-109, and S024's drained run is why). So the run is owed, the standing
-  figure stays 5 lines from 1 search in 3000 games in `adocs/specs.md` and
-  beside instrument 3 in `DEV_MANUAL.md`, and neither document claims a silence
-  that has not been measured. Plug the machine in and it is the next thing.
-- Last done: S170 -- **a mate score the search did not itself prove is
-  reported with a line that reaches it.** Three causes, one fix each, all
-  reporting-only and all under DEC-122; `tests/test_mate_carry.cpp` is the
-  guard and `adocs/data/S170_replay.py` with `S170_cases.tsv` the
-  reproduction. Its own `--fast` run took 12 lines over 3 searches down to 5
-  over 1, and the 5 became S171 above.
+- In progress: **nothing.** `adocs/plan_current/` is empty.
+- **S171 is postponed to the desktop workstation (DEC-128), not blocked and not
+  abandoned.** Its file is back in `adocs/plan_todo/` and its Open entry is last
+  in the list tagged `postponed`, so the next step derives as S020. **The fix is
+  committed and green at `136b03f`** -- `certified_mate_move()` completes a mate
+  line across a table slot the walk has lost, `tests/test_mate_carry.cpp` guards
+  it (red at `6 of 9 mate lines do not reach their mate`, green at 0, 9 lines
+  either way, 7.9 s), INV-6 discharged on 121512 / 800769 / 62907 at depth 9 and
+  639228 / 3430710 / 367858 at depth 12 with `c3d5` / `e2a6` / `d7c8q` at both,
+  gate green in both builds, 24 tests, `./clang-format.sh --check` clean. **No
+  branch was made because there is no work to put on one**: the tree is clean at
+  `136b03f` and the aborted run left two empty files under `/tmp` and a 29-line
+  log in gitignored `.tuning/`.
+- **What S171 owes is a machine, not a change.** One `fastchess.sh --fast`
+  census, 3000 games at 8+0.08, about two hours, accepted at **0**
+  `Incomplete mating PV` lines from the candidate:
+
+      REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &
+
+  `457e355` is the commit before the fix, so the reference prints its own count
+  in the same match and nothing is compared across machines. Two attempts here
+  died on the machine: `pmset -g ac` said `No adapter attached` in the morning,
+  which the POWER rule forbids (DEC-109), and on mains in the afternoon
+  `fastchess.sh`'s own load guard reported `about 387% of a core is already
+  busy` -- Spotlight indexing PDFs through ten `CGPDFService` workers beside
+  `mds_stores`, about half of eight cores -- so the run was killed after a
+  minute with `games.pgn` at zero bytes. The standing figure stays 5 lines from
+  1 search in 3000 games in `adocs/specs.md` and beside instrument 3 in
+  `DEV_MANUAL.md`, and neither claims a silence that has not been measured.
+- Last done: S171's fix itself, `136b03f`, described above but **not stamped**
+  -- the step is not done, it is postponed with its census outstanding. Before
+  it, S170 -- **a mate score the search did not itself prove is reported with a
+  line that reaches it.** Three causes, one fix each, all reporting-only and all
+  under DEC-122; `tests/test_mate_carry.cpp` is the guard and
+  `adocs/data/S170_replay.py` with `S170_cases.tsv` the reproduction. Its own
+  `--fast` run took 12 lines over 3 searches down to 5 over 1, and the 5 became
+  S171 above.
 - Before it: S147 (**a mate line the search proved reaches its mate**, 54 short
   of 706 before and 0 after; DEC-122, DEC-123), S144 (**a citation in a plan
   document carries its own path**; DEC-120), S169 (**the 97 stale citations are
@@ -73,15 +74,15 @@ Updated: 2026-09-03, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: finish **S171** by taking its `--fast` run on mains power. After it the
-  machine-light entries are the behaviour-neutral pair (S020, S030), discharged
-  on identical `tools/search_bench.py` node counts and best moves plus a
-  `hyperfine` timing.
-- Blocked: **nothing.** S146 was the only entry here and it is parked rather
-  than blocked now (DEC-126): parking is what an unblocking event with no date
-  gets, so no slot is held against it.
-- Watching: nothing. No run is armed; S171's is owed and cannot start on
-  battery.
+- Next: **S020**, the first entry in `plan.md`'s Open list -- compute the
+  in-check state once per node instead of once per call site. It is
+  behaviour-neutral and discharges on identical `tools/search_bench.py` node
+  counts and best moves plus a `hyperfine` timing, so it is machine-light and
+  does not want the idle machine S171 does. S030 is the other half of that
+  pair. **On the desktop workstation, S171's census comes first.**
+- Blocked: **nothing.**
+- Watching: **nothing. No run is armed.** The 2026-09-03 attempt was killed a
+  minute in and no watcher was ever armed for it.
 - Parked:
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**

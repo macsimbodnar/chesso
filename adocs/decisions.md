@@ -7239,3 +7239,69 @@ Consequences: The BUGS-rule urgency that put S171 first in the Open list does
               machine was on battery when the fix landed and the POWER rule
               forbids a timed match there, so the run is owed and named in the
               step file rather than assumed.
+
+
+## DEC-128  2026-09-03  S171 is postponed to the desktop workstation: its census run needs a machine this one cannot be
+Tags:         plan, measurement, machine, sprt, postponed
+Context:      S171's fix is in and green at `136b03f`: `certified_mate_move()`
+              completes a mate line across a table slot the walk has lost,
+              `tests/test_mate_carry.cpp` guards it red-then-green, INV-6 is
+              discharged on identical node counts and best moves, and the gate
+              passes in both builds. What the step still owes is one thing --
+              a `fastchess.sh --fast` census, 3000 games at 8+0.08, about two
+              hours, reporting **0** `Incomplete mating PV` lines from the
+              candidate. Two attempts on this MacBook failed for machine
+              reasons and not for code reasons. In the morning `pmset -g ac`
+              reported `No adapter attached` and the POWER rule forbids a timed
+              match on battery (DEC-109, and S024's drained run is why). With
+              the adapter attached the same afternoon, `fastchess.sh`'s own
+              load guard printed `about 387% of a core is already busy`:
+              Spotlight was indexing PDFs through ten `CGPDFService` workers
+              beside `mds_stores`, roughly half of the eight cores. The run was
+              killed about a minute in, before a single game finished -- its
+              `games.pgn` is zero bytes -- because at 8+0.08 a match sharing
+              half the machine risks time forfeits, and the figure it would be
+              read against was taken on an idle machine.
+Decision:     By the owner. **S171 is postponed, not blocked and not
+              abandoned.** Its file moves back to `adocs/plan_todo/` with the
+              run written into it, and its Open entry leaves position 1 for the
+              parked cluster tagged `postponed, DEC-128`, so the next step
+              derives as S020 rather than as a step nothing can advance. It
+              resumes on the owner's desktop workstation, where the census is
+              the first thing taken. The run needs no re-derivation:
+              `REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &`
+              -- 3000 games, `Hash=16`, `UHO_Lichess_4852_v1.epd`, reference
+              `457e355` being the commit before the fix -- accepted at 0 lines
+              from the candidate against whatever the reference prints in the
+              same run.
+              **No branch was made, because there is no work to put on one.**
+              The whole of S171 is committed at `136b03f` on `achesso` and the
+              tree is clean; the aborted run produced two empty files under
+              `/tmp` and a 29-line log in gitignored `.tuning/`, none of which
+              is evidence of anything. This is the opposite case to DEC-111,
+              where a branch was the right home for gitignored evidence that
+              would otherwise die with a machine.
+Rejected:     Taking the run on the loaded machine -- the script prints that
+              guard precisely so this decision is not taken by accident, and a
+              two-hour census whose forfeit rate is unknown is worth less than
+              a delayed one. Turning Spotlight indexing off to clear the
+              machine -- a system-wide change to the owner's machine for one
+              measurement, and his call rather than an agent's. Leaving the
+              step in `plan_current/` as blocked -- it would hold a coordinator
+              slot under the PLAN rule against an unblocking event with no
+              date, which is what DEC-126 declined for S146 five days earlier.
+              Writing the `done:` stamp with the run outstanding -- the accepts
+              names that run, and a stamp that skipped it would be false in the
+              one document whose whole value is that it is not.
+Consequences: The standing rate stays **5 `Incomplete mating PV` lines from 1
+              search in 3000 games** in `adocs/specs.md` and beside instrument
+              3 in `DEV_MANUAL.md`, and neither document claims a silence that
+              has not been measured. No bug is open against this: DEC-127
+              already established that the score was never the defect, so the
+              BUGS rule does not force the step ahead of anything. The census
+              carries across machines without qualification, unlike a timing --
+              both engines play in the same run on the same machine, so the
+              reference's count is measured beside the candidate's rather than
+              read from a figure taken elsewhere, and DEC-049 is untouched. The
+              standing 5 is this MacBook's and stays attributed to it. The next
+              step in the Open list is S020.

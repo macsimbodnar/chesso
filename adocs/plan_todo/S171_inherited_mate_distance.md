@@ -141,3 +141,43 @@ becomes `guard: yes`. Without the fix `tests/test_mate_carry.cpp` reports
 at 5, 6, 7 and 9 plies of 15, and the two `mate -9` lines at ply 50 at 11 and 12
 plies of 18. With it, 0 of 9, and the mate-line count is 9 either way, which is
 what says the change is reporting-only. 7.9 s.
+
+## Postponed to the desktop workstation, 2026-09-03 (DEC-128)
+
+The fix is in and green at `136b03f`. **One thing is owed and it is a machine,
+not a change**: the `fastchess.sh --fast` census the `accepts:` names.
+
+Two attempts here failed for machine reasons:
+
+| attempt | what stopped it |
+|---|---|
+| morning | `pmset -g ac` = `No adapter attached`; the POWER rule forbids a timed match on battery (DEC-109) |
+| afternoon, on mains | `fastchess.sh`'s load guard: `about 387% of a core is already busy` -- Spotlight indexing PDFs through ten `CGPDFService` workers beside `mds_stores`, about half of eight cores. Killed after about a minute, `games.pgn` zero bytes |
+
+**The run, so whoever resumes does not re-derive it:**
+
+```bash
+REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &
+```
+
+3000 games at 8+0.08, `Hash=16`, `UHO_Lichess_4852_v1.epd`, concurrency all
+cores. `457e355` is the commit before the fix, so the reference prints its own
+`Incomplete mating PV` count in the same match. **Accept at 0 from the
+candidate.** Arm a watcher on `SPRT-RUN-(DONE|FAILED)` per DEC-061, ceiling at
+least 2x the expected two hours.
+
+Before starting it: `pmset -g ac` must report an adapter, and
+`ps aux | sort -rnk3 | head` must be quiet -- the script's own guard is the
+check and it fired here.
+
+**The census is not a figure carried across machines.** Both engines play in
+the same run, so the reference's count is measured beside the candidate's and
+the workstation needs no re-baseline (DEC-049 untouched). The standing **5
+lines from 1 search in 3000 games** is this MacBook's and stays attributed to
+it until the workstation's run replaces the pair.
+
+**On finishing there:** the run's count is the only outstanding item. Then
+`adocs/specs.md` (the paragraph ending "S171's own run is owed and the figure
+is not restated until it is taken") and `DEV_MANUAL.md`'s instrument 3 table
+and the paragraph under it take the measured number, the `done:` stamp is
+written, and the file moves to `adocs/plan_done/`.

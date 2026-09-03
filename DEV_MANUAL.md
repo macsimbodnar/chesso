@@ -1052,7 +1052,7 @@ down and neither reached silence, so **read a count and not a silent log**:
 | before S147 | 138 | -- | 3000 games |
 | S147 | 10, later measured 12 | 3 | 3000 games each |
 | S170 | **5** | **1** | 3000 games |
-| S171 | not yet measured | -- | run owed |
+| S171 | not yet measured | -- | run postponed, DEC-128 |
 
 S147 (2026-09-02) removed the truncation of a line the search had just proved.
 S170 the same day removed three more ways a **true** mate score lost its line --
@@ -1065,9 +1065,17 @@ stalled five plies from the mate on one missing slot. `certified_mate_move()`
 now fills such a hole from the children of the position whose entry is gone.
 
 **The standing figure is still 5 lines from 1 search in 3000 games** until
-S171's own `--fast` run replaces it: the fix landed with the machine on battery
-and the POWER rule forbids a timed match there. Read a count against 5, and
+S171's own `--fast` run replaces it, and that run is **postponed to the owner's
+desktop workstation (DEC-128)**. It was attempted twice here and stopped by the
+machine both times: `pmset -g ac` reported no adapter, which the POWER rule
+forbids, and then on mains this script's own load guard reported `about 387% of
+a core is already busy` with Spotlight indexing. Read a count against 5, and
 anything materially above it has found something new.
+
+The census carries across machines where a timing does not: both engines play
+in the same run, so the reference's count is measured beside the candidate's
+and nothing is read from a figure taken elsewhere (DEC-049 untouched). The
+standing 5 is the MacBook's and stays attributed to it.
 
 The reproducible half of the same property is `test_mate_pv`, in the fast label
 since S147: every `info` line carrying a mate score over both S145 sets, 706 of
