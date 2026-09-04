@@ -189,9 +189,23 @@ warning in the log. UCI says to ignore what is not implemented, and the rest of
 the line still carries the time control. A GUI asking for a mate search gets a
 normal search.
 
-`position` takes `startpos` or `fen <six fields>`, either of them optionally
-followed by `moves`. A move in the `moves` list that does not parse or is not
-legal is skipped with a warning, and the rest of the list is still applied.
+`position` takes `startpos` or `fen <four to six fields>`, either of them
+optionally followed by `moves`. The halfmove and fullmove clocks may be omitted
+and default to `0 1`, which is what Stockfish, cutechess and python-chess
+accept too; reading stops at `moves`. A FEN with fewer than four fields, or one
+that does not load, is **refused and ends the command there**, with the engine
+on the position it had -- board, history and every move applied since the last
+`position` -- so the moves after a refused FEN are never applied to a board they
+were not meant for. The refusal is one `info string` line on stdout, in one of
+two shapes (S176):
+
+```
+info string refused [position fen] <fen>, fewer than four fields
+info string refused [position fen] <fen>, does not load
+```
+
+A move in the `moves` list that does not parse or is not legal is skipped with
+a warning, and the rest of the list is still applied.
 
 A FEN carrying a castling right or an en-passant square the board cannot
 support is **accepted with that field cleared**, not refused. A right survives

@@ -616,6 +616,102 @@ TEST_SUITE("engine: uci layer")
     uci_shutdown();
   }
 
+  // S176, 2026-09-03_adversarial-F04. The case above covers only a FEN with no
+  // moves applied, where the last FEN and the position coincide. With moves
+  // applied, a failed load reloaded `initial_position` -- the last FEN -- and
+  // the moves were gone: after `startpos moves e2e4` one malformed FEN put the
+  // engine on the start position, and the moves after the bad FEN were then
+  // applied to it.
+  TEST_CASE("a malformed fen keeps the previous position and its moves")
+  {
+    uci_init();
+
+    std::string after_e2e4;
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos moves e2e4");
+      after_e2e4 = generate_FEN(&uci_game()->board);
+      REQUIRE_NE(after_e2e4, std::string(DEFAULT_POSITION));
+
+      uci_process_line(
+          "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq a9 "
+          "0 1 moves e7e5");
+      CHECK(capture.contains(
+          "info string refused [position fen] "
+          "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq a9 0 1, does not "
+          "load"));
+    }
+
+    // Neither the bad FEN nor the moves after it reached the board.
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), after_e2e4);
+
+    uci_shutdown();
+  }
+
+  // The FEN standard's clocks are optional in practice: Stockfish, cutechess
+  // and python-chess all accept four and five fields. Chesso dropped the short
+  // form silently and stayed on whatever position it had (F04), and read
+  // `moves` as the fifth field when the short form had moves after it.
+  TEST_CASE("a four- or five-field fen loads with the clocks defaulted")
+  {
+    uci_init();
+
+    const std::string kings = "8/8/8/4k3/8/4K3/8/8 w - -";
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+      uci_process_line("position fen " + kings);
+    }
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), kings + " 0 1");
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+      uci_process_line("position fen " + kings + " 7");
+    }
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), kings + " 7 1");
+
+    // With moves: the short form lands where the six-field form lands. The
+    // expected FEN comes from the engine, not from a board kept in the head.
+    std::string six_fields_then_move;
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen " + kings + " 0 1 moves e3d3");
+      six_fields_then_move = generate_FEN(&uci_game()->board);
+      REQUIRE_NE(six_fields_then_move, kings + " 0 1");
+
+      uci_process_line("position startpos");
+      uci_process_line("position fen " + kings + " moves e3d3");
+    }
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), six_fields_then_move);
+
+    uci_shutdown();
+  }
+
+  TEST_CASE("a fen with fewer than four fields is refused and changes nothing")
+  {
+    uci_init();
+
+    std::string after_e2e4;
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos moves e2e4");
+      after_e2e4 = generate_FEN(&uci_game()->board);
+
+      // e7e5 is legal on the board the engine holds, so applying it would be
+      // the visible failure: the refusal has to end the whole command.
+      uci_process_line("position fen 8/8/8/4k3/8/4K3/8/8 w - moves e7e5");
+      CHECK(capture.contains(
+          "info string refused [position fen] 8/8/8/4k3/8/4K3/8/8 w -, fewer "
+          "than four fields"));
+    }
+
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), after_e2e4);
+
+    uci_shutdown();
+  }
+
   TEST_CASE("unknown and empty input is ignored")
   {
     uci_init();

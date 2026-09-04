@@ -69,6 +69,10 @@ static const std::vector<std::string> expected_refusal_templates = {
     "info string refused [<name>] value <value>, not an integer, range [<min>, "
     "<max>]",
     "info string refused [<name>], unknown option",
+    // S176: `position fen` refusals. MANUAL.md and specs.md described them
+    // before these lines were added (SURFACE).
+    "info string refused [position fen] <fen>, fewer than four fields",
+    "info string refused [position fen] <fen>, does not load",
 };
 
 

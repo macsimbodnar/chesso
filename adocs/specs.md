@@ -150,6 +150,17 @@ Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
 
+**`position fen` takes four to six fields, and a FEN that does not load changes
+nothing, since S176.** The clocks default to `0 1` when omitted and reading
+stops at `moves`. A FEN with fewer than four fields, or one `load_FEN()`
+rejects, is refused with one `info string` line (`MANUAL.md` has the two
+shapes) and ends the command with the board, the history and every move applied
+since the last `position` exactly as they were. Before S176 the short form was
+dropped silently, `moves` was read as its fifth field, and a failed load reloaded
+the last FEN without its moves -- so one malformed FEN after `startpos moves
+e2e4` put the engine on the start position and then applied the moves that
+followed to it (2026-09-03_adversarial-F04).
+
 **An `info` line that claims a mate shows the mate since 2026-09-02, S147**: a
 `score mate N` carries a `pv` of `2N - 1` plies where the side to move delivers
 it and `2|N|` where it receives it, and the position that line ends on is

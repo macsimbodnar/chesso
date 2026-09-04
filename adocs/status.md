@@ -8,7 +8,25 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
-- Last done: **S175, 2026-09-04 -- the Polyglot key follows the format on an
+- Last done: **S176, 2026-09-04 -- `position fen` takes four to six fields, and
+  a FEN that does not load changes nothing.** Two defects in `command_position`.
+  Fewer than six fields was dropped silently with the board left wherever it
+  was, and a four-field FEN followed by `moves` read `moves` as its fifth
+  field, failed to load, and applied nothing. A failed load then reloaded
+  `initial_position` -- the last *FEN*, not the last *position* -- so the moves
+  applied since were gone: after `startpos moves e2e4` one malformed FEN put the
+  engine on the start position and applied the moves that followed to it. Now
+  the clocks default to `0 1`, reading stops at `moves`, and fewer than four
+  fields or a FEN `load_FEN()` rejects is refused with one `info string` line
+  (`refused [position fen] <fen>, fewer than four fields` / `, does not load`)
+  that ends the whole command; `set_position()` saves the whole `game_t` before
+  the load and restores it on failure, about 100 KB and not on a search path.
+  **Red first**: three new `test_engine` cases, 4 assertions failed on the
+  unfixed tree, green after; the golden surface gained the two refusal shapes
+  only after `MANUAL.md` and `specs.md` described them (SURFACE). INV-6
+  identical (121512 / 800769 / 62907; 639228 / 3430710 / 367858, same best
+  moves). Fast suite 26/26 in both builds. `DEV_MANUAL.md` needed nothing.
+- Before S176: **S175, 2026-09-04 -- the Polyglot key follows the format on an
   edge-file en-passant square, and the shipped book is rebuilt to it.**
   `get_key()` looked for the capturing pawn at `en_passant + 7/+9` (White) and
   `-9/-7` (Black); with a8 at index 0 those wrap round the board edge on the a-
@@ -230,10 +248,10 @@ Updated: 2026-09-04, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S176**, third of the audit batch -- `position fen` accepts the four-
-  and five-field forms and a FEN that fails to load keeps the whole previous
-  position, moves included. Then S177, S178; S020 resumes after the batch. **On
-  the desktop workstation, S171's census comes first.**
+- Next: **S177**, last of the audit batch -- `rating.sh` and `build_release.sh`
+  get the portability S167 gave `fastchess.sh`, and `rating.sh` arms its marker
+  before anything can fail. Then S178; S020 resumes after it. **On the desktop
+  workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran

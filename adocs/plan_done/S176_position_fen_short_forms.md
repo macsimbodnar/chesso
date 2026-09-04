@@ -7,8 +7,8 @@ decisions:
 closes:     2026-09-03_adversarial-F04
 blocks:
 paused_by:
-author:
-done:
+author:     claude (Fable 5.1), 2026-09-04
+done:       2026-09-04. `command_position` reads four to six fields after `fen`, stopping at `moves`, defaults the missing clocks to `0 1`, and refuses fewer than four fields with `info string refused [position fen] <fen>, fewer than four fields`, ending the command; `set_position()` saves the whole `game_t` before `load_FEN()` and restores it on failure, reporting `info string refused [position fen] <fen>, does not load` and ending the command, so board, history and every move applied since the last `position` survive a bad FEN. Red observed first through ctest on the unfixed tree: three new `test_engine` cases, 4 assertions failed (the malformed-FEN-with-moves case landed on the start position; the four-field form left the board on `startpos`); green after, 54 of 54 cases. The finding's own sequence now prints `8/8/8/4k3/8/4K3/8/8 w - - 0 1`, then the position after `e3d3` from the four-field form with moves, then the three-field refusal with the board unchanged. `MANUAL.md` and `adocs/specs.md` describe the forms and the two refusal shapes, and only then were the two shapes added to `test_uci_surface`'s golden list (SURFACE); `DEV_MANUAL.md` checked, no change needed. INV-6: `search_bench` 121512 / 800769 / 62907 and 639228 / 3430710 / 367858, `c3d5` / `e2a6` / `d7c8q`, identical. Fast suite 26/26 in `build` and `build-tune`, `clang-format --check` clean. Fast check over the diff: no issues on five named questions (restore completeness, field-count trace, template match, test vacuity, doc claims).
 
 ## Why this exists
 

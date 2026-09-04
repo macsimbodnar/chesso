@@ -389,11 +389,21 @@ bool check_move_legality(move_t move)
 
 bool set_position(const std::string& fen)
 {
-  if (!load_FEN(fen, &game)) {
-    LOG_E << "Failed to load FEN [" << fen << "]. Restoring previous position"
-          << END_E;
+  // S176 (2026-09-03_adversarial-F04). A FEN that does not load leaves the
+  // engine exactly where it was, moves included: the whole game -- board,
+  // history, hash randoms -- is saved before the load and put back after a
+  // failure, since load_FEN() may have written part of the board before it
+  // rejected the rest. Reloading `initial_position` here was reloading the
+  // last *FEN*, not the last *position*, so every move applied since was lost
+  // and one malformed FEN after `startpos moves e2e4` put the engine on the
+  // start position. The copy is about 100 KB and `position` is not on any
+  // search path. The refusal goes on the UCI channel in every build: LOG_E is
+  // silent in the binary that ships (the S137 pattern).
+  const game_t previous = game;
 
-    load_FEN(initial_position, &game);
+  if (!load_FEN(fen, &game)) {
+    game = previous;
+    uci_reply("info string refused [position fen] " + fen + ", does not load");
     return false;
   }
 
@@ -1326,29 +1336,43 @@ bool command_position(std::queue<std::string>& args)
     if (token == "fine70") { set_position(FINE_70_POS); }
 
     if (token == "fen") {
-      // Reading the fen string. Fen string contains 6 portions
-      if (args.size() < 6) {
-        // The fen string is not complete
-        return false;
+      // S176. Four to six fields. The clocks are optional in practice --
+      // Stockfish, cutechess and python-chess all accept the short form -- and
+      // default to `0 1`. Reading stops at `moves`, which used to be swallowed
+      // as the fifth field of a four-field FEN so that the load failed and the
+      // moves were never applied. Fewer than four fields is refused and, like a
+      // FEN that does not load, ends the whole command with the position
+      // unchanged: applying the moves that follow to the old board would put
+      // the engine somewhere the GUI did not send it.
+      std::vector<std::string> fields;
+
+      while (!args.empty() && fields.size() < 6 && args.front() != "moves") {
+        fields.push_back(args.front());
+        args.pop();
       }
 
       std::string fen;
 
-      for (int i = 0; i < 6; ++i) {
-        fen += args.front() + " ";
-        args.pop();
+      for (const std::string& field : fields) {
+        fen += field + " ";
       }
 
       fen = trim_whitespace(fen);
 
-      // Initialize the board with the fen
-      bool res = set_position(fen);
-
-      if (res) {
-        LOG_I << "Set fen " << fen << END_I;
-      } else {
-        LOG_W << "Failed to set fen " << fen << END_W;
+      if (fields.size() < 4) {
+        uci_reply("info string refused [position fen] " +
+                  (fen.empty() ? std::string("(none)") : fen) +
+                  ", fewer than four fields");
+        return false;
       }
+
+      if (fields.size() == 4) { fen += " 0"; }
+      if (fields.size() <= 5) { fen += " 1"; }
+
+      // The refusal, if any, has already been reported by set_position().
+      if (!set_position(fen)) { return false; }
+
+      LOG_I << "Set fen " << fen << END_I;
     }
 
     if (token == "moves") {
