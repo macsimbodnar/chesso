@@ -8,6 +8,29 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
+- **Audit re-run 2026-09-04 (`adocs/audit/2026-09-04_adversarial.md`), the
+  closing run for the 2026-09-03 batch: no high, no medium, three low.** All
+  four 2026-09-03 findings are **closed on re-measurement from their own
+  reproductions**, not from the stamps -- the Polyglot key (registered test
+  green, python-chess re-derivation 0/0/0, `OwnBook` answers `d2f3` on one of the
+  seven positions), the SAN parser (annotated PGN builds, `Qxf7` refused with
+  exit 1 and no file), the scripts (`rating.sh --bracket` prints
+  `RATING-RUN-FAILED: ordo not on PATH`) and `position fen` (short forms load, a
+  bad FEN after `startpos moves e2e4` keeps the e2e4 board). Rules: nothing.
+  Elo behind the literature: nothing outside the plan. Prior findings recounted:
+  37 code-audit findings, 30 closed, 4 accepted, 3 planned (S039, S042, S151).
+  **The three lows are `open` and wait on the owner** (DEC-035 says a run with
+  no high and no medium is where the loop stops, and the lows are discharged by
+  one decision or become steps): **F01** `go infinite` prints `bestmove` unasked
+  on a root whose tree collapses (KNvK, stalemate, checkmate) because the
+  infinite search is the depth loop to `MAX_DEPTH` 126 -- a protocol break, red
+  test written and unregistered at `tests/test_audit_go_infinite.cpp`, 3 of 6
+  red; **F02** a bad token in `position ... moves` is skipped and the rest
+  applied, silently in Release, documented in `MANUAL.md` as intended -- the
+  S176 rule applied to the FEN half of the command and not to the moves half;
+  **F03** the aborted-iteration best-move logic assumes the root's table entry
+  survives the iteration, which the replacement rule does not guarantee --
+  mechanism shown, not reproduced, about 6e-5 per iteration by estimate.
 - Last done: **S177, 2026-09-04 -- `rating.sh` and `build_release.sh` run on
   macOS as `fastchess.sh` does, and `rating.sh` prints its terminal marker on
   every exit.** On this machine `./rating.sh --bracket` died at

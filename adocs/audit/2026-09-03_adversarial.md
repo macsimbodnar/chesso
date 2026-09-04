@@ -76,7 +76,7 @@ reports are dispositioned in the table.
 
 ### 2026-09-03_adversarial-F01  medium  `get_key()` wraps round the board edge when the en-passant square is on the a- or h-file, so the Polyglot key is wrong wherever a same-side pawn stands on the wrapped square; the shipped book carries 7 such entries and an external book is silently abandoned there
 
-Status: planned -- S175
+Status: closed -- S175, re-run 2026-09-04_adversarial
 
 **Evidence.** `src/openings.cpp:562-593` decides whether the key carries the
 en-passant component by testing two squares for a pawn of the side to move:
@@ -187,7 +187,7 @@ configuration never probes the book.
 
 ### 2026-09-03_adversarial-F02  medium  `algebraic_to_move()` fabricates a move instead of failing in the Release build, so `make_book` and `pgn_to_positions` run on silently on a corrupted board and exit 0
 
-Status: planned -- S174
+Status: closed -- S174, re-run 2026-09-04_adversarial
 
 **Evidence.** `src/bitboard.cpp:2418-2424`, `:2430-2435` and `:2483-2488` are
 the parser's three failure paths, and each is `LOG_E ... assert(false)` with
@@ -277,7 +277,7 @@ parser returns 0 -- its guard is already written.
 
 ### 2026-09-03_adversarial-F03  low  `rating.sh` and `build_release.sh` need GNU `nproc` and `timeout` and die on this machine before any terminal marker is armed; only `fastchess.sh` was made portable
 
-Status: planned -- S177
+Status: closed -- S177, re-run 2026-09-04_adversarial
 
 **Evidence.**
 
@@ -319,7 +319,7 @@ S167; one line in `.moltke.local.md` naming which scripts run on this machine.
 
 ### 2026-09-03_adversarial-F04  low  a `position fen` with fewer than six fields is dropped silently, and a six-field FEN that fails to load resets the board to the last FEN without its moves -- both leave the engine on a position the GUI did not send
 
-Status: planned -- S176
+Status: closed -- S176, re-run 2026-09-04_adversarial
 
 **Evidence.** `src/chesso.cpp:1328-1333` returns from `command_position` when
 fewer than six tokens follow `fen`, with nothing on the UCI channel; the
