@@ -4990,6 +4990,13 @@ Consequences: `plan_todo/` loses ten files and the corrections survive in the
 
 ## DEC-087  2026-08-19  Second adversarial review: the block order holds, four techniques are demoted or retired, three cheap wins get steps
 Tags:         planning, search, evaluation, measurement
+Amended:      2026-09-04 by DEC-133 -- three of its rulings rested on figures
+              the 2026-09-04 plan review's source pass narrowed: (a) Ethereal
+              removed only its pre-move-loop check extension, so the in-loop
+              form is reopened as S188; (b) Lynx's +11.4 was measured at CCRL
+              3226-3293, not ~2850, so S099 joins the reserve at its head;
+              (d) S133's +65 and +88 are release-bundle deltas. S181 and S185
+              record the corrected bands and sources.
 Context:      The 2026-08-19 review (DEC-081 to DEC-086) was itself reviewed
               against per-patch SPRT records of engines that passed through this
               band -- Weiss, Lynx, Stash, Berserk and Ethereal commit logs and
@@ -5518,6 +5525,9 @@ Rejected:     A dedicated re-measurement run -- buys a clean close on the audit
 
 ## DEC-097  2026-08-21  the SOTA enrichment pass resumes, in parallel, on nights
 Tags:         plan, research, process, dec-084, dec-041
+Amended:      2026-09-04 by DEC-137 -- the resumed pass produced no commit in
+              fourteen days; the enrichment becomes step S186, ordered before
+              block 3, and is no longer a standing promise for nights.
 Context:      The enrichment pass appends a technical-details section per pending
               step -- published form, traced records, `file:line` grounding, seeds
               per DEC-084, measurement plan per DEC-083. It was stopped at S120
@@ -5981,6 +5991,11 @@ Consequences: CLAUDE.md, adocs/specs.md and adocs/plan.md state the same goal
 
 ## DEC-105  2026-08-22  A seed's origin decides, not its venue: engine-tuned numbers are never seeds
 Tags:         provenance, licensing, tuning, identity
+Amended:      2026-09-04 by DEC-134 -- the rule binds the seed sections of the
+              pending step files too, which its Consequences did not name; a
+              constant quoted in another engine's commit message is that
+              engine's constant, and S180 reseeds the seven files written
+              under DEC-084's venue reading.
 Amends:       DEC-084, whose seed rule was stated by venue
 Context:      DEC-084 allows "a number from open literature -- papers, the
               wiki, articles" to seed a fit, and forbids anything from another
@@ -6829,6 +6844,9 @@ Consequences: A step that rewrites a pending step file for any reason moves
 
 ## DEC-120  2026-09-01  A citation in a plan document repeats its path, and a bare `:line` is a flag
 Tags:         workflow, docs, tooling, plan
+Amended:      2026-09-04 by DEC-135 -- a citation from a pending step file into
+              code names a symbol and carries no line number; the path is
+              still repeated. S187 converts the existing citations.
 Context:      S138 brought 201 full `path:line` citations inside
               `tools/plan_prose_check.py --citations`. It could not reach the
               other class: a bare `:line` continuation whose path is inherited
@@ -7535,3 +7553,242 @@ Consequences: S179 sits second in the Open list, after S178, machine-light: a
               magics are perfect hashes into tables whose size the relevant-bit
               counts fix, so only the constants move. The relevant-bit counts,
               shifts and table layout are not the series' and do not change.
+
+## DEC-133  2026-09-04  Third review of the plan: DEC-087 corrected on three rulings, S099 to the reserve, check extensions reopened, S133 kept
+Tags:         planning, search, evaluation, measurement, provenance
+Context:      The 2026-09-04 plan review (`adocs/audit/2026-09-04_plan_review.md`,
+              no high, five medium, five low) and its independent literature
+              pass (`adocs/data/2026-09-04_plan_review_literature_check.md`)
+              fetched every figure DEC-087 argued from. Three rulings rest on
+              figures the sources narrow. (a) Ethereal commit 3f4ef537
+              (2018-06-25) removed only the check extension applied *before*
+              the move loop, +4.14/+4.54 at bounds [-3, 1]; Ethereal's master
+              still extends a checking move inside the loop, and the wiki's
+              Ethereal page lists the technique. Stormphrax #67 removed check
+              extensions with no Elo in the message, in a network engine far
+              above the band. Weiss 1.2 at 3055 and Stash, the plan's own
+              existence proofs, carry the in-loop form. (b) Lynx pull request
+              #1662, the "+11.4 at ~2850" that kept S099 in the main order,
+              merged 2025-04-15 between Lynx v1.9.0 and v1.10.0, which the
+              CCRL Blitz list rates 3226 and 3293 -- above the "~3100" that
+              demoted S110 and S111. All three correction tables' evidence is
+              above 3100; the criterion separates nothing. S110's twelve
+              figures carry no source at all. (d) Berserk 4.3.0's "~+65" is the
+              author's estimate for the whole release, which bundles the
+              king-side tables with space, imbalance tables, a wider king area,
+              history pruning, phased move generation and TT buckets; Leorik's
+              "~+88" is the 2.4 to 2.5 CCRL delta of a release that also
+              shipped PEXT, threads and .NET 8, and its piece-square form is
+              linear in both king squares rather than bucketed. No isolated
+              figure for king-relative tables exists in anything fetched.
+Decision:     By the owner, 2026-09-04, on the agent's report, item by item.
+              (a) S096 stays retired by id -- ids are never reused -- and the
+              in-loop check extension is a new step, S188, placed directly after
+              S097 whose extension plumbing it uses, one SPRT, whatever it
+              returns. (b) S099 moves to the head of the reserve tail as the
+              probe for the correction-history family, run on a spare night
+              when the machine is idle; S110 and S111 stay in the reserve and
+              are gated on its verdict; S181 re-bands every Lynx figure by
+              merge date and redraws S098's "sub-3000 evidence" grouping. (d)
+              S133 stays where it is, its two figures restated as
+              release-bundle deltas with no isolated number, kept on adoption
+              breadth (Berserk, Leorik, Lynx) and on the owner's approval of
+              2026-08-19.
+Rejected:     Keeping S096 retired on the corrected record -- zero cost, but
+              every surveyed hand-crafted engine at the band has the in-loop
+              form and DEC-019 says a published figure decides what to try.
+              Folding the check extension into S097 as a third verdict --
+              cheaper by a step, but it blurs S097's two-verdict attribution.
+              Keeping S099 at entry 12 with a restated reason -- it places a
+              technique whose only evidence is at 3200 ahead of steps with
+              sub-3000 records. Demoting or retiring S133 -- the technique is
+              real and adopted; only its number is not isolated.
+Consequences: DEC-087 carries an Amended line pointing here. `plan.md`'s
+              DEC-087 section carries the three corrections inline. The Open
+              list moves S099 to the reserve head and inserts S188 after S097.
+              S181 records the Lynx bands, S185 the sources. DEC-087's
+              structure -- four blocks, search first -- is untouched.
+
+## DEC-134  2026-09-04  A constant quoted in another engine's commit message is that engine's constant; the seven seeded sections are reseeded
+Tags:         provenance, licensing, tuning, plan
+Context:      `2026-09-04_plan_review-F01`. Seven enriched step files -- S095,
+              S097, S098, S109, S113, S114, S132 -- were written on 2026-08-19
+              under DEC-084's venue rule and seed their constants from numbers
+              Stockfish, Weiss, Lynx, Ethereal and Berserk quote in commit
+              messages and pull-request bodies: ProbCut's `beta + 200`, late
+              move pruning's `depth * 10` with cap 3, the time-management pair
+              2.0 / 1.0, a history clamp of 2, singular depth 8 and margin 3,
+              "one pawn" and "three plies". S114 states in so many words that
+              "numbers quoted from message prose are legal seeds". DEC-105
+              (2026-08-22) made the seed rule provenance-based and its
+              Consequences named `plan.md`, `CLAUDE.md`, `AGENTS.md` and
+              `specs.md`; the step files were not on the list and nobody
+              re-read them. Nothing in the engine carries these constants; the
+              defect is that an implementer following the files as written
+              starts a sweep or an SPSA run from another engine's number, and
+              DEC-105's own reasoning -- a seeded-then-refit vector converges
+              near its seed by construction -- is why that is a breach and not
+              a formality.
+Decision:     By the owner, 2026-09-04: stick to the rule. A number that
+              originates as another engine's tuned or shipped value is that
+              engine's constant wherever it is quoted; a commit message is a
+              venue like the wiki. DEC-105 binds the seed sections of every
+              pending step file. S180 reseeds the seven, each seed in one of
+              three forms: a value from a publication about the technique with
+              its URL, a derivation procedure over chesso's own data or scale
+              that the owning step runs at its start, or the range midpoint,
+              stated as such. Units are not exempt by name -- "one pawn" is
+              expressed in chesso's own material scale.
+Rejected:     A per-case exception in the DEC-087 Fathom style admitting
+              prose-quoted constants -- it contradicts DEC-105's own reasoning,
+              and the owner's stated ground for the rule is comfort that no
+              engine number is anywhere in the lineage. Midpoint for all seven
+              -- kept as the fallback where no derivation is cheap.
+Consequences: DEC-105 carries an Amended line pointing here. Every future
+              enrichment writes seeds in one of the three forms; S186's
+              accepts says so. S180 sits third in the Open list, before any of
+              the seven can be started.
+
+## DEC-135  2026-09-04  Citations from pending step files into code name symbols, not lines
+Tags:         workflow, docs, plan
+Context:      `2026-09-04_plan_review-F07`, the third recurrence of
+              `2026-08-20_plan_review-F01`'s class. S169 re-anchored 97
+              citations on 2026-09-01; three days later `--citations` flags 59
+              over 54 files, one inside S159's accepts. Four steps carry
+              citations that were wrong when written -- S109's accepts, S055's
+              taper divisions, S024's Note, S119's `rating.sh` line -- which the
+              checker cannot see because its baseline is the file's own last
+              commit. Every drifted citation sits beside the symbol it names:
+              the symbol is the durable reference, the line number the
+              decaying one.
+Decision:     By the owner, 2026-09-04. A citation from a file in
+              `adocs/plan_todo/` or `adocs/plan_current/` into source or test
+              code names the file and a symbol -- a function, a constant, a
+              macro or a `TEST_CASE` title -- and carries no line number. A
+              citation into a document quotes the phrase it points at.
+              DEC-120's rule that a citation repeats its path stands.
+              `tools/plan_prose_check.py --citations` fails a `file:line` form
+              in the pending directories and a symbol absent from the named
+              file. S187 converts the existing citations and adds the check,
+              and decides whether the mode then joins the fast suite, since
+              the reason for keeping it out -- line drift on every source
+              commit -- no longer applies to the symbol form.
+Rejected:     A fourth re-anchoring pass plus a symbol check on line citations
+              -- cheaper once, and the recurrence rate says it is paid every
+              three days. Leaving line numbers with a symbol beside them --
+              that is the state at HEAD and it still reads wrong.
+Consequences: DEC-120 carries an Amended line pointing here. `plan_done/` is
+              history and keeps its line citations as written; `specs.md`'s
+              invariant table and `decisions.md` are outside this rule until a
+              later decision. Step files written from this date use the symbol
+              form; S180 to S188 do.
+
+## DEC-136  2026-09-04  The plan's cost and Elo lines are derived from the ledger and re-derived at every verdict
+Tags:         planning, measurement
+Context:      `2026-09-04_plan_review-F03` and `-F04`. The cost line prices a
+              verdict at 45 to 75 minutes where the seven runs stamped since
+              S105 averaged 4 h 40 m (median 5 h 26 m), so the pending 45 to
+              55 verdicts cost 210 to 256 machine-hours and not 75 to 110; the
+              plan itself records that S093 overran and leaves the total
+              standing. The Elo arithmetic ("the midpoint clears 3000") has no
+              recorded inputs anywhere in the repository and applies no
+              published-to-measured discount, where the ledger since it was
+              written measured that ratio at 0.29 to 0.38 (S093), a wrong
+              sign (persistence), about 0.1 (S130) and a negative (S149); the
+              plan's own low end lands at 2949.
+Decision:     By the owner, 2026-09-04. Both lines are derived from recorded
+              inputs and from nothing else. The cost line from the wall time
+              of every SPRT run stamped in `plan_done/` since S105, by effect
+              class -- block-class effects at the fast end, +5-class effects
+              at the ledger's mean -- times the pending count per class
+              (S182). The Elo line from a tabled list of per-step published
+              figures with their sources, and a third discount, the ledger's
+              own transfer ratio, under a rule written before the number is
+              computed (S183). Both are re-derived in the completing commit of
+              every step that lands a verdict, the way `status.md` is
+              rewritten. "The midpoint clears 3000" survives only if the
+              re-derived midpoint does; if the re-derived high end does not
+              clear 3000, that is a DEC-071 question put to the owner and not
+              a plan edit.
+Rejected:     Deleting the arithmetic -- the ledger is the evidence of
+              progress, but a checkable heuristic is better than none. A
+              caveat on the existing numbers -- a wrong number with a caveat
+              still schedules the nights. Changing the bounds regime to make
+              the old figure true -- a measurement-policy decision, separate,
+              and not taken here.
+Consequences: `plan.md`'s "What this costs" and Elo paragraphs are rewritten
+              by S182 and S183; the old figures are struck through with the
+              date, not deleted. Until then they stand as written and the
+              plan says so.
+
+## DEC-137  2026-09-04  The DEC-097 enrichment pass becomes a step before block 3, and the review's source table is tracked
+Tags:         planning, docs, provenance
+Context:      DEC-097 (2026-08-21) resumed the SOTA enrichment "in parallel,
+              on nights". `git log --since=2026-08-21 -- adocs/plan_todo/`
+              shows 40 commits and no enrichment; 35 of 54 pending files carry
+              no "Technical details" section; block 3's order rests on "the
+              Stash ledger" with no path, commit or URL in any tracked
+              document (`2026-09-04_plan_review-F06`). The review's independent
+              literature pass fetched 33 of the plan's figures at source,
+              confirmed most, narrowed ten, and located both ledgers: the
+              Ethereal figures are the table in Ethereal commit e755a814, the
+              Stash figures are entries in `mhouppin/stash-bot`'s
+              `CHANGELOG.md`.
+Decision:     By the owner, 2026-09-04. The literature pass is tracked as
+              `adocs/data/2026-09-04_plan_review_literature_check.md` and is
+              the source table S185 records from. The enrichment is no longer
+              a standing promise for nights: it is S186, ordered before S134,
+              the first block-3 step, and block 3 does not start until S186
+              has run over its files. Block 1 and block 2 files are not
+              re-enriched; S180 and S181 correct what their enrichment got
+              wrong.
+Rejected:     Enrichment on demand, per step at its start -- a step started on
+              an unsourced figure repeats F06 at the moment the figure matters
+              most. Enriching everything now -- block 3 is 28 entries away
+              and the machine-scope lane has work with a closer payoff.
+Consequences: DEC-097 carries an Amended line pointing here. S186 takes
+              S185's unverified list as its work list. `adocs/data/README.md`
+              carries the literature check's row.
+
+## DEC-138  2026-09-04  Techniques the surveyed engines carry and this plan gives no step, considered and deferred
+Tags:         planning, search, evaluation, scope
+Context:      The review's literature pass inventoried the documented
+              techniques of Stockfish, Ethereal, Berserk, Weiss, Stash and
+              Leorik -- read as names in their current sources and write-ups,
+              never as code -- against the Open list. Beyond the omissions the
+              plan already records (mate distance pruning and the two-ply
+              killer reset in `plan.md`'s 2026-09-03 section; the null-move
+              verification search and check extensions in DEC-087, the latter
+              reopened by DEC-133; threads in DEC-089), the following have no
+              step and no record: negative extensions and double or triple
+              extensions (S097 names them as later refinements and no step owns
+              them); table-move and table-PV reduction and extension terms;
+              opponent-worsening; pawn history; minor-piece, major-piece, threat
+              and last-move correction histories; material imbalance tables;
+              trapped-piece terms; minor behind pawn, long-diagonal and
+              bad-bishop terms; closedness and complexity scaling; queen
+              relative pin; king defenders; hanging-piece and pawn-push threats
+              beyond S101's "attacked by a lesser piece"; a KPK bitbase and
+              specialised endgames beyond S124's scaling; time-management
+              factors by move type; and MultiPV, pondering, Chess960 and
+              contempt, which are interface or style items. The wiki states an
+              Elo figure for none of them.
+Decision:     By the owner, 2026-09-04. All of the above are recorded as
+              considered and given no step in phase one. The extension family
+              and the further correction tables are present in the current
+              versions of Stockfish, Berserk, Weiss and Stash, all far above
+              the mark, and no record of their value at this band was found;
+              they belong to the reserve's band or to phase two. The
+              evaluation terms are hand-crafted refinements the parked network
+              supersedes (DEC-054) and are reopened only if block 3's fits show
+              a specific term binding. The interface items are not strength and
+              are scheduled when a user needs them. A future audit that finds
+              one of these absent cites this entry.
+Rejected:     A step per item -- twenty-odd unpriced steps ahead of a list
+              that already owes over two hundred machine-hours. A reserve
+              entry per item -- the reserve is for steps with evidence at a
+              stated band, and none of these has a number.
+Consequences: S097's "later refinements" sentence and S101's excludes cite
+              this entry when S180 and S186 next touch those files. The
+              inventory itself is in
+              `adocs/data/2026-09-04_plan_review_literature_check.md`, part B.

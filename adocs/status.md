@@ -8,6 +8,35 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
+- **Plan review 2026-09-04 (`adocs/audit/2026-09-04_plan_review.md`), digested
+  the same day: no high, 5 medium, 5 low; every finding has a home and every
+  home is a document step.** A cold reviewer read the plan against the
+  published record, the code at HEAD and the project's rules; an independent
+  pass fetched 33 of the plan's figures at source and is tracked as
+  `adocs/data/2026-09-04_plan_review_literature_check.md` (DEC-137). Fast suite
+  27/27 in both builds, both node-count baselines reproduced, 45 of 46 prior
+  plan-review findings closed on re-measurement. The owner decided item by
+  item: **F01** seven search steps seed constants from other engines'
+  commit-message prose -- stick to DEC-105, reseed, **S180** (DEC-134); **F02**
+  S099's "+11.4 at ~2850" was measured at Lynx 3226-3293, so S099 goes to the
+  **reserve head** as the family's probe, S110/S111 gated on it, Lynx figures
+  re-banded by **S181** (DEC-133); **F03** the cost line's 45-75 minutes per
+  verdict against a ledger mean of 4 h 40 m -- **S182**; **F04** the Elo
+  arithmetic with no recorded inputs -- **S183** (DEC-136); **F05, F08, F09,
+  F10** stale parameter values (S115 would revert a verified SPSA axis), S042's
+  narrow touches, five stale sentences, two missing `done:` fields --
+  **S184**; **F06** block 3's unsourced ledgers, both located by the literature
+  pass -- **S185**, and the DEC-097 enrichment becomes **S186** before block 3
+  (DEC-137); **F07** 59 drifted citations three days after S169 -- citations
+  into code become symbols, **S187** (DEC-135). From the literature pass, not
+  the report: Ethereal removed only its *pre-move-loop* check extension, so
+  the in-loop form is reopened as **S188** after S097, S096's id staying
+  retired; S133's +65/+88 are release-bundle deltas, kept on adoption breadth
+  (both DEC-133). Techniques the surveyed engines carry and the plan gives no
+  step are recorded in DEC-138. Nine steps, 63 Open entries; `plan.md` carries
+  a section on the review and inline corrections at the DEC-087 rulings; the
+  report's findings read `planned`. Nothing in the engine changed, no run was
+  started.
 - **Audit re-run 2026-09-04 (`adocs/audit/2026-09-04_adversarial.md`), the
   closing run for the 2026-09-03 batch: no high, no medium, three low.** All
   four 2026-09-03 findings are **closed on re-measurement from their own
@@ -296,9 +325,12 @@ Updated: 2026-09-04, by hand.
   all and nothing said so. `.moltke.local.md` records it now.
 - Next: **S178** -- `movetext_to_san()` splits a move number glued to its move so
   PGN import format (`1.e4`) builds a book; found by running S174's fixed tools.
-  Then **S020** resumes the plan proper. The 2026-09-03 audit batch (S174 to
-  S177) is complete; a re-run of the audit is what closes the four findings.
-  **On the desktop workstation, S171's census comes first.**
+  Then **S179**, the magic numbers under a project seed. Then the review's seven
+  documentation steps, **S180** and **S184** first because each removes a
+  hazard an implementer would follow (engine-seeded constants; S115's "keep 5"
+  reverting a verified axis), then S181, S182, S183, S185, S187 -- none owes a
+  run. **S020** resumes the plan proper after them. **On the desktop
+  workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
