@@ -1957,7 +1957,7 @@ from another engine:
 build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin
 
 shasum -a 256 src/openings.bin
-# 3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd
+# 77f47f1bd184df6d1e6be539c354b526558d2e4970c6dc565c5ea53e5db06b58
 ```
 
 The build is deterministic — output is sorted by key and then by weight, so the
@@ -1966,6 +1966,22 @@ digest above is reproducible from the PGN — and the defaults are the ones used
 `--min-games 1`, which drops nothing. Because every game in it is recorded
 `1/2-1/2`, an entry's weight is exactly the number of book lines that played the
 move.
+
+**Checked from outside since S175.** `adocs/data/S175_book_conformance.py`
+(python-chess, `~/.venv/chess`) re-derives every entry from the PGN with an
+independent implementation of the key and compares the multiset with the file;
+`missing 0 extra 0 weight_mismatch 0` is what the shipped file reports, exit 0.
+It exists because `make_book` keys with the engine's own `get_key()`, so a book
+it builds agrees with the engine whether or not the key is the format's: the
+2026-09-03 file (sha256 `3b89a4ad…15b873dd`) carried 7 keys that wrapped round
+the board edge on an edge-file en-passant square, the engine probed them
+happily, and only a reader outside the project could see it
+(2026-09-03_adversarial-F01). Run it after any rebuild:
+
+```bash
+~/.venv/chess/bin/python adocs/data/S175_book_conformance.py \
+    books/8moves_v3.pgn src/openings.bin
+```
 
 The book this replaced was 2610256 bytes and 163141 entries, sha256
 `47a81735…ce78fb5`. It was inherited from the `bitboard` branch, no document or

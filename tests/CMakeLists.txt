@@ -114,6 +114,18 @@ target_include_directories(test_corpus_dedupe PRIVATE ../tools)
 # test like the rest.
 add_doctest_target(test_audit_fen_semantics)
 
+# S175: the Polyglot key on an edge-file en-passant square.
+# 2026-09-03_adversarial-F01 -- get_key() looked for the capturing pawn with
+# +7/+9 (-9/-7) index offsets, which wrap round the board edge for an en-passant
+# square on the a- or h-file, so a same-side pawn on the wrapped square switched
+# the en-passant component on against the format. Seven of the shipped book's
+# 172232 entries carried such a key and no other Polyglot reader could find
+# them. The expected keys are python-chess's, an independent implementation of
+# the same specification; the file was written by the audit before the fix and
+# observed red, 7 of 10. No dataset and no search, so it is a fast test like the
+# rest.
+add_doctest_target(test_audit_polyglot_key)
+
 # S073: the tunable search parameters. Compiled in both configurations and the
 # same file in both -- the release build and the tune build each hold their live
 # values against the one table that is outside every #ifdef, which is how two

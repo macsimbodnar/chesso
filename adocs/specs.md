@@ -273,8 +273,14 @@ from a PGN and verifies one. DEC-129, DEC-130.
 since 2026-09-03, S146.** It is `build/tools/make_book build
 books/8moves_v3.pgn --out src/openings.bin` at the tool's defaults --
 2755712 bytes, 172232 entries over 129613 positions, sha256
-`3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`, reproducible
-because the output is sorted. The input is the committed CC0-1.0
+`77f47f1bd184df6d1e6be539c354b526558d2e4970c6dc565c5ea53e5db06b58`, reproducible
+because the output is sorted. **Rebuilt 2026-09-04 by S175 to the format's keys**: the
+2026-09-03 file (sha256 `3b89a4ad...15b873dd`) keyed 7 of its 172232 entries
+with an en-passant component the format forbids, because `get_key()` looked for
+the capturing pawn by index offset and wrapped round the board edge on the a-
+and h-files; `adocs/data/S175_book_conformance.py` re-derives every entry from
+the PGN with python-chess and reports 0 missing, 0 extra and 0 weight
+mismatches against the shipped file (2026-09-03_adversarial-F01). The input is the committed CC0-1.0
 `books/8moves_v3.pgn`, pinned by both digests in `books/fetch_book.sh`; the SAN
 is read by the engine's own `algebraic_to_move` and keyed by its own `get_key`,
 so no other engine's code, table or binary is anywhere in the path. **Since

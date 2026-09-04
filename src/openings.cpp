@@ -558,38 +558,33 @@ uint64_t get_key(const board_t* board)
   // capturing pawn is pinned or when the double pawn push was a discovered
   // check).
   // NOTE: Our make move set the en-passant always, even if not pawn to capture,
-  // because of this we need to check if there is a pawn
+  // because of this we need to check if there is a pawn.
+  //
+  // The capturing pawn stands beside the pushed pawn, on the rank the mover's
+  // pawns capture from: one rank below the en-passant square for White (a8 is
+  // index 0, so +8), one rank above it for Black (-8), and one file to either
+  // side. The two sides are taken by file, not by index offset: S175
+  // (2026-09-03_adversarial-F01) -- `+7/+9` and `-9/-7` wrap round the board
+  // edge when the en-passant square is on the a- or h-file, so `h6 + 9` read
+  // a4 and `a3 - 9` read h5, and a same-side pawn there switched the component
+  // on against the format. Seven of the shipped book's entries carried such a
+  // key.
   if (board->en_passant < INVALID_INDEX) {
-    if (board->active_color == WHITE) {
-      // WHITE case
-      const index_t on_left = board->en_passant + 7;
-      const index_t on_right = board->en_passant + 9;
+    const position_t ep = index_to_position(board->en_passant);
+    const bool white = board->active_color == WHITE;
+    const piece_t capturer = white ? W_PAWN : B_PAWN;
+    const index_t beside = white ? static_cast<index_t>(board->en_passant + 8)
+                                 : static_cast<index_t>(board->en_passant - 8);
 
-      assert(on_left < INVALID_INDEX);
-      assert(on_right < INVALID_INDEX);
+    assert(beside < INVALID_INDEX);
+    assert(ep.file < EP_SIZE);
 
-      if (get_piece(board, on_left) == W_PAWN ||
-          get_piece(board, on_right) == W_PAWN) {
-        // Valid en-passant, we take the file of the square
-        const position_t pos = index_to_position(board->en_passant);
-        assert(pos.file < EP_SIZE);
-        key ^= polyglot_randoms[EP_OFFSET + pos.file];
-      }
-    } else {
-      // BLACK case
-      const index_t on_left = board->en_passant - 9;
-      const index_t on_right = board->en_passant - 7;
+    const bool on_left =
+        ep.file > 0 && get_piece(board, beside - 1) == capturer;
+    const bool on_right =
+        ep.file < 7 && get_piece(board, beside + 1) == capturer;
 
-      assert(on_left < INVALID_INDEX);
-      assert(on_right < INVALID_INDEX);
-
-      if (get_piece(board, on_left) == B_PAWN ||
-          get_piece(board, on_right) == B_PAWN) {
-        const position_t pos = index_to_position(board->en_passant);
-        assert(pos.file < EP_SIZE);
-        key ^= polyglot_randoms[EP_OFFSET + pos.file];
-      }
-    }
+    if (on_left || on_right) { key ^= polyglot_randoms[EP_OFFSET + ep.file]; }
   }
 
   // Active color. Insert only if white

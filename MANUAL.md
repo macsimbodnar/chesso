@@ -75,7 +75,7 @@ build's own options, below, are the exception and answer over UCI.
 ### The book it ships with
 
 172232 Polyglot entries over 129613 positions, 2755712 bytes, sha256
-`3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd`. Lines run to
+`77f47f1bd184df6d1e6be539c354b526558d2e4970c6dc565c5ea53e5db06b58`. Lines run to
 16 plies and no further, so the engine leaves the book by move 9 at the latest.
 
 It is built by this project, from `books/8moves_v3.pgn` — 34700 balanced

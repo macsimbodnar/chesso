@@ -8,7 +8,32 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
-- Last done: **S174, 2026-09-04 -- the SAN parser fails closed and `make_book`
+- Last done: **S175, 2026-09-04 -- the Polyglot key follows the format on an
+  edge-file en-passant square, and the shipped book is rebuilt to it.**
+  `get_key()` looked for the capturing pawn at `en_passant + 7/+9` (White) and
+  `-9/-7` (Black); with a8 at index 0 those wrap round the board edge on the a-
+  and h-files, so `h6 + 9` read a4 and `a3 - 9` read h5, and a same-side pawn
+  there switched the en-passant component on against the format. Now the two
+  squares are taken by file with bounds, on the rank the mover's pawns capture
+  from. **Red first through ctest**: the audit's `test_audit_polyglot_key`,
+  registered, failed 7 of 10 on the unfixed tree and passes 10 of 10 after; the
+  nine format example keys in `test_openings` still pass. **The book is
+  rebuilt**: `src/openings.bin` is `make_book build books/8moves_v3.pgn` again
+  through the gated tool, 0 games cut short, the same 2755712 bytes, 172232
+  entries over 129613 positions, **sha256
+  `77f47f1bd184df6d1e6be539c354b526558d2e4970c6dc565c5ea53e5db06b58`**, swapped
+  into `specs.md`, `MANUAL.md`, `DEV_MANUAL.md`, `src/openings_embedded.S` and
+  S173's accepts. **Checked from outside, which the digest never could**:
+  `adocs/data/S175_book_conformance.py` re-derives every entry from the PGN with
+  python-chess's independent key and reports `missing 0 extra 0
+  weight_mismatch 0` against the new file, where the 2026-09-03 file gave
+  `missing 7 extra 7` on exactly the audit's seven positions. INV-6 identical
+  (121512 / 800769 / 62907; 639228 / 3430710 / 367858; same best moves) -- the
+  default configuration never probes the book. End to end: with `OwnBook` on,
+  the position `rnb1kb1r/2pqnpp1/1p2p3/p2pP2p/P2P1P2/2P5/1P1N2PP/R1BQKBNR w
+  KQkq h6 0 8` -- one of the seven -- answers `bestmove d2f3` from the book with
+  no `info` line. Fast suite 26/26 in both builds.
+- Before S175: **S174, 2026-09-04 -- the SAN parser fails closed and `make_book`
   gates on it.** `algebraic_to_move()`'s three failure paths were `assert(false)`
   with no return, so in Release a token it could not read became a fabricated
   move that `make_move()` applied and the board was rewritten, not left illegal.
@@ -73,7 +98,8 @@ Updated: 2026-09-04, by hand.
   `src/openings.bin` is now `build/tools/make_book build books/8moves_v3.pgn
   --out src/openings.bin` at the tool's defaults -- **2755712 bytes, 172232
   entries over 129613 positions, sha256 `3b89a4ad9146e266ae9296778067aaedcb7f57
-  f3cf0ff2086b9ae6df15b873dd`**. DEC-131 is the ruling.
+  f3cf0ff2086b9ae6df15b873dd`**. DEC-131 is the ruling. (That digest is history
+  since S175 rebuilt the file to the format's keys: `77f47f1b...db06b58`.)
 - **What made it possible was S172, not new evidence about the blob.** DEC-126's
   refutation still stands -- `books/8moves_v3.pgn` shares only 11703 of the old
   book's 154916 positions, 7.6 % -- so this is a **different book, not a
@@ -204,11 +230,10 @@ Updated: 2026-09-04, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S175**, second of the audit batch -- `get_key()` finds the en-passant
-  capturer by file, the audit's red test is registered, `src/openings.bin` is
-  rebuilt through the now-gated `make_book` (the digest moves: 7 keys), and the
-  python-chess conformance script is committed. Then S176, S177; S020 resumes
-  after the batch. **On the desktop workstation, S171's census comes first.**
+- Next: **S176**, third of the audit batch -- `position fen` accepts the four-
+  and five-field forms and a FEN that fails to load keeps the whole previous
+  position, moves included. Then S177, S178; S020 resumes after the batch. **On
+  the desktop workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran

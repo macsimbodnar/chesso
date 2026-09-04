@@ -8,7 +8,7 @@
  *   ./build/tools/make_book build books/8moves_v3.pgn --out src/openings.bin
  *
  * 172232 entries over 129613 positions, 2755712 bytes, sha256
- * 3b89a4ad9146e266ae9296778067aaedcb7f57f3cf0ff2086b9ae6df15b873dd. The input
+ * 77f47f1bd184df6d1e6be539c354b526558d2e4970c6dc565c5ea53e5db06b58. The input
  * is the committed CC0-1.0 `books/8moves_v3.pgn`, pinned in `fetch_book.sh` by
  * both digests; the moves are read by the engine's own `algebraic_to_move` and
  * keyed by its own `get_key`, so no third-party book, table or binary is in
