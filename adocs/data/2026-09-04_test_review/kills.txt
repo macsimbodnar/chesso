@@ -1,0 +1,191 @@
+Failing assertions per mutant, extracted from each mutant's `ctest --output-on-failure` log.
+Format: [test binary] TEST_CASE title | first failing assertion (+n more in the same case)
+
+== M01_nmp_in_check: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+3 more)
+
+== M02_nmp_mate_band_neg: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( failures.empty() ) is NOT correct!  (+1 more)
+
+== M03_nmp_zugzwang: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!
+
+== M04_nmp_mate_artifact: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!
+
+== M05_rfp_margin_flat: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+3 more)
+
+== M06a_rfp_ply_floor_minus1: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop == 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+3 more)
+
+== M06b_rfp_ply_floor_minus2: 7 failing case(s); ctest: 85% tests passed, 4 tests failed out of 27
+   [test_search] mate in two is found at the right distance  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] pruning does not hide a mate against the material leader  |  REQUIRE( result.mate_found ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop > 0 ) is NOT correct!
+   [test_engine] a proved mate is never mis-scored, and every mate in two is found on time  |  REQUIRE( first_exact == minimum ) is NOT correct!
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M07_lmr_captures: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M08_lmr_checks: 3 failing case(s); ctest: 89% tests passed, 3 tests failed out of 27
+   [test_engine] a narrowed window still finds a mate that appears mid-search  |  REQUIRE( iterations[i].kind == "mate" ) is NOT correct!
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+3 more)
+
+== M09_lmr_no_research: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop == 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M10_pvs_no_research: 12 failing case(s); ctest: 85% tests passed, 4 tests failed out of 27
+   [test_search] mate in two is found at the right distance  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] a search fills the ordering tables  |  REQUIRE( killers_1_duplicated > 0 ) is NOT correct!
+   [test_search] the announced mate distance falls by one for every ply played  |  REQUIRE( result.mate_found ) is NOT correct!
+   [test_search] the table never changes the answer  |  REQUIRE( warm.score == without.score ) is NOT correct!
+   [test_search] a warm table costs fewer nodes  |  REQUIRE( warm.explored_nodes < cold.explored_nodes ) is NOT correct!
+   [test_search] the reported line runs the full depth  |  REQUIRE( warm.pv.length == static_cast<size_t>(depth) ) is NOT correct!
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] pruning does not hide a mate against the material leader  |  REQUIRE( result.mate_found ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop == 0 ) is NOT correct!
+   [test_engine] a proved mate is never mis-scored, and every mate in two is found on time  |  REQUIRE( first_exact == minimum ) is NOT correct!
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M11_tt_cut_on_pv: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] the reported line runs the full depth  |  REQUIRE( warm.pv.length == static_cast<size_t>(depth) ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+1 more)
+
+== M12_tt_depth_ignored: 8 failing case(s); ctest: 85% tests passed, 4 tests failed out of 27
+   [test_search] a main-search node at depth 1 does not cut on a quiescence entry  |  REQUIRE_FALSE( tt_entry_answers(&entry, 1, 3, -100, 100, &score) ) is NOT correct!
+   [test_search] reverse futility prunes on the stored static score  |  REQUIRE_EQ( run(false), planted_pruned ) is NOT correct!
+   [test_search] pruning does not hide a mate against the material leader  |  REQUIRE( result.mate_found ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop > 0 ) is NOT correct!
+   [test_engine] a narrowed window still finds a mate that appears mid-search  |  REQUIRE( iterations[i].kind == "mate" ) is NOT correct!
+   [test_engine] a proved mate is never mis-scored, and every mate in two is found on time  |  REQUIRE( last.value == 2 ) is NOT correct!
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M13_tt_bounds_swapped: 5 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] a stand pat that is itself a bound is still capped  |  CHECK_EQ( entry->type, TT_BETA_NODE ) is NOT correct!
+   [test_search] the bound conditions decide which side of the window may answer  |  REQUIRE( tt_entry_answers(&entry, 1, 3, -100, 100, &score) ) is NOT correct!
+   [test_search] a mate bound is compared after the ply adjustment, not before  |  REQUIRE( tt_entry_answers(&entry, 1, 3, -100000, MATE_MAX_LOCAL - 8, &score) ) is NOT correct!
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M14_mate_normalize_sign: 5 failing case(s); ctest: 89% tests passed, 3 tests failed out of 27
+   [test_search] the main search stores a mate below it at the mate's own distance  |  REQUIRE_EQ( entry->score, MATE_IN_ONE_PLY ) is NOT correct!
+   [test_search] a mate stored at one ply reads the same distance at another  |  REQUIRE( MATE_MAX_LOCAL - score - static_cast<int>(q) == 1 ) is NOT correct!
+   [test_search] a stored mate score counts from its own position  |  REQUIRE( std::abs(entry->score) == std::abs(previous) + 1 ) is NOT correct!
+   [test_mate_pv] the mined set reports no mate it cannot show  |  REQUIRE( offending == 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+5 more)
+
+== M15_killer_slot1_dead: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] a search fills the ordering tables  |  REQUIRE( killers_1 > 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M16_history_malus_sign: 3 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] a quiet cutoff maluses the quiets tried before it  |  CHECK( state.quiet_history[side][(static_cast<index_t>((move) & 0x3f))][(static_cast<index_t>(((move) & 0xfc0) >> 6))] < 0 ) is NOT correct!  (+2 more)
+   [test_search] the cutoff move is credited and the quiets before it are charged  |  CHECK( state.quiet_history[WHITE][g1][g2] < 0 ) is NOT correct!  (+1 more)
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M17_qs_standpat_in_check: 11 failing case(s); ctest: 85% tests passed, 4 tests failed out of 27
+   [test_search] mate in two is found at the right distance  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] a quiet move that gives check enters the ordering tables  |  REQUIRE( score >= BETA ) is NOT correct!
+   [test_search] the cutoff move is credited and the quiets before it are charged  |  REQUIRE( score >= BETA ) is NOT correct!
+   [test_search] the main search stores a mate against it at the mate's own distance  |  REQUIRE_EQ( negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 2, 0, &game, &state, 0, false), -(MATE_MAX_LOCAL - 2) ) is NOT correct!
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( white.mate_found ) is NOT correct!
+   [test_search] pruning does not hide a mate against the material leader  |  REQUIRE( result.mate_found ) is NOT correct!
+   [test_engine] a narrowed window still finds a mate that appears mid-search  |  REQUIRE( iterations[i].kind == "mate" ) is NOT correct!
+   [test_engine] a proved mate is never mis-scored, and every mate in two is found on time  |  REQUIRE( first_exact == minimum ) is NOT correct!
+   [test_engine] checkmate outranks the hundredth halfmove  |  REQUIRE( score_line.rfind("info score mate 1 ", 0) == 0 ) is NOT correct!
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+2 more)
+
+== M18_qs_see_prune_in_check: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_mate_pv] the mined set reports no mate it cannot show  |  REQUIRE( offending == 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( failures.empty() ) is NOT correct!  (+3 more)
+
+== M19_fifty_off_by_one: 0 failing case(s); ctest: 100% tests passed out of 27
+
+== M20_mated_distance_off: 3 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] a mated side reports mate in zero  |  REQUIRE_EQ( result.mate_in, 0 ) is NOT correct!
+   [test_search] the announced mate distance falls by one for every ply played  |  REQUIRE_EQ( MATE_MAX_LOCAL - std::abs(result.score), 3 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+1 more)
+
+== M21_standpat_lower_bound_lowers: 5 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_search] quiescence stands pat on the stored static score  |  REQUIRE_EQ( run(), planted ) is NOT correct!
+   [test_search] quiescence stands pat on the stored score where the bound allows it  |  CHECK_EQ( run(-10000, 10000), 600 ) is NOT correct!  (+2 more)
+   [test_search] a substituted stand pat is stored as the bound it is  |  CHECK_EQ( raised->score, 600 ) is NOT correct!  (+1 more)
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+1 more)
+
+== M22_castling_rights_on_capture: 4 failing case(s); ctest: 89% tests passed, 3 tests failed out of 27
+   [test_chesso] Test against generated jsons  |  REQUIRE( new_fen == fen ) is NOT correct!
+   [test_movegen] castling rights are lost  |  REQUIRE_EQ( game.board.castling & WK, 0 ) is NOT correct!
+   [test_movegen] shallow perft matches every column  |  REQUIRE( counts.nodes == nodes ) is NOT correct!
+   [test_engine] hash and board survive make/unmake  |  REQUIRE( g->board.hash == compute_full_hash(g) ) is NOT correct!
+
+== M23_ep_hash_skipped: 2 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_engine] hash and board survive make/unmake  |  REQUIRE( g->board.hash == compute_full_hash(g) ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M24_halfmove_not_reset_on_capture: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_chesso] Test against generated jsons  |  REQUIRE( new_fen == fen ) is NOT correct!
+
+== M25_insufficient_two_minors: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_search] which material can still mate  |  REQUIRE( is_insufficient_material(&game.board) == test.dead ) is NOT correct!
+
+== M26_repetition_skips_first: 0 failing case(s); ctest: 100% tests passed out of 27
+
+== M27_castle_through_check: 3 failing case(s); ctest: 93% tests passed, 2 tests failed out of 27
+   [test_chesso] Test against generated jsons  |  REQUIRE( moves_count == expected_moves.size() ) is NOT correct!
+   [test_movegen] castling  |  REQUIRE( found_king_side == test.king_side ) is NOT correct!
+   [test_movegen] shallow perft matches every column  |  REQUIRE( counts.nodes == nodes ) is NOT correct!
+
+== M28_see_ge_ep_victim: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_search] over every legal move of every test position  |  REQUIRE( fast == (exact >= threshold) ) is NOT correct!
+
+== M29_eval_expensive_sign: 16 failing case(s); ctest: 81% tests passed, 5 tests failed out of 27
+   [test_evaluation] each piece is worth what the tables say  |  REQUIRE( evaluate(&game.board) == test.score ) is NOT correct!
+   [test_evaluation] the unclamped terms are the engine's own  |  REQUIRE( std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN) == applied ) is NOT correct!
+   [test_search] a quiet position stands pat  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] a side in check may not stand pat  |  REQUIRE_EQ( black_static, 198 ) is NOT correct!
+   [test_search] a quiet evasion is a legal answer to a check  |  REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -505 ) is NOT correct!
+   [test_search] a quiescence entry carries the static score, never a bound  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] quiescence stands pat on the stored static score  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] quiescence stands pat on the stored score where the bound allows it  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] a mate score is never used as a stand pat  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] a substituted stand pat is stored as the bound it is  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] reverse futility prunes on the stored static score  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] a main-search store records this node's evaluation  |  REQUIRE_EQ( static_score, 563 ) is NOT correct!
+   [test_search] the losing side takes an available repetition  |  REQUIRE_EQ( evaluate(&game.board), -569 ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop == 0 ) is NOT correct!
+   [test_eval_model] the model reproduces evaluate() on every phase  |  CHECK( std::abs(model - engine_white) <= 3.0 ) is NOT correct!  (+27 more)
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+2 more)
+
+== M30_mvv_lva_sign: 4 failing case(s); ctest: 89% tests passed, 3 tests failed out of 27
+   [test_evaluation] MVV-LVA prefers a cheap attacker  |  REQUIRE( capture_score(&game.board, pawn_takes) > capture_score(&game.board, queen_takes) ) is NOT correct!
+   [test_evaluation] the declared history ceiling clears the band above it  |  REQUIRE_EQ( s_capture - s_killer0, 100 ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop > 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+2 more)
+
+== M31_lazy_bound_no_margin: 7 failing case(s); ctest: 85% tests passed, 4 tests failed out of 27
+   [test_search] the node budget is honoured exactly  |  REQUIRE( result.explored_nodes <= budget ) is NOT correct!
+   [test_search] an aborted search reports no move at all  |  REQUIRE( result.explored_nodes <= budget ) is NOT correct!
+   [test_search] a quiet evasion is a legal answer to a check  |  REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -505 ) is NOT correct!
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score ) is NOT correct!
+   [test_engine] the iteration loop scales its soft limit by what the search found  |  REQUIRE( scaled.drop == 0 ) is NOT correct!
+   [test_mate_pv] the mined set reports no mate it cannot show  |  REQUIRE( offending == 0 ) is NOT correct!
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( mate_lines >= expected_mate_lines(game.name) ) is NOT correct!  (+4 more)
+
+== M32_hard_limit_no_overhead: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_engine] the hard limit never exceeds the clock  |  REQUIRE( budget.hard_ms < test.remaining ) is NOT correct!
+
+== M33_soft_limit_unbounded: 1 failing case(s); ctest: 96% tests passed, 1 tests failed out of 27
+   [test_engine] the hard limit never exceeds the clock  |  REQUIRE( budget.soft_ms <= budget.hard_ms ) is NOT correct!
+

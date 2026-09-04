@@ -125,7 +125,10 @@ migration that way (DEC-109).
   force operations.
 - COMMITS: commit at each completed step and at any plan change. Every commit
   is green. Imperative subject under 72 characters; the body says **why** and
-  references the step id and any `INV-n`.
+  references the step id and any `INV-n`. A commit that touches `src/` ends
+  with `Bench: <nodes>`, the total `chesso bench` prints, or `No functional
+  change` when the total is the parent's; `tools/gate.sh` checks it, and a
+  mismatch is a red gate. From S189's completing commit on. DEC-140.
 - TESTS: the suite is green before a step is marked done, in **both** builds —
   `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`
   (`-j8`, the core count of the machine `.moltke.local.md` describes). The tune
@@ -136,7 +139,18 @@ migration that way (DEC-109).
   gets a minimized failing test before its fix, and the failure is observed,
   not assumed. Never relax a test, never delete one to get green — deleting is
   a recorded decision. A test asserting X does not happen first establishes the
-  precondition that would make X happen.
+  precondition that would make X happen. **The second tier, DEC-141:** a step
+  that touches `make_move`, `unmake_move`, the generator or the search
+  self-plays the Debug binary — four rounds of `fastchess` at 4+0.04 — and
+  greps its log for `Assertion` before completing, and its stamp says so; a
+  new pruning, reduction or extension rule ships with a direct guard test and
+  a mutant that test kills (`tools/mutation_check.py`, S196); and
+  `tools/gate_extra.sh` (S197) — the Debug binaries, a sanitizer build, deep
+  perft, the prose and citation checks — runs before such a step completes
+  and otherwise weekly, noted in `status.md`. **Goldens, DEC-142:** every
+  golden number in `tests/` is named as one at its site with the script that
+  re-derives it, and is re-derived by that script whenever either end moves,
+  never re-read from a run; a golden that cannot be scripted is a finding.
 - DOCS: `README.md` is written by hand by the repository owner. **No agent
   writes in it, ever.** The developer-facing document is `DEV_MANUAL.md`, and
   it and `MANUAL.md` are checked at every step completion — concluding neither
@@ -179,7 +193,11 @@ migration that way (DEC-109).
   identical node counts and best moves from `tools/search_bench.py` (INV-6).
   One change at a time — two at once and neither number means anything. A
   verdict of zero is recorded as zero, and the feature may still be kept with
-  the reason stated.
+  the reason stated. A run's pre-registration states its bounds pair's
+  worst-case expected games from the nElo formula and its abort rule beside
+  the three outcomes, and a fixed-rounds A/A of 1000 games follows every
+  change to the harness — fastchess version, book, adjudication, machine —
+  read with `adocs/data/S105_pairs.py` before the next verdict. DEC-143.
 - MACHINE: a match runs on every core the machine has. `fastchess.sh` defaults
   to it and the default is not lowered to be polite — nothing else should be
   running during a match anyway. Efficiency cores are included knowingly

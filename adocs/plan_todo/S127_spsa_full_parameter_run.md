@@ -3,7 +3,7 @@ goal:       an SPSA run over the whole search parameter set as it stands after t
 accepts:    the run is over the full set in src/search_params.hpp, which by then includes every margin, threshold and blend weight the search block added; the objective is games and the verdict is an **independent** SPRT against the incumbent, not the SPSA's own score; the run is detached with a terminal marker and a watcher that exits on it (AGENTS.md section 12); the shipped values are what the run returned, and any that agree with a published seed are noted as confirmations (DEC-084)
 touches:    tools/, src/search_params.hpp
 excludes:   the driver itself, which is S084; the first run over the pre-block set, which is S085
-decisions:  DEC-084, DEC-041
+decisions:  DEC-084, DEC-041, DEC-139
 closes:
 blocks:
 paused_by:
@@ -23,3 +23,18 @@ different line; kiwipete goes the other way, 5167100 to 6061763; the endgame
 position is unchanged. 16 against 32 is identical, so the natural depth is
 under 16. The parameter is load-bearing, position-dependent and has never been
 fitted. It is one of twenty in that file in the same condition.
+
+## Deferred here 2026-09-05: a `NodesTime` clock for the sweep
+
+R12 of `adocs/testing_strategy.md` (DEC-139): a `NodesTime` option in the tune
+build, Stockfish's `nodestime` shape -- the clock, the increment and the move
+overhead converted to nodes, so the soft and hard limits and the S089/S132
+scaling still run on a clock hardware cannot disturb. fishtest uses it for
+SPSA "removing noise introduced by inconsistent hardware speed", only "if the
+value you're tuning is not susceptible to change significantly the nps". The
+owner deferred the decision to this step's design: when the run is sized,
+state whether it plays wall time or node time, and if node time, that the
+verdict SPRT is wall time regardless and that the bias -- a change that spends
+time to save nodes looks better than it plays -- is accepted for the sweep
+only. Half a day to build, behaviour-neutral in the shipping build, proved on
+the bench signature.

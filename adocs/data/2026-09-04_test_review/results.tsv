@@ -1,0 +1,34 @@
+id	class	compiled	ctest_failed	ctest_total	failed_tests	nodes_changed	bestmove_changed	bench	build_s	ctest_s	note
+BASELINE	-	yes	0	27		-	-	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	-	-	unmutated worktree
+M01_nmp_in_check	search/pruning	yes	1	27		yes	no	{'midgame': ('126856', 'c3d5'), 'kiwipete': ('801922', 'e2a6'), 'tactical': ('90730', 'd7c8q')}	1.5	61.7	null move allowed while in check
+M02_nmp_mate_band_neg	search/pruning	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	46.8	S165 guard dropped: null move at beta <= -MATE_MIN
+M03_nmp_zugzwang	search/pruning	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	58.1	null move in pawn endings (game_phase 0)
+M04_nmp_mate_artifact	search/pruning	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	57.3	null-move mate score returned as a real score
+M05_rfp_margin_flat	search/pruning	yes	2	27		yes	no	{'midgame': ('82179', 'c3d5'), 'kiwipete': ('435471', 'e2a6'), 'tactical': ('64760', 'd7c8q')}	1.3	56.8	RFP margin not scaled by depth
+M06a_rfp_ply_floor_minus1	search/pruning	yes	2	27		yes	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('760962', 'e2a6'), 'tactical': ('62167', 'd7c8q')}	1.3	57.5	RFP ply floor one ply lower
+M06b_rfp_ply_floor_minus2	search/pruning	yes	4	27		yes	no	{'midgame': ('117564', 'c3d5'), 'kiwipete': ('760919', 'e2a6'), 'tactical': ('75015', 'd7c8q')}	1.3	55.1	RFP ply floor two plies lower
+M07_lmr_captures	search/reduction	yes	1	27		yes	no	{'midgame': ('104610', 'c3d5'), 'kiwipete': ('440483', 'e2a6'), 'tactical': ('67489', 'd7c8q')}	1.3	54.8	LMR reduces captures
+M09_lmr_no_research	search/reduction	yes	2	27		yes	no	{'midgame': ('118846', 'c3d5'), 'kiwipete': ('776025', 'e2a6'), 'tactical': ('63349', 'd7c8q')}	1.3	63.8	reduced search beating alpha is believed, no re-search
+M10_pvs_no_research	search/pvs	yes	4	27		yes	no	{'midgame': ('118039', 'c3d5'), 'kiwipete': ('1035331', 'e2a6'), 'tactical': ('69998', 'd7c8q')}	1.4	54.9	null-window fail-high never re-searched with the full window
+M11_tt_cut_on_pv	search/tt	yes	2	27		yes	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800658', 'e2a6'), 'tactical': ('62853', 'd7c8q')}	1.3	58.1	TT cutoffs taken at PV nodes
+M13_tt_bounds_swapped	search/tt	yes	2	27		yes	no	{'midgame': ('266507', 'c3d5'), 'kiwipete': ('1064287', 'e2a6'), 'tactical': ('91510', 'd7c8q')}	1.3	97.3	lower/upper bound types confused on probe
+M14_mate_normalize_sign	search/mate	yes	3	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	57.7	mate score normalised with the wrong sign
+M15_killer_slot1_dead	search/ordering	yes	2	27		yes	no	{'midgame': ('122770', 'c3d5'), 'kiwipete': ('801258', 'e2a6'), 'tactical': ('80731', 'd7c8q')}	1.3	57.9	second killer slot never written
+M16_history_malus_sign	search/ordering	yes	2	27		yes	no	{'midgame': ('127064', 'c3d5'), 'kiwipete': ('802004', 'e2a6'), 'tactical': ('92050', 'd7c8q')}	1.3	58.3	history malus applied as a bonus
+M17_qs_standpat_in_check	search/quiescence	yes	4	27		yes	no	{'midgame': ('120152', 'c3d5'), 'kiwipete': ('681806', 'e2a6'), 'tactical': ('62527', 'd7c8q')}	1.3	52.6	standing pat allowed while in check
+M18_qs_see_prune_in_check	search/quiescence	yes	2	27		yes	no	{'midgame': ('120997', 'c3d5'), 'kiwipete': ('779355', 'e2a6'), 'tactical': ('62720', 'd7c8q')}	1.3	58.3	losing captures pruned even when in check
+M19_fifty_off_by_one	rules	yes	0	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	57.6	fifty-move draw one halfmove late
+M20_mated_distance_off	search/mate	yes	2	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.3	57.9	main-search mate distance off by one ply
+M21_standpat_lower_bound_lowers	search/tt	yes	2	27		yes	no	{'midgame': ('102375', 'c3d5'), 'kiwipete': ('798292', 'e2a6'), 'tactical': ('72921', 'd7c8q')}	1.3	58.0	a lower bound lowers the stand pat (DEC-102 inverted)
+M22_castling_rights_on_capture	board/make_move	yes	3	27		yes	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('801137', 'e2a6'), 'tactical': ('62957', 'd7c8q')}	2.6	57.9	castling right not lost when the rook is captured
+M23_ep_hash_skipped	board/hash	yes	2	27		yes	no	{'midgame': ('121501', 'c3d5'), 'kiwipete': ('800763', 'e2a6'), 'tactical': ('62913', 'd7c8q')}	2.6	58.5	en-passant square changes without touching the hash
+M24_halfmove_not_reset_on_capture	board/make_move	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	2.7	57.8	halfmove clock not reset by a capture
+M25_insufficient_two_minors	rules	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	2.6	57.8	two minors called insufficient material
+M26_repetition_skips_first	rules	yes	0	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	2.6	57.7	repetition scan starts four plies back
+M27_castle_through_check	movegen	yes	2	27		yes	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('804144', 'e2a6'), 'tactical': ('62915', 'd7c8q')}	2.5	57.2	king-side castling ignores an attacked f-square
+M28_see_ge_ep_victim	see	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	2.6	57.7	see_ge forgets the en-passant victim
+M29_eval_expensive_sign	eval	yes	5	27		yes	no	{'midgame': ('148663', 'c3d5'), 'kiwipete': ('396753', 'e2a6'), 'tactical': ('78218', 'd7c8q')}	2.6	57.5	mobility/king-safety sign flipped for the side to move
+M30_mvv_lva_sign	ordering	yes	3	27		yes	no	{'midgame': ('142441', 'c3d5'), 'kiwipete': ('949809', 'e2a6'), 'tactical': ('67401', 'd7c8q')}	1.2	60.2	MVV-LVA adds the attacker value instead of subtracting
+M31_lazy_bound_no_margin	eval/lazy	yes	4	27		yes	yes	{'midgame': ('991238', 'c3d5'), 'kiwipete': ('3904821', 'd5e6'), 'tactical': ('134106', 'd7c8q')}	1.2	59.6	lazy shortcut taken without its margin
+M32_hard_limit_no_overhead	time	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	2.0	57.5	hard limit ignores MOVE_OVERHEAD_MS
+M33_soft_limit_unbounded	time	yes	1	27		no	no	{'midgame': ('121512', 'c3d5'), 'kiwipete': ('800769', 'e2a6'), 'tactical': ('62907', 'd7c8q')}	1.9	60.3	soft limit not capped by the hard limit

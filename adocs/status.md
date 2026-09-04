@@ -5,7 +5,7 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-04, by hand.
+Updated: 2026-09-05, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
 - **Plan review 2026-09-04 (`adocs/audit/2026-09-04_plan_review.md`), digested
@@ -37,6 +37,38 @@ Updated: 2026-09-04, by hand.
   a section on the review and inline corrections at the DEC-087 rulings; the
   report's findings read `planned`. Nothing in the engine changed, no run was
   started.
+- **Test review 2026-09-04 (`adocs/audit/2026-09-04_test_review.md`), digested
+  2026-09-05: no high, 3 medium, 7 low; eleven steps, four rule amendments, one
+  finding accepted (DEC-139 to DEC-143).** The owner asked for research on how
+  a chess engine's tests and measurements are done and an assessment of ours.
+  The suite was **measured**, not read: 33 hand-written engine bugs injected
+  one at a time into a scratch worktree of `5cffb70`, **31 of 32
+  non-equivalent caught**, the survivor a fifty-move draw claimed at 101
+  instead of 100 (F04); 98.9 % line and 92 % branch coverage of
+  `src/search.cpp`, 100 % of the evaluation, the UCI book path never executed
+  (F06); 35 full runs of the fast label, 0 unexplained failures, 41 to 64 s.
+  The mediums: INV-2 and INV-4 live in `assert`s both gated builds compile
+  out (F01, **S190**); the null-move and reduction guards have no direct test
+  and five guard-removal bugs were caught by `test_mate_carry`'s count floor
+  and nothing else (F02, **S191**, before S109); the suite's sensitivity
+  comes largely from goldens every legitimate search change will redden (F03,
+  **S192**, DEC-142). The lows: F04/F05/F09 **S193**; F06 **S194**; F07 the
+  bench signature **S189** with DEC-140's `Bench:` commit line and
+  `tools/gate.sh`; F08 **S195**, the Zobrist keys folded into **S179**;
+  **F10 accepted** -- no harness calibration on this MacBook, the workstation
+  is back soon and its A/A is the first run taken there (DEC-143, doubling
+  as **S198**'s). From the survey (`adocs/testing_strategy.md`, four
+  source-verified literature passes): **S196** the mutation driver as a tool
+  and a mutant per new search rule, **S197** `tools/gate_extra.sh` with the
+  coverage recipe, **S199** a fixed-rounds drift match against a pinned
+  reference after each block; a `NodesTime` clock deferred to S127. The
+  bounds now have a price before a run: a `{0,5}` pair is 41861 expected
+  games at the midpoint, **17.9 h at the 2337 games an hour the seven
+  ledger runs average here** (2328 to 2346), carried into S182 and DEC-143.
+  The plan's "~60 % sticks" self-play ratio could not be verified at any
+  source; S183 carries it as unverified. Evidence under
+  `adocs/data/2026-09-04_test_review/`. 74 Open entries. Nothing in the
+  engine changed, no run was started, the machine was on battery throughout.
 - **Audit re-run 2026-09-04 (`adocs/audit/2026-09-04_adversarial.md`), the
   closing run for the 2026-09-03 batch: no high, no medium, three low.** All
   four 2026-09-03 findings are **closed on re-measurement from their own
@@ -329,7 +361,10 @@ Updated: 2026-09-04, by hand.
   documentation steps, **S180** and **S184** first because each removes a
   hazard an implementer would follow (engine-seeded constants; S115's "keep 5"
   reverting a verified axis), then S181, S182, S183, S185, S187 -- none owes a
-  run. **S020** resumes the plan proper after them. **On the desktop
+  run. Then the test review's nine machine-free steps, **S189** first because
+  its gate script and signature serve every step after it, then S190, S193,
+  S191, S192, S195, S196, S197, S194. **S020** resumes the plan proper after
+  them. **On the desktop
   workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
@@ -337,6 +372,14 @@ Updated: 2026-09-04, by hand.
   in the foreground of their own turns and are finished, and S146's fast-check
   subagent has reported and exited.
 - Parked:
+  - **Calibrate the harness on the workstation when it is back: `AA=1
+    ./fastchess.sh` at fixed rounds, 1000 games, read with
+    `adocs/data/S105_pairs.py` and `tools/forfeit_report.py`, recorded beside
+    S105's numbers.** The owner refused the same run on this MacBook
+    (DEC-139: a number about a machine that is leaving); DEC-143 makes it the
+    rule after every machine change, and S198's A/A is this run. Until it is
+    taken, the harness has no pair-variance or forfeit figure for the machine
+    the verdicts run on.
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**
 

@@ -1,9 +1,9 @@
 id:         S182
 goal:       the plan's "What this costs" section prices verdicts from the project's own ledger of runs since S105, by effect class, and states the rule by which it is re-derived at every completing commit that lands a verdict
-accepts:    the section states the mean and the median wall time per verdict over every SPRT run stamped in `adocs/plan_done/` since S105 landed the harness regime (2026-08-20), with the table of runs beside it -- step, wall time, games, bounds pair, and the stamp the figures are read from -- split into two classes, block-class effects and +5-class effects at DEC-063's pairs, and multiplied by the pending verdict count per class into a total in machine-hours; the 45-to-75-minute figure and the 75-to-110-hour total are struck through with the date, not deleted; the rule "re-derived in the completing commit of every step that lands a verdict" is written in "How this file works" beside the status-rewrite rule; the seven runs the review tabled appear with the stamps' own figures; `tools/plan_prose_check.py --params` and `--prose` report nothing new; nothing else in `adocs/plan.md` changes
-touches:    adocs/plan.md
+accepts:    the section states the mean and the median wall time per verdict over every SPRT run stamped in `adocs/plan_done/` since S105 landed the harness regime (2026-08-20), with the table of runs beside it -- step, wall time, games, bounds pair, and the stamp the figures are read from -- split into two classes, block-class effects and +5-class effects at DEC-063's pairs, and multiplied by the pending verdict count per class into a total in machine-hours; the 45-to-75-minute figure and the 75-to-110-hour total are struck through with the date, not deleted; the rule "re-derived in the completing commit of every step that lands a verdict" is written in "How this file works" beside the status-rewrite rule; the seven runs the review tabled appear with the stamps' own figures; `tools/plan_prose_check.py --params` and `--prose` report nothing new; nothing else in `adocs/plan.md` changes except the table below; **and (2026-09-05, DEC-143)** the section and `DEV_MANUAL.md` "Which bounds" carry the bounds cost table of `adocs/testing_strategy.md` section 1.1 -- expected games at the interval's midpoint and at a bound per pair from the nElo formula, converted at the ledger's measured 2337 games an hour -- and the ledger's mean is read against it
+touches:    adocs/plan.md, DEV_MANUAL.md
 excludes:   changing any bounds pair, the harness or which steps owe a verdict -- a cost-cutting decision is its own entry if the owner wants one; the Elo arithmetic, which is S183
-decisions:  DEC-063, DEC-136
+decisions:  DEC-063, DEC-136, DEC-143
 closes:     2026-09-04_plan_review-F03
 blocks:
 paused_by:
@@ -50,3 +50,15 @@ row and the figure moves with it.
 ## Cost
 
 Documents only. An hour.
+
+## Amended 2026-09-05: the cost is a formula before it is a ledger
+
+The nElo run-length formula prices a pair before the run: a `{0,5}` or
+`{-5,0}` pair costs 41861 expected games with the truth at the midpoint and
+25591 with it on a bound, 17.9 h and 10.9 h at the 2337 games an hour the
+seven ledger runs average (2328 to 2346); `{-5,5}` costs 10465 and 6398;
+`--fast`'s `{0,10}` at alpha = beta = 0.10 costs 5828 worst case. The ledger's
+4 h 40 m mean is about 10900 games, between the two `{0,5}` cases, and the
+45-to-75-minute figure is what these pairs return only for effects far outside
+the interval. `adocs/testing_strategy.md` section 1.1 has the derivation and
+the sources; DEC-143 makes the worst case part of every pre-registration.

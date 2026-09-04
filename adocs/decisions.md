@@ -7792,3 +7792,167 @@ Consequences: S097's "later refinements" sentence and S101's excludes cite
               this entry when S180 and S186 next touch those files. The
               inventory itself is in
               `adocs/data/2026-09-04_plan_review_literature_check.md`, part B.
+
+## DEC-139  2026-09-05  The 2026-09-04 test review is digested: eleven steps, four rule amendments, one finding accepted
+Tags:         testing, audit, workflow, planning
+Context:      The owner asked for research on chess-engine testing technique
+              and an assessment of this engine's tests. The assessment is
+              `adocs/audit/2026-09-04_test_review.md` -- three medium and seven
+              low findings, the suite's fault detection measured by
+              fault injection (31 of 32 non-equivalent hand-written bugs
+              caught; the survivor is the fifty-move boundary) and its reach
+              by coverage -- and the survey with its fourteen recommendations
+              is `adocs/testing_strategy.md`, every claim fetched at source or
+              marked unverified. The recommendations were put to the owner one
+              at a time on 2026-09-05.
+Decision:     By the owner, item by item. R1 to R6, R8 to R11 and R14 become
+              steps S189 to S199 and the rule amendments DEC-140 to DEC-143;
+              R3 (S191) is ordered before S109 and R14 (S199) takes its first
+              point after the S109 block. **R7, calibrating the harness on
+              this MacBook, is refused: the workstation returns soon and a
+              number about a machine that is leaving is not worth 26 minutes
+              of it**, so `2026-09-04_test_review-F10` moves to `accepted` and
+              the calibration is owed on the workstation as the first run
+              taken there, under DEC-143's rule and doubling as S198's A/A.
+              R12, a `NodesTime` screening option, is deferred to S127's
+              design and noted in that file. R13, coverage as a periodic
+              report, folds into S197 as a documented command. The strategy
+              document is a plan input in the sense DEC-062 gave
+              `eval_tuning_strategy.md`.
+Rejected:     Calibrating here anyway -- see above. A step per rule clause --
+              four decisions carry the rule changes and the steps carry the
+              work. Bundling the eleven into fewer steps -- each closes a named
+              finding or implements one recommendation, and a stamp per
+              finding is what the audit re-run needs to move a status.
+Consequences: The Open list grows to 74 entries; the nine machine-free steps
+              join the machine-light lane after the plan review's document
+              steps, S198 sits before the first SPRT-owing step and S199 after
+              S109. The report's findings read `planned` (F10 `accepted`). The
+              review's evidence directory `adocs/data/2026-09-04_test_review/`
+              is append-only like the rest of `adocs/data/`. S179, S182 and
+              S127 are amended: the Zobrist keys join the magic regeneration
+              (F08), the cost line carries the bounds cost table (R11a), and
+              S127 records the `NodesTime` option as a design question.
+
+## DEC-140  2026-09-05  A commit touching `src/` carries its bench signature, and the gate checks it
+Tags:         workflow, git, testing, inv-6
+Context:      INV-6 is discharged by a person running `tools/search_bench.py`
+              on two builds and comparing by eye; the number is recorded in
+              step stamps and nowhere a gate can read. Every CI the strategy
+              document surveyed checks a bench signature from the commit
+              message before anything else runs, and the review's
+              fault-injection pass showed the signature moving on 21 of 33
+              injected bugs -- including a one-ply reverse-futility floor
+              drift that two of the three mate gates did not see -- and
+              staying still on 12 the suite caught, so the two instruments are
+              complementary and only one is automatic.
+Decision:     By the owner, 2026-09-05. From S189's completing commit on,
+              every commit that touches `src/` ends with `Bench: <nodes>`, the
+              total `chesso bench` prints, or `No functional change` when the
+              total is the parent's; `tools/gate.sh` runs the TESTS rule
+              command and then compares the built binary's bench with the
+              message, and a mismatch is a red gate. `AGENTS.md`'s COMMITS
+              rule carries the line. A commit that changes the bench position
+              set is itself a `Bench:` line.
+Rejected:     Keeping INV-6 a procedure -- it stayed one for a month and the
+              review found it compared by hand and recorded nowhere. A remote
+              CI service -- the machine is the constraint and a local script
+              gives the same guarantee at commit time.
+Consequences: S189 builds the command and the script. Stamps keep quoting the
+              three `search_bench.py` counts for continuity with the recorded
+              baselines; the signature is the gate's number.
+
+## DEC-141  2026-09-05  The TESTS rule gains a second tier: Debug self-play, a mutant per new search rule, and a scheduled extra gate
+Tags:         testing, workflow, invariants
+Context:      Both gated builds are Release, so every `assert(` in `src/` is
+              dead in them and INV-2 and INV-4 run only when somebody runs the
+              Debug binaries by hand (`2026-09-04_test_review-F01`). The
+              null-move and reduction guards had no direct test and their
+              whole coverage was one golden count (F02). Sanitizer runs have
+              been "absent from the gate" since the 2026-08-14 review.
+              Stockfish self-plays a Debug binary in CI and runs its command
+              set under sanitizers; S145 proved a test bites by showing it red
+              under a stated mutation, and the review generalised that into a
+              measured kill rate.
+Decision:     By the owner, 2026-09-05. Three clauses in the TESTS rule.
+              (1) A step that touches `make_move`, `unmake_move`, the
+              generator or the search self-plays the Debug binary -- four
+              rounds of `fastchess` at 4+0.04 -- and greps its log for
+              `Assertion` before completing, and its stamp says so. (2) A new
+              pruning, reduction or extension rule ships with a direct guard
+              test and a mutant that test kills, run through
+              `tools/mutation_check.py` once S196 lands and through the
+              review's driver before. (3) `tools/gate_extra.sh` (S197) -- the
+              Debug binaries, a sanitizer build, deep perft, the prose and
+              citation checks -- runs before such a step completes and
+              otherwise weekly, noted in `status.md`.
+Rejected:     Putting the Debug binaries or the sanitizers in the automatic
+              gate -- 7 to 20 minutes per run against a 108 s gate, and
+              DEC-025 stands. Leaving the cadence to judgement -- that is the
+              state the two reviews found.
+Consequences: S190, S191, S196, S197. The S109 block's four rules each arrive
+              with a case and a mutant. `DEV_MANUAL.md` "Test" carries the
+              exact commands when the steps land.
+
+## DEC-142  2026-09-05  Every golden number in the tests is named as one and re-derived by its script, never re-read
+Tags:         testing, workflow, dec-116
+Amends:       DEC-116, generalised from one floor to every golden
+Context:      The review found that a large share of the fast suite's
+              sensitivity comes from golden numbers -- static-score anchors,
+              mate-line floors, node budgets, a soft-limit scaling asserted on
+              a fixed position's tree -- that every legitimate search or
+              evaluation change also moves: 16 cases red on an eval sign flip,
+              `test_mate_carry` red on 21 of 22 search mutants, the scaling
+              case red on eight search mutants that were not time-management
+              defects. They caught the injected bugs; they will also redden on
+              S024, S109, every refit, and a floor re-derived under time
+              pressure is how a gate gets weakened. DEC-116 already states the
+              rule for the mate-in-three floor. The piece anchors are derived
+              by a gitignored script (`status.md`, parked since 2026-08-23).
+Decision:     By the owner, 2026-09-05. Every golden value or floor in `tests/`
+              is named as a golden at its site with the command that
+              re-derives it; a golden is re-derived by its script whenever
+              either end of it moves, with the margin stated, and never
+              re-read from a run; a golden that cannot be scripted is a
+              finding; `anchors.py` enters the repository. Where a golden
+              stands in for a property, the property gets its own case so
+              coverage survives a re-derivation. The TESTS rule carries the
+              sentence.
+Rejected:     Deleting the goldens for properties alone -- they are the best
+              detectors the suite has. Leaving re-derivation to each step --
+              the state that produced a floor that stopped separating for
+              nine days (DEC-116).
+Consequences: S192. Every search or evaluation step's stamp names the goldens
+              it re-derived and the script it ran.
+
+## DEC-143  2026-09-05  A pre-registration prices its bounds pair, and every harness change is followed by a fixed-rounds A/A
+Tags:         sprt, measurement, bounds, dec-063
+Context:      The nElo run-length formula (Van den Bergh,
+              `adocs/testing_strategy.md` section 1.1) prices a `{0,5}` or
+              `{-5,0}` pair at 41861 expected games when the truth sits at the
+              interval's midpoint and 25591 when it sits on a bound -- 17.9 h
+              and 10.9 h at the 2337 games an hour seven recorded runs on this
+              machine average -- and the ledger agrees: 4 h 40 m mean, one
+              6 h 36 m no-verdict run. The plan's 45 to 75 minutes holds only
+              for effects far outside the interval. DEC-063 asks every
+              pre-registration for the reading of each outcome; it does not
+              ask what the pair costs. S105 calibrated the harness once with
+              two fixed-rounds A/A runs and no calibration has followed a
+              machine change or a fastchess upgrade since; an SPRT A/A passes
+              with probability alpha and measures nothing.
+Decision:     By the owner, 2026-09-05. A run's pre-registration states the
+              pair's worst-case expected games from the formula and its abort
+              rule beside the three outcomes. A fixed-rounds A/A of 1000 games
+              is taken after every change to the harness -- fastchess version,
+              book, adjudication, machine -- and read with
+              `adocs/data/S105_pairs.py` and `tools/forfeit_report.py` before
+              the next verdict; the first is the workstation's, and it
+              doubles as S198's. The MEASUREMENT rule carries both sentences;
+              `DEV_MANUAL.md` "Which bounds" carries the cost table when S182
+              lands it.
+Rejected:     Calibrating the MacBook now (DEC-139). An SPRT A/A as the
+              calibration -- see above. Changing any pair -- the cost is a
+              property of the pairs and the right answer is to write it down.
+Consequences: S182's accepts carries the table; S198 lands the harness flags
+              with the workstation's A/A; every `adocs/data/S*_sprt.sh` header
+              from here on states its worst-case games.
