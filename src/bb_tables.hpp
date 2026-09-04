@@ -40,6 +40,12 @@ static inline constexpr uint8_t castling_rights[64] = {
 };
 // clang-format on
 
+// Provenance, DEC-132. Both magic arrays below were generated in this
+// repository by commit a5dbe68 (2023-03-28) with a xorshift generator seeded
+// 1804289383, the seed the "Bitboard chess engine in C" series uses, so they
+// coincide with that series' published set. The owner's decision of
+// 2026-09-04 keeps them for now; S179 commits the generator and regenerates
+// both arrays under a project seed.
 static inline constexpr bb_t rook_magic_numbers[64] = {
     0x8a80104000800020ULL, 0x140002000100040ULL,  0x2801880a0017001ULL,
     0x100081001000420ULL,  0x200020010080420ULL,  0x3001c0002010008ULL,

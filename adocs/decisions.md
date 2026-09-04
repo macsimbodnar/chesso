@@ -7497,3 +7497,41 @@ Consequences: **The book is reproducible from two committed inputs**, which is
               the book by move 9**, which is shallower than the old blob went
               and is a property to remember before reading anything into an
               opening. `polyglot_randoms[781]` is untouched and stays DEC-121.
+
+## DEC-132  2026-09-04  The sliding-attack magic numbers stay for now, and a step regenerates them under a project seed
+Tags:         provenance, licensing, movegen, plan
+Context:      The 2026-09-03 audit's clean list noted that the 128 magic
+              constants in `src/bb_tables.hpp` were produced in this repository
+              by commit `a5dbe68` ("Generatd magic numbers", 2023-03-28), whose
+              generator used the xorshift seed 1804289383 from the "Bitboard
+              chess engine in C" series the `bitboard` branch followed -- so the
+              numbers coincide, value for value, with that series' published
+              set. The code was the owner's and the origin is in git; COPYING is
+              about tables taken from another engine, and these were generated
+              here. Still, a reader meeting the constants finds no note, a
+              value-for-value match with a published table is exactly the shape
+              COPYING exists to question, and the generator that produced them
+              did not survive into this branch.
+Decision:     By the owner, 2026-09-04. The constants stay as they are for now
+              -- inherited foundation under DEC-013, the project's own generator
+              output, origin in git -- and a plan step, S179, recovers or
+              rewrites the generator, commits it under `tools/`, and regenerates
+              both arrays under a seed this project chooses, so the coincidence
+              ends and the provenance becomes a command rather than an argument.
+              Until S179 lands, `src/bb_tables.hpp` carries a comment at the
+              arrays naming this entry.
+Rejected:     Recording provenance alone and never regenerating -- cheapest, and
+              it leaves a published-set coincidence in the tree that every
+              future audit re-raises. Regenerating inside the audit batch -- it
+              is not a bug, BUGS does not apply, and it is behaviour-neutral
+              work for an idle moment, proved on perft and node counts rather
+              than on a match. Doing nothing -- the question was asked, and
+              DEC-126 is the record of what an unanswered provenance question
+              costs later.
+Consequences: S179 sits second in the Open list, after S178, machine-light: a
+              generator in `tools/`, both arrays replaced, `bench_movegen`'s
+              perft verification, `test_perft` and `tools/search_bench.py`'s
+              node counts as the proof that move generation is unchanged --
+              magics are perfect hashes into tables whose size the relevant-bit
+              counts fix, so only the constants move. The relevant-bit counts,
+              shifts and table layout are not the series' and do not change.

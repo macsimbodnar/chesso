@@ -147,13 +147,15 @@ Updated: 2026-09-04, by hand.
   `tests/test_audit_polyglot_key.cpp` is committed with the report and S175
   registers it. `2026-08-13_plan_review.2-F06` had no trace in S023, whose
   `accepts` already carries its resolution; `closes:` is set now.
-- **One owner question is open from the audit's clean list.** The 128 magic
-  constants in `src/bb_tables.hpp` were generated in-repo (`a5dbe68`,
-  2023-03-28) by a generator using the xorshift seed the `bitboard` series used,
-  so they coincide with that series' published set. Inherited foundation under
-  DEC-013, origin in git. Whether that wants a DEC-121-style provenance sentence
-  at the table, a regeneration under a project seed, or nothing is the owner's
-  call, asked and not decided.
+- **The magic-number question is answered: DEC-132, 2026-09-04.** The 128
+  constants in `src/bb_tables.hpp` were generated in-repo (`a5dbe68`) with the
+  tutorial's xorshift seed and coincide with that series' published set. The
+  owner keeps them for now -- own generator output, inherited under DEC-013,
+  origin in git -- and **S179** recovers or rewrites the generator, commits it,
+  and regenerates both arrays under a project seed, proved unchanged on
+  `bench_movegen`'s perft verification, `test_perft` and `search_bench` node
+  counts. The table cites DEC-132 until then. S179 sits second in the Open
+  list, after S178.
 - Before S174: **S146, 2026-09-03 -- the book the engine ships with is built by
   this project, from a source it can account for.** The owner took the second of
   DEC-126's three standing options: the unaccounted blob is **deleted**, and
