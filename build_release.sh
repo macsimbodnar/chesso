@@ -96,7 +96,7 @@ for arch in "${arches[@]}"; do
           -DCHESSO_ARCH="$arch" \
           -DCHESSO_PGO=generate \
           -DCHESSO_PGO_DIR="$profile" > /dev/null
-     cmake --build "$out_dir" --target chesso -j"$(nproc)" > /dev/null
+     cmake --build "$out_dir" --target chesso -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null
 
      echo "-- pass 2/3  workload"
      workload_start=$SECONDS
@@ -160,7 +160,7 @@ WORKLOAD
           -DCHESSO_ARCH="$arch" \
           -DCHESSO_PGO=use \
           -DCHESSO_PGO_DIR="$profile" > /dev/null
-     cmake --build "$out_dir" --target chesso -j"$(nproc)" > /dev/null
+     cmake --build "$out_dir" --target chesso -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null
 
      popcnt="$(objdump -d "$out_dir/src/chesso" | grep -c popcnt || true)"
      echo "-- $out_dir/src/chesso"

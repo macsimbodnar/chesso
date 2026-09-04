@@ -8,7 +8,28 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-04, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty.
-- Last done: **S176, 2026-09-04 -- `position fen` takes four to six fields, and
+- Last done: **S177, 2026-09-04 -- `rating.sh` and `build_release.sh` run on
+  macOS as `fastchess.sh` does, and `rating.sh` prints its terminal marker on
+  every exit.** On this machine `./rating.sh --bracket` died at
+  `all_cores="$(nproc)"` with exit 127 and **no marker**, 90 lines before its
+  trap was armed -- the WATCHERS-rule hole S167 closed for `fastchess.sh`. Now
+  the marker trap and `fail()` come first, with a `marked` flag rather than `$?`
+  because bash 3.2's EXIT trap reads `$? == 0` on a `set -u` abort; cores are
+  counted through `sysctl -n hw.physicalcpu` with `nproc` as the fallback and a
+  named refusal when neither exists; the GNU `timeout` `identify()` needs is
+  resolved once as `timeout` or `gtimeout` and refused by name before any engine
+  is probed; and the `command -v x || fail` checks are `if`s, since bash 3.2
+  exits before `fail` runs in the old form. `build_release.sh` takes the core
+  count the same way (`hw.logicalcpu` for build jobs). **Red first**:
+  `tests/test_rating_script.sh`, a sandbox whose PATH holds only the utilities
+  it links in -- no `nproc`, `timeout`, `gtimeout`, `sysctl` or `ordo` -- failed
+  all five of its properties on the old scripts and passes after; on this
+  machine the real script now answers `RATING-RUN-FAILED: ordo not on PATH`,
+  exit 1, one marker, snapshot cleaned. Fast suite 27/27 in both builds.
+  `DEV_MANUAL.md` (concurrency rows, rating section) and `TOOLCHAIN.md` (new
+  "GNU coreutils on macOS" section) say so; `.moltke.local.md` now lists which
+  scripts run here. No engine binary changed.
+- Before S177: **S176, 2026-09-04 -- `position fen` takes four to six fields, and
   a FEN that does not load changes nothing.** Two defects in `command_position`.
   Fewer than six fields was dropped silently with the board left wherever it
   was, and a four-field FEN followed by `moves` read `moves` as its fifth
@@ -248,10 +269,11 @@ Updated: 2026-09-04, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S177**, last of the audit batch -- `rating.sh` and `build_release.sh`
-  get the portability S167 gave `fastchess.sh`, and `rating.sh` arms its marker
-  before anything can fail. Then S178; S020 resumes after it. **On the desktop
-  workstation, S171's census comes first.**
+- Next: **S178** -- `movetext_to_san()` splits a move number glued to its move so
+  PGN import format (`1.e4`) builds a book; found by running S174's fixed tools.
+  Then **S020** resumes the plan proper. The 2026-09-03 audit batch (S174 to
+  S177) is complete; a re-run of the audit is what closes the four findings.
+  **On the desktop workstation, S171's census comes first.**
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran

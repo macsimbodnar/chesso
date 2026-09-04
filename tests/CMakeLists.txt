@@ -245,6 +245,18 @@ add_test(NAME test_make_book_tools
                       $<TARGET_FILE:make_book> $<TARGET_FILE:pgn_to_positions>)
 set_tests_properties(test_make_book_tools PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S177: rating.sh's terminal marker, and the GNU tools both it and
+# build_release.sh assumed. 2026-09-03_adversarial-F03 -- on a machine without
+# coreutils `./rating.sh --bracket` died at `$(nproc)` with exit 127 before the
+# RATING-RUN-* trap was armed, so a detached run would have left its watcher
+# spinning (the class S167 fixed for fastchess.sh). Same shape as the fastchess
+# smoke run: no game, a throwaway directory, and a PATH holding only the
+# utilities the test links in, so the result does not depend on the machine.
+add_test(NAME test_rating_script
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_rating_script.sh
+                      ${CMAKE_SOURCE_DIR}/rating.sh ${CMAKE_SOURCE_DIR}/build_release.sh)
+set_tests_properties(test_rating_script PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S084: the SPSA driver. Python, and the first test in this directory that is
 # neither doctest nor shell -- the driver is a tool and the objective it has to
 # be right about is a noisy quadratic, not a chess position.

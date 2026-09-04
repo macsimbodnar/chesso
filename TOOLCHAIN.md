@@ -278,3 +278,22 @@ Node counts first, timings second. A change under 3 % has not been shown to do
 anything on this machine unless `hyperfine` says otherwise with a tight sigma.
 One change at a time — two at once and neither number means anything.
 
+## GNU coreutils on macOS
+
+`nproc`, `timeout` and `sha256sum` are GNU coreutils and are not on a stock
+Mac. The scripts here do not assume them: `fastchess.sh` (S167), `rating.sh`
+and `build_release.sh` (S177) count cores with `sysctl -n hw.physicalcpu`
+(`hw.logicalcpu` for build jobs) and fall back to `nproc`; `books/fetch_book.sh`
+uses `shasum -a 256` (S024). `rating.sh` drives every reference engine through
+a GNU `timeout` and has no substitute for it, so on a Mac it needs
+
+```bash
+brew install coreutils    # installs it as gtimeout; rating.sh takes either name
+```
+
+and refuses with `RATING-RUN-FAILED: neither timeout nor gtimeout on PATH ...`
+before asking any engine anything. It needs `ordo` too, refused the same way.
+`tests/test_rating_script.sh` holds both refusals on a PATH with none of these
+tools, so the check does not depend on what the machine running the suite has.
+`build_release.sh`'s three targets are x86-64 and `cmake/arch.cmake` refuses them
+on arm64 by design (DEC-112).

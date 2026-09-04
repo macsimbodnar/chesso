@@ -26,6 +26,25 @@ candidate="$repo/build/src/chesso"
 
 tc="${TC:-10+0.2}"
 
+# The terminal marker, armed before the first command that can fail. S177: this
+# used to be a fail() defined 60 lines further down and a cleanup-only trap
+# another 50 after that, and on a machine without GNU coreutils the script died
+# at `all_cores="$(nproc)"` -- exit 127, no marker, and under the WATCHERS rule
+# a detached run's watcher spinning to its ceiling on the silence
+# (2026-09-03_adversarial-F03; the class S167 removed for fastchess.sh). Every
+# exit now prints one marker: fail() and the DONE paths mark themselves, and the
+# trap covers whatever reached neither. `marked` is read rather than `$?`
+# because bash 3.2's EXIT trap sees `$? == 0` for a `set -u` abort (S167).
+marked=0
+fail() { marked=1; echo "RATING-RUN-FAILED: $*" >&2; exit 1; }
+trap 'status=$?
+      [[ -n "${snapshot:-}" ]] && rm -f "$snapshot"
+      if ((marked == 0)); then
+        echo "RATING-RUN-FAILED: exited $status before the run could report" >&2
+        ((status != 0)) || status=1
+      fi
+      exit $status' EXIT
+
 # 128 MB, deliberately unlike fastchess.sh's 16. The two scripts match
 # different invariants and S105 is where they parted. CCRL Blitz runs its
 # engines at 128 to 256 MB (DEC-089, read from the live conditions page), and
@@ -47,7 +66,12 @@ hash_mb=128
 # concurrency-6 forfeit was a 25360 ms hang rather than a margin overrun. Load was
 # never the cause. Concurrency 6 also costs 2.1x: 6.2 of 12 threads busy and
 # 10.6 games/min against 22.6, measured on this machine.
-all_cores="$(nproc)"
+#
+# Counted through `sysctl` where it exists and `nproc` otherwise, fastchess.sh's
+# form since S167; this script kept the bare `nproc` until S177 and died on it
+# on this project's own machine.
+all_cores="$(sysctl -n hw.physicalcpu 2> /dev/null || nproc 2> /dev/null || true)"
+[[ -n "$all_cores" ]] || fail "cannot count cores: neither sysctl nor nproc on PATH"
 concurrency="${CONCURRENCY:-$all_cores}"
 
 # Adjudication, as fastchess.sh. Both are two-sided -- a resign needs both
@@ -84,13 +108,27 @@ pgnfile="$outdir/games.pgn"
 logfile="$outdir/fastchess.log"
 report="$outdir/report.txt"
 
-fail() { echo "RATING-RUN-FAILED: $*" >&2; exit 1; }
-
 [[ -x "$candidate" ]] || fail "no candidate at $candidate, build it first"
 [[ -r "$manifest" ]] || fail "no manifest at $manifest"
 [[ -r "$book" ]] || fail "no book at $book"
-command -v fastchess > /dev/null || fail "fastchess not on PATH"
-command -v ordo > /dev/null || fail "ordo not on PATH"
+
+# Written as `if`, not `command -v x || fail`: bash 3.2 does not suppress
+# errexit for the `command` builtin on the left of `||`, so the old form exited
+# before fail() ran and printed nothing (S167's second finding, S177 here).
+if ! command -v fastchess > /dev/null; then fail "fastchess not on PATH"; fi
+if ! command -v ordo > /dev/null; then fail "ordo not on PATH"; fi
+
+# identify() below drives every engine through a GNU timeout. macOS has none;
+# Homebrew's coreutils installs it as gtimeout. Resolved once, here, so a
+# missing one is a named refusal before any engine is asked anything rather
+# than an empty `id name` blamed on the engine.
+if command -v timeout > /dev/null; then
+  timeout_cmd=timeout
+elif command -v gtimeout > /dev/null; then
+  timeout_cmd=gtimeout
+else
+  fail "neither timeout nor gtimeout on PATH -- brew install coreutils on macOS"
+fi
 
 # Ask each binary what it is, before playing a single game.
 #
@@ -107,7 +145,7 @@ command -v ordo > /dev/null || fail "ordo not on PATH"
 # read the way it does now. The probe's real result is the string, and an empty
 # string is checked for by the caller.
 identify() {
-  { printf 'uci\nquit\n' | timeout -k 1 5 "$1" 2> /dev/null \
+  { printf 'uci\nquit\n' | "$timeout_cmd" -k 1 5 "$1" 2> /dev/null \
     | sed -n 's/^id name //p' | head -1 | tr -d '\r'; } || true
 }
 
@@ -136,7 +174,7 @@ done < "$manifest"
 snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-rated.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
-trap 'status=$?; rm -f "$snapshot"; exit $status' EXIT
+# Removed on every exit by the trap armed at the top.
 
 busy="$(ps -A -o %cpu= | awk '{ total += $1 } END { printf "%.0f", total }')"
 if ((busy > 60)); then
@@ -232,6 +270,7 @@ if ((unexpected > 0 || broken > 0 || forfeit_status != 0)); then
     echo "A crash or a disconnect voids at zero. A forfeit rate is raised with"
     echo "FORFEIT_MAX_PCT only by a recorded decision -- DEC-075 set 1 %."
   } | tee -a "$report"
+  marked=1
   echo "RATING-RUN-DONE $mode INVALID $outdir"
   exit 1
 fi
@@ -245,6 +284,7 @@ if [[ "$mode" == "bracket" ]]; then
   } | tee -a "$report"
   ordo -q -p "$pgnfile" -o "$outdir/ordo_bracket.txt" -W -D -j "$outdir/h2h.txt"
   tee -a "$report" < "$outdir/h2h.txt"
+  marked=1
   echo "RATING-RUN-DONE bracket OK $outdir"
   exit 0
 fi
@@ -281,4 +321,5 @@ done
   echo "other."
 } | tee -a "$report"
 
+marked=1
 echo "RATING-RUN-DONE rated OK $outdir"

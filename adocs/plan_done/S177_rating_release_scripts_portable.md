@@ -7,8 +7,8 @@ decisions:
 closes:     2026-09-03_adversarial-F03
 blocks:
 paused_by:
-author:
-done:
+author:     claude (Fable 5.1), 2026-09-04
+done:       2026-09-04. `rating.sh`: `fail()` and the EXIT trap now come first, with a `marked` flag instead of `$?` (bash 3.2 reads `$? == 0` on a `set -u` abort); cores are `sysctl -n hw.physicalcpu`, else `nproc`, else a named refusal; the GNU `timeout` `identify()` needs is resolved once as `timeout` or `gtimeout` and refused by name before any engine is probed; the `command -v x || fail` checks are `if`s; the three DONE sites mark themselves and the snapshot is removed by the one trap. `build_release.sh`: both `-j` core counts take the `sysctl -n hw.logicalcpu || nproc` form. Red observed first: `./rating.sh --bracket` on this machine exited 127 at `nproc: command not found` with 0 markers; `tests/test_rating_script.sh` (sandbox, PATH holding only the utilities it links in) failed all five properties on the old scripts. Green after: the test passes; on this machine the real script answers `RATING-RUN-FAILED: ordo not on PATH`, exit 1, one marker, no snapshot left. `bash -n` passes on both scripts. Fast suite 27/27 in `build` and `build-tune`, `clang-format --check` clean; no engine binary changed, so no node-count check is owed. `DEV_MANUAL.md` (concurrency table row and paragraph, rating section) and `TOOLCHAIN.md` (new section "GNU coreutils on macOS") updated; `.moltke.local.md` lists which scripts run here. Two test-side corrections while writing it, not to the scripts: `true` is a builtin so stubs are scripts rather than symlinks, and the bare-`nproc` check skips comment lines because both scripts now name the old form in a comment. Fast check over the diff: no issue in the change; it flagged that `DEV_MANUAL.md`'s watcher regex also matches the non-terminal `RATING-RUN-INVALID:` line, which predates this step and is harmless because that line is always followed by its `RATING-RUN-DONE <mode> INVALID` marker in the same block.
 
 ## Why this exists
 

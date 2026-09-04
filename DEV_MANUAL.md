@@ -1512,7 +1512,7 @@ is about.
 | hash | `16` MB | matches table **pressure**, not table size: at the rating list's 2'+1" a game writes ~660 M nodes against 5.6–11 M entries, 60–120 overwrites per entry, and 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about eightfold — DEC-088 |
 | book | `UHO_Lichess_4852_v1.epd` | unbalanced. A balanced book draws about 91 % between engines of equal strength and a drawn pair carries no signal, so it spends the night to say less — DEC-083 |
 | threads | `1` | the target is the CCRL Blitz **1CPU** scale — DEC-089 |
-| concurrency | every core `nproc` reports | DEC-048, DEC-050 |
+| concurrency | every core the machine reports: `sysctl -n hw.physicalcpu`, else `nproc` | DEC-048, DEC-050 |
 | pairing | `-repeat` | paired colours. This is what makes an unbalanced book sound, and it is never dropped |
 | adjudication | `-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400` | unchanged by S105, deliberately: the book was the one variable moved |
 
@@ -1524,8 +1524,10 @@ question.
 
 **Concurrency is every core the machine reports**, whatever kind it is — 12 on
 this machine, which is 6 physical cores with SMT (DEC-050); efficiency cores on
-Apple silicon (DEC-048, superseding DEC-042). The script reads it from `nproc`,
-so it needs no edit per machine. `CONCURRENCY=N` overrides it; do not lower it
+Apple silicon (DEC-048, superseding DEC-042). The scripts read it from `sysctl
+-n hw.physicalcpu` where that exists and from `nproc` otherwise -- `fastchess.sh`
+since S167, `rating.sh` and `build_release.sh` since S177 -- so they need no
+edit per machine. `CONCURRENCY=N` overrides it; do not lower it
 to be polite, since nothing else should be running during a match, and a run
 that does lower it records why. `CONCURRENCY=6` is the way to one game per
 physical core here if a result has to be as clean as this machine can make it.
@@ -1778,6 +1780,17 @@ CONCURRENCY=6 ROUNDS=50 ./rating.sh
 against engines with published CCRL Blitz ratings and solves the PGN into an
 absolute figure with `ordo`. It is not a gate: run it after a milestone, not
 before a commit. S087, DEC-067, DEC-068.
+
+**What it needs on the machine is checked before anything runs, and every exit
+prints one marker (S177).** `fastchess`, `ordo` and a GNU `timeout` -- `timeout`
+itself, or `gtimeout` from Homebrew's coreutils on macOS -- and a way to count
+cores (`sysctl`, else `nproc`). Each missing one is refused as
+`RATING-RUN-FAILED: <what is missing>`, the run's one terminal line, and the
+marker trap is armed before the first command that can fail, so a detached run
+never dies silently: before S177 the script died at `$(nproc)` with exit 127
+and no marker on the machine this project is developed on
+(2026-09-03_adversarial-F03), the class S167 fixed for `fastchess.sh`.
+`tests/test_rating_script.sh` holds it on a PATH with none of those tools.
 
 **Run it when substantial work has been done to the engine, and not on a
 threshold.** DEC-074 is the owner's decision and it replaced DEC-071's "any
