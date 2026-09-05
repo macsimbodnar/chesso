@@ -50,3 +50,467 @@ produces the keys under the project seed as well, so both tables that must be
 this project's own output come from one command. Unlike the magics, new keys
 change the table indices and therefore the node counts, once; the accepts
 says how that is recorded.
+
+## Implementation guide (2026-09-05)
+
+### 1. What this step is, for someone new
+
+The engine answers "which squares does a rook on d4 attack, given these
+blockers" by a table lookup. The lookup index is made by multiplying the
+blocker pattern by a per-square 64-bit constant, the *magic number*, and
+keeping the top few bits of the product. The 128 constants that do this live in
+`src/bb_tables.hpp` (`rook_magic_numbers`, `bishop_magic_numbers`). They are
+valid and the engine is correct with them, but they are, value for value, the
+set a public tutorial series published, because the generator that produced
+them here in 2023 used that tutorial's seed. This step commits a generator
+under `tools/`, chooses a seed of the project's own, regenerates the two
+arrays, and proves that nothing the move generator returns has changed.
+
+The same step replaces how the Zobrist hash keys are drawn. Today
+`src/bitboard.cpp` `init_zobrist` fills them from
+`std::uniform_int_distribution<uint64_t>` over `std::mt19937_64`; the standard
+does not fix what the distribution returns for a given engine state, so two
+standard libraries may give two different key sets and therefore two different
+node counts for the same search. After this step the keys come from the
+project's own generator, whose output is defined bit for bit by its code.
+
+Two commits, in this order: the magics first (node-identical, provable), then
+the keys (node counts move once, recorded). One change at a time is the rule
+(`CLAUDE.md` "Nothing is believed without a measurement", point 6), and each
+half has a different proof.
+
+### 2. The technique as published
+
+**Magic bitboards.** https://www.chessprogramming.org/Magic_Bitboards. The
+occupancy is masked to the *relevant* squares (the ray squares excluding the
+board edge, because a blocker on the edge changes nothing), multiplied by the
+magic, and shifted right by `64 - n` where `n` is the relevant-bit count; the
+result indexes a per-square table of attack sets. The wiki calls this "perfect
+hashing" via a "surjective function, to map the vector of all relevant
+occupancies to a range of attack-sets per square", and notes that
+"constructive collisions, where different occupancies map same attack-sets"
+are "desired and even necessary". Chesso is the *plain* form: fixed 4096-entry
+rook and 512-entry bishop tables per square
+(`src/data_structures.hpp` `bb_tables_t`, `rook_attacks[64][4096]`,
+`bishop_attacks[64][512]`), no per-square shift variable. Nothing in this step
+changes that form; `excludes:` says so.
+
+**Finding a magic.** https://www.chessprogramming.org/Looking_for_Magics, which
+attributes the method to Tord Romstad: "just trying out random numbers with a
+low number of nonzero bits until you find a number which works". In prose,
+without the page's code: (1) draw a candidate with few bits set, by taking the
+bitwise AND of three 64-bit random draws; (2) reject it cheaply if the product
+of the square's mask and the candidate has fewer than six ones in its top eight
+bits, since such a product cannot spread the occupancies over the index range;
+(3) enumerate every subset of the mask's bits -- every possible blocker pattern
+-- and for each compute the index and the true attack set; (4) write the attack
+set into a scratch table at that index if the slot is empty, accept the write if
+the slot already holds the *same* attack set (a constructive collision), and
+reject the candidate on the first slot holding a *different* one; (5) a
+candidate that survives every subset is the magic. Romstad reports "less than a
+second to find magic numbers for rooks and bishops for all squares" on a 2008
+machine.
+
+**Enumerating the subsets.** https://www.chessprogramming.org/Traversing_Subsets_of_a_Set
+gives the "Carry-Rippler": from a subset, the next one is
+`(subset - set) & set`, which visits every subset of `set` exactly once and
+returns to zero. Chesso already has the equivalent index-to-subset mapping,
+`src/bitboard.cpp` `set_occupancy`, which places bit `k` of an integer index on
+the `k`-th set bit of the mask; the table initialiser uses it, so the generator
+uses it too -- the same enumeration the engine will replay when it builds the
+tables. Either method is correct; using the engine's own removes one thing that
+could differ.
+
+**Zobrist hashing.** https://www.chessprogramming.org/Zobrist_Hashing. A
+position's key is the XOR of one random number per (piece, square), plus keys
+for side to move, castling rights and en passant. The page's quality rule:
+"linear independence" matters more than Hamming distance -- "avoid that:
+x1^x2^...^xm = y1^y2^...^yn" for small distinct subsets -- and it recommends
+taking a good generator's output as is rather than post-processing it. The
+classic count is 781 keys; chesso's `zobrist_randoms_t` holds **851**:
+`piece_randoms[12][64]`, `castling_randoms[16]` (one per rights nibble, not
+four per right), `side_randoms[2]` and `ep_randoms[65]` (64 squares plus
+`INVALID_INDEX` for "no en-passant square"). Every one of the 851 is live:
+`compute_full_hash` XORs `side_randoms[active_color]`,
+`castling_randoms[castling]` and `ep_randoms[en_passant]` unconditionally.
+
+**The generator.** The wiki's PRNG page
+(https://www.chessprogramming.org/Pseudorandom_Number_Generator) says Zobrist
+keys have "less issues with randomness and period, but with distribution", and
+lists xorshift-family and Mersenne generators as what engines use. The
+generator this step adopts is **splitmix64**, Sebastiano Vigna's public-domain
+reference implementation at https://prng.di.unimi.it/splitmix64.c ("dedicated
+all copyright and related and neighboring rights to this software to the public
+domain worldwide"): the 64-bit state advances by a fixed odd increment, and the
+output is the state passed through xor-shift-by-30, multiply, xor-shift-by-27,
+multiply, xor-shift-by-31. Two properties decide for it over xorshift64*
+(shift triplet 12, 25, 27 and a scrambling multiplier, Vigna, "An experimental
+exploration of Marsaglia's xorshift generators, scrambled",
+https://arxiv.org/abs/1402.6246, constants at
+https://en.wikipedia.org/wiki/Xorshift): every seed is valid including zero,
+where a shift-register generator has an all-zero state it never leaves; and the
+output function is a bijection of a counter, so the first 2^64 outputs are
+pairwise distinct -- the 851 keys cannot repeat by construction, and at most one
+can be zero. https://prng.di.unimi.it/ recommends it for seeding because it is
+"radically different in nature" from shift-register generators. Its origin is
+the SplittableRandom design of Steele, Lea and Flood, "Fast Splittable
+Pseudorandom Number Generators", OOPSLA 2014, https://doi.org/10.1145/2660193.2660195
+-- `unverified`: the ACM page refused the fetch and the PDF could not be read
+here; the reference implementation above is the source the implementer needs.
+
+### 3. What chesso has today, and where the change plugs in
+
+**The consumers.** `src/bitboard.hpp` `get_rook_attacks` and
+`get_bishop_attacks` do `occupancy &= mask; occupancy *= magic; occupancy >>=
+64 - relevant_bits; return table[square][occupancy]`. The tables are filled
+once per process in `src/bitboard.cpp` `initialize_game_const_data`, which for
+each square enumerates `1 << relevant_bits` occupancies with `set_occupancy`,
+computes `(occupancy * magic) >> (64 - relevant_bits)` and stores
+`precompute_rook_attacks(square, occupancy)` (or the bishop twin) at that
+index. `between[][]` and `line[][]` are built afterwards from those lookups.
+Squares are `a8 = 0` to `h1 = 63` (`src/data_structures.hpp` `bb_squares_t`);
+`precompute_rook_attack_masks` and `precompute_bishop_attack_masks` derive rank
+and file as `square / 8` and `square % 8`, so the generator iterates the same
+index and needs no coordinate conversion.
+
+**The old generator.** `git show a5dbe68:src/board.cpp` (this project's own
+history, 2023-03-28, "Generatd magic numbers"): a 32-bit xorshift seeded
+`1804289383`, four 16-bit slices glued into a 64-bit draw, candidates as the AND
+of three draws, the six-high-bits filter, a scratch table of 4096 entries, a
+cap of one hundred million attempts, squares in enum order, rooks then bishops,
+each printed as `0x...ULL,`. The seed is glibc's first `rand()` value after
+`srand(1)` (search-result summary, `unverified` at source), which is why it
+appears in tutorials. Rewrite the *shape* against today's types; do not port the
+RNG.
+
+**Edit order, commit 1 (magics).**
+
+1. Add `tools/magic_gen.cpp`, registered in `tools/CMakeLists.txt` exactly as
+   `make_book` is: `add_executable`, `target_include_directories(... PRIVATE
+   ../src)`, `target_link_libraries(... PRIVATE chesso_engine)`, with a
+   comment saying why it links the engine (the masks, the enumeration and the
+   reference attacks must be the engine's own, or a magic verified here could
+   fail there). Usage in the `make_book` style (`tools/make_book.cpp` `usage`):
+   `magic_gen magics --seed N` and `magic_gen zobrist --seed N`; `--seed` is
+   required and a missing one prints usage and exits 1.
+2. The generator needs `set_occupancy`, `precompute_rook_attack_masks`,
+   `precompute_bishop_attack_masks`, `precompute_rook_attacks` and
+   `precompute_bishop_attacks`. They are non-static in `src/bitboard.cpp` and
+   declared in no header; forward-declare them in the tool with the comment
+   `tests/test_engine.cpp` uses for `compute_full_hash` ("Defined in
+   bitboard.cpp. Not in the header because nothing in the engine needs it at
+   runtime"). Do not add them to `src/bitboard.hpp`; it is not in `touches:`.
+3. Put the PRNG in `src/bitboard.cpp` beside `init_zobrist` as one non-static
+   function, `uint64_t project_random_next(uint64_t* state)`, and the seed as a
+   named constant beside it (section 4). Forward-declare the function in the
+   tool the same way. One definition, used by the engine at start-up and by the
+   tool: that is what "the same project generator" means in `accepts:`.
+4. `magics` mode: one splitmix64 stream seeded with `--seed`; for each square
+   `a8..h1` for rooks, then `a8..h1` for bishops, run the search of section 2
+   with a `bb_t used[4096]` scratch table, the relevant-bit count from
+   `rook_relevant_bits_count` / `bishop_relevant_bits_count`, and the attempt
+   cap; on the cap, print the piece and square to stderr and exit 1. Print both
+   arrays to stdout in the header's form -- the `static inline constexpr bb_t
+   rook_magic_numbers[64] = {` line, the values as `0x%llxULL,` (lowercase,
+   no leading zeros, `std::hex`), the closing `};` -- and let
+   `./clang-format.sh` (no argument formats in place; `--check` only reports)
+   restore the column alignment after pasting. To stderr, print for every
+   square the attempt count, and the coincidence count of section 7.
+5. Replace the two arrays in `src/bb_tables.hpp`. Replace the DEC-132 comment
+   with: the seed, the exact command, and the sentence that the relevant-bit
+   counts, shifts and layout are unchanged. Nothing else in the header moves.
+6. Build, run the proofs of section 7, commit.
+
+**Edit order, commit 2 (keys).** In `init_zobrist`, replace the
+`std::mt19937_64` and the distribution with `uint64_t state =
+CHESSO_PROJECT_SEED;` and `random = project_random_next(&state);`, keeping the
+four loops and their order exactly (pieces, castling, side, en passant), and
+drop `#include <random>` from `src/bitboard.cpp` if nothing else there uses it.
+`zobrist` mode of the tool draws the 851 values in the same order from a stream
+seeded with `--seed`, prints the quality report of section 6, and compares them
+with a freshly initialised `game_t`'s `hash_randoms`, printing `matches
+init_zobrist: yes/no` -- `no` before the engine change, `yes` after. Both modes
+take the same seed value; the two streams then share their opening draws, which
+has no consequence because a magic is the AND of three draws and a key is one
+draw, and the magic stream's draws are never themselves stored.
+
+### 4. Constants and seeds
+
+This step adds nothing to `src/search_params.hpp` and no `SEARCH_PARAM` range:
+none of its constants is tunable, and a magic or a key is right or wrong, not
+better or worse.
+
+- `CHESSO_PROJECT_SEED` (`src/bitboard.cpp`, `constexpr uint64_t`): the
+  project's choice, the owner's to make (DEC-132: "a seed this project
+  chooses"). Proposed value `20260904`, the date of DEC-132 -- a number with a
+  stated origin that no tutorial or engine uses. Use it unless the owner names
+  another before the step starts; whichever it is, the header comment in
+  `src/bb_tables.hpp`, the tool's stderr banner and the stamp all carry the
+  same value. It must not be `1804289383`, and must not be
+  `0x9E3779B97F4A7C15` either: that is the increment of splitmix64 itself, and
+  today's `init_zobrist` happens to use it as the `mt19937_64` seed.
+- splitmix64's three constants and three shifts: form (a), from the reference
+  implementation https://prng.di.unimi.it/splitmix64.c -- increment
+  `0x9e3779b97f4a7c15`, multipliers `0xbf58476d1ce4e5b9` and
+  `0x94d049bb133111eb`, shifts 30, 27, 31. Comment the function with that URL
+  and the public-domain dedication.
+- The candidate filter, at least six ones in the top eight bits of
+  `mask * candidate`: form (a), https://www.chessprogramming.org/Looking_for_Magics.
+- The attempt cap, one hundred million per square: the project's own old bound
+  (`a5dbe68:src/board.cpp` `find_magic_number`), a safety stop and not a
+  tuning; the search normally ends in thousands.
+- The relevant-bit counts, the shifts, the table sizes: unchanged, per
+  `excludes:`.
+
+### 5. Interactions and traps
+
+- **Which lookups can change.** None. A valid magic is a perfect hash: for
+  every (square, occupancy) the table slot differs but the bitboard read from it
+  is the same, so `generate_moves`, `between[][]`, `line[][]`, SEE and the
+  evaluation's mobility all see identical inputs. An invalid magic -- one with a
+  destructive collision -- silently returns a wrong attack set for some
+  occupancy, and the first symptom is a perft mismatch, which is why
+  `bench_movegen` verifies counts before it times anything.
+- **What the keys change.** `src/transposition_table.cpp` indexes with
+  `hash & tt->index_mask` and accepts a hit only on `res->key == hash`, the
+  full 64 bits. New keys therefore never create false hits by themselves, but
+  they change which positions share a slot and so which entries evict which.
+  That moves node counts (a cutoff found or missed one ply earlier) and can, in
+  principle, move a best move at a fixed depth. `accepts:` requires "every best
+  move unchanged"; if a `search_bench.py` best move differs after commit 2,
+  stop and report it -- it is not evidence of a bug, and the owner decides how
+  the accepts reads (section 10).
+- **Repetition, dedupe, books.** `is_position_repeated` compares keys within
+  one process; `tools/corpus_dedupe` hashes rows in one process and stores
+  none of the keys; the Polyglot book uses its own `polyglot_randoms`
+  (`src/openings.cpp`), untouched. No file on disk carries a chesso key, so
+  nothing external goes stale. `tools/corpus_dedupe.hpp` carries a stale
+  line-number citation to `init_zobrist` (the path, a colon, a stale number); leave it,
+  it is outside `touches:`, and note it in the stamp.
+- **Datagen's warning.** `tools/datagen.cpp` `play_games`: a `game_t` that
+  skips `initialize_game_const_data` "hashes every position to zero". The
+  generator tool must call it before comparing keys, or the comparison reads
+  zeros.
+- **INV-4, ordering bands, mate hiding, fail-soft, time management**: not
+  touched -- no evaluation term, no ordering score, no pruning rule and no clock
+  path changes.
+- **Determinism of the tool itself.** Single thread, fixed square order, no
+  wall-clock input, unsigned arithmetic only. Two runs of `magic_gen magics
+  --seed N` on two machines must print byte-identical arrays; check it on the
+  workstation and on this MacBook if both are available, and say so in the
+  stamp.
+- **`-Werror`.** `CMakeLists.txt` builds with `-Wall -Wextra -Werror`, and
+  Apple clang adds `-Wunused-const-variable` (`.moltke.local.md`): a constant
+  the tool declares and does not use breaks the Mac build and not the Linux
+  one.
+- **Two commits, not one.** Regenerating magics and keys in one commit leaves
+  no node-identical proof for either. Commit 1 must reproduce the baselines to
+  the node; commit 2 records the new ones.
+
+### 6. Tests
+
+No pruning, reduction or extension rule changes, so DEC-141 clause 2 (a guard
+test with a mutant) does not apply. Two direct guards are still owed, both in
+`tests/test_engine.cpp` under the existing `engine_fixture_t`, registered as
+`fast` already; S195 also lands cases there, so coordinate the file through
+the coordinator.
+
+**Guard 1, the magics are collision-free, precondition first.** Move the
+per-square check out of the tool into `src/bitboard.cpp` as a non-static
+`bool magic_is_collision_free(index_t square, bb_t magic, bool rook)`, declared
+forward in the tool and the test like `compute_full_hash`. Pseudo-code:
+
+```
+TEST_CASE("magic numbers: the checker rejects a bad magic, and accepts all 128")
+{
+  // precondition: the checker can fail. Zero maps every occupancy to slot 0.
+  REQUIRE_FALSE(magic_is_collision_free(a8, 0, /*rook=*/true));
+  for (index_t sq = 0; sq < 64; ++sq) {
+    CHECK_MESSAGE(magic_is_collision_free(sq, rook_magic_numbers[sq], true), ...);
+    CHECK_MESSAGE(magic_is_collision_free(sq, bishop_magic_numbers[sq], false), ...);
+  }
+}
+```
+
+**Guard 2, the keys are the project generator's, and are sound.** Draw the 851
+values from `project_random_next` seeded with `CHESSO_PROJECT_SEED` in
+`init_zobrist`'s order and `REQUIRE` each equal to `game.hash_randoms`; then
+over the 851: no key is zero; a `std::set<uint64_t>` of them has size 851; no
+XOR of two keys equals a third key (put the 851 in a set, test all 361,675
+pair-XORs against it); no two distinct pair-XORs are equal (the 361,675 values
+into a set, size unchanged) -- that is "no subset of two, three or four keys
+XORs to zero", the wiki's linear-independence rule at the sizes that matter.
+These are properties, not goldens: nothing here is a number re-read from a run
+(DEC-142). The tool's `zobrist` mode prints the same checks plus the minimum
+pairwise Hamming distance as a figure for the stamp, recorded, not asserted.
+
+**Goldens touched.** None in `tests/`. The node-count baselines in
+`adocs/specs.md` and `adocs/status.md` are the recorded figures that move in
+commit 2; they are re-read from `tools/search_bench.py`, which is the script
+that derives them.
+
+**INV-6 command**, before and after each commit, on an idle machine
+(`ps aux | sort -rnk3 | head` first):
+
+```
+python3 tools/search_bench.py ./build/src/chesso 9
+python3 tools/search_bench.py ./build/src/chesso 12
+```
+
+Expected at HEAD (`.moltke.local.md`, `adocs/status.md`): depth 9
+`121512 / 800769 / 62907`, depth 12 `639228 / 3430710 / 367858`, best moves
+`c3d5 / e2a6 / d7c8q` at both.
+
+**Perft**: `./build/tests/bench_movegen` (prints `WRONG NODE COUNT for ...`
+and exits 1 on a mismatch, before any timing) and `ctest --test-dir build -L
+slow -R test_perft --output-on-failure` (minutes).
+
+**Debug self-play**, DEC-141 clause 1. The magics feed the generator, so run
+it after commit 1 and again after commit 2, mirroring `fastchess.sh`'s flags
+(`tests/` has no wrapper for this yet; S190 and S197 add the documented form):
+
+```
+cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+cmake --build build-debug -j8
+fastchess -engine cmd=build-debug/src/chesso name=a -engine cmd=build-debug/src/chesso name=b \
+  -openings file=books/8moves_v3.pgn format=pgn order=random \
+  -each tc=4+0.04 option.Hash=16 option.Threads=1 -rounds 4 -repeat -recover \
+  -log file=/tmp/S179_debug_selfplay.log
+grep -c Assertion /tmp/S179_debug_selfplay.log    # must print 0
+```
+
+### 7. Measurement
+
+**Lane: timing, no SPRT.** Commit 1 is node-identical by construction, and
+DEC-083 sends such a change to a timing, not a match. Commit 2 is a re-draw of
+random keys -- a different sample from the same distribution, expected Elo 0 --
+and the owner's amendment of 2026-09-05 discharges it on perft, best moves and
+the recorded node counts rather than on games; that is an argument accepted by
+decision, and the stamp says so in those words.
+
+**Commit 1, in order:**
+
+1. At HEAD, build, run `./build/tests/bench_movegen` twice and keep the
+   output: the Mnps lines and the `resolution N.N%` line. Copy the binary:
+   `cp build/tests/bench_movegen <scratch>/bench_before`.
+2. Save the old arrays: `git show HEAD:src/bb_tables.hpp > <scratch>/bb_tables_old.hpp`.
+3. Generate, paste, format, build. Run `bench_movegen`, `test_perft`, the two
+   `search_bench.py` depths. All three counts and all three best moves at both
+   depths must equal the baselines above; a single differing node means an
+   invalid magic or an edit outside the arrays -- do not proceed.
+4. Coincidence check, the `accepts:` clause "how many coincide": extract the
+   128 `0x...ULL` values from the old header and the new one (a regex over
+   both files, in Python) and count values present in both; the tool's stderr
+   prints the same count against its compiled-in arrays. Expected 0. A repeat
+   is stated in the stamp with its square, never hidden; it is not a failure,
+   because a valid magic is a valid magic, but the stamp then says which value
+   the project shares with the tutorial set.
+5. Rebuild the tool against the new header and run it again with the same seed:
+   its coincidence count must now read 128 of 128 -- the committed arrays are
+   what the seed reproduces. Record that line.
+6. Timing: `./build/tests/bench_movegen` twice; the throughput must lie within
+   the run's own reported resolution of step 1's figure (`accepts:`). Then the
+   interleaved figure, `hyperfine --warmup 1 --runs 10 '<scratch>/bench_before
+   -r 2' './build/tests/bench_movegen -r 2'`; report mean ± sigma for both. No
+   difference is expected: same table sizes, same multiply, same shift.
+
+**Commit 2, in order:** run the two `search_bench.py` depths *before* the key
+change (they should reproduce the baselines a second time), make the change,
+run them after; perft and `test_perft` again; `magic_gen zobrist --seed N` must
+print `matches init_zobrist: yes` and its quality report. Record before and
+after counts side by side. The new counts are the baselines from here on; they
+go into `adocs/specs.md` (the paragraph that today reads "121512 / 800769 /
+62907 at depth 9 and 639228 / 3430710 / 367858 at depth 12") and into
+`adocs/status.md`'s handover check, through the coordinator, in the same
+commit as the code.
+
+**What to record where.** No `adocs/data/S179_*.sh` is needed -- nothing here
+is a run a decision rests on beyond what the stamp carries. The stamp holds:
+the seed; the two commands; per-array attempt totals; the coincidence count
+(0 of 128 expected, then 128 of 128 on the re-run); the `bench_movegen`
+figures and resolution before and after with the hyperfine line; the six node
+counts and three best moves at both depths for commit 1 (identical) and for
+commit 2 (before and after); the Zobrist quality lines (no zero, 851 distinct,
+no 3- or 4-subset XORs to zero, minimum Hamming distance); the Debug self-play
+line (`grep -c Assertion` = 0, rounds, time control).
+
+### 8. Completion checklist
+
+- Gate, per TESTS, after each commit: `cmake --build build -j8 && ctest
+  --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8
+  && ctest --test-dir build-tune -L fast --output-on-failure &&
+  ./clang-format.sh --check`, plus `ctest --test-dir build -L slow -R
+  test_perft`.
+- Bench line, DEC-140, if S189 has landed (it is ordered before this step in
+  `adocs/plan.md`): commit 1 ends `No functional change`; commit 2 ends
+  `Bench: <total>` with the new total, and its body says the keys changed the
+  table's slot pattern and nothing in the search. If S189 has not landed, the
+  rule does not yet apply; still write the two lines.
+- `adocs/specs.md`: the node-count baseline paragraph, and one sentence under
+  the search row or the INV-2 test row that the keys are drawn by the project
+  generator under `CHESSO_PROJECT_SEED`. Through the coordinator.
+- `DEV_MANUAL.md`: a section "Regenerate the magic numbers and the Zobrist
+  keys" beside "The engine's own opening book", with the two commands, the
+  paste-and-format step, the coincidence check, and the sentence that
+  regenerating the keys moves the node-count baselines once and where they are
+  recorded. `MANUAL.md`: check and conclude no change -- no UCI surface moves;
+  say "checked" in the stamp.
+- `tools/corpus_dedupe.hpp`'s stale citation noted in the stamp for S180 or a
+  follow-up, not fixed here.
+- Stamp per section 7; `plan.md` and `status.md` through the coordinator;
+  `closes:` names `2026-09-04_test_review-F08` for the generator exposure only
+  -- S195 closes the rest.
+
+### 9. Sources read
+
+- https://www.chessprogramming.org/Magic_Bitboards -- the lookup, plain vs
+  fancy, "perfect hashing" and "constructive collisions" phrasing.
+- https://www.chessprogramming.org/Looking_for_Magics -- Romstad's
+  trial-and-error search, the three-draw AND, the six-high-bits filter, the
+  "less than a second" figure. Code not reproduced.
+- https://www.chessprogramming.org/Traversing_Subsets_of_a_Set -- the
+  Carry-Rippler recurrence.
+- https://www.chessprogramming.org/Zobrist_Hashing -- the 781 count, the
+  linear-independence rule, the advice against post-processing.
+- https://www.chessprogramming.org/Pseudorandom_Number_Generator -- what
+  engines use; "less issues with randomness and period, but with distribution".
+- https://prng.di.unimi.it/splitmix64.c -- the constants, shifts and the
+  public-domain dedication. https://prng.di.unimi.it/ -- why splitmix64 seeds
+  the others; xorshift64* "entirely superseded".
+- https://arxiv.org/abs/1402.6246 -- Vigna's xorshift* paper, abstract only.
+  https://en.wikipedia.org/wiki/Xorshift -- xorshift64* shifts 12, 25, 27,
+  multiplier `0x2545F4914F6CDD1D`, non-zero state requirement.
+- https://doi.org/10.1145/2660193.2660195 -- `unverified` (403, then an
+  unreadable PDF); cited as the origin of SplitMix only.
+- Web search on `1804289383` -- glibc's first `rand()` after `srand(1)`,
+  `unverified` at source.
+- Repository: `src/bb_tables.hpp`; `src/bitboard.cpp` `init_zobrist`,
+  `set_occupancy`, `initialize_game_const_data`, `compute_full_hash`,
+  `add_piece`; `src/bitboard.hpp` `get_rook_attacks`; `src/data_structures.hpp`
+  `zobrist_randoms_t`, `bb_squares_t`, `tt_entry_t`;
+  `src/transposition_table.cpp` (index mask, full-key compare);
+  `git show a5dbe68:src/board.cpp`; `tools/CMakeLists.txt`;
+  `tools/make_book.cpp` `usage`; `tools/datagen.cpp` `play_games`;
+  `tools/corpus_dedupe.hpp`; `tools/search_bench.py`; `tests/test_engine.cpp`
+  *"hash and board survive make/unmake"*; `tests/bench_movegen.cpp`;
+  `tests/CMakeLists.txt`; `fastchess.sh`; `clang-format.sh`; `DEV_MANUAL.md`
+  "Measure", "Not every change goes to a match", "Test"; `adocs/specs.md`
+  INV-1, INV-2, INV-6; `adocs/status.md`; `.moltke.local.md`;
+  `adocs/decisions.md` DEC-083, DEC-105, DEC-132, DEC-139, DEC-140, DEC-141,
+  DEC-142; `adocs/audit/2026-09-04_test_review.md` F08;
+  `adocs/plan_todo/S189_*.md`, `S190_*.md`, `S195_*.md`.
+
+### 10. Questions deferred to the owner
+
+1. The seed value. `20260904` is proposed; the owner names the project's seed
+   (DEC-132's wording), and it is recorded in three places once chosen.
+2. `accepts:` requires "every best move unchanged" after the key change. A
+   different slot pattern can move a fixed-depth best move without any defect;
+   if it happens, should the accepts read "recorded, like the node counts", or
+   is a changed best move a stop?
+3. The `zobrist_randoms_t` struct holds 851 keys, not "781-plus"; no change
+   proposed, stated so the count in the accepts is read as chesso's.
+4. Section 3 puts `project_random_next` and `magic_is_collision_free` in
+   `src/bitboard.cpp` with forward declarations in the tool and the test, to
+   stay inside `touches:`. If the owner prefers a declared header
+   (`src/bitboard.hpp` or a new `src/prng.hpp`), `touches:` gains that file.
