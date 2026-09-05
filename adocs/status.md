@@ -8,8 +8,13 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-05, by hand.
 
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
-  pass of DEC-145 is running over the pending files in Open order**, one agent
-  per file, one commit per file; it is not a step and holds no run.
+  pass of DEC-145 is stopped at the owner's word after twenty of 74 files --
+  Open entries 1 to 20, S178 through S151; the next file is S181.** Resume by
+  handing `adocs/data/2026-09-05_enrichment_brief.md` and one step path to one
+  agent per file, in Open order, one commit per file; what is left is named by
+  `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
+  session's report, with twenty findings and the owner questions from every
+  file, is `adocs/data/2026-09-05_enrichment_pass.md`.
 - **Reordered 2026-09-05 for the workstation, DEC-144.** The owner, leaving for
   the day, asked that the plan be re-sorted for the goal under the rules with
   every step assumed to run on the Linux workstation, and that decisions be
@@ -39,7 +44,20 @@ Updated: 2026-09-05, by hand.
   are replaced in place, so S180 becomes a verification; block 3's files are
   brought to S186's accepts, so S186 becomes one too. What the pass has not
   reached: `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`.
-  The report of 2026-09-05 lists what each agent flagged.
+  `adocs/data/2026-09-05_enrichment_pass.md` lists what each agent flagged.
+  **Findings the owner should read before the workstation runs anything**, none
+  fixed today (BUGS rule: the owner says which are bugs): `make_book` is killed
+  by `SIGXFSZ` before S146's stream guard and leaves a truncated `loadable`
+  book; the `SANITIZER` CMake block lets UBSan recover so a UB report exits 0;
+  `adocs/data/S105_pairs.py` reads a side name `fastchess.sh` never prints, so
+  S198's A/A read as its accepts says would inflate the variance silently, and
+  `fastchess.sh` has no fixed-rounds mode without `-sprt`, so that A/A cannot be
+  launched as written; `command_ucinewgame` sets the stop flag and only `go`
+  and `test` clear it; `set_position` never clears `proven_mate_line`. Stale
+  clauses in pending files: S190's depth-3 walk is about seven times over its
+  budget, S159's second candidate is behaviour-neutral and cannot be SPRT'd,
+  S148's S145 table predates S154's re-take, S184 assumes `--params` is outside
+  the fast suite, S180's inventory found fifteen seeds the review missed.
 - **Plan review 2026-09-04 (`adocs/audit/2026-09-04_plan_review.md`), digested
   the same day: no high, 5 medium, 5 low; every finding has a home and every
   home is a document step.** A cold reviewer read the plan against the
@@ -599,13 +617,16 @@ Updated: 2026-09-05, by hand.
     not reached its stopping condition, which is a re-run with no high and no
     medium. F05 was this file's own two parked items and S069 has rewritten
     them; it is `planned` until the re-run, like the rest.
-  - **The corpus and the fit tooling are gitignored and do not survive a machine
-    move.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693 positions) and
-    the scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
-    `reanchor.py`, `diff_fit.py`. `anchors.py` in particular is now the only
-    executable record of how ten pinned test values are derived, including the
-    quiescence composite that no evaluation model can produce; the step file
-    records the transformations in prose but nothing re-runs them. This is the
+  - **The corpus is gitignored and does not survive a machine move; the fit
+    scripts do -- corrected 2026-09-05.** `.tuning/` holds `selfplay_v2.tsv`
+    (715 MB, 11003693 positions), which is gitignored and was not on this
+    MacBook. The five scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`,
+    `anchors.py`, `reanchor.py`, `diff_fit.py` — **are tracked** since `c56ab41`
+    (`.gitignore` carries `!.tuning/*.py`), which this item wrongly called
+    gitignored until S192's enrichment agent checked. What is true instead:
+    `anchors.py` hard-codes `ROOT = "/home/max/ws/chesso/"` and does not run
+    here; patched in a scratch copy it reproduces 10 of 10 pinned values at
+    HEAD. S192 owns the fix. This is the
     same class of loss `2026-08-13_plan_review.2-F02` recorded when
     `selfplay_v1.tsv` did not survive DEC-049, and it cost S065 a night of
     regeneration. Found while completing S065. Parked, not planned: a step is
