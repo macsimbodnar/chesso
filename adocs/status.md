@@ -7,7 +7,39 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-05, by hand.
 
-- In progress: **nothing.** `adocs/plan_current/` is empty.
+- In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
+  pass of DEC-145 is running over the pending files in Open order**, one agent
+  per file, one commit per file; it is not a step and holds no run.
+- **Reordered 2026-09-05 for the workstation, DEC-144.** The owner, leaving for
+  the day, asked that the plan be re-sorted for the goal under the rules with
+  every step assumed to run on the Linux workstation, and that decisions be
+  taken. The DEC-112 machine-scope lane is gone from `plan.md` (its text is in
+  the file's history at `66cbc54`). The Open list now reads: two tool bugs
+  (S178, S173); the census (S171, DEC-128's first run there); S189 and S179 as
+  agent-only work while it plays; S198's harness flags and the calibrating A/A
+  (DEC-143) before any verdict; then an instrument lane of the sixteen
+  document and test steps interleaved with S148, S159 and S151 so the machine
+  has a job while documents are written; then blocks 1 to 4 exactly as the
+  2026-08-19 review ordered them and DEC-133 corrected them, S152 closing the
+  main order, the reserve and the parked network last. **One question is
+  deferred to the owner:** S151's re-test of S085's vector at a control at
+  least four times 8+0.08 prices a `{-5, 0}` pair near 72 hours worst case by
+  DEC-143's formula; whether that pair, a cheaper pair or a fixed-rounds
+  reading is wanted decides when it runs -- it sits at Open entry 20 until
+  then. Nothing in the engine changed, no run was started, the gate was green
+  at `66cbc54` before the edit (27/27 in both builds) and the four prose
+  checks pass after it.
+- **The enrichment pass, DEC-145.** Also on the owner's instruction: every
+  pending step file gets an `## Implementation guide (2026-09-05)` section for
+  the agent that will implement it -- the technique as published, chesso's
+  form, the symbols it touches at HEAD, seeds in DEC-105 form only, the tests
+  DEC-141/142 require, the pair priced per DEC-143, the completion checklist,
+  the repository's own traps, every source with its URL or `unverified`, and
+  deferred owner questions. Engine-originated seeds in the seven DEC-134 files
+  are replaced in place, so S180 becomes a verification; block 3's files are
+  brought to S186's accepts, so S186 becomes one too. What the pass has not
+  reached: `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`.
+  The report of 2026-09-05 lists what each agent flagged.
 - **Plan review 2026-09-04 (`adocs/audit/2026-09-04_plan_review.md`), digested
   the same day: no high, 5 medium, 5 low; every finding has a home and every
   home is a document step.** A cold reviewer read the plan against the
@@ -357,29 +389,44 @@ Updated: 2026-09-05, by hand.
   all and nothing said so. `.moltke.local.md` records it now.
 - Next: **S178** -- `movetext_to_san()` splits a move number glued to its move so
   PGN import format (`1.e4`) builds a book; found by running S174's fixed tools.
-  Then **S179**, the magic numbers under a project seed. Then the review's seven
-  documentation steps, **S180** and **S184** first because each removes a
-  hazard an implementer would follow (engine-seeded constants; S115's "keep 5"
-  reverting a verified axis), then S181, S182, S183, S185, S187 -- none owes a
-  run. Then the test review's nine machine-free steps, **S189** first because
-  its gate script and signature serve every step after it, then S190, S193,
-  S191, S192, S195, S196, S197, S194. **S020** resumes the plan proper after
-  them. **On the desktop
-  workstation, S171's census comes first.**
+  Then **S173**, the atomic book write. Then **S171's census** -- the first run
+  on the workstation (DEC-128):
+
+      REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &
+
+  -- with **S189** (bench signature, `tools/gate.sh`) and **S179** (magic
+  numbers under a project seed) as the agent-only work while it plays. Then
+  **S198**: the `-srand` and PGN flags, and the 1000-game fixed-rounds A/A that
+  is the workstation's DEC-143 calibration, read with
+  `adocs/data/S105_pairs.py` and `tools/forfeit_report.py` before the first
+  verdict. Then the instrument lane, S180 first, with S148 the first verdict.
+  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads
+  the list with one machine.
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
   in the foreground of their own turns and are finished, and S146's fast-check
   subagent has reported and exited.
 - Parked:
-  - **Calibrate the harness on the workstation when it is back: `AA=1
-    ./fastchess.sh` at fixed rounds, 1000 games, read with
-    `adocs/data/S105_pairs.py` and `tools/forfeit_report.py`, recorded beside
-    S105's numbers.** The owner refused the same run on this MacBook
-    (DEC-139: a number about a machine that is leaving); DEC-143 makes it the
-    rule after every machine change, and S198's A/A is this run. Until it is
-    taken, the harness has no pair-variance or forfeit figure for the machine
-    the verdicts run on.
+  - **Calibrate the harness on the workstation: `AA=1 ./fastchess.sh` at fixed
+    rounds, 1000 games, read with `adocs/data/S105_pairs.py` and
+    `tools/forfeit_report.py`, recorded beside S105's numbers.** The owner
+    refused the same run on the MacBook (DEC-139: a number about a machine
+    that is leaving); DEC-143 makes it the rule after every machine change,
+    and it is S198's A/A, Open entry 6 since DEC-144. Until it is taken, the
+    harness has no pair-variance or forfeit figure for the machine the
+    verdicts run on.
+  - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
+    asks for S085's vector re-tested against `3488506` at a control at least
+    four times `8+0.08`; at a quarter of 2337 games an hour a `{-5, 0}` pair
+    is about 72 hours worst case and 44 on a bound. Options: that pair on a
+    weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
+    +/-8 Elo) which would change the accepts and is therefore a decision. It
+    sits at Open entry 20 behind S148 and S159 until answered.
+  - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
+    (`go infinite` printing `bestmove` unasked; a bad token in `position ...
+    moves` skipped silently; the aborted-iteration best move assuming its table
+    entry survives) -- one decision or steps, unchanged by the reorder.
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**
 

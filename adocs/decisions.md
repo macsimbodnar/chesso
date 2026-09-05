@@ -6374,6 +6374,9 @@ Consequences: `achesso`'s engine is byte-identical to `10c350a`'s in `src/` and
 
 ## DEC-112  2026-08-30  The plan is scoped to the machine for the duration: a machine-light lane, temporarily at the head of Open
 Tags:         plan, machine, measurement, workflow
+Amended:      2026-09-05 by DEC-144 -- the lane is dismissed, the `## Machine
+              scope` section deleted from plan.md and the Open list re-sorted
+              for the workstation; the lane's reasoning stays here.
 Context:      The owner is on vacation with the MacBook and returns to the
               Linux workstation, where the heavy runs belong. This machine now
               has its own measurements rather than an estimate: 2700 games/h on
@@ -7723,6 +7726,9 @@ Consequences: `plan.md`'s "What this costs" and Elo paragraphs are rewritten
 
 ## DEC-137  2026-09-04  The DEC-097 enrichment pass becomes a step before block 3, and the review's source table is tracked
 Tags:         planning, docs, provenance
+Amended:      2026-09-05 by DEC-145 -- on the owner's instruction every
+              pending file is enriched in Open order, block 1 and 2 files
+              included; S186 becomes the verification of block 3's files.
 Context:      DEC-097 (2026-08-21) resumed the SOTA enrichment "in parallel,
               on nights". `git log --since=2026-08-21 -- adocs/plan_todo/`
               shows 40 commits and no enrichment; 35 of 54 pending files carry
@@ -7956,3 +7962,128 @@ Rejected:     Calibrating the MacBook now (DEC-139). An SPRT A/A as the
 Consequences: S182's accepts carries the table; S198 lands the harness flags
               with the workstation's A/A; every `adocs/data/S*_sprt.sh` header
               from here on states its worst-case games.
+
+
+## DEC-144  2026-09-05  The machine-scope lane is dismissed and the Open list is re-sorted for the workstation: bugs, the two calibrating runs, an instrument lane, then the four blocks
+Tags:         plan, machine, measurement, workflow, dec-112, dec-113
+Amends:       DEC-112, whose lane this removes
+Context:      DEC-112 lifted fifteen machine-light steps to the head of the
+              Open list while the owner worked from the MacBook, and said that
+              restoring the order is a decision and not a tidy-up. On
+              2026-09-05 the owner, leaving for the day, asked that the plan be
+              reordered in the best way to reach the goal under the project's
+              rules, assuming every step runs on the Linux workstation, and
+              that decisions be taken rather than deferred where possible.
+              Since DEC-112 the list gained the 2026-09-03 audit batch (done),
+              S178 and S179, the plan review's nine steps and the test review's
+              eleven, and three decisions already fix the head: DEC-128 (S171's
+              census is the first thing taken on the workstation), DEC-143 (a
+              fixed-rounds A/A of 1000 games follows the machine change, before
+              the next verdict, and doubles as S198's) and DEC-140/DEC-141 (the
+              bench signature binds every `src/` commit from S189's completing
+              commit on; S191, S196 and S197 precede S109). Everything the
+              lane's table said the M1 could not measure is measurable on the
+              workstation.
+Decision:     By the agent, under the owner's instruction of 2026-09-05 to
+              reorder and take decisions; the owner confirms or amends on
+              return. (1) plan.md's `## Machine scope` section is deleted and
+              the Open list re-sorted; the section's text is in the file's
+              history at `66cbc54`. (2) The head: S178 and S173, two tool bugs
+              under the BUGS rule; S171, the census, first run on the
+              workstation; S189 and S179, agent-only work during the census,
+              both proved on node counts; S198, the harness flags and the
+              calibrating A/A, before any verdict. (3) An instrument lane of
+              the sixteen document and test steps, interleaved with the only
+              three runs that depend on nothing in the search block so a single
+              agent always has an entry to take while a run plays: S180, S184,
+              S148, S187, S190, S159, S193, S191, S196, S197, S192, S195, S194,
+              S151, S181, S185, S182, S183. S180 and S184 first because each
+              removes a hazard an implementer would follow; S187 next so every
+              later edit to a pending file is under the symbol check; S191,
+              S196, S197 before S109 (DEC-141); S182 before the first verdict
+              lands; S183 after S181 and S185, its inputs. (4) Blocks 1 to 4 in
+              the 2026-08-19 order as DEC-133 corrected it, nothing inside them
+              moved: S199's first point after S109, S188 after S097, S186
+              before S134, S152 after S129 as the close of the main order
+              (DEC-108). S020 and S030 return to block 2. (5) Reserve S099,
+              S023, S025, S110, S111; parked S029. (6) The reading rule: the
+              coordinator takes the first Open entry that owns a run; while it
+              plays, the next entry that owns no run may start in list order; a
+              change to `src/` waits, since it either alters play (MEASUREMENT,
+              one at a time) or is behaviour-neutral and owes a timing that
+              needs the idle machine. Dependencies are the entries above; no
+              entry is started out of order to fill the machine.
+Rejected:     Keeping S148 and S159 behind the search block -- each verdict
+              would then be taken against the tree it will play in, but the
+              workstation would idle through sixteen document steps; both
+              depend on nothing in the block, which is why DEC-112 could move
+              them, and S127 refits every search parameter at the end anyway.
+              S151 ahead of S148 -- its control of at least four times 8+0.08
+              prices a `{-5, 0}` pair near 72 hours worst case (DEC-143's
+              formula at a quarter of 2337 games an hour), and whether that
+              pair or a cheaper fixed-rounds reading is wanted is the owner's;
+              it sits behind the two cheap verdicts with the question deferred.
+              A list with the document steps in one run and the verdicts in
+              another -- a single agent reading it would launch a run and find
+              no next entry. Reordering inside the blocks -- the order is the
+              product of two reviews and the owner's rulings (DEC-081 to
+              DEC-089, DEC-133) and no new measurement has arrived to move it.
+Consequences: The next step is S178. S171's Open entry loses its `postponed`
+              tag. `status.md` names the workstation's first runs in order and
+              the one question deferred to the owner. Nothing in the engine
+              changed and no run started. A future absence from the workstation
+              re-derives a lane from DEC-112 rather than from memory.
+
+
+## DEC-145  2026-09-05  Every pending step is enriched for its implementer, one agent per file, sequentially, in Open order
+Tags:         plan, research, process, dec-097, dec-137, dec-105, dec-135
+Amends:       DEC-137, whose "block 1 and block 2 files are not re-enriched" clause this supersedes for the pass
+Context:      DEC-097 resumed the SOTA enrichment "in parallel, on nights" and
+              produced no commit in fourteen days; DEC-137 turned block 3's
+              share into S186 and left block 1 and 2 alone. On 2026-09-05 the
+              owner asked that, starting from the next step and moving forward
+              one step at a time in the new order, an agent enrich each step
+              file with details from the literature and whatever else helps
+              the weaker agent that will implement it. At that moment 20 of
+              the 74 pending files carried a 2026-08-19/20 "Technical details"
+              section, seven of them seeding constants from other engines'
+              commit prose (DEC-134), and the rest none.
+Decision:     By the agent, under the owner's instruction of 2026-09-05. One
+              agent per pending file, one file at a time, in Open order,
+              appending `## Implementation guide (2026-09-05)` with a fixed
+              shape: what the step is, the technique as published with the
+              wiki's or the paper's definition, chesso's form written in the
+              agent's own words, the symbols the change touches as they read at
+              HEAD (DEC-135 form, path repeated per DEC-120), constants and
+              seeds in a DEC-105 form only -- a literature value with its URL,
+              a derivation over chesso's own data, or the range midpoint -- the
+              tests DEC-141 and DEC-142 require, the measurement plan with its
+              pair priced per DEC-143, the completion checklist, this
+              repository's own recorded traps, every source read with its URL
+              or the word unverified, and the questions deferred to the owner.
+              An existing 2026-08-19 section is kept; a seed in it that
+              originates in another engine is replaced in place in a DEC-105
+              form with the replacement noted, which is S180's accepts done
+              early -- S180 verifies and stamps. Engine records are read as
+              commit messages, pull-request bodies, changelogs and release
+              notes, never as source or tables (DEC-016). The pass edits no
+              header field -- a stale `accepts` becomes a deferred question --
+              and no file but the step's own; one commit per file, each green
+              on the `--touches` check. It is not a plan step and enters no
+              order. Block 3's files are brought to S186's accepts, so S186
+              becomes a verification of them.
+Rejected:     Parallel agents -- the owner asked for one step at a time, as on
+              2026-08-20 when the parallel pass was stopped. Skipping the
+              twenty enriched files -- DEC-134 found their seeds wrong, the
+              older sections predate DEC-135 and the improving-flag plumbing
+              S108 landed, and the instruction starts from the next step
+              without exception. Rewriting the old sections -- they are the
+              record of what was known on 2026-08-19; the new section corrects
+              them by name where they are wrong. Editing header fields -- the
+              accepts belong to the step's decision record, not to research.
+Consequences: `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`
+              names what the pass has not reached, and the recipe replaces any
+              census in `status.md`. Where the pass reaches one of S180's seven
+              files, S180's remaining work is to verify. The owner's deferred
+              questions are gathered in the report of 2026-09-05 and in
+              `status.md`'s Parked list.
