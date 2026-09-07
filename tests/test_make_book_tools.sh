@@ -29,6 +29,15 @@
 #      game written in export form
 #   8. the same across a comment, a black indication and glued castling
 #
+# S173 added three more, over the atomic replacement of the destination.
+#
+#   9. a failed write leaves a pre-existing destination byte-identical and no
+#      temporary beside it
+#  10. a successful build replaces a pre-existing destination and leaves no
+#      temporary
+#  11. the cut-short refusal still precedes any write: a pre-existing
+#      destination survives it untouched
+#
 # Everything happens in a throwaway directory. No engine is searched.
 #
 # Usage: test_make_book_tools.sh <make_book> <pgn_to_positions>
@@ -141,6 +150,38 @@ grep -q 'entries written      7' "$tmp/castle_glued.out" \
 { [[ -f "$tmp/castle_spaced.bin" ]] && [[ -f "$tmp/castle_glued.bin" ]] \
   && cmp -s "$tmp/castle_spaced.bin" "$tmp/castle_glued.bin"; } \
   || fail "castle_glued: book differs from the spaced twin's"
+
+# 9. A failed write leaves a pre-existing destination byte-identical and no
+#    temporary beside it. `ulimit -f 0` fails the first write with EFBIG -- the
+#    tool ignores SIGXFSZ, so the limit arrives as an error and not as a kill --
+#    and RLIMIT_FSIZE is per process, so the subshell scopes it. The output goes
+#    through a pipe: a redirection to a file would hit the same limit.
+printf 'previous book' > "$tmp/keep.bin"
+cp "$tmp/keep.bin" "$tmp/keep.before"
+out=$( ( ulimit -f 0; "$make_book" build "$tmp/control.pgn" --out "$tmp/keep.bin" ) 2>&1 )
+status=$?
+[[ $status -ne 0 ]] || fail "atomic: build exited 0 under a zero file-size limit"
+cmp -s "$tmp/keep.bin" "$tmp/keep.before" \
+  || fail "atomic: the destination changed: $(wc -c < "$tmp/keep.bin") bytes"
+[[ ! -e "$tmp/keep.bin.tmp" ]] || fail "atomic: temporary left beside the destination"
+grep -q 'book not written' <<< "$out" || fail "atomic: no refusal message: $out"
+
+# 10. Success replaces a pre-existing destination and leaves no temporary.
+printf 'previous book' > "$tmp/replace.bin"
+"$make_book" build "$tmp/control.pgn" --out "$tmp/replace.bin" \
+  > "$tmp/replace.out" 2>&1 \
+  || fail "replace: build exited non-zero: $(cat "$tmp/replace.out")"
+{ [[ -f "$tmp/control.bin" ]] && cmp -s "$tmp/replace.bin" "$tmp/control.bin"; } \
+  || fail "replace: the destination is not the control book"
+[[ ! -e "$tmp/replace.bin.tmp" ]] || fail "replace: temporary left beside the destination"
+
+# 11. The cut-short refusal still precedes any write, so a pre-existing
+#     destination survives it untouched -- the temporary is never created.
+printf 'previous book' > "$tmp/refused.bin"
+"$make_book" build "$tmp/illegal.pgn" --out "$tmp/refused.bin" > /dev/null 2>&1
+[[ "$(cat "$tmp/refused.bin")" == "previous book" ]] \
+  || fail "refused: the destination changed"
+[[ ! -e "$tmp/refused.bin.tmp" ]] || fail "refused: a temporary was created"
 
 # 5. pgn_to_positions, annotated against clean.
 printf 'e4 e5 Nf3 Nc6\n' | "$pgn_to_positions" > "$tmp/p_control.tsv" \

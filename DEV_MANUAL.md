@@ -2027,9 +2027,35 @@ accept.
 Entries are 16 bytes and sorted, so *any prefix of a book is also a valid book*.
 Found while doing S146: writing the 2755712-byte book onto a 1 MB volume left
 901120 bytes, `dump` called the result `loadable` with 56320 entries, and the
-engine loaded it. `build` now checks the stream after the write, deletes the
-partial file and exits non-zero — but if a book reaches you by any other route,
-its digest is the only thing that says it is whole.
+engine loaded it.
+
+Since S173, `build` never writes to `--out` at all until the bytes are safe. It
+writes them to `<out>.tmp` beside the destination, flushes it, and renames it
+over `--out` only once the write is verified, so a failed write — a full volume,
+a file-size limit, a kill — leaves any previous book at `--out` byte-for-byte
+unchanged, and a reader sees the old book or the new one and never anything
+between. Every failure the process lives through removes the temporary and says
+`book not written` with the reason; a `SIGKILL` mid-write leaves `<out>.tmp`
+behind, which the next build to the same destination reuses. The name is fixed
+rather than unique, so two concurrent builds to one `--out` would clobber each
+other's temporary. `SIGXFSZ` is ignored by the tool for this to work: by default
+it *kills*, and before S173 that killed the process mid-write — under
+`ulimit -f 200`, exit 153 and a 204800-byte truncated book left at `--out` that
+`dump` accepted. Ignored, the limit arrives as `EFBIG` from `write` instead.
+
+The portable reproduction, no `sudo` and no ram disk, is a file-size limit in a
+subshell (`RLIMIT_FSIZE` is per process, and the message must go through a pipe
+or it hits the same limit):
+
+```bash
+printf 'previous book' > /tmp/keep.bin
+( ulimit -f 200; build/tools/make_book build books/8moves_v3.pgn --out /tmp/keep.bin ) 2>&1
+# wrote 204800 of 2755712 bytes to '/tmp/keep.bin.tmp': File too large -- book not written
+cat /tmp/keep.bin   # previous book, 13 bytes, untouched
+```
+
+None of that makes `loadable` mean complete: if a book reaches you by any other
+route than this tool, its digest is the only thing that says it is whole.
 
 **A cut-short game refuses the build, and `games cut short 0` is evidence
 since S174 and not before.** `algebraic_to_move` — the engine's SAN parser,

@@ -8239,3 +8239,52 @@ Consequences: `xd5` and a leading `-` are refused too, which no PGN writes.
               `Bench:` line binds from S189's completing commit on and S189 is
               open, so this commit owes none. S200's `excludes:` keeps the two
               apart and S200 does not wait on this.
+
+## DEC-149  2026-09-07  `make_book build`'s temporary has the fixed name `<out>.tmp`, not a unique one
+Tags:         tools, make_book, filesystem, s173, dec-131
+Context:      S173 replaces the destination atomically -- write beside it,
+              `rename` over it -- and its `accepts` says "the temporary is
+              removed on every failure path and nothing is left beside the
+              destination". That cannot hold literally: a `SIGKILL` mid-write
+              kills the process before it can `unlink`, so *something* survives
+              unless the name is one the next run reuses. The step file's
+              implementation guide raised it as a question for the owner and
+              proposed `mkstemp` on `<out>.tmp.XXXXXX`, which is the textbook
+              form -- `O_CREAT|O_EXCL` removes the race between choosing a name
+              and creating it, and two concurrent builds to one destination
+              cannot collide.
+Decision:     By the owner, asked on 2026-09-07 with both readings and their
+              costs on screen. **The fixed name.** `<out>.tmp`, opened
+              `O_WRONLY|O_CREAT|O_TRUNC` at 0666, which is what the replaced
+              `std::ofstream` asked for and so keeps the mode `rename` carries
+              onto the destination unchanged -- the guide's third deferred
+              question answers itself under this choice, so no `fchmod` and no
+              `mkstemp` are needed. At most one temporary is ever left behind,
+              by a kill the process cannot survive, and the next build to the
+              same `--out` truncates it. The `accepts` therefore holds as
+              written and the fixture test can assert `! -e <out>.tmp`
+              unconditionally.
+Rejected:     `mkstemp` on `<out>.tmp.XXXXXX`. Safer against two concurrent
+              builds to one destination and free of the name race, and it was
+              the guide's own recommendation; refused because it leaves one
+              unreclaimable file per kill, so the property the step is written
+              to guarantee would have had to be weakened in the `accepts` to
+              "every failure path the process lives through". The concurrency it
+              buys is not exercised: `--out` is pointed at `src/openings.bin`
+              about once, by hand, and the fixture test builds one book at a
+              time.
+Consequences: Two `make_book build` runs writing to the same `--out` at the same
+              moment clobber each other's temporary and one of them renames a
+              file the other was still writing. Nothing in the tree does that,
+              and no test can catch it if something starts to. The temporary is
+              in the destination's own directory, not `$TMPDIR`, because
+              `rename(2)` is atomic only within a file system and fails `EXDEV`
+              across one -- that is not a choice, it is the reason the whole
+              approach works. `SIGXFSZ` is ignored in `main` for the same step:
+              by default it kills, and it killed the tool mid-write under
+              `ulimit -f 200` -- exit 153, a 204800-byte truncated book left at
+              `--out`, and `dump` accepted it. Ignored, the limit arrives as
+              `EFBIG` from `write`, which the loop reports and cleans up after.
+              This is the first POSIX header in `tools/` or `src/`
+              (`<fcntl.h>`, `<unistd.h>`): nothing standard gives `fsync`, and
+              `std::filesystem::rename` alone would not have.

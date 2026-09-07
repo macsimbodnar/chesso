@@ -13,7 +13,11 @@
 //
 // `dump` runs the same two checks the engine's loader runs, so a book this
 // accepts is a book the engine will load.
+#include <fcntl.h>
+#include <unistd.h>
 #include <algorithm>
+#include <cerrno>
+#include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -471,29 +475,89 @@ int build(const build_options_t& options)
     }
   }
 
-  std::ofstream output(options.out, std::ios::binary);
-
-  if (output.fail()) {
-    fprintf(stderr, "cannot write '%s'\n", options.out.c_str());
-    return 1;
-  }
-
-  output.write(reinterpret_cast<const char*>(bytes.data()),
-               static_cast<std::streamsize>(bytes.size()));
-  output.close();
-
   // S146. A short write is the one failure this tool can survive and must not:
   // the entries are 16 bytes each and sorted, so any prefix of them is also a
   // whole number of sorted entries. `dump` called a truncated book loadable and
   // the engine loaded it -- observed, writing 2755712 bytes onto a 1 MB volume
-  // produced 901120 bytes, 56320 entries, verdict `loadable`, exit 0. The
-  // partial file goes with the error for the same reason: a book that validates
-  // is one somebody will ship.
-  if (!output.good()) {
-    fprintf(stderr, "short write to '%s' -- book not written\n",
-            options.out.c_str());
-    std::remove(options.out.c_str());
+  // produced 901120 bytes, 56320 entries, verdict `loadable`, exit 0.
+  //
+  // S173. So the destination is never opened until the bytes are safely on
+  // disk: they go to a temporary beside it and are renamed over it only once
+  // the write is verified. The replaced `std::ofstream output(options.out,
+  // ...)` truncated the previous book the instant it opened, which is why a
+  // write that then failed left nothing where a good book had been. The
+  // temporary's name is fixed, `<out>.tmp`, by the owner's decision (DEC-149):
+  // at most one is ever left behind -- by a kill the process cannot survive to
+  // clean up after -- and the next build to the same `--out` reuses it, at the
+  // cost of two concurrent builds to one destination clobbering each other's.
+  // It lives in the destination's own directory because rename(2) is atomic
+  // only within a file system and fails EXDEV across one.
+  const std::string temporary = options.out + ".tmp";
+
+  // 0666 is what the replaced std::ofstream asked for; the umask narrows it,
+  // and rename(2) carries this mode onto the destination.
+  int fd = open(temporary.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+  // Every failure below keeps S146's `book not written`, which the manual and
+  // the fixture test both grep, and adds errno so a full volume and a file-size
+  // limit are told apart.
+  //
+  // `reason` is passed rather than read from errno inside, because a library
+  // call between the failure and the message -- snprintf below -- is allowed to
+  // set errno of its own even when it succeeds.
+  auto abandon = [&](const char* what, const int reason) {
+    fprintf(stderr, "%s '%s': %s -- book not written\n", what,
+            temporary.c_str(), strerror(reason));
+
+    if (fd >= 0) { close(fd); }
+
+    unlink(temporary.c_str());
     return 1;
+  };
+
+  if (fd < 0) {
+    // Nothing to clean up, and --out has not been touched.
+    fprintf(stderr, "cannot write '%s': %s -- book not written\n",
+            temporary.c_str(), strerror(errno));
+    return 1;
+  }
+
+  // write() may write fewer bytes than it was given without failing, and may be
+  // interrupted before it writes any.
+  size_t done = 0;
+
+  while (done < bytes.size()) {
+    const ssize_t n = write(fd, bytes.data() + done, bytes.size() - done);
+
+    if (n < 0) {
+      if (errno == EINTR) { continue; }
+
+      const int reason = errno;
+      char what[64];
+
+      snprintf(what, sizeof(what), "wrote %llu of %llu bytes to",
+               (unsigned long long)done, (unsigned long long)bytes.size());
+      return abandon(what, reason);
+    }
+
+    done += static_cast<size_t>(n);
+  }
+
+  // One line, unmeasurable at this size, and it closes the case where the
+  // rename lands but the bytes never do. The directory is deliberately not
+  // synced: a rename lost to a crash leaves the old book in place, which is
+  // the state this step guarantees anyway.
+  if (fsync(fd) != 0) { return abandon("cannot flush", errno); }
+
+  // Some file systems report a write error here and nowhere earlier. The
+  // descriptor is released either way, so it is not closed twice.
+  const int closed = close(fd);
+  fd = -1;
+
+  if (closed != 0) { return abandon("cannot close", errno); }
+
+  if (std::rename(temporary.c_str(), options.out.c_str()) != 0) {
+    return abandon("cannot rename", errno);
   }
 
   printf("games read           %llu\n", (unsigned long long)games);
@@ -643,6 +707,13 @@ void usage()
 
 int main(int argc, char** argv)
 {
+  // S173. RLIMIT_FSIZE kills with SIGXFSZ by default, and that killed this tool
+  // mid-write: observed under `ulimit -f 0`, exit 153 and a truncated -- and
+  // loadable -- book left at --out, with no guard reached because the process
+  // was already dead. Ignored, the limit arrives as EFBIG from write(), which
+  // the write loop reports and cleans up after.
+  std::signal(SIGXFSZ, SIG_IGN);
+
   if (argc < 3) {
     usage();
     return 1;

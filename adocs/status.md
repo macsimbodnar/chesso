@@ -38,7 +38,45 @@ Updated: 2026-09-07, by hand.
   with, which answers S198's open question about it; and `.ref-builds/` holds
   21 August worktrees at 2.2 GB on a root filesystem at 95 %, prunable with
   `git worktree remove` at the cost of one rebuild if a ref is re-used.
-- Last done: **S178, 2026-09-07 -- `movetext_to_san()` reads a move number
+- Last done: **S173, 2026-09-07 -- `make_book build` replaces a book
+  atomically.** The bytes go to `<out>.tmp` beside the destination and are
+  renamed over `--out` only after the write, `fsync` and `close` all succeed;
+  every failure the process lives through unlinks the temporary and exits 1
+  with `book not written` and the `errno` string. Before, `std::ofstream
+  output(options.out, ...)` truncated the previous book the instant it opened,
+  so a write that then failed destroyed it -- and because any prefix of a
+  sorted 16-byte-entry book is a valid book, what was left passed `dump` and
+  the engine's loader alike. **Two reds on this machine, both new here.** The
+  fixture's three new properties (9, 10, 11) gave two `FAIL:` lines --
+  destination 0 bytes, refusal message absent -- and by hand `ulimit -f 0`
+  exited **153**, SIGXFSZ killing the tool before any guard could run. The
+  partial-write form, which S146 had only on macOS, reproduces here too:
+  pre-change under `ulimit -f 200` the shipped PGN left **204800 bytes** at
+  `--out` and `dump` read it (`heaviest 1: 0844931a6ef4b9a0 g1f3 weight
+  2527`). **Green after**: fixture `ok`; by hand exit 1, `wrote 204800 of
+  2755712 bytes to '<out>.tmp': File too large -- book not written`, the
+  destination still `previous book` at 13 bytes, no temporary. So `SIGXFSZ` is
+  now ignored in `main` -- the limit arrives as `EFBIG` from `write` instead of
+  as a kill -- and `tools/make_book.cpp` carries the first POSIX headers in the
+  tree (`<fcntl.h>`, `<unistd.h>`: nothing standard gives `fsync`).
+  **Success path unchanged, measured**: the shipped book rebuilt through the
+  new write path is 2755712 bytes, `cmp`-identical to `src/openings.bin` at
+  `77f47f1b...db06b58`, 1.15 s. **No `src/` file in the diff**, so no `Bench:`
+  line is owed and INV-6 is not owed -- `make_book` is its own executable.
+  Gate 27/27 in both builds, format clean under `CLANG_FORMAT_MAJOR=22`,
+  `plan_prose_check.py` exit 0 with 0 touches flagged. **The owner chose the
+  fixed temporary name over `mkstemp`, DEC-149**: `<out>.tmp`, so at most one
+  is ever left behind -- by a kill the process cannot survive -- and the next
+  build to the same `--out` truncates it, which lets the `accepts` hold as
+  written; the cost is that two concurrent builds to one destination would
+  clobber each other, which nothing in the tree does. That choice also answers
+  the step's file-mode question by itself: `O_WRONLY|O_CREAT|O_TRUNC` at 0666
+  is exactly what the replaced `std::ofstream` asked for, and `rename(2)`
+  carries the mode onto the destination. `DEV_MANUAL.md`'s "`loadable` does not
+  mean complete" paragraph now states the guarantee and carries the
+  `ulimit -f` reproduction as the root-free form of S146's ram disk;
+  `MANUAL.md` and `adocs/specs.md` checked, neither moves.
+- Previously: **S178, 2026-09-07 -- `movetext_to_san()` reads a move number
   indication glued to the move it introduces.** `1.e4`, `2...Nc6`, `4.O-O`: PGN
   import format, 8.2.2.1. Before, the whole token reached `algebraic_to_move()`,
   got 0 from S174's fail-closed parser, and the build was refused at ply 0 --
@@ -64,7 +102,7 @@ Updated: 2026-09-07, by hand.
   and cuts the game short by name -- and whether the cut-short message should
   carry the token as written (`1.e4`) rather than the move part (`e4`).
 - **S178's two deferred questions answered by the owner, 2026-09-07, DEC-147;
-  both become S200, at Open entry 2.** The whitespace form of a move number
+  both become S200, at Open entry 1.** The whitespace form of a move number
   indication (`1 . e4`, `1 .e4`, `1. ... e5`, which PGN 8.2.2.1 allows) is
   folded into a follow-up rather than left refused, and the cut-short message
   will quote the token as the PGN wrote it -- the owner's condition on the
@@ -133,7 +171,7 @@ Updated: 2026-09-07, by hand.
   deferred to the owner:** S151's re-test of S085's vector at a control at
   least four times 8+0.08 prices a `{-5, 0}` pair near 72 hours worst case by
   DEC-143's formula; whether that pair, a cheaper pair or a fixed-rounds
-  reading is wanted decides when it runs -- it sits at Open entry 20 until
+  reading is wanted decides when it runs -- it sits at Open entry 19 until
   then. Nothing in the engine changed, no run was started, the gate was green
   at `66cbc54` before the edit (27/27 in both builds) and the four prose
   checks pass after it.
@@ -534,7 +572,7 @@ Updated: 2026-09-07, by hand.
     `tools/forfeit_report.py`, recorded beside S105's numbers.** The owner
     refused the same run on the MacBook (DEC-139: a number about a machine
     that is leaving); DEC-143 makes it the rule after every machine change,
-    and it is S198's A/A, Open entry 6 since DEC-144. Until it is taken, the
+    and it is S198's A/A, Open entry 5 since DEC-144. Until it is taken, the
     harness has no pair-variance or forfeit figure for the machine the
     verdicts run on.
   - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
@@ -543,7 +581,7 @@ Updated: 2026-09-07, by hand.
     is about 72 hours worst case and 44 on a bound. Options: that pair on a
     weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
     +/-8 Elo) which would change the accepts and is therefore a decision. It
-    sits at Open entry 20 behind S148 and S159 until answered.
+    sits at Open entry 19 behind S148 and S159 until answered.
   - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
     (`go infinite` printing `bestmove` unasked; a bad token in `position ...
     moves` skipped silently; the aborted-iteration best move assuming its table
