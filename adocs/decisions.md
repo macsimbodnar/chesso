@@ -8187,3 +8187,55 @@ Consequences: S200 sits in `plan_todo/` and enters the Open list where the
               The remaining leniencies of S178's `excludes:` -- `e8Q` without
               `=`, `0-0` with zeros, a `P` prefix -- stay unread and stay each
               their own decision.
+
+## DEC-148  2026-09-07  `algebraic_to_move()` refuses a leading character that is not a piece or file letter; the disambiguation walk stays lenient
+Tags:         engine, parser, tools, make_book, bugs, s201, dec-140
+Context:      Found 2026-09-07 while sizing S200's second half. The parser
+              reads the piece letter at position 0 only, so any other leading
+              character fell to the pawn branch, and the disambiguation walk --
+              which records only `a`-`h` and `1`-`8` -- swallowed the real
+              piece letter on its way to the destination square. `.Nf3` came
+              back as the legal pawn push `f2f3` where the token means `g1f3`;
+              `make_move()` applied it and no caller could see it. python-chess
+              refuses `.Nf3`, `.e4` and `..e4`, checked the same day. Reachable,
+              because `1 .Nf3` is legal PGN import format (8.2.2.1), so
+              `make_book` could build a book from a wrong board and report
+              `games cut short 0`. It is the shape S174 closed for a token the
+              parser *cannot* read, still open for one it reads as something
+              else. Bounded: the function is called only by the two tools and
+              the tests, never on the engine's UCI move path, which is long
+              algebraic; `books/8moves_v3.pgn` carries no such token.
+Decision:     By the owner, shown the evidence on 2026-09-07 and asked both
+              halves. **It is a bug and it is fixed before anything else
+              starts**, which is the BUGS rule; S201 was created directly in
+              `plan_current/` for it. **The gate is narrow**: after the suffix
+              strip and the castling forms, a token whose first character is
+              not in `[a-hKQRBN]` returns 0, and an empty token returns 0.
+              Characters after the first stay exactly as tolerated as they
+              were.
+Rejected:     The wider gate, every character in `[a-h1-8KQRBNx=]`. It also
+              closes the lenient interior forms (`N.f3`, `N,f3`, `N*f3`, all of
+              which give the *correct* move today) and would match python-chess
+              exactly, but it narrows what the tools accept from real-world PGN
+              for no defect: the wrong-move class is entirely a leading-
+              character effect, and the narrow gate closes all of it.
+              Filing it as a step and letting it wait its turn in the Open
+              list. Defensible, since the engine's own move path never calls
+              the function, and refused: a known defect in the tree
+              contaminates every measurement taken after it.
+              Recording it as deliberate leniency and changing no code. The
+              parser's contract since S174 is that a token it cannot read
+              returns 0; a token it reads as a different piece is not leniency.
+              Fixing it in `movetext_to_san()` instead, by never emitting such
+              a token. S200 does that and it is worth having, but it leaves
+              `pgn_to_positions` and any future caller on the wrong board.
+Consequences: `xd5` and a leading `-` are refused too, which no PGN writes.
+              Verified over the whole shipped corpus rather than argued: the
+              book rebuilt from `books/8moves_v3.pgn` through the changed
+              parser is byte-identical at `77f47f1b...db06b58` -- 34700 games,
+              172232 entries, 0 cut short -- so roughly 278000 real SAN tokens,
+              with captures, disambiguation, promotions and castling among
+              them, parse exactly as before. INV-6 identical. DEC-140's
+              `Bench:` line binds from S189's completing commit on and S189 is
+              open, so this commit owes none. S200's `excludes:` keeps the two
+              apart and S200 does not wait on this.

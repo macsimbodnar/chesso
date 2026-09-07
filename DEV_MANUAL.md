@@ -2038,9 +2038,12 @@ with `assert(false)` and no return, so the Release build handed back a
 fabricated move that `make_move` applied: at `1d8cbac`, `1. e4!? e5 2. Nf3
 Nc6 *` built a `loadable` book whose first entry was the start position with
 move `a8a7`, reported `games cut short 0` and exited 0
-(2026-09-03_adversarial-F02). The parser returns 0 for a token it cannot read
-and strips PGN suffix annotations (`!`, `?`, `!?`, `?!`, `!!`, `??`) as it
-strips `+` and `#`; `build` exits non-zero and writes nothing when any game was
+(2026-09-03_adversarial-F02). The parser returns 0 for a token it cannot read --
+which since S201 includes one beginning with anything but a piece or a file
+letter, because a leading `.` or `-` used to fall to the pawn branch and the
+disambiguation walk then swallowed the piece letter, turning `.Nf3` into the
+legal pawn push `f2f3` -- and strips PGN suffix annotations (`!`, `?`, `!?`,
+`?!`, `!!`, `??`) as it strips `+` and `#`; `build` exits non-zero and writes nothing when any game was
 cut short, naming the game and the token on stderr (the first twenty).
 `--allow-cut-short` is the deliberate form of the old behaviour: such a game is
 dropped from the bad token on and the count is reported.

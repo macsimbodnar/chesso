@@ -75,8 +75,8 @@ Updated: 2026-09-07, by hand.
   reads it, both are covered by the same fixture file, and neither alters play.
   It sits after S173 to group the two `make_book` tool steps; move it if the
   order should differ.
-- **A parser defect found while sizing S200, 2026-09-07, and it is the owner's
-  to call (BUGS rule).** Not fixed, nothing else started on it.
+- **S201, 2026-09-07: the parser defect found while sizing S200, called a bug
+  by the owner and fixed before anything else started (BUGS rule); DEC-148.**
   `algebraic_to_move()` reads the piece letter at position 0 only
   (`src/bitboard.cpp`, the `std::isupper(notation[pos])` test): a leading
   character that is not an uppercase piece letter falls to the pawn branch, and
@@ -92,11 +92,23 @@ Updated: 2026-09-07, by hand.
   path, which is long algebraic; `books/8moves_v3.pgn` has no such token, so
   `src/openings.bin` is unaffected. Interior junk is lenient but *correct* --
   `N.f3` gives `g1f3` -- so only the leading character produces a wrong move.
-  The proposed fix is a character-class gate after the suffix strip and the
-  castling cases, refusing a token whose first character is not `[a-hKQRBN]`;
-  the wider form additionally requires every character to be in
-  `[a-h1-8KQRBNx=]`, which would also close the lenient interior forms and
-  match python-chess.
+  **The fix, narrow by the owner's choice**: after the suffix strip and the two
+  castling returns, an empty token or one whose first character is not in
+  `[a-hKQRBN]` returns 0. The wider gate -- every character in
+  `[a-h1-8KQRBNx=]` -- was rejected: the wrong-move class is entirely a
+  leading-character effect, and the interior forms it would also close give the
+  correct move today. **Red first**: five `CHECK`s, `.Nf3` coming back as
+  `2933`. **Verified over the corpus, not argued**: the book rebuilt through
+  the changed parser is byte-identical at `77f47f1b...db06b58` -- 34700 games,
+  172232 entries, 0 cut short -- so roughly 278000 real SAN tokens parse as
+  before. INV-6 identical, gate 27/27 in both builds. No `Bench:` line is owed:
+  DEC-140 binds from S189's completing commit and S189 is open.
+  **One thing found in passing and not fixed, for S193**: the new
+  `REQUIRE(algebraic_to_move("Nf3", &game) != 0)` is the first positive
+  assertion in that TEST_CASE. Every existing subcase asserts `== 0`, so with
+  `game_tables()` uninitialised -- which is what running the binary with a
+  `-tc=` filter and no earlier case does -- they all pass vacuously. Under
+  `ctest` the case is sound; the vacuity is the class S193 was written for.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open

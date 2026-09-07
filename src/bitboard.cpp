@@ -2326,6 +2326,27 @@ move_t algebraic_to_move(std::string notation, game_t* game)
   }
 
 
+  // S201. A move that is not castling begins with a piece letter or a file
+  // letter and with nothing else: PGN 8.2.3 gives SAN no other first
+  // character, and the two castling forms and the suffix marks are already
+  // out. Without this gate the pawn branch below took any other leading
+  // character, and the disambiguation walk -- which records only `a`-`h` and
+  // `1`-`8` -- then swallowed the real piece letter on its way to the
+  // destination square: `.Nf3` came back as the legal pawn push f2f3 where the
+  // token means g1f3, and the caller applied it and was told nothing. That is
+  // reachable, because `1 .Nf3` is legal PGN import format (8.2.2.1).
+  //
+  // Narrow by decision (DEC-148): characters *after* the first stay as
+  // tolerated as they were, since `N.f3` gives g1f3 -- lenient, and correct.
+  if (notation.empty() ||
+      !((notation[0] >= 'a' && notation[0] <= 'h') || notation[0] == 'K' ||
+        notation[0] == 'Q' || notation[0] == 'R' || notation[0] == 'B' ||
+        notation[0] == 'N')) {
+    LOG_E << "Wrong formatting. Invalid Algebraic notation: "
+          << original_notation << END_E;
+    return 0;
+  }
+
   // Parse non-castling moves
   size_t pos = 0;
   piece_t moving_piece;

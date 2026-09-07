@@ -318,6 +318,28 @@ TEST_SUITE("Test utils")
       CHECK(algebraic_to_move("a0", &game) == 0);
     }
 
+    SUBCASE("a leading character that is neither a piece nor a file letter")
+    {
+      // S201. The piece letter was read at position 0 only, so anything in
+      // front of it fell to the pawn branch and the disambiguation walk --
+      // which records only a-h and 1-8 -- swallowed the letter on its way to
+      // the destination square. `.Nf3` came back as the legal pawn push f2f3
+      // where the token means g1f3, `make_move()` applied it and the caller
+      // was told nothing. Reachable: `1 .Nf3` is legal PGN import format
+      // (8.2.2.1), so make_book built a book from a wrong board.
+      //
+      // The knight move is asserted first: without it this case would pass on
+      // a position where g1f3 was illegal anyway.
+      const move_t knight = algebraic_to_move("Nf3", &game);
+      REQUIRE(knight != 0);
+
+      CHECK(algebraic_to_move(".Nf3", &game) == 0);
+      CHECK(algebraic_to_move(".e4", &game) == 0);
+      CHECK(algebraic_to_move("..e4", &game) == 0);
+      CHECK(algebraic_to_move("-e4", &game) == 0);
+      CHECK(algebraic_to_move("xd5", &game) == 0);
+    }
+
     SUBCASE("a well-formed token matching no legal move")
     {
       CHECK(algebraic_to_move("Qxf7", &game) == 0);

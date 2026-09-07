@@ -301,7 +301,15 @@ suffix annotations (`!`, `?` and their pairs) are ignored like `+` and `#`, and
 `make_book build` refuses to write when any game was cut short unless
 `--allow-cut-short` says to drop such games from the bad token on -- so the
 `games cut short 0` the digest above rests on is a gate and not a report
-(2026-09-03_adversarial-F02). **Since S178 the splitter also reads a move
+(2026-09-03_adversarial-F02). **Since S201 it also refuses a token that begins
+with anything but a piece or a file letter**: the piece letter was read at
+position 0 only, so a leading `.` or `-` fell to the pawn branch and the
+disambiguation walk swallowed the letter behind it -- `.Nf3` came back as the
+legal pawn push `f2f3` where the token means `g1f3`, which `make_move()`
+applied and no caller could see. `1 .Nf3` is legal PGN import format, so a
+book could be built from a wrong board with `games cut short 0`; characters
+after the first stay as tolerated as they were, `N.f3` giving `g1f3`
+(DEC-148). **Since S178 the splitter also reads a move
 number indication glued to the move it introduces** (`1.e4`, `2...Nc6`), which
 is PGN import format, so a hand-written PGN builds the same book as its export
 form twin; `books/8moves_v3.pgn` carries no such token, so the digest above is
