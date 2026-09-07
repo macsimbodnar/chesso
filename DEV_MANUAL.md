@@ -1055,7 +1055,7 @@ down and neither reached silence, so **read a count and not a silent log**:
 | before S147 | 138 | -- | 3000 games |
 | S147 | 10, later measured 12 | 3 | 3000 games each |
 | S170 | **5** | **1** | 3000 games |
-| S171 | not yet measured | -- | run postponed, DEC-128 |
+| S171 | **8** | **1** | 3000 games, workstation; `457e355` **0** from **0** beside it |
 
 S147 (2026-09-02) removed the truncation of a line the search had just proved.
 S170 the same day removed three more ways a **true** mate score lost its line --
@@ -1067,18 +1067,26 @@ and the same replay at `Hash=256` prints it -- and what failed was the walk,
 stalled five plies from the mate on one missing slot. `certified_mate_move()`
 now fills such a hole from the children of the position whose entry is gone.
 
-**The standing figure is still 5 lines from 1 search in 3000 games** until
-S171's own `--fast` run replaces it, and that run is **postponed to the owner's
-desktop workstation (DEC-128)**. It was attempted twice here and stopped by the
-machine both times: `pmset -g ac` reported no adapter, which the POWER rule
-forbids, and then on mains this script's own load guard reported `about 387% of
-a core is already busy` with Spotlight indexing. Read a count against 5, and
-anything materially above it has found something new.
+**The standing figure is 8 lines from 1 search in 3000 games**, taken on the
+Linux workstation on 2026-09-07 -- `REF=457e355 ./fastchess.sh --fast`, 1 h 17 m
+49 s, 0 time forfeits, Elo +3.24 +/- 8.91 between two INV-6 identical builds.
+`457e355` produced **0** in the same match. Read a count against 8, and anything
+materially above it has found something new.
+
+The 8-against-0 split is which side met the position, not a difference between
+the builds: the same case replayed against both binaries produces three
+byte-identical short lines. **What the 8 are, and why they are not closed.**
+One search whose `mate 6` is the position's true distance -- `stockfish` gives
+`#+6` at depth 20 and 30 -- read off the table at depth 3 on 1224 nodes, too
+shallow to build the 11 plies it owes, whose line continues in the table into a
+chain proving `mate 8`; both lookups in `complete_mate_pv()` are keyed on the
+distance still owed and both refuse. No completion walk can close it, S171's
+`excludes` forbade every other route, and **S202** owns the class. DEC-150.
 
 The census carries across machines where a timing does not: both engines play
 in the same run, so the reference's count is measured beside the candidate's
 and nothing is read from a figure taken elsewhere (DEC-049 untouched). The
-standing 5 is the MacBook's and stays attributed to it.
+earlier 5 is the MacBook's and stays attributed to it.
 
 The reproducible half of the same property is `test_mate_pv`, in the fast label
 since S147: every `info` line carrying a mate score over both S145 sets, 706 of
@@ -1094,9 +1102,18 @@ reported in a game comes out of entries earlier searches of that game wrote.
 
 ```
 build/tools/mate_trace --fen '<root fen>' --moves '<the game, uci>' \
-    --start 40 --warm 'nodes 1500000' --final 'depth 11' \
+    --start 40 --stride 2 --warm 'nodes 1500000' --final 'depth 11' \
     --line '<the pv it reported>' --needed 18
 ```
+
+**`--stride 2`, and it is not optional. DEC-151.** A game gives one engine only
+the positions *it* moves from — it never searches the ones its opponent moved
+from — so searching every ply builds a table no game produces. S171's case was
+read back from its census log three times at stride 1 and came up clean each
+time; it reproduces at stride 2 on the first attempt. `adocs/data/S170_replay.py`
+takes the same stride, from the `stride` column of `adocs/data/S170_cases.tsv`
+or from `--stride-override`. Rows A to E of that file are stride 1, the shape
+they were found in.
 
 It replays the game through the real UCI layer — one process, one table, the
 shape `adocs/data/S170_replay.py` uses — and then walks the reported line over a

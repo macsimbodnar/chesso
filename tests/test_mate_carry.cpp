@@ -66,13 +66,30 @@ struct case_t
   std::string go;
   size_t start;
 
+  // Plies between one search and the next. 1 searches every ply; 2 is one
+  // side's own turns, which is what a game gives an engine's table -- it
+  // never searches a position its opponent moved from. S171.
+  size_t stride;
+
   // Whether this row is a case the guard asserts on. A row that is `no` is a
   // reproduction kept for the step that owns it and not a property held here.
-  // Every row is `yes` today: `E_mate_minus9` was the one exception, on the
-  // reading that its `mate -9` claimed a distance the position does not hold,
-  // and S171 measured that reading wrong -- an 18-ply mating line from that
-  // root exists and the engine publishes it once the walk can reach it.
-  // DEC-127.
+  // `E_mate_minus9` was `no` until S171, on the reading that its `mate -9`
+  // claimed a distance the position does not hold; S171 measured that reading
+  // wrong -- an 18-ply mating line from that root exists and the engine
+  // publishes it once the walk can reach it -- so the row is guarded. DEC-127.
+  //
+  // `F_mate6_inherited_no_line` is `no`: it is the reproduction of the 8 lines
+  // S171's own census left, measured and not yet closed. Its `mate 6` is the
+  // position's true distance -- stockfish gives `#+6` at depth 20 and 30 --
+  // read off the table at depth 3 on 1224 nodes, too shallow to build the
+  // 11 plies it needs, and the line that iteration did build continues in the
+  // table into a chain proving `mate 8`. Both lookups in the walk are keyed on
+  // the distance still owed, so both refuse it, and all-or-nothing leaves the
+  // line short and visible, which is what it is for. No walk can close this
+  // one: the 11-ply line the score names is not in the table to be found, and
+  // building it would mean searching, which this path may not do. The same
+  // three lines reproduce byte for byte on 457e355, so nothing in S171 caused
+  // it.
   bool guard;
 };
 
@@ -107,11 +124,23 @@ static std::vector<case_t> read_cases()
       field.push_back(cell);
     }
 
-    if (field.size() < 6 || field[0] == "name") { continue; }
+    if (field.size() < 7 || field[0] == "name") { continue; }
 
-    cases.push_back({field[0], field[1], split_words(field[2]), field[3],
-                     static_cast<size_t>(std::stoul(field[4])),
-                     field[5] == "yes"});
+    const size_t start = static_cast<size_t>(std::stoul(field[4]));
+    const size_t stride = static_cast<size_t>(std::stoul(field[5]));
+    const std::vector<std::string> moves = split_words(field[2]);
+
+    REQUIRE_MESSAGE(stride >= 1, (field[0] + ": stride must be at least 1"));
+
+    // A schedule that steps over the last ply never searches the position the
+    // case is about, and the row would pass by never looking. S171.
+    REQUIRE_MESSAGE(
+        (moves.size() - start) % stride == 0,
+        (field[0] + ": start " + field[4] + " and stride " + field[5] +
+         " step over the last ply, " + std::to_string(moves.size())));
+
+    cases.push_back({field[0], field[1], moves, field[3], start, stride,
+                     field[6] == "yes"});
   }
 
   return cases;
@@ -263,6 +292,7 @@ static size_t expected_mate_lines(const std::string& name)
   if (name == "C_mate7_depth11") { return 6; }
   if (name == "D_mate_minus6_depth10") { return 1; }
   if (name == "E_mate_minus9") { return 9; }
+  if (name == "F_mate6_inherited_no_line") { return 6; }
 
   FAIL("unknown case " << name);
   return 0;
@@ -275,10 +305,10 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
   initialize_game_const_data(&replay);
 
   const std::vector<case_t> cases = read_cases();
-  REQUIRE_MESSAGE(cases.size() == 5,
+  REQUIRE_MESSAGE(cases.size() == 6,
                   ("adocs/data/S170_cases.tsv is not the tracked set any "
                    "more: " +
-                   std::to_string(cases.size()) + " rows, expected 5"));
+                   std::to_string(cases.size()) + " rows, expected 6"));
 
   for (const case_t& game : cases) {
     if (!game.guard) { continue; }
@@ -296,7 +326,8 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
     size_t mate_lines = 0;
     std::vector<std::string> failures;
 
-    for (size_t ply = game.start; ply <= game.moves.size(); ++ply) {
+    for (size_t ply = game.start; ply <= game.moves.size();
+         ply += game.stride) {
       std::string command = "position fen " + game.fen;
 
       if (ply > 0) {

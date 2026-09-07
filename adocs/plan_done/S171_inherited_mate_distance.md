@@ -1,13 +1,13 @@
 id:         S171
 goal:       a reported mate line reaches its mate even where the table has lost a slot the walk needs, closing the 5 `Incomplete mating PV` lines from 1 search in 3000 games S170 left -- **rescoped by DEC-127**, the original goal having assumed a wrong mate distance that measurement refuted
-accepts:    the case S170 measured is reproduced and its mechanism established from the code rather than argued -- **done, and it refuted the premise this step was created on (DEC-127)**: the reported `mate -9` is deliverable, an 18-ply line from that root is legal throughout and ends in checkmate, and the same warm replay at `Hash=256` prints it and warns about nothing, so what fails at `Hash=16` is the walk and not the score; a minimized failing test observed red before any fix, driving the engine the way `tests/test_mate_carry.cpp` does because a cold table does not reproduce it; the fix decided by SPRT if it alters play at all and by identical `tools/search_bench.py` node counts and best moves if it does not (INV-6); a `fastchess.sh --fast` run reports **0** `Incomplete mating PV` lines from the candidate, which is the residual S170 could not close and the reason this step exists; `MANUAL.md`, `adocs/specs.md` and `DEV_MANUAL.md`'s instrument 3 lose the residual they state today in the same commit that removes it
+accepts:    the case S170 measured is reproduced and its mechanism established from the code rather than argued -- **done, and it refuted the premise this step was created on (DEC-127)**: the reported `mate -9` is deliverable, an 18-ply line from that root is legal throughout and ends in checkmate, and the same warm replay at `Hash=256` prints it and warns about nothing, so what fails at `Hash=16` is the walk and not the score; a minimized failing test observed red before any fix, driving the engine the way `tests/test_mate_carry.cpp` does because a cold table does not reproduce it; the fix decided by SPRT if it alters play at all and by identical `tools/search_bench.py` node counts and best moves if it does not (INV-6); a `fastchess.sh --fast` run reports the candidate's `Incomplete mating PV` count beside the reference's own from the same run -- **amended by DEC-150 from "reports 0"**, which the measurement showed unreachable inside this step's own `excludes`: the run was taken, the residual it left is a class no completion walk can close, and the measured pair is the deliverable instead; `MANUAL.md`, `adocs/specs.md` and `DEV_MANUAL.md`'s instrument 3 lose the residual they state today in the same commit that removes it
 touches:    src/search.cpp, tools/, tests/, adocs/data/, MANUAL.md, DEV_MANUAL.md, adocs/specs.md
 excludes:   **amended by DEC-127** -- the reporting side is now this step's ground, because the residual is a line the walk could not build and not a score; anything that alters play, including making the table keep entries longer, resizing it or changing its replacement policy, each of which owes an SPRT of its own; improving mate *finding*, which is S148's and S154's ground, and which is where a search naming a longer mate than the position's own value belongs
 decisions:  DEC-122, DEC-123, DEC-125, DEC-127
 closes:
 blocks:
 paused_by:
-author:     agent (Claude Opus 5), coordinator, 2026-09-03
+author:     agent (Claude Opus 5), coordinator, 2026-09-03; resumed on the workstation 2026-09-07
 
 ## What this is
 
@@ -479,3 +479,94 @@ it.
 - A note for the stamp, not a question: the `accepts:` clause that `MANUAL.md`
   "lose[s] the residual [it] state[s] today" was satisfied at `136b03f`, which
   rewrote that entry to DEC-127's reading; `MANUAL.md` states no count now.
+
+## What the census measured, 2026-09-07, and how this closed
+
+Everything above section 10 was written before the run. The run was taken; its
+`accepts` was not met as written, and DEC-150 is the owner's decision on what
+that means.
+
+**The run.** `REF=457e355 nohup ./fastchess.sh --fast`, launched 22:42 on the
+Linux workstation, out `/tmp/chesso_sprt_fast_20260907_224259`, log
+`.tuning/sprt_s171_matepv.log`. 3000 games at 8+0.08, `Hash=16`, book
+`UHO_Lichess_4852_v1.epd`, concurrency 12 of 12. **1 h 17 m 49 s, 0 forfeits of
+3000**, 938 draws (31.3 %), `Elo +3.24 +/- 8.91`, `nElo +4.53 +/- 12.43`,
+`LLR -0.12` -- the cap ended it, as section 4 predicted for two builds that play
+identically.
+
+| | `Incomplete mating PV` lines | distinct searches |
+|---|---|---|
+| candidate (`008261b`) | **8** | **1** |
+| `ref-457e355` | **0** | **0** |
+
+**Preconditions, all read before launch.** Power: `/sys/class/power_supply/`
+holds one entry, `hidpp_battery_0`, type `Battery` -- a Logitech peripheral, not
+a system battery; this is a mains-only desktop, so the POWER rule is satisfied
+and section 5's literal test ("no `Battery` line") does not survive a wireless
+mouse. Load: sum of `%cpu` 37.2, governor `performance`, and no load warning in
+the script's banner. INV-6 between the two binaries: 121512 / 800769 / 62907 at
+depth 9 with `c3d5` / `e2a6` / `d7c8q`, identical, so the run is an A/A on play.
+Gate green in both builds before and after. DEC-141's Debug self-play: 8 games
+at 4+0.04, **0** `Assertion` lines, 0 time forfeits.
+
+**What the 8 are.** Round 909, candidate as White, move 45; one search, `info`
+lines at depths 1 to 5 and 7 to 9, each with a `pv` exactly as long as its
+iteration depth. Reproduced as `F_mate6_inherited_no_line` in
+`adocs/data/S170_cases.tsv`: `nodes 300000`, from ply 64, **stride 2** --
+6 mate lines, 3 short, deterministic over three runs on each binary.
+
+The reading, measured and not argued (DEC-150):
+
+- the score is **right**: `stockfish` gives `#+6` at depth 20 and 30 for the
+  position and `#+5` after the move chesso plays;
+- it is read off the table at **depth 3 on 1224 nodes**, too shallow to build
+  the 11 plies a `mate 6` owes;
+- the line that iteration built continues, in the table, into a chain proving
+  **`mate 8`**, so both distance-keyed lookups in `complete_mate_pv()` refuse
+  and DEC-122 leaves the line short and visible;
+- it is **not a regression**: the same three lines reproduce byte for byte on
+  `457e355`, and the 8-against-0 split is which side met the position;
+- **no walk can close it** -- the line the score names is not in the table to be
+  found, and building it would mean searching, which that path may not do. Every
+  other route is named in this file's own `excludes`.
+
+So the step's `accepts` could not be reached from inside the step. DEC-150
+amends it to the measured pair and gives the class to **S202**.
+
+**One hypothesis was implemented and reverted.** That the walk stalled on a
+position whose single legal move carried an upper bound, which
+`certified_mate_move()` declines by construction. It was read off a walk of the
+match's line over a differently-warmed table; the guard case stayed red under
+it; `src/search.cpp` is untouched by this step and stands at `136b03f`.
+
+**The instrument defect found on the way, DEC-151.** `adocs/data/S170_replay.py`
+and `tools/mate_trace.cpp` both replayed **every** ply through one process. A
+game gives one engine only the positions it moves from, so stride 1 is a table
+no game produces -- which is why this case was read back from the census log
+three times at stride 1 and came up clean each time. Both take a stride now,
+`adocs/data/S170_cases.tsv` has a `stride` column, and the guard test refuses a
+`start`/`stride` pair that steps over the last ply. Rows A to E stay stride 1
+and still report 0 short lines.
+
+done:       2026-09-07/08 on the Linux workstation. The census was run and read:
+            3000 games at 8+0.08 in 1 h 17 m 49 s, 0 forfeits, Elo +3.24 +/-
+            8.91 between INV-6 identical builds, candidate **8** lines from
+            **1** search against `ref-457e355`'s **0** from **0** in the same
+            match. `accepts` amended by DEC-150 from "reports 0", the zero being
+            unreachable inside this file's own `excludes`; the residual's
+            mechanism is measured, is not a regression against `457e355`, and is
+            handed to **S202**. `certified_mate_move()` keeps its own evidence
+            at `136b03f` -- red then green on `tests/test_mate_carry.cpp`, and
+            the five stride-1 cases still report 0 short lines. DEC-151 gives
+            both replay instruments a stride and the case file a `stride`
+            column; `F_mate6_inherited_no_line` is the tracked reproduction,
+            `guard: no` until S202 closes it. `adocs/specs.md`, `DEV_MANUAL.md`
+            instrument 3 and `MANUAL.md` take the measured figure -- MANUAL.md
+            did need a change after all, contrary to section 8 item 4: its `pv`
+            row stated the mate-line guarantee unconditionally, which the code
+            path does not provide, and it now says short-or-right. Gate green in
+            both builds, `-j12`, with `CLANG_FORMAT_MAJOR=22` (DEC-146);
+            DEC-141's Debug self-play 0 `Assertion` lines over 8 games;
+            `plan_prose_check.py --touches` 0 flagged. No `src/` change, so
+            neither `Bench:` nor `No functional change` is owed (DEC-140 binds
+            from S189, which is still open).

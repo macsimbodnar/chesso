@@ -239,7 +239,7 @@ bestmove c3d5
 | `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair never claims a mate the line does not reach |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
-| `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate: 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate |
+| `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**: the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver. Measured at 8 such lines from 1 search in 3000 games (DEC-150) |
 
 `bestmove 0000` means no legal move at all. A search cut off before it finished
 even one move still answers with a legal one.
@@ -289,9 +289,17 @@ here as the FEN each one loads. A GUI never sends them.
   18-ply line from that root ends in checkmate, and the engine prints it itself
   when the table is large enough — it is simply not the fastest mate. A
   depth-limited search naming a longer mate than the game value is ordinary,
-  and the `pv` guarantee below still holds over it: the line reaches the mate
-  the score claims. S171 and DEC-127 measured this; finding the *shortest* mate
-  is a search question and belongs to the reverse-futility entry further down.
+  and the `pv` guarantee above still holds over it: a published line reaches the
+  mate the score claims, or is left short rather than made wrong. S171 and
+  DEC-127 measured this; finding the *shortest* mate is a search question and
+  belongs to the reverse-futility entry further down.
+- **A mate line can be shorter than the score's distance.** Not wrong, short:
+  the line is published only when it reaches the mate, so the failure mode is a
+  missing tail and never a line that does not deliver. It happens when the score
+  is read back from the table at a depth too shallow to build its own line and
+  the table no longer holds one — measured at 8 `info` lines from 1 search in
+  3000 games at 8+0.08 on 2026-09-07. S202 owns it; DEC-122 is the all-or-nothing
+  rule that makes short the only failure, and DEC-150 the measurement.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

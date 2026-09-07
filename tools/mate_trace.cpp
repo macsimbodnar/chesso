@@ -239,7 +239,8 @@ void walk(game_t* game, const std::vector<std::string>& line, size_t needed)
   fprintf(stderr,
           "usage: mate_trace --fen FEN [--moves 'e2e4 ...'] [--start N]\n"
           "                  [--warm 'nodes 1500000'] [--final 'depth 11']\n"
-          "                  [--line 'h1g1 ...'] [--needed N] [--hash MB]\n");
+          "                  [--line 'h1g1 ...'] [--needed N] [--hash MB]\n"
+          "                  [--stride N]\n");
   exit(2);
 }
 
@@ -255,6 +256,7 @@ int main(int argc, char** argv)
   size_t needed = 0;
   std::string final_go;
   size_t start = 0;
+  size_t stride = 1;
   int hash_mb = 16;
 
   for (int i = 1; i < argc; ++i) {
@@ -275,6 +277,8 @@ int main(int argc, char** argv)
       needed = strtoul(argv[++i], nullptr, 10);
     } else if (strcmp(arg, "--start") == 0 && has_value) {
       start = strtoul(argv[++i], nullptr, 10);
+    } else if (strcmp(arg, "--stride") == 0 && has_value) {
+      stride = strtoul(argv[++i], nullptr, 10);
     } else if (strcmp(arg, "--hash") == 0 && has_value) {
       hash_mb = atoi(argv[++i]);
     } else {
@@ -292,11 +296,14 @@ int main(int argc, char** argv)
   uci_process_line("setoption name Hash value " + std::to_string(hash_mb));
   uci_process_line("ucinewgame");
 
-  // Every ply from `start` on is searched, because what the table holds at the
-  // last one is made by the searches before it. Dropping the earlier plies is
-  // dropping the warming, not the moves: the position is always the full move
-  // list.
-  for (size_t i = start; i < moves.size(); ++i) {
+  // Every `stride`-th ply from `start` on is searched, because what the table
+  // holds at the last one is made by the searches before it. Dropping the
+  // earlier plies is dropping the warming, not the moves: the position is
+  // always the full move list. `--stride 2` is one side's own searches, which
+  // is what a game gives an engine's table -- it never searches the positions
+  // its opponent moved from. S171: the S171 case reproduces at stride 2 and
+  // not at stride 1.
+  for (size_t i = start; i < moves.size(); i += stride) {
     std::string position = "position fen " + fen;
 
     if (i > 0) {

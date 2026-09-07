@@ -5,7 +5,54 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-07, by hand.
+Updated: 2026-09-08, by hand.
+
+- **S171 is done, 2026-09-07/08: the census ran on this machine and its
+  residual is measured rather than closed (DEC-150).** The run DEC-128
+  postponed here -- `REF=457e355 ./fastchess.sh --fast`, 3000 games at 8+0.08,
+  **1 h 17 m 49 s, 0 forfeits**, `Elo +3.24 +/- 8.91` between INV-6 identical
+  builds, out `/tmp/chesso_sprt_fast_20260907_224259`. The count it exists for:
+  candidate **8** `Incomplete mating PV` lines from **1** search,
+  `ref-457e355` **0** from **0**. The `accepts` said 0, and 0 turned out to be
+  unreachable inside the step's own `excludes`, so the owner amended it to the
+  measured pair.
+- **The residual is neither a regression nor a wrong score, and no walk can
+  close it.** `stockfish` gives `#+6` for the position at depth 20 and 30, so
+  the `mate 6` is right; it is read off the table at depth 3 on 1224 nodes, too
+  shallow to build the 11 plies it owes, and the line that iteration built
+  continues in the table into a chain proving `mate 8`, so both distance-keyed
+  lookups in `complete_mate_pv()` refuse and DEC-122 leaves the line short and
+  visible. The same three lines reproduce byte for byte on `457e355`; the
+  8-against-0 split is which side met the position. Building the missing line
+  means searching, which that path may not do, and every other route is named
+  in S171's `excludes`. **S202** owns the class and may alter play under its own
+  SPRT. The standing figure in `adocs/specs.md`, `DEV_MANUAL.md` instrument 3
+  and now `MANUAL.md` is **8 from 1 search in 3000 games** on this machine, with
+  the MacBook's 5 kept attributed to the MacBook.
+- **One hypothesis was implemented and reverted on the way, and it is worth the
+  line.** That the walk stalled on a position whose single legal move carried an
+  upper bound, which `certified_mate_move()` declines by construction. It was
+  read off a walk of the match's line over a *differently warmed* table, the
+  guard case stayed red under it, and it was backed out: `src/search.cpp` is
+  untouched by this step and stands at `136b03f`. A dump of the table taken at a
+  different moment than the failure is not evidence about the failure.
+- **The instruments were probing a table no game produces, DEC-151.**
+  `adocs/data/S170_replay.py` and `tools/mate_trace.cpp` both replayed **every**
+  ply through one process; a game gives one engine only the positions it moves
+  from. The census case was read back at stride 1 three times and came up clean
+  each time, and reproduced at stride 2 on the first attempt -- at
+  `nodes 1000000` from ply 56 or 64, *every* mate line the stride-2 replay sees
+  is short. Both tools take a stride now, `adocs/data/S170_cases.tsv` has a
+  `stride` column, and the guard test refuses a `start`/`stride` pair that steps
+  over the last ply. Rows A to E stay stride 1 and still report 0 short lines.
+  The class hidden behind stride 1 is unmeasured and S202 inherits it.
+- **The POWER rule's literal test does not survive a wireless mouse.**
+  `/sys/class/power_supply/` on this machine holds exactly one entry,
+  `hidpp_battery_0`, type `Battery` -- a Logitech peripheral. S171's guide said
+  "no `Battery` line" satisfies the rule; on a mains-only desktop that reads as
+  a refusal. Taken as satisfied and recorded in the stamp. Whoever writes the
+  next power check should test for a supply whose `scope` is `System`, not for
+  the absence of the word.
 
 - **Back on the workstation, 2026-09-07, and its gate was red on arrival --
   both halves fixed or decided, nothing in the engine changed.** No code moved
@@ -511,28 +558,16 @@ Updated: 2026-09-07, by hand.
   code returned the short-write finding above. Recorded because the lesson is
   cheap: a clean review and a shallow one look identical until the questions are
   specific.
-- **S171 is postponed to the desktop workstation (DEC-128), not blocked and not
-  abandoned.** Its file is in `adocs/plan_todo/` and its Open entry is last in
-  the list tagged `postponed`, so it derives as nobody's next step. **The fix is
-  committed and green at `136b03f`** -- `certified_mate_move()` completes a mate
-  line across a table slot the walk has lost, `tests/test_mate_carry.cpp` guards
-  it, INV-6 discharged on the same node counts as above.
-- **What S171 owes is a machine, not a change.** One `fastchess.sh --fast`
-  census, 3000 games at 8+0.08, about two hours, accepted at **0**
-  `Incomplete mating PV` lines from the candidate:
-
-      REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &
-
-  `457e355` is the commit before the fix, so the reference prints its own count
-  in the same match and nothing is compared across machines. Two attempts here
-  died on the machine: `pmset -g ac` said `No adapter attached`, which the POWER
-  rule forbids (DEC-109), and on mains `fastchess.sh`'s own load guard reported
-  `about 387% of a core is already busy` -- Spotlight indexing PDFs. **That
-  indexing has since finished**: load average was 2.4 on eight cores while
-  S146's gate ran, against about 15 earlier the same day. The standing figure
-  stays 5 lines from 1 search in 3000 games in `adocs/specs.md` and beside
-  instrument 3 in `DEV_MANUAL.md`, and neither claims a silence that has not
-  been measured.
+- **S171's postponement, kept for the record.** It was postponed here from the
+  MacBook by DEC-128 after two attempts died on that machine -- `pmset -g ac`
+  said `No adapter attached`, which the POWER rule forbids (DEC-109), and on
+  mains `fastchess.sh`'s own load guard reported `about 387% of a core is
+  already busy` with Spotlight indexing PDFs. The fix itself was committed and
+  green there at `136b03f`: `certified_mate_move()` completes a mate line across
+  a table slot the walk has lost, `tests/test_mate_carry.cpp` guards it, INV-6
+  discharged. It keeps that evidence -- the five stride-1 cases still report 0
+  short lines -- and what the census found is a different cause it never
+  claimed. The run itself is the entry at the top of this file.
 - Before S146: **S172, 2026-09-03 -- an opening book is loadable over UCI, on
   the option names the protocol actually uses.** `OwnBook` (check, default
   false), `Book File` (string, default `<embedded>`) and `Best Book Move`

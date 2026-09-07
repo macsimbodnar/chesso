@@ -8288,3 +8288,105 @@ Consequences: Two `make_book build` runs writing to the same `--out` at the same
               This is the first POSIX header in `tools/` or `src/`
               (`<fcntl.h>`, `<unistd.h>`): nothing standard gives `fsync`, and
               `std::filesystem::rename` alone would not have.
+
+
+## DEC-150  2026-09-08  S171's `accepts` of 0 is unreachable inside its own `excludes`; it takes the measured pair instead
+Tags:         search, mate-pv, s171, s170, measurement, dec-122, dec-127, dec-128
+Context:      S171's census ran on the workstation on 2026-09-07, the run DEC-128
+              postponed there: `REF=457e355 ./fastchess.sh --fast`, 3000 games at
+              8+0.08, `Hash=16`, concurrency 12 of 12, 1 h 17 m 49 s, **0 time
+              forfeits**, Elo +3.24 +/- 8.91 with `LLR -0.12` -- the two builds
+              are INV-6 identical, so that is the number it should print. The
+              count the step exists for: **8** `Incomplete mating PV` lines from
+              **1** search from the candidate, **0** from **0** from
+              `ref-457e355`. The `accepts` names 0 from the candidate.
+              The 8-against-0 split is which side met the position and not a
+              difference between the builds: the same case replayed against both
+              binaries at `nodes 300000` produces three short lines that are
+              byte-identical, so the residual predates `136b03f` and
+              `certified_mate_move()` never claimed it.
+              What it is, measured and not argued. The score is **correct** --
+              `stockfish` gives `#+6` at depth 20 and depth 30 for the position,
+              and `#+5` after the move chesso plays -- and it is read off the
+              table at **depth 3 on 1224 nodes**, too shallow to build the 11
+              plies a `mate 6` owes. The line that iteration did build continues,
+              in the table, into a chain proving `mate 8`. Both lookups in
+              `complete_mate_pv()` are keyed on the distance still owed, so both
+              refuse, and DEC-122's all-or-nothing rule leaves the line short and
+              visible, which is what it is for. By depth 7 the same search
+              reports `mate 8` with a complete 15-ply line and by depth 11 a
+              complete 11-ply `mate 6`.
+              No walk can close it: the line the score names is not in the table
+              to be found at that moment, and building it would mean searching,
+              which that path may not do. Every other route -- keeping entries
+              longer, resizing the table, changing its replacement policy,
+              anything that alters play -- is named in S171's own `excludes` as
+              out of scope and owing an SPRT of its own.
+Decision:     By the owner, asked on 2026-09-08 with the census, the
+              reproduction, the Stockfish readings and the three options on
+              screen. **The `accepts` is amended to the measured pair** -- 8
+              lines from 1 search against 0 from 0, 3000 games, this workstation,
+              recorded as measured -- and S171 completes on it, with the
+              instrument work and `F_mate6_inherited_no_line` as the tracked
+              reproduction. **S202** owns the class: a mate score inherited at a
+              depth too shallow to back it, free to alter play under its own
+              SPRT.
+Rejected:     Widening S171's `excludes` so it may alter play and attempting the
+              fix inside it. Refused because it makes S171 a different and much
+              larger step than the one that was agreed, and because an SPRT plus
+              a second census is several more machine-hours spent on a property
+              that changes no game -- the engine's play is INV-6 identical either
+              way.
+              Leaving S171 open with the result recorded and no decision.
+              Refused because a step held open on an `accepts` its own
+              `excludes` forbids it to reach never closes.
+Consequences: The standing figure for `-check-mate-pvs` becomes **8 lines from 1
+              search in 3000 games** on the workstation, beside **0 from 0** for
+              `457e355` in the same run, replacing the MacBook's 5 from 1 --
+              which stays attributed to that machine (DEC-049 untouched). A count
+              is read against 8 from now on. `certified_mate_move()` keeps its
+              own evidence: `tests/test_mate_carry.cpp` was red then green at
+              `136b03f` and the five stride-1 cases still report 0 short lines.
+              An accepts written as an absolute count over a table-pressure
+              property is what produced this: S170 left a residual too, and the
+              lesson recorded here is that such a step states a *ceiling and a
+              paired reference*, not a zero.
+              One hypothesis was implemented and reverted on the way: that the
+              walk stalled on a position whose single legal move carried a bound,
+              which `certified_mate_move()` declines by construction. It was read
+              off a walk of the match's line over a differently-warmed table, the
+              guard case stayed red under it, and `src/search.cpp` is untouched.
+
+
+## DEC-151  2026-09-08  The mate-line cases carry a `stride`, and a game's table is stride 2
+Tags:         tools, testing, mate-pv, s171, s170, instruments
+Context:      `adocs/data/S170_replay.py` and `tools/mate_trace.cpp` both replayed
+              **every** ply of a game through one engine process. A game gives one
+              engine only the positions *it* moves from -- it never searches the
+              ones its opponent moved from, so half the plies write nothing to its
+              table. Searching every ply is therefore a table no game produces.
+              This was found the hard way: the census case above was read back
+              from the log three times at stride 1 and came up clean each time,
+              and reproduces at stride 2 on the first attempt. It is not a small
+              difference -- at `nodes 1000000` from ply 56 or 64, every mate line
+              the stride-2 replay sees is short.
+Decision:     By the owner, 2026-09-08, as part of the S171 close. Both
+              instruments take a stride: `--stride` on `mate_trace`,
+              `--stride-override` and a sixth TSV column on `S170_replay.py`, and
+              `adocs/data/S170_cases.tsv` gains a `stride` column that
+              `tests/test_mate_carry.cpp` reads. Rows A to E stay **stride 1**,
+              the shape they were found and measured in; nothing about them
+              changes and they still report 0 short lines.
+Rejected:     Converting the existing five cases to stride 2. Refused because
+              their numbers -- the `expected_mate_lines()` floors and the
+              red-then-green readings of S170 and S171 -- were all taken at
+              stride 1, and moving them would invalidate the record without
+              measuring anything new.
+              Leaving the tools as they were and reproducing by hand. Refused
+              because the reproduction is the evidence, and a case that cannot be
+              re-derived from the file is not one.
+Consequences: The mate-line case set has probed only stride 1 until now, so the
+              whole class this shape hides is unmeasured -- S202 inherits that.
+              `start` and `stride` must leave the last ply on the schedule, which
+              the guard test now checks when it reads a row: a schedule that steps
+              over it would pass by never looking.

@@ -13,6 +13,12 @@ it -- which is why tests/test_mate_pv.cpp, where every case is its own
 Reads cases from a TSV (`name`, `fen`, `moves`) or from --fen/--moves, and for
 each replayed ply prints the short lines with the ply they came from.
 
+`stride` is how many plies separate the searches. A game gives one engine only
+the positions *it* moves from -- it never searches the ones its opponent moved
+from -- so stride 2 is one side's own turns and stride 1 is a table no game
+produces. S171: its census case reproduces at stride 2 and never at stride 1,
+which is why reading it back at stride 1 came up clean three times.
+
 Usage:
   S170_replay.py --engine build/src/chesso --cases adocs/data/S170_cases.tsv
   S170_replay.py --engine build/src/chesso --fen '<fen>' --moves 'e2e4 e7e5'
@@ -96,18 +102,21 @@ def parse_info(line):
     return mate_in, depth, pv
 
 
-def replay(engine, fen, moves, spec, name, verbose, start=0):
-    """One game from ply `start` onward. Returns the short mate lines found.
+def replay(engine, fen, moves, spec, name, verbose, start=0, stride=1):
+    """One game from ply `start` onward, every `stride`-th ply. Returns the
+    short mate lines found.
 
     `start` skips the searches of the opening plies, not the plies themselves:
     the position is always the full move list, and what is dropped is the
     warming those early searches would have done to the table. A case that
     still reproduces from a late start is a cheaper reproduction, which is what
-    puts one inside the fast gate.
+    puts one inside the fast gate. `stride` is the same idea across colours:
+    stride 2 searches one side's turns only, which is the table a game gives
+    that engine. S171.
     """
     short = []
 
-    for i in range(start, len(moves) + 1):
+    for i in range(start, len(moves) + 1, stride):
         played = " ".join(moves[:i])
         position = f"position fen {fen}"
         if played:
@@ -145,6 +154,9 @@ def main():
                     help="override the case's own go arguments, e.g. 'nodes 200000'")
     ap.add_argument("--start-override", type=int, dest="start_override",
                     help="override the case's own start ply")
+    ap.add_argument("--stride-override", type=int, dest="stride_override",
+                    help="override the case's own stride; 2 is one side's "
+                         "turns, which is what a game gives an engine's table")
     ap.add_argument("--hash", type=int, default=16,
                     help="Hash in MB; 16 is what fastchess.sh sets")
     ap.add_argument("--only", help="run only the case with this name")
@@ -163,10 +175,11 @@ def main():
                     continue
                 spec = field[3] if len(field) > 3 and field[3] else None
                 start = int(field[4]) if len(field) > 4 and field[4] else 0
+                stride = int(field[5]) if len(field) > 5 and field[5] else 1
                 cases.append((field[0], field[1], field[2].split(), spec,
-                              start))
+                              start, stride))
     elif args.fen:
-        cases.append(("cli", args.fen, args.moves.split(), None, 0))
+        cases.append(("cli", args.fen, args.moves.split(), None, 0, 1))
     else:
         ap.error("--cases or --fen is required")
 
@@ -174,14 +187,17 @@ def main():
         cases = [c for c in cases if c[0] == args.only]
 
     total = 0
-    for name, fen, moves, spec, start in cases:
+    for name, fen, moves, spec, start, stride in cases:
         spec = args.go or spec or "movetime 150"
         start = args.start_override if args.start_override is not None else start
+        if args.stride_override is not None:
+            stride = args.stride_override
 
         engine = Engine(args.engine, args.hash)
-        print(f"=== {name}: {len(moves)} plies from ply {start}, go {spec}")
+        print(f"=== {name}: {len(moves)} plies from ply {start} "
+              f"by {stride}, go {spec}")
         total += len(replay(engine, fen, moves, spec, name, args.verbose,
-                            start))
+                            start, stride))
         engine.close()
 
     print(f"TOTAL short mate lines: {total}")

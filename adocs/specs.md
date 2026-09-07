@@ -249,8 +249,23 @@ for a position whose value is `mate -7`. Finding the shortest mate is a search
 property and belongs to the mate-breadth instruments, not here. The rate the
 line guarantee is measured at, over 3000-game runs at 8+0.08 with
 `fastchess -check-mate-pvs`: **138** lines from the engine before S147, **10**
-after it, **5** after S170. S171's own run is owed and the figure is not
-restated until it is taken.
+after it, **5** after S170, and **8 from 1 search** after S171 -- the last taken
+on the Linux workstation on 2026-09-07, beside **0 from 0** for `457e355` in the
+same run, where the 5 is the MacBook's and stays attributed to it (DEC-049).
+Both engines play in the same match, so the pair is measured together and no
+figure crosses machines.
+
+**The residual, and it is not a wrong score. DEC-150.** S171's 8 lines are one
+search whose `mate 6` is the position's true distance -- `stockfish` gives `#+6`
+at depth 20 and 30 -- read off the table at depth 3 on 1224 nodes, too shallow
+to build the 11 plies it owes; the line that iteration built continues in the
+table into a chain proving `mate 8`, so both distance-keyed lookups refuse and
+the all-or-nothing rule leaves the line short and visible. No walk can close it:
+the line the score names is not in the table to be found, and building it would
+mean searching, which that path may not do. It is not a regression -- the same
+three lines reproduce byte for byte on `457e355` -- and **S202** owns the class,
+free to alter play under its own SPRT where S171 was not. 8 is the ceiling a
+later census is read against, not a zero.
 
 **The engine loads an opening book over UCI on the protocol's own option
 names, since 2026-09-03, S172.** `OwnBook` (check, default false) enables it,
