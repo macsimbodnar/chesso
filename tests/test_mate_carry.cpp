@@ -132,6 +132,12 @@ static std::vector<case_t> read_cases()
 
     REQUIRE_MESSAGE(stride >= 1, (field[0] + ": stride must be at least 1"));
 
+    // Both are size_t, so this is what keeps the subtraction below from
+    // wrapping to a huge value that the modulo could then accept.
+    REQUIRE_MESSAGE(start <= moves.size(),
+                    (field[0] + ": start " + field[4] + " is past ply " +
+                     std::to_string(moves.size())));
+
     // A schedule that steps over the last ply never searches the position the
     // case is about, and the row would pass by never looking. S171.
     REQUIRE_MESSAGE(

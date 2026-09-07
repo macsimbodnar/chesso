@@ -279,6 +279,11 @@ int main(int argc, char** argv)
       start = strtoul(argv[++i], nullptr, 10);
     } else if (strcmp(arg, "--stride") == 0 && has_value) {
       stride = strtoul(argv[++i], nullptr, 10);
+
+      // A stride of 0 never advances the replay loop below, so it would search
+      // one position forever. The guard test refuses the same value when it
+      // reads it from a row.
+      if (stride == 0) { usage(); }
     } else if (strcmp(arg, "--hash") == 0 && has_value) {
       hash_mb = atoi(argv[++i]);
     } else {
