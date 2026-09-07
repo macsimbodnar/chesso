@@ -64,10 +64,11 @@ Updated: 2026-09-07, by hand.
   and cuts the game short by name -- and whether the cut-short message should
   carry the token as written (`1.e4`) rather than the move part (`e4`).
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
-  pass of DEC-145 is stopped at the owner's word after twenty of 74 files --
-  Open entries 1 to 20, S178 through S151; the next file is S181.** Resume by
-  handing `adocs/data/2026-09-05_enrichment_brief.md` and one step path to one
-  agent per file, in Open order, one commit per file; what is left is named by
+  pass of DEC-145 is stopped at the owner's word after twenty of the then 74
+  files -- S178, since done, through S151; the next file is S181, today Open
+  entry 20.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  one step path to one agent per file, in Open order, one commit per file; what
+  is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
   session's report, with twenty findings and the owner questions from every
   file, is `adocs/data/2026-09-05_enrichment_pass.md`.
