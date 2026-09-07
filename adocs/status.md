@@ -28,7 +28,8 @@ Updated: 2026-09-07, by hand.
   (121512 / 800769 / 62907 at depth 9, 639228 / 3430710 / 367858 at depth 12,
   `c3d5` / `e2a6` / `d7c8q`), `src/openings.bin` still digests to
   `77f47f1b...db06b58`, the Open list's 74 entries match `plan_todo/`'s 74
-  files id for id with none duplicated and none also in `plan_done/`, and
+  files id for id with none duplicated and none also in `plan_done/` (72 after
+  the day's three completions, re-checked), and
   `plan_prose_check.py --touches` flags 0. **Before the first timed run the
   machine still needs**: the `performance` governor (it boots `powersave`),
   `kernel.perf_event_paranoid=1` for samply, and an idle desktop -- gthumb and
@@ -38,7 +39,41 @@ Updated: 2026-09-07, by hand.
   with, which answers S198's open question about it; and `.ref-builds/` holds
   21 August worktrees at 2.2 GB on a root filesystem at 95 %, prunable with
   `git worktree remove` at the cost of one rebuild if a ref is re-used.
-- Last done: **S173, 2026-09-07 -- `make_book build` replaces a book
+- Last done: **S200, 2026-09-07 -- `movetext_to_san()` reads the whitespace
+  form of a move number indication, and a cut-short message quotes the token as
+  the PGN wrote it.** PGN 8.2.2.1 lets white space sit between the digits and
+  the dots, so `1 . e4`, `1 .e4` and `1. ... e5` hand the splitter a token of
+  dots with no digits in front of it; S178's block required digits, so the dots
+  reached `algebraic_to_move()` whole and the build was refused at ply 0.
+  Dropping that one clause -- `dot > 0` -- reads all three forms. The message
+  half is the reader's problem and not the engine's: `cannot parse 'Qxf7'`
+  matches every line of a PGN that plays the move somewhere, where `2.Qxf7`
+  matches the one line that holds it, so `movetext_to_san()` now returns
+  `san_token_t {move, as_written}` and `build()` reads the second field for both
+  `report_cut_short()` messages. **Red first at `ffe207f`**: two new fixture
+  properties gave 13 `FAIL:` lines -- `cannot parse '.' at ply 0`, `'.e4' at ply
+  0`, `'...' at ply 1`, and `'Qxf7' at ply 2` failing both the as-written
+  assertion and its bare-form negation. Green after. **Numbered 12 and 13, not
+  the 9 and 10 the step file named**: S173 landed between the writing and the
+  doing and took 9, 10 and 11. **The remainder is still not re-classified**, as
+  the step's traps require: `.2` cuts short as `.2` and `1.2` as `1.2`, while a
+  bare `2` is still dropped -- silently dropping broken input is the fault class
+  S174 closed. **python-chess agrees**: `adocs/data/S175_book_conformance.py`
+  reads all three new fixtures natively at `missing 0 extra 0
+  weight_mismatch 0`. **Nothing in the engine moved**: no `src/` file in the
+  diff, so no `Bench:` line is owed (DEC-140) and `tools/gate.sh` does not exist
+  yet; INV-6 reproduces to the node (121512 / 800769 / 62907 and
+  639228 / 3430710 / 367858, `c3d5` / `e2a6` / `d7c8q`), and `src/openings.bin`
+  rebuilt from `books/8moves_v3.pgn` is byte-identical at `77f47f1b...db06b58`
+  -- 34700 games, 0 cut short, 172232 entries. Gate 27/27 in both builds, format
+  clean under `CLANG_FORMAT_MAJOR=22`. **Documents**: `DEV_MANUAL.md`'s
+  move-number paragraph says the whitespace form is read and what happens to the
+  remainder, its cut-short sentence says the token is quoted as written, and
+  `adocs/specs.md`'s book clause is widened from S178's wording -- the
+  coordinator's own call, this step held the machine; `MANUAL.md` checked, no
+  UCI surface touched. **`1 .e4` builds correctly only because S201 fixed the
+  parser first**; the other import-format leniencies S178 listed are untouched.
+- Previously: **S173, 2026-09-07 -- `make_book build` replaces a book
   atomically.** The bytes go to `<out>.tmp` beside the destination and are
   renamed over `--out` only after the write, `fsync` and `close` all succeed;
   every failure the process lives through unlinks the temporary and exits 1
@@ -76,7 +111,7 @@ Updated: 2026-09-07, by hand.
   mean complete" paragraph now states the guarantee and carries the
   `ulimit -f` reproduction as the root-free form of S146's ram disk;
   `MANUAL.md` and `adocs/specs.md` checked, neither moves.
-- Previously: **S178, 2026-09-07 -- `movetext_to_san()` reads a move number
+- Before that: **S178, 2026-09-07 -- `movetext_to_san()` reads a move number
   indication glued to the move it introduces.** `1.e4`, `2...Nc6`, `4.O-O`: PGN
   import format, 8.2.2.1. Before, the whole token reached `algebraic_to_move()`,
   got 0 from S174's fail-closed parser, and the build was refused at ply 0 --
@@ -102,7 +137,7 @@ Updated: 2026-09-07, by hand.
   and cuts the game short by name -- and whether the cut-short message should
   carry the token as written (`1.e4`) rather than the move part (`e4`).
 - **S178's two deferred questions answered by the owner, 2026-09-07, DEC-147;
-  both become S200, at Open entry 1.** The whitespace form of a move number
+  both become S200, done the same day.** The whitespace form of a move number
   indication (`1 . e4`, `1 .e4`, `1. ... e5`, which PGN 8.2.2.1 allows) is
   folded into a follow-up rather than left refused, and the cut-short message
   will quote the token as the PGN wrote it -- the owner's condition on the
@@ -150,7 +185,7 @@ Updated: 2026-09-07, by hand.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
-  entry 20.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  entry 19.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
@@ -171,7 +206,7 @@ Updated: 2026-09-07, by hand.
   deferred to the owner:** S151's re-test of S085's vector at a control at
   least four times 8+0.08 prices a `{-5, 0}` pair near 72 hours worst case by
   DEC-143's formula; whether that pair, a cheaper pair or a fixed-rounds
-  reading is wanted decides when it runs -- it sits at Open entry 19 until
+  reading is wanted decides when it runs -- it sits at Open entry 18 until
   then. Nothing in the engine changed, no run was started, the gate was green
   at `66cbc54` before the edit (27/27 in both builds) and the four prose
   checks pass after it.
@@ -572,7 +607,7 @@ Updated: 2026-09-07, by hand.
     `tools/forfeit_report.py`, recorded beside S105's numbers.** The owner
     refused the same run on the MacBook (DEC-139: a number about a machine
     that is leaving); DEC-143 makes it the rule after every machine change,
-    and it is S198's A/A, Open entry 5 since DEC-144. Until it is taken, the
+    and it is S198's A/A, Open entry 4 since DEC-144. Until it is taken, the
     harness has no pair-variance or forfeit figure for the machine the
     verdicts run on.
   - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
@@ -581,7 +616,7 @@ Updated: 2026-09-07, by hand.
     is about 72 hours worst case and 44 on a bound. Options: that pair on a
     weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
     +/-8 Elo) which would change the accepts and is therefore a decision. It
-    sits at Open entry 19 behind S148 and S159 until answered.
+    sits at Open entry 18 behind S148 and S159 until answered.
   - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
     (`go infinite` printing `bestmove` unasked; a bad token in `position ...
     moves` skipped silently; the aborted-iteration best move assuming its table

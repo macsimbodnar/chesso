@@ -38,6 +38,17 @@
 #  11. the cut-short refusal still precedes any write: a pre-existing
 #      destination survives it untouched
 #
+# S200 added two more, over the rest of PGN 8.2.2.1 and over the message. White
+# space may sit between the digits and the dots, so the dots reach the splitter
+# as a token of their own; and a message that quotes the move alone matches many
+# lines of a PGN where the token as written matches one. (Numbered 12 and 13:
+# S200's file says 9 and 10, which S173 had taken by the time it ran.)
+#
+#  12. the whitespace form builds -- the dots alone are dropped, dots glued to
+#      a move are split off it -- byte-identically to the export-form twin
+#  13. a cut-short message quotes the token as the PGN wrote it, `2.Qxf7` and
+#      not `Qxf7`
+#
 # Everything happens in a throwaway directory. No engine is searched.
 #
 # Usage: test_make_book_tools.sh <make_book> <pgn_to_positions>
@@ -75,6 +86,10 @@ write_pgn '1. e4 e5 2. Qxf7 Nc6 *' "$tmp/illegal.pgn"
 write_pgn '1.e4 e5 2.Nf3 Nc6 *' "$tmp/glued.pgn"
 write_pgn '1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. O-O *' "$tmp/castle_spaced.pgn"
 write_pgn '1.e4 e5 2.Nf3 {c} 2...Nc6 3.Bc4 Nf6 4.O-O *' "$tmp/castle_glued.pgn"
+write_pgn '1 . e4 e5 2 . Nf3 Nc6 *' "$tmp/spaced_dots.pgn"
+write_pgn '1 .e4 e5 2 .Nf3 2 ...Nc6 *' "$tmp/spaced_glued.pgn"
+write_pgn '1. e4 1. ... e5 *' "$tmp/spaced_black.pgn"
+write_pgn '1.e4 e5 2.Qxf7 *' "$tmp/glued_illegal.pgn"
 
 # 1. The control.
 if ! "$make_book" build "$tmp/control.pgn" --out "$tmp/control.bin" \
@@ -182,6 +197,44 @@ printf 'previous book' > "$tmp/refused.bin"
 [[ "$(cat "$tmp/refused.bin")" == "previous book" ]] \
   || fail "refused: the destination changed"
 [[ ! -e "$tmp/refused.bin.tmp" ]] || fail "refused: a temporary was created"
+
+# 12. White space between the digits and the dots, PGN 8.2.2.1. The dots reach
+#     the splitter as their own token: alone they are dropped, and a move glued
+#     behind them is split off it exactly as `1.e4` is.
+for form in spaced_dots spaced_glued; do
+  if ! "$make_book" build "$tmp/$form.pgn" --out "$tmp/$form.bin" \
+      > "$tmp/$form.out" 2>&1; then
+    fail "$form: build exited non-zero: $(cat "$tmp/$form.out")"
+  fi
+  grep -q 'games cut short      0' "$tmp/$form.out" \
+    || fail "$form: the whitespace form cut the game short: $(cat "$tmp/$form.out")"
+  grep -q 'entries written      4' "$tmp/$form.out" \
+    || fail "$form: expected 4 entries: $(cat "$tmp/$form.out")"
+  { [[ -f "$tmp/control.bin" ]] && [[ -f "$tmp/$form.bin" ]] \
+    && cmp -s "$tmp/control.bin" "$tmp/$form.bin"; } \
+    || fail "$form: book differs from the control's"
+done
+# A black indication spaced away from its own dots, mid-game: `1. ... e5`.
+if ! "$make_book" build "$tmp/spaced_black.pgn" --out "$tmp/spaced_black.bin" \
+    > "$tmp/spaced_black.out" 2>&1; then
+  fail "spaced_black: build exited non-zero: $(cat "$tmp/spaced_black.out")"
+fi
+grep -q 'games cut short      0' "$tmp/spaced_black.out" \
+  || fail "spaced_black: the game was cut short: $(cat "$tmp/spaced_black.out")"
+grep -q 'entries written      2' "$tmp/spaced_black.out" \
+  || fail "spaced_black: expected 2 entries: $(cat "$tmp/spaced_black.out")"
+
+# 13. The message quotes the token as written. `2.Qxf7` names the one line that
+#     holds it; `Qxf7` names every line that plays the move somewhere.
+"$make_book" build "$tmp/glued_illegal.pgn" --out "$tmp/glued_illegal.bin" \
+  > "$tmp/glued_illegal.out" 2>&1
+status=$?
+[[ $status -ne 0 ]] || fail "glued_illegal: build exited 0"
+grep -q "cannot parse '2.Qxf7' at ply 2" "$tmp/glued_illegal.out" \
+  || fail "glued_illegal: the report does not quote the token as written: $(cat "$tmp/glued_illegal.out")"
+# Without this the property passes on a substring of the bare form.
+grep -q "cannot parse 'Qxf7'" "$tmp/glued_illegal.out" \
+  && fail "glued_illegal: the report still quotes the bare move: $(cat "$tmp/glued_illegal.out")"
 
 # 5. pgn_to_positions, annotated against clean.
 printf 'e4 e5 Nf3 Nc6\n' | "$pgn_to_positions" > "$tmp/p_control.tsv" \

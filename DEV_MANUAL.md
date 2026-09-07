@@ -2070,20 +2070,30 @@ letter, because a leading `.` or `-` used to fall to the pawn branch and the
 disambiguation walk then swallowed the piece letter, turning `.Nf3` into the
 legal pawn push `f2f3` -- and strips PGN suffix annotations (`!`, `?`, `!?`,
 `?!`, `!!`, `??`) as it strips `+` and `#`; `build` exits non-zero and writes nothing when any game was
-cut short, naming the game and the token on stderr (the first twenty).
+cut short, naming the game and the token on stderr (the first twenty). The
+token is quoted as the PGN wrote it, so a glued move number is part of the
+quote: `cannot parse '2.Qxf7' at ply 2` names the one line that holds it where
+`Qxf7` would name every line that plays the move somewhere (S200).
 `--allow-cut-short` is the deliberate form of the old behaviour: such a game is
 dropped from the bad token on and the count is reported.
 `tests/test_make_book_tools.sh` holds all of it, and the shipped book rebuilt
 through the gated tool is byte-identical to the committed file.
 
-**Move numbers are read in both PGN forms.** `movetext_to_san` drops a move
+**Move numbers are read in every PGN form.** `movetext_to_san` drops a move
 number indication whether it stands alone, which is export format (`1. e4 e5`,
 `2... Nc6`), or is glued to the move it introduces, which import format allows
 (`1.e4 e5`, `2...Nc6`, `4.O-O`): digits, then one or more dots, then the move,
-and only the move survives (S178). A token of digits and dots alone is still
-dropped and a bare number is still dropped. Whitespace *between* the digits and
-the dots — `1 . e4`, which 8.2.2.1 also allows — is not read: the leading `.`
-token reaches the parser and cuts the game short by name.
+and only the move survives (S178). Whitespace *between* the digits and the dots
+— `1 . e4`, `1 .e4`, `1. ... e5`, which 8.2.2.1 allows as well — is read too
+(S200). The dots then arrive as a token with no digits in front of them and the
+same rule runs from the front: `.` and `...` alone are dropped, `.e4` gives
+`e4`, `...Nc6` gives `Nc6`. Nothing legal begins with a period — 7.3 makes it a
+token by itself and 7.9 keeps it out of a symbol's continuation characters — so
+a leading run of dots is always an indication. A token of digits and dots alone
+is still dropped and a bare number is still dropped. What is left after the dots
+is handed to the parser and never re-classified: `.2` cuts the game short as
+`.2`, the same as `1.2` does, because silently dropping broken input is the
+fault class S174 closed.
 
 Weights are two for a win, one for a draw and nothing for a loss, from the
 moving side's point of view, summed over every game that played the move; an

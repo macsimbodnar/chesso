@@ -69,16 +69,27 @@ outcome_t outcome_from_string(const std::string& text)
 }
 
 
+// One movetext token, twice: what the parser should be handed, and what the
+// PGN wrote. They differ when a move number indication was glued to the move,
+// and a cut-short message quotes the second -- `2.Qxf7` names the one line that
+// holds it where `Qxf7` names every line that plays the move somewhere. S200.
+struct san_token_t
+{
+  std::string move;
+  std::string as_written;
+};
+
+
 // Splits movetext into SAN tokens, dropping everything PGN allows to sit
 // between them: `{...}` comments (which may span lines), `;` line comments,
 // `(...)` variations at any nesting depth, `$12` numeric annotation glyphs,
-// move number indications -- alone or glued to the move they introduce, which
-// is import format, PGN 8.2.2.1 -- and the result token. Variations are dropped
-// rather than followed: a book is built from what was played, not from what was
-// analysed.
-std::vector<std::string> movetext_to_san(const std::string& movetext)
+// move number indications -- alone, glued to the move they introduce, or with
+// white space between the digits and the dots, all of which is import format,
+// PGN 8.2.2.1 -- and the result token. Variations are dropped rather than
+// followed: a book is built from what was played, not from what was analysed.
+std::vector<san_token_t> movetext_to_san(const std::string& movetext)
 {
-  std::vector<std::string> tokens;
+  std::vector<san_token_t> tokens;
 
   size_t i = 0;
   int variation_depth = 0;
@@ -132,20 +143,28 @@ std::vector<std::string> movetext_to_san(const std::string& movetext)
       continue;
     }
 
+    // The token as the PGN wrote it, taken before the indication is stripped
+    // off it: the cut-short message quotes this one.
+    const std::string as_written = token;
+
     // A move number indication: digits, then one or more dots. It stands alone
     // in export format ("1.", "1..."), and import format lets it be glued to
     // the move it introduces ("1.e4", "2...Nc6"), which is split off here.
-    // The dot test keeps "1-0" and "1/2-1/2" out, though the result test above
-    // has already dropped them.
+    // 8.2.2.1 also allows white space between the digits and the dots, so the
+    // dots arrive with no digits in front ("1 . e4", "1 .e4", "1. ... e5") and
+    // the same rule applies from the front of the token -- nothing legal begins
+    // with a period, which 7.3 makes a token by itself and 7.9 excludes from a
+    // symbol's continuation characters. The dot test keeps "1-0" and "1/2-1/2"
+    // out, though the result test above has already dropped them.
     const size_t dot = token.find_first_not_of("0123456789");
     if (dot == std::string::npos) { continue; }  // a bare number
-    if (dot > 0 && token[dot] == '.') {
+    if (token[dot] == '.') {
       const size_t rest = token.find_first_not_of('.', dot);
       if (rest == std::string::npos) { continue; }  // the indication alone
       token.erase(0, rest);
     }
 
-    tokens.push_back(token);
+    tokens.push_back({token, as_written});
   }
 
   return tokens;
@@ -368,16 +387,16 @@ int build(const build_options_t& options)
       continue;
     }
 
-    const std::vector<std::string> tokens = movetext_to_san(pgn_game.movetext);
+    const std::vector<san_token_t> tokens = movetext_to_san(pgn_game.movetext);
 
     int ply = 0;
 
-    for (const std::string& token : tokens) {
+    for (const san_token_t& token : tokens) {
       if (ply >= options.max_ply) { break; }
 
       const color_t mover = game.board.active_color;
       const uint64_t key = get_key(&game.board);
-      const move_t move = algebraic_to_move(token, &game);
+      const move_t move = algebraic_to_move(token.move, &game);
 
       if (move == 0 || !make_move(&game, move)) {
         // One unparseable token poisons every position after it, so the game is
@@ -389,7 +408,7 @@ int build(const build_options_t& options)
         report_cut_short(
             rejected_games, games + 1,
             (std::string(move == 0 ? "cannot parse '" : "cannot play '") +
-             token + "' at ply " + std::to_string(ply))
+             token.as_written + "' at ply " + std::to_string(ply))
                 .c_str());
         break;
       }

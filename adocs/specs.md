@@ -310,10 +310,13 @@ applied and no caller could see. `1 .Nf3` is legal PGN import format, so a
 book could be built from a wrong board with `games cut short 0`; characters
 after the first stay as tolerated as they were, `N.f3` giving `g1f3`
 (DEC-148). **Since S178 the splitter also reads a move
-number indication glued to the move it introduces** (`1.e4`, `2...Nc6`), which
-is PGN import format, so a hand-written PGN builds the same book as its export
-form twin; `books/8moves_v3.pgn` carries no such token, so the digest above is
-unchanged and the engine binary with it. It replaced
+number indication glued to the move it introduces** (`1.e4`, `2...Nc6`), **and
+since S200 the whitespace form as well** (`1 . e4`, `1 .e4`, `1. ... e5`) --
+all of it PGN import format, 8.2.2.1 -- so a hand-written PGN builds the same
+book as its export form twin, and a cut-short message quotes the token as the
+PGN wrote it, `2.Qxf7` rather than the `Qxf7` that matches every line playing
+the move somewhere (DEC-147); `books/8moves_v3.pgn` carries no such token, so
+the digest above is unchanged and the engine binary with it. It replaced
 a 2610256-byte, 163141-entry book inherited from the `bitboard` branch whose
 origin no document, commit or person could establish -- that book is deleted,
 which is the ruling DEC-131 records. `OwnBook` defaults false and no measurement
