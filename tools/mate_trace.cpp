@@ -1,7 +1,7 @@
 // What the transposition table holds along a reported line, after a game has
 // been replayed into it. S171.
 //
-//   build/tools/mate_trace --fen '<fen>' --moves '<game>' --start 40 \
+//   build/tools/mate_trace --fen '<fen>' --moves '<game>' --start 40
 //       --warm 'nodes 1500000' --final 'depth 11' --line '<reported pv>'
 //
 // The defect this exists for cannot be read off a cold search: a mate score
