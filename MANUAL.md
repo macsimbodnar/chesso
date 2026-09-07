@@ -258,7 +258,57 @@ Convenience only, not part of UCI. A GUI never sends these.
 | `fen` | print the current position as FEN |
 | `help` | list commands |
 | `test` | run the built-in self-test over seven positions. `test <n>` sets the depth, default 6 |
+| `bench` | print the node signature — see below. `bench <n>` sets the depth, but only the bare form is the signature |
 | `clean-tt` | clear the transposition table |
+
+### The node signature, `bench`
+
+`bench` searches eight fixed positions to a fixed depth and prints one number
+that stands for the whole search tree. It is what every commit touching `src/`
+carries in its message, and what `tools/gate.sh` checks the built binary
+against. A change that moves the number changed the search; a change that does
+not is behaviour-neutral.
+
+It is reachable two ways, and both print the same number:
+
+```
+printf 'bench\nquit\n' | chesso        # over stdin, like any other command
+chesso bench                            # on argv, the form OpenBench runs
+```
+
+`bench` runs synchronously, unlike `go`, so a `quit` written after it on the
+same pipe is read only once it has finished.
+
+The output is the `info` lines of each search, a `bestmove <move>` line after
+each of the eight positions, and last, on its own line:
+
+```
+<nodes> nodes <nps> nps
+```
+
+`<nodes>` is the sum over the eight searches and `<nps>` is that total over the
+summed search time, so the rate varies from run to run and the node count does
+not. Two things fix the number and both are compiled in: the depth, and the
+position set. Changing either changes the signature deliberately.
+
+Three caveats, all of them about keeping the number comparable:
+
+- **The table size is not fixed by the command.** A `setoption name Hash`
+  before `bench` changes the count. The signature is the number a fresh
+  process prints at the default 16 MB, which is what both invocations above
+  give.
+- **Single-threaded.** The search is single-threaded in every build
+  (`Threads` has range 1 to 1), so there is no thread count to state.
+- **Per standard library, for now.** The Zobrist keys come from
+  `std::uniform_int_distribution<uint64_t>`, whose output is
+  implementation-defined, so two platforms can disagree on the number without
+  either being wrong. glibc and Apple libc++ have agreed on every count taken
+  so far; until the keys are generated in-repo, a disagreement between
+  machines is investigated before it is called a behaviour change.
+
+Between positions `bench` does what `ucinewgame` does — clears the table, drops
+any proven mate line — so each position is searched cold and the total does not
+depend on the order.
 
 ### Non-standard position shortcuts
 

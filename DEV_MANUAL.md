@@ -532,17 +532,60 @@ build carrying it.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 52 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 60 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
-Those 52 s -- 24 tests, measured 2026-09-02, against 48 s over 23 before S170
-added `test_mate_carry` at 6.6 s and 42 s over 22 before S147 added
-`test_mate_pv` at 3.1 s; the label total moves a second or two between runs, so
-read it as a size and not as a stopwatch -- assume `build/` was configured
-`Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`, the same
-suite takes about two minutes — the assertions are on and the optimiser is off
-— and `test_movegen` and `test_search` take 165 s and 216 s on their own. Until
+### The gate, `tools/gate.sh`
+
+One command runs the TESTS rule's whole chain and then checks the commit's
+signature. Run it before committing, on the message you are about to use, and
+again on the commit once it exists:
+
+```bash
+export CLANG_FORMAT_MAJOR=22          # this machine only, DEC-146
+tools/gate.sh --message .git/COMMIT_MSG   # the staged tree, message not yet committed
+tools/gate.sh                             # HEAD
+tools/gate.sh <ref>                       # any other commit
+tools/gate.sh --build-parent              # for 'No functional change' over an
+                                          # ancestry that predates the rule
+```
+
+It prints `GATE-DONE <total>` or `GATE-FAILED: <reason>` as its last line,
+success and failure both, so a detached run can be watched (WATCHERS rule).
+What it does, in order: `cmake --build build` and the `fast` suite, the same
+two for `build-tune`, `./clang-format.sh --check`, then the signature.
+
+What it enforces is DEC-140. A commit touching `src/` carries exactly one of
+`Bench: <n>` or `No functional change`, and the gate refuses a message that
+carries neither, both, a wrong `<n>`, or an unsupportable `No functional
+change` — for which it reads the parent's total off the nearest ancestor
+`Bench:` line, or builds the parent with `--build-parent`. A commit touching
+nothing under `src/` owes neither line. In `--message` mode the tree under test
+is the staged one, so the run is refused outright when the working tree has
+unstaged edits: a signature taken from a tree the commit will not contain is
+worse than no signature.
+
+`tools/search_bench.py` keeps its own role, which is timing and per-position
+counts. The gate is one number for the whole tree; `search_bench.py` is three
+numbers you can attribute.
+
+Those 60 s -- 28 tests, measured 2026-09-08, against 27 tests and 52 s at
+`6688a01`, 48 s over 23 before S170 added `test_mate_carry` at 6.6 s and 42 s
+over 22 before S147 added `test_mate_pv` at 3.1 s. S189 accounts for the last
+7 s: `test_uci_surface` went from 0.03 s to 6.8 s, because its new case
+searches the whole bench set twice at `BENCH_DEPTH`, and the one test it added,
+`test_gate_script`, costs 0.24 s. The label total moves a second or two between
+runs, so read it as a size and not as a stopwatch -- assume `build/` was
+configured `Release`. Configured `Debug`, or with an empty `CMAKE_BUILD_TYPE`,
+the same suite takes about two minutes — the assertions are on and the
+optimiser is off — and `test_movegen` and `test_search` take 165 s and 216 s on
+their own. **Since S189 `test_uci_surface` joins them at 157 s in `Debug`**,
+measured 2026-09-08 against 6.8 s in `Release`: its bench case searches the
+eight-position set twice at `BENCH_DEPTH`, and that is a search, so it pays the
+Debug factor like the other two. It is the shipping depth on purpose — a case
+that benched shallower would not be testing the number that ships — and the
+cost lands on the Debug gate, not on the per-commit one. Until
 S067 every `fast` target carried a flat 60 s timeout, so a debug directory
 reported those two as `Timeout`, which reads as two test failures rather than
 as a wrongly configured build directory. It happened twice on 2026-08-13, the
@@ -1292,6 +1335,35 @@ to exist.
 ./build/tests/bench_movegen        # perft and generator throughput
 ./build/tests/bench_movegen -r 40  # long enough that a profiler window cannot leave the phase
 ```
+
+### The node signature
+
+One number for the whole search tree, over eight fixed positions at a fixed
+depth. It is what every commit touching `src/` carries and what `tools/gate.sh`
+checks; `MANUAL.md` has the command's contract and its caveats.
+
+```bash
+chesso bench                          # the argv form OpenBench runs
+printf 'bench\nquit\n' | chesso      # the same number over stdin
+chesso bench 9                        # a shallower run; NOT the signature
+```
+
+**At `S189`, on the workstation: `24880255`.** Quote it with its commit, the
+way every other number on this page is quoted — it moves with every functional
+change by design, which is the whole point of it.
+
+`BENCH_DEPTH` is 14, chosen as the largest depth whose mean is at most five
+seconds here. The sweep, 2026-09-08, idle, on mains, governor `performance`,
+`hyperfine -w 1 -r 5`:
+
+| depth | mean | nodes |
+|---|---|---|
+| 9 | 0.208 s ± 0.003 | 1587743 |
+| 10 | 0.344 s ± 0.007 | 2580811 |
+| 11 | 0.583 s ± 0.007 | 4437125 |
+| 12 | 0.997 s ± 0.008 | 7408328 |
+| 13 | 1.754 s ± 0.006 | 13064004 |
+| **14** | **3.445 s ± 0.028** | **24880255** |
 
 The search is not perft. perft measures generate, make and unmake; a search also
 evaluates, orders moves and probes the transposition table, so a change can move

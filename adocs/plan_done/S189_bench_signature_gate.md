@@ -1,14 +1,24 @@
 id:         S189
 goal:       a `bench` UCI command prints one node signature over a fixed position set, every commit touching `src/` carries it, and `tools/gate.sh` runs the gate and checks the built binary against the message
 accepts:    `bench` is in the UCI dispatch table: `ucinewgame`, then a fixed set of at least eight positions -- the three of `tools/search_bench.py` plus positions that reach quiescence mates, promotions, en passant and castling -- each searched at a fixed depth, the per-position best moves printed above one final line `<nodes> nodes <nps> nps`; deterministic single-threaded: two runs in one process and two processes give the same total; `MANUAL.md` documents the command before `tests/test_uci_surface.cpp`'s golden list gains it (SURFACE rule); `tools/gate.sh` runs the TESTS rule command and then compares `build/src/chesso bench`'s total with the `Bench: <n>` line of the commit under test (HEAD by default, or a message file passed to it), exits non-zero on a mismatch or on a missing line in a commit that touched `src/`, and accepts `No functional change` only when the total equals the parent commit's; observed red on a commit whose message carries the previous signature after a functional change, then green; `DEV_MANUAL.md` "Test" and "Measure" say so and record the current signature; `tools/search_bench.py` keeps its timing role unchanged
-touches:    src/chesso.cpp, MANUAL.md, tests/test_uci_surface.cpp, tools/gate.sh, DEV_MANUAL.md, adocs/specs.md
+touches:    src/chesso.cpp, src/main.cpp, MANUAL.md, tests/test_uci_surface.cpp, tests/test_gate_script.sh, tests/CMakeLists.txt, tools/gate.sh, DEV_MANUAL.md, adocs/specs.md
 excludes:   any change to the search; changing what `tools/search_bench.py` measures; a remote CI service (considered and refused, `adocs/testing_strategy.md` section 5)
 decisions:  DEC-139, DEC-140
 closes:     2026-09-04_test_review-F07
 blocks:
 paused_by:
-author:
-done:
+author:     agent, 2026-09-08
+done:       2026-09-08. `bench` is in the dispatch table and prints
+            **24880255 nodes** over eight fixed positions at `BENCH_DEPTH` 14,
+            identical across three fresh processes and across the stdin and
+            argv forms; `tools/gate.sh` runs the TESTS chain in both builds and
+            then refuses a message whose number is not the binary's, observed
+            red at `GATE-FAILED: message says Bench: 24880255, the binary
+            benches 13064004` and green at `GATE-DONE 13064004` after the
+            amend. INV-6 identical at depths 9 and 12, interleaved timing 1.00x.
+            Section 10's four questions answered by the owner. One real bug
+            found in `gate.sh` by its own test and fixed; one finding recorded
+            for S192.
 
 ## Why this exists
 
@@ -295,3 +305,171 @@ remove worktree and branch. Quote both lines in the stamp.
 2. OpenBench's `./binary bench` argv form needs `src/main.cpp`: add it to `touches:` now, or keep the stdin form and plan the argv form later.
 3. `KILLER_POS` fails python-chess `is_valid()` (nine white pawns): keep it (the engine loads it, the properties are verified, OpenBench asks only determinism), or derive a valid variant by removing one uninvolved white pawn and re-verifying `f5e6` and the promotions with the same script.
 4. `-j8` in the gate is the rule's verbatim text; a `JOBS` override defaulting to 8 for the workstation deviates from the TESTS wording -- allow it or not.
+
+## What was done, 2026-09-08
+
+### The owner's four answers (section 10)
+
+1. **`touches:` extended**, `tests/CMakeLists.txt` and `tests/test_gate_script.sh`
+   added; the gate script keeps its test.
+2. **The argv form was added now**, so `src/main.cpp` joins `touches:`.
+   `./chesso bench` and `printf 'bench\nquit\n' | chesso` print the same number.
+3. **`KILLER_POS` is kept as it is.** It fails python-chess `is_valid()` on
+   nine white pawns and it is the only position in the set carrying the en
+   passant capture and twelve promotions; a signature needs determinism, not
+   legality. Said so in `MANUAL.md` and in the comment above the array.
+4. `-j8` kept verbatim, the TESTS rule's own text; no `JOBS` override.
+
+### The position set, verified here
+
+`~/.venv/chess` python-chess **1.11.2**, and stockfish
+**dev-20260810-5062aee5** at `go depth 20` through `chess.engine` (the safe
+invocation, TOOLCHAIN.md). Eight distinct FENs; every property the MacBook
+recorded on 2026-09-05 reproduces:
+
+| position | legal | en passant | castling | promotions | valid |
+|---|---|---|---|---|---|
+| midgame | 46 | — | — | 0 | yes |
+| kiwipete | 48 | — | `e1g1`, `e1c1` | 0 | yes |
+| tactical | 44 | — | `e1g1` | 4 | yes |
+| KILLER_POS | 42 | `f5e6` | — | 12 | **no** |
+| CMK_POS | 43 | — | — | 0 | yes |
+| FINE_70_POS | 3 | — | — | 0 | yes |
+| MATE_IN_2_W_POS | 29 | — | — | 0 | yes, `#+2` |
+| MATE_IN_2_B_POS | 29 | — | — | 0 | yes, `#-2` |
+
+The accepts asked for quiescence mates, promotions, en passant and castling;
+all four are present. `KILLER_POS` reports
+`TOO_MANY_WHITE_PAWNS|TOO_MANY_WHITE_PIECES`.
+
+### `BENCH_DEPTH`, form (b)
+
+Idle workstation on mains, governor `performance`, `hyperfine -w 1 -r 5`:
+
+| depth | mean | nodes |
+|---|---|---|
+| 9 | 0.208 s ± 0.003 | 1587743 |
+| 10 | 0.344 s ± 0.007 | 2580811 |
+| 11 | 0.583 s ± 0.007 | 4437125 |
+| 12 | 0.997 s ± 0.008 | 7408328 |
+| 13 | 1.754 s ± 0.006 | 13064004 |
+| **14** | **3.445 s ± 0.028** | **24880255** |
+
+14 is the largest at most five seconds, the rule the step set itself, and
+inside the guide's predicted 12–14 band.
+
+### The signature: 24880255
+
+Three fresh processes: `24880255` each time, at 7.29, 7.32 and 7.37 M nps — the
+rate moves, the count does not. `./build/src/chesso bench` gives the same
+number as the stdin form. Best moves `c3d5`, `e2a6`, `d7c8q`, `g7h8q`, `a7a6`,
+`a1b2`, `e5e6`, `e5e6`; the first three are `search_bench.py`'s own, unchanged.
+
+### INV-6, and the timing
+
+`tools/search_bench.py` at depth 9 gives **121512 / 800769 / 62907** and at
+depth 12 **639228 / 3430710 / 367858**, best moves `c3d5` / `e2a6` / `d7c8q` at
+both — identical to `.moltke.local.md`'s recorded values, so no search line
+moved. `hyperfine -w 2 -r 10` over `search_bench.py` at depth 12, this tree
+against a `6688a01` worktree build: **662.2 ms ± 6.0 against 659.1 ms ± 6.4**,
+a ratio of 1.00 ± 0.01. Under 3 %, and no search code was touched.
+
+### Red then green
+
+Not with a search mutant, and that is the finding. **Every node-moving change
+tried was refused by the fast suite before the signature was ever compared**,
+so the signature branch cannot be demonstrated with one:
+
+- `M01_nmp_in_check` from `adocs/data/2026-09-04_test_review/mutants.py`, the
+  mutant the guide named → `test_mate_carry` red.
+- `ORDER_KILLER_0`/`ORDER_KILLER_1` swapped → `test_evaluation` red, which
+  asserts the band ordering as an invariant. Correct behaviour.
+- `MVV_KNIGHT` 300 → 310, a change no band assertion covers →
+  `test_mate_carry` red again.
+
+`test_mate_carry` is the common cause. Its anti-vacuity precondition —
+`mate_lines >= expected_mate_lines(name)`, "at least 5 when the case was
+chosen … needs re-choosing, not deleting" — is a search-tree-sensitive golden,
+so any change that reorders the tree trips it. That is the test doing its job,
+and it is also a golden in the DEC-142 sense with no script that re-derives it.
+**Recorded for S192**, which owns naming and scripting the goldens.
+
+The demonstration used the case `MANUAL.md` already names as a deliberate
+signature change, `BENCH_DEPTH` 14 → 13, in a scratch worktree off this tree:
+
+```
+GATE-DONE 24880255                                            # baseline
+GATE-FAILED: message says Bench: 24880255, the binary benches 13064004
+GATE-DONE 13064004                                            # after the amend
+GATE-DONE 13064004 (no functional change)   # a comment-only src/ commit after
+```
+
+The `No functional change` path read the parent's total off the ancestry, not
+by building it.
+
+### One bug in `tools/gate.sh`, found by its own test and fixed
+
+Case 8 of `tests/test_gate_script.sh` — a binary that prints no signature line —
+printed the trap's generic `GATE-FAILED: exited 1` instead of the specific
+message written for it. `grep` exits 1 when nothing matches, `set -o pipefail`
+fails the whole pipeline, and errexit killed the script one line above its own
+check. `bench_of` is now called `|| true` at both call sites, and the comment
+at the site says why. The test was written first and observed red.
+
+### Tests
+
+- `tests/test_uci_surface.cpp`, new case *"bench prints one final signature
+  line and repeats its total"*: exactly one line matching
+  `^[0-9]+ nodes [0-9]+ nps$` and it is last, at least eight `bestmove` lines,
+  the total equal to the sum of each search's last `info nodes` field, and a
+  second run in the same process giving the same total and the same moves.
+  **Falsifiability observed, two mutants killed**: `total_nodes +=
+  res.total_node_explored + 1` and a second signature-shaped line printed above
+  the real one.
+- `tests/test_gate_script.sh`, nine cases in a throwaway git repository whose
+  PATH holds stubs for `cmake`, `ctest` and `clang-format.sh` and a
+  `build/src/chesso` printing a canned line. git is real, because the
+  touched-paths and message reading is the half a stub would hide. Registered
+  `fast`, 0.24 s.
+- **SURFACE order observed in both directions**: `bench` in the dispatch table
+  and not in the golden gave *"Present but not in the golden list: [bench]"*;
+  `bench` in the golden and not in `MANUAL.md` gave *"MANUAL.md does not
+  document the command [bench]"*. Then the manual row, then green.
+- Not owed and not done: guard test, mutant list entry, Debug self-play — no
+  search, `make_move` or generator change.
+
+### Cost, measured
+
+The fast suite goes from 52 s over 27 tests to **61 s over 28**. All of the
+increase is `test_uci_surface`, 0.03 s → 6.8 s, because its case searches the
+bench set twice at depth 14. **In `Debug` that case is 157 s**, measured, which
+lands on S197's Debug gate rather than on the per-commit one. Kept at the
+shipping depth on purpose: a case that benched shallower would not be testing
+the number that ships.
+
+### Documents
+
+- `MANUAL.md`: the `bench` row, and a new *"The node signature, `bench`"*
+  section — both invocations, the output format, and the three caveats that
+  keep the number comparable (`Hash` is not fixed by the command, the search is
+  single-threaded, the Zobrist keys are per standard library until S179).
+- `DEV_MANUAL.md` *"Test"*: a new *"The gate, `tools/gate.sh`"* subsection —
+  the four invocations, the markers, what it enforces, and that
+  `search_bench.py` keeps the per-position role. The suite timing and test
+  count updated, and the `Debug` paragraph given the 157 s.
+- `DEV_MANUAL.md` *"Measure"*: a new *"The node signature"* subsection with
+  **24880255 at S189**, quoted with its step the way every other number on that
+  page is, and the depth sweep.
+- `adocs/specs.md`: the INV-6 bullet gains the paragraph saying the neutral half
+  is enforced rather than performed, and the invariant table's INV-6 row stops
+  saying *"no test: a procedure"* and names the gate and the two tests.
+- `README.md` untouched, as the DOCS rule requires.
+
+### One thing carried forward
+
+`git worktree` does not bring the submodules (`tests/doctest`, `tests/json`,
+`tests/pixello`), so a worktree cannot build the test targets without them —
+`fastchess.sh` never met this because it builds only the `chesso` target, and
+`gate.sh --build-parent` builds only `chesso` for the same reason. It cost a
+gate run to find during the demonstration. Not a defect in anything this step
+owns; written down so the next agent that gates inside a worktree knows.

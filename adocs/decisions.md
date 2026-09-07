@@ -8390,3 +8390,53 @@ Consequences: The mate-line case set has probed only stride 1 until now, so the
               `start` and `stride` must leave the last ply on the schedule, which
               the guard test now checks when it reads a row: a schedule that steps
               over it would pass by never looking.
+
+---
+
+## DEC-152  2026-09-08  The bench set keeps an illegal position, benches at depth 14, and the argv form ships with it
+Tags:         testing, gate, signature, S189
+Context:      S189 left four questions to the owner before its position set and
+              its depth could be fixed. Three of them change what the signature
+              is or what the step touches, and all three are the kind a future
+              reader re-derives from the code rather than from a record. The
+              signature is a compiled-in constant plus a compiled-in list of
+              eight FENs, so every one of these choices is frozen into
+              `24880255` and into every `Bench:` line after it.
+Decision:     By the owner, 2026-09-08, answering S189 section 10.
+              **1.** `KILLER_POS` stays in the set although python-chess reports
+              it `TOO_MANY_WHITE_PAWNS|TOO_MANY_WHITE_PIECES` -- nine white
+              pawns, `is_valid() == False`. The engine loads it, `test` already
+              searches it, and it is the only position in the set carrying both
+              the en passant capture (`f5e6`) and twelve promotions. A signature
+              needs determinism, which OpenBench states as its only
+              requirement; legality buys nothing here.
+              **2.** `BENCH_DEPTH` is **14**, by the rule the step set itself --
+              the largest depth whose mean is at most five seconds on this
+              workstation. Measured, `hyperfine -w 1 -r 5`, idle, on mains:
+              3.445 s +/- 0.028.
+              **3.** The OpenBench argv form `./chesso bench` ships now rather
+              than later, so `src/main.cpp` joins `touches:`; both forms print
+              the same number.
+              **4.** `tests/test_gate_script.sh` and `tests/CMakeLists.txt` join
+              `touches:` too, so `tools/gate.sh` has a test of its own.
+Rejected:     Deriving a legal variant of `KILLER_POS` by removing an
+              uninvolved white pawn. Refused: it would add a ninth FEN constant
+              that exists only to satisfy a validator nothing in the pipeline
+              runs, and the position would then differ from the one `test` and
+              the fault-injection pass measured.
+              A shallower `BENCH_DEPTH`. Refused as a deviation from the step's
+              own stated rule; the cost it buys off is 6.8 s per Release fast
+              suite and 157 s in `Debug`, which lands on S197's weekly gate
+              rather than on the per-commit one, and a case that benched
+              shallower would not test the depth that ships.
+              Shipping `gate.sh` untested and checking its nine decisions by
+              hand at completion. Refused: it would make the gate the one piece
+              of the gate nothing gates -- and the test earned itself
+              immediately, finding the `pipefail` bug that sent a missing
+              signature line through the trap's generic marker.
+Consequences: Changing the depth or the set changes the signature deliberately
+              and is itself a `Bench:` commit, which `MANUAL.md` now says. The
+              number is per standard library until S179 regenerates the Zobrist
+              keys, so a disagreement between machines is investigated before it
+              is called a behaviour change. `Debug` runs of the fast suite gain
+              157 s, which S197 inherits.

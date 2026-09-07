@@ -257,6 +257,17 @@ add_test(NAME test_rating_script
                       ${CMAKE_SOURCE_DIR}/rating.sh ${CMAKE_SOURCE_DIR}/build_release.sh)
 set_tests_properties(test_rating_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S189: the commit gate. Nine cases over the one thing gate.sh decides -- is a
+# signature owed, is the one in the message the one the binary prints -- in a
+# throwaway git repository whose PATH holds stubs for cmake, ctest and
+# clang-format.sh. git is real, because the touched-paths and message reading
+# is the half of the logic a stub would hide. No suite runs and no game is
+# played, so it costs nothing and does not depend on the machine.
+add_test(NAME test_gate_script
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_gate_script.sh
+                      ${CMAKE_SOURCE_DIR}/tools/gate.sh)
+set_tests_properties(test_gate_script PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S084: the SPSA driver. Python, and the first test in this directory that is
 # neither doctest nor shell -- the driver is a tool and the objective it has to
 # be right about is a noisy quadratic, not a chess position.

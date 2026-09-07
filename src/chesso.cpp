@@ -1,7 +1,9 @@
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <charconv>
+#include <chrono>
 #include <future>
 #include <iostream>
 #include <limits>
@@ -166,6 +168,7 @@ bool command_print_board(std::queue<std::string>& args);
 bool command_fen(std::queue<std::string>& args);
 bool command_help(std::queue<std::string>& args);
 bool command_test(std::queue<std::string>& args);
+bool command_bench(std::queue<std::string>& args);
 bool command_clean_TT(std::queue<std::string>& args);
 
 // clang-format off
@@ -186,6 +189,7 @@ static const std::unordered_map<std::string, process_func> commands = {
   {"fen", command_fen},
   {"help", command_help},
   {"test", command_test},
+  {"bench", command_bench},
   {"clean-tt", command_clean_TT},
 };
 // clang-format on
@@ -1296,16 +1300,26 @@ bool command_register(std::queue<std::string>& args)
 }
 
 
-bool command_ucinewgame(std::queue<std::string>& args)
+// Everything `ucinewgame` clears. `bench` calls it between positions so each
+// one is searched cold: `set_position` alone resets the table only when the
+// FEN differs from the one already loaded, and it never clears the proven mate
+// line, which outlives a search by design (S170). S189.
+static void reset_for_new_game()
 {
-  LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
-
   stop_and_join_search();
 
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
   proven_mate_line.length = 0;
   still_in_opening = true;
+}
+
+
+bool command_ucinewgame(std::queue<std::string>& args)
+{
+  LOG_I << "Command [ucinewgame]. Args: " << args << END_I;
+
+  reset_for_new_game();
 
   LOG_I << print_nice_board(&game.board) << END_I;
 
@@ -1773,6 +1787,105 @@ bool command_test(std::queue<std::string>& args)
   uci_reply("\nTESTS END ------------------------");
   uci_reply("Total explored nodes: " + STR(total_nodes));
   uci_reply("Search time: " + total_timer.duration_str());
+
+  return true;
+}
+
+
+// The node signature. One number over a fixed position set at a fixed depth,
+// the form OpenBench asks a public engine for -- "a final node count, and a
+// final nodes-per second count, and then exit", format `4712710 nodes 1323423
+// nps" -- and the number every commit touching src/ carries in its message
+// (DEC-140). `tools/gate.sh` reads it back off this binary. S189.
+//
+// BENCH_DEPTH is deliberately not a CHESSO_SEARCH_PARAMS row: a depth that
+// setoption could move would make the signature session state. Changing it, or
+// the set below, changes the signature and is itself a `Bench:` commit.
+// 14 is the largest depth whose mean is at most five seconds on the i7-8700K
+// workstation, the rule this step set itself. Measured 2026-09-08, idle, on
+// mains, governor `performance`, `hyperfine -w 1 -r 5`: depth 9 0.208 s,
+// 10 0.344, 11 0.583, 12 0.997, 13 1.754, **14 3.445 s +/- 0.028**.
+constexpr int BENCH_DEPTH = 14;
+
+// The eight positions, verified on this workstation 2026-09-08 with
+// python-chess 1.11.2 (~/.venv/chess) and stockfish dev-20260810-5062aee5 at
+// `go depth 20` through the safe invocation (TOOLCHAIN.md, "The chess oracle"):
+//
+//   position         legal  en passant  castling      promo  valid
+//   midgame             46   -           -                 0  yes
+//   kiwipete            48   -           e1g1, e1c1        0  yes
+//   tactical            44   -           e1g1              4  yes
+//   KILLER_POS          42   f5e6        -                12  NO
+//   CMK_POS             43   -           -                 0  yes
+//   FINE_70_POS          3   -           -                 0  yes
+//   MATE_IN_2_W_POS     29   -           -                 0  yes, #+2
+//   MATE_IN_2_B_POS     29   -           -                 0  yes, #-2
+//
+// Eight distinct FENs; the accepts asks for quiescence mates, promotions, en
+// passant and castling and every one of the four is present. KILLER_POS is
+// knowingly illegal by FIDE piece count -- python-chess reports
+// TOO_MANY_WHITE_PAWNS|TOO_MANY_WHITE_PIECES, nine white pawns. It is kept:
+// the engine loads it, `test` already searches it, it carries both the en
+// passant capture and twelve promotions, and a signature needs determinism and
+// not legality. The first three are `tools/search_bench.py`'s POSITIONS, so
+// the two instruments cover the same ground; kiwipete is TRICKY_POS verbatim.
+// clang-format off
+static const std::array<std::string, 8> bench_positions = {{
+    "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",  // midgame
+    TRICKY_POS,                                                                  // kiwipete
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",                 // tactical
+    KILLER_POS,
+    CMK_POS,
+    FINE_70_POS,
+    MATE_IN_2_W_POS,
+    MATE_IN_2_B_POS
+  }};
+// clang-format on
+
+
+bool command_bench(std::queue<std::string>& args)
+{
+  LOG_I << "Command [bench]. Args: " << args << END_I;
+
+  uci_search_options_t search_options = {};
+  search_options.infinite = false;
+  search_options.depth = BENCH_DEPTH;
+
+  // `bench <depth>` is for exploring the cost curve; the signature is the bare
+  // form, which is what the gate runs.
+  if (!args.empty()) {
+    pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
+  }
+
+  uint64_t total_nodes = 0;
+  std::chrono::nanoseconds total_elapsed = std::chrono::nanoseconds::zero();
+
+  for (const std::string& fen : bench_positions) {
+    // Cold table and no mate line carried in from the position before, so the
+    // total does not depend on the order the set is searched in.
+    reset_for_new_game();
+    begin_search_session();
+    set_position(fen);
+
+    const auto started = std::chrono::steady_clock::now();
+    const uci_search_result_t res = iterative_deepening_search(search_options);
+    total_elapsed += std::chrono::steady_clock::now() - started;
+
+    uci_reply("bestmove " + best_move_to_string(res));
+    total_nodes += res.total_node_explored;
+  }
+
+  const int64_t elapsed_us =
+      std::chrono::duration_cast<std::chrono::microseconds>(total_elapsed)
+          .count();
+
+  // Floored at a microsecond, as the info line's nps is, so a stubbed or
+  // trivial run cannot divide by zero.
+  const uint64_t nps =
+      (total_nodes * 1000000ULL) /
+      ((elapsed_us > 0) ? static_cast<uint64_t>(elapsed_us) : 1ULL);
+
+  uci_reply(STR(total_nodes) + " nodes " + STR(nps) + " nps");
 
   return true;
 }

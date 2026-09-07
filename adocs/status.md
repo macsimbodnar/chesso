@@ -7,6 +7,46 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S189 is done, 2026-09-08: the engine has a node signature and a script that
+  checks it.** `bench` searches eight fixed positions at `BENCH_DEPTH` 14 and
+  prints **`24880255 nodes <nps> nps`** -- identical across three fresh
+  processes and across the stdin and argv forms -- and `tools/gate.sh` runs the
+  TESTS chain in both builds and then refuses a message whose `Bench:` line is
+  not the binary's number. **DEC-140 binds from this commit on**: every commit
+  touching `src/` carries `Bench: <n>` or `No functional change`. INV-6 stops
+  being a procedure a person performs by eye; it is identical at depths 9 and
+  12 and the interleaved timing is 1.00x, so nothing in the search moved.
+  DEC-152 records the owner's four answers -- `KILLER_POS` stays in the set
+  though it is illegal by piece count, depth 14 by the step's own rule, the
+  OpenBench argv form ships now, and `gate.sh` gets a test.
+- **The red-then-green could not be taken with a search mutant, and that is
+  worth more than the demonstration was.** Three node-moving changes were tried
+  -- `M01_nmp_in_check` from the test review's own mutant list, the two killer
+  ordering ranks swapped, `MVV_KNIGHT` 300 → 310 -- and the fast suite refused
+  all three before the signature was ever compared. The common cause is
+  `test_mate_carry`: its anti-vacuity precondition, `mate_lines >=
+  expected_mate_lines(name)`, is a search-tree-sensitive golden with no script
+  that re-derives it, so any change that reorders the tree trips it. That is
+  the test doing its job and it is also exactly the DEC-142 class. **Recorded
+  for S192**, which owns naming and scripting the goldens. The demonstration
+  used `BENCH_DEPTH` 14 → 13 instead, the case `MANUAL.md` names as a
+  deliberate signature change: `GATE-FAILED: message says Bench: 24880255, the
+  binary benches 13064004`, then `GATE-DONE 13064004` after the amend.
+- **One bug found and fixed on the way, by the gate's own test.** Case 8 of
+  `tests/test_gate_script.sh` -- a binary printing no signature line -- got the
+  trap's generic `GATE-FAILED: exited 1` instead of the specific message
+  written for it: `grep` exits 1 on no match, `set -o pipefail` fails the
+  pipeline, and errexit killed the script one line above its own check.
+  `bench_of` is now called `|| true` at both sites.
+- **What it cost the suite.** 52 s over 27 tests → **61 s over 28**, all of it
+  `test_uci_surface` going 0.03 s → 6.8 s because its new case searches the
+  bench set twice at the shipping depth. **In `Debug` that one case is 157 s**,
+  measured, which S197's Debug gate inherits. Kept at the shipping depth on
+  purpose (DEC-152).
+- **Carried forward, cheap to know:** `git worktree` does not bring the
+  submodules, so a worktree cannot build the test targets without them.
+  `fastchess.sh` and `gate.sh --build-parent` never meet this because both
+  build only the `chesso` target. It cost one gate run to find.
 - **S171 is done, 2026-09-07/08: the census ran on this machine and its
   residual is measured rather than closed (DEC-150).** The run DEC-128
   postponed here -- `REF=457e355 ./fastchess.sh --fast`, 3000 games at 8+0.08,
@@ -86,7 +126,12 @@ Updated: 2026-09-08, by hand.
   with, which answers S198's open question about it; and `.ref-builds/` holds
   21 August worktrees at 2.2 GB on a root filesystem at 95 %, prunable with
   `git worktree remove` at the cost of one rebuild if a ref is re-used.
-- Last done: **S200, 2026-09-07 -- `movetext_to_san()` reads the whitespace
+- Last done: **S189, 2026-09-08 -- the `bench` node signature and
+  `tools/gate.sh`.** `24880255` at `BENCH_DEPTH` 14 over eight fixed positions;
+  the gate runs the TESTS chain in both builds and then checks the binary
+  against the commit message. DEC-140 binds from its completing commit on and
+  DEC-152 records the four owner answers. Before it: **S200, 2026-09-07 --
+  `movetext_to_san()` reads the whitespace
   form of a move number indication, and a cut-short message quotes the token as
   the PGN wrote it.** PGN 8.2.2.1 lets white space sit between the digits and
   the dots, so `1 . e4`, `1 .e4` and `1. ... e5` hand the splitter a token of
@@ -222,7 +267,8 @@ Updated: 2026-09-08, by hand.
   the changed parser is byte-identical at `77f47f1b...db06b58` -- 34700 games,
   172232 entries, 0 cut short -- so roughly 278000 real SAN tokens parse as
   before. INV-6 identical, gate 27/27 in both builds. No `Bench:` line is owed:
-  DEC-140 binds from S189's completing commit and S189 is open.
+  DEC-140 bound from S189's completing commit and S189 was open. (S189 has
+  since landed, 2026-09-08; every `src/` commit after it carries the line.)
   **One thing found in passing and not fixed, for S193**: the new
   `REQUIRE(algebraic_to_move("Nf3", &game) != 0)` is the first positive
   assertion in that TEST_CASE. Every existing subcase asserts `== 0`, so with
@@ -253,7 +299,7 @@ Updated: 2026-09-08, by hand.
   deferred to the owner:** S151's re-test of S085's vector at a control at
   least four times 8+0.08 prices a `{-5, 0}` pair near 72 hours worst case by
   DEC-143's formula; whether that pair, a cheaper pair or a fixed-rounds
-  reading is wanted decides when it runs -- it sits at Open entry 18 until
+  reading is wanted decides when it runs -- it sits at Open entry 17 until
   then. Nothing in the engine changed, no run was started, the gate was green
   at `66cbc54` before the edit (27/27 in both builds) and the four prose
   checks pass after it.
@@ -616,21 +662,21 @@ Updated: 2026-09-08, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S178** -- `movetext_to_san()` splits a move number glued to its move so
-  PGN import format (`1.e4`) builds a book; found by running S174's fixed tools.
-  Then **S173**, the atomic book write. Then **S171's census** -- the first run
-  on the workstation (DEC-128):
-
-      REF=457e355 nohup ./fastchess.sh --fast > .tuning/sprt_s171_matepv.log 2>&1 &
-
-  -- with **S189** (bench signature, `tools/gate.sh`) and **S179** (magic
-  numbers under a project seed) as the agent-only work while it plays. Then
-  **S198**: the `-srand` and PGN flags, and the 1000-game fixed-rounds A/A that
-  is the workstation's DEC-143 calibration, read with
+- Next: **S179** -- the sliding-attack magic numbers regenerated by a committed
+  generator under a project-chosen seed, so `src/bb_tables.hpp` is this
+  project's own output; agent-only, no machine time, and it is the step that
+  also removes the "per standard library" caveat the signature carries today.
+  Then **S198**: the `-srand` and PGN flags, and the 1000-game fixed-rounds A/A
+  that is the workstation's DEC-143 calibration, read with
   `adocs/data/S105_pairs.py` and `tools/forfeit_report.py` before the first
-  verdict. Then the instrument lane, S180 first, with S148 the first verdict.
-  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads
-  the list with one machine.
+  verdict -- that one owns the machine. Then the instrument lane, **S180**
+  first, with **S148** the first verdict. `plan.md`'s "What the 2026-09-05
+  reorder changed" says how one agent reads the list with one machine.
+
+  **Every commit touching `src/` now needs a `Bench:` line.** Run
+  `export CLANG_FORMAT_MAJOR=22` and then `tools/gate.sh --message <file>`
+  before committing and `tools/gate.sh` after; `DEV_MANUAL.md` "Test" has the
+  four invocations.
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
   a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
@@ -642,7 +688,8 @@ Updated: 2026-09-08, by hand.
     `tools/forfeit_report.py`, recorded beside S105's numbers.** The owner
     refused the same run on the MacBook (DEC-139: a number about a machine
     that is leaving); DEC-143 makes it the rule after every machine change,
-    and it is S198's A/A, Open entry 4 since DEC-144. Until it is taken, the
+    and it is S198's A/A, Open entry 2 since S189 landed. Until it is taken,
+    the
     harness has no pair-variance or forfeit figure for the machine the
     verdicts run on.
   - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
@@ -651,7 +698,7 @@ Updated: 2026-09-08, by hand.
     is about 72 hours worst case and 44 on a bound. Options: that pair on a
     weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
     +/-8 Elo) which would change the accepts and is therefore a decision. It
-    sits at Open entry 18 behind S148 and S159 until answered.
+    sits at Open entry 17 behind S148 and S159 until answered.
   - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
     (`go infinite` printing `bestmove` unasked; a bad token in `position ...
     moves` skipped silently; the aborted-iteration best move assuming its table

@@ -123,6 +123,15 @@ place, and the ledger's other 88 rows were per-step records already held by
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
 
+  **Since S189 the neutral half is enforced rather than performed.** The
+  `bench` command prints one node signature over eight fixed positions at
+  `BENCH_DEPTH`, every commit touching `src/` carries it in its message as
+  `Bench: <n>` or claims `No functional change` (DEC-140), and `tools/gate.sh`
+  runs the TESTS rule's chain and then refuses a message whose number is not
+  the one the built binary prints. `tools/search_bench.py` keeps the timing and
+  per-position role; the gate is the number a script can read, which is what
+  INV-6 had never had.
+
 | invariant | what fails when it breaks |
 |---|---|
 | INV-1 | `test_movegen` *"shallow perft matches every column"*; `test_perft`, `ctest` label `slow`; `bench_movegen`, which verifies its counts before printing a single timing |
@@ -130,7 +139,7 @@ place, and the ledger's other 88 rows were per-step records already held by
 | INV-3 | `test_movegen` *"captures and quiets partition the list"*, 90.5 M assertions over a three-ply tree from every test FEN |
 | INV-4 | `assert(eval_accumulators_match(...))` at `src/bitboard.cpp:742`, `:875` and `:997`, debug build only -- the function itself is at `:596` |
 | INV-5 | `test_evaluation` *"colour symmetry over every test position"* and *"a mirrored start position is balanced"* |
-| INV-6 | no test: a procedure. `tools/search_bench.py` node counts and best moves for the neutral half, an SPRT against a named commit for the half that alters play |
+| INV-6 | `tools/gate.sh` for the neutral half -- the `bench` signature against the commit message's `Bench:` line, `test_gate_script` over its nine decisions and `test_uci_surface` *"bench prints one final signature line and repeats its total"* over the command; `tools/search_bench.py` still gives the per-position counts and best moves; an SPRT against a named commit for the half that alters play |
 
 **The numbering ends at INV-6 and there is no INV-7.** One commit cites one --
 `68a61d0`, *"Restore S084's landed step file (INV-7)"*, 2026-08-20 -- and it is

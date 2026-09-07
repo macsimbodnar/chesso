@@ -38,7 +38,7 @@ static const std::vector<std::string> expected_commands = {
   "uci", "debug", "isready", "setoption", "register", "ucinewgame",
   "position", "go", "stop", "ponderhit", "quit",
   // non-standard convenience commands
-  "pb", "fen", "help", "test", "clean-tt",
+  "pb", "fen", "help", "test", "bench", "clean-tt",
 };
 
 // Verbatim, including every default and every range. A changed Hash range is a
@@ -305,6 +305,45 @@ static std::string current_fen()
 }
 
 
+// The two readers the bench case needs, written the way `tools/gate.sh` reads
+// the same output: the signature is the last line matching
+// `^[0-9]+ nodes [0-9]+ nps$`, and a count is the token after a named field.
+// S189.
+static bool is_signature_line(const std::string& line)
+{
+  std::istringstream stream(line);
+  uint64_t nodes = 0;
+  uint64_t nps = 0;
+  std::string nodes_word;
+  std::string nps_word;
+  std::string trailing;
+
+  if (!(stream >> nodes >> nodes_word >> nps >> nps_word)) { return false; }
+  if (stream >> trailing) { return false; }
+
+  return nodes_word == "nodes" && nps_word == "nps";
+}
+
+
+// An empty key reads the line's first token, which is where the signature puts
+// its total; a named key reads the token after that word.
+static bool field_after(const std::string& line,
+                        const std::string& key,
+                        uint64_t& out)
+{
+  std::istringstream stream(line);
+  std::string token;
+
+  if (key.empty()) { return static_cast<bool>(stream >> out); }
+
+  while (stream >> token) {
+    if (token == key) { return static_cast<bool>(stream >> out); }
+  }
+
+  return false;
+}
+
+
 TEST_SUITE("uci surface")
 {
   TEST_CASE("the command set is exactly the documented one")
@@ -336,6 +375,103 @@ TEST_SUITE("uci surface")
     // anything.
     REQUIRE(!listed.empty());
     CHECK(listed == uci_command_names());
+
+    uci_shutdown();
+  }
+
+
+  // S189. The signature is a number a script reads off the binary and compares
+  // with a commit message, so what is asserted here is the shape it is read by
+  // and its repeatability -- not the value, which lives in the commit messages
+  // and in DEV_MANUAL.md and moves with every functional change by design.
+  TEST_CASE("bench prints one final signature line and repeats its total")
+  {
+    uci_init();
+
+    std::string first_total;
+    std::vector<std::string> first_best_moves;
+
+    {
+      const stdout_capture_t capture;
+      uci_process_line("bench");
+
+      // `bench` searches on the calling thread, so by here it has finished --
+      // no uci_wait_for_search(), which would join a thread that never ran.
+      const std::vector<std::string> lines = capture.lines();
+      REQUIRE(!lines.empty());
+
+      std::vector<std::string> signature_lines;
+      uint64_t summed_nodes = 0;
+      uint64_t last_info_nodes = 0;
+      bool saw_info_since_bestmove = false;
+
+      for (const std::string& line : lines) {
+        if (is_signature_line(line)) { signature_lines.push_back(line); }
+
+        if (line.rfind("info ", 0) == 0) {
+          uint64_t nodes = 0;
+
+          if (field_after(line, "nodes", nodes)) {
+            last_info_nodes = nodes;
+            saw_info_since_bestmove = true;
+          }
+        }
+
+        if (line.rfind("bestmove ", 0) == 0) {
+          first_best_moves.push_back(line);
+
+          // The precondition for the sum below: every search reports its count
+          // on an info line before it names its move.
+          REQUIRE(saw_info_since_bestmove);
+
+          summed_nodes += last_info_nodes;
+          saw_info_since_bestmove = false;
+        }
+      }
+
+      // Eight positions, one move each, and the set is fixed in the source.
+      CHECK(first_best_moves.size() == 8);
+
+      REQUIRE(signature_lines.size() == 1);
+      CHECK(signature_lines.front() == lines.back());
+
+      uint64_t total = 0;
+      REQUIRE(field_after(signature_lines.front(), "", total));
+
+      // The signature is the sum of what the eight searches reported, so a
+      // count the engine prints and a count the gate reads cannot diverge.
+      CHECK(total == summed_nodes);
+
+      first_total = signature_lines.front();
+    }
+
+    {
+      const stdout_capture_t capture;
+      uci_process_line("bench");
+
+      const std::vector<std::string> lines = capture.lines();
+      REQUIRE(!lines.empty());
+
+      std::vector<std::string> best_moves;
+      std::string total;
+
+      for (const std::string& line : lines) {
+        if (line.rfind("bestmove ", 0) == 0) { best_moves.push_back(line); }
+        if (is_signature_line(line)) {
+          uint64_t nodes = 0;
+          REQUIRE(field_after(line, "", nodes));
+          total = std::to_string(nodes);
+        }
+      }
+
+      uint64_t first_nodes = 0;
+      REQUIRE(field_after(first_total, "", first_nodes));
+
+      // Two runs in one process. The table is cleared per position, so the
+      // second run cannot inherit the first one's entries.
+      CHECK(total == std::to_string(first_nodes));
+      CHECK(best_moves == first_best_moves);
+    }
 
     uci_shutdown();
   }
