@@ -27,10 +27,10 @@ Updated: 2026-09-07, by hand.
   exit 0.** Also re-checked on arrival: INV-6 reproduces to the node
   (121512 / 800769 / 62907 at depth 9, 639228 / 3430710 / 367858 at depth 12,
   `c3d5` / `e2a6` / `d7c8q`), `src/openings.bin` still digests to
-  `77f47f1b...db06b58`, the Open list's 74 entries match `plan_todo/`'s 74
-  files id for id with none duplicated and none also in `plan_done/`, and
-  `plan_prose_check.py --touches` flags 0. **Before the first timed run the
-  machine still needs**: the `performance` governor (it boots `powersave`),
+  `77f47f1b...db06b58`, the Open list's 73 entries match `plan_todo/`'s 73
+  files id for id -- 74 each on arrival, before S178 -- with none duplicated and
+  none also in `plan_done/`, and `plan_prose_check.py --touches` flags 0.
+  **Before the first timed run the machine still needs**: the `performance` governor (it boots `powersave`),
   `kernel.perf_event_paranoid=1` for samply, and an idle desktop -- gthumb and
   firefox were between them holding about two cores while this was written.
   **Two facts the workstation settles**: `fastchess` here is
@@ -38,6 +38,31 @@ Updated: 2026-09-07, by hand.
   with, which answers S198's open question about it; and `.ref-builds/` holds
   21 August worktrees at 2.2 GB on a root filesystem at 95 %, prunable with
   `git worktree remove` at the cost of one rebuild if a ref is re-used.
+- Last done: **S178, 2026-09-07 -- `movetext_to_san()` reads a move number
+  indication glued to the move it introduces.** `1.e4`, `2...Nc6`, `4.O-O`: PGN
+  import format, 8.2.2.1. Before, the whole token reached `algebraic_to_move()`,
+  got 0 from S174's fail-closed parser, and the build was refused at ply 0 --
+  honest and useless for the half of the world's PGN files written that way.
+  The splitter now drops a bare number first, then, for digits followed by at
+  least one dot, either drops the indication alone or erases it and keeps the
+  move. **Red first at `3200a1a`**: two new properties in
+  `tests/test_make_book_tools.sh` gave 8 `FAIL:` lines, all on `cannot parse
+  '1.e4' at ply 0`; the export-form control was green from the start, so the
+  expected entry counts came from its own output. Green after.
+  **python-chess agrees**: `adocs/data/S175_book_conformance.py` re-derives both
+  glued fixtures at `missing 0 extra 0 weight_mismatch 0`. **Nothing in the
+  engine moved**: no `src/` file in the diff, so no `Bench:` line is owed
+  (DEC-140), INV-6 reproduces to the node (121512 / 800769 / 62907 and
+  639228 / 3430710 / 367858, `c3d5` / `e2a6` / `d7c8q`), and `src/openings.bin`
+  rebuilt through the fixed tool is byte-identical at `77f47f1b...db06b58`
+  because `books/8moves_v3.pgn` has no glued token. Gate 27/27 in both builds,
+  format clean under `CLANG_FORMAT_MAJOR=22`. `DEV_MANUAL.md` and
+  `adocs/specs.md` say so; `MANUAL.md` checked, no UCI surface touched.
+  **Two owner questions are open and neither is a bug**: whether `1 . e4`
+  (whitespace between the digits and the dots, also legal by 8.2.2.1) is worth
+  the same few lines or its own step -- today the leading `.` reaches the parser
+  and cuts the game short by name -- and whether the cut-short message should
+  carry the token as written (`1.e4`) rather than the move part (`e4`).
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of 74 files --
   Open entries 1 to 20, S178 through S151; the next file is S181.** Resume by

@@ -68,8 +68,10 @@ outcome_t outcome_from_string(const std::string& text)
 // Splits movetext into SAN tokens, dropping everything PGN allows to sit
 // between them: `{...}` comments (which may span lines), `;` line comments,
 // `(...)` variations at any nesting depth, `$12` numeric annotation glyphs,
-// move numbers and the result token. Variations are dropped rather than
-// followed -- a book is built from what was played, not from what was analysed.
+// move number indications -- alone or glued to the move they introduce, which
+// is import format, PGN 8.2.2.1 -- and the result token. Variations are dropped
+// rather than followed: a book is built from what was played, not from what was
+// analysed.
 std::vector<std::string> movetext_to_san(const std::string& movetext)
 {
   std::vector<std::string> tokens;
@@ -117,7 +119,7 @@ std::vector<std::string> movetext_to_san(const std::string& movetext)
       ++end;
     }
 
-    const std::string token = movetext.substr(i, end - i);
+    std::string token = movetext.substr(i, end - i);
     i = end;
 
     if (variation_depth > 0) { continue; }
@@ -126,13 +128,18 @@ std::vector<std::string> movetext_to_san(const std::string& movetext)
       continue;
     }
 
-    // A move number: digits, then any number of dots. "1." and "1..." both.
+    // A move number indication: digits, then one or more dots. It stands alone
+    // in export format ("1.", "1..."), and import format lets it be glued to
+    // the move it introduces ("1.e4", "2...Nc6"), which is split off here.
+    // The dot test keeps "1-0" and "1/2-1/2" out, though the result test above
+    // has already dropped them.
     const size_t dot = token.find_first_not_of("0123456789");
-    if (dot != std::string::npos && dot > 0 &&
-        token.find_first_not_of('.', dot) == std::string::npos) {
-      continue;
-    }
     if (dot == std::string::npos) { continue; }  // a bare number
+    if (dot > 0 && token[dot] == '.') {
+      const size_t rest = token.find_first_not_of('.', dot);
+      if (rest == std::string::npos) { continue; }  // the indication alone
+      token.erase(0, rest);
+    }
 
     tokens.push_back(token);
   }

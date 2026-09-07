@@ -301,7 +301,11 @@ suffix annotations (`!`, `?` and their pairs) are ignored like `+` and `#`, and
 `make_book build` refuses to write when any game was cut short unless
 `--allow-cut-short` says to drop such games from the bad token on -- so the
 `games cut short 0` the digest above rests on is a gate and not a report
-(2026-09-03_adversarial-F02). It replaced
+(2026-09-03_adversarial-F02). **Since S178 the splitter also reads a move
+number indication glued to the move it introduces** (`1.e4`, `2...Nc6`), which
+is PGN import format, so a hand-written PGN builds the same book as its export
+form twin; `books/8moves_v3.pgn` carries no such token, so the digest above is
+unchanged and the engine binary with it. It replaced
 a 2610256-byte, 163141-entry book inherited from the `bitboard` branch whose
 origin no document, commit or person could establish -- that book is deleted,
 which is the ruling DEC-131 records. `OwnBook` defaults false and no measurement

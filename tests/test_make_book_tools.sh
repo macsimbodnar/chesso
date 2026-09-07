@@ -21,6 +21,14 @@
 #      with the position after the last move
 #   6. pgn_to_positions on an unparseable token exits non-zero
 #
+# S178 added two more, over PGN import format (8.2.2.1): a move number
+# indication may be glued to the move it introduces, `1.e4`, and a black
+# indication `2...Nc6` may follow commentary.
+#
+#   7. a game written in the glued form builds byte-identically to the same
+#      game written in export form
+#   8. the same across a comment, a black indication and glued castling
+#
 # Everything happens in a throwaway directory. No engine is searched.
 #
 # Usage: test_make_book_tools.sh <make_book> <pgn_to_positions>
@@ -55,6 +63,9 @@ write_pgn()
 write_pgn '1. e4 e5 2. Nf3 Nc6 *' "$tmp/control.pgn"
 write_pgn '1. e4!? e5 2. Nf3 Nc6 *' "$tmp/annotated.pgn"
 write_pgn '1. e4 e5 2. Qxf7 Nc6 *' "$tmp/illegal.pgn"
+write_pgn '1.e4 e5 2.Nf3 Nc6 *' "$tmp/glued.pgn"
+write_pgn '1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. O-O *' "$tmp/castle_spaced.pgn"
+write_pgn '1.e4 e5 2.Nf3 {c} 2...Nc6 3.Bc4 Nf6 4.O-O *' "$tmp/castle_glued.pgn"
 
 # 1. The control.
 if ! "$make_book" build "$tmp/control.pgn" --out "$tmp/control.bin" \
@@ -97,6 +108,39 @@ grep -q 'games cut short      1' "$tmp/allowed.out" \
 grep -q 'entries written      2' "$tmp/allowed.out" \
   || fail "allow-cut-short: expected the 2 entries before the bad token: $(cat "$tmp/allowed.out")"
 [[ -f "$tmp/allowed.bin" ]] || fail "allow-cut-short: no book written"
+
+# 7. Import-format move numbers: glued builds byte-identically to the control.
+if ! "$make_book" build "$tmp/glued.pgn" --out "$tmp/glued.bin" \
+    > "$tmp/glued.out" 2>&1; then
+  fail "glued: build exited non-zero: $(cat "$tmp/glued.out")"
+fi
+grep -q 'games cut short      0' "$tmp/glued.out" \
+  || fail "glued: the glued move number cut the game short: $(cat "$tmp/glued.out")"
+grep -q 'entries written      4' "$tmp/glued.out" \
+  || fail "glued: expected 4 entries: $(cat "$tmp/glued.out")"
+# Unlike property 2, a missing book is a failure here and not a skipped check.
+{ [[ -f "$tmp/control.bin" ]] && [[ -f "$tmp/glued.bin" ]] \
+  && cmp -s "$tmp/control.bin" "$tmp/glued.bin"; } \
+  || fail "glued: book differs from the control's"
+
+# 8. A black indication after a comment, and castling glued to its number.
+if ! "$make_book" build "$tmp/castle_spaced.pgn" --out "$tmp/castle_spaced.bin" \
+    > "$tmp/castle_spaced.out" 2>&1; then
+  fail "castle_spaced: build exited non-zero: $(cat "$tmp/castle_spaced.out")"
+fi
+grep -q 'entries written      7' "$tmp/castle_spaced.out" \
+  || fail "castle_spaced: expected 7 entries: $(cat "$tmp/castle_spaced.out")"
+if ! "$make_book" build "$tmp/castle_glued.pgn" --out "$tmp/castle_glued.bin" \
+    > "$tmp/castle_glued.out" 2>&1; then
+  fail "castle_glued: build exited non-zero: $(cat "$tmp/castle_glued.out")"
+fi
+grep -q 'games cut short      0' "$tmp/castle_glued.out" \
+  || fail "castle_glued: the game was cut short: $(cat "$tmp/castle_glued.out")"
+grep -q 'entries written      7' "$tmp/castle_glued.out" \
+  || fail "castle_glued: expected 7 entries: $(cat "$tmp/castle_glued.out")"
+{ [[ -f "$tmp/castle_spaced.bin" ]] && [[ -f "$tmp/castle_glued.bin" ]] \
+  && cmp -s "$tmp/castle_spaced.bin" "$tmp/castle_glued.bin"; } \
+  || fail "castle_glued: book differs from the spaced twin's"
 
 # 5. pgn_to_positions, annotated against clean.
 printf 'e4 e5 Nf3 Nc6\n' | "$pgn_to_positions" > "$tmp/p_control.tsv" \
