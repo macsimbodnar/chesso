@@ -202,8 +202,15 @@ if ((build_parent == 1)); then
 else
   # The first `Bench:` at or below the parent. `-n 100` is the same window
   # Stockfish's CI takes its reference from.
+  #
+  # `|| true` for the reason the bench pipeline above has it: with no match
+  # `grep` exits 1, `pipefail` fails the assignment and errexit kills the
+  # script before the check written for this exact case -- an ancestry that
+  # predates the rule, which is the situation `--build-parent` exists for, so
+  # the one path that most needs its message was the one that lost it. Found by
+  # the S189 fast check; case 10 of tests/test_gate_script.sh covers it.
   parent_total="$(git log --format=%B -n 100 "$parent" \
-    | grep -E '^Bench: [0-9]+$' | head -1 | cut -d' ' -f2)"
+    | grep -E '^Bench: [0-9]+$' | head -1 | cut -d' ' -f2 || true)"
   [[ -n "$parent_total" ]] \
     || fail "'No functional change' but no ancestor carries a 'Bench:' line in the last 100 commits; re-run with --build-parent"
 fi

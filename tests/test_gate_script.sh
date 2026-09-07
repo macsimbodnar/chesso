@@ -22,6 +22,8 @@
 #                                                             GATE-FAILED
 #   9. static: parses under `bash -n`, and uses none of the bash 4 forms the
 #      MacBook's bash 3.2 does not have
+#  10. `No functional change` with no `Bench:` anywhere in the ancestry ->
+#      exactly one GATE-FAILED, and it names --build-parent
 #
 # Usage: test_gate_script.sh <gate.sh>
 
@@ -260,6 +262,53 @@ if ! grep -q "GATE-FAILED.*nodes" "$tmp/out.txt"; then
   fail "8: the marker does not say the signature line is missing"; show
 fi
 set_bench 12345
+
+# 10. `No functional change` over an ancestry that carries no `Bench:` line at
+#     all -- a history from before DEC-140, which is the situation
+#     `--build-parent` exists for. A second repository, because the one above
+#     has carried a `Bench:` line since its root commit.
+#
+#     This is the case the S189 fast check found missing: the parent walk had
+#     no `|| true`, so with no match `grep` exited 1, `pipefail` failed the
+#     assignment and errexit killed the script one line above the message
+#     written for it -- the generic `GATE-FAILED: exited 1` on the one path
+#     that most needs to say what to do next.
+mkdir -p "$tmp/repo2/tools" "$tmp/repo2/src" "$tmp/repo2/build/src"
+cp "$gate_script" "$tmp/repo2/tools/gate.sh"
+chmod +x "$tmp/repo2/tools/gate.sh"
+cp "$tmp/repo/clang-format.sh" "$tmp/repo2/clang-format.sh"
+cp "$tmp/repo/build/src/chesso" "$tmp/repo2/build/src/chesso"
+
+git -C "$tmp/repo2" init -q
+git -C "$tmp/repo2" config user.email smoke@example.invalid
+git -C "$tmp/repo2" config user.name smoke
+echo "before the rule" > "$tmp/repo2/src/old.cpp"
+git -C "$tmp/repo2" add src/old.cpp
+git -C "$tmp/repo2" commit -q -m "a commit from before DEC-140"
+echo "still nothing functional" >> "$tmp/repo2/src/old.cpp"
+git -C "$tmp/repo2" add src/old.cpp
+git -C "$tmp/repo2" commit -q -m "A change with no ancestor to compare against
+
+No functional change"
+
+(
+  cd "$tmp/repo2" || exit 127
+  export PATH="$tmp/stub"
+  ./tools/gate.sh
+) > "$tmp/out.txt" 2>&1
+status=$?
+if [[ "$status" -eq 0 ]]; then
+  fail "10: 'No functional change' with no ancestor signature exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]]; then
+  fail "10: expected exactly one GATE-FAILED, got $(failed_markers)"; show
+fi
+if ! grep -q 'build-parent' "$tmp/out.txt"; then
+  fail "10: the marker does not say to re-run with --build-parent"; show
+fi
+if grep -q 'GATE-FAILED: exited' "$tmp/out.txt"; then
+  fail "10: the trap's generic marker won over the specific one"; show
+fi
 
 # 9. Static. bash 3.2 on the MacBook has none of these (S167, S177), and the
 #    comments in the script name no such form, so the whole file is searched.

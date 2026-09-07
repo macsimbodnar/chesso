@@ -32,6 +32,15 @@ Updated: 2026-09-08, by hand.
   used `BENCH_DEPTH` 14 → 13 instead, the case `MANUAL.md` names as a
   deliberate signature change: `GATE-FAILED: message says Bench: 24880255, the
   binary benches 13064004`, then `GATE-DONE 13064004` after the amend.
+- **The S189 fast check found a second instance of the first bug, fixed at
+  `HEAD`.** The `No functional change` parent walk had no `|| true` either, so
+  an ancestry carrying no `Bench:` line anywhere -- a history from before
+  DEC-140, which is precisely what `--build-parent` exists for -- died at
+  `GATE-FAILED: exited 1` one line above the message telling the reader to use
+  it. The one path that most needed to say what to do next was the one that
+  lost it. `tests/test_gate_script.sh` gains case 10, observed red on the
+  unfixed script and green after; cases 5 and 6 could never have caught it
+  because their sandbox has carried a `Bench:` line since its root commit.
 - **One bug found and fixed on the way, by the gate's own test.** Case 8 of
   `tests/test_gate_script.sh` -- a binary printing no signature line -- got the
   trap's generic `GATE-FAILED: exited 1` instead of the specific message
