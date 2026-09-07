@@ -5,8 +5,39 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-05, by hand.
+Updated: 2026-09-07, by hand.
 
+- **Back on the workstation, 2026-09-07, and its gate was red on arrival --
+  both halves fixed or decided, nothing in the engine changed.** No code moved
+  between the MacBook and here; a machine changed and two compiler-and-toolchain
+  differences came with it, which is what S167 was in the other direction.
+  **(1)** `tools/mate_trace.cpp`'s usage comment wrapped with a trailing
+  backslash, which g++ 13.3 -- the reference compiler here, DEC-049 -- calls
+  `-Wcomment` and `-Werror` makes fatal; clang does not warn, so it survived
+  S171 (`136b03f`) and stopped `build` and `build-tune` at the same object.
+  Fixed at `d54f690`, comment only. **(2)** clang-format 23 (DEC-110's pin) is
+  not installable from what this machine carries -- the apt line is
+  `llvm-toolchain-noble-22` -- so the script resolved Ubuntu's 18.1.3, refused
+  it and exited 1, and `test_clang_format_script` failed six assertions in both
+  builds: the failure DEC-110's Consequences predicted for this machine, word
+  for word. **The owner decided the override, DEC-146**: the pin stays 23,
+  this machine exports `CLANG_FORMAT_MAJOR=22`, and `.moltke.local.md` carries
+  it. The two majors format this tree identically -- measured, the check prints
+  nothing and exits 0. **After both: fast suite 27/27 in both builds, gate
+  exit 0.** Also re-checked on arrival: INV-6 reproduces to the node
+  (121512 / 800769 / 62907 at depth 9, 639228 / 3430710 / 367858 at depth 12,
+  `c3d5` / `e2a6` / `d7c8q`), `src/openings.bin` still digests to
+  `77f47f1b...db06b58`, the Open list's 74 entries match `plan_todo/`'s 74
+  files id for id with none duplicated and none also in `plan_done/`, and
+  `plan_prose_check.py --touches` flags 0. **Before the first timed run the
+  machine still needs**: the `performance` governor (it boots `powersave`),
+  `kernel.perf_event_paranoid=1` for samply, and an idle desktop -- gthumb and
+  firefox were between them holding about two cores while this was written.
+  **Two facts the workstation settles**: `fastchess` here is
+  `alpha 1.8.1 20260720-daa3ea2`, the version S105, S087 and S145 measured
+  with, which answers S198's open question about it; and `.ref-builds/` holds
+  21 August worktrees at 2.2 GB on a root filesystem at 95 %, prunable with
+  `git worktree remove` at the cost of one rebuild if a ref is re-used.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of 74 files --
   Open entries 1 to 20, S178 through S151; the next file is S181.** Resume by

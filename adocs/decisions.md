@@ -6272,6 +6272,9 @@ Consequences: Nothing is machine-enforced any more. A step completes by hand --
 
 ## DEC-110  2026-08-30  The clang-format pin moves from major 22 to major 23
 Tags:         toolchain, tests, gate, macos
+Amended:      2026-09-07 by DEC-146 -- the pin stays 23 and the workstation
+              exports `CLANG_FORMAT_MAJOR=22`, which is the cost this entry's
+              Consequences predicted, paid rather than removed.
 Context:      `ctest -L fast` went red on this machine with no code change
               behind it. `test_clang_format_script` failed six assertions, all
               of them because `clang-format.sh` resolves a binary and then
@@ -8087,3 +8090,52 @@ Consequences: `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`
               files, S180's remaining work is to verify. The owner's deferred
               questions are gathered in the report of 2026-09-05 and in
               `status.md`'s Parked list.
+
+## DEC-146  2026-09-07  The workstation runs the format gate with `CLANG_FORMAT_MAJOR=22`; the pin stays 23
+Tags:         toolchain, tests, gate, machine, linux, dec-110
+Amends:       DEC-110, whose pin is unchanged and whose predicted workstation
+              cost this pays
+Context:      The owner returned to the Linux workstation on 2026-09-07 and the
+              gate was red there, with no code change behind either half of it.
+              The second half is this one: clang-format 23 is not on this
+              machine and cannot be installed from what it carries. The LLVM
+              apt line here is `llvm-toolchain-noble-22`, the repository offers
+              14 to 22, and the only unsuffixed binary is Ubuntu's 18.1.3, so
+              `clang-format.sh` resolves it, refuses it by version and exits 1,
+              and `test_clang_format_script` fails six assertions in both
+              builds -- the same six, and for the same reason, that DEC-110's
+              Context recorded on the MacBook and its Consequences predicted
+              for this machine in as many words. `apt.llvm.org` does serve
+              `llvm-toolchain-noble-23` (checked, HTTP 200), so installing it
+              was available and costs one new apt source and a sudo install.
+Decision:     By the owner, asked directly on 2026-09-07. `REQUIRED_MAJOR`
+              stays 23 in `clang-format.sh` and every committed document keeps
+              that number, because the pin has not moved. This machine exports
+              `CLANG_FORMAT_MAJOR=22` for the gate, and `.moltke.local.md`
+              records it as this machine's. Measured before the choice was put:
+              `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` prints nothing
+              and exits 0, so the tree is byte-identical under 22 and 23 --
+              which is what DEC-110's Consequences said would hold after
+              S024's revert, now confirmed from the other side -- and the fast
+              suite is 27/27 in both builds with the override exported.
+Rejected:     Installing clang-format 23 here. It keeps one number across both
+              machines and needs no override in any command, but it adds an apt
+              source for a toolchain this machine otherwise does not carry --
+              `.moltke.local.md` pins LLVM 22 suffixed as a second front end
+              beside the reference `g++ 13.3` -- and the override costs nothing
+              while the two majors format this tree identically.
+              Moving the pin back to 22. That reverses an owner decision in
+              order to suit a machine, and it would redden the MacBook exactly
+              the way 23 reddened this one.
+              Widening the pin to a range, or dropping it. DEC-110's rejection,
+              unchanged: two machines formatting the same tree differently is
+              the failure the pin was written against.
+Consequences: Every gate invocation on this machine carries
+              `CLANG_FORMAT_MAJOR=22`, and `tools/gate.sh` (S189) reads the
+              variable from the environment rather than hard-coding a major.
+              The equivalence is a measurement and not a guarantee: the day a
+              construct formats differently under the two majors, the override
+              stops being free and the choice returns, with `./clang-format.sh
+              --check` under 23 as the arbiter and this machine unable to run
+              it. What would show it is a MacBook check reddening on a tree
+              this machine calls clean.
