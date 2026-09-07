@@ -27,10 +27,10 @@ Updated: 2026-09-07, by hand.
   exit 0.** Also re-checked on arrival: INV-6 reproduces to the node
   (121512 / 800769 / 62907 at depth 9, 639228 / 3430710 / 367858 at depth 12,
   `c3d5` / `e2a6` / `d7c8q`), `src/openings.bin` still digests to
-  `77f47f1b...db06b58`, the Open list's 73 entries match `plan_todo/`'s 73
-  files id for id -- 74 each on arrival, before S178 -- with none duplicated and
-  none also in `plan_done/`, and `plan_prose_check.py --touches` flags 0.
-  **Before the first timed run the machine still needs**: the `performance` governor (it boots `powersave`),
+  `77f47f1b...db06b58`, the Open list's 74 entries match `plan_todo/`'s 74
+  files id for id with none duplicated and none also in `plan_done/`, and
+  `plan_prose_check.py --touches` flags 0. **Before the first timed run the
+  machine still needs**: the `performance` governor (it boots `powersave`),
   `kernel.perf_event_paranoid=1` for samply, and an idle desktop -- gthumb and
   firefox were between them holding about two cores while this was written.
   **Two facts the workstation settles**: `fastchess` here is
@@ -63,6 +63,40 @@ Updated: 2026-09-07, by hand.
   the same few lines or its own step -- today the leading `.` reaches the parser
   and cuts the game short by name -- and whether the cut-short message should
   carry the token as written (`1.e4`) rather than the move part (`e4`).
+- **S178's two deferred questions answered by the owner, 2026-09-07, DEC-147;
+  both become S200, at Open entry 2.** The whitespace form of a move number
+  indication (`1 . e4`, `1 .e4`, `1. ... e5`, which PGN 8.2.2.1 allows) is
+  folded into a follow-up rather than left refused, and the cut-short message
+  will quote the token as the PGN wrote it -- the owner's condition on the
+  second was "if not too complex", and it was sized before the step was
+  written: `movetext_to_san()` returns a two-field struct, its one caller in
+  the tree reads the second field for the message, about fifteen lines. One
+  step and not two, because both edits are in that function and the loop that
+  reads it, both are covered by the same fixture file, and neither alters play.
+  It sits after S173 to group the two `make_book` tool steps; move it if the
+  order should differ.
+- **A parser defect found while sizing S200, 2026-09-07, and it is the owner's
+  to call (BUGS rule).** Not fixed, nothing else started on it.
+  `algebraic_to_move()` reads the piece letter at position 0 only
+  (`src/bitboard.cpp`, the `std::isupper(notation[pos])` test): a leading
+  character that is not an uppercase piece letter falls to the pawn branch, and
+  the disambiguation loop then swallows the real piece letter. **`.Nf3` comes
+  back as `f2f3`, a pawn push, where the token means the knight move `g1f3`.**
+  python-chess refuses `.Nf3`, `.e4` and `..e4` outright (checked). It is
+  reachable: `1 .Nf3` is legal PGN import format, so `make_book` and
+  `pgn_to_positions` build silently from a wrong board -- the shape S174 closed
+  for a token the parser *cannot* read, still open for one it reads as
+  something else. `Zf3` is refused and is what the suite tests; no test covers
+  a non-uppercase leading character. **Bounded**: `algebraic_to_move()` is
+  called only by the two tools and the tests, never on the engine's UCI move
+  path, which is long algebraic; `books/8moves_v3.pgn` has no such token, so
+  `src/openings.bin` is unaffected. Interior junk is lenient but *correct* --
+  `N.f3` gives `g1f3` -- so only the leading character produces a wrong move.
+  The proposed fix is a character-class gate after the suffix strip and the
+  castling cases, refusing a token whose first character is not `[a-hKQRBN]`;
+  the wider form additionally requires every character to be in
+  `[a-h1-8KQRBNx=]`, which would also close the lenient interior forms and
+  match python-chess.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open

@@ -8139,3 +8139,51 @@ Consequences: Every gate invocation on this machine carries
               --check` under 23 as the arbiter and this machine unable to run
               it. What would show it is a MacBook check reddening on a tree
               this machine calls clean.
+
+## DEC-147  2026-09-07  S178's two deferred questions answered: the remaining import-format leniency and the token as written both become S200
+Tags:         tools, make_book, pgn, docs, s178, s200
+Context:      S178 taught `movetext_to_san()` the glued move number indication
+              (`1.e4`, `2...Nc6`) and left two questions in its section 10,
+              both outside its `accepts:` and neither a bug. **One**, PGN
+              8.2.2.1 also allows whitespace between the digit sequence and the
+              period(s), so `1 . e4`, `1 .e4` and `1. ... e5` are legal import
+              format; after S178 the leading `.` or `...` token has `dot == 0`,
+              reaches `algebraic_to_move()`, gets 0 and cuts the game short by
+              name. Honest, and still not the whole standard. **Two**, S178
+              erases the indication in place, so the cut-short message names
+              the move part (`e4`) and not the token the PGN wrote (`1.e4`),
+              which is a worse pointer into the file being fixed.
+Decision:     By the owner, asked on 2026-09-07 with S178's completion. Both
+              are taken, and both land in **one** follow-up step, S200: the
+              leading-dot run is dropped by the same rule, and the message
+              carries the original token. The owner's condition on the second
+              was "if not too complex"; it was sized before the step was
+              written -- `movetext_to_san()` returns a two-field struct
+              carrying the move and the token as written, its one caller in the
+              tree reads the second field for the message only, and no other
+              file in `src/`, `tests/` or `tools/` names the function. About
+              fifteen lines. The condition is met and no re-evaluation is owed.
+Rejected:     Two separate steps, one per question. Correct by the letter of
+              "one goal per change", and ceremony here: both edits are in
+              `movetext_to_san()` and the one loop that reads it, both are
+              covered by the same fixture file, neither alters play, and no
+              verdict is at stake for either -- the rule exists so two changes
+              cannot contaminate one measurement, and there is no measurement.
+              Folding either into S178. S178 is in `plan_done/`, which is
+              history and is never edited.
+              Leaving the message as S178 left it. The message exists to point
+              at a place in a PGN the reader must fix; `e4` appears many times
+              in a file and `1.e4` appears once.
+              Teaching `algebraic_to_move()` to skip a leading indication
+              instead. S178's `excludes:` keeps the engine's parser out of the
+              tool's lexing, and the parser is on the engine's move path where
+              this has no business being.
+Consequences: S200 sits in `plan_todo/` and enters the Open list where the
+              owner puts it; it is not urgent -- the tool refuses honestly
+              today for every form it does not read. After it, the message text
+              changes for a glued token, so any test grepping a cut-short
+              message must expect the token as written; `tests/test_make_book_tools.sh`
+              property 3 greps `Qxf7` from a spaced fixture and is unaffected.
+              The remaining leniencies of S178's `excludes:` -- `e8Q` without
+              `=`, `0-0` with zeros, a `P` prefix -- stay unread and stay each
+              their own decision.
