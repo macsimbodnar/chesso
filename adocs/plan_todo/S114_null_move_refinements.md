@@ -3,7 +3,7 @@ goal:       the null move reduction scales with how far the static score is abov
 accepts:    an SPRT verdict, recorded whatever it is; **the static-score term is capped** -- uncapped, a position twenty pawns ahead reduces to depth 0 and re-creates the mate-hiding bug this engine has already shipped twice; the existing zugzwang guard on game_phase is kept, not replaced; the mate cases in the fast suite pass, and the cap is observed to be load-bearing by removing it and watching one go red; the base and divisor seeds are stated with their source and everything ships from our own sweep and S127 (DEC-084)
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   a null-move verification search -- dropped by DEC-087, no evidence below 3000 and the game_phase guard already covers zugzwang; the reduction formula's final values, which S127 fits
-decisions:  DEC-071, DEC-084, DEC-087
+decisions:  DEC-071, DEC-084, DEC-087, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -22,9 +22,10 @@ is already guarded by `game_phase(&game->board) > 0`, which stays.
 ## Technical details (SOTA research, 2026-08-19)
 
 Line numbers at `0edfd26`; re-locate by symbol if drifted. Every GitHub read
-below was a commit message or PR body, never a diff or source file (DEC-016,
-DEC-084); numbers quoted from message prose are legal seeds, the S113 pass's
-precedent.
+below was a commit message or PR body, never a diff or source file (DEC-016).
+Under DEC-105 a number quoted from such prose is still that engine's tuned
+output and never a seed, wherever it is republished: the figures below are
+records, and section 4's seeds are derived here.
 
 ### 1. State of the art
 
@@ -138,20 +139,70 @@ One SPRT, as the accepts prices:
 
 ### 4. Constants and seeds
 
-All in src/search_params.hpp with ranges; every number a **seed -- must be
-fitted/SPSA'd here** (DEC-084, S127):
-- `NULL_MOVE_BASE` seed 2, sweep 1..4 (ships today; CPW "2 or 3", basic
-  "3 or 4", Fruit 3, Heinz 2/3 -- mind the depth-arithmetic convention).
-- `NULL_MOVE_DIVISOR` seed 6, sweep 3..8 (ships today; Lynx prose "depth/5").
-- `NULL_MOVE_EVAL_MARGIN` seed 100, range 1..2000 (SF 074c7a3 prose: one
-  pawn); floor 1 is the div-by-zero guard, the range top parks the term.
-- `NULL_MOVE_EVAL_CAP` seed 3, range 0..16 (SF 7ed15af prose: "three plies";
-  Ethereal 89ed7eb is the gain record for having one); 0 = term off.
-- The entry gate ships as bare `>= beta`; Lynx #1918's margin-30 variant is
-  an S127-era sweep, not V1.
+All in the `CHESSO_SEARCH_PARAMS` X-macro in `src/search_params.hpp` with
+ranges; every number a **seed -- must be fitted/SPSA'd here** (S127). Under
+DEC-105 each is one of three forms and says which: **(a)** a value from a
+publication about the technique, with its URL; **(b)** a derivation over
+chesso's own data or scale, which includes a value chesso already ships from
+its own SPSA run; **(c)** the range midpoint or off value, stated as such.
+No engine's shipped R, divisor or margin seeds anything here, wherever it is
+republished; those records are in section 1 and, as anti-seeds, in section 5.
+
+**Units, once for this file (P6).** The eval margin is compared against
+`evaluate()`, so it is in chesso's material scale, `piece_value` in
+`src/eval_tables.hpp`: `PAWN` 94, `KNIGHT` 327, `BISHOP` 308, `ROOK` 487,
+`QUEEN` 716. The header's own comment says the split between `piece_value`
+and `psqt_mg` / `psqt_eg` is degenerate, so the material term alone is the
+unit. "One pawn" therefore means **94**, not 100 -- DEC-134 decided this
+treatment by name. Plies have no unit at all, so a ply count quoted from an
+engine takes form (c) and nothing else.
+
+- `NULL_MOVE_BASE` seed **3**, sweep 1..4 -- **(b)**, the value chesso ships
+  today, which is S085's SPSA output over chesso's own games. (The
+  2026-08-19 pass wrote "seed 2, ships today"; **it is 3 since S085**.) The
+  sweep range has **(a)** context and no (a) seed: Heinz's rule as the wiki
+  states it is "R=3 when normal search depth exceeds 6 plies and R=2
+  otherwise", https://www.chessprogramming.org/Depth_Reduction_R (fetched
+  2026-09-05) -- mind the depth-arithmetic convention.
+- `NULL_MOVE_DIVISOR` seed **6**, sweep 3..8 -- **(b)**, the value chesso
+  ships today.
+- `NULL_MOVE_EVAL_MARGIN` seed **94**, range 1..2000 -- **(b)**, one pawn in
+  chesso's own material scale, `PAWN` in `src/eval_tables.hpp` (units above).
+  The wiki's Null Move Pruning page states the eval-scaled factor with no
+  number (https://www.chessprogramming.org/Null_Move_Pruning, fetched
+  2026-09-05), so there is no (a) to take. Floor 1 is the div-by-zero guard;
+  the range top parks the term.
+- `NULL_MOVE_EVAL_CAP` seed **8**, range 0..16 -- **(c) midpoint**, stated as
+  such, and 0 is the term off. **A midpoint is a poor seed for a safety cap
+  and this file says so out loud**: at 8 a large static lead takes eight extra
+  plies off the null-move depth, and this step's own `accepts` calls an
+  uncapped term the mate-hiding bug this engine has already shipped twice.
+  So the mate instruments decide the seed's admissibility *before* any
+  sweep -- `TEST_SUITE("engine: mate safety")` in `tests/test_engine.cpp` and
+  `TEST_CASE` "pruning does not hide a forced mate" in
+  `tests/test_search.cpp`. **The measured alternative, P4**, and this step
+  may take it instead of the midpoint if the instruments say 8 is
+  inadmissible: with the eval term landed in the tune build, sweep the cap
+  downward from the range top, record the largest value at which both suites
+  pass, and seed one below it. That is a "measured" bound in the sense
+  `src/search_params.hpp`'s own header defines, the kind `RFP_MIN_PLY`'s
+  floor is. Whichever is used, the stamp records it and why. (The owner's
+  answer of 2026-09-08: seed the midpoint, keep P4 named beside it.)
+- The entry gate ships as bare `>= beta`; a margin on it is an S127-era
+  sweep, not V1.
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** DEC-019 lets a record say which
+  direction is worth trying; DEC-105 forbids any of these numbers starting a
+  sweep, which is why section 4 names no engine. Fruit's R=3 and the wiki's
+  "2 or 3" / "3 or 4" wordings are engines' shipped reductions; the divisor
+  "depth/5" is Lynx's prose; the eval margin "one pawn" is SF 074c7a3's, in
+  SF's scale, and the cap "three plies" is SF 7ed15af's, with Ethereal
+  89ed7eb the gain record for having a cap at all. Lynx #1918's margin-30
+  entry gate is a form to try at S127, not a value to start from.
 - - **The floor and the cap are different safety devices, and the demolition
   only reddens if both are lifted.** With the floor kept and the term uncapped,
   a +20-pawn node makes R huge, src/search.cpp:823 fails, and NMP switches off

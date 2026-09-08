@@ -219,6 +219,15 @@ value, `as shipped`, the step that shipped it.
 | S118 "What it costs today", "83.35 ns a call at 12.0 M calls a second ... 5.8 M nodes a second" | pre-S104 binary | `specs.md`: `bench_eval` 53.90 ns a call, 18.6 M calls per second (2026-08-19, S104) | date the paragraph "measured 2026-08-19 before S104" and quote the S104 line; a fresh `./build/tests/bench_eval` on the workstation is optional |
 | S127 "the bound binds" | pre-S085 cap | 19 | S150's form: "**was** 8 when this was written (2026-08-19); S085 shipped 19" |
 
+**Two F05-class values are already fixed and are not this step's (DEC-157).**
+S180 rewrote the `### 4. Constants and seeds` section of seven block-1 search
+steps on 2026-09-08 and corrected, in passing, the two stale shipping values
+that sat inside them: S114's "`NULL_MOVE_BASE` seed 2, ships today" against
+the 3 S085 shipped, and S132's `TM_NODE_MIN_DEPTH` "seeded beside
+`ASPIRATION_MIN_DEPTH`" against that gate's pre-S085 5 where 2 compiles.
+Neither file is in this step's `touches:` and neither is in the worklist
+above; do not go looking for them. The rest of the F05 class is unaffected.
+
 **Worklist, F08 -- S042.** Every site in `src/bitboard.cpp` touching
 `board->en_passant` or its key, from grep at HEAD:
 

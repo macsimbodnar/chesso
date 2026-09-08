@@ -3,7 +3,7 @@ goal:       the late move reduction is scaled by history, by node type and by wh
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
 touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
 excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md:81`; no `decisions.md` entry records that merge) and which is an input here
-decisions:  DEC-071
+decisions:  DEC-071, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -226,36 +226,76 @@ node, so search_params_rebuild_derived still covers only LMR_BASE/DIVISOR.
 
 ### 4. Constants and seeds
 
-All in src/search_params.hpp with stated ranges; every number below is a
-**seed — must be fitted/SPSA'd here (S127, DEC-084)**; off values sit inside
-the declared ranges.
+All in the `CHESSO_SEARCH_PARAMS` X-macro in `src/search_params.hpp` with
+stated ranges; every number below is a **seed — must be fitted/SPSA'd here
+(S127)**; off values sit inside the declared ranges. Under DEC-105 each seed
+is one of three forms and says which: **(a)** a value from a publication
+about the technique, with its URL; **(b)** a derivation over chesso's own
+data or scale; **(c)** the range midpoint or off value, stated as such. Where
+a midpoint is not an integer this step takes the integer below it and says
+so. Another engine's shipped coefficient is never a seed, wherever it is
+republished — the wiki's Late Move Reductions page proposes no formula of its
+own, only named engines' (fetched 2026-09-05,
+https://www.chessprogramming.org/Late_Move_Reductions), which is DEC-105's
+own PeSTO case. Those records are in section 1 and, as anti-seeds, in
+section 5.
 
-- `LMR_BASE 52` / `LMR_DIVISOR 182` ship already. Open-literature seeds if
-  re-swept: Obsidian 0.99/3.14, Weiss quiet 1.35/2.75, Ethereal quiet
-  0.7844/2.4696 (all CPW prose, DEC-084's allowed source). Weiss #481
-  (+7.37 steepening the curve after history landed) says the pair goes
-  stale the moment verdict 1 ships — S127's refit, not a mid-step re-sweep.
-- `LMR_HIST_DIV`: **no publishable seed** — Weiss/Lynx divisors are engine
-  values (Lynx's SPSA outputs in PR bodies are that engine's tuned
-  constants, not literature). Derive from our own scale: a saturated sum at
-  +/-3M mapping to the full clamp gives `3M / LMR_HIST_CLAMP`, ~12288 at
-  M = 2^13; sweep. Off: range top.
-- `LMR_HIST_CLAMP`: 2 (Weiss #451's "between +2 and -2", PR prose). Off: 0.
-- `LMR_CUTNODE`: 1 (Lynx #1233; a second ply failed at -17.62). Off: 0.
-- `LMR_NOT_IMPROVING`: 1 (Lynx #1135's form). Off: 0.
-- `LMR_TT_CAPTURE`: 1 (Weiss #536/#666, Lynx #1529). Off: 0.
-- `LMR_PV`: 1 — or `LMR_MIN_MOVES_PV` 5 against `LMR_MIN_MOVES` 4, the
-  parameterised `> 3` (Weiss #71 started one later at PV). Off: 0 / equal.
-- `LMR_DEEPER_MARGIN`, `LMR_SHALLOWER_MARGIN`: **no publishable numeric
-  seed** (SF margins are source; Lynx's guard is a diff). Sweep on our own
-  centipawn scale, several tens of cp first. Off: range top / 0.
-- Anti-seeds, measured negative: per-move no-TT-move (-8.08, Lynx #2253), a
-  second cutnode ply (-17.62, #1234), killer terms (four neutral-negative
-  Lynx PRs; Weiss removed its own), the reduced child reaching depth 0
-  (-25.77/-25.92, Lynx #2332/#2338).
+**Units, once for this file (P6).** A margin compared against `evaluate()` is
+in chesso's material scale, `piece_value` in `src/eval_tables.hpp`: `PAWN`
+94, `KNIGHT` 327, `BISHOP` 308, `ROOK` 487, `QUEEN` 716. The header's own
+comment says the split between `piece_value` and `psqt_mg` / `psqt_eg` is
+degenerate, so the material term alone is the unit. Plies have no unit.
+
+- `LMR_BASE 52` / `LMR_DIVISOR 182` ship already, and they are **(b)** — the
+  output of S085's SPSA run over chesso's own games. That is the only seed a
+  re-sweep needs and no other is admissible. Section 1's record that the pair
+  goes stale the moment verdict 1 ships still holds: that is S127's refit,
+  not a mid-step re-sweep.
+- `LMR_HIST_DIV` — **(b)**, chesso's own scale. A saturated history sum
+  mapping to the full clamp gives `3M / LMR_HIST_CLAMP`, where `M` is
+  `QUIET_HISTORY_MAX` (8192) — ~12288 at `LMR_HIST_CLAMP` 2. The 3 counts
+  S024's two continuation tables alongside the quiet table: **before S024
+  lands the sum is `[-M, +M]` and the divisor is `M / LMR_HIST_CLAMP`**,
+  ~4096. Sweep. Off: range top.
+- `LMR_HIST_CLAMP` **2** — **(b)**, a stated fraction of chesso's own
+  reduction table. Read `search_lmr_reduction_probe(depth, move)` in
+  `src/search.cpp` at the census median depth (11 at the S085 control, per
+  the `RFP_MAX_DEPTH` comment in `src/search_params.hpp`; re-read at this
+  step's HEAD) and the table's last move index 63: `0.52 + ln(11) * ln(63) /
+  1.82` = 5.98, stored floored as 5. Half of that, rounded down, is **2** —
+  history may move a late reduction by at most half of what depth and move
+  number gave it. Re-derive the arithmetic when `LMR_BASE` / `LMR_DIVISOR`
+  move. Fallback **(c)**: midpoint of 0..4 is 2, the same integer. Off: 0.
+- `LMR_CUTNODE`, `LMR_NOT_IMPROVING`, `LMR_TT_CAPTURE`, `LMR_PV` **1** each —
+  **(c) midpoint** of a 0..2 ply term, off 0. A ply count has no unit to
+  derive from and no publication states one.
+- `LMR_MIN_MOVES` **4** — **(b)**, chesso's own: the parameterised form of
+  the `legal_moves_counter > 3` guard in `negamax` in `src/search.cpp`.
+  `LMR_MIN_MOVES_PV` **6** — **(c) midpoint** of 4..8; off: equal to
+  `LMR_MIN_MOVES`.
+- `LMR_DEEPER_MARGIN`, `LMR_SHALLOWER_MARGIN` **47** each — **(c) midpoint**
+  of a range stated by purpose, 0..`PAWN` (0..94): the top is one pawn, the
+  point past which the re-search decision would be made on more material than
+  a pawn of window. Midpoint **47**. Both off values sit inside it and they
+  are opposite ends — `LMR_DEEPER_MARGIN` is off at the range top (the
+  re-search never returns far enough above to search deeper) and
+  `LMR_SHALLOWER_MARGIN` is off at 0. Compared against `evaluate()`, so the
+  units above apply.
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** DEC-019 lets a record say which
+  direction is worth trying; DEC-105 forbids any of these numbers starting a
+  sweep, which is why section 4 names no engine. Measured negative
+  elsewhere: per-move no-TT-move (-8.08, Lynx #2253), a second cutnode ply
+  (-17.62, #1234), killer terms (four neutral-negative Lynx PRs; Weiss
+  removed its own), the reduced child reaching depth 0 (-25.77/-25.92, Lynx
+  #2332/#2338). The coefficient pairs section 1 quotes from the wiki's LMR
+  page — Obsidian 0.99/3.14, Weiss 1.35/2.75, Ethereal 0.7844/2.4696 — are
+  those engines' tuned output republished, DEC-105's own PeSTO case: they are
+  records of what a curve can look like, never a seed for chesso's.
 - **The repo's own bug class.** S013's LMR reduced the mating move at the
   root; null move hid a mate in 2 (tests/test_search.cpp:2804-2825, the
   "pruning does not hide a forced mate" case). The

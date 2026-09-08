@@ -3,7 +3,7 @@ goal:       reduce a node whose table entry carries no move instead of searching
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the depth threshold and the reduction amount are constants in src/search_params.hpp with stated ranges (S073); the reduction applies only where the entry genuinely has no move, with a test asserting the precondition -- a node whose entry does have a move must not be reduced, and the test fails if the precondition is absent; a position with a forced mate inside the reduced depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   internal iterative deepening, the older and more expensive form, unless the step measures both and says which it kept
-decisions:  DEC-071
+decisions:  DEC-071, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -138,21 +138,42 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 4. Constants and seeds
 
-Both in src/search_params.hpp (the src/search_params.hpp:50 X-macro) with
-stated ranges; each is a **seed — must be fitted/SPSA'd here** (S127, DEC-084).
+Both in `src/search_params.hpp` (the `CHESSO_SEARCH_PARAMS` X-macro) with
+stated ranges; each is a **seed — must be fitted/SPSA'd here** (S127). Under
+DEC-105 every seed is one of three forms and says which: **(a)** a value from
+a publication about the technique, with its URL; **(b)** a derivation over
+chesso's own data or scale; **(c)** the range midpoint or off value, stated
+as such. A ply count another engine ships is that engine's tuned output and
+is never a seed, wherever it is republished — those records live in section 1
+and, as anti-seeds, in section 5.
 
-- `IIR_MIN_DEPTH` **4** — Lynx #507's introduction value; 4->5 +0.43 and
-  5->6 0.08 say flat above it; CPW's "depth > 5, say"; SF deleted the
-  condition at ~3800. Range 2..63: 2 keeps the floor trivially true, 63 is
-  the off value.
-- `IIR_REDUCTION` **1** — every traced introduction. Range 0..3, 0 = off.
-  **Anti-seed: 2, measured -12.38 and -46.23 at Lynx** (#1361, #2028).
+- `IIR_MIN_DEPTH` **6** — **(a) literature.** The wiki's own page states the
+  condition as a hypothetical with no engine attached: "only use IIR if depth
+  > 5, say", https://www.chessprogramming.org/Internal_Iterative_Reductions
+  (fetched 2026-09-05). Section 3's guard is `depth >= IIR_MIN_DEPTH`, so
+  "depth > 5" is **6**. Range 2..63 stands: 2 keeps the floor trivially true,
+  63 is the off value.
+- `IIR_REDUCTION` **1** — **(c) midpoint.** The wiki states no reduction
+  amount, so no (a) exists, and a ply count has no unit to derive from
+  chesso's own scale. Range 0..3, 0 = off; the arithmetic midpoint 1.5 is not
+  an integer, so the seed is **1**, the integer below it, and the sweep
+  decides. That this is also the amount every traced introduction shipped is
+  a coincidence of the arithmetic, not its provenance.
 - No cutnode term: chesso gains a cut_node input only if S098's verdict 2
   shipped, and the cutnode variants are 3300+ records in both directions —
   S127-era material, not this step's.
 
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
+
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** Section 1 carries them and they stay
+  there: Lynx introduced the threshold at min depth 4 (#507) with 4->5 +0.43
+  and 5->6 +0.08 above it, and measured a 2-ply reduction at **-12.38**
+  (#1361) and **-46.23** (#2028); SF simplified its depth condition away at
+  ~3800 (3747a19). Under DEC-019 a record like that says which direction is
+  worth trying and never what to start from, and under DEC-105 none of these
+  numbers may seed the sweep — which is why section 4 names no engine.
 - **Stacking with S098/S091 is in series, not additive.** IIR cuts `depth`
   once at node level before the move loop; S098's reduction and S091's extra
   ply are per-move cuts on child_depth inside it. The per-move machinery

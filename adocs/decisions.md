@@ -8647,3 +8647,59 @@ Consequences: **The grid is a knife edge and both files now say so** rather than
               work from, and S202's file carries it.
               The fast suite costs more: D at 4000000 nodes is about 7.9 s where
               its old budget was under 1 s.
+
+## DEC-157  2026-09-08  S114 seeds its null-move cap from the midpoint with the measured bound named beside it, and S180 fixes the stale shipping values it rewrites
+Tags:         seeds, dec-105, dec-134, s180, s114, s132, s184, search-params, workflow
+Context:      S180's implementation guide closed with three questions its own
+              `accepts` could not settle, and all three had to be answered before
+              seven step files could be rewritten.
+              **One.** `NULL_MOVE_EVAL_CAP` is a mate-safety cap, and DEC-105
+              leaves only the range midpoint once the engine values are refused:
+              8 of 0..16, which is near the *off* end for a term whose job is to
+              stop the search reducing into a hidden mate. The alternative is a
+              measured bound -- sweep the cap downward and take one below the
+              largest value the two mate suites still pass at -- which is the
+              third bound kind `src/search_params.hpp`'s own header defines and
+              the kind `RfpMinPly`'s floor is. S180 runs nothing, so it can only
+              write one of them down.
+              **Two.** The F01 table of `adocs/audit/2026-09-04_plan_review.md`
+              lists ten seeds; the seven sections hold about a dozen more
+              engine-originated or formless ones. `accepts` binds "every seed"
+              but its walk-row-by-row clause names only F01's, so the stamp's
+              scope was ambiguous.
+              **Three.** S114's "`NULL_MOVE_BASE` seed 2, ships today" has been
+              wrong since S085 moved it to 3, and S132's `TM_NODE_MIN_DEPTH`
+              "seeded beside `ASPIRATION_MIN_DEPTH`" quotes that gate's pre-S085
+              value of 5 against the 2 that compiles. Both are S184's class (F05)
+              and both sit inside sections S180 rewrites, and S184's `touches`
+              names neither file.
+Decision:     By the owner, 2026-09-08, before the rewrite started.
+              **One: the midpoint, with the measured bound named beside it.**
+              S114's section 4 seeds `NULL_MOVE_EVAL_CAP` at 8 and states in the
+              same bullet that a midpoint is a poor seed for a safety cap, that
+              the mate instruments decide the seed's admissibility before any
+              sweep, and that S114 may take the measured bound instead and record
+              which it used. A step file may name an alternative; it may not run
+              one, and S180 does not.
+              **Two: the stamp lists both, F01's ten rows first.** `accepts` is
+              not amended -- it already says "every seed" -- and the inventory
+              rows follow the F01 walk as a second list.
+              **Three: S180 fixes them in passing**, stamps it, and S184's file is
+              told so it does not go looking. A wrong shipping value inside a
+              section being rewritten is cheaper to fix than to hand over.
+Rejected:     Seeding `NULL_MOVE_EVAL_CAP` from the measured bound. Not refused on
+              its merits -- it is the better seed -- but S180 measures nothing by
+              its own `excludes`, and a step file that states a number it did not
+              produce is the thing this whole step exists to stop.
+              Amending S180's `accepts` to name the inventory rows. Refused as a
+              step file edited to match the work rather than the reverse; "every
+              seed" already covers them.
+              Leaving the two stale values to S184. Refused because the sections
+              are being rewritten anyway, and a rewrite that copies a wrong number
+              forward launders it.
+Consequences: S114's section 4 carries both the midpoint and the P4 procedure, and
+              whichever S114 uses goes in its stamp. S184 no longer owns the two
+              values named here and its file says so; the rest of its F05 class is
+              untouched. Once S184 extends `tools/plan_prose_check.py --params` to
+              `adocs/plan_todo/`, a shipping value quoted wrongly in a step file
+              becomes a red fast test rather than an audit finding.

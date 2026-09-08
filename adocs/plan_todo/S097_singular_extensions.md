@@ -3,7 +3,7 @@ goal:       extend the one move a verification search says is singular, and take
 accepts:    an SPRT verdict per change, measured separately -- the extension and the multicut are two changes off one verification search; the verification search excludes the table move, runs at a reduced depth against a window below the table score, and is skipped at the root and where the entry is too shallow or its bound is wrong, each condition asserted by a test that fails if the precondition is absent; the margins and the reduced depth are constants in src/search_params.hpp with stated ranges (S073); a position with a forced mate inside the multicut's pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp:961` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
-decisions:  DEC-071
+decisions:  DEC-071, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -224,32 +224,75 @@ extension first, the multicut second, each its own SPRT.
 
 ### 4. Constants and seeds
 
-All in the src/search_params.hpp X-macro (src/search_params.hpp:50) with stated
-ranges; every number is a **seed — must be fitted/SPSA'd here** (S127,
-DEC-084).
+All in the `CHESSO_SEARCH_PARAMS` X-macro in `src/search_params.hpp` with
+stated ranges; every number is a **seed — must be fitted/SPSA'd here**
+(S127). Under DEC-105 each is one of three forms and says which: **(a)** a
+value from a publication about the technique, with its URL; **(b)** a
+derivation over chesso's own data or scale; **(c)** the range midpoint or off
+value, stated as such. Where a midpoint is not an integer this step takes the
+integer below it and says so. No engine's shipped depth, margin or ply count
+seeds anything here, wherever it is republished; those records are in section
+1 and, as anti-seeds, in section 5.
 
-- `SE_MIN_DEPTH` **8**, range 4..16 (SF prose 8e823459; Ethereal 8→10
-  +12.68 up, Stash 8→7 +7.87 down, Weiss #639/#641 lower still at ~3300 —
-  direction is engine-dependent, sweep).
-- `SE_TT_DEPTH_MARGIN` **3**, range 0..8 (edwardyu 2011 prose,
-  "depth - nBetaDepth <= 3").
-- `SE_MARGIN_PER_DEPTH`: form `margin = SE_MARGIN_PER_DEPTH * depth` scaled
-  to land a few tens of cp at depth 8 — **no publishable coefficient**
-  (engine values are source; CPW's flat 10..100 experimentation range is the
-  open record). Off value: range top (never singular).
-- Verification depth: `(depth - 1) / 2` as the shipped form; CPW publishes
-  "depth/2 to depth-N" as the space — if parameterised, `SE_VDEPTH_SUB`
-  with the halving stated, else record the fixed form in the commit.
-- `SE_PLY_FACTOR` **3**, range 2..8 (Lynx #1768 title prose).
+**Units, once for this file (P6).** A margin compared against `evaluate()` is
+in chesso's material scale, `piece_value` in `src/eval_tables.hpp`: `PAWN`
+94, `KNIGHT` 327, `BISHOP` 308, `ROOK` 487, `QUEEN` 716. The header's own
+comment says the split between `piece_value` and `psqt_mg` / `psqt_eg` is
+degenerate, so the material term alone is the unit — a pawn measured by
+removing one from a board is not 94. Plies have no unit at all.
+
+- `SE_MIN_DEPTH` **10**, range 4..16 — **(c) midpoint.** No (a) exists to
+  take: the wiki's Singular Extensions page states no depth
+  (https://www.chessprogramming.org/Singular_Extensions, fetched
+  2026-09-05), and the Anantharaman, Campbell and Hsu papers behind the
+  technique are paywalled and their parameters **unverified**
+  (https://dl.acm.org/doi/abs/10.1016/0004-3702(90)90073-9,
+  https://journals.sagepub.com/doi/abs/10.3233/ICG-1988-11402). The **(b)**
+  alternative belongs to this step at its start and is stated here so it can
+  be taken instead: profile chesso's own table-entry reliability by depth —
+  over the 300-position stratified pick (`adocs/data/S021_aspiration_sweep.py`),
+  how often the stored move of an entry at depth `d` survives as best move of
+  a full-width search at the same depth — and seed at the shallowest depth
+  where that share is high enough for a verification search to be worth its
+  nodes. Whichever is used, the stamp records it.
+- `SE_TT_DEPTH_MARGIN` **4**, range 0..8 — **(c) midpoint**, exactly.
+- `SE_PLY_FACTOR` **5**, range 2..8 — **(c) midpoint**, exactly.
+- `SE_MARGIN_PER_DEPTH` **9** — **(c) midpoint** of a range stated by
+  purpose, which is what `src/search_params.hpp`'s header asks a bound to be.
+  Form `margin = SE_MARGIN_PER_DEPTH * depth`, compared against `evaluate()`,
+  so the units above apply. Floor **1**: the smallest margin that is not off.
+  Top **18**: the value at which the margin at the `SE_MIN_DEPTH` seed
+  reaches two pawns, `2 * PAWN / SE_MIN_DEPTH` = `2 * 94 / 10` = 18.8,
+  floored — above that the verification window is wider than the material a
+  singular move is being claimed to win. Midpoint of 1..18 is 9.5, so the
+  seed is **9**. **Off value: none inside this range**, and that is stated
+  rather than fudged -- at the top the margin is still only two pawns at
+  `SE_MIN_DEPTH` and the extension keeps firing. The feature's off switch is
+  `SE_MIN_DEPTH` at its own range top, and if the sweep wants a margin that
+  parks the term it needs a wider declared range and a purpose for it.
+  The "flat 10..100 experimentation range" the 2026-08-19 pass attributed to
+  the wiki **is not on the page as fetched 2026-09-05** and is dropped.
+- Verification depth: `(depth - 1) / 2` as the shipped form. The
+  "depth/2 to depth-N" space the 2026-08-19 pass attributed to the wiki is
+  **unverified** — not on the page as fetched 2026-09-05 — so the form is
+  chesso's own choice, **(b)**: if parameterised, `SE_VDEPTH_SUB` with the
+  halving stated, else record the fixed form in the commit.
 - Multicut adds no constant beyond the guards; a return margin is S127-era.
-- Anti-seeds, measured negative elsewhere: returning singularBeta from
-  multicut (Lynx #1750 failed where #1751 passed); stacking a check
-  extension on a singular one (SF 30c58320 prose; moot here — none exist,
-  DEC-087); extending more than 1 without the double-extension guards
-  (Lynx caps doubles at 6 per line, #1777).
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** Records of a value that measured
+  negative elsewhere; DEC-019 lets them say which direction is worth trying
+  and DEC-105 forbids any of them starting a sweep, which is why section 4
+  names no engine. Returning singularBeta from multicut (Lynx #1750 failed
+  where #1751 passed); stacking a check extension on a singular one (SF
+  30c58320 prose; moot here — none exist, DEC-087); extending more than 1
+  without the double-extension guards (Lynx caps doubles at 6 per line,
+  #1777). The min-depth direction is engine-dependent and section 1 carries
+  it both ways (Ethereal 8→10 +12.68 up, Stash 8→7 +7.87 down, Weiss
+  #639/#641 lower still at ~3300) — sweep, do not seed.
 - - **Search explosion is the published hazard, not a hidden mate** — the
   extension only adds depth. Caps: +1 once per node, no recursive exclusion,
   `ply < SE_PLY_FACTOR * depth`, the MAX_PLY walls (src/search.cpp:612,

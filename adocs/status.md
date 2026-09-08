@@ -7,6 +7,36 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S180 is done, 2026-09-08: no pending step tells an implementer to start a
+  sweep from another engine's number.** Every seed in the `### 4. Constants and
+  seeds` section of S095, S097, S098, S109, S113, S114 and S132 is now one of
+  three declared forms -- **(a)** a literature value with its URL, **(b)** a
+  derivation over chesso's own data or scale written as the procedure its
+  owning step runs, **(c)** a declared range's midpoint or off value stated as
+  such. F01's ten rows walked plus about a dozen the inventory found.
+  Documents only: no `src/`, nothing measured, `GATE-DONE 26851183` unchanged
+  from the parent, fast suite 28/28 in both builds. Closes
+  `2026-09-04_plan_review-F01`.
+- **Three replacements are worth knowing before their steps start.**
+  `PROBCUT_MARGIN` is no longer four engines' margins averaged: it is Buro's
+  own regression over chesso's positions at the paper's `t` = 1.0, and the
+  procedure with its exclusions is written into S113 for S113 to run. **The
+  futility margins were wrong in a way nobody had noticed**: the 2026-08-19
+  pass read the wiki's "minor" and "rook" as 300 and 500 -- `see_value`'s
+  scale -- for a margin compared against `evaluate()`, so `FUT_BASE` /
+  `FUT_SLOPE` become **147 / 170** from `piece_value`, not 100 / 200. Every
+  rewritten section now carries a units paragraph naming which of the two
+  pawns, 94 or 100, its numbers are in. And the clause seeding an LMR
+  re-sweep from three engines' curve coefficients republished on the wiki is
+  **deleted** -- DEC-105's own PeSTO case -- leaving S085's own 52 / 182.
+- **DEC-157 answers the step's three deferred questions, and one of them is a
+  standing rule.** `NULL_MOVE_EVAL_CAP` seeds from the range midpoint 8 with
+  the measured bound (P4) named beside it, because a step file may state an
+  alternative but S180 measures nothing; the stamp lists F01's rows first and
+  the inventory's second; and the two stale shipping values sitting inside the
+  rewritten sections -- S114's `NULL_MOVE_BASE` "2 ships today" against the 3
+  S085 shipped, S132's `TM_NODE_MIN_DEPTH` 5 against the compiled 2 -- were
+  fixed here rather than handed to S184, whose file now says so.
 - **S203 is done, 2026-09-08: the Zobrist keys are the project generator's, and
   the mating-PV fixture was rebuilt by a rule rather than by a match.**
   `init_zobrist` draws its 851 keys from `project_random_next` seeded with
@@ -768,12 +798,13 @@ Updated: 2026-09-08, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: the instrument lane, **S180** first, with **S148** the first verdict --
-  and the calibration that had to precede it is taken, so nothing blocks it.
-  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads the
-  list with one machine.
-  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads
-  the list with one machine.
+- Next: the instrument lane continues at **S184** -- the pending documents
+  stated at HEAD values, and `tools/plan_prose_check.py --params` extended to
+  reach `plan_todo/` -- with **S148** still the first verdict, and the
+  calibration that had to precede it taken, so nothing blocks it. Two of
+  S184's F05 rows are already done: S180 fixed them in passing and S184's file
+  carries the note (DEC-157). `plan.md`'s "What the 2026-09-05 reorder
+  changed" says how one agent reads the list with one machine.
 
   **Every commit touching `src/` now needs a `Bench:` line.** Run
   `export CLANG_FORMAT_MAJOR=22` and then `tools/gate.sh --message <file>`

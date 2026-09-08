@@ -3,7 +3,7 @@ goal:       late move pruning, futility pruning, history pruning and quiet SEE p
 accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, or when alpha or beta is near mate -- all four rules, no exceptions; **the gives-check exemption binds the three per-move rules only** -- futility, history pruning and quiet SEE, which run after `make_move` where `is_check_move` exists (`src/search.cpp:678`) -- **and does not bind late move pruning**, whose skip-quiets flag is honoured at the generation stage before any move is made, where the engine has no pre-make gives-check predicate to consult and the published LMP form carries no such exemption; so LMP may end a quiet stage that still holds checking quiets, which is stated here rather than tested away, and buying it the exemption with a post-make prune is a departure from the published form and the owner's call, not the implementer's; for every rule, the test asserts the precondition that would otherwise prune the move, against the exemptions that bind that rule; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   razoring, which is a node-level rule and is S116; SEE pruning of **captures** in the main search, which is S091; futility inside quiescence, which is S112; the improving flag, which S108 supplies and this step consumes
-decisions:  DEC-071, DEC-082, DEC-084, DEC-087
+decisions:  DEC-071, DEC-082, DEC-084, DEC-087, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -270,31 +270,84 @@ without taking strength numbers on the tune build (forbidden, S073):
 
 ### 4. Constants and seeds
 
-All in src/search_params.hpp with stated ranges; every number below is a
-**seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**. Off
-values sit inside the declared ranges on purpose.
+All in the `CHESSO_SEARCH_PARAMS` X-macro in `src/search_params.hpp` with
+stated ranges; every number below is a **seed -- must be fitted here (sweep)
+and SPSA'd at S127**. Off values sit inside the declared ranges on purpose.
+Under DEC-105 each seed is one of three forms and says which: **(a)** a value
+from a publication about the technique, with its URL; **(b)** a derivation
+over chesso's own data or scale; **(c)** the range midpoint or off value,
+stated as such. Where a midpoint is not an integer this step takes the
+integer below it and says so. No engine's shipped threshold, margin or depth
+cap seeds anything here, wherever it is republished; those records are in
+section 1 and, as anti-seeds, in section 5.
+
+**Units, once for this file (P6).** A margin compared against `evaluate()` --
+futility -- is in chesso's material scale, `piece_value` in
+`src/eval_tables.hpp`: `PAWN` 94, `KNIGHT` 327, `BISHOP` 308, `ROOK` 487,
+`QUEEN` 716. The header's own comment says the split between `piece_value`
+and `psqt_mg` / `psqt_eg` is degenerate, so the material term alone is the
+unit. A threshold compared against a SEE result -- the quiet SEE gate -- is
+in the exchange scale instead, `see_value` in `src/bitboard.cpp`, where a
+pawn is 100. **The two pawns differ and the 2026-08-19 pass conflated them.**
 
 - `LMP_BASE`, `LMP_DEPTH_COEFF`, `LMP_MAX_DEPTH`: threshold `LMP_BASE +
-  LMP_DEPTH_COEFF * depth` (linear seed: base 0, coeff 10, depth cap 3 --
-  Lynx #512 PR prose, the only sub-3000 pass), quadratic `base 3 + depth^2`
-  as the alternative FORM (failed at 2600, Lynx #512/#783 -- try it only
-  above the first fit). Doubled when improving (Lynx #1129). Off: base at
-  MAX_MOVES (270).
-- `FUT_BASE`, `FUT_SLOPE`, `FUT_MAX_LMRDEPTH`: seed margin ~300 at depth 1,
-  ~500 at depth 2 (CPW's minor/rook wording -> base 100, slope 200), cap 6-8.
-  Off: base at the range top (>= 2 * queen value).
-- `HP_COEFF`, `HP_MAX_DEPTH`: **no publishable numeric seed** (Weiss/Lynx
-  constants live in source). Choose relative to S093's `HISTORY_MAX` M:
-  first setting in the `M/64..M/8` per-depth-ply region, swept; depth cap
-  seed 3-4 ("low depths", Weiss #446). Off: HP_COEFF at max (threshold below
-  -3M).
-- `SEE_QUIET_COEFF`, `SEE_QUIET_MAX_LMRDEPTH`: gate seed lmrDepth <= 9 (SF
-  a834bfe prose); coefficient seeded so the bar at lmrDepth 1 is under a
-  pawn's `see_value` (100, src/bitboard.cpp:1096) -- our own scale, not a
-  copied margin. Off: coefficient at max.
+  LMP_DEPTH_COEFF * depth` -- **(b)**, a census over chesso's own tree,
+  **P2**, run by this step at its start. Tune build, instrumented under
+  `#ifdef CHESSO_TUNE` only: at every beta cutoff on a quiet move in
+  `negamax` in `src/search.cpp`, record `(depth, legal_moves_counter)`; run
+  `go depth 10` over the 300-position stratified pick
+  (`adocs/data/S021_aspiration_sweep.py`). Per remaining depth 1..8 take the
+  **95th percentile** of the cutoff index -- the count past which 19 of 20
+  quiet cutoffs have already happened, which is what "late enough to skip"
+  means; the percentile is this file's choice and the sweep decides. Fit
+  `threshold = LMP_BASE + LMP_DEPTH_COEFF * depth` by least squares over
+  depths 1..3. Seed `LMP_MAX_DEPTH` as the largest depth at which the fitted
+  threshold is below the median number of quiet moves generated at that depth
+  in the same census -- a rule that never binds is not measurable. Record the
+  percentile table in this step's stamp. The quadratic `base + depth^2` stays
+  the alternative **form**, tried only after the linear fit has a verdict.
+  Off: `LMP_BASE` at `MAX_MOVES` (270, `src/data_structures.hpp`).
+- `FUT_BASE` **147**, `FUT_SLOPE` **170** -- **(a) literature**, Heinz's
+  margins as the wiki states them:
+  https://www.chessprogramming.org/Futility_Pruning (fetched 2026-09-05)
+  gives the depth-1 margin as one that "should not exceed the value of a
+  minor piece" and the depth-2 margin as "more like the value of a rook". In
+  chesso's material scale (units above) a minor is `(KNIGHT + BISHOP) / 2` =
+  317 and a rook is `ROOK` = 487, so with `margin = FUT_BASE + FUT_SLOPE *
+  depth`: `FUT_SLOPE` = 487 - 317 = **170** and `FUT_BASE` = 317 - 170 =
+  **147**. The 2026-08-19 pass read the same two words in `see_value`'s scale
+  and got 100 / 200; that was the wrong pawn. `FUT_MAX_LMRDEPTH` **8** --
+  **(c) midpoint** of a range declared by purpose, 0..16: 0 is off, and 16 is
+  above the median depth 11 the `RFP_MAX_DEPTH` comment in
+  `src/search_params.hpp` records, where the gate stops binding. Off:
+  `FUT_BASE` at the range top (>= 2 * `QUEEN`).
+- `HP_COEFF` **576**, `HP_MAX_DEPTH` **8**. `HP_COEFF` is **(c)**, the
+  arithmetic midpoint of the per-depth-ply region this file declares on
+  chesso's own history scale, `M/64 .. M/8` with `M` = `QUIET_HISTORY_MAX`
+  (8192): `(128 + 1024) / 2` = `9M/128` = **576**, swept from there.
+  `HP_MAX_DEPTH` is **(c) midpoint** of 0..16, declared by the same purpose
+  as `FUT_MAX_LMRDEPTH` above. Off: `HP_COEFF` at max (threshold below
+  `-3M`).
+- `SEE_QUIET_COEFF` -- **(b)**, chesso's own exchange scale: seeded so the
+  bar at lmrDepth 1 is under one pawn of `see_value` in `src/bitboard.cpp`
+  (100 there, not 94). `SEE_QUIET_MAX_LMRDEPTH` **8** -- **(c) midpoint** of
+  0..16, declared by purpose as above. Off: coefficient at max.
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** DEC-019 lets a record say which
+  direction is worth trying; DEC-105 forbids any of these numbers starting a
+  sweep, which is why section 4 names no engine. The linear threshold's
+  shipped form at the only sub-3000 pass is Lynx #512's (base 0, coeff 10,
+  cap 3) and the quadratic `3 + depth^2` failed at 2600 there (#512/#783) --
+  a record of which *form* to try first, never of where to start it;
+  doubling the threshold when improving is Lynx #1129 and is S092-era, not
+  this step's. The depth cap "3-4, low depths" is Weiss #446's phrase, and
+  the quiet-SEE gate lmrDepth <= 9 is SF a834bfe prose: both are those
+  engines' tuned output. Section 4 declares its own ranges and takes their
+  midpoints instead.
 - **The recurring repo bug, now four ways.** Null move hid a mate in 2, LMR
   reduced the mating root move, RFP cannot see mates (S033). Every rule here
   carries the in-check + near-mate-bounds + PV + first-move guards, and the

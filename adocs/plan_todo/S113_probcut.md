@@ -3,7 +3,7 @@ goal:       a shallow verification search over good captures prunes a node whose
 accepts:    an SPRT verdict, recorded whatever it is; never at a PV node, never when beta is near mate, and skipped when the table already holds a sufficient-depth entry scoring below the ProbCut beta; the margin and the depth reduction are constants in src/search_params.hpp with ranges and are fitted, not taken (DEC-084); a mate inside the pruned depth is in the fast suite and observed red with the guard removed
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   multicut, which arrives with S097's singular search at no extra cost
-decisions:  DEC-071, DEC-084
+decisions:  DEC-071, DEC-084, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -22,8 +22,10 @@ outcome and gets recorded as one.
 
 Line numbers at `0edfd26`; re-locate by symbol if drifted. Every GitHub read
 below was a PR body, commit message or release-note text, never a diff or
-source file (DEC-016, DEC-084). Buro's papers are open literature and were
-read in full; their numbers are legal seeds (DEC-084).
+source file (DEC-016). Buro's papers are open literature about the technique
+and were read in full: under DEC-105 a number from them is form (a) and may
+start a fit, and section 4 carries its URL. A number an engine ships is form
+(a) for nothing, wherever it is republished.
 
 ### 1. State of the art
 
@@ -133,7 +135,8 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 - **Nothing from S097 is needed**: no excluded-move parameter, no cutoff or
   store suppression -- ProbCut excludes nothing and its sub-searches probe
   and store normally. probDepth arithmetic: `probDepth = depth -
-  PROBCUT_DEPTH_OFFSET` (seed 4, SF prose), with the depth threshold
+  PROBCUT_DEPTH_OFFSET` (seed 4, the paper's depth pair -- section 4), with
+  the depth threshold
   keeping probDepth >= 1.
 
 ### 3. Implementation sketch
@@ -169,28 +172,75 @@ One SPRT, as the accepts prices. Increments:
 
 ### 4. Constants and seeds
 
-All in src/search_params.hpp with ranges (S073); every number is a **seed --
-must be fitted/SPSA'd here** (S127, DEC-084).
+All in the `CHESSO_SEARCH_PARAMS` X-macro in `src/search_params.hpp` with
+ranges (S073); every number is a **seed -- must be fitted/SPSA'd here**
+(S127). Under DEC-105 each is one of three forms and says which: **(a)** a
+value from a publication about the technique, with its URL; **(b)** a
+derivation over chesso's own data or scale; **(c)** the range midpoint or off
+value, stated as such. ProbCut is the one technique in this block with an
+open paper that states its own parameters, so (a) and (b) carry the whole
+section. No engine's shipped margin or gate seeds anything here.
 
-- `PROBCUT_MARGIN` **150**, range 50..2000, off = range top (probBeta
-  unreachable). Prose seeds: SF-2014 rbeta = beta + 200 (012f20d6's own bug
-  arithmetic: "beta = 29832, so rbeta = 30032"); Weiss beta + 200 (#567);
-  Ethereal 80 -> 100 cp (a8c9baf); Berserk 110 (#215 title). SF-2024's
-  beta + 390 (bb4b01e3) is the NNUE-era internal scale, not centipawns --
-  not a seed. Buro's method is the principled fit if the sweep wants one:
-  regress chesso's own shallow-vs-deep scores and set margin = t*sigma --
-  Jiang/Buro measured sigma 52-82 cp at best t 1.0-1.2.
-- `PROBCUT_MIN_DEPTH` **5**, range 3..10. Historic gates are source-only --
-  no publishable introduction value; SF prose allows 3 as of 2025 with the
-  verification collapsed into the qsearch (f00d91f). Sweep.
-- `PROBCUT_DEPTH_OFFSET` **4**, range 2..8 (SF 71cc01c, "'depth - 4
-  plies'").
+**Units, once for this file (P6).** The margin is compared against
+`evaluate()`, so it is in chesso's material scale, `piece_value` in
+`src/eval_tables.hpp`: `PAWN` 94, `KNIGHT` 327, `BISHOP` 308, `ROOK` 487,
+`QUEEN` 716. The header's own comment says the split between `piece_value`
+and `psqt_mg` / `psqt_eg` is degenerate, so the material term alone is the
+unit. A figure the paper quotes in *its* engines' scale is not convertible
+and is not a seed.
+
+- `PROBCUT_MARGIN` -- **(b) derivation**, the paper's own method run over
+  chesso's own positions, **P1**, by this step at its start; the threshold it
+  is run at is **(a)**, `t = 1.0` from
+  https://skatgame.net/mburo/ps/chessmpc.pdf (Jiang and Buro, ACG 10; Figure
+  2 `#define T 1.0`, and "the cut threshold 1.5 is no good"). Range 50..2000,
+  off = range top (probBeta unreachable). **The procedure.** Tune build. Over
+  the 300-position stratified pick (`adocs/data/S021_aspiration_sweep.py`),
+  run `go depth d'` and `go depth d` with `d' = PROBCUT_MIN_DEPTH -
+  PROBCUT_DEPTH_OFFSET` and `d = PROBCUT_MIN_DEPTH` -- 4 and 8 at the seeds
+  below -- reading `score cp` from the last `info` line. Drop a position where
+  either score is a mate score or `|v'| > 3 * PAWN`, the paper's own
+  exclusions ("We only used v' data points in the range [-300, 300]"; mate
+  scores excluded because a 4-ply search misses a mate an 8-ply search finds
+  "roughly once every 1000 positions"). Least-squares `v = a*v' + b`; `sigma`
+  is the standard deviation of the residuals; seed `PROBCUT_MARGIN =
+  round(t * sigma)` at `t` = 1.0. Record `a`, `b`, `sigma` and the surviving
+  and excluded counts in this step's stamp. Section 3's `probBeta = beta +
+  margin` is the paper's `(t*sigma + beta - b)/a` at `a` = 1, `b` = 0, and
+  the regression is what says how far chesso is from that. **Fewer than 200
+  surviving positions is a finding, not a seed: widen the set.**
+- `PROBCUT_DEPTH_OFFSET` **4**, range 2..8 -- **(a) literature.** The paper's
+  single-pair implementation is the depth pair (4, 8): Figure 2 `#define S 4
+  // depth of shallow search` and `#define H 8 // check height`; Table 1
+  regresses (3,5) and (4,8), and the MPC pair list is (2,6), (3,7), (4,8),
+  (3,9), (4,10). Same URL. That an engine also ships 4 is irrelevant --
+  provenance is the paper.
+- `PROBCUT_MIN_DEPTH` **8**, range 3..10 -- **(a) literature**, the check
+  height `H` of the same pair, so at the minimum depth the shallow search is
+  the paper's 4-ply search. Same URL. Sweep the range as declared.
 - The stored depth (probDepth vs probDepth + 1 for the qsearch stage): no
-  publishable prose either way -- store probDepth, the depth actually
-  searched, and record the choice in the commit.
+  publication states either, and chesso's own table has no measurement to
+  derive from yet -- store probDepth, the depth actually searched, and record
+  the choice in the commit.
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** DEC-019 lets a record say which
+  direction is worth trying; DEC-105 forbids any of these numbers starting
+  the fit, which is why section 4 names no engine. The shipped margins
+  section 1 quotes are those engines' tuned output: SF-2014 `beta + 200`
+  (012f20d6), Weiss `beta + 200` (#567), Ethereal 80 -> 100 cp (a8c9baf),
+  Berserk 110 (#215); SF-2024's `beta + 390` (bb4b01e3) is an NNUE-era
+  internal scale and is not even convertible. SF prose allowing a minimum
+  depth of 3 as of 2025 with the verification collapsed into the qsearch
+  (f00d91f) is a record of a *form*, not a gate value. **And the paper's own
+  fitted numbers are not seeds either**: Jiang and Buro measured `a` 0.998 to
+  1.11, `b` -7.0 to 2.36 and `sigma` 51.8 to 82.0 at pawn = 100 over about
+  2700 positions from Crafty and Yace. Expect that order of magnitude in
+  chesso's scale as a sanity check on P1's output and do not seed from it --
+  they are those engines' positions and those engines' searches.
 - **Mate-band beta is the load-bearing guard.** The margin sits on top of
   beta, and SF's 2014 assert bug is exactly that arithmetic escaping its
   bounds (012f20d6). Here the guard does two jobs: it stops a fail-high

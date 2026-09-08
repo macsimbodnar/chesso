@@ -3,7 +3,7 @@ goal:       the soft time limit scales with the share of the root's nodes the be
 accepts:    an SPRT verdict at an increment control, recorded whatever it is, with the time-forfeit count read from the PGN (the S089 lesson); per-root-move node counting happens at the root loop only, with no per-node cost added to the tree, and a test asserts the per-move counts sum to the iteration's total; the scale formula's constants are in src/search_params.hpp with stated ranges, seeded from the published form and fitted here (DEC-084, S127); a time the GUI named with `go movetime` is still never scaled, and the S089 stability and falling-score scalers are untouched -- this multiplies them, stated in the code where the three meet
 touches:    src/chesso.cpp iterative_deepening_search and the root move loop, src/search_params.hpp, tests/
 excludes:   the S089 base allocation and its two scalers; the hard limit
-decisions:  DEC-071, DEC-084, DEC-087
+decisions:  DEC-071, DEC-084, DEC-087, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
@@ -136,23 +136,59 @@ already asserts the budget side); `go movetime` unscaled (accepts).
 
 ### 4. Constants and seeds
 
-All **seed — must be fitted/SPSA'd here** (DEC-084), X-macro rows in
-src/search_params.hpp: `TM_NODE_BASE_PCT` 200 and `TM_NODE_SCALE_PCT` 100 —
-the Lynx #1203 prose pair (base 2.0, scale 1.0), the only published constants
-traced as prose; Lynx's retune to (240, 165) in #1206 says the pair co-moves
-with the base allocation, not that 240/165 fits chesso's. `TM_NODE_MIN_DEPTH`
-5 — **no depth gate is traced in any prose read**; this is our own guard
-against a depth-1..4 fraction being noise, seeded beside ASPIRATION_MIN_DEPTH,
-swept honestly (0 = no gate is a valid outcome). Before fitting, measure
-chesso's own best-move fraction distribution over the 300-position set at
-fixed depth (deterministic, one afternoon): at the Lynx seeds the factor band
-is [100, 200] — a mean above 100 inflates every move's spend, so either
-normalize the pair so the factor at the *measured median fraction* is ~100, or
-co-fit `TM_SOFT_PERCENT` with it. Ranges: base [100, 400], scale [0, 300],
-gate [0, 64].
+All **seed — must be fitted/SPSA'd here** (S127), X-macro rows of
+`CHESSO_SEARCH_PARAMS` in `src/search_params.hpp`. Under DEC-105 each is one
+of three forms and says which: **(a)** a value from a publication about the
+technique, with its URL; **(b)** a derivation over chesso's own data or
+scale; **(c)** the range midpoint or off value, stated as such. **No (a)
+exists for this technique**: the wiki's Time Management page names "the ratio
+of the size of the subtree under the best move versus the size of the whole
+search tree" as a consideration and states no method and no number
+(https://www.chessprogramming.org/Time_Management, fetched 2026-09-05). So
+the pair is derived over chesso's own tree, and the engines' shipped pairs
+are records only — section 1 and, as anti-seeds, section 5. Ranges: base
+[100, 400], scale [0, 300], gate [0, 64].
+
+- `TM_NODE_BASE_PCT` and `TM_NODE_SCALE_PCT` — **(b)**, a census over
+  chesso's own tree, **P3**, run by this step once its counting half has
+  landed (behaviour-neutral, and first in section 3's sketch). Release build.
+  Over the 300-position stratified pick
+  (`adocs/data/S021_aspiration_sweep.py`) at `go depth 12`, record the best
+  move's share `f` of root-child nodes. In the X-macro's percent units
+  section 3's factor is `factor_pct = (TM_NODE_BASE_PCT - 100 f) *
+  TM_NODE_SCALE_PCT / 100`. **Two constraints, both chesso's own.**
+  `factor_pct` = 100 at the census median `f_med`, so the seed spends today's
+  allocation in expectation and the SPRT measures redistribution rather than
+  a longer clock; and `factor_pct` = `TM_SCALE_MIN_PERCENT` (30 today) at
+  `f` = 1, chesso's own floor for the scaled soft limit. Solving:
+  `TM_NODE_SCALE_PCT = 7000 / (100 - 100 f_med)` and `TM_NODE_BASE_PCT = 100
+  + 3000 / TM_NODE_SCALE_PCT`, rounded to integers — **140 and 121** at
+  `f_med` = 0.5, which is the illustration and not the seed; the census
+  supplies `f_med`. Record `f_med` and the quartiles in this step's stamp.
+  Fallback **(c)** if the census cannot run before the multiplier is written,
+  said so in the stamp: midpoints **250** of [100, 400] and **150** of
+  [0, 300].
+- `TM_NODE_MIN_DEPTH` — **(b)**, equal to `ASPIRATION_MIN_DEPTH` **as
+  compiled at this step's HEAD** (2 today, not the 5 the 2026-08-19 pass
+  wrote from its pre-S085 value). It is chesso's own guard against a
+  depth-1..4 fraction being noise, and 0 — no gate — is a valid swept
+  outcome. **(c) is refused here and the refusal is the point**: the midpoint
+  32 of [0, 64] is above every depth this engine reaches, so it would seed
+  the feature switched off and the sweep would start from a rule that never
+  fires.
+
+seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
+- **Anti-seeds — records, not seeds.** DEC-019 lets a record say which
+  direction is worth trying; DEC-105 forbids any of these numbers starting
+  the fit, which is why section 4 names no engine. The only pair traced as
+  prose is Lynx #1203's (base 2.0, scale 1.0), and its retune to (240, 165)
+  in #1206 is the useful part of the record: the pair co-moves with the base
+  allocation, which is exactly why a number fitted against another engine's
+  allocation cannot seed chesso's. P3's two constraints are the same
+  observation written as arithmetic over chesso's own clock.
 - **TM constants are the most TC-sensitive family.** S085 traced an SPSA'd
   time manager at **+23.8 at 20+0.2 that measured -22.9 at 10+0.1**. Every
   node-TM record above was verified at two to four controls (Ethereal even at
