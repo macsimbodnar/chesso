@@ -2,9 +2,10 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Eight properties. The second is the one that stops F01 recurring; 3 to 8 are
+# Eleven properties. The second is the one that stops F01 recurring; 3 to 8 are
 # the default reference and the A/A guard -- the trap S160 disarmed and the
-# defects its own first attempt shipped, each one reproduced before it was fixed:
+# defects its own first attempt shipped, each one reproduced before it was
+# fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -16,6 +17,10 @@
 #      state, not who chose the ref
 #   7. AA=1 is how the A/A calibration is asked for, and it says so on screen
 #   8. a run outside a git checkout still prints a terminal marker
+#   9. the banner prints the seed fastchess is given, and SRAND overrides it
+#  10. the pgn records node counts and the clock left after every move
+#  11. ROUNDS runs fixed rounds with no SPRT, and the banner says it is not a
+#      verdict
 #
 # No game is played and no engine is built. `fastchess` is a stub on PATH, the
 # candidate and the reference are one-line shell scripts, and the whole run
@@ -66,9 +71,15 @@ make_sandbox()
   # The stub records that it ran and plays nothing. It reports its own
   # invocation through a file rather than through stdout, so the assertion
   # cannot be satisfied by the script merely echoing the word fastchess.
+  #
+  # It also writes its argument vector one argument per line, which is what
+  # cases 9 to 11 read: what the banner says and what fastchess is handed are
+  # two different claims, and only the second one decides which games are
+  # played.
   cat > "$tmp/stub/fastchess" << 'STUB'
 #!/bin/sh
 touch "$(dirname "$0")/../fastchess_invoked"
+printf '%s\n' "$@" > "$(dirname "$0")/../fastchess_args"
 exit 0
 STUB
   chmod +x "$tmp/stub/fastchess"
@@ -113,14 +124,15 @@ STUB
 # the per-run pgn/log directory inside the sandbox as well, so a smoke run
 # leaves nothing in /tmp.
 #
-# The second argument is the REF to pass and the third is AA. With neither, both
-# are left unset, which is what cases 3, 4 and 7 are about: the default is the
-# thing under test, so it cannot be supplied by the harness. They are unset
-# explicitly rather than merely not set, so a REF or AA exported into the test's
-# own environment cannot decide the result.
+# The second argument is the REF to pass, the third is AA, the fourth SRAND and
+# the fifth ROUNDS. With none of them the four are left unset, which is what
+# cases 3, 4, 7 and 9 are about: the default is the thing under test, so it
+# cannot be supplied by the harness. They are unset explicitly rather than
+# merely not set, so a value exported into the test's own environment cannot
+# decide the result.
 run_sandbox()
 {
-  local tmp="$1" ref="${2-}" aa="${3-}"
+  local tmp="$1" ref="${2-}" aa="${3-}" srand="${4-}" rounds="${5-}"
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub:$PATH" OUT="$tmp/out"
@@ -133,6 +145,16 @@ run_sandbox()
       export AA="$aa"
     else
       unset AA
+    fi
+    if [[ -n "$srand" ]]; then
+      export SRAND="$srand"
+    else
+      unset SRAND
+    fi
+    if [[ -n "$rounds" ]]; then
+      export ROUNDS="$rounds"
+    else
+      unset ROUNDS
     fi
     ./fastchess.sh --fast
   ) > "$tmp/out.txt" 2>&1
@@ -331,8 +353,97 @@ elif ! grep -q 'SPRT-RUN-FAILED' "$nogit_dir/out.txt"; then
   show "$nogit_dir"
 fi
 
+# 9. The banner prints the seed, and fastchess is handed the same one.
+#
+# fastchess echoes the seed nowhere -- not on stdout, not in its log, not in
+# the PGN (measured on alpha 1.8.1 20260720-daa3ea2, S198 section 2) -- so the
+# banner is a run's only record of which opening sequence it played. Two
+# claims are asserted separately: what the banner says, and what the process
+# was actually given. A banner line built from something other than the value
+# passed would be invisible to either one alone.
+seed_dir="$(make_sandbox "$script_under_test")"
+seed_status="$(run_sandbox "$seed_dir" HEAD~1)"
+banner_seed="$(sed -n 's/^seed       \([0-9]*\)$/\1/p' "$seed_dir/out.txt")"
+passed_seed="$(grep -A1 -x -- '-srand' "$seed_dir/fastchess_args" | tail -1)"
+
+if ((seed_status != 0)); then
+  fail "SRAND unset: the script exited $seed_status"
+  show "$seed_dir"
+elif [[ ! "$banner_seed" =~ ^[0-9]{14}$ ]]; then
+  # Fourteen digits is the stamp with its underscore removed, YYYYMMDDHHMMSS,
+  # which is what makes the default unique per run and readable as its time.
+  fail "SRAND unset: the banner does not print a 14-digit derived seed (got '$banner_seed')"
+  show "$seed_dir"
+elif [[ "$passed_seed" != "$banner_seed" ]]; then
+  fail "the seed passed to fastchess ('$passed_seed') is not the one the banner printed ('$banner_seed')"
+  show "$seed_dir"
+fi
+
+# The override, which is how a run's openings are replayed. Same two claims.
+override_dir="$(make_sandbox "$script_under_test")"
+override_status="$(run_sandbox "$override_dir" HEAD~1 "" 424242)"
+override_banner="$(sed -n 's/^seed       \([0-9]*\)$/\1/p' "$override_dir/out.txt")"
+override_passed="$(grep -A1 -x -- '-srand' "$override_dir/fastchess_args" | tail -1)"
+
+if ((override_status != 0)); then
+  fail "SRAND=424242: the script exited $override_status"
+  show "$override_dir"
+elif [[ "$override_banner" != 424242 || "$override_passed" != 424242 ]]; then
+  fail "SRAND=424242 was not honoured (banner '$override_banner', passed '$override_passed')"
+  show "$override_dir"
+fi
+
+# 10. The PGN records node counts and the clock left after every move.
+#
+# Both default to false in fastchess, and a census that wants them cannot get
+# them back from a match already played. Asserted on the argument vector for
+# the same reason as case 9: the stub writes no PGN.
+pgn_dir="$(make_sandbox "$script_under_test")"
+pgn_status="$(run_sandbox "$pgn_dir" HEAD~1)"
+
+if ((pgn_status != 0)); then
+  fail "pgn fields: the script exited $pgn_status"
+  show "$pgn_dir"
+else
+  for field in -pgnout nodes=true timeleft=true; do
+    if ! grep -q -x -- "$field" "$pgn_dir/fastchess_args"; then
+      fail "fastchess was not passed '$field'"
+      show "$pgn_dir"
+    fi
+  done
+fi
+
+# 11. ROUNDS plays fixed rounds with no SPRT, and the banner refuses the word.
+#
+# A fixed-rounds run is a calibration or a drift reading and never a verdict
+# (MEASUREMENT rule): the stopping rule is the round count, so the bounds
+# would be a claim nothing tested. The banner has to say that where a reader
+# of the log will meet it. AA=1 because a fixed-rounds run of two identical
+# builds is what this mode exists for.
+rounds_dir="$(make_sandbox "$script_under_test")"
+rounds_status="$(run_sandbox "$rounds_dir" "" 1 "" 500)"
+passed_rounds="$(grep -A1 -x -- '-rounds' "$rounds_dir/fastchess_args" | tail -1)"
+
+if ((rounds_status != 0)); then
+  fail "ROUNDS=500 AA=1: the script exited $rounds_status"
+  show "$rounds_dir"
+elif [[ "$passed_rounds" != 500 ]]; then
+  fail "ROUNDS=500 did not reach fastchess as -rounds 500 (got '$passed_rounds')"
+  show "$rounds_dir"
+elif grep -q -x -- '-sprt' "$rounds_dir/fastchess_args"; then
+  fail "a fixed-rounds run still passed -sprt, so it would stop on a bound"
+  show "$rounds_dir"
+elif ! grep -q 'fixed 500 rounds' "$rounds_dir/out.txt"; then
+  fail "the banner does not say the run is fixed at 500 rounds"
+  show "$rounds_dir"
+elif ! grep -q 'NOT a verdict' "$rounds_dir/out.txt"; then
+  fail "the banner does not say a fixed-rounds run is not a verdict"
+  show "$rounds_dir"
+fi
+
 rm -rf "$reached_dir" "$default_dir" "$clean_dir" "$older_dir" \
-       "$explicit_dir" "$aa_dir" "$nogit_dir"
+       "$explicit_dir" "$aa_dir" "$nogit_dir" "$seed_dir" \
+       "$override_dir" "$pgn_dir" "$rounds_dir"
 [[ -n "${abort_dir:-}" ]] && rm -rf "$abort_dir"
 
 if ((failures > 0)); then
@@ -340,4 +451,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 8 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git"
+echo "$script_under_test: 11 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT"

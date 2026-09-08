@@ -7,7 +7,7 @@ decisions:  DEC-139, DEC-143
 closes:
 blocks:
 paused_by:
-author:
+author:     agent (Claude Opus 5), coordinator, 2026-09-08
 done:
 
 ## Why this exists

@@ -690,12 +690,17 @@ argument will not fail it — DEC-028 says why.
 script any test touches. It plays no games: `fastchess` is a stub on `PATH`, the
 candidate and reference are one-line shell scripts, and the whole run happens
 inside a throwaway git repository, so `.ref-builds/` and `build/` are never
-read. It asserts eight things: the script reaches the `fastchess` invocation; a
+read. It asserts eleven things: the script reaches the `fastchess` invocation; a
 script that aborts before that point exits non-zero; with `REF` unset the banner
 names `HEAD`; each side's date comes from its own commit; a clean-tree A/A is
 refused however the ref is spelled, and leaves no output directory behind;
-`AA=1` reaches the match and says so; and a run outside a git checkout still
-prints a terminal marker. The first two exist because `44877c4` left a renamed
+`AA=1` reaches the match and says so; a run outside a git checkout still
+prints a terminal marker; the seed the banner prints is the seed `fastchess` is
+handed, and `SRAND` overrides it; the PGN is asked for node counts and time
+left; and `ROUNDS` reaches `fastchess` as a round count with no `-sprt` beside
+it. The last three read the stub's recorded argument vector rather than the
+banner alone, because what a banner says and what the process was given are two
+different claims (S198). The first two exist because `44877c4` left a renamed
 variable behind and the harness stopped running for a commit without anything
 noticing (S035, `2026-08-13_adversarial-F01`). The rest keep the default
 reference from silently freezing to a sha again (S160,
@@ -1519,6 +1524,8 @@ measurement.
 REF=HEAD~1 ./fastchess.sh       # measure against some other commit instead
 OUT=<dir> ./fastchess.sh        # where the pgn and log land
 AA=1 ./fastchess.sh             # A/A: identical builds, calibrates the harness
+SRAND=<n> ./fastchess.sh        # replay another run's openings, seed off its banner
+ROUNDS=<n> AA=1 ./fastchess.sh  # fixed rounds, no SPRT: never a verdict
 ```
 
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
@@ -1575,6 +1582,56 @@ state no usage licence, so nothing is taken from there. The committed
 repository -- `./books/fetch_book.sh 8moves_v3.pgn` verifies the tracked copy
 against upstream instead of downloading it. The script fails with
 `FETCH-BOOK-FAILED:` and `fastchess.sh` refuses to start without the file.
+
+### What the PGN carries, and how a run's openings are replayed
+
+**The seed is in the banner and nowhere else fastchess put it.** `-openings
+... order=random` has always been passed, so the opening sequence — and with
+`-repeat` the pairing that follows from it — came from a seed the harness never
+recorded. Measured on `alpha 1.8.1 20260720-daa3ea2`: fastchess echoes its seed
+on no stream, in no log and in no PGN header. `fastchess.sh` now derives one
+from the run stamp, prints it, and passes it:
+
+```
+book       UHO_Lichess_4852_v1.epd
+seed       20260908021500
+```
+
+`SRAND=<n>` overrides it, which is how a sequence is played again; a value that
+is not an unsigned integer is refused by name before the output directory is
+made. The parser is 64-bit — a 20-digit value is refused with `stoull: out of
+range`, and `seed + 2^32` gives a different sequence, so nothing is truncated.
+
+**A replay reproduces the openings, not the games.** Search under a clock is
+not deterministic, and the seed-to-sequence mapping is fastchess's own, so the
+same openings come back only with the same book (pinned by
+`books/fetch_book.sh`), the same fastchess build and the same `-openings`
+options. Each PGN carries the seed in its own header —
+`[Event "chesso full 20260908_021500 srand=20260908021500"]` — so a file
+separated from its log still says what it played.
+
+**Every move carries its node count and the clock left after it.** `-pgnout`
+is passed `nodes=true timeleft=true`, both of which default to false, so a
+census reads them without a log at `trace`:
+
+```
+3... Nc6 {+1.00/3 0.000s, tl=0.000s, n=2437}
+```
+
+The existing score, depth and time come first; `tl=` and `n=` follow.
+`tools/error_profile.py` takes the comment whole and anchors at its start, so
+it is unaffected.
+
+**`ROUNDS=<n>` plays a fixed number of rounds and runs no SPRT** — the mode a
+calibration and a drift reading need, and never a verdict (MEASUREMENT rule).
+An SPRT stops where its likelihood ratio happens to cross a bound, so variance
+read over an A/A that stopped that way is read over a denominator the answer
+chose; fixed rounds give a known one and an error bar of `v * sqrt(2/(n-1))`,
+about 6.3 % of `v` at 500 pairs. The banner prints no bounds line there:
+
+```
+bounds     none -- fixed 500 rounds, a calibration or drift reading, NOT a verdict
+```
 
 ### Not every change goes to a match
 

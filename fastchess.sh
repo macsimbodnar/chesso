@@ -11,6 +11,10 @@ set -euo pipefail
 #   OUT=<dir> ./fastchess.sh        where the pgn and log land
 #   AA=1 ./fastchess.sh             play an identical build against itself on
 #                                   purpose, to calibrate the harness
+#   SRAND=<n> ./fastchess.sh        replay another run's opening sequence, the
+#                                   seed read off its banner
+#   ROUNDS=<n> AA=1 ./fastchess.sh  fixed rounds and no SPRT: a calibration or
+#                                   a drift reading, never a verdict
 #
 # WHICH BOUNDS, AND WHY THE PAIR IS NOT A DETAIL. The hypothesis pair sets the
 # cost of a verdict as much as the hardware does. S068 measured one constant
@@ -219,6 +223,31 @@ case "${1:-}" in
     ;;
 esac
 
+# FIXED ROUNDS, AND WHY THAT IS NEVER A VERDICT. ROUNDS=<n> replaces the mode's
+# round limit and removes the SPRT entirely, so the run stops where it was told
+# to rather than where a likelihood ratio happened to cross a bound.
+#
+# That is what a calibration needs and what an SPRT cannot give it. In an A/A
+# the true difference is zero by construction, so the pair distribution that
+# comes back is the harness's alone -- but an SPRT on it accepts H1 with
+# probability alpha exactly, stopping at a game count the result itself chose,
+# and variance read over that denominator is read over a number the answer
+# picked. Fixed rounds give a known denominator and a known error bar,
+# v * sqrt(2/(n-1)) as adocs/data/S105_pairs.py prints it, about 6.3 % of v at
+# 500 pairs. S199's drift readings want the same thing for the same reason.
+#
+# The bounds do not merely go unused here, they go unprinted: a bounds line
+# over a run nothing tested against is the DEC-020 class of banner. The
+# MEASUREMENT rule is on the screen instead. S198, DEC-143.
+sprt_args="-sprt $sprt model=normalized"
+if [[ -n "${ROUNDS:-}" ]]; then
+  case "$ROUNDS" in
+    '' | *[!0-9]*) fail "ROUNDS must be an unsigned integer, got '$ROUNDS'" ;;
+  esac
+  rounds="$ROUNDS"
+  sprt_args=""
+fi
+
 head_sha="$(git rev-parse --short HEAD)"
 ref_sha="$(git rev-parse --short "$REF")"
 
@@ -251,13 +280,39 @@ if [[ "$ref_sha" == "$head_sha" ]] && ((diff_status == 0)); then
   echo
 fi
 
+stamp="$(date +%Y%m%d_%H%M%S)"
+
+# THE SEED, BECAUSE FASTCHESS RECORDS IT NOWHERE. `-openings ... order=random`
+# has always been passed, so which openings a run played -- and in which order,
+# which decides the pairs -- was drawn from an unrecorded seed and could not be
+# replayed. fishtest passes `-srand` with `order=random` for exactly this
+# reason.
+#
+# Measured on alpha 1.8.1 20260720-daa3ea2: the seed appears on no stream, in
+# no log and in no PGN header, and the parser is a 64-bit unsigned integer (a
+# 20-digit value is refused with `stoull: out of range`, and seed + 2^32 gives
+# a different sequence, so nothing is truncated to 32 bits). The banner below
+# and the -event header are therefore the seed's only records.
+#
+# The default is derived from the run stamp, so it is unique per run and reads
+# as the time the run started; SRAND overrides it to replay a sequence. What a
+# replay reproduces is the openings and not the games: search under a clock is
+# not deterministic, and the seed-to-sequence mapping is fastchess's own, so it
+# needs the same book, the same fastchess and the same -openings options.
+#
+# Validated before the output directory is made and before the reference is
+# built, so a typo costs a message rather than a directory and a compile. S198.
+seed="${SRAND:-${stamp//_/}}"
+case "$seed" in
+  '' | *[!0-9]*) fail "SRAND must be an unsigned integer, got '$seed'" ;;
+esac
+
 # One directory per run, stamped, as rating.sh:72-77 already does. The old
 # fixed /tmp/fastchess_<tag>.pgn was appended to by every run that shared a
 # tag, so a census over it mixed matches: after S089's 500-game run the file
 # held 587 games, 87 of them against an earlier reference, and an unfiltered
 # termination count read 421/166 instead of the run's real 359/141. "Filtered
 # to the run" is now the filename rather than a grep nobody remembers to write.
-stamp="$(date +%Y%m%d_%H%M%S)"
 outdir="${OUT:-/tmp/chesso_sprt_${tag}_${stamp}}"
 mkdir -p "$outdir"
 logfile="$outdir/fastchess.log"
@@ -337,7 +392,12 @@ echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
 echo "reference  $ref_sha  $(commit_date "$ref_sha")"
 echo "tc $tc  hash 16  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
-echo "bounds     $sprt"
+echo "seed       $seed"
+if [[ -n "$sprt_args" ]]; then
+  echo "bounds     $sprt"
+else
+  echo "bounds     none -- fixed $rounds rounds, a calibration or drift reading, NOT a verdict"
+fi
 echo "out        $outdir"
 echo
 
@@ -345,15 +405,17 @@ fastchess \
   -engine cmd="$candidate" name=candidate \
   -engine cmd="$reference" name="ref-$ref_sha" \
   -openings file="$book" format="$book_format" order=random \
+  -srand "$seed" \
   -each tc="$tc" option.Hash=16 option.Threads=1 \
-  -sprt $sprt model=normalized \
+  $sprt_args \
   $adjudication \
   $mate_pv_check \
   -rounds "$rounds" \
   -repeat \
   -concurrency "$concurrency" \
   -recover \
-  -pgnout file="$pgnfile" \
+  -event "chesso $tag $stamp srand=$seed" \
+  -pgnout file="$pgnfile" nodes=true timeleft=true \
   -log file="$logfile"
 
 # WHAT THE RUN COST, READ FROM THE PGN AND NOT FROM THE LOG. `-log` is
