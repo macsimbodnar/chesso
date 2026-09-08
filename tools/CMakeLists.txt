@@ -98,3 +98,13 @@ target_link_libraries(mate_trace PRIVATE chesso_engine)
 add_executable(make_book make_book.cpp)
 target_include_directories(make_book PRIVATE ../src)
 target_link_libraries(make_book PRIVATE chesso_engine)
+
+# S179. Draws the sliding-attack magic numbers and the Zobrist keys under the
+# project seed. Links the engine because the masks, the occupancy enumeration
+# and the reference attacks a candidate is verified against have to be the
+# engine's own: a magic accepted here against a second implementation of "which
+# squares does a rook attack" could still be wrong there, and the first symptom
+# would be a perft mismatch.
+add_executable(magic_gen magic_gen.cpp)
+target_include_directories(magic_gen PRIVATE ../src)
+target_link_libraries(magic_gen PRIVATE chesso_engine)

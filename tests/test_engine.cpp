@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "bb_tables.hpp"  // rook_magic_numbers, bishop_magic_numbers
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "evaluation.hpp"
@@ -23,6 +24,10 @@
 // Defined in bitboard.cpp. Not in the header because nothing in the engine
 // needs it at runtime - only the tests, to check the incremental hash.
 hash_t compute_full_hash(game_t* game);
+
+// Also defined in bitboard.cpp and also out of the header: the engine calls
+// neither at runtime. S179 uses them to check the two generated tables.
+bool magic_is_collision_free(index_t square, bb_t magic, bool rook);
 
 
 static game_t game;
@@ -130,6 +135,44 @@ TEST_SUITE("engine: zobrist and unmake")
     unmake_move(&game);
 
     REQUIRE_EQ(memcmp(&before, &game.board, sizeof(board_t)), 0);
+  }
+}
+
+
+TEST_SUITE("engine: generated tables")
+{
+  // S179. A magic number is a perfect hash of a square's relevant occupancies
+  // into its attack table: every blocker pattern must land in a free slot or on
+  // a slot already holding the *same* attack set. A magic that fails this
+  // returns a wrong attack set for some occupancy and says nothing about it;
+  // the first symptom is a perft mismatch, thousands of nodes later.
+  //
+  // The checker is the same one tools/magic_gen.cpp accepts a candidate with,
+  // so this asserts that what the generator was told to look for is what the
+  // committed constants are.
+  TEST_CASE_FIXTURE(
+      engine_fixture_t,
+      "the magic checker rejects a bad magic, and accepts all 128")
+  {
+    // Precondition: the checker can fail. Zero maps every occupancy to slot 0,
+    // and a8 has more than one distinct rook attack set, so it must be
+    // rejected. Without this the loop below would pass against a checker that
+    // returns true unconditionally.
+    REQUIRE_FALSE(magic_is_collision_free(0, BB_0, true));
+    REQUIRE_FALSE(magic_is_collision_free(0, BB_0, false));
+
+    for (index_t square = 0; square < 64; ++square) {
+      const std::string at = " at square " + std::to_string(square);
+      const std::string rook_msg = "rook magic collides" + at;
+      const std::string bishop_msg = "bishop magic collides" + at;
+
+      CHECK_MESSAGE(
+          magic_is_collision_free(square, rook_magic_numbers[square], true),
+          rook_msg);
+      CHECK_MESSAGE(
+          magic_is_collision_free(square, bishop_magic_numbers[square], false),
+          bishop_msg);
+    }
   }
 }
 

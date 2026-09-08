@@ -2675,6 +2675,41 @@ bool is_pv_legal(game_t* game, const pv_t* pv)
  *                      INITIALIZATION FUNCTIONS
  * NOTE: Does not need to be optimized, they are called once at the start
  ******************************************************************************/
+// S179. The seed every table this project generates is drawn under: the magic
+// numbers in bb_tables.hpp and the Zobrist keys below. The value is the date of
+// DEC-132, the decision that asked for a seed of the project's own. It is
+// deliberately not 1804289383, the tutorial seed the 2023 magics were drawn
+// under, and not splitmix64's own increment. `extern` gives it linkage so
+// tools/magic_gen.cpp and tests/test_engine.cpp can declare it without
+// bitboard.hpp gaining a symbol the engine never calls at runtime.
+extern const uint64_t CHESSO_PROJECT_SEED;
+const uint64_t CHESSO_PROJECT_SEED = 20260904ULL;
+
+
+// splitmix64, written out from Sebastiano Vigna's reference implementation at
+// https://prng.di.unimi.it/splitmix64.c, where the author "dedicated all
+// copyright and related and neighboring rights to this software to the public
+// domain worldwide".
+//
+// Preferred to a shift-register generator for two properties this project
+// needs. Every seed is valid, including zero, where a xorshift has an all-zero
+// state it never leaves; and the output is a bijection of a counter, so the
+// first 2^64 draws are pairwise distinct and the 851 Zobrist keys cannot
+// repeat by construction.
+uint64_t project_random_next(uint64_t* state)
+{
+  assert(state != nullptr);
+
+  *state += 0x9e3779b97f4a7c15ULL;
+
+  uint64_t z = *state;
+  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+
+  return z ^ (z >> 31);
+}
+
+
 void init_zobrist(zobrist_randoms_t* zobrist)
 {
   assert(zobrist != nullptr);
@@ -2911,6 +2946,51 @@ bb_t precompute_rook_attacks(index_t square, bb_t blocks)
   }
 
   return attacks;
+}
+
+
+// S179. Is `magic` a perfect hash for this square, that is, does every one of
+// the 2^relevant_bits blocker patterns either land in a free slot or land on a
+// slot already holding the *same* attack set? The second case is the
+// constructive collision the technique depends on; a slot holding a different
+// set is the destructive one, and a magic with even one of those silently
+// returns wrong attacks for some occupancy.
+//
+// Lives here rather than in the generator so that the check accepting a
+// candidate in tools/magic_gen.cpp is the same code the fast suite runs over
+// the 128 committed constants. It rebuilds the mask and the reference attacks
+// on every call, which costs the generator a few minutes over 128 squares and
+// buys the tests one definition instead of two.
+bool magic_is_collision_free(index_t square, bb_t magic, bool rook)
+{
+  assert(square < 64);
+
+  const bb_t mask = rook ? precompute_rook_attack_masks(square)
+                         : precompute_bishop_attack_masks(square);
+  const int relevant_bits = rook ? rook_relevant_bits_count[square]
+                                 : bishop_relevant_bits_count[square];
+  const uint64_t occupancy_count = BB_1 << relevant_bits;
+
+  // 4096 is the rook's worst case, 2^12; the bishop uses the first 512.
+  bb_t used[4096];
+  bool filled[4096] = {false};
+
+  for (uint64_t index = 0; index < occupancy_count; ++index) {
+    const bb_t occupancy = set_occupancy(index, relevant_bits, mask);
+    const bb_t attacks = rook ? precompute_rook_attacks(square, occupancy)
+                              : precompute_bishop_attacks(square, occupancy);
+    const uint64_t slot = (occupancy * magic) >> (64 - relevant_bits);
+    assert(slot < occupancy_count);
+
+    if (!filled[slot]) {
+      filled[slot] = true;
+      used[slot] = attacks;
+    } else if (used[slot] != attacks) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 
