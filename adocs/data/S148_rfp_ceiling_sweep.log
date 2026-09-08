@@ -1,0 +1,85 @@
+# adocs/data/S148_rfp_ceiling_sweep.py --mined, run at 192a5a3 on the machine
+# .moltke.local.md describes, 2026-09-08, against the tune build. The table
+# S148 chooses its challenger from.
+#
+# WHAT IS NEW HERE. Every earlier reading of this axis is six values wide --
+# S145's [0, 3, 6, 10, 15, 63] over the 48 rows the constructed set held then,
+# S154's re-take of the same six at `fc5526e`. The set is 82 rows since S168
+# and the ceiling had never been swept over them. S148's challenger rule names
+# one integer:
+#
+#   C1 = the largest ceiling at which both the mate in four and the mate in
+#        five exact counts over the 82 rows are non-zero
+#
+# which is a statement about every value from 0 to 15. This is that table, and
+# it reads C1 = 4.
+#
+# WHAT IT SAYS.
+#
+#   the mate in five class is the binding one: 11, 9, 6, 4, 1 exact of 16 at
+#   ceilings 0, 1, 2, 3, 4, and 0 from 5 up. The mate in four class survives
+#   further -- 13, 14, 10, 10, 7, 4, 5, 3, 2, 2 through ceiling 9 -- and is
+#   still 1 of 16 at the shipping 15, which is where the S145-era claim of
+#   "0 of 8" now reads on the larger set.
+#
+#   the curve is flat from 10 up: exact 39/82, m3 12/24, m4 1/16, m5 0/16 at
+#   every value from 10 to 15. "10 is already indistinguishable from 63" holds
+#   on this grid too, one value lower than S145 and S154 could see.
+#
+#   the whole-set count moves 39 -> 52 of 82 between 15 and 4, the mate in
+#   three class 12 -> 18 of 24, and the mined breadth set 145 -> 159 exact of
+#   318. `short` and `sign` are 0 at every one of the sixteen settings, which
+#   is the defect column and is what makes the rest a strength reading.
+#
+# WHAT IT DOES NOT SAY. Nothing here is Elo. The ceiling is what confines the
+# pruning to the nodes nearest the leaves, so a lower one searches more nodes
+# per iteration and reaches fewer plies under a clock; S085's SPSA run moved
+# this axis the other way and the vector that held 15 was verified at +21.02.
+# The trade is the SPRT of adocs/data/S148_sprt.sh and not this table.
+#
+# `RfpMinPly` is held at 3 throughout, read from the binary rather than
+# written down: floor and ceiling are one guard read two ways and S145
+# measured them substituting for each other, so a sweep that moves both
+# attributes nothing (S145's own header).
+#
+# The script imports S145_rfp_sweep and calls its sweep(); this directory is
+# append-only, so adocs/data/S145_rfp_sweep.log is left as it was taken and
+# the re-run lands here.
+
+shipping defaults read from the binary: {'RfpMargin': 63, 'RfpMaxDepth': 15, 'RfpMinPly': 3}
+declared ranges: {'RfpMargin': [0, 2000], 'RfpMaxDepth': [0, 63], 'RfpMinPly': [2, 63]}
+
+RfpMaxDepth swept, RfpMinPly held at 3, 82 constructed positions, depth 2m-1+8
+  RfpMaxDepth=0  exact 70/82  m2 26/26 d0  m3 20/24 d4  m4 13/16 d8  m5 11/16 d8  short 0  sign 0
+                 mined: 182 of 318 found, 177 exact
+  RfpMaxDepth=1  exact 70/82  m2 26/26 d0  m3 21/24 d6  m4 14/16 d8  m5 9/16 d8  short 0  sign 0
+                 mined: 181 of 318 found, 175 exact
+  RfpMaxDepth=2  exact 62/82  m2 26/26 d0  m3 20/24 d7  m4 10/16 d8  m5 6/16 d8  short 0  sign 0
+                 mined: 180 of 318 found, 175 exact
+  RfpMaxDepth=3  exact 60/82  m2 26/26 d0  m3 20/24 d7  m4 10/16 d7  m5 4/16 d7  short 0  sign 0
+                 mined: 171 of 318 found, 166 exact
+  RfpMaxDepth=4  exact 52/82  m2 26/26 d0  m3 18/24 d7  m4 7/16 d8  m5 1/16 d7  short 0  sign 0
+                 mined: 164 of 318 found, 159 exact
+  RfpMaxDepth=5  exact 47/82  m2 26/26 d0  m3 17/24 d8  m4 4/16 d7  m5 0/16 d-  short 0  sign 0
+                 mined: 151 of 318 found, 149 exact
+  RfpMaxDepth=6  exact 46/82  m2 26/26 d0  m3 15/24 d8  m4 5/16 d8  m5 0/16 d-  short 0  sign 0
+                 mined: 151 of 318 found, 149 exact
+  RfpMaxDepth=7  exact 44/82  m2 26/26 d0  m3 15/24 d8  m4 3/16 d8  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=8  exact 41/82  m2 26/26 d0  m3 13/24 d8  m4 2/16 d7  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=9  exact 41/82  m2 26/26 d0  m3 13/24 d8  m4 2/16 d8  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=10 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=11 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=12 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=13 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=14 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+  RfpMaxDepth=15 exact 39/82  m2 26/26 d0  m3 12/24 d8  m4 1/16 d4  m5 0/16 d-  short 0  sign 0
+                 mined: 147 of 318 found, 145 exact
+SWEEP-DONE

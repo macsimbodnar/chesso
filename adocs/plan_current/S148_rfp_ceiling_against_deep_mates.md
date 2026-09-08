@@ -7,7 +7,7 @@ decisions:  DEC-019, DEC-063, DEC-095
 closes:
 blocks:
 paused_by:
-author:
+author:     agent (Claude Opus 5), coordinator, 2026-09-08
 done:
 
 ## What S145 measured, and why this is a trade rather than a fix
@@ -44,9 +44,9 @@ and LTC, and mates found on ChestUCI at 1M nodes fell from **2427 to 1246**.
 Restoring either condition alone recovered only 1282 and 1630, so both were
 needed, and the change was reverted at `dabaf222`. The source has carried "The
 depth condition is important for mate finding" ever since. Master now makes the
-bound a function of how close the score is to decisive -- 19 at small scores
-decaying to 13 near the mate band, `fa8b6add` -- so the pruning depth shrinks
-where mates live. That last shape is excluded here: it is a feature, not a
+bound a function of how close the score is to decisive -- a table that shrinks
+the ceiling as scores approach the decisive band, `fa8b6add` -- so the pruning
+depth shrinks where mates live. That last shape is excluded here: it is a feature, not a
 constant, and it deserves its own verdict.
 
 ## What is not claimed
@@ -57,6 +57,52 @@ exactly why the step exists. What is established is that the shipping value has
 a cost that was invisible before S145 built a set with deep mates in it, and
 that S142's "no defect was demonstrated against 15" is no longer true as a
 statement about mate finding.
+
+## The HEAD sweep, 2026-09-08, and the challenger it names
+
+`adocs/data/S148_rfp_ceiling_sweep.py --mined` at `192a5a3`, the tune build,
+`RfpMinPly` read from the binary and held at 3, the 82 constructed rows at
+depth `2m - 1 + 8` and the 318 mined rows at depth 10. The full transcript is
+`adocs/data/S148_rfp_ceiling_sweep.log`; every value from 0 to 15, which is
+the grid the challenger rule needs and which no earlier sweep had:
+
+| `RfpMaxDepth` | exact / 82 | mate 2 | mate 3 | mate 4 | mate 5 | mined exact |
+|---|---|---|---|---|---|---|
+| 0 | 70 | 26/26 | 20/24 | 13/16 | **11/16** | 177 |
+| 1 | 70 | 26/26 | 21/24 | 14/16 | **9/16** | 175 |
+| 2 | 62 | 26/26 | 20/24 | 10/16 | **6/16** | 175 |
+| 3 | 60 | 26/26 | 20/24 | 10/16 | **4/16** | 166 |
+| **4, C1** | **52** | 26/26 | 18/24 | **7/16** | **1/16** | 159 |
+| 5 | 47 | 26/26 | 17/24 | 4/16 | 0/16 | 149 |
+| 6 | 46 | 26/26 | 15/24 | 5/16 | 0/16 | 149 |
+| 7 | 44 | 26/26 | 15/24 | 3/16 | 0/16 | 145 |
+| 8 | 41 | 26/26 | 13/24 | 2/16 | 0/16 | 145 |
+| 9 | 41 | 26/26 | 13/24 | 2/16 | 0/16 | 145 |
+| 10 | 39 | 26/26 | 12/24 | 1/16 | 0/16 | 145 |
+| 11 to 14 | 39 | 26/26 | 12/24 | 1/16 | 0/16 | 145 |
+| **15, shipping** | **39** | 26/26 | 12/24 | **1/16** | **0/16** | 145 |
+
+`short` 0 and `sign` 0 at all sixteen settings -- the two defect columns -- so
+the rest is a strength reading and not a correctness one.
+
+**C1 = 4**, by the rule this file pre-registered: the largest ceiling at which
+both deep classes are non-zero. The mate in five class is the binding one and
+it is a cliff, 11 / 9 / 6 / 4 / 1 at ceilings 0 to 4 and 0 from 5 up; the mate
+in four class survives to 15 at 1 of 16, which is where S145's "0 of 8" now
+reads on the larger set. S180's estimate of "between 3 and 5 on the finer
+grid" was right.
+
+Two readings the coarse grids could not give. The plateau starts at **10**,
+not at 15 -- every count from 10 up is identical, so the shipping value
+confines nothing that three lower values do not also fail to confine. And the
+step's own header table is superseded on every row: it is the `14748c9`
+reading over 48 positions, the set is 82 now, and the counts here are the ones
+this step decides on.
+
+What it costs is not in this table. A ceiling of 4 switches reverse futility
+off for every node with more than 4 plies left, so the engine searches more
+nodes per iteration and reaches fewer plies at 8+0.08. That is what the SPRT
+prices, and nothing here anticipates it.
 
 ## Implementation guide (2026-09-05)
 
@@ -457,12 +503,15 @@ the `14748c9` reading and every count has moved since: S154's re-take at
 34), 30 at 6 (not 27), deep classes at 0 of 6 of 8 and 5 of 8 (not 4 and 3);
 the set is 82 rows since S168 and the ceiling has never been swept over them,
 so the HEAD sweep of section 3 is the number this step decides on. "10 is
-already indistinguishable from 63" holds on every re-take. "19 at small scores
-decaying to 13 near the mate band" quotes Stockfish's shipped constants for an
-excluded feature (question 4). The header carries `author:` in `plan_todo/`
+already indistinguishable from 63" holds on every re-take -- and one value
+lower on the finer grid, from 10 rather than from 15. The sentence that quoted
+Stockfish's shipped constants for the excluded dynamic-cutoff feature is
+reworded to name the shape without the numbers, 2026-09-08, question 4
+answered: DEC-134 makes a constant read off an engine's commit message that
+engine's constant wherever it appears, and this one seeds nothing here. The header carries `author:` in `plan_todo/`
 and has no `done:` field; S184's worklist owns that (its F10).
 
-### 10. Questions deferred to the owner
+### 10. Questions deferred to the owner, answered 2026-09-08
 
 1. **The pair.** `{-5, 0}` as recommended (17.9 h worst case, accepts a cost
    up to about 2.5 nElo for the mates), or `{-5, 5}` (4.5 h, ships only a
@@ -486,3 +535,23 @@ and has no `done:` field; S184's worklist owns that (its F10).
    has no margin, which DEC-116 rejected for the mate in three. Promote at 1
    with the zero margin stated, or keep that class in the `MESSAGE` until a
    later change lifts it to 2?
+
+**The answers, taken 2026-09-08 before the sweep finished and before any game
+was played.** Every one of the five is the file's own recommendation:
+
+1. **The pair is `{-5, 0}`**, `--nonreg`. And on a null: **keep 15**, as
+   written -- the incumbent has a verdict behind it and the candidate is not
+   inert in play.
+2. **C1 alone.** No C2 = 6 fallback is bought; a rejection ends the step at
+   "keep 15" with the measured price recorded.
+3. **The re-run lands in `adocs/data/S148_rfp_ceiling_sweep.log`**, and the
+   accepts' "`S145_rfp_sweep.log` re-run at the shipped value" is read that
+   way: that file is evidence and is never rewritten. Decided by the agent as
+   a low-stakes reading, and it is what the file already proposed.
+4. **Reworded**, and the sentence in the header section now names the shape
+   without Stockfish's two constants. Also the agent's call, under DEC-134.
+5. **A class whose count is exactly 1 stays in the `MESSAGE`.** A floor of 1
+   has no margin between its ends, which is what DEC-116 rejected for the mate
+   in three. This binds: at C1 = 4 the mate in five count is exactly 1, so
+   **only the mate in four class is promoted** and the mate in five stays
+   recorded, with the comment saying which and why.
