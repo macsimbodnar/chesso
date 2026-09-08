@@ -238,9 +238,12 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   (f00d91f) is a record of a *form*, not a gate value. **And the paper's own
   fitted numbers are not seeds either**: Jiang and Buro measured `a` 0.998 to
   1.11, `b` -7.0 to 2.36 and `sigma` 51.8 to 82.0 at pawn = 100 over about
-  2700 positions from Crafty and Yace. Expect that order of magnitude in
-  chesso's scale as a sanity check on P1's output and do not seed from it --
-  they are those engines' positions and those engines' searches.
+  2700 positions "chosen randomly from some computer chess tournament games
+  and some of Crafty's games against human grandmasters" (p. 9; Yace appears
+  only in Table 4's validation matches, not in the regression sample). Expect
+  that order of magnitude in chesso's scale as a sanity check on P1's output
+  and do not seed from it -- that is another engine's positions read by
+  another engine's search.
 - **Mate-band beta is the load-bearing guard.** The margin sits on top of
   beta, and SF's 2014 assert bug is exactly that arithmetic escaping its
   bounds (012f20d6). Here the guard does two jobs: it stops a fail-high

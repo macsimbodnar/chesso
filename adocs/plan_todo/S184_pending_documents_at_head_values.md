@@ -225,8 +225,10 @@ steps on 2026-09-08 and corrected, in passing, the two stale shipping values
 that sat inside them: S114's "`NULL_MOVE_BASE` seed 2, ships today" against
 the 3 S085 shipped, and S132's `TM_NODE_MIN_DEPTH` "seeded beside
 `ASPIRATION_MIN_DEPTH`" against that gate's pre-S085 5 where 2 compiles.
-Neither file is in this step's `touches:` and neither is in the worklist
-above; do not go looking for them. The rest of the F05 class is unaffected.
+Neither value has a row in the F05 worklist above and neither is this step's
+to fix; do not go looking for them. S114 is not in this step's `touches:` at
+all; S132 is, but for the unrelated F09 row that routes its follow-up
+measurements to S128. The rest of the F05 class is unaffected.
 
 **Worklist, F08 -- S042.** Every site in `src/bitboard.cpp` touching
 `board->en_passant` or its key, from grep at HEAD:
