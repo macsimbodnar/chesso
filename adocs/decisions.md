@@ -8490,3 +8490,67 @@ Consequences: `fastchess.sh` grows two environment overrides, `SRAND` and
               properties instead of eight. A fixed-rounds run is never quoted as
               a verdict. S199's drift readings have their mechanism, and every
               future harness change under DEC-143 has one too.
+
+---
+
+## DEC-154  2026-09-08  Redrawing the Zobrist keys retires the S170 case set; the key half leaves S179 and becomes S203
+Tags:         hashing, testing, mate-pv, s179, s170, s171, s202, fixtures, dec-139, dec-142
+Context:      S179 was written as two commits under one step: the magic numbers
+              first, node-identical and provable, then the Zobrist keys, whose
+              node counts move once and were to be recorded. The magics landed
+              exactly as written -- 0 of 128 values shared with the tutorial set,
+              128 of 128 reproduced from seed 20260904, every node count and best
+              move identical, `GATE-DONE 24880255 (no functional change)`.
+              The key half then turned `test_mate_carry` red, and not because it
+              introduced a defect. `adocs/data/S170_cases.tsv` is six games
+              **mined from S147's 3000-game run**: the class it guards is table
+              eviction, and which entries evict which is precisely what the keys
+              decide. Measured over four arbitrary seeds -- 20260904, 12345,
+              999983, 777777777 -- **every one** breaks it, with 3, 3, 4 and 3 of
+              the six cases going vacuous. The test's own message anticipates
+              this state and says such a case "needs re-choosing, not deleting".
+              Under 20260904 one case also publishes `mate 9` on a 5-ply PV,
+              which is the class DEC-122 leaves short and visible and **S202**
+              owns, not a wrong score: perft, `test_perft`, the hash-versus-full-
+              recompute test and a Debug self-play were green, and the 851 keys
+              are distinct with no three- or four-subset XORing to zero.
+              So the key half does not invalidate the engine. It invalidates a
+              fixture, and re-deriving that fixture is a fresh 3000-game match,
+              a re-mining of the `Incomplete mating PV` cases and a re-measuring
+              of the six `expected_mate_lines()` floors -- work S179's `accepts`
+              never contemplated.
+Decision:     By the owner, 2026-09-08, asked once the four-seed measurement was
+              in hand. **Split.** S179 completes on its magics half, with its
+              `accepts` amended to that scope and the key clauses moved out.
+              **S203** owns the Zobrist redraw and owns re-mining the case set
+              with it; `tools/magic_gen`'s `zobrist` mode, `project_random_next`
+              and `CHESSO_PROJECT_SEED` ship in S179 and are already what S203
+              needs, and until it lands the tool reports `matches init_zobrist:
+              no`, which is the honest reading and the precondition S203 flips.
+Rejected:     Finishing S179 whole by re-mining the fixture inside it. Refused
+              because it makes one step own two changes with two different proofs
+              and roughly two hours of match time that its cost section prices at
+              seconds -- and "one change at a time" is the rule that makes either
+              number mean anything.
+              Landing the keys and recording `test_mate_carry` as knowingly red.
+              Refused outright: every measurement taken afterwards would be taken
+              over a suite that is not green, which is the contamination BUGS
+              exists to prevent.
+              Choosing a seed under which the fixture happens to survive. Refused
+              because the four-seed measurement says no such seed is meaningful --
+              the fixture is tied to a key set, not to a good or bad one, and
+              picking for a green suite would be fitting the seed to the test.
+Consequences: DEC-139's exposure stays open one step longer: the keys are still
+              drawn through `std::uniform_int_distribution` over
+              `std::mt19937_64`, whose result the standard leaves
+              implementation-defined, so the node-count baselines this repository
+              records remain a property of the standard library as well as of
+              this code. `2026-09-04_test_review-F08` is therefore **not** closed
+              by S179 and passes to S203.
+              A second, more general consequence, and the reason this entry is
+              longer than the choice: **`adocs/data/S170_cases.tsv` is a fixture
+              whose validity depends on the Zobrist key set**, and nothing at its
+              site said so. Any future change to the keys retires it the same
+              way. It is named as such in the file and in
+              `tests/test_mate_carry.cpp` from S179's completing commit, which is
+              DEC-142's rule reaching a fixture that is not a number.

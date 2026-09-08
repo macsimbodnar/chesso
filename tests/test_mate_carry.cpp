@@ -47,6 +47,15 @@
 // one missing slot, with the entry that certifies the continuation sitting in
 // the children of the position whose entry is gone.
 
+// WHAT RETIRES THIS FILE'S FIXTURE. The class here is transposition-table
+// eviction, and which entries evict which is decided by the Zobrist keys. So
+// `adocs/data/S170_cases.tsv` is valid only for the key set it was mined under,
+// and a redraw of the keys retires it -- measured on 2026-09-08 over four
+// arbitrary seeds, of which every one left three or four of the six cases
+// reporting no mate at all. That is what the vacuity assertion below catches,
+// and re-choosing the cases means another mining run, not an edit. DEC-154; the
+// redraw itself is S203.
+
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the case file"
 #endif

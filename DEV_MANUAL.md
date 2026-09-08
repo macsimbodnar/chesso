@@ -2105,6 +2105,62 @@ When you take a run's result, also check nothing is still watching it:
 ps -eo pid,etime,cmd | grep '[t]ail -f'
 ```
 
+## Regenerate the magic numbers and the Zobrist keys
+
+Two tables in this tree are drawn from a pseudorandom stream rather than
+derived: the 128 sliding-attack magic numbers in `src/bb_tables.hpp`, and the
+851 Zobrist keys `init_zobrist` fills. One command draws both, under one seed —
+`CHESSO_PROJECT_SEED` in `src/bitboard.cpp`, 20260904 — so that neither is a
+table whose origin can only be argued (S179, DEC-132, DEC-139).
+
+```bash
+cmake --build build -j12 --target magic_gen
+
+# The magics: both arrays on stdout, the per-square attempt counts and the
+# coincidence line on stderr.
+./build/tools/magic_gen magics --seed 20260904 > /tmp/magics.txt
+
+# The keys: the quality report, and whether the engine's are these.
+./build/tools/magic_gen zobrist --seed 20260904
+```
+
+**The engine uses the magics and does not yet use the keys.** `zobrist` prints
+`matches init_zobrist: no` today and that is correct, not a fault: `init_zobrist`
+still draws from `std::uniform_int_distribution` over `std::mt19937_64`, and
+**S203** is the step that replaces it. Flipping that line to `yes` is what that
+step does.
+
+`magics` prints the two arrays in `src/bb_tables.hpp`'s exact form. Paste them
+over the existing ones, leave the relevant-bit counts and everything else in that
+file alone, and run `./clang-format.sh` to restore the column alignment. Then
+rebuild and run the tool again: its stderr must read `coincide with the
+compiled-in arrays: 128 of 128`, which is the proof that what is committed is
+what the seed reproduces. Against a *different* set that same line is the
+coincidence check — it read `0 of 128` when S179 replaced the 2023 arrays, which
+is the number that ended their coincidence with a published set.
+
+The generator is deterministic by construction: one thread, fixed square order,
+no wall-clock input, unsigned arithmetic only. The same seed prints
+byte-identical arrays on any machine. Finding all 128 takes about 1.6 s here,
+9270054 candidates over the 64+64 squares.
+
+**New magics do not change what the engine plays and new keys do.** A magic is a
+perfect hash of a square's relevant occupancies into a table whose size is fixed
+by the relevant-bit count, so a different valid set moves which slot an occupancy
+lands in and nothing `generate_moves` returns: prove it with
+`./build/tests/bench_movegen` (it verifies its perft counts before it times
+anything), `ctest --test-dir build -L slow -R test_perft`, and identical node
+counts and best moves from `tools/search_bench.py`. New keys move which positions
+share a transposition-table slot, so the node counts move once — and they also
+retire `adocs/data/S170_cases.tsv`, whose cases are eviction reproductions mined
+under one key set. Budget a mining run, not a minute; DEC-154 is why, and S203
+owns it.
+
+`zobrist` reports the checks the wiki's linear-independence rule asks for at the
+sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal
+to a key, no two pair XORs equal — plus the minimum pairwise Hamming distance,
+which is reported and not asserted.
+
 ## The engine's own opening book
 
 Not the match books under `books/` — this is the book the *engine* plays from,

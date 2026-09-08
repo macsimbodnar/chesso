@@ -123,6 +123,33 @@ place, and the ledger's other 88 rows were per-step records already held by
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
 
+  **The magic numbers are this project's own output, under a seed it chose.**
+  The 128 sliding-attack constants in `src/bb_tables.hpp` come from
+  `./build/tools/magic_gen magics --seed 20260904`, splitmix64 written out in
+  `src/bitboard.cpp` as `project_random_next` with the seed beside it as
+  `CHESSO_PROJECT_SEED`. They share **0 of 128** values with the set that stood
+  here until 2026-09-08, which was generated in this repository in 2023 under a
+  public tutorial's seed and coincided with that tutorial's published set value
+  for value. `magic_is_collision_free` is the predicate the generator accepts a
+  candidate with and the fast suite runs over all 128, with a zero magic as the
+  precondition proving it can fail. Node-identical by construction: a magic is a
+  perfect hash into a table whose size is fixed by the relevant-bit count, so a
+  different valid set moves which slot an occupancy lands in and nothing
+  `generate_moves` returns. S179, DEC-132.
+
+  **The Zobrist keys are not yet drawn that way, and that is an open exposure.**
+  `init_zobrist` still fills its 851 keys from
+  `std::uniform_int_distribution<uint64_t>` over `std::mt19937_64`, whose result
+  the standard leaves implementation-defined -- so the keys, the table indices
+  and every node count recorded here are a property of the standard library as
+  well as of this code. They matched between glibc and Apple libc++ when the
+  MacBook handover check ran, which is a measurement and not a guarantee.
+  `magic_gen zobrist --seed 20260904` draws the replacement and reports
+  `matches init_zobrist: no` until **S203** flips it. That step, not S179, closes
+  `2026-09-04_test_review-F08`, because redrawing the keys retires
+  `adocs/data/S170_cases.tsv` -- a fixture mined under one key set -- and
+  re-mining it is a match rather than a minute. DEC-139, DEC-154.
+
   **Since S189 the neutral half is enforced rather than performed.** The
   `bench` command prints one node signature over eight fixed positions at
   `BENCH_DEPTH`, every commit touching `src/` carries it in its message as
