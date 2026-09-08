@@ -25,6 +25,53 @@ also shows the seed changes nothing about the pair distribution.
 Two flags, two script cases, a manual paragraph; the run is the workstation's
 calibration, about 25 minutes there.
 
+## The run, pre-registered (2026-09-08, before launch)
+
+The workstation's DEC-143 calibration, doubling as this step's A/A. Written
+before the first game, as MEASUREMENT requires.
+
+**Lane: calibration at fixed rounds. This is not a verdict and no bounds pair
+is priced** -- there is no stopping rule to price. The denominator is 500
+rounds, 1000 games, chosen by DEC-143 and by S105's own denominator so the two
+readings share one; the error bar on the pair variance is `v * sqrt(2/(n-1))`,
+about 6.3 % of `v`, which `adocs/data/S105_pairs.py` prints.
+
+| | pre-registered |
+|---|---|
+| command | `ROUNDS=500 AA=1 nohup ./fastchess.sh > .tuning/aa_s198.log 2>&1 &` |
+| commit | `da8ca0b`, clean tree, both sides |
+| binaries | `build/src/chesso` and `.ref-builds/da8ca0b/build/src/chesso`, **sha256 identical**, `b047f22d957935f219ebd2326b48b3b4a496c567518ff65f9f7f956a11f823ce`; bench `24880255` nodes on both, 7400474 and 7378394 nps |
+| build config | Release, `CHESSO_ARCH=native`, PGO off, ccache, `/usr/bin/c++` (g++ 13.3), both sides |
+| fastchess | `alpha 1.8.1 20260720-daa3ea2` -- the version `.moltke.local.md` records and the script's comment names, so S198 question 5 needs no answer |
+| machine | workstation, i7-8700K, 12 threads, governor `performance` on all 12, load average 0.05 at launch, on mains |
+| regime | unchanged: `8+0.08`, Hash 16, Threads 1, UHO book, `order=random`, the S105 adjudication, `-repeat`, concurrency 12 |
+| expected duration | about 26 minutes at S105's 38.7 games a minute; watcher ceiling 7200 s |
+
+**The three outcomes, decided in advance.**
+
+1. **Inside the band** -- `|z| < 1.96` on the pair variance against S105's
+   after-run `0.2395 +/- 0.0152`, with `z = (v_ws - v_S105) /
+   sqrt(e_ws^2 + e_S105^2)`, which for `e_ws` near 0.015 is roughly
+   `[0.197, 0.282]`. Record and proceed to the first verdict.
+2. **Outside it** -- record it as the workstation's own baseline, say which
+   shape the difference has (a lower `1.0` pair fraction points at the engine,
+   which has moved since S105 by S107, S108, S149, S165 and more; a wider
+   `GameDuration` spread points at the machine), and **do not re-run for a
+   better number**. The seed cannot move a distribution -- it draws a different
+   sample of the same book -- so it is never the attribution. This is the
+   owner's answer of 2026-09-08 to question 2 and it amends the goal's "shows
+   the distribution unchanged" to a band check.
+3. **Any forfeit over `FORFEIT_MAX_PCT` 1.0 on a side** -- the calibration does
+   not stand, the BUGS rule applies, and the margin is `MOVE_OVERHEAD_MS` in
+   `src/uci.hpp`, which this step excludes: stop, put a new step to the owner,
+   take no verdict first. 0 of 1000 is the expectation, which is what S105
+   measured here at this control.
+
+**Abort rule.** The run is abandoned, not read, if: the machine leaves mains or
+sleeps mid-run (POWER, DEC-109 -- S024's hibernated match); anything else takes
+the machine while it plays; or the log reaches `SPRT-RUN-FAILED`. A partial PGN
+is not read as a short calibration.
+
 ## Implementation guide (2026-09-05)
 
 ### 1. What this step is, for someone new
