@@ -8,7 +8,54 @@ closes:
 blocks:
 paused_by:
 author:     agent (Claude Opus 5), coordinator, 2026-09-08
-done:
+done:       2026-09-08. `fastchess.sh` derives `-srand` from the run stamp,
+            refuses a non-numeric `SRAND` by name before the output directory
+            exists, prints `seed <n>` in the banner and passes the same value;
+            `-pgnout` carries `nodes=true timeleft=true` and each PGN's
+            `[Event]` header the seed (DEC-153 question 3). `ROUNDS=<n>` is the
+            fixed-rounds mode the accepts needed and no mode had (question 1),
+            printing `bounds none -- fixed <n> rounds, a calibration or drift
+            reading, NOT a verdict`. Red first, `bash
+            tests/test_fastchess_script.sh <HEAD's script>`: **5 `FAIL:` lines
+            over cases 9, 10 and 11** -- no 14-digit banner seed, `SRAND=424242`
+            not honoured, `nodes=true` absent, `timeleft=true` absent, `-rounds`
+            1500 instead of 500 -- and cases 1 to 8 green throughout; eleven
+            properties on the edited script. `-srand` sits on its own line
+            rather than on the `-openings` line the guide suggested: it is a
+            top-level option and not an `-openings` key, and the argument vector
+            is identical either way.
+            **The run.** `ROUNDS=500 AA=1 ./fastchess.sh` at `bbbf8f6`, seed
+            `20260908021324`, fastchess **alpha 1.8.1 20260720-daa3ea2** (the
+            version `.moltke.local.md` and the script's comment already name, so
+            question 5 answered itself), both sides the byte-identical binary
+            `b047f22d957935f219ebd2326b48b3b4a496c567518ff65f9f7f956a11f823ce`.
+            1000 games in **26 m 21 s**, **0 time forfeits on either side**
+            (`tools/forfeit_report.py --max-pct 1.0`, exit 0), so question 4
+            never arose. Pair score variance **0.2430 +/- 0.0154** against
+            S105's after-run 0.2395 +/- 0.0152: **z = +0.16, inside the
+            pre-registered band**, ratio 1.014, pentanomial
+            `[34, 92, 229, 107, 38]` against `[34, 101, 234, 94, 37]`, 1.0 pairs
+            45.8 % against 46.8 %, white-won-both 17.6 % against 19.8 %, draws
+            32.3 % against 29.5 %. Outcome 1: recorded, nothing re-run.
+            **2277 games an hour**, 37.9 a minute, against S105's 2322 -- game
+            length and not machine speed, since seconds a ply fell 0.1831 to
+            0.1791 while plies a game rose 98.0 to 102.1; S182 converts at the
+            measured figure. One nElo is **0.698 logistic Elo** here
+            (`Elo: 7.99 +/- 15.03, nElo: 11.46 +/- 21.53`), and that `Elo` on a
+            run whose truth is zero by construction is the fixed-rounds mode's
+            own argument for refusing the word verdict.
+            Records: `adocs/data/S198_calibration.log`, `S198_calibration.pgn`
+            (5.1 MB, 2.3 more than S105's for the same game count -- what `n=`
+            and `tl=` cost), `S198_calibration_pairs.txt` and `S198_pairs.py`,
+            each with a row in `adocs/data/README.md`. `DEV_MANUAL.md` gains the
+            seed, replay, PGN-field and fixed-rounds section and a third column
+            in "What a verdict costs, measured"; `.moltke.local.md` the
+            throughput; `adocs/specs.md` the calibration beside S105's.
+            **`MANUAL.md` checked and unchanged: nothing here reaches the UCI
+            surface.** No bound, time control, hash, book or adjudication
+            setting moved -- the `excludes` held. Gate green in both builds, no
+            `src/` file touched so no signature owed (`GATE-DONE 24880255 (no
+            src/ change)`).
 
 ## Why this exists
 
@@ -71,6 +118,61 @@ about 6.3 % of `v`, which `adocs/data/S105_pairs.py` prints.
 sleeps mid-run (POWER, DEC-109 -- S024's hibernated match); anything else takes
 the machine while it plays; or the log reaches `SPRT-RUN-FAILED`. A partial PGN
 is not read as a short calibration.
+
+## The run, read (2026-09-08)
+
+**1000 games, 26 m 21 s, 0 time forfeits on either side, pair variance inside
+S105's band at z +0.16.** The calibration stands and the first verdict may be
+taken. Records: `adocs/data/S198_calibration.log`, `S198_calibration.pgn`,
+`S198_calibration_pairs.txt`, `S198_pairs.py`, each with a row in
+`adocs/data/README.md`.
+
+Played at `bbbf8f6`, seed `20260908021324`, fastchess `alpha 1.8.1
+20260720-daa3ea2`, both sides the byte-identical binary
+`b047f22d957935f219ebd2326b48b3b4a496c567518ff65f9f7f956a11f823ce`. Machine
+idle, on mains, governor `performance` on all 12 threads.
+
+| | S105 before (10+0.2, `8moves_v3`) | S105 after (8+0.08, UHO) | **S198 workstation, same regime** |
+|---|---|---|---|
+| pair score variance | 0.2343 +/- 0.0148 | 0.2395 +/- 0.0152 | **0.2430 +/- 0.0154** |
+| pentanomial 0 / 0.5 / 1 / 1.5 / 2 | -- | 34 / 101 / 234 / 94 / 37 | 34 / 92 / 229 / 107 / 38 |
+| 1.0 pairs | 41.6 % | 46.8 % | 45.8 % |
+| white won both | 13.4 % | 19.8 % | 17.6 % |
+| draws | 40.3 % | 29.5 % | 32.3 % |
+| plies a game | 117.8 | 98.0 | 102.1 |
+| seconds a ply | 0.2579 | 0.1831 | 0.1791 |
+| seconds a game | 30.4 | 17.9 | 18.3 |
+| games a minute | 23.1 | 38.7 | 37.9 |
+| time forfeits | 0 of 1000 | 0 of 1000 | **0 of 1000** |
+
+**The band check.** `z = (0.2430 - 0.2395) / sqrt(0.0154^2 + 0.0152^2) =
++0.16`, ratio 1.014, well inside the pre-registered `|z| < 1.96`. Outcome 1:
+record and proceed. The pentanomial is the same shape -- the 1.0 pairs and the
+pairs an opening decided both moved *down* by about a point, which is the
+direction a stronger engine self-plays, and both moves are inside the counting
+noise of 500 pairs. Nothing here is attributable to `-srand`, and nothing was
+re-run.
+
+**Throughput is 37.9 games a minute, 2277 games an hour** (1000 games in
+1581 s), against S105's 38.7 and 2322. The difference is game length, not
+machine speed: seconds a ply went *down*, 0.1831 to 0.1791, while plies a game
+went up, 98.0 to 102.1. S182's cost line converts at 2337 games an hour and
+takes the measured 2277 instead.
+
+**One nElo is 0.698 logistic Elo on this harness today**, read off the run's
+own pair as DEV_MANUAL's "Which bounds" says to: `Elo: 7.99 +/- 15.03, nElo:
+11.46 +/- 21.53`. So a `{-5, 0}` non-regression excludes about 3.49 logistic
+Elo, consistent with the 3.54 measured at S165's 44.75 % draws.
+
+**The Elo figure is the reason a fixed-rounds A/A is not a verdict.** The truth
+here is exactly zero by construction, and the run still printed `Elo: 7.99` with
+`LOS: 85.16 %`. It is inside its own error bar, and reading it as an effect is
+precisely the mistake the mode's banner refuses. What the run measures is the
+distribution.
+
+**The PGN fields cost 2.3 MB per 1000 games** -- 5.1 MB against S105's 2.8 MB
+for the same game count. Section 5 estimated about 2 MB of growth and it is
+slightly more; nothing reads the file by offset.
 
 ## Implementation guide (2026-09-05)
 

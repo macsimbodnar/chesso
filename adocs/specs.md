@@ -570,6 +570,16 @@ The order stands.
   (2026-08-13: rewritten for the DEC-049 move -- the old text priced an hour on
   three Apple cores with `opendirectoryd` overhead and called for an x86-64
   box, which S032 and S029 now have.)
+  **Re-calibrated on the workstation 2026-09-08 under DEC-143** -- the rule
+  that a fixed-rounds A/A follows every harness change -- after the machine
+  move, the opening seed and the two new PGN fields. One run of 1000 games at
+  the same regime: **2277 games an hour, 37.9 a minute**, pair score variance
+  **0.2430 +/- 0.0154** against S105's 0.2395 +/- 0.0152, `z = +0.16`, inside
+  the band, and **0 time forfeits on either side**. So what a verdict costs has
+  not moved; the throughput difference from 38.7 is game length and not machine
+  speed (seconds a ply 0.1831 to 0.1791, plies a game 98.0 to 102.1). One nElo
+  is 0.698 logistic Elo here, read off that run's own `Elo`/`nElo` pair.
+  `adocs/data/S198_*` is the evidence.
 - Phase two has no steps and should not get any until the engine is strong
   enough for an experiment to mean something. The transition gets a decision
   entry when it happens.

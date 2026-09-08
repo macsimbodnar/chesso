@@ -1759,15 +1759,26 @@ in it. That is Pohl's own floor for the book class.
 fixed rounds so both numbers share a denominator —
 `adocs/data/S105_calibration.sh` is the script and the PGNs are beside it.
 
-| | before: 10+0.2, `8moves_v3.pgn` | after: 8+0.08, UHO |
-|---|---|---|
-| games a minute | 23.1 | **38.7** |
-| seconds a game | 30.4 | 17.9 |
-| seconds a ply | 0.2579 | 0.1831 |
-| plies a game | 117.8 | 98.0 |
-| draws | 40.3 % | **29.5 %** |
-| time forfeits | 0 of 1000 | **0 of 1000** |
-| pair score variance | 0.2343 ± 0.0148 | 0.2395 ± 0.0152 |
+The third column is the same measurement re-taken on 2026-09-08 under DEC-143,
+which makes a fixed-rounds A/A follow every harness change — here the move to
+the workstation, the seed and the two PGN fields. `adocs/data/S198_*` is its
+evidence and `adocs/data/S198_pairs.py` is the band check.
+
+| | before: 10+0.2, `8moves_v3.pgn` | after: 8+0.08, UHO | workstation, 2026-09-08 |
+|---|---|---|---|
+| games a minute | 23.1 | **38.7** | **37.9** |
+| seconds a game | 30.4 | 17.9 | 18.3 |
+| seconds a ply | 0.2579 | 0.1831 | 0.1791 |
+| plies a game | 117.8 | 98.0 | 102.1 |
+| draws | 40.3 % | **29.5 %** | 32.3 % |
+| time forfeits | 0 of 1000 | **0 of 1000** | **0 of 1000** |
+| pair score variance | 0.2343 ± 0.0148 | 0.2395 ± 0.0152 | 0.2430 ± 0.0154 |
+
+**Budget a verdict at 2277 games an hour**, the measured figure: 1000 games in
+26 m 21 s. The pair variance is inside its band at `z = +0.16`, so what a
+verdict costs at fixed bounds has not moved. The throughput difference against
+S105 is game length and not machine speed — seconds a ply went *down* while
+plies a game went up, which is the engine, not the harness.
 
 **Throughput went up ×1.67, not ×3.** DEC-083 priced the change at "roughly
 three times the verdicts per night"; measured, it is 23.1 → 38.7 games a

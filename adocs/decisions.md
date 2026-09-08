@@ -8440,3 +8440,53 @@ Consequences: Changing the depth or the set changes the signature deliberately
               keys, so a disagreement between machines is investigated before it
               is called a behaviour change. `Debug` runs of the fast suite gain
               157 s, which S197 inherits.
+
+## DEC-153  2026-09-08  Fixed rounds are a mode of `fastchess.sh`, the A/A is read as a band, and the seed rides in the PGN
+Tags:         measurement, harness, calibration, S198, S199
+Context:      S198 deferred five questions to the owner before its run could be
+              launched. Two of them decide what the instrument is -- there was
+              no way to play a fixed-rounds match at all, since every mode of
+              `fastchess.sh` passed `-sprt` -- and one decides whether a PGN
+              can say what it played. The remaining two answered themselves:
+              the workstation's `fastchess` is `alpha 1.8.1 20260720-daa3ea2`,
+              the version the script's comment already names, and a forfeit
+              rate over 1 % is a new step by the step's own rule.
+Decision:     By the owner, 2026-09-08, answering S198 section 10.
+              **1.** `ROUNDS=<n>` becomes a mode of `fastchess.sh` rather than a
+              standalone runner, so a calibration exercises the exact
+              invocation a verdict uses and S199's drift readings reuse it. It
+              drops `-sprt` entirely and the banner prints
+              `bounds none -- fixed <n> rounds, a calibration or drift reading,
+              NOT a verdict` where a reader of the log meets it.
+              **2.** "One A/A shows the distribution unchanged" is read as a
+              **band check**, which amends S198's goal. The run is the
+              workstation's own baseline; S105's after-run figures are a sanity
+              band at `|z| > 1.96` on the pair variance. A difference is
+              recorded and attributed by shape -- a lower 1.0-pair fraction
+              points at the engine, a wider `GameDuration` spread at the machine
+              -- and the run is never repeated for a better number. The seed is
+              never the attribution: it draws a different sample of the same
+              book and cannot move a distribution.
+              **3.** Each PGN carries the seed in its own `[Event]` header,
+              `chesso <tag> <stamp> srand=<seed>`, so a file separated from its
+              log still says what it played. Outside S198's `accepts` and taken
+              anyway, because fastchess records the seed nowhere at all.
+Rejected:     A standalone fixed-rounds runner in `S105_calibration.sh`'s shape.
+              Refused: it calibrates a copy of the command line, and the copy
+              drifts from the one verdicts are taken with -- which is the whole
+              failure DEC-020 is about, one level up.
+              Reading the A/A as a literal "unchanged" against S105. Refused as
+              unsatisfiable: S107, S108, S149, S165 and more have landed since
+              2026-08-20 and a stronger engine self-plays a different
+              pentanomial, so a strict reading would fail on the engine's own
+              progress and say nothing about the harness.
+              Re-running the calibration if it lands outside the band. Refused:
+              re-running until a number agrees is choosing the sample after
+              seeing it, and the band is a sanity check rather than a test that
+              can be failed.
+Consequences: `fastchess.sh` grows two environment overrides, `SRAND` and
+              `ROUNDS`, both refused by name when they are not unsigned
+              integers, and `tests/test_fastchess_script.sh` asserts eleven
+              properties instead of eight. A fixed-rounds run is never quoted as
+              a verdict. S199's drift readings have their mechanism, and every
+              future harness change under DEC-143 has one too.

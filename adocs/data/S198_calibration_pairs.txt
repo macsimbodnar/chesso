@@ -1,0 +1,35 @@
+=== /tmp/chesso_sprt_full_20260908_021324/games.pgn ===
+games            1000
+draws            323, 32.3 %
+decisive         677, 67.7 %
+plies per game   mean 102.1, median 92
+seconds per game mean 18.3, median 18
+seconds per ply  0.1791
+complete pairs   500
+  pair score 0.0     34    6.8 %
+  pair score 0.5     92   18.4 %
+  pair score 1.0    229   45.8 %
+  pair score 1.5    107   21.4 %
+  pair score 2.0     38    7.6 %
+white won both   88 of 500, 17.6 %  (the pair Pohl's floor is about)
+pair score       mean 1.0230, variance 0.2430, sd 0.4929
+
+=== /home/max/ws/chesso/adocs/data/S105_calibration_after.pgn ===
+games            1000
+draws            295, 29.5 %
+decisive         705, 70.5 %
+plies per game   mean 98.0, median 89
+seconds per game mean 17.9, median 18
+seconds per ply  0.1831
+complete pairs   500
+  pair score 0.0     34    6.8 %
+  pair score 0.5    101   20.2 %
+  pair score 1.0    234   46.8 %
+  pair score 1.5     94   18.8 %
+  pair score 2.0     37    7.4 %
+white won both   99 of 500, 19.8 %  (the pair Pohl's floor is about)
+pair score       mean 0.9990, variance 0.2395, sd 0.4894
+
+pair variance    0.2430 +/- 0.0154  vs  0.2395 +/- 0.0152  (this run vs S105 after)
+ratio            1.014
+z                +0.16  (inside the band, |z| < 1.96)

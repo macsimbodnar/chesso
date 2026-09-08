@@ -1,0 +1,2373 @@
+A/A CALIBRATION: both sides are bbbf8f6 with a clean tree, so this run
+                 measures the harness and not the engine. AA is set.
+
+candidate  bbbf8f6  2026-09-08
+reference  bbbf8f6  2026-09-08
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       UHO_Lichess_4852_v1.epd
+seed       20260908021324
+bounds     none -- fixed 500 rounds, a calibration or drift reading, NOT a verdict
+out        /tmp/chesso_sprt_full_20260908_021324
+
+Indexing opening suite...
+Started game 1 of 1000 (candidate vs ref-bbbf8f6)
+Started game 4 of 1000 (ref-bbbf8f6 vs candidate)
+Started game 3 of 1000 (candidate vs ref-bbbf8f6)
+Started game 5 of 1000 (candidate vs ref-bbbf8f6)
+Started game 8 of 1000 (ref-bbbf8f6 vs candidate)
+Started game 10 of 1000 (ref-bbbf8f6 vs candidate)
+Started game 2 of 1000 (ref-bbbf8f6 vs candidate)
+Started game 12 of 1000 (ref-bbbf8f6 vs candidate)
+Started game 11 of 1000 (candidate vs ref-bbbf8f6)
+Started game 9 of 1000 (candidate vs ref-bbbf8f6)
+Started game 7 of 1000 (candidate vs ref-bbbf8f6)
+Started game 6 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 12 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 13 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 4 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 14 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 9 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 15 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 10 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 16 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 5 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 17 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 8 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 18 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 1 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 19 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 11 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 20 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 6 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 21 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 3 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 22 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 13 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 23 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 2 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 24 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 7 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 25 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 17 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 26 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 16 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 27 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 14 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 28 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 15 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 29 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 18 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 30 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 19 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 31 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 26 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 32 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 27 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 33 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 24 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 34 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 22 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 35 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 23 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 36 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 20 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 31.67 +/- 99.59, nElo: 47.72 +/- 145.18
+LOS: 74.03 %, DrawRatio: 63.64 %, PairsRatio: 3.00
+Games: 22, Wins: 9, Losses: 7, Draws: 6, Points: 12.0 (54.55 %)
+Ptnml(0-2): [1, 0, 7, 2, 1], WL/DD Ratio: 2.50
+--------------------------------------------------
+Started game 37 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 21 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 38 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 25 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 39 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 28 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 40 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 31 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 41 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 30 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 42 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 34 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 43 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 32 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 44 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 37 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 45 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 38 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 46 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 33 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 47 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 39 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 48 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 36 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 49 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 40 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 48.57 +/- 77.54, nElo: 73.28 +/- 113.49
+LOS: 89.71 %, DrawRatio: 55.56 %, PairsRatio: 3.00
+Games: 36, Wins: 15, Losses: 10, Draws: 11, Points: 20.5 (56.94 %)
+Ptnml(0-2): [1, 1, 10, 4, 2], WL/DD Ratio: 2.33
+--------------------------------------------------
+Started game 50 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 35 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 51 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 29 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 52 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 44 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 53 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 48 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 54 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 43 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 55 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 50 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 56 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 49 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 57 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 47 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 58 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 42 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 59 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 46 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 60 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 45 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 61 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 41 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 62 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 51 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 63 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 52 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 64 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 54 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 65 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 56 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 66 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 55 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 67 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 58 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 68 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 59 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 69 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 57 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 70 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 62 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 71 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 61 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 72 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 53 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 73 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 63 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 74 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 66 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 75 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 60 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 68.10 +/- 64.72, nElo: 94.56 +/- 86.48
+LOS: 98.39 %, DrawRatio: 51.61 %, PairsRatio: 2.75
+Games: 62, Wins: 29, Losses: 17, Draws: 16, Points: 37.0 (59.68 %)
+Ptnml(0-2): [1, 3, 16, 5, 6], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 76 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 64 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 77 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 65 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 78 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 73 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 79 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 74 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 80 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 72 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 81 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 67 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 82 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 68 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 83 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 70 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 84 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 75 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 85 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 69 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 86 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 71 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 87 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 78 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 88 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 85 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 89 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 77 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 90 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 86 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 91 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 76 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 92 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 81 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 93 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 80 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 94 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 79 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 51.21 +/- 51.66, nElo: 76.22 +/- 75.20
+LOS: 97.65 %, DrawRatio: 53.66 %, PairsRatio: 2.17
+Games: 82, Wins: 35, Losses: 23, Draws: 24, Points: 47.0 (57.32 %)
+Ptnml(0-2): [1, 5, 22, 7, 6], WL/DD Ratio: 2.67
+--------------------------------------------------
+Started game 95 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 82 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 96 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 84 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 97 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 92 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 98 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 87 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 99 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 83 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 100 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 91 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 101 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 90 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 102 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 89 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 103 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 88 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 104 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 93 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 105 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 95 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 106 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 96 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 107 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 97 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 108 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 98 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 109 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 100 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 110 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 101 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 111 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 94 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 112 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 103 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 113 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 102 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 114 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 99 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 41.06 +/- 45.78, nElo: 61.42 +/- 67.43
+LOS: 96.29 %, DrawRatio: 52.94 %, PairsRatio: 2.00
+Games: 102, Wins: 42, Losses: 30, Draws: 30, Points: 57.0 (55.88 %)
+Ptnml(0-2): [2, 6, 27, 10, 6], WL/DD Ratio: 2.86
+--------------------------------------------------
+Started game 115 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 104 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 116 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 107 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 117 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 106 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 118 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 105 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 119 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 109 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 120 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 111 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 121 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 108 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 122 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 116 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 123 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 110 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 124 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 121 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 125 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 115 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 126 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 122 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 127 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 114 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 128 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 113 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 129 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 120 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 130 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 112 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 131 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 117 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 132 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 118 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 133 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 128 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 134 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 129 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 135 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 126 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 136 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 123 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 137 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 119 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 22.82 +/- 41.76, nElo: 33.95 +/- 61.65
+LOS: 85.98 %, DrawRatio: 52.46 %, PairsRatio: 1.42
+Games: 122, Wins: 47, Losses: 39, Draws: 36, Points: 65.0 (53.28 %)
+Ptnml(0-2): [3, 9, 32, 11, 6], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 138 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 132 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 139 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 127 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 140 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 125 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 141 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 133 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 142 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 131 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 143 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 124 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 144 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 137 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 145 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 134 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 146 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 141 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 147 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 140 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 148 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 135 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 149 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 130 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 150 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 136 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 151 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 142 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 152 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 139 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 19.88 +/- 38.30, nElo: 30.06 +/- 57.55
+LOS: 84.70 %, DrawRatio: 50.00 %, PairsRatio: 1.33
+Games: 140, Wins: 53, Losses: 45, Draws: 42, Points: 74.0 (52.86 %)
+Ptnml(0-2): [3, 12, 35, 14, 6], WL/DD Ratio: 3.38
+--------------------------------------------------
+Started game 153 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 138 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 154 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 147 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 155 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 146 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 156 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 148 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 157 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 144 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 158 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 151 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 159 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 145 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 160 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 143 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 161 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 150 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 162 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 155 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 163 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 153 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 164 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 152 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 165 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 158 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 166 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 157 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 167 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 156 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 168 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 149 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 169 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 154 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 170 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 159 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 171 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 165 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 172 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 160 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 21.74 +/- 35.55, nElo: 33.13 +/- 53.83
+LOS: 88.61 %, DrawRatio: 50.00 %, PairsRatio: 1.35
+Games: 160, Wins: 60, Losses: 50, Draws: 50, Points: 85.0 (53.12 %)
+Ptnml(0-2): [3, 14, 40, 16, 7], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 173 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 163 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 174 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 162 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 175 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 170 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 176 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 161 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 177 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 169 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 178 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 167 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 179 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 164 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 180 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 166 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 181 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 179 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 182 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 178 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 183 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 168 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 184 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 176 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 185 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 172 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 186 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 171 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 187 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 177 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 188 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 175 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 189 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 173 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 190 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 182 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 191 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 180 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 5.86 +/- 34.53, nElo: 8.69 +/- 51.04
+LOS: 63.06 %, DrawRatio: 49.44 %, PairsRatio: 1.05
+Games: 178, Wins: 61, Losses: 58, Draws: 59, Points: 90.5 (50.84 %)
+Ptnml(0-2): [5, 17, 44, 16, 7], WL/DD Ratio: 2.38
+--------------------------------------------------
+Started game 192 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 184 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 193 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 174 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 194 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 188 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 195 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 181 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 196 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 185 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 197 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 183 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 198 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 187 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 199 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 196 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 200 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 192 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 201 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 191 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 202 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 189 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 203 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 186 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 204 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 190 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 205 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 193 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 206 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 197 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 207 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 195 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 208 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 201 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 209 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 202 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 210 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 194 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 211 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 200 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 212 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 203 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 213 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 198 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 214 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 199 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 20.66 +/- 32.29, nElo: 30.82 +/- 47.91
+LOS: 89.63 %, DrawRatio: 47.52 %, PairsRatio: 1.41
+Games: 202, Wins: 73, Losses: 61, Draws: 68, Points: 107.0 (52.97 %)
+Ptnml(0-2): [5, 17, 48, 23, 8], WL/DD Ratio: 2.43
+--------------------------------------------------
+Started game 215 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 210 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 216 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 209 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 217 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 206 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 218 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 207 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 219 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 204 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 220 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 211 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 221 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 205 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 222 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 213 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 223 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 208 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 224 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 214 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 225 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 212 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 226 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 216 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 227 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 215 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 228 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 221 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 229 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 217 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 230 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 219 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 231 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 218 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 232 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 224 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 233 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 220 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 20.55 +/- 30.43, nElo: 31.17 +/- 45.91
+LOS: 90.83 %, DrawRatio: 47.27 %, PairsRatio: 1.42
+Games: 220, Wins: 79, Losses: 66, Draws: 75, Points: 116.5 (52.95 %)
+Ptnml(0-2): [5, 19, 52, 26, 8], WL/DD Ratio: 2.47
+--------------------------------------------------
+Started game 234 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 225 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 235 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 223 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 236 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 228 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 237 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 227 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 238 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 229 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 239 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 226 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 240 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 222 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 241 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 232 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 242 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 234 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 243 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 230 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 244 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 231 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 245 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 235 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 246 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 242 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 247 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 239 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 248 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 233 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 249 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 241 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 250 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 237 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 251 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 243 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 252 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 238 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 253 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 244 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 254 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 236 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 255 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 245 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 256 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 240 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 21.39 +/- 28.52, nElo: 32.85 +/- 43.59
+LOS: 93.01 %, DrawRatio: 48.36 %, PairsRatio: 1.42
+Games: 244, Wins: 89, Losses: 74, Draws: 81, Points: 129.5 (53.07 %)
+Ptnml(0-2): [5, 21, 59, 28, 9], WL/DD Ratio: 2.69
+--------------------------------------------------
+Started game 257 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 246 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 258 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 250 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 259 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 247 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 260 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 253 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 261 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 254 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 262 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 256 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 263 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 251 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 264 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 258 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 265 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 249 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 266 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 257 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 267 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 248 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 268 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 255 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 269 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 259 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 270 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 260 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 22.93 +/- 27.19, nElo: 35.93 +/- 42.39
+LOS: 95.16 %, DrawRatio: 49.61 %, PairsRatio: 1.50
+Games: 258, Wins: 95, Losses: 78, Draws: 85, Points: 137.5 (53.29 %)
+Ptnml(0-2): [5, 21, 64, 30, 9], WL/DD Ratio: 2.76
+--------------------------------------------------
+Started game 271 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 252 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 272 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 261 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 273 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 271 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 274 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 270 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 275 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 269 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 276 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 272 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 277 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 268 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 278 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 263 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 279 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 265 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 280 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 262 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 281 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 267 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 282 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 264 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 283 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 266 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 284 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 278 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 285 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 275 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 286 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 279 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 287 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 276 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 288 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 277 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 289 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 280 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 21.27 +/- 26.18, nElo: 33.34 +/- 40.84
+LOS: 94.52 %, DrawRatio: 49.64 %, PairsRatio: 1.41
+Games: 278, Wins: 102, Losses: 85, Draws: 91, Points: 147.5 (53.06 %)
+Ptnml(0-2): [5, 24, 69, 31, 10], WL/DD Ratio: 2.83
+--------------------------------------------------
+Started game 290 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 282 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 291 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 285 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 292 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 274 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 293 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 273 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 294 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 286 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 295 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 281 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 296 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 284 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 297 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 288 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 298 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 283 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 299 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 294 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 300 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 289 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 301 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 291 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 302 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 295 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 303 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 292 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 304 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 296 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 305 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 287 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 306 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 290 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 307 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 293 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 308 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 297 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 309 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 299 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 310 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 298 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 311 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 302 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 312 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 305 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 313 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 301 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 314 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 304 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 315 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 303 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 316 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 308 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 317 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 307 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 318 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 306 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 319 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 300 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 19.20 +/- 25.05, nElo: 29.85 +/- 38.80
+LOS: 93.42 %, DrawRatio: 49.35 %, PairsRatio: 1.36
+Games: 308, Wins: 111, Losses: 94, Draws: 103, Points: 162.5 (52.76 %)
+Ptnml(0-2): [6, 27, 76, 34, 11], WL/DD Ratio: 2.62
+--------------------------------------------------
+Started game 320 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 309 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 321 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 311 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 322 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 310 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 323 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 316 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 324 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 315 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 325 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 318 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 326 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 312 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 327 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 314 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 328 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 319 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 329 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 321 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 330 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 322 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 331 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 320 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 22.98 +/- 24.77, nElo: 35.58 +/- 38.19
+LOS: 96.61 %, DrawRatio: 49.06 %, PairsRatio: 1.45
+Games: 318, Wins: 117, Losses: 96, Draws: 105, Points: 169.5 (53.30 %)
+Ptnml(0-2): [6, 27, 78, 36, 12], WL/DD Ratio: 2.71
+--------------------------------------------------
+Started game 332 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 317 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 333 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 323 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 334 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 325 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 335 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 324 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 336 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 327 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 337 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 326 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 338 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 330 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 339 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 328 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 340 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 329 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 341 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 333 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 342 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 313 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 343 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 335 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 344 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 334 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 345 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 332 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 346 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 337 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 347 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 336 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 348 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 341 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 349 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 338 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 350 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 342 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 351 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 339 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 352 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 331 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 353 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 340 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 22.38 +/- 23.79, nElo: 34.79 +/- 36.82
+LOS: 96.80 %, DrawRatio: 49.12 %, PairsRatio: 1.42
+Games: 342, Wins: 125, Losses: 103, Draws: 114, Points: 182.0 (53.22 %)
+Ptnml(0-2): [6, 30, 84, 38, 13], WL/DD Ratio: 2.65
+--------------------------------------------------
+Started game 354 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 347 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 355 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 343 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 356 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 346 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 357 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 348 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 358 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 344 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 359 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 345 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 360 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 349 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 361 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 351 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 362 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 350 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 363 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 352 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 364 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 358 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 365 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 353 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 366 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 356 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 367 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 359 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 368 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 360 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 23.59 +/- 23.45, nElo: 36.58 +/- 36.19
+LOS: 97.62 %, DrawRatio: 49.15 %, PairsRatio: 1.43
+Games: 354, Wins: 131, Losses: 107, Draws: 116, Points: 189.0 (53.39 %)
+Ptnml(0-2): [6, 31, 87, 39, 14], WL/DD Ratio: 2.78
+--------------------------------------------------
+Started game 369 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 357 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 370 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 367 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 371 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 363 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 372 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 366 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 373 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 361 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 374 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 354 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 375 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 355 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 376 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 362 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 377 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 368 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 378 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 365 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 379 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 364 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 380 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 369 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 381 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 371 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 382 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 376 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 383 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 374 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 384 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 370 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 385 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 375 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 386 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 383 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 387 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 379 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 388 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 373 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 389 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 372 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 390 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 378 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 391 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 377 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 392 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 385 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 393 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 390 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 394 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 386 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 395 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 381 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 396 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 380 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 23.68 +/- 23.14, nElo: 35.82 +/- 34.84
+LOS: 97.81 %, DrawRatio: 48.69 %, PairsRatio: 1.39
+Games: 382, Wins: 143, Losses: 117, Draws: 122, Points: 204.0 (53.40 %)
+Ptnml(0-2): [7, 34, 93, 40, 17], WL/DD Ratio: 2.88
+--------------------------------------------------
+Started game 397 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 387 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 398 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 382 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 399 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 384 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 400 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 388 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 401 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 389 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 402 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 393 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 403 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 400 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 404 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 392 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 405 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 395 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 406 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 398 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 407 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 391 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 408 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 396 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 409 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 401 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 410 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 397 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 411 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 399 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 23.61 +/- 22.40, nElo: 36.13 +/- 34.13
+LOS: 98.10 %, DrawRatio: 49.25 %, PairsRatio: 1.40
+Games: 398, Wins: 149, Losses: 122, Draws: 127, Points: 212.5 (53.39 %)
+Ptnml(0-2): [7, 35, 98, 42, 17], WL/DD Ratio: 2.92
+--------------------------------------------------
+Started game 412 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 394 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 413 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 406 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 414 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 409 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 415 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 407 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 416 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 402 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 417 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 405 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 418 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 410 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 419 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 403 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 420 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 404 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 421 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 408 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 422 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 411 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 423 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 412 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 424 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 413 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 425 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 417 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 426 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 415 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 427 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 416 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 428 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 425 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 429 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 424 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 430 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 420 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 431 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 419 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 18.39 +/- 22.40, nElo: 27.50 +/- 33.39
+LOS: 94.68 %, DrawRatio: 48.56 %, PairsRatio: 1.28
+Games: 416, Wins: 153, Losses: 131, Draws: 132, Points: 219.0 (52.64 %)
+Ptnml(0-2): [9, 38, 101, 42, 18], WL/DD Ratio: 2.88
+--------------------------------------------------
+Started game 432 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 421 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 433 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 423 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 434 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 422 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 435 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 418 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 436 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 414 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 437 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 428 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 438 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 427 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 439 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 426 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 440 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 430 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 441 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 436 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 442 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 432 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 443 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 435 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 444 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 429 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 445 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 431 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 446 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 439 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 447 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 433 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 448 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 438 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 449 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 434 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 450 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 437 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 451 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 443 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 452 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 440 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 18.18 +/- 21.68, nElo: 27.31 +/- 32.46
+LOS: 95.04 %, DrawRatio: 48.64 %, PairsRatio: 1.31
+Games: 440, Wins: 163, Losses: 140, Draws: 137, Points: 231.5 (52.61 %)
+Ptnml(0-2): [10, 39, 107, 46, 18], WL/DD Ratio: 3.12
+--------------------------------------------------
+Started game 453 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 446 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 454 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 447 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 455 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 444 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 456 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 452 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 457 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 449 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 458 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 441 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 459 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 450 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 460 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 445 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 461 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 448 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 462 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 442 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 463 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 453 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 464 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 451 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 465 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 457 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 466 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 455 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 467 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 458 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 468 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 461 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 469 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 459 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 470 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 454 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 471 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 464 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 472 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 462 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 473 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 465 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 474 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 463 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 475 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 460 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 16.56 +/- 21.33, nElo: 24.66 +/- 31.68
+LOS: 93.65 %, DrawRatio: 48.05 %, PairsRatio: 1.31
+Games: 462, Wins: 170, Losses: 148, Draws: 144, Points: 242.0 (52.38 %)
+Ptnml(0-2): [12, 40, 111, 50, 18], WL/DD Ratio: 3.11
+--------------------------------------------------
+Started game 476 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 466 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 477 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 467 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 478 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 468 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 479 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 474 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 480 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 470 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 481 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 469 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 482 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 456 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 483 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 472 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 484 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 473 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 485 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 471 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 486 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 480 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 487 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 477 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 488 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 475 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 489 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 481 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 490 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 476 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 491 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 484 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 492 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 485 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 493 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 482 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 494 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 486 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 495 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 479 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 12.26 +/- 21.09, nElo: 18.06 +/- 31.02
+LOS: 87.32 %, DrawRatio: 47.30 %, PairsRatio: 1.23
+Games: 482, Wins: 175, Losses: 158, Draws: 149, Points: 249.5 (51.76 %)
+Ptnml(0-2): [14, 43, 114, 52, 18], WL/DD Ratio: 3.22
+--------------------------------------------------
+Started game 496 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 478 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 497 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 487 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 498 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 483 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 499 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 490 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 500 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 491 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 501 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 488 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 502 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 493 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 503 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 492 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 504 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 496 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 505 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 497 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 506 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 499 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 507 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 494 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 508 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 489 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 509 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 498 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 510 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 495 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 511 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 500 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 11.82 +/- 20.51, nElo: 17.58 +/- 30.45
+LOS: 87.10 %, DrawRatio: 47.60 %, PairsRatio: 1.22
+Games: 500, Wins: 182, Losses: 165, Draws: 153, Points: 258.5 (51.70 %)
+Ptnml(0-2): [14, 45, 119, 54, 18], WL/DD Ratio: 3.41
+--------------------------------------------------
+Started game 512 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 506 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 513 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 504 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 514 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 501 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 515 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 502 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 516 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 505 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 517 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 507 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 518 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 508 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 519 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 512 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 520 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 511 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 521 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 510 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 522 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 509 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 523 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 516 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 524 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 513 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 525 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 503 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 526 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 519 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 527 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 514 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 528 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 517 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 529 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 523 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 530 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 518 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 531 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 515 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 532 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 526 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 533 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 520 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 14.04 +/- 20.06, nElo: 20.95 +/- 29.86
+LOS: 91.54 %, DrawRatio: 47.69 %, PairsRatio: 1.27
+Games: 520, Wins: 190, Losses: 169, Draws: 161, Points: 270.5 (52.02 %)
+Ptnml(0-2): [14, 46, 124, 57, 19], WL/DD Ratio: 3.28
+--------------------------------------------------
+Started game 534 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 524 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 535 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 529 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 536 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 522 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 537 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 527 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 538 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 530 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 539 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 521 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 540 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 528 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 541 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 537 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 542 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 533 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 543 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 531 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 544 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 525 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 545 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 532 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 546 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 538 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 547 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 539 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 548 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 543 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 549 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 536 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 550 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 535 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 551 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 544 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 552 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 534 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 553 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 541 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 554 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 540 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 15.39 +/- 19.60, nElo: 23.03 +/- 29.25
+LOS: 93.86 %, DrawRatio: 47.60 %, PairsRatio: 1.29
+Games: 542, Wins: 198, Losses: 174, Draws: 170, Points: 283.0 (52.21 %)
+Ptnml(0-2): [14, 48, 129, 60, 20], WL/DD Ratio: 3.16
+--------------------------------------------------
+Started game 555 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 542 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 556 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 549 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 557 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 546 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 558 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 545 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 559 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 547 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 560 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 553 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 561 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 548 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 562 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 554 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 563 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 551 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 564 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 555 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 565 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 550 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 566 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 558 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 567 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 561 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 568 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 556 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 569 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 552 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 570 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 559 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 571 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 557 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 572 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 565 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 573 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 562 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 574 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 566 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 575 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 560 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 16.65 +/- 19.17, nElo: 24.96 +/- 28.67
+LOS: 95.60 %, DrawRatio: 47.52 %, PairsRatio: 1.31
+Games: 564, Wins: 208, Losses: 181, Draws: 175, Points: 295.5 (52.39 %)
+Ptnml(0-2): [14, 50, 134, 63, 21], WL/DD Ratio: 3.32
+--------------------------------------------------
+Started game 576 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 563 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 577 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 568 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 578 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 571 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 579 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 567 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 580 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 570 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 581 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 572 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 582 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 564 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 583 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 569 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 584 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 573 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 585 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 575 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 586 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 576 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 587 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 579 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 588 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 577 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 589 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 581 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 590 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 580 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 16.90 +/- 19.10, nElo: 25.17 +/- 28.37
+LOS: 95.90 %, DrawRatio: 47.57 %, PairsRatio: 1.32
+Games: 576, Wins: 213, Losses: 185, Draws: 178, Points: 302.0 (52.43 %)
+Ptnml(0-2): [15, 50, 137, 64, 22], WL/DD Ratio: 3.28
+--------------------------------------------------
+Started game 591 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 574 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 592 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 583 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 593 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 578 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 594 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 587 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 595 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 586 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 596 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 584 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 597 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 585 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 598 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 582 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 599 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 589 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 600 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 588 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 601 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 593 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 602 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 590 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 603 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 592 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 604 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 596 (ref-bbbf8f6 vs candidate): 1-0 {White mates}
+Started game 605 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 598 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 606 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 597 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 607 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 595 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 608 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 594 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 609 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 601 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 610 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 599 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 611 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 591 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 612 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 604 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 613 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 600 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 16.81 +/- 18.58, nElo: 25.21 +/- 27.80
+LOS: 96.23 %, DrawRatio: 47.33 %, PairsRatio: 1.32
+Games: 600, Wins: 221, Losses: 192, Draws: 187, Points: 314.5 (52.42 %)
+Ptnml(0-2): [15, 53, 142, 68, 22], WL/DD Ratio: 3.30
+--------------------------------------------------
+Started game 614 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 602 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 615 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 603 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 616 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 607 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 617 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 609 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 618 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 606 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by stalemate}
+Started game 619 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 605 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 620 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 608 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 621 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 610 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 622 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 611 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 623 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 616 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 624 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 612 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 625 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 617 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 626 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 614 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 627 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 613 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 628 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 621 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 629 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 615 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 630 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 618 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 631 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 620 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 632 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 625 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 633 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 622 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 634 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 624 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 635 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 623 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 636 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 627 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 637 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 628 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 638 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 619 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 15.55 +/- 18.04, nElo: 23.51 +/- 27.22
+LOS: 95.48 %, DrawRatio: 47.28 %, PairsRatio: 1.29
+Games: 626, Wins: 228, Losses: 200, Draws: 198, Points: 327.0 (52.24 %)
+Ptnml(0-2): [15, 57, 148, 71, 22], WL/DD Ratio: 3.23
+--------------------------------------------------
+Started game 639 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 629 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 640 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 632 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 641 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 630 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 642 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 626 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 643 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 634 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 644 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 636 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 645 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 638 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 646 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 642 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 647 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 640 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 648 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 631 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 649 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 633 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 650 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 643 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 651 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 635 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 652 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 639 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 15.80 +/- 17.92, nElo: 23.82 +/- 26.96
+LOS: 95.84 %, DrawRatio: 47.02 %, PairsRatio: 1.32
+Games: 638, Wins: 232, Losses: 203, Draws: 203, Points: 333.5 (52.27 %)
+Ptnml(0-2): [16, 57, 150, 74, 22], WL/DD Ratio: 3.17
+--------------------------------------------------
+Started game 653 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 637 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 654 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 645 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 655 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 641 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 656 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 644 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 657 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 648 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 658 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 646 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 659 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 653 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 660 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 655 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 661 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 650 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 662 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 654 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 663 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 647 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 664 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 652 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 665 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 649 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 666 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 657 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 667 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 656 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 668 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 651 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 669 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 658 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 670 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 661 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 671 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 662 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 672 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 659 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 673 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 667 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 674 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 660 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 15.76 +/- 17.42, nElo: 23.98 +/- 26.47
+LOS: 96.21 %, DrawRatio: 47.43 %, PairsRatio: 1.32
+Games: 662, Wins: 241, Losses: 211, Draws: 210, Points: 346.0 (52.27 %)
+Ptnml(0-2): [16, 59, 157, 77, 22], WL/DD Ratio: 3.24
+--------------------------------------------------
+Started game 675 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 664 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 676 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 668 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 677 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 666 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 678 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 672 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 679 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 665 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 680 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 673 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 681 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 669 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 682 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 670 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 683 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 671 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 684 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 675 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 685 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 677 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 686 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 663 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 687 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 676 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 688 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 680 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 689 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 674 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 690 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 679 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 14.36 +/- 17.31, nElo: 21.73 +/- 26.15
+LOS: 94.83 %, DrawRatio: 47.49 %, PairsRatio: 1.28
+Games: 678, Wins: 244, Losses: 216, Draws: 218, Points: 353.0 (52.06 %)
+Ptnml(0-2): [17, 61, 161, 77, 23], WL/DD Ratio: 3.02
+--------------------------------------------------
+Started game 691 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 683 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 692 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 684 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 693 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 686 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 694 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 681 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 695 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 685 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 696 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 678 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 697 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 682 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 698 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 688 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 699 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 687 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 700 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 692 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 701 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 691 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 702 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 689 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 703 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 694 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 704 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 693 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 705 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 690 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 706 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 698 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 707 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 699 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 708 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 696 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 709 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 697 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 710 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 701 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 711 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 695 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 712 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 700 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 15.40 +/- 17.13, nElo: 23.19 +/- 25.74
+LOS: 96.13 %, DrawRatio: 47.14 %, PairsRatio: 1.31
+Games: 700, Wins: 252, Losses: 221, Draws: 227, Points: 365.5 (52.21 %)
+Ptnml(0-2): [18, 62, 165, 81, 24], WL/DD Ratio: 2.93
+--------------------------------------------------
+Started game 713 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 703 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 714 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 704 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 715 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 707 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 716 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 702 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 717 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 712 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 718 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 705 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 719 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 706 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 720 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 709 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 721 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 711 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 722 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 708 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 723 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 710 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 724 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 713 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 725 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 714 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 726 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 720 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 727 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 715 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 728 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 718 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 729 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 716 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 730 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 722 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 731 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 717 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 732 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 721 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 733 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 724 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 734 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 723 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 735 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 725 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 736 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 719 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 14.89 +/- 17.04, nElo: 22.16 +/- 25.31
+LOS: 95.69 %, DrawRatio: 46.41 %, PairsRatio: 1.31
+Games: 724, Wins: 259, Losses: 228, Draws: 237, Points: 377.5 (52.14 %)
+Ptnml(0-2): [20, 64, 168, 85, 25], WL/DD Ratio: 2.82
+--------------------------------------------------
+Started game 737 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 730 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 738 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 727 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 739 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 729 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 740 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 728 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 741 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 732 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 742 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 731 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 743 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 734 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 744 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 736 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 745 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 735 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 746 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 733 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 747 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 738 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 748 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 726 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 749 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 737 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 750 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 740 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 751 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 741 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 752 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 745 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 753 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 743 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 754 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 739 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 16.45 +/- 16.86, nElo: 24.47 +/- 25.03
+LOS: 97.23 %, DrawRatio: 46.22 %, PairsRatio: 1.34
+Games: 740, Wins: 267, Losses: 232, Draws: 241, Points: 387.5 (52.36 %)
+Ptnml(0-2): [20, 65, 171, 88, 26], WL/DD Ratio: 2.89
+--------------------------------------------------
+Started game 755 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 748 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 756 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 742 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 757 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 747 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 758 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 746 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 759 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 749 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 760 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 752 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 761 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 751 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 762 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 744 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 763 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 758 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 764 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 756 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 765 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 750 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 766 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 760 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 767 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 754 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 768 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 757 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 769 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 753 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 770 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 759 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 12.38 +/- 16.87, nElo: 18.18 +/- 24.73
+LOS: 92.52 %, DrawRatio: 45.65 %, PairsRatio: 1.26
+Games: 758, Wins: 270, Losses: 243, Draws: 245, Points: 392.5 (51.78 %)
+Ptnml(0-2): [23, 68, 173, 89, 26], WL/DD Ratio: 2.93
+--------------------------------------------------
+Started game 771 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 755 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+Started game 772 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 761 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 773 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 762 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 774 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 763 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 775 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 767 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 776 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 766 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 777 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 764 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 778 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 768 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 779 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 765 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 780 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 772 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 781 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 779 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 782 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 777 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 783 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 773 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 784 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 776 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 785 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 775 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 786 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 774 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 787 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 778 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 788 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 769 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 789 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 780 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 10.75 +/- 16.83, nElo: 15.64 +/- 24.45
+LOS: 89.50 %, DrawRatio: 45.36 %, PairsRatio: 1.23
+Games: 776, Wins: 276, Losses: 252, Draws: 248, Points: 400.0 (51.55 %)
+Ptnml(0-2): [25, 70, 176, 90, 27], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 790 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 770 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 791 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 786 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 792 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 771 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 793 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 782 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 794 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 783 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 795 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 789 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 796 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 781 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 797 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 788 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 798 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 785 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 799 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 784 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 800 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 790 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 801 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 793 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 802 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 787 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 803 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 791 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 804 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 794 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 805 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 796 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 806 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 801 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 807 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 792 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 808 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 797 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 809 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 800 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 810 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 799 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 10.48 +/- 16.54, nElo: 15.31 +/- 24.14
+LOS: 89.31 %, DrawRatio: 45.23 %, PairsRatio: 1.22
+Games: 796, Wins: 282, Losses: 258, Draws: 256, Points: 410.0 (51.51 %)
+Ptnml(0-2): [25, 73, 180, 93, 27], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 811 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 795 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 812 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 802 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 813 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 798 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 814 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 805 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 815 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 803 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 816 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 806 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 817 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 807 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 818 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 811 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 819 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 808 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 820 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 809 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 821 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 814 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 822 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 813 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 823 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 817 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 824 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 812 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 825 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 804 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 826 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 823 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 827 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 816 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 828 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 818 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 829 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 810 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 830 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 815 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 831 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 821 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 832 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 820 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 833 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 831 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 834 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 832 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 835 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 822 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 836 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 825 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 837 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 826 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 838 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 824 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 839 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 827 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 840 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 819 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 10.91 +/- 16.19, nElo: 15.97 +/- 23.67
+LOS: 90.70 %, DrawRatio: 45.41 %, PairsRatio: 1.24
+Games: 828, Wins: 294, Losses: 268, Draws: 266, Points: 427.0 (51.57 %)
+Ptnml(0-2): [26, 75, 188, 97, 28], WL/DD Ratio: 3.00
+--------------------------------------------------
+Started game 841 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 829 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 842 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 828 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 843 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 830 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 844 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 833 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 845 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 834 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 846 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 836 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 847 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 837 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 848 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 835 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 849 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 840 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 850 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 838 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 851 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 843 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 852 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 841 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 853 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 842 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 854 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 845 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 855 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 839 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 9.91 +/- 16.13, nElo: 14.43 +/- 23.47
+LOS: 88.59 %, DrawRatio: 45.37 %, PairsRatio: 1.21
+Games: 842, Wins: 298, Losses: 274, Draws: 270, Points: 433.0 (51.43 %)
+Ptnml(0-2): [27, 77, 191, 97, 29], WL/DD Ratio: 2.98
+--------------------------------------------------
+Started game 856 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 844 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 857 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 846 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 858 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 847 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 859 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 853 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 860 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 849 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 861 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 851 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 862 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 850 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 863 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 848 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 864 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 854 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 865 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 852 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 866 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 857 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 867 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 855 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 868 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 858 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 869 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 856 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 870 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 863 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 871 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 859 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 872 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 860 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 8.89 +/- 15.91, nElo: 12.99 +/- 23.22
+LOS: 86.35 %, DrawRatio: 45.81 %, PairsRatio: 1.20
+Games: 860, Wins: 302, Losses: 280, Draws: 278, Points: 441.0 (51.28 %)
+Ptnml(0-2): [28, 78, 197, 98, 29], WL/DD Ratio: 2.86
+--------------------------------------------------
+Started game 873 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 862 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 874 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 865 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 875 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 864 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 876 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 861 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 877 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 869 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 878 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 866 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 879 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 875 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 880 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 877 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 881 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 874 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 882 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 871 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 883 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 872 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 884 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 879 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 885 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 867 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 886 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 873 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 887 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 870 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 888 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 876 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 889 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 878 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 890 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 880 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 7.52 +/- 15.73, nElo: 11.00 +/- 22.98
+LOS: 82.59 %, DrawRatio: 46.01 %, PairsRatio: 1.17
+Games: 878, Wins: 308, Losses: 289, Draws: 281, Points: 448.5 (51.08 %)
+Ptnml(0-2): [29, 80, 202, 99, 29], WL/DD Ratio: 2.96
+--------------------------------------------------
+Started game 891 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 868 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+Started game 892 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 885 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 893 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 883 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 894 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 886 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 895 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 890 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 896 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 882 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 897 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 888 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 898 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 887 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 899 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 881 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 900 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 884 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 901 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 889 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 902 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 891 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 903 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 893 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 904 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 894 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 905 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 895 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 906 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 892 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 907 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 898 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 908 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 896 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 909 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 897 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 910 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 900 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 911 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 907 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 912 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 901 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 913 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 905 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 914 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 906 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 915 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 902 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 916 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 899 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 8.84 +/- 15.71, nElo: 12.76 +/- 22.65
+LOS: 86.53 %, DrawRatio: 44.91 %, PairsRatio: 1.18
+Games: 904, Wins: 319, Losses: 296, Draws: 289, Points: 463.5 (51.27 %)
+Ptnml(0-2): [30, 84, 203, 103, 32], WL/DD Ratio: 2.98
+--------------------------------------------------
+Started game 917 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 909 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 918 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 903 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 919 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 915 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 920 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 916 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 921 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 912 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 922 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 910 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 923 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 908 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 924 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 904 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 925 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 914 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 926 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 917 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 927 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 918 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 928 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 913 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 929 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 921 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 930 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 911 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 931 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 919 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 932 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 922 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 933 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 928 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 934 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 925 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 935 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 926 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 936 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 923 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 937 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 927 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 938 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 930 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 939 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 924 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 940 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 920 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 9.36 +/- 15.75, nElo: 13.30 +/- 22.35
+LOS: 87.82 %, DrawRatio: 44.61 %, PairsRatio: 1.18
+Games: 928, Wins: 328, Losses: 303, Draws: 297, Points: 476.5 (51.35 %)
+Ptnml(0-2): [32, 86, 207, 103, 36], WL/DD Ratio: 2.83
+--------------------------------------------------
+Started game 941 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 929 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 942 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 936 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 943 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 932 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by insufficient mating material}
+Started game 944 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 933 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 945 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 931 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 946 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 938 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 947 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 941 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 948 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 940 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 949 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 937 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 950 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 939 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 9.28 +/- 15.62, nElo: 13.24 +/- 22.26
+LOS: 87.82 %, DrawRatio: 45.09 %, PairsRatio: 1.18
+Games: 936, Wins: 330, Losses: 305, Draws: 301, Points: 480.5 (51.34 %)
+Ptnml(0-2): [32, 86, 211, 103, 36], WL/DD Ratio: 2.77
+--------------------------------------------------
+Started game 951 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 935 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 952 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 942 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 953 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 951 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 954 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 934 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 955 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 943 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 956 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 948 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 957 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 946 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 958 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 947 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 959 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 952 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 960 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 944 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 961 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 945 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 962 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 950 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 963 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 956 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 964 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 949 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 965 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 955 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 966 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 954 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 967 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 957 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 968 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 958 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 969 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 960 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 970 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 962 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 971 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 959 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 8.71 +/- 15.51, nElo: 12.36 +/- 22.00
+LOS: 86.46 %, DrawRatio: 45.09 %, PairsRatio: 1.16
+Games: 958, Wins: 337, Losses: 313, Draws: 308, Points: 491.0 (51.25 %)
+Ptnml(0-2): [33, 89, 216, 103, 38], WL/DD Ratio: 2.72
+--------------------------------------------------
+Started game 972 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 961 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 973 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 967 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 974 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 963 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 975 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 968 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 976 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 964 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 977 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 966 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 978 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 965 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 979 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 969 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 980 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 953 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Started game 981 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 970 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 982 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 971 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 983 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 975 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 984 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 972 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 985 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 979 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 986 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 973 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 987 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 980 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 9.28 +/- 15.32, nElo: 13.23 +/- 21.82
+LOS: 88.27 %, DrawRatio: 45.17 %, PairsRatio: 1.17
+Games: 974, Wins: 344, Losses: 318, Draws: 312, Points: 500.0 (51.33 %)
+Ptnml(0-2): [33, 90, 220, 106, 38], WL/DD Ratio: 2.79
+--------------------------------------------------
+Started game 988 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 983 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 989 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 982 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 990 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 977 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 991 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 981 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by insufficient mating material}
+Started game 992 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 974 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 993 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 985 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Started game 994 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 984 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Started game 995 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 986 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Started game 996 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 976 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 997 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 978 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Started game 998 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 987 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Started game 999 of 1000 (candidate vs ref-bbbf8f6)
+Finished game 991 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 1000 of 1000 (ref-bbbf8f6 vs candidate)
+Finished game 993 (candidate vs ref-bbbf8f6): 1-0 {White wins by adjudication}
+Finished game 988 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Finished game 990 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Finished game 992 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Finished game 994 (ref-bbbf8f6 vs candidate): 1-0 {White wins by adjudication}
+Finished game 995 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Finished game 989 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Finished game 999 (candidate vs ref-bbbf8f6): 0-1 {Black wins by adjudication}
+Finished game 998 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+Finished game 996 (ref-bbbf8f6 vs candidate): 1/2-1/2 {Draw by adjudication}
+Finished game 997 (candidate vs ref-bbbf8f6): 1/2-1/2 {Draw by adjudication}
+Finished game 1000 (ref-bbbf8f6 vs candidate): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of candidate vs ref-bbbf8f6 (8+0.08, 1t, 16MB, UHO_Lichess_4852_v1.epd):
+Elo: 7.99 +/- 15.03, nElo: 11.46 +/- 21.53
+LOS: 85.16 %, DrawRatio: 45.80 %, PairsRatio: 1.15
+Games: 1000, Wins: 350, Losses: 327, Draws: 323, Points: 511.5 (51.15 %)
+Ptnml(0-2): [34, 92, 229, 107, 38], WL/DD Ratio: 2.69
+--------------------------------------------------
+Finished match
+Total Time: 00:26:21 (hours:minutes:seconds)
+
+
+=== 1000 games in /tmp/chesso_sprt_full_20260908_021324/games.pgn ===
+    760 [Termination "adjudication"]
+    240 [Termination "normal"]
+draws     323 of 1000, 32.3 %
+decisive  677 of 1000, 67.7 %
+forfeits  0 of 1000, 0.00 %
+SPRT-RUN-DONE full /tmp/chesso_sprt_full_20260908_021324

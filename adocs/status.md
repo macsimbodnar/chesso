@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S198 is done, 2026-09-08: the harness seeds its openings, records nodes and
+  clocks, and the workstation is calibrated.** `fastchess.sh` derives `-srand`
+  from the run stamp, prints it in the banner and carries it in each PGN's
+  `[Event]` header -- fastchess records it on no stream, in no log and in no
+  header of its own -- with `SRAND=<n>` to replay a sequence and `ROUNDS=<n>`
+  for the fixed-rounds mode nothing had, which drops `-sprt` and prints
+  `bounds none -- fixed <n> rounds ... NOT a verdict`. `-pgnout` gains
+  `nodes=true timeleft=true`. Three test cases, red first with 5 assertions
+  against HEAD's script; eleven properties now.
+- **DEC-143's calibration is taken and it stands.** 1000 games at `bbbf8f6`
+  between **byte-identical binaries** (sha256 `b047f22d...`), 26 m 21 s,
+  **0 time forfeits on either side**, pair score variance **0.2430 +/- 0.0154**
+  against S105's after-run 0.2395 +/- 0.0152: **`z = +0.16`, inside the
+  pre-registered band**, ratio 1.014, nothing re-run. **2277 games an hour**,
+  and the difference from S105's 2322 is game length rather than machine speed
+  -- seconds a ply 0.1831 → 0.1791 while plies a game went 98.0 → 102.1. One
+  nElo is **0.698 logistic Elo** here, read off the run's own pair. The run is
+  also the mode's own argument: with the truth zero by construction it printed
+  `Elo: 7.99 +/- 15.03, LOS 85.16 %`, which is why a fixed-rounds run is never
+  quoted as a verdict. Records `adocs/data/S198_*`; DEC-153 has the owner's
+  three answers. **The next verdict may be taken.**
 - **S189 is done, 2026-09-08: the engine has a node signature and a script that
   checks it.** `bench` searches eight fixed positions at `BENCH_DEPTH` 14 and
   prints **`24880255 nodes <nps> nps`** -- identical across three fresh
@@ -675,36 +696,30 @@ Updated: 2026-09-08, by hand.
   generator under a project-chosen seed, so `src/bb_tables.hpp` is this
   project's own output; agent-only, no machine time, and it is the step that
   also removes the "per standard library" caveat the signature carries today.
-  Then **S198**: the `-srand` and PGN flags, and the 1000-game fixed-rounds A/A
-  that is the workstation's DEC-143 calibration, read with
-  `adocs/data/S105_pairs.py` and `tools/forfeit_report.py` before the first
-  verdict -- that one owns the machine. Then the instrument lane, **S180**
-  first, with **S148** the first verdict. `plan.md`'s "What the 2026-09-05
-  reorder changed" says how one agent reads the list with one machine.
+  Then the instrument lane, **S180** first, with **S148** the first verdict --
+  and the calibration that had to precede it is taken, so nothing blocks it.
+  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads
+  the list with one machine.
 
   **Every commit touching `src/` now needs a `Bench:` line.** Run
   `export CLANG_FORMAT_MAJOR=22` and then `tools/gate.sh --message <file>`
   before committing and `tools/gate.sh` after; `DEV_MANUAL.md` "Test" has the
   four invocations.
 - Blocked: **nothing.**
-- Watching: **nothing. No run is armed.** The 2026-09-03 SPRT attempt was killed
-  a minute in and no watcher was ever armed for it; the S172 and S146 gates ran
-  in the foreground of their own turns and are finished, and S146's fast-check
-  subagent has reported and exited.
+- Watching: **nothing. No run is armed.** S198's A/A finished at 02:39 on
+  2026-09-08 and its watcher exited on `SPRT-RUN-DONE`, acknowledged in the
+  same turn; the result is read and recorded above. Before it, the 2026-09-03
+  SPRT attempt was killed a minute in with no watcher ever armed for it.
 - Parked:
-  - **Calibrate the harness on the workstation: `AA=1 ./fastchess.sh` at fixed
-    rounds, 1000 games, read with `adocs/data/S105_pairs.py` and
-    `tools/forfeit_report.py`, recorded beside S105's numbers.** The owner
-    refused the same run on the MacBook (DEC-139: a number about a machine
-    that is leaving); DEC-143 makes it the rule after every machine change,
-    and it is S198's A/A, Open entry 2 since S189 landed. Until it is taken,
-    the
-    harness has no pair-variance or forfeit figure for the machine the
-    verdicts run on.
+  - ~~**Calibrate the harness on the workstation.**~~ **Taken 2026-09-08 as
+    S198's A/A and retired**: 1000 fixed rounds, 0 forfeits, pair variance
+    0.2430 +/- 0.0154 inside S105's band at `z = +0.16`, 2277 games an hour.
+    The next machine change owes the next one under DEC-143.
   - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
     asks for S085's vector re-tested against `3488506` at a control at least
-    four times `8+0.08`; at a quarter of 2337 games an hour a `{-5, 0}` pair
-    is about 72 hours worst case and 44 on a bound. Options: that pair on a
+    four times `8+0.08`; at a quarter of the **measured 2277** games an hour
+    (S198, 2026-09-08, where the estimate was 2337) a `{-5, 0}` pair is about
+    74 hours worst case and 45 on a bound. Options: that pair on a
     weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
     +/-8 Elo) which would change the accepts and is therefore a decision. It
     sits at Open entry 17 behind S148 and S159 until answered.
