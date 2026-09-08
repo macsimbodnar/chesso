@@ -45,9 +45,10 @@ mislabels them.
 
 ## The trap
 
-`MAX_QSEARCH_DEPTH` is 8 (`src/search.cpp:27`). A leaf reached by exhausting that
-bound is not quiet, it is truncated, and recording it puts back exactly the noise
-this step removes. The gate asks for a test that separates the two, and datagen
+`MAX_QSEARCH_DEPTH`, 19 as shipped since S085 retuned it from 8, is the ply
+bound `quiescence` of `src/search.cpp` tests against `qply`. A leaf reached by
+exhausting that bound is not quiet, it is truncated, and recording it puts back
+exactly the noise this step removes. The gate asks for a test that separates the two, and datagen
 should count the truncated ones rather than silently keep them.
 
 Second trap: the leaf of a search is not the leaf of a plain quiescence call from

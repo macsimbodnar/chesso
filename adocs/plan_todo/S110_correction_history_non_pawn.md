@@ -15,8 +15,8 @@ Demoted behind the 3000 push by the second review: the non-pawn and
 continuation tables measure +3 to +8 and only above ~3100 in the surveyed
 record, where the pawn table (S099, which stays in the main order) has
 sub-3000 evidence at +11.4. The long-control doubling noted below is one more
-reason this family reads better after S128 moves the measurement nearer the
-list's control.
+reason this family reads better after S152, which absorbed S128's question
+(DEC-108), moves the measurement nearer the list's control.
 
 ## Order, and why it is three steps
 

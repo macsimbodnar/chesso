@@ -7,7 +7,8 @@ decisions:  DEC-019, DEC-063, DEC-095
 closes:
 blocks:
 paused_by:
-author:     Maksym Bodnar
+author:
+done:
 
 ## What S145 measured, and why this is a trade rather than a fix
 

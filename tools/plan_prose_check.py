@@ -41,6 +41,10 @@ Three rules, and the third is the one with a maintenance cost:
           few tight forms -- `Name` is N, ships at N, = N, default N, N as
           shipped. Deliberately tight: "`LazyEvalMargin` at 0, 150 and 2000" is
           a sweep, not a claim about the default, and a looser rule flags it.
+          The same three forms run against the C++ symbol as well, which is how
+          a step file names a parameter -- `ASPIRATION_DELTA` and not
+          `AspirationDelta`. There both backticks are mandatory; the comment
+          above PARAM_NEAR_SYMBOL has the false positive that decided it.
   PHRASE  a sentence that never names the parameter at all. Two of F02's three
           were of this kind, so a name-adjacency scan alone would have missed
           them. These are keyed on the wording, in PARAM_PHRASES below, and
@@ -52,9 +56,11 @@ Three rules, and the third is the one with a maintenance cost:
 Coverage is what those three rules reach and nothing more. A number stated
 about a parameter in prose that neither names it nor matches a phrase rule is
 not checked and cannot be -- the check is a net with a stated mesh, not a
-proof. Default file set: `adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md` and
-`adocs/plan.md`. `adocs/plan_done/` is excluded on purpose: it is history and
-records what was true when it was written. S150, F02.
+proof. Default file set: `adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md`,
+`adocs/plan.md`, and every file in `adocs/plan_todo/` and `adocs/plan_current/`
+-- S184 added the pending step files, where the class also lived and where only
+the symbol form can see it. `adocs/plan_done/` is excluded on purpose: it is
+history and records what was true when it was written. S150, F02; S184, F05.
 
 **--prose: a completed step described as pending.** plan.md is second in the
 reading order and its prose is what a cold session reads before the ordered
@@ -816,7 +822,7 @@ PARAM_ROW = re.compile(
     r"\s*(-?\d+)\s+to\s+(-?\d+)\s*\|")
 
 PARAM_DECL = re.compile(
-    r"X\(\s*[A-Z][A-Z0-9_]*\s*,\s*\"([A-Za-z][A-Za-z0-9]*)\"\s*,"
+    r"X\(\s*([A-Z][A-Z0-9_]*)\s*,\s*\"([A-Za-z][A-Za-z0-9]*)\"\s*,"
     r"\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)")
 
 # A number close enough to the name to be a claim about the default. Tight on
@@ -826,6 +832,15 @@ PARAM_NEAR = (
     r"`?{n}`?[^.\n]{{0,30}}?\b(-?\d+)\s+as shipped",
     r"`?{n}`?[^.\n]{{0,20}}?\bdefault\s+(-?\d+)",
 )
+
+# The same three forms against the C++ symbol, which is how a step file names a
+# parameter -- "`ASPIRATION_DELTA` is 50" and not the UCI name. **Both backticks
+# are mandatory here and that is measured, not stylistic**: optional, the first
+# form reads S114's formula line "`NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` =
+# 3 + depth/6" as a claim that the divisor is 3, because the regex takes the
+# formula's own closing backtick as the symbol's. Mandatory, it does not, and no
+# true hit anywhere in the file set is lost. S184.
+PARAM_NEAR_SYMBOL = tuple(p.replace("`?{n}`?", "`{n}`") for p in PARAM_NEAR)
 
 # The sentences that state a parameter's value without ever naming it. Keyed on
 # the wording, which is the cost: rewrite the sentence and the rule goes STALE
@@ -850,19 +865,32 @@ PARAM_PHRASES = (
 # -- and leaving the rule in would have printed STALE on every run until
 # somebody deleted it to get green. S150.
 
+# The four documents that describe the shipping engine. The pending step files
+# are read too and are not listed here: they come from pending_step_files(), so
+# a new step is covered the day it is written. `adocs/plan_done/` stays out --
+# history records what was true when it was written. S184.
 PARAM_DOCS = ("adocs/specs.md", "MANUAL.md", "DEV_MANUAL.md", "adocs/plan.md")
 
 
-def search_params():
-    """{uci name: (default, min, max)} from src/search_params.hpp.
+def _search_params(group):
+    """{key: (default, min, max)} from src/search_params.hpp, keyed on group.
 
     Empty is a failure and never a pass: a list that stopped parsing would make
     every rule below vacuous, which is the trap this whole check exists against.
     """
     text = code_of("src/search_params.hpp") or ""
-    out = {m.group(1): (int(m.group(2)), int(m.group(3)), int(m.group(4)))
-           for m in PARAM_DECL.finditer(text)}
-    return out
+    return {m.group(group): (int(m.group(3)), int(m.group(4)), int(m.group(5)))
+            for m in PARAM_DECL.finditer(text)}
+
+
+def search_params():
+    """{uci name: (default, min, max)} -- what the manuals and plan.md name."""
+    return _search_params(2)
+
+
+def search_symbols():
+    """{C++ symbol: (default, min, max)} -- what a step file names."""
+    return _search_params(1)
 
 
 def _joined(text):
@@ -885,7 +913,7 @@ def _joined(text):
     return "".join(flat), lines
 
 
-def check_params(path, params):
+def check_params(path, params, symbols=None):
     """Report every document number that disagrees with the compiled value."""
     full = os.path.join(REPO, path)
     try:
@@ -909,13 +937,15 @@ def check_params(path, params):
 
     flat, lineof = _joined(text)
 
-    for name, (default, _lo, _hi) in params.items():
-        for pattern in PARAM_NEAR:
-            for m in re.finditer(pattern.format(n=re.escape(name)), flat):
-                if int(m.group(1)) != default:
-                    print("NEAR   {}:{}  {} stated as {}, code {}".format(
-                        path, lineof[m.start()], name, m.group(1), default))
-                    bad += 1
+    for names, rules in ((params, PARAM_NEAR),
+                         (symbols or {}, PARAM_NEAR_SYMBOL)):
+        for name, (default, _lo, _hi) in names.items():
+            for pattern in rules:
+                for m in re.finditer(pattern.format(n=re.escape(name)), flat):
+                    if int(m.group(1)) != default:
+                        print("NEAR   {}:{}  {} stated as {}, code {}".format(
+                            path, lineof[m.start()], name, m.group(1), default))
+                        bad += 1
 
     fired = set()
     for index, (name, pattern) in enumerate(PARAM_PHRASES):
@@ -932,16 +962,21 @@ def check_params(path, params):
     return bad, fired
 
 
-def check_all_params(paths):
-    params = search_params()
+def check_all_params(paths, adocs=None):
+    params, symbols = search_params(), search_symbols()
     if not params:
         print("PARSE  src/search_params.hpp yielded no parameters -- the "
               "check would pass vacuously, so it fails instead")
         return 1
 
+    default_set = list(PARAM_DOCS)
+    if adocs:
+        default_set += [os.path.relpath(p, REPO)
+                        for p in pending_step_files(adocs)]
+
     bad, fired = 0, set()
-    for path in paths or PARAM_DOCS:
-        count, hit = check_params(path, params)
+    for path in paths or default_set:
+        count, hit = check_params(path, params, symbols)
         bad += count
         fired |= hit
 
@@ -979,7 +1014,7 @@ def main():
     if mode in ("all", "touches"):
         bad += touches(args if mode == "touches" else [], adocs)
     if mode in ("all", "params"):
-        bad += check_all_params(args if mode == "params" else [])
+        bad += check_all_params(args if mode == "params" else [], adocs)
     return 1 if bad else 0
 
 

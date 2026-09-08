@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S184 is done, 2026-09-08: the pending documents state the engine as it
+  ships, and the parameter checker now reads them.** Every F05 value restored
+  from `src/search_params.hpp` at HEAD -- S115's aspiration sweep designed on
+  2 / 21 / 437 with the "keep 5" instruction gone, S082's quiescence cap on 19,
+  the lazy clamp on 184 in S120, S122 and `plan.md`, S118's cost paragraph
+  dated to before S104 with `specs.md`'s 53.90 ns quoted beside it. S042's
+  `touches:` names all four sites that build the en-passant key and its body
+  states the one rule applied at each. Five F09 sentences and two F10 headers.
+  Documents only: `git diff --stat -- src/` empty, 28/28 in both builds.
+  Closes `2026-09-04_plan_review-F05`, `-F08`, `-F09`, `-F10`.
+- **Three things from S184 are worth knowing before the next step.**
+  `tools/plan_prose_check.py --params` now reads the **68 pending step files**
+  as well as the four documents, and matches the **C++ symbol** -- with both
+  backticks mandatory, because optional they make S114's formula line read as a
+  claim about its divisor. So a pending file stating a stale parameter is a red
+  fast suite from now on, and the cost is 1.27 s a run against 0.37 s.
+  **S171's three F09/F10 items are void, not deferred**: that step completed
+  into `plan_done/` on 2026-09-07/08 and `plan_done/` is never edited -- its
+  `done:` stamp sits at line 551 rather than in the header, which no longer
+  matters. And **an absent `author:` is the corpus convention** for an
+  unstarted step, not a defect: 47 of 48 `plan_todo/` headers omit it, which
+  is why S024 got one and then had it reverted. The header audit that
+  established this found one fresh instance of F10's real class, S202's missing
+  `done:`, now added.
 - **S180 is done, 2026-09-08: no pending step tells an implementer to start a
   sweep from another engine's number.** Every seed in the `### 4. Constants and
   seeds` section of S095, S097, S098, S109, S113, S114 and S132 is now one of
@@ -798,13 +822,20 @@ Updated: 2026-09-08, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: the instrument lane continues at **S184** -- the pending documents
-  stated at HEAD values, and `tools/plan_prose_check.py --params` extended to
-  reach `plan_todo/` -- with **S148** still the first verdict, and the
-  calibration that had to precede it taken, so nothing blocks it. Two of
-  S184's F05 rows are already done: S180 fixed them in passing and S184's file
-  carries the note (DEC-157). `plan.md`'s "What the 2026-09-05 reorder
-  changed" says how one agent reads the list with one machine.
+- Last done: **S184, 2026-09-08 -- the pending documents at HEAD values and
+  `--params` extended over them.** Documents and one checker change, no `src/`.
+  (Two earlier `Last done:` lines sit above this one, S189's and S177's, from
+  earlier sessions: they are that log's chronology and this is the live
+  pointer. Nothing here reconciles them -- a flat list carrying three of the
+  same field is a hygiene finding and not S184's scope.)
+- Next: **S148**, now Open entry 1 and **the first verdict** -- the reverse
+  futility depth ceiling re-decided against the deep mates S145 measured it
+  losing, by SPRT. It owns the machine, so the entry to take while it plays is
+  **S187** (symbol citations), whose input S184 just handed it: 52 DRIFT flags
+  over the pending set, down from 76, with all 24 on S184's own 14 files
+  cleared by the baseline moving. `plan.md`'s "What the 2026-09-05 reorder
+  changed" says how one agent reads the list with one machine. The calibration
+  DEC-143 required before any verdict is taken (S198), so nothing blocks S148.
 
   **Every commit touching `src/` now needs a `Bench:` line.** Run
   `export CLANG_FORMAT_MAJOR=22` and then `tools/gate.sh --message <file>`

@@ -12,12 +12,12 @@ done:
 ## The clamp is the whole problem
 
 `evaluate_expensive()` clamps mobility **plus** king safety to
-+/-LAZY_EVAL_MARGIN -- 150 centipawns for both together -- and `evaluate()` is
-`evaluate_cheap() + evaluate_expensive()`, so the clamp is on the real score and
-not only on the shortcut's. **The architecture forbids a king-safety term
-strong enough to matter.** A mating attack is worth four to six hundred
-centipawns and this evaluation cannot say more than one hundred and fifty about
-the king and the mobility combined.
+`LAZY_EVAL_MARGIN`, 184 as shipped since S085's SPSA run raised it from 150, for
+both together -- and `evaluate()` is `evaluate_cheap() + evaluate_expensive()`,
+so the clamp is on the real score and not only on the shortcut's. **The
+architecture forbids a king-safety term strong enough to matter.** A mating
+attack is worth four to six hundred centipawns and this evaluation cannot say
+more than a hundred and eighty-four about the king and the mobility combined.
 
 That is why S039 was moved from the end of the plan to just before this step,
 and why S120 is ordered ahead of both: retiring the clamp costs 11.7 % of nps

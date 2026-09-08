@@ -16,7 +16,9 @@ step above it adds, so it cannot precede them". That is right about this run
 and wrong about the first one, which is why S084 and S085 moved to the front.
 
 The evidence that the *existing* set is mis-set, measured 2026-08-19 on the
-tune build at depth 12: `MaxQsearchDepth` is 8 and **the bound binds**. Raised
+tune build at depth 12: `MaxQsearchDepth` **was** 8 when this was written and
+**the bound binds**. S085 shipped 19 on 2026-08-21, so the sweep below is the
+argument that moved it and not a claim about what compiles today. Raised
 to 16 the Ruy Lopez position after `e4 e5 Nf3 Nc6 Bb5 a6` drops from 1038972 to
 940880 nodes -- 9.4 % fewer -- and its score moves from 20 to 33 with a
 different line; kiwipete goes the other way, 5167100 to 6061763; the endgame

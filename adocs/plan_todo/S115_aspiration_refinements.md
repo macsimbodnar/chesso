@@ -11,14 +11,24 @@ done:
 
 ## What is there
 
-`ASPIRATION_DELTA` is 50 and widening doubles the failing side alone. What the
-band's engines do that this does not: keep the search fail-soft through the
-window plumbing (fail-soft in the pruning returns measured +2.6/+5.1 at
-Ethereal), halve beta toward alpha on a fail-low (one line), and reduce the
-root depth on a repeated fail-high so an unstable root does not burn a whole
-iteration (Lynx carries it). The volatility-seeded width the strong engines
-run has no measured gain below ~3100 and left this step at DEC-087; S085 and
-S127 own the delta itself.
+The triple this step re-sweeps is **S085's, not S021's**: `ASPIRATION_MIN_DEPTH`,
+2 as shipped since S085; `ASPIRATION_DELTA`, 21 as shipped since S085;
+`ASPIRATION_MAX_DELTA`, 437 as shipped since S085. S021 measured and shipped
+5 / 50 / 400 and the SPSA vector of 2026-08-21 replaced all three
+(+21.02 +/- 9.86, verified; `adocs/plan_done/S085_spsa_first_run.md`). Every
+number below is read against those, and the sweep's own off row is taken at
+them -- taken at S021's triple it would measure S085's axes and this step's
+together, and neither number would mean anything.
+
+Widening doubles the failing side alone. **The plumbing is already fail-soft
+end to end** -- "Shape for chesso" walks the five return paths and the "Scope
+concern" section is the record of this paragraph having once said otherwise, so
+Ethereal's +2.6/+5.1 for fail-soft pruning returns is banked here and is not
+this step's to win. What the band's engines do that this does not: halve beta
+toward alpha on a fail-low (one line), and reduce the root depth on a repeated
+fail-high so an unstable root does not burn a whole iteration (Lynx carries
+it). The volatility-seeded width the strong engines run has no measured gain
+below ~3100 and left this step at DEC-087; S127 owns the delta itself.
 
 ## Technical details (SOTA research, 2026-08-19)
 
@@ -59,7 +69,8 @@ is a seed and must be swept or SPSA'd here.
   gating it on alpha measured -1 to -2 and was rejected (#1102, #1103, #1141).
 - **Depth gating.** Weiss enabled windows "for depth > 6" (#30, 2019);
   Althoff +/-50 cp from depth 4, Buijs +/-15 cp from depth 4 (t=76115).
-  Chesso's gate of 5 was measured here (S021) and stands.
+  S021 measured 5 here; S085 moved it to 2, the arithmetic floor its own
+  `min` allows, inside a +21.02 +/- 9.86 verified vector.
 - **The dropped branch, confirmed dropped.** Eval-scaled width exists at the
   top (SF 0150da5c2b, 2019); Weiss *removed* its extreme-score adjustment as a
   passed simplification, -0.72 +/- 1.13 (#668, 2023) -- band-level support for
@@ -98,7 +109,11 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
 2. Re-sweep with adocs/data/S021_aspiration_sweep.py (tune build, depth 11,
    the three stratified offsets -- 300 positions, never the three-position
    bench), with (a) and (b) toggled apart and together, multiplier variants
-   x1.5/x2/x3 in the same table.
+   x1.5/x2/x3 in the same table. **The off row is taken at the shipped triple,
+   2 / 21 / 437, and re-read from `src/search_params.hpp` before the run**:
+   S021's script was written when 5 / 50 / 400 compiled, and an off row at
+   those values would put S085's verified vector inside this step's own
+   comparison.
 3. Verdicts per the accepts: **one SPRT if the sweep shows (a) and (b) inert
    apart, otherwise one each -- 1 to 3, expected 1** (Weiss shipped the whole
    bundle as one patch). The schedule choice itself is a node-count decision
@@ -121,9 +136,9 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
 | midpoint-pull weight | none | 1/2 of the interval (SF prose in 57b32f3e60); SF 2025 runs 3/4 toward alpha -- seed 1/2 |
 | fail-high reduction | none | 1 ply per consecutive root fail-high, floor depth 1, reset on fail-low (SF 3a572ffb48); uncapped -- Lynx caps measured negative |
 | widening multiplier | x2 (src/chesso.cpp:792) | x2 "exponential" (CPW); linear +delta/fail (SF 49dfc50b12, 2010); "reduce the rate" (Weiss #183) -- sweep x1.5/x2/x3 |
-| depth gate | 5, measured (S021) | Weiss >6, Althoff/Buijs 4 -- keep 5 unless the sweep says otherwise |
-| initial delta | 50 (S021) | excluded: S085/S127 own it (for the record: 50 cp Althoff, 15 cp Buijs, "21 internal units" SF 2019 prose) |
-| max delta escape | 400 then full | keep; re-sweep confirms |
+| depth gate | 2 (S085; S021 measured 5) | Weiss >6, Althoff/Buijs 4 -- hold at 2. A row at 5 re-measures an axis S085's verified vector moved and is not this step's |
+| initial delta | 21 (S085; S021 measured 50) | excluded: S127 owns it (for the record: 50 cp Althoff, 15 cp Buijs, "21 internal units" SF 2019 prose) |
+| max delta escape | 437 then full (S085; S021 measured it flat from 100 to 2000) | keep; re-sweep confirms |
 
 ### Pitfalls
 

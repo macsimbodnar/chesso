@@ -1,14 +1,45 @@
 id:         S184
 goal:       the pending documents state the engine as it ships at HEAD -- retuned parameters at their shipped values, S042's touches naming every site that builds the en-passant key, prose that calls no done step pending and routes to no folded id, step headers complete -- and the params checker reaches the pending step files so the class stops recurring
 accepts:    S115's "What is there" section and its constants table are rewritten against the aspiration triple `src/search_params.hpp` compiles at this step's HEAD (S085's vector), the sweep's off row is taken at those values and the "keep 5" instruction is gone; S082's quiescence-cap sentence, S120's and S122's clamp figures, `adocs/plan.md`'s "150 centipawns" sentence in "Three things the first review measured" and S118's "What it costs today" paragraph state the shipped values or carry the date they were measured; S042's `touches:` names `load_FEN`'s en-passant sanitiser and every other place the key is built beside `make_move`, and its body states the one rule applied at all of them; the five prose defects of F09 are corrected -- the machine-scope lane paragraph to the list as it stands, `status.md`'s Next line, S159's S093 clause, S171's section title, the three S128 routes to S152 -- and `adocs/plan.md`'s sentence claiming the surveyed engines test at 8+0.08 names the split the OpenBench presets show, 14 of 20 at 8+0.08 with Ethereal, Berserk, Weiss and Stockfish at 10+0.1; S148 and S171 gain their `done:` field and the `author:` lines of S148, S171 and S024 are cleared or explained in one line naming DEC-128 or DEC-111; `tools/plan_prose_check.py --params` covers `adocs/plan_todo/` with named-constant phrases for the parameters those files state, observed red on S115's old text before the rewrite and green after; fast suite green in both builds
-touches:    adocs/plan_todo/S115_aspiration_refinements.md, adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md, adocs/plan_todo/S120_eval_cache.md, adocs/plan_todo/S122_king_safety_rebuild.md, adocs/plan_todo/S118_pawn_hash_table.md, adocs/plan_todo/S042_en_passant_only_when_capturable.md, adocs/plan_todo/S159_killer_slot_ageing.md, adocs/plan_todo/S171_inherited_mate_distance.md, adocs/plan_todo/S109_shallow_depth_pruning_block.md, adocs/plan_todo/S110_correction_history_non_pawn.md, adocs/plan_todo/S132_time_management_node_fraction.md, adocs/plan_todo/S148_rfp_ceiling_against_deep_mates.md, adocs/plan_todo/S024_continuation_history.md, adocs/plan.md, adocs/status.md, tools/plan_prose_check.py, tests/CMakeLists.txt
+touches:    adocs/plan_todo/S115_aspiration_refinements.md, adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md, adocs/plan_todo/S120_eval_cache.md, adocs/plan_todo/S122_king_safety_rebuild.md, adocs/plan_todo/S118_pawn_hash_table.md, adocs/plan_todo/S042_en_passant_only_when_capturable.md, adocs/plan_todo/S159_killer_slot_ageing.md, adocs/plan_todo/S171_inherited_mate_distance.md, adocs/plan_todo/S109_shallow_depth_pruning_block.md, adocs/plan_todo/S110_correction_history_non_pawn.md, adocs/plan_todo/S132_time_management_node_fraction.md, adocs/plan_todo/S148_rfp_ceiling_against_deep_mates.md, adocs/plan_todo/S024_continuation_history.md, adocs/plan_todo/S127_spsa_full_parameter_run.md, adocs/plan.md, adocs/status.md, tools/plan_prose_check.py, tests/CMakeLists.txt
 excludes:   any change to what S042 does at the sites it names -- the rule is stated here, the code is S042's; re-anchoring line citations, which is S187; sourcing figures, which is S185; the engine
 decisions:  DEC-108, DEC-111, DEC-128
 closes:     2026-09-04_plan_review-F05, 2026-09-04_plan_review-F08, 2026-09-04_plan_review-F09, 2026-09-04_plan_review-F10
 blocks:
 paused_by:
-author:
-done:
+author:     agent (Claude Opus 5), coordinator, 2026-09-08
+done:       2026-09-08. Documents and one checker change; **no `src/`**, and the proof is that `git diff --stat -- src/` prints nothing. Fast suite **28/28 green in both builds** (`build` and `build-tune`), `./clang-format.sh --check` clean under `CLANG_FORMAT_MAJOR=22` (DEC-146). No `Bench:` trailer and no `No functional change`: DEC-140 binds `src/` commits.
+
+            **Red first, observed and not assumed.** With the checker extended and no document yet edited, `python3 tools/plan_prose_check.py --params` printed exactly four lines and exit 1 -- the four the guide predicted, no `STALE`:
+
+                NEAR   adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md:48  MAX_QSEARCH_DEPTH stated as 8, code 19
+                NEAR   adocs/plan_todo/S115_aspiration_refinements.md:14  ASPIRATION_DELTA stated as 50, code 21
+                NEAR   adocs/plan_todo/S127_spsa_full_parameter_run.md:19  MaxQsearchDepth stated as 8, code 19
+                NEAR   adocs/plan_current/S184_pending_documents_at_head_values.md:57  ASPIRATION_DELTA stated as 50, code 21
+
+            Green after the edits, exit 0. **Non-vacuity from the other side** (S150's method): `AspirationDelta`'s default moved to 22 in the working tree fired all three layers -- `PHRASE adocs/specs.md:467`, `TABLE MANUAL.md:167`, and `NEAR adocs/plan_todo/S115_aspiration_refinements.md:15` through the **new symbol rule**, which is what proves the symbol form is not decorative. Restored; `git diff -- src/` empty again.
+
+            **F05, the shipped values.** S115's "What is there" rewritten against 2 / 21 / 437 with S085 named and the claim that fail-soft plumbing is missing dropped (its own "Scope concern" section already refuted it); the depth-gating bullet says S021 measured 5 and S085 moved it to 2; all three table rows carry the shipped value with S021's in parentheses and "keep 5" is gone, replaced by "a row at 5 re-measures an axis S085's verified vector moved"; the sweep's off row is stated to be taken at 2 / 21 / 437 and re-read from `src/search_params.hpp` before the run. S082 names `MAX_QSEARCH_DEPTH` and the function that tests it instead of a line that had become a comment. S120 and S122 carry 184 at all four sites. `adocs/plan.md`'s sentence carries 184 and dates its 0 / 150 / 2000 sweep to the 150 that compiled when it was taken -- that three-setting record is left unflagged as the guide required. S118's cost paragraph is dated "measured 2026-08-19 before S104" and quotes `specs.md`'s 53.90 ns / 18.6 M calls beside it; no `bench_eval` run, the owner's answer to question 4. Every value read from `src/search_params.hpp` at this step's own HEAD, not from the guide.
+
+            **F05 was wider than the finding: S127 (discovered, in scope).** The extended checker flagged `S127_spsa_full_parameter_run.md:19`, which the review had not listed. Repaired in S150's tense form -- "**was** 8 when this was written ... S085 shipped 19 on 2026-08-21" -- so the sweep that moved the parameter is kept as the argument it is. The owner added the file to `touches:` rather than leaving it a stamp-only discovery (answer to question 1).
+
+            **F08, S042.** `touches:` now reads `src/bitboard.cpp make_move_impl, load_FEN, set_en_passant, compute_full_hash, tests/test_audit_fen_semantics.cpp`. The body states one rule -- an en-passant square is kept only where a pawn of the side to move stands on a square attacking it, the generator's own `pawn_attacks[opponent][en_passant]` test -- and a seven-row table separating the four sites the rule reaches from the five consumers that must merely keep agreeing. **The owner picked X-FEN's pseudo-legal reading** (question 2), so S042's Stockfish comparison uses python-chess `en_passant='xfen'` and not its `'legal'` default, and the step body says so. Every row re-verified by grep at this HEAD rather than copied: `set_en_passant` at `src/bitboard.cpp:1465` still has no caller in `src/`, `tests/` or `tools/`; `compute_full_hash` at 1517 xors unconditionally; `load_FEN` at 1548 holds the S161 sanitiser at 1868-1891 whose `supported` test at 1887 checks the victim and not a capturer; the four `test_audit_fen_semantics.cpp` case titles quoted are verbatim. Nothing in `src/` changed -- `excludes:` forbids it.
+
+            **F09, five items, of which two were already closed and one is void.** `adocs/plan.md`'s orphan lane sentence -- left behind when DEC-144 deleted the section around it -- rewritten to say the batch is done and the lane is gone (discovered in scope, as the guide predicted). `adocs/status.md`'s Next line **verified current**, rewritten by `2445d23` already. S159's ordering clause rewritten: the constraint is void by history, S093 landed 2026-08-22 at +10.73 +/- 6.70, and this step's verdict is read as ageing measured on top of S093's malus and gravity. The three S128 routes in S109, S110 and S132 (four sites) now name S152 and cite DEC-108; S152's own references to S128 are correct and untouched. `adocs/plan.md`'s 8+0.08 sentence now names the split -- 14 of 20 OpenBench presets at 8.0+0.08, six at 10.0+0.1 (Berserk, Ethereal, Igel, RubiChess, Stockfish, Weiss) -- citing row A33 of `adocs/data/2026-09-04_plan_review_literature_check.md` rather than re-deriving it.
+
+            **S171's items are void, and that is the one place the plan met reality and lost.** `accepts:` asks for S171's `done:` field, its `author:` cleared and its section retitled. The file is in **`plan_done/`**: it completed at `a04ad84` on 2026-09-07/08 with its `done:` stamp written at line 551 rather than into the header. AGENTS.md is unambiguous -- `plan_done/` is never edited -- so all three items are closed by that step's own completion and not by this one. The audit report's F09 and F10 `Status:` lines say so. Nothing was edited under `plan_done/`.
+
+            **F10, headers.** S148 gained `done:` and its `author:` was cleared -- it has never been in `plan_current/`. S024's stray filled `author:` at line 288, left from the discarded MacBook attempt (DEC-111, named by the section below it already), deleted. **A header audit over all 68 pending files then corrected the step's own premise**: `author:` is *absent* from 47 of 48 `plan_todo/` headers, so an absent field is the corpus convention for an unstarted step and not a defect -- an `author:` line was added to S024's header and then reverted on that evidence. The audit did find one fresh instance of F10's own class: **S202 had no `done:` field**, added (discovered, in scope). Every pending file now carries one.
+
+            **The checker.** `PARAM_DECL` captures the C++ symbol as well as the UCI name; `search_symbols()` is the symbol-keyed sibling of `search_params()`; `PARAM_NEAR_SYMBOL` is the same three forms derived from `PARAM_NEAR` with **both backticks made mandatory**, which is measured and not stylistic -- optional, the first form reads S114's formula line ```NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6`` as a claim that the divisor is 3, taking the formula's own closing backtick as the symbol's. `check_all_params` reads `PARAM_DOCS` plus `pending_step_files(adocs)` -- `plan_todo/` and `plan_current/` both, which is why S184's own text was one of the four red lines. `plan_done/` stays out. Docstring, both comment blocks, `DEV_MANUAL.md`'s "**`--params`.**" paragraph and the `test_plan_params` comment in `tests/CMakeLists.txt` all say what is read now and why. One correction to the step body confirmed: `--params` was **already** in the fast suite as `test_plan_params` (S150), so the extension changed what it reads and not whether it runs.
+
+            **Cost.** `--params` over 68 pending files plus the four documents: **1.27 s** (three runs, 1.26-1.28), against **0.37 s** over the four documents alone. Once per build in the gate, so the fast suite pays it twice; measured on the workstation and written into `tests/CMakeLists.txt` and `DEV_MANUAL.md`. `MANUAL.md` and `adocs/specs.md` mention no checker (grep) and were left unchanged -- checked, not assumed.
+
+            **`--citations` before and after, for S187.** Over the 14 files this step edits: **24 DRIFT flagged before, 0 after** -- cleared by the baseline moving to "new or edited", not by one citation being repaired, which is exactly what DEC-119 says the mode does. Whole pending set **76 before, 52 after** (before taken from a detached worktree at the parent commit, since the count is baseline-relative). S187 inherits the 52.
+
+            **One more discovered in scope:** the audit report's F01 `Status:` line still read "planned -- S180" although S180 completed on 2026-09-08 with F01 in its `closes:`. Moved to closed with a note saying the line was left behind. `2026-09-04_plan_review.md` is otherwise untouched; five findings remain planned (S181, S182, S183, S185, S187).
+
+            Closes `2026-09-04_plan_review-F05`, `-F08`, `-F09`, `-F10`.
 
 ## Why this exists
 
@@ -54,11 +85,13 @@ which the schema reads as a started step.
 
 `--params` holds no line numbers, which is why it is in the fast suite where
 `--citations` is not. The pending files name their parameters by constant
-name, so the phrase for them is the constant -- "`ASPIRATION_DELTA` is 50" --
-and a named-constant phrase holds no line number either. The extension adds
-`adocs/plan_todo/` to the files the mode reads and one phrase family keyed on
-the constant names `src/search_params.hpp` declares. Red first on S115's
-current text, then green.
+name, so the phrase for them is the constant name, `is`, and a number -- and a
+named-constant phrase holds no line number either. The extension adds
+`adocs/plan_todo/` and `adocs/plan_current/` to the files the mode reads and one
+phrase family keyed on the constant names `src/search_params.hpp` declares. Red
+first on S115's current text, then green. (This paragraph quoted the example
+with its own stale number until the extension flagged it, which is the
+red-first observation arriving from an unexpected file.)
 
 ## Cost
 
@@ -386,6 +419,16 @@ gate. Re-measure on the workstation for the `tests/CMakeLists.txt` comment.
 - https://raw.githubusercontent.com/AndyGrant/OpenBench/master/Config/config.json -- 20 engines; `.../Engines/Ethereal.json` 10.0+0.1 and `.../Engines/Stash.json` 8.0+0.08, re-fetched today; the other 18 rest on A33.
 
 ### 10. Questions deferred to the owner
+
+**All four answered 2026-09-08, in the session that ran the step.** (1) S127
+joins `touches:` -- done, the diff contract kept honest. (2) S042's rule is
+X-FEN's **pseudo-legal** reading, and its Stockfish comparison will use
+python-chess `en_passant='xfen'`. (3) S171's `author:` was to be cleared with a
+DEC-128 line -- **overtaken by events**, see the stamp: the file is in
+`plan_done/`. (4) S118's cost paragraph is dated and quotes `specs.md`'s S104
+line; no `bench_eval` run. Question 5 (`--prose` and F09's shapes) stays a
+later step's or a by-hand read, unchanged.
+
 
 1. **S127 is stale and not in `touches:`.** The extended checker is red on it,
    so the step cannot complete green without editing it. Add

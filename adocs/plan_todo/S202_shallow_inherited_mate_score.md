@@ -8,6 +8,7 @@ closes:
 blocks:
 paused_by:
 author:
+done:
 
 ## What this is
 

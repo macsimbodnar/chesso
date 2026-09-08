@@ -223,8 +223,8 @@ counts stated. Increment 2 owes **one SPRT at the S105 regime** — 8+0.08,
 Hash=16, UHO book, `elo0=0 elo1=5` — verdict recorded whatever it is, with the
 time-forfeit count read from the run-filtered PGN (accepts; the S089 lesson).
 **Recommendation, owner decides:** before calling the constants shipped, one
-confirmation at a second control (40+0.4-class, or fold into S128's rated run
-at the list's own control) — the S085 +23.8/-22.9 record and the multi-TC
+confirmation at a second control (40+0.4-class, or fold into the rated run of
+S152, which absorbed S128's question by DEC-108, at the list's own control) — the S085 +23.8/-22.9 record and the multi-TC
 verification every published node-TM patch ran are the reasons. Published
 figures decided what to try here, never what to conclude (DEC-019).
 
@@ -240,8 +240,9 @@ figures decided what to try here, never what to conclude (DEC-019).
   caveat doubled — the TM family is the one S085 recommends excluding from a
   tune at a TC the verification does not share; a fit of these three wants
   the playing control or a second-TC verification.
-- **S128:** the rated run near the list's control is where a TM fit
-  overfitted to 8+0.08 would show as underperformance against the anchor.
+- **S152** (which absorbed S128 by DEC-108)**:** the rated run near the list's
+  control is where a TM fit overfitted to 8+0.08 would show as
+  underperformance against the anchor.
 
 ### 8. References
 

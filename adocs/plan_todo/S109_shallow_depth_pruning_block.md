@@ -417,7 +417,8 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 - **S093/S024 (history inputs)**: signed sum through one probe path;
   thresholds fitted against the **post-S024** shape (plan order guarantees
   it). Stockfish d37de3c records cont-hist pruning as strongly TC-sensitive
-  -- the 8+0.08 verdict may not transfer upward; S128 eventually reads that.
+  -- the 8+0.08 verdict may not transfer upward; S152, which absorbed S128's
+  question (DEC-108), eventually reads that.
 - **S098 (after)**: rebuilds the reduction this gate is computed from.
   plan.md gives S098 three verdicts of its own, measured with the block
   live, so the block is **not** re-verdicted -- S098's SPRTs price the

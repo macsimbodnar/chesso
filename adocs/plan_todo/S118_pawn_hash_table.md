@@ -23,10 +23,15 @@ expectation stands: a few thousand entries buy >95 % on the published numbers.
 ## What it costs today
 
 `evaluate_cheap()` calls `evaluate_pawns()` on **every** evaluation, and that
-function does four bitboard fills plus per-pawn work. `evaluate()` measures
-83.35 ns a call at 12.0 M calls a second on this machine, against a search that
-runs at 5.8 M nodes a second -- so the evaluation is a large fraction of the
-clock and the pawn structure is recomputed for a structure that changes on
+function does four bitboard fills plus per-pawn work. The figures this paragraph
+was written on -- 83.35 ns a call, 12.0 M calls a second, against a search at
+5.8 M nodes a second -- were **measured 2026-08-19 before S104** added the
+architecture flag, and DEC-083's rule is that nothing taken on the unflagged
+binary is comparable with anything taken after it. On the shipping `bmi2`
+target `bench_eval` reads **53.90 ns a call, 18.6 M calls a second**
+(2026-08-19, S104; `adocs/specs.md`). Either way the conclusion is the one the
+ratio carries and not the absolute: the evaluation is a large fraction of the
+clock, and the pawn structure is recomputed for a structure that changes on
 perhaps one move in eight.
 
 Reported +10.11 Elo and a 10 to 12 % speed-up, with hit rates above 95 %.

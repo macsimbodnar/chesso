@@ -15,12 +15,14 @@ done:
 
 ## The point is not speed, it is what it unblocks
 
-The lazy shortcut exists because `evaluate()` costs 83 ns and quiescence calls
-it at nearly every node. The shortcut's soundness rests on
-`evaluate_expensive()` clamping mobility plus king safety to
-**+/-LAZY_EVAL_MARGIN, 150 centipawns for the two of them together**. That
-clamp is the ceiling on how much the evaluation is allowed to say, and a real
-king-danger term needs to reach four to six hundred.
+The lazy shortcut exists because `evaluate()` is expensive and quiescence calls
+it at nearly every node -- `bench_eval` reads **53.90 ns a call, 18.6 M calls a
+second** on the shipping `bmi2` target (2026-08-19, S104; `adocs/specs.md`), and
+83.35 ns before that flag existed. The shortcut's soundness rests on
+`evaluate_expensive()` clamping mobility plus king safety to `LAZY_EVAL_MARGIN`,
+184 as shipped since S085's SPSA run raised it from 150, for the two of them
+together. That clamp is the ceiling on how much the evaluation is allowed to
+say, and a real king-danger term needs to reach four to six hundred.
 
 So the order is: cache the full score (here), size or retire the margin
 (S039), then rebuild king safety without a clamp over it (S122). Measured cost
@@ -184,7 +186,7 @@ the stamp; S039 executes it.
 - **Clamp staleness is a tune-build-only hazard, and the plan order is cache
   first.** Verified against plan.md's list: S120 (entry 34) -> S039 (41) ->
   S122 (47), and this file's own prose says cache, then margin, then rebuild.
-  Every cached value carries the 150 clamp -- self-consistent, the cache
+  Every cached value carries the 184 clamp -- self-consistent, the cache
   mirrors the live evaluate(), and when S039 changes the margin that is a new
   binary and a fresh cache. The live path is the tune build, where
   LazyEvalMargin is a setoption (src/search_params.hpp:200): clear the cache on

@@ -73,7 +73,7 @@ Ten findings: no high, five medium, five low.
 
 ### 2026-09-04_plan_review-F01  medium  Seven pending search steps seed constants from other engines' constants quoted in commit-message prose, which DEC-105 rules out by origin
 
-Status: planned — S180
+Status: closed — S180, 2026-09-08 (the line was left at planned by that step)
 
 **Evidence.** DEC-105 (`adocs/decisions.md:5982`, 2026-08-22): *"A number
 may seed a fit or an SPSA run only if it originates in a publication about
@@ -294,7 +294,7 @@ published inputs.
 
 ### 2026-09-04_plan_review-F05  medium  S115's baseline is the pre-S085 aspiration triple and its table says to keep a value S085 moved; four other pending documents state retuned parameters at their old values
 
-Status: planned — S184
+Status: closed — S184, 2026-09-08
 
 **Evidence.** The shipped values at HEAD:
 
@@ -477,7 +477,7 @@ accepts.
 
 ### 2026-09-04_plan_review-F08  low  S042 scopes the en-passant change to `make_move`; the code's own comment and the S161 FEN sanitiser say the key must move in three places
 
-Status: planned — S184
+Status: closed — S184, 2026-09-08
 
 **Evidence.** `adocs/plan_todo/S042_en_passant_only_when_capturable.md:4`
 `touches: src/bitboard.cpp make_move`; `:49` "One `pawn_attacks` lookup
@@ -515,7 +515,7 @@ Stockfish-agreement clause for that case.
 
 ### 2026-09-04_plan_review-F09  low  Prose in five places describes completed steps as pending or routes to a folded id, and the `--prose` checker passes
 
-Status: planned — S184
+Status: closed — S184, 2026-09-08 (two of its five items were already closed by DEC-144; S171's was voided by that step's own completion)
 
 **Evidence.**
 
@@ -555,7 +555,7 @@ S128 references to S152.
 
 ### 2026-09-04_plan_review-F10  low  Two pending step files lack the `done:` field and three carry `author:` while in `plan_todo/`
 
-Status: planned — S184
+Status: closed — S184, 2026-09-08 (S148 only; S171's half was voided by that step completing into plan_done/, which is never edited)
 
 **Evidence.** AGENTS.md's step schema ends `author: <!-- who claimed it, set
 on start -->` and `done: <!-- completion stamp ... written last -->`.

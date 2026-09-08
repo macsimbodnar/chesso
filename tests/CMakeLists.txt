@@ -317,6 +317,15 @@ set_tests_properties(test_plan_touches PROPERTIES LABELS "fast" TIMEOUT 60)
 # the wording of sentences that never name their parameter, and a rule that
 # matches nothing reports STALE. That is the check's maintenance cost and it is
 # meant to be visible rather than silent.
+#
+# S184 widened what it reads: the four documents above **plus every file in
+# adocs/plan_todo/ and adocs/plan_current/**, matched on the C++ symbol as well
+# as the UCI name, because a step file names `ASPIRATION_DELTA` where a manual
+# names `AspirationDelta` and the four-document set could not see the class at
+# all. It found four on the day it was written -- S082 and S115 at pre-S085
+# values, S127, and S184's own text. adocs/plan_done/ stays out: it is history.
+# Cost on the workstation, 68 pending files: 0.37 s over the four documents,
+# 1.27 s over the whole set, once per build.
 add_test(NAME test_plan_params
          COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
                          --params)

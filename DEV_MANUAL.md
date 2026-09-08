@@ -849,7 +849,14 @@ visible**:
 - `NEAR` — a sentence that names the parameter and then gives a number in one of
   a few tight forms: `` `Name` `` is N, ships at N, = N, default N, N as
   shipped. Tight on purpose — "`LazyEvalMargin` at 0, 150 and 2000" is a sweep,
-  not a claim about the default, and a looser rule flags it.
+  not a claim about the default, and a looser rule flags it. **The same three
+  forms run against the C++ symbol too** (S184), which is how a step file names
+  a parameter: `` `ASPIRATION_DELTA` `` is 21, not `` `AspirationDelta` ``.
+  There **both** backticks are mandatory, and that is measured rather than
+  stylistic — optional, the first form reads S114's formula line
+  `` `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6 `` as a claim
+  that the divisor is 3, taking the formula's own closing backtick as the
+  symbol's.
 - `PHRASE` — a sentence that never names its parameter. **Two of F02's three
   were of this kind**, so a name-adjacency scan alone would have missed them.
   These are keyed on the wording, in `PARAM_PHRASES`, and a rule matching
@@ -864,10 +871,18 @@ history and is left alone, which is how `plan.md`'s sentence was repaired
 without deleting what it records. Rewriting a keyed sentence retires its rule —
 `("MaxQsearchDepth", "quiescence is capped at (\d+) plies")` was F02's third
 case and is retired in the source with the reason, because `eaad88b` rewrote
-that sentence to name the parameter and `NEAR` covers it now. Default file set:
-`adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md`, `adocs/plan.md`;
-`adocs/plan_done/` is excluded because it is history and records what was true
-when it was written.
+that sentence to name the parameter and `NEAR` covers it now.
+
+**Default file set:** `adocs/specs.md`, `MANUAL.md`, `DEV_MANUAL.md`,
+`adocs/plan.md`, **and every file in `adocs/plan_todo/` and
+`adocs/plan_current/`** — S184 added the pending step files, because the class
+lived there too and the four-document set could not see it: S082 and S115 stated
+pre-S085 values, S127 stated one, and S184's own text stated a fourth. A step
+file is covered the day it is written, since the set comes from the same
+`pending_step_files()` `--citations` and `--touches` use. `adocs/plan_done/` is
+excluded because it is history and records what was true when it was written.
+Cost on the workstation with 68 pending files: **0.37 s** over the four
+documents, **1.27 s** over the whole set.
 
 `--prose` and `--citations` are **not** registered with ctest, and that is
 deliberate rather than an omission: any source commit shifts lines under fifty
@@ -878,7 +893,8 @@ numbers and moves only when a step file is written or a symbol changes file, so
 S141 put it in the fast suite where a broken scope contract fails at once
 instead of waiting for someone to run the tool. It does not reach `--params`
 either, and for the same reason: it compares a number to a number and no source
-commit can shift it. S150 registered it as `test_plan_params`, 0.23 s.
+commit can shift it. S150 registered it as `test_plan_params`; S184 widened its
+file set and its cost to 1.27 s.
 
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts

@@ -33,10 +33,14 @@ ageing scheme measures zero and that is recorded as zero -- which is itself
 worth knowing, because it would say the second killer slot carries very little
 either way on this search and S093 can stop treating it as load-bearing.
 
-**Ordering.** S093 rewrites this same block (history malus, gravity, butterfly
-indexing). The constraint S149 carried carries over unchanged: this lands
-before S093 or is folded into it deliberately, never after, or S093's verdict is
-taken over whatever the killer table happens to be doing.
+**Ordering.** The constraint S149 carried -- "this lands before S093 or is
+folded into it deliberately, never after" -- is **void by history**: S093
+rewrote the same block (history malus, gravity, butterfly indexing) and landed
+2026-08-22, H1 accepted at +10.73 +/- 6.70 over 6412 games. So this step is
+measured **on top of** S093's malus and gravity, and its verdict is read as
+that and never as a statement about the killer slots against the pre-S093
+table. Nothing is owed to the ordering; what is owed is that the reference
+commit be after S093, which any `REF` default already is.
 
 ## Implementation guide (2026-09-05)
 
