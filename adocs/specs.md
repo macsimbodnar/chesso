@@ -123,6 +123,17 @@ place, and the ledger's other 88 rows were per-step records already held by
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
 
+  **The baseline the tool reproduces today, from S203 on 2026-09-08:**
+  `121530 / 801481 / 72924` at depth 9 and `636677 / 3520847 / 494098` at depth
+  12, best moves `c3d5` / `e2a6` / `d7c8q` at both, and `bench` **26851183**.
+  S203 redrew the Zobrist keys, which moves node counts once by design -- which
+  positions share a transposition-table slot changes, so a cutoff is found or
+  missed one ply earlier. The best moves did not move. Every node figure this
+  file records against a named commit *before* that step is still what that
+  comparison read; the sets are not interchangeable, and a behaviour-neutral
+  claim is checked against its own parent's baseline, which `tools/gate.sh` does
+  by construction.
+
   **The magic numbers are this project's own output, under a seed it chose.**
   The 128 sliding-attack constants in `src/bb_tables.hpp` come from
   `./build/tools/magic_gen magics --seed 20260904`, splitmix64 written out in
@@ -137,18 +148,21 @@ place, and the ledger's other 88 rows were per-step records already held by
   different valid set moves which slot an occupancy lands in and nothing
   `generate_moves` returns. S179, DEC-132.
 
-  **The Zobrist keys are not yet drawn that way, and that is an open exposure.**
-  `init_zobrist` still fills its 851 keys from
-  `std::uniform_int_distribution<uint64_t>` over `std::mt19937_64`, whose result
-  the standard leaves implementation-defined -- so the keys, the table indices
-  and every node count recorded here are a property of the standard library as
-  well as of this code. They matched between glibc and Apple libc++ when the
-  MacBook handover check ran, which is a measurement and not a guarantee.
-  `magic_gen zobrist --seed 20260904` draws the replacement and reports
-  `matches init_zobrist: no` until **S203** flips it. That step, not S179, closes
-  `2026-09-04_test_review-F08`, because redrawing the keys retires
-  `adocs/data/S170_cases.tsv` -- a fixture mined under one key set -- and
-  re-mining it is a match rather than a minute. DEC-139, DEC-154.
+  **The Zobrist keys are drawn the same way since S203, and the exposure is
+  closed.** `init_zobrist` fills its 851 keys from `project_random_next` seeded
+  with `CHESSO_PROJECT_SEED`, in the order pieces, castling, side, en passant --
+  an order that is load-bearing, since the tool and the fast suite both replay
+  it. Until 2026-09-08 they came from `std::uniform_int_distribution<uint64_t>`
+  over `std::mt19937_64`, whose result the standard leaves
+  implementation-defined, so the keys, the table indices and every node count
+  recorded here were a property of the standard library as much as of this code;
+  they matched between glibc and Apple libc++ when the MacBook handover check
+  ran, which was a measurement and not a guarantee. `magic_gen zobrist --seed
+  20260904` reports `matches init_zobrist: yes`, and the fast suite asserts the
+  851 values equal that draw and that none is zero, all are distinct, no pair XOR
+  equals a key and no two pair XORs are equal -- the linear-independence rule at
+  the subset sizes that can be enumerated. Closes
+  `2026-09-04_test_review-F08`. DEC-139, DEC-154, DEC-156.
 
   **Since S189 the neutral half is enforced rather than performed.** The
   `bench` command prints one node signature over eight fixed positions at

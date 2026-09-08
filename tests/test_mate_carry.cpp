@@ -47,14 +47,33 @@
 // one missing slot, with the entry that certifies the continuation sitting in
 // the children of the position whose entry is gone.
 
-// WHAT RETIRES THIS FILE'S FIXTURE. The class here is transposition-table
-// eviction, and which entries evict which is decided by the Zobrist keys. So
-// `adocs/data/S170_cases.tsv` is valid only for the key set it was mined under,
-// and a redraw of the keys retires it -- measured on 2026-09-08 over four
-// arbitrary seeds, of which every one left three or four of the six cases
-// reporting no mate at all. That is what the vacuity assertion below catches,
-// and re-choosing the cases means another mining run, not an edit. DEC-154; the
-// redraw itself is S203.
+// WHAT RETIRES THIS FILE'S FIXTURE, AND WHAT DOES NOT. The class here is
+// transposition-table eviction, and which entries evict which is decided by the
+// Zobrist keys. So the budgets in `adocs/data/S170_cases.tsv` are valid only
+// for the key set they were chosen under, and a redraw retires them -- measured
+// over four arbitrary seeds, every one of which left three or four of the six
+// cases reporting no mate at all. That is what the vacuity assertion below
+// catches.
+//
+// What it does *not* mean is that the cases themselves are lost. S203 redrew
+// the keys and every one of the six came back by re-sweeping its node budget
+// alone, no game and no mining run: A at 1000000 nodes instead of 300000, C at
+// 1500000 instead of 1000000, D at 4000000 instead of 1000000. The rule is
+// stated once in `adocs/data/S203_case_sweep.sh` and applied to every row --
+// the cheapest budget at which the case reports at least its floor of mate
+// lines with all of them complete -- because a budget chosen per case because
+// it happened to be green would be fitting the fixture to the test.
+//
+// The budgets are a knife edge and the file says so rather than implying it:
+// C reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
+// Expect to re-run that sweep after any change that moves the tree, not only
+// after a key change. DEC-154, DEC-156.
+//
+// D carries one more thing. Between 1200000 and 3000000 nodes it reproduces a
+// short line -- `mate -6` at ply 35 depth 11 with a 10-of-12-ply PV, at a depth
+// that also publishes a complete 12/12 -- which is the class DEC-122 leaves
+// short and visible and S202 owns. It is recorded there as a reproduction
+// rather than hidden behind the 4000000 that clears it.
 
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the case file"
@@ -302,12 +321,37 @@ static bool line_ends_in_mate(const std::string& fen,
 // number exists to catch.
 static size_t expected_mate_lines(const std::string& name)
 {
-  if (name == "A_mate8_shallow") { return 5; }
+  // Re-derived 2026-09-08 by adocs/data/S203_case_sweep.sh, which is the script
+  // DEC-142 requires beside a golden. The rule, stated once and applied to
+  // every row rather than tuned per case: a floor is half the mate lines the
+  // case reports at its own budget, rounded down. Half and not the count
+  // itself, because the count swings with the table -- C reports 13 lines at
+  // 1500000 nodes and 0 at both 1000000 and 2000000 -- and a floor set at the
+  // observation would break on drift the guard does not care about. What it has
+  // to catch is a case that reports no mate at all, and any positive floor does
+  // that.
+  //
+  // A row whose budget did not move keeps the floor it was measured with: B
+  // reports 8 against its 7 and E reports 23 against its 9, so nothing about
+  // them was re-chosen and re-deriving them would only churn the record. A, C
+  // and D were re-swept and carry new floors; A and D rose, so no floor here
+  // was lowered against a live guard. F is `guard no` and its floor was stale
+  // at 6 against 4 reported -- corrected to 2 so the number means something if
+  // the row is ever guarded.
+  //
+  //   case                       budget      reports  floor
+  //   A_mate8_shallow            1000000       12       6
+  //   B_mate6_shallow             100000        8       7   (unchanged)
+  //   C_mate7_depth11            1500000       13       6
+  //   D_mate_minus6_depth10      4000000        6       3
+  //   E_mate_minus9              1500000       23       9   (unchanged)
+  //   F_mate6_inherited_no_line   300000        4       2   (not guarded)
+  if (name == "A_mate8_shallow") { return 6; }
   if (name == "B_mate6_shallow") { return 7; }
   if (name == "C_mate7_depth11") { return 6; }
-  if (name == "D_mate_minus6_depth10") { return 1; }
+  if (name == "D_mate_minus6_depth10") { return 3; }
   if (name == "E_mate_minus9") { return 9; }
-  if (name == "F_mate6_inherited_no_line") { return 6; }
+  if (name == "F_mate6_inherited_no_line") { return 2; }
 
   FAIL("unknown case " << name);
   return 0;

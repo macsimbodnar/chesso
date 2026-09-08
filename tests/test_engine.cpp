@@ -28,6 +28,8 @@ hash_t compute_full_hash(game_t* game);
 // Also defined in bitboard.cpp and also out of the header: the engine calls
 // neither at runtime. S179 uses them to check the two generated tables.
 bool magic_is_collision_free(index_t square, bb_t magic, bool rook);
+uint64_t project_random_next(uint64_t* state);
+extern const uint64_t CHESSO_PROJECT_SEED;
 
 
 static game_t game;
@@ -173,6 +175,92 @@ TEST_SUITE("engine: generated tables")
           magic_is_collision_free(square, bishop_magic_numbers[square], false),
           bishop_msg);
     }
+  }
+
+
+  // S203, DEC-139. Two things about the 851 Zobrist keys, neither of them a
+  // number re-read from a run (DEC-142).
+  //
+  // First, that they are the project generator's output under the project seed,
+  // draw order included. They came from std::uniform_int_distribution over
+  // std::mt19937_64 until S203, and the standard does not fix what a
+  // distribution returns for a given engine state -- so the keys, the table
+  // indices and every node count this repository records were a property of the
+  // standard library as much as of this code. They matched between glibc and
+  // Apple libc++ when the MacBook handover check ran, which is a measurement
+  // and not a guarantee. This is the guarantee.
+  //
+  // Second, the quality rule from
+  // https://www.chessprogramming.org/Zobrist_Hashing : what matters is linear
+  // independence, that no small subset of keys XORs to the same value as
+  // another, since such a pair is two different positions with one key.
+  // Enumerated at the sizes that can be -- distinct keys rules out subsets of
+  // one and two, no pair XOR equal to a key rules out three, and no two pair
+  // XORs equal rules out four.
+  TEST_CASE_FIXTURE(engine_fixture_t,
+                    "the zobrist keys are the project generator's, and sound")
+  {
+    // init_zobrist's order. A reordering there changes every key, and this is
+    // what would catch it.
+    std::vector<uint64_t> keys;
+    keys.reserve(851);
+
+    uint64_t state = CHESSO_PROJECT_SEED;
+    for (int piece = 0; piece < 12; ++piece) {
+      for (int square = 0; square < 64; ++square) {
+        keys.push_back(project_random_next(&state));
+      }
+    }
+    for (int i = 0; i < 16; ++i) {
+      keys.push_back(project_random_next(&state));
+    }
+    for (int i = 0; i < 2; ++i) {
+      keys.push_back(project_random_next(&state));
+    }
+    for (int i = 0; i < 65; ++i) {
+      keys.push_back(project_random_next(&state));
+    }
+
+    REQUIRE_EQ(keys.size(), 851u);
+
+    const zobrist_randoms_t& live = game.hash_randoms;
+    REQUIRE(live.initialized);
+
+    size_t n = 0;
+    for (int piece = 0; piece < 12; ++piece) {
+      for (int square = 0; square < 64; ++square) {
+        REQUIRE_EQ(live.piece_randoms[piece][square], keys[n++]);
+      }
+    }
+    for (int i = 0; i < 16; ++i) {
+      REQUIRE_EQ(live.castling_randoms[i], keys[n++]);
+    }
+    for (int i = 0; i < 2; ++i) {
+      REQUIRE_EQ(live.side_randoms[i], keys[n++]);
+    }
+    for (int i = 0; i < 65; ++i) {
+      REQUIRE_EQ(live.ep_randoms[i], keys[n++]);
+    }
+    REQUIRE_EQ(n, 851u);
+
+    // A zero key is a piece on a square that does not change the hash.
+    CHECK_EQ(std::count(keys.begin(), keys.end(), uint64_t(0)), 0);
+
+    const std::set<uint64_t> distinct(keys.begin(), keys.end());
+    CHECK_EQ(distinct.size(), 851u);
+
+    std::set<uint64_t> pair_xors;
+    int xor_hits_a_key = 0;
+    for (size_t i = 0; i < keys.size(); ++i) {
+      for (size_t j = i + 1; j < keys.size(); ++j) {
+        const uint64_t x = keys[i] ^ keys[j];
+        if (distinct.count(x) != 0) { ++xor_hits_a_key; }
+        pair_xors.insert(x);
+      }
+    }
+
+    CHECK_EQ(xor_hits_a_key, 0);
+    CHECK_EQ(pair_xors.size(), 851u * 850u / 2u);
   }
 }
 

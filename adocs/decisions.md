@@ -8554,3 +8554,96 @@ Consequences: DEC-139's exposure stays open one step longer: the keys are still
               way. It is named as such in the file and in
               `tests/test_mate_carry.cpp` from S179's completing commit, which is
               DEC-142's rule reaching a fixture that is not a number.
+
+---
+
+## DEC-155  2026-09-08  A run under four hours goes during the day; the night is for what is longer
+Tags:         workflow, runs, machine, scheduling, dec-041, dec-061
+Context:      RUNS said the agent "schedules anything lasting several hours for
+              the night when there is better work to do meanwhile", which sets no
+              threshold. In practice that turned into deferring runs the machine
+              could simply have taken -- S203's mining run was written up as
+              "budget a night, not a turn" on an estimate of about 1 h 20 m,
+              which is not a night by any reading. Measurement capacity is the
+              binding constraint on the whole plan (DEC-048), so an hour of
+              daylight left unspent is a cost and not a courtesy.
+Decision:     By the owner, 2026-09-08. **Four hours is the line.** A run
+              expected to take less than four hours starts when it is ready,
+              during the day, without asking. A run expected to take four hours
+              or more is scheduled for the night if there is better work to do
+              meanwhile. The estimate is stated before the run starts and comes
+              from the measured throughput in `.moltke.local.md` -- 2277 games an
+              hour at 8+0.08 with concurrency 12 -- and not from a guess.
+Rejected:     Keeping "several hours" unquantified. Refused because it was read
+              conservatively every time it was read, which is the expensive
+              direction on a plan whose bottleneck is the machine.
+              A shorter line, an hour or two. Refused because the machine is not
+              wanted for anything else while a match runs -- MACHINE already says
+              nothing else should be running during one -- so the only real cost
+              of a daytime run is the owner's own use of the desktop, and four
+              hours is where that starts to bite.
+Consequences: RUNS in `AGENTS.md` carries the number. An estimate is now part of
+              starting a run, which is a small discipline the WATCHERS rule wanted
+              anyway: a watcher's ceiling is "at least 2x the expected run", and
+              that phrase presumed an expectation nobody was required to write
+              down.
+
+---
+
+## DEC-156  2026-09-08  The S170 budgets are re-swept by one stated rule, not re-mined; the grid is a knife edge and the file says so
+Tags:         testing, mate-pv, fixtures, s203, s170, s202, dec-142, dec-154, measurement
+Context:      DEC-154 sent the Zobrist redraw to S203 with the job of re-mining
+              `adocs/data/S170_cases.tsv` from a fresh match. The match was run
+              -- `ROUNDS=1500 ./fastchess.sh`, 3000 games at 8+0.08, 1 h 18 m 10 s,
+              **0 time forfeits** -- and it produced **no case material at all**:
+              3 `Incomplete mating PV` warnings over 2 distinct roots, **all of
+              them from the old-keys reference and none from the candidate**.
+              That is not evidence the redraw fixed anything; under an equal-rate
+              null, 3 lines all landing on one side has probability 0.125. What
+              it does say is that the class has become far rarer than when the
+              set was built: S147 read 10 lines over 4 games in 3000, this run
+              read 3 in total across both engines. A mining campaign for six
+              fresh cases would be many hours with no guarantee of converging.
+              The cheap alternative turned out to work. All three affected cases
+              came back by re-sweeping their node budget alone -- no game, no
+              match -- because a case goes vacuous when its budget no longer
+              reaches the table state, not because the game stopped containing
+              one. Re-sweeping is also what S170 did when it chose the budgets in
+              the first place.
+Decision:     By the owner, 2026-09-08, with the sweep table in hand.
+              **Re-sweep, under one rule stated once and applied to every row:**
+              the cheapest budget at which the case reports at least its floor of
+              mate lines with all of them complete. `adocs/data/S203_case_sweep.sh`
+              is that rule as a script, which is what DEC-142 requires beside a
+              golden, and it re-derives the budgets and the floors both.
+              A 300000 -> 1000000, C 1000000 -> 1500000, D 1000000 -> 4000000;
+              B, E and F untouched. Floors: a re-swept row takes half the lines it
+              reports, rounded down; a row whose budget did not move keeps the
+              floor it was measured with. A rose 5 -> 6 and D rose 1 -> 3, so no
+              live floor was lowered. F was `guard no` with a stale floor of 6
+              against 4 reported, corrected to 2.
+Rejected:     Mining fresh cases from matches. Refused on the run's own evidence:
+              0 candidate cases in 1 h 18 m, against a fixture that needs six.
+              Choosing each budget because it happened to be green. Refused
+              because that is fitting the fixture to the test, the same move the
+              seed choice was refused for in DEC-154 -- hence one rule, stated
+              before it was applied, and the whole grid recorded rather than the
+              winning row.
+              Dropping D, whose only clean budget costs 7.9 s and sits past a wide
+              red window. Refused because the window is information and the row is
+              where it is recorded.
+Consequences: **The grid is a knife edge and both files now say so** rather than
+              implying it: `C_mate7_depth11` reports 13 mate lines at 1500000
+              nodes and **0 at both 1000000 and 2000000**. The sweep is to be
+              re-run after anything that moves the tree, not only after a key
+              change, and a step that moves the tree and leaves this test green by
+              luck has learned nothing. This is the fragility DEC-154 named in the
+              abstract, now measured.
+              **D carries an S202 reproduction and it is recorded, not cleared.**
+              Between 1200000 and 3000000 nodes `D_mate_minus6_depth10` publishes
+              `mate -6` at ply 35 depth 11 with a 10-of-12-ply PV, at a depth that
+              also publishes a complete 12/12. That is the class DEC-122 leaves
+              short and visible; it is cheaper than anything S202 currently has to
+              work from, and S202's file carries it.
+              The fast suite costs more: D at 4000000 nodes is about 7.9 s where
+              its old budget was under 1 s.

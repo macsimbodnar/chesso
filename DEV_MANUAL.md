@@ -1353,9 +1353,12 @@ printf 'bench\nquit\n' | chesso      # the same number over stdin
 chesso bench 9                        # a shallower run; NOT the signature
 ```
 
-**At `S189`, on the workstation: `24880255`.** Quote it with its commit, the
-way every other number on this page is quoted — it moves with every functional
-change by design, which is the whole point of it.
+**At `S189`, on the workstation: `24880255`. At `S203`: `26851183`.** Quote it
+with its commit, the way every other number on this page is quoted — it moves
+with every functional change by design, which is the whole point of it. S203 is
+the example worth remembering: it redrew the Zobrist keys, which changes which
+positions share a table slot and therefore the whole tree, without changing a
+single rule of the search.
 
 `BENCH_DEPTH` is 14, chosen as the largest depth whose mean is at most five
 seconds here. The sweep, 2026-09-08, idle, on mains, governor `performance`,
@@ -2124,11 +2127,10 @@ cmake --build build -j12 --target magic_gen
 ./build/tools/magic_gen zobrist --seed 20260904
 ```
 
-**The engine uses the magics and does not yet use the keys.** `zobrist` prints
-`matches init_zobrist: no` today and that is correct, not a fault: `init_zobrist`
-still draws from `std::uniform_int_distribution` over `std::mt19937_64`, and
-**S203** is the step that replaces it. Flipping that line to `yes` is what that
-step does.
+**The engine uses both since S203.** `zobrist` prints `matches init_zobrist:
+yes`; if it ever prints `no`, either the seed passed here is not
+`CHESSO_PROJECT_SEED` or `init_zobrist`'s four loops have been reordered, which
+changes every key.
 
 `magics` prints the two arrays in `src/bb_tables.hpp`'s exact form. Paste them
 over the existing ones, leave the relevant-bit counts and everything else in that
@@ -2152,9 +2154,11 @@ lands in and nothing `generate_moves` returns: prove it with
 anything), `ctest --test-dir build -L slow -R test_perft`, and identical node
 counts and best moves from `tools/search_bench.py`. New keys move which positions
 share a transposition-table slot, so the node counts move once — and they also
-retire `adocs/data/S170_cases.tsv`, whose cases are eviction reproductions mined
-under one key set. Budget a mining run, not a minute; DEC-154 is why, and S203
-owns it.
+retire the `go` budgets in `adocs/data/S170_cases.tsv`, whose cases are eviction
+reproductions. Re-derive them with `adocs/data/S203_case_sweep.sh`, which is
+cheap and needs no match; the games survive a redraw and only the budgets move.
+DEC-154 and DEC-156 are the history, and the grid is a knife edge — one case
+reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
 
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal

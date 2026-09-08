@@ -29,15 +29,28 @@
 # the shape they were found and measured in; nothing about them changes.
 # `start` and `stride` must leave the last ply on the schedule, which is what
 # the guard checks when it reads the row.
-# VALID ONLY FOR THE ZOBRIST KEY SET THESE WERE MINED UNDER. The class is
-# table eviction and the keys decide which entries evict which, so a redraw
-# retires this file: over four arbitrary seeds on 2026-09-08 every one left
-# three or four of the six cases reporting no mate at all. Re-choosing them
-# is another mining run, not an edit. DEC-154, DEC-142; S203 is the redraw.
+#
+# THE `go` BUDGETS ARE VALID ONLY FOR THE ZOBRIST KEY SET THEY WERE CHOSEN
+# UNDER. The class is table eviction and the keys decide which entries evict
+# which, so a redraw retires them: over four arbitrary seeds on 2026-09-08 every
+# one left three or four of the six cases reporting no mate at all.
+#
+# The games survive it and only the budgets move. S203 redrew the keys and
+# re-swept all three affected rows back -- A 300000 -> 1000000,
+# C 1000000 -> 1500000, D 1000000 -> 4000000, with B, E and F untouched -- by
+# one rule stated in `adocs/data/S203_case_sweep.sh` and applied to every row:
+# the cheapest budget at which the case reports at least its floor of mate lines
+# with all of them complete. Run that script after anything that moves the tree,
+# not only after a key change; it re-derives these budgets and the floors in
+# tests/test_mate_carry.cpp both. DEC-154, DEC-156, DEC-142.
+#
+# The grid is a knife edge, which is the thing to expect rather than be
+# surprised by: C reports 13 mate lines at 1500000 nodes and 0 at both 1000000
+# and 2000000.
 name	fen	moves	go	start	stride	guard
-A_mate8_shallow	r2qk1nr/pp1bbppp/2npp3/2p5/8/4PP1P/PPPPB1PN/RNBQ1RK1 b kq - 0 7	g8f6 b1c3 d8b6 c3e4 e8g8 c2c3 e6e5 h2g4 f6g4 f3g4 f7f5 e4g3 f5g4 e2g4 b6c7 g3f5 e7f6 d2d3 a8e8 e3e4 g8h8 c1e3 c6d8 g1h1 d8e6 d1c2 b7b6 a2a3 a7a6 f5g3 b6b5 g3f5 g7g6 f5h6 e8b8 a1d1 c7d8 b2b4 d8e7 c2a2 b8c8 b4c5 e6c5 e3c5 d7g4 h6g4 c8c5 g4e3 f6g7 a3a4 e7g5 f1f8 g7f8 e3d5 a6a5 d1f1 g5d8 f1f7 f8h6 a2b3 d8g8 f7d7 g8f8 b3b2 b5b4 c3b4 c5c1 h1h2 a5b4 d5b4 h6f4 g2g3	nodes 300000	20	1	yes
+A_mate8_shallow	r2qk1nr/pp1bbppp/2npp3/2p5/8/4PP1P/PPPPB1PN/RNBQ1RK1 b kq - 0 7	g8f6 b1c3 d8b6 c3e4 e8g8 c2c3 e6e5 h2g4 f6g4 f3g4 f7f5 e4g3 f5g4 e2g4 b6c7 g3f5 e7f6 d2d3 a8e8 e3e4 g8h8 c1e3 c6d8 g1h1 d8e6 d1c2 b7b6 a2a3 a7a6 f5g3 b6b5 g3f5 g7g6 f5h6 e8b8 a1d1 c7d8 b2b4 d8e7 c2a2 b8c8 b4c5 e6c5 e3c5 d7g4 h6g4 c8c5 g4e3 f6g7 a3a4 e7g5 f1f8 g7f8 e3d5 a6a5 d1f1 g5d8 f1f7 f8h6 a2b3 d8g8 f7d7 g8f8 b3b2 b5b4 c3b4 c5c1 h1h2 a5b4 d5b4 h6f4 g2g3	nodes 1000000	20	1	yes
 B_mate6_shallow	rn1qkb1r/p1pppp1p/1p3np1/6B1/3PP3/2P2P2/PP3P1P/RN1QKB1R b KQkq - 0 6	f8g7 b1d2 h7h6 g5h4 e8g8 f1g2 c7c5 d4d5 d7d6 f3f4 b8d7 e1g1 d8c7 f4f5 f6h5 f2f4 h5f4 f1f4 g6g5 h4g5 h6g5 f4g4 f7f6 g4g3 c5c4 d2f3 d7c5 f3d4 b6b5 h2h4 g5h4 g3g7 g8g7 d1g4 g7h7 g4h4 h7g7 h4g4 g7h8 g4h5 h8g7	nodes 100000	20	1	yes
-C_mate7_depth11	rnb1k1nr/ppp1bpp1/3p2qp/4p3/2B1P2P/2PP1N2/PP3PP1/RNBQ1RK1 b kq - 0 7	b8c6 d3d4 c8h3 f3e1 h3g4 f2f3 g4d7 d4d5 c6d8 e1d3 g8f6 f3f4 e8g8 b1d2 f8e8 f4f5 g6g3 f1f3 g3h4 f3h3 h4g4 d1e1 f6e4 d2e4 d7f5 d3f2 g4g6 h3g3 g6h7 a2a3 f5d7 e1e2 f7f5 e4d2 d8f7 e2h5 e7g5 a3a4 e5e4 f2h3 f5f4 g3g5 f7g5 h3f4 e4e3 c4d3 d7f5 d3b5 g7g6 h5e2 e3d2 b5e8 d2d1q e2d1 a8e8 d1d4 e8e1 g1h2 h7e7 f4g6 f5g6 c1g5 h6g5 a1e1 e7e1 d4a7 e1e5 h2g1 g5g4 a7b7 e5e3 g1h1 e3c1 h1h2	nodes 1000000	40	1	yes
-D_mate_minus6_depth10	rnbqk2r/pp3ppp/2p1pn2/8/8/2bBB1P1/PPP1QP1P/2KR2NR w kq - 0 9	b2c3 d8a5 c1b2 b8d7 g1f3 d7b6 e3d4 b6a4 b2b3 c8d7 f3d2 e8g8 d4f6 a4c5 b3b2 g7f6 e2g4 g8h8 d2b3 c5b3 c2b3 a8d8 g4h4 f6f5 h4e7 c6c5 g3g4 f5g4 h2h3 f8g8 h3g4 g8g7 d3h7 d8e8 e7f6	nodes 1000000	20	1	yes
+C_mate7_depth11	rnb1k1nr/ppp1bpp1/3p2qp/4p3/2B1P2P/2PP1N2/PP3PP1/RNBQ1RK1 b kq - 0 7	b8c6 d3d4 c8h3 f3e1 h3g4 f2f3 g4d7 d4d5 c6d8 e1d3 g8f6 f3f4 e8g8 b1d2 f8e8 f4f5 g6g3 f1f3 g3h4 f3h3 h4g4 d1e1 f6e4 d2e4 d7f5 d3f2 g4g6 h3g3 g6h7 a2a3 f5d7 e1e2 f7f5 e4d2 d8f7 e2h5 e7g5 a3a4 e5e4 f2h3 f5f4 g3g5 f7g5 h3f4 e4e3 c4d3 d7f5 d3b5 g7g6 h5e2 e3d2 b5e8 d2d1q e2d1 a8e8 d1d4 e8e1 g1h2 h7e7 f4g6 f5g6 c1g5 h6g5 a1e1 e7e1 d4a7 e1e5 h2g1 g5g4 a7b7 e5e3 g1h1 e3c1 h1h2	nodes 1500000	40	1	yes
+D_mate_minus6_depth10	rnbqk2r/pp3ppp/2p1pn2/8/8/2bBB1P1/PPP1QP1P/2KR2NR w kq - 0 9	b2c3 d8a5 c1b2 b8d7 g1f3 d7b6 e3d4 b6a4 b2b3 c8d7 f3d2 e8g8 d4f6 a4c5 b3b2 g7f6 e2g4 g8h8 d2b3 c5b3 c2b3 a8d8 g4h4 f6f5 h4e7 c6c5 g3g4 f5g4 h2h3 f8g8 h3g4 g8g7 d3h7 d8e8 e7f6	nodes 4000000	20	1	yes
 E_mate_minus9	r2q1rk1/1pp1ppbp/2np1np1/p7/2PP1Pb1/2N1PN2/PP2B1PP/R1BQ1RK1 w - - 0 9	d4d5 c6b4 e3e4 c7c6 a2a3 d8b6 g1h1 b4a6 f4f5 a6c5 f3g5 c5b3 f5g6 h7g6 a1b1 b3c1 b1c1 g7h6 h2h4 g8g7 e2g4 h6g5 c1b1 f8h8 g4h3 h8h4 d1c2 h4f4 b1e1 f4f1 e1f1 b6e3 d5c6 b7c6 c2b1 e3d4 f1e1 g5d2 e1d1 d4e3 e4e5 d6e5 d1f1 e5e4 c3a4 a8h8 b2b4 h8h3 g2h3 e3h3	nodes 1500000	40	1	yes
 F_mate6_inherited_no_line	rnbqk2r/ppp1bppp/1n2p3/3pP3/3P4/3B1N2/PPPB1PPP/RN1QK2R w KQkq - 2 7	e1g1 b8d7 c2c3 c7c5 a2a4 e8f8 b1a3 a7a5 a3b5 f8g8 b2b3 c5c4 d3e2 d7f8 b3c4 d5c4 d2f4 f8g6 d1d2 g6f4 d2f4 b6d5 f4g3 c8d7 f3d2 d7b5 a4b5 h7h5 e2c4 h5h4 g3f3 h4h3 g2h3 a5a4 f1e1 a4a3 d2e4 h8h4 e4d6 e7d6 e5d6 d8d6 c4b3 d5f4 e1e5 d6c7 a1a2 f4h3 g1h1 h3f4 f3g3 h4h3 g3f4 h3c3 f4h4 g7g6 b3e6 f7e6 e5e6 c7f7 h4e4 g8f8 f2f4 c3c4 a2a1 a8c8 a1a3 c4c1 h1g2 g6g5 e6h6 f7f4 h6h8 f8g7 h8h7 g7f6	nodes 300000	64	2	no

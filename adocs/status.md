@@ -7,6 +7,47 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S203 is done, 2026-09-08: the Zobrist keys are the project generator's, and
+  the mating-PV fixture was rebuilt by a rule rather than by a match.**
+  `init_zobrist` draws its 851 keys from `project_random_next` seeded with
+  `CHESSO_PROJECT_SEED`; `magic_gen zobrist --seed 20260904` reports **`matches
+  init_zobrist: yes`** where it reported `no`, quality clean (0 zero keys,
+  851/851 distinct, 0 pair XORs equal to a key, 361675/361675 distinct pair
+  XORs, minimum Hamming 14). The fast suite asserts all of it. **New baselines:**
+  depth 9 **121530 / 801481 / 72924**, depth 12 **636677 / 3520847 / 494098**,
+  `bench` **26851183**, **best moves unchanged** -- `specs.md` under INV-6 and
+  the handover check below carry them. Perft verified, `test_perft` green, Debug
+  self-play 8 games 0 assertions. Closes `2026-09-04_test_review-F08`.
+- **The mining run produced nothing, and that is the finding, DEC-156.**
+  `ROUNDS=1500 ./fastchess.sh`, 3000 games at 8+0.08, **1 h 18 m 10 s, 0 time
+  forfeits** -- and **3** `Incomplete mating PV` warnings over 2 roots, **all
+  from the old-keys reference, none from the candidate**. That is not evidence
+  the redraw fixed the class: 3 lines landing all on one side has probability
+  0.125 under an equal-rate null. What it says is that the class has become far
+  rarer than when the set was built -- S147 read 10 lines over 4 games in 3000 --
+  so a mining campaign for six fresh cases was not going to converge. The run's
+  Elo was not read and the banner says why: fixed rounds, no bounds, not a
+  verdict.
+- **All six cases came back by re-sweeping their node budget, no match needed.**
+  One rule, stated before it was applied and applied to every row: the cheapest
+  budget at which the case reports at least its floor of mate lines with all of
+  them complete. A `300000 -> 1000000`, C `1000000 -> 1500000`,
+  D `1000000 -> 4000000`; B, E, F untouched. Floors re-derived, A 5 -> 6 and
+  D 1 -> 3, **no live floor lowered**; F's stale 6 against 4 reported corrected
+  to 2. `adocs/data/S203_case_sweep.sh` is the script, which is what DEC-142
+  wants beside a golden. **The grid is a knife edge and both files now say so:**
+  C reports 13 mate lines at 1500000 nodes and **0 at both 1000000 and
+  2000000**, so re-run the sweep after anything that moves the tree, not only
+  after a key change.
+- **Two reproductions changed hands.** `D_mate_minus6_depth10` between 1200000
+  and 3000000 nodes publishes `mate -6` at ply 35 depth 11 with a 10-of-12-ply
+  PV, at a depth that also publishes a complete 12/12 -- DEC-122's class, and
+  **S202** now carries it as a seconds-long reproduction where its only other
+  route was a 3000-game match. In the same move, **S202's existing F
+  reproduction is retired**: it printed 6 mate lines and 3 short for two months
+  and prints 4 and 0 under the redrawn keys. The old numbers are kept beside the
+  new ones, because they are quoted elsewhere. The fast suite costs about 8 s
+  more, D's new budget being the price.
 - **S179 is done, 2026-09-08: the 128 magic numbers are this project's own
   output and share 0 values with the tutorial set.** `tools/magic_gen` is the
   command and **20260904** the seed -- DEC-132's date, the owner's choice.
@@ -727,16 +768,10 @@ Updated: 2026-09-08, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
-- Next: **S203** -- `init_zobrist()` drawing its 851 keys from the project
-  generator instead of `std::uniform_int_distribution`, which is what removes
-  the "per standard library" caveat the node signature carries today. **It is
-  not agent-only and not free**, which is the thing S179 learned: the redraw
-  retires `adocs/data/S170_cases.tsv` and re-mining it is a fresh class run of
-  about 1 h 20 m here plus the sweep for each case's cheapest reproduction.
-  Budget a night, not a turn. The engine change itself is four lines and was
-  already measured -- S203's file carries the before and after.
-  Then the instrument lane, **S180** first, with **S148** the first verdict --
+- Next: the instrument lane, **S180** first, with **S148** the first verdict --
   and the calibration that had to precede it is taken, so nothing blocks it.
+  `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads the
+  list with one machine.
   `plan.md`'s "What the 2026-09-05 reorder changed" says how one agent reads
   the list with one machine.
 
@@ -786,6 +821,16 @@ Updated: 2026-09-08, by hand.
 
     The original text follows, because its reasoning about which figures carry
     and which do not is the standing rule, not a one-off.
+
+    **S203 moved these numbers on 2026-09-08 and the check still works, with
+    the new set.** Redrawing the Zobrist keys changes which positions share a
+    transposition-table slot, so the counts move once by design; the values
+    below are what the engine gave until that step, and from it on they are
+    **121530 / 801481 / 72924** at depth 9 and **636677 / 3520847 / 494098** at
+    depth 12, best moves unchanged. `adocs/specs.md` under INV-6 carries the
+    current pair and is the one to read. The original text follows unedited,
+    because what it says about which figures carry across a machine and which do
+    not is the standing rule.
 
     **Start here, and it takes ten seconds.** Build, then run
     `python3 tools/search_bench.py ./build/src/chesso 9` and the same at 12.

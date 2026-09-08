@@ -1,7 +1,6 @@
 #include "bitboard.hpp"
 #include <bit>
 #include <limits>
-#include <random>
 #include <unordered_map>
 #include "bb_tables.hpp"
 #include "data_structures.hpp"
@@ -2714,26 +2713,37 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 {
   assert(zobrist != nullptr);
 
-  // Fixed seed.
-  std::mt19937_64 gen(0x9E3779B97F4A7C15ULL);
-  std::uniform_int_distribution<uint64_t> dist(0, UINT64_MAX);
+  // S203, DEC-139. The project's own generator, not
+  // std::uniform_int_distribution over std::mt19937_64: the standard does not
+  // fix what a distribution returns for a given engine state, so the keys, the
+  // table indices and therefore the node counts were implementation-defined
+  // across standard libraries. splitmix64 is defined bit for bit by the code
+  // above, and its bijection property is what makes these 851 draws distinct
+  // without anything having to check.
+  //
+  // The draw order is load-bearing three times over: tools/magic_gen.cpp
+  // zobrist replays it to say whether the engine's keys are the ones the seed
+  // produces, tests/test_engine.cpp asserts the same, and
+  // adocs/data/S170_cases.tsv was mined under whatever key set was in force.
+  // Reordering these loops changes every key.
+  uint64_t state = CHESSO_PROJECT_SEED;
 
   for (auto& piece_array : zobrist->piece_randoms) {
     for (uint64_t& random : piece_array) {
-      random = dist(gen);
+      random = project_random_next(&state);
     }
   }
 
   for (uint64_t& random : zobrist->castling_randoms) {
-    random = dist(gen);
+    random = project_random_next(&state);
   }
 
   for (uint64_t& random : zobrist->side_randoms) {
-    random = dist(gen);
+    random = project_random_next(&state);
   }
 
   for (uint64_t& random : zobrist->ep_randoms) {
-    random = dist(gen);
+    random = project_random_next(&state);
   }
 
   zobrist->initialized = true;

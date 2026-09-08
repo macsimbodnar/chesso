@@ -206,8 +206,11 @@ migration that way (DEC-109).
   overrides when a run genuinely has to share the machine, and a run that
   lowers it says why.
 - RUNS: the agent runs tests, measurements and evaluation tuning itself
-  (DEC-041), without asking, and schedules anything lasting several hours for
-  the night if there is better work to do meanwhile. **NNUE training is still
+  (DEC-041), without asking. **Four hours is the line (DEC-155):** a run
+  expected to take less than four hours starts when it is ready, during the
+  day; four hours or more is scheduled for the night if there is better work
+  to do meanwhile. The estimate is stated before the run starts and comes
+  from the measured throughput in `.moltke.local.md`, not from a guess. **NNUE training is still
   the owner's**: the agent builds the trainer, prepares the data and states the
   run, and the result comes back as a network measured by SPRT like any other
   change. The line is *running the network training*, not writing it. DEC-015
