@@ -39,8 +39,8 @@ about 6.3 % of `v`, which `adocs/data/S105_pairs.py` prints.
 | | pre-registered |
 |---|---|
 | command | `ROUNDS=500 AA=1 nohup ./fastchess.sh > .tuning/aa_s198.log 2>&1 &` |
-| commit | `da8ca0b`, clean tree, both sides |
-| binaries | `build/src/chesso` and `.ref-builds/da8ca0b/build/src/chesso`, **sha256 identical**, `b047f22d957935f219ebd2326b48b3b4a496c567518ff65f9f7f956a11f823ce`; bench `24880255` nodes on both, 7400474 and 7378394 nps |
+| commit | the commit this pre-registration lands in, clean tree, both sides -- a file cannot name its own sha, so the identity claim below is what is checked at launch and the stamp names the commit |
+| binaries | `build/src/chesso` and the reference worktree's, **sha256 identical**, `b047f22d957935f219ebd2326b48b3b4a496c567518ff65f9f7f956a11f823ce` -- measured at `da8ca0b` and re-checked at the launch commit, which moves no `src/` file; bench `24880255` nodes on both, 7400474 and 7378394 nps |
 | build config | Release, `CHESSO_ARCH=native`, PGO off, ccache, `/usr/bin/c++` (g++ 13.3), both sides |
 | fastchess | `alpha 1.8.1 20260720-daa3ea2` -- the version `.moltke.local.md` records and the script's comment names, so S198 question 5 needs no answer |
 | machine | workstation, i7-8700K, 12 threads, governor `performance` on all 12, load average 0.05 at launch, on mains |
