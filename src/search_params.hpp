@@ -107,7 +107,7 @@
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
-     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:522,  \
+     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:766,  \
      so it is a distance to the leaves and not a distance from the root.       \
                                                                                \
      Both were a first setting, one pawn per ply and the last few plies, and   \
@@ -119,7 +119,7 @@
      is the guard that is left. Not `beta < MATE_MIN`, which S145 measured     \
      inert: evaluate_expensive() is clamped to +/-LAZY_EVAL_MARGIN, so the     \
      static score cannot approach the mate band and the condition never binds  \
-     (src/search.cpp:512-517 says the same in its own words).                  \
+     (src/search.cpp:754-761 says the same in its own words).                  \
                                                                                \
      **The declared range stays 0 to 63 (DEC-095), and that is a decision.**   \
      S145 swept the ceiling against 48 constructed forced mates with the floor \
@@ -149,8 +149,8 @@
      saves; exempting a third costs 27 %. S033.                                \
                                                                                \
      The root is not exempt because of this parameter, and that is still the   \
-     caveat to read the bound with. The guard at src/search.cpp:521 is         \
-     `!is_pv && ... ply >= RFP_MIN_PLY`, and search() calls the root at :853   \
+     caveat to read the bound with. The guard at src/search.cpp:765 is         \
+     `!is_pv && ... ply >= RFP_MIN_PLY`, and search() calls the root at :1461  \
      with is_pv true, so `!is_pv` exempts it at every setting. **0 and 1 are   \
      therefore the same engine** -- byte-identical node counts and best moves, \
      TRICKY 329568, CMK 260802, KILLER 53310 at depth 8 (S085) -- so 0 was a   \

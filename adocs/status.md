@@ -932,7 +932,10 @@ Updated: 2026-09-08, by hand.
     74 hours worst case and 45 on a bound. Options: that pair on a
     weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
     +/-8 Elo) which would change the accepts and is therefore a decision. It
-    sits at Open entry 17 behind S148 and S159 until answered.
+    sits at **Open entry 11** behind S159 until answered -- S148 is done and
+    out of the list as of 2026-09-09, and its verdict joins S151's own: the
+    ceiling was re-decided at 8+0.08 and the incumbent kept, so the magnitude
+    S151 re-takes is S085's vector and not this one.
   - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
     (`go infinite` printing `bestmove` unasked; a bad token in `position ...
     moves` skipped silently; the aborted-iteration best move assuming its table
