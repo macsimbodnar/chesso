@@ -64,16 +64,28 @@ if [[ "${1:-}" == "--ceilings" ]]; then
   echo "The short-line ceiling per case: the worst cell of the recorded grid at"
   echo "the stride the case itself carries. tests/test_mate_carry.cpp holds these."
   printf "%-26s %8s\n" "case" "ceiling"
+  # A case with no row at its own stride is an error and not an omission: the
+  # ceilings are a golden and a short table would quietly ship the wrong one.
+  # Reachable whenever a row's stride moves or a sweep file is partial.
   awk -v strides="$strides" '
     BEGIN { while ((getline line < strides) > 0) { split(line, f, "\t"); want[f[1]] = f[2] } }
     NF == 5 && $2 ~ /^[0-9]+$/ && ($1 in want) && $2 == want[$1] {
       if ($5 + 0 > max[$1]) { max[$1] = $5 + 0 }
       seen[$1] = 1
     }
-    END { for (n in seen) printf "%-26s %8d\n", n, max[n] }
+    END {
+      missing = ""
+      for (n in want) { if (!(n in seen)) { missing = missing " " n } }
+      if (missing != "") {
+        printf "no row at its own stride for:%s\n", missing > "/dev/stderr"
+        exit 1
+      }
+      for (n in seen) printf "%-26s %8d\n", n, max[n]
+    }
   ' "$@" | sort
+  status=${PIPESTATUS[0]}
   rm -f "$strides"
-  exit 0
+  exit "$status"
 fi
 
 if [[ "${1:-}" == "--at" ]]; then

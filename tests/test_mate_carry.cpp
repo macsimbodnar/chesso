@@ -371,7 +371,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //   C_mate7_depth11                  0  none: 0 short in all 18 of its cells
 //   D_mate_minus6_depth10            1  five cells, both sides
 //   E_mate_minus9                    8  1000000 at HEAD
-//   F_mate6_inherited_no_line        2  2000000 at HEAD (not guarded)
+//   F_mate6_inherited_no_line        2  1200000 at HEAD (not guarded)
 //
 // C's zero is earned rather than chosen, which is the difference this file now
 // keeps: a ceiling of 0 says the grid has never shown one, and a budget where

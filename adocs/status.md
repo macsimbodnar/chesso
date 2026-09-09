@@ -44,6 +44,22 @@ Updated: 2026-09-09, by hand.
   being found, two of them in larger numbers than HEAD. `tools/mutation_check.py`
   is S196 and does not exist yet, so the mutants were applied by hand and
   reverted; `git diff -- src/` is empty.
+- **The Tier-1 check over S204's diff found three things and all three were
+  real; two are fixed and one could not be.** The `--ceilings` mode dropped a
+  case with no row at its own stride instead of erroring -- a golden-deriving
+  script that ships a short table quietly, reachable whenever a stride moves or
+  a sweep file is partial -- now fails and names the case, observed on a grid
+  with `C_mate7_depth11` removed. `short_line_ceiling`'s comment cited
+  `F_mate6_inherited_no_line`'s worst cell as 2000000, which is a **stride-1**
+  cell for a row whose stride is 2; its own worst cell is 1200000. The ceiling
+  of 2 was right either way, because the script selects the stride and only the
+  prose did not. And **DEC-162's cost arithmetic was wrong**: "13.5x that" is
+  not a ratio of the fixture -- 13.5 M is the sum of the nine budgets, the
+  multiplier for one *search* of a case at 1 M and 135x for B at 100000. The
+  union is 1863 M against 188 M, **9.9x, and the 4.3 minutes the rejection
+  rests on was right**. DEC-162 is corrected in place and says so;
+  `plan_done/S204_*` carries the wrong figure and is not edited, because
+  `plan_done/` is history.
 - **DEC-156 is amended and not upheld.** Its re-sweep prescription stands for the
   *budgets*, which nothing here moved, and no longer applies to floors because
   there are none. `adocs/plan_todo/S192_golden_hygiene.md` row 6 moved with it:

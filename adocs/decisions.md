@@ -8997,9 +8997,19 @@ Context:      DEC-161 recorded the defect and sent the shape to S204. The count
               reproduce `adocs/data/S204_sweep_head.txt` cell for cell. So one
               of the two things the fixture merged into a single failure list is
               budget-independent and the other is not.
-              Cost bounds the answer: the fixture is 26.30 s over 188 M nodes,
-              and a per-case union over all nine budgets is 13.5x that, about
-              4.3 minutes, which is not a fast-suite test.
+              Cost bounds the answer: the fixture is 26.30 s over 188 M nodes
+              of budget, and a per-case union over all nine budgets is 1863 M --
+              **9.9x the fixture, about 4.3 minutes** -- which is not a
+              fast-suite test.
+              *Corrected 2026-09-09, hours after this entry was written, by the
+              Tier-1 check over S204's diff.* It read "13.5x that", which is not
+              a ratio of the fixture at all: 13.5 M is the sum of the nine
+              budgets, the multiplier for one search of a case whose own budget
+              is 1 M, and it is 135x for `B_mate6_shallow` at 100000 and 3.4x for
+              `D_mate_minus6_depth10` at 4000000. The 4.3 minutes was right and
+              is what the rejection rests on; the ratio beside it was wrong.
+              `adocs/plan_done/S204_mate_carry_knife_edge_guard.md` carries the
+              same wrong figure and is not edited -- `plan_done/` is history.
 Decision:     By the owner, 2026-09-09, on the agent's proposal, with the count
               and the census in hand. **The budgets do not move.** The guard
               becomes three assertions:
@@ -9022,7 +9032,7 @@ Decision:     By the owner, 2026-09-09, on the agent's proposal, with the count
               `adocs/data/S203_case_sweep.sh`, which is what DEC-142 requires.
 Rejected:     A per-case union of budgets for the vacuity floor. It is the
               robust shape and it was refused on measured cost: 4.3 minutes
-              against 26.30 s, in a suite that gates every commit. It belongs in
+              against 26.30 s, 9.9x, in a suite that gates every commit. It belongs in
               `tools/gate_extra.sh` if S197 ever wants it.
               A contiguous green window per case, which DEC-161's shape list
               offered. Dead on the data rather than on cost: C has no window
