@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """S159 killer census driver.
 
-One engine process, Hash 64, every position in census_positions.txt searched to
-its own depth. Each `go` is waited on until `bestmove` before the next command
-is written -- writing `quit` behind an un-awaited `go` kills the search before
+One engine process, Hash 64, every position in S159_census_positions.txt
+searched to its own depth. Each `go` is waited on until `bestmove` before the
+next command is written -- writing `quit` behind an un-awaited `go` kills the search before
 it looks at a node, which is TOOLCHAIN.md's "the one way to ask it that lies"
 and it silently reported 0 killer stores over the whole set here.
 
-    census_run.py <engine> <positions file> <out prefix>
+    adocs/data/S159_census_run.py <engine> \
+        adocs/data/S159_census_positions.txt <out prefix>
 
 Prints the instrumented build's last S159CENSUS line, plus per-position nodes
 and best move so the tree can be compared between two builds.
 """
-import subprocess, sys, threading, queue
+import subprocess, sys, threading
 
 engine, positions, out = sys.argv[1], sys.argv[2], sys.argv[3]
 

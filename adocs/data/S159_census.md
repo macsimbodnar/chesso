@@ -23,13 +23,20 @@ here so the next agent is not in the position this one was.
 ## How to reproduce
 
 ```
-git archive HEAD | tar -x -C <scratch>/inst
-patch -p0 -d <scratch>/inst < adocs/data/S159_census_instrument.patch
+git archive 99000c1 | tar -x -C <scratch>/inst
+patch -p1 -d <scratch>/inst < adocs/data/S159_census_instrument.patch
 cmake -S <scratch>/inst -B <scratch>/inst/build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build <scratch>/inst/build --target chesso -j8
 python3 adocs/data/S159_census_run.py <scratch>/inst/build/src/chesso \
         adocs/data/S159_census_positions.txt <scratch>/census
 ```
+
+Verified end to end on 2026-09-09: rebuilt from these files alone, the census
+prints `stores=222815 dup_store=160423 probe=10189958 dup_live=4484073
+stale_live=55142 k1_live=9107792 k1_distinct=4623719 k1_stale=90575` and
+18166063 nodes, identical to `S159_census_head.txt`. That check is the whole
+reason this directory exists: S149's numbers cannot be reproduced and these
+can.
 
 The instrumentation lives in the patch and never in `src/`. The driver waits
 for `bestmove` before writing the next command: piping the whole script with a

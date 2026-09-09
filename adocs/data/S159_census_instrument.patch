@@ -1,5 +1,5 @@
---- /dev/fd/63	2026-09-09 16:34:56.719729373 +0200
-+++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/search.cpp	2026-09-09 16:02:09.746191081 +0200
+--- a/src/search.cpp
++++ b/src/search.cpp
 @@ -12,6 +12,17 @@
  #include "transposition_table.hpp"
  #include "utils.hpp"
@@ -58,8 +58,8 @@
          state->killer_moves[1][ply] = state->killer_moves[0][ply];
          state->killer_moves[0][ply] = moves[i];
  
---- /dev/fd/63	2026-09-09 16:34:56.725729236 +0200
-+++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/chesso.cpp	2026-09-09 16:02:09.746373379 +0200
+--- a/src/chesso.cpp
++++ b/src/chesso.cpp
 @@ -1,3 +1,4 @@
 +#include <cstdio>
  #include <algorithm>
@@ -99,8 +99,8 @@
    return result;
  }
  
---- /dev/fd/63	2026-09-09 16:34:56.728729168 +0200
-+++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/data_structures.hpp	2026-09-09 16:00:39.881798778 +0200
+--- a/src/data_structures.hpp
++++ b/src/data_structures.hpp
 @@ -482,6 +482,10 @@
    uint64_t explored_nodes;
    uint64_t node_limit = NODE_BUDGET_UNLIMITED;
