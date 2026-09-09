@@ -1157,6 +1157,20 @@ Updated: 2026-09-09, by hand.
   Open entry 8, is still the owner question parked below. The enrichment pass's
   next file is **S181**, today Open entry 9.
 
+- **S193's fast check found one real thing and it is S205, not a mid-step
+  fix.** `tests/test_perft.cpp` parses four more columns than it compares --
+  `checks`, `discovery_checks`, `double_checks`, `checkmates` -- and
+  `get_move_stats` sets all four to 0, so `perft()` does not count them at all.
+  The reviewer read this as latent on the belief that every asset layer leaves
+  them null; counted, **42 of 71 layers carry a `checks` value and 42 a
+  `checkmates` value**, 30 each for the other two, so these are real expected
+  numbers in tracked assets that no run has ever compared. It is a step and not
+  a one-liner because counting checks means `is_check()` at every perft node
+  and the slow label runs 53 s -- the measurement is what decides between
+  counting them and deleting the dead fields. Open entry 5. The rest of the
+  check came back clean, including the two removals S193 claimed were the clamp
+  and the no-op filter restated, both verified against `src/`.
+
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on
   2026-09-09 and its watcher exited on `SPRT-RUN-DONE`, acknowledged and read
