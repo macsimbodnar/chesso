@@ -14,7 +14,7 @@ done:
 Applied by S139, and it is DEC-088's own `Consequences:` line rather than a new
 choice: *"S119's SPRT clause changes from 'at Hash 128' to 'at the S105 harness
 setting, with the pressure ratio stated'"*. The harness is what settles it --
-`fastchess.sh:348` is
+`fastchess.sh` "option.Hash=16 option.Threads=1" is
 
 ```
   -each tc="$tc" option.Hash=16 option.Threads=1 \
@@ -26,9 +26,9 @@ for 128 could only be run by editing the harness, which this step's `touches:`
 does not include, and DEC-088's reason for refusing 128 is that it flatters
 exactly this step.
 
-The rating regime is still reachable and is a different tool:
-`rating.sh:36` is `hash_mb=128`, fed to `-each` at `:172`. If a second verdict
-there is ever wanted it is a `rating.sh` run, named as one, with `rating.sh` in
+The rating regime is still reachable and is a different tool: `rating.sh`
+`hash_mb` is `hash_mb=128`, fed to `-each` at `:172`. If a second verdict there
+is ever wanted it is a `rating.sh` run, named as one, with `rating.sh` in
 `touches:` -- not this step's SPRT.
 
 ## What is there

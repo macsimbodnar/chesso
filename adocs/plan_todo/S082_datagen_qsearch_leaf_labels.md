@@ -26,7 +26,7 @@ reason:
 
 > That fourth clause was justified here by the claim that evaluate() is only ever
 > asked about a position quiescence has already resolved. It is not:
-> src/search.cpp:349 calls evaluate_lazy() at the top of every quiescence node,
+> `src/search.cpp` `quiescence` calls evaluate_lazy() at the top of every quiescence node,
 > before a single capture is generated.
 
 S065 loosened the clause behind `--allow-tactical` and regenerated with it on, so

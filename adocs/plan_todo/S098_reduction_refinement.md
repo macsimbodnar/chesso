@@ -2,7 +2,7 @@ id:         S098
 goal:       the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
 touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
-excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md:81`; no `decisions.md` entry records that merge) and which is an input here
+excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md` "the improving flag, was first in the pending order"; no `decisions.md` entry records that merge) and which is an input here
 decisions:  DEC-071, DEC-105, DEC-134
 closes:
 blocks:
@@ -41,7 +41,8 @@ this from a static reduction: Weiss #73 "Aggressive lmr" (fixed 1 ply → grows
 with depth and moves tried) **+48.44 +/-15.81**, then #76 (adopt Ethereal's
 log formula) **+20.28 +/-9.75** — both 2019-11, Weiss sub-3000 (1.2 = 3055
 came in 2021). **Chesso already ships this layer** — build_lmr_table at
-src/search.cpp:96-110 is exactly this form (S013, +129.2 +/-33.8 killed at
+`src/search.cpp` `build_lmr_table` is exactly this form (S013, +129.2 +/-33.8
+killed at
 96 % LLR) — so layer (a) owes nothing here; its constants are S085/S127
 material.
 **(b) History scaling.** Reduce less for a quiet with high history, more with
@@ -112,33 +113,36 @@ S023 sits in reserve), cutnode-with-no-TT-move (SF prose only; ~0 at Lynx).
 
 ### 2. Shape for chesso
 
-The whole feature is src/search.cpp:96-130 and src/search.cpp:958-966:
+The whole feature is `src/search.cpp` `build_lmr_table` and `src/search.cpp`
+`lmr_reduction` and `src/search.cpp` `negamax`:
 
-- - Table: build_lmr_table src/search.cpp:96-110, `r = LMR_BASE/100 + ln(depth)
-  * ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
-  zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
-  (src/search_params.hpp:202-203, ranges stated, both already in S085's SPSA
-  set). CHESSO_TUNE rebuilds it per setoption (src/search.cpp:113-122); a test
-  probe exists (search_lmr_reduction_probe, src/search.cpp:133-136).
-- - Eligibility src/search.cpp:960-961: `ply > 0 && depth >= 3 &&
+- - Table: build_lmr_table `src/search.cpp` `build_lmr_table`, `r =
+  LMR_BASE/100 + ln(depth) * ln(move_number) / (LMR_DIVISOR/100)`, uint8_t,
+  axes clamped 1..63, row 0 zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
+  (`src/search_params.hpp` `LMR_BASE` and `src/search_params.hpp`
+  `LMR_DIVISOR`, ranges stated, both already in S085's SPSA set). CHESSO_TUNE
+  rebuilds it per setoption (`src/search.cpp` `search_params_rebuild_derived`);
+  a test probe exists (search_lmr_reduction_probe, `src/search.cpp`
+  `search_lmr_reduction_probe` and `src/search.cpp` `lmr_reduction`).
+- - Eligibility `src/search.cpp` `negamax`: `ply > 0 && depth >= 3 &&
   legal_moves_counter > 3 && !is_capture && !MOVE_PROMOTED && !is_in_check &&
   !is_check_move`. Root exempt (S013's mate bug), first three moves exempt,
   **PV not exempt** — chesso reduces at PV nodes from the same table.
-  is_check_move (src/search.cpp:929) is post-make and survives S107 for exactly
-  this guard. The 3 and the 3 are hardcoded, not yet parameters.
-- - Clamps src/search.cpp:964-965: `int reduction` clamped to [0, child_depth -
-  1] — the child keeps one real ply; new signed terms ride the same variable
-  and the same clamps.
-- - Re-search structure src/search.cpp:968-991 (PVS): first legal move
+  is_check_move (`src/search.cpp` `negamax`) is post-make and survives S107 for
+  exactly this guard. The 3 and the 3 are hardcoded, not yet parameters.
+- - Clamps `src/search.cpp` `negamax`: `int reduction` clamped to [0,
+  child_depth - 1] — the child keeps one real ply; new signed terms ride the
+  same variable and the same clamps.
+- - Re-search structure `src/search.cpp` `negamax` (PVS): first legal move
   full-window; others zero-window at `child_depth - reduction`
-  (src/search.cpp:973); **reduced fail-high → zero-window re-search at
-  child_depth** (src/search.cpp:979-982), verdict 3's site; alpha < score <
-  beta → full-window re-search, is_pv passed (src/search.cpp:988-991).
-  `best_so_far` (src/search.cpp:1001) is the fail-soft base the deeper margin
-  compares to.
-- - Node type today: the `is_pv` parameter alone (src/search.cpp:596). No
-  cutnode, no ttPv. `tt_move` is copied out at src/search.cpp:667 — the
-  TT-capture term's input exists.
+  (`src/search.cpp` `negamax`); **reduced fail-high → zero-window re-search at
+  child_depth** (`src/search.cpp` `negamax`), verdict 3's site; alpha < score <
+  beta → full-window re-search, is_pv passed (`src/search.cpp` `negamax`).
+  `best_so_far` (`src/search.cpp` `negamax`) is the fail-soft base the deeper
+  margin compares to.
+- - Node type today: the `is_pv` parameter alone (`src/search.cpp` `negamax`).
+  No cutnode, no ttPv. `tt_move` is copied out at `src/search.cpp` `negamax` —
+  the TT-capture term's input exists.
 - History after S093/S024: signed butterfly + continuation sum in [-3M, +3M]
   through one probe path, all pre-make inputs. Read the **raw sum**, never
   score_move's banded return (S109's trap). Gravity's fixed range is what
@@ -169,7 +173,7 @@ The whole feature is src/search.cpp:96-130 and src/search.cpp:958-966:
 
 Verdict 1 — history:
 1. 1. Factor `lmr_adjusted_reduction(...)`: raw table plus signed terms,
-   clamped at the call sites exactly as src/search.cpp:964-965 today. With
+   clamped at the call sites exactly as `src/search.cpp` `negamax` today. With
    every new constant at its off value it returns the raw table — the property
    that makes the whole step inert-by-rebuild, S109's re-pointed gate included.
 2. The term: `r -= clamp(hist_sum / LMR_HIST_DIV, +/-LMR_HIST_CLAMP)`,
@@ -179,13 +183,14 @@ Verdict 1 — history:
    the interaction and S127 refits the thresholds.
 4. Tests red-first: helper unit test — driven table state, the high-history
    quiet reduced strictly less than the low-history one (direction pinned; a
-   sign slip reduces the good quiets, silent); the accepts' root-mate case —
-   a mate at the root that is late, low-history and quiet, precondition
-   asserted (it would be reduced but for `ply > 0`), built the S033 way
-   (python-chess enumeration + Stockfish confirmation, DEC-023); both mate
-   cases re-run -- "pruning does not hide a forced mate",
-   tests/test_search.cpp:2808 and "pruning does not hide a mate against the
-   material leader", tests/test_search.cpp:2847; fast suite. SPRT.
+   sign slip reduces the good quiets, silent); the accepts' root-mate case — a
+   mate at the root that is late, low-history and quiet, precondition asserted
+   (it would be reduced but for `ply > 0`), built the S033 way (python-chess
+   enumeration + Stockfish confirmation, DEC-023); both mate cases re-run --
+   "pruning does not hide a forced mate", `tests/test_search.cpp` "pruning does
+   not hide a forced mate" and "pruning does not hide a mate against the
+   material leader", `tests/test_search.cpp` "pruning does not hide a mate
+   against the material leader"; fast suite. SPRT.
 
 Verdict 2 — node type:
 1. Thread `bool cut_node` through negamax per CPW Node Types (Garms's
@@ -207,14 +212,14 @@ Verdict 2 — node type:
    value, exempt variants search identically; mate suites re-run. SPRT.
 
 Verdict 3 — re-search rule:
-1. 1. At src/search.cpp:979-982 the re-search depth becomes `child_depth + 1`
-   when the reduced score clears `best_so_far + LMR_DEEPER_MARGIN` (the 65e2150
-   re-basing), `child_depth - 1` when it beat alpha by under
+1. 1. At `src/search.cpp` `negamax` the re-search depth becomes `child_depth +
+   1` when the reduced score clears `best_so_far + LMR_DEEPER_MARGIN` (the
+   65e2150 re-basing), `child_depth - 1` when it beat alpha by under
    LMR_SHALLOWER_MARGIN; gate the deeper path on a real reduction (`reduction
    >= 2` seed) — Lynx's bare form measured -7.07 and the guarded one +3.11, and
    SF scales the bar with the reduction (061f98a, a37b38b). Cap at child_depth
-   + 1, floor at 1; the src/search.cpp:988-991 full-window re-search stays at
-   child_depth — state that choice in the commit.
+   + 1, floor at 1; the `src/search.cpp` `negamax` full-window re-search stays
+   at child_depth — state that choice in the commit.
 2. Tests: precondition test that the deeper path fires (node counts move
    against off = margin at range top) and never exceeds its cap or floor;
    mate suites re-run per the accepts. SPRT; a zero recorded as zero.
@@ -297,7 +302,7 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   those engines' tuned output republished, DEC-105's own PeSTO case: they are
   records of what a curve can look like, never a seed for chesso's.
 - **The repo's own bug class.** S013's LMR reduced the mating move at the
-  root; null move hid a mate in 2 (tests/test_search.cpp:2804-2825, the
+  root; null move hid a mate in 2 (`tests/test_search.cpp` "search: draws", the
   "pruning does not hide a forced mate" case). The
   accepts re-runs the mate case per adjustment and adds the root assertion
   with its precondition. The root exemption is not up for relaxation —
@@ -386,8 +391,8 @@ verdict in the stamp.
 1. 1. **The in-check/gives-check exemptions have a contrary sub-3000 record.**
    Lynx allowed LMR while in check at ~2700 (#702, v1.5.0) and re-forbidding it
    later failed at -5.60 (#1800); Stash reduces all moves (663ddbc). Chesso
-   exempts both (src/search.cpp:960-961). The goal names three scalings and no
-   eligibility change, so this step keeps the exemptions — the repo's mate
+   exempts both (`src/search.cpp` `negamax`). The goal names three scalings and
+   no eligibility change, so this step keeps the exemptions — the repo's mate
    history argues the same — but the record is on file: relaxation is a
    candidate fourth verdict or S127-era step, and it would change S107's
    "needed for the LMR guard alone" statement.

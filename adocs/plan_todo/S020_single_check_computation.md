@@ -42,44 +42,48 @@ structure; a function-local computed at node entry is the minimal form.
 ### 2. Shape for chesso
 
 **The boolean is already once-per-function at HEAD**: negamax computes
-`is_in_check` once (src/search.cpp:687), quiescence `in_check` once
-(src/search.cpp:415). The live duplication is one level down, in the
+`is_in_check` once (`src/search.cpp` `negamax`), quiescence `in_check` once
+(`src/search.cpp` `quiescence`). The live duplication is one level down, in the
 king-attack scan itself.
 
 Per-node, negamax at position P:
-- - src/search.cpp:687 `is_check(game)` at entry. Readers: RFP
-  src/search.cpp:765, NMP src/search.cpp:822, LMR src/search.cpp:961,
-  mate-vs-stalemate src/search.cpp:1066 -- and after block 1 also S108's eval
-  gate, S109's rule guards, S114's NMP gate, S116's razor guard.
-- - src/search.cpp:875 `generate_captures` -> `generate_moves_impl`
-  (src/bitboard.cpp:483) recomputes `attackers_to(king)` (src/bitboard.cpp:504)
-  plus snipers/pins (src/bitboard.cpp:516-531) for P.
-- - src/search.cpp:882 or src/search.cpp:902 `generate_quiets` -> the same
-  preamble again, same P. Every node that opens the quiet stage pays
-  checkers+pins twice.
+- - `src/search.cpp` `negamax` computes `is_check(game)` at entry. Every reader
+  is in that same function: RFP, NMP, LMR and the mate-vs-stalemate return --
+  and after block 1 also S108's eval gate, S109's rule guards, S114's NMP gate,
+  S116's razor guard.
+- - `src/search.cpp` `negamax` calls `generate_captures` ->
+  `generate_moves_impl`, and `src/bitboard.cpp` `generate_moves_impl`
+  recomputes `attackers_to(king)` plus snipers and pins for P.
+- - `src/search.cpp` `negamax` reaches `generate_quiets` from either of its two
+  call sites -> the same preamble again, same P. Every node that opens the
+  quiet stage pays checkers+pins twice.
 
 Per-node, quiescence at position P:
-- - src/search.cpp:415 `is_check(game)`. Readers: stand-pat gate
-  src/search.cpp:420, generation choice src/search.cpp:454, capture filter
-  src/search.cpp:469/src/search.cpp:481, best_value init src/search.cpp:491,
-  mate src/search.cpp:549.
-- - src/search.cpp:454-456 the generator -> preamble recomputes checkers+pins
-  for P.
+- - `src/search.cpp` `quiescence` computes `is_check(game)`. Every reader is in
+  that same function: the stand-pat gate, the generation choice, the two
+  capture-filter sites, the `best_value` initialisation and the mate return.
+- - `src/search.cpp` `quiescence` the generator -> preamble recomputes
+  checkers+pins for P.
 
 Per-move -- a DIFFERENT node, never collapsible into P's flag:
-- - src/search.cpp:929 `is_check_move = is_capture ? false : is_check(game)`,
-  post-make, the child position P'. After S107 its sole reader is the LMR guard
-  (src/search.cpp:961), and S107's accepts hands exactly that to this step to
-  preserve; S109 adds per-move gives-check exemptions reading the same value.
+- - `src/search.cpp` `negamax` computes `is_check_move = is_capture ? false :
+  is_check(game)`, post-make, for the child position P'. After S107 its sole
+  reader is the LMR guard in the same function, and S107's accepts hands
+  exactly that to this step to preserve; S109 adds per-move gives-check
+  exemptions reading the same value.
 
-Non-search callers stay untouched: SAN's +/# (src/bitboard.cpp:2225-2226),
-tools/datagen.cpp:201/tools/datagen.cpp:280, tests. `is_check` remains public.
+Non-search callers stay untouched: SAN's +/# (`src/bitboard.cpp`
+`move_to_algebraic`), `tools/datagen.cpp` `terminal_result` and
+`tools/datagen.cpp` `play_games`, tests. `is_check` remains public.
 
-Cost path: `is_check` (src/bitboard.cpp:1433) = king lsb + `is_attacked` ->
-`is_attacked_with_occupancy` (src/bitboard.cpp:21): pawn/knight/king table ANDs
+Cost path: `is_check` (`src/bitboard.cpp` `is_check`) = king lsb +
+`is_attacked` ->
+`is_attacked_with_occupancy` (`src/bitboard.cpp` `is_attacked_with_occupancy`):
+pawn/knight/king table ANDs
 with early exit, then bishop and rook magics against bishop|queen, rook|queen.
 Out of check no early exit fires, so all five lookups run -- the same five
-`attackers_to` (src/bitboard.cpp:68) does without exits; `is_attacked(sq,c)`
+`attackers_to` (`src/bitboard.cpp` `attackers_to`) does without exits;
+`is_attacked(sq,c)`
 iff `attackers_to(sq,c) != 0`, same tables, same occupancies[BOTH]. The
 generator preamble adds count_bits, the between-table mask, two empty-occupancy
 magic lookups for snipers, and the pin loop.
@@ -94,23 +98,23 @@ the TT_EVAL_NONE sentinel in `static_evals[]`, not from a flag.
 Each increment lands alone and proves itself node-identical first.
 
 - - (a) **Share the preamble between the staged calls.** Extract a masks struct
-  {checkers, pinned, king_square} + a compute function from
-  generate_moves_impl:483-531; add generator entry points taking it
-  precomputed; the existing three signatures compute-then-forward, so every
-  non-search caller is untouched. negamax computes the masks once before
-  src/search.cpp:875 and hands them to
-  src/search.cpp:875/src/search.cpp:882/src/search.cpp:902 -- the board is
-  provably back at P everywhere they are read (the loop unmakes before
-  src/search.cpp:902 runs). Same values reach generate_moves_body, INV-1/INV-3
-  untouched.
+  {checkers, pinned, king_square} + a compute function from `src/bitboard.cpp`
+  `generate_moves_impl`; add generator entry points taking it precomputed; the
+  existing three signatures compute-then-forward, so every non-search caller is
+  untouched. `src/search.cpp` `negamax` computes the masks once before its
+  first generation call and hands them to all three of its generation sites --
+  the board is provably back at P everywhere they are read, because the move
+  loop unmakes before the quiet stage opens. Same values reach
+  generate_moves_body, INV-1/INV-3 untouched.
 - - (b) **Unify the entry flag with the masks' checkers.** Replace
-  src/search.cpp:687/src/search.cpp:415 with `checkers != 0` from an
+  the entry flag in `src/search.cpp` `negamax` and in `src/search.cpp`
+  `quiescence` with `checkers != 0` from an
   `attackers_to` at entry; pins stay deferred to the generation site, because
   RFP/NMP (negamax) and the stand-pat cutoff and qply cap (quiescence) return
   in between and must not pay for pins. Keep the no-king guard both existing
   sites have.
-- - (c) **Declined for the minimal shape**: passing the parent's
-  src/search.cpp:929 value down as the child's entry flag. It stays inside
+- - (c) **Declined for the minimal shape**: passing the parent's post-make
+  `is_check_move` value down as the child's entry flag. It stays inside
   search.cpp/hpp but changes both signatures, covers quiet-move children only,
   and buys the stale-flag risk class of section 5. Take it only if (a)+(b)
   measure zero and a fresh profile still shows the entry scan.
@@ -121,19 +125,22 @@ None. No parameter, no number to fit; DEC-084 is satisfied vacuously.
 
 ### 5. Pitfalls
 
-- **:662 is not this node.** It is the child's post-make state. Folding it
+- **The post-make flag is not this node.** `is_check_move` in
+  `src/search.cpp` `negamax` is the child's state. Folding it
   into P's flag is wrong by construction, and deleting it breaks the LMR
   guard S107 explicitly preserved it for.
 - - **Stale masks across make/unmake.** Masks are valid only at P. The board
-  leaves P at src/search.cpp:917 and returns at src/search.cpp:994; cached
-  masks may be read only where the board is provably back at P, and never from
-  storage that outlives the node's frame. A debug assert (recompute == cached)
-  at the src/search.cpp:902 read is cheap insurance during the transition.
+  leaves P at the `make_move` in `src/search.cpp` `negamax` and returns at the
+  matching `unmake_move`; cached masks may be read only where the board is
+  provably back at P, and never from storage that outlives the node's frame. A
+  debug assert (recompute == cached) at the quiet-stage read is cheap insurance
+  during the transition.
 - - **Quiescence's structure differs.** Its commonest conclusion is the
-  stand-pat store-and-return (src/search.cpp:421-436), which needs the flag and
-  never the pins -- hoisting the full preamble to src/search.cpp:415 taxes
-  exactly those nodes. Split checkers (entry) from pins (generation) there too;
-  the qply cap (src/search.cpp:446) is the other early return.
+  stand-pat store-and-return (`src/search.cpp` `quiescence`), which needs the
+  flag and never the pins -- hoisting the full preamble to `src/search.cpp`
+  `quiescence` taxes exactly those nodes. Split checkers (entry) from pins
+  (generation) there too; the qply cap (`src/search.cpp` `quiescence`) is the
+  other early return.
 - **The null-move child computes its own state.** No inference about
   post-null check state -- any shortcut there is a semantic change, outside
   `excludes:`.
@@ -160,7 +167,7 @@ file orders.
 Plan order lands S020 after all of block 1, so section 2's inventory is a
 floor, not the final sweep: by then S108/S109/S114/S116 read the entry flag,
 and S109's skip_quiets has rewired the staged-generation branch
-(src/search.cpp:897-913) that increment (a) shares. Re-sweep at start with
+(`src/search.cpp` `negamax`) that increment (a) shares. Re-sweep at start with
 `grep -n "is_check\|in_check" src/search.cpp`. The order is right as it stands
 -- landing S020 first would mean rebasing it under every block-1 step; landing
 it last collects all their call sites in one sweep, and each block-1 step needs
@@ -196,14 +203,14 @@ remove -- expect the field to grow at implementation, recorded, not silent.
 ## What S107 left here, measured (2026-08-20)
 
 S107 removed the fail-high gate's `!is_check_move` term, so the flag now has
-exactly one consumer: the late move reduction guard at `src/search.cpp:961`,
-where `!is_check_move` is the **last** conjunct. That makes a second, cheaper
-saving available in the same neighbourhood as this step's, and it was counted
-rather than argued -- instrumented copy, kiwipete `go depth 11`:
+exactly one consumer: the late move reduction guard at `src/search.cpp`
+`negamax`, where `!is_check_move` is the **last** conjunct. That makes a
+second, cheaper saving available in the same neighbourhood as this step's, and
+it was counted rather than argued -- instrumented copy, kiwipete `go depth 11`:
 
 | site | calls |
 |---|---|
-| `is_check(game)` at `src/search.cpp:929` | 888738 |
+| `is_check(game)` at `src/search.cpp` `negamax` | 888738 |
 | the guard's cheap prefix true (`ply>0 && depth>=3 && legal_moves_counter>3 && !is_capture && !MOVE_PROMOTED && !is_in_check`) | 179590 |
 
 So the flag is consumed by about 20 % of the calls that compute it, and the

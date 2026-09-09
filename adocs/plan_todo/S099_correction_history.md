@@ -109,51 +109,54 @@ time control, so 8+0.08 likely understates it.
 ### 2. Shape for chesso
 
 **Pawn key: absent, this step adds it.** Verified: `board_t` carries one `hash`
-(src/data_structures.hpp:298); the three-function alphabet
+(`src/data_structures.hpp` `hash`); the three-function alphabet
 `add_piece`/`remove_piece`/`move_piece` xors only `board->hash`
-(src/bitboard.cpp:685, src/bitboard.cpp:702, src/bitboard.cpp:724-725);
-`unmake_move` restores the hash by copy from the history entry
-(src/bitboard.cpp:992); `compute_full_hash` (src/bitboard.cpp:1518) is the only
-from-scratch rebuild. No pawn-only key exists anywhere. Plan under INV-4:
-`hash_t pawn_hash` in `board_t`, xored in the three alphabet functions when the
-piece is W_PAWN/B_PAWN, reusing the existing `piece_randoms` -- pawn placement
-only, both colours in one key, **no side/castling/ep randoms** (side-to-move is
-the table's index dimension instead, and #1663 says no kings). Promotion
-removes the pawn from the key via the existing `remove_piece` call
-(src/bitboard.cpp:803); en passant removes the victim (src/bitboard.cpp:812).
-Restore on unmake by copy, like `hash`: one `pawn_hash` field in
-`history_entry_t` (16 -> 24 bytes -- a timing question the DEC-083 run answers;
-the alternative, open-coded xor-undo at unmake's four pawn-touching sites,
-avoids the growth at the cost of more edit sites). FEN load and `cleanup_board`
-(src/bitboard.cpp:1494) get a `compute_full_pawn_hash` sibling, and the
-make/unmake asserts alongside `eval_accumulators_match` (src/bitboard.cpp:742,
-src/bitboard.cpp:875, src/bitboard.cpp:997) check key-equals-recomputation in
-debug builds. Never rebuilt in `evaluate()` -- INV-4, and `excludes:` already
-bars touching `evaluate()` at all.
+(`src/bitboard.cpp` `add_piece`, `src/bitboard.cpp` `remove_piece`,
+`src/bitboard.cpp` `move_piece`); `unmake_move` restores the hash by copy from
+the history entry (`src/bitboard.cpp` `unmake_move_impl`); `compute_full_hash`
+(`src/bitboard.cpp` `compute_full_hash`) is the only from-scratch rebuild. No
+pawn-only key exists anywhere. Plan under INV-4: `hash_t pawn_hash` in
+`board_t`, xored in the three alphabet functions when the piece is
+W_PAWN/B_PAWN, reusing the existing `piece_randoms` -- pawn placement only,
+both colours in one key, **no side/castling/ep randoms** (side-to-move is the
+table's index dimension instead, and #1663 says no kings). Promotion removes
+the pawn from the key via the existing `remove_piece` call (`src/bitboard.cpp`
+`make_move_impl`); en passant removes the victim (`src/bitboard.cpp`
+`make_move_impl`). Restore on unmake by copy, like `hash`: one `pawn_hash`
+field in `history_entry_t` (16 -> 24 bytes -- a timing question the DEC-083 run
+answers; the alternative, open-coded xor-undo at unmake's four pawn-touching
+sites, avoids the growth at the cost of more edit sites). FEN load and
+`cleanup_board` (`src/bitboard.cpp` `cleanup_board`) get a
+`compute_full_pawn_hash` sibling, and the make/unmake asserts alongside
+`eval_accumulators_match` -- two in `src/bitboard.cpp` `make_move_impl` and one
+in `src/bitboard.cpp` `unmake_move_impl` --
+check key-equals-recomputation in debug builds. Never rebuilt in `evaluate()`
+-- INV-4, and `excludes:` already bars touching `evaluate()` at all.
 
 **Table**: beside the TT per `touches:` -- a static next to `tt`
-(src/chesso.cpp:48), wired through `search_state_t` like `state.tt`
-(src/chesso.cpp:674-675), surviving across `go` within a game, cleared in
-`command_ucinewgame` (src/chesso.cpp:1148-1161) where `tt_reset` already runs.
-Shape as published FORM: `entry[stm][pawn_hash & (N-1)]`, N a power of two,
-int32 entries. Indexing by side to move is CPW's "Color and Hash", and it is
-what INV-5 requires: eval and search score are both stm-relative at the node,
-so the diff is stm-relative and White's and Black's errors for one structure
-must not share a slot.
+(`src/chesso.cpp` `tt`), wired through `search_state_t` like `state.tt`
+(`src/chesso.cpp` `iterative_deepening_search`), surviving across `go` within a
+game, cleared in `command_ucinewgame` (`src/chesso.cpp` `command_ucinewgame`)
+where `tt_reset` already runs. Shape as published FORM: `entry[stm][pawn_hash &
+(N-1)]`, N a power of two, int32 entries. Indexing by side to move is CPW's
+"Color and Hash", and it is what INV-5 requires: eval and search score are both
+stm-relative at the node, so the diff is stm-relative and White's and Black's
+errors for one structure must not share a slot.
 
 **Where it applies, post-S108**: at S108's single compute-or-read site (top of
-node, after the in-check test at src/search.cpp:687 and the TT-cutoff return at
-src/search.cpp:678-681). `corrected = raw + correction(stm, pawn_hash)`,
-computed once. Consumers see **corrected**: the stack slot `static_evals[ply]`
-(so improving compares corrected values -- Lynx #1999 orders correction before
-improving, per S108 section 7), the RFP margin (src/search.cpp:767-771 today),
-then S109 futility, S114 null-move scaling, S116 razoring as they land. The TT
-eval field stores **raw** -- S108 section 7 reserves exactly this, and the SF
-layering above is the published reason. The update diff uses **raw** in v1
-(`best_so_far - raw_eval`): published prose does not pin raw-vs-corrected for
-the diff, raw is the CPW definition and the testable one; the SF-style residual
-variant is a recorded later tweak. Quiescence is untouched in v1 -- stand-pat
-correction is a possible later verdict, stated here so the scope is explicit.
+node in `src/search.cpp` `negamax`, after the in-check test and the TT-cutoff
+return). `corrected = raw + correction(stm,
+pawn_hash)`, computed once. Consumers see **corrected**: the stack slot
+`static_evals[ply]` (so improving compares corrected values -- Lynx #1999
+orders correction before improving, per S108 section 7), the RFP margin
+(`src/search.cpp` `negamax` today), then S109 futility, S114 null-move scaling,
+S116 razoring as they land. The TT eval field stores **raw** -- S108 section 7
+reserves exactly this, and the SF layering above is the published reason. The
+update diff uses **raw** in v1 (`best_so_far - raw_eval`): published prose does
+not pin raw-vs-corrected for the diff, raw is the CPW definition and the
+testable one; the SF-style residual variant is a recorded later tweak.
+Quiescence is untouched in v1 -- stand-pat correction is a possible later
+verdict, stated here so the scope is explicit.
 
 ### 3. Implementation sketch
 
@@ -168,19 +171,23 @@ round-trip equals `compute_full_pawn_hash`; a knight move leaves the key
 untouched.
 
 (b) **Table + update + apply -- the SPRT.** Update beside negamax's one store
-(src/search.cpp:1099-1101), where `type`, `best_move` and the raw eval are all
-in scope and `state->aborted` has already returned (src/search.cpp:996). Gate:
+(`src/search.cpp` `negamax`), where `type`, `best_move` and the raw eval are
+all
+in scope and `state->aborted` has already returned (`src/search.cpp`
+`negamax`). Gate:
 not in check, raw eval present (not TT_EVAL_NONE), best move absent-or-quiet
 (`MOVE_CAPTURE`), bound consistency by `type` (TT_BETA needs `score >= raw`,
 TT_ALPHA needs `score <= raw`, TT_PV always), `|best_so_far| < MATE_MIN` -- and
 the diff uses `best_so_far`, **never** the ply-normalized `to_store`
-(src/search.cpp:1099). Apply at the S108 site; corrected value clamped inside
+(`src/search.cpp` `negamax`). Apply at the S108 site; corrected value clamped
+inside
 `+/-(MATE_MIN - 1)`. Unit tests: update bounded (drive huge diffs, entry stays
 inside the clamp); sign (a positive diff raises the corrected eval for the same
 stm+key, and leaves the other stm's slot untouched); no update in check / on a
 capture best move / on a mate score / on a wrong-direction bound -- each with
 the precondition established first, non-vacuously; correction applied at the
-consumer (plant an entry, the RFP decision at src/search.cpp:771 shifts) and
+consumer (plant an entry, the RFP decision at `src/search.cpp` `negamax`
+shifts) and
 nowhere else (the TT eval field reads back raw with a planted correction live);
 the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
 
@@ -229,9 +236,9 @@ the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
   S100's diagnosis runs first in plan order; keep it that way, or the
   diagnostic reads a symptom this step has papered over.
 - - **Never correct a lazy bound.** The S108 site computes full `evaluate()`;
-  quiescence's `evaluate_lazy()` bound (src/search.cpp:349) is window-relative
-  and adding a correction to it is neither a bound nor a score. Out of scope in
-  v1 anyway.
+  quiescence's `evaluate_lazy()` bound (`src/search.cpp` `quiescence`) is
+  window-relative and adding a correction to it is neither a bound nor a score.
+  Out of scope in v1 anyway.
 
 ### 6. Measurement
 

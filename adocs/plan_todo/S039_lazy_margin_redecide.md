@@ -20,15 +20,14 @@ done:
 
 ## What is stale
 
-`src/evaluation.hpp:274-282` says 150 is above the largest correction observed,
-and adds that the figure "is still the whole correction only because king safety
-ships at zero weight; the margin is re-decided from measured data once it is
-fitted, and tools/eval_spread is what measures it".
+`src/evaluation.hpp` `evaluate_expensive_terms` says 150 is above the largest
+correction observed, and adds that the figure "is still the whole correction
+only because king safety ships at zero weight; the margin is re-decided from
+measured data once it is fitted, and tools/eval_spread is what measures it".
 
-King safety has not shipped at zero weight since S027
-(`src/evaluation.cpp:788-791`). The margin is 184, moved by S085's SPSA and
-not by a spread measurement. The re-decision the comment promises has not
-happened.
+King safety has not shipped at zero weight since S027 (`src/evaluation.cpp`
+`king_safety_mg`). The margin is 184, moved by S085's SPSA and not by a spread
+measurement. The re-decision the comment promises has not happened.
 
 ## What it costs now
 

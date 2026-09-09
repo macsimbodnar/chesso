@@ -71,46 +71,55 @@ differs across engines and nothing in the record says it matters.
 ### 2. Shape for chesso
 
 **The base this scales** (all S089): `compute_search_time_budget()`
-src/chesso.cpp:454-507 — base = remaining/movestogo, or 5 % of remaining + 50 %
-of increment at sudden death (src/chesso.cpp:471-479); hard = 300 % clamped to
-`remaining - MOVE_OVERHEAD_MS` and floored (src/chesso.cpp:481,
-src/chesso.cpp:488-499); soft = 60 % clamped to hard (src/chesso.cpp:482,
-src/chesso.cpp:504). `search_time_scale_percent()` src/chesso.cpp:510-534 is
+`src/chesso.cpp` `compute_search_time_budget` — base = remaining/movestogo, or
+5 % of remaining + 50 % of increment at sudden death (`src/chesso.cpp`
+`tokenize_input`); hard = 300 % clamped to `remaining - MOVE_OVERHEAD_MS` and
+floored (`src/chesso.cpp` `tokenize_input`, `src/chesso.cpp`
+`stop_search_after_ms`); soft = 60 % clamped to hard, both in
+`src/chesso.cpp` `compute_search_time_budget`.
+`search_time_scale_percent()` `src/chesso.cpp` `search_time_scale_percent` is
 the existing scaler — `100 - 4*stability (cap 8) + falling grant (≤50)`,
-floored at `TM_SCALE_MIN_PERCENT` 30. Applied after each completed iteration at
-src/chesso.cpp:864-879: `soft = base * scale / 100`, clamped to hard at
-src/chesso.cpp:873-875; consulted between iterations only,
-src/chesso.cpp:920-927. `scale_time` is true only on the clock path
-(src/chesso.cpp:1402); `go movetime` sets both limits to the named time and
-never scales (src/chesso.cpp:1380-1384); `go ponder` is ignored
-(src/chesso.cpp:1346-1350). The nine `Tm*` constants:
-src/search_params.hpp:270-320.
+floored at `TM_SCALE_MIN_PERCENT` 30. Applied after each completed iteration in
+`src/chesso.cpp` `iterative_deepening_search`: `soft = base * scale / 100`,
+clamped to hard in the same place; consulted
+between iterations only, `src/chesso.cpp` `iterative_deepening_search`.
+`scale_time` is true only on the clock path (`src/chesso.cpp`
+`command_position`); `go movetime` sets both limits to the named time and never
+scales (`src/chesso.cpp` `command_position`); `go ponder` is ignored
+(`src/chesso.cpp` `command_position`). The nine `Tm*` constants:
+`src/search_params.hpp` `TM_SOFT_PERCENT` to `src/search_params.hpp`
+`TM_SCALE_MIN_PERCENT`.
 
 **What per-root-move attribution needs.** The node counter is one global:
-`search_state_t::explored_nodes` (src/data_structures.hpp:453), incremented at
-negamax entry (src/search.cpp:608) and quiescence (src/search.cpp:302), reset
-per depth iteration (chesso.cpp:726), summed into `result.total_node_explored`
-(src/chesso.cpp:804). There is no root loop of its own — the root is `ply == 0`
-inside negamax's shared move loop (src/search.cpp:896-1063; root-only branches
-src/search.cpp:1041, src/search.cpp:1074). The counter arithmetic: at `ply ==
-0` only, snapshot `explored_nodes` before `make_move` (src/search.cpp:917),
-take `after - before` past `unmake_move` (src/search.cpp:994), add the delta to
-a bucket **keyed by the move** — `pick_next_move` (src/search.cpp:915) reorders
-in place, so index i is not stable across iterations. Buckets live in
-`search_state_t`, which is constructed per `go` (chesso.cpp:674) and survives
-iterations and aspiration re-searches (src/chesso.cpp:774-795) — so they
+`search_state_t::explored_nodes` (`src/data_structures.hpp` `explored_nodes`),
+incremented at negamax entry (`src/search.cpp` `negamax`) and quiescence
+(`src/search.cpp` `quiescence`), reset per depth iteration and summed into
+`result.total_node_explored`, both in `src/chesso.cpp`
+`iterative_deepening_search`. There is no root loop of its own — the root is
+`ply == 0` inside the shared move loop of `src/search.cpp` `negamax`, whose
+root-only branches are the only place the distinction shows. The
+counter arithmetic: at `ply == 0` only, snapshot `explored_nodes` before
+`make_move`, take `after - before` past `unmake_move`, add the delta to a
+bucket **keyed by the move** — `pick_next_move` reorders in
+place, so index i is not stable across iterations. Buckets live in
+`search_state_t`, which `src/chesso.cpp` `iterative_deepening_search`
+constructs per `go` and which survives iterations and aspiration
+re-searches — so they
 accumulate across both, the published reading. Residual per `search()` call:
-exactly the root's own +1 at src/search.cpp:608 (NMP is gated `ply > 0`,
-src/search.cpp:822; nothing else at the root counts nodes before the loop) —
-the accepts' sum test pins `1 + sum(deltas) ==` the call's counter growth, so a
-later root-level feature breaks it loudly.
+exactly the root's own +1 at the top of `src/search.cpp` `negamax` (NMP is
+gated `ply > 0` further down; nothing else at the root counts nodes before
+the loop) — the accepts' sum test pins `1 + sum(deltas) ==` the call's counter
+growth, so a later root-level feature breaks it loudly.
 
-**Where the multiplier applies:** the src/chesso.cpp:864-879 block.
-`fraction_pct = 100 * bucket[search_result.best_move] / max(1, sum(buckets))`,
-integer like the rest of the TM code; multiply the node factor onto `scale`;
-the existing clamp to hard (src/chesso.cpp:873-875) already bounds the top.
+**Where the multiplier applies:** the `src/chesso.cpp`
+`iterative_deepening_search` block. `fraction_pct = 100 *
+bucket[search_result.best_move] / max(1, sum(buckets))`, integer like the rest
+of the TM code; multiply the node factor onto `scale`; the existing clamp to
+hard (`src/chesso.cpp` `iterative_deepening_search`) already bounds the top.
 Expose `uci_last_bestmove_node_percent` beside the S089 accessors
-(chesso.cpp:71-93, uci.hpp:144-153) for the probe.
+(`src/chesso.cpp` `last_aspiration_failures` to `src/chesso.cpp`
+`last_time_scale_percent`, `src/uci.hpp` `uci_last_aspiration_failures` to
+`src/uci.hpp` `uci_last_time_scale_percent`) for the probe.
 
 ### 3. Implementation sketch
 
@@ -123,16 +132,17 @@ Two increments, one verdict.
    proof is an interleaved timing (expect noise; the branch predicts to
    not-taken everywhere but the root).
 2. 2. **The multiplier.** New constants (par.4), factor into the
-   src/chesso.cpp:864 block, clamp the combined product (par.5), tests, then
-   the SPRT.
+   `src/chesso.cpp` `iterative_deepening_search` block, clamp the combined
+   product (par.5), tests, then the SPRT.
 
 Tests, all deterministic (fixed depth, no clock, the S089 probe pattern at
-tests/test_engine.cpp:866-981): the pure node-scale function is monotone
-decreasing in the fraction and matches the Lynx worked examples at the seed
-constants; the sum identity above; a stalemate-adjacent one-legal-move
-position drives the fraction to 100 % and the probe's reported scale below
-100; the product clamp — soft never exceeds hard (test_engine.cpp:449-533
-already asserts the budget side); `go movetime` unscaled (accepts).
+`tests/test_engine.cpp` "uci reports the options the GUI needs"): the pure
+node-scale function is monotone decreasing in the fraction and matches the Lynx
+worked examples at the seed constants; the sum identity above; a
+stalemate-adjacent one-legal-move position drives the fraction to 100 % and the
+probe's reported scale below 100; the product clamp — soft never exceeds hard
+(`test_engine.cpp` "generation never lands on the reserved 0" already asserts
+the budget side); `go movetime` unscaled (accepts).
 
 ### 4. Constants and seeds
 
@@ -196,25 +206,27 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   hazard's shape — see par.6.
 - - **Multiplicative stacking underspends.** Stability floor 30 % times a node
   factor at fraction → 1 craters the product; apply `TM_SCALE_MIN_PERCENT` to
-  the *combined* scale, and state in the src/chesso.cpp:864 block that three
-  scalers meet there (the accepts require it). The top is already the hard
-  clamp (src/chesso.cpp:873-875) — never touched, per excludes.
+  the *combined* scale, and state in the `src/chesso.cpp`
+  `iterative_deepening_search` block that three scalers meet there (the accepts
+  require it). The top is already the hard clamp (`src/chesso.cpp`
+  `iterative_deepening_search`) — never touched, per excludes.
 - **The counting is easy to get subtly wrong.** Weiss shipped a follow-up
   "Fix node counts for root moves" (#753, ~neutral at 51k games); Stormphrax
   found AW widenings uncounted (ca2ed2b217); Stockfish moved the effort
   snapshot "back to its original place right before making the move"
   (944bee7117). The sum-identity test is the local answer to all three.
 - - **Edge cases chesso actually has:** fastchess sends `wtime/btime winc/binc`
-  (sudden death — the src/chesso.cpp:471-479 path); `movestogo` arrives only at
-  cyclic controls (rating.sh-style), and the factor applies downstream of the
-  budget so both paths get it; `go ponder` is ignored
-  (src/chesso.cpp:1346-1350) so there is no ponderhit accounting; the first
-  iteration is not abortable (S089 finding), unchanged here; a `go movetime`
-  time is never scaled (src/chesso.cpp:1380-1384, accepts).
-- - **Bucket the move, not the index** (src/search.cpp:915 reorders), and mind
-  promotions — Stormphrax's "store move node counts directly in the root move"
-  was "functional in the case that the best move is a promotion" (e3c86966b1):
-  key on the full move encoding, not from/to.
+  (sudden death — the `src/chesso.cpp` `tokenize_input` path); `movestogo`
+  arrives only at cyclic controls (rating.sh-style), and the factor applies
+  downstream of the budget so both paths get it; `go ponder` is ignored
+  (`src/chesso.cpp` `command_position`) so there is no ponderhit accounting;
+  the first iteration is not abortable (S089 finding), unchanged here; a `go
+  movetime` time is never scaled (`src/chesso.cpp` `command_position`,
+  accepts).
+- - **Bucket the move, not the index** (`src/search.cpp` `negamax` reorders),
+  and mind promotions — Stormphrax's "store move node counts directly in the
+  root move" was "functional in the case that the best move is a promotion"
+  (e3c86966b1): key on the full move encoding, not from/to.
 
 ### 6. Measurement
 
@@ -231,7 +243,8 @@ figures decided what to try here, never what to conclude (DEC-019).
 ### 7. Interactions
 
 - **S089 (done)** is the base: this multiplies its two scalers and changes
-  neither, per excludes; the three meet at chesso.cpp:864-879.
+  neither, per excludes; the three meet at `chesso.cpp`
+  `iterative_deepening_search`.
 - **S115 (order 28, before this at 30):** re-sweeping the widening schedule
   changes how often the root is re-searched, which moves both bucket
   composition and denominator — land S115 first (plan order already does),

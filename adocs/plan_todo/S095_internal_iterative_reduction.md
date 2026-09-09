@@ -79,35 +79,34 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
 
 ### 2. Shape for chesso
 
-- - The condition: tt_get_entry (src/search.cpp:663) returns nullptr on a miss
-  (transposition_table.cpp:96-103), and src/search.cpp:667 already computes
-  `tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0`. **The probe
-  exposes both variants today** — `tt_entry == nullptr` is entry-absent,
-  non-null with `best_move == 0` is entry-present-move-empty — and `tt_move ==
-  0` is their union, the published winning condition, one variable already in
-  scope. Verified who writes moveless entries: negamax never (assert
-  src/search.cpp:1069, store src/search.cpp:1099-1101); **quiescence does**,
-  since S094 (src/search.cpp:432-434 stand-pat beta, src/search.cpp:556-557
-  mated, src/search.cpp:576-578 fail-low), all at TT_DEPTH_QS. So "entry with
-  no move" concretely means "only quiescence has resolved this position" — the
-  unimportance signal the technique prices. The goal's "table entry carries no
-  move" is read as the union: a missing entry carries no move either.
-- - The site: node level, after the TT-cutoff block (src/search.cpp:675-681)
-  and the quiescence drop (src/search.cpp:684), before the RFP block
-  (src/search.cpp:765) — before all forward pruning, the placement with the two
-  positive records. Cut `depth` once; everything downstream reads the reduced
-  depth by construction: the RFP gate (src/search.cpp:766), the null-move
-  formula (src/search.cpp:814), S109's move-loop gates, S098's table row via
-  lmr_reduction(depth, ...) (src/search.cpp:962), child_depth
-  (src/search.cpp:943), and the store (src/search.cpp:1100), which then records
-  the depth the node was actually searched to.
+- - The condition: tt_get_entry (`src/search.cpp` `negamax`) returns nullptr on
+  a miss (`transposition_table.cpp` `tt_get_entry`), and `src/search.cpp`
+  `negamax` already computes `tt_move = (tt_entry != nullptr) ?
+  tt_entry->best_move : 0`. **The probe exposes both variants today** —
+  `tt_entry == nullptr` is entry-absent, non-null with `best_move == 0` is
+  entry-present-move-empty — and `tt_move == 0` is their union, the published
+  winning condition, one variable already in scope. Verified who writes
+  moveless entries: `src/search.cpp` `negamax` never -- an assert above its
+  store says so; **quiescence does**, since S094 -- `src/search.cpp`
+  `quiescence` stores on stand-pat beta, on mate and on a fail-low, all at
+  TT_DEPTH_QS. So "entry with no move" concretely means "only quiescence has
+  resolved this position" — the unimportance signal the technique prices. The
+  goal's "table entry carries no move" is read as the union: a missing entry
+  carries no move either.
+- - The site: node level in `src/search.cpp` `negamax`, after the TT-cutoff
+  block and the quiescence drop and before the RFP block — before all forward
+  pruning, the placement with the two positive records. Cut `depth` once;
+  everything downstream in the same function reads the reduced depth by
+  construction: the RFP gate, the null-move formula, S109's move-loop gates,
+  S098's table row via `lmr_reduction(depth, ...)`, `child_depth`, and the
+  store, which then records the depth the node was actually searched to.
 - - No ply guard: the root re-stores its entry with a move every iteration, so
   from iteration 2 it has a TT move — and Lynx's allow-root record is +1.39. No
   in-check condition either (the published simple form has none; is_in_check
-  src/search.cpp:687 sits below the site anyway). Quiescence is untouched — no
-  depth to cut (qply cap only), and no published implementation reduces there.
-  No IID remnant exists in the tree (grepped; specs.md "absent, search" lists
-  IIR as absent) — the excludes line is scope, not a deletion.
+  `src/search.cpp` `negamax` sits below the site anyway). Quiescence is
+  untouched — no depth to cut (qply cap only), and no published implementation
+  reduces there. No IID remnant exists in the tree (grepped; specs.md "absent,
+  search" lists IIR as absent) — the excludes line is scope, not a deletion.
 
 ### 3. Implementation sketch
 
@@ -118,8 +117,8 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
    repo's recurring bug class — null move's depth-0 mate miss). At the seeds
    the floor never binds; it exists so no SPSA value can open that path.
 2. Tests, red first. The harness is the exposed state by construction:
-   search_fen (tests/test_search.cpp:37) resets the table and makes one
-   fixed-depth search() call, so every node starts with tt_move == 0.
+   search_fen (`tests/test_search.cpp` `search_fen`) resets the table and makes
+   one fixed-depth search() call, so every node starts with tt_move == 0.
    - The accepts' precondition pair: cold-table search at fixed depth >=
      IIR_MIN_DEPTH, node count recorded; then pre-store an entry with a move
      for the root position (a prior shallower search through search_fen_with
@@ -127,11 +126,12 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
      the "entry with a move must not be reduced" side, failing if the
      precondition is absent.
    - The accepts' mate case: a forced mate inside the reduced depth added
-     beside "pruning does not hide a forced mate",
-     tests/test_search.cpp:2808 and "pruning does not hide a mate against
-     the material leader", tests/test_search.cpp:2847, observed red with the
-     guard removed (threshold to 0 locally, observed, reverted — the S033
-     protocol; cold fixed-depth search is where it bites).
+     beside "pruning does not hide a forced mate", `tests/test_search.cpp`
+     "pruning does not hide a forced mate" and "pruning does not hide a mate
+     against the material leader", `tests/test_search.cpp` "pruning does not
+     hide a mate against the material leader", observed red with the guard
+     removed (threshold to 0 locally, observed, reverted — the S033 protocol;
+     cold fixed-depth search is where it bites).
    - Both existing mate suites re-run; fast suite green. Node counts move by
      construction — INV-6 takes the SPRT path; search_bench depths 9/12 in
      the stamp.
@@ -182,17 +182,18 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   LMR: Lynx measured that duplicate at **-8.08** with IIR present (#2253);
   S098's file carries the same warning from its side.
 - - **Re-visits do not re-reduce forever here.** The reduced visit stores its
-  entry at the reduced depth *with a move* (src/search.cpp:1069); the next
-  visit at the same nominal depth finds the move — no cutoff, stored depth one
-  short (src/search.cpp:228) — and is not reduced. The loop terminates because
-  every negamax store carries a move. Residual re-fire paths — a slot lost to a
-  collision (key mismatch reads as no-entry), a quiescence store recapturing
-  the slot across a `go` boundary (in-generation it cannot:
-  transposition_table.cpp:158 replaces only at depth >= entry->depth, and
-  TT_DEPTH_QS loses to any main depth) — cost 1 ply once per visit, bounded.
-  The published mitigation for the saturated-table case is the depth threshold
-  (Ed's stated concern on talkchess), and S105's Hash 16 regime is deliberately
-  high-pressure, so the threshold is load-bearing here, not decorative.
+  entry at the reduced depth *with a move* (`src/search.cpp` `negamax`); the
+  next visit at the same nominal depth finds the move — no cutoff, stored depth
+  one short (`src/search.cpp` `tt_entry_answers`) — and is not reduced. The
+  loop terminates because every negamax store carries a move. Residual re-fire
+  paths — a slot lost to a collision (key mismatch reads as no-entry), a
+  quiescence store recapturing the slot across a `go` boundary (in-generation
+  it cannot: `transposition_table.cpp` `tt_store_entry` replaces only at depth
+  >= entry->depth, and TT_DEPTH_QS loses to any main depth) — cost 1 ply once
+  per visit, bounded. The published mitigation for the saturated-table case is
+  the depth threshold (Ed's stated concern on talkchess), and S105's Hash 16
+  regime is deliberately high-pressure, so the threshold is load-bearing here,
+  not decorative.
 - **S097 needs a TT move by definition — no overlap.** Singular extension
   verifies a node whose entry has a move and sufficient depth/bound; IIR
   fires only where tt_move == 0 — mutually exclusive at a node. The one real
@@ -206,7 +207,7 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   play, and the cold-table fixed-depth mate tests are where a wrong floor or
   threshold shows.
 - - **Store the reduced depth.** Mutating `depth` before the loop makes
-  src/search.cpp:1100 store it correctly; cutting a copy and storing the
+  `src/search.cpp` `negamax` store it correctly; cutting a copy and storing the
   original would claim depth the node never searched and poison deeper cutoffs.
 
 ### 6. Measurement

@@ -1,6 +1,6 @@
 id:         S112
 goal:       quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
-accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (tests/test_search.cpp:993) and "mate is recognised at depth zero" (tests/test_search.cpp:1067)
+accepts:    an SPRT verdict, recorded whatever it is; the prune path raises best_value to the futility value rather than dropping it, because quiescence is fail-soft and skipping that assignment returns bounds that are too low; no futility while in check, at a promotion, or on a move that gives check; the margin is a constant in src/search_params.hpp with a range; the two fast-suite quiescence mate cases still pass -- "a side in check may not stand pat" (`tests/test_search.cpp` "a side in check may not stand pat") and "mate is recognised at depth zero" (`tests/test_search.cpp` "mate is recognised at depth zero")
 touches:    src/search.cpp quiescence, src/search_params.hpp
 excludes:   delta pruning, which is S022 and is re-decided after this
 decisions:  DEC-019
@@ -100,73 +100,76 @@ zero still buys S022 its baseline.
 
 Line numbers at `cf89e22`; re-locate by symbol if drifted.
 
-- - Quiescence's capture handling is two loops: the **filter loop** at
-  src/search.cpp:467-489 compacts survivors (non-captures dropped at
-  src/search.cpp:469, S015's SEE gate at src/search.cpp:481-484: `!in_check &&
-  !capture_cannot_lose && !see_ge(move, 0)` skips), then the **search loop** at
-  src/search.cpp:507-545. `best_value` is initialised at src/search.cpp:491
-  (`in_check ? MIN : stand_pat`, fail-soft) — after the filter loop, which the
-  fail-soft raise must respect.
-- - **The futility test sits in the filter loop, above src/search.cpp:481.**
-  The ordering benefit is one-sided: the test is three adds and a compare,
-  `see_ge` rebuilds `attackers_to_square` per exchange round (src/bitboard.cpp:
-  1103-1130), and `capture_cannot_lose` (src/bitboard.cpp:1160-1174, two
-  lookups) sits between. Futility first, cannot-lose second, `see_ge` last.
+- - Quiescence's capture handling is two loops, both in `src/search.cpp`
+  `quiescence`: the **filter loop** compacts survivors, dropping non-captures
+  and then applying S015's SEE gate (`!in_check && !capture_cannot_lose &&
+  !see_ge(move, 0)` skips), and then the **search loop** runs. `best_value` is
+  initialised between them (`in_check ? MIN : stand_pat`, fail-soft) — after
+  the filter loop, which the fail-soft raise must respect.
+- - **The futility test sits in the filter loop, above the SEE gate.** The
+  ordering benefit is one-sided: the test is three adds and a compare, `see_ge`
+  rebuilds `attackers_to_square` per exchange round (src/bitboard.cpp:
+  1103-1130), and `capture_cannot_lose` (`src/bitboard.cpp`
+  `capture_cannot_lose`, two lookups) sits between. Futility first, cannot-lose
+  second, `see_ge` last.
 - - **Victim values: none of the three existing tables; a fourth, owned by the
-  search.** `piece_values_abs` (src/evaluation.cpp:41-43) is the MVV ordering
-  band table — king at 100000, bands clearing by exactly 100, excluded from
-  tuning for that reason (src/search_params.hpp:29-32) — wiring pruning to it
-  couples a margin to the CLAUDE.md band hazard. `see_value`
-  (src/bitboard.cpp:1096) is deliberately file-local; exporting it couples
-  futility to every future SEE retune. `piece_value` (src/eval_tables.hpp:24,
-  {94, 327, 308, 487, 716}) is PSQT-degenerate by its own comment
-  (src/eval_tables.hpp:44-49) — only the sum is fitted, so it understates
-  victims and every refit (S126) would silently move the prune. A dedicated
-  `qs_futility_value[]` decouples all three; seed in section 4.
-- **Victim lookup mirrors capture_score's EP branch**
-  (src/evaluation.cpp:1125-1134): `board->squares[MOVE_TO(move)]` is EMPTY for
-  en passant; the victim is a pawn. SF 725c504 shipped that wrong first.
+  search.** `piece_values_abs` (`src/evaluation.cpp` `piece_values_abs`) is the
+  MVV ordering band table — king at 100000, bands clearing by exactly 100,
+  excluded from tuning for that reason (`src/search_params.hpp` "Not in the
+  set, on purpose") — wiring pruning to it couples a margin to the CLAUDE.md
+  band hazard. `see_value` (`src/bitboard.cpp` `see_value`) is deliberately
+  file-local; exporting it couples futility to every future SEE retune.
+  `piece_value` (`src/eval_tables.hpp` `piece_value`, {94, 327, 308, 487, 716})
+  is PSQT-degenerate by its own comment (`src/eval_tables.hpp` "degenerate by
+  five dimensions -- adding c to every") — only the sum is fitted, so it
+  understates victims and every refit (S126) would silently move the prune. A
+  dedicated `qs_futility_value[]` decouples all three; seed in section 4.
+- **Victim lookup mirrors capture_score's EP branch** (`src/evaluation.cpp`
+  `capture_score`): `board->squares[MOVE_TO(move)]` is EMPTY for en passant;
+  the victim is a pawn. SF 725c504 shipped that wrong first.
 - - **Promotions: exempt on the `MOVE_PROMOTED(move)` bit, before the victim
-  arithmetic.** Capturing promotions are in the loop *today*
-  (src/search.cpp:469 keeps captures); victim-only arithmetic underprices them
-  by queen-minus-pawn (CPW's alternative is a +775-class allowance; the accepts
+  arithmetic.** Capturing promotions are in the loop *today* (`src/search.cpp`
+  `quiescence` keeps captures); victim-only arithmetic underprices them by
+  queen-minus-pawn (CPW's alternative is a +775-class allowance; the accepts
   choose exemption). Ethereal b7f142a is the recorded bug. The bit test also
   pre-answers S131 (section 7).
 - **Gives-check exemption: no pre-make predicate exists.** The main search
-  learns it by `is_check(game)` *after* make_move (src/search.cpp:928-929),
+  learns it by `is_check(game)` *after* make_move (`src/search.cpp` `negamax`),
   deliberately not on captures. Two routes: (a) for a capture futility wants
   to skip, pay make/is_check/unmake and keep it if it checks — exact, no new
   machinery, cost only on would-be-skipped moves, still saves the child call
   and `see_ge`; (b) a `gives_check(board, move)` predicate — new machinery
   with a discovered-check bug surface, its own step if (a)'s cost shows.
   Start with (a).
-- - **Stand-pat post-S130**: the substitution lands between src/search.cpp:361
-  and src/search.cpp:421, so a `futility_base` computed after it consumes the
-  TT-tightened stand-pat. That is published practice — Weiss cca90ea7's "use
-  that instead for pruning heuristics" is exactly this consumer. Watch: an
-  UPPER-bound cap *lowers* futility_base and prunes more (honest — the entry
-  certifies value <= s), and it is the first bisect lever if the SPRT fails:
-  the decoupled fallback is futility_base from the pre-substitution static.
-  When the lazy shortcut fired instead, the alpha-side bound is `cheap +
-  LAZY_EVAL_MARGIN >= truth` (src/evaluation.hpp:24-27): futility_base
-  overstated, the test fires less — conservative, sound.
+- - **Stand-pat post-S130**: the substitution lands between the stand-pat
+  computation and the filter loop in `src/search.cpp` `quiescence`, so a
+  `futility_base` computed after it consumes the TT-tightened stand-pat. That
+  is published practice — Weiss cca90ea7's "use that instead for pruning
+  heuristics" is exactly this consumer. Watch: an UPPER-bound cap *lowers*
+  futility_base and prunes more (honest — the entry certifies value <= s), and
+  it is the first bisect lever if the SPRT fails: the decoupled fallback is
+  futility_base from the pre-substitution static. When the lazy shortcut fired
+  instead, the alpha-side bound is `cheap + LAZY_EVAL_MARGIN >= truth`
+  (`src/evaluation.hpp` "one it would have taken, and both are true
+  statements"): futility_base overstated, the test fires less — conservative,
+  sound.
 - - **Fail-soft arithmetic, and why S130's watched exact-store corner stays
   unreachable.** A skip needs `stand_pat + margin + victim <= alpha` with
   margin and victim non-negative, so it fires only when `stand_pat <= alpha`,
-  i.e. src/search.cpp:438 did not raise alpha and `alpha == alpha0`. Every
-  skipped futility_value is <= alpha0, the raised best_value stays <= alpha0,
-  and the src/search.cpp:576-578 store keeps TT_ALPHA_NODE. Keep the margin's
-  range floor at 0 or this argument dies.
+  i.e. `src/search.cpp` `quiescence` did not raise alpha and `alpha == alpha0`.
+  Every skipped futility_value is <= alpha0, the raised best_value stays <=
+  alpha0, and the `src/search.cpp` `quiescence` store keeps TT_ALPHA_NODE. Keep
+  the margin's range floor at 0 or this argument dies.
 
 ### 3. Implementation sketch
 
 One commit, one SPRT; tests first within it.
 
-1. **Red-first unit tests**, inlining the tests/test_search.cpp:917-931
-   `quiesce()` helper where node counts are needed (`state.explored_nodes`
-   counts entries, src/search.cpp:302). Windows are built from the engine's
-   own numbers — `evaluate()` of the FEN, the margin, the table's victim
-   value — never from a judged score (DEC-023):
+1. **Red-first unit tests**, inlining the `tests/test_search.cpp` "search:
+   quiescence" `quiesce()` helper where node counts are needed
+   (`state.explored_nodes` counts entries, `src/search.cpp` `quiescence`).
+   Windows are built from the engine's own numbers — `evaluate()` of the FEN,
+   the margin, the table's victim value — never from a judged score (DEC-023):
    - *Skipped when it cannot reach alpha*: one-capture FEN, alpha =
      stand_pat + margin + victim + 1. Expect explored_nodes == 1 and return ==
      stand_pat + margin + victim — the fail-soft raise, red against an
@@ -176,24 +179,26 @@ One commit, one SPRT; tests first within it.
    - *Promotion exemption*: a capturing promotion below the threshold is
      still searched.
    - *In-check exemption*: in-check FEN, alpha huge — every evasion searched,
-     and no mate score while a legal evasion exists (the src/search.cpp:549
-     `legal_moves == 0` guard is what futility-in-check would corrupt).
+     and no mate score while a legal evasion exists (the `src/search.cpp`
+     `quiescence` `legal_moves == 0` guard is what futility-in-check would
+     corrupt).
    - *Gives-check exemption*: a checking capture below the threshold is still
-     searched (assert check via the src/search.cpp:928 post-make pattern).
+     searched (assert check via the `src/search.cpp` `negamax` post-make
+     pattern).
    - *En passant*: an EP capture with alpha between futility_base and
      futility_base + pawn value — the squares[to]==EMPTY bug prunes it, the
      correct victim searches it.
 2. 2. **The change**: `futility_base` once, under `!in_check`, after
-   src/search.cpp:446; in the filter loop above src/search.cpp:481: not
-   promoted, not gives-check, victim from the dedicated table, skip and fold
-   futility_value into a running maximum that src/search.cpp:491 takes into
-   best_value's initialisation.
-3. Fast suite green -- the two quiescence mate cases explicitly
-   ("a side in check may not stand pat", tests/test_search.cpp:993-1027,
-   which is the case where quiescence has to search evasions to reach a
-   mate, and "mate is recognised at depth zero",
-   tests/test_search.cpp:1067-1079, where the mate is already on the board)
-   -- then the SPRT.
+   `src/search.cpp` `quiescence`; in the filter loop above `src/search.cpp`
+   `quiescence`: not promoted, not gives-check, victim from the dedicated
+   table, skip and fold futility_value into a running maximum that
+   `src/search.cpp` `quiescence` takes into best_value's initialisation.
+3. Fast suite green -- the two quiescence mate cases explicitly ("a side in
+   check may not stand pat", `tests/test_search.cpp` "a side in check may not
+   stand pat", which is the case where quiescence has to search evasions to
+   reach a mate, and "mate is recognised at depth zero",
+   `tests/test_search.cpp` "mate is recognised at depth zero", where the mate
+   is already on the board) -- then the SPRT.
 
 ### 4. Constants and seeds
 
@@ -206,27 +211,27 @@ One commit, one SPRT; tests first within it.
   trial shapes, not values. Weiss's margin: **no publishable seed** (prose
   silent; source off limits).
 - **Victim values**: seed from this repo's own exchange scale — `see_value`'s
-  {100, 300, 300, 500, 900} (src/bitboard.cpp:1096) copied into the new
-  array, not shared with it. Internal reuse, no provenance question; the
+  {100, 300, 300, 500, 900} (`src/bitboard.cpp` `see_value`) copied into the
+  new array, not shared with it. Internal reuse, no provenance question; the
   margin and this scale share one job (absorbing the PSQT part of a victim's
   worth), so sweep them together at S127.
 
 ### 5. Pitfalls
 
-- - **Futility while in check corrupts mate detection**: src/search.cpp:549
-  declares mate on `legal_moves == 0`; a pruned evasion fakes it. The
-  `!in_check` guard is load-bearing exactly as it is for S015's gate.
+- - **Futility while in check corrupts mate detection**: `src/search.cpp`
+  `quiescence` declares mate on `legal_moves == 0`; a pruned evasion fakes it.
+  The `!in_check` guard is load-bearing exactly as it is for S015's gate.
 - **The band hazard**: `piece_values_abs` is ordering, not price, and
-  search_params.hpp:29-32 already refuses to tune it. Futility must not
-  become the back door that couples pruning to it — section 2 names the table
-  to use instead.
+  `src/search_params.hpp` "Not in the set, on purpose" already refuses to tune
+  it. Futility must not become the back door that couples pruning to it —
+  section 2 names the table to use instead.
 - **Stacking with S015's gate**: futility runs first and is cheaper; both
   skip only what cannot beat bounds the node already holds (stand-pat floors
   the return either way). Asymmetry to know: the futility skip raises
   best_value, S015's skip today does not — changing S015's skip is S022's
   business, not this commit's.
-- **En passant**: victim is not on MOVE_TO; evaluation.cpp:1127-1130 is the
-  in-repo pattern, SF 725c504 the published bug.
+- **En passant**: victim is not on MOVE_TO; `evaluation.cpp` `capture_score` is
+  the in-repo pattern, SF 725c504 the published bug.
 - **Promotions and S131**: the MOVE_PROMOTED exemption must precede the
   victim arithmetic. When S131 admits *non-capture* promotions they arrive
   with victim 0 and futility_value == futility_base — an unexempted test
@@ -236,9 +241,9 @@ One commit, one SPRT; tests first within it.
   |eval| + margin + 900, far under MATE_MIN 48000; alpha inside the mate band
   prunes every capture into an honest fail-low. CPW's near-mate guard is for
   main-search margins — note it in a comment, do not add a dead guard.
-- - **MaxQsearchDepth**: src/search.cpp:446 returns before the loop, so the two
-  never compose; S085's SPSA may raise the 8, which makes this prune's savings
-  bigger, not smaller — S127's re-sweep covers it.
+- - **MaxQsearchDepth**: `src/search.cpp` `quiescence` returns before the loop,
+  so the two never compose; S085's SPSA may raise the 8, which makes this
+  prune's savings bigger, not smaller — S127's re-sweep covers it.
 
 ### 6. Measurement
 

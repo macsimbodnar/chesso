@@ -78,12 +78,12 @@ Stash #19 (+8.05/7424) and Lynx #429 (+13.5/4903).
 
 ### 2. Shape for chesso
 
-- - **Site: after the RFP block (src/search.cpp:733-772), before the null-move
-  block (src/search.cpp:774-841).** Lynx #2180 measured razoring *before* RFP
-  at -1.06 over 28174 games -- stay after. RFP is the mirror: a static bound
-  returned when eval is `RFP_MARGIN * depth` **above beta**
-  (src/search.cpp:771); razoring drops to quiescence when eval is a margin
-  **below alpha**. Non-PV windows are null (src/search.cpp:973), so the two
+- - **Site: after the RFP block and before the null-move block, both in
+  `src/search.cpp` `negamax`.** Lynx #2180 measured razoring *before* RFP at
+  -1.06 over 28174 games -- stay after. RFP is the mirror: a static bound
+  returned when eval is `RFP_MARGIN * depth` **above beta**; razoring drops to
+  quiescence when eval is a margin **below alpha**. Non-PV windows are null, so
+  the two
   conditions are disjoint by arithmetic -- the pair covers both tails of the
   same eval.
 - **Input**: post-S108 the static eval is computed-or-read at the top of the
@@ -93,29 +93,31 @@ Stash #19 (+8.05/7424) and Lynx #429 (+13.5/4903).
   asserted not assumed (S114's sentinel rule).
 - - **The exact form** (verified, per the accepts): at `!is_pv && !is_in_check
   && depth <= RAZOR_DEPTH && alpha < MATE_MIN && alpha > -MATE_MIN`
-  (src/search.cpp:766 is the guard row to mirror, alpha for beta; MATE_MIN
-  48000 at src/search.cpp:17) and `static_eval + RAZOR_MARGIN <= alpha`: `score
-  = quiescence(alpha, beta, ply, 0, game, state)` (src/search.cpp:293
-  signature; src/search.cpp:684 is the call pattern) -- **return score only if
-  `score <= alpha`**, else fall through to the move loop. Fail-soft: return
-  quiescence's own score, never alpha. The null window is its own cheapest
-  verification; no second windowing to get wrong.
+  (`src/search.cpp` `negamax` is the guard row to mirror, alpha for beta;
+  MATE_MIN 48000 at `src/search.cpp` `MATE_MIN`) and `static_eval +
+  RAZOR_MARGIN <= alpha`: `score = quiescence(alpha, beta, ply, 0, game,
+  state)` (`src/search.cpp` `quiescence` signature; `src/search.cpp` `negamax`
+  is the call pattern) -- **return score only if `score <= alpha`**, else fall
+  through to the move loop. Fail-soft: return quiescence's own score, never
+  alpha. The null window is its own cheapest verification; no second windowing
+  to get wrong.
 
 ### 3. Implementation sketch
 
-One commit, one SPRT: two constants, ~10 guarded lines between
-src/search.cpp:772 and src/search.cpp:774, tests red-first.
+One commit, one SPRT: two constants, ~10 guarded lines between the RFP and
+null-move blocks of `src/search.cpp` `negamax`, tests red-first.
 
 - - **Mate case, built the S033 way** (python-chess enumeration + Stockfish
   confirmation, DEC-023, never a judged position): the razoring side far behind
   on material at a depth-1 node yet mating with a **quiet** first move -- out
-  of check quiescence generates captures only (src/search.cpp:444-446), so the
-  drop is blind to it by construction. Lands beside "pruning does not hide a
-  forced mate", tests/test_search.cpp:2808 and "pruning does not hide a mate
-  against the material leader", tests/test_search.cpp:2847 in the fast suite;
-  observed red against the demolition build (verification arm removed, i.e. the
-  unconditional drop) and the printout recorded, per the accepts -- record
-  which guard's removal reddens it.
+  of check quiescence generates captures only (`src/search.cpp` `quiescence`),
+  so the drop is blind to it by construction. Lands beside "pruning does not
+  hide a forced mate", `tests/test_search.cpp` "pruning does not hide a forced
+  mate" and "pruning does not hide a mate against the material leader",
+  `tests/test_search.cpp` "pruning does not hide a mate against the material
+  leader" in the fast suite; observed red against the demolition build
+  (verification arm removed, i.e. the unconditional drop) and the printout
+  recorded, per the accepts -- record which guard's removal reddens it.
 - **In-check exemption, non-vacuous** (S109's precondition pattern): a
   position where the condition would fire but for the check searches
   identically to the off build; the same shape out of check moves the counts.
@@ -149,8 +151,8 @@ Both in src/search_params.hpp's X-macro with ranges (the accepts):
 - - **Alpha in the mate band**: a static eval provably cannot approach a mate
   score here (the LAZY_EVAL_MARGIN clamp, S033's row), so with alpha near +mate
   the condition is trivially true at every node and the whole subtree under a
-  mate-scored bound drops to quiescence. The src/search.cpp:766 band guard, on
-  alpha.
+  mate-scored bound drops to quiescence. The `src/search.cpp` `negamax` band
+  guard, on alpha.
 - **PV exemption**: Weiss #102 shipped "no razoring in pvnodes"; SF #4147
   removed the exemption at 3600 as a non-regression simplification. Keep it
   per the accepts; a 3600 simplification is not evidence at this band.
@@ -165,11 +167,11 @@ Both in src/search_params.hpp's X-macro with ranges (the accepts):
   enforcement, not this comment.
 - **No TT-move gate**: razor-only-without-a-TT-move failed at Lynx (#1541,
   -4.71). Do not add conditions the record priced negative.
-- - **Double node count, cosmetic**: negamax counts the node
-  (src/search.cpp:608) and the razor's quiescence call counts it again
-  (src/search.cpp:302) -- Berserk #581 cleaned this at ~0. The
-  src/search.cpp:684 leaf drop has the same property today, so search_bench
-  stays internally consistent; note it, do not fix it here.
+- - **Double node count, cosmetic**: negamax counts the node (`src/search.cpp`
+  `negamax`) and the razor's quiescence call counts it again (`src/search.cpp`
+  `quiescence`) -- Berserk #581 cleaned this at ~0. The `src/search.cpp`
+  `negamax` leaf drop has the same property today, so search_bench stays
+  internally consistent; note it, do not fix it here.
 
 ### 6. Measurement
 
@@ -197,8 +199,8 @@ verdict recorded.
   stand-pat -- cheaper verification, same answer.
 - **S109 (before)**: different mechanism, section 5; no shared lines.
 - - **S113/S114 (just before, same 50 lines of negamax)**: both rewrite the
-  src/search.cpp:774-841 neighbourhood first by plan order; this block lands
-  between RFP and null move afterwards -- rebase onto their shapes, cite
+  `src/search.cpp` `negamax` neighbourhood first by plan order; this block
+  lands between RFP and null move afterwards -- rebase onto their shapes, cite
   symbols.
 - **S127 (if kept)**: RAZOR_MARGIN and RAZOR_DEPTH join the SPSA set; the
   deferred variants are priced there, not here -- Lynx #2039's

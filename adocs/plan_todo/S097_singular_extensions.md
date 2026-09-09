@@ -2,7 +2,7 @@ id:         S097
 goal:       extend the one move a verification search says is singular, and take the multicut the same search offers
 accepts:    an SPRT verdict per change, measured separately -- the extension and the multicut are two changes off one verification search; the verification search excludes the table move, runs at a reduced depth against a window below the table score, and is skipped at the root and where the entry is too shallow or its bound is wrong, each condition asserted by a test that fails if the precondition is absent; the margins and the reduced depth are constants in src/search_params.hpp with stated ranges (S073); a position with a forced mate inside the multicut's pruned depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
-excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp:961` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
+excludes:   check extensions, which are retired outright by DEC-087 (a) and have no successor step -- Ethereal and Stormphrax both removed them for a gain, `src/search.cpp` `negamax` already exempts a checking move from the reduction, and the forcing-line concern is this step; any extension not derived from the verification search
 decisions:  DEC-071, DEC-105, DEC-134
 closes:
 blocks:
@@ -121,53 +121,58 @@ and DEC-087's Lynx-based banding (S099's "+11.4 at ~2850" included) reads
 
 - **negamax is one function and has no excluded-move plumbing** — verified:
   signature `(alpha0, beta, depth, ply, game, state, prev_move, is_pv)`
-  (src/search.hpp:58-65, src/search.cpp:589-596); no per-ply search stack,
-  only per-ply arrays in search_state_t (src/data_structures.hpp:447-483).
-  Published shape is a per-ply excludedMove (SF prose d6bdcec5 "(ss+1)->
-  excludedMove ... reset right after singular search is finished"); chesso's
-  natural form is one more parameter, `move_t excluded_move`, travelling
-  exactly as prev_move does. negamax is test-callable since S103.
+  (`src/search.hpp` `negamax`, `src/search.cpp` `negamax`); no per-ply search
+  stack, only per-ply arrays in search_state_t (`src/data_structures.hpp`
+  `search_state_t`). Published shape is a per-ply excludedMove (SF prose
+  d6bdcec5 "(ss+1)-> excludedMove ... reset right after singular search is
+  finished"); chesso's natural form is one more parameter, `move_t
+  excluded_move`, travelling exactly as prev_move does. negamax is
+  test-callable since S103.
 - - **No extensions of any kind exist** (specs.md "absent, search"; S096
   retired by DEC-087), so this is the tree's first depth increase. Plumbing:
-  `child_depth = depth - 1` (src/search.cpp:943); the singular move alone
-  searches at `child_depth + 1`. MAX_PLY walls carry it: negamax returns
-  evaluate() at `ply + 1 >= MAX_PLY` (src/search.cpp:612), quiescence stand-pat
-  at src/search.cpp:413; MAX_PLY 128, MAX_DEPTH 126
-  (data_structures.hpp:42-43). An always-extending path terminates on the ply
-  wall by construction; the published cap that keeps the wall theoretical is
-  Lynx's `ply < 3 * depth` (#1768).
-- - **TT entry fields suffice** — verified at src/data_structures.hpp:388-420:
-  `depth` int16_t, `type` uint8_t (TT_BETA_NODE = lower, TT_PV_NODE = exact,
-  src/data_structures.hpp:360-380), `score` int32_t, `best_move`; probe
-  src/search.cpp:663, `tt_move` copied out src/search.cpp:667. No change to the
-  24-byte layout is needed for V1/V2.
+  `child_depth = depth - 1` (`src/search.cpp` `negamax`); the singular move
+  alone searches at `child_depth + 1`. MAX_PLY walls carry it: negamax returns
+  evaluate() at `ply + 1 >= MAX_PLY` (`src/search.cpp` `negamax`), quiescence
+  stand-pat at `src/search.cpp` `quiescence`; MAX_PLY 128, MAX_DEPTH 126
+  (`data_structures.hpp` `MAX_PLY` and `data_structures.hpp` `MAX_DEPTH`). An
+  always-extending path terminates on the ply wall by construction; the
+  published cap that keeps the wall theoretical is Lynx's `ply < 3 * depth`
+  (#1768).
+- - **TT entry fields suffice** — verified at `src/data_structures.hpp`
+  `tt_entry_t`: `depth` int16_t, `type` uint8_t (TT_BETA_NODE = lower,
+  TT_PV_NODE = exact, `src/data_structures.hpp` "the same all-or-nothing gate a
+  table move is (DEC-122)"), `score` int32_t, `best_move`; probe and `tt_move`
+  copy-out are both in `src/search.cpp` `negamax`. No change to the 24-byte
+  layout is needed for V1/V2.
 - - **The score read is a new de-normalize site.** entry->score is stored
-  normalized (src/search.cpp:1099); SE bypasses tt_entry_answers (it wants the
-  value, not a cutoff), so it calls `de_normalize_score(entry->score, ply)`
-  (src/search.cpp:193-198) itself, then requires `|tt_score| < MATE_MIN` before
+  normalized (`src/search.cpp` `negamax`); SE bypasses tt_entry_answers (it
+  wants the value, not a cutoff), so it calls `de_normalize_score(entry->score,
+  ply)`
+  (`src/search.cpp` `de_normalize_score`) itself, then requires `|tt_score| < MATE_MIN` before
   deriving singularBeta — S106's round-trip lesson applied at the new reader.
 - - **TT while excluding, published practice:** at the excluded node take no TT
   cutoff (Berserk e06b444 "Disable TT and NMP on singular search"; Lynx's
   merged branch literally named "no-tt-cutoffs") and **write no store** (SF
-  ebe021f6, "Don't update TT at excluded move ply") — gate
-  src/search.cpp:675-681 and src/search.cpp:1099-1101 on `excluded_move == 0`.
-  The subtree below probes and stores normally in every traced writeup. The
-  alternative — hashing the exclusion into the key so the verification owns a
-  separate entry — is known practice whose open prose this pass could not
-  trace: **unknown, not taken** (DEC-084 caution). Weiss #600 (SMP probe rule)
-  and #644 (skip TB) are out of scope here.
+  ebe021f6, "Don't update TT at excluded move ply") — gate the probe and the
+  store in `src/search.cpp` `negamax` on `excluded_move == 0`. The subtree
+  below probes and stores normally in every traced writeup. The alternative —
+  hashing the exclusion into the key so the verification owns a separate entry
+  — is known practice whose open prose this pass could not trace: **unknown,
+  not taken** (DEC-084 caution). Weiss #600 (SMP probe rule) and #644 (skip TB)
+  are out of scope here.
 - - **Also suppressed at the excluded node:** NMP (same Berserk prose — a
   null-move bound would answer the verification with no alternative searched;
   gate it on excluded_move directly, never by abusing the `prev_move != 0` gate
-  at src/search.cpp:822, since prev_move must keep flowing for
+  at `src/search.cpp` `negamax`, since prev_move must keep flowing for
   countermoves/S024) and SE itself (`excluded_move == 0` in the conditions — no
-  recursive exclusion, the published rule). Whether RFP (src/search.cpp:765)
-  needs suppressing too has no traced prose: a static fail-high there answers
-  "not singular" without any move searched — decide with a test, record which.
+  recursive exclusion, the published rule). Whether RFP (`src/search.cpp`
+  `negamax`) needs suppressing too has no traced prose: a static fail-high
+  there answers "not singular" without any move searched — decide with a test,
+  record which.
 - - **The move loop under exclusion:** skip `moves[i] == excluded_move` before
-  make_move and before legal_moves_counter++ (src/search.cpp:917-930).
+  make_move and before legal_moves_counter++ (`src/search.cpp` `negamax`).
   score_move still ranks the excluded move first — one wasted pick, harmless.
-  If no legal alternative exists, src/search.cpp:1065-1067 returns mate/draw:
+  If no legal alternative exists, `src/search.cpp` `negamax` returns mate/draw:
   the mate side reads as fail-low (singular — correct, it is the only legal
   move); the stalemate DRAW_SCORE side reads as fail-high when singularBeta <=
   0 — no traced prose, decide and pin with a test.
@@ -188,36 +193,37 @@ extension first, the multicut second, each its own SPRT.
    `singular_beta = tt_score - se_margin(depth)`;
    `vscore = negamax(singular_beta - 1, singular_beta, (depth - 1) / 2, ply,
    game, state, prev_move, false)` with excluded_move = tt_move; check
-   `state->aborted` before using vscore (src/search.cpp:996's pattern).
+   `state->aborted` before using vscore (`src/search.cpp` `negamax`'s pattern).
    `vscore < singular_beta` → `se_extension = 1`.
 3. 3. In the loop: the searched depth for `moves[i] == tt_move` becomes
-   `child_depth + se_extension`; the LMR clamp (src/search.cpp:964) and
+   `child_depth + se_extension`; the LMR clamp (`src/search.cpp` `negamax`) and
    S098-V3's deeper cap follow the extended child depth — the edit S098 §5
    assigns here.
 4. Tests, red first: **exclusion unit test through the negamax seam** — a
-   tool-built mate-in-1 with exactly one mating move (python-chess
-   enumeration + Stockfish confirmation, S033 protocol, DEC-023): with
-   excluded_move = the mating move negamax must not return a mate score;
-   with excluded_move = another legal move and with 0 it must — excludes
-   exactly the given move. **Condition tests per the accepts**, each by
-   planting entries with tt_store_entry (public) and failing if the
-   precondition is absent: root never verifies; an entry shallower than
-   `depth - SE_TT_DEPTH_MARGIN` never does; a TT_ALPHA_NODE bound never
-   does — observed via node counts moving only when the condition holds.
-   Both mate cases re-run -- "pruning does not hide a forced mate",
-   tests/test_search.cpp:2808 and "pruning does not hide a mate against the
-   material leader", tests/test_search.cpp:2847; fast suite. SPRT.
+   tool-built mate-in-1 with exactly one mating move (python-chess enumeration
+   + Stockfish confirmation, S033 protocol, DEC-023): with excluded_move = the
+   mating move negamax must not return a mate score; with excluded_move =
+   another legal move and with 0 it must — excludes exactly the given move.
+   **Condition tests per the accepts**, each by planting entries with
+   tt_store_entry (public) and failing if the precondition is absent: root
+   never verifies; an entry shallower than `depth - SE_TT_DEPTH_MARGIN` never
+   does; a TT_ALPHA_NODE bound never does — observed via node counts moving
+   only when the condition holds. Both mate cases re-run -- "pruning does not
+   hide a forced mate", `tests/test_search.cpp` "pruning does not hide a forced
+   mate" and "pruning does not hide a mate against the material leader",
+   `tests/test_search.cpp` "pruning does not hide a mate against the material
+   leader"; fast suite. SPRT.
 
 **V2 — multicut:**
 1. 1. `vscore >= singular_beta && vscore >= beta && |vscore| < MATE_MIN &&
    !is_pv` → return vscore. Fail-soft score, not singularBeta (Lynx #1751 vs
    #1750); mate guard is #1761's; the !is_pv gate is the house pattern for
-   bound-returning prunes (RFP src/search.cpp:765, NMP src/search.cpp:822) —
+   bound-returning prunes, RFP and NMP in `src/search.cpp` `negamax` —
    direct prose untraced, stated as a choice in the commit.
 2. The accepts' mate case: a forced mate inside the multicut's pruned depth
-   added beside "pruning does not hide a forced mate",
-   tests/test_search.cpp:2808, observed red with the mate-range guard
-   removed.
+   added beside "pruning does not hide a forced mate", `tests/test_search.cpp`
+   "pruning does not hide a forced mate", observed red with the mate-range
+   guard removed.
 3. SPRT; a random walk near +3 is terminated and recorded as zero (DEC-063),
    and dropping the multicut while keeping the extension is the default at
    zero (S005/S006/S015 precedent).
@@ -295,20 +301,22 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   #639/#641 lower still at ~3300) — sweep, do not seed.
 - - **Search explosion is the published hazard, not a hidden mate** — the
   extension only adds depth. Caps: +1 once per node, no recursive exclusion,
-  `ply < SE_PLY_FACTOR * depth`, the MAX_PLY walls (src/search.cpp:612,
-  src/search.cpp:413). §6's fixed-node depth check is the instrument that
-  catches a blowup before an SPRT spends a night on it.
+  `ply < SE_PLY_FACTOR * depth`, the MAX_PLY walls (`src/search.cpp` `negamax`,
+  `src/search.cpp` `quiescence`). §6's fixed-node depth check is the instrument
+  that catches a blowup before an SPRT spends a night on it.
 - - **TT pollution from the verification:** its result is computed with the
   best move removed — stored, it poisons every later probe of the position. The
-  no-store gate (src/search.cpp:1099-1101) is SF-prose-backed (ebe021f6); the
+  no-store gate (`src/search.cpp` `negamax`) is SF-prose-backed (ebe021f6); the
   no-cutoff gate keeps the entry from answering its own verification (the
   entry's lower bound >= singularBeta would multicut every time, vacuously).
 - - **Mate scores.** De-normalize before deriving anything (S106's lesson;
-  tt_entry_answers does it at src/search.cpp:234 for cutoffs, this is a second
+  tt_entry_answers does it at `src/search.cpp` `tt_entry_answers` for cutoffs,
+  this is a second
   reader); `|tt_score| < MATE_MIN` gates entry; singularBeta itself must stay
   out of the mate band (Lynx #2559/#2560 — the merged guard measured ~0 but
   exists to stop false mate reports); multicut never returns a mate-range value
-  (#1761). MATE_MIN/MATE_MAX are src/search.cpp:16-17.
+  (#1761). MATE_MIN/MATE_MAX are `src/search.cpp` `MATE_MAX` and
+  `src/search.cpp` `MATE_MIN`.
 - **IIR (S095, lands before) is disjoint by construction** — IIR fires on
   `tt_move == 0`, SE requires `tt_move != 0`; inside the verification node
   the probe still finds the entry, so IIR stays off there unless the
@@ -324,8 +332,8 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   and the extension never fires — harmless but wasted; gating on the move
   appearing in the list is one comparison if the waste shows in profiles.
 - - **The abort path:** vscore from an aborted verification is garbage — check
-  state->aborted immediately (the src/search.cpp:996 pattern) and take no
-  decision from it.
+  state->aborted immediately (the `src/search.cpp` `negamax` pattern) and take
+  no decision from it.
 - **The repo gate:** both mate suites re-run per verdict (CLAUDE.md: any new
   pruning gets the mate treatment before it is called done — multicut is
   pruning); tune-build strength numbers forbidden (S073).

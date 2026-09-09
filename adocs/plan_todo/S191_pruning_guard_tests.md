@@ -288,8 +288,8 @@ tune-build value that moves reads as a red and not as a vacuous pass:
 - **Chess judgement stays with the tool** (DEC-023). Every FEN below is
   constructed and checked with python-chess in `~/.venv/chess` -- in check, not
   mate, king-and-pawns only, a mate in one that survives a pass, which moves
-  are captures or give check -- and Stockfish only through the two safe forms in
-  `TOOLCHAIN.md` "The chess oracle, and the one way to ask it that lies".
+  are captures or give check -- and Stockfish only through the two safe forms
+  in `TOOLCHAIN.md` "The chess oracle, and the one way to ask it that lies".
   `position_is_reachable` is a precondition on every constructed position.
 
 ### 6. Tests
@@ -457,15 +457,17 @@ own resolution).
   `adocs/plan_done/S165_nmp_mate_band_guard.md`, `S103_...`, `S107_...`, `S145_...`.
 - `adocs/data/S165_defender_set.tsv` and `S165_nmp_defender_sweep.py` -- format,
   the 2k-plies rule, exact/short/sign scoring.
-- `src/search.cpp` `negamax`, `lmr_reduction`, `build_lmr_table`; `src/search.hpp`;
-  `src/search_params.hpp`; `src/transposition_table.cpp` `tt_store_entry`;
-  `src/data_structures.hpp` `search_state_t`, `tt_entry_t`, `TT_EVAL_NONE`;
-  `src/eval_tables.hpp` `phase_value`; `src/evaluation.hpp`.
+- `src/search.cpp` `negamax`, `lmr_reduction`, `build_lmr_table`;
+  `src/search.hpp`; `src/search_params.hpp`; `src/transposition_table.cpp`
+  `tt_store_entry`; `src/data_structures.hpp` `search_state_t`, `tt_entry_t`,
+  `TT_EVAL_NONE`; `src/eval_tables.hpp` `phase_value`; `src/evaluation.hpp`.
 - `tests/test_search.cpp` (`search_fixture_t`, `node_fixture_t`, the S107 case,
   "pruning does not hide a forced mate"), `tests/test_mate_carry.cpp`
-  `read_cases`, `tests/test_engine.cpp` mate-safety suite, `tests/CMakeLists.txt`.
+  `read_cases`, `tests/test_engine.cpp` mate-safety suite,
+  `tests/CMakeLists.txt`.
 - `DEV_MANUAL.md` "Test", "Mate safety", "Measure", "Not every change goes to
-  a match"; `TOOLCHAIN.md` "The chess oracle..."; `adocs/data/README.md`;
+  a match"; `TOOLCHAIN.md` "The chess oracle, and the one way to ask it that
+  lies"; `adocs/data/README.md`;
   `fastchess.sh` (flags for the self-play line).
 
 ### 10. Questions deferred to the owner

@@ -2,7 +2,7 @@ id:         S042
 goal:       set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
 accepts:    perft counts are identical over the existing suite; two move orders reaching the same position produce the same hash and the same FEN; generate_FEN's fourth field agrees with Stockfish over a corpus sample; an SPRT against the preceding commit returns a verdict
 touches:    src/bitboard.cpp make_move_impl, load_FEN, set_en_passant, compute_full_hash, tests/test_audit_fen_semantics.cpp
-excludes:   any other zobrist change, including the single side-to-move key that was S031 -- retired, no successor step, "under 1 % by its own file, below every instrument here" (`adocs/plan.md:110`)
+excludes:   any other zobrist change, including the single side-to-move key that was S031 -- retired, no successor step, `adocs/plan.md` "under 1 % by its own file, below every instrument here"
 decisions:
 closes:     2026-08-13_adversarial-F08
 blocks:
@@ -11,9 +11,9 @@ done:
 
 ## What happens now
 
-`src/bitboard.cpp:825-834` sets `new_en_passant` after every double push with no
-test for an enemy pawn that could capture onto it. Two move orders reaching the
-same position hash differently:
+`src/bitboard.cpp` `make_move_impl` sets `new_en_passant` after every double
+push with no test for an enemy pawn that could capture onto it. Two move orders
+reaching the same position hash differently:
 
 ```
 order 1  fen rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2

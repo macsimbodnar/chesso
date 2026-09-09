@@ -78,29 +78,29 @@ is a seed and must be swept or SPSA'd here.
 
 ### Shape for chesso -- today's loop
 
-The plumbing is **already fail-soft end to end**: negamax returns best_so_far
-(src/search.cpp:1103), RFP returns `static_score - margin`
-(src/search.cpp:771), null move returns `null_score` (src/search.cpp:839), TT
-cutoffs return the stored score, not the bound (src/search.cpp:236-249),
-quiescence returns best_value (src/search.cpp:580). Ethereal's +2.60/+5.07 for
-fail-soft pruning returns (a0d84b633e) is already banked here.
+The plumbing is **already fail-soft end to end**: in `src/search.cpp`
+`negamax`, the ordinary return hands back `best_so_far`, RFP returns
+`static_score - margin` and the null move returns `null_score`; TT cutoffs
+return the stored score and not the bound (`src/search.cpp`
+`tt_entry_answers`); and `src/search.cpp` `quiescence` returns `best_value`.
+Ethereal's +2.60/+5.07 for fail-soft pruning returns
+(a0d84b633e) is already banked here.
 
-The loop (src/chesso.cpp): init `aspiration_score +/- ASPIRATION_DELTA` from
-depth `ASPIRATION_MIN_DEPTH` (src/chesso.cpp:765-772); re-search while the
-score is a bound (src/chesso.cpp:776-795) -- fail-low `alpha = max(score -
-delta, -SEARCH_SCORE_INF)` (src/chesso.cpp:787), fail-high `beta = min(score +
-delta, SEARCH_SCORE_INF)` (src/chesso.cpp:789), so the failing side is already
-re-centered on the returned score; `delta += delta` (src/chesso.cpp:792);
-re-search at the **same depth** (src/chesso.cpp:794); mate or `delta >
-ASPIRATION_MAX_DELTA` jumps to the full window (src/chesso.cpp:783-785). The
-resolved score becomes the next centre and a mate disarms the window
-(src/chesso.cpp:831-842). `last_aspiration_failures` is test-only
-(src/chesso.cpp:60-64, src/chesso.cpp:88-89). **Missing: the opposite bound is
-never touched, and the root is never reduced.** The changes: (a) fail-low
-additionally sets `beta = (alpha + beta) / 2` before pushing alpha; (b) a
-consecutive-fail-high counter makes the re-search run at `max(1, current_depth
-- count)`, reset on fail-low; (c) the widening schedule is re-swept under
-(a)+(b).
+The loop is all of `src/chesso.cpp` `iterative_deepening_search`: init
+`aspiration_score +/- ASPIRATION_DELTA` from depth `ASPIRATION_MIN_DEPTH`;
+re-search while the score is a bound -- fail-low `alpha = max(score - delta,
+-SEARCH_SCORE_INF)`, fail-high `beta = min(score + delta, SEARCH_SCORE_INF)`,
+so the failing side is already re-centered on the returned score; `delta +=
+delta`; re-search at the **same depth**; mate or `delta >
+ASPIRATION_MAX_DELTA` jumps to the full window. The resolved score becomes the
+next centre and a mate disarms the window. The counter `src/chesso.cpp`
+`last_aspiration_failures` is test-only, declared once and read through its
+accessor.
+**Missing: the opposite bound is never touched, and the root is never
+reduced.** The changes: (a) fail-low additionally sets `beta = (alpha + beta) /
+2` before pushing alpha; (b) a consecutive-fail-high counter makes the
+re-search run at `max(1, current_depth - count)`, reset on fail-low; (c) the
+widening schedule is re-swept under (a)+(b).
 
 ### Implementation sketch
 
@@ -124,7 +124,7 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
      later iteration reports the same mate distance;
    - a Release-visible engine-loop test in the S021 "windowed root" style: a
      root fail-high resolved by a *reduced* re-search must not lose the best
-     move -- assert bestmove/PV agree (search.cpp:1074-1096 is the recorded
+     move -- assert bestmove/PV agree (`search.cpp` `negamax` is the recorded
      failure shape);
    - loop termination: bounded number of fails to the full window, with (a)
      active.
@@ -135,7 +135,7 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
 |---|---|---|
 | midpoint-pull weight | none | 1/2 of the interval (SF prose in 57b32f3e60); SF 2025 runs 3/4 toward alpha -- seed 1/2 |
 | fail-high reduction | none | 1 ply per consecutive root fail-high, floor depth 1, reset on fail-low (SF 3a572ffb48); uncapped -- Lynx caps measured negative |
-| widening multiplier | x2 (src/chesso.cpp:792) | x2 "exponential" (CPW); linear +delta/fail (SF 49dfc50b12, 2010); "reduce the rate" (Weiss #183) -- sweep x1.5/x2/x3 |
+| widening multiplier | x2 (`src/chesso.cpp` `iterative_deepening_search`) | x2 "exponential" (CPW); linear +delta/fail (SF 49dfc50b12, 2010); "reduce the rate" (Weiss #183) -- sweep x1.5/x2/x3 |
 | depth gate | 2 (S085; S021 measured 5) | Weiss >6, Althoff/Buijs 4 -- hold at 2. A row at 5 re-measures an axis S085's verified vector moved and is not this step's |
 | initial delta | 21 (S085; S021 measured 50) | excluded: S127 owns it (for the record: 50 cp Althoff, 15 cp Buijs, "21 internal units" SF 2019 prose) |
 | max delta escape | 437 then full (S085; S021 measured it flat from 100 to 2000) | keep; re-sweep confirms |
@@ -143,16 +143,17 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
 ### Pitfalls
 
 - **Bound arithmetic near infinity.** SEARCH_SCORE_INF is 2000000000
-  (src/search.hpp:8): never compute `(alpha+beta)/2` while either bound is
-  infinite -- armed bounds are finite, but the full-window escape must bypass
-  the pull. Lynx #1275 ("windows outside [MinEval, MaxEval] after overflow")
-  is the published instance of getting this wrong.
-- - **Mate-band windows.** MATE_MAX 49000 (search.cpp:16). Keep the existing
-  guards -- mate ends the schedule (src/chesso.cpp:783) and disarms the next
-  window (src/chesso.cpp:842), the published form (SF 1f73a9ed63: mate scores
-  made "aspiration blow up in a series of researches loops"; 8acb1d7e4d) -- and
-  do not reduce the root when the fail-high score is a mate: SF's
-  opposite-bound patch was reverted for a near-mate bug (fc54d87301), and Lynx
+  (`src/search.hpp` `SEARCH_SCORE_INF`): never compute `(alpha+beta)/2` while
+  either bound is infinite -- armed bounds are finite, but the full-window
+  escape must bypass the pull. Lynx #1275 ("windows outside [MinEval, MaxEval]
+  after overflow") is the published instance of getting this wrong.
+- - **Mate-band windows.** MATE_MAX 49000 (`search.cpp` `MATE_MAX`). Keep the
+  existing guards -- in `src/chesso.cpp` `iterative_deepening_search` mate ends
+  the schedule and disarms the next window, the published form (SF 1f73a9ed63:
+  mate scores made "aspiration blow up in a series of researches loops";
+  8acb1d7e4d) -- and do not reduce the root when the fail-high score is a mate:
+  SF's opposite-bound patch was reverted for a near-mate bug (fc54d87301), and
+  Lynx
   #2560 added mate-range guards after false mate reports "specially after being
   saved in TT".
 - **Fail-soft scores as re-centres.** SF 57b32f3e60's caution verbatim
@@ -168,16 +169,16 @@ consecutive-fail-high counter makes the re-search run at `max(1, current_depth
   entries the failed attempt just wrote; the root never takes a TT cutoff
   (is_pv) but everything below does. Mate scores written during a fail are
   the recorded hazard (8acb1d7e4d, Lynx #2560). tt_new_search runs once per
-  go (chesso.cpp:678) -- do not age per re-search.
+  go (`chesso.cpp` `search_book_move`) -- do not age per re-search.
 - **Root ordering across fails.** A root fail-high publishes the cutoff move
-  and a one-move PV (search.cpp:1074-1096, S021's bug fix); the reduced
+  and a one-move PV (`search.cpp` `negamax`, S021's bug fix); the reduced
   re-search must find that move first via the TT root entry -- assert, not
   assume.
-- **Time management.** S089's scaler reads completed in-window iterations
-  only (chesso.cpp:847-879); fail events feed nothing. Keep it that way:
-  Lynx measured soft-limit checks inside the window loop at -7.4 to -94.5
-  Elo, all rejected (#2212-#2214). A fail-low near the soft limit is stopped
-  by the hard timer alone, today and after this step.
+- **Time management.** S089's scaler reads completed in-window iterations only
+  (`chesso.cpp` `iterative_deepening_search`); fail events feed nothing. Keep
+  it that way: Lynx measured soft-limit checks inside the window loop at -7.4
+  to -94.5 Elo, all rejected (#2212-#2214). A fail-low near the soft limit is
+  stopped by the hard timer alone, today and after this step.
 
 ### Measurement
 
@@ -191,9 +192,10 @@ and the S074 mate cases green at the shipping schedule; the sweep over the
 
 ### Interactions
 
-- **S089 (done).** Verified: the budget does *not* react to fails -- its
-  inputs are best-move stability and the completed iteration's score drop
-  (chesso.cpp:847-879). This step adds no mid-loop time checks (Lynx
+- **S089 (done).** Verified: the budget does *not* react to fails -- its inputs
+  are best-move stability and the completed iteration's score drop
+  (`chesso.cpp` `iterative_deepening_search`). This step adds no mid-loop time
+  checks (Lynx
   #2212-#2214 measured them negative).
 - **S132 (later).** Node-fraction soft-limit scaler, same function -- land
   S115 first as ordered; nothing here reads node shares.
@@ -206,16 +208,16 @@ and the S074 mate cases green at the shipping schedule; the sweep over the
 ### Scope concern
 
 The "What is there" paragraph implies the fail-soft plumbing is missing. It is
-not: every return path is already fail-soft (search.cpp:1103,
-src/search.cpp:771, src/search.cpp:839, src/search.cpp:236-249,
-src/search.cpp:580) and the failing bound has re-centered on the returned score
-since S021 (chesso.cpp:787, src/chesso.cpp:789) -- Ethereal's +2.6/+5.1
-rewarded fail-soft *pruning returns*, which RFP and null move here already do.
-What remains of the goal's first clause is the re-sweep itself; the new
-behaviour is the midpoint pull and the root reduction. The goal's direction is
-the published one -- fail-low pulls **beta** toward alpha, `(alpha+beta)/2` --
-confirmed by SF prose (57b32f3e60) and Weiss #183 ("lower beta when resolving
-fail lows"). No change to goal or accepts is needed.
+not: every return path is already fail-soft -- the three in `src/search.cpp`
+`negamax`, plus `src/search.cpp` `tt_entry_answers` and `src/search.cpp`
+`quiescence` -- and the failing bound has re-centered on the returned score
+since S021, on both sides, in `src/chesso.cpp` `iterative_deepening_search` --
+Ethereal's +2.6/+5.1 rewarded fail-soft *pruning returns*, which RFP and null
+move here already do. What remains of the goal's first clause is the re-sweep
+itself; the new behaviour is the midpoint pull and the root reduction. The
+goal's direction is the published one -- fail-low pulls **beta** toward alpha,
+`(alpha+beta)/2` -- confirmed by SF prose (57b32f3e60) and Weiss #183 ("lower
+beta when resolving fail lows"). No change to goal or accepts is needed.
 
 ### References (all read 2026-08-19, as prose)
 

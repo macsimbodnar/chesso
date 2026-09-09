@@ -29,25 +29,27 @@ S118", which S118 cannot supply at this point in the order. S139 dropped the
 dependency rather than reorder, because every document that touches the
 question orders the terms first and says why:
 
-- `adocs/plan.md:260-262` -- *"the connected and phalanx pawn work (S125,
-  +25.4 class), the pawn hash that makes them affordable (S118)"*. Terms, then
-  the cache.
-- `adocs/plan.md:143-145` -- *"S118 moves out of the speed block to land after
-  the pawn terms it caches are worth caching (a cheap pawn eval cached measured
-  a published slowdown)."*
+- `adocs/plan.md` "pawns with king distance (S123, +22.3 the largest" -- *"the
+  connected and phalanx pawn work (S125, +25.4 class), the pawn hash that makes
+  them affordable (S118)"*. Terms, then the cache.
+- `adocs/plan.md` "block to land after the pawn terms it caches are" -- *"S118
+  moves out of the speed block to land after the pawn terms it caches are worth
+  caching (a cheap pawn eval cached measured a published slowdown)."*
 - DEC-087 (h) -- *"S118 moves from the speed block into the evaluation block,
   behind the expensive pawn terms -- caching a cheap pawn evaluation measured a
   10 % slowdown in the published record"* -- and (i) prices the block in Stash
   ledger order, connected/phalanx ahead of the pawn hash.
-- `adocs/plan_todo/S118_pawn_hash_table.md:15-19` -- S118's own body: an
-  *"implementer who cached a still-cheap pawn evaluation measured a 10 %
-  slowdown"*, so *"this step now lands in the evaluation block, after S123 and
-  S125 have made the pawn evaluation worth caching"*; and `:37`, *"it is what
-  makes S125's richer pawn terms affordable"*.
-- The list itself: `adocs/plan.md:374-375`, S125 at 54 and S118 at 55. (Both
-  ranges moved when S140 rewrote the block-3 paragraph on 2026-08-21; this one
-  was also one entry low before that, naming 55 and 56 while the sentence
-  claims 54 and 55.)
+- `adocs/plan_todo/S118_pawn_hash_table.md` "implementer who cached a
+  still-cheap pawn evaluation" -- S118's own body: an *"implementer who cached
+  a still-cheap pawn evaluation measured a 10 % slowdown"*, so *"this step now
+  lands in the evaluation block, after S123 and S125 have made the pawn
+  evaluation worth caching"*; and `:37`, *"it is what makes S125's richer pawn
+  terms affordable"*.
+- The list itself: `adocs/plan.md` "backward, phalanx, supported and weak
+  unopposed pawns join the three", S125 at 54 and S118 at 55. (Both ranges
+  moved when S140 rewrote the block-3 paragraph on 2026-08-21; this one was
+  also one entry low before that, naming 55 and 56 while the sentence claims 54
+  and 55.)
 
 Reversing the pair would put a cache in front of the cheap computation it
 caches, which is the measured 10 % slowdown DEC-087 moved S118 to avoid. So the
@@ -61,4 +63,5 @@ not exist in any form yet, so nothing stops being accumulated. What they cost
 is what a new pawn term costs before a cache exists, and the SPRT per group
 prices exactly that: term value net of term cost, which is the honest question
 at this position in the order. S118 reads the same boundary from its side
-(`adocs/plan_todo/S118_pawn_hash_table.md:34-37`).
+(`adocs/plan_todo/S118_pawn_hash_table.md` "the bitboards at every node; this
+is a cache keyed").

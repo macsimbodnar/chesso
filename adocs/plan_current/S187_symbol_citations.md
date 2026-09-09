@@ -248,12 +248,14 @@ file into a `tempfile.TemporaryDirectory`, run
 `subprocess`, and assert the exit code and the flag word in stdout. A path
 outside the repository has no baseline (`baseline` returns `None` when
 `git log` finds nothing), which is fine because neither new class consults
-one. Cases: a `src/chesso.cpp` line citation fails as `LINE`; a
-`src/search.cpp` `no_such_symbol` pair fails as `MISSING`; a
-`tests/test_search.cpp` "no such title" pair fails as `MISSING`;
+one. Cases: a line citation into `src/chesso.cpp` fails as `LINE`; a symbol no
+source file carries, paired with `src/search.cpp`, fails as `MISSING`; a title
+no test file holds, paired with `tests/test_search.cpp`, fails as `MISSING`;
 `src/search.cpp` `negamax` and `tests/test_search.cpp` "pruning does not hide
 a forced mate" pass; a `:NNN` continuation still fails as `BARE`; a path
-followed by a prose word passes. Register it in `tests/CMakeLists.txt` beside
+followed by a prose word passes. The illustrations here are worded so that
+none of them is itself a citation -- a planted failure written out in full
+would be a flag against the step that removes the class. Register it in `tests/CMakeLists.txt` beside
 `test_spsa_driver` with the `fast` label. The accepts' "observed red on a
 planted case before the conversion" is also satisfied on the real set: after
 commit (2) of section 3, `python3 tools/plan_prose_check.py --citations`

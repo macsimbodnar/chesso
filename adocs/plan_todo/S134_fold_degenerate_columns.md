@@ -35,8 +35,8 @@ attribute.
 ## The fold is bit-exact, and that is the whole design
 
 `evaluate_pawns()` sums all three pawn terms into `pawn_mg` / `pawn_eg`, and
-`src/evaluation.cpp:696-700` adds those to the piece-square accumulator **before
-a single tapered division**:
+`src/evaluation.cpp` `evaluate_cheap` adds those to the piece-square
+accumulator **before a single tapered division**:
 
 ```
 const int positional =
@@ -65,9 +65,10 @@ still has to go, or the next fit puts a weight back on an unidentified column.
 
 **The passer half is not zero and this is the trap the step exists to avoid.**
 S100's own first framing said "the weights are already zero so the compiler
-deletes both terms" -- true of `piece_placement`, false of passer bucket 5, which
-ships mg -17 and eg +42 (`src/evaluation.cpp:80-81`). Deleting bucket 5 without
-folding is a play-altering change wearing a behaviour-neutral label.
+deletes both terms" -- true of `piece_placement`, false of passer bucket 5,
+which ships mg -17 and eg +42 (`src/evaluation.cpp` `passed_pawn_mg` and
+`src/evaluation.cpp` `passed_pawn_eg`). Deleting bucket 5 without folding is a
+play-altering change wearing a behaviour-neutral label.
 
 ## Hazards
 

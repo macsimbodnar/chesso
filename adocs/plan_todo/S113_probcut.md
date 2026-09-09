@@ -98,40 +98,43 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 
 ### 2. Shape for chesso
 
-- - **Ladder site**: RFP src/search.cpp:765-772, null move
-  src/search.cpp:814-841. ProbCut goes after the null-move block's close
-  (src/search.cpp:841) and before `node_type_t type = ...` (src/search.cpp:843)
-  -- the SF placement, and a null-pruned node then never pays for captures.
+- - **Ladder site**: RFP and then the null move, both in `src/search.cpp`
+  `negamax`. ProbCut goes after the null-move block's close and before
+  `node_type_t type = ...` in the same function -- the SF placement, and a
+  null-pruned node then never pays for captures.
   S097 lands earlier in plan order and its verification block sits in the same
   region; ProbCut goes first, same never-pays argument.
-- - **qsearch is callable mid-node**: declared search.hpp:46-51, already called
-  by negamax at src/search.cpp:684. The preliminary is `-quiescence(-probBeta,
-  -probBeta + 1, ply + 1, 0, game, state)` after `make_move` (illegal moves
-  drop out via its false return, src/search.cpp:917 pattern); the shallow
-  search is `-negamax(-probBeta, -probBeta + 1, probDepth, ply + 1, game,
-  state, moves[i], false)` -- prev_move flows as everywhere.
+- - **qsearch is callable mid-node**: declared `search.hpp` `quiescence`,
+  already called by negamax at `src/search.cpp` `negamax`. The preliminary is
+  `-quiescence(-probBeta, -probBeta + 1, ply + 1, 0, game, state)` after
+  `make_move` (illegal moves drop out via its false return, `src/search.cpp`
+  `negamax` pattern); the shallow search is `-negamax(-probBeta, -probBeta + 1,
+  probDepth, ply + 1, game, state, moves[i], false)` -- prev_move flows as
+  everywhere.
 - - **The restricted move set exists**: generate its own capture list before
-  the staged loop (the src/search.cpp:875 stage regenerates later -- an
+  the staged loop (the `src/search.cpp` `negamax` stage regenerates later -- an
   accepted double generation every surveyed movepicker also pays), ordered by
-  `capture_score` (evaluation.hpp:308) through `pick_next_move`
-  (src/search.cpp:141). The "good" filter is the predicate pair quiescence uses
-  at src/search.cpp:481-482, `capture_cannot_lose(...)` then `see_ge(..., 0)`
-  (bitboard.cpp:1160, src/bitboard.cpp:1185) -- S015 machinery, nothing new.
-  generate_captures also emits non-capture promotions (src/bitboard.cpp:303-307
-  comment); ProbCut keeps them -- the published set is "noisy" moves.
-- - **TT probe already paid**: the entry is copied out at
-  src/search.cpp:663-673. The skip reads the score through
-  `de_normalize_score(entry->score, ply)` (src/search.cpp:193) -- a **new
-  de-normalize site, S106's lesson** -- and skips when the entry's depth
-  reaches probDepth and its score sits under probBeta with an upper-bound or
-  exact type. That is the honest V1 form: an ALPHA entry under probBeta proves
-  it, a BETA entry does not; Weiss #771 later ignores the bound for +4.99 STC,
-  an S127-era sweep here.
+  `capture_score` (`evaluation.hpp` `capture_score`) through `pick_next_move`
+  (`src/search.cpp` `pick_next_move`). The "good" filter is the predicate pair
+  quiescence uses at `src/search.cpp` `quiescence`, `capture_cannot_lose(...)`
+  then `see_ge(..., 0)` (`bitboard.cpp` `capture_cannot_lose`,
+  `src/bitboard.cpp` `see_ge`) -- S015 machinery, nothing new.
+  generate_captures also emits non-capture promotions (`src/bitboard.cpp`
+  `generate_moves_body` comment); ProbCut keeps them -- the published set is
+  "noisy" moves.
+- - **TT probe already paid**: the entry is copied out at `src/search.cpp`
+  `negamax`. The skip reads the score through `de_normalize_score(entry->score,
+  ply)` (`src/search.cpp` `de_normalize_score`) -- a **new de-normalize site,
+  S106's lesson** -- and skips when the entry's depth reaches probDepth and its
+  score sits under probBeta with an upper-bound or exact type. That is the
+  honest V1 form: an ALPHA entry under probBeta proves it, a BETA entry does
+  not; Weiss #771 later ignores the bound for +4.99 STC, an S127-era sweep
+  here.
 - - **TT store exists**: `tt_store_entry(state->tt, &game->board, probDepth,
   normalize_score(value, ply), TT_BETA_NODE, moves[i], static_eval)`
-  (transposition_table.hpp:49-55); static_eval is whatever RFP left at
-  src/search.cpp:731, TT_EVAL_NONE otherwise (S094: the score field, never a
-  bound).
+  (`transposition_table.hpp` `tt_store_entry`); static_eval is whatever RFP
+  left at `src/search.cpp` `negamax`, TT_EVAL_NONE otherwise (S094: the score
+  field, never a bound).
 - **Nothing from S097 is needed**: no excluded-move parameter, no cutoff or
   store suppression -- ProbCut excludes nothing and its sub-searches probe
   and store normally. probDepth arithmetic: `probDepth = depth -
@@ -144,30 +147,32 @@ carry either or both. SF 2025 allows depth 3 with the verification disabled
 One SPRT, as the accepts prices. Increments:
 
 1. 1. Three constants in the search_params.hpp X-macro
-   (src/search_params.hpp:50), ranges stated.
-2. 2. The block after src/search.cpp:841. Entry: `!is_pv && !is_in_check && ply
-   > 0 && depth >= PROBCUT_MIN_DEPTH && beta < MATE_MIN && beta > -MATE_MIN`
-   (the RFP guard row src/search.cpp:765-766 is the house pattern), the TT skip
+   (`src/search_params.hpp` `CHESSO_SEARCH_PARAMS`), ranges stated.
+2. 2. The block after the null move in `src/search.cpp` `negamax`. Entry:
+   `!is_pv && !is_in_check && ply > 0 && depth >= PROBCUT_MIN_DEPTH && beta <
+   MATE_MIN && beta > -MATE_MIN` (the RFP guard row above it is the house
+   pattern), the TT skip
    above, and `excluded_move == 0` once S097's parameter exists (section 5).
 3. 3. The loop: captures generated and filtered, pick_next_move by
    capture_score; per move make, preliminary qsearch, shallow search only if
    the preliminary held, unmake; `state->aborted` checked after each sub-search
-   (src/search.cpp:996 pattern) and nothing concluded from an aborted score. On
-   `value >= probBeta`: store as section 2, return value (fail-soft).
+   (`src/search.cpp` `negamax` pattern) and nothing concluded from an aborted
+   score. On `value >= probBeta`: store as section 2, return value (fail-soft).
 4. Tests, red first, printouts recorded:
-   - the accepts' mate case: a forced mate for the defender inside the
-     pruned window behind a crushing-looking capture, built the S033 way --
-     python-chess enumeration plus Stockfish confirmation, never own
-     judgement (DEC-023) -- added beside "pruning does not hide a forced
-     mate", tests/test_search.cpp:2808, observed red with the mate-band
-     guard removed.
+   - the accepts' mate case: a forced mate for the defender inside the pruned
+     window behind a crushing-looking capture, built the S033 way --
+     python-chess enumeration plus Stockfish confirmation, never own judgement
+     (DEC-023) -- added beside "pruning does not hide a forced mate",
+     `tests/test_search.cpp` "pruning does not hide a forced mate", observed
+     red with the mate-band guard removed.
    - precondition tests, non-vacuous: a position where ProbCut fires (node
      counts move against the off value); then PV node, in check, depth
      below threshold, and a planted under-probBeta TT entry
      (tt_store_entry is public) each hold the counts still.
    - both mate cases re-run -- "pruning does not hide a forced mate",
-     tests/test_search.cpp:2808 and "pruning does not hide a mate against
-     the material leader", tests/test_search.cpp:2847; fast suite;
+     `tests/test_search.cpp` "pruning does not hide a forced mate" and "pruning
+     does not hide a mate against the material leader", `tests/test_search.cpp`
+     "pruning does not hide a mate against the material leader"; fast suite;
      search_bench 9/12 in the stamp.
 
 ### 4. Constants and seeds

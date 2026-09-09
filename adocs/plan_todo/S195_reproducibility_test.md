@@ -88,7 +88,8 @@ orders or prunes with is in `search_state_t` (`src/data_structures.hpp`) --
 `killer_moves`, `quiet_history`, `counter_moves`, `static_evals`, `pv_table` --
 which `iterative_deepening_search` builds fresh for every `go`, so none of it
 can carry. S093's game-long history was measured H0 and reverted in full
-(DEC-101; `adocs/specs.md` "History is still zeroed on every `go`"): there is no
+(DEC-101; `adocs/specs.md` "History is still zeroed on every `go`"): there is
+no
 persistence flag at HEAD. What reproducibility needs reset is therefore the
 table entries and `tt->generation` (`tt_reset`, `src/transposition_table.cpp`),
 `still_in_opening` (book path only) and `proven_mate_line`; `initial_position`
@@ -311,12 +312,12 @@ and Debug durations of the new cases, the `search_bench` counts if run.
    `python3 tools/plan_prose_check.py --touches`.
 2. `DEV_MANUAL.md` "Measure", beside the `tools/search_bench.py` block: the
    table is reset only when the FEN string differs from the previous one; two
-   `go` on the same FEN in one process run the second warm; `search_bench.py` is
-   safe because its three FENs differ; a repeated position, or a re-run to
+   `go` on the same FEN in one process run the second warm; `search_bench.py`
+   is safe because its three FENs differ; a repeated position, or a re-run to
    double-check a count, needs `ucinewgame` between (or a new process); `bench`
-   sends it before every position; pinned by `tests/test_engine.cpp` "a
-   repeated go depth is cold only across ucinewgame". "Test" needs no change
-   unless it quotes a case count.
+   sends it before every position; pinned by the case this step adds to
+   `tests/test_engine.cpp`, *a repeated go depth is cold only across
+   ucinewgame*. "Test" needs no change unless it quotes a case count.
 3. `MANUAL.md`: `ucinewgame` appears only in the command list and no wording
    changes, so no edit and the SURFACE golden is untouched (section 10 asks
    whether a sentence is wanted). `adocs/specs.md` is not in `touches:`: propose
@@ -347,9 +348,9 @@ and Debug durations of the new cases, the `search_bench` counts if run.
   guides (sections 3 and 6; T1 and section 10); S179's 2026-09-05 amendment;
   `adocs/plan_done/S170_mate_line_across_searches.md` and
   `adocs/plan_done/S176_position_fen_short_forms.md` (stamp shape);
-  `src/chesso.cpp`, `src/search.cpp`,
-  `src/transposition_table.cpp`, `src/data_structures.hpp`, `src/uci.hpp`;
-  `tests/test_engine.cpp`, `tests/test_mate_carry.cpp`, `tests/test_mate_pv.cpp`,
+  `src/chesso.cpp`, `src/search.cpp`, `src/transposition_table.cpp`,
+  `src/data_structures.hpp`, `src/uci.hpp`; `tests/test_engine.cpp`,
+  `tests/test_mate_carry.cpp`, `tests/test_mate_pv.cpp`,
   `tests/test_search.cpp` "the same search twice gives the same answer",
   `tests/test_helpers.hpp`, `tests/CMakeLists.txt`; `tools/search_bench.py`;
   `DEV_MANUAL.md` "Test" and "Measure", `MANUAL.md` "Commands", `TOOLCHAIN.md`

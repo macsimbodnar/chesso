@@ -204,6 +204,7 @@ Two ungated classes print as notes rather than failing:
     `.hpp`, because S075 dumped six fitted tables there, so naming that
     directory does buy silence for a C++ symbol. Name files, not directories.
 """
+import collections
 import os
 import re
 import subprocess
@@ -307,6 +308,16 @@ DIRECT = re.compile(r":(\d{1,5})(?:\s*-\s*(\d{1,5}))?" + _TAIL)
 CONT = re.compile(r"(?<=[\s(,/;]):(\d{1,5})(?:\s*-\s*(\d{1,5}))?" + _TAIL)
 
 QUOTED = re.compile(r'"([^"]{4,120})"')
+
+# The retired form, found without resolving anything. PATH refuses a path
+# preceded by a slash, so that it cannot match the tail of a longer one -- and
+# S020 writes `src/search.cpp:479/src/search.cpp:481`, S117 writes three
+# make-site lines the same way, and all four were invisible to the citation
+# walk while staying exactly what DEC-135 forbids. A LINE flag needs no path,
+# so it is looked for in the text instead.
+RETIRED = re.compile(
+    r"(?<![\w:])/?((?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_-]+\.(?:" + _EXT + r"))"
+    r":(\d{1,5})(?:\s*-\s*(\d{1,5}))?" + _TAIL)
 
 # What sits between a path and the symbol it points at: the path's own closing
 # backtick when it has one, and at most one line break, because the prose is
@@ -510,8 +521,9 @@ def check_citations(path, tracked, byname):
         text = fh.read()
     counts = {"code": 0, "doc": 0, "bare": 0, "line": 0}
     flags, notes = [], []
+    body = unfenced(text)
 
-    for first, para in paragraphs(unfenced(text)):
+    for first, para in paragraphs(body):
         for line, spelled, resolved, kind, what in refs_in(
                 para, first, tracked, byname):
             if kind == "bare":
@@ -545,6 +557,21 @@ def check_citations(path, tracked, byname):
             elif not carries_symbol(what, resolved):
                 sink.append((line, cite, "MISSING",
                              f"{resolved} carries no such symbol"))
+
+    # Every retired form, including the ones the path token cannot reach.
+    already = collections.Counter((line, cite) for line, cite, kind, _why in flags
+                                  if kind == "LINE")
+    for m in RETIRED.finditer(body):
+        line = body.count("\n", 0, m.start()) + 1
+        cite = m.group(1) + ":" + m.group(2) \
+            + (f"-{m.group(3)}" if m.group(3) else "")
+        if already[(line, cite)]:
+            already[(line, cite)] -= 1
+            continue
+        counts["line"] += 1
+        flags.append((line, cite, "LINE",
+                      "a citation names a symbol, not a line (DEC-135)"))
+    flags.sort(key=lambda f: f[0])
 
     print(f"{rel}: {counts['code']} code citations, {len(flags)} flagged "
           f"({counts['line']} line form, {counts['bare']} bare, "

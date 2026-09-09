@@ -1,6 +1,6 @@
 id:         S109
 goal:       late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
-accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, or when alpha or beta is near mate -- all four rules, no exceptions; **the gives-check exemption binds the three per-move rules only** -- futility, history pruning and quiet SEE, which run after `make_move` where `is_check_move` exists (`src/search.cpp:678`) -- **and does not bind late move pruning**, whose skip-quiets flag is honoured at the generation stage before any move is made, where the engine has no pre-make gives-check predicate to consult and the published LMP form carries no such exemption; so LMP may end a quiet stage that still holds checking quiets, which is stated here rather than tested away, and buying it the exemption with a post-make prune is a departure from the published form and the owner's call, not the implementer's; for every rule, the test asserts the precondition that would otherwise prune the move, against the exemptions that bind that rule; the fast suite green
+accepts:    all four rules land in one commit and are measured by **one** SPRT, whatever it returns, recorded as it comes (INV-6); every threshold and margin is a constant in src/search_params.hpp with a stated range and none of them is a number copied from anywhere (DEC-084); the four rules are gated on `depth - lmr_reduction(depth, move_number)` and not on raw depth; the late-move rule sets a skip-quiets flag the staged generator honours rather than `continue`-ing, so the quiet stage is abandoned and not merely skipped over; **a position with a forced mate inside the pruned depth is added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guards removed and the printout recorded**; no quiet is pruned while in check, at a PV node, on the first move, or when alpha or beta is near mate -- all four rules, no exceptions; **the gives-check exemption binds the three per-move rules only** -- futility, history pruning and quiet SEE, which run after `make_move` where `is_check_move` exists (`src/search.cpp` `negamax`) -- **and does not bind late move pruning**, whose skip-quiets flag is honoured at the generation stage before any move is made, where the engine has no pre-make gives-check predicate to consult and the published LMP form carries no such exemption; so LMP may end a quiet stage that still holds checking quiets, which is stated here rather than tested away, and buying it the exemption with a post-make prune is a departure from the published form and the owner's call, not the implementer's; for every rule, the test asserts the precondition that would otherwise prune the move, against the exemptions that bind that rule; the fast suite green
 touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
 excludes:   razoring, which is a node-level rule and is S116; SEE pruning of **captures** in the main search, which is S091; futility inside quiescence, which is S112; the improving flag, which S108 supplies and this step consumes
 decisions:  DEC-071, DEC-082, DEC-084, DEC-087, DEC-105, DEC-134
@@ -176,26 +176,28 @@ LMP is the one rule with no per-move exemption list -- it ends a stage.
 
 ### 2. Shape for chesso
 
-The move loop: `for (size_t i = 0;; ++i)` at src/search.cpp:645; staged quiet
-generation inside it at src/search.cpp:897-913 (`quiets_generated`, the branch
-the skip-quiets flag must gate); `pick_next_move` src/search.cpp:915;
-`make_move` src/search.cpp:917; `is_capture` src/search.cpp:919;
-`is_check_move` src/search.cpp:929 -- **computed only after make_move**, from
-the child position; `legal_moves_counter++` src/search.cpp:930; LMR eligibility
-and `reduction = lmr_reduction(depth, legal_moves_counter)` at
-src/search.cpp:960-965; the fail-high update block src/search.cpp:1006-1030;
-the no-legal-moves mate/stalemate return src/search.cpp:1065-1067. `is_pv` is a
-parameter (src/search.cpp:596). RFP's guard row to copy the mate clause from:
-src/search.cpp:765-766 (`beta < MATE_MIN && beta > -MATE_MIN`).
+The move loop: `for (size_t i = 0;; ++i)` at `src/search.cpp` `negamax`; staged
+quiet generation inside it at `src/search.cpp` `negamax` (`quiets_generated`,
+the branch the skip-quiets flag must gate); `pick_next_move` `src/search.cpp`
+`negamax`; `make_move` `src/search.cpp` `negamax`; `is_capture`
+`src/search.cpp` `negamax`; `is_check_move` `src/search.cpp` `negamax` --
+**computed only after make_move**, from the child position;
+`legal_moves_counter++` `src/search.cpp` `negamax`; LMR eligibility and
+`reduction = lmr_reduction(depth, legal_moves_counter)` at `src/search.cpp`
+`negamax`; the fail-high update block `src/search.cpp` `negamax`; the
+no-legal-moves mate/stalemate return `src/search.cpp` `negamax`. `is_pv` is a
+parameter (`src/search.cpp` `negamax`). RFP's guard row to copy the mate clause
+from: `src/search.cpp` `negamax` (`beta < MATE_MIN && beta > -MATE_MIN`).
 
 - **lmrDepth before S098**: the reduction today is the static table
-  `lmr_reduction(depth, move_number)` (src/search.cpp:42-76), `LMR_BASE 52` /
-  `LMR_DIVISOR 182` (src/search_params.hpp:166-167), axes capped at 63. The
-  accepts' `lmr_depth = depth - lmr_reduction(depth, move_number)`, clamped
-  to >= 0, computed per candidate move with `move_number =
-  legal_moves_counter + 1` when testing before the counter increments. When
-  S098 rebuilds the reduction, this gate shifts with it by construction --
-  see Interactions.
+  `lmr_reduction(depth, move_number)` (`src/search.cpp`
+  `history_gravity_update` and `src/search.cpp` `history_on_quiet_cutoff`),
+  `LMR_BASE 52` / `LMR_DIVISOR 182` (`src/search_params.hpp`
+  `CHESSO_SEARCH_PARAMS`), axes capped at 63. The accepts' `lmr_depth = depth -
+  lmr_reduction(depth, move_number)`, clamped to >= 0, computed per candidate
+  move with `move_number = legal_moves_counter + 1` when testing before the
+  counter increments. When S098 rebuilds the reduction, this gate shifts with
+  it by construction -- see Interactions.
 - **Exists after S108**: `static_evals[ply]` (TT_EVAL_NONE while in check --
   so futility is off in check by data as well as by guard) and the
   `improving_at()` helper whose first in-search call site is this step.
@@ -205,20 +207,22 @@ src/search.cpp:765-766 (`beta < MATE_MIN && beta > -MATE_MIN`).
   threshold reads the **raw table sum**, never `score_move`'s return -- a
   killer's 900000 band value would silently exempt it (see Pitfalls).
 - - **Quiet classification in the loop**: `!MOVE_CAPTURE(m) &&
-  !MOVE_PROMOTED(m)`, the same pair LMR uses (src/search.cpp:960-961). En
+  !MOVE_PROMOTED(m)`, the same pair LMR uses (`src/search.cpp` `negamax`). En
   passant is capture-flagged. Non-capture promotions are not "quiet" here.
 - - **SEE for quiets exists today**: `see_ge(board, move, threshold)`
-  (src/bitboard.cpp:1185) scores a quiet move -- `captured == EMPTY` gives gain
-  0 -- and takes a negative threshold, so quiet SEE pruning is
-  `!see_ge(&game->board, moves[i], -margin)`. `see()` src/bitboard.cpp:1271 is
-  the exact reference; `see_value` src/bitboard.cpp:1096; `capture_cannot_lose`
-  src/bitboard.cpp:1160 is capture-only.
+  (`src/bitboard.cpp` `see_ge`) scores a quiet move -- `captured == EMPTY`
+  gives gain 0 -- and takes a negative threshold, so quiet SEE pruning is
+  `!see_ge(&game->board, moves[i], -margin)`. `see()` `src/bitboard.cpp` `see`
+  is the exact reference; `see_value` `src/bitboard.cpp` `see_value`;
+  `capture_cannot_lose` `src/bitboard.cpp` `capture_cannot_lose` is
+  capture-only.
 - - **Does NOT exist**: a pre-make gives-check predicate. `is_check_move` is
   known only after make_move, so the per-move rules (futility, history, SEE)
-  run **after** src/search.cpp:929 and prune by `unmake_move + continue` -- the
-  subtree saving dominates the wasted make. LMP's flag is pre-make by
-  construction and cannot see gives-check (Scope concerns). Lynx #1520 measured
-  moving rules before make at -0.6 +/-2.6, so nothing is lost by staying after.
+  run **after** `src/search.cpp` `negamax` and prune by `unmake_move +
+  continue` -- the subtree saving dominates the wasted make. LMP's flag is
+  pre-make by construction and cannot see gives-check (Scope concerns). Lynx
+  #1520 measured moving rules before make at -0.6 +/-2.6, so nothing is lost by
+  staying after.
 
 ### 3. Implementation sketch
 
@@ -228,12 +232,12 @@ the kill-switch that keeps a failing block bisectable without four SPRTs and
 without taking strength numbers on the tune build (forbidden, S073):
 
 1. 1. **Scaffold**: `lmr_depth` computation plus a `skip_quiets` flag wired
-   into the generation branch (src/search.cpp:897-913: when set, do not
+   into the generation branch (`src/search.cpp` `negamax`: when set, do not
    generate quiets, break instead) and into the staged-up-front corner -- when
-   `tt_move_is_quiet` put both stages in the array (src/search.cpp:880-884),
-   already-generated quiets are filtered by the same flag. Flag never set yet:
-   node counts identical, search_bench proves the scaffold inert before any
-   rule lands.
+   `tt_move_is_quiet` put both stages in the array (`src/search.cpp`
+   `negamax`), already-generated quiets are filtered by the same flag. Flag
+   never set yet: node counts identical, search_bench proves the scaffold inert
+   before any rule lands.
 2. **LMP**: `legal_moves_counter + 1 > lmp_threshold(depth, improving)` sets
    `skip_quiets` (never `continue`, per accepts). Threshold doubled when
    improving. Guards: `!is_pv`, `!is_in_check`, depth cap, `>= 1` legal move
@@ -252,13 +256,14 @@ without taking strength numbers on the tune build (forbidden, S073):
    when `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`
    (power parameterised; linear is the one-line alternative).
 6. Tests red-first, per rule, before its rule lands:
-   - Extend "pruning does not hide a forced mate" (tests/test_search.cpp:2808)
-     with a position whose mating move is a **late, low-history, negative-SEE
-     quiet** inside the pruned depth -- observed red with the in-check and
-     near-mate guards removed, printout recorded (accepts). Built the S033
-     way: python-chess enumeration plus Stockfish confirmation (DEC-023).
+   - Extend "pruning does not hide a forced mate" (`tests/test_search.cpp`
+     "pruning does not hide a forced mate") with a position whose mating move
+     is a **late, low-history, negative-SEE quiet** inside the pruned depth --
+     observed red with the in-check and near-mate guards removed, printout
+     recorded (accepts). Built the S033 way: python-chess enumeration plus
+     Stockfish confirmation (DEC-023).
    - - Stalemate edge: a position whose only legal moves are late quiets; the
-     first-legal-move guard keeps src/search.cpp:1065-1067 unreachable --
+     first-legal-move guard keeps `src/search.cpp` `negamax` unreachable --
      assert no false mate/stalemate score.
    - Pure-helper tests: `lmp_threshold` doubles exactly when improving says
      so; each formula at its off constant is provably unreachable.
@@ -354,11 +359,11 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   accepts' red-first mate test is the enforcement, not the comment.
 - - **Pruning the last legal move.** Rules skip moves without making them, so
   `legal_moves_counter` can end at 0 with legal moves on the board, and
-  src/search.cpp:1065-1067 would return a false mate/stalemate. The `>= 1 legal
-  move searched` guard (CPW's own clause) is load-bearing; the stalemate edge
-  test pins it. Zugzwang: no surveyed move-loop rule adds a phase guard (null
-  move keeps that job); the depth caps bound the damage -- do not invent one
-  silently.
+  `src/search.cpp` `negamax` would return a false mate/stalemate. The `>= 1
+  legal move searched` guard (CPW's own clause) is load-bearing; the stalemate
+  edge test pins it. Zugzwang: no surveyed move-loop rule adds a phase guard
+  (null move keeps that job); the depth caps bound the damage -- do not invent
+  one silently.
 - **Improving misread through S108's sentinel.** `static_evals[ply]` is
   TT_EVAL_NONE in check; `improving_at` falls back ply-2 -> ply-4 -> default
   true. A wrong-side default doubles the LMP count where it should not --
@@ -369,10 +374,11 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   threshold is negative (`< -HP_COEFF * depth`); a sign slip prunes the *good*
   quiets -- silent regression, the S093 band hazard's sibling. And the rule
   must read the raw table sum through the S093/S024 probe path: killers score
-  900000 and counters 700000 in `score_move` (src/evaluation.cpp:33-37,
-  src/evaluation.cpp:1160-1166), so testing the ordering score instead of the
-  table silently exempts killers/counters and nothing else -- decide the
-  exemption, never inherit it from the wrong variable.
+  900000 and counters 700000 in `score_move` (`src/evaluation.cpp`
+  `ORDER_TT_MOVE` to `src/evaluation.cpp` `ORDER_COUNTER`, `src/evaluation.cpp`
+  `score_move`), so testing the ordering score instead of the table silently
+  exempts killers/counters and nothing else -- decide the exemption, never
+  inherit it from the wrong variable.
 - **The skip-quiets flag kills killers and checking quiets in the tail.**
   Chesso's killers live inside the quiet stage (no separate emission stage),
   so an abandoned stage drops them; they order at the band top and are
@@ -449,8 +455,9 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
    the accepts says which.** It used to be one undivided clause over all four.
    It is testable for futility, history and SEE, which run after `make_move`
    where the flag exists -- `const bool is_check_move = is_capture ? false :
-   is_check(game);` at `src/search.cpp:678` -- and structurally impossible for
-   a skip-quiets flag honoured at the generation stage: `grep -rn
+   is_check(game);` at `src/search.cpp` `negamax` -- and structurally
+   impossible for a skip-quiets flag honoured at the generation stage: `grep
+   -rn
    "gives_check\|is_check_move" src/` returns that line and its single
    consumer, the LMR guard at `:710`, and nothing else, so there is no
    pre-make predicate to gate generation on. The published LMP form carries no

@@ -16,16 +16,17 @@ done:
 ## What this is
 
 `evaluate_mobility_and_king_safety()` tapers its two terms separately, one
-integer division each (`src/evaluation.cpp:1008` mobility, `:953` king safety),
-then sums them. Summing the two middlegame sums and the two endgame sums first
-and dividing once is the same term through one division instead of two.
+integer division each (`src/evaluation.cpp` `evaluate_mobility_and_king_safety`
+mobility, `:953` king safety), then sums them. Summing the two middlegame sums
+and the two endgame sums first and dividing once is the same term through one
+division instead of two.
 
 The same argument is already written in this file for the pawn terms, at
-`src/evaluation.cpp:692-696`: summed into the accumulated pair before the
-interpolation rather than tapered on its own, "one integer division instead of
-two [...] and one truncation towards zero instead of two -- which is what keeps
-test_eval_model's one-centipawn slack against the tuner's floating-point model
-from having to grow." This step applies it one function further down.
+`src/evaluation.cpp` `evaluate_cheap`: summed into the accumulated pair before
+the interpolation rather than tapered on its own, "one integer division instead
+of two [...] and one truncation towards zero instead of two -- which is what
+keeps test_eval_model's one-centipawn slack against the tuner's floating-point
+model from having to grow." This step applies it one function further down.
 
 ## It alters play, so it is an SPRT
 
@@ -56,10 +57,11 @@ anything, and do not let a sub-resolution number decide the step.
 
 `test_eval_model`'s tolerance is 3, because `evaluate()` divides by
 `GAME_PHASE_MAX` four times and three of them can round today
-(`src/evaluation.cpp:697` positional, `:668` tempo — exactly 0 while
-`tempo_mg == tempo_eg == 0`, `:951` mobility, `:953` king safety), bounding the
-disagreement with `tools/eval_model.hpp` at 3 x 23/24 = 2.875. Removing one
-division puts the bound at 2 x 23/24 = 1.917, so the tolerance returns to 2.
+(`src/evaluation.cpp` `evaluate_cheap` positional, `:668` tempo — exactly 0
+while `tempo_mg == tempo_eg == 0`, `:951` mobility, `:953` king safety),
+bounding the disagreement with `tools/eval_model.hpp` at 3 x 23/24 = 2.875.
+Removing one division puts the bound at 2 x 23/24 = 1.917, so the tolerance
+returns to 2.
 
 That is worth a centipawn of guard resolution: the guard is the only thing
 stopping the model drifting from `evaluate()`, and at a tolerance of 3 a real
@@ -74,7 +76,7 @@ after it.
 
 ## The model already does it this way
 
-Checked at S038 rather than assumed: `tools/eval_model.hpp:973-974` is
+Checked at S038 rather than assumed: `tools/eval_model.hpp` `evaluate` is
 
 ```
 double stage_two = (mobility_mg_sum + king_safety_mg_sum) * mg_weight +
@@ -102,11 +104,11 @@ file at all:
 ## Watch the clamp, not just the sum
 
 `evaluate_expensive()` clamps the summed stage-two score to
-+/-`LAZY_EVAL_MARGIN` (`src/evaluation.cpp:1045`) and the model clamps in the
-same place. The clamp is applied after the taper on both sides today; merging
-the divisions must not move it to before, or the two implementations stop
-clamping the same quantity — which the model's own comments at
-`tools/eval_model.hpp:987-1007` warn about term by term.
++/-`LAZY_EVAL_MARGIN` (`src/evaluation.cpp` `evaluate_expensive`) and the model
+clamps in the same place. The clamp is applied after the taper on both sides
+today; merging the divisions must not move it to before, or the two
+implementations stop clamping the same quantity — which the model's own
+comments at `tools/eval_model.hpp` `evaluate` warn about term by term.
 
 S039 re-decides `LAZY_EVAL_MARGIN` and sits ahead of this step in plan order.
 If it changes the margin, nothing here has to change: this step alters what is
@@ -120,25 +122,33 @@ PHASE_MAX`, documented over a 0–256 phase with an optional half-denominator
 rounding add; chesso uses the common 24-point granularity (minor 1, rook 2,
 queen 4) with pure truncation. Per-term tapering is not the published shape.
 This step moves stage two to the canonical form that `evaluate_cheap()`
-(src/evaluation.cpp:697-700) and the float model (tools/eval_model.hpp:973-974)
-already have. Division count is observable because C++ integer division
-truncates toward zero ([expr.mul]/4).
+(`src/evaluation.cpp` `evaluate_cheap`) and the float model
+(`tools/eval_model.hpp` `evaluate`) already have. Division count is observable
+because C++ integer division truncates toward zero ([expr.mul]/4).
 
-**Shape for chesso.** The two sites: src/evaluation.cpp:1008-1009 (mobility)
-and src/evaluation.cpp:1010-1011 (king safety), each dividing a phase blend by
-`GAME_PHASE_MAX` = 24 (src/evaluation.hpp:307); `phase = game_phase()` is
-`board->phase` clamped to [0,24] (src/evaluation.cpp:1111-1114). The guard
-today: tests/test_eval_model.cpp:277 `CHECK(|model - engine| <= 3.0)`, comment
-tests/test_eval_model.cpp:236-258 naming the four divisions; the non-vacuity
-case tests/test_eval_model.cpp:304-345 asserts the tempo-unfitted precondition
-(tests/test_eval_model.cpp:309-314, message "4 x 23/24 = 3.833 ... has to be
-4"), per-pin `difference > 2.0` (tests/test_eval_model.cpp:335) and `worst >
-2.8` (tests/test_eval_model.cpp:343) over `truncation_positions`
-(tests/test_eval_model.cpp:130-135), four FENs at exactly 69/24 found by
+**Shape for chesso.** The two sites are both in `src/evaluation.cpp`
+`evaluate_mobility_and_king_safety`, one for mobility and one for king safety,
+each dividing a phase blend by
+`GAME_PHASE_MAX` = 24 (`src/evaluation.hpp` `GAME_PHASE_MAX`); `phase =
+game_phase()` is
+`board->phase` clamped to [0,24] (`src/evaluation.cpp` `game_phase`). The guard
+today: `tests/test_eval_model.cpp` "the model reproduces evaluate() on every phase" `CHECK(|model - engine| <= 3.0)`, comment
+`tests/test_eval_model.cpp` "the model reproduces evaluate() on every phase"
+naming the four divisions; the non-vacuity
+case `tests/test_eval_model.cpp` "the pinned positions reach the truncation
+bound" asserts the tempo-unfitted precondition
+(`tests/test_eval_model.cpp` "the pinned positions reach the truncation bound",
+message "4 x 23/24 = 3.833 ... has to be
+4"), per-pin `difference > 2.0` (`tests/test_eval_model.cpp` "the pinned
+positions reach the truncation bound") and `worst >
+2.8` (`tests/test_eval_model.cpp` "the pinned positions reach the truncation
+bound") over `truncation_positions`
+(`tests/test_eval_model.cpp` `truncation_positions`), four FENs at exactly
+69/24 found by
 `build/tools/truncation_scan` over `.tuning/selfplay_v2_dedup.tsv` (present on
 this machine). Transformation: sum the two mg halves and the two eg halves,
 blend once, divide once; the model changes nothing
-(tools/eval_model.hpp:973-974 is already merged).
+(`tools/eval_model.hpp` `evaluate` is already merged).
 
 **Implementation sketch.** In `evaluate_mobility_and_king_safety`: `stage_two =
 ((mob_mg + saf_mg) * phase + (mob_eg + saf_eg) * endgame) / 24`. Rounding
@@ -149,7 +159,8 @@ blends: `d = sign` iff `|rA + rB| >= 24`, else 0 — merged loses less, score
 weakly farther from zero. Mixed signs: d in {-1, 0, +1}, either direction. So
 **|d| <= 1 cp per position, no parity invariant**, and at phase 0 or 24 the
 blend is divisible by 24 and d = 0. Guard bound: after the merge two divisions
-round (src/evaluation.cpp:697-700 and the merged one; tempo still 0/24 exact),
+round (`src/evaluation.cpp` `evaluate_cheap` and the merged one; tempo still
+0/24 exact),
 each losing at most 23/24 toward zero, worst case aligned: **2 x 23/24 = 46/24
 = 1.9167**, so 2 is the tightest integer tolerance the arithmetic can never
 legitimately exceed (headroom 0.083 cp dwarfs double rounding; today's is 3 -
@@ -166,24 +177,26 @@ positions that reach the new maximum.
 **Pitfalls.**
 - - Truncation is toward zero, so the loss direction flips with the blend's
   sign, and the blends are routinely negative: knight mg is -1
-  (src/evaluation.cpp:747), queen eg -6 (src/evaluation.cpp:748), and the sums
-  are mover-signed (src/evaluation.cpp:958-959). The +/-1 lands on most
-  positions; direction depends on the sign mix, per the analysis above.
+  (`src/evaluation.cpp` `mobility_mg`), queen eg -6 (`src/evaluation.cpp`
+  `mobility_eg`), and the sums are mover-signed (`src/evaluation.cpp`
+  `evaluate_mobility_and_king_safety`). The +/-1 lands on most positions;
+  direction depends on the sign mix, per the analysis above.
 - - **The collect path is the trap the file does not name.** `<collect=true>`
-  hands back tapered mobility and safety separately
-  (src/evaluation.cpp:1013-1015) through `evaluate_expensive_terms`
-  (src/evaluation.cpp:1066) to tools/eval_spread.cpp:174 and
-  tests/test_evaluation.cpp:467-499, which REQUIREs `clamp(mobility + safety)
-  == evaluate() - evaluate_cheap()` **exactly**
-  (tests/test_evaluation.cpp:484-487). Post-merge the reported pair must sum to
-  the merged total: taper one term, hand back the other as `stage_two - that
-  term`, and state which term carries the +/-1 residue — do not weaken the
-  test. eval_spread's per-term worsts shift by <= 1 cp; S039 reads them.
-- - The clamp stays after the taper (src/evaluation.cpp:1045; model
-  tools/eval_model.hpp:976-977) — already stated above.
+  hands back tapered mobility and safety separately (`src/evaluation.cpp`
+  `evaluate_mobility_and_king_safety`) through `evaluate_expensive_terms`
+  (`src/evaluation.cpp` `evaluate_expensive_terms`) to `tools/eval_spread.cpp`
+  `main` and `tests/test_evaluation.cpp` "the unclamped terms are the engine's
+  own", which REQUIREs `clamp(mobility + safety) == evaluate() -
+  evaluate_cheap()` **exactly** (`tests/test_evaluation.cpp` "the unclamped
+  terms are the engine's own"). Post-merge the reported pair must sum to the
+  merged total: taper one term, hand back the other as `stage_two - that term`,
+  and state which term carries the +/-1 residue — do not weaken the test.
+  eval_spread's per-term worsts shift by <= 1 cp; S039 reads them.
+- - The clamp stays after the taper (`src/evaluation.cpp` `evaluate_expensive`;
+  model `tools/eval_model.hpp` `evaluate`) — already stated above.
 - INV-4: same loop, same accumulated sums, one arithmetic site changed, no
   recompute added; `evaluate_cheap()` untouched.
-- - The stale comments at src/evaluation.cpp:695-696 and src/evaluation.cpp:719
+- - The two stale comments in `src/evaluation.cpp` `evaluate_cheap`
   are this step's to fix — DEC-053's consequences say "S055 owns them".
 
 **Measurement.** The accepts is unambiguous: **SPRT, zero recorded as zero.**
@@ -213,9 +226,9 @@ division by constant 24 is already a multiply-shift, not a `div`).
   finalizer emits mg/eg halves, the merged blend survives; if it applies after
   the taper, this site is rewritten and S122 must re-derive the guard's
   division count. One line of rework either way.
-- - **S039**: `evaluate_lazy()`'s shortcut (src/evaluation.cpp:1099) tapers
-  nothing — it compares the already-tapered cheap score against the window.
-  Covered above.
+- - **S039**: `evaluate_lazy()`'s shortcut (`src/evaluation.cpp`
+  `evaluate_lazy`) tapers nothing — it compares the already-tapered cheap score
+  against the window. Covered above.
 - Order note: this file's "after S042, before S029" is DEC-053-era prose;
   plan.md owns order and now lists S055 (entry 32) before S042 (entry 36),
   with S029 parked — DEC-054 says S055 "keeps its value and loses its
