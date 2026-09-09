@@ -18,6 +18,19 @@
 #
 #   adocs/data/S203_case_sweep.sh                 # every case, the sweep grid
 #   adocs/data/S203_case_sweep.sh --at            # every case at its TSV setting
+#   adocs/data/S203_case_sweep.sh --ceilings F... # short_line_ceiling() from
+#                                                 # recorded sweep files
+#
+# S204, DEC-162 added `--ceilings`. `tests/test_mate_carry.cpp` no longer holds
+# a per-case floor on mate lines -- one cell of this grid is one sample and not
+# a property -- and holds a per-case ceiling on short lines instead. The rule,
+# stated once and applied to every row: the ceiling is the largest short-line
+# count any cell of the recorded grid shows for that case, at the stride its TSV
+# row carries, across every recorded sweep given. Re-derive it from the tracked
+# grids, never from a failing run:
+#
+#   adocs/data/S203_case_sweep.sh --ceilings \
+#       adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
 #
 # Each line is: case, stride, nodes, mate lines reported, short lines. A row is
 # usable when mate lines clears its floor and short is 0.
@@ -42,6 +55,26 @@ counts() {
           --hash 16 --verbose "${@:2}" 2>&1)
   echo "$(grep -cE '^  ply +[0-9]+ depth' <<< "$out") $(grep -c '^SHORT' <<< "$out")"
 }
+
+if [[ "${1:-}" == "--ceilings" ]]; then
+  shift
+  [[ $# -gt 0 ]] || { echo "--ceilings needs at least one recorded sweep file" >&2; exit 1; }
+  strides=$(mktemp)
+  awk -F'\t' '!/^#/ && NF > 1 && $1 != "name" { print $1 "\t" $6 }' "$CASES" > "$strides"
+  echo "The short-line ceiling per case: the worst cell of the recorded grid at"
+  echo "the stride the case itself carries. tests/test_mate_carry.cpp holds these."
+  printf "%-26s %8s\n" "case" "ceiling"
+  awk -v strides="$strides" '
+    BEGIN { while ((getline line < strides) > 0) { split(line, f, "\t"); want[f[1]] = f[2] } }
+    NF == 5 && $2 ~ /^[0-9]+$/ && ($1 in want) && $2 == want[$1] {
+      if ($5 + 0 > max[$1]) { max[$1] = $5 + 0 }
+      seen[$1] = 1
+    }
+    END { for (n in seen) printf "%-26s %8d\n", n, max[n] }
+  ' "$@" | sort
+  rm -f "$strides"
+  exit 0
+fi
 
 if [[ "${1:-}" == "--at" ]]; then
   echo "Each case at the budget and stride its TSV row carries."

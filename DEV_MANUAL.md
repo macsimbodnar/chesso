@@ -2263,8 +2263,19 @@ on changes it has no opinion about: over the nine stride-1 budgets,
 that cell is its configured budget. So a red `test_mate_carry` after a `src/`
 change is a question and not a verdict — sweep both sides before concluding
 anything, as `adocs/data/S204_sweep_head.txt` and
-`adocs/data/S204_sweep_killer_iter_clear.txt` do. Whether re-pinning to a fresh
-spike at every step is a guard at all is DEC-161 and S204.
+`adocs/data/S204_sweep_killer_iter_clear.txt` do.
+
+**S204 answered it: re-pinning at every step is not a guard, and the test no
+longer asks you to.** DEC-162 deleted the per-case floor on mate lines, which
+was the number a tree-moving change moved, and replaced it with a fixture-wide
+majority — three of the five guarded cases must report a mate line. A short
+mating PV is no longer forbidden either; it is S202's residue, counted against a
+per-case ceiling that `adocs/data/S203_case_sweep.sh --ceilings` re-derives from
+the two recorded grids. What is asserted at zero and pinned to nothing is the
+one thing that does not move: a line as long as the distance it claims ends in
+checkmate. So a red `test_mate_carry` now names which of the three fired, and
+only the ceiling one is a budget question. The budgets themselves did not move
+and a redraw still retires them.
 
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal

@@ -31,11 +31,35 @@
 // swept for the cheapest reproduction: node budgets rather than movetime, so
 // the case is a property of the tree and not of how busy the machine is.
 //
-// WHY THE PRECONDITION IS ASSERTED FIRST. What a table holds at a given ply is
-// fragile, and a change that moves the tree can make a case stop reporting a
-// mate at all -- at which point "no short line" is true and means nothing. So
-// every case must first be seen to report a mate, and the count of mate lines
-// is asserted to be at least what was measured when the case was chosen.
+// WHAT THIS FILE ASSERTS, AND WHY IT IS THREE THINGS AND NOT ONE. S204,
+// DEC-162. Until then it held one failure list and one per-case floor, and both
+// had to be true at one node budget, so the budget was chosen where they were.
+// The count that retired that shape: over the nine budgets of the sweep grid,
+// `C_mate7_depth11` reports a mate line in **one cell** at HEAD and its
+// configured budget is that cell. A green that is one cell in nine is a
+// coincidence, not a property, and every change that moved the tree re-pinned
+// it.
+//
+// The two things the failure list merged are not the same kind of thing:
+//
+//   a line at least as long as the distance it claims that is not checkmate at
+//   exactly that distance. DEC-122's own guarantee -- the walk extends only
+//   when it reaches the mate -- so this is a published lie and it is asserted
+//   at zero, at any budget, pinned to nothing. Measured 0 in 428 mate lines
+//   across the whole grid by `adocs/data/S204_class_census.py`.
+//
+//   a line shorter than the distance it claims. DEC-122 leaves it short and
+//   visible on a failed walk, so it is an expected residue, S202 owns closing
+//   it, and it moves with the tree -- 11 of the stride-1 cells show one at
+//   HEAD. It carries a per-case ceiling instead of a zero, and the ceiling is
+//   the worst cell the recorded grid shows for that case.
+//
+// And the precondition -- that a case was seen to report a mate at all, without
+// which "no short line" is true and means nothing -- is now asserted over the
+// **set** rather than per case: a majority of the guarded cases must report
+// one. One case falling silent is a cell moving; three of five falling silent
+// is the engine no longer finding these mates, which is what the fixture is
+// for.
 //
 // The three causes the cases cover, measured 2026-09-02 and recorded in the
 // step file: a score inherited across searches (A, B, C -- C reports `mate 7`
@@ -52,8 +76,9 @@
 // Zobrist keys. So the budgets in `adocs/data/S170_cases.tsv` are valid only
 // for the key set they were chosen under, and a redraw retires them -- measured
 // over four arbitrary seeds, every one of which left three or four of the six
-// cases reporting no mate at all. That is what the vacuity assertion below
-// catches.
+// cases reporting no mate at all. That is what the majority assertion below
+// catches -- a redraw silences most of the set, where a change that moves the
+// tree silences one case and leaves the rest reporting.
 //
 // What it does *not* mean is that the cases themselves are lost. S203 redrew
 // the keys and every one of the six came back by re-sweeping its node budget
@@ -66,8 +91,11 @@
 //
 // The budgets are a knife edge and the file says so rather than implying it:
 // C reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
-// Expect to re-run that sweep after any change that moves the tree, not only
-// after a key change. DEC-154, DEC-156.
+// Re-run that sweep after any change that moves the tree, not only after a key
+// change -- DEC-154, DEC-156. What DEC-162 changed is what depends on the
+// answer: no golden here is a per-case mate count any more, so a re-sweep moves
+// budgets and nothing else, and the assertions below are written so that a case
+// whose cell has moved does not fail on its own.
 //
 // D carries one more thing. Between 1200000 and 3000000 nodes it reproduces a
 // short line -- `mate -6` at ply 35 depth 11 with a 10-of-12-ply PV, at a depth
@@ -315,42 +343,49 @@ static bool line_ends_in_mate(const std::string& fen,
 }
 
 
-// The mate lines each case reported when it was chosen, 2026-09-02. A floor
-// and not an equality: a change that finds *more* mates is not a regression,
-// and one that finds none has made the case vacuous, which is the thing this
-// number exists to catch.
-static size_t expected_mate_lines(const std::string& name)
+// The most short mating PVs a case may report. S204, DEC-162: this replaces
+// the per-case floor on mate lines, which was a single cell of a sparse grid
+// and was re-pinned by every change that moved the tree.
+//
+// A short line is DEC-122's expected residue -- the walk found no entry it
+// could certify, so the line stays exactly as the search produced it -- and
+// S202 owns closing the class. It is not zero and pretending otherwise is what
+// selected the budgets: at HEAD short lines appear in 11 of the stride-1 cells
+// and merely miss the pinned ones.
+//
+// The rule, stated once and applied to every row: the ceiling is the largest
+// short-line count any cell of the recorded grid shows for that case, at the
+// stride its TSV row carries, over both recorded sweeps. Re-derive it with
+//
+//   adocs/data/S203_case_sweep.sh --ceilings F1 F2
+//
+// as one command line, where F1 and F2 are `adocs/data/S204_sweep_head.txt` and
+// `adocs/data/S204_sweep_killer_iter_clear.txt`, the two grids S204 recorded,
+//
+// which is the script DEC-142 requires beside a golden. Never read one off a
+// failing run.
+//
+//   case                       ceiling  worst cell
+//   A_mate8_shallow                  5  3000000, with the killer clear
+//   B_mate6_shallow                 11  1000000, with the killer clear
+//   C_mate7_depth11                  0  none: 0 short in all 18 of its cells
+//   D_mate_minus6_depth10            1  five cells, both sides
+//   E_mate_minus9                    8  1000000 at HEAD
+//   F_mate6_inherited_no_line        2  2000000 at HEAD (not guarded)
+//
+// C's zero is earned rather than chosen, which is the difference this file now
+// keeps: a ceiling of 0 says the grid has never shown one, and a budget where
+// none happens to appear says nothing.
+//
+// A step that lowers a ceiling is recording progress on S202. A step that
+// raises one is relaxing a test and needs a decision.
+static size_t short_line_ceiling(const std::string& name)
 {
-  // Re-derived 2026-09-08 by adocs/data/S203_case_sweep.sh, which is the script
-  // DEC-142 requires beside a golden. The rule, stated once and applied to
-  // every row rather than tuned per case: a floor is half the mate lines the
-  // case reports at its own budget, rounded down. Half and not the count
-  // itself, because the count swings with the table -- C reports 13 lines at
-  // 1500000 nodes and 0 at both 1000000 and 2000000 -- and a floor set at the
-  // observation would break on drift the guard does not care about. What it has
-  // to catch is a case that reports no mate at all, and any positive floor does
-  // that.
-  //
-  // A row whose budget did not move keeps the floor it was measured with: B
-  // reports 8 against its 7 and E reports 23 against its 9, so nothing about
-  // them was re-chosen and re-deriving them would only churn the record. A, C
-  // and D were re-swept and carry new floors; A and D rose, so no floor here
-  // was lowered against a live guard. F is `guard no` and its floor was stale
-  // at 6 against 4 reported -- corrected to 2 so the number means something if
-  // the row is ever guarded.
-  //
-  //   case                       budget      reports  floor
-  //   A_mate8_shallow            1000000       12       6
-  //   B_mate6_shallow             100000        8       7   (unchanged)
-  //   C_mate7_depth11            1500000       13       6
-  //   D_mate_minus6_depth10      4000000        6       3
-  //   E_mate_minus9              1500000       23       9   (unchanged)
-  //   F_mate6_inherited_no_line   300000        4       2   (not guarded)
-  if (name == "A_mate8_shallow") { return 6; }
-  if (name == "B_mate6_shallow") { return 7; }
-  if (name == "C_mate7_depth11") { return 6; }
-  if (name == "D_mate_minus6_depth10") { return 3; }
-  if (name == "E_mate_minus9") { return 9; }
+  if (name == "A_mate8_shallow") { return 5; }
+  if (name == "B_mate6_shallow") { return 11; }
+  if (name == "C_mate7_depth11") { return 0; }
+  if (name == "D_mate_minus6_depth10") { return 1; }
+  if (name == "E_mate_minus9") { return 8; }
   if (name == "F_mate6_inherited_no_line") { return 2; }
 
   FAIL("unknown case " << name);
@@ -369,8 +404,14 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
                    "more: " +
                    std::to_string(cases.size()) + " rows, expected 6"));
 
+  size_t guarded = 0;
+  size_t reporting = 0;
+  std::string quiet;
+
   for (const case_t& game : cases) {
     if (!game.guard) { continue; }
+
+    ++guarded;
 
     {
       // One `ucinewgame` per game and none between the plies: the table the
@@ -383,7 +424,8 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
     }
 
     size_t mate_lines = 0;
-    std::vector<std::string> failures;
+    size_t short_lines = 0;
+    std::vector<std::string> unreached;
 
     for (size_t ply = game.start; ply <= game.moves.size();
          ply += game.stride) {
@@ -408,38 +450,79 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
                                   std::to_string(report.depth) + " mate " +
                                   std::to_string(report.mate_in);
 
+        // Shorter than the distance claimed: the walk stalled and DEC-122
+        // leaves the line as the search produced it. Counted against the
+        // ceiling, not a failure on its own.
         if (report.pv.size() < needed) {
-          failures.push_back(where + ": pv is " +
-                             std::to_string(report.pv.size()) + " plies, " +
-                             std::to_string(needed) + " needed");
+          ++short_lines;
           continue;
         }
 
+        // Long enough to be walked to the end, so it must end where the score
+        // says. This one is not budget-dependent and has no tolerance.
         std::string why;
         if (!line_ends_in_mate(game.fen, game.moves, report.ply, report.pv,
                                needed, why)) {
-          failures.push_back(where + ": " + why);
+          unreached.push_back(where + ": " + why);
         }
       }
     }
 
-    CHECK_MESSAGE(mate_lines >= expected_mate_lines(game.name),
-                  (game.name + " reported " + std::to_string(mate_lines) +
-                   " mate lines, at least " +
-                   std::to_string(expected_mate_lines(game.name)) +
-                   " when the case was chosen -- the case has gone vacuous "
-                   "and needs re-choosing, not deleting"));
+    if (mate_lines > 0) {
+      ++reporting;
+    } else {
+      quiet += (quiet.empty() ? "" : ", ") + game.name;
+    }
 
     std::string report;
-    for (const std::string& failure : failures) {
+    for (const std::string& failure : unreached) {
       report += "\n  " + failure;
     }
 
-    CHECK_MESSAGE(failures.empty(),
-                  (game.name + ": " + std::to_string(failures.size()) + " of " +
-                   std::to_string(mate_lines) +
-                   " mate lines do not reach their mate:" + report));
+    // DEC-122's guarantee, asserted at every budget and pinned to none: a line
+    // the search published at the length its score claims reaches the mate, or
+    // it is a line the engine cannot stand behind. 0 in 428 mate lines across
+    // the whole sweep grid when this was written (S204).
+    CHECK_MESSAGE(unreached.empty(),
+                  (game.name + ": " + std::to_string(unreached.size()) +
+                   " of " + std::to_string(mate_lines) +
+                   " mate lines run their claimed distance and do not end in "
+                   "checkmate -- DEC-122 says the walk extends only to a mate, "
+                   "so this is a published line the engine cannot back:" +
+                   report));
+
+    // S202's residue, bounded rather than assumed away. A ceiling that is
+    // exceeded is either a regression in the walk or the case having moved to
+    // a cell the recorded grid does not cover -- re-run
+    // adocs/data/S203_case_sweep.sh before deciding which, and never raise the
+    // ceiling to match a run.
+    CHECK_MESSAGE(short_lines <= short_line_ceiling(game.name),
+                  (game.name + " reported " + std::to_string(short_lines) +
+                   " short mating PVs of " + std::to_string(mate_lines) +
+                   " mate lines, ceiling " +
+                   std::to_string(short_line_ceiling(game.name)) +
+                   " -- the worst cell the recorded grid shows for this case "
+                   "(DEC-162)"));
   }
+
+  // The precondition, over the set instead of per case. A case whose budget no
+  // longer lands on a cell that reports a mate is a cell moving in a sparse
+  // grid -- C reports one at one budget of nine -- and asserting on it per case
+  // re-pinned the golden at every tree-moving change, which is the defect S204
+  // exists for. A majority falling silent is not that: it is a Zobrist redraw
+  // (three or four of six went quiet on every seed tried) or the engine no
+  // longer finding these mates, and either one makes the assertions above
+  // vacuous. DEC-161, DEC-162.
+  const size_t majority = (guarded + 1) / 2;
+
+  CHECK_MESSAGE(
+      reporting >= majority,
+      (std::to_string(reporting) + " of " + std::to_string(guarded) +
+       " guarded cases reported a mate line, " + std::to_string(majority) +
+       " needed -- the set has gone vacuous and the budgets need "
+       "re-sweeping with adocs/data/S203_case_sweep.sh, not the "
+       "assertions relaxing. Silent: " +
+       quiet));
 
   uci_shutdown();
 }

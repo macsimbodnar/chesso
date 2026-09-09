@@ -8973,3 +8973,88 @@ Consequences: **DEC-156 is not void and is not amended here.** Its re-sweep
               `tests/test_search.cpp`'s mate cases -- were green on the same
               candidate, 30 of 31 fast tests passing. They are not implicated and
               S204 does not touch them.
+
+
+## DEC-162  2026-09-09  `test_mate_carry` guards a fixture-wide majority and a per-case short-line ceiling, and stops asserting a per-case floor at a pinned cell
+Tags:         testing, mate-pv, fixtures, s204, s202, s170, dec-122, dec-142, dec-156, dec-161
+Context:      DEC-161 recorded the defect and sent the shape to S204. The count
+              S204 took from the two recorded grids says what has to change.
+              Per case, over the nine stride-1 budgets, cells reporting at least
+              one mate line: A 8/9 both sides, B 9/9 then 8/9, **C 1/9 at HEAD
+              and 3/9 under S159's clear, with the pinned budget being that one
+              cell**, D 4/9 then 2/9, E 7/9 then 6/9. The union over the nine is
+              non-zero for every case on both sides -- C is 13 lines against 48
+              -- so **no case lost its mate; the cell holding it moved.**
+              The short-line half is the same. Across the stride-1 grid at HEAD
+              short lines appear in 11 cells and merely miss the pinned budgets,
+              and the rule that chose those budgets -- "the cheapest budget at
+              which the case reports at least its floor of mate lines with all
+              of them complete" (DEC-156) -- is what selected for that.
+              The part neither DEC-156 nor DEC-161 had is the class split.
+              `adocs/data/S204_class_census.py`, over the five guarded cases at
+              nine budgets, **428 mate lines, 39 short, 0 that run the claimed
+              distance and fail to be checkmate** -- and its mate counts
+              reproduce `adocs/data/S204_sweep_head.txt` cell for cell. So one
+              of the two things the fixture merged into a single failure list is
+              budget-independent and the other is not.
+              Cost bounds the answer: the fixture is 26.30 s over 188 M nodes,
+              and a per-case union over all nine budgets is 13.5x that, about
+              4.3 minutes, which is not a fast-suite test.
+Decision:     By the owner, 2026-09-09, on the agent's proposal, with the count
+              and the census in hand. **The budgets do not move.** The guard
+              becomes three assertions:
+              **1. The mate-reaching invariant, asserted at zero and pinned to
+              nothing.** A published mate line whose `pv` is at least the
+              distance the score claims must be checkmate at exactly that
+              distance. This is DEC-122's own guarantee, it held in 428 of 428
+              lines across the grid, and no budget is chosen to make it true.
+              **2. Vacuity becomes fixture-wide: a majority of the guarded cases
+              -- 3 of 5 -- must report a mate line.** The per-case
+              `expected_mate_lines` floors are deleted. One cell of a sparse
+              grid is one sample and not a property the engine has, which is
+              exactly what C at 1/9 measures; the majority is a property, and it
+              is a rule stated once over the set rather than a number per case.
+              **3. The short-line residue is bounded per case, not asserted
+              zero.** The ceiling is the largest short-line count any cell of
+              the recorded grid shows for that case on either side: A 5, B 11,
+              C 0, D 1, E 8. C's zero is earned -- 0 short in all 18 of its
+              cells -- and is not a budget choice. The ceilings are re-derived by
+              `adocs/data/S203_case_sweep.sh`, which is what DEC-142 requires.
+Rejected:     A per-case union of budgets for the vacuity floor. It is the
+              robust shape and it was refused on measured cost: 4.3 minutes
+              against 26.30 s, in a suite that gates every commit. It belongs in
+              `tools/gate_extra.sh` if S197 ever wants it.
+              A contiguous green window per case, which DEC-161's shape list
+              offered. Dead on the data rather than on cost: C has no window
+              wider than one cell on either side -- {1500000} at HEAD and
+              {1000000, 2000000, 4000000} under the clear.
+              Dropping the count entirely and asserting only completeness.
+              Refused because until a differently-sourced vacuity guard exists,
+              a fixture that sees nothing at all passes.
+              Keeping `short == 0` at the pinned budget. Refused because it
+              leaves half the defect standing: two of S159's four reds were
+              short lines landing on a pinned cell, and the budget stays chosen
+              to dodge a residue DEC-122 says is expected.
+Consequences: **DEC-156 is amended here, not upheld.** Its re-sweep
+              prescription -- "the sweep is to be re-run after anything that
+              moves the tree" -- stands for the *budgets*, which is what it was
+              written about and which nothing here moves. It no longer applies
+              to the floors, because there are none: a tree-moving change that
+              silences one case is now green by design, and only a change that
+              silences three of five is red. The rule that chose the budgets
+              (DEC-156) also selected cells with no short lines; that selection
+              pressure is removed by assertion 3, so a future re-sweep is
+              choosing on the mate count alone.
+              **The guard is deliberately looser than it was, in one direction
+              only.** It cannot notice one case going quiet or a short line
+              appearing under a case's grid ceiling. It gains what it did not
+              have: it fires on a change that stops mates being found across the
+              set, and it fires on a published line that does not reach its
+              mate at *any* budget rather than at one. Both halves were shown
+              red on a mutant before this was called done, which is the second
+              tier of DEC-141 applied to a fixture.
+              **S202's class is bounded here and still owned there.** The
+              ceilings are the size of the residue as measured, and closing S202
+              is what allows them to go to zero. A step that lowers one is
+              recording progress; a step that raises one is relaxing a test and
+              needs a decision.

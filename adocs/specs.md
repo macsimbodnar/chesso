@@ -263,9 +263,19 @@ of them still all-or-nothing (DEC-122).
 S147's run replayed move by move through one process at fixed node budgets,
 which is the only shape that reproduces any of this -- `test_mate_pv` gives
 every case its own `ucinewgame`, and on a cold table none of the three exists.
-It asserts the mate lines it sees are complete, and asserts first that it saw
-any, so a case that stops reporting a mate fails loudly instead of passing
-vacuously.
+It asserts three things, and the split is S204's, DEC-162. **A line at least as
+long as the distance it claims ends in checkmate at exactly that distance** --
+DEC-122's own guarantee, asserted at zero, at whatever budget the row carries
+and pinned to none; measured 0 in 881 mate lines over both sides of the sweep
+grid by `adocs/data/S204_class_census.py`. **A line shorter than the distance it
+claims is counted against a per-case ceiling** rather than forbidden, because
+DEC-122 leaves it short on a failed walk and S202 owns closing the class; the
+ceiling is the worst cell the recorded grid shows for that case. **A majority of
+the guarded cases must report a mate line at all**, over the set and not per
+case, so the assertions above cannot pass vacuously. What retired the per-case
+floor is that it was one cell of a sparse grid -- `C_mate7_depth11` reports a
+mate line in one of nine budgets and its configured budget is that cell -- so
+every change that moved the tree re-pinned it (DEC-161).
 
 **A fourth cause, and it is a hole in the table rather than a wrong score,
 since 2026-09-03, S171.** S170's own 3000-game run left **5** `Incomplete

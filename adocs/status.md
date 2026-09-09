@@ -7,6 +7,49 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-09, by hand.
 
+- **S204 is done, 2026-09-09: `test_mate_carry` stops firing on any change that
+  moves the tree, and starts firing on three separate things that matter.**
+  DEC-162. The count that retired the old shape, from the two grids the step was
+  created with: over the nine stride-1 budgets `C_mate7_depth11` reports a mate
+  line in **one cell** at `c982f9d` and its configured budget is that cell,
+  `B_mate6_shallow`'s is 100000, the lowest cell and the edge it switches on --
+  and **every case's union over the nine is non-zero on both sides**, 13 against
+  48 for C, so no case lost its mate and only the cell holding it moved. One
+  failure list and one per-case floor became three assertions, budgets unmoved:
+  a line as long as the distance it claims **ends in checkmate**, at zero and
+  pinned to nothing; a shorter line is S202's residue against a **per-case
+  ceiling** (A 5, B 11, C 0, D 1, E 8) that
+  `adocs/data/S203_case_sweep.sh --ceilings` re-derives from the recorded grids;
+  and a **majority of the guarded cases, 3 of 5**, reports a mate line at all.
+- **The class split is the measurement DEC-156 and DEC-161 did not have.**
+  `adocs/data/S204_class_census.py` over both sides: **881 mate lines, 64 short,
+  0 that run their claimed distance and fail to be checkmate**, and its counts
+  reproduce `adocs/data/S204_sweep_head.txt` and
+  `adocs/data/S204_sweep_killer_iter_clear.txt` in **all 90 cells**, which is
+  what says the driver agrees with `adocs/data/S203_case_sweep.sh` instead of
+  measuring something else. So one of the two things the old list merged is
+  budget-independent over 881 lines and only the other ever needed a budget
+  chosen for it.
+- **Green on the tree-moving change, red on a mutant once per assertion, every
+  failure observed.** S159's candidate A -- the four reds that started this --
+  passes with 61 assertions, and the reconstruction was checked cell-identical
+  to the recorded grid before it was trusted. No checkmate detection anywhere
+  takes the majority to `0 >= 3`; DEC-122's own rejected option, extending to
+  the claimed length instead of to the mate, takes the mate-reaching assertion
+  red at a cell where the walk stalls, with the same budget green unmutated; the
+  walk publishing nothing takes four ceilings red. **Three plausible search
+  mutants stayed green and that is the guard working** -- the table refusing
+  mate scores, null move reducing to depth 0 inside the mate window, quiescence
+  losing checkmate detection: each moves the tree and each leaves the mates
+  being found, two of them in larger numbers than HEAD. `tools/mutation_check.py`
+  is S196 and does not exist yet, so the mutants were applied by hand and
+  reverted; `git diff -- src/` is empty.
+- **DEC-156 is amended and not upheld.** Its re-sweep prescription stands for the
+  *budgets*, which nothing here moved, and no longer applies to floors because
+  there are none. `adocs/plan_todo/S192_golden_hygiene.md` row 6 moved with it:
+  it cited `expected_mate_lines` and turned the citation gate red the moment the
+  symbol went, which is that gate working. The fixture costs **23.5 s** against
+  26.3 s.
 - **S159 is done, 2026-09-09, and it cost no machine time: the hypothesis was
   refuted by a census before a game was played.** S149 measured CPW's killer
   distinctness guard at -11.02 +/- 10.53 Elo and reverted it; S159's reading was
@@ -38,21 +81,6 @@ Updated: 2026-09-09, by hand.
   66.0 % / 44.4 %. S159's set, driver, instrumentation patch and outputs are all
   under `adocs/data/S159_*`; the duplicate rates reproduce on it at 72.0 % of
   stores and 44.0 % of nodes. A census that cannot be re-run is an anecdote.
-- **S204 is in progress and it is the found bug, taken before anything else
-  (BUGS).** Candidate A turned `test_mate_carry` red against a green HEAD, on
-  four assertions over four cases. The S203 sweep over both sides says it is the
-  fixture: of nine stride-1 budgets **`C_mate7_depth11` reports a mate line in
-  one cell at HEAD -- 1500000 nodes -- and that cell is its configured budget**,
-  while `B_mate6_shallow` is pinned at 100000, the edge where it switches on.
-  Short lines are scattered across the grid at HEAD too and merely miss the
-  pinned budgets. DEC-156 already recorded the knife edge and prescribed
-  re-sweeping after any tree change; on a grid this sparse that re-pins each
-  golden to a fresh spike every time, which DEC-156's own `Rejected:` refuses as
-  "fitting the fixture to the test". That tension is S204's, DEC-161.
-  **The mate guards written for the recurring "pruning that hides a mate"
-  failure were green on the same candidate** -- `test_engine` "engine: mate
-  safety" and `test_search`'s mate cases, 30 of 31 fast tests passing -- so they
-  are not implicated and S204 does not touch them.
 - **S190 is done, 2026-09-09: INV-2 and INV-4 are enforced by the gate.**
   `tests/test_invariants` walks every test FEN two plies deep plus the five
   positions of `test_engine`'s hash oracle at their own depths -- **2132167
@@ -658,7 +686,8 @@ Updated: 2026-09-09, by hand.
   `game_tables()` uninitialised -- which is what running the binary with a
   `-tc=` filter and no earlier case does -- they all pass vacuously. Under
   `ctest` the case is sound; the vacuity is the class S193 was written for.
-- In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
+- In progress: **nothing.** `adocs/plan_current/` is empty; S204 completed into
+  `plan_done/` on 2026-09-09. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
   entry 10.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
@@ -1055,11 +1084,13 @@ Updated: 2026-09-09, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S159**, now Open entry 1 -- measure whether the second killer slot
-  wants ageing rather than distinctness, the hypothesis S149's -11 Elo left
-  standing. It is the first entry that wants the machine, and the machine is
-  free. Behind it the agent-only test block runs on: **S193**, **S191**,
-  **S196**, **S197**, **S192**, **S195**, **S194**, entries 2 to 8. S151's
+- Next: **S193**, now Open entry 1 -- the fast suite's vacuous assertions made
+  falsifiable, the fifty-move boundary pinned, `test_perft` Release-safe. It is
+  agent-only work and wants no machine time, and the machine is free. Behind it
+  the rest of the test block runs on: **S191**, **S196**, **S197**, **S192**,
+  **S195**, **S194**, entries 2 to 7. S204 supplied two of them with material
+  while it ran -- S196 gets the seven mutants it applied by hand, and S192's
+  row 6 is already done. S151's
   pair, Open entry 9, is still the owner question parked below. The enrichment
   pass's next file is **S181**, today Open entry 10.
 
