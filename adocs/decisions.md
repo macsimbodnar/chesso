@@ -9068,3 +9068,62 @@ Consequences: **DEC-156 is amended here, not upheld.** Its re-sweep
               is what allows them to go to zero. A step that lowers one is
               recording progress; a step that raises one is relaxing a test and
               needs a decision.
+
+## DEC-163  2026-09-09  S193's accepts is amended before the step starts: the R2 clause names the mechanism that works, and R13 to R17 join the enumeration
+Tags:         testing, plan, s193, vacuity, dec-139, dec-141, dec-142
+Context:      Two things in S193's `accepts:` did not survive contact with the
+              code, and its enrichment guide (2026-09-05) put both to the owner
+              rather than letting the implementer decide.
+              **The R2 clause names a mechanism that cannot do what it says.**
+              The accepts asked for `ucinewgame` before `tests/test_engine.cpp`'s
+              "a search with no limit is still bounded", to clear the stop flag
+              `position` leaves set. At HEAD `command_ucinewgame` in
+              `src/chesso.cpp` calls `stop_and_join_search()`, which *sets*
+              `stop_search_signal`; the only callers of `begin_search_session()`,
+              which clears it, are `command_go` and `command_test`, and that
+              function is declared in no header, so a test cannot call it. The
+              clause as written would be satisfied by an edit that leaves the
+              case exactly as vacuous as the review found it.
+              **R13 to R17 and three temp-file names are in the goal and not in
+              the accepts.** The 2026-09-04 test review's F05 list has five more
+              vacuous assertions than the accepts enumerates -- a history of one
+              entry, a bound true by an earlier clamp, a literal compared with
+              itself, a depth floor no writer can go below, a `make_move` that
+              refuses nothing -- and F09's temp-file family includes
+              `tests/test_corpus_hash.cpp`, which the review's own enumeration
+              missed. The goal's words ("vacuous assertions are made
+              falsifiable", "temp-file hazards removed") cover all of them; the
+              accepts does not.
+Decision:     By the owner, 2026-09-09, on the three questions in S193 section 10.
+              1. The R2 clause becomes "the stop flag cleared through a completed
+              `go depth 1` before the case, and the case shown to spend at least
+              half its 200 ms budget". The `ucinewgame` wording is dropped rather
+              than kept and deviated from.
+              2. R13 to R17 and `tests/test_corpus_hash.cpp`'s three fixture
+              names are in scope; the accepts gains a clause naming them.
+              3. R7 takes the asserting form, not the rewording one:
+              `legal_moves()` asserts `position_is_reachable` after `make_move`,
+              which is the property its comment already claims. Subject to trap
+              T7 -- if a Debug binary approaches its CMake timeout the fallback
+              wording is taken instead and the stamp says so.
+Rejected:     Keeping the accepts verbatim and recording a deviation in the stamp
+              (question 1's alternative). Refused because a stamp note does not
+              stop the next reader from re-deriving the wrong mechanism, and the
+              accepts is what a later audit reads.
+              Deferring R13 to R17 to a follow-up step. Refused on cost: each is
+              minutes, none touches `src/`, and a second step over the same files
+              pays the gate twice for the same class of defect.
+              Rewording `legal_moves()`' comment instead of asserting it.
+              Refused because the perft and JSON counts do pin legality but do
+              not pin it *at this helper*, which is what its call sites read the
+              comment as promising.
+Consequences: S193's `accepts:` carries the amended R2 clause and an R13-to-R17
+              clause, both marked with this id. The step's own guide keeps its
+              section 10 as the record of what was asked.
+              R7's cost is now a step obligation: the Debug `test_movegen` and
+              `test_search` timings are taken after the change and reported in
+              the stamp against their 600 s ceilings, and taking the fallback is
+              a stamped outcome rather than a silent one.
+              `2026-09-04_adversarial-F01` reads `Status: open` at `fbffd36`, so
+              R12 stays unregistered under the accepts' own condition; nothing
+              here changes that.
