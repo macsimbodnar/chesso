@@ -5,8 +5,58 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-08, by hand.
+Updated: 2026-09-09, by hand.
 
+- **S187 is done, 2026-09-09: every citation from a pending step file into
+  code names a symbol, and the checker refuses a line number.** **572
+  converted over 27 files**; `tools/plan_prose_check.py --citations` reads
+  **0 flagged over 65 files**, from a census of **558 code citations, 14
+  document, 0 bare and 52 DRIFT** banked at `2b198f6` in
+  `adocs/data/S187_citations_before.txt` before the first conversion. The
+  mapping is `adocs/data/S187_symbols.tsv` and the generator
+  `adocs/data/S187_symbolise.py` -- S144's and S169's shape, because the
+  evidence for a conversion is the mapping and never a green run (DEC-119).
+  Methods: 393 WALK, 47 AUTO, 50 TITLE, 37 CHOSEN by hand, 20 HAND read and
+  rewritten, 15 SPAN over a pair with the path repeated per DEC-120, 10 PHRASE
+  at file scope. Closes
+  `2026-09-04_plan_review-F07`.
+- **Six citations were wrong at the moment they were written, and that is the
+  class the old checker could not see** -- its baseline was the commit that
+  wrote them. `src/chesso.cpp` line 674 was cited by **S099, S132 and S159**
+  for where the per-`go` `search_state_t` is built, and at all three baselines
+  it had fallen into the book-move helper; S132's node counter named the
+  transposition table declared under it and its per-iteration reset the same
+  helper; S115's two citations for the test-only aspiration counter named a
+  thread block and a typedef; S024's countermove write named an `unmake_move`
+  line. Each is in the generator's `HAND_CHOICES` with the sentence that
+  decided it. The four F07 cases come out right: S109's `is_check_move` and
+  its reduction guard are both `src/search.cpp` `negamax`, S055's taper
+  divisions split between `evaluate_cheap` and
+  `evaluate_mobility_and_king_safety`, S024's countermove read is
+  `src/evaluation.cpp` `score_move`, S119's is `rating.sh` `hash_mb`.
+- **`--citations` is in the fast suite now, DEC-159**, as
+  `test_plan_citation_freshness`: **0.45 s** over the 66 pending files, median
+  of five, against **6.3 s** under the retired DRIFT class, which ran
+  `git show` once per baseline-and-path pair. The S141 reason for keeping it
+  out -- "any source commit shifts lines under fifty step files at once" -- no
+  longer reaches it, because nothing it reads is a line. What turns it red is
+  a renamed or deleted symbol with a pending step still citing it, and that
+  commit is exactly when a manual check is not run. `tests/CMakeLists.txt`,
+  `DEV_MANUAL.md` and `adocs/plan.md`'s writing rule all say so.
+  `tests/test_plan_citations.py` is the separate planted-case gate on the
+  checker itself, 18 cases over temporary files, so a recogniser that stopped
+  firing cannot hide behind a green real set.
+- **Three things the next writer should know.** `BOUNDS`, `ANCHOR` and `DRIFT`
+  are retired; `LINE`, `MISSING` and `BARE` replace them. **`LINE` is found by
+  a scan over the file's text, not through the path token**, because a path
+  preceded by a slash is invisible to the token -- S020 and S117 each write
+  `path:line/path:line`, and four citations were hiding there. And the
+  conversion costs prose: a step that cited eight distinct lines inside
+  `negamax` now cites `negamax` eight times, so **fifty paragraphs were
+  rewritten** to name the enclosing function once and the sites by what they
+  do. Write it that way from the start; the checker fires only on a backticked
+  identifier or a quoted phrase directly after the path, so backtick the
+  symbol.
 - **S148 is done, 2026-09-09: the reverse futility ceiling stays at 15, and
   the deep mates it loses are its measured price.** `{-5, 0}` nElo at 8+0.08,
   **H0 accepted at LLR -2.95** -- `Elo -5.66 +/- 4.33, nElo -7.31 +/- 5.60`
@@ -510,7 +560,7 @@ Updated: 2026-09-08, by hand.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
-  entry 19.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  entry 12.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
@@ -904,13 +954,13 @@ Updated: 2026-09-08, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S187**, now Open entry 1 -- citations from pending step files into
-  code name a symbol and no line, the checker verifies the symbol, and the 549
-  existing ones are converted (F07, DEC-135). Its input is S184's 52 DRIFT
-  flags over the pending set. It is agent-only work and owns no run, so the
-  machine is free for whichever verdict is taken beside it; **S159** is the
-  next entry that wants the machine, and S151's pair is still the owner
-  question parked below.
+- Next: **S190**, now Open entry 1 -- a Release fast test compares the
+  accumulators and `squares[]` against a full rebuild after every make and
+  unmake, so INV-2 and INV-4 are enforced by the gate (F01, DEC-141). It is
+  agent-only work and owns no run, so the machine is free for whichever
+  verdict is taken beside it; **S159**, Open entry 2, is the next entry that
+  wants the machine, and S151's pair is still the owner question parked below.
+  The enrichment pass's next file is **S181**, today Open entry 12.
 
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on

@@ -8,7 +8,7 @@ closes:     2026-09-04_plan_review-F07
 blocks:
 paused_by:
 author:     agent (Claude Opus 5), coordinator, 2026-09-09
-done:
+done:       2026-09-09. **Every citation in `adocs/plan_todo/` and `adocs/plan_current/` names a symbol, and the checker refuses a line number.** Census at `2b198f6`, the commit the step started from and banked in `adocs/data/S187_citations_before.txt` before the first conversion: **558 code citations, 14 document, 0 bare, 52 DRIFT over 66 files** -- the goal's 549 and the guide's 564 were both taken earlier and the header keeps 549 by S144's precedent. **572 line citations converted over 27 files**; `--citations` reads **0 flagged** -- over 66 pending files while the step was current, 65 once its own file moved to `plan_done/`. Methods, from `adocs/data/S187_symbols.tsv`: **393 WALK** (one enclosing definition, not named beside the citation), **47 AUTO** (that definition already backticked beside it), **50 TITLE**, **37 CHOSEN** by hand in the generator's `HAND_CHOICES` with the sentence that decided each, **20 HAND** (the walk-up's symbol kept and the sentence read, because the citing line named a different definition of the same file), **15 SPAN** (a range over a pair, both names kept, path repeated per DEC-120), **10 PHRASE** (file scope -- a comment or a bare declaration, quoted from the baseline text and required to occur exactly once at HEAD). 393 + 47 + 50 + 37 + 20 + 15 + 10 = 572. The four F07 cases come out right: S109's `is_check_move` and its reduction guard are both `src/search.cpp` `negamax`; S055's taper divisions split between `src/evaluation.cpp` `evaluate_cheap` and `src/evaluation.cpp` `evaluate_mobility_and_king_safety`; S024's countermove read is `src/evaluation.cpp` `score_move` and its Note now obeys its own accepts; S119's is `rating.sh` `hash_mb`. **Six more were wrong when written and are recorded in `HAND_CHOICES`** -- `src/chesso.cpp:674` cited by S099, S132 and S159 for where the per-`go` `search_state_t` is built, and it had fallen into the book-move helper at all three baselines; S132's node counter naming the table declared under it; S132's per-iteration reset likewise; S115's two citations for the test-only aspiration counter naming a thread block and a typedef; S024's countermove write naming an `unmake_move` line. Planted cases observed red before the conversion and green after: `tests/test_plan_citations.py`, **18 cases**, and the real set printed `LINE` for all 572 at `124e557`. **The mode joins the fast suite as `test_plan_citation_freshness` (DEC-159)**, 0.45 s over the 66 pending files, median of five, against 6.3 s under the retired DRIFT class; `tests/CMakeLists.txt` says why the S141 reason no longer reaches it. `adocs/plan.md`'s "A citation repeats its path" paragraph and `DEV_MANUAL.md`'s `--citations` and ctest-registration paragraphs are rewritten for the symbol form; `MANUAL.md` unchanged (no UCI surface); `adocs/specs.md` unchanged (its invariant table is excluded by DEC-135); `README.md` untouched. Gate green in both builds, 30/30 after the registration, format clean. No `src/` change and therefore no `Bench:` line (DEC-140).
 
 ## Why this exists
 
@@ -379,3 +379,49 @@ transcript is not the memory.
    Amended line on DEC-135 and not the CMake comment alone: what a future
    reader re-derives is why the 2026-08 reason for keeping the mode out
    stopped applying, and that is a decision rather than a comment.
+
+## 12. What the step found that the guide did not predict
+
+Four things, each a decision made in the working and worth having beside the
+mapping.
+
+**The recogniser needed two rules the guide's grammar did not have, and both
+were decided by measurement over the 66 pending files rather than by taste.**
+Fenced code blocks are blanked before the scan: 0 of the 648 real citations sat
+inside a fence and both matches that did were false, a python string literal's
+closing quote read as the opening of a phrase in S191 and S193. And the
+raw-text phrase check is case-folded, because a phrase quoted out of a comment
+is quoted from mid-sentence -- S193's R15 cites
+`tests/test_uci_surface.cpp` "the release build declares exactly the five
+golden lines" against a comment that opens the sentence with a capital T.
+
+**Four line citations were invisible to the citation walk and are exactly what
+DEC-135 forbids.** `PATH` refuses a path preceded by a slash, so that it cannot
+match the tail of a longer one, and S020 and S117 both write
+`path:line/path:line` for a pair of sites. A `LINE` flag resolves nothing, so
+the retired form is now looked for in the file's text as well; the four came
+out with the rest.
+
+**The disagreement rule the guide prescribed had to be narrowed to the citing
+line.** Comparing the walk-up's symbol against every backticked identifier in
+the citing paragraph made **258 of 572** rows hand cases and not one of them
+was a real disagreement -- a paragraph that says `generate_quiets` beside a
+citation into `negamax` is naming what the code does, not where it is.
+Narrowed to the citing line and the one before it, the same window
+`anchor_titles` used for titles, it gives 20. The six blind cases above were
+found by reading those, and by reading the rows whose cited text mentions none
+of the symbols beside it.
+
+**The conversion damages prose, and the damage is the price of the form.** A
+step file that cited eight distinct lines inside `negamax` now cites `negamax`
+eight times, and a sentence like "between `src/search.cpp` `negamax` and
+`src/search.cpp` `negamax`" says nothing at all. Fifty paragraphs were
+rewritten to name the enclosing function once and the sites by what they do --
+"between `pick_next_move` and `make_move`" -- which is what the symbol form
+asks a writer to do from the start. The paragraphs the substitution made
+overlong were re-wrapped to the file's own width with the flattened text
+asserted equal on both sides, and three markdown hazards were caught by
+comparing heading, bullet and numbered-item counts against the parent commit:
+a wrapped line that opens with `#2620` is a heading, one that opens with `0.`
+is a list item, and `  * ln(move_number)` is a multiplication rather than a
+bullet.

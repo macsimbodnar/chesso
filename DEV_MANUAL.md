@@ -732,10 +732,10 @@ at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
-`tools/plan_prose_check.py` carries four plan-hygiene checks. Two of the four,
-`--touches` and `--params`, are in the fast suite as `test_plan_touches` and
-`test_plan_params`; the other two are not, and the paragraph after them says
-why:
+`tools/plan_prose_check.py` carries four plan-hygiene checks. Three of the
+four -- `--touches`, `--params` and `--citations` -- are in the fast suite as
+`test_plan_touches`, `test_plan_params` and `test_plan_citation_freshness`;
+`--prose` is not, and the paragraph after them says why:
 
 ```bash
 tools/plan_prose_check.py             # all four, exits non-zero on any
@@ -755,22 +755,40 @@ it when a step completes: this has now gone stale three times
 (`2026-08-13_plan_review-F05`, `2026-08-13_plan_review.2-F07`, and again the
 moment S033 finished), and S062 is the third repair.
 
-**`--citations`.** Every `path:line` and `path:line-line` citation in
-`plan_todo/` and `plan_current/`, re-resolved against the working tree. Three
-failure classes are exact string comparisons and none is a judgement: `BOUNDS`
-(the path is absent, or the line is past the end of the file), `ANCHOR` (a
-doctest title quoted on the citing line or the line above it is not the test the
-cited lines open), `DRIFT` (the cited lines hold different text now than they
-held in the commit that last wrote the step file). The fourth is a rule about
-writing rather than a comparison: `BARE`, a `:line` continuation with no path of
-its own. Citations into `adocs/` and other `.md` files are counted and printed
-but do not fail the run, because those documents are rewritten at every
-completion by design. S138 is why it exists:
-`2026-08-20_plan_review-F01` measured 70 of 147 citations stale, and
-eight pending steps that each add pruning or a reduction told their implementer
-to extend the mate-safety gate at a line that had come to rest inside an
-unrelated test. The symptom of extending the wrong mate test is a strength
-regression, not a red test.
+**`--citations`.** Every citation in `plan_todo/` and `plan_current/`,
+resolved against the working tree. A citation is a path followed by a
+backticked symbol or a double-quoted phrase -- `src/search.cpp` `negamax`,
+`tests/test_search.cpp` "pruning does not hide a forced mate" -- and a path
+followed by an ordinary word is prose and is not one. Three failure classes,
+none a judgement:
+
+* `LINE`, a `path:line` or `path:line-line` in a pending step file. The
+  retired form (DEC-135). Found by a scan over the file's text rather than
+  through the path token, because a path preceded by a slash -- S020 and S117
+  each write `path:line/path:line` -- is invisible to the token and is exactly
+  what the rule forbids.
+* `MISSING`, the named file carries no such symbol or holds no such phrase. A
+  symbol is searched word-bounded with the file's comments blanked, so a name
+  that survives only in a comment does not answer; a phrase is matched against
+  the doctest titles first and then, case-folded, as text anywhere in the file,
+  which is how a citation into a comment lands.
+* `BARE`, a `:line` continuation with no path of its own.
+
+`LINE` gates a citation into `adocs/` too -- those rot fastest of all -- but a
+phrase missing from a document is a note and does not fail the run, because
+those documents are rewritten at every completion by design. Fenced code blocks
+are not scanned: a fence holds a command, and the quote closing a string
+literal in one reads as a phrase opening.
+
+S138 is why the check exists: `2026-08-20_plan_review-F01` measured 70 of 147
+citations stale, and eight pending steps that each add pruning or a reduction
+told their implementer to extend the mate-safety gate at a line that had come
+to rest inside an unrelated test. The symptom of extending the wrong mate test
+is a strength regression, not a red test. **`BOUNDS`, `ANCHOR` and `DRIFT` are
+retired** -- all three needed a line number, and DRIFT needed a git baseline
+per file besides, which is what made this mode cost 6.3 s. Their evidence is in
+`adocs/plan_done/S138_*`, `S144_*` and `S169_*`; the last run of them is banked
+at `adocs/data/S187_citations_before.txt`, 52 DRIFT over 66 files.
 
 **`BARE`, and why the check refuses to resolve one.** `(src/evaluation.cpp:951
 mobility, :953 king safety)` — the second citation inherits its path from the
@@ -783,26 +801,20 @@ file works" carries it — and this flag is its enforcement. S144 converted the
 383 that existed across 19 pending files, reading each citing sentence and then
 relocating the text the citation was written against to prove the path;
 `adocs/data/S144_pathings.tsv` is that mapping and `adocs/data/S144_paths.py`
-the generator. DEC-120.
+the generator. DEC-120. The path is still repeated per symbol in the form that
+replaced it: `src/search_params.hpp` `LMR_BASE` and `src/search_params.hpp`
+`LMR_DIVISOR`, because the checker reads only the first token after each path.
 
-**What a converted citation is worth.** A wrong path is caught when its line is
-past the end of that file, or when a quoted `TEST_CASE` title contradicts it.
-An in-range wrong path is caught by neither, and DRIFT is blind on the commit
-that writes the citation, since that commit becomes the baseline. Observed both
-ways at S144: `src/search_params.hpp:181-182` mistyped as `src/search.hpp` gave
-`BOUNDS ... src/search.hpp has 99 lines`, and the same range mistyped as
-`src/search.cpp` — in range, wrong file — passed green. The mapping is the
-evidence; the green run is not.
-
-**Run it before editing a step file, not after.** DRIFT's baseline is the commit
-that last wrote the step file, so *any* edit to that file — for any reason, on
-any step — moves the baseline forward and every DRIFT flag it was carrying goes
-green without being repaired. Measured at S169: 97 flags stood at HEAD and 92 of
-them sat in the eighteen files S144 was about to rewrite for an unrelated
-reason, so running S144 first would have cleared them and printed a green run
-over a tree that had got no better. ANCHOR is the half that survives an edit, and
-it is the reason a citation is written with a `TEST_CASE` title beside it.
-DEC-119.
+**What a citation is worth, and what proves it.** The check is existence, not
+relevance: `src/search.cpp` `state` passes because `state` occurs in the file.
+What proves a citation means what it says is the mapping the conversion was
+made through, and never a green run — `adocs/data/S144_pathings.tsv`,
+`adocs/data/S169_recitations.tsv`, `adocs/data/S187_symbols.tsv`, each with its
+generator beside it. S187's records six citations that were wrong at the moment
+they were written, a class no checker could see because its baseline was the
+commit that wrote them: `src/chesso.cpp:674` was cited by three steps for where
+the per-`go` `search_state_t` is built and had fallen into the book-move helper
+at all three baselines. DEC-119.
 
 **`--touches`.** A step whose `goal:` names a code symbol that no file its
 `touches:` allows it to edit carries in code. `touches:` is the scope contract a
@@ -884,17 +896,26 @@ excluded because it is history and records what was true when it was written.
 Cost on the workstation with 68 pending files: **0.37 s** over the four
 documents, **1.27 s** over the whole set.
 
-`--prose` and `--citations` are **not** registered with ctest, and that is
-deliberate rather than an omission: any source commit shifts lines under fifty
-step files at once, so gating the suite on citation freshness would make a red
-suite the normal state of the repository and this check the thing that gets
-weakened to clear it. Run both at step completion. That reason does not reach `--touches`, which holds no line
-numbers and moves only when a step file is written or a symbol changes file, so
-S141 put it in the fast suite where a broken scope contract fails at once
-instead of waiting for someone to run the tool. It does not reach `--params`
-either, and for the same reason: it compares a number to a number and no source
-commit can shift it. S150 registered it as `test_plan_params`; S184 widened its
-file set and its cost to 1.27 s.
+`--prose` is **not** registered with ctest, and that is deliberate rather than
+an omission: which tense a sentence should take is a judgement, and a rewrite
+of `plan.md`'s prose would redden the suite for a step that had nothing to do
+with it. Run it at step completion.
+
+The other three are registered, and the reason each one is safe there is the
+same: none of them reads a line number. `--touches` moves only when a step file
+is written or a symbol changes file, so S141 put it in the fast suite where a
+broken scope contract fails at once instead of waiting for someone to run the
+tool. `--params` compares a number to a number and no source commit can shift
+it; S150 registered it as `test_plan_params` and S184 widened its file set and
+its cost to 1.27 s. `--citations` was the exception until S187: the reason it
+was kept out was that "any source commit shifts lines under fifty step files at
+once, so gating the suite on citation freshness would make a red suite the
+normal state". In the symbol form a source commit shifts nothing it reads, and
+what does turn it red is a renamed or deleted symbol with a pending step still
+citing it -- the event the plan wants to hear about, one line to fix, in the
+same commit as the rename. S187 registered it as
+`test_plan_citation_freshness`, 0.45 s over the 66 pending files, median of
+five on the workstation. DEC-159.
 
 `test_clang_format_script` is the same shape over `clang-format.sh`, and it
 exists because that script is the third command in the gate above. It asserts

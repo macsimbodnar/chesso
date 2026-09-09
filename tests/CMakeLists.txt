@@ -342,10 +342,30 @@ set_tests_properties(test_plan_params PROPERTIES LABELS "fast" TIMEOUT 60)
 # `negamax` in src/search.cpp, "pruning does not hide a forced mate" in
 # tests/test_search.cpp, `GAME_PHASE_MAX` in the comment in src/search_params.hpp
 # that must stay comment-only for the negative case to mean anything. Renaming
-# one turns this red, and the rename is the fix. 0.6 s, stdlib only.
+# one turns this red, and the rename is the fix. 0.7 s, stdlib only.
 add_test(NAME test_plan_citations
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_plan_citations.py)
 set_tests_properties(test_plan_citations PROPERTIES LABELS "fast" TIMEOUT 120)
+
+# S187: `--citations` itself, the third mode in the suite. It was kept out
+# until now for a reason stated at test_plan_touches above -- "any source
+# commit shifts lines under fifty step files at once, so gating on citation
+# freshness would make red the normal state" -- and that reason no longer
+# reaches it. Since DEC-135 a citation from a pending step file into code
+# names a symbol and no line, so a commit that moves lines moves nothing this
+# check reads. What turns it red is a renamed or deleted symbol with a pending
+# step still citing it, which is the event the plan wants to hear about and is
+# one line to fix, in the same commit as the rename. DEC-159.
+#
+# 0.45 s over the 66 pending files, median of five on the workstation, against
+# 6.3 s under the retired DRIFT class, which ran `git show` per baseline-and-
+# path pair. Nothing consults a previous commit now. It skips itself with exit
+# 0 outside a git checkout, the way `--touches` does.
+add_test(NAME test_plan_citation_freshness
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
+                         --citations)
+set_tests_properties(test_plan_citation_freshness
+                     PROPERTIES LABELS "fast" TIMEOUT 60)
 
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and

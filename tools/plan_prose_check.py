@@ -4,10 +4,10 @@
 Four checks over the plan and manual documents. They report and do not rewrite
 -- which tense a sentence should take and which symbol a citation meant are
 judgements, and the fix belongs in the same commit as the landing that made it
-stale. `--touches` and `--params` are in the ctest suite; `--prose` is not and
-DEV_MANUAL.md says why.
+stale. `--touches`, `--params` and `--citations` are in the ctest suite;
+`--prose` is not and DEV_MANUAL.md says why.
 
-    tools/plan_prose_check.py             # all three checks
+    tools/plan_prose_check.py             # all four checks
     tools/plan_prose_check.py --prose     # plan.md tense only
     tools/plan_prose_check.py --citations # pending step files' citations only
     tools/plan_prose_check.py --touches   # pending step files' touches only
@@ -124,7 +124,7 @@ line number to mean anything, and DRIFT needed a git baseline per file as well
 evidence is in `adocs/plan_done/S138_*`, `S144_*` and `S169_*` and in
 `adocs/data/S169_citations_before.txt`; the last run of them is banked at
 `adocs/data/S187_citations_before.txt`, 52 DRIFT over 66 files. Nothing
-consults a previous commit now.
+consults a previous commit now, so the mode is in the fast label (DEC-159).
 
 A bare `:line` continuation -- `(src/evaluation.cpp:951 mobility, :953 king
 safety)` -- is `BARE`, and it fails the run. **The check never resolves one**:
@@ -140,8 +140,9 @@ a check that prints garbage gets ignored rather than acted on.
 
 Fenced code blocks are blanked before the scan. A fence holds a command rather
 than a citation, and the quote that closes a python string literal inside one
-reads as the opening of a phrase -- measured at 2b198f6, 0 of the 648 real
-citations sat inside a fence and both matches that did were false.
+reads as the opening of a phrase. Measured at 2b198f6: 0 of the 648 line and
+symbol citations sat inside a fence, and both phrase matches that did were
+false.
 
 Citations into `adocs/` and other `.md` files still gate on `LINE` -- those rot
 fastest of all -- but a phrase absent from a document is a note and does not

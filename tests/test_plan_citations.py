@@ -71,6 +71,15 @@ class CitationChecks(unittest.TestCase):
         """Gated like a code one: a citation into plan.md rots fastest."""
         self.assert_flag("The plan says so at `adocs/plan.md:359`.\n", "LINE")
 
+    def test_line_after_a_slash_fails(self):
+        """`PATH` refuses a path preceded by a slash, so that it cannot match
+        the tail of a longer one -- and S020 and S117 both write
+        `path:line/path:line` for a pair of sites, which hid four citations
+        from the walk. A LINE flag resolves nothing, so the retired form is
+        looked for in the file's text as well."""
+        self.assert_flag("Reached from make via `src/bitboard.cpp` `add_piece`"
+                         "/src/bitboard.cpp:704 and directly.\n", "LINE")
+
     def test_bare_continuation_still_fails(self):
         self.assert_flag("Mobility at `src/evaluation.cpp` `evaluate_cheap`, "
                          "and :953 for king safety.\n", "BARE")

@@ -8781,3 +8781,59 @@ Consequences: `RFP_MAX_DEPTH` is a settled value and no longer an open question
               of the entries S151 re-takes at a control at least four times
               8+0.08 before its magnitude is banked -- though the magnitude
               here decides nothing, the incumbent having been kept.
+
+## DEC-159  2026-09-09  `--citations` joins the fast suite, because the symbol form removed the reason it was out
+
+Tags:         workflow, plan-hygiene, tests, gate, s187, s141, s150, dec-120, dec-135
+Context:      `tools/plan_prose_check.py --citations` has been a manual check
+              since it was written, and `tests/CMakeLists.txt` states the
+              reason at `test_plan_touches`: "any source commit shifts lines
+              under fifty step files at once, so gating on citation freshness
+              would make red the normal state and this the check that gets
+              weakened to clear it." That was true of the `path:line` form and
+              measured -- S169 re-anchored 97 citations on 2026-09-01 and 59
+              had drifted again three days and four source commits later. It
+              is the reason `--touches` (S141) and `--params` (S150) are in the
+              suite and this mode was not: neither of those reads a line
+              number. DEC-135 then removed the line number from the citation
+              itself, and S187 converted the 572 that existed, so the premise
+              the exclusion rested on no longer holds and the question had to
+              be re-asked rather than inherited.
+Decision:     By the owner, 2026-09-09, answering S187's section 10. **The mode
+              is registered in the fast label as
+              `test_plan_citation_freshness`.** In the symbol form a commit
+              that moves lines moves nothing the check reads; what turns it red
+              is a renamed or deleted symbol with a pending step still citing
+              it. That coupling -- a rename must fix every pending file citing
+              the old name, in the same commit -- is the point of registering
+              it and not a cost of doing so. Measured at 0.45 s over the 66
+              pending files, median of five, against 6.3 s under the retired
+              DRIFT class, which ran `git show` once per baseline-and-path
+              pair. It skips itself with exit 0 outside a git checkout, as
+              `--touches` does.
+Rejected:     **An Amended line on DEC-135.** DEC-135 decided the form of a
+              citation; this decides what the gate does about it, and the thing
+              a future reader re-derives is why the 2026-08 exclusion stopped
+              applying. That is an entry, not an amendment.
+              **The CMake comment and `DEV_MANUAL.md` as the only record**,
+              which is what S187's `accepts:` asked for. Both are written and
+              both say why, but a comment in a build file is not where this
+              repository keeps a decision, and the exclusion it reverses is
+              quoted in three documents.
+              **Leaving the mode manual.** It would have kept a check nobody
+              runs at the moment it matters: the citation that goes stale is
+              the one whose symbol was renamed by the commit that renamed it,
+              and that commit is exactly when a manual check is not run.
+Consequences: `tools/plan_prose_check.py --citations` is now part of the TESTS
+              command's `ctest -L fast`, in both builds, and a red run there is
+              a real finding rather than noise. A commit that renames or
+              deletes a symbol cited by a pending step file must update that
+              file in the same commit. `adocs/plan_todo/` and
+              `adocs/plan_current/` are the gated set;
+              `adocs/plan_done/` is history and stays out. `--prose` remains
+              the one mode outside the suite, because which tense a sentence
+              should take is a judgement and a `plan.md` rewrite would redden
+              an unrelated step. The planted-case gate on the checker itself,
+              `tests/test_plan_citations.py`, is separate and was registered by
+              the same step: it is what keeps a recogniser that stopped firing
+              from hiding behind a green real set.
