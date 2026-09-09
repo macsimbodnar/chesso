@@ -473,6 +473,49 @@ struct search_t
 };
 
 
+// The pruning and reduction decisions of exactly one node, recorded so a test
+// can watch a guard hold. S191.
+//
+// Null move pruning, reverse futility and late move reduction all decide *not*
+// to do something, and nothing they decide is visible from outside the search:
+// a node that refused its null move and a node that never had the option
+// return the same score through the same table. That is why removing five of
+// those guards one at a time was caught by a single golden count and by
+// nothing else (2026-09-04_test_review-F02) -- a test that infers a guard from
+// the shape of a tree is a test that goes green once the guard is gone.
+//
+// Write-only, and that is the whole of its safety argument: negamax never
+// reads a field of this struct, so the tree a probed search explores is the
+// tree it explores without one. The pointer in search_state_t is null in every
+// caller but a test, and INV-6 at depths 9 and 12 is what holds the claim.
+struct search_node_probe_t
+{
+  // The ply to record. Nothing is recorded at any other ply, and -1 -- what a
+  // value-initialised probe holds -- records nothing at all.
+  int ply = -1;
+
+  // The null-move block passed the move and searched the child. Not "a cutoff
+  // was taken": the guards decide whether the pass happens, and a pass that
+  // fails low is still a pass.
+  bool null_move_made = false;
+
+  // Reverse futility returned its bound instead of searching a move.
+  bool rfp_cutoff = false;
+
+  // One entry per legal move this node searched, in the order the node
+  // searched them, so index k is the move whose legal_moves_counter was k + 1
+  // -- which is the number the reduction table is indexed by.
+  //
+  // `reduction` is what came off the first search of the move, and 0 is what a
+  // guard that refused the reduction leaves there. `researched` is the
+  // full-depth repeat a reduced move that beat alpha is owed.
+  int move_count = 0;
+  move_t moves[MAX_MOVES];
+  int reduction[MAX_MOVES];
+  bool researched[MAX_MOVES];
+};
+
+
 struct search_state_t
 {
   std::atomic_bool* stop = nullptr;
@@ -481,6 +524,19 @@ struct search_state_t
   bool aborted = false;
   uint64_t explored_nodes;
   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
+
+  // Attached by a test that needs to see one node's pruning and reduction
+  // decisions. Null everywhere else, and written through but never read by the
+  // search, so the tree is the same tree with one attached. S191.
+  //
+  // Only `negamax_at<true>` ever loads it, so where it sits costs the engine
+  // nothing -- but it took a measurement to stop caring. Read at every node,
+  // as the first version did, this field cost **1.49 % of nodes per second,
+  // sd 0.66 % over 13 interleaved pairs of `chesso bench`**, and moving it up
+  // here beside the fields every node already touches did not recover it. What
+  // recovered it was making the read compile-time: 0.14 % +/- 0.24 % at 95 %
+  // over 33 pairs, which is nothing this machine can resolve.
+  search_node_probe_t* probe = nullptr;
   move_t killer_moves[2][MAX_PLY];
 
   // The static evaluation of the node at each ply, TT_EVAL_NONE where the node

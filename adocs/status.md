@@ -7,6 +7,47 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-09, by hand.
 
+- **S191 is done, 2026-09-09: every guard on null move pruning, reverse
+  futility and late move reduction now has a case of its own, and each was
+  observed red under the mutant that removes it.** Thirteen cases in
+  `tests/test_search.cpp`'s new `search: pruning and reduction guards` suite.
+  The five removals `2026-09-04_test_review-F02` found were caught by
+  `test_mate_carry`'s per-game floor **and by nothing else**, and three of the
+  five left the depth-9 bench identical, so INV-6 would have passed them too.
+  The 104 proved defender nodes of `adocs/data/S165_defender_set.tsv` are a
+  registered fixture -- until now nothing in `tests/` read that file at all.
+- **The observable is `search_node_probe_t`, and making it free took a second
+  design.** The owner chose section 10's counter route over the
+  transposition-table one, so `src/` joined `touches:`. The first version
+  resolved `state->probe` at every interior node and tested it once per move:
+  **1.49 % fewer nodes per second, sd 0.66 % over 13 interleaved paired
+  `chesso bench` runs** -- resolved, not this machine's noise, and moving the
+  field beside the hot ones did not recover it. `negamax` is now
+  `negamax_at<bool PROBING>`, `<false>` everywhere the engine searches and
+  `<true>` only at the node `negamax_probed()` drives; the recursion is always
+  `<false>`, exact because a probe names one ply and every child is at another.
+  Re-measured over **33 pairs: 0.14 % +/- 0.24 % at 95 %**. INV-6 identical at
+  depths 9 and 12, `bench 26851183` on both sides, so the commit carries
+  `No functional change`.
+- **One case needed a beta the guide did not name.** M04's mating node sits
+  three plies below the driven one, which is exactly `RfpMinPly`, and it
+  inherits the drive's beta: at the guide's 100 reverse futility fired there on
+  a static score a queen up and the precondition read
+  `REQUIRE( 742 >= 48000 )`. Beta is 40000, still inside the mate band. It is
+  the reverse-futility comment's own "a mate deeper than ply 3 can still be
+  missed for an iteration", met head on.
+- **Six mutants had no home** -- the 2026-09-04 file is append-only -- so
+  `adocs/data/S191_mutants.py` holds them in the same shape, and S196 folds
+  both. All **39 anchors across the two files** still resolve uniquely against
+  the templated source; the red pass was run twice, once before the templating
+  and once after. Debug self-play: 8 of 8 games, **0 `Assertion`** in a log
+  carrying 78601 engine-stderr lines (a first attempt greped a 0-byte log and
+  was thrown away). `test_search` **2.16 s Release, 67.08 s Debug**, so it
+  needs no binary of its own.
+- **`tools/gate_extra.sh` and `tools/mutation_check.py` do not exist yet** --
+  S197 and S196, now Open entries 2 and 1 -- so DEC-141's other two clauses had
+  no tool to run and the mutation pass above is the hand form S196 will fold in.
+
 - **S193 is done, 2026-09-09: the one injected bug that survived the whole fast
   suite is dead, and seventeen assertions that could not fail can now.** The
   survivor was the fifty-move boundary. The only direct case searched a root
@@ -1138,24 +1179,28 @@ Updated: 2026-09-09, by hand.
   falsifiable and the fifty-move boundary pinned.** Tests and documents only,
   no `src/`, no Bench line. (This is the live pointer; the S184 line below is
   the previous one.)
+- Last done: **S191, 2026-09-09 -- every null-move, reverse-futility and
+  reduction guard has a direct case, each red under its own mutant, and the
+  S165 defender set is a registered fixture.** `src/search.cpp`,
+  `src/search.hpp` and `src/data_structures.hpp` changed and the engine's tree
+  did not: `No functional change`, INV-6 identical at 9 and 12.
 - Last done: **S184, 2026-09-08 -- the pending documents at HEAD values and
   `--params` extended over them.** Documents and one checker change, no `src/`.
   (Two earlier `Last done:` lines sit above this one, S189's and S177's, from
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S191**, now Open entry 1 -- every null-move, reverse-futility and
-  reduction guard gets a direct test with its precondition, and the S165
-  defender set becomes a registered fixture. DEC-141 puts it before S109. It is
-  agent-only work and wants no machine time, and the machine is free. Behind it
-  the rest of the test block runs on: **S196**, **S197**, **S192**, **S195**,
-  **S194**, entries 2 to 6. Two of them now have material waiting: S196 gets
-  S204's seven hand-applied mutants **and S193's six**, which are recorded per
-  row in S193's stamp with the red each produced; S192's row 6 is already done
-  and S193 named one more golden in its DEC-142 form, the option-line count
-  with its `printf 'uci\nquit\n' | ... | grep -c` derivation. S151's pair,
-  Open entry 8, is still the owner question parked below. The enrichment pass's
-  next file is **S181**, today Open entry 9.
+- Next: **S196**, now Open entry 1 -- the fault-injection driver becomes
+  `tools/mutation_check.py` over a tracked mutant list. It has more material
+  waiting than any other pending step: S204's seven hand-applied mutants,
+  S193's six, and now **S191's thirteen with the red each produced**, recorded
+  per row in its stamp, plus a second tracked mutant file
+  (`adocs/data/S191_mutants.py`) to fold in beside the 2026-09-04 one. Behind
+  it **S197**, **S192**, **S205**, **S195**, **S194**, entries 2 to 6; S192's
+  row 6 is done and both S193 and S191 named further goldens in DEC-142 form --
+  the option-line count and the defender set's 104 rows. S151's pair, Open
+  entry 7, is still the owner question parked below. The enrichment pass's next
+  file is **S181**, today Open entry 8.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --

@@ -148,8 +148,15 @@ add_doctest_target(test_invariants)
 # builds are compared member by member from inside one binary.
 add_doctest_target(test_search_params)
 
+# S191: the pruning and reduction guard suite reads
+# adocs/data/S165_defender_set.tsv -- the 104 proved defender nodes S165 built
+# to measure the mate-band guard -- out of the source tree, so it needs the
+# same definition test_uci_surface does.
+target_compile_definitions(test_search
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
-# where that tree is. Nothing else in the tests looks outside its own directory.
+# where that tree is.
 add_doctest_target(test_uci_surface)
 target_compile_definitions(test_uci_surface
      PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")

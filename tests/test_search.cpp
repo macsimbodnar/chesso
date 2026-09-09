@@ -3,6 +3,8 @@
 #include <bit>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -3458,5 +3460,804 @@ TEST_SUITE("search: windowed root")
     // The precondition. Without it every assertion above is skippable by a run
     // that never failed high at the root at all.
     REQUIRE(fail_highs_with_a_pv > 0);
+  }
+}
+
+
+// Every guard on null move pruning, reverse futility and late move reduction,
+// one case each, with the guard's own condition established before the search
+// so the guard is the only thing between the node and the rule. S191.
+//
+// The 2026-09-04 test review removed five of these guards one at a time and
+// found each removal caught by a single golden count in test_mate_carry.cpp
+// and by nothing else, three of the five leaving the depth-9 bench identical
+// as well -- so INV-6 would have passed them too (F02). What the cases here
+// read is `search_node_probe_t`, which records the pruning decisions of
+// exactly one node and is written by negamax and never read by it.
+TEST_SUITE("search: pruning and reduction guards")
+{
+  // search.cpp's, pinned here rather than shared, for the reason the two
+  // suites above pin them: a change to either should read as a disagreement.
+  static constexpr int MATE_MAX_LOCAL = 49000;
+  static constexpr int MATE_MIN_LOCAL = 48000;
+
+  // The drive depth for every null-move case. The only depth at which the
+  // block's own `depth - 1 - null_reduction >= 1` clears by exactly one ply,
+  // which each case asserts rather than assumes: at 4 the reduced search is
+  // zero plies deep and the block is never entered at all, so a case driven
+  // there would pass with the guard removed.
+  static constexpr int NULL_DRIVE_DEPTH = 5;
+
+  // An ordinary beta, inside the mate band by three orders of magnitude. Cases
+  // that are about a band edge set their own.
+  static constexpr int ORDINARY_BETA = 100;
+
+  // A well-formed previous move, which is all the null-move guard reads of it
+  // -- `prev_move != 0` -- and all score_move needs to index counter_moves
+  // with. 1.e4, so the piece and both squares are real.
+  static const move_t PREV_MOVE = NEW_MOVE(e2, e4, W_PAWN, TO_NONE, 0, 1, 0, 0);
+
+  // Drives one node with a probe attached to it.
+  //
+  // The table is wiped and a new search started before every drive, which is
+  // what keeps a case from reading an entry an earlier one wrote and, more
+  // to the point here, keeps `static_eval` equal to `evaluate()`: negamax
+  // takes the stored evaluation where the probe found one (S103), and the
+  // reverse-futility cases below set beta from a fresh `evaluate()` call.
+  struct guard_fixture_t : search_fixture_t
+  {
+    std::atomic_bool never_stop{false};
+    search_state_t state = {};
+    search_node_probe_t probe = {};
+
+    void load(const std::string& fen, int ply)
+    {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+      REQUIRE_MESSAGE(position_is_reachable(&game),
+                      (fen + " is not a position a legal game can reach"));
+
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      never_stop = false;
+      state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      probe = {};
+      probe.ply = ply;
+      state.probe = &probe;
+    }
+
+    // Everything the null-move block tests except the one guard the case is
+    // about, asserted before the drive. Without this a case saying "no null
+    // move here" passes for the wrong reason -- some other condition of the
+    // block was false and the guard under test never decided anything.
+    //
+    // `!is_pv` and `ply > 0` are properties of the drive and are asserted at
+    // the call site; the rest are properties of the position and the window.
+    void require_null_move_preconditions(int depth, int beta, move_t prev)
+    {
+      REQUIRE_EQ(depth - 1 - (NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR)), 1);
+      REQUIRE(prev != 0);
+      REQUIRE(beta < MATE_MIN_LOCAL);
+      REQUIRE(beta > -MATE_MIN_LOCAL);
+      REQUIRE(game_phase(&game.board) > 0);
+      REQUIRE(!is_check(&game));
+    }
+
+    // The node ran far enough to have made a null move. The block sits above
+    // the move loop, so a node that searched a move is a node that passed the
+    // block, and "no null move was made" is then a decision and not an early
+    // return from somewhere higher up.
+    void require_the_node_reached_its_move_loop() const
+    {
+      REQUIRE_MESSAGE(probe.move_count > 0,
+                      "the drive returned before its move loop, so nothing "
+                      "here is evidence about the null-move block");
+    }
+  };
+
+
+  // One row of adocs/data/S165_defender_set.tsv.
+  struct defender_row_t
+  {
+    std::string fen;
+    int mated_in;
+    int ply;
+  };
+
+
+  // The S165 defender set: 104 nodes proved to be losing to a forced mate,
+  // built to measure the negative mate-band guard and read by nothing in
+  // tests/ until now.
+  //
+  // Same reader as test_mate_carry.cpp's read_cases(): skip blanks, comments
+  // and the header row, split on tabs.
+  static std::vector<defender_row_t> read_defender_set()
+  {
+#ifndef CHESSO_SOURCE_DIR
+#error "CHESSO_SOURCE_DIR is not defined; see tests/CMakeLists.txt"
+#endif
+
+    const std::string path =
+        std::string(CHESSO_SOURCE_DIR) + "/adocs/data/S165_defender_set.tsv";
+
+    std::ifstream file(path);
+    REQUIRE_MESSAGE(file.good(), ("Cannot open " + path));
+
+    std::vector<defender_row_t> rows;
+    std::string line;
+
+    while (std::getline(file, line)) {
+      if (line.empty() || line[0] == '#') { continue; }
+
+      std::vector<std::string> field;
+      std::istringstream stream(line);
+      std::string cell;
+
+      while (std::getline(stream, cell, '\t')) {
+        field.push_back(cell);
+      }
+
+      if (field.size() < 6 || field[0] == "fen") { continue; }
+
+      rows.push_back({field[0], std::stoi(field[1]), std::stoi(field[2])});
+    }
+
+    return rows;
+  }
+
+
+  // Mutation: M01_nmp_in_check -- drop `!is_in_check &&` from the null-move
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    an in-check node makes no null move
+  //   REQUIRE( !probe.null_move_made )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t, "an in-check node makes no null move")
+  {
+    // 1.e4 c5 2.Nf3 d6 3.Bb5+. From a tool and not from the board (CLAUDE.md):
+    // python-chess reports `is_valid() True`, `is_check() True`,
+    // `is_checkmate() False`, 4 legal replies and 24 points of phase, so the
+    // only null-move condition this position denies is the one under test.
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    load(fen, 1);
+
+    // The precondition the case is named for, and it is the inverse of the
+    // guard: the node is in check, and it has somewhere to go, so the search
+    // below is a real one.
+    REQUIRE(is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    REQUIRE(legal_moves(&game, buffer) > 0);
+
+    // Everything else the block wants, except `!is_in_check` itself. The
+    // fixture helper asserts that the node is not in check, which is exactly
+    // what this case denies, so the remaining conditions are asserted here.
+    REQUIRE_EQ(NULL_DRIVE_DEPTH - 1 -
+                   (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
+               1);
+    REQUIRE(PREV_MOVE != 0);
+    REQUIRE(ORDINARY_BETA < MATE_MIN_LOCAL);
+    REQUIRE(ORDINARY_BETA > -MATE_MIN_LOCAL);
+    REQUIRE(game_phase(&game.board) > 0);
+
+    // Reverse futility cannot pre-empt the block at ply 1, which is what makes
+    // the move loop below evidence about the null move and nothing else.
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // Mutation: M03_nmp_zugzwang -- `game_phase(&game->board) > 0` becomes
+  // `true`.
+  //
+  //   search: pruning and reduction guards
+  //    a node with only kings and pawns makes no null move
+  //   REQUIRE( !probe.null_move_made )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node with only kings and pawns makes no null move")
+  {
+    // python-chess: `is_valid() True`, `is_check() False`, 8 legal moves, and
+    // the only piece types on the board are kings and pawns -- phase_value in
+    // src/eval_tables.hpp scores both 0, which is the zugzwang case the guard
+    // exists for.
+    const std::string fen = "6k1/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1";
+
+    load(fen, 1);
+
+    // The inverse of the guard.
+    REQUIRE_EQ(game_phase(&game.board), 0);
+
+    move_t buffer[MAX_MOVES];
+    REQUIRE(legal_moves(&game, buffer) > 0);
+
+    REQUIRE_EQ(NULL_DRIVE_DEPTH - 1 -
+                   (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
+               1);
+    REQUIRE(PREV_MOVE != 0);
+    REQUIRE(ORDINARY_BETA < MATE_MIN_LOCAL);
+    REQUIRE(ORDINARY_BETA > -MATE_MIN_LOCAL);
+    REQUIRE(!is_check(&game));
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // Mutation: S191-N01 -- drop `prev_move != 0 &&` from the null-move
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    a node whose parent already passed makes no null move
+  //   REQUIRE( !probe.null_move_made )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node whose parent already passed makes no null move")
+  {
+    // The Italian after 3...Bc5. python-chess: `is_valid() True`,
+    // `is_check() False`, 31 legal moves, 24 points of phase.
+    const std::string fen =
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+
+    load(fen, 1);
+
+    // Zero is what negamax passes its own null child, so this drive is the
+    // node one pass below another. Every other condition holds.
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // Mutation: S191-N02 -- drop `beta < MATE_MIN &&` from the null-move
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    a node at the positive edge of the mate band makes no null move
+  //   REQUIRE( !probe.null_move_made )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "a node at the positive edge of the mate band makes no null move")
+  {
+    const std::string fen =
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+
+    load(fen, 1);
+
+    // MATE_MIN itself, the first beta the guard excludes: `beta < MATE_MIN` is
+    // false here and true one point below. A fail-high against a bound this
+    // high is a claim about a mate, and a pass never proves one.
+    const int beta = MATE_MIN_LOCAL;
+
+    REQUIRE_EQ(NULL_DRIVE_DEPTH - 1 -
+                   (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
+               1);
+    REQUIRE(PREV_MOVE != 0);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE(game_phase(&game.board) > 0);
+    REQUIRE(!is_check(&game));
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // Mutation: M02_nmp_mate_band_neg -- drop `beta > -MATE_MIN` from the
+  // null-move condition, which is the S165 guard.
+  //
+  //   search: pruning and reduction guards
+  //    no defender node inside the mate band makes a null move
+  //   REQUIRE( violations.empty() )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "no defender node inside the mate band makes a null move")
+  {
+    const std::vector<defender_row_t> rows = read_defender_set();
+
+    // Golden, DEC-142. Re-derive with
+    //   grep -vc '^#' adocs/data/S165_defender_set.tsv
+    // which counts the header row as well, or by regenerating the file with
+    //   ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py generate
+    REQUIRE_MESSAGE(rows.size() == 104,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(rows.size()) + " rows, expected 104"));
+
+    std::string violations;
+    size_t scored = 0;
+
+    for (const defender_row_t& row : rows) {
+      load(row.fen, row.ply);
+
+      // A mate against the side to move in k is 2k plies away, which is what
+      // adocs/data/S165_nmp_defender_sweep.py's docstring states and what the
+      // mated_in column counts. `s` is that score seen from this node, and
+      // beta one point above it is the bound a search proving the mate would
+      // pass down.
+      const int s = -(MATE_MAX_LOCAL - row.ply - 2 * row.mated_in);
+      const int beta = s + 1;
+
+      REQUIRE_MESSAGE(beta <= -MATE_MIN_LOCAL,
+                      (row.fen + ": beta " + std::to_string(beta) +
+                       " is not inside the mate band"));
+      REQUIRE_MESSAGE(row.ply > 0, (row.fen + ": ply 0 has no null move"));
+      REQUIRE_MESSAGE(!is_check(&game),
+                      (row.fen + " is in check, so the block stops on the "
+                                 "wrong guard"));
+      REQUIRE_MESSAGE(game_phase(&game.board) > 0,
+                      (row.fen + " has no phase, so the block stops on the "
+                                 "wrong guard"));
+
+      negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH,
+                     static_cast<size_t>(row.ply), &game, &state, PREV_MOVE,
+                     false);
+
+      scored++;
+
+      if (probe.null_move_made) { violations += row.fen + "\n"; }
+    }
+
+    REQUIRE_EQ(scored, rows.size());
+
+    // Zero tolerance. One pass at a node already proved lost is one mate the
+    // engine can talk itself out of seeing, which is what S165 measured.
+    REQUIRE_MESSAGE(
+        violations.empty(),
+        ("defender nodes that passed inside the mate band:\n" + violations));
+  }
+
+
+  // Mutation: M04_nmp_mate_artifact -- the fail-high returns `null_score`
+  // instead of the bound.
+  //
+  //   search: pruning and reduction guards
+  //    a null-move fail-high against a mate returns the bound
+  //   REQUIRE( score == 100 )
+  //   values: REQUIRE( 48998 == 100 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a null-move fail-high against a mate returns the bound")
+  {
+    // White mates in one whatever Black replies, so the pass still fails high
+    // on a mate score. From a tool (CLAUDE.md): python-chess reports
+    // `is_valid() True`, `is_check() False`, and after a null move Black's
+    // only legal moves are h6 and h5, each of which is followed by four mates
+    // in one -- so the child of the pass reaches a mate at any depth that
+    // holds two plies.
+    const std::string fen = "k7/2Q4p/K7/8/8/8/8/8 w - - 0 1";
+
+    // Reduction 4 and a child two plies deep: the mating move lands at depth 0
+    // on quiescence's in-check-with-no-moves return, which the case "mate is
+    // recognised at depth zero" already holds. NULL_DRIVE_DEPTH's child is one
+    // ply and cannot see it.
+    const int depth = 7;
+    const int reduction = NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR);
+
+    // Not ORDINARY_BETA, and the reason is a measurement rather than a
+    // preference. The mating node sits three plies below this one, which is
+    // exactly RFP_MIN_PLY, and it inherits this beta: at 100 reverse futility
+    // fires there on a static score a queen up, and 837 came back in place of
+    // a mate -- the precondition below read `REQUIRE( 742 >= 48000 )`. Any
+    // beta above that static score plus RFP_MARGIN keeps the node searching,
+    // and this one clears it by a factor of forty while staying inside the
+    // mate band the null-move guard is about. It is the "mate deeper than
+    // ply 3 can still be missed for an iteration" that the reverse-futility
+    // comment in src/search.cpp already names, met head on.
+    const int beta = 40000;
+
+    load(fen, 1);
+
+    REQUIRE_EQ(depth - 1 - reduction, 2);
+    REQUIRE(PREV_MOVE != 0);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE(game_phase(&game.board) > 0);
+    REQUIRE(!is_check(&game));
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    // The precondition, taken from the engine and not assumed: the search the
+    // block is about to run really does come back with a mate score. Driven
+    // by hand here, so what the case asserts below is what the block does with
+    // that score and not whether the score turns up.
+    make_null_move(&game);
+
+    const int null_score = -negamax(-beta, -beta + 1, depth - 1 - reduction, 2,
+                                    &game, &state, 0, false);
+
+    unmake_null_move(&game);
+
+    REQUIRE(null_score >= MATE_MIN_LOCAL);
+    REQUIRE(null_score >= beta);
+
+    // The table now holds the hand-driven subtree; wipe it and start again so
+    // the drive below searches rather than reads.
+    load(fen, 1);
+
+    const int score = negamax_probed(beta - 1, beta, depth, 1, &game, &state,
+                                     PREV_MOVE, false);
+
+    REQUIRE(probe.null_move_made);
+
+    // The bound, not the mate. A mate out of a pass is an artefact of the
+    // pass: nobody forced it, and publishing it puts a mate score into a
+    // parent's window that no line reaches.
+    REQUIRE_EQ(score, beta);
+  }
+
+
+  // Mutation: S191-N03 -- drop `!is_in_check &&` from the reverse-futility
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    reverse futility does not fire at a node in check
+  //   REQUIRE( !probe.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "reverse futility does not fire at a node in check")
+  {
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    const int depth = 3;
+
+    load(fen, RFP_MIN_PLY);
+
+    REQUIRE(is_check(&game));
+
+    // In check there is no static score: negamax puts TT_EVAL_NONE in the slot
+    // rather than pricing a position whose king is attacked. That sentinel is
+    // what makes the guard removable without effect at an ordinary beta -- the
+    // comparison the mutant would then run is
+    // `TT_EVAL_NONE - RFP_MARGIN * depth >= beta`, and it is false for every
+    // beta above -32957. This beta is below it, which is what gives the case
+    // something to kill.
+    const int beta = -40000;
+
+    REQUIRE(TT_EVAL_NONE - (RFP_MARGIN * depth) >= beta);
+
+    // The rest of the reverse-futility condition, so the guard under test is
+    // the only one that can stop it.
+    REQUIRE(static_cast<int>(RFP_MIN_PLY) >= RFP_MIN_PLY);
+    REQUIRE(depth <= RFP_MAX_DEPTH);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false);
+
+    REQUIRE(!probe.rfp_cutoff);
+
+    // The same fact from the other side: reverse futility returns before the
+    // node searches anything, so a node that searched a child did not take it.
+    REQUIRE(state.explored_nodes > 1);
+  }
+
+
+  // Mutation: S191-N04 -- drop `!is_pv &&` from the reverse-futility
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    reverse futility does not fire at a PV node
+  //   REQUIRE( !probe.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "reverse futility does not fire at a PV node")
+  {
+    const std::string fen =
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+
+    const int depth = 3;
+
+    load(fen, RFP_MIN_PLY);
+
+    REQUIRE(!is_check(&game));
+
+    // The table was just wiped, so negamax has no stored evaluation to reuse
+    // and its static_eval is this call. Beta is set to the exact value that
+    // makes `static_eval - margin >= beta` true by equality, so the only thing
+    // between this node and a cutoff is the PV guard.
+    const int beta = evaluate(&game.board) - (RFP_MARGIN * depth);
+
+    REQUIRE(depth <= RFP_MAX_DEPTH);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, true);
+
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(state.explored_nodes > 1);
+  }
+
+
+  // Mutation: S191-N05 -- drop `depth <= RFP_MAX_DEPTH &&` from the
+  // reverse-futility condition.
+  //
+  //   search: pruning and reduction guards
+  //    reverse futility does not fire above its depth bound
+  //   REQUIRE( !probe.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "reverse futility does not fire above its depth bound")
+  {
+    // Four blocked pawn pairs two files apart, so no pawn can advance and none
+    // can capture: python-chess reports `is_valid() True`, `is_check() False`
+    // and 5 legal moves, all of them king moves. A position this narrow is
+    // what makes a search one ply past the bound affordable.
+    const std::string fen = "4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1";
+
+    const int depth = RFP_MAX_DEPTH + 1;
+
+    load(fen, RFP_MIN_PLY);
+
+    REQUIRE(!is_check(&game));
+
+    const int beta = evaluate(&game.board) - (RFP_MARGIN * depth);
+
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    // The cutoff is decided before the node searches anything, so a budget
+    // bounds the cost of the guarded run without touching what is observed.
+    // It has to be more than one node, or the limit rather than the guard is
+    // what ends the drive.
+    state.node_limit = 200000;
+
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false);
+
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(state.explored_nodes > 1);
+  }
+
+
+  // Mutation: S191-N06 -- drop `beta > -MATE_MIN` from the reverse-futility
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    reverse futility does not fire inside the mate band
+  //   REQUIRE( !probe.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "reverse futility does not fire inside the mate band")
+  {
+    const std::string fen =
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+
+    const int depth = 3;
+
+    load(fen, RFP_MIN_PLY);
+
+    REQUIRE(!is_check(&game));
+
+    // -MATE_MIN itself, the first beta the guard excludes. Only the negative
+    // edge is constructible: the positive one needs a static score near 48000,
+    // and evaluate_expensive() clamps the whole king-safety correction to
+    // LAZY_EVAL_MARGIN, which is why src/search_params.hpp records that half of
+    // the guard as one S145 measured inert.
+    const int beta = -MATE_MIN_LOCAL;
+
+    REQUIRE(evaluate(&game.board) - (RFP_MARGIN * depth) >= beta);
+    REQUIRE(depth <= RFP_MAX_DEPTH);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false);
+
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(state.explored_nodes > 1);
+  }
+
+
+  // A window no move can beat without a forced mate. Every legal move then
+  // fails low, the node runs its whole move loop, and the reduction each move
+  // was searched with is the reduction the guards decided on -- nothing is cut
+  // short and nothing is re-searched.
+  static constexpr int FAIL_LOW_BETA = 5001;
+
+  // The drive depth for the two reduction cases. The block's own bound is
+  // `depth >= 3`, and one ply above it the reduction is clamped to
+  // `child_depth - 1`, which is 1.
+  static constexpr int LMR_DRIVE_DEPTH = 3;
+
+
+  // Mutation: M07_lmr_captures -- drop `!is_capture &&` from the reduction
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    a capture is not reduced
+  //   REQUIRE( probe.reduction[k] == 0 )
+  //   values: REQUIRE( 1 == 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t, "a capture is not reduced")
+  {
+    // The standard perft position 2. python-chess: `is_valid() True`,
+    // `is_check() False`, 48 legal moves of which 8 are captures and none of
+    // those is a promotion -- so the fourth move the ordering reaches is a
+    // capture, which is the only way a capture is ever eligible for a
+    // reduction at all.
+    const std::string fen =
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    // The whole loop ran, so no move was skipped and no cutoff hid one.
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+
+    // The first capture the ordering put past the reduction block's own
+    // `legal_moves_counter > 3`.
+    int k = -1;
+
+    for (int i = 3; i < probe.move_count; ++i) {
+      if (MOVE_CAPTURE(probe.moves[i]) != 0) {
+        k = i;
+        break;
+      }
+    }
+
+    REQUIRE_MESSAGE(k >= 3,
+                    "no capture was ordered past the first three "
+                    "moves, so the guard decided nothing here");
+
+    // A promotion is refused by its own clause of the same condition, which
+    // would make the observation below ambiguous.
+    REQUIRE_EQ(MOVE_PROMOTED(probe.moves[k]), TO_NONE);
+
+    // The table would have reduced this move number at this depth. Without
+    // this a reduction of zero says nothing: it could be the guard, or it
+    // could be a reduction table that returns zero here.
+    REQUIRE(search_lmr_reduction_probe(LMR_DRIVE_DEPTH, k + 1) > 0);
+
+    REQUIRE_EQ(probe.reduction[k], 0);
+  }
+
+
+  // Mutation: M08_lmr_checks -- drop `!is_check_move` from the reduction
+  // condition.
+  //
+  //   search: pruning and reduction guards
+  //    a quiet move that gives check is not reduced
+  //   REQUIRE( probe.reduction[k] == 0 )
+  //   values: REQUIRE( 1 == 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a quiet move that gives check is not reduced")
+  {
+    // python-chess: `is_valid() True`, `is_check() False`, 45 legal moves, 4
+    // of them captures and none a promotion, and exactly one quiet move that
+    // gives check -- Bd7+, which is not mate. Four captures ahead of every
+    // quiet is what puts the checking move past the block's own move-number
+    // bound.
+    const std::string fen =
+        "1r2kb1r/pbn1pp1p/1q1p1n1p/1pP3Q1/4P3/P1P2NPB/RP3P1P/1N2K2R w Kk - 6 "
+        "17";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+
+    // Which move gives check comes from the engine's own is_check() after its
+    // own make_move(), the way the guard itself decides it -- never from a
+    // move list read by eye (CLAUDE.md).
+    int k = -1;
+
+    for (int i = 0; i < probe.move_count; ++i) {
+      const move_t move = probe.moves[i];
+
+      if (MOVE_CAPTURE(move) != 0) { continue; }
+      if (MOVE_PROMOTED(move) != TO_NONE) { continue; }
+
+      REQUIRE(make_move(&game, move));
+      const bool gives_check = is_check(&game);
+      unmake_move(&game);
+
+      if (gives_check) {
+        k = i;
+        break;
+      }
+    }
+
+    REQUIRE_MESSAGE(k >= 0, "no quiet move here gives check");
+    REQUIRE_MESSAGE(k >= 3,
+                    "the checking move was ordered inside the first "
+                    "three, where the move-number bound refuses the "
+                    "reduction anyway");
+
+    REQUIRE(search_lmr_reduction_probe(LMR_DRIVE_DEPTH, k + 1) > 0);
+
+    REQUIRE_EQ(probe.reduction[k], 0);
+  }
+
+
+  // Mutation: M09_lmr_no_research -- the re-search is never run.
+  //
+  //   search: pruning and reduction guards
+  //    a reduced move that beats alpha is searched again at full depth
+  //   REQUIRE( researched > 0 )
+  //   values: REQUIRE( 0 > 0 )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "a reduced move that beats alpha is searched again at full depth")
+  {
+    const std::string fen =
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+
+    // Wide enough that a move beating alpha does not also reach beta, so the
+    // loop keeps running past the first one that does. A null window would end
+    // the node on it instead.
+    const int alpha = -30000;
+    const int beta = 30000;
+
+    // Deep enough for the reduction table to return more than zero on a late
+    // move and for a late move to be worth more than the ordering thought.
+    const int depth = 6;
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // Zero as the previous move keeps the null-move block out of the drive,
+    // so what the probe records below is the move loop's own arithmetic.
+    negamax_probed(alpha, beta, depth, 1, &game, &state, 0, false);
+
+    size_t reduced = 0;
+    size_t researched = 0;
+
+    for (int i = 0; i < probe.move_count; ++i) {
+      if (probe.reduction[i] <= 0) { continue; }
+
+      reduced++;
+
+      if (probe.researched[i]) { researched++; }
+    }
+
+    // The precondition. With nothing reduced there is no re-search to owe and
+    // the assertion below would hold over an empty set.
+    REQUIRE_MESSAGE(reduced > 0,
+                    "no move at this node was reduced, so the re-search rule "
+                    "decided nothing here");
+
+    // A reduced search that beats alpha has proved the reduction wrong and
+    // nothing else. Believing its score is how a move gets played on a search
+    // that was never run at the depth its score claims.
+    REQUIRE(researched > 0);
   }
 }

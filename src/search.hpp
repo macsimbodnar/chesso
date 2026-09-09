@@ -64,6 +64,24 @@ int negamax(int alpha0,
             move_t prev_move,
             bool is_pv);
 
+
+// The same node with `state->probe` honoured, so a test can watch this node's
+// null-move, reverse-futility and reduction decisions instead of inferring
+// them from the tree it left behind. Every node below it is an ordinary one:
+// a probe names one ply and no child is at that ply.
+//
+// A separate entry point rather than a flag, because the engine's own node
+// must hold no probe code at all -- the branchy version measured 1.49 % of
+// nodes per second. Nothing outside a test calls this. S191.
+int negamax_probed(int alpha0,
+                   int beta,
+                   int depth,
+                   size_t ply,
+                   game_t* game,
+                   search_state_t* state,
+                   move_t prev_move,
+                   bool is_pv);
+
 // Completes a reported mate line so that it reaches the mate it claims, and
 // keeps a line that does reach one for the searches that follow.
 //
@@ -112,10 +130,11 @@ void history_on_quiet_cutoff(search_state_t* state,
                              size_t quiets_tried_count,
                              int depth);
 
-#ifdef CHESSO_TUNE
-// The reduction the built table holds for a (depth, move number) pair. Tune
-// build only, and it exists for one test: LMR_BASE and LMR_DIVISOR are read
-// once, when the table is built, so a setoption that moved a coefficient
-// without rebuilding would be invisible from outside. S073.
+// The reduction the built table holds for a (depth, move number) pair. It
+// exists for two tests. S073's: LMR_BASE and LMR_DIVISOR are read once, when
+// the table is built, so a setoption that moved a coefficient without
+// rebuilding would be invisible from outside. And S191's, which is why it is
+// no longer tune-only -- a case asserting that a guard refused to reduce a
+// move says nothing unless the table would have reduced it, and that has to be
+// checkable in the build the gate ships as well as the one it tunes.
 int search_lmr_reduction_probe(int depth, int move_number);
-#endif

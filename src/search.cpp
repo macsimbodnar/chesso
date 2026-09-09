@@ -130,10 +130,8 @@ static inline int lmr_reduction(int depth, int move_number)
 }
 
 
-#ifdef CHESSO_TUNE
 int search_lmr_reduction_probe(int depth, int move_number)
 { return lmr_reduction(depth, move_number); }
-#endif
 
 
 // Selection sort, one step per visited move. Most nodes fail high on one of the
@@ -586,14 +584,25 @@ int quiescence(int alpha,
 // PV row ends up in the reported line, so they never take a transposition table
 // cutoff - a cutoff returns a score without a move sequence and would chop the
 // PV short.
-int negamax(int alpha0,
-            int beta,
-            int depth,
-            size_t ply,
-            game_t* game,
-            search_state_t* state,
-            move_t prev_move,
-            bool is_pv)
+//
+// PROBING is false in every node the engine ever searches and true only at the
+// one node a test drives directly. It exists because the alternative measured:
+// resolving `state->probe` at every node and testing it once per move cost
+// **1.49 % of nodes per second, sd 0.66 % over 13 interleaved pairs of
+// `chesso bench`** -- a real number, not the machine's noise, and not a price
+// worth paying for observability the shipping binary never uses. With this
+// parameter `negamax_at<false>` holds no probe code at all, and the recursion
+// below is always `<false>` because a probe records exactly one ply and every
+// child is at another one. S191.
+template <bool PROBING>
+static int negamax_at(int alpha0,
+                      int beta,
+                      int depth,
+                      size_t ply,
+                      game_t* game,
+                      search_state_t* state,
+                      move_t prev_move,
+                      bool is_pv)
 {
   assert(game != nullptr);
   assert(state != nullptr);
@@ -686,6 +695,16 @@ int negamax(int alpha0,
   // Below the leaf test: every leaf used to pay for this and throw it away.
   const bool is_in_check = is_check(game);
 
+  // Null unless a test attached a probe and this is the node it asked for.
+  // Resolved once, and only in the instantiation a test drives. S191.
+  search_node_probe_t* probe = nullptr;
+
+  if constexpr (PROBING) {
+    if (state->probe != nullptr && state->probe->ply == static_cast<int>(ply)) {
+      probe = state->probe;
+    }
+  }
+
   // The static evaluation of this node, computed once here and read by
   // everything below that wants one. Reverse futility was the only consumer
   // until S108 and computed its own inside its guard; improving and the
@@ -768,7 +787,13 @@ int negamax(int alpha0,
 
     // Fail soft, and the bound returned is the one actually argued for: the
     // static score minus everything the opponent was assumed able to win back.
-    if (static_eval - margin >= beta) { return static_eval - margin; }
+    if (static_eval - margin >= beta) {
+      if constexpr (PROBING) {
+        if (probe != nullptr) { probe->rfp_cutoff = true; }
+      }
+
+      return static_eval - margin;
+    }
   }
 
   // Null move pruning. Give the opponent a free move; if the position is still
@@ -824,10 +849,15 @@ int negamax(int alpha0,
       game_phase(&game->board) > 0) {
     const int reduction = null_reduction;
 
+    if constexpr (PROBING) {
+      if (probe != nullptr) { probe->null_move_made = true; }
+    }
+
     make_null_move(game);
 
-    const int null_score = -negamax(-beta, -beta + 1, depth - 1 - reduction,
-                                    ply + 1, game, state, 0, false);
+    const int null_score =
+        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
+                           game, state, 0, false);
 
     unmake_null_move(game);
 
@@ -965,20 +995,37 @@ int negamax(int alpha0,
       if (reduction < 0) { reduction = 0; }
     }
 
+    if constexpr (PROBING) {
+      if (probe != nullptr) {
+        const int k = legal_moves_counter - 1;
+
+        probe->moves[k] = moves[i];
+        probe->reduction[k] = reduction;
+        probe->researched[k] = false;
+        probe->move_count = legal_moves_counter;
+      }
+    }
+
     if (legal_moves_counter == 1) {
       // The first legal move of a PV node continues the principal variation.
-      score = -negamax(-beta, -alpha, child_depth, ply + 1, game, state,
-                       moves[i], is_pv);
+      score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
+                                 state, moves[i], is_pv);
     } else {
-      score = -negamax(-alpha - 1, -alpha, child_depth - reduction, ply + 1,
-                       game, state, moves[i], false);
+      score = -negamax_at<false>(-alpha - 1, -alpha, child_depth - reduction,
+                                 ply + 1, game, state, moves[i], false);
 
       // A reduced search that beats alpha has proved only that the reduction
       // was wrong, not what the move is worth. Repeat it at full depth before
       // believing anything.
       if (!state->aborted && reduction > 0 && score > alpha) {
-        score = -negamax(-alpha - 1, -alpha, child_depth, ply + 1, game, state,
-                         moves[i], false);
+        if constexpr (PROBING) {
+          if (probe != nullptr) {
+            probe->researched[legal_moves_counter - 1] = true;
+          }
+        }
+
+        score = -negamax_at<false>(-alpha - 1, -alpha, child_depth, ply + 1,
+                                   game, state, moves[i], false);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the
@@ -986,8 +1033,8 @@ int negamax(int alpha0,
       // worth doing. Skipped when the search was abandoned mid-way, because
       // the score is meaningless then.
       if (!state->aborted && score > alpha && score < beta) {
-        score = -negamax(-beta, -alpha, child_depth, ply + 1, game, state,
-                         moves[i], is_pv);
+        score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
+                                   state, moves[i], is_pv);
       }
     }
 
@@ -1101,6 +1148,37 @@ int negamax(int alpha0,
                  static_eval);
 
   return best_so_far;
+}
+
+
+// The engine's node, and the only one it ever searches.
+int negamax(int alpha0,
+            int beta,
+            int depth,
+            size_t ply,
+            game_t* game,
+            search_state_t* state,
+            move_t prev_move,
+            bool is_pv)
+{
+  return negamax_at<false>(alpha0, beta, depth, ply, game, state, prev_move,
+                           is_pv);
+}
+
+
+// The same node with `state->probe` honoured. Tests only; every child it
+// searches is an ordinary node. S191.
+int negamax_probed(int alpha0,
+                   int beta,
+                   int depth,
+                   size_t ply,
+                   game_t* game,
+                   search_state_t* state,
+                   move_t prev_move,
+                   bool is_pv)
+{
+  return negamax_at<true>(alpha0, beta, depth, ply, game, state, prev_move,
+                          is_pv);
 }
 
 
@@ -1458,7 +1536,7 @@ search_t search(int depth,
 
   state->aborted = false;
 
-  int score = negamax(alpha, beta, depth, 0, game, state, 0, true);
+  int score = negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true);
 
   search_result.best_move = state->best_move;
 

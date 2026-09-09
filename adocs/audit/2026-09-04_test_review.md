@@ -138,7 +138,7 @@ so in its stamp. Not applied here.
 
 ### 2026-09-04_test_review-F02  medium  the null-move and reduction guards have no direct test; five guard-removal bugs were caught by one count floor and by nothing else
 
-Status: planned — S191
+Status: closed — S191 (2026-09-09)
 
 Evidence: no `TEST_CASE` exercises the null-move guards at
 `src/search.cpp:822-824` -- in check, `prev_move != 0` (two passes in a row),

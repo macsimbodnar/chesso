@@ -9127,3 +9127,79 @@ Consequences: S193's `accepts:` carries the amended R2 clause and an R13-to-R17
               `2026-09-04_adversarial-F01` reads `Status: open` at `fbffd36`, so
               R12 stays unregistered under the accepts' own condition; nothing
               here changes that.
+
+
+## DEC-164  2026-09-09  A guard's firing is observed through a write-only probe the engine's own instantiation does not contain
+Tags:         testing, search, s191, dec-141, dec-083, performance
+Context:      S191 had to make thirteen guards on null move pruning, reverse
+              futility and late move reduction directly testable. Its enrichment
+              guide offered two observables and put the choice to the owner.
+              The **transposition-table** one infers each decision from what the
+              node left in the table -- an entry at the passed position means a
+              null move was made, `explored_nodes == 1` means reverse futility
+              returned, `entry->depth` says what depth a move was searched at.
+              It touches no `src/` file, so it owes no Bench line, no INV-6, no
+              timing and no Debug self-play. It is also indirect: every reading
+              depends on the table's replacement rule, and the guide's own
+              section 5 lists five ways a case could go green or red for a
+              reason that is not the guard.
+              The **counter** one records the decisions themselves. Direct, and
+              it puts `src/search.cpp` in `touches:` with everything that
+              follows.
+Decision:     By the owner, 2026-09-09: the counter. And by the agent, on the
+              measurement that route then produced: the probe is compile-time,
+              not a runtime pointer test. `search_node_probe_t` records one
+              node's decisions -- whether the null move was made, whether
+              reverse futility returned, and per legal move the reduction it was
+              first searched with and whether it was re-searched -- and nothing
+              in the search reads a field of it back. `negamax` became
+              `negamax_at<bool PROBING>`, instantiated `<false>` for the engine
+              and `<true>` only at the node `negamax_probed()` drives, with the
+              recursion always `<false>`. That last is exact rather than an
+              approximation: a probe names one ply, and every child of the
+              driven node is at another one.
+              The owner also accepted the guide's four smaller proposals in one
+              block: a seventh null-move case for M04, a second tracked mutant
+              file for the six guards the append-only 2026-09-04 file does not
+              cover, the positive reverse-futility band edge recorded as inert
+              rather than written as a case that cannot meet its own
+              precondition, and "takes no null-move cutoff" asserted as the
+              stronger "makes no null move".
+Rejected:     **A runtime pointer test, which is what the first implementation
+              was.** Resolving `state->probe` once per interior node and testing
+              it once per move measured **1.49 % fewer nodes per second, sd
+              0.66 % over 13 interleaved paired `chesso bench` runs** -- past
+              this machine's noise floor, and moving the field beside the ones
+              every node already touches did not recover it. A permanent 1.5 %
+              of engine speed for observability the shipping binary never uses
+              is not a trade worth making. Note the instrument: hyperfine's
+              block layout read 1.01x in both directions with sigmas too tight
+              to believe across drift, and two runs of the same binary differed
+              by 0.9 %; the paired interleaved form is what resolved it, and it
+              is what CLAUDE.md's rule 5 asks for.
+              **`#ifdef CHESSO_TUNE` around the probe**, which is where
+              `search_lmr_reduction_probe` lived. Free in the shipping build and
+              the cases would then run in `build-tune` only -- the guards the
+              gate ships would have no direct test, which is the whole finding
+              (2026-09-04_test_review-F02) restated one build over. The same
+              reasoning is why that function stopped being tune-only here: a
+              case asserting a guard refused to reduce says nothing unless the
+              reduction table would have reduced, and that has to be checkable
+              in both gated builds.
+              **The transposition-table observable.** Free, and the owner
+              declined it for directness.
+Consequences: `negamax` is a template with two instantiations, and a future
+              reader asking why finds this entry. The engine's instantiation
+              contains no probe code: INV-6 is identical at depths 9 and 12,
+              `chesso bench` is the parent's **26851183**, and the completing
+              commit carries `No functional change`. Re-measured after the
+              change, **0.14 % +/- 0.24 % at 95 % over 33 pairs**, which is
+              nothing this machine can resolve.
+              A guard added later -- S109's four rules first -- is observed the
+              same way: add a field, write it under `if constexpr (PROBING)`,
+              and drive the node with `negamax_probed()`. Adding a runtime test
+              to `negamax_at<false>` instead is the thing this entry forbids.
+              `adocs/data/S191_mutants.py` joins
+              `adocs/data/2026-09-04_test_review/mutants.py` as tracked
+              evidence; S196 folds both into `tools/mutants/`.
+

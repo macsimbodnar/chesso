@@ -996,7 +996,7 @@ preconditions — without them a script that always fails, or a fixture that is
 not actually misformatted, would satisfy the rest by accident. See the `Format`
 section below for what the selection is (S054).
 
-### Mate safety: four instruments, and none of them substitutes for another
+### Mate safety: five instruments, and none of them substitutes for another
 
 Pruning that hides a mate is this engine's recurring bug — null move pruning hid
 a mate in 2 by reducing to depth 0, late move reduction reduced the mating move
@@ -1364,6 +1364,51 @@ times the filter's budget, and why stockfish there corroborates rather than
 decides: it reports no mate on 1 of the 48 and a longer mate on another, both
 re-proved by enumeration, because a frozen defending army is a position class
 its network scores badly wrong.
+
+**5. The defender fixture, in the fast suite.** The same 104 nodes as
+instrument 4, read by `tests/test_search.cpp`'s
+`search: pruning and reduction guards` suite through `CHESSO_SOURCE_DIR`, and
+that is the whole of the difference: instrument 4 is a sweep you run, this one
+is a gate that runs itself. Until S191 the file was read by nothing in `tests/`
+at all.
+
+```bash
+cd tests && ../build/tests/test_search -tc='*defender*'      # the one case
+cd tests && ../build/tests/test_search -ts='search: pruning and reduction guards'
+```
+
+**What it asserts.** Every row is loaded, its ply and proved distance turned
+into the mated score `s = -(MATE_MAX - ply - 2 * mated_in)` and beta into
+`s + 1`, which is inside the mate band by construction and asserted to be; the
+node is then driven at depth 5 through `negamax_probed()` and the probe read.
+**No row may make a null move, zero tolerance**, and the failure message names
+the FENs that did. Each row also asserts the three conditions that would
+otherwise stop the block on the wrong guard -- the node is not in check, its
+`game_phase` is above zero, its ply is above zero -- so a row that stops passing
+for the right reason cannot go on passing for a wrong one.
+
+**What it cannot see.** It drives one node with a cold table and says nothing
+whatever about mate *finding*: whether the engine ever reaches these positions,
+whether it reports the mate, and how late. That is instrument 1's question and
+instruments 2 and 4 read it at breadth. This one holds a single guard --
+`beta > -MATE_MIN` on the null-move block, S165's -- against removal, which is
+the thing all four of the others together caught only through
+`test_mate_carry`'s per-game floor (2026-09-04_test_review-F02).
+
+**The row count 104 is a golden** (DEC-142), named as one at its assertion and
+re-derived with `grep -vc '^#' adocs/data/S165_defender_set.tsv` -- which counts
+the header row too -- or by regenerating the file with the sweep script's
+`generate` mode.
+
+The suite around it holds the other twelve guards the same way, one case each
+and none of them reading the defender set: the null-move block's `!is_in_check`,
+`game_phase > 0`, `prev_move != 0` and both band edges, the artefact rule that
+returns beta rather than a mate a pass produced, reverse futility's
+`!is_in_check`, `!is_pv`, `depth <= RfpMaxDepth` and negative band edge, and the
+reduction block's `!is_capture` and `!is_check_move` plus the re-search a
+reduced move that beat alpha is owed. Each was observed red under a guard-removal
+mutant before it was called done; the mutants are
+`adocs/data/2026-09-04_test_review/mutants.py` and `adocs/data/S191_mutants.py`.
 
 ### Stress the stale-timer disarm
 

@@ -1,14 +1,141 @@
 id:         S191
 goal:       every null-move, reverse-futility and late-move-reduction guard has a direct test with a precondition that the guard's condition holds at the node, and the S165 defender set is a registered fixture
 accepts:    cases, each with its precondition asserted before the search: an in-check node makes no null move; a pawn-only position (`game_phase` 0) is searched with no null move; every defender node of `adocs/data/S165_defender_set.tsv` with beta inside the mate band takes no null-move cutoff, scored over the whole set with zero tolerance; `prev_move == 0` forbids a second consecutive null; a checking move and a capture are searched at `child_depth` with no reduction; a reduced move that beats alpha is re-searched at full depth; reverse futility does not fire in check, at a PV node, above `RFP_MAX_DEPTH` or inside the mate band; each case observed red under the matching mutant of `adocs/data/2026-09-04_test_review/mutants.py` (M01 to M04, M07 to M09) in a binary other than `test_mate_carry`, then green; the defender TSV is read through `CHESSO_SOURCE_DIR` like the S145 sets; `DEV_MANUAL.md` "Mate safety" lists the defender set as the fifth instrument; fast suite green in both builds
-touches:    tests/test_search.cpp, tests/CMakeLists.txt, src/search.hpp, DEV_MANUAL.md, adocs/specs.md
+touches:    tests/test_search.cpp, tests/CMakeLists.txt, src/search.hpp, src/search.cpp, src/data_structures.hpp, adocs/data/S191_mutants.py, DEV_MANUAL.md, adocs/specs.md, adocs/audit/2026-09-04_test_review.md
 excludes:   changing any guard; the four S109 rules, which arrive with their own cases under DEC-141
-decisions:  DEC-139, DEC-141
+decisions:  DEC-139, DEC-141, DEC-164
 closes:     2026-09-04_test_review-F02
 blocks:
 paused_by:
-author:
-done:
+author:     agent (Claude Opus 5), coordinator, 2026-09-09
+done:       2026-09-09. Thirteen guard cases in `tests/test_search.cpp`'s new
+            `search: pruning and reduction guards` suite, **each observed red
+            under the mutant that removes its guard and green with the guard in
+            place**, and the S165 defender set is a registered fixture. No
+            engine rule changed: `chesso bench` is **26851183**, the parent's,
+            so the commit carries `No functional change`.
+
+            **The owner's answers on section 10, taken 2026-09-09.** Q5: the
+            counter/probe route rather than the transposition-table observable,
+            which is why `src/search.cpp`, `src/search.hpp` and
+            `src/data_structures.hpp` joined `touches:` and why INV-6, a
+            timing and the Debug self-play are discharged below. Q1 to Q4:
+            accepted as proposed -- the M04 case was added, the six homeless
+            mutants went into `adocs/data/S191_mutants.py`, the positive
+            reverse-futility band edge is recorded as inert rather than written
+            as a case that cannot meet its own precondition, and "takes no
+            null-move cutoff" is asserted as the stronger "makes no null move".
+
+            **The observable.** `search_node_probe_t` in
+            `src/data_structures.hpp` records one node's decisions -- whether
+            the null move was made, whether reverse futility returned, and per
+            legal move the reduction it was first searched with and whether it
+            was re-searched. `search_state_t` carries a pointer to one. Nothing
+            in the search reads a field of it.
+
+            **It costs the engine nothing, and that took a second design.** The
+            first version resolved `state->probe` at every interior node and
+            tested it once per move. Interleaved and paired `chesso bench`,
+            13 pairs: **1.49 % fewer nodes per second, sd 0.66 %** -- resolved,
+            not this machine's noise, and moving the field beside the hot ones
+            did not recover it (hyperfine block runs had read 1.01x both ways
+            with sigmas too tight to trust across drift, which is why the
+            paired form was used). `negamax` is now
+            `negamax_at<bool PROBING>`, instantiated `<false>` for the engine
+            and `<true>` only at the node `negamax_probed()` drives; the
+            recursion is always `<false>`, which is exact because a probe names
+            one ply and every child is at another. Re-measured over **33
+            interleaved pairs: 0.14 % +/- 0.24 % at 95 %**, nothing this
+            machine can resolve. `search_lmr_reduction_probe()` also stopped
+            being tune-only: a case asserting a guard refused to reduce says
+            nothing unless the table would have reduced, and that has to be
+            checkable in the build the gate ships.
+
+            **Red then green, all thirteen** (Release, run from `tests/`, one
+            mutant at a time, rebuilt each time):
+
+            | case | mutant | failing assertion |
+            |---|---|---|
+            | an in-check node makes no null move | M01_nmp_in_check | `REQUIRE( !probe.null_move_made )` -> `false` |
+            | a node with only kings and pawns makes no null move | M03_nmp_zugzwang | `REQUIRE( !probe.null_move_made )` -> `false` |
+            | a node whose parent already passed makes no null move | N01_nmp_double_null | `REQUIRE( !probe.null_move_made )` -> `false` |
+            | a node at the positive edge of the mate band makes no null move | N02_nmp_mate_band_pos | `REQUIRE( !probe.null_move_made )` -> `false` |
+            | no defender node inside the mate band makes a null move | M02_nmp_mate_band_neg | `REQUIRE( violations.empty() )` -> `false` |
+            | a null-move fail-high against a mate returns the bound | M04_nmp_mate_artifact | `REQUIRE_EQ( score, beta )` -> `48996, 40000` |
+            | reverse futility does not fire at a node in check | N03_rfp_in_check | `REQUIRE( !probe.rfp_cutoff )` -> `false` |
+            | reverse futility does not fire at a PV node | N04_rfp_pv | `REQUIRE( !probe.rfp_cutoff )` -> `false` |
+            | reverse futility does not fire above its depth bound | N05_rfp_depth_bound | `REQUIRE( !probe.rfp_cutoff )` -> `false` |
+            | reverse futility does not fire inside the mate band | N06_rfp_mate_band_neg | `REQUIRE( !probe.rfp_cutoff )` -> `false` |
+            | a capture is not reduced | M07_lmr_captures | `REQUIRE_EQ( probe.reduction[k], 0 )` -> `1, 0` |
+            | a quiet move that gives check is not reduced | M08_lmr_checks | `REQUIRE_EQ( probe.reduction[k], 0 )` -> `1, 0` |
+            | a reduced move that beats alpha is searched again at full depth | M09_lmr_no_research | `REQUIRE( researched > 0 )` -> `0 > 0` |
+
+            The pass was run twice, once before the templating and once after,
+            and every anchor in both mutant files -- **39 of 39, the
+            2026-09-04 file's 33 included** -- still occurs exactly once in the
+            source it names.
+
+            **One case needed a beta the guide did not name, and it is a
+            measurement.** M04's mating node sits three plies below the driven
+            one, which is exactly `RFP_MIN_PLY`, and it inherits the drive's
+            beta: at the guide's 100 reverse futility fires there on a static
+            score a queen up and the precondition read
+            `REQUIRE( 742 >= 48000 )`. Beta is 40000, still inside the mate
+            band. That is the reverse-futility comment's own "a mate deeper
+            than ply 3 can still be missed for an iteration", met head on.
+
+            **The defender fixture.** 104 rows, the golden named at its site
+            with `grep -vc '^#' adocs/data/S165_defender_set.tsv` (header
+            included) as its re-derivation, read through `CHESSO_SOURCE_DIR`
+            the way the S145 sets are. Every row asserts its beta is inside the
+            band and that the node is not in check, has phase above zero and
+            ply above zero, so a row cannot pass on the wrong guard. Zero
+            tolerance, and the message names offending FENs.
+
+            **Behaviour neutrality, INV-6.** `tools/search_bench.py` against
+            `cb6aca8` at depth 9 -- 121530 / 801481 / 72924, `c3d5` / `e2a6` /
+            `d7c8q` -- and depth 12 -- 636677 / 3520847 / 494098, same three
+            moves -- identical on every node count and every best move; only
+            the wall-clock line differs. `chesso bench` 26851183 both sides.
+
+            **Debug self-play, DEC-141 clause 1.** 4 rounds at 4+0.04 on the
+            UHO book, both engines `build-debug/src/chesso`, `Hash=16`,
+            `Threads=1`. 8 of 8 games finished with a normal result, no
+            warning, no termination, and **0 `Assertion` lines**. The grep is
+            not vacuous: the log was taken with `-log ... engine=true`, which
+            captured **78601 engine-stderr lines**. A first attempt greped a
+            0-byte log and was thrown away; a second, wrapping the engine in a
+            stderr-redirecting script, pushed Debug startup past fastchess's
+            `uciok` allowance and aborted under `-strict`.
+
+            **Timings.** `test_search`: **2.16 s in Release, 67.08 s in Debug**,
+            94 cases and 888340 assertions, against the 600 s Debug ceiling --
+            no separate binary is needed (section 10 Q6 answered by
+            measurement). The 13 new cases are 967 of those assertions and the
+            defender fixture's 104 drives are the bulk of them.
+
+            **Gate.** `ctest -L fast` 31 of 31 in `build` and 31 of 31 in
+            `build-tune`; `./clang-format.sh --check` clean with
+            `CLANG_FORMAT_MAJOR=22` (DEC-146); `plan_prose_check.py --touches`
+            and `--params` both clean.
+
+            **Not owed and not run.** `tools/gate_extra.sh` and
+            `tools/mutation_check.py` do not exist yet -- they are S197 and
+            S196, Open entries 3 and 2 -- so DEC-141's other two clauses have
+            no tool to run; the mutation pass above is the hand form S196 will
+            fold in, and `adocs/data/S191_mutants.py` is written in the same
+            `m(id, file, klass, note, (old, new))` shape for it. No SPRT: the
+            engine's tree is identical and DEC-083 applies a fortiori.
+
+            **DOCS.** `DEV_MANUAL.md`'s "Mate safety" is five instruments now,
+            the fifth being this fixture -- what it holds, what it asserts,
+            what it cannot see, its commands and its golden. `adocs/specs.md`
+            gained three clauses naming the cases that hold the null-move
+            edges, the four reverse-futility guards and the two reduction
+            guards. **`MANUAL.md` needs no change and was checked**: no UCI
+            option, default or output moved, `negamax_probed` is not reachable
+            over UCI, and `test_uci_surface` is untouched and green in both
+            builds. `README.md` untouched, per DOCS.
 
 ## Why this exists
 
