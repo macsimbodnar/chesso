@@ -31,11 +31,17 @@ Updated: 2026-09-09, by hand.
   perft -- `test_movegen` *"shallow perft matches every column"* stayed green,
   because `squares[]` is not what the generator reads -- and the `phase` mutant
   reddened three other binaries rather than none. **No mutant is caught by the
-  new test alone**: `test_engine`'s existing `memcmp` sees every one of them
-  *after unmake*, which is the half F01 already had. What this step adds is the
-  *after make* half, and the phase mutant is where the two differ -- it fails at
-  the after-unmake line in `test_invariants` and at the after-make line for the
-  other five.
+  new test alone**: `test_engine`'s existing `memcmp` compares the whole
+  `board_t` after every unmake, and that catches all six -- which is the half
+  F01 already had. What this step adds is the *after make* half, and five of
+  the six mutants fail there, at `test_invariants.cpp:123`. **The phase mutant
+  is the one that does not**, failing instead at the after-unmake line 131, and
+  the reason is worth keeping: it drops the `phase` decrement from
+  `eval_remove_piece`, the first drift it reaches is a promotion, and the piece
+  `make_move` removes there is a **pawn**, whose `phase_value` is zero. Nothing
+  moves until `unmake_move` removes the queen. So the mutant set as it stands
+  does not exhibit a drift that only the after-make half can see; S196 inherits
+  that as a gap to close, not as a proven equivalence.
 - **The Debug self-play line is traced to observed output, and the obvious form
   of it lies.** `-log file=...` defaults to WARN and does not capture engine
   stderr, which is where an `assert` writes: a Debug binary carrying a planted
