@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Plan hygiene: stale tense, citations, touches, and doc numbers vs the code.
 
-Four checks over the plan and manual documents. `--prose` and `--citations` report and do
-not rewrite -- which tense a sentence should take and which line a citation
-meant are judgements, and the fix belongs in the same commit as the landing that
-made it stale. Only `--touches` is in the ctest suite; the reason the other two
-are not is in DEV_MANUAL.md and does not apply to it.
+Four checks over the plan and manual documents. They report and do not rewrite
+-- which tense a sentence should take and which symbol a citation meant are
+judgements, and the fix belongs in the same commit as the landing that made it
+stale. `--touches` and `--params` are in the ctest suite; `--prose` is not and
+DEV_MANUAL.md says why.
 
     tools/plan_prose_check.py             # all three checks
     tools/plan_prose_check.py --prose     # plan.md tense only
@@ -73,37 +73,58 @@ Sentence-wise, not line-wise. The prose is hard-wrapped, so an id and the claim
 about it routinely sit on different lines; a line-based version of this check
 missed two of the five stale claims S062 found.
 
-**--citations: a file:line citation that no longer holds what it is cited
-for.** A step file's citations are written once and the source moves under them
-at every landing. 2026-08-20_plan_review-F01 measured 70 of 147 stale, shifted
-by up to 613 lines, and six of those had come to rest inside an unrelated test:
-five pending steps that each add pruning or a reduction told their implementer
-to extend the mate-safety gate at tests/test_search.cpp:1274, which by then was
-inside "a mate bound is compared after the ply adjustment, not before". The
-symptom of extending the wrong mate test is a strength regression, not a red
-test, so the class is worth a check rather than a repair. S138 is the repair and
-this is the check.
+**--citations: a citation into code that names a line, or names a symbol the
+file does not carry.** A step file's citations are written once and the source
+moves under them at every landing. 2026-08-20_plan_review-F01 measured 70 of
+147 stale, shifted by up to 613 lines, and six of those had come to rest inside
+an unrelated test: five pending steps that each add pruning or a reduction told
+their implementer to extend the mate-safety gate at line 1274 of
+tests/test_search.cpp, which by then was inside "a mate bound is compared after
+the ply adjustment, not before". The symptom of extending the wrong mate test is
+a strength regression, not a red test. S138 repaired that round, S169 re-anchored
+97 more on 2026-09-01, and three days later 59 had drifted again -- which is
+2026-09-04_plan_review-F07 and the end of repairing the class one round at a
+time. DEC-135 changed the form instead: **in the pending directories a citation
+into code names a symbol and no line.** S187 converted the 558 that existed.
+
+The form is `src/search.cpp` `negamax`, `src/evaluation.hpp` `LAZY_EVAL_MARGIN`,
+`tests/test_search.cpp` "pruning does not hide a forced mate". The path is
+repeated for every symbol (DEC-120); the checker reads only the first token
+after each path, so two symbols under one path are two citations. A path
+followed by an ordinary word is prose and is not a citation -- the recogniser
+fires on a backticked identifier or a double-quoted phrase and nothing else,
+which is narrow on purpose and is why the writing rule is: backtick the symbol.
 
 Three failures, each exact and none a judgement:
 
-  BOUNDS  the cited path does not exist at HEAD, or the cited line is past the
-          end of the file. Catches a citation that was never right.
-  ANCHOR  a doctest title quoted beside the citation is not the test the cited
-          lines open. This is the check that makes a citation survivable: a
-          line number is a moving reference and a TEST_CASE title is a stable
-          one, so a citation carrying both degrades to something still findable
-          instead of to something silently wrong.
-  DRIFT   the cited lines hold different text now than they held in the commit
-          that last wrote the step file. Exact string comparison, so it reports
-          the class F01 found and nothing else.
+  LINE    a `path:line` or `path:line-line` in a pending step file. The retired
+          form; the fix is to name what sits at that line.
+  MISSING the named file carries no such symbol, or holds no such phrase. A
+          symbol is searched word-bounded in the file with its comments blanked,
+          so a name that survives only in a comment does not answer; a phrase is
+          matched against the doctest titles first and then, case-folded, as
+          text anywhere in the file, which is how a citation into a comment
+          lands. Both sides are whitespace-flattened: the prose is hard-wrapped
+          and so is the code.
+  BARE    a `:line` continuation with no path of its own.
 
-Citations resolve against the working tree, which is what an implementer
-actually opens; DRIFT's "then" side comes from git. A step file with no commit
-of its own has no baseline and is checked for BOUNDS and ANCHOR only.
+**Weak by design.** `src/search.cpp` `state` passes, because `state` occurs in
+the file. The check is existence, not relevance -- a symbol is a durable
+reference and that is the whole claim. Relevance is proved by the mapping a
+conversion is made through, `adocs/data/S144_pathings.tsv`,
+`adocs/data/S169_recitations.tsv` and `adocs/data/S187_symbols.tsv`, and never
+by this check's verdict. DEC-119, DEC-120, DEC-135.
 
-The grammar is the one the step files already use, not a new one: a full
-`path:line` or `path:line-line`, with the path either rooted or given as a bare
-basename when that basename is unique in the repository.
+**The three classes this replaced.** BOUNDS (the path does not exist, or the
+line is past the end of the file), ANCHOR (a title quoted beside a citation is
+not the test the cited lines open) and DRIFT (the cited lines hold different
+text than they held in the commit that last wrote the step file) all needed a
+line number to mean anything, and DRIFT needed a git baseline per file as well
+-- which is what made this mode cost 6.3 s and kept it out of the suite. Their
+evidence is in `adocs/plan_done/S138_*`, `S144_*` and `S169_*` and in
+`adocs/data/S169_citations_before.txt`; the last run of them is banked at
+`adocs/data/S187_citations_before.txt`, 52 DRIFT over 66 files. Nothing
+consults a previous commit now.
 
 A bare `:line` continuation -- `(src/evaluation.cpp:951 mobility, :953 king
 safety)` -- is `BARE`, and it fails the run. **The check never resolves one**:
@@ -117,29 +138,16 @@ subject was named paragraphs earlier, so :662 and :701-724 resolved onto a
 288-line header. Between them they produced sixty impossible line numbers, and
 a check that prints garbage gets ignored rather than acted on.
 
-So the repair is a rule about writing rather than a cleverer resolver, and
-`plan.md`'s "How this file works" states it: **a citation repeats its path**.
-S144 converted the 383 that existed -- reading each citing sentence, then
-relocating the text the citation was written against to prove the path -- and
-this flag is what stops the 384th. Until S144 these were counted as
-`loose, ungated` and reported, which is how they went stale in bulk with
-nothing saying so: S138 found eight pending steps pointing an implementer at
-the wrong mate-safety test, and the three the audit had missed were exactly the
-three that wrote it bare.
+Fenced code blocks are blanked before the scan. A fence holds a command rather
+than a citation, and the quote that closes a python string literal inside one
+reads as the opening of a phrase -- measured at 2b198f6, 0 of the 648 real
+citations sat inside a fence and both matches that did were false.
 
-**What a converted citation buys and what it does not.** BOUNDS catches a wrong
-path whose line is past the end of that file, and ANCHOR catches one whose
-quoted test title does not open there. A wrong path that is merely in range is
-caught by neither, and DRIFT cannot help on the commit that writes it -- the
-baseline is that commit. The evidence for a conversion is therefore the mapping
-it was made through, `adocs/data/S144_pathings.tsv`, and not this check's
-verdict. DEC-119, DEC-120.
-
-Citations into `adocs/` and other `.md` files are counted and printed but do
-not fail the run. Those documents are rewritten at every completion, by design,
-so a line citation into one is stale by construction; the durable fix is to
-cite a section or an id, and gating on them would make this check permanently
-red and therefore ignored.
+Citations into `adocs/` and other `.md` files still gate on `LINE` -- those rot
+fastest of all -- but a phrase absent from a document is a note and does not
+fail the run. Those documents are rewritten at every completion by design, so
+gating a phrase in one would make this check permanently red and therefore
+ignored. The owner's answer of 2026-09-09, recorded in S187.
 
 **--touches: a step whose goal names a symbol no file it may touch carries.**
 `touches:` is the field that says where a change is allowed to land, so a step
@@ -299,6 +307,17 @@ DIRECT = re.compile(r":(\d{1,5})(?:\s*-\s*(\d{1,5}))?" + _TAIL)
 CONT = re.compile(r"(?<=[\s(,/;]):(\d{1,5})(?:\s*-\s*(\d{1,5}))?" + _TAIL)
 
 QUOTED = re.compile(r'"([^"]{4,120})"')
+
+# What sits between a path and the symbol it points at: the path's own closing
+# backtick when it has one, and at most one line break, because the prose is
+# hard-wrapped and `tests/test_search_params.cpp` routinely ends a line with
+# `golden_defaults` opening the next.
+GAP = re.compile(r"`?[ \t]*\n?[ \t]*")
+
+# A backticked symbol. The parenthesised tail is dropped whole rather than by
+# rstrip("()"), which turns `CHESSO_SEARCH_PARAMS(X)` into `CHESSO_SEARCH_PARAMS(X`
+# and then finds nothing.
+SYMBOL = re.compile(r"`([A-Za-z_][A-Za-z0-9_:]*)(?:\s*\([^`)]*\))?`")
 TITLE = re.compile(
     r"TEST_(?:CASE|CASE_FIXTURE|SUITE)\s*\(\s*(?:[A-Za-z_][\w]*\s*,\s*)?"
     r'"((?:[^"\\]|\\.)*)"', re.S)
@@ -348,32 +367,6 @@ def titles_of(path):
     return _titles[path]
 
 
-def baseline(path):
-    """The commit whose source a step file's citations were written against.
-
-    The commit that last wrote the step file -- so a landing that shifts
-    src/search.cpp invalidates every citation into it that nobody has looked at
-    since. None when the step file is new or is modified in the working tree:
-    a file being rewritten right now is being written against the tree as it
-    stands, and has nothing to have drifted from yet.
-
-    That does mean touching a step file relaxes its own drift check, and the
-    same is true of committing one -- correcting a citation and moving the
-    baseline are the same act. ANCHOR is the check that survives it, which is
-    the argument for putting a title beside a line number rather than trusting
-    the number.
-    """
-    dirty = subprocess.run(
-        ["git", "-C", REPO, "status", "--porcelain", "--", path],
-        capture_output=True, text=True).stdout.strip()
-    if dirty:
-        return None
-    r = subprocess.run(
-        ["git", "-C", REPO, "log", "-1", "--format=%H", "--", path],
-        capture_output=True, text=True)
-    return r.stdout.strip() or None
-
-
 def paragraphs(text):
     """(first line number, text) per blank-line separated block."""
     out, line, buf, start = [], 1, [], 1
@@ -391,151 +384,180 @@ def paragraphs(text):
     return out
 
 
-def cites_in(para, first_line, tracked, byname):
-    """Every citation in one paragraph, with the path inherited across wraps."""
-    def span(kind, m):
-        a = int(m.group(1))
-        return (kind, m.start(), m.end(), a,
-                int(m.group(2)) if m.group(2) else a)
+def unfenced(text):
+    """The step file with fenced code blocks blanked, line count preserved.
 
-    marks = []
+    A fence holds a command, not a citation. Measured over the 66 pending
+    files at 2b198f6: 572 line citations and 76 symbol ones sit outside every
+    fence and 0 inside, while both phrase matches inside a fence are false --
+    `adocs/data/2026-09-04_test_review/mutants.py")` in S191 and S193, where
+    the quote that follows the path closes a python string literal and the
+    "phrase" runs to the next quote two lines down. So blanking costs nothing
+    and removes a class the recogniser cannot otherwise tell from prose.
+    """
+    out, inside = [], False
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            inside = not inside
+            out.append("")
+            continue
+        out.append("" if inside else line)
+    return "\n".join(out)
+
+
+def refs_in(para, first_line, tracked, byname):
+    """Every citation in one paragraph: symbol forms, line forms and bares.
+
+    A citation is a path token followed by the thing it points at. Three
+    shapes, and the first is the only legal one (DEC-135):
+
+      symbol   `src/search.cpp` `negamax`, or a quoted doctest title or
+               document phrase -- `tests/test_search.cpp` "pruning does not
+               hide a forced mate".
+      line     `src/search.cpp:1274`, the retired form, reported as LINE.
+      bare     a `:1274` continuation with no path of its own, reported as
+               BARE. Never resolved: DEC-120's paragraph in the docstring
+               above has the two measured reasons.
+
+    A path followed by neither is prose -- 88 places write a backticked path
+    and then an ordinary word -- and is not a citation at all. That is the
+    cost of the recogniser being narrow, and the writing rule in plan.md's
+    "How this file works" answers it: backtick the symbol.
+    """
+    out, taken = [], []
     for m in PATH.finditer(para):
+        spelled = m.group(1)
+        resolved = spelled if spelled in tracked else byname.get(spelled)
+        line = first_line + para.count("\n", 0, m.start())
         direct = DIRECT.match(para, m.end())
         if direct:
-            marks.append(span("direct", direct) + (m.group(1),))
-    taken = [(s, e) for _k, s, e, _a, _b, _p in marks]
-    for m in CONT.finditer(para):
-        if not any(s <= m.start() < e for s, e in taken):
-            marks.append(span("cont", m) + (None,))
-    marks.sort(key=lambda t: t[1])
-
-    out = []
-    for kind, start, _end, a, b, spelled in marks:
-        line = first_line + para.count("\n", 0, start)
-        if spelled is None:
-            out.append((line, None, None, a, b, kind))
+            a = int(direct.group(1))
+            b = int(direct.group(2)) if direct.group(2) else a
+            taken.append((direct.start(), direct.end()))
+            out.append((line, spelled, resolved, "line",
+                        f"{spelled}:{a}" + (f"-{b}" if b != a else "")))
             continue
-        resolved = spelled if spelled in tracked else byname.get(spelled)
-        out.append((line, spelled, resolved, a, b, kind))
+        at = GAP.match(para, m.end()).end()
+        sym = SYMBOL.match(para, at)
+        if sym:
+            out.append((line, spelled, resolved, "symbol", sym.group(1)))
+            continue
+        phrase = QUOTED.match(para, at)
+        if phrase:
+            out.append((line, spelled, resolved, "phrase", phrase.group(1)))
+    for m in CONT.finditer(para):
+        if any(s <= m.start() < e for s, e in taken):
+            continue
+        a = int(m.group(1))
+        b = int(m.group(2)) if m.group(2) else a
+        out.append((first_line + para.count("\n", 0, m.start()),
+                    None, None, "bare",
+                    f":{a}" + (f"-{b}" if b != a else "")))
+    out.sort(key=lambda t: t[0])
     return out
 
 
-def anchor_titles(para, offset_line, first_line, path, cite=None):
-    """Doctest titles of `path` that a citation on this line is claiming.
+def carries_symbol(sym, path):
+    """The named file carries this symbol in code, comments blanked.
 
-    Flattened before matching, because the prose is hard-wrapped and a title as
-    long as "a side in check may not stand pat" straddles the wrap. The window
-    is the citing line and the one before it, backward only and one line only: a
-    title names the test a citation points at when it *introduces* it --
-    `Extend "..." (tests/test_search.cpp:1887)` -- whereas text after a citation
-    is as likely to be naming the test the line landed in by mistake, which is
-    what S138's own evidence paragraph does.
-
-    Paired positionally when `cite` is given, because a sentence may name two
-    tests and cite two lines -- S112's and S131's accepts do, after S138 named
-    both quiescence mate cases in them -- and demanding that every title in the
-    window sit at every line cited in it fails both of them. Each citation
-    answers to the title nearest to its left, and only falls back to the whole
-    window when its own text cannot be located in the flattened line.
+    Not `carries()`: that one refuses tools/plan_prose_check.py, because
+    --touches must not answer to the docstring above naming the symbols it
+    checks for. A citation *into* this file is an ordinary citation and is
+    resolved like any other.
     """
-    known = titles_of(path)
-    if not known:
-        return []
-    lines = para.split("\n")
-    i = offset_line - first_line
-    window = " ".join(" ".join(lines[max(0, i - 1):i + 1]).split())
-    found = [(m.group(1), m.end()) for m in QUOTED.finditer(window)
-             if m.group(1) in known]
-    if not found:
-        return []
-    if cite:
-        nearest = []
-        start = window.find(cite)
-        while start != -1:
-            before = [t for t, end in found if end <= start]
-            if before:
-                nearest.append(before[-1])
-            start = window.find(cite, start + 1)
-        if nearest:
-            return nearest
-    return [t for t, _end in found]
+    text = code_of(path)
+    if text is None:
+        return False
+    return re.search(r"\b" + re.escape(sym) + r"\b", text) is not None
 
 
-def gated(resolved):
-    """Code citations gate the run; document citations are reported only."""
-    return not (resolved.startswith("adocs/") or resolved.endswith(".md"))
+def holds_phrase(phrase, path):
+    """A doctest title of the named file, or text anywhere in it.
+
+    The title map first, so a citation into a test file says which test. The
+    raw-text fallback is what a phrase into a comment needs -- `code_of`
+    blanks comments, and the file-scope citations (the "Not in the set, on
+    purpose" comment above CHESSO_SEARCH_PARAMS, LAZY_EVAL_MARGIN's comment in
+    src/evaluation.hpp) have no enclosing definition to name. Both sides are
+    whitespace-flattened, because the prose is hard-wrapped and so is the code.
+    """
+    if phrase in titles_of(path):
+        return True
+    lines = _at(None, path)
+    if lines is None:
+        return False
+    # Case-folded on the fallback only. A doctest title is a literal and is
+    # matched as one; a phrase quoted out of a comment is routinely quoted
+    # from mid-sentence, which is S193's R15 -- it cites "the release build
+    # declares exactly the five golden lines" and the comment in
+    # tests/test_uci_surface.cpp opens the sentence with a capital T.
+    needle = " ".join(phrase.split()).lower()
+    return needle in " ".join("\n".join(lines).split()).lower()
+
+
+def gated(name):
+    """Code citations gate the run; document citations are reported only.
+
+    Takes the path as spelled when it resolves to nothing, so an unresolvable
+    `adocs/`-rooted path is still a note rather than a flag.
+    """
+    return not (name.startswith("adocs/") or name.endswith(".md"))
 
 
 def check_citations(path, tracked, byname):
     rel = os.path.relpath(os.path.abspath(path), REPO)
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
-    rev = baseline(rel)
-    counts = {"code": 0, "doc": 0, "bare": 0}
+    counts = {"code": 0, "doc": 0, "bare": 0, "line": 0}
     flags, notes = [], []
 
-    for first, para in paragraphs(text):
-        for line, spelled, resolved, a, b, kind in cites_in(
+    for first, para in paragraphs(unfenced(text)):
+        for line, spelled, resolved, kind, what in refs_in(
                 para, first, tracked, byname):
-            cite = (f"{spelled}:{a}" if spelled else f":{a}") \
-                + (f"-{b}" if b != a else "")
-            if spelled is None:
+            if kind == "bare":
                 counts["bare"] += 1
-                flags.append((line, cite, "BARE",
+                flags.append((line, what, "BARE",
                               "a citation carries its own path (DEC-120)"))
                 continue
-            if resolved is None:
-                counts["code"] += 1
-                flags.append((line, cite, "BOUNDS",
-                              "no such file in the repository"))
+            if kind == "line":
+                counts["line"] += 1
+                # Gated whatever the path is: the accepts of S187 orders every
+                # `file:line` out of the pending directories, a citation into
+                # adocs/plan.md included -- those rot fastest of all.
+                flags.append((line, what, "LINE",
+                              "a citation names a symbol, not a line (DEC-135)"))
                 continue
-            now = _at(None, resolved)
-            bucket = "code" if gated(resolved) else "doc"
+            quoted = kind == "phrase"
+            # Flattened for the report: a quoted title straddles the wrap as
+            # often as not, and a flag printed with a newline in it is unusable.
+            flat = " ".join(what.split())
+            cite = f'{spelled} "{flat}"' if quoted else f"{spelled} `{flat}`"
+            bucket = "code" if gated(resolved or spelled) else "doc"
             counts[bucket] += 1
             sink = flags if bucket == "code" else notes
-            if now is None:
-                sink.append((line, cite, "BOUNDS", "tracked but unreadable"))
-                continue
-            if a < 1 or a > b or b > len(now):
-                sink.append((line, cite, "BOUNDS",
-                             f"{resolved} has {len(now)} lines"))
-                continue
-            claimed = anchor_titles(para, line, first, resolved, cite)
-            # One of the titles this citation claims has to be the test the
-            # cited lines open. Any, not all: two titles reach a citation only
-            # when the pairing above could not separate them.
-            if claimed and not any(a <= titles_of(resolved)[t] <= b
-                                   for t in claimed):
-                worst = claimed[0]
-                sink.append((line, cite, "ANCHOR",
-                             f'"{worst}" opens at '
-                             f"{resolved}:{titles_of(resolved)[worst]}"))
-                continue
-            if rev is None:
-                continue
-            then = _at(rev, resolved)
-            if then is None or b > len(then):
-                continue
-            if "\n".join(then[a - 1:b]) != "\n".join(now[a - 1:b]):
-                sink.append((line, cite, "DRIFT",
-                             "held " + repr(then[a - 1][:60].strip())
-                             + f" at {rev[:7]}"))
+            if resolved is None:
+                sink.append((line, cite, "MISSING",
+                             "no such file in the repository"))
+            elif quoted:
+                if not holds_phrase(what, resolved):
+                    sink.append((line, cite, "MISSING",
+                                 f"{resolved} holds no such phrase"))
+            elif not carries_symbol(what, resolved):
+                sink.append((line, cite, "MISSING",
+                             f"{resolved} carries no such symbol"))
 
-    tag = rev[:7] if rev else "none (new or edited)"
-    print(f"{rel}: {counts['code']} code citations, baseline {tag}, "
-          f"{len(flags)} flagged "
-          f"({counts['bare']} bare and {counts['doc']} document, ungated)")
+    print(f"{rel}: {counts['code']} code citations, {len(flags)} flagged "
+          f"({counts['line']} line form, {counts['bare']} bare, "
+          f"{counts['doc']} document ungated)")
     for line, cite, kind, why in flags:
-        print(f"  {kind:6} {rel}:{line}  {cite}  -- {why}")
+        print(f"  {kind:7} {rel}:{line}  {cite}  -- {why}")
     for line, cite, kind, why in notes:
-        print(f"  note   {kind} {rel}:{line}  {cite}  -- {why}")
+        print(f"  note    {kind} {rel}:{line}  {cite}  -- {why}")
     return len(flags)
 
 
 # ------------------------------------------------------------------ touches
 
-# A step file's fields are `name:` at column zero and wrap onto indented
-# continuation lines; this reads one field's whole value.
 FIELD = re.compile(r"^([a-z_]+):[ \t]*(.*)$")
 
 CONST_SYM = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
@@ -809,6 +831,9 @@ def pending_step_files(adocs):
 
 def citations(paths, adocs):
     tracked, byname = _tracked()
+    if not tracked:
+        print("citations: no tracked files, skipped (not a git checkout)")
+        return 0
     files = paths or pending_step_files(adocs)
     flagged = sum(check_citations(p, tracked, byname) for p in files)
     print(f"citations flagged: {flagged} over {len(files)} files")

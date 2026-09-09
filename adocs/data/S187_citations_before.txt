@@ -1,0 +1,137 @@
+# S187 citation census, banked before the first conversion.
+# HEAD 2b198f6 (Correct four stale search.cpp citations the S148 check found (S148))
+# Working tree: S187's own file moved plan_todo/ -> plan_current/ and amended;
+# it carries 0 code citations, so no row below comes from it.
+# Command: python3 tools/plan_prose_check.py --citations
+#
+# Totals: 558 code citations, 14 document, 0 bare, 52 DRIFT flagged, 66 files.
+
+adocs/plan_todo/S020_single_check_computation.md: 41 code citations, baseline 7862f41, 7 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:55  src/bitboard.cpp:483  -- held 'static size_t generate_moves_impl(const bb_tables_t* tables,' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:55  src/bitboard.cpp:504  -- held 'const bb_t checkers = attackers_to(tables, board, king_s' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:56  src/bitboard.cpp:516-531  -- held 'bb_t snipers = (get_rook_attacks(tables, king_square, BB' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:75  src/bitboard.cpp:2225-2226  -- held 'const bool is_check =' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:78  src/bitboard.cpp:1433  -- held 'bool is_check(const game_t* game)' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:79  src/bitboard.cpp:21  -- held 'static inline bool is_attacked_with_occupancy(const bb_table' at 7862f41
+  DRIFT  adocs/plan_todo/S020_single_check_computation.md:82  src/bitboard.cpp:68  -- held 'static inline bb_t attackers_to(const bb_tables_t* tables,' at 7862f41
+adocs/plan_todo/S022_delta_pruning_quiescence.md: 19 code citations, baseline 7862f41, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S023_capture_history.md: 0 code citations, baseline 1dac39d, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S024_continuation_history.md: 3 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S025_bad_capture_ordering_retry.md: 0 code citations, baseline cf89e22, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S029_nnue.md: 0 code citations, baseline 190849c, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S030_move_encoding_16_bit.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S032_pext_sliding_attacks.md: 0 code citations, baseline 962ec3a, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S039_lazy_margin_redecide.md: 2 code citations, baseline ff3a9e0, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S042_en_passant_only_when_capturable.md: 1 code citations, baseline 192a5a3, 0 flagged (0 bare and 1 document, ungated)
+adocs/plan_todo/S055_taper_stage_two_once.md: 34 code citations, baseline 7862f41, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md: 1 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S083_corpus_scale_fifty_million.md: 0 code citations, baseline cf89e22, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S091_see_pruning_main_search.md: 36 code citations, baseline 7862f41, 8 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:98  src/bitboard.cpp:1271  -- held 'int see(const board_t* board, move_t move)' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:99  src/bitboard.cpp:1185  -- held 'bool see_ge(const board_t* board, move_t move, int threshold' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:100  src/bitboard.cpp:1196-1201  -- held 'if (MOVE_EN_PASSANT(move)) {' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:101  src/bitboard.cpp:1209-1212  -- held 'if (MOVE_PROMOTED(move)) {' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:102  src/bitboard.cpp:1160  -- held 'bool capture_cannot_lose(const board_t* board, move_t move)' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:104  src/bitboard.cpp:1096  -- held 'static constexpr int see_value[6] = {100, 300, 300, 500, 900' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:193  src/bitboard.cpp:1096  -- held 'static constexpr int see_value[6] = {100, 300, 300, 500, 900' at 7862f41
+  DRIFT  adocs/plan_todo/S091_see_pruning_main_search.md:209  src/bitboard.cpp:1342-1348  -- held '// No speculative cutoff here. The usual one - stop once' at 7862f41
+adocs/plan_todo/S095_internal_iterative_reduction.md: 24 code citations, baseline 70b9b10, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S097_singular_extensions.md: 33 code citations, baseline 70b9b10, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S098_reduction_refinement.md: 24 code citations, baseline 7504c3d, 0 flagged (0 bare and 1 document, ungated)
+adocs/plan_todo/S099_correction_history.md: 23 code citations, baseline 7862f41, 14 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S099_correction_history.md:114  src/bitboard.cpp:685  -- held 'board->hash ^= randoms->piece_randoms[piece][square];' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:114  src/bitboard.cpp:702  -- held 'board->hash ^= randoms->piece_randoms[piece][square];' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:114  src/bitboard.cpp:724-725  -- held 'board->hash ^= randoms->piece_randoms[piece][from];' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:116  src/bitboard.cpp:992  -- held 'board->hash = entry->hash;' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:116  src/bitboard.cpp:1518  -- held 'hash_t compute_full_hash(game_t* game)' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:123  src/bitboard.cpp:803  -- held 'remove_piece<us>(board, randoms, pawn, move.to);' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:123  src/bitboard.cpp:812  -- held 'remove_piece<them>(board, randoms, captured_pawn, captur' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:128  src/bitboard.cpp:1494  -- held 'void cleanup_board(game_t* game)' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:129  src/bitboard.cpp:742  -- held 'assert(eval_accumulators_match(&game->board));' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:130  src/bitboard.cpp:875  -- held 'assert(eval_accumulators_match(board));' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:130  src/bitboard.cpp:997  -- held 'assert(eval_accumulators_match(board));' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:135  src/chesso.cpp:48  -- held 'static transposition_table_t tt = {};' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:136  src/chesso.cpp:674-675  -- held 'search_state_t state = {};' at 7862f41
+  DRIFT  adocs/plan_todo/S099_correction_history.md:137  src/chesso.cpp:1148-1161  -- held 'bool command_ucinewgame(std::queue<std::string>& args)' at 7862f41
+adocs/plan_todo/S101_threat_terms.md: 0 code citations, baseline c2f1c43, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S102_outposts_and_space.md: 0 code citations, baseline c2f1c43, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S109_shallow_depth_pruning_block.md: 29 code citations, baseline 7504c3d, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S110_correction_history_non_pawn.md: 0 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S111_correction_history_continuation.md: 0 code citations, baseline cf89e22, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S112_quiescence_move_futility.md: 36 code citations, baseline 7862f41, 3 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:113  src/bitboard.cpp:1160-1174  -- held 'bool capture_cannot_lose(const board_t* board, move_t move)' at 7862f41
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:120  src/bitboard.cpp:1096  -- held 'static constexpr int see_value[6] = {100, 300, 300, 500, 900' at 7862f41
+  DRIFT  adocs/plan_todo/S112_quiescence_move_futility.md:209  src/bitboard.cpp:1096  -- held 'static constexpr int see_value[6] = {100, 300, 300, 500, 900' at 7862f41
+adocs/plan_todo/S113_probcut.md: 25 code citations, baseline 56b4276, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S114_null_move_refinements.md: 21 code citations, baseline 7504c3d, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S115_aspiration_refinements.md: 32 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S116_razoring_depth_one.md: 18 code citations, baseline 7862f41, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S117_swar_packed_eval_score.md: 45 code citations, baseline 7862f41, 8 flagged (0 bare and 1 document, ungated)
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:96  src/bitboard.cpp:687  -- held 'eval_add_piece(board, piece, square);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:97  src/bitboard.cpp:937-938  -- held 'eval_remove_piece(board, rook.piece, rook.to);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:97  src/bitboard.cpp:953-954  -- held 'eval_remove_piece(board, promoted_to, move.to);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:98  src/bitboard.cpp:967  -- held 'eval_add_piece(board, captured_pawn, captured_square);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:98  src/bitboard.cpp:975-976  -- held 'eval_remove_piece(board, move.piece, move.to);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:98  src/bitboard.cpp:982  -- held 'eval_add_piece(board, entry->captured, move.to);' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:100  src/bitboard.cpp:596-604  -- held 'static bool eval_accumulators_match(const board_t* board)' at 7862f41
+  DRIFT  adocs/plan_todo/S117_swar_packed_eval_score.md:101  tests/test_engine.cpp:63  -- held 'REQUIRE_MESSAGE(memcmp(&before, &g->board, sizeof(boar' at 7862f41
+adocs/plan_todo/S118_pawn_hash_table.md: 0 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S119_tt_cluster_layout.md: 2 code citations, baseline fe25f46, 2 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S119_tt_cluster_layout.md:17  fastchess.sh:348  -- held '-each tc="$tc" option.Hash=16 option.Threads=1 \\' at fe25f46
+  DRIFT  adocs/plan_todo/S119_tt_cluster_layout.md:30  rating.sh:36  -- held 'hash_mb=128' at fe25f46
+adocs/plan_todo/S120_eval_cache.md: 19 code citations, baseline 7504c3d, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S121_mobility_curves.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S122_king_safety_rebuild.md: 0 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S123_passed_pawn_suite.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S124_endgame_scaling_factors.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S125_pawn_structure_completion.md: 0 code citations, baseline 373e953, 0 flagged (0 bare and 5 document, ungated)
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:32  adocs/plan.md:260-262  -- held 'pawns with king distance (S123, +22.3 the largest single ent' at 373e953
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:35  adocs/plan.md:143-145  -- held 'gravity as one verdict, persistence as a second; S118 moves' at 373e953
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:47  adocs/plan.md:374-375  -- held '54. S125  backward, phalanx, supported and weak unopposed pa' at 373e953
+  note   DRIFT adocs/plan_todo/S125_pawn_structure_completion.md:64  adocs/plan_todo/S118_pawn_hash_table.md:34-37  -- held '**This is not the pattern INV-4 forbids.** INV-4 is about te' at 373e953
+adocs/plan_todo/S126_full_refit_after_search.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S127_spsa_full_parameter_run.md: 0 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S129_syzygy_three_four_five.md: 0 code citations, baseline 38ad4fe, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S131_quiescence_promotions.md: 42 code citations, baseline 7862f41, 10 flagged (0 bare and 0 document, ungated)
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:72  src/bitboard.cpp:194  -- held 'const bb_t push_promotions = pushed & last_rank & check_' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:73  src/bitboard.cpp:207-223  -- held 'const auto emit_promotions = [&](bb_t targets, int shift' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:73  src/bitboard.cpp:229-244  -- held 'if constexpr (Type != GEN_CAPTURES) {' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:74  src/bitboard.cpp:236  -- held 'emit_promotions(push_promotions, push_shift, 0);' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:75  src/bitboard.cpp:261-263  -- held 'if (is_promoting) {' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:101  src/bitboard.cpp:1168-1170  -- held 'const piece_t victim = board->squares[MOVE_TO(move)];' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:102  src/bitboard.cpp:1203-1204  -- held 'const piece_t captured = board->squares[to];' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:104  src/bitboard.cpp:1209-1212  -- held 'if (MOVE_PROMOTED(move)) {' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:105  src/bitboard.cpp:1293  -- held 'gain[0] = (captured == EMPTY) ? 0 : see_value[piece_type' at 7862f41
+  DRIFT  adocs/plan_todo/S131_quiescence_promotions.md:105  src/bitboard.cpp:1300-1307  -- held 'if (MOVE_PROMOTED(move)) {' at 7862f41
+adocs/plan_todo/S132_time_management_node_fraction.md: 43 code citations, baseline 7504c3d, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S133_king_relative_psqt.md: 0 code citations, baseline cf89e22, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S134_fold_degenerate_columns.md: 2 code citations, baseline da8b0df, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S135_unfreeze_piece_placement.md: 0 code citations, baseline a3d36d4, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S136_unfreeze_tempo.md: 1 code citations, baseline a3d36d4, 0 flagged (0 bare and 6 document, ungated)
+  note   DRIFT adocs/plan_todo/S136_unfreeze_tempo.md:3  adocs/plan.md:359  -- held '`plan_todo/`, `plan_current/`, and `plan_done/`. Ids are all' at a3d36d4
+  note   DRIFT adocs/plan_todo/S136_unfreeze_tempo.md:3  adocs/plan.md:370  -- held '**Both lists are maintained by hand, and that is new since 2' at a3d36d4
+  note   DRIFT adocs/plan_todo/S136_unfreeze_tempo.md:79  adocs/plan.md:359  -- held '`plan_todo/`, `plan_current/`, and `plan_done/`. Ids are all' at a3d36d4
+  note   DRIFT adocs/plan_todo/S136_unfreeze_tempo.md:81  adocs/plan.md:370  -- held '**Both lists are maintained by hand, and that is new since 2' at a3d36d4
+  note   DRIFT adocs/plan_todo/S136_unfreeze_tempo.md:111  adocs/plan.md:370  -- held '**Both lists are maintained by hand, and that is new since 2' at a3d36d4
+adocs/plan_todo/S151_pruning_verdicts_at_longer_control.md: 0 code citations, baseline 04abd23, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S152_rating_checkpoint_after_search_block.md: 0 code citations, baseline bbbd9f4, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S159_killer_slot_ageing.md: 2 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S181_lynx_band_correction.md: 0 code citations, baseline 5cffb70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S182_cost_line_from_ledger.md: 0 code citations, baseline 66cbc54, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S183_elo_arithmetic_inputs.md: 0 code citations, baseline 5cffb70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S185_plan_figures_sourced.md: 0 code citations, baseline 5cffb70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S186_block_three_enrichment.md: 0 code citations, baseline 5cffb70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S188_check_extension_in_loop.md: 0 code citations, baseline 5cffb70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S190_invariants_in_release_gate.md: 0 code citations, baseline 0a4f88f, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S191_pruning_guard_tests.md: 0 code citations, baseline ac9cd36, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S192_golden_hygiene.md: 0 code citations, baseline ef0b0cc, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S193_fast_suite_repairs.md: 0 code citations, baseline ca9199b, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S194_book_path_under_test.md: 0 code citations, baseline afee527, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S195_reproducibility_test.md: 0 code citations, baseline a014a70, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S196_mutation_check_tool.md: 0 code citations, baseline 4d0cbb0, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S197_gate_extra_script.md: 0 code citations, baseline 97e1f0c, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S199_drift_match_against_pinned_reference.md: 0 code citations, baseline 66cbc54, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_todo/S202_shallow_inherited_mate_score.md: 0 code citations, baseline 192a5a3, 0 flagged (0 bare and 0 document, ungated)
+adocs/plan_current/S187_symbol_citations.md: 0 code citations, baseline none (new or edited), 0 flagged (0 bare and 0 document, ungated)
+citations flagged: 52 over 66 files
+exit: 1

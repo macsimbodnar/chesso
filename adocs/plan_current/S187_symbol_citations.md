@@ -1,13 +1,13 @@
 id:         S187
 goal:       citations from pending step files into code name a file and a symbol -- a function, a constant, a macro or a test title -- and carry no line number, and the citation checker verifies the symbol exists in the named file, so a source commit can no longer stale the plan
 accepts:    every `file:line` citation in `adocs/plan_todo/` is rewritten as the file and the symbol or `TEST_CASE` title it points at (the review counted 549, 58 of them drifted), keeping the symbol S144's rule already puts beside the citation; `tools/plan_prose_check.py --citations` fails a `file:line` form found in `adocs/plan_todo/` or `adocs/plan_current/` as `LINE` and a `file` plus symbol whose symbol is absent from that file at HEAD as `MISSING`, each observed red on a planted case before the conversion and green after; the four citations the review found wrong when written -- S109's accepts, S055's taper divisions, S024's Note, S119's `rating.sh` line -- come out right in the symbol form and S024's Note obeys S024's own accepts; the step states whether the mode joins the fast suite now that it holds no line numbers, and if so `tests/CMakeLists.txt` says why the old reason no longer applies; the "A citation repeats its path" paragraph of `adocs/plan.md` is rewritten for the symbol form and cites DEC-135; `DEV_MANUAL.md`'s citation section says the same; fast suite green in both builds
-touches:    adocs/plan_todo/, tools/plan_prose_check.py, tests/CMakeLists.txt, adocs/plan.md, DEV_MANUAL.md
-excludes:   `adocs/plan_done/`, which is history and keeps its line citations as written; `adocs/specs.md`'s invariant table, which cites lines into `src/bitboard.cpp` and is not a pending step file -- its own rule is a later decision; `adocs/decisions.md`; the engine
+touches:    adocs/plan_todo/, adocs/plan_current/, tools/plan_prose_check.py, tests/test_plan_citations.py, tests/CMakeLists.txt, adocs/data/, adocs/plan.md, DEV_MANUAL.md, adocs/decisions.md
+excludes:   `adocs/plan_done/`, which is history and keeps its line citations as written; `adocs/specs.md`'s invariant table, which cites lines into `src/bitboard.cpp` and is not a pending step file -- its own rule is a later decision; the engine
 decisions:  DEC-120, DEC-135
 closes:     2026-09-04_plan_review-F07
 blocks:
 paused_by:
-author:
+author:     agent (Claude Opus 5), coordinator, 2026-09-09
 done:
 
 ## Why this exists
@@ -348,3 +348,32 @@ unverified.
    the header and states the number in the stamp -- confirm.
 4. Whether the fast-label decision gets an Amended line on DEC-135, or the
    CMake comment and `DEV_MANUAL.md` are the record, as the accepts reads.
+
+## 11. The owner's answers, 2026-09-09
+
+All four questions of section 10 were answered on the day the step started,
+every one as the section recommended. They are recorded here because the
+transcript is not the memory.
+
+1. **`touches:` is amended now, not at completion**, so the field is true
+   while the step is current: it gains `adocs/plan_current/`,
+   `tests/test_plan_citations.py`, `adocs/data/`, `adocs/decisions.md` and
+   loses nothing. `adocs/decisions.md` therefore leaves `excludes:` -- it is
+   excluded no longer, because answer 3 puts a decision in it.
+2. **The goal's 549 stays.** The census at `2b198f6`, the commit this step
+   starts from, is **558 code citations and 14 document ones, 0 bare, 52
+   DRIFT over 66 pending files**; the guide's 564 / 59 / 74 was taken at
+   `d14fcd6`, before S180, S184, S203 and S148 landed. S144's precedent:
+   the header keeps the number it was written with and the stamp states the
+   measured one.
+3. **A quoted phrase absent from a cited document stays a note, ungated.**
+   The document bucket's existing reason holds -- `adocs/plan.md` and
+   `adocs/specs.md` are rewritten at every completion, so gating a phrase in
+   them makes red the normal state, which is the failure mode DEC-119's
+   paragraph in the checker docstring describes. The `LINE` class still
+   reaches them, so the six `adocs/plan.md:NNN` citations in S136 and the
+   other eight document line citations are converted like every other.
+4. **`--citations` joins the fast label, and the choice is DEC-159.** Not an
+   Amended line on DEC-135 and not the CMake comment alone: what a future
+   reader re-derives is why the 2026-08 reason for keeping the mode out
+   stopped applying, and that is a decision rather than a comment.

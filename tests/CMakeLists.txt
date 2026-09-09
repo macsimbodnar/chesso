@@ -331,6 +331,22 @@ add_test(NAME test_plan_params
                          --params)
 set_tests_properties(test_plan_params PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S187: the planted-case gate on `--citations` itself. Not a check over the
+# plan -- that is test_plan_citations' sibling below -- but a check that the
+# checker still recognises a citation. Each case writes one step file into a
+# temporary directory and runs the mode over that file alone, so a plan edit
+# cannot turn it red and a recogniser that stopped firing cannot hide behind a
+# green real set.
+#
+# It resolves the symbols its passing cases name against this checkout:
+# `negamax` in src/search.cpp, "pruning does not hide a forced mate" in
+# tests/test_search.cpp, `GAME_PHASE_MAX` in the comment in src/search_params.hpp
+# that must stay comment-only for the negative case to mean anything. Renaming
+# one turns this red, and the rename is the fix. 0.6 s, stdlib only.
+add_test(NAME test_plan_citations
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_plan_citations.py)
+set_tests_properties(test_plan_citations PROPERTIES LABELS "fast" TIMEOUT 120)
+
 # Perft. Not a doctest binary: it has its own main() and reports through the
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.
