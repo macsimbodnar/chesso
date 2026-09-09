@@ -8837,3 +8837,139 @@ Consequences: `tools/plan_prose_check.py --citations` is now part of the TESTS
               `tests/test_plan_citations.py`, is separate and was registered by
               the same step: it is what keeps a recogniser that stopped firing
               from hiding behind a green real set.
+
+## DEC-160  2026-09-09  S159 closes on its census: the ageing reading of S149's 11 Elo is refuted before a game, and no SPRT is spent on it
+Tags:         search, move-ordering, killers, s149, s159, measurement, dec-019, dec-063, dec-099
+Context:      S159 existed to test one reading of S149's verdict. S149 implemented
+              CPW's killer-distinctness guard, measured **-11.02 +/- 10.53 Elo,
+              H0 accepted over 2522 games**, and reverted it. S159's hypothesis --
+              written as a hypothesis, which is why this was answerable -- was
+              that the unguarded shift is incidentally an *ageing* mechanism, that
+              the guard removed the ageing along with the duplication, and that
+              the 11 Elo is the cost of the staleness the guard then preserved.
+              The step's own order of work put the census before the games, "as
+              S165 counted reachability first". It was run on 2026-09-09 over
+              18166063 nodes, on HEAD and on HEAD with S149's guard re-applied to
+              an instrumented copy, and it answers the question:
+
+                                                        HEAD   S149's guard
+                stores re-storing the move in slot 0    72.0 %       72.4 %
+                nodes with both slots equal            44.0 %        0.0 %
+                nodes offering a distinct slot 1       45.4 %       88.8 %
+                ... of those, stale                     1.96 %       1.91 %
+
+              **The stale share of distinct second-killer offers is flat**, 1.96 %
+              against 1.91 %. The guard did not preserve proportionally staler
+              killers; it raised the stale count only because it roughly doubled
+              the offer count. The 11 Elo attaches to offering the second killer
+              twice as often, not to its age. And on HEAD the unguarded shift is
+              already an aggressive ageing mechanism -- it discards slot 1 on 72 %
+              of stores -- so the candidate S159 built, clearing the table once
+              per iteration, had **0.89 % of nodes** to act on.
+Decision:     By the owner, 2026-09-09, with the census table in hand. **S159
+              completes on the census and its `accepts:` is amended**: the clause
+              requiring an ageing scheme decided by SPRT is met by a measurement
+              that removed the reason to take one, and candidate A -- `killers_clear`
+              called from the depth loop in `iterative_deepening_search` -- is
+              reverted unrun. The killer table's lifetime stays one `go`. Candidate
+              B is recorded neutral as the step predicted: node-identical and
+              best-move-identical at depths 9 and 12 (INV-6), its only observable
+              being the duplication fence in `tests/test_search.cpp` going red for
+              a change that alters no game.
+Rejected:     Spending the run anyway, `{-5, 5}` nElo, 10465 games and 4 h 36 m
+              worst case at the measured 2277 games/h. It was pre-registered and
+              ready, script and all. Refused on what the census had already
+              priced: measurement capacity is the binding constraint on the plan,
+              and a night on a mechanism measured at 0.89 % of nodes is a night
+              not spent on the S109 block. **This is not a licence to argue a
+              verdict.** DEC-019 stands unchanged and this entry does not weaken
+              it: what was measured here is the *size of the mechanism*, cheaply
+              and directly, not its Elo, and the census was written into the run
+              script's header before the games precisely so it could not be
+              reread afterwards as whatever the games happened to say. A census
+              that had come out large would have bought the run, not replaced it.
+              Substituting a second candidate -- the per-node ply+2 reset, or
+              S149's guard combined with the clear. Refused on 2026-09-09 before
+              the census, and the census removed the reason to revisit it.
+              Keeping the clear on a null. Refused by the owner's rule of the
+              same day: it implements no published rule and removes no unintended
+              state, so an extra action with no measured return does not ship.
+Consequences: **The killer heuristic is closed for now, on two measurements
+              rather than one.** S149 measured the guard and S159 measured the
+              mechanism behind the reading of it; the table keeps two slots, an
+              unguarded shift and a per-`go` lifetime, and the fence in
+              `tests/test_search.cpp` keeps the numbers where the next agent to
+              notice the duplication will find them. What the census leaves open
+              is a different question with a number on it: the second killer is
+              offered on 45.4 % of nodes today and 88.8 % under the guard, and it
+              is *presence*, not age, that the 11 Elo is attached to. No step is
+              created for it -- S159's `excludes:` keeps the slot count at two and
+              the reserve already holds S023 and S025 on this block -- and
+              creating one is a decision, not a drift.
+              **S149's instrumentation driver is not reproducible and this is how
+              that was found.** Its 11 positions -- "startpos 13, kiwipete 13,
+              lasker 18, promo-mess 12, 9bishops 14, kpk 22, perpetual 16,
+              mate-QR 15, underpromo 14, tactical 13, checkfest 13" -- are named
+              in `adocs/plan_done/S149_killer_slot_dedupe.md` and in
+              `adocs/audit/2026-08-21_adversarial.md` and their FENs are recorded
+              in neither, so nobody can reproduce 66.0 % / 44.4 %. S159's set is
+              recorded, one in-repo source per row, with its driver, its
+              instrumentation as a patch and its outputs, under `adocs/data/S159_*`.
+              A census is evidence and evidence that cannot be re-run is an
+              anecdote.
+
+## DEC-161  2026-09-09  `test_mate_carry` fires on any change that moves the tree, and that is a defect in the guard rather than budget drift to be re-swept
+Tags:         testing, mate-pv, fixtures, s203, s204, s159, dec-142, dec-156, bugs
+Context:      S159's candidate turned `test_mate_carry` red against a green HEAD:
+              four assertions over four cases, two incomplete mating PVs (S202's
+              class) and two cases reporting no mate line at all, which
+              `expected_mate_lines`'s own message calls "gone vacuous". The BUGS
+              rule made the question -- engine or fixture? -- the next thing to
+              answer, and it was answered with the script DEC-142 puts beside the
+              golden: `adocs/data/S203_case_sweep.sh`, the whole grid, both sides,
+              recorded as `adocs/data/S204_sweep_head.txt` and
+              `adocs/data/S204_sweep_killer_iter_clear.txt`.
+              Of nine stride-1 budgets, **`C_mate7_depth11` reports a mate line in
+              exactly one cell at HEAD -- 1500000 nodes -- and that cell is its
+              configured budget.** `B_mate6_shallow`'s budget is 100000, the
+              lowest in the grid and the edge at which the case switches on. Under
+              the candidate both spikes move. Short lines behave identically:
+              they are scattered across the grid at HEAD -- A 2 and 2, B 5, 6, 5
+              and 7, E 8, F 2 -- and merely miss the pinned budgets.
+Decision:     By the owner, 2026-09-09. **This is a bug in the fixture and it gets
+              a step, S204, before anything else starts** -- not a re-sweep, and
+              not a reason to hold S159. S159's candidate was reverted for its own
+              reasons (DEC-160), which returns the gate to green, so S204 is the
+              next step rather than S159's blocker and no `paused_by:` is set.
+Rejected:     Re-deriving the budgets and floors against S159's candidate, which
+              is what DEC-156's consequences prescribe -- "the sweep is to be
+              re-run after anything that moves the tree". Refused because on a
+              grid this sparse that re-pins each golden to a fresh spike at every
+              tree-moving change, and DEC-156's own `Rejected:` refuses precisely
+              that -- "choosing each budget because it happened to be green ...
+              fitting the fixture to the test". DEC-156's one-rule answer
+              constrains *which* green cell is taken and does not stop the taking
+              recurring, so the tension is real and belongs to S204.
+              Deleting or relaxing the test. Refused by the TESTS rule and by the
+              fixture's own message: a vacuous case needs re-choosing, not
+              deleting.
+              Running S159's SPRT with the gate red. Refused: a known defect in
+              the tree contaminates every measurement taken after it, which is
+              the whole of the BUGS rule.
+Consequences: **DEC-156 is not void and is not amended here.** Its re-sweep
+              prescription stands until S204 either upholds it with the tension
+              resolved or replaces it, and S204's `accepts:` requires that in
+              writing. What DEC-156 did not have is the count: it recorded that
+              the grid is a knife edge; this records that one case's green is a
+              single cell in nine, which is why "re-sweep after every tree change"
+              cannot be the whole answer.
+              **A guard that fires on every tree-moving change trains agents to
+              re-pin it.** S148's stamp already establishes the same test going
+              red on its candidate and being read as budget calibration; that
+              reading was right and is the second instance. A third would be a
+              habit, which is what S204 exists to prevent.
+              The mate guards written for the recurring "pruning that hides a
+              mate" failure -- `tests/test_engine.cpp` `"engine: mate safety"` and
+              `tests/test_search.cpp`'s mate cases -- were green on the same
+              candidate, 30 of 31 fast tests passing. They are not implicated and
+              S204 does not touch them.

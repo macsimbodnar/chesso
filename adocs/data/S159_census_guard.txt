@@ -1,0 +1,13 @@
+startpos	13	3200156	e2e4
+kiwipete	13	5032826	e2a6
+midgame	13	809182	c3d5
+tactical	13	537710	d7c8q
+cmk	13	2691211	d8e7
+promo-mess	12	150899	g7h8q
+lasker	18	19906	a1b2
+locked-pawns	22	21167	f2f3
+perpetual	16	2555702	c3g3
+9bishops	14	274075	g1h2
+underpromo	14	724162	h7g8q
+TOTAL		16016996	
+S159CENSUS stores=210270 dup_store=152317 probe=9039916 dup_live=0 stale_live=51421 k1_live=8027693 k1_distinct=8027693 k1_stale=152957

@@ -1,0 +1,114 @@
+--- /dev/fd/63	2026-09-09 16:34:56.719729373 +0200
++++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/search.cpp	2026-09-09 16:02:09.746191081 +0200
+@@ -12,6 +12,17 @@
+ #include "transposition_table.hpp"
+ #include "utils.hpp"
+ 
++// S159 instrumentation, scratchpad only. Never in the repository tree.
++uint64_t g_killer_stores = 0;
++uint64_t g_killer_dup_store = 0;
++uint64_t g_km_probe = 0;
++uint64_t g_km_dup_live = 0;
++uint64_t g_km_stale_live = 0;
++uint64_t g_km_k1_live = 0;
++uint64_t g_km_k1_distinct = 0;
++uint64_t g_km_k1_stale = 0;
++
++
+ 
+ #define MATE_MAX 49000
+ #define MATE_MIN 48000
+@@ -672,6 +683,26 @@
+   // S103.
+   const int tt_eval = (tt_entry != nullptr) ? tt_entry->eval : TT_EVAL_NONE;
+ 
++  // S159 instrumentation, scratchpad only.
++  {
++    const move_t k0 = state->killer_moves[0][ply];
++    const move_t k1 = state->killer_moves[1][ply];
++    g_km_probe++;
++    if (k0 != 0 && k0 == k1) { g_km_dup_live++; }
++    if (k0 != 0 && state->killer_iter[0][ply] < state->iteration) {
++      g_km_stale_live++;
++    }
++    if (k1 != 0) {
++      g_km_k1_live++;
++      // The only case in which ORDER_KILLER_1 can be awarded at all: score_move
++      // tests slot 0 first, so a slot 1 equal to slot 0 is a dead band.
++      if (k1 != k0) {
++        g_km_k1_distinct++;
++        if (state->killer_iter[1][ply] < state->iteration) { g_km_k1_stale++; }
++      }
++    }
++  }
++
+   if (!is_pv && ply > 0) {
+     int tt_score = 0;
+ 
+@@ -1014,6 +1045,12 @@
+         // slots hold one move on 44 % of nodes and nothing distinct can reach
+         // ORDER_KILLER_1. CPW's replacement rule says to guard it; guarding it
+         // measured -11.02 +/- 10.53 Elo over 2522 games, H0 accepted. S149.
++        // S159 instrumentation, scratchpad only.
++        g_killer_stores++;
++        if (moves[i] == state->killer_moves[0][ply]) { g_killer_dup_store++; }
++        state->killer_iter[1][ply] = state->killer_iter[0][ply];
++        state->killer_iter[0][ply] = state->iteration;
++
+         state->killer_moves[1][ply] = state->killer_moves[0][ply];
+         state->killer_moves[0][ply] = moves[i];
+ 
+--- /dev/fd/63	2026-09-09 16:34:56.725729236 +0200
++++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/chesso.cpp	2026-09-09 16:02:09.746373379 +0200
+@@ -1,3 +1,4 @@
++#include <cstdio>
+ #include <algorithm>
+ #include <array>
+ #include <atomic>
+@@ -826,6 +827,9 @@
+   for (int current_depth = 1; current_depth <= conf.depth; ++current_depth) {
+     // Iterative deepening
+ 
++    // S159 instrumentation, scratchpad only.
++    state.iteration = static_cast<uint32_t>(current_depth);
++
+     // Reset the explored nodes in the previous iteration
+     state.explored_nodes = 0;
+ 
+@@ -1062,6 +1066,23 @@
+     }
+   }
+ 
++    {
++    extern uint64_t g_killer_stores, g_killer_dup_store, g_km_probe,
++        g_km_dup_live, g_km_stale_live, g_km_k1_live, g_km_k1_distinct,
++        g_km_k1_stale;
++    std::fprintf(stderr,
++                 "S159CENSUS stores=%llu dup_store=%llu probe=%llu "
++                 "dup_live=%llu stale_live=%llu k1_live=%llu "
++                 "k1_distinct=%llu k1_stale=%llu\n",
++                 (unsigned long long) g_killer_stores,
++                 (unsigned long long) g_killer_dup_store,
++                 (unsigned long long) g_km_probe,
++                 (unsigned long long) g_km_dup_live,
++                 (unsigned long long) g_km_stale_live,
++                 (unsigned long long) g_km_k1_live,
++                 (unsigned long long) g_km_k1_distinct,
++                 (unsigned long long) g_km_k1_stale);
++  }
+   return result;
+ }
+ 
+--- /dev/fd/63	2026-09-09 16:34:56.728729168 +0200
++++ /tmp/claude-1000/-home-max-ws-chesso/53087890-e229-4d58-b0ce-47c63d9acd2c/scratchpad/inst_head/src/data_structures.hpp	2026-09-09 16:00:39.881798778 +0200
+@@ -482,6 +482,10 @@
+   uint64_t explored_nodes;
+   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
+   move_t killer_moves[2][MAX_PLY];
++  // S159 instrumentation, scratchpad only. The iteration each slot was written
++  // in, and the iteration the depth loop is currently running.
++  uint32_t killer_iter[2][MAX_PLY];
++  uint32_t iteration;
+ 
+   // The static evaluation of the node at each ply, TT_EVAL_NONE where the node
+   // was in check and never computed one. Written by every negamax node that

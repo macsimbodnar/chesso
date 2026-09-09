@@ -7,6 +7,52 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-09, by hand.
 
+- **S159 is done, 2026-09-09, and it cost no machine time: the hypothesis was
+  refuted by a census before a game was played.** S149 measured CPW's killer
+  distinctness guard at -11.02 +/- 10.53 Elo and reverted it; S159's reading was
+  that the guard removed an *ageing* mechanism as a side effect and that the 11
+  Elo was the staleness it then preserved. Counted over **18166063 nodes** on 11
+  recorded positions, on HEAD and on HEAD with the guard re-applied to an
+  instrumented copy: **the stale share of distinct second-killer offers is
+  1.96 % against 1.91 %, flat.** The guard did not preserve proportionally
+  staler killers -- it roughly doubled how often a distinct second killer is
+  offered at all, **45.4 % of nodes to 88.8 %**, and the stale count rose only
+  with the offer count. On HEAD the unguarded shift already *is* the ageing
+  mechanism, discarding slot 1 on **72.0 % of stores**, which left candidate A
+  -- the table cleared once per iteration -- **0.89 % of nodes** to act on. It
+  was built, tested, mutated and **reverted unrun**. DEC-160.
+- **The `{-5, 5}` SPRT was pre-registered, priced and declined.** 10465 games
+  and 4 h 36 m worst case at the measured 2277 games/h. The census is written
+  into the run script's header rather than read back over the games, which is
+  the point: DEC-019 is not weakened, because what was measured cheaply is the
+  *size of the mechanism* and not its Elo, and a census that had come out large
+  would have bought the run instead of replacing it.
+- **Candidate B was neutral exactly as the step file predicted** -- node- and
+  best-move-identical at depths 9 and 12 (INV-6), 121530 / 801481 / 72924 and
+  636677 / 3520847 / 494098 -- and its only observable is the duplication fence
+  in `tests/test_search.cpp` going red for a change that alters no game. The
+  fence was not rewritten for it.
+- **S149's instrumentation driver is not reproducible, and that is how it was
+  found.** Its 11 positions are named in `plan_done/S149_*` and in the
+  2026-08-21 audit and their FENs appear in neither, so nobody can re-derive
+  66.0 % / 44.4 %. S159's set, driver, instrumentation patch and outputs are all
+  under `adocs/data/S159_*`; the duplicate rates reproduce on it at 72.0 % of
+  stores and 44.0 % of nodes. A census that cannot be re-run is an anecdote.
+- **S204 is in progress and it is the found bug, taken before anything else
+  (BUGS).** Candidate A turned `test_mate_carry` red against a green HEAD, on
+  four assertions over four cases. The S203 sweep over both sides says it is the
+  fixture: of nine stride-1 budgets **`C_mate7_depth11` reports a mate line in
+  one cell at HEAD -- 1500000 nodes -- and that cell is its configured budget**,
+  while `B_mate6_shallow` is pinned at 100000, the edge where it switches on.
+  Short lines are scattered across the grid at HEAD too and merely miss the
+  pinned budgets. DEC-156 already recorded the knife edge and prescribed
+  re-sweeping after any tree change; on a grid this sparse that re-pins each
+  golden to a fresh spike every time, which DEC-156's own `Rejected:` refuses as
+  "fitting the fixture to the test". That tension is S204's, DEC-161.
+  **The mate guards written for the recurring "pruning that hides a mate"
+  failure were green on the same candidate** -- `test_engine` "engine: mate
+  safety" and `test_search`'s mate cases, 30 of 31 fast tests passing -- so they
+  are not implicated and S204 does not touch them.
 - **S190 is done, 2026-09-09: INV-2 and INV-4 are enforced by the gate.**
   `tests/test_invariants` walks every test FEN two plies deep plus the five
   positions of `test_engine`'s hash oracle at their own depths -- **2132167

@@ -2255,6 +2255,17 @@ cheap and needs no match; the games survive a redraw and only the budgets move.
 DEC-154 and DEC-156 are the history, and the grid is a knife edge — one case
 reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
 
+**A key redraw is not the only thing that retires those budgets, and since
+2026-09-09 that is measured.** Any change that moves the tree does, which is
+DEC-156's own consequence, and the grid is sparse enough that the guard fires
+on changes it has no opinion about: over the nine stride-1 budgets,
+`C_mate7_depth11` reports a mate line in **exactly one cell** at `c982f9d`, and
+that cell is its configured budget. So a red `test_mate_carry` after a `src/`
+change is a question and not a verdict — sweep both sides before concluding
+anything, as `adocs/data/S204_sweep_head.txt` and
+`adocs/data/S204_sweep_killer_iter_clear.txt` do. Whether re-pinning to a fresh
+spike at every step is a guard at all is DEC-161 and S204.
+
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal
 to a key, no two pair XORs equal — plus the minimum pairwise Hamming distance,
