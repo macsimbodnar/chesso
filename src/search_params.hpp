@@ -123,14 +123,22 @@
                                                                                \
      **The declared range stays 0 to 63 (DEC-095), and that is a decision.**   \
      S145 swept the ceiling against 48 constructed forced mates with the floor \
-     held at 3: 34 of 48 exact at 0, 27 at S033's 6, 24 at the shipping 15 and \
-     24 at 63, with the mate in four and mate in five classes reading 4 of 8   \
-     and 3 of 8 at 0 against 0 and 0 from 10 up. So the deep classes belong to \
-     this bound and not to the floor -- but that is a case for re-measuring    \
-     the *default*, which alters play and is S148's, and it is not a defect in \
-     the declared range: 15 passes the whole mate suite. The tuner keeps every \
-     value. S033 for the derivation, S085 for the values,                      \
-     adocs/data/S145_rfp_sweep.log for the sweep. */                           \
+     held at 3 and found the deep classes belong to this bound and not to the  \
+     floor. S148 re-swept it over the 82-row set at every value from 0 to 15   \
+     and then measured what the elbow costs. **The default stays 15, on an     \
+     SPRT, and the deep mates it loses are its measured price.** At 15 the set \
+     reads 39 of 82 exact, 12 of 24 mates in three, 1 of 16 in four and 0 of   \
+     16 in five; at 4 -- the largest ceiling where both deep classes are       \
+     non-zero -- it reads 52, 18, 7 and 1. That candidate lost: nElo -7.31     \
+     +/- 5.60, Elo -5.66 +/- 4.33 over 14808 games at 8+0.08, H0 accepted      \
+     against {-5, 0}. So a ceiling low enough to find the deep mates costs     \
+     more than five nElo of ordinary play, and the mate counts above are what  \
+     this engine pays for the pruning. S148 for the verdict, DEC-158 for the   \
+     trade. The declared range is untouched by all of it and stays 0 to 63     \
+     (DEC-095): the tuner keeps every value. S033 for the derivation, S085 for \
+     the values, adocs/data/S145_rfp_sweep.log for the first sweep,            \
+     adocs/data/S148_rfp_ceiling_sweep.log for the finer grid and              \
+     adocs/data/S148_sprt.log for the run. */                                  \
   X(RFP_MARGIN,        "RfpMargin",       63,     0, 2000)                     \
   X(RFP_MAX_DEPTH,     "RfpMaxDepth",     15,     0, 63)                       \
                                                                                \

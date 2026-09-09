@@ -84,7 +84,7 @@ src/chesso.cpp:920-927. `scale_time` is true only on the clock path
 (src/chesso.cpp:1402); `go movetime` sets both limits to the named time and
 never scales (src/chesso.cpp:1380-1384); `go ponder` is ignored
 (src/chesso.cpp:1346-1350). The nine `Tm*` constants:
-src/search_params.hpp:262-312.
+src/search_params.hpp:270-320.
 
 **What per-root-move attribution needs.** The node counter is one global:
 `search_state_t::explored_nodes` (src/data_structures.hpp:453), incremented at

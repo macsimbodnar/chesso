@@ -2181,11 +2181,23 @@ TEST_SUITE("engine: mate safety")
   //
   // The mate in four and five counts are **recorded and not asserted**: 1 of 16
   // and 0 of 16, and a floor of one asserts almost nothing. What recovers them
-  // is the depth ceiling and not the ply floor - over the 48 it was 6 of 8 and
-  // 5 of 8 at RfpMaxDepth 0, still 0 and 0 at 10 and above, and S085 tuned that
-  // ceiling from S033's 6 to 15. Those two were 4 and 3 when S145 measured
-  // them, so the ceiling is costing more now than the step that queued the
-  // question read; S148 is where it is re-decided, by SPRT and not here.
+  // is the depth ceiling and not the ply floor - over the 82 the ceiling reads
+  // 13 of 16 and 11 of 16 at RfpMaxDepth 0 against 1 and 0 from 10 up, and
+  // S085 tuned that ceiling from S033's 6 to 15.
+  //
+  // **S148 re-decided that ceiling on 2026-09-09 and it stays at 15**, so
+  // these two counts stay recorded and this comment is where the reason lives.
+  // The largest ceiling at which both deep classes survive is 4, where the set
+  // reads 52 of 82 exact and the classes 7 of 16 and 1 of 16; that candidate
+  // lost its SPRT at nElo -7.31 +/- 5.60 over 14808 games at 8+0.08, H0
+  // accepted against {-5, 0}. A promotion to an asserted floor was the
+  // accepts' condition and it is not met in either class: four would ship at
+  // 1, which is the zero-margin floor DEC-116 already rejected here, and five
+  // ships at 0. What would lift them is a search that finds these mates
+  // without paying for them, not a lower bound. DEC-158,
+  // adocs/data/S148_rfp_ceiling_sweep.log for the grid and
+  // adocs/data/S148_sprt.log for the run.
+  //
   // adocs/data/S145_rfp_sweep.log holds S145's sweep and
   // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
@@ -2813,12 +2825,16 @@ TEST_SUITE("engine: mate safety")
     // The two counts the guard does not reach are recorded rather than
     // asserted, and the message carries them, so a change that improves them
     // says so in the log instead of going silently green at the old number.
+    // Neither is promotable today and S148 measured why, not guessed it: see
+    // the comment above MATE_IN_THREE_FLOOR.
     MESSAGE("mate in 4: " << exact_by_distance[4] << " of "
                           << total_by_distance[4]
                           << " exact, mate in 5: " << exact_by_distance[5]
                           << " of " << total_by_distance[5]
                           << " -- recovered by RfpMaxDepth and not by "
-                             "RfpMinPly; adocs/data/S145_rfp_sweep.log");
+                             "RfpMinPly, and lowering it lost 7.31 nElo "
+                             "(S148, DEC-158); adocs/data/S145_rfp_sweep.log "
+                             "and adocs/data/S148_rfp_ceiling_sweep.log");
 
     REQUIRE(exact_by_distance[2] == total_by_distance[2]);
     REQUIRE(exact_by_distance[3] >= MATE_IN_THREE_FLOOR);

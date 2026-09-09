@@ -86,7 +86,7 @@ Both preconditions hold today, measured. (1) `evaluate()` is `evaluate_cheap()
 + evaluate_expensive()` (src/evaluation.cpp:1051-1052), 53.90 ns a call
 post-S104 (specs.md); the expensive half is mobility plus king safety clamped
 to +/-LAZY_EVAL_MARGIN inside evaluate_expensive() (src/evaluation.cpp:1045;
-the constant at src/search_params.hpp:200), and paying it everywhere costs the
+the constant at src/search_params.hpp:208), and paying it everywhere costs the
 11.7 % above. (2) The TT does not cover quiescence: S094 counted the quiescence
 probe finding **any** entry on 0.79 % of nodes (kiwipete depth 12, 16 MB table)
 -- TT_DEPTH_QS = -1 sits below every main depth, so any main store over the
@@ -189,7 +189,7 @@ the stamp; S039 executes it.
   Every cached value carries the 184 clamp -- self-consistent, the cache
   mirrors the live evaluate(), and when S039 changes the margin that is a new
   binary and a fresh cache. The live path is the tune build, where
-  LazyEvalMargin is a setoption (src/search_params.hpp:200): clear the cache on
+  LazyEvalMargin is a setoption (src/search_params.hpp:208): clear the cache on
   that setoption, the same rule S108 records for the TT eval field. Were S039
   ever re-ordered ahead, nothing breaks -- the cache is indifferent to which
   margin it memoises.

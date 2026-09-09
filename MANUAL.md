@@ -156,7 +156,7 @@ of a refusal is the only confirmation the value was taken.
 | `HistoryMalusConst` | 0 | -32768 to 32767 | the constant term of the same malus. The malus ships equal to the bonus; the split is what these three axes exist for |
 | `MaxQsearchDepth` | 19 | 1 to 64 | how many plies quiescence may keep going on its own before it stops and returns its stand-pat score |
 | `RfpMargin` | 63 | 0 to 2000 | reverse futility pruning: centipawns per remaining ply the opponent is assumed able to claw back |
-| `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice. 0 switches the rule off |
+| `RfpMaxDepth` | 15 | 0 to 63 | the largest *remaining* depth reverse futility pruning is applied at — a distance to the leaves, not from the root. At 15 that is every depth this engine reaches, so it confines nothing in practice; every value from 10 up behaves identically. 0 switches the rule off. Lowering it finds deep mates and costs rating: 4 is the largest value at which the constructed set reports any mate in five, and it lost an SPRT at −7.31 nElo over 14808 games (S148, DEC-158) |
 | `RfpMinPly` | 3 | 2 to 63 | the shallowest ply reverse futility pruning is applied at. The top of the tree is searched properly. The floor is 2 because the mate-safety suite goes red below it (S145, DEC-095), not for an arithmetic reason. Since S156 the mined breadth set says the same from the other side: 145 of its 318 mates found at the exact distance at 2 and 3, 141 at 1 and 0, against a floor of 143 |
 | `NullMoveBase` | 3 | 0 to 16 | the constant part of the null move reduction |
 | `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
@@ -361,7 +361,13 @@ here as the FEN each one loads. A GUI never sends them.
   (2026-08-21) is the constructed set of proved mates the floor is measured
   against — 48 then, 82 since S168 on 2026-09-01: all 26 mates in two are found
   immediately, 12 of the 24 mates in three are found late or not at all, and
-  1 of 16 at four and 0 of 16 at five. The set is three motifs — a lone queen,
+  1 of 16 at four and 0 of 16 at five. **Those last two counts are a price that
+  has been measured and paid, not an oversight** (S148, 2026-09-09, DEC-158):
+  the bound was swept over all sixteen values and 4 is the largest at which the
+  set reports any mate in five, where it reads 52 of 82 exact against 39 and the
+  deep classes read 7 of 16 and 1 of 16 — and 4 lost its SPRT at −7.31 ± 5.60
+  nElo over 14808 games at 8+0.08. Finding these mates costs more rating than it
+  returns at this control. The set is three motifs — a lone queen,
   a lone rook and two knights, each mating a defender that is materially ahead
   and frozen behind a blocked pawn wall — so the shapes the suite cannot speak
   for are listed in `DEV_MANUAL.md` (S155, S168).

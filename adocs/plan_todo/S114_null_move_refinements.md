@@ -84,7 +84,7 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 ### 2. Shape for chesso
 
 - R today: `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR` = 3 + depth/6
-  (src/search.cpp:814; src/search_params.hpp:181-182, ranges 0..16, 1..64).
+  (src/search.cpp:814; src/search_params.hpp:189-190, ranges 0..16, 1..64).
   With the floor below, NMP fires from depth 5.
 - - Conditions (src/search.cpp:822-824): `!is_pv && !is_in_check && ply > 0 &&
   prev_move != 0 && depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&
@@ -114,7 +114,7 @@ record: Berserk #524, "Implemented as-is from SF", **-0.68 STC / -0.24 LTC**
 ### 3. Implementation sketch
 
 One SPRT, as the accepts prices:
-1. 1. Two new constants beside src/search_params.hpp:181-182 in the X-macro,
+1. 1. Two new constants beside src/search_params.hpp:189-190 in the X-macro,
    ranges stated (section 4).
 2. Entry gains the gate `static_eval >= beta` (the term is then never
    negative); R gains `min((static_eval - beta) / NULL_MOVE_EVAL_MARGIN,

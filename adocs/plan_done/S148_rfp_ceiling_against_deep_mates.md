@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     agent (Claude Opus 5), coordinator, 2026-09-08
-done:
+done:       2026-09-09. **The reverse futility depth ceiling was re-decided by SPRT and stays at 15, and the deep mates it loses are its measured price.** The challenger came from a rule fixed before the grid was run (DEC-105 form (b)): the largest ceiling at which both the mate in four and the mate in five exact counts over the 82-row set are non-zero. `adocs/data/S148_rfp_ceiling_sweep.py --mined` swept **every value from 0 to 15** at `192a5a3` against the 82 constructed rows at depth `2m - 1 + 8` and the 318 mined rows at depth 10, `RfpMinPly` **held at 3 throughout and read from the binary rather than written down** -- a grid no earlier reading had, S145 and S154 both having run six values over the 48 rows the set held before S168. Per value, exact of 82 / m2 / m3 / m4 / m5 / mined exact: **0** 70 / 26 of 26 / 20 of 24 / 13 of 16 / 11 of 16 / 177; **1** 70 / 26 / 21 / 14 / 9 / 175; **2** 62 / 26 / 20 / 10 / 6 / 175; **3** 60 / 26 / 20 / 10 / 4 / 166; **4** 52 / 26 / 18 / 7 / 1 / 159; **5** 47 / 26 / 17 / 4 / 0 / 149; **6** 46 / 26 / 15 / 5 / 0 / 149; **7** 44 / 26 / 15 / 3 / 0 / 145; **8 and 9** 41 / 26 / 13 / 2 / 0 / 145; **10 through 15** 39 / 26 / 12 / 1 / 0 / 145. `short` **0** and `sign` **0** at all sixteen settings, which is the defect column and is what makes the rest a strength reading. So **C1 = 4**: the mate in five class is the binding one and it is a cliff, 11 / 9 / 6 / 4 / 1 and then nothing, while the mate in four class survives to the shipping value at 1 of 16. **The verdict: H0 accepted.** `adocs/data/S148_sprt.sh`, `--nonreg` `{-5, 0}` nElo, alpha = beta = 0.05, 8+0.08, Hash 16, UHO, `-repeat`, `-check-mate-pvs`, candidate the working tree with the one integer at 4 against `a6b74be`: **LLR -2.95 (-100.2%), Elo -5.66 +/- 4.33, nElo -7.31 +/- 5.60, LOS 0.52 %, PairsRatio 0.95, 14808 games, Ptnml [770, 1594, 2798, 1591, 651], 6 h 19 m 35 s, 0 time forfeits of 14809** (2342 games an hour against S198's measured 2277); `adocs/data/S148_sprt.log`, the 73 MB PGN not committed. The three readings were written before the first game and H0's was applied unchanged: 4 costs five nElo or more, so it is rejected, 15 is kept, and the deep-mate loss is recorded as the measured price of S085's ceiling. **No C2 = 6 fallback was bought** -- the owner decided C1 alone on 2026-09-08, with all five deferred questions answered as the file recommended -- so the rejection ends the step. **The candidate was not behaviour-neutral and INV-6 could not discharge it, which is why the games decided it:** `search_bench.py` depth 9 121530 / 801481 / 72924 -> **124511 / 805638 / 111393**, depth 12 636677 / 3520847 / 494098 -> **716171 / 3707680 / 560079**, `bench` 26851183 -> **28339749**, best moves `c3d5` / `e2a6` / `d7c8q` unchanged throughout. Debug self-play at 4+0.04, 4 rounds: **0 `Assertion` over 8 Debug games**, 0 disconnect, crash or illegal (DEC-141). **No golden moved and none was re-derived, because the tree went back:** after the revert `src/` differs from the parent only in one comment, both builds reproduce **121530 / 801481 / 72924** and `bench` **26851183**, and `MATE_IN_THREE_FLOOR` (11), `EXACT_FLOOR` (143), `expected_mate_lines` and the `S170_cases.tsv` budgets are untouched. **Neither deep class was promoted to an asserted floor**, and the accepts' condition is subtler than it reads: mate in four ships at **1 of 16**, which is non-zero, but a floor of 1 has no margin between its ends and that is what DEC-116 rejected for the mate in three -- the owner decided on 2026-09-08 that a class at exactly 1 stays recorded. Both stay in the `MESSAGE`, whose text and the comment above `MATE_IN_THREE_FLOOR` now say which, why, and what the refused ceiling would have made them. **One finding, raised by the fast suite and closed before the machine was committed.** The candidate turned `test_mate_carry` red -- `A_mate8_shallow` publishing 2 of 9 mate lines whose PV does not reach the mate, `B_mate6_shallow` vacuous at 0 lines against a floor of 7. `adocs/data/S203_case_sweep.sh` over the candidate says what that is: the `short` column moves with the **node budget** and not with the ceiling, A short 2 at 1000000 nodes and **0** at 1200000, 1500000, 2000000, 3000000 and 4000000, and B short 4 at stride 2 / 2000000 alone. That is DEC-122's eviction class, open under S202, and S203's own warning that the grid is a knife edge and the budgets are re-swept after anything that moves the tree -- so the engine was not newly broken, the BUGS rule was not triggered, and the run was launched. **The run then read the same class from both sides: 7 `Incomplete mating PV` lines from the candidate against 13 from the reference.** The candidate is *below* the reference, so there was no BUGS-rule finding to read before the verdict, and the direction is the sweep's -- the lower ceiling loses fewer mate lines than the shipping one. S202 inherits that as a reading about its own class. **S151:** this is a pruning-parameter verdict and falls inside its re-take at a control at least four times 8+0.08, though the magnitude decides nothing here, the incumbent having been kept; its list gains this run beside S085's vector. Gate: 28/28 in both builds, format clean under `CLANG_FORMAT_MAJOR=22` (DEC-146), `bench` **26851183** equal to the parent's, so the commit signs `No functional change` (DEC-140). The fast suite's own line reads `mate in 4: 1 of 16 exact, mate in 5: 0 of 16`. Docs: `adocs/specs.md`'s reverse futility sentence, `MANUAL.md`'s `RfpMaxDepth` option row **and** its known-bug entry, `DEV_MANUAL.md`'s mate safety table **re-taken over the 82 rows** (it still read 48 positions and S154's counts), the `RFP_MARGIN` comment block in `src/search_params.hpp` and the comment above `MATE_IN_THREE_FLOOR` -- the five places 15 is written, each now carrying the price beside it. `test_uci_surface` builds its option line from the table and no default moved, so no golden refresh was owed. `README.md` untouched, human-owned. **`--citations` was checked and put back where it was found:** the comment in `src/search_params.hpp` grew by eight lines, which shifted every line-number citation below it and took the checker from 52 flags to 59. The seven are restored mechanically -- S098:120, S109:193, S114:87 and :117, S120:89 and :192, S132:87, each +8 -- and the check reads **52 over 66 files** again, the same 52 it read at the parent over 67. It is red on both sides and has been since before this step: that is F07, the class **S187** converts to symbol citations next, and one of those seven (S109's, which names `LMR_DIVISOR` and points at the reverse futility comment) is a worked example of why line numbers are the wrong unit. `--prose` and `--params` green, Debug fast suite 28/28, `ctest -L slow` 1/1. DEC-158 records the trade.
 
 ## What S145 measured, and why this is a trade rather than a fix
 
@@ -103,6 +103,160 @@ What it costs is not in this table. A ceiling of 4 switches reverse futility
 off for every node with more than 4 plies left, so the engine searches more
 nodes per iteration and reaches fewer plies at 8+0.08. That is what the SPRT
 prices, and nothing here anticipates it.
+
+## The run, launched 2026-09-08 19:47
+
+Candidate: the working tree with `RFP_MAX_DEPTH`'s default at 4 and the
+`golden_defaults` transcription in `tests/test_search_params.cpp` moved with
+it. Nothing else in `src/`. Left uncommitted so `./fastchess.sh --nonreg`
+measures the tree against `a6b74be`, which is `192a5a3` plus this step's own
+document commit and carries no `src/` change; the banner printed both shas
+with their dates before the first game. The candidate binary is snapshotted to
+a temp file before a game is played (DEC-020), so the working tree is free to
+move while the run plays -- but `src/` does not, until the verdict lands
+(MEASUREMENT, DEC-144).
+
+Pre-registration, written before the first game: `adocs/data/S148_sprt.sh`.
+`{-5, 0}` nElo, `--nonreg`, alpha = beta = 0.05, 8+0.08, Hash 16, UHO,
+`-repeat`, `-check-mate-pvs`. 18.4 h at the midpoint and 11.2 h on a bound, at
+the 2277 games an hour S198 measured here on 2026-09-08; the 20000-round cap
+is 40000 games and about 17.6 h, below the midpoint case, so reaching it is
+"no verdict" by construction. Watcher: the WATCHERS poll loop, all four exits,
+36 h ceiling.
+
+**The candidate is not behaviour-neutral, and INV-6 is recorded rather than
+claimed** (DEC-140, and DEV_MANUAL "Measure" -- no saving is read off three
+positions):
+
+| | HEAD `a6b74be` | candidate |
+|---|---|---|
+| `search_bench.py` depth 9 | 121530 / 801481 / 72924 | **124511 / 805638 / 111393** |
+| `search_bench.py` depth 12 | 636677 / 3520847 / 494098 | **716171 / 3707680 / 560079** |
+| `chesso bench` | 26851183 | **28339749** |
+| best moves | `c3d5` / `e2a6` / `d7c8q` | unchanged, both depths |
+
+Debug self-play, DEC-141 clause 1: `fastchess` 4 rounds at 4+0.04 between two
+`build-debug` binaries, **0 `Assertion` over 8 games** in both the trace log
+and the console, 0 disconnect, crash or illegal. The gate was green at HEAD in
+both builds, 28/28, before the integer moved.
+
+### The finding the fast suite raised, and why it did not stop the run
+
+The candidate turns two fast tests red, and only one of them is a lag.
+
+`test_plan_params` is red because the four documents and the 68 pending step
+files still write 15, which is exactly what `--params` is for: the documents
+carry the decided number, and the decision is what this run takes. It goes
+green when the verdict is applied, in either direction.
+
+`test_mate_carry` is the one that had to be established before 18 hours of
+machine were committed. It reads **`A_mate8_shallow`: 2 of 9 mate lines do not
+reach their mate** -- `mate -8` published at depths 4 and 5 with a PV of 4 and
+5 plies where 16 are needed -- and **`B_mate6_shallow` reported 0 mate lines**
+against a floor of 7, the vacuity guard. `adocs/data/S203_case_sweep.sh` over
+the candidate says what that is, and the answer is the node budget rather than
+the ceiling:
+
+| case | stride | 1000000 | 1200000 | 1500000 | 2000000 | 3000000 | 4000000 |
+|---|---|---|---|---|---|---|---|
+| A, mates / short | 1 | 9 / **2** | 6 / 0 | 16 / 0 | 17 / 0 | 10 / 0 | 10 / 0 |
+| A, mates / short | 2 | 2 / 0 | 4 / 0 | 4 / **4** | 4 / **4** | 4 / 0 | 4 / 0 |
+| B, mates / short | 1 | 16 / 0 | 30 / 0 | 15 / 0 | 29 / 0 | 27 / 0 | 54 / 0 |
+| B, mates / short | 2 | 9 / 0 | 15 / 0 | 17 / 0 | 14 / **4** | 17 / 0 | 27 / 0 |
+
+Short lines appear at one budget and vanish at the next, in both directions,
+which is DEC-122's eviction class and not a property of the ceiling. It is
+open under S202, and S203 said this would happen in so many words: the grid is
+a knife edge, and the budgets are re-swept after anything that moves the tree,
+not only after a key change. So the engine is not newly broken, the BUGS rule
+is not triggered, and the run was launched. The budgets and floors are
+re-derived by `adocs/data/S203_case_sweep.sh` under its own stated rule -- the
+cheapest budget at which the case reports at least its floor of mate lines
+with all of them complete -- **after** the verdict, because a rejection puts
+the tree back and retires the table above with it.
+
+The same table is the reason the run's `Incomplete mating PV` count is read
+before the verdict and not after: a candidate excess over the reference is
+recorded as a finding against S202, and this evidence is what it is read
+against rather than being attributed to the ceiling by default.
+
+## The verdict, 2026-09-09: H0 accepted, 15 stays
+
+```
+SPRT ([-5.00, 0.00]) completed - H0 was accepted
+Elo: -5.66 +/- 4.33, nElo: -7.31 +/- 5.60
+LOS: 0.52 %, DrawRatio: 37.79 %, PairsRatio: 0.95
+Games: 14808, Wins: 4892, Losses: 5133, Draws: 4783, Points: 7283.5 (49.19 %)
+Ptnml(0-2): [770, 1594, 2798, 1591, 651], WL/DD Ratio: 2.50
+LLR: -2.95 (-100.2%) (-2.94, 2.94) [-5.00, 0.00]
+Total Time: 06:19:35        forfeits 0 of 14809, 0.00 %
+```
+
+`adocs/data/S148_sprt.log` is the run, 14809 games written to
+`/tmp/chesso_sprt_nonreg_20260908_193719/games.pgn` (73 MB, not committed;
+the log carries every game's result and every periodic SPRT block). 2342 games
+an hour against S198's measured 2277.
+
+**Read as the script pre-registered it, and the reading was written before the
+first game.** H0 accepted means C1 = 4 costs 5 nElo or more: reject it, keep
+15, and record the deep-mate loss as the measured price of S085's ceiling. No
+C2 = 6 fallback was bought -- the owner decided C1 alone on 2026-09-08 -- so
+the rejection ends the step. The integer is reverted; `git diff` against
+`a6b74be` over `src/` is empty but for one comment.
+
+The bound cleared decisively rather than by a hair: LLR -2.95 against -2.94 at
+14808 games, LOS 0.52 %, and the point estimate -7.31 nElo sits below the -5
+bound rather than between the bounds. The run never approached its 40000-game
+cap.
+
+**Both abort checks were clean, and one of them is a result in its own right.**
+0 time forfeits on either side. `Incomplete mating PV`: **7 lines from the
+candidate against 13 from the reference**. The candidate is *below* the
+reference, so there is no BUGS-rule finding to read before the verdict -- and
+the direction is the sweep's direction, the lower ceiling losing fewer mate
+lines than the shipping one. S202 inherits that as a reading about its own
+class: this ceiling is not what produces it.
+
+### What this costs, stated plainly
+
+The engine does not find the deep mates in the constructed set, and it will not
+until something other than this bound finds them. At the shipping 15 the set
+reads 39 of 82 exact, 26 of 26 mates in two, 12 of 24 in three, **1 of 16 in
+four and 0 of 16 in five**. At 4 those become 52, 26, 18, **7 and 1** -- and 4
+is 7.31 nElo worse over 14808 games. That is the whole trade, measured on both
+sides, and the answer is that the mates are not worth the rating at 8+0.08.
+
+S142's "no defect was demonstrated against 15" was retired by S145 as a
+statement about mate finding; what replaces it is not a defect either. It is a
+price, and it is now written in five places rather than inferred.
+
+### The accepts, clause by clause
+
+- **`RFP_MAX_DEPTH`'s default decided by SPRT of 15 against at least one lower
+  value, with each value's mate-finding cost from the sweep in the same step.**
+  Done: 4 against 15, the full 0-to-15 grid in
+  `adocs/data/S148_rfp_ceiling_sweep.log` and tabled above. "Keep 15" is the
+  outcome and it is recorded as one, not as a non-event.
+- **`RfpMinPly` held at its shipping value throughout.** 3, read from the
+  binary by the sweep script rather than written down, and never set by the
+  SPRT candidate.
+- **The mate in four and five counts promoted to an asserted floor if and only
+  if the shipped value makes them non-zero.** Not promoted, and the condition
+  is subtler than it reads: at 15 the mate in four count is 1 of 16, which is
+  non-zero, but a floor of 1 has no margin between its ends and that is what
+  DEC-116 rejected for the mate in three. The owner decided on 2026-09-08 that
+  a class at exactly 1 stays recorded. Both classes stay in the `MESSAGE` and
+  the comment above `MATE_IN_THREE_FLOOR` now says which, why, and what the
+  refused ceiling would have made them.
+- **`adocs/data/S145_rfp_sweep.log` re-run at the shipped value.** Read as
+  question 3 proposed and the owner confirmed: S145's log is evidence and is
+  never rewritten, so the re-run is `adocs/data/S148_rfp_ceiling_sweep.log`,
+  which contains the shipped value's row and fifteen others.
+- **`specs.md`'s reverse futility sentence and `MANUAL.md`'s known-bug entry
+  carry the decided number.** Both, plus `DEV_MANUAL.md`'s mate safety table
+  re-taken over the 82 rows (it still read 48 positions and S154's counts),
+  the `RFP_MARGIN` comment block in `src/search_params.hpp`, and
+  `MANUAL.md`'s `RfpMaxDepth` option row.
 
 ## Implementation guide (2026-09-05)
 

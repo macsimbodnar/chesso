@@ -7,6 +7,78 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-08, by hand.
 
+- **S148 is done, 2026-09-09: the reverse futility ceiling stays at 15, and
+  the deep mates it loses are its measured price.** `{-5, 0}` nElo at 8+0.08,
+  **H0 accepted at LLR -2.95** -- `Elo -5.66 +/- 4.33, nElo -7.31 +/- 5.60`
+  over **14808 games in 6 h 19 m 35 s, 0 time forfeits**, LOS 0.52 %,
+  `adocs/data/S148_sprt.log`. The candidate was one integer, `RfpMaxDepth`
+  15 -> 4, and it is reverted. The reading was written into
+  `adocs/data/S148_sprt.sh` before the first game and applied unchanged: a
+  ceiling low enough to find the deep mates costs more than five nElo of
+  ordinary play, so the mates the engine does not find -- **1 of 16 at four,
+  0 of 16 at five** -- are what the pruning costs. DEC-158, and the five
+  places 15 is written now carry the price beside it: `specs.md`, both
+  `MANUAL.md` sites, `DEV_MANUAL.md`'s mate table (re-taken over 82 rows, it
+  still read 48 and S154's counts), `src/search_params.hpp`'s comment and the
+  mate suite's own. **A verdict of "keep the incumbent" is a result and the
+  step completes on it**, which is the S005 / S006 / S015 precedent read in
+  the other direction.
+- **Neither deep class was promoted to an asserted floor, and the reason is
+  not that they are zero.** At the shipping value mate in four is **1 of 16**,
+  which satisfies the accepts' "non-zero" literally -- but a floor of 1 has no
+  margin between its ends, which is what DEC-116 rejected for the mate in
+  three, and the owner decided on 2026-09-08 that a class at exactly 1 stays
+  recorded. Both stay in the `MESSAGE`; the comment above
+  `MATE_IN_THREE_FLOOR` now says which, why, and what the refused ceiling
+  would have made them.
+- **Two facts from the run are worth more than the verdict.** The
+  `Incomplete mating PV` class was read from both sides -- **7 lines from the
+  candidate against 13 from the reference** -- so the class is not this
+  ceiling's and the lower ceiling produced *fewer*; **S202 inherits that**.
+  And `test_mate_carry` went red on the candidate and was established as
+  budget calibration **before** 18 hours of machine were committed:
+  `adocs/data/S203_case_sweep.sh` shows the short lines appearing and
+  vanishing with the node budget in both directions -- A short 2 at 1000000
+  and 0 at 1200000, 1500000, 2000000, 3000000 and 4000000 -- which is
+  DEC-122's eviction class and S203's own knife-edge warning, not a defect
+  this change introduced.
+- **One thing S187 should know before it starts.** The `src/search_params.hpp`
+  comment grew by eight lines here, which shifted every line-number citation
+  below it and took `--citations` from 52 flags to 59. The seven are restored
+  mechanically -- S098:120, S109:193, S114:87 and :117, S120:89 and :192,
+  S132:87, each **+8** -- so the check reads **52 over 66 files** again, the
+  same 52 the parent read over 67. It is red on both sides and has been since
+  before this step; that is F07 and S187 owns it. One of the seven is a worked
+  example of why the unit is wrong: **S109:193 names `LMR_DIVISOR` and points
+  at the reverse futility comment**, and the checker cannot see that, because
+  all it verifies is that the cited line still holds the text it held.
+- **The sweep is the reusable half.** The finer grid was measured before the
+  run and the challenger decided by the rule the file pre-registered: `adocs/data/S148_rfp_ceiling_sweep.py --mined` at `192a5a3`,
+  every ceiling from 0 to 15 over the 82 constructed rows and the 318 mined
+  ones, `RfpMinPly` held at 3 and read from the binary. **C1 = 4**, because the
+  mate in five class is the binding one and it is a cliff -- 11 / 9 / 6 / 4 / 1
+  of 16 at ceilings 0 to 4 and 0 from 5 up. The whole constructed set moves
+  **39 to 52 of 82** between the shipping 15 and 4, the mined set 145 to 159 of
+  318, and `short` and `sign` are 0 at all sixteen settings. Two readings the
+  coarse grids could not give: the **plateau starts at 10**, not at 15, and the
+  mate in four class is 1 of 16 at the shipping value rather than S145's
+  "0 of 8", the set having grown.
+- **The owner answered all five deferred questions on 2026-09-08, every one as
+  the file recommended**, and the answers are in the step file: `{-5, 0}`
+  `--nonreg`; **C1 alone**, no C2 = 6 fallback; **keep 15** on a null or a
+  rejection; the re-run lands in `S148_rfp_ceiling_sweep.log` because S145's is
+  evidence; the excluded dynamic-cutoff sentence reworded off Stockfish's two
+  constants (DEC-134). The fifth binds: a class whose count is exactly 1 stays
+  in the `MESSAGE`, and at C1 the mate in five count **is** 1, so only the mate
+  in four class is promoted when the value ships.
+- **The candidate was not behaviour-neutral, which is why INV-6 could not
+  discharge it and the games had to.**
+  `search_bench.py` depth 9 **124511 / 805638 / 111393** against HEAD's
+  121530 / 801481 / 72924, depth 12 **716171 / 3707680 / 560079** against
+  636677 / 3520847 / 494098, `bench` **28339749** against 26851183, best moves
+  `c3d5` / `e2a6` / `d7c8q` unchanged throughout. Debug self-play **0
+  Assertion over 8 games**, 0 disconnect, crash or illegal. Gate green at HEAD
+  in both builds, 28/28, before the integer moved.
 - **S184 is done, 2026-09-08: the pending documents state the engine as it
   ships, and the parameter checker now reads them.** Every F05 value restored
   from `src/search_params.hpp` at HEAD -- S115's aspiration sweep designed on
@@ -822,30 +894,32 @@ Updated: 2026-09-08, by hand.
   survived the move from the Linux workstation, so
   `adocs/data/S145_rfp_sweep.py` and `S145_mate_set.py` could not run here at
   all and nothing said so. `.moltke.local.md` records it now.
+- Last done: **S148, 2026-09-09 -- the reverse futility ceiling re-decided by
+  SPRT and kept at 15.** One integer measured and reverted; documents, one
+  `src/` comment and one test comment carry the price. `No functional change`.
+  (Older `Last done:` lines sit below this one; this is the live pointer.)
 - Last done: **S184, 2026-09-08 -- the pending documents at HEAD values and
   `--params` extended over them.** Documents and one checker change, no `src/`.
   (Two earlier `Last done:` lines sit above this one, S189's and S177's, from
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S148**, now Open entry 1 and **the first verdict** -- the reverse
-  futility depth ceiling re-decided against the deep mates S145 measured it
-  losing, by SPRT. It owns the machine, so the entry to take while it plays is
-  **S187** (symbol citations), whose input S184 just handed it: 52 DRIFT flags
-  over the pending set, down from 76, with all 24 on S184's own 14 files
-  cleared by the baseline moving. `plan.md`'s "What the 2026-09-05 reorder
-  changed" says how one agent reads the list with one machine. The calibration
-  DEC-143 required before any verdict is taken (S198), so nothing blocks S148.
+- Next: **S187**, now Open entry 1 -- citations from pending step files into
+  code name a symbol and no line, the checker verifies the symbol, and the 549
+  existing ones are converted (F07, DEC-135). Its input is S184's 52 DRIFT
+  flags over the pending set. It is agent-only work and owns no run, so the
+  machine is free for whichever verdict is taken beside it; **S159** is the
+  next entry that wants the machine, and S151's pair is still the owner
+  question parked below.
 
-  **Every commit touching `src/` now needs a `Bench:` line.** Run
-  `export CLANG_FORMAT_MAJOR=22` and then `tools/gate.sh --message <file>`
-  before committing and `tools/gate.sh` after; `DEV_MANUAL.md` "Test" has the
-  four invocations.
 - Blocked: **nothing.**
-- Watching: **nothing. No run is armed.** S198's A/A finished at 02:39 on
-  2026-09-08 and its watcher exited on `SPRT-RUN-DONE`, acknowledged in the
-  same turn; the result is read and recorded above. Before it, the 2026-09-03
-  SPRT attempt was killed a minute in with no watcher ever armed for it.
+- Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on
+  2026-09-09 and its watcher exited on `SPRT-RUN-DONE`, acknowledged and read
+  in the same turn; the verdict is recorded above and in DEC-158. Its PGN,
+  73 MB at `/tmp/chesso_sprt_nonreg_20260908_193719/games.pgn`, is **not**
+  committed and `/tmp` will take it; the log is, and carries every game's
+  result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
+
 - Parked:
   - ~~**Calibrate the harness on the workstation.**~~ **Taken 2026-09-08 as
     S198's A/A and retired**: 1000 fixed rounds, 0 forfeits, pair variance

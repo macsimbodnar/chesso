@@ -8703,3 +8703,81 @@ Consequences: S114's section 4 carries both the midpoint and the P4 procedure, a
               untouched. Once S184 extends `tools/plan_prose_check.py --params` to
               `adocs/plan_todo/`, a shipping value quoted wrongly in a step file
               becomes a red fast test rather than an audit finding.
+
+## DEC-158  2026-09-09  The reverse futility ceiling stays at 15 and the deep mates it loses are its measured price
+Tags:         search, reverse-futility, mate-safety, sprt, s148, s085, s145, dec-019, dec-095, dec-116
+Context:      S085's SPSA run moved `RFP_MAX_DEPTH` from S033's 6 to 15 and the
+              vector holding it was verified at +21.02 Elo. S145 then built a set
+              of proved mates and measured that the deep classes are found only
+              when the ceiling is low, which made 15 a trade that had never been
+              priced rather than a tuned value: the mate in two class is complete
+              at every setting, so nothing in the gate before S145 could see it.
+              The published record pointed the other way from S085 -- Stockfish
+              removed both of its futility depth caps in July 2021 as
+              Elo-neutral at STC and LTC and reverted them five weeks later on
+              mate finding alone, 2427 mates falling to 1246 on ChestUCI at 1M
+              nodes -- so the question was whether an Elo-neutral cap is what
+              finds mates here too. DEC-019 says a published figure decides what
+              to try and never what to conclude, so it was an SPRT.
+Decision:     By the owner, 2026-09-08, pre-registered in
+              `adocs/data/S148_sprt.sh` before a game was played; applied
+              2026-09-09 on the run's word. **The default stays 15.**
+              The challenger was chosen by a rule fixed before the grid was run,
+              DEC-105 form (b): the largest ceiling at which both the mate in
+              four and the mate in five exact counts over the 82-row set are
+              non-zero. Over every value from 0 to 15 that is **4**
+              (`adocs/data/S148_rfp_ceiling_sweep.log`), the mate in five class
+              being a cliff -- 11, 9, 6, 4, 1 of 16 at ceilings 0 to 4 and 0
+              from 5 up. At 4 the set reads 52 of 82 exact against 39 at 15,
+              mates in three 18 of 24 against 12, deep classes 7 of 16 and 1 of
+              16 against 1 and 0, and the mined breadth set 159 of 318 against
+              145. `short` and `sign` are 0 at all sixteen settings.
+              **4 lost.** `{-5, 0}` nElo, alpha = beta = 0.05, 8+0.08, Hash 16,
+              UHO, `-repeat`, `-check-mate-pvs`: **H0 accepted at LLR -2.95,
+              nElo -7.31 +/- 5.60, Elo -5.66 +/- 4.33 over 14808 games in
+              6 h 19 m 35 s, 0 time forfeits** (`adocs/data/S148_sprt.log`). So
+              a ceiling low enough to find the deep mates costs more than five
+              nElo of ordinary play at this control, and the mates the engine
+              does not find -- 1 of 16 at four, 0 of 16 at five -- are what the
+              pruning costs and are recorded as such in `specs.md`, `MANUAL.md`,
+              `DEV_MANUAL.md`, `src/search_params.hpp` and the mate suite's own
+              comment. A verdict of "keep the incumbent" is a result and the
+              step completes on it.
+Rejected:     Shipping 4 for its mate property on the strength of the sweep. That
+              is the argument DEC-019 exists to refuse, and the games refused it
+              too: the sweep is a strength reading about 82 constructed
+              positions and the SPRT is about 14808 games.
+              A second verdict at C2 = 6. Pre-registration offered it as a
+              fallback and the owner declined it on 2026-09-08, before the
+              result was known: 6 is 5 of 16 and 0 of 16 on the deep classes,
+              so it buys less than 4 did and would have to survive the same
+              cost. A rejection ends the step.
+              Promoting the mate in four count to an asserted floor. The
+              accepts made it conditional on the shipped value being non-zero
+              and it is -- 1 of 16 -- but a floor of 1 has no margin between its
+              ends, which is what DEC-116 rejected for the mate in three. Both
+              deep classes stay in the `MESSAGE`, with the comment saying which
+              and why.
+              Making the ceiling a function of the score, the shape Stockfish
+              carries since `fa8b6add`. Excluded by S148 by name: it is a
+              feature and not a constant, and it deserves its own step and its
+              own verdict. Its constants are that engine's and are not quoted
+              (DEC-134).
+Consequences: `RFP_MAX_DEPTH` is a settled value and no longer an open question
+              in any document; a future step that wants the deep mates has to
+              find them without lowering this bound, and the number to beat is
+              on record. The declared range is untouched at 0 to 63 (DEC-095)
+              so the tuner still keeps every value. Two readings the coarse
+              grids could not give are now on record and cost nothing to reuse:
+              the plateau starts at **10**, not at 15 -- every count from 10 up
+              is identical, so the shipping value confines nothing that three
+              lower values do not also fail to confine -- and the mate in four
+              class is 1 of 16 at the shipping value rather than the "0 of 8"
+              S145 recorded, the set having grown to 82 rows at S168. The run
+              also measured the `Incomplete mating PV` class from both sides:
+              **7 lines from the candidate against 13 from the reference**, so
+              the class is not this ceiling's and the lower ceiling produced
+              fewer, which is a reading S202 inherits. And the verdict is one
+              of the entries S151 re-takes at a control at least four times
+              8+0.08 before its magnitude is banked -- though the magnitude
+              here decides nothing, the incumbent having been kept.

@@ -987,19 +987,26 @@ a cold-table call at exactly `2m - 1` cannot tell a mate that is *gone* from a
 mate that is one iteration *late*, and postponement is what a removed guard
 actually causes.
 
-**What it asserts is not "every mate is found", because that is not true.** 48
-positions on the shipping build at depth `2m - 1 + 8`:
+**What it asserts is not "every mate is found", because that is not true.** The
+82 positions on the shipping build at depth `2m - 1 + 8`:
 
 | distance | exact at the final iteration | delay |
 |---|---|---|
-| mate in 2 | 16 of 16 | 0 |
-| mate in 3 | 9 of 16 | up to 8 |
-| mate in 4 | 0 of 8 | — |
-| mate in 5 | 0 of 8 | — |
+| mate in 2 | 26 of 26 | 0 |
+| mate in 3 | 12 of 24 | up to 8 |
+| mate in 4 | 1 of 16 | up to 4 |
+| mate in 5 | 0 of 16 | — |
 
-Re-measured 2026-09-01 by S154; S145 read 8 of 16 at delay up to 4 and S165
-moved both. With reverse futility switched off entirely it is 40 of 48, not 48,
-so no setting makes the strong claim true. What is asserted is three things
+Re-taken 2026-09-08 by S148 over the whole set --
+`adocs/data/S148_rfp_ceiling_sweep.log`, the `RfpMaxDepth=15` row -- where the
+figures above it were S154's over the 48 rows the set held before S168. With
+reverse futility switched off entirely it is 70 of 82, not 82, so no setting
+makes the strong claim true. **The gap between those two numbers has a price
+now**: S148 swept the ceiling over all sixteen values and ran the elbow, 4,
+against the shipping 15 at 8+0.08 -- 52 of 82 against 39, deep classes 7 and 1
+against 1 and 0 -- and 4 lost at nElo -7.31 +/- 5.60 over 14808 games, H0
+accepted against `{-5, 0}`. So the missing mates are what the pruning costs and
+the trade was declined on the games, DEC-158. What is asserted is three things
 instead: **no mate score for the side being mated and none closer than the
 proved minimum** — both provably false claims, measured 0 and 0 over twelve
 reverse-futility settings; **every mate in two at the first iteration that can

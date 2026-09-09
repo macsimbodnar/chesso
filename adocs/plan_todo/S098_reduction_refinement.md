@@ -117,7 +117,7 @@ The whole feature is src/search.cpp:96-130 and src/search.cpp:958-966:
 - - Table: build_lmr_table src/search.cpp:96-110, `r = LMR_BASE/100 + ln(depth)
   * ln(move_number) / (LMR_DIVISOR/100)`, uint8_t, axes clamped 1..63, row 0
   zero-initialised; `LMR_BASE 52` / `LMR_DIVISOR 182`
-  (src/search_params.hpp:194-195, ranges stated, both already in S085's SPSA
+  (src/search_params.hpp:202-203, ranges stated, both already in S085's SPSA
   set). CHESSO_TUNE rebuilds it per setoption (src/search.cpp:113-122); a test
   probe exists (search_lmr_reduction_probe, src/search.cpp:133-136).
 - - Eligibility src/search.cpp:960-961: `ply > 0 && depth >= 3 &&

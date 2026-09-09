@@ -190,7 +190,7 @@ src/search.cpp:765-766 (`beta < MATE_MIN && beta > -MATE_MIN`).
 
 - **lmrDepth before S098**: the reduction today is the static table
   `lmr_reduction(depth, move_number)` (src/search.cpp:42-76), `LMR_BASE 52` /
-  `LMR_DIVISOR 182` (src/search_params.hpp:158-159), axes capped at 63. The
+  `LMR_DIVISOR 182` (src/search_params.hpp:166-167), axes capped at 63. The
   accepts' `lmr_depth = depth - lmr_reduction(depth, move_number)`, clamped
   to >= 0, computed per candidate move with `move_number =
   legal_moves_counter + 1` when testing before the counter increments. When
