@@ -290,22 +290,33 @@ TEST_SUITE("engine: repetition")
     REQUIRE(is_position_repeated(&game.history, &game.board));
   }
 
+  // This case used to search for the repetition from the start position after
+  // one pawn push: a history of one entry, over which the `back = 2` loop never
+  // runs, so it could not fail whatever the clock did. It establishes the
+  // repetition first now, then moves only the clock, which is the claim the
+  // title makes. S193, 2026-09-04_test_review-F05.
   TEST_CASE_FIXTURE(engine_fixture_t, "an irreversible move clears the window")
   {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/N3K3 w - - 0 1", &game));
 
-    move_t moves[MAX_MOVES];
-    const size_t count = legal_moves(&game, moves);
+    const std::vector<std::pair<index_t, index_t>> line = {
+        {a1, b3}, {e8, d8}, {b3, a1}, {d8, e8}};
 
-    // Any pawn push resets the halfmove clock, so nothing can be a repetition.
-    for (size_t i = 0; i < count; ++i) {
-      if (MOVE_PIECE(moves[i]) != W_PAWN) { continue; }
-
-      REQUIRE(make_move(&game, moves[i]));
-      REQUIRE_EQ(game.board.halfmove_clock, 0);
-      REQUIRE_FALSE(is_position_repeated(&game.history, &game.board));
-      unmake_move(&game);
+    for (const auto& [from, to] : line) {
+      REQUIRE(play_move(&game, from, to));
     }
+
+    // Precondition: the window is open and the repetition is inside it.
+    REQUIRE_GE(game.board.halfmove_clock, 4);
+    REQUIRE(is_position_repeated(&game.history, &game.board));
+
+    // The same board, the same history, one irreversible move's worth of clock.
+    // Nothing else changes, so the window is the only thing that can answer.
+    const uint8_t clock = game.board.halfmove_clock;
+    game.board.halfmove_clock = 0;
+    REQUIRE_FALSE(is_position_repeated(&game.history, &game.board));
+    game.board.halfmove_clock = clock;
+    REQUIRE(is_position_repeated(&game.history, &game.board));
   }
 }
 
@@ -898,11 +909,20 @@ TEST_SUITE("engine: uci layer")
     // And the engine is bookless rather than back on the built-in book: a
     // harness that asked for one book and silently got another is measuring
     // something nobody configured.
+    //
+    // Read off an `info score` line, not off "Found position in the opening
+    // book": that string is LOG_I, which is `if (false)` in the Release build
+    // the gate runs, and it goes to std::clog while this capture reads stdout,
+    // so the old assertion could not fail in either build. command_go answers a
+    // book hit with `bestmove` alone -- its info line is commented out -- so an
+    // `info score` line is the observable that says a real search ran.
+    // S193, 2026-09-04_test_review-F05.
     uci_process_line("setoption name OwnBook value true");
     uci_process_line("position startpos");
     uci_process_line("go depth 1");
+    uci_wait_for_search();
 
-    REQUIRE(!capture.contains("Found position in the opening book"));
+    REQUIRE(capture.contains("info score "));
 
     uci_process_line("setoption name OwnBook value false");
     uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
@@ -1038,6 +1058,19 @@ TEST_SUITE("engine: uci layer")
       uci_process_line("position startpos");
     }
 
+    // `position` runs stop_and_join_search(), which *sets* stop_search_signal.
+    // Without this the loop below breaks after depth 1 and the case measured
+    // about a millisecond while claiming to bound a 200 ms search -- it passed
+    // its `elapsed < 30000` for the wrong reason. A completed `go` is the only
+    // way a test can clear the flag: begin_search_session() is what clears it
+    // and no header declares it, and `ucinewgame` sets it again through the
+    // same stop_and_join_search(). S193, DEC-163, 2026-09-04_test_review-F05.
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+    }
+
     uci_search_options_t options = {};
     options.depth = MAX_DEPTH;
     options.nodes = 0;
@@ -1061,6 +1094,13 @@ TEST_SUITE("engine: uci layer")
     // The soft limit is checked between iterations, so allow a generous
     // margin over the 200ms budget while still catching an unbounded search.
     REQUIRE(elapsed < 30000);
+
+    // And it is bounded from below, which is what makes the bound above mean
+    // something: half the 200 ms budget, so a machine that starts no further
+    // iteration still clears it. Five runs on the DEC-049 workstation read 239,
+    // 235, 238, 232 and 239 ms; the same case read 0 ms before the clearing
+    // above was added.
+    REQUIRE(elapsed >= 100);
 
     uci_shutdown();
   }
@@ -1495,7 +1535,7 @@ TEST_SUITE("engine: uci go")
   }
 
 
-  TEST_CASE("an infinite search answers only once stop arrives")
+  TEST_CASE("a stopped infinite search answers with a legal move")
   {
     uci_init();
 

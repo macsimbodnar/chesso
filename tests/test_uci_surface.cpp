@@ -517,7 +517,15 @@ TEST_SUITE("uci surface")
     // -- and S073 did not move that. Stated as its own assertion because the
     // comparison above grows a generated half in the tune build, and this half
     // must not.
-    CHECK(expected_option_lines.size() == 5);
+    //
+    // GOLDEN: 5, the number of `option name` lines the release binary prints.
+    // Re-derive with
+    //   printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'
+    // -- no search runs on that pipe, so `quit` cannot truncate it. Read off
+    // the binary and not off `expected_option_lines`, which until S193 was
+    // compared with its own literal and could not fail. DEC-142, S193,
+    // 2026-09-04_test_review-F05.
+    CHECK(actual.size() - tune_option_lines().size() == 5);
     CHECK(actual.size() ==
           expected_option_lines.size() + tune_option_lines().size());
 

@@ -297,10 +297,6 @@ TEST_SUITE("evaluation: score")
 
       if (correction > worst) { worst = correction; }
 
-      REQUIRE_MESSAGE(
-          correction <= LAZY_EVAL_MARGIN,
-          ("FEN: " + fen + " correction " + std::to_string(correction)));
-
       // A window that contains the score: no shortcut, the exact number.
       REQUIRE_MESSAGE(
           evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
@@ -343,6 +339,16 @@ TEST_SUITE("evaluation: score")
     // at all, every assertion above would hold for a reason that has nothing to
     // do with the margin being right.
     REQUIRE(worst > 0);
+
+    // The widest gap between the exact score and the cheap one over the set,
+    // reported and not asserted. `correction <= LAZY_EVAL_MARGIN` used to stand
+    // here as a REQUIRE and could not fail: evaluate_expensive() clamps stage
+    // two to +/-LAZY_EVAL_MARGIN, so the bound is the clamp restated rather
+    // than a property of the terms. The soundness claim is the four
+    // evaluate_lazy() assertions above, which do read the shortcut's answers.
+    // S193, 2026-09-04_test_review-F05.
+    MESSAGE("widest correction over " << checked << " positions: " << worst
+                                      << " (clamp " << LAZY_EVAL_MARGIN << ")");
   }
 
   // A caller that keeps the number instead of only comparing it has to know

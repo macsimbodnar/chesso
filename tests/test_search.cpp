@@ -281,7 +281,7 @@ TEST_SUITE("search: invariants")
 
 TEST_SUITE("search: budgets")
 {
-  TEST_CASE_FIXTURE(search_fixture_t, "the node budget is honoured exactly")
+  TEST_CASE_FIXTURE(search_fixture_t, "the node budget is never exceeded")
   {
     for (const uint64_t budget : {uint64_t(1), uint64_t(64), uint64_t(4096)}) {
       const search_t result = search_fen(DEFAULT_POSITION, 12, budget);
@@ -1925,9 +1925,16 @@ TEST_SUITE("search: quiescence transposition entries")
     // Every entry the main search wrote is at a depth that could not have come
     // from quiescence, which is the storage half of the rule the first case in
     // this suite holds on the reading side.
+    //
+    // `>= TT_DEPTH_QS` was the whole assertion until S193, and TT_DEPTH_QS is
+    // -1, the lowest depth any writer can produce: it held for every entry
+    // whatever the search did. The two bands are disjoint instead - a store is
+    // quiescence's own sentinel, or it is depth 1 or more. Depth 0 is the gap
+    // and it is unreachable by construction: negamax hands `depth < 1` to
+    // quiescence before it can store. S193, 2026-09-04_test_review-F05.
     for (size_t i = 0; i < tt.entry_count; ++i) {
       if (tt.entries[i].generation == 0) { continue; }
-      REQUIRE(tt.entries[i].depth >= TT_DEPTH_QS);
+      REQUIRE((tt.entries[i].depth == TT_DEPTH_QS || tt.entries[i].depth >= 1));
     }
   }
 }
@@ -2980,6 +2987,60 @@ TEST_SUITE("search: draws")
     const search_t result = search_fen("4k3/8/8/8/8/8/8/3QK3 w - - 100 200", 4);
 
     REQUIRE_EQ(result.score, 0);
+  }
+
+  // The case above cannot see the boundary. Its root is at 100 and the root is
+  // exempt from the draw test, so every node it reaches is at 101 or more and a
+  // rule that read `>= 101` would pass it unchanged - which is exactly what
+  // mutant M19 of the 2026-09-04 test review does, surviving all 27 binaries.
+  // The boundary needs a root one halfmove below it, so the children land on
+  // exactly 100. S193, 2026-09-04_test_review-F04.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the fifty-move boundary lands on the hundredth halfmove")
+  {
+    const char* at_99 = "4k3/8/8/8/8/8/8/3QK3 w - - 99 200";
+    const char* at_98 = "4k3/8/8/8/8/8/8/3QK3 w - - 98 200";
+
+    // Preconditions, from the engine's own generator rather than from a claim
+    // about the position: a reachable root, material that is not an
+    // insufficient-material draw, at least one reply, and every reply quiet -
+    // no capture, no pawn move - landing on clock exactly 100 without mating.
+    // So at ply 1 the fifty-move rule applies to every child, and neither of
+    // the two things that outrank it does: not the mate exception S162 added,
+    // and not the insufficient-material return below it.
+    //
+    // The mate test is spelled the way negamax spells it, in check with no
+    // reply, and not as "is the child in check": several of the queen's moves
+    // do give check, and a check that is not mate still draws.
+    REQUIRE(load_FEN(at_99, &game));
+    REQUIRE(position_is_reachable(&game));
+    REQUIRE_FALSE(is_insufficient_material(&game.board));
+
+    move_t replies[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &game.board, replies);
+    REQUIRE(count > 0);
+
+    for (size_t i = 0; i < count; ++i) {
+      REQUIRE_FALSE(MOVE_CAPTURE(replies[i]));
+      REQUIRE_NE(MOVE_PIECE(replies[i]), W_PAWN);
+      REQUIRE(make_move(&game, replies[i]));
+      REQUIRE_EQ(int(game.board.halfmove_clock), 100);
+
+      move_t escapes[MAX_MOVES];
+      const bool child_is_mated =
+          is_check(&game) &&
+          generate_moves(game_tables(), &game.board, escapes) == 0;
+      REQUIRE_FALSE(child_is_mated);
+      REQUIRE_FALSE(is_insufficient_material(&game.board));
+
+      unmake_move(&game);
+    }
+
+    // Each probe resets the table (search_fen does), which matters here: the
+    // Zobrist key does not carry the halfmove clock, so a warm entry from the
+    // clock-98 probe would answer the clock-99 child.
+    REQUIRE_EQ(search_fen(at_99, 1).score, 0);  // every reply draws at ply 1
+    REQUIRE_NE(search_fen(at_98, 1).score, 0);  // one halfmove earlier, not
   }
 }
 

@@ -532,9 +532,24 @@ build carrying it.
 ## Test
 
 ```bash
-ctest --test-dir build -L fast    # correctness, must stay green, about 60 s
+ctest --test-dir build -L fast    # correctness, must stay green, about 80 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
+
+`test_perft`, the slow label's one binary, **exits non-zero on a missing or an
+unparseable asset** and on a mismatch in any of the five columns it reads —
+`nodes`, `captures`, `en_passant`, `castles`, `promotions`. Both used to be
+`assert`, which the Release build the gate runs compiles out, so a missing asset
+iterated zero cases and exited 0; and only `nodes` reached the pass flag, so the
+other four printed red and the run passed anyway (S193). It reads its assets
+relative to the working directory, so run it through `ctest` or from
+`build/tests`.
+
+Every doctest binary fills the attack tables through a **fixture**, not through
+a first case that happens to run first. So `-tc=<glob>` over a single case and
+`--order-by=name` are both safe ways to run this suite; before S193,
+`./test_chesso -tc="Basic test"` answered 20 moves as 16 in Release and aborted
+in Debug.
 
 ### The gate, `tools/gate.sh`
 
@@ -743,7 +758,10 @@ candidate and reference are one-line shell scripts, and the whole run happens
 inside a throwaway git repository, so `.ref-builds/` and `build/` are never
 read. It asserts eleven things: the script reaches the `fastchess` invocation; a
 script that aborts before that point exits non-zero; with `REF` unset the banner
-names `HEAD`; each side's date comes from its own commit; a clean-tree A/A is
+names `HEAD`; each side's date comes from its own commit — the expected date is
+read with `git show -s --date=short --format=%cd`, the form `commit_date()` uses,
+so the case does not depend on the wall clock and does not fail across midnight
+(S193); a clean-tree A/A is
 refused however the ref is spelled, and leaves no output directory behind;
 `AA=1` reaches the match and says so; a run outside a git checkout still
 prints a terminal marker; the seed the banner prints is the seed `fastchess` is

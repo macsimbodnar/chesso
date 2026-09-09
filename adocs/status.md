@@ -7,6 +7,46 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-09, by hand.
 
+- **S193 is done, 2026-09-09: the one injected bug that survived the whole fast
+  suite is dead, and seventeen assertions that could not fail can now.** The
+  survivor was the fifty-move boundary. The only direct case searched a root
+  already at clock 100 -- which the root exemption makes unreachable, every node
+  below it being at 101 or more -- so mutant M19, `>= 100` becoming `>= 101`,
+  passed **all 27 binaries**. The new pair puts the root a halfmove lower and
+  reads **0 at clock 99 against 929 at clock 98**, red under M19 at exactly
+  those two numbers while the old case stayed green in the same run. Its
+  preconditions come from the engine's own generator: 21 replies, every one
+  quiet, all landing on clock exactly 100, none mate, none insufficient
+  material -- and **the guide's own precondition was wrong**, asking for no
+  check on any child when several of the queen's moves give check; what the
+  block excepts is mate, spelled the way `negamax` spells it.
+- **`test_perft` stopped exiting 0 on a run that checked nothing.** Its two
+  `assert`s were compiled out of the Release build the gate runs, and only
+  `nodes` reached the pass flag. Observed before and after: **a missing asset
+  0 -> 2** (and the old run printed nothing at all), **an unparseable one
+  0 -> 2**, **a wrong `captures` column 0 -> 1**. The dead `RUN_THREADS`
+  branches went with it -- they named `g_board`, `g_globals` and a `make_move`
+  signature that has not existed for years, and could not have compiled.
+- **Three numbers say what the vacuity was worth.** The case that claims to
+  bound a 200 ms search measured **0 ms** and now measures 239, 235, 238, 232
+  and 239. `./test_chesso -tc="Basic test"` answered **16 moves against 20**
+  before the tables moved into a fixture. And the lazy-margin bound, dropped as
+  the `std::clamp` restated, left a measurement behind that proves it: **the
+  widest correction over 2696 positions is 184, which is `LAZY_EVAL_MARGIN`
+  exactly**, so the assertion had been reading a saturated value.
+- **Six `src/` mutants, six reds, every one reverted and the tree confirmed
+  clean.** M19 for the boundary; the embedded book loading after a file load
+  fails (R3); the repetition window ignoring the clock (R13); pins ignored in
+  `generate_moves_body` (R7, which names the offending move and beside which the
+  pre-existing `make_move` assertion stayed green -- the vacuity); the book
+  move's from-rank flipped (R17). R4's guard was shown to bite on a tool-checked
+  mated position instead, no mutant existing for a missing precondition.
+  **R12 stays unregistered**: `2026-09-04_adversarial-F01` still reads
+  `Status: open`, which is the accepts' own condition. **No `src/` change, no
+  Bench line, no SPRT, no Debug self-play owed.** DEC-163 amended the accepts
+  before the step started -- the R2 clause named `ucinewgame`, which sets the
+  stop flag rather than clearing it -- and widened it to R13 to R17. Closes
+  `2026-09-04_test_review-F04`, `-F05` and `-F09`.
 - **S204 is done, 2026-09-09: `test_mate_carry` stops firing on any change that
   moves the tree, and starts firing on three separate things that matter.**
   DEC-162. The count that retired the old shape, from the two grids the step was
@@ -1094,21 +1134,28 @@ Updated: 2026-09-09, by hand.
   SPRT and kept at 15.** One integer measured and reverted; documents, one
   `src/` comment and one test comment carry the price. `No functional change`.
   (Older `Last done:` lines sit below this one; this is the live pointer.)
+- Last done: **S193, 2026-09-09 -- the fast suite's vacuous assertions made
+  falsifiable and the fifty-move boundary pinned.** Tests and documents only,
+  no `src/`, no Bench line. (This is the live pointer; the S184 line below is
+  the previous one.)
 - Last done: **S184, 2026-09-08 -- the pending documents at HEAD values and
   `--params` extended over them.** Documents and one checker change, no `src/`.
   (Two earlier `Last done:` lines sit above this one, S189's and S177's, from
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S193**, now Open entry 1 -- the fast suite's vacuous assertions made
-  falsifiable, the fifty-move boundary pinned, `test_perft` Release-safe. It is
+- Next: **S191**, now Open entry 1 -- every null-move, reverse-futility and
+  reduction guard gets a direct test with its precondition, and the S165
+  defender set becomes a registered fixture. DEC-141 puts it before S109. It is
   agent-only work and wants no machine time, and the machine is free. Behind it
-  the rest of the test block runs on: **S191**, **S196**, **S197**, **S192**,
-  **S195**, **S194**, entries 2 to 7. S204 supplied two of them with material
-  while it ran -- S196 gets the seven mutants it applied by hand, and S192's
-  row 6 is already done. S151's
-  pair, Open entry 9, is still the owner question parked below. The enrichment
-  pass's next file is **S181**, today Open entry 10.
+  the rest of the test block runs on: **S196**, **S197**, **S192**, **S195**,
+  **S194**, entries 2 to 6. Two of them now have material waiting: S196 gets
+  S204's seven hand-applied mutants **and S193's six**, which are recorded per
+  row in S193's stamp with the red each produced; S192's row 6 is already done
+  and S193 named one more golden in its DEC-142 form, the option-line count
+  with its `printf 'uci\nquit\n' | ... | grep -c` derivation. S151's pair,
+  Open entry 8, is still the owner question parked below. The enrichment pass's
+  next file is **S181**, today Open entry 9.
 
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on

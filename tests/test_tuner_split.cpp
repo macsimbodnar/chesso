@@ -8,6 +8,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include "test_temp_file.hpp"
 #include "tuner_split.hpp"
 
 // The tuner holds out a tenth of its corpus and reads the error on it as
@@ -61,11 +62,13 @@ struct fixture_t
 };
 
 
+// One unique name per binary, not per call: several cases below compare the
+// path they wrote with the path they read. S193.
 std::string fixture_path()
 {
-  return (std::filesystem::temp_directory_path() /
-          "chesso_test_tuner_split.tsv")
-      .string();
+  static const std::string path =
+      unique_fixture_path("chesso_test_tuner_split.tsv");
+  return path;
 }
 
 

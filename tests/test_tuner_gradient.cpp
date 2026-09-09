@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "test_eval_positions.hpp"
+#include "test_temp_file.hpp"
 #include "tuner_model.hpp"
 
 // The two things nothing in tests/ had ever checked about the fit: that the
@@ -67,11 +68,13 @@ using eval_model::TEMPO_MG_BASE;
 using test_eval_positions::positions;
 
 
+// One unique name per binary, not per call: six cases below write and then
+// read the same path. S193.
 std::string fixture_path()
 {
-  return (std::filesystem::temp_directory_path() /
-          "chesso_test_tuner_gradient.tsv")
-      .string();
+  static const std::string path =
+      unique_fixture_path("chesso_test_tuner_gradient.tsv");
+  return path;
 }
 
 

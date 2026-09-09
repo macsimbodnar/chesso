@@ -222,7 +222,7 @@ Not applied here.
 
 ### 2026-09-04_test_review-F04  low  the fifty-move boundary is not pinned: a draw claimed one halfmove late passes the suite
 
-Status: planned — S193
+Status: closed — S193 (2026-09-09)
 
 Evidence: mutant M19 changes `if (game->board.halfmove_clock >= 100)` at
 `src/search.cpp:647` to `>= 101`. **27 of 27 tests pass.** The only direct
@@ -245,7 +245,7 @@ at clock 98 that must not, the same shape as `:2720`. Not applied here.
 
 ### 2026-09-04_test_review-F05  low  eleven assertions in the fast suite cannot fail, and two titles claim more than their body checks
 
-Status: planned — S193
+Status: closed — S193 (2026-09-09)
 
 Evidence, each a case that passes for a reason unrelated to the property in
 its title:
@@ -382,7 +382,7 @@ before every position. Not applied here.
 
 ### 2026-09-04_test_review-F09  low  the fast label carries wall-clock dependence, fixed temp-file names and one midnight race
 
-Status: planned — S193
+Status: closed — S193 (2026-09-09)
 
 Evidence: `tests/test_engine.cpp:940` (1 ms clock under a 3 s watchdog),
 `:1326` (nine `go` variants, two of which burn the 1000 ms no-limit fallback),

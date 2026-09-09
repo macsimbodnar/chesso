@@ -270,9 +270,22 @@ TEST_SUITE("movegen: generation")
     move_t moves[MAX_MOVES];
     const size_t count = legal_moves(&game, moves);
 
+    // The loop below asserts an absence, so it passes over an empty list and
+    // would go on passing if the generator returned nothing at all. Establish
+    // that there is a list, and that it is the king's moves rather than the
+    // knight's absence being read off silence. S193,
+    // 2026-09-04_test_review-F05.
+    REQUIRE(position_is_reachable(&game));
+    REQUIRE(count > 0);
+
+    size_t king_moves = 0;
+
     for (size_t i = 0; i < count; ++i) {
       REQUIRE_NE(MOVE_PIECE(moves[i]), W_KNIGHT);
+      king_moves += (MOVE_PIECE(moves[i]) == W_KING) ? 1 : 0;
     }
+
+    REQUIRE(king_moves > 0);
   }
 
   TEST_CASE_FIXTURE(movegen_fixture_t, "only evasions when in check")

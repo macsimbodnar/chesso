@@ -9,17 +9,27 @@
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "openings.hpp"
+#include "test_temp_file.hpp"
 
 
 static game_t game;
 
 
+// Every case below reaches the attack tables through generate_moves() or
+// load_FEN(). They used to be filled by a case named "Initialize" that ran
+// first only because doctest's default order is file order, so `-tc=<glob>`
+// over one case, or `--order-by=name`, ran the rest on zero tables - a Release
+// binary answered 16 moves for the start position and a Debug one aborted on
+// game_tables()' own assert. S193, 2026-09-04_test_review-F09.
+struct openings_fixture_t
+{
+  openings_fixture_t() { initialize_game_const_data(&game); }
+};
+
+
 TEST_SUITE("Test openings")
 {
-  TEST_CASE("Initialize")
-  { initialize_game_const_data(&game); }
-
-  TEST_CASE("Test key generation")
+  TEST_CASE_FIXTURE(openings_fixture_t, "Test key generation")
   {
     // clang-format off
     std::unordered_map<std::string, uint64_t> test_cases = {
@@ -46,7 +56,7 @@ TEST_SUITE("Test openings")
     }
   }
 
-  TEST_CASE("Test get moves")
+  TEST_CASE_FIXTURE(openings_fixture_t, "Test get moves")
   {
     load_FEN(DEFAULT_POSITION, &game);
     book_t book;
@@ -58,6 +68,31 @@ TEST_SUITE("Test openings")
         get_book_moves_for_key(&book, &game.board, moves, weights);
     REQUIRE(moves_cout > 0);
 
+    // Every book move is one the generator produces from this position.
+    // `make_move(&game, moves[0])` was the whole assertion until S193 and
+    // make_move() refuses nothing but a full history stack, so a lookup that
+    // fabricated a move passed it. Matched on from, to and promotion, which is
+    // what validate_book_move() in src/chesso.cpp matches on. S193,
+    // 2026-09-04_test_review-F05.
+    move_t generated[MAX_MOVES];
+    const size_t generated_count =
+        generate_moves(game_tables(), &game.board, generated);
+    REQUIRE(generated_count > 0);
+
+    for (size_t i = 0; i < moves_cout; ++i) {
+      size_t matches = 0;
+
+      for (size_t j = 0; j < generated_count; ++j) {
+        matches += (MOVE_FROM(generated[j]) == MOVE_FROM(moves[i]) &&
+                    MOVE_TO(generated[j]) == MOVE_TO(moves[i]) &&
+                    MOVE_PROMOTED(generated[j]) == MOVE_PROMOTED(moves[i]))
+                       ? 1
+                       : 0;
+      }
+
+      REQUIRE_EQ(matches, 1);
+    }
+
     REQUIRE(make_move(&game, moves[0]));
   }
 
@@ -65,7 +100,7 @@ TEST_SUITE("Test openings")
   // of this before: load_book_from_file() had existed since the bitboard branch
   // with no caller anywhere in the tree and had therefore never run.
 
-  TEST_CASE("Test weights come back with the moves")
+  TEST_CASE_FIXTURE(openings_fixture_t, "Test weights come back with the moves")
   {
     load_FEN(DEFAULT_POSITION, &game);
     book_t book;
@@ -92,7 +127,8 @@ TEST_SUITE("Test openings")
   // The binary search replaced a scan over every entry in the book. It is only
   // equal to the scan while the keys are sorted, which is why the loader
   // checks, and this is the check that the two agree on the shipped book.
-  TEST_CASE("Test the search finds what a scan finds")
+  TEST_CASE_FIXTURE(openings_fixture_t,
+                    "Test the search finds what a scan finds")
   {
     book_t book;
     REQUIRE(load_book_embedded(&book));
@@ -135,11 +171,9 @@ TEST_SUITE("Test openings")
     }
   }
 
-  TEST_CASE("Test a book is loaded from a file")
+  TEST_CASE_FIXTURE(openings_fixture_t, "Test a book is loaded from a file")
   {
-    const std::string path =
-        (std::filesystem::temp_directory_path() / "chesso_s172_good.bin")
-            .string();
+    const std::string path = unique_fixture_path("chesso_s172_good.bin");
 
     // Two entries for the opening position, e2e4 heavier than d2d4, written by
     // hand so the test does not depend on tools/make_book.
@@ -178,11 +212,10 @@ TEST_SUITE("Test openings")
   // book. A probe over arbitrary bytes does not fail -- it returns arbitrary
   // moves that the engine reports as its best move without ever searching them
   // -- so each of these has to be refused at load.
-  TEST_CASE("Test a book that is not a book is refused")
+  TEST_CASE_FIXTURE(openings_fixture_t,
+                    "Test a book that is not a book is refused")
   {
-    const std::string path =
-        (std::filesystem::temp_directory_path() / "chesso_s172_bad.bin")
-            .string();
+    const std::string path = unique_fixture_path("chesso_s172_bad.bin");
 
     book_t book;
     std::string reason;

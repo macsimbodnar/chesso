@@ -4,8 +4,10 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <string>
 #include "corpus_hash.hpp"
+#include "test_temp_file.hpp"
 
 // S077. An emitted weight table names the corpus it was fitted from by content
 // hash, because a path is not a corpus: `.tuning/selfplay_v2.tsv` has meant two
@@ -61,8 +63,17 @@ std::string digest_of(const std::string& text)
 }
 
 
+// One unique name per requested name, held for the life of the binary: a case
+// writes a path and then reads it back. S193.
 std::string fixture_path(const std::string& name)
-{ return (std::filesystem::temp_directory_path() / name).string(); }
+{
+  static std::map<std::string, std::string> unique;
+
+  const auto it = unique.find(name);
+  if (it != unique.end()) { return it->second; }
+
+  return unique.emplace(name, unique_fixture_path(name)).first->second;
+}
 
 
 void write_file(const std::string& path, const std::string& content)

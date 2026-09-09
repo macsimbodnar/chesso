@@ -286,6 +286,12 @@ older_dir="$(make_sandbox "$script_under_test")"
 older_status="$(run_sandbox "$older_dir" HEAD~1)"
 older_sha="$(git -C "$older_dir" rev-parse --short HEAD~1)"
 older_head="$(git -C "$older_dir" rev-parse --short HEAD)"
+# HEAD's own committer date, read the way the banner reads it. `date +%F` stood
+# here until S193 and made the case fail across midnight: the script would print
+# the date the commit carries and the test would expect the date the clock says.
+# The reference line's forced 2020-01-02 above is what still catches a banner
+# printing today's date. S193, 2026-09-04_test_review-F09.
+older_head_date="$(git -C "$older_dir" show -s --date=short --format=%cd HEAD)"
 
 if ((older_status != 0)); then
   fail "REF=HEAD~1: the script exited $older_status"
@@ -293,8 +299,8 @@ if ((older_status != 0)); then
 elif ! grep -qE "^reference  $older_sha  2020-01-02\$" "$older_dir/out.txt"; then
   fail "REF=HEAD~1: the reference line does not carry HEAD~1's sha and its own date"
   show "$older_dir"
-elif ! grep -qE "^candidate  $older_head  $(date +%F)\$" "$older_dir/out.txt"; then
-  fail "REF=HEAD~1: the candidate line does not carry HEAD's sha and today's date"
+elif ! grep -qE "^candidate  $older_head  $older_head_date\$" "$older_dir/out.txt"; then
+  fail "REF=HEAD~1: the candidate line does not carry HEAD's sha and its own date"
   show "$older_dir"
 fi
 

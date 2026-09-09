@@ -105,18 +105,19 @@ bool contain_move_algebraic(const std::string& move,
 }
 
 
+// The generator's output, unfiltered. It used to run every move through
+// is_move_legal(), which is membership in generate_moves()' own output, so the
+// filter removed nothing and could not - and the `assert` below it was compiled
+// out of the Release build the gate runs. What pins legality here is the JSON:
+// each case compares this against an exact expected count and an expected move
+// per entry, and "Test make move with jsons" replays every move. INV-1. Two of
+// the 2026-09-04 review's mutants, M22 and M27, die on those counts.
+// S193, 2026-09-04_test_review-F05.
 size_t test_generate_legal_moves(game_t* game, move_t moves[])
 {
-  size_t count = 0;
-  move_t all_moves[MAX_MOVES];
-  const size_t all_moves_count =
-      generate_moves(game_tables(), &game->board, all_moves);
+  const size_t count = generate_moves(game_tables(), &game->board, moves);
 
-  assert(all_moves_count < MAX_MOVES);
-
-  for (size_t i = 0; i < all_moves_count; ++i) {
-    if (is_move_legal(game, all_moves[i])) { moves[count++] = all_moves[i]; }
-  }
+  REQUIRE_LT(count, size_t(MAX_MOVES));
 
   return count;
 }
@@ -230,15 +231,22 @@ int make_random_move(int depth, game_t* g)
 }
 
 
-TEST_SUITE("INITIALIZATION")
+// Every case in this file reaches the attack tables through generate_moves(),
+// load_FEN() or make_move(). They used to be filled by a case named "Test
+// INITIALIZATION" that ran first only because doctest's default order is file
+// order, so `-tc=<glob>` over one case, or `--order-by=name`, ran the rest on
+// zero tables: "Basic test" answered 16 moves for the start position instead of
+// 20 in Release, and Debug aborted on game_tables()' own assert. The empty
+// INITIALIZATION suite goes with it. S193, 2026-09-04_test_review-F09.
+struct chesso_fixture_t
 {
-  TEST_CASE("Test INITIALIZATION")
-  { initialize_game_const_data(&game); }
-}
+  chesso_fixture_t() { initialize_game_const_data(&game); }
+};
+
 
 TEST_SUITE("Test utils")
 {
-  TEST_CASE("Test FEN")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test FEN")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -247,7 +255,7 @@ TEST_SUITE("Test utils")
     REQUIRE_EQ(fen_result, std::string(DEFAULT_POSITION));
   }
 
-  TEST_CASE("Test fen parsing - generation")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test fen parsing - generation")
   {
     for (const auto& test_file : test_files) {
       const json test_cases = load_json(test_file);
@@ -272,7 +280,7 @@ TEST_SUITE("Test utils")
     }
   }
 
-  TEST_CASE("Test algebraic parsing")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test algebraic parsing")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -296,7 +304,8 @@ TEST_SUITE("Test utils")
   // move built from the partial parse -- `from` 0, a piece letter, a `to` that
   // could exceed 63 -- and make_move() applied it. Every caller tests for zero,
   // so zero is the contract; an unparseable token is input, not an invariant.
-  TEST_CASE("algebraic_to_move returns 0 for what it cannot parse")
+  TEST_CASE_FIXTURE(chesso_fixture_t,
+                    "algebraic_to_move returns 0 for what it cannot parse")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -354,7 +363,8 @@ TEST_SUITE("Test utils")
   // marker and are ordinary in published PGN. They mean nothing to the board
   // and are stripped the way `+` and `#` are; before S174 `e4!?` was parsed
   // with the annotation as part of the token and fabricated a move (F02).
-  TEST_CASE("algebraic_to_move ignores suffix annotations")
+  TEST_CASE_FIXTURE(chesso_fixture_t,
+                    "algebraic_to_move ignores suffix annotations")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -388,7 +398,7 @@ TEST_SUITE("Test utils")
 
 TEST_SUITE("Test move generator")
 {
-  TEST_CASE("Basic test")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Basic test")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -399,7 +409,7 @@ TEST_SUITE("Test move generator")
     REQUIRE_EQ(moves_count, 20);
   }
 
-  TEST_CASE("Test against generated jsons")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test against generated jsons")
   {
     for (const auto& test_json_file : test_files) {
       json test_cases = load_json(test_json_file);
@@ -472,7 +482,7 @@ TEST_SUITE("Test move generator")
 
 TEST_SUITE("Test make_move and unmake_move")
 {
-  TEST_CASE("Test make move with jsons")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test make move with jsons")
   {
     for (const auto& test_json_file : test_files) {
       json test_cases = load_json(test_json_file);
@@ -517,7 +527,7 @@ TEST_SUITE("Test make_move and unmake_move")
     }
   }
 
-  TEST_CASE("Test random moves")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test random moves")
   {
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -536,7 +546,7 @@ TEST_SUITE("Test make_move and unmake_move")
   }
 
 
-  TEST_CASE("Test is in check")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test is in check")
   {
     struct test_case_t
     {
@@ -560,7 +570,7 @@ TEST_SUITE("Test make_move and unmake_move")
     }
   }
 
-  TEST_CASE("Test is_attacking_king")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test is_attacking_king")
   {
     struct test_case_t
     {
@@ -590,7 +600,7 @@ TEST_SUITE("Test make_move and unmake_move")
   }
 
 
-  TEST_CASE("Test file masks")
+  TEST_CASE_FIXTURE(chesso_fixture_t, "Test file masks")
   {
     static const bb_t NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL;
     static const bb_t NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL;

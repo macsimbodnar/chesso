@@ -1,13 +1,11 @@
-#include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
-#include <future>
 #include <iomanip>
 #include <iostream>
 #include <optional>
 #include <ostream>
-#include <thread>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "json.hpp"
@@ -16,7 +14,6 @@
 
 using json = nlohmann::json;
 
-// #define RUN_THREADS
 #define MAXIMUM_DEPTH 20
 
 
@@ -92,21 +89,6 @@ struct stats_t
 };
 
 
-class spin_lock
-{
-  std::atomic_flag locked;
-
-public:
-  void lock()
-  {
-    while (locked.test_and_set(std::memory_order_acquire)) {
-      std::this_thread::yield();
-    }
-  }
-  void unlock() { locked.clear(std::memory_order_release); }
-};
-
-
 /**
  *  Transposition table element
  *
@@ -119,7 +101,6 @@ struct tt_elem_t
   int depth;
 };
 
-static spin_lock tt_spin_lock;
 static tt_elem_t tt[TT_SIZE] = {};
 
 
@@ -136,17 +117,9 @@ inline const stats_t* get_from_tt(const board_t* board, int depth)
 
   const tt_elem_t* entry = &tt[board->hash % TT_SIZE];
 
-#ifdef RUN_THREADS
-  tt_spin_lock.lock();
-#endif
-
   if (entry->key == board->hash && entry->depth == depth) {
     res = &entry->stats;
   }
-
-#ifdef RUN_THREADS
-  tt_spin_lock.unlock();
-#endif
 
   return res;
 }
@@ -156,11 +129,9 @@ inline void store_to_tt(const board_t* board, int depth, const stats_t* stats)
 {
   tt_elem_t* elem = &tt[board->hash % TT_SIZE];
 
-  tt_spin_lock.lock();
   elem->depth = depth;
   elem->stats = *stats;
   elem->key = board->hash;
-  tt_spin_lock.unlock();
 }
 
 
@@ -254,16 +225,28 @@ expected_stats_t load_expected_stats(const json& stats_dict)
 }
 
 
+// Both refusals used to be `assert`, which the Release build compiles out: a
+// missing or unparseable asset iterated zero cases and the binary exited 0, so
+// the gate reported a pass for a run that checked nothing. Every check that
+// must hold in the gate exits explicitly. S193, 2026-09-04_test_review-F05.
 json load_json(const std::string& filename)
 {
   std::ifstream file(filename);
-  assert(file);
+  if (!file) {
+    std::cerr << RED << "test_perft: cannot open asset: " << filename << RESET
+              << "\nRun from a directory holding assets/perft_json/, such as "
+                 "build/tests."
+              << std::endl;
+    std::exit(2);
+  }
 
   json json_data;
   try {
     file >> json_data;
   } catch (const json::parse_error& e) {
-    assert(false);
+    std::cerr << RED << "test_perft: cannot parse asset: " << filename << ": "
+              << e.what() << RESET << std::endl;
+    std::exit(2);
   }
 
   file.close();
@@ -327,6 +310,29 @@ stats_t perft(int depth, game_t* game)
 }
 
 
+// One definition of "this column agrees", read by the colours below and by
+// main()'s pass flag, so a red cell and a zero exit status cannot disagree.
+// Only `nodes` used to reach the flag; the other four were printed in red and
+// the run still passed. A column the asset leaves null makes no claim and
+// decides nothing. S193.
+template <typename E, typename R>
+static bool column_matches(const std::optional<E>& expected, R real)
+{
+  return !expected.has_value() ||
+         static_cast<uint64_t>(expected.value()) == static_cast<uint64_t>(real);
+}
+
+
+static bool columns_match(const expected_stats_t& expected, const stats_t& real)
+{
+  return column_matches(expected.nodes, real.nodes) &&
+         column_matches(expected.captures, real.captures) &&
+         column_matches(expected.en_passants, real.en_passants) &&
+         column_matches(expected.castles, real.castles) &&
+         column_matches(expected.promotions, real.promotions);
+}
+
+
 std::string print_stats(const expected_stats_t& expected, const stats_t real)
 {
   std::stringstream ss;
@@ -335,31 +341,31 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
   ss << std::left;
 
   if (expected.nodes.has_value()) { 
-    ss << ((expected.nodes.value() == real.nodes) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.nodes.value())) << std::setw(15) << real.nodes << RESET;
+    ss << (column_matches(expected.nodes, real.nodes) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.nodes.value())) << std::setw(15) << real.nodes << RESET;
   } else {
     ss << std::setw(15) << "| - " << std::setw(15) << real.nodes;
   }
 
   if (expected.captures.has_value()) { 
-    ss << ((expected.captures.value() == real.captures) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.captures.value())) << std::setw(15) << real.captures << RESET;
+    ss << (column_matches(expected.captures, real.captures) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.captures.value())) << std::setw(15) << real.captures << RESET;
   } else {
     ss << std::setw(15) << "| - " << std::setw(15) << real.captures;
   }
 
   if (expected.en_passants.has_value()) { 
-    ss << ((expected.en_passants.value() == real.en_passants) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.en_passants.value())) << std::setw(width) << real.en_passants << RESET;
+    ss << (column_matches(expected.en_passants, real.en_passants) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.en_passants.value())) << std::setw(width) << real.en_passants << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.en_passants;
   }
 
   if (expected.castles.has_value()) { 
-    ss << ((expected.castles.value() == real.castles) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.castles.value())) << std::setw(width) << real.castles << RESET;
+    ss << (column_matches(expected.castles, real.castles) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.castles.value())) << std::setw(width) << real.castles << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.castles;
   }
 
   if (expected.promotions.has_value()) { 
-    ss << ((expected.promotions.value() == real.promotions) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.promotions.value())) << std::setw(width) << real.promotions << RESET;
+    ss << (column_matches(expected.promotions, real.promotions) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.promotions.value())) << std::setw(width) << real.promotions << RESET;
   } else {
     ss << std::setw(width) << "| - " << std::setw(width) << real.promotions;
   }
@@ -437,32 +443,6 @@ int main()
               generate_moves(game_tables(), &game.board, moves);
 
           if (depth > 1) {
-#ifdef RUN_THREADS
-            std::vector<std::future<stats_t>> results;
-
-            for (size_t i = 0; i < moves_count; ++i) {
-              results.push_back(std::async(std::launch::async, [moves, i,
-                                                                depth]() {
-                const move_t tmp_move = moves[i];
-                board_t tmp_board = g_board;
-
-                global_state_t* globals = new global_state_t;
-                *globals = g_globals;
-
-                make_move(&tmp_move, &tmp_board, globals);
-                const stats_t result = perft(depth - 1, &tmp_board, globals);
-                unmake_move(&tmp_board, globals);
-
-                delete globals;
-
-                return result;
-              }));
-            }
-
-            for (auto& res : results) {
-              stats += res.get();
-            }
-#else
             for (size_t i = 0; i < moves_count; ++i) {
               if (make_move(&game, moves[i])) {
                 const auto res = perft(depth - 1, &game);
@@ -470,8 +450,6 @@ int main()
                 stats += res;
               }
             }
-#endif
-
           } else {
             // In case depth 1 we try for legal moves and count stats
             for (size_t i = 0; i < moves_count; ++i) {
@@ -485,9 +463,7 @@ int main()
 
         const auto end_time = std::chrono::high_resolution_clock::now();
 
-        const int64_t difference = expected_stats.nodes.value() - stats.nodes;
-
-        if (difference != 0) { passed = false; }
+        if (!columns_match(expected_stats, stats)) { passed = false; }
 
         const auto duration_ns =
             std::chrono::duration_cast<std::chrono::nanoseconds>(end_time -
