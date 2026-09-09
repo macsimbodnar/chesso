@@ -126,6 +126,22 @@ add_doctest_target(test_audit_fen_semantics)
 # rest.
 add_doctest_target(test_audit_polyglot_key)
 
+# S190: INV-2 and INV-4 in the Release gate. Both gated builds are Release, so
+# the assert(squares_match_bitboards) / assert(eval_accumulators_match) pairs in
+# src/bitboard.cpp are dead in the only builds the gate runs, and neither
+# invariant had any enforcement `ctest -L fast` could reach
+# (2026-09-04_test_review-F01). This walks the corpus at depth 2 and the hash
+# oracle's five positions at their own depths, 2.1 M make_move calls, and runs
+# both from-scratch rebuilds after every make and unmake.
+#
+# Its own binary rather than a case in test_engine, for the reason stated at
+# test_mate_breadth below: a cost this size is reported rather than absorbed.
+# Measured on the machine .moltke.local.md describes, 2026-09-09: 1.816 s
+# +/- 0.018 s over ten hyperfine runs in Release and 12.7 s in Debug, so the
+# shared 60 s / 600 s timeouts of add_doctest_target hold both with room and
+# it needs no timeout of its own.
+add_doctest_target(test_invariants)
+
 # S073: the tunable search parameters. Compiled in both configurations and the
 # same file in both -- the release build and the tune build each hold their live
 # values against the one table that is outside every #ifdef, which is how two

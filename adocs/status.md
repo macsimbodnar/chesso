@@ -7,6 +7,55 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-09, by hand.
 
+- **S190 is done, 2026-09-09: INV-2 and INV-4 are enforced by the gate.**
+  `tests/test_invariants` walks every test FEN two plies deep plus the five
+  positions of `test_engine`'s hash oracle at their own depths -- **2132167
+  `make_move` calls** -- and after every make and unmake rebuilds the four
+  accumulators with `eval_refresh`, rebuilds `squares[]` from the bitboards,
+  and compares the whole `board_t` against its pre-make copy. **1.816 s +/-
+  0.018 s** in Release against a 5 s budget, 12.7 s in Debug. Both gated
+  builds are Release, where every `assert` in `src/` is dead, so
+  `eval_accumulators_match` and `squares_match_bitboards` moved out of
+  `#ifndef NDEBUG` and lost `static`; the three assert sites are untouched and
+  behaviour does not change -- identical node counts and best moves against
+  `dc878de` at depths 9 and 12, `bench 26851183` on both sides, so
+  `No functional change`. Closes `2026-09-04_test_review-F01`.
+- **The `accepts:`' "every test FEN to depth 3" was unsatisfiable** -- 53975914
+  makes, about 34 s with the compares, against "Release wall time under 5 s" --
+  and the owner re-decided it on 2026-09-09 to depth 2 over the corpus plus the
+  five at their own depths, section 10 question 1's own proposal. Question 2's
+  `memcmp` is in; question 3's environment override is left to S197 behind the
+  single `CORPUS_DEPTH` constant.
+- **Six mutants, all killed, each naming the field it broke**, and two of the
+  guide's predictions came out wrong. The `squares[]` mutant did **not** redden
+  perft -- `test_movegen` *"shallow perft matches every column"* stayed green,
+  because `squares[]` is not what the generator reads -- and the `phase` mutant
+  reddened three other binaries rather than none. **No mutant is caught by the
+  new test alone**: `test_engine`'s existing `memcmp` sees every one of them
+  *after unmake*, which is the half F01 already had. What this step adds is the
+  *after make* half, and the phase mutant is where the two differ -- it fails at
+  the after-unmake line in `test_invariants` and at the after-make line for the
+  other five.
+- **The Debug self-play line is traced to observed output, and the obvious form
+  of it lies.** `-log file=...` defaults to WARN and does not capture engine
+  stderr, which is where an `assert` writes: a Debug binary carrying a planted
+  accumulator mutant aborted in every game and `grep -c Assertion` read **0** on
+  that log, against **2** on the same run at `level=trace engine=true`.
+  `fastchess.sh` uses the default form. `DEV_MANUAL.md` now carries the line
+  with the level and the reason; the clean run was 8 games in 19 s, 0
+  `Assertion`, 0 `disconnect`, 0 crashes.
+- **The section 7 timing formality resolved nothing and is recorded as
+  resolving nothing.** `hyperfine -w 2 -r 10` over `search_bench ... 12` read
+  the working tree 1.11x faster than the reference and 1.08x slower with the
+  order swapped, while an **A/A of one binary against itself read 1.07x**. The
+  probe's noise floor at this shape is 7 to 11 % on a 0.8 s run dominated by
+  process startup; both A/B readings sit inside it and no difference is
+  claimed. INV-6's identical node counts are the discharge.
+- **Census floors are goldens and were re-derived, not read back** (DEC-142):
+  `adocs/data/S190_walk_census.py` counts the same tree with python-chess and
+  agreed with the engine's walk exactly -- 2132167 makes, 15023 castlings, 181
+  en passants, 221928 promotions, 206212 capture promotions -- so the asserted
+  floors are half of each: 1000000 / 7000 / 90 / 100000 / 100000.
 - **S187 is done, 2026-09-09: every citation from a pending step file into
   code names a symbol, and the checker refuses a line number.** **572
   converted over 27 files**; `tools/plan_prose_check.py --citations` reads
@@ -560,7 +609,7 @@ Updated: 2026-09-09, by hand.
 - In progress: **nothing.** `adocs/plan_current/` is empty. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
-  entry 12.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  entry 10.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
@@ -954,13 +1003,13 @@ Updated: 2026-09-09, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S190**, now Open entry 1 -- a Release fast test compares the
-  accumulators and `squares[]` against a full rebuild after every make and
-  unmake, so INV-2 and INV-4 are enforced by the gate (F01, DEC-141). It is
-  agent-only work and owns no run, so the machine is free for whichever
-  verdict is taken beside it; **S159**, Open entry 2, is the next entry that
-  wants the machine, and S151's pair is still the owner question parked below.
-  The enrichment pass's next file is **S181**, today Open entry 12.
+- Next: **S159**, now Open entry 1 -- measure whether the second killer slot
+  wants ageing rather than distinctness, the hypothesis S149's -11 Elo left
+  standing. It is the first entry that wants the machine, and the machine is
+  free. Behind it the agent-only test block runs on: **S193**, **S191**,
+  **S196**, **S197**, **S192**, **S195**, **S194**, entries 2 to 8. S151's
+  pair, Open entry 9, is still the owner question parked below. The enrichment
+  pass's next file is **S181**, today Open entry 10.
 
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on

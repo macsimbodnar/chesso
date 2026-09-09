@@ -670,11 +670,62 @@ Or through ctest, which since S067 no longer times the debug build out:
 cmake --build build-debug -j12 && ctest --test-dir build-debug -L fast
 ```
 
-The debug build asserts `squares[]` against the bitboards and the evaluation
-accumulators against a full recomputation, on every make and unmake. Any change
-to `make_move`, `unmake_move` or the generator must be run through it. That is
-INV-2 and INV-4. It is **not** in the gate above and running it is still on
-you.
+`test_invariants` is INV-2 and INV-4 in the gate, since S190. It walks every
+test FEN two plies deep plus the five positions `test_engine`'s hash oracle
+uses at their own depths -- 2132167 `make_move` calls -- and after every make
+and unmake rebuilds the four evaluation accumulators with `eval_refresh()`,
+rebuilds `squares[]` from the bitboards, and compares the whole `board_t`
+against its pre-make copy. 1.816 s +/- 0.018 s over ten hyperfine runs in
+Release and 12.7 s in Debug, on the machine `.moltke.local.md` describes. The five census floors it asserts are
+goldens: re-derive them with `adocs/data/S190_walk_census.py`, which counts the
+same tree with python-chess, whenever the corpus or either depth moves
+(DEC-142).
+
+The debug build asserts the same two things inside `make_move` and
+`unmake_move` themselves, which is a stricter place to catch them: the assert
+fires at the entry and exit of the call rather than after it returns. That half
+is **not** in the gate — both gated build directories are Release, where every
+`assert` is dead — and running it is still on you:
+
+```bash
+cmake --build build-debug -j8 && ctest --test-dir build-debug -L fast
+```
+
+### The Debug self-play habit
+
+DEC-141. A step that touches `make_move`, `unmake_move`, the generator or the
+search self-plays the Debug binary before it completes, and its `done:` stamp
+says so. Four rounds at 4+0.04 is minutes and it puts the asserts above under a
+real clock, on positions no test FEN reaches:
+
+```bash
+cmake --build build-debug -j8
+fastchess -engine cmd=build-debug/src/chesso name=debug-a \
+          -engine cmd=build-debug/src/chesso name=debug-b \
+          -openings file=books/UHO_Lichess_4852_v1.epd format=epd order=random \
+          -each tc=4+0.04 option.Hash=16 option.Threads=1 \
+          -rounds 4 -repeat -concurrency 8 -recover -check-mate-pvs \
+          -pgnout file=/tmp/debug_selfplay.pgn \
+          -log file=/tmp/debug_selfplay.log level=trace engine=true \
+          2>&1 | tee /tmp/debug_selfplay.out
+grep -c Assertion /tmp/debug_selfplay.log /tmp/debug_selfplay.out
+grep -c disconnect /tmp/debug_selfplay.out
+```
+
+`level=trace engine=true` is load-bearing and was traced to observed output,
+not assumed. `-log` defaults to WARN and does not capture engine stderr, which
+is where an `assert` writes: a Debug binary carrying a planted accumulator
+mutant aborted in every game, and `grep -c Assertion` on a default `-log` file
+read **0** while the same run logged at `level=trace engine=true` read **2**.
+`fastchess.sh` uses the default form, so this line is deliberately not that
+one. `disconnect` is the cheaper signal and reaches the tee'd stdout either
+way, but it names a dead engine and not the assertion that killed it.
+
+Measured with a clean Debug build, 2026-09-09: 8 games in 19 s, 0 `Assertion`,
+0 `disconnect`, 0 crashes.
+
+Time forfeits are not the failure condition — a Debug binary is tens of times
+slower and will forfeit at this control. `Assertion` and `disconnect` are.
 
 `test_uci_surface` is the golden surface guard. It reads the command set out of
 `uci_command_names()` and the option lines out of the `uci` reply, then holds

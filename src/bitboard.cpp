@@ -587,12 +587,21 @@ bool move_belongs_to_side_to_move(const board_t* board, move_t move)
 }
 
 
-#ifndef NDEBUG
 // The evaluation accumulators are maintained by make_move and unmake_move
 // rather than recomputed, so they can drift out of step with the position in
 // exactly the way squares[] can. Rebuilding and comparing on every node is what
 // makes the existing tree walks catch that.
-static bool eval_accumulators_match(const board_t* board)
+//
+// Outside `#ifndef NDEBUG` since S190, and not static, so the Release test
+// binaries can call it: both gated builds are Release, where every assert()
+// below is dead, and INV-4 had no enforcement the gate could reach
+// (2026-09-04_test_review-F01). The asserts are unchanged; the search calls
+// neither helper in any build.
+//
+// eval_refresh() rebuilds from squares[], so this alone would pass on a board
+// whose squares[] and bitboards disagree. squares_match_bitboards() below is
+// the other half, and the two are always called together.
+bool eval_accumulators_match(const board_t* board)
 {
   board_t rebuilt = *board;
   eval_refresh(&rebuilt);
@@ -606,7 +615,7 @@ static bool eval_accumulators_match(const board_t* board)
 // squares[] duplicates the bitboards, so it can drift out of sync with them.
 // Rebuilding it and comparing on every node is what makes the existing
 // make/unmake tree walks catch that.
-static bool squares_match_bitboards(const board_t* board)
+bool squares_match_bitboards(const board_t* board)
 {
   for (index_t square = 0; square < 64; ++square) {
     piece_t expected = EMPTY;
@@ -623,7 +632,6 @@ static bool squares_match_bitboards(const board_t* board)
 
   return true;
 }
-#endif
 
 
 static const piece_t w_promotion_map[] = {W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK,

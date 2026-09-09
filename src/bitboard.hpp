@@ -99,6 +99,15 @@ size_t generate_quiets(const bb_tables_t* tables,
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
 
+// The two INV-2 / INV-4 oracles: rebuild the evaluation accumulators, and
+// squares[], from scratch and compare against what make_move/unmake_move
+// maintained incrementally. The search calls neither, in any build -- they are
+// asserted inside make_move_impl and unmake_move_impl in Debug, and called by
+// tests/test_invariants.cpp in every build (S190). Both are O(64) per call and
+// eval_accumulators_match() copies the board, so neither belongs on a hot path.
+bool eval_accumulators_match(const board_t* board);
+bool squares_match_bitboards(const board_t* board);
+
 // Pass the turn without moving, for null move pruning. Must be undone with
 // unmake_null_move(), not unmake_move(): the history entry it pushes carries no
 // move to reverse.
