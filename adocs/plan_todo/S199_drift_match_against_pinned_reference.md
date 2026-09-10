@@ -4,7 +4,7 @@ accepts:    the reference commit is chosen and recorded here -- the first commit
 touches:    adocs/data/, adocs/plan.md, DEV_MANUAL.md
 excludes:   the gauntlet and S152 (DEC-108 stands); any per-patch attribution, which a fixed match cannot give; changing the reference once chosen
 decisions:  DEC-139, DEC-108
-closes:
+closes:     2026-09-10_adversarial-F30
 blocks:
 paused_by:
 author:
@@ -27,3 +27,19 @@ verdicts are in the engine, and not the gauntlet DEC-108 deferred.
 
 A script and a reading rule, an hour; about 52 minutes of machine per point,
 one point per block boundary.
+
+## Amended 2026-09-11, DEC-170: the reading rule gains a term for timing conversions (F30)
+
+`2026-09-10_adversarial-F30`: the reading rule above prices a point as "inside
+the previous point's interval plus the verdicts landed since", and block 2 is
+eight speed steps that land no verdict at all -- discharged by an interleaved
+timing converted at DEC-083's 1.43 or 2.10 Elo per percent of nps, named as a
+conversion. A drift point taken after block 2 would read high against a rule
+with no slot for them. The rule therefore counts, beside the verdicts, the
+conversions landed since, at their published rate and marked as conversions,
+so the expected band has a term for speed; the point then says whether the
+conversions were worth what the rate claims, which is a measurement this
+project has never had. DEC-172 also places the S151-form longer-control
+reading -- one fixed 1000-pair match at `32+0.32` -- beside each drift point,
+so a boundary produces two numbers: drift at the regime, and transfer to four
+times the control.

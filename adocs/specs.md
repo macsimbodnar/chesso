@@ -29,8 +29,13 @@ documented technique and implementing it here. Phase two is to experiment.
 **Measured strength, 2026-08-18: chesso is approximately 2559 on the CCRL Blitz
 scale, 95 % ±25, and the figure is soft.** 3340 games against **five** rated
 engines from **three families**, solved with `ordo` anchored on each in turn.
-`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md` is the record and `./rating.sh`
-re-derives it. S088, DEC-072 and DEC-075 to DEC-077.
+`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md` is the record. **`./rating.sh`
+at HEAD does not re-derive it** (2026-09-10_adversarial-F07, corrected
+2026-09-11): the script runs `Hash` 128 where S088 ran 64, every core where
+S088 ran 6 -- "this figure only", its own record says -- and a different
+unseeded opening draw, and the concurrency-12 variant of that run was voided
+as `S088_rated_c12_INVALID.pgn`. Whether the S088 regime gets a flag is
+S212's. S088, DEC-072 and DEC-075 to DEC-077.
 
 Soft because the reference set disagrees internally by **121.8 Elo**, four times
 the 30 the procedure allows; approximate because the games were played at
@@ -38,6 +43,15 @@ the 30 the procedure allows; approximate because the games were played at
 measured 2570 over four engines and two families (still recorded in
 `rating_2026-08-18_ccrl_blitz.md`), and **`src/` is byte-identical between the
 two runs** — the instrument changed, the engine did not.
+
+**And the `+/-25` is one anchor's `ordo` interval, not the interval on the
+number** (2026-09-10_adversarial, Part B): it carries no term for the
+anchor-choice dispersion (SD 52.9 over the five solves), for the anchors' own
+CCRL error (+/-11 to +/-18), for the 334 openings each played ten times, or
+for the one-sided adjudication DEC-174 corrects, so the defensible statement
+is that the interval is no narrower than about +/-60 from anchor choice and
+statistics alone. Four documents quote the +/-25 as if it were the whole
+interval; this sentence is where that stops.
 
 **And it stays the measured figure until the engine is near 3000, DEC-108.** The
 owner's decision on 2026-08-23: the rating is re-measured once, near the goal,
@@ -666,3 +680,9 @@ The order stands.
   costs 11.7 %. S039 re-decides the margin, S120 caches the score behind it, and
   S122 is the rebuild that needs both.
 
+- **Parallel search is phase two, DEC-175.** Phase one's arena is the CCRL
+  Blitz 1CPU list (DEC-089) and `Threads` is honestly `max 1`; no step, reserve
+  entry or decision named SMP until 2026-09-10_adversarial-F15 asked. The form,
+  when phase two opens, is Lazy SMP adapted from the literature, and the one
+  constraint that binds now is that every table added to the search states
+  whether it is per-thread or shared at its declaration.

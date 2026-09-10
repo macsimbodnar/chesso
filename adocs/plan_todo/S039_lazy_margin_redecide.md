@@ -10,10 +10,12 @@ accepts:    the margin is chosen from an eval_spread run at the weights that shi
 touches:    src/search_params.hpp, where the value itself has lived since S073
             and where a re-decision has to land; src/evaluation.hpp
             LAZY_EVAL_MARGIN and its comment, which is what the number means;
-            adocs/data/S039_eval_spread.log for the run the accepts records
+            adocs/data/S039_eval_spread.log for the run the accepts records;
+            tools/eval_spread.cpp, whose candidate margins must include the value
+            that ships (F25)
 excludes:   the structure of the lazy shortcut itself, which is S034 and is done
 decisions:  DEC-039
-closes:     2026-08-13_adversarial-F05
+closes:     2026-08-13_adversarial-F05, 2026-09-10_adversarial-F16, 2026-09-10_adversarial-F25
 blocks:
 paused_by:
 done:
@@ -62,3 +64,23 @@ Raising the margin costs search time in `evaluate_lazy` — fewer positions take
 the shortcut. That trade is an SPRT question, not an argument. Re-run
 `eval_spread` over the full corpus first, pick the margin from that
 distribution, then measure.
+
+## Amended 2026-09-11, DEC-170 and DEC-172: moved beside S122, and two audit findings folded in
+
+`2026-09-10_adversarial-F16` re-measured the spread at the shipping weights
+over 1.5 M rows: p99 **153**, max **401**, against the `src/evaluation.cpp`
+comment's "p99 128 and max 330" -- the figures in "What it costs now" above
+are older still. And it observed that this step sized the margin "at the
+weights that ship at this step's own HEAD" while the Open order placed S121,
+S123, S125 and S101 -- four steps that change the very sum being clamped --
+between it and S122. **So this step now sits directly before S122**, its
+consumer, and the `eval_spread` run is taken at the weights those four steps
+leave behind. DEC-169 already binds the other side: a move of
+`LAZY_EVAL_MARGIN` owes a fresh `truncation_scan` reading, recorded beside the
+new margin.
+
+`2026-09-10_adversarial-F25`: `tools/eval_spread.cpp`'s candidate margins are
+`{150, 200, 250, 300, 400}` and do not include the 184 that has shipped since
+S085 -- in the tool whose whole job is this re-decision. The candidate list
+gains the shipping value, read from the binary or from `search_param_info()`
+rather than typed, before the run is taken.

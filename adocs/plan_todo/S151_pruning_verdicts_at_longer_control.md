@@ -1,6 +1,6 @@
 id:         S151
 goal:       a change that moves a pruning or reduction parameter has its verdict re-taken at a control at least four times longer before the number is banked, starting with S085's shipped vector
-accepts:    S085's shipped vector is re-tested against `3488506` at a control at least four times longer than `8+0.08`, with the control and its cost stated before the run is committed to, and whatever it returns is recorded -- including a regression, which is the outcome the published record says to expect if it exists; the rule is written where the bounds rule already lives in `fastchess.sh` and `DEV_MANUAL.md`: a change that moves a pruning or reduction parameter has its verdict re-taken at a longer control before the magnitude is banked; the rule is scoped so it does **not** apply to all 45 to 55 pending verdicts, because that roughly doubles the plan's machine budget, and the scoping reason is stated
+accepts:    S085's shipped vector is measured against `3488506` at `32+0.32` and `Hash=64` in a fixed 1000-pair match read as an estimate with its 95 % interval -- design (iii) of section 7, DEC-172 -- with the control and its cost stated before the run is committed to, and whatever it returns is recorded -- including a regression, which is the outcome the published record says to expect if it exists; the rule is written where the bounds rule already lives in `fastchess.sh` and `DEV_MANUAL.md`, in its block-boundary form: the longer-control reading is one fixed 1000-pair match at `32+0.32` and `Hash=64` taken beside S199's drift point at each block boundary, so a block's pruning and reduction verdicts are read at the longer control before their magnitudes are banked; the rule is scoped so it does **not** apply to all 45 to 55 pending verdicts, because that roughly doubles the plan's machine budget, and the scoping reason is stated
 touches:    fastchess.sh, DEV_MANUAL.md, adocs/data/, adocs/decisions.md, adocs/specs.md
 excludes:   a second SPSA run at the longer control, which is a tuning step and not a verification one; re-testing the earlier verdicts S021, S068, S076, S089 or S107, which is a separate decision about history; changing any default, which only the verdict may do and which would be its own step
 decisions:  DEC-019, DEC-063, DEC-094
@@ -521,3 +521,26 @@ assumed.
    recorded as a decision.
 6. **Control ratio**: exactly four (`32+0.32`, priced) or fishtest's six
    (`48+0.48`, 1.5x the hours in every row above).
+
+## Amended 2026-09-11, DEC-172: the design is (iii), and the rule is the block-boundary form
+
+The owner's question of section 10 is answered under the 2026-09-11
+delegation. **Design (iii)**: a fixed 1000-pair match at `32+0.32`, `Hash=64`
+(question 2: DEC-088's pressure invariant held, fishtest's LTC practice),
+control ratio exactly four (question 6), about 3.4 hours at the 584 games an
+hour section 4 assumes -- checked in the run's first hour -- and read as an
+estimate with the run's own printed `Elo`/`nElo` intervals, never as a verdict.
+The accepts' "re-tested" became "measured ... read as an estimate" above, which
+is the change section 7 said (iii) would make. The standing rule (question 3)
+is the fixed-rounds form at block boundaries, beside S199's drift point, and
+not a re-take per verdict: 13 re-takes at `{-5, 0}` cost more than the whole
+plan and the accepts' budget sentence is met only by this scope. Extensions
+(S097, S188) are inside the reading's scope because the record names them
+(question 4); S148's already-taken verdict owes no retroactive re-take, per
+the excludes; the rule lives in `fastchess.sh`, `DEV_MANUAL.md`, `specs.md`
+and the decision, not in `AGENTS.md` (question 5). Design (i) -- 44 to 72
+hours of the binding constraint for a number that adds no strength -- is the
+rejected option and DEC-172 says why. The harness additions of section 3
+(`TC`, `HASH`, `CAND`) are still this step's first work; their defaults leave
+the regime byte-identical, and S212's A/A, which follows this step in the
+order, is the DEC-143 calibration that covers them.

@@ -81,7 +81,7 @@ dispositioned in the table.
 
 ### 2026-09-04_adversarial-F01  low  `go infinite` prints `bestmove` without a `stop` on any root whose tree collapses -- insufficient material, a stalemated or checkmated root -- because the infinite search is the iterative-deepening loop to `MAX_DEPTH` and nothing holds it open
 
-Status: open
+Status: planned -- S210 (DEC-170), where F19 of the 2026-09-10 report re-triggers it
 
 **Evidence.** `src/chesso.cpp:1472` seeds every `go` with
 `search_options.depth = MAX_DEPTH` (126, `src/data_structures.hpp:43`), the

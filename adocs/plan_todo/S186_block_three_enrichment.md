@@ -1,10 +1,10 @@
 id:         S186
 goal:       the DEC-097 enrichment pass runs over block 3's step files before block 3 starts -- every evaluation figure traced to its source or marked unverified, every technique's form checked against the wiki's definition, every seed in a DEC-105 form -- so the evaluation block is executed against figures somebody can check
 accepts:    each of S134, S082, S083, S135, S136, S039, S121, S123, S125, S118, S101, S122, S124, S102, S133 and S126 carries a "Technical details (SOTA research ...)" section in the form the block-1 files have; every figure in it has a URL or the word unverified beside it; every seed is a literature value with its URL, a derivation the step runs at its start, or a range midpoint (DEC-105, DEC-134); the wiki's definition of each technique is cited and any place the step's form departs from it is stated; the engine records are read as commit messages, pull-request bodies, changelogs and release notes only, never as source or tables (DEC-016), and every file read is listed; S185's unverified list is the work list and each entry is resolved or stays marked with what was searched; block 3's ordering paragraph in `adocs/plan.md` is re-read against the traced figures and any reordering is proposed as a decision, not made as an edit; the pass lands as one commit per file or per few files so a review can follow it; `tools/plan_prose_check.py --touches` and `--params` green; no engine file changes
-touches:    adocs/plan_todo/, adocs/plan.md
+touches:    adocs/plan_todo/, adocs/plan.md, adocs/eval_tuning_strategy.md
 excludes:   the block-1 and block-2 files, enriched 2026-08-19 to 2026-08-20, whose corrections are S180 and S181; any engine code; running any derivation, which the owning step does at its start
 decisions:  DEC-097, DEC-105, DEC-134, DEC-137
-closes:
+closes:     2026-09-10_adversarial-F37
 blocks:
 paused_by:
 author:
@@ -44,3 +44,15 @@ tables (DEC-016).
 
 Documents only, sixteen files, several hours spread over the machine-scope
 lane's idle moments. It owes no match and no run.
+
+## Amended 2026-09-11, DEC-170: the strategy document's two unrecorded divergences (F37)
+
+`2026-09-10_adversarial-F37`: `adocs/eval_tuning_strategy.md` specifies
+mini-batch Adam at batch 16k to 64k where `tools/tuner.cpp` is full-batch, and
+its Phase A requires an in-engine evaluation trace and UCI exposure of every
+tunable, neither of which exists -- the trace lives in `tools/eval_model.hpp`
+as a second implementation. Its other divergences (leaf labels, non-linear
+king safety) are recorded and planned. This pass, which reads that document
+for every block-3 file, records the two as decided departures or corrects the
+document, and says which, so block 3 is executed against a strategy that
+describes the tools it has.

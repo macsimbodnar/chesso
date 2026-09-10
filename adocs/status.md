@@ -5,7 +5,31 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-10, by hand.
+Updated: 2026-09-11, by hand.
+
+- **The 2026-09-10 audit is digested and the plan is re-sorted for the 3000
+  mark, 2026-09-11 (DEC-170 to DEC-175).** Thirty-seven findings, five high:
+  eight steps, **S207 to S214**, six decisions, six pending files amended (five
+  for findings, S151 for its design), two `specs.md` sentences corrected, the report's `Status:` lines moved to
+  `planned`/`accepted`. The owner's instruction that shaped it: Elo first,
+  bugs first only where they are reachable in play or can move an evaluation,
+  a UCI answer or a line -- DEC-171 writes that scope into BUGS. **Every
+  ruling was taken by the agent under the owner's delegation of 2026-09-11**
+  (engine-related questions are the agent's; the owner is asked only when the
+  workstation is at risk, the ethic would change, or the goal is not served)
+  and each names itself as such, so the owner's veto on reading is the check:
+  DEC-173 changes the repetition convention and re-states a test; DEC-174 makes
+  resign adjudication two-sided; DEC-172 takes S151's cheap design and moves
+  S039 beside S122; DEC-175 puts parallel search in phase two.
+  **Tonight's run is S207**, Open entry 1: the F08 repetition fix, one
+  `--nonreg` SPRT priced at 4 to 18 hours, launched detached with a watcher
+  through `Monitor`. While it plays the coordinator takes the filler behind it
+  in order -- S185, S181, S182, S183, documents only -- and when the verdict
+  lands it completes S207 and continues down the list without waiting for the
+  owner (DEC-172's clause): S208 and S209 in the morning, node-identical and
+  owning no run, then S024's first verdict as the next night's run. `plan.md`'s cost and Elo paragraphs
+  stand as written until S182 and S183 rewrite them. No `src/` changed today,
+  no `Bench:` line, no run started.
 
 - **S195 is complete: three cases hold what an SPRT cannot see, and two of the
   guide's four predictions about them were wrong.** `tests/test_engine.cpp`
@@ -1161,16 +1185,17 @@ Updated: 2026-09-10, by hand.
   `ctest` the case is sound; the vacuity is the class S193 was written for.
 - In progress: **nothing.** `adocs/plan_current/` is empty; S195 completed into
   `plan_done/` on 2026-09-10, S206, S205 and S192 the same day. **The next step
-  is Open entry 1, S194** -- the UCI book path executed by the fast suite, the
-  weighted draw seeded through `CHESSO_BOOK_SEED` (F06). **The enrichment
-  pass of DEC-145 is stopped at the owner's word after twenty of the then 74
-  files -- S178, since done, through S151; the next file is S181, today Open
-  entry 3.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  is Open entry 1, S207** -- the F08 repetition rule, the night run of
+  2026-09-11 (DEC-172). **The enrichment pass of DEC-145 is stopped at the
+  owner's word after twenty of the then 74 files -- S178, since done, through
+  S151.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
   session's report, with twenty findings and the owner questions from every
-  file, is `adocs/data/2026-09-05_enrichment_pass.md`.
+  file, is `adocs/data/2026-09-05_enrichment_pass.md`. The eight steps of
+  2026-09-11 carry their guidance in their own files and are outside that
+  pass.
 - **Reordered 2026-09-05 for the workstation, DEC-144.** The owner, leaving for
   the day, asked that the plan be re-sorted for the goal under the rules with
   every step assumed to run on the Linux workstation, and that decisions be
@@ -1568,11 +1593,12 @@ Updated: 2026-09-10, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S195**, now Open entry 1 -- node-limited searches reproducible across
-  `ucinewgame` in a fast test, and `bench` resetting the table per position
-  (F08). Behind it **S194**, entry 2. S151's pair, Open entry 3, is still the
-  owner question parked below. The enrichment pass's next file is **S181**,
-  today Open entry 4.
+- Next: **S207**, Open entry 1 -- the repetition rule, F08, one `--nonreg`
+  SPRT, the night run of 2026-09-11. Its filler while the run plays: **S185**,
+  **S181**, **S182**, **S183**, entries 2 to 5, documents only. Behind them
+  **S208** and **S209**, the two audit bug steps the owner's criterion selects,
+  then **S024**. S151's pair is answered, DEC-172: design (iii), a fixed
+  1000-pair estimate at `32+0.32`, entry 11.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --
@@ -1630,17 +1656,12 @@ Updated: 2026-09-10, by hand.
     S198's A/A and retired**: 1000 fixed rounds, 0 forfeits, pair variance
     0.2430 +/- 0.0154 inside S105's band at `z = +0.16`, 2277 games an hour.
     The next machine change owes the next one under DEC-143.
-  - **Owner question from the 2026-09-05 reorder: S151's pair.** Its accepts
-    asks for S085's vector re-tested against `3488506` at a control at least
-    four times `8+0.08`; at a quarter of the **measured 2277** games an hour
-    (S198, 2026-09-08, where the estimate was 2337) a `{-5, 0}` pair is about
-    74 hours worst case and 45 on a bound. Options: that pair on a
-    weekend; a wider pair; or a fixed-rounds reading (2000 games, about 3.5 h,
-    +/-8 Elo) which would change the accepts and is therefore a decision. It
-    sits at **Open entry 11** behind S159 until answered -- S148 is done and
-    out of the list as of 2026-09-09, and its verdict joins S151's own: the
-    ceiling was re-decided at 8+0.08 and the incumbent kept, so the magnitude
-    S151 re-takes is S085's vector and not this one.
+  - **S151's pair, the owner question from the 2026-09-05 reorder, is answered
+    by DEC-172 on 2026-09-11 under the owner's delegation**: design (iii), a
+    fixed 1000-pair match at `32+0.32` and `Hash=64` read as an estimate, about
+    3.4 h, and the longer-control rule in its block-boundary form. Its accepts
+    is amended in its file. Kept here one turn so the owner sees the question
+    closed; prune at the next rewrite.
   - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
     (`go infinite` printing `bestmove` unasked; a bad token in `position ...
     moves` skipped silently; the aborted-iteration best move assuming its table

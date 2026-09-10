@@ -225,6 +225,12 @@ migration that way (DEC-109).
 - BUGS: **a bug that has been found gets fixed before anything else starts.**
   Not noted, not scheduled, not carried into the next change. A known defect in
   the tree contaminates every measurement taken after it.
+  **Scoped by reach, DEC-171:** that clause binds a defect reachable in
+  ordinary play, on the UCI surface as GUIs and harnesses drive it, or able
+  to move a reported score, move or line. Any other defect is a step
+  scheduled as filler behind the next strength step, closed by the block
+  boundary it sits in, and named by finding id in the pre-registration of
+  every run taken while it is open.
 - WATCHERS: **a long run is detached and the thing watching it terminates on
   its own.** An SPRT takes hours here and a fit takes tens of minutes, so both
   start detached — `nohup ... &` — and are never held open by the turn that

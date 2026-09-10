@@ -70,7 +70,7 @@ order contain no engine feature.
 
 ### 2026-09-10_adversarial-F01  high  Three tables in `src/bb_tables.hpp` are copies from a GPL-3.0 engine, and the whitespace proves it
 
-Status: open. VERIFIED.
+Status: planned -- S211 (DEC-170). VERIFIED.
 
 Evidence. `github.com/maksimKorzh/bbc` ("Bit Board Chess (BBC) ... by Code Monkey
 King") is **GPL-3.0** -- confirmed from the GitHub API, `license.spdx_id`. This
@@ -141,7 +141,7 @@ constants.
 
 ### 2026-09-10_adversarial-F02  medium  Five mask builders in `src/bitboard.cpp` are line-for-line transliterations of the same source, and `CMK_POS` names its author in the shipped header
 
-Status: open. VERIFIED, with a stated caveat.
+Status: planned -- S211 (DEC-170). VERIFIED, with a stated caveat.
 
 Evidence. `src/bitboard.cpp` `precompute_knight_attacks` against BBC
 `mask_knight_attacks`: the same eight shifts in the same order
@@ -175,7 +175,7 @@ which is what the wiki calls it.
 
 ### 2026-09-10_adversarial-F03  medium  Twelve pieces of third-party artwork are redistributed with no licence or attribution, and `books/fetch_book.sh` asserts that this cannot happen
 
-Status: open. VERIFIED.
+Status: planned -- S211 (DEC-170). VERIFIED.
 
 Evidence. `git ls-files tests/assets/gui/` tracks `Chess_{b,k,n,p,q,r}{d,l}t60.png`
 -- Wikimedia Commons' Cburnett naming scheme -- plus `background_l.jpg`,
@@ -246,7 +246,7 @@ F02 are: `bb_tables.hpp` 73 %, `openings.cpp` 68 %, `bitboard.cpp` 52 %,
 
 ### 2026-09-10_adversarial-F04  high  Resign adjudication is one-sided in both harnesses, and `rating.sh` states the opposite in the comment that justifies it
 
-Status: open. VERIFIED, and quantified further here.
+Status: planned -- S212 (DEC-170, DEC-174). VERIFIED, and quantified further here.
 
 Evidence. `fastchess.sh:178` and `rating.sh:80` both pass
 `-resign movecount=3 score=400`, and neither passes `twosided`. The installed
@@ -316,7 +316,7 @@ reader will rely on. First measurement is free -- re-score
 
 ### 2026-09-10_adversarial-F05  medium  The engine's `id name` carries no version, so the identity check the project enforces on every opponent it cannot enforce on itself
 
-Status: open. VERIFIED.
+Status: planned -- S212 (DEC-170). VERIFIED.
 
 Evidence. `src/chesso.cpp:1074` is `uci_reply("id name Chesso");` -- a literal,
 with no version, no commit, no build configuration. `printf 'uci\nquit\n' |
@@ -348,7 +348,7 @@ project already enforces on everyone else.
 
 ### 2026-09-10_adversarial-F06  medium  `.ref-builds/` binaries are reused forever with nothing checking the worktree, the build's freshness, or its configuration
 
-Status: open. VERIFIED (the mechanism; no contaminated verdict found).
+Status: planned -- S212 (DEC-170). VERIFIED (the mechanism; no contaminated verdict found).
 
 Evidence. `fastchess.sh:356` is `if [[ ! -x "$reference" ]]; then` -- the
 worktree is created and built only when the binary is absent. Nothing
@@ -380,7 +380,7 @@ banner.
 
 ### 2026-09-10_adversarial-F07  medium  `adocs/specs.md` says `./rating.sh` re-derives 2559; it cannot, and the changed variant of that run was voided by the project
 
-Status: open. VERIFIED.
+Status: planned -- S212; the specs.md sentence corrected 2026-09-11 (DEC-170). VERIFIED.
 
 Evidence. `adocs/specs.md:32-33`: *"`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md`
 is the record and **`./rating.sh` re-derives it**."*
@@ -428,7 +428,7 @@ figure left in the file that reads more precisely than it is.
 
 ### 2026-09-10_adversarial-F08  high  A two-fold repetition whose first occurrence is in the pre-root game history is scored as a dead draw, and a fast-suite test pins that as correct
 
-Status: open. VERIFIED with two oracles.
+Status: planned -- S207 (DEC-170, DEC-173). VERIFIED with two oracles.
 
 Evidence. `src/bitboard.cpp:1412-1437` `is_position_repeated` scans back over
 the whole history window and returns `true` on the **first** hash match. Nothing
@@ -477,7 +477,7 @@ agent's. This finding is the reason to make it.
 
 ### 2026-09-10_adversarial-F09  high  `generate_moves()` overruns its 270-entry stack buffer, so one `position fen` line aborts the shipping binary
 
-Status: open. VERIFIED.
+Status: planned -- S208 (DEC-170). VERIFIED.
 
 Evidence, against `build/src/chesso`, the Release binary that ships and that
 every SPRT measures. The FEN loads cleanly first -- the `fen` command echoes it
@@ -528,7 +528,7 @@ not a proof.
 
 ### 2026-09-10_adversarial-F10  high  A pawn on the first or eighth rank indexes the passed-pawn table out of bounds, read and write, from `position fen`
 
-Status: open. VERIFIED.
+Status: planned -- S208 (DEC-170). VERIFIED.
 
 Evidence. `src/evaluation.cpp:511` computes `bucket = 6 - (get_lsb_index(white_passed) >> 3)`
 and `:524` computes `bucket = (get_lsb_index(black_passed) >> 3) - 1`. Under the
@@ -575,7 +575,7 @@ other two semantic classes, with a red-first test. Clamping the bucket inside
 
 ### 2026-09-10_adversarial-F11  medium  `clean-tt` clears the transposition table without joining the search, and ThreadSanitizer reports the race
 
-Status: open. Reported by the board/UCI reviewer under TSan; the code path
+Status: planned -- S209 (DEC-170). Reported by the board/UCI reviewer under TSan; the code path
 verified here, the TSan run not re-executed.
 
 Evidence. `src/chesso.cpp:1894-1900` `command_clean_TT` calls `tt_reset`
@@ -599,7 +599,7 @@ Suggested resolution. One line: `stop_and_join_search();` at the top of
 
 ### 2026-09-10_adversarial-F12  medium  `setoption` is case-sensitive, against the spec, and the shipping binary says nothing when it refuses
 
-Status: open. VERIFIED.
+Status: planned -- S209 (DEC-170). VERIFIED.
 
 Evidence. The repository's own copy of the spec, `UCI.txt:90`: *"The name and
 value of the option in `<id>` should not be case sensitive and can inlude
@@ -629,7 +629,7 @@ comparing. The `Book File` *value* must stay verbatim: it is a path.
 
 ### 2026-09-10_adversarial-F13  medium  `Hash` is parsed with `std::stoll`, so `0x40` silently buys 1 MB, in the same function that already does this correctly
 
-Status: open. VERIFIED by reading both parse sites; the reviewer's node-count
+Status: planned -- S209 (DEC-170). VERIFIED by reading both parse sites; the reviewer's node-count
 probe is the behavioural evidence.
 
 Evidence. `src/chesso.cpp:1208-1212`:
@@ -669,7 +669,7 @@ the measurements say about whether phase one is on course.
 
 ### 2026-09-10_adversarial-F14  medium  No measured Elo has been added in nineteen days, and the next six steps in the plan's order contain no engine feature
 
-Status: open. VERIFIED.
+Status: accepted -- DEC-172, the 2026-09-11 reorder (DEC-170). VERIFIED.
 
 Evidence. The SPRT ledger, built by grepping every `plan_done/` stamp for a
 verdict: **the last kept positive verdict is S093, 2026-08-22, +10.73 +/- 6.70.**
@@ -707,7 +707,7 @@ and S183 are the two steps that would turn it from an impression into a number.
 
 ### 2026-09-10_adversarial-F15  medium  There is no parallel search anywhere in the code or the plan, and the stated end goal requires one
 
-Status: open. VERIFIED.
+Status: accepted -- DEC-175 (DEC-170). VERIFIED.
 
 Evidence. `src/chesso.cpp:1081` advertises
 `option name Threads type spin default 1 min 1 max 1`, and `:1220` logs and
@@ -729,7 +729,7 @@ with a reason, or a reserve step. Either makes it a choice on the record.
 
 ### 2026-09-10_adversarial-F16  medium  The whole non-material part of the evaluation is clamped to +/-184 centipawns, and what that costs has never been measured
 
-Status: open. VERIFIED.
+Status: planned -- S039 amended and moved before S122 (DEC-170, DEC-172). VERIFIED.
 
 Evidence. `src/evaluation.cpp:1042-1048` `evaluate_expensive()` clamps
 mobility-plus-king-safety to `+/-LAZY_EVAL_MARGIN` **before** the side-to-move

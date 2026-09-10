@@ -1,10 +1,10 @@
 id:         S134
 goal:       delete rook-on-the-seventh and passer bucket 5 by folding their weights into the piece-square tables, which is bit-exact, and shrink the parameter vector to 823
 accepts:    the engine-side identity is measured before anything is deleted -- `passed_pawn_counts()` and `piece_placement_counts()` read out of the engine, not out of `eval_model`, and compared against the signed piece-square occupancy of squares 8..15 over the whole corpus, 0 violations required and the non-zero row count reported so the check is not vacuous; the fold is **bit-exact and shown to be**, by identical scores on the seven pinned anchor positions and by `tools/search_bench.py` returning identical node counts and best moves at two depths (INV-6 discharged on node counts, no SPRT owed -- DEC-090); `PIECE_PLACEMENT_COUNT` 4 to 3 and `PASSED_PAWN_COUNT` 6 to 5, `PARAM_COUNT` 827 to 823, with `test_tuner_groups`' three partition properties green **and observed red** under a base left unshifted; `test_eval_model`'s hand cases, differential sweep and non-vacuity lists re-targeted to the narrowed features rather than deleted; `tools/feature_audit` still runs and its identity report now has nothing left to check, which is stated rather than silently dropped; the fast suite green
-touches:    src/evaluation.cpp (the two terms and their accumulation), src/eval_tables.hpp (the sixteen folded entries), tools/eval_model.hpp (widths and bases), tools/tuner_groups.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, DEV_MANUAL.md, adocs/specs.md
+touches:    src/evaluation.cpp (the two terms and their accumulation), src/eval_tables.hpp (the sixteen folded entries), tools/eval_model.hpp (widths and bases), tools/tuner_model.hpp (the phase column), tools/tuner_groups.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, DEV_MANUAL.md, adocs/specs.md
 excludes:   any change to the other three placement features, which is S135; tempo, which is S136; any refit -- this step moves numbers between two places that add up to the same score and fits nothing
 decisions:  DEC-090
-closes:
+closes:     2026-09-10_adversarial-F36
 blocks:     S135
 paused_by:
 done:
@@ -94,3 +94,18 @@ play-altering change wearing a behaviour-neutral label.
   and S133 re-shapes the tables; a per-square table keeps the degeneracy for any
   feature defined on a single rank, so S123's new terms need the same test S100
   built. `tools/feature_audit`'s identity report is where that check lives.
+
+## Amended 2026-09-11, DEC-170: the tuner recomputes the phase (F36)
+
+`2026-09-10_adversarial-F36`: `tools/tuner_model.hpp` trusts the corpus's
+`phase` column, range-checked only, instead of recomputing it with
+`eval_model::phase_of()` from the same header. Verified equal today over
+456304 rows, 0 disagreements -- and latent, because this step and S117 both
+move `phase_value`, after which every existing corpus tapers on the wrong
+phase while the range check still passes. The audit names both steps; S117's
+own file changes how the two halves travel and not the phase weights, so this
+step is the one that moves `phase_value` by its own text and carries the
+obligation -- and S117's implementer re-checks the column if the packing turns
+out to touch the phase. This step makes the tuner recompute the phase from the placement (or assert
+equality with the column and refuse on a mismatch, naming the row) before any
+fit is taken on the new value, and states which.

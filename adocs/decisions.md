@@ -9496,3 +9496,305 @@ Consequences: S039 re-decides `LAZY_EVAL_MARGIN` and owes a fresh
               `-march=native` and the model's float arithmetic is contracted
               there, which is a difference from a `portable` build that shows up
               only at exact thresholds.
+
+## DEC-170  2026-09-11  The 2026-09-10 adversarial audit is digested: eight steps, four rulings, and the low findings folded into the files that own them
+Tags:         audit, plan, correctness, originality, measurement, tools
+Context:      `adocs/audit/2026-09-10_adversarial.md`: 37 findings over the two
+              founding rules, five high. Three are defects the engine ships --
+              F08 a pre-root repetition scored as a dead draw in ordinary play,
+              F09 a stack overflow and F10 an out-of-bounds table index, both
+              from `position fen` -- and two are breaches of the founding rules:
+              F01 three tables copied from a GPL-3.0 tutorial engine, F04
+              one-sided resign adjudication in both harnesses under a comment
+              claiming the opposite. Part D found no measured Elo added in
+              nineteen days (F14) and no record of parallel search anywhere
+              (F15). Part E holds 21 low findings. The owner asked on
+              2026-09-11 that the plan be updated with the report and re-sorted
+              for the 3000 mark, and delegated every engine-related question to
+              the agent: the owner is asked only when the workstation is at
+              risk, the development's ethic would change, or a choice is not in
+              line with the goal and its restrictions. This entry and DEC-171
+              to DEC-175 are those settlements, proposed and recorded by the
+              agent and open to the owner's veto on reading.
+Decision:     By the agent under that delegation, 2026-09-11. **Eight steps,
+              each closing the findings it names:**
+              S207 -- F08, the repetition rule (DEC-173), one `--nonreg` SPRT;
+              S208 -- F09 and F10, a third refused class at the load boundary,
+              node-identical;
+              S209 -- F11, F12, F13, the UCI option surface, node-identical;
+              S210 -- F17 to F23 as one batch, plus the still-open
+              `2026-09-04_adversarial-F01` that F19 re-triggers, an SPRT only
+              if F22's census finds reach;
+              S211 -- F01, F02, F03, the originality remediation, bench-identical;
+              S212 -- F04, F05, F06, F07, F31, F32, the harness (DEC-174),
+              closed by a fixed-rounds A/A;
+              S213 -- F26, F27, F33, comments and dead API;
+              S214 -- F28, F29, F35, the tools.
+              **Four rulings without a step:** F14 is answered by the reorder,
+              DEC-172; F15 by DEC-175; F34 -- the tuner has no regularisation
+              -- is decided *against* regularisation: the two exact
+              degeneracies S100 proved are removed structurally by S134, which
+              is the better answer to a ridge than a penalty that biases every
+              other column, and the question reopens only if S126's fit shows a
+              second ridge; F23's behavioural half stays accepted as
+              `2026-08-14_test_review-F05` and S067 left it, and S210 corrects
+              the justification alone. **Six findings amend the five pending files
+              that own them**, dated sections appended today and the ids
+              added to each file's `closes:`: F16 and F25 in
+              S039, which also moves to sit directly before S122 (DEC-172);
+              F24 in S126; F30 in S199; F36 in S134; F37 in S186. **Two
+              sentences in `adocs/specs.md` are corrected today** rather than
+              scheduled: F07's claim that `./rating.sh` re-derives 2559, and
+              the `+/-25` now carries Part B's reading that the defensible
+              interval is no narrower than `+/-60` once anchor choice is
+              counted. `CLAUDE.md`'s stale "hand-written and untuned" is S211's.
+              The report's `Status:` lines move to `planned` or `accepted` with
+              the id, the one edit an audit report takes.
+Rejected:     One step per finding -- 37 steps, most of them an hour's work
+              that would each cost a completion cycle. Fixing all 23 code
+              findings before the next strength step -- the literal BUGS rule,
+              and DEC-171 is where the owner scoped it. Leaving Part E
+              unassigned because it is low -- a finding with no home is
+              re-found by the next audit, which is what DEC-138 exists to stop.
+              Regularising the tuner -- see above.
+Consequences: `adocs/plan_todo/` gains S207 to S214; ids allocated 207 to 214;
+              the Open list is DEC-172's. Nine of the report's 37 findings are
+              closed by no code change, six by documents. The next adversarial
+              re-run reads this entry before reporting any of the 37 again.
+
+## DEC-171  2026-09-11  The BUGS rule is scoped by reach: a defect in ordinary play, on the UCI surface as it is driven, or in a reported score or line is fixed first; the rest is scheduled behind the next strength step
+Tags:         workflow, bugs, plan, priority, agents-md
+Amends:       AGENTS.md `## Project rules`, BUGS
+Context:      BUGS says a found bug is fixed "before anything else starts. Not
+              noted, not scheduled." The 2026-09-10 audit produced 23 code
+              findings, sixteen of them low and none of those sixteen reachable
+              in an adjudicated match or from anything a GUI sends. Read
+              literally, the rule puts a day of edge cases -- a 256-ply
+              shuffle, a 4999-ply `position` line, `movestogo 0`, a custom
+              command's race -- ahead of the first strength step in nineteen
+              days (F14). The owner's instruction of 2026-09-11: "the bugs are
+              important to solve but Elo is more important unless the bug is
+              relevant or can impact engine evaluation like UCI bug or PV bugs."
+Decision:     By the owner, 2026-09-11, recorded and worded by the agent. A
+              found defect is fixed before the next play-altering change starts
+              when it is **(a)** reachable in ordinary play -- a game a harness
+              or a GUI produces -- or **(b)** on the UCI surface as GUIs and
+              harnesses drive it, including a crash or corruption from
+              `position`, `setoption` or `go` with the tokens they send, or
+              **(c)** able to move a reported score, best move or line. Any
+              other defect -- one that needs an illegal position, an
+              implausible input length, a custom command, or that lives in a
+              comment or in code nothing calls -- is a step scheduled as filler
+              behind the next strength step, and it is not carried past the
+              block boundary it sits in. BUGS in `AGENTS.md` carries the scope
+              in one added sentence. Applied to the audit: S207 (F08, ordinary
+              play) is first; S208 (F09, F10: a crash and a write off the end
+              of a table from `position fen`) and S209 (F11 to F13: the option
+              surface) land before S024; S210 and S213 sit behind S109 as the
+              block boundary's daytime filler, beside S194, and S214 -- tools
+              only, no `src/` -- is S024's filler.
+Rejected:     Leaving BUGS unamended and reordering anyway -- "never deviate
+              silently" is the rule the rule sits under. Dropping the low
+              findings -- they are still defects and still fixed; only their
+              place in the order moves. Scoping by severity word alone -- the
+              audit's "low" is a judgement; reach is a test.
+Consequences: A run's pre-registration lists, by finding id, the known defects
+              DEC-171 has scoped behind it, so a verdict taken on a tree with
+              known unreachable defects says so on its face. The block
+              boundary after S109 (S199's first point) is where S210, S213 and
+              S194 must be closed by, not merely scheduled; S214 closes beside
+              S024.
+
+## DEC-172  2026-09-11  The Open list is re-sorted for the 3000 mark: the owner's bug criterion first, then strength steps as the night runs, with the document lane as filler beside them; the coordinator chains through the night, and S151 is a fixed-rounds estimate at the block boundary
+Tags:         plan, priority, measurement, machine, scheduling, dec-144, dec-113, dec-155, s151, s039
+Amends:       DEC-144's order; S151's `accepts:` (design (iii)); S039's place
+Context:      F14: the last kept positive verdict is S093 on 2026-08-22, the
+              first strength step sat seventh in the order behind six
+              document and test entries, and 8 of 57 open steps touch no
+              `src/`. The owner asked on 2026-09-11 for the plan to be
+              prioritised for 3000 Elo within the project's constraints, said
+              the first entry must be one that holds the machine for a long
+              time because the review is the last thing before sleep and the
+              next word will be "next", and delegated engine-related choices to
+              the agent. S151's pair had been the owner's open question since
+              DEC-144.
+Decision:     The priority is the owner's; the order and the rulings below are
+              the agent's under the 2026-09-11 delegation.
+              **The order.** S207 first: the one high finding that fires in
+              ordinary play, and a `--nonreg` run priced at 4 to 18 hours --
+              the night's run. Behind it, as filler that owns no run and
+              touches no `src/`, the instrument lane's four document steps --
+              S182 and S183, which F14 named as the two that would turn the
+              feasibility claim into a number, and S185 and S181, which feed
+              them -- in dependency order. Then the two bug steps the
+              owner's criterion selects, S208 and S209, node-identical daytime
+              work. Then S024, the largest ordering gain surveyed, two night
+              runs; S214 as its filler. Then S211 (originality), S151, S212
+              (its A/A is the last harness change before the next verdict),
+              S109, S199's first drift point, and the three filler steps the
+              boundary closes -- S210, S213, S194. The search block continues
+              in DEC-133's order from S091; block 2, block 3 and block 4 stand,
+              with one move: **S039 sits directly before S122**, its consumer,
+              because F16 showed that sizing the margin before S121, S123,
+              S125 and S101 change the very sum it clamps would leave S122
+              inheriting a stale number.
+              **The reading rule** of DEC-144 stands and gains two clauses. A
+              run that ends while the owner is away is completed and the next
+              run-owning entry is taken without waiting -- the list is the
+              authority and "next" is a convenience. Between the verdicts of a
+              multi-verdict step, a `src/` entry that is behaviour-neutral on
+              node counts may land, because it cannot contaminate the second
+              verdict's attribution; a play-altering one may not.
+              **S151** takes design (iii) of its own section 7: S085's vector
+              against `3488506` in a fixed 1000-pair match at `32+0.32`,
+              `Hash=64` (DEC-088's pressure invariant held), read as an
+              estimate with its interval, about 3.4 hours -- under DEC-155's
+              line, so a daytime run while the agent writes the next step's
+              code. Its `accepts:` is amended from "re-tested" to "measured ...
+              read as an estimate", the amendment recorded in its file. The
+              standing rule the step writes is the block-boundary form: the
+              longer-control reading is one fixed 1000-pair match at `32+0.32`
+              taken beside S199's drift point at each block boundary, not a
+              re-take per verdict, which is the only scope that meets the
+              accepts' own budget sentence. `Hash=64` and ratio 4 answer its
+              questions 2 and 6; extensions are inside the scope (question 4)
+              because the record names them; S148's verdict owes no
+              retroactive re-take (excludes).
+Rejected:     S024 first with F08 unfixed -- the owner's criterion and BUGS
+              both put an ordinary-play defect ahead of a feature, and the
+              defect moves reported scores. S151 as design (i), a `{-5, 0}`
+              SPRT of 44 to 72 hours -- three days of the binding constraint
+              for a number that adds no strength. Keeping S194 at the head --
+              a test of a path no measurement has ever exercised. Dropping
+              S182 and S183 -- F14 says they are the two steps that would turn
+              "the midpoint clears 3000" from an impression into a number, and
+              they cost the machine nothing. Interleaving block 2's speed
+              steps into the search block as daytime filler -- each needs the
+              idle machine for its timing, and the order would then encode a
+              daily cadence rather than dependencies.
+Consequences: `adocs/plan.md`'s Open list is rewritten; `status.md` names the
+              night's run. The cost and Elo paragraphs of `plan.md` stand as
+              written until S182 and S183 rewrite them, now entries 4 and 5.
+              S151's throughput assumption (584 games an hour at `32+0.32`) is
+              checked in its first hour and the ceiling is set from the
+              pricing. S199's reading rule gains the F30 term in its file.
+
+## DEC-173  2026-09-11  A repetition is a draw in the tree when the earlier occurrence lies strictly after the root, or when it is a third occurrence; the test that pinned two-fold-anywhere is re-stated, not relaxed
+Tags:         search, draw, repetition, testing, s207
+Context:      `2026-09-10_adversarial-F08`. `is_position_repeated` returns true
+              on the first hash match anywhere in the history window, and
+              `negamax_at` scores `DRAW_SCORE` on it above the root. A position
+              that occurred once before the root and recurs inside the tree is
+              therefore a dead draw to the search. Through `chess.engine` at
+              `go depth 10` the same board reads `cp 0` on 4249 nodes with the
+              history `g1f3 g8f6 f3g1` and `-900` on 325965 nodes without it;
+              python-chess says no draw exists and stockfish scores it `-687`.
+              `tests/test_search.cpp` "the losing side takes an available
+              repetition" asserts the two-fold-anywhere convention on a
+              position with one prior occurrence, and its comment states the
+              mechanism as intended. The TESTS rule reserves re-stating a test
+              to the owner; the owner delegated engine-related questions to the
+              agent on 2026-09-11.
+Decision:     By the agent under that delegation. **The convention is the
+              published refined one** (CPW *Repetitions*; Stockfish PR #925,
+              read as prose): inside the tree a first recurrence is a draw,
+              because the side that repeated can repeat again past the
+              horizon; a recurrence of a position from before or at the root is a
+              draw only when it is the **third** occurrence, which is the
+              occurrence FIDE 9.2 lets a player claim, because the side to
+              move at the root chooses again and the opponent cannot force the
+              third alone. The root's history size is the boundary and travels
+              in `search_state_t`. **The test is re-stated**: its precondition
+              becomes a position that has already occurred twice before the
+              root, so the property it asserts -- a draw score beats a lost
+              position -- is unchanged and its old precondition becomes the
+              red-first case for the new rule. That is a re-statement with the
+              property preserved and the precondition strengthened, not a
+              relaxation, and this entry is the record the TESTS rule wants
+              before an agent touches it. The change alters play and takes one
+              `--nonreg` SPRT (S207); a zero is kept with the reason stated,
+              because the oracle contradicts the old score on a position from
+              ordinary play and the SPRT is the rule, not the motive.
+Rejected:     Keeping two-fold-anywhere -- older engines used it, it is the
+              weaker convention, the one engine that A/B'd the refinement
+              measured a gain, and this engine's own oracle refutes it on the
+              reproduction. Deleting the test -- the property is worth keeping.
+              Calling the fix behaviour-neutral -- node counts move wherever a
+              pre-root two-fold was reached, so INV-6's neutral half is not
+              available.
+Consequences: S207 owns the change, the tests and the run. `adocs/specs.md`'s
+              search row states the rule when S207 lands. Every earlier game
+              analysis that read `cp 0` on a pre-root repetition was reading
+              this defect, `tools/analyse_game.py` included.
+
+## DEC-174  2026-09-11  Resign adjudication is two-sided in both harnesses, the score stays 400, and a fixed-rounds A/A re-calibrates the regime
+Tags:         measurement, harness, adjudication, rating, s212, dec-143, dec-077
+Context:      `2026-09-10_adversarial-F04`. `fastchess.sh` and `rating.sh` pass
+              `-resign movecount=3 score=400` without `twosided`, which the
+              installed fastchess defaults to false; `rating.sh`'s comment
+              claims both are two-sided and names that as the protection the
+              rating run relies on. Counted from the tracked PGNs: 76 % of the
+              A/A's games and 84 % of the S088 rating run's ended by
+              adjudication; one-sided resignations were 11 of 676 decisive
+              adjudications in self-play (1.6 %) and 514 of 2627 (19.6 %) in
+              the rating run, where chesso conceded alone 311 times and its
+              opponents 203, opponent-specific in direction and correlated
+              with the anchor's solved rating at r = -0.505 on n = 5.
+Decision:     By the agent, as measurement design under the 2026-09-11
+              delegation. `twosided=true` in **both** harnesses. In self-play
+              the throughput cost is bounded by the 1.6 % of adjudications that
+              were one-sided, so it is close to free, and it removes the
+              hazard the evaluation block creates when a candidate's scale
+              moves (S039, S122, S126): under one-sided adjudication the side
+              with the larger scale resigns first in equal positions. In the
+              rating harness it is the property the comment already promised.
+              `score=400` and `movecount=3` stay: 600 is fishtest's setting and
+              the audit's note, and moving it is a throughput trade that gets
+              its own entry if wanted. The change is followed by a 1000-game
+              fixed-rounds A/A read with `adocs/data/S198_pairs.py` (DEC-143),
+              with games an hour recorded so the cost is a number. F04's
+              hypothesis about the anchor spread is recorded as a second
+              candidate beside DEC-077's time-control candidate, to be read
+              off S152's two-sided run.
+Rejected:     Keeping one-sided for throughput -- the cost is 1.6 % of
+              adjudications, and S105 already found the book bought x1.20 for
+              nothing at the pair level; there is no throughput worth an
+              instrument that is wrong against foreign scales. Moving to 600
+              in the same step -- two harness changes under one A/A cannot be
+              priced apart.
+Consequences: S212. S152's gauntlet is two-sided where S088's was not, and its
+              stamp says so beside the comparison. `rating.sh`'s comment
+              becomes true by the change and not by rewording.
+
+## DEC-175  2026-09-11  Parallel search is phase two: the 1CPU list is phase one's arena, and no SMP step exists until the mark
+Tags:         search, threads, smp, phase-two, dec-089, dec-014, dec-138
+Context:      `2026-09-10_adversarial-F15`. `Threads` is advertised `min 1 max
+              1` and honoured honestly; no step, reserve entry or decision
+              anywhere names SMP, Lazy SMP or a parallel search, while the end
+              goal in `CLAUDE.md` and `specs.md` is the strongest CPU engine,
+              which no single-threaded engine is. Phase one's target is the
+              CCRL Blitz **1CPU** list (DEC-089), which single-threaded play
+              satisfies, so nothing is wrong today; the gap is that the framing
+              made a structural requirement of the end goal invisible rather
+              than deferred.
+Decision:     By the agent under the 2026-09-11 delegation. Parallel search is
+              **phase two**, entered by the decision that opens phase two and
+              not before. The form, when it comes, is the published default --
+              Lazy SMP: one shared transposition table, one `search_state_t`
+              per thread, threads differing by depth offset and by the noise of
+              a shared table -- adapted from the literature and never copied
+              (DEC-016, DEC-104). One constraint binds phase one now: a table
+              added to the search states which of the two it is, per-thread or
+              shared, at its declaration -- the S093-style hoisted tables, the
+              S024 continuation table, S099's correction table -- so the move
+              to threads is a decision about each table and not a rewrite of
+              them. A future audit that finds SMP absent cites this entry, the
+              DEC-138 form.
+Rejected:     A reserve step -- the reserve is for steps with evidence at a
+              stated band, and the published figure (about +180 at LTC for
+              eight threads, DEC-085's record) is a phase-two rating, not a
+              phase-one one. Building it now -- the 1CPU list does not reward
+              it and the machine has twelve threads to spend on verdicts, all
+              of which it does spend.
+Consequences: `adocs/specs.md`'s Open items carry one line. S024, S099, S110
+              and S111 state the per-thread-or-shared property when they land.
