@@ -147,7 +147,7 @@ std::string print_stats_headline()
      << std::setw(width) << "|en_passant"
      << std::setw(width) << "|castles"
      << std::setw(width) << "|promotions"
-     << std::setw(width) << "|checks"
+     << std::setw(30) << "|checks"
      << std::setw(width) << "|discovery"
      << std::setw(width) << "|double"
      << std::setw(width) << "|checkmates";
@@ -167,7 +167,7 @@ std::string print_stats_headline_second_line()
      << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real"
-     << std::setw(width) << "|expected real"
+     << std::setw(30) << "|expected      real"
      << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real";
@@ -464,9 +464,9 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
   }
 
   if (expected.checks.has_value()) { 
-    ss << (column_matches(expected.checks, real.checks) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.checks.value())) << std::setw(width) << real.checks << RESET;
+    ss << (column_matches(expected.checks, real.checks) ? GREEN : RED) << std::setw(15) << std::string("|").append(STR(expected.checks.value())) << std::setw(15) << real.checks << RESET;
   } else {
-    ss << std::setw(width) << "| - " << std::setw(width) << real.checks;
+    ss << std::setw(15) << "| - " << std::setw(15) << real.checks;
   }
 
   if (expected.discovery_checks.has_value()) { 
