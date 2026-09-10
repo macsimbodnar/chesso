@@ -318,8 +318,8 @@ set_tests_properties(test_spsa_driver PROPERTIES LABELS "fast" TIMEOUT 120)
 # mutant behind, a verdict on the wrong branch or a missing marker, and every
 # one of those resolves in under a second. Registered on DEC-118's argument: the
 # moment somebody next needs this tool is the moment they are adding a pruning
-# rule and want to know their new test bites (DEC-141 clause 2). 21 cases,
-# ~1.3 s.
+# rule and want to know their new test bites (DEC-141 clause 2). 24 cases,
+# ~1.6 s.
 add_test(NAME test_mutation_check
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py)
 set_tests_properties(test_mutation_check PROPERTIES LABELS "fast" TIMEOUT 60)

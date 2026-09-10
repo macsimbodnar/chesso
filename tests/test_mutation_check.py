@@ -33,6 +33,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -68,6 +69,7 @@ TEST CASE:  a fabricated case the stub reports
 The following tests FAILED:
 	  1 - test_x (Failed)
 	  2 - test_y (Timeout)
+FAIL: a line ctest prints after the last test block, belonging to no binary
 Errors while running CTest
 EOF
   exit 8
@@ -138,6 +140,10 @@ done
 """
 
 CMAKE = r"""#!/bin/sh
+if grep -q SLOW_BUILD "$MUT_SRC"; then
+  sleep 30
+  exit 0
+fi
 if grep -q WILL_NOT_COMPILE "$MUT_SRC"; then
   echo "/sandbox/src/x.cpp:2:5: error: 'guard_one' declared void"
   exit 2
@@ -191,6 +197,15 @@ class Sandbox:
         with open(path, "w") as handle:
             handle.write(body)
         return path
+
+    def spawn(self, mutants, target=None, extra=()):
+        """Popen rather than run: a case that signals the tool needs it alive."""
+        env = dict(os.environ)
+        env["PATH"] = self.stubs + os.pathsep + env["PATH"]
+        env["MUT_SRC"] = self.src
+        return subprocess.Popen(
+            [sys.executable, TOOL, mutants, target or self.worktree, *extra],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
 
     def run(self, mutants, target=None, extra=()):
         env = dict(os.environ)
@@ -256,6 +271,17 @@ m("C01_ctest_broken", "src/x.cpp", "sandbox", "ctest exits non-zero having run n
 STILLBORN = """
 m("D01_stillborn", "src/x.cpp", "sandbox", "the mutant does not compile",
   ("int guard_one = 1;", "int guard_one = 1;  // WILL_NOT_COMPILE"))
+"""
+
+PAIR_BREAKS_LATER_PAIR = """
+m("P01_two_pairs", "src/x.cpp", "sandbox", "pair 0 makes pair 1's anchor ambiguous",
+  ("int guard_one = 1;", "int guard_one = 1; int guard_two = 2;"),
+  ("int guard_two = 2;", "int guard_two = 3;"))
+"""
+
+SLOW_BUILD = """
+m("W01_slow_build", "src/x.cpp", "sandbox", "a build long enough to signal during",
+  ("int guard_one = 1;", "int guard_one = 1;  // SLOW_BUILD"))
 """
 
 AMBIGUOUS = """
@@ -463,6 +489,47 @@ class MutationCheckTest(unittest.TestCase):
         self.assertNotIn("S01_bench_moved", proc.stdout)
 
     # -- the tree it borrows ------------------------------------------------
+
+    def test_a_pair_that_breaks_a_later_pair_leaves_nothing_behind(self):
+        """validate() checks each anchor against the pristine file, so a mutant
+        whose pair 0 makes pair 1 ambiguous passes it and fails while applying,
+        with pair 0 already written. The revert has to cover that."""
+        proc = self.box.run(self.box.mutant_file(PAIR_BREAKS_LATER_PAIR))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("stopped being unique", proc.stdout)
+        self.assertEqual(self.box.worktree_dirty(), "")
+        self.assertIn("MUTATION-RUN-FAILED", last_line(proc.stdout))
+
+    def test_sigterm_reverts_the_mutant_before_exiting(self):
+        """A detached run is stopped with `kill`, and Python's default SIGTERM
+        exits without unwinding: the mutant would stay in the worktree and every
+        later run would refuse at the clean-src check."""
+        proc = self.box.spawn(self.box.mutant_file(SLOW_BUILD))
+        self.addCleanup(proc.kill)
+        deadline = time.time() + 30
+        while time.time() < deadline:
+            with open(self.box.src) as handle:
+                if "SLOW_BUILD" in handle.read():
+                    break
+            time.sleep(0.05)
+        else:
+            self.fail("the mutant was never applied")
+        proc.terminate()
+        output = proc.communicate(timeout=30)[0]
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(self.box.worktree_dirty(), "")
+        self.assertIn("MUTATION-RUN-FAILED", output)
+
+    def test_the_summary_after_the_last_test_is_not_its_assertion(self):
+        """ctest's trailing block follows the last test with no `Start` line to
+        close it, so a `FAIL:` or `ERROR:` line there is read as the last
+        binary's own -- and a binary with no output of its own, a ceiling hit
+        here, has nothing to shadow it."""
+        proc = self.box.run(self.box.mutant_file(TIMEOUT_PLUS_FAIL))
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertIn("[test_y] -  |  (no assertion text in the log)",
+                      proc.stdout)
+        self.assertNotIn("belonging to no binary", proc.stdout)
 
     def test_worktree_is_clean_after_every_mutant(self):
         both = KILLED + BENCH_SURVIVOR

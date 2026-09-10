@@ -46,6 +46,21 @@ Updated: 2026-09-10, by hand.
   its own section 10 question 3 is answered there -- and the table is evidence
   under `adocs/data/` rather than living only in a stamp. The self-test is
   registered, which is why `tests/` joined `touches:`.
+- **S196's Tier-1 fast check found three real defects in the tool and all three
+  are fixed**, in the commit after it -- "Close the three defects S196's fast
+  check found". Each has a case, each observed red against the committed tool
+  first. (1) `apply_mutant` sat outside the `try` that reverts,
+  so a mutant whose pairs interact -- pair 0 making pair 1's anchor ambiguous --
+  fails while applying with pair 0 already on disk, and every later run refuses
+  at the clean-src check until somebody reverts by hand. (2) **`SIGTERM` skipped
+  every `finally`**, which is what happened when the pre-fix pass was stopped
+  today: the worktree was left with `src/search.cpp` mutated and was cleaned by
+  hand without the defect being recognised. It is caught and raised now. (3)
+  ctest's trailing summary has no `Start` line to close it, so a `FAIL:` there
+  was reported as the last binary's own assertion -- visible only when that
+  binary has no output of its own, which a ceiling hit is. **The 39 of 39 pass
+  is unaffected**: no kill line in it carries summary text, and none of the
+  three can move a verdict. Self-test 21 cases to **24, 1.61 s**.
 - **What the next step should know.** A `--only M<nn>` row costs 168 s including
   the baseline, which is what DEC-141 clause 2 charges a completing step. Do not
   run a pass beside a match. The worktree recipe needs a line `fastchess.sh`'s

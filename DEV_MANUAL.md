@@ -1564,10 +1564,17 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
 throwaway git repository, a four-line `src/x.cpp`, and `cmake`, `ctest` and the
-engine as stubs on PATH. Twenty-one cases in about 1.3 s, and it is what catches
-an anchor counted wrong, a revert that leaves a mutant behind, a verdict on the
-wrong branch or a missing marker. Each was observed red under a cut to the guard
-it names before it was kept -- the tool held to its own rule (DEC-141).
+engine as stubs on PATH. Twenty-four cases in about 1.6 s, and it is what
+catches an anchor counted wrong, a revert that leaves a mutant behind, a verdict
+on the wrong branch or a missing marker. Each was observed red under a cut to
+the guard it names before it was kept -- the tool held to its own rule
+(DEC-141). Three of them come from S196's own fast check and are worth knowing
+before you edit the loop: a mutant whose pairs interact can fail while being
+applied, with the first pair already on disk, so `apply_mutant` sits inside the
+`try` that reverts; `SIGTERM` is caught and raised, because Python's default
+disposition exits without unwinding and a detached run is stopped with `kill`;
+and ctest's trailing summary belongs to no binary, so the chunk that collects a
+failing test's output ends at it rather than at end of file.
 
 ## Format
 

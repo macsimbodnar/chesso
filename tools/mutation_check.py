@@ -66,6 +66,7 @@ exit path, success and failure both (WATCHERS rule), so it can be detached.
 import argparse
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -98,6 +99,21 @@ SEARCH_BENCH_RE = re.compile(
 
 class Refused(Exception):
     """A precondition the run will not proceed without."""
+
+
+class Terminated(Exception):
+    """A signal, raised so the unwind reverts the mutant on the way out.
+
+    Python's default SIGTERM disposition exits without unwinding, so a plain
+    `kill` on a detached run skips the per-mutant `finally` and leaves the
+    worktree mutated -- every later run then refuses at require_clean_src until
+    somebody reverts it by hand. Observed on 2026-09-10, stopping a pass that
+    was running the wrong version of this tool. SIGINT already unwinds.
+    """
+
+
+def raise_on_signal(signum, _frame):
+    raise Terminated(f"signal {signum}")
 
 
 # --------------------------------------------------------------------------
@@ -367,6 +383,12 @@ def extract_kills(output, failing_tests):
             current = start.group(1)
             chunks.setdefault(current, [])
             continue
+        # The last test has no `Start` after it, so without this its chunk runs
+        # into ctest's own summary and any trailing `ERROR:` or `FAIL:` line
+        # there would be reported as that binary's assertion.
+        if CTEST_SUMMARY_RE.search(line) or line.startswith("The following tests"):
+            current = None
+            continue
         if current is not None:
             chunks[current].append(line)
 
@@ -577,8 +599,12 @@ def main(argv=None):
     rows = []
     for mut in chosen:
         mutant_started = time.time()
-        apply_mutant(worktree, mut)
+        # Inside the try, not before it: a mutant's pairs are applied in
+        # sequence and an earlier one can move a later anchor, so apply_mutant
+        # can raise with pair 0 already on disk. Outside, that mutant stays in
+        # the worktree and every later run refuses at require_clean_src.
         try:
+            apply_mutant(worktree, mut)
             code, first_error = build(
                 build_dir, args.jobs, os.path.join(log_dir, mut["id"] + "_build.log"))
             row = dict(id=mut["id"], klass=mut["klass"], note=mut["note"],
@@ -659,6 +685,7 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, raise_on_signal)
     try:
         status = main()
     except Refused as refused:
