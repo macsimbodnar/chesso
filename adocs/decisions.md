@@ -5018,6 +5018,27 @@ Amended:      2026-09-11 by S185 -- the two ledgers this decision rests on are
               **+25.38 +/- 10.40**, v32 king proximity in the passed-pawn term
               **+22.27 +/- 9.86**. Neither ledger's numbers moved; what changed
               is that the tree now says where they come from.
+Amended:      2026-09-11 by S181 -- **every Lynx figure this decision and the
+              steps it ruled on cite is banded**, in
+              `adocs/data/S181_lynx_bands.md`: each pull request's `merged_at`
+              from the GitHub API against the two releases it falls between and
+              the CCRL Blitz 1CPU rating of each, on the list computed
+              2026-09-05 and read 2026-09-11. Ruling (b)'s two premises do not
+              survive it. **"+11.4 at ~2850" was measured at 3224-3291**
+              (#1662, between v1.9.1 and v1.10.0) -- above the "~3100" that
+              demoted S110 and S111, so the criterion separated nothing, which
+              is `2026-09-04_plan_review-F02` and DEC-133's reason for moving
+              S099 to the reserve head. **"Capture history failed four SPRTs at
+              ~2600 (Lynx)" is withdrawn**: no source was ever located for the
+              four, and Lynx *merged* capture history as #634 on 2024-02-02
+              into v1.3.0 at a banded 2653. S023's demotion stands on the
+              figure that traces, Weiss #428's -4.17 +/- 4.83 STC against
+              +3.66 +/- 3.29 LTC, measured by an engine CCRL rates 3055.
+              Ruling (c)'s S098 groupings move too: cutnode, !improving and
+              Lynx's PV-min-moves patch are 3119-3138 and TT-capture and
+              deeper/shallower 3138-3224, where the file read high-2800s and
+              "~3000-3100". DEC-176 records what all of that changes, which is
+              the record and not the order.
 Context:      The 2026-08-19 review (DEC-081 to DEC-086) was itself reviewed
               against per-patch SPRT records of engines that passed through this
               band -- Weiss, Lynx, Stash, Berserk and Ethereal commit logs and
@@ -9819,3 +9840,82 @@ Rejected:     A reserve step -- the reserve is for steps with evidence at a
               of which it does spend.
 Consequences: `adocs/specs.md`'s Open items carry one line. S024, S099, S110
               and S111 state the per-thread-or-shared property when they land.
+
+
+## DEC-176  2026-09-11  The Lynx bands are corrected and the record moves, not the order: S023's Lynx evidence is withdrawn, S098's node-type layers become 3100-band, and no step changes position
+Tags:         planning, measurement, sources, dec-087, dec-133, dec-019
+Amends:       DEC-087 (b) and (c), whose band words this replaces
+Context:      `2026-09-04_plan_review-F02`. DEC-087 ruled on the
+              correction-history family and on S098's layers with band words
+              nothing in the tree sourced -- "~2600", "high-2800s", "~2850",
+              "only above ~3100". S181 banded every Lynx figure those rulings
+              cite: each pull request's `merged_at` from the GitHub API
+              against the two releases it falls between, and the CCRL Blitz
+              1CPU rating of each release on the list computed 2026-09-05,
+              read 2026-09-11 (`adocs/data/S181_lynx_bands.md`). Three of the
+              words were wrong by 180 to 380 points and one claim was wrong in
+              kind:
+                (i) "+11.4 at ~2850" (#1662) was measured at **3224-3291**,
+                    above the "~3100" that demoted S110 and S111, so DEC-087
+                    (b)'s criterion separated nothing. DEC-133 already
+                    answered this by moving S099 to the reserve head.
+                (ii) "Capture history failed four SPRTs at ~2600 (Lynx)" has no
+                    source, and Lynx **merged** capture history as #634 on
+                    2024-02-02 into v1.3.0 at a banded 2653; the
+                    closed-unmerged capture-history pull requests are later
+                    refinements dated 2024-09 onward at 2925 and above.
+                (iii) S098's cutnode (#1233), !improving (#1135) and
+                    PV-min-moves (#1230) are **3119-3138**, and TT-capture
+                    (#1529) and deeper/shallower (#1535) **3138-3224**, where
+                    the file read high-2800s and "~3000-3100".
+                (iv) S109's Lynx LMP band (#512) is **2420-2430**, 180 points
+                    *below* the "~2600" written, which strengthens that step's
+                    sub-3000 claim rather than weakening it.
+              S097 recorded the discrepancy as a scope concern on 2026-08-19
+              against Lynx's own README and could not resolve it; the list
+              agrees with the README to within a few points, so the README was
+              right and the repository's banding of that era was about 300 low.
+Decision:     By the agent under the owner's delegation of 2026-09-11
+              (engine-related questions are the agent's; the owner is asked
+              only when the workstation is at risk, the ethic would change or
+              the goal is not served). **The corrected bands change the record
+              and no step's position.** Specifically:
+              (a) S023's Lynx sentence is **withdrawn as unverified** and the
+                  demotion stands on the figure that traces -- Weiss #428,
+                  -4.17 +/- 4.83 STC against +3.66 +/- 3.29 LTC, measured by an
+                  engine CCRL Blitz rates 3055, which is above chesso's target.
+                  A reserve position argued from a sourced figure at a higher
+                  band is better founded than one argued from four runs nobody
+                  can find, so S023 does not move.
+              (b) S098 stays **one step, three verdicts, in that order**, in
+                  the main order. History scaling stays first as the only layer
+                  with evidence in this engine's band; node type and
+                  post-re-search keep their places because (d) reads the
+                  re-search (c) produces. What changes is what the file may
+                  claim: (c) and (d) rest on 3100-band evidence, a zero from
+                  either is an expected outcome, and neither may be argued for
+                  on "it worked below 3000".
+              (c) S099, S110 and S111 stay where DEC-133 put them. The
+                  re-banding is the *reason* DEC-133 was right, not a new
+                  question.
+              (d) Every band word in a step file is now either a range from the
+                  table with its read date, or absent. A band figure chooses
+                  bounds and never a conclusion (DEC-019).
+Rejected:     Re-promoting S023 out of the reserve because its Lynx evidence
+              evaporated -- the Weiss figure is the stronger evidence and it
+              points the same way; a promotion would spend a verdict on a
+              technique whose only sourced measurement is negative at short
+              control above this band. Demoting S098's node-type layer to the
+              reserve on its corrected 3119-3138 band -- late move reduction is
+              the single most expensive feature in the Ethereal ledger
+              (-248.59 on removal) and its refinement is where a 3000-mark
+              engine's search work is; the band changes the expected magnitude,
+              not whether the work belongs. Re-reading the CCRL list at each
+              future citation -- it drifts 0 to 4 points in a fortnight, so the
+              read date beside the figure is the discipline and a re-read is
+              not owed.
+Consequences: S181's stamp carries the table. DEC-087 gains a second `Amended:`
+              line naming it. S097's band caution and its scope concern 1 are
+              closed in the README's favour; S098's "honest split" is redrawn;
+              S099, S109, S110, S023 and S132 carry ranges. `2026-09-04_plan_review-F02`
+              is closed by S181.

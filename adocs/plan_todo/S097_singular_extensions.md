@@ -92,7 +92,8 @@ LTC at its introduction release.
 - Ethereal aa36bc09 (2018-04, ~10.x, low-3100s): three stacked patches —
   basic SE +6.23, don't stack check extension on it +3.46, threshold 8→10
   **+12.68**.
-- Lynx #1731 (2025-06): **+20.53 +/-8.48** LTC, branch named
+- Lynx #1731 (merged 2025-06-08, band **3224-3291**, S181):
+  **+20.53 +/-8.48** LTC, branch named
   "se-04-7-no-tt-cutoffs"; v1.10.0 shipped SE plus double extension (#1742
   +18.33, margin 15), negative extension (#1743 +11.99), multicut (#1751
   +6.21) and a `ply < 3 * depth` cap (#1768) in one release.
@@ -110,12 +111,21 @@ refinements, not this step's: negative extensions, double/triple extensions
 (Ethereal 464fa339 **+10.82**), ttPv singularBeta bonus (Lynx #2331 +4.95 —
 needs a PV flag bit tt_entry_t does not carry, S098's ttPv wall).
 
-**Band caution, recorded not resolved.** Lynx's own README rates v1.8.0 at
-**3144** and v1.10.0 at **3293** CCRL Blitz where this repo's S098 trace and
-DEC-087 place that era high-2800s / "~2850". If the README is right, Lynx's
-SE block is 3150-3300 evidence, not sub-3000 — carried into the split above —
-and DEC-087's Lynx-based banding (S099's "+11.4 at ~2850" included) reads
-~300 high. Flagged for the owner; not this step's premise either way.
+**Band caution, resolved 2026-09-11 by S181: the README was right.** This
+paragraph flagged on 2026-08-19 that Lynx's own README rates v1.8.0 at **3144**
+and v1.10.0 at **3293** CCRL Blitz where S098's trace and DEC-087 placed that
+era at high-2800s / "~2850", and that if the README were right, DEC-087's
+Lynx-based banding read about 300 high. It did. The CCRL Blitz list computed
+2026-09-05 and read 2026-09-11 gives **v1.8.0 3138, v1.9.0 3224, v1.10.0
+3291** on the 1CPU rows, agreeing with the README to within a few points
+(`adocs/data/S181_lynx_bands.md`). So **Lynx's singular-extension block is 3224-3291 evidence, not
+sub-3000** — #1731, #1743 and #1751 all merged between v1.9.1 and v1.10.0 —
+and the split above says so. The reading this step's case rests on is
+unchanged, because the sub-3000 introduction it names is Berserk #42 at ~2450
+and the band evidence is Weiss, Berserk and Stash; what moved is that the Lynx
+block no longer supports it at this engine's band. S099's "+11.4 at ~2850" is
+3224-3291 by the same table, which is `2026-09-04_plan_review-F02` and DEC-133's
+reason for moving S099 to the reserve head.
 
 ### 2. Shape for chesso
 
@@ -380,12 +390,14 @@ dropped it at ~3000). A stalled V2 near +3 straddles the {0,5} bounds
 
 ### Scope concerns
 
-1. **The Lynx band discrepancy** (§1): Lynx's README claims 3144/3225/3293
-   CCRL Blitz for v1.8.0/v1.9.0/v1.10.0 where DEC-087 and S098's trace used
-   high-2800s/"~2850" for that era. S097's case survives either reading
-   (Weiss, Berserk, Stash carry the band evidence), but DEC-087's
-   Lynx-anchored banding — S099's headline number included — may sit ~300
-   low. Owner's to re-read; recorded here because this pass found it.
+1. **The Lynx band discrepancy** (§1) — **closed 2026-09-11, S181, in the
+   README's favour.** The CCRL Blitz list computed 2026-09-05 gives
+   **3138/3224/3291** for v1.8.0/v1.9.0/v1.10.0 against the README's
+   3144/3225/3293, so DEC-087's Lynx-anchored banding did sit about 300 low
+   and S099's headline number was measured at 3224-3291. S097's case survives
+   as this pass predicted, on Weiss, Berserk and Stash; DEC-133 moved S099 to
+   the reserve head and DEC-176 records what the re-banding does and does not
+   change. `adocs/data/S181_lynx_bands.md` is the table.
 2. **Negative and double extensions measured +11.99 and +18.33 LTC at
    Lynx's introduction release** — large enough that a follow-up step (not
    a smuggled third change; the accepts prices exactly two verdicts) is

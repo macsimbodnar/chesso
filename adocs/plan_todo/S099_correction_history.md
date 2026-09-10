@@ -95,14 +95,24 @@ use -- the layering that stops a correction compounding through storage.
 
 **The traced +11.4**: Lynx PR #1662 "Pawn correction history / corrhist",
 merged 2025-04-15, **+11.35 +/-5.16 over 7502 games** at 8+0.08 1t 32MB, LLR
-2.94 [0.00, 3.00] -- DEC-087's "+11.4 at ~2850". PR #1663 "no king in hash"
+2.94 [0.00, 3.00] -- DEC-087's "+11.4 at ~2850", **and ~2850 is wrong by about
+380 points**. S181 banded it: the merge falls between v1.9.1 (2025-04-05, not
+on the CCRL list) and v1.10.0 (2025-06-29), the nearest rated release before it
+being v1.9.0 (2025-03-11), so the band is **3224 to 3291** CCRL Blitz 1CPU on
+the list computed 2026-09-05 (`adocs/data/S181_lynx_bands.md`). PR #1663 "no king in hash"
 then removed the king from the key: **+3.27 +/-2.43 over 33028 games** on top,
 and **+12.09 +/-5.37** measured alone. So the measured endpoint is a **pure
 pawn key**, and chesso goes straight there. Why pawn-keyed first: the pawn
 structure is the position feature most stable across a subtree, the origin
-term was pawn-keyed, SF's introduction chose it, and DEC-087 found it is the
-only correction table with sub-3000 evidence (non-pawn/continuation measure
-+3 to +8 above ~3100 -- S110/S111, reserve). Caissa's LTC figures exceeding
+term was pawn-keyed, and SF's introduction chose it. **What is no longer a
+reason is DEC-087's:** it kept this table in the main order as "the only
+correction table with sub-3000 evidence", and the band above says that figure
+was measured at 3224-3291 -- above the ~3100 that demoted the other two, so
+that criterion separated nothing. **DEC-133 is the owner's answer**: S099 moves
+to the head of the reserve as the family's probe, run on a spare night, with
+S110 and S111 gated on its verdict. It returns to the main order if this
+engine's own verdict is positive, which is the only band that ever mattered
+(DEC-019). `2026-09-04_plan_review-F02`, corrected by S181 on 2026-09-11. Caissa's LTC figures exceeding
 its STC figures (8.99 vs 3.66; 30.3 vs 20.1) say the technique scales up with
 time control, so 8+0.08 likely understates it.
 
@@ -246,9 +256,12 @@ the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
   interleaved timing (DEC-083, 1.43 Elo/% named as a conversion). Expect a
   small negative: three xor sites and 8 bytes per history entry.
 - (b) owes **one SPRT** at the S105 regime (8+0.08, Hash 16, UHO book),
-  gainer bounds `elo0=0 elo1=5`: the Lynx-band expectation ~+11 sits above
+  gainer bounds `elo0=0 elo1=5`: the Lynx expectation ~+11 sits above
   elo1, so the bounds do not straddle the effect (DEC-063) and the run
-  resolves fast. Fast suite and the mate cases green first. Verdict recorded
+  resolves fast. **Read that expectation for what it is now**: it was measured
+  at 3224-3291, about 300 points above where this engine will run it, and
+  DEC-019's three transfer failures are the reason a figure from another band
+  chooses the bounds and never the conclusion. Fast suite and the mate cases green first. Verdict recorded
   whatever it is (INV-6); a fail is bisected update-gating-first, because the
   published failure modes are gating bugs.
 
@@ -287,7 +300,8 @@ the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
 - https://github.com/official-stockfish/Stockfish/pull/4950 -- PR prose,
   author, date, Caissa credit.
 - https://github.com/lynx-chess/Lynx/pull/1662 -- **+11.35 +/-5.16, 7502
-  games, 8+0.08** -- the +11.4 the plan cites.
+  games, 8+0.08** -- the +11.4 the plan cites, banded at **3224-3291** by
+  `adocs/data/S181_lynx_bands.md`.
 - https://github.com/lynx-chess/Lynx/pull/1663 -- pure pawn key (+3.27 on
   top; +12.09 alone).
 - -

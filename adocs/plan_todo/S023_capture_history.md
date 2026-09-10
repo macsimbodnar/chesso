@@ -16,9 +16,15 @@ done:
 ## Reserve, 2026-08-19, DEC-087
 
 Demoted behind the 3000 push by the second review. The band evidence is
-against it as an ordering term at this strength: Lynx failed four SPRTs on it
-at ~2600 (-35.8 to -11.1, **unverified** -- no source was located for those
-four runs, and the band is S181's) and Weiss measured it **-4.17 +/- 4.83** at
+against it as an ordering term at this strength. **The Lynx half of that
+evidence is withdrawn** (S181, 2026-09-11, DEC-176): this file read "Lynx
+failed four SPRTs on it at ~2600 (-35.8 to -11.1)", no source was ever located
+for those four runs, and the API record says the opposite of the headline --
+**Lynx merged capture history**, pull request #634, 2024-02-02, into v1.3.0 at
+a banded **2653** (`adocs/data/S181_lynx_bands.md`). The closed-unmerged capture-history pull
+requests in that repository are later refinements of a feature already in the
+tree, dated 2024-09 onward at 2925 and above, not four attempts at the
+feature. What is left, and it is enough: Weiss measured it **-4.17 +/- 4.83** at
 short control against **+3.66 +/- 3.29** at long -- Weiss pull request #428,
 "Capture History", 2021-06-04, 9088 games at 10+0.1 and 15936 at 60+0.6, the
 author's own summary being "hurts STC, but LTC shows decent gain"

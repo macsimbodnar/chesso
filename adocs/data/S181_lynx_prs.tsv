@@ -1,0 +1,21 @@
+512	2023-11-24T01:08:21Z	🔍 Add basic LMP
+613	2024-01-15T20:25:41Z	🔍 Take history into consideration for LMR
+634	2024-02-02T14:15:51Z	🔍 Add capture history
+637	2024-02-03T01:16:01Z	🔍 Stop clearing quiet history
+733	2024-05-14T15:57:16Z	🔍 Futility pruning
+971	not-merged	🔍 LMR: clamp history reductions to [-1,1]
+1135	2024-10-31T09:15:47Z	🔍 Improving: LMR, `if (!improving) ++reduction;`
+1203	2024-11-27T09:09:06Z	⌛ Add node time management
+1206	2024-11-27T21:08:34Z	⌛ Node time management: Base 2.4 scale 1.65
+1230	2024-12-08T15:23:47Z	🔍 LMR: increase pv min moves 2
+1233	2024-12-05T13:05:10Z	🔍 LMR: reduce more on cutnode
+1476	2025-02-10T20:54:49Z	🔍 Add TTPV - depth offset 2 + LMR increase on no ttPv
+1512	2025-02-23T16:42:13Z	🔍 LMR: split base and history factor in quiet and noisy - w/ fractional LMR + manual values
+1529	2025-03-04T09:37:18Z	🔍 LMR TT capture
+1535	2025-03-05T09:41:33Z	🔍 LMR: Deeper/shallower
+1662	2025-04-15T22:16:01Z	🔍 Pawn correction history / corrhist
+1663	2025-04-15T22:28:03Z	🔍 Pawn correction history / corrhist - no king in hash
+1731	2025-06-08T22:35:14Z	🔍 Singular Extensions (SE)
+1743	2025-06-10T21:44:17Z	🔍 SE: negative extension
+1751	2025-06-11T15:01:15Z	🔍 SE: multicut with `singularScore`
+1999	2025-08-26T19:15:17Z	🔍 Allow static eval correction and improving calculation on pv nodes

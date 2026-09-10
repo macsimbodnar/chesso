@@ -46,9 +46,12 @@ killed at
 96 % LLR) — so layer (a) owes nothing here; its constants are S085/S127
 material.
 **(b) History scaling.** Reduce less for a quiet with high history, more with
-low: `r -= clamp(history / divisor, -k, +k)`. Sub-3000 record: **Lynx #613**
-"reduce less if history value is high", merged 2024-01-15 into v1.3.0 (Lynx
-1.0.1 = 2432 on CCRL's 2024-01 recalc; DEC-087 pegs this era ~2600):
+low: `r -= clamp(history / divisor, -k, +k)`. Sub-3000 record, and it is the layer that survives S181's
+re-banding: **Lynx #613**
+"reduce less if history value is high", merged 2024-01-15 between v1.2.0 (not
+on the CCRL list) and v1.3.0, the nearest rated release before it being v1.1.0
+— so the band is **2420 to 2653** and the release it shipped in rates
+**2653** (`adocs/data/S181_lynx_bands.md`; DEC-087's "~2600" for this era holds):
 **+11.40 +/-7.30** at 8+0.08 — the one clean record in chesso's own band.
 Above it: Weiss #451 "adjust LMR reduction by between +2 and -2 based on move
 history" **+14.11 +/-7.57** (2021-06, ~3050), #452 more-aggressive +4.94,
@@ -61,20 +64,24 @@ where the Elo is).
 **(c) Node-type adjustments.** CPW's modern set: "Reduce less in PV-nodes",
 "Reduce less when improving", "Reduce more in an expected Cut-node", "Reduce
 more when hash move is a capture", less on killers/checks. Per adjustment:
-- **Cutnode +1**: Lynx #1233 **+9.34 +/-4.75** (v1.8.0, 2024, high-2800s);
+- **Cutnode +1**: Lynx #1233 **+9.34 +/-4.75** (merged 2024-12-05, between
+  v1.7.0 and v1.8.0, band **3119 to 3138** — *not* the "high-2800s" this
+  file read until 2026-09-11, which was low by about 300; S181);
   Weiss #607 +2.27/+5.88 (2022-12, ~3300); a second ply on top failed at
   Lynx (**-17.62**, #1234); the prediction-plumbing fix alone was +1.77
   (#1304). Stash introduced cutNodes to *allow* LMR on them, +6.16 (bd9ecf5).
-- **!improving +1**: Lynx #1135 merged (v1.8.0; +4.64 per S108's trace); the
+- **!improving +1**: Lynx #1135 merged 2024-10-31, band **3119 to 3138**
+  (+4.64 per S108's trace); the
   reduce-less-when-improving direction failed first (#1134) — the asymmetry
   is the published shape (CPW Improving says the same).
 - **TT-move-is-capture +1**: Weiss #536 +3.33 LTC (2021-08, ~3100), extended
-  to all moves at #666 (2023); Lynx #1529 **+1.87 +/-1.52** (v1.9.0) after
+  to all moves at #666 (2023); Lynx #1529 **+1.87 +/-1.52** (merged 2025-03-04, band
+  **3138 to 3224**) after
   three wrong or failed attempts (#706 no-op, #1241 -3.99, #1243 -8.59).
   Small everywhere.
 - **PV**: reduce less, or start later. Weiss #71 "LMR later in pv nodes"
   **+3.78 +/-2.98** (2019-11, sub-3000); Lynx #1230 "increase pv min moves"
-  merged (v1.8.0); Fruit Reloaded cuts the non-PV reduction by 2/3 at PV
+  merged 2024-12-08, band **3119 to 3138**; Fruit Reloaded cuts the non-PV reduction by 2/3 at PV
   (CPW); removing Lynx's PV decrement failed (#779).
 - **Not worth a term by the record**: killers (Weiss #665 simplified its
   killer adjustment away at ~3300; Lynx #2006/#2070/#2071/#2072 all
@@ -89,7 +96,8 @@ the score is "not too far from the current best search result"; 98965c1
 doEvenDeeperSearch (+2 when "really really good"); 65e2150 (2023) re-bases
 the margin on best value rather than alpha; a37b38b (2025) adds a
 `d < newDepth` guard; 4d4c6eb/1047f84 (2025-12) simplify — alive at ~3600
-through five years of churn. Near the band: **Lynx #1535** (v1.9.0, 2025-03)
+through five years of churn. Not near the band after all: **Lynx #1535**, merged 2025-03-05, band
+**3138 to 3224** (S181),
 measured the bare form at **-7.07 +/-7.65** and the guarded form at
 **+3.11 +/-2.35** — the guard is load-bearing. Weiss #675 passed both
 controls (+2.36/+3.65, 2023, ~3300) yet closed unmerged, no landed commit
@@ -101,10 +109,33 @@ the re-search outcome: Weiss #662 +2.61/+8.92, Stash 2138db2 +2.20, Berserk
 All 3300+, and a history change rather than a reduction change — routed
 onward, see Scope concerns.
 
-**The honest split.** Sub-3000 evidence: the log table (banked), history
-scaling (Lynx #613, ~2600), cutnode/improving/PV-min-moves (Lynx v1.8.0
-high-2800s; Weiss 2019). Boundary (~3000-3100): TT-capture, deeper/shallower
-(one guarded pass at Lynx v1.9.0). Defer as 3100+ refinements: fractional /
+**The honest split, redrawn by S181 on 2026-09-11
+(`2026-09-04_plan_review-F02`).** Every Lynx band here is now the CCRL Blitz
+1CPU range its pull request merged between, from `adocs/data/S181_lynx_bands.md`, and one grouping
+left this heading as a result.
+
+**Sub-3000 evidence**: the log table (banked); history scaling (Lynx #613,
+**2420-2653**, shipped at 2653); reducing later at PV nodes *as a direction*,
+from Weiss #71 in 2019 when Weiss was sub-3000. **That is all of it.**
+
+**Boundary and above, 3119 to 3224, where this file read high-2800s until
+2026-09-11**: cutnode +1 (Lynx #1233, **3119-3138**), !improving +1 (#1135,
+**3119-3138**), Lynx's own PV-min-moves patch (#1230, **3119-3138**),
+TT-capture (#1529, **3138-3224**), deeper/shallower (#1535, **3138-3224**).
+
+**Does the order of the three verdicts change? No — and the reason is not
+the bands.** (b) history scaling stays first: it is the only layer with
+evidence in this engine's own band, and it is the layer whose family the
+Ethereal ledger prices highest by proxy (late move reduction, **-248.59** on
+removal). (c) node type and (d) post-re-search follow in that order, unchanged,
+because (d)'s device reads the re-search (c)'s reductions produce and cannot be
+measured before it exists. What changes is what this file may *claim*: (c) and
+(d) rest on 3100-band evidence, so a zero from either is an expected outcome
+rather than a surprise, and neither may be argued for on "it worked below
+3000". DEC-176 records that ruling and that the step stays whole in the main
+order.
+
+Defer as 3100+ refinements: fractional /
 quantised reductions (Lynx #1512/#1514 +5.13), ttPv terms (Lynx #1476 +9.39 —
 needs a TT PV-flag bit the entry does not carry), post-LMR history updates,
 bad-re-search malus (Weiss #701), capture LMR (Weiss #356 +11.55 at ~3050,
@@ -156,7 +187,8 @@ The whole feature is `src/search.cpp` `build_lmr_table` and `src/search.cpp`
   sites.
 
 **The three verdicts**, grouped by input and evidence:
-1. **History scaling** — the largest sub-3000 record (+11.40) and the direct
+1. **History scaling** — the largest sub-3000 record (+11.40, at a banded
+   2420-2653) and the direct
    consumer of S093/S024; first, so verdicts 2 and 3 measure on the shipping
    history term.
 2. **Node type** — cutnode + improving + TT-capture + the PV term as one
@@ -418,8 +450,9 @@ verdict in the stamp.
   of CUT is ALL, others CUT; children of ALL are CUT); Kannan on re-search and
   null-move labels.
 - - https://github.com/lynx-chess/Lynx/pull/613 — history in LMR, +11.40
-  +/-7.30 at 8+0.08, merged 2024-01-15 (v1.3.0, ~2600 era): verdict 1's
-  sub-3000 record.
+  +/-7.30 at 8+0.08, merged 2024-01-15, banded **2420-2653** and shipped in
+  v1.3.0 at **2653** (`adocs/data/S181_lynx_bands.md`): verdict 1's
+  sub-3000 record, and the only one this file has.
 - -
   https://api.github.com/search/issues?q=repo:lynx-chess/Lynx+LMR+in:title+type:pr
   — #1233 cutnode +9.34 / #1234 -17.62; #1135 !improving (#1134 inverse

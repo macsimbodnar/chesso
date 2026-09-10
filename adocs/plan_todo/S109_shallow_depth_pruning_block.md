@@ -118,9 +118,11 @@ merged 2023-11-24, **+4.7 +/-3.9**; PR #733 "Futility pruning", merged
 **(a) Late move pruning.** Skip the remaining quiets past a move count that
 grows with depth. Weiss PR #104 (2019-12, +20.17/+24.67): "after trying some
 quiet moves we give up". The quadratic FORM `base + depth^2` is Stockfish's
-shape (source, not citable) and in PR prose at ~2600 it **failed**: Lynx #512
-measured `3 + depth*depth` at **-23.8 +/-15.0** while linear `moves >=
-depth*10` capped at depth <= 3 passed +4.7; re-tries #783 (-0.9/-8.61) and
+shape (source, not citable) and in PR prose **at a band S181 puts 180 points
+lower than the "~2600" written here before 2026-09-11** it **failed**: Lynx
+#512 merged 2023-11-24, between v1.0.1 and v1.1.0, band **2420 to 2430**
+(`adocs/data/S181_lynx_bands.md`), and measured `3 + depth*depth` at **-23.8 +/-15.0** while linear
+`moves >= depth*10` capped at depth <= 3 passed +4.7; re-tries #783 (-0.9/-8.61) and
 #1343/#1344/#1345 all closed; #1551 later removed the depth cap for
 +0.87/+2.60. The aggressive count is a >3000 setting; the seed starts loose.
 **Improving doubles the count**: Lynx #1129 "Improving: LMP, multiplying by
@@ -346,7 +348,8 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   direction is worth trying; DEC-105 forbids any of these numbers starting a
   sweep, which is why section 4 names no engine. The linear threshold's
   shipped form at the only sub-3000 pass is Lynx #512's (base 0, coeff 10,
-  cap 3) and the quadratic `3 + depth^2` failed at 2600 there (#512/#783) --
+  cap 3) and the quadratic `3 + depth^2` failed at a banded **2420-2430**
+  there (#512/#783; S181) --
   a record of which *form* to try first, never of where to start it;
   doubling the threshold when improving is Lynx #1129 and is S092-era, not
   this step's. The depth cap "3-4, low depths" is Weiss #446's phrase, and
@@ -467,7 +470,8 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 3. **"Quadratic in depth" is the >3000 form, not the entry form.** Both
    sub-3000 LMP passes traced (Weiss #104, formula unstated; Lynx #512,
    linear capped at depth 3) are conservative; every quadratic attempt at
-   ~2600 failed. The FORM ships parameterised either way; the seed is loose.
+   Lynx's **2420-2430** band failed (S181; this read "~2600" until
+   2026-09-11). The FORM ships parameterised either way; the seed is loose.
 
 ### 8. References
 

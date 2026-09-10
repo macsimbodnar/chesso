@@ -63,7 +63,32 @@ Updated: 2026-09-11, by hand.
   **S186** as a sixteen-row work list. Nothing reordered. Documents only, no
   `src/`, no run.
 
-  **Next**, without waiting for the owner (DEC-172): S181, S182 and S183 while
+  **Done, S181**: every Lynx figure the steps and DEC-087 cite is banded, in
+  `adocs/data/S181_lynx_bands.md` -- twenty-one pull requests to their
+  `merged_at`, the two releases they fall between and each release's CCRL Blitz
+  1CPU rating, from the list **computed 2026-09-05** and read 2026-09-11 with
+  `curl` (`WebFetch` gets 403 there). The list drifts 0 to 4 points a
+  fortnight, which is why the read date sits beside every figure, and **four
+  releases the argument needs are not on it at all**, so an unrated bracket
+  runs from the nearest rated release before the merge. **Three band words were
+  low by 180 to 380 points and one claim was wrong in kind**: S099's "+11.4 at
+  ~2850" is **3224-3291**, *above* the ~3100 that demoted S110 and S111, so
+  DEC-087 (b)'s criterion separated nothing; **S023's "Lynx failed four SPRTs
+  at ~2600" is withdrawn** -- unsourced, and Lynx *merged* capture history as
+  #634 into v1.3.0 at a banded **2653** -- leaving Weiss #428's **-4.17** STC
+  at an engine CCRL rates 3055 as the demotion's evidence; S098's cutnode,
+  !improving and PV-min-moves leave the "Sub-3000 evidence" heading at
+  **3119-3138**, TT-capture and deeper/shallower at **3138-3224**; S109's Lynx
+  LMP band is **2420-2430**, 180 points *below* what was written, which
+  strengthens that step. **S097's band caution of 2026-08-19 is closed in the
+  README's favour** -- it said the repository's banding might sit ~300 low and
+  it did. **DEC-176 rules that the record moves and no step's position does**,
+  taken by the agent under the owner's delegation and naming itself as such:
+  S023 stays in the reserve on the Weiss figure, S098 stays one step with three
+  verdicts in that order, S099/S110/S111 stay where DEC-133 put them; what
+  changes is what those files may claim. Documents and API reads only.
+
+  **Next**, without waiting for the owner (DEC-172): S182 and S183 while
   the match plays; S207 completed and committed when the verdict lands; then
   S208 and S209, node-identical and owning no run; then S024's first verdict as
   the next night's run.

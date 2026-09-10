@@ -53,7 +53,8 @@ are searched on a single move... Koivisto scales the optimal time by the nodes
 effort; we just scale down the totalTime" — STC <0,2> over 88672 games and LTC
 <0.5,2.5> over 170856, both passed. Weiss PR #752, 2024-12: "Adjust time spent
 based on how much of the search effort goes into the top move", **+11.37 ±4.93
-at 8+0.08 and +11.76 ±4.85 at 40+0.4**, both [0, 3]. Lynx #1203: +3.59 at
+at 8+0.08 and +11.76 ±4.85 at 40+0.4**, both [0, 3]. Lynx #1203, merged 2024-11-27, band **3119 to 3138**
+(`adocs/data/S181_lynx_bands.md`; #1206's retune is the same band): +3.59 at
 8+0.08, +9.40 at 16+0.16, +10.18 at 40+0.4; #1206 retuned (base 2.4, scale
 1.65) for +13.33 more at 40+0.4. CPW's Time Management page names "the ratio
 of the size of the subtree under the best move versus the size of the whole

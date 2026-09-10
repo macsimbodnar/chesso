@@ -25,8 +25,15 @@ does say gains grow with the time control). The pawn table (S099, which stays
 in the main order) has its figure sourced: **+11.35 +/- 5.16** at 8+0.08 over
 7502 games, bounds [0, 3], Lynx pull request #1662, merged 2025-04-15
 (https://github.com/lynx-chess/Lynx/pull/1662) -- the "+11.4" this file quoted
-rounded. **The strength it was measured at is not sub-3000** and correcting
-that band is S181's work, not this file's. The long-control doubling noted below is one more
+rounded. **The strength it was measured at is not sub-3000**: S181 banded that
+merge at **3224 to 3291** CCRL Blitz 1CPU -- between v1.9.1, which the list
+does not carry, and v1.10.0, with v1.9.0 the nearest rated release before it,
+on the list computed 2026-09-05 (`adocs/data/S181_lynx_bands.md`). So the one
+figure DEC-087 (b) called sub-3000 was measured **above** the ~3100 that
+demoted this step and S111, and the criterion that separated them separates
+nothing. DEC-133 is the owner's answer -- S099 to the head of the reserve as
+the family's probe, this step and S111 gated on its verdict -- and DEC-176
+records that the re-banding changes the record and not the order. The long-control doubling noted below is one more
 reason this family reads better after S152, which absorbed S128's question
 (DEC-108), moves the measurement nearer the list's control.
 
