@@ -3163,9 +3163,12 @@ is 3 against a worst of 2.875, and the two bound clauses are `> 2.0` and
 `> 2.8`, so the tightest of them keeps 0.075 between the assertion and a
 rounding wobble. `adocs/data/S206_truncation_drift.sh` re-derives all six
 readings and both counterfactuals from clean worktrees, eight builds and eight
-scans: **8 of 8 reproduced in 7 m 02 s** on the workstation, 2026-09-10, with
-ccache already warm on those shas — a cold cache pays eight full builds
-instead.
+scans: **8 of 8 reproduced in 7 m 02 s** on the workstation, 2026-09-10. It is
+the scans that cost, not the builds, and ccache has nothing to do with it —
+the script's own `cmake` line wires no `CMAKE_CXX_COMPILER_LAUNCHER`, unlike
+the four build directories above, and nine translation units build from cold
+in **4.57 s** at `-j12` behind a 0.97 s configure against **45.7 s** for one
+pass over 10.8 M rows.
 
 ### Audit what a corpus contains, per feature
 
