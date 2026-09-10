@@ -23,7 +23,18 @@
 #      silent pass on an empty total
 #   6. the script sitting outside the chesso tree: one FAILED marker naming the
 #      root, and no stage runs against a tree that is not this one
-#   7. static: the script parses, and it does not reach for a bare $(nproc)
+#   7. a build directory whose cache is not what the stage needs: the stage
+#      fails and names the directory, instead of building an uninstrumented
+#      tree and reporting a green sanitize
+#   8. the Release build prints no bench signature: the stage says so, instead
+#      of comparing against the first word of whatever it did print
+#   9. a build directory that already has a cache: the configure runs anyway
+#      and the directory is recovered, rather than being trusted because a
+#      CMakeCache.txt happens to exist
+#  10. static: the script parses, it does not reach for a bare $(nproc), and
+#      every FAILED marker is written to the saved fd 9 — a `fail` reached from
+#      inside a stage would otherwise put the marker in that stage's log, where
+#      no watcher polls
 #
 # Cases 4 and 5 exist because a first version of this file asserted only that
 # the comparison had run, and a cut replacing its condition with `false`
@@ -84,7 +95,32 @@ make_stub()
   chmod +x "$tmp/stub/$name"
 }
 
-make_stub cmake 'exit 0'
+# cmake writes the cache its arguments describe, because the script verifies the
+# directory rather than trusting that it exists. With stale_sanitize_cache the
+# sanitizer directory comes back configured but without SANITIZER=ON -- the
+# vacuous green case 7 exists for.
+make_stub cmake "
+b=''
+prev=''
+for a in \"\$@\"; do
+  if [ \"\$prev\" = -B ]; then b=\"\$a\"; fi
+  prev=\"\$a\"
+done
+if [ -n \"\$b\" ]; then
+  mkdir -p \"\$b\"
+  : > \"\$b/CMakeCache.txt\"
+  for a in \"\$@\"; do
+    case \"\$a\" in
+      -DCMAKE_BUILD_TYPE=*)
+        echo \"CMAKE_BUILD_TYPE:STRING=\${a#-DCMAKE_BUILD_TYPE=}\" >> \"\$b/CMakeCache.txt\" ;;
+      -DSANITIZER=*)
+        if [ ! -f \"$tmp/stale_sanitize_cache\" ]; then
+          echo \"SANITIZER:BOOL=\${a#-DSANITIZER=}\" >> \"\$b/CMakeCache.txt\"
+        fi ;;
+    esac
+  done
+fi
+exit 0"
 make_stub python3 'exit 0'
 make_stub nproc 'echo 8'
 
@@ -103,7 +139,12 @@ exit 0"
 # flag file. They drain stdin: a stub that exits without reading it gives printf
 # an EPIPE, and under `set -o pipefail` the script would read that as the engine
 # failing.
-printf '#!/bin/sh\ncat > /dev/null\necho "12345 nodes 100 nps"\n' > "$tmp/build/src/chesso"
+{
+  echo '#!/bin/sh'
+  echo 'cat > /dev/null'
+  echo "if [ -f \"$tmp/no_release_signature\" ]; then echo 'bestmove e2e4'; exit 0; fi"
+  echo "echo '12345 nodes 100 nps'"
+} > "$tmp/build/src/chesso"
 chmod +x "$tmp/build/src/chesso"
 
 {
@@ -120,7 +161,14 @@ chmod +x "$tmp/build-sanitize/src/chesso"
 run_sandbox()
 {
   : > "$calls"
-  [[ -n "${tmp:-}" ]] && rm -rf "$tmp/out"
+  [[ -n "${tmp:-}" ]] && rm -rf "$tmp/out" "$tmp/build/CMakeCache.txt" \
+                               "$tmp/build-debug" "$tmp/build-sanitize/CMakeCache.txt"
+  # Case 9 needs the directory to exist *before* the script runs, which is the
+  # only state in which "it already has a cache" can be trusted or verified.
+  if [[ -f "$tmp/plant_stale_cache" ]]; then
+    mkdir -p "$tmp/build-sanitize"
+    echo 'CMAKE_BUILD_TYPE:STRING=RelWithDebInfo' > "$tmp/build-sanitize/CMakeCache.txt"
+  fi
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub" OUT="$tmp/out" TMPDIR="$tmp"
@@ -313,13 +361,77 @@ if grep -q 'cmake\|ctest' "$calls"; then
   fail "6: a stage ran against a tree that is not the chesso tree"; show
 fi
 
-# 7. Static: the script parses, and it does not reach for a bare $(nproc) --
-#    the form rating.sh died on before its marker was armed (S177).
+# 7. The sanitizer directory comes back configured without SANITIZER=ON. Before
+#    the check existed the script returned early on any CMakeCache.txt, so this
+#    built an uninstrumented tree, ran the whole fast label with no sanitizer,
+#    matched the Release bench total trivially and reported `sanitize ok` --
+#    the most expensive stage returning a green that means nothing. DEC-052
+#    records VS Code's CMake Tools writing into a directory of this tree
+#    uninvited, so it is not hypothetical.
+: > "$tmp/stale_sanitize_cache"
+status="$(run_sandbox)"
+rm -f "$tmp/stale_sanitize_cache"
+if [[ "$status" -eq 0 ]]; then
+  fail "7: exited 0 with build-sanitize configured without SANITIZER=ON"; show
+fi
+if ! grep -q '^GATE-EXTRA-FAILED: .*sanitize' "$tmp/out.txt"; then
+  fail "7: a wrong build-sanitize cache did not fail the sanitize stage"; show
+fi
+if ! grep -q 'carries no SANITIZER:BOOL=ON' "$tmp/out.txt"; then
+  fail "7: the failure does not name what the cache is missing"; show
+fi
+
+# 8. The Release side prints no signature. Unvalidated, its first word became
+#    the "total" and the stage accused the tree of a memory bug from a stale
+#    build directory.
+: > "$tmp/no_release_signature"
+status="$(run_sandbox)"
+rm -f "$tmp/no_release_signature"
+if [[ "$status" -eq 0 ]]; then
+  fail "8: exited 0 with the Release build printing no bench signature"; show
+fi
+if ! grep -q 'the Release build printed no bench signature line' "$tmp/out.txt"; then
+  fail "8: an unparseable Release bench line was not named as one"; show
+fi
+if grep -q 'INV-6 across builds: sanitizer' "$tmp/out.txt"; then
+  fail "8: an unparseable Release line was reported as a bench mismatch"; show
+fi
+
+# 9. build-sanitize already has a cache, and it is the wrong one. The stage must
+#    configure anyway -- which recovers the directory -- rather than returning
+#    early because a CMakeCache.txt exists. The early return is what made a
+#    stale directory a green sanitize stage, and it is invisible to every other
+#    case here because the sandbox starts each run with no cache at all.
+: > "$tmp/plant_stale_cache"
+status="$(run_sandbox)"
+rm -f "$tmp/plant_stale_cache"
+if ! grep -q 'cmake -S .* -B .*build-sanitize' "$calls"; then
+  fail "9: an existing CMakeCache.txt skipped the configure -- the directory is" \
+       "trusted rather than verified"; show
+fi
+if [[ "$status" -ne 0 ]]; then
+  fail "9: configuring over an existing wrong cache did not recover the directory"; show
+fi
+
+# 10. Static: the script parses, it does not reach for a bare $(nproc) -- the
+#     form rating.sh died on before its marker was armed (S177) -- and every
+#     FAILED marker goes to the saved fd 9.
 if grep -v '^[[:space:]]*#' "$gate_script" | grep -q '\$(nproc)'; then
-  fail "7: gate_extra.sh uses a bare \$(nproc)"
+  fail "10: gate_extra.sh uses a bare \$(nproc)"
 fi
 if ! bash -n "$gate_script"; then
-  fail "7: gate_extra.sh does not parse"
+  fail "10: gate_extra.sh does not parse"
+fi
+# The driver redirects each stage's whole output to that stage's log, and a
+# function is not a subshell -- a `fail` reached from inside a stage exits with
+# stderr still pointing at the stage log. Measured before the fix: the terminal
+# log was empty and the marker was in the stage log, so a watcher polling the
+# terminal log would have spun to its ceiling (S167, S177, DEC-061).
+if ! grep -q 'exec 9>&2' "$gate_script"; then
+  fail "10: fd 9 is never opened, so a marker from inside a stage cannot escape"
+fi
+if grep -n 'echo "GATE-EXTRA-FAILED' "$gate_script" | grep -q '>&2'; then
+  fail "10: a FAILED marker is written to >&2 rather than the saved fd 9"
 fi
 
 if [[ $failures -ne 0 ]]; then

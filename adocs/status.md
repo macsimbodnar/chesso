@@ -65,6 +65,43 @@ Updated: 2026-09-10, by hand.
   whose command line contains the launch string, and that shell exits seconds
   later. `pid=$!` in the launching shell is the only form that names the run.
   `DEV_MANUAL.md` says so now. DEC-061.
+- **S197's Tier-1 fast check found four real defects and all four are closed**,
+  in the commit after it -- `plan_done/` is history and was not edited. Each has
+  a case observed red against the committed script first, and the mutant file
+  went from twelve cuts to sixteen, the test from seven cases to ten,
+  **16 of 16 killed**. (1) `configure_if_needed` returned early on any
+  `CMakeCache.txt`, so a `build-sanitize` left without `-DSANITIZER=ON` would
+  build an uninstrumented tree, run the whole fast label with no sanitizer,
+  match the Release bench total trivially and report **`sanitize ok`** -- the
+  most expensive stage returning a green that means nothing, and DEC-052 records
+  VS Code's CMake Tools writing into a directory of this tree uninvited, so it is
+  live. It configures and then verifies the cache now. (2) **A `fail()` reached
+  from inside a stage printed no marker anywhere a watcher polls**: the driver
+  redirects each stage's whole output to that stage's log, a function is not a
+  subshell, and `exit` left stderr pointing at the log while `marked=1` silenced
+  the trap. Measured before the fix -- terminal log empty, marker in the stage
+  log. Markers go to `exec 9>&2` now. No stage calls `fail` today; this keeps the
+  header's promise true for whoever adds stage 6. (3) Only the sanitizer's bench
+  line was pattern-checked, so a stale `build/` whose last line is
+  `bestmove e2e4` made the Release "total" the word `bestmove` and the stage
+  **accused the tree of a memory bug and escalated it to the BUGS rule**. Both
+  sides go through one validator now. (4) A prose claim that was false:
+  `--citations` has been in the fast label as `test_plan_citation_freshness`
+  since S187 (DEC-159), so **stage 2 catches nothing the automatic gate cannot**
+  -- only `--prose` is out. The script header and `DEV_MANUAL.md`'s table said
+  otherwise. The stage stays, because the `accepts:` named both modes, and its
+  row now says what it is.
+- **`M13_trust_any_cache` survived the first attempt to kill it**, and the reason
+  is the shape of the sandbox: every case there starts with no `CMakeCache.txt`,
+  so the early-return branch was never reached and the mutant was behaviourally
+  identical. Case 9 plants a wrong cache *before* the run and asserts the
+  configure still happens. A cut that only bites on pre-existing state needs a
+  case that creates that state.
+- **Re-run after the fixes: `GATE-EXTRA-DONE 5 stages 774 s`**, against 768 s
+  before them -- `prose` 0 s, `citations` 0 s, `debug` 260 s, `sanitize` 460 s,
+  `perft` 54 s. Always configuring instead of returning early costs about six
+  seconds. Zero ASan, UBSan and LeakSanitizer reports again, and
+  `INV-6 across builds: both 26851183 nodes`.
 - **DEC-167 records the owner's five section-10 answers**, 2026-09-10: assert the
   cross-build bench totals in stage 4 (so `adocs/specs.md`'s INV-6 row gains the
   clause and the file joined `touches:`); six Debug binaries, the three mate ones

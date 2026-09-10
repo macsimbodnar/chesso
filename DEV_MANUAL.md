@@ -731,8 +731,8 @@ pass, so the marker names every stage that failed rather than the first:
 
 | # | stage | what it catches that the automatic gate cannot |
 |---|---|---|
-| 1 | `prose` | stale tense in `adocs/plan.md`, `tools/plan_prose_check.py --prose` |
-| 2 | `citations` | a code citation in a pending step file that no longer resolves to its symbol |
+| 1 | `prose` | stale tense in `adocs/plan.md`, `tools/plan_prose_check.py --prose` — the one mode of that tool the fast label does not run |
+| 2 | `citations` | nothing the automatic gate cannot — `--citations` is in the fast label as `test_plan_citation_freshness` since S187 (DEC-159). It costs a second and re-asserts it outside the sanitizer build; the `accepts:` named both modes and it is kept for that |
 | 3 | `debug` | INV-2 and INV-4 and every other `assert(` in `src/`, over the six binaries that drive `make_move` — `test_chesso`, `test_openings`, `test_movegen`, `test_evaluation`, `test_search`, `test_engine`. Both gated builds are Release, where those asserts are dead |
 | 4 | `sanitize` | out-of-bounds reads, use-after-free, signed overflow, bad shifts, misaligned loads, and leaks on Linux — ASan and UBSan over the `fast` label, plus `bench` |
 | 5 | `perft` | INV-1 at the depths the fast label does not reach, `ctest -L slow` |
@@ -807,12 +807,24 @@ GATE-EXTRA-FAILED: <stage> <stage>... <outdir>
 ```
 
 `tests/test_gate_extra_script.sh` is the guard on all of that, in the `fast`
-label at 0.46 s: seven cases over a sandbox whose `PATH` holds stubs for
+label at about 1.1 s: ten cases over a sandbox whose `PATH` holds stubs for
 `cmake`, `ctest`, `python3` and `nproc`, so no stage does any real work. Both
 `fastchess.sh` and `rating.sh` shipped with a path that printed no marker at
 all and both were found after the fact (S167, S177); this one is checked from
-the day the script exists. The twelve cuts every case was observed red under
+the day the script exists. The sixteen cuts every case was observed red under
 are `adocs/data/S197_script_mutants.py`.
+
+Two of those cases guard against a stage returning a green that means nothing.
+**A build directory is configured and then verified, never trusted because it
+has a `CMakeCache.txt`**: a `build-sanitize` left without `-DSANITIZER=ON`
+would otherwise build an uninstrumented tree, run the whole `fast` label with no
+sanitizer, match the Release bench total trivially and report `sanitize ok`.
+DEC-052 records VS Code's CMake Tools writing into a directory of this tree
+uninvited, so it is a live hazard and not a hypothetical. And **both bench lines
+are checked against the signature pattern**, not only the sanitizer's: an
+unvalidated Release line from a stale `build/` made the "total" the word
+`bestmove`, and the stage then accused the tree of a memory bug and escalated it
+to the BUGS rule.
 
 #### Coverage, on demand and never a stage
 

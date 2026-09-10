@@ -19,7 +19,10 @@ set -uo pipefail
 #   * a sanitizer build, which existed as a CMake option nobody ran since the
 #     2026-08-13 audit;
 #   * deep perft, INV-1 at depths the fast label cannot reach;
-#   * the two tools/plan_prose_check.py modes kept out of the fast label.
+#   * tools/plan_prose_check.py --prose, the one mode the fast label does not
+#     already run. --citations is in it as test_plan_citation_freshness since
+#     S187 (DEC-159); stage 2 re-asserts it here for a second's cost rather
+#     than reaching anything the automatic gate cannot.
 #
 # WHEN IT RUNS, DEC-141 clause 3: before a step that touched make_move,
 # unmake_move, the generator or the search completes, and otherwise weekly. The
@@ -58,16 +61,28 @@ set -uo pipefail
 # after S167 and S177: `marked` is read rather than `$?`, because bash 3.2's EXIT
 # trap sees `$? == 0` for a `set -u` abort, and a detached run that dies with no
 # marker leaves its watcher spinning to the ceiling.
+#
+# Every marker is written to fd 9, which is this script's real stderr saved
+# before anything is redirected. The driver runs each stage with its whole
+# output redirected to that stage's log, and a function is not a subshell: a
+# `fail` reached from inside a stage would `exit` with stderr still pointing at
+# the stage log, so the marker would land in a file no watcher polls and the
+# EXIT trap would stay silent because `marked` is already 1. Measured before the
+# fix: the terminal log was empty and `GATE-EXTRA-FAILED` was in the stage log.
+# No stage calls `fail` today -- this keeps the header's "one line on every exit
+# path" true for whoever adds stage 6.
+exec 9>&2
+
 marked=0
 fail()
 {
   marked=1
-  echo "GATE-EXTRA-FAILED: $*" >&2
+  echo "GATE-EXTRA-FAILED: $*" >&9
   exit 1
 }
 trap 'status=$?
       if ((marked == 0)); then
-        echo "GATE-EXTRA-FAILED: exited $status before the run could report" >&2
+        echo "GATE-EXTRA-FAILED: exited $status before the run could report" >&9
         ((status != 0)) || status=1
       fi
       exit $status' EXIT
@@ -121,22 +136,60 @@ if ! command -v python3 > /dev/null; then fail "python3 not on PATH"; fi
 # stopped being applied reads as a green stage. DEC-165 met the same class from
 # the other side -- a non-zero run that ran nothing is not a kill.
 
-# Configures <dir> only when it has no cache, so a re-run reuses the objects.
-configure_if_needed()
+# Configures <dir> and then proves the cache says what this stage needs.
+#
+# The first version returned early on any existing CMakeCache.txt, and that is a
+# vacuous green waiting to happen: a `build-sanitize` configured by hand without
+# -DSANITIZER=ON builds an uninstrumented tree, runs the whole fast label with
+# no sanitizer at all, matches the Release bench total trivially, and reports
+# `sanitize ok` -- the most expensive stage returning nothing, which is the
+# class this script exists to remove. `build-debug` left at Release is the same
+# defect on the stage whose only job is the asserts. It is not hypothetical:
+# DEC-052 records VS Code's CMake Tools configuring a directory of this tree on
+# open and writing a compiler into it that nobody chose.
+#
+# cmake is idempotent and costs about a second on a correct cache, so the
+# configure always runs; a directory whose compiler has changed makes it fail
+# here by name instead of later and elsewhere. `expect` is the grep-ready
+# strings the cache must carry, one per argument, before the shift.
+configure_and_verify()
 {
-  local dir="$1"
-  shift
-  if [[ -f "$repo/$dir/CMakeCache.txt" ]]; then
-    echo "-- $dir already configured, reusing it"
-    return 0
-  fi
+  local dir="$1" expect="$2"
+  shift 2
   # shellcheck disable=SC2086
-  cmake -S "$repo" -B "$repo/$dir" "$@" $launcher
-  return $?
+  cmake -S "$repo" -B "$repo/$dir" "$@" $launcher || return $?
+
+  local cache="$repo/$dir/CMakeCache.txt"
+  if [[ ! -f "$cache" ]]; then
+    echo "$dir has no CMakeCache.txt after configuring it" >&2
+    return 1
+  fi
+  local want
+  for want in $expect; do
+    if ! grep -q -- "$want" "$cache"; then
+      echo "$dir is not the directory this stage needs: $cache carries no $want" >&2
+      echo "remove $repo/$dir and run again" >&2
+      return 1
+    fi
+  done
+  return 0
 }
 
-# Stale tense in adocs/plan.md. Kept out of the fast label because it goes red
-# on commits that touch no code.
+# `<total> nodes <nps> nps`, the line S189's bench command ends on.
+signature_or_fail()
+{
+  local which="$1" line="$2"
+  if [[ ! "$line" =~ ^[0-9]+\ nodes\ [0-9]+\ nps$ ]]; then
+    echo "the $which build printed no bench signature line: $line" >&2
+    return 1
+  fi
+  return 0
+}
+
+# Stale tense in adocs/plan.md, which is the one plan_prose_check.py mode the
+# fast label does not already run: `--citations` has been in it since S187 as
+# test_plan_citation_freshness (DEC-159), so stage 2 below re-asserts a fast
+# test rather than reaching something the automatic gate cannot.
 stage_prose()
 {
   python3 "$repo/tools/plan_prose_check.py" --prose
@@ -161,7 +214,8 @@ stage_citations()
 # test_search_params.
 stage_debug()
 {
-  configure_if_needed build-debug -DCMAKE_BUILD_TYPE=Debug \
+  configure_and_verify build-debug "CMAKE_BUILD_TYPE:STRING=Debug" \
+      -DCMAKE_BUILD_TYPE=Debug \
     && cmake --build "$repo/build-debug" -j"$jobs_n" \
     && ctest --test-dir "$repo/build-debug" --output-on-failure --no-tests=error \
          -R '^(test_chesso|test_openings|test_movegen|test_evaluation|test_search|test_engine)$'
@@ -189,7 +243,9 @@ stage_sanitize()
   export ASAN_OPTIONS=detect_leaks=1
   export UBSAN_OPTIONS=print_stacktrace=1
 
-  configure_if_needed build-sanitize -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSANITIZER=ON \
+  configure_and_verify build-sanitize \
+      "CMAKE_BUILD_TYPE:STRING=RelWithDebInfo SANITIZER:BOOL=ON" \
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSANITIZER=ON \
     && cmake --build "$repo/build-sanitize" -j"$jobs_n" \
     && ctest --test-dir "$repo/build-sanitize" -L fast --output-on-failure --no-tests=error \
     || return $?
@@ -197,15 +253,18 @@ stage_sanitize()
   san_line="$(printf 'bench\nquit\n' | "$repo/build-sanitize/src/chesso" | tail -n 1)" \
     || return $?
   echo "sanitizer bench: $san_line"
-  if [[ ! "$san_line" =~ ^[0-9]+\ nodes\ [0-9]+\ nps$ ]]; then
-    echo "the sanitizer build printed no bench signature line" >&2
-    return 1
-  fi
+  signature_or_fail sanitizer "$san_line" || return $?
 
   # The Release reference, built here so the comparison is the same commit.
   cmake --build "$repo/build" -j"$jobs_n" || return $?
   rel_line="$(printf 'bench\nquit\n' | "$repo/build/src/chesso" | tail -n 1)" || return $?
   echo "release bench:   $rel_line"
+  # Checked on both sides, and the second one is not symmetry for its own sake.
+  # Unvalidated, a stale build/ whose last line is `bestmove e2e4` made
+  # rel_total the word "bestmove", the totals differed, and the stage accused
+  # the tree of a memory bug the sanitizers had missed and escalated it to the
+  # BUGS rule -- from a build directory that simply predated `bench`.
+  signature_or_fail Release "$rel_line" || return $?
 
   san_total="${san_line%% *}"
   rel_total="${rel_line%% *}"
@@ -298,7 +357,7 @@ if [[ -n "$failed" ]]; then
     fi
   done
   marked=1
-  echo "GATE-EXTRA-FAILED: $failed $outdir" >&2
+  echo "GATE-EXTRA-FAILED: $failed $outdir" >&9
   exit 1
 fi
 
