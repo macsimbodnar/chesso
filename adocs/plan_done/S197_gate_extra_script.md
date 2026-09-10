@@ -1,14 +1,14 @@
 id:         S197
 goal:       `tools/gate_extra.sh` runs what the fast label cannot hold -- the Debug binaries, a sanitizer build, deep perft, the prose and citation checks -- and prints a terminal marker; the coverage recipe is documented beside it
 accepts:    the script builds `build-debug` and runs its six invariant-carrying binaries from `tests/` (INV-2, INV-4), configures and builds a sanitizer directory with the existing `SANITIZER` option and runs the fast label and `bench` under it, runs `ctest -L slow`, runs `tools/plan_prose_check.py --prose` and `--citations`, and ends with `GATE-EXTRA-DONE` or `GATE-EXTRA-FAILED` on every exit path (WATCHERS rule); every stage's exit status reaches the shell; its wall time on this machine is measured and recorded in this file; `DEV_MANUAL.md` "Test" documents the script, the DEC-141 cadence, and the `llvm-cov` coverage recipe of the 2026-09-04 test review as an on-demand command whose output is compared with `adocs/data/2026-09-04_test_review/coverage_unexecuted.txt`; `tests/test_gate_extra_script.sh` smoke-tests both markers in a sandbox like the other script tests; fast suite green in both builds
-touches:    tools/gate_extra.sh, tests/, tests/CMakeLists.txt, DEV_MANUAL.md, CMakeLists.txt
+touches:    tools/gate_extra.sh, tests/, tests/CMakeLists.txt, DEV_MANUAL.md, CMakeLists.txt, adocs/specs.md, adocs/data/
 excludes:   putting any of it in the automatic TESTS gate (DEC-025); a remote CI
-decisions:  DEC-139, DEC-141
+decisions:  DEC-139, DEC-141, DEC-166, DEC-167
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     Claude Opus 5 (coordinator)
+done:       2026-09-10. `tools/gate_extra.sh` runs five stages and prints one terminal marker on every exit path; **GATE-EXTRA-DONE 5 stages 768 s** at the tree that completes this step, g++ 13.3, workstation, on mains and otherwise idle. Stage table below. The sanitizer build's `bench` total equals the Release one -- **both 26851183 nodes** -- which is DEC-167's assertion firing green, and **zero ASan, UBSan or LSan reports** across the whole `fast` label. `tests/test_gate_extra_script.sh` is seven sandbox cases at 0.46 s in the fast label, **12 of 12 cuts killed**. Fast suite green in both builds; `tools/gate.sh` green. No `src/` change, so `No functional change` and no `Bench:` line.
 
 ## Why this exists
 
@@ -401,3 +401,211 @@ different compiler; coverage is reach, not speed, and transfers.
    existing `Watching:` bullet, or its own bullet `Extra gate: last
    GATE-EXTRA-DONE <date> <sha> <mm:ss>`. Recommended: its own bullet, so a
    missed week is visible when `Watching:` reads "nothing".
+
+## What was done, and what the run measured
+
+### The stage table, replacing section 3's estimates
+
+Two runs. **Run 1 is the cold one** -- `build-sanitize` did not exist and
+`build-debug` was stale -- and it failed. **Run 2 is what a weekly run costs**,
+with both directories warm. Both are quoted because section 7 asks for both.
+
+| # | stage | run 1, cold | run 2, warm | estimate in section 3 |
+|---|---|---|---|---|
+| 1 | `prose` | 0 s ok | 0 s ok | seconds |
+| 2 | `citations` | 0 s ok | 1 s ok | seconds |
+| 3 | `debug` | 276 s ok | 258 s ok | about 7 min |
+| 4 | `sanitize` | **514 s exit 8** | 455 s ok | 3 to 6 min |
+| 5 | `perft` | 53 s ok | 54 s ok | about 1 min |
+| | **total** | 843 s | **768 s, 12 m 48 s** | 12 to 15 min |
+
+So the guide's own estimate was right and R10's "about 20 minutes" was high.
+The two figures are close because ccache carries the compile: the cold run's
+extra 75 s is the sanitizer configure and first build, and a weekly run pays
+almost none of it.
+
+**The Debug stage is cheaper here than the figure the guide inherited.** The
+2026-08-14 MacBook timings were 165 s `test_movegen` and 216 s `test_search`;
+on this workstation the six are `test_movegen` **151.07 s**, `test_search`
+**55.78 s**, `test_engine` **49.82 s**, `test_chesso` 1.18 s, `test_evaluation`
+0.21 s, `test_openings` 0.04 s, 258.11 s together. `test_search` is the one that
+moved, and by a factor of four -- the DEC-049 machine change, not anything this
+step did. `DEV_MANUAL.md` quotes the stage totals rather than the old per-binary
+figures.
+
+### What the run found, which is nothing, and what that is worth
+
+**Zero ASan, UBSan and LeakSanitizer reports** over the whole `fast` label and
+`bench` -- 33 binaries, 431.96 s under instrumentation. The option had not been
+run since the 2026-08-13 audit, so this is the first statement about the tree in
+a month, and it is a clean one. `ctest -L slow` green at 53.85 s (INV-1) and the
+six Debug binaries green at 258.11 s (INV-2, INV-4, and every other `assert(`
+in `src/`).
+
+**DEC-167's cross-build assertion fired green**: sanitizer
+`26851183 nodes 1385612 nps` against Release `26851183 nodes 7651211 nps`,
+`INV-6 across builds: both 26851183 nodes`. The instrumentation costs
+**5.5x on nodes per second**, which is worth writing down beside ASan's
+documented "typical slowdown ... is 2x": that figure is ASan alone, and this
+directory carries UBSan as well.
+
+### The red-first for the recovery flag, section 6 (a)
+
+Observed in a scratch worktree of `a7e42cc`, `RelWithDebInfo`, `-DSANITIZER=ON`,
+with a signed overflow planted in `src/chesso.cpp` `command_test` and driven by
+`printf 'test 1\nquit\n'`. **Without `-fno-sanitize-recover=undefined`:**
+
+```
+src/chesso.cpp:1711:5: runtime error: signed integer overflow: 2147483647 + 1 cannot be represented in type 'int'
+...
+Total explored nodes: 1479
+EXIT_WITHOUT_FLAG=0
+```
+
+The run reported the undefined behaviour and then **ran the whole command to
+completion and exited 0**. **With the flag:** the same report, then
+`EXIT_WITH_FLAG=1`, at the first check. `-fno-omit-frame-pointer` and
+`UBSAN_OPTIONS=print_stacktrace=1` turned the bare line into six named frames,
+`command_test` -> `uci_process_line` -> `main`. The worktree was removed and
+`git worktree list` confirms it gone.
+
+**The guide's literal plant does not work under g++ 13.3 at -O2, and it takes
+two tries to make it work.** `int x = INT_MAX; x += 1; (void) x;` produced **no
+report at all** -- gcc folds it at compile time, and the instrumentation never
+reaches the binary. Defeating the fold with `volatile int seed = INT_MAX; int x
+= seed; x += 1; (void) x;` **still produced no report**: `x` is dead after the
+`(void)` cast, so the add is dropped even though the load is not. The plant only
+works when the result is stored back -- `seed = x;`. A standalone probe with a
+`printf` of `x` reported at the first attempt, which is what located the cause.
+Anyone re-running section 6 (a) needs the third form.
+
+### The one defect the test found in the script, before any run
+
+`repo="$(cd "$(dirname "$0")/.." && pwd)"`, the form the guide's template and
+`rating.sh` both use. **`dirname` is an external command**, and the sandbox's
+`PATH` holds only what the test links in: the substitution expanded to nothing,
+the root became `/`, and all five stages ran against the filesystem root while
+the script printed `gate_extra: repo /` and said nothing was wrong. It is the
+same class as `rating.sh`'s bare `$(nproc)` (S177, `2026-09-03_adversarial-F03`)
+and it was found on the day the script was written rather than by an audit
+months later, which is the whole argument for the smoke test.
+
+The root is now taken with `${0%/*}` -- a parameter expansion, no external
+command -- and then **checked rather than trusted**: a root with no
+`tools/plan_prose_check.py` is a named refusal before any stage. Case 6 guards
+both halves, and `M8_dirname_again` and `M12_no_root_check` are the cuts it was
+observed red under.
+
+### Run 1's failure, and why it is not a defect in the script
+
+Run 1 ended `GATE-EXTRA-FAILED: sanitize` after 514 s. The cause was
+`test_clang_format_script`, one of the 33 binaries in the `fast` label stage 4
+runs under the sanitizer: it could not resolve its pinned major, which is
+**DEC-146** -- `clang-format.sh` pins 23, this machine has 18 and 22, and
+`CLANG_FORMAT_MAJOR=22` must be exported. A detached run inherits no interactive
+shell's environment, and the export was not in the `nohup` line.
+
+**The script behaved correctly**: the fast label was genuinely red, the stage
+that ran it failed, the marker named that stage and the log named the binary.
+What is wrong is that a reader of the marker alone would blame the sanitizers
+for something that is not theirs, after paying for the build. That is a
+precondition, not a bug, and it is now written where the operator reads the
+launch line -- in `tools/gate_extra.sh`'s header and in `DEV_MANUAL.md`:
+**the extra gate presumes the automatic gate is green**, and on this machine
+that means exporting the override first.
+
+A pre-flight refusal was considered and not written. Reproducing
+`clang-format.sh`'s resolution loop duplicates it, and calling `--check` to read
+its "not found." line couples this script to another's message while also
+conflating a version mismatch with a genuine formatting red -- which belongs to
+the automatic gate and not to this one. Recorded here so the next reader does
+not re-derive it.
+
+### The watcher, and a second trap
+
+The first watcher on run 2 reported **"gate_extra process died with no marker"
+while the run was in stage 3**. The PID came from `pgrep -f gate_extra.sh`,
+which also matches the wrapper shell whose command line contains the launch
+string; that shell exited seconds later and the real run, a different pid, was
+still going. Re-armed on the right pid, it caught `GATE-EXTRA-DONE` normally.
+`pid=$!` in the launching shell is the only form that names the run, and
+`DEV_MANUAL.md` now says so. A watcher that cries wolf is worth as little as one
+that never fires (DEC-061).
+
+### The tests, and the twelve cuts
+
+`tests/test_gate_extra_script.sh`, registered `fast` with `TIMEOUT 60`,
+**0.46 s** through ctest. Seven cases over a throwaway directory whose `PATH`
+holds stubs for `cmake`, `ctest`, `python3` and `nproc` and two one-line engine
+binaries -- nothing is built and no stage does real work:
+
+1. every stub succeeds: exit 0, exactly one marker and it is DONE, the five
+   stages in the documented order, `build-debug` at `CMAKE_BUILD_TYPE=Debug`,
+   `build-sanitize` at `RelWithDebInfo` with `-DSANITIZER=ON`, the Debug
+   `ctest -R` anchored, and the two bench totals compared;
+2. the fast label red under the sanitizer: exit non-zero, one marker naming
+   `sanitize`, **and the `-L slow` call still after it** -- every stage runs;
+3. no `cmake` on `PATH`: one marker naming cmake, and the EXIT trap does not add
+   a second behind `fail()`'s;
+4. the two builds disagree on the bench total: the sanitize stage fails and says
+   `INV-6 across builds` (DEC-167);
+5. the sanitizer build prints no signature line: same, and not a silent pass on
+   an empty total;
+6. the script run from a directory that is not the chesso tree: one marker
+   naming the root, and **no stage ran**;
+7. static: `bash -n`, and no bare `$(nproc)`.
+
+**Cases 4, 5 and 6 exist because the first version of the file did not have
+them, and three cuts said so.** Three passes:
+
+| pass | cuts | killed | survivors, and why |
+|---|---|---|---|
+| 1 | 8 | 7 | `M5_no_bench_compare` -- the condition replaced by `false`. The test asserted only that the comparison had *run*, and both stubs print the same total either way, so the guard itself was never exercised |
+| 2 | 12 | 10 | `M11_debug_is_release` and `M12_no_root_check` -- nothing read the Debug directory's build type, and with `${0%/*}` the sandbox root is always correct, so the check that refuses a wrong one had nothing to refuse |
+| 3 | 12 | **12** | none |
+
+Pass 2 added cases 4 and 5, which made the engine stubs disagree on the total
+and print no signature at all; pass 3 added case 1's build-type assertion and
+case 6, which runs the script from a directory that is not the chesso tree. The generator is `adocs/data/S197_script_mutants.py`, which refuses
+unless every anchor appears exactly once, and it is not in `tools/mutants/`
+because these are shell mutants and `tools/mutation_check.py` builds the engine.
+
+### What changed outside `tools/` and `tests/`
+
+- `CMakeLists.txt`: the `SANITIZER` block gains
+  `-fno-sanitize-recover=undefined` and `-fno-omit-frame-pointer`, with the
+  observed red above as the comment's evidence. **No shipping or measured binary
+  is built with the option**, so no recorded figure moves.
+- `adocs/specs.md`: the INV-6 row gains the cross-build clause. DEC-167 put it
+  there and `adocs/specs.md` joined `touches:` for it.
+- `DEV_MANUAL.md` "Test": a new `### The extra gate` with the five stages, the
+  markers, `JOBS`/`OUT`/`STAGES`, the detached launch and poll loop, the DEC-141
+  cadence, the two traps above, and a `#### Coverage` subsection carrying the
+  `llvm-cov` recipe as an on-demand command compared against
+  `adocs/data/2026-09-04_test_review/coverage_unexecuted.txt` **by region and by
+  eye** -- every commit since `5cffb70` has shifted its line numbers and the
+  review used Apple clang. The paragraph above it that said running the Debug
+  half "is still on you" now points at stage 3.
+- **No coverage run was made.** The recipe is documented, not exercised; DEC-167
+  question 4 declined the script that would have made the comparison mechanical,
+  so nothing here claims a fresh coverage number.
+- `MANUAL.md`: checked, unchanged -- no UCI surface moves. `README.md`:
+  untouched, human-owned.
+- `.gitignore`: checked, no change needed. `build-*` already covers
+  `build-sanitize/` and `build-coverage/`, and the section 5 finding stands.
+
+### What the next reader should know
+
+- **The `-j` count in `DEV_MANUAL.md` is inconsistent and this step did not fix
+  it.** The `ctest --test-dir build-debug -L fast` line under *"Or through
+  ctest, which since S067 no longer times the debug build out"* reads `-j12`;
+  the near-identical line this step rewrote, under the paragraph about the
+  Debug build asserting inside `make_move`, read `-j8`. The machine has 12 and
+  `AGENTS.md`'s TESTS rule spells `-j8`. Only the line inside the rewritten
+  paragraph was corrected, to 12. Which number the rule itself should carry is a
+  separate question and is not S197's.
+- `STAGES` takes a subset by name and refuses an unknown one: `STAGES="sanitize
+  perft"` re-runs the expensive half after a fix without paying for the Debug
+  build again.
+- The sanitizer directory persists, so the weekly run is the 768 s figure and
+  not the 843 s one. Deleting `build-sanitize/` costs about 75 s to rebuild.

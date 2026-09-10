@@ -699,12 +699,153 @@ same tree with python-chess, whenever the corpus or either depth moves
 The debug build asserts the same two things inside `make_move` and
 `unmake_move` themselves, which is a stricter place to catch them: the assert
 fires at the entry and exit of the call rather than after it returns. That half
-is **not** in the gate — both gated build directories are Release, where every
-`assert` is dead — and running it is still on you:
+is **not** in the automatic gate — both gated build directories are Release,
+where every `assert` is dead. It is stage 3 of `tools/gate_extra.sh` below; by
+hand it is:
 
 ```bash
-cmake --build build-debug -j8 && ctest --test-dir build-debug -L fast
+cmake --build build-debug -j12 && ctest --test-dir build-debug -L fast
 ```
+
+### The extra gate, `tools/gate_extra.sh`
+
+Everything the `fast` label cannot hold, in one script with one terminal marker.
+S197. It is **not** automatic and never becomes automatic — DEC-025 keeps the
+per-commit gate at `tools/gate.sh` — and **DEC-141 clause 3 says when it runs**:
+before a step that touched `make_move`, `unmake_move`, the generator or the
+search completes, and otherwise weekly. The date and sha of the last
+`GATE-EXTRA-DONE` are a bullet of their own in `adocs/status.md`, so a missed
+week is visible.
+
+```bash
+tools/gate_extra.sh                             # all five stages
+STAGES="sanitize perft" tools/gate_extra.sh     # a subset, after a fix
+JOBS=6 OUT=/tmp/run tools/gate_extra.sh         # override cores and outdir
+```
+
+`JOBS` defaults to `nproc`, then `sysctl -n hw.logicalcpu`; `OUT` defaults to
+`/tmp/chesso_gate_extra_<stamp>` and holds one log per stage,
+`NN_<stage>.log`. The five stages run cheapest first, and **every stage runs
+even after one fails** — the weekly run's value is the whole picture in one
+pass, so the marker names every stage that failed rather than the first:
+
+| # | stage | what it catches that the automatic gate cannot |
+|---|---|---|
+| 1 | `prose` | stale tense in `adocs/plan.md`, `tools/plan_prose_check.py --prose` |
+| 2 | `citations` | a code citation in a pending step file that no longer resolves to its symbol |
+| 3 | `debug` | INV-2 and INV-4 and every other `assert(` in `src/`, over the six binaries that drive `make_move` — `test_chesso`, `test_openings`, `test_movegen`, `test_evaluation`, `test_search`, `test_engine`. Both gated builds are Release, where those asserts are dead |
+| 4 | `sanitize` | out-of-bounds reads, use-after-free, signed overflow, bad shifts, misaligned loads, and leaks on Linux — ASan and UBSan over the `fast` label, plus `bench` |
+| 5 | `perft` | INV-1 at the depths the fast label does not reach, `ctest -L slow` |
+
+**Stage 4 also asserts INV-6 across builds** (DEC-167): the sanitizer build's
+`bench` total must equal `build/src/chesso`'s. The two directories differ only
+in instrumentation, so a difference is a read of uninitialised or out-of-bounds
+memory that moved the search tree and that neither sanitizer reported — the
+class they are blind to. It is the third reading of INV-6, and the only one that
+compares two *builds* of one commit rather than two commits.
+
+The sanitizer directory is `RelWithDebInfo`, not `Release` and not `Debug`:
+`-O2 -g` is the "-O1 or higher" ASan's documentation asks for plus symbolised
+reports, and it falls on the 600 s side of `CHESSO_TEST_TIMEOUT`, so a 2x
+slowdown cannot hit the 60 s Release ceiling and read as a failure that is
+really the clock. The `SANITIZER` option carries
+`-fno-sanitize-recover=undefined` since S197, and that flag is load-bearing:
+**UBSan recovers by default**, so without it a run prints
+`runtime error: signed integer overflow: 2147483647 + 1`, carries on to the end
+and exits **0**. Measured with a planted overflow on 2026-09-10: exit 0 without
+the flag, exit 1 with it. `-fno-omit-frame-pointer` is there for the same
+reason ASan's documentation asks for it — with `UBSAN_OPTIONS=print_stacktrace=1`
+the same report came back with six named frames instead of a bare line.
+
+A red `citations` stage means fix the citation in the step file, by symbol
+(DEC-135) — never relax the check. A red anything else is a bug and the BUGS
+rule applies: fix it before anything else starts.
+
+**It presumes the automatic gate is green.** Stage 4 runs the whole `fast`
+label under the sanitizer, so any red in that label fails the sanitize stage —
+and the marker then names the sanitizers for something that is not theirs, after
+the build has been paid for. The first real run failed exactly that way:
+`test_clang_format_script` could not resolve its pinned major, and 514 s of
+Debug and sanitizer building went by before it said so. On the machine
+`.moltke.local.md` describes that means exporting DEC-146's override **in the
+launching shell**, because a detached run inherits no interactive environment:
+
+```bash
+export CLANG_FORMAT_MAJOR=22
+```
+
+**The stages load every core, so never run this beside a match or an SPSA**
+(PLAN and MACHINE rules). A run is longer than one tool call, so detach it and
+poll the whole log — never `tail -f | grep`, which cannot exit on a log that has
+stopped being written (WATCHERS rule, DEC-061):
+
+```bash
+nohup tools/gate_extra.sh > .tuning/gate_extra_$(date +%F).log 2>&1 &
+pid=$!
+bash -c '
+  end=$(($(date +%s)+3600))
+  until grep -qE "GATE-EXTRA-(DONE|FAILED)" "$1"; do
+    kill -0 "$2" 2>/dev/null || exit 3
+    [ "$(date +%s)" -ge "$end" ] && exit 124
+    sleep 20
+  done' _ .tuning/gate_extra_$(date +%F).log $pid
+```
+
+`pid=$!` is load-bearing and `pgrep -f gate_extra.sh` is not a substitute: the
+pattern also matches the wrapper shell whose command line contains the launch
+string, and that shell exits seconds later. Arming the watcher on it reports
+"died with no marker" while the run is still in stage 3 — observed 2026-09-10,
+and a watcher that cries wolf is worth as little as one that never fires.
+
+The marker is one line on every exit path, including the refusals that come
+before any stage — no `cmake`, no `ctest`, no `python3`, no way to count cores,
+or a root that is not the chesso tree:
+
+```
+GATE-EXTRA-DONE <n> stages <total> s <outdir>
+GATE-EXTRA-FAILED: <stage> <stage>... <outdir>
+```
+
+`tests/test_gate_extra_script.sh` is the guard on all of that, in the `fast`
+label at 0.46 s: seven cases over a sandbox whose `PATH` holds stubs for
+`cmake`, `ctest`, `python3` and `nproc`, so no stage does any real work. Both
+`fastchess.sh` and `rating.sh` shipped with a path that printed no marker at
+all and both were found after the fact (S167, S177); this one is checked from
+the day the script exists. The twelve cuts every case was observed red under
+are `adocs/data/S197_script_mutants.py`.
+
+#### Coverage, on demand and never a stage
+
+`adocs/testing_strategy.md` R13: coverage is a periodic report, not a gate. The
+recipe is clang's, because the gcc route produces gcov output rather than the
+format the 2026-09-04 test review recorded. On macOS prefix each `llvm-*` with
+`xcrun`; on this workstation the tools are suffixed (`clang++-22`,
+`llvm-cov-22`, `llvm-profdata-22`) — `.moltke.local.md` has the paths.
+
+```bash
+cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate"
+cmake --build build-coverage -j12
+LLVM_PROFILE_FILE="$PWD/build-coverage/prof/%m-%p.profraw" ctest --test-dir build-coverage -L fast
+llvm-profdata merge -sparse build-coverage/prof/*.profraw -o build-coverage/chesso.profdata
+objs=$(for b in build-coverage/tests/test_* build-coverage/tools/*; do [ -x "$b" ] && [ ! -d "$b" ] && printf -- '-object %s ' "$b"; done)
+llvm-cov report -instr-profile=build-coverage/chesso.profdata build-coverage/src/chesso $objs \
+  -ignore-filename-regex='tests/|tools/|doctest|json' > build-coverage/summary.txt
+llvm-cov show -instr-profile=build-coverage/chesso.profdata build-coverage/src/chesso $objs \
+  -show-branches=count -show-line-counts-or-regions -sources src/ > build-coverage/show.txt
+```
+
+`summary.txt` compares with
+`adocs/data/2026-09-04_test_review/coverage_summary.txt`, whose
+"89 functions have mismatched data" warning is expected across 25 binaries.
+Lines whose count column is `0` in `show.txt` compare with
+`coverage_unexecuted.txt` **by region and by eye**, not by diff: every commit
+since `5cffb70` has shifted its line numbers, and the review took it with Apple
+clang and `-march=native`. Coverage is reach, not speed, so it transfers across
+the two compilers. `.gitignore` already covers `build-*`, so keep the
+`.profraw` and `.profdata` files inside `build-coverage/` and nothing new needs
+ignoring.
 
 ### The Debug self-play habit
 

@@ -7,6 +7,74 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S197 is done, 2026-09-10: the second tier of the gate is a script with one
+  marker, and its first green run says the tree is clean under instrumentation.**
+  `tools/gate_extra.sh`, five stages cheapest first, **GATE-EXTRA-DONE 5 stages
+  768 s** -- `prose` 0 s, `citations` 1 s, `debug` 258 s over the six binaries
+  that drive `make_move` (INV-2, INV-4), `sanitize` 455 s over the whole `fast`
+  label plus `bench`, `perft` 54 s (INV-1). **Zero ASan, UBSan and LeakSanitizer
+  reports** across 33 binaries under instrumentation; the option had not been run
+  since the 2026-08-13 audit, so this is the first statement about the tree in a
+  month and it is a clean one. DEC-167's cross-build assertion green: sanitizer
+  `26851183 nodes 1385612 nps` against Release `26851183 nodes 7651211 nps`, the
+  instrumentation costing **5.5x on nps** where ASan's own documentation says 2x
+  for itself alone. DEC-141 clause 3 now has a tool to name.
+- **The flag that makes the option usable as a stage had never been there, and
+  its red was observed.** Without `-fno-sanitize-recover=undefined` a planted
+  signed overflow printed `runtime error: signed integer overflow: 2147483647 +
+  1`, ran the whole command to completion and **exited 0** -- a stage on that
+  build is green on a log carrying undefined behaviour. With it, exit 1 at the
+  first check. **The guide's literal plant produces no report at all under
+  g++ 13.3 at -O2**: gcc folds `int x = INT_MAX; x += 1; (void) x;`, and a
+  `volatile` seed is still not enough because the result is dead -- it takes a
+  store back. Anyone re-running section 6 (a) needs the third form.
+- **The smoke test found a defect in the script before a single stage ever
+  ran.** `repo="$(cd "$(dirname "$0")/.." && pwd)"` -- the form `rating.sh` uses
+  -- expands to nothing on a `PATH` without `dirname`, so the root became `/`
+  and all five stages ran against the filesystem root while the script printed
+  `gate_extra: repo /` and said nothing was wrong. It is `rating.sh`'s bare
+  `$(nproc)` again (S177), caught on the day the script was written rather than
+  by an audit months later. The root is `${0%/*}` now, a parameter expansion,
+  and is **checked rather than trusted**: a root with no
+  `tools/plan_prose_check.py` is a named refusal before any stage.
+- **Seven sandbox cases at 0.46 s in the fast label, 12 of 12 cuts killed over
+  three passes** -- and three of the seven exist only because the earlier passes
+  left something alive. Pass 1, 8 cuts, killed 7: `M5_no_bench_compare` survived
+  because the test asserted only that the bench comparison had *run*, both stubs
+  printing the same total either way. Pass 2, 12 cuts, killed 10:
+  `M11_debug_is_release` and `M12_no_root_check` survived because nothing read
+  the Debug directory's build type and nothing ever gave the root check a wrong
+  root to refuse. Cases 4, 5 and 6 close all three. The generator is
+  `adocs/data/S197_script_mutants.py` and it refuses unless every anchor resolves
+  exactly once.
+- **Run 1 failed, it was not the sanitizers, and the precondition is now written
+  where the launch line is.** `GATE-EXTRA-FAILED: sanitize` after 514 s, caused
+  by `test_clang_format_script` -- one of the 33 binaries stage 4 runs under the
+  sanitizer -- failing to resolve its pinned major, which is **DEC-146** and
+  wants `CLANG_FORMAT_MAJOR=22` exported. A detached run inherits no interactive
+  shell's environment and the `nohup` line did not carry it. The script behaved
+  correctly and the marker named the stage that failed; what is wrong is that
+  the marker alone blames the sanitizers for something that is not theirs, after
+  the build has been paid for. **The extra gate presumes the automatic gate is
+  green**, and that sentence is now in the script header and in `DEV_MANUAL.md`.
+  A pre-flight refusal was considered and declined, with the reason in the stamp
+  so nobody re-derives it.
+- **A watcher cried wolf and the reason is worth keeping.** The first watcher on
+  run 2 reported "died with no marker" while the run was in stage 3, because the
+  pid came from `pgrep -f gate_extra.sh` -- which also matches the wrapper shell
+  whose command line contains the launch string, and that shell exits seconds
+  later. `pid=$!` in the launching shell is the only form that names the run.
+  `DEV_MANUAL.md` says so now. DEC-061.
+- **DEC-167 records the owner's five section-10 answers**, 2026-09-10: assert the
+  cross-build bench totals in stage 4 (so `adocs/specs.md`'s INV-6 row gains the
+  clause and the file joined `touches:`); six Debug binaries, the three mate ones
+  stay out on cost; **no** `tools/coverage_unexecuted.py`, here or as a step of
+  its own, so the `llvm-cov` recipe is documented and the comparison stays by
+  eye; the two `SANITIZER` flags go in; and the cadence gets its own `status.md`
+  bullet rather than a clause inside `Watching:`. Question 3 was already answered
+  by DEC-166. **No coverage run was made** -- the recipe is documented, not
+  exercised, so nothing here claims a fresh coverage number.
+
 - **S196 is done, 2026-09-10: the fault-injection driver is `tools/mutation_check.py`
   over 40 tracked mutants, and the fast suite's kill rate is a measured number
   -- 39 of 39, 100 %.** 3948 s wall on this workstation, worktree at `44440b4`,
@@ -1252,17 +1320,15 @@ Updated: 2026-09-10, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S196**, now Open entry 1 -- the fault-injection driver becomes
-  `tools/mutation_check.py` over a tracked mutant list. It has more material
-  waiting than any other pending step: S204's seven hand-applied mutants,
-  S193's six, and now **S191's thirteen with the red each produced**, recorded
-  per row in its stamp, plus a second tracked mutant file
-  (`adocs/data/S191_mutants.py`) to fold in beside the 2026-09-04 one. Behind
-  it **S197**, **S192**, **S205**, **S195**, **S194**, entries 2 to 6; S192's
-  row 6 is done and both S193 and S191 named further goldens in DEC-142 form --
-  the option-line count and the defender set's 104 rows. S151's pair, Open
-  entry 7, is still the owner question parked below. The enrichment pass's next
-  file is **S181**, today Open entry 8.
+- Next: **S192**, now Open entry 1 -- every golden in `tests/` named at its site
+  with the script that re-derives it (DEC-142). Its row 6 is already done, and
+  S193, S191 and S204 each named further goldens in that form since it was
+  written: the option-line count, the defender set's 104 rows, and
+  `test_mate_carry`'s five per-case ceilings with
+  `adocs/data/S203_case_sweep.sh --ceilings` as their deriver. Behind it
+  **S205**, **S195**, **S194**, entries 2 to 4; S151's pair, Open entry 5, is
+  still the owner question parked below. The enrichment pass's next file is
+  **S181**, today Open entry 6.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --
@@ -1278,6 +1344,12 @@ Updated: 2026-09-10, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `d68cfa6` 12:48**, the
+  first run there has ever been. DEC-141 clause 3 is the cadence -- before a
+  step that touched `make_move`, `unmake_move`, the generator or the search
+  completes, and otherwise weekly -- and this bullet is where a missed week
+  shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first
+  or stage 4 goes red on the formatter (DEC-146).
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on
   2026-09-09 and its watcher exited on `SPRT-RUN-DONE`, acknowledged and read

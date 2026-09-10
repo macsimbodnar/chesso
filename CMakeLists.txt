@@ -37,13 +37,36 @@ else()
      # string(REPLACE "-O3" "-Ofast" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
+# S197, DEC-167. The two extra flags are what make the option usable as a gate
+# stage rather than a thing somebody reads the output of.
+#
+# -fno-sanitize-recover=undefined, because UBSan recovers by default: gcc's
+# documentation says "error recovery is turned on by default" for
+# -fsanitize=undefined, and clang's says the instrumented program "prints a
+# verbose error report and continues execution upon a failed check". Observed
+# here on 2026-09-10 with a signed overflow planted in command_test and built
+# at RelWithDebInfo: without the flag the run printed
+# "runtime error: signed integer overflow: 2147483647 + 1" and then ran the
+# whole test command to completion and exited 0. With it, exit 1 at the first
+# report. A stage that ran the recovering form would be green on a log carrying
+# undefined behaviour.
+#
+# -fno-omit-frame-pointer, because ASan's documentation asks for it "to get
+# nicer stack traces in error messages"; with UBSAN_OPTIONS=print_stacktrace=1
+# the same report came back with six named frames instead of the bare line.
+#
+# No shipping or measured binary is built with SANITIZER=ON, so neither flag
+# moves a recorded figure.
 if(SANITIZER)
      message("-- Sanitizer ON")
      add_compile_options(-fsanitize=address)
      add_compile_options(-fsanitize=undefined)
-     
+     add_compile_options(-fno-sanitize-recover=undefined)
+     add_compile_options(-fno-omit-frame-pointer)
+
      add_link_options(-fsanitize=address)
      add_link_options(-fsanitize=undefined)
+     add_link_options(-fno-sanitize-recover=undefined)
 else()
      message("-- Sanitizer OFF")
 endif()

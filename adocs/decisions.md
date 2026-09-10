@@ -9302,3 +9302,71 @@ Consequences: `adocs/data/` joined S196's `touches:`, as did
               and the live mutant list is the copy under `tools/mutants/`.
               S197's section 10 question 3 is answered here; an implementer who
               reads it needs no new interview.
+
+## DEC-167  2026-09-10  The extra gate asserts the sanitizer `bench` total against the Release one; the coverage recipe stays a documented command
+Tags:         testing, tooling, s197, dec-141, dec-025, dec-166, inv-6, sanitizers, coverage
+Context:      S197's implementation guide deferred six questions to the owner
+              before `tools/gate_extra.sh` was written. Question 3 -- whether
+              S196's full mutation pass joins the weekly run -- was already
+              answered by DEC-166 (no). The other five were open at the moment
+              the step started, and two of them change what the step builds.
+              **The sanitizer's blind spot.** ASan and UBSan report what they
+              instrument. A read of uninitialised memory that is neither out of
+              bounds nor undefined by their definition changes the search tree
+              and is reported by neither; the engine's own `bench` total is a
+              27-million-node signature over twelve positions that such a read
+              moves. The two builds differ only in instrumentation, so the
+              totals are equal or something is wrong.
+              **The coverage comparison.** The 2026-09-04 test review's
+              `coverage_unexecuted.txt` was produced with Apple clang and
+              `-march=native`; every commit since `5cffb70` has shifted its
+              line numbers, so comparing it against a fresh run is by-eye work
+              that a small stdlib script over `llvm-cov export -format=text`
+              could make mechanical.
+Decision:     By the owner, 2026-09-10, answering S197 section 10:
+              **(1) assert.** Stage 4 compares the sanitizer build's `bench`
+              total with `build/src/chesso bench`'s and fails the stage on a
+              difference. `adocs/specs.md`'s INV-6 row gains the clause, so
+              `adocs/specs.md` joins S197's `touches:`.
+              **(2) six binaries.** The Debug stage runs `test_chesso`,
+              `test_openings`, `test_movegen`, `test_evaluation`, `test_search`
+              and `test_engine`. The three mate binaries stay out.
+              **(4) no script.** `DEV_MANUAL.md` documents the `llvm-cov`
+              recipe as an on-demand command and the comparison stays by eye;
+              `tools/coverage_unexecuted.py` is not written, here or as a
+              step of its own.
+              **(5) the flags go in.** The `SANITIZER` block gains
+              `-fno-sanitize-recover=undefined` and `-fno-omit-frame-pointer`,
+              with the section 6 (a) red-first observed and quoted in the stamp.
+              **(6) its own bullet.** `status.md` carries
+              `Extra gate: last GATE-EXTRA-DONE <date> <sha> <mm:ss>` as a
+              bullet of its own, not a clause inside `Watching:`.
+Rejected:     **Recording both bench totals in the stamp without asserting.**
+              Stays inside the `accepts:` as written and touches no spec, but a
+              future divergence is then visible only to whoever reads that
+              run's log -- which is the class of miss this step exists to stop.
+              **The three mate binaries in the Debug stage.** They drive
+              `make_move` under the same asserts, but `test_mate_breadth` alone
+              is about 697 s in Debug (`tests/CMakeLists.txt`), roughly
+              tripling a stage estimated at 7 minutes, for assertions the six
+              already exercise on every make and unmake.
+              **`tools/coverage_unexecuted.py` in this step.** Widens
+              `touches:` and owes a test of its own, for a comparison made a
+              few times a year against a baseline taken on a different
+              compiler.
+              **`tools/coverage_unexecuted.py` as a new step.** Same work,
+              deferred; the owner declined the capability rather than its
+              timing, so a step in `plan_todo/` would be a placeholder for a
+              decision already made.
+              **A clause inside `Watching:`.** A missed week is then invisible
+              whenever `Watching:` reads "nothing", which is exactly when the
+              cadence is most likely to have lapsed.
+Consequences: `adocs/specs.md` joins S197's `touches:` for the INV-6 row alone;
+              no other spec moves and no UCI surface changes. The `SANITIZER`
+              option means something stricter after this: a UBSan report is a
+              non-zero exit rather than a line on a green log. No shipping or
+              measured binary is built with the option, so no recorded figure
+              moves. The stage-4 assertion is a third reading of INV-6, beside
+              `tools/gate.sh`'s signature check and `tools/search_bench.py`'s
+              per-position counts -- the first that compares two *builds* of
+              the same commit rather than two commits.
