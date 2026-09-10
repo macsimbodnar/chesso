@@ -356,7 +356,9 @@ binary's bench to the message. Not applied here.
 
 ### 2026-09-04_test_review-F08  low  three determinism exposures are documented in one place or none
 
-Status: planned — S195 and S179 (the key generator)
+Status: closed — S203 took the key generator (DEC-154, not S179) and S195 the
+warm-table exposure; the LMR `std::log` exposure stays recorded in `status.md`
+as cross-machine and is not repaired
 
 Evidence: the Zobrist keys come from
 `std::uniform_int_distribution<uint64_t>` over `mt19937_64`

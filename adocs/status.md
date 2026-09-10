@@ -7,6 +7,42 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S195 is complete: three cases hold what an SPRT cannot see, and two of the
+  guide's four predictions about them were wrong.** `tests/test_engine.cpp`
+  gains *node-limited searches repeat across ucinewgame* -- two sequences at ten
+  node limits, each run twice with `ucinewgame` between, **40 searches and every
+  pair identical** on the last `info` line's `nodes` and on the `bestmove` line,
+  ten and nine distinct counts against a floor of five -- *a repeated go depth
+  is cold only across ucinewgame* -- **77612 cold, 77612 cold again, 8460 warm**
+  at depth 8, the inequality holding at every depth 5 to 10 -- and *bench
+  searches its last position cold*, `bench 9`'s eighth position 128048 against a
+  cold standalone 128048. **Four mutants, every one built and observed, all
+  reverted**: `tt_reset` out of `reset_for_new_game` reddens case 1 at the first
+  limit, `113 then 232`; **`set_position`'s reset gate never firing leaves all
+  three green**, where the guide predicted case 2 red -- S189's
+  `reset_for_new_game` calls `tt_reset` directly as well, so `ucinewgame` clears
+  the table whatever `set_position` does; deleting that gate so every `position`
+  resets, the F08 hazard silently repaired, reddens case 2 at `warm repeat 77612
+  equals cold 77612`; cutting both paths reddens all three. **The bench clause
+  needed no code and case 3 cannot prove what it was written to prove** -- S189
+  landed first, so `command_bench` already resets per position, and commenting
+  that call out leaves `bench 9`'s output **byte-identical**, every `nodes`,
+  `score` and `pv` field and the signature total `1600876`, because the eight
+  FENs are pairwise distinct and `set_position` already resets on a differing
+  FEN. The loop's reset guards a bench list that ever *repeats* a position and
+  no test can build that from outside, so case 3 ships as the end-to-end
+  coldness property with the blind spot named at its site. Section 4's constants
+  were re-derived here and **the MacBook's did not transfer** -- 77612 against
+  its 77617 -- which is S203's key redraw landing in between, and is why nothing
+  in these cases is compared against a recorded number. Goldens: none (DEC-142).
+  `DEV_MANUAL.md` "Measure" gains the warm-table paragraph; `MANUAL.md` checked
+  and unchanged, the owner deciding on 2026-09-10 that neither candidate
+  sentence is wanted. No `src/` change, no `Bench:` line, no SPRT. Cost Release
+  0.343 / 0.021 / 0.205 s, Debug 7.01 / 0.47 / 5.19 s inside a 65.26 s
+  `test_engine` against that build's 600 s ceiling. Gate green in both builds,
+  33/33 and 33/33 under `CLANG_FORMAT_MAJOR=22` (DEC-146), format clean. Closes
+  `2026-09-04_test_review-F08` with S203, which took the key half (DEC-154).
+
 - **S206 is complete: `truncation_scan`'s drift is two commits and neither is a
   defect.** Both readings reproduce at their own shas -- 135399 / 99 / 30 at
   `77d7450`, 138331 / 105 / 33 at HEAD, same corpus, same command, and the
@@ -1121,13 +1157,13 @@ Updated: 2026-09-10, by hand.
   `game_tables()` uninitialised -- which is what running the binary with a
   `-tc=` filter and no earlier case does -- they all pass vacuously. Under
   `ctest` the case is sound; the vacuity is the class S193 was written for.
-- In progress: **nothing.** `adocs/plan_current/` is empty; S206 completed into
-  `plan_done/` on 2026-09-10, S205 and S192 the same day. **The next step is
-  Open entry 1, S195** -- node-limited searches reproducible across
-  `ucinewgame`, and `bench` resetting the table per position. **The enrichment
+- In progress: **nothing.** `adocs/plan_current/` is empty; S195 completed into
+  `plan_done/` on 2026-09-10, S206, S205 and S192 the same day. **The next step
+  is Open entry 1, S194** -- the UCI book path executed by the fast suite, the
+  weighted draw seeded through `CHESSO_BOOK_SEED` (F06). **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
-  entry 4.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  entry 3.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
@@ -1571,6 +1607,23 @@ Updated: 2026-09-10, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
+  - **Three findings filed by S195, none of them planned.** (1) `MANUAL.md` has
+    no sentence saying what `ucinewgame` resets; the owner decided on
+    2026-09-10 that S195 would not add one, so the surface stays undocumented
+    on that point. (2) `MANUAL.md`'s `nodes` wording, "counting every
+    iteration", is not the whole truth: the last `info` line is printed only
+    when the iteration had a result, so a final iteration that aborts before it
+    has a PV leaves the reported count **under** the budget -- measured
+    2026-09-10, `go nodes 5000` reports 2917. Same decision, not added. (3)
+    **`command_bench`'s per-position `reset_for_new_game()` is unobservable and
+    no test can reach it.** Commenting it out leaves `bench 9`'s output
+    byte-identical on every `nodes`, `score` and `pv` field and on the
+    signature total, because the eight FENs are pairwise distinct and
+    `set_position` already resets on a differing FEN. It is a guard against a
+    bench list that ever repeats a position, and that list cannot be
+    constructed from outside the binary; the only thing that would make it
+    testable is surface `command_bench` does not have. Parked, not planned: a
+    step is created by a decision and none has been taken on any of the three.
   - ~~**Calibrate the harness on the workstation.**~~ **Taken 2026-09-08 as
     S198's A/A and retired**: 1000 fixed rounds, 0 forfeits, pair variance
     0.2430 +/- 0.0154 inside S105's band at `z = +0.16`, 2277 games an hour.

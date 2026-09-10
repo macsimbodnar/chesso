@@ -1660,6 +1660,296 @@ TEST_SUITE("engine: uci go")
   }
 
 
+  // S195, closing 2026-09-04_test_review-F08. The shape of Stockfish's
+  // tests/reprosearch.sh, as adocs/testing_strategy.md section 3.1 describes
+  // it: the same node-limited search, repeated across [ucinewgame], has to
+  // visit the same tree. What that shape catches is Stockfish#5376 -- a table
+  // generation counter [ucinewgame] did not reset, which showed up as two
+  // alternating bench totals and which an SPRT cannot see, because it averages
+  // over games and never repeats one search.
+  //
+  // No golden here (DEC-142): every assertion compares two runs inside one
+  // process and no count from any run is written into this file. The limits
+  // and the two move sequences are the only constants, and section 4 of
+  // adocs/plan_done/S195_reproducibility_test.md derives them.
+  //
+  // The one hazard these cases do NOT cover is the Stockfish one itself: a
+  // tt_reset() that forgot [generation] is invisible to both, since the
+  // entries are zeroed and replacement compares an entry's generation against
+  // the table's. That counter is guarded by construction -- tt_reset() puts
+  // [generation] back to 1 -- and not by anything asserted below.
+  struct search_report_t
+  {
+    uint64_t nodes;
+    std::string best;
+  };
+
+
+  // The last [info] line's node count, cumulative over the whole search since
+  // S037, and the [bestmove] line. Those two and nothing else: [pv] can
+  // lengthen on a carried mate line (S170), and [time] and [nps] are the
+  // machine's. Parsed outside the capture, so a failure message reaches a
+  // stdout that is nobody's buffer.
+  static search_report_t report_of(const std::vector<std::string>& lines)
+  {
+    search_report_t report = {0, ""};
+    bool seen_nodes = false;
+
+    for (const std::string& line : lines) {
+      if (line.rfind("info ", 0) == 0) {
+        const size_t at = line.find(" nodes ");
+
+        if (at != std::string::npos) {
+          report.nodes = std::stoull(line.substr(at + 7));
+          seen_nodes = true;
+        }
+      }
+
+      if (line.rfind("bestmove ", 0) == 0) { report.best = line; }
+    }
+
+    REQUIRE_MESSAGE(seen_nodes, "no info line carrying a node count");
+    REQUIRE_MESSAGE(!report.best.empty(), "no bestmove line");
+
+    return report;
+  }
+
+
+  TEST_CASE("node-limited searches repeat across ucinewgame")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("uci");
+
+      // Pinned, as tests/test_mate_carry.cpp pins it: a future default would
+      // otherwise move both what these searches cost and how warm the table
+      // is when they start.
+      uci_process_line("setoption name Hash value 16");
+    }
+
+    // Two sequences because one tree is one shape. Legality is all that was
+    // judged of them (DEC-023) and it was judged twice: python-chess 1.11.2
+    // push_uci, and the engine's own [fen] after [position startpos moves],
+    // which printed the same FEN for each. The second carries captures.
+    const std::vector<std::string> sequences = {
+        "e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6",
+        "d2d4 d7d5 c2c4 d5c4 e2e3 e7e5 f1c4 e5d4"};
+
+    // About a factor of two apart, so each budget truncates a different
+    // iteration. A linear spacing puts most of the limits inside one.
+    const std::vector<uint64_t> limits = {500,   1000,  2500,   5000,   10000,
+                                          25000, 50000, 100000, 150000, 250000};
+
+    // [go nodes] arms no timer and check_limits() compares the count exactly,
+    // so where a search stops is a function of the tree and of nothing else.
+    // T1 of the S193 guide: the [ucinewgame] here sets the stop flag and only
+    // a [go] clears it again, which is why every search goes through the UCI
+    // layer instead of calling iterative_deepening_search() directly.
+    auto run = [](const std::string& moves, uint64_t limit) {
+      std::vector<std::string> lines;
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("ucinewgame");
+        uci_process_line("position startpos moves " + moves);
+        uci_process_line("go nodes " + std::to_string(limit));
+        uci_wait_for_search();
+        lines = capture.lines();
+      }
+
+      return report_of(lines);
+    };
+
+    for (const std::string& moves : sequences) {
+      std::set<uint64_t> distinct;
+
+      for (const uint64_t limit : limits) {
+        const search_report_t first = run(moves, limit);
+        const search_report_t second = run(moves, limit);
+
+        // Never [nodes] == limit: the last [info] line is printed only when
+        // the iteration had a result, so a final iteration that aborts before
+        // it has a PV leaves the reported count under the budget. Measured
+        // 2026-09-10: 2917 at [go nodes 5000] on the first sequence.
+        REQUIRE_MESSAGE(first.nodes == second.nodes,
+                        (moves + " at " + std::to_string(limit) + ": " +
+                         std::to_string(first.nodes) + " then " +
+                         std::to_string(second.nodes)));
+        REQUIRE_EQ(first.best, second.best);
+
+        distinct.insert(first.nodes);
+      }
+
+      // Precondition, without which the sweep could be one search repeated ten
+      // times and would prove nothing about budgets. Measured 2026-09-10: ten
+      // distinct counts on the first sequence and nine on the second.
+      REQUIRE(distinct.size() >= 5);
+    }
+
+    uci_shutdown();
+  }
+
+
+  TEST_CASE("a repeated go depth is cold only across ucinewgame")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("uci");
+      uci_process_line("setoption name Hash value 16");
+    }
+
+    // tools/search_bench.py's midgame position, which is also the first of
+    // bench_positions.
+    const std::string fen =
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - "
+        "0 10";
+
+    auto run = [&fen](bool newgame) {
+      std::vector<std::string> lines;
+
+      {
+        stdout_capture_t capture;
+
+        if (newgame) { uci_process_line("ucinewgame"); }
+
+        uci_process_line("position fen " + fen);
+        uci_process_line("go depth 8");
+        uci_wait_for_search();
+        lines = capture.lines();
+      }
+
+      return report_of(lines);
+    };
+
+    const search_report_t cold = run(true);
+
+    // Precondition for the warm half: the table holds the root now, so a
+    // second search on it has something to read back.
+    memcpy(&game, uci_game(), sizeof(game_t));
+    REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
+
+    // The depth-limited twin of the case above, and it takes both reset paths
+    // to break before it fires: measured 2026-09-10, cutting tt_reset() out of
+    // reset_for_new_game() leaves it green, because set_position() still
+    // resets on the differing FEN, and cutting set_position()'s reset leaves
+    // it green for the mirror reason. With both cut it reads 8460 against a
+    // cold 77612.
+    REQUIRE_EQ(run(true).nodes, cold.nodes);
+
+    // F08 pinned as a property rather than repaired -- the step's excludes:.
+    // set_position() resets the table only when the FEN string differs from
+    // the one already loaded, so a [position] repeating the FEN keeps whatever
+    // the previous search left and the second search runs warm. The Chess
+    // Programming Wiki's Transposition Table page, section Aging, is why that
+    // is a property and not a bug: "most todays programs do not [clear the
+    // hash table between root positions], profit from entries of previous
+    // searches". The inequality is not an accident of one depth -- measured
+    // here 2026-09-10, cold against warm at depths 5 to 10: 15905/683,
+    // 21794/7400, 51667/11926, 77612/8460, 121530/9084, 208806/8218 -- and it
+    // is what goes red if the hazard is ever silently repaired: removing
+    // set_position()'s [initial_position != fen] gate reads 77612 against a
+    // cold 77612.
+    const search_report_t warm = run(false);
+
+    REQUIRE_MESSAGE(warm.nodes != cold.nodes,
+                    ("warm repeat " + std::to_string(warm.nodes) +
+                     " equals cold " + std::to_string(cold.nodes)));
+
+    uci_shutdown();
+  }
+
+
+  TEST_CASE("bench searches its last position cold")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("uci");
+      uci_process_line("setoption name Hash value 16");
+    }
+
+    // [bench 9] and not the bare form: the reset under test is the same call
+    // in the same loop and depth 9 costs 0.21 s here against 3.6 s at
+    // BENCH_DEPTH. The bare form has its own case, in
+    // tests/test_uci_surface.cpp, "bench prints one final signature line and
+    // repeats its total".
+    std::vector<std::string> lines;
+    {
+      stdout_capture_t capture;
+      uci_process_line("bench 9");
+
+      // No uci_wait_for_search(): [bench] searches on the calling thread, so
+      // it has finished by here and there is no thread to join.
+      lines = capture.lines();
+    }
+
+    // One count per position: the last [info] line before each [bestmove].
+    std::vector<uint64_t> per_position;
+    uint64_t last_info_nodes = 0;
+    bool saw_info = false;
+
+    for (const std::string& line : lines) {
+      if (line.rfind("info ", 0) == 0) {
+        const size_t at = line.find(" nodes ");
+
+        if (at != std::string::npos) {
+          last_info_nodes = std::stoull(line.substr(at + 7));
+          saw_info = true;
+        }
+      }
+
+      if (line.rfind("bestmove ", 0) == 0) {
+        REQUIRE(saw_info);
+        per_position.push_back(last_info_nodes);
+        saw_info = false;
+      }
+    }
+
+    // Eight positions, fixed in src/chesso.cpp.
+    REQUIRE(per_position.size() == 8);
+
+    std::vector<std::string> standalone;
+    {
+      stdout_capture_t capture;
+      uci_process_line("ucinewgame");
+
+      // The same string constant command_bench searches last, reached through
+      // the [position] shorthand rather than retyped.
+      uci_process_line("position mate2b");
+      uci_process_line("go depth 9");
+      uci_wait_for_search();
+      standalone = capture.lines();
+    }
+
+    // What this proves: bench's numbers are cold numbers, end to end -- the
+    // last position of the run reports what it reports when it is the only
+    // thing searched. What it does NOT prove, measured rather than argued
+    // (2026-09-10): commenting out the loop's reset_for_new_game() leaves
+    // [bench 9]'s output byte-identical on every nodes, score and pv field and
+    // on the signature total, because the eight FENs are pairwise distinct and
+    // set_position() already resets on a differing FEN. The loop's reset is a
+    // guard against a bench list that ever repeats a position, and no test can
+    // construct that list from outside.
+    //
+    // A red here after the bench set is reordered or extended means this case
+    // is comparing the wrong position, not that the engine broke.
+    const search_report_t cold = report_of(standalone);
+
+    REQUIRE_MESSAGE(cold.nodes == per_position.back(),
+                    ("bench read " + std::to_string(per_position.back()) +
+                     " on its last position, a cold search of it reads " +
+                     std::to_string(cold.nodes) +
+                     " -- is mate2b still the last of bench_positions?"));
+
+    uci_shutdown();
+  }
+
+
   TEST_CASE("a book move is checked against the real move list")
   {
     uci_init();

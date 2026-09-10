@@ -1931,6 +1931,26 @@ with one taken after it. The counts themselves did not move: the same run reads
 609848 / 2058510 / 468039 at depth 9 where it used to read 254082 / 1022573 /
 168767.
 
+**Two searches on the same FEN in one process are not two cold searches.**
+`set_position` (`src/chesso.cpp`) resets the transposition table only when the
+FEN string differs from the one already loaded, so a second `position` carrying
+the FEN the engine is already on keeps whatever the previous search left, and
+the search that follows runs warm. Measured 2026-09-10 on the midgame position,
+`go depth 8` cold against warm: **77612 nodes then 8460**, and the gap holds at
+every depth from 5 to 10. `tools/search_bench.py` is safe because its three FENs
+differ from each other, and so is `bench`, which sends the whole of `ucinewgame`
+before every position. What is not safe is searching a position twice, or
+re-running one search to double-check a count: send `ucinewgame` between them,
+or start a new process. This is a property and not a bug -- the Chess
+Programming Wiki's Transposition Table page, section Aging, is why an engine
+carries entries between root positions on purpose -- and it is pinned as one by
+`tests/test_engine.cpp` "a repeated go depth is cold only across ucinewgame".
+Its other half, that the same `go nodes N` repeated across `ucinewgame` visits
+the same tree, is `tests/test_engine.cpp` "node-limited searches repeat across
+ucinewgame": the shape of Stockfish's reproducibility test, which caught a
+counter their `ucinewgame` did not reset and which no SPRT could have seen.
+S195.
+
 Neither of those can price an evaluation term. A term that changes the score
 changes the tree, so the two builds visit different nodes and a wall time at
 fixed depth mixes the cost of the term with the shape of the search it caused.
