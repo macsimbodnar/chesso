@@ -12,7 +12,14 @@ done:
 ## Reserve, 2026-08-19, DEC-087
 
 Demoted behind the 3000 push with S110: measured +1.8 to +4.6 per table and
-only above ~3100 in the surveyed record.
+only above ~3100 in the surveyed record. **Both halves of that sentence are
+unverified.** The 2026-09-04 literature check searched for the continuation
+figures and the band and found neither (row A22); what it did find is that
+Stockfish pull request #5617 is where continuation correction history landed
+and that CPW's page carries no Elo number for any variant
+(https://www.chessprogramming.org/Static_Evaluation_Correction_History). The
+demotion rests on S110's sourced pawn figure and on the reserve's own logic,
+not on +1.8 to +4.6. S186 owns resolving it (DEC-137).
 
 ## The free second use
 

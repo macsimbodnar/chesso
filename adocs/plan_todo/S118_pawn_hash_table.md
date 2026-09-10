@@ -14,11 +14,18 @@ done:
 The published record has a warning this step's old position walked into: an
 implementer who cached a still-cheap pawn evaluation measured a **10 %
 slowdown**, and the reported ~10 % speedups come from engines whose pawn terms
-were expensive first. chesso's three pawn terms share four bitboard fills and
+were expensive first. **Both figures are unverified** -- the 2026-09-04
+literature check fetched CPW *Pawn Hash Table*
+(https://www.chessprogramming.org/Pawn_Hash_Table) and it states **no speed and
+no Elo figure at all**, only the hit rate below. The warning is kept because it
+is the reason this step moved out of the speed block and the reasoning stands
+without a number; S186 owns finding one (DEC-137). chesso's three pawn terms share four bitboard fills and
 are cheap by construction (S027). So this step now lands in the evaluation
 block, after S123 and S125 have made the pawn evaluation worth caching, and
 directly before S122 reads the shelter and storm slots it adds. The hit-rate
-expectation stands: a few thousand entries buy >95 % on the published numbers.
+expectation stands and is the one part of this paragraph with a source: CPW
+*Pawn Hash Table* states that a few thousand entries give hit rates above
+**95 to 99 %** (https://www.chessprogramming.org/Pawn_Hash_Table).
 
 ## What it costs today
 
@@ -35,6 +42,10 @@ clock, and the pawn structure is recomputed for a structure that changes on
 perhaps one move in eight.
 
 Reported +10.11 Elo and a 10 to 12 % speed-up, with hit rates above 95 %.
+**The +10.11 and the 10 to 12 % are unverified** (2026-09-04 literature check,
+part C: the CPW page carries neither); only the hit rate is sourced, as above.
+The accepts asks for this engine's own hit rate measured over a real search
+anyway, which is the number that decides anything here.
 
 **This is not the pattern INV-4 forbids.** INV-4 is about terms rebuilt from
 the bitboards at every node; this is a cache keyed on a hash that only moves

@@ -7,6 +7,67 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S207's SPRT is playing and S185 is complete, 2026-09-11 night.**
+
+  **In progress, S207** (`plan_current/`): a repetition is scored as a draw only
+  where the search itself walked into it, or on a third occurrence anywhere.
+  `src/bitboard.cpp` gains `classify_repetition()`, which compares the matching
+  history index against `search_state_t::root_history_size` --
+  `history.size` as `search()` was entered, set there unconditionally because
+  that is the only way into ply 0, so nothing had to be plumbed through the UCI
+  layer -- and `negamax_at` scores `DRAW_SCORE` on its `DRAW` class alone.
+  `is_position_repeated()` keeps its two-fold contract as a wrapper, which is
+  what leaves `test_engine.cpp`'s two direct cases and `datagen`'s game-level
+  adjudication untouched. **The F08 reproduction now answers the same way with
+  the history and without it** -- `-1229 / 412680 / e7e5` both, against the
+  reference's `score 0, nodes 5387, pv f6g8` with it, a false draw behind a
+  tree **77 times smaller**; oracles re-taken, python-chess
+  `is_repetition(3) False` and `can_claim_threefold_repetition() False`,
+  stockfish depth 18 **-703**. `search_bench` depth 9 is **node-identical**
+  (121530 / 801481 / 72924) while `bench` moves **26851183 -> 26491479**, and
+  the pair is exact rather than contradictory: from a bare FEN the only class
+  that can move is the root position recurring once inside the tree. Gate
+  **33/33 in both builds**, format clean, Debug self-play **8 games, 0
+  `Assertion`, 0 disconnect** (DEC-141), the `-569` golden re-derived,
+  `--prose` / `--citations` / `--touches` / `--params` all clean. Two mutants
+  added and both killed by hand -- **M35** (`>` to `>=`, the root's own entry)
+  and **M36** (the pre-S207 rule) -- `mutation_check.py` re-validates them from
+  a worktree after the completing commit. Three fast-suite cases moved: two
+  **re-stated, not relaxed** under DEC-173, each now reaching its position a
+  third time, and one of them ("a repetition is answered before the table is")
+  was a **discovery** the accepts did not name. **The SPRT is running**:
+  `adocs/data/S207_sprt.sh`, `--nonreg` `{-5, 0}` nElo at 8+0.08, Hash 16,
+  concurrency 12, launched detached 01:24 with seed `20260911012459`, out
+  `/tmp/chesso_sprt_nonreg_20260911_012459`, log `.tuning/sprt_s207.log`,
+  candidate `ae4eed4` + uncommitted against reference `ae4eed4`. Priced at
+  **41861 games / 18.4 h** worst case at the midpoint and 25591 / 11.2 h on a
+  bound (DEC-143), against a 40000-game cap -- so **no verdict at the cap is a
+  live outcome and it is pre-registered: recorded as zero and kept.** Watcher
+  armed through `Monitor` with all four exits and a 37 h ceiling. The step
+  completes when the verdict lands; nothing is committed for it before then,
+  because the run measures the working tree.
+
+  **Done, S185**: every figure the plan and thirteen pending files argue from
+  now carries its source or the word unverified where it sits. The Ethereal
+  ledger (commit `e755a814`) and the Stash `CHANGELOG.md` entries the block
+  order rests on are cited where they are used, and on DEC-087 as a second
+  `Amended:` line. **Three of the four numbers behind the zero-weight paragraph
+  did not survive being looked up**: +12.99 is Weiss #241's *tempo*, not rook
+  on the seventh, and +16.7, +4.2 and +9.2 have no source at all -- marked
+  unverified with the nearest fetched figures beside them. "Single digits for
+  most evaluation terms" is deleted as a claim, that ledger pricing search
+  steps only. S129's 13 and 25 are restated as **six-men** figures against
+  Minic's **0** at three men, with dropping the step named as an honest
+  outcome. S109's "~0 alone" is re-pointed to pull request **#2401**. About
+  thirty figures stay quoted as unverified with what was searched, handed to
+  **S186** as a sixteen-row work list. Nothing reordered. Documents only, no
+  `src/`, no run.
+
+  **Next**, without waiting for the owner (DEC-172): S181, S182 and S183 while
+  the match plays; S207 completed and committed when the verdict lands; then
+  S208 and S209, node-identical and owning no run; then S024's first verdict as
+  the next night's run.
+
 - **The 2026-09-10 audit is digested and the plan is re-sorted for the 3000
   mark, 2026-09-11 (DEC-170 to DEC-175).** Thirty-seven findings, five high:
   eight steps, **S207 to S214**, six decisions, six pending files amended (five
@@ -28,8 +89,9 @@ Updated: 2026-09-11, by hand.
   lands it completes S207 and continues down the list without waiting for the
   owner (DEC-172's clause): S208 and S209 in the morning, node-identical and
   owning no run, then S024's first verdict as the next night's run. `plan.md`'s cost and Elo paragraphs
-  stand as written until S182 and S183 rewrite them. No `src/` changed today,
-  no `Bench:` line, no run started.
+  stand as written until S182 and S183 rewrite them. **That digest commit**
+  changed no `src/`, carried no `Bench:` line and started no run; the bullet
+  above is what happened after it.
 
 - **S195 is complete: three cases hold what an SPRT cannot see, and two of the
   guide's four predictions about them were wrong.** `tests/test_engine.cpp`

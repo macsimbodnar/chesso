@@ -17,10 +17,17 @@ done:
 
 Demoted behind the 3000 push by the second review. The band evidence is
 against it as an ordering term at this strength: Lynx failed four SPRTs on it
-at ~2600 (-35.8 to -11.1) and Weiss measured it -4.2 at short control, +3.7
-only at long. Its documented value arrives as an *input* -- reducing tacticals
-with bad capture history measured +7.2/+2.4 at Ethereal, and capture futility
-and SEE margins read it -- which is work for the 3000-plus phase this reserve
+at ~2600 (-35.8 to -11.1, **unverified** -- no source was located for those
+four runs, and the band is S181's) and Weiss measured it **-4.17 +/- 4.83** at
+short control against **+3.66 +/- 3.29** at long -- Weiss pull request #428,
+"Capture History", 2021-06-04, 9088 games at 10+0.1 and 15936 at 60+0.6, the
+author's own summary being "hurts STC, but LTC shows decent gain"
+(https://github.com/TerjeKir/weiss/pull/428; the -4.2 and +3.7 quoted here
+before 2026-09-11 were that pair rounded). Its documented value arrives as an
+*input* -- reducing tacticals with bad capture history measured +7.2/+2.4 at
+Ethereal, **unverified**: the 2026-09-04 literature check found no source for
+that pair, and S186 owns resolving it -- and capture futility
+and SEE margins read it, which is work for the 3000-plus phase this reserve
 exists for. The order note below stands for whenever it runs.
 
 ## Hazard

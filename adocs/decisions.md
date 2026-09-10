@@ -4997,6 +4997,27 @@ Amended:      2026-09-04 by DEC-133 -- three of its rulings rested on figures
               3226-3293, not ~2850, so S099 joins the reserve at its head;
               (d) S133's +65 and +88 are release-bundle deltas. S181 and S185
               record the corrected bands and sources.
+Amended:      2026-09-11 by S185 -- the two ledgers this decision rests on are
+              cited where they are used, both fetched by the 2026-09-04
+              literature check (`adocs/data/2026-09-04_plan_review_literature_check.md`,
+              rows A4, A5 and A27). **Ethereal**: commit `e755a814`, "Add elo
+              estimates to search steps", 2020-01-22, Ethereal 11.82,
+              https://github.com/AndyGrant/Ethereal/commit/e755a8140fba -- all
+              rows at 12.0+0.12, one thread, 8 MB; history **-759.05 +/- 57.40**,
+              late move reduction **-248.59 +/- 10.48**, quiet move pruning
+              **-175.08 +/- 7.24**, beta pruning **-31.95 +/- 3.21**. The
+              Context line below reads "-759, -249, -175, -60, -9" from that
+              same table (extensions -59.87, ProbCut -9.08) and **the ledger
+              prices search steps only** -- no evaluation term appears in it,
+              which is why `plan.md`'s "single digits for most evaluation
+              terms" was deleted rather than sourced. **Stash**:
+              `mhouppin/stash-bot`'s `CHANGELOG.md`,
+              https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md --
+              v26 initiative from threatened pieces **+10.13 +/- 6.50**, v27
+              mobility zone **+19.95 +/- 9.63**, v31 connected pawns
+              **+25.38 +/- 10.40**, v32 king proximity in the passed-pawn term
+              **+22.27 +/- 9.86**. Neither ledger's numbers moved; what changed
+              is that the tree now says where they come from.
 Context:      The 2026-08-19 review (DEC-081 to DEC-086) was itself reviewed
               against per-patch SPRT records of engines that passed through this
               band -- Weiss, Lynx, Stash, Berserk and Ethereal commit logs and

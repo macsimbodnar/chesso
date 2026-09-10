@@ -11,11 +11,27 @@ done:
 
 ## Created by the second review, DEC-087, on the owner's explicit approval
 
-The largest documented evaluation item this plan had no step for. Leorik 2.5
-replaced its piece-square tables with linear functions of both king positions
-and phase and gained **~+88 CCRL** (its author claims +100, bundled with PEXT
-and threads); Berserk 4.3.0 mirrored its tables to the enemy king's side for
-an author-estimated **~+65** in a bundle. The idea is the cheap end of what a
+The largest documented evaluation item this plan had no step for. **Neither
+of the two figures below prices the tables**, which DEC-133 already amended
+DEC-087 (d) for and S185 now writes at the site (2026-09-04 literature check,
+rows A18 and A19). Leorik 2.5 replaced its piece-square tables with linear
+functions of both king positions and phase -- 18 parameters, AVX2 -- and the
+release is **2917 against 2.4's 2829 on CCRL Blitz, a delta of +88**, its
+author claiming about +100
+(https://github.com/lithander/Leorik/releases/tag/2.5); that release also
+carries the MIT relicence, .NET 8, PEXT move generation and threads, so +88 is
+a **four-change release delta**, not the tables. Berserk 4.3.0 mirrored its
+tables to the enemy king's side and its author estimates the *release* at
+"about 65 Elo stronger than Berserk 4.2.0"
+(https://github.com/jhonnold/berserk/releases/tag/4.3.0) -- self-play
++157.76 +/- 3.86 at 8+0.08 and +130.11 +/- 4.79 at 32+0.32, halved -- bundled
+with space, imbalance tables, an expanded king area, phased move generation,
+history pruning, a null threat in LMR, ordering, TT bucket size 4 and bug
+fixes. So **~+65** and **~+88** are the two bundles, and the tables' own share
+is unmeasured in the record. CPW's *Piece-Square Tables* page does not describe
+the king-relative form at all
+(https://www.chessprogramming.org/Piece-Square_Tables, one 2013 forum title).
+The step is kept on the coverage argument below, not on the two deltas. The idea is the cheap end of what a
 network buys: the value of a square depends on where the kings stand, and a
 bucket index captures the largest slice of that for the price of a wider
 table.

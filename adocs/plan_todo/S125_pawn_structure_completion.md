@@ -18,6 +18,15 @@ what the surveyed record says pays more than any of them is **conditioning**
 rather than adding: the largest pure pawn-structure patch on record is "apply
 the isolated penalty only when there is no pawn capture available", at +10.68.
 Indexing the existing three by file and by rank is reported at +6.60 and +3.77.
+**Those three figures and the +4.01 double-count in the accepts are
+unverified** -- the 2026-09-04 literature check found no source for any of them.
+What it did source for this group is Stash v31's connected pawns, phalanx and
+defender, **+25.38 +/- 10.40** at 8+0.08 and +18.57 +/- 8.45 at 40+0.4, in
+`mhouppin/stash-bot`'s `CHANGELOG.md` (https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md), which is the figure
+the block order uses; and CPW *Pawn Structure*
+(https://www.chessprogramming.org/Pawn_Structure), which states no figure. The
+conditioning claim is the one this step's shape rests on and it is the one
+without a source, so S186 owns it (DEC-137) and no run is priced on +10.68.
 
 So this step is as much about giving the three terms that exist more shape as
 about adding four more.

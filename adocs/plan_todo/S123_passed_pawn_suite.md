@@ -21,6 +21,11 @@ positions, and it is the same shape of problem as S121 and S100: not enough
 model and not enough data on the positions the term exists for. The endgame row
 is monotonic and plausible, which is the control.
 
-Reported for the group: the whole feature +36.1 from nothing at about 2600, and
-**king proximity alone +22.3** -- the single largest passed-pawn patch in the
-surveyed record, and chesso has no king-distance term at all.
+Reported for the group: the whole feature +36.1 from nothing at about 2600 --
+**unverified**, no source located by the 2026-09-04 literature check -- and
+**king proximity alone +22.27 +/- 9.86** at 8+0.08, which is Stash v32's
+"king proximity in the passed-pawn evaluation" in `mhouppin/stash-bot`'s
+`CHANGELOG.md` (https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md) and is the single largest passed-pawn entry in
+the surveyed record. chesso has no king-distance term at all. The +22.3 quoted
+here before 2026-09-11 was that figure rounded; the +36.1 stays quoted as
+unverified and S186 owns it (DEC-137).

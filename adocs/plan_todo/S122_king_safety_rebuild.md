@@ -32,6 +32,15 @@ weakest and the hardest to tune: its entries are sparsely represented in any
 corpus. One documented from-scratch implementation of it **regressed 8 to 10
 Elo**, and the diagnosis was the corpus, not the code: the tuner drove the
 attack bonus to +7 centipawns because it never saw a mating attack.
+**Unverified**: the 2026-09-04 literature check searched for that write-up and
+did not locate it, so neither the -8/-10 nor the +7 has a source in this tree.
+The warning is kept because the accepts acts on it -- the corpus clause is
+this step's, and it stands on its own reasoning -- but it prices nothing.
+What *is* sourced for the form is Stash's own rewrite at v31, **+4.24** then
+**+9.69**, about +13 together, in `mhouppin/stash-bot` `CHANGELOG.md`
+(https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md), and CPW *King Safety*
+(https://www.chessprogramming.org/King_Safety), which states no figure. S186
+owns the missing one (DEC-137).
 
 The form to reproduce is the tuned linear accumulator with a quadratic
 finalizer, because it is the one that stays differentiable -- every input is an

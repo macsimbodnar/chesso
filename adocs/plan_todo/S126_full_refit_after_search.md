@@ -16,9 +16,14 @@ second sentence of `adocs/eval_tuning_strategy.md`, and this plan changes the
 search more than it has ever been changed. Every weight fitted before S109
 lands was fitted against a tree that no longer exists.
 
-The surveyed record puts a full retune repeatedly at +5 to +15 years apart, and
-one engine's move from a hand-picked to a fitted evaluation as **the only
-change in a release** carried it from 2529 to 2910 on the public list. S028
+The surveyed record puts a full retune repeatedly at +5 to +15 years apart,
+and one engine's move from a hand-picked to a fitted evaluation as **the only
+change in a release** carried it from 2529 to 2910 on the public list.
+**Both are unverified**: the 2026-09-04 literature check located neither the
++5-to-+15 range nor the 2529-to-2910 release, and neither is needed -- this
+step's argument is the local one below it, S028's **+188.74** measured in this
+engine, and `adocs/eval_tuning_strategy.md`'s opening sentence. S186 owns the
+two figures (DEC-137). S028
 measured +188.74 here doing the same thing. This is the cheapest large number
 on the plan and it costs no engine code.
 

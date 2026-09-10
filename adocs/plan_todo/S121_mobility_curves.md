@@ -24,9 +24,18 @@ are worth far more than the twentieth -- and a single coefficient fitted across
 that curve lands near zero. DEC-040 already noticed the symptom and read it as
 a finding about knights; it is a finding about the model.
 
-The exclusions are the other half and are separately reported large: excluding
-rammed and low-rank own pawns **+19.95**, excluding enemy pawn attacks from
-knight mobility **+10.5**, removing the king square **+10.9**. Note what is
+The exclusions are the other half and are separately reported large:
+excluding rammed and low-rank own pawns **+19.95 +/- 9.63** at 10+0.1 -- Stash
+v27's mobility zone, `mhouppin/stash-bot` `CHANGELOG.md`
+(https://github.com/mhouppin/stash-bot/blob/master/CHANGELOG.md) -- and, from the same changelog, taking the king's own square
+out of the mobility zone at v32, **+10.86**. Excluding enemy pawn attacks from
+knight mobility at **+10.5** is **unverified**: the 2026-09-04 literature check
+found no source for it, and the +10.9 quoted here for the king square before
+2026-09-11 is v32's +10.86 rounded, which is the one that traces. CPW *Mobility*
+(https://www.chessprogramming.org/Mobility) defines "safe mobility" as counting
+only squares not attacked by enemy pawns -- best for knights, which is where
+the +10.5 claim points -- but **states no figure**, and the term "mobility area"
+and the per-count curve are not on that page at all. Note what is
 *not* done anywhere: full "safe mobility" excluding every attacked square. The
 exclusion is enemy **pawn** attacks, and that distinction is worth stating
 because it is the cheap half.

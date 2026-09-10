@@ -477,8 +477,13 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
 - - https://github.com/official-stockfish/Stockfish/pull/3868 -- 2021 re-run:
   block +98.63; FutilityMoveCount +6.91; futility parent +8.71; SEE based
   pruning +9.10; cont-hist pruning +1.7; qsearch pair +4.95/+5.14.
-- - https://github.com/official-stockfish/Stockfish/pull/4294 -- 2022 update
-  (25k games, UHO): movecount pruning ~0 alone. The plan's "~0 alone".
+- - **The plan's "~0 alone" is pull request #2401 above, not #4294.** The
+  literature check of 2026-09-04 fetched #2401's comment updates and the
+  number is there: "Move count based pruning **~0** Elo", added in the same
+  diff that moved step 14 from ~170 to ~204, 20000 games per test at 10+0.1,
+  +/-3 Elo. Re-pointed by S185 (2026-09-04_plan_review-F06);
+  https://github.com/official-stockfish/Stockfish/pull/4294 is a later update
+  and is **unverified** as the source of that figure.
 - - https://github.com/lynx-chess/Lynx/pull/512 -- basic LMP +4.7 +/-3.9;
   formula ablations in prose: 3+depth^2 -23.8, depth*10 cap-3 merged.
 - - https://github.com/lynx-chess/Lynx/pull/733 -- futility pruning +4.72 STC /

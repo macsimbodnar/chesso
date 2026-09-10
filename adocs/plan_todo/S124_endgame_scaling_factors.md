@@ -17,9 +17,20 @@ factor at about 2600, +13.72 and +7.56 for scaling by strong-side pawn count,
 +9.41 for the specific change from scaling the whole score to scaling only the
 endgame half.
 
+**All four of those figures are unverified.** The 2026-09-04 literature check
+confirmed that Ethereal, Berserk, Weiss and Stash all ship endgame scaling and
+that chesso ships none of it -- which is the argument this paragraph makes and
+it survives without a number -- but it located no source for +11.3, +13.72,
++7.56 or +9.41, and CPW has no page pricing the group. The order this step sits
+in does not rest on them: it rests on the coverage gap. S186 owns resolving
+them (DEC-137).
+
 The warning is the shape of the tail. One engine at 3300 measured +0.29, +0.94,
 +0.18 and +0.11 for four further opposite-bishop special cases and **removed
-them as neutral simplifications**. Build the two that pay, measure, and stop --
+them as neutral simplifications** -- **unverified** for the same reason, and
+the four numbers are quoted for their *shape*, which is the point being made:
+the tail of this group measures at the resolution limit of any harness this
+project can afford. Build the two that pay, measure, and stop --
 do not build the matrix.
 
 `specs.md` records that the endgame is the cheapest phase per move in chesso's
