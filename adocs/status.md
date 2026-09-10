@@ -7,6 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S206 is complete: `truncation_scan`'s drift is two commits and neither is a
+  defect.** Both readings reproduce at their own shas -- 135399 / 99 / 30 at
+  `77d7450`, 138331 / 105 / 33 at HEAD, same corpus, same command, and the
+  corpus file has not been rewritten since 34 minutes before `77d7450` itself.
+  **`21b4a21`, S085's SPSA vector, is the whole of 99 -> 105 and 30 -> 33**: it
+  raised `LAZY_EVAL_MARGIN` from 150 to 184, and `eval_model::evaluate` and
+  `evaluate()` both clamp the tapered mobility-plus-king-safety sum at that
+  margin, so **wherever the clamp binds the two agree exactly and the taper's
+  truncation residual is not there to be measured**. Raising the margin
+  unclamps a band of positions and it reappears, which is why the count went
+  *up*. **`883c255`, S104's `CHESSO_ARCH=native`, moved the 2.0 column alone by
+  -991**: `-march=native` contracts the model's
+  `mobility[t] * params[...] + sum` into an FMA and the double moves by an ulp,
+  visible only at a threshold rows sit exactly on -- a residual is a multiple of
+  1/24 and **2.0 = 48/24**, where 2.8 is not. **Both proved by counterfactual,
+  not by argument**: HEAD with the margin edited back to 150 reads
+  **134408 / 99 / 30**, its parent's reading to the row; `883c255` built with
+  `-ffp-contract=off` reads **135399** again. **The candidate the step was
+  opened on moves nothing** -- `ecd735e` (S161, `load_FEN`) is dated after
+  `21b4a21`, which already prints what HEAD prints. The weights were excluded by
+  measurement and not by the anchors alone: every non-zero entry of the model's
+  starting vector is identical at the two shas, and so is every extracted model
+  feature on a row that entered the set. Classification **(a) twice**, so the BUGS rule
+  does not arm. **DEC-169** adds the second trigger -- the four pinned positions
+  are re-derived after a refit *and* after any move of `LAZY_EVAL_MARGIN`, which
+  is what S039 exists to do -- and the `GOLDEN (DEC-142)` note in
+  `tests/test_eval_model.cpp` says so at its site. **The evidence script's own
+  first run was vacuous on two rows**: it passed the word `HEAD` to
+  `git -C "$WT" checkout`, which resolves in the worktree, so both HEAD rows
+  re-measured their predecessor and both still printed `as recorded`. The sha is
+  resolved in the repository now and the margin counterfactual greps for the 184
+  it replaces. No `src/` change, no `Bench:` line, no SPRT. Gate green in both
+  builds, 33/33 and 33/33 with `CLANG_FORMAT_MAJOR=22` (DEC-146), format clean.
+
 - **S205 is complete: `test_perft` gates nine columns, not five, and the four
   it never compared do not mean what they look like.** `perft()` counts
   `checks`, `discovery_checks`, `double_checks` and `checkmates` at the depth-1
@@ -1087,13 +1121,13 @@ Updated: 2026-09-10, by hand.
   `game_tables()` uninitialised -- which is what running the binary with a
   `-tc=` filter and no earlier case does -- they all pass vacuously. Under
   `ctest` the case is sound; the vacuity is the class S193 was written for.
-- In progress: **nothing.** `adocs/plan_current/` is empty; S205 completed into
-  `plan_done/` on 2026-09-10, S192 the same day. **The next step is Open entry
-  1, S206** -- `truncation_scan`'s model-against-engine counts, which S192 found
-  moved at unchanged weights. **The enrichment
+- In progress: **nothing.** `adocs/plan_current/` is empty; S206 completed into
+  `plan_done/` on 2026-09-10, S205 and S192 the same day. **The next step is
+  Open entry 1, S195** -- node-limited searches reproducible across
+  `ucinewgame`, and `bench` resetting the table per position. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
-  entry 10.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
+  entry 4.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
   one step path to one agent per file, in Open order, one commit per file; what
   is left is named by
   `grep -L 'Implementation guide (2026-09-05)' adocs/plan_todo/*.md`. The
@@ -1496,10 +1530,11 @@ Updated: 2026-09-10, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S206**, now Open entry 1 -- the `truncation_scan` count drift S192
-  turned up and did not diagnose. Behind it **S195** and **S194**, entries 2 and
-  3. S151's pair, Open entry 4, is still the owner question parked below. The
-  enrichment pass's next file is **S181**, today Open entry 5.
+- Next: **S195**, now Open entry 1 -- node-limited searches reproducible across
+  `ucinewgame` in a fast test, and `bench` resetting the table per position
+  (F08). Behind it **S194**, entry 2. S151's pair, Open entry 3, is still the
+  owner question parked below. The enrichment pass's next file is **S181**,
+  today Open entry 4.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --

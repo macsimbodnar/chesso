@@ -3126,16 +3126,46 @@ belong to the weights and not to the positions (DEC-057): S065's four fell to
 between 0.08 and 1.83 under S076's constants, and the rows that reach the 2.875
 maximum are where the replacements come from. Expect both on the next fit.
 
-**The counts here were re-taken 2026-09-10 and they had drifted**, at the same
-constants and on the same corpus: `--min 2.8` over `selfplay_v2_dedup.tsv` now
-reads **10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at 2.875**, against the
-135399 / 99 / 30 this paragraph carried from S076. All four pinned positions are
-still in the set, so nothing the suite asserts moved, and the weights have not:
+**The counts here were re-taken 2026-09-10 and they had drifted. S206 bisected
+it: two commits moved them and neither is a defect.** `--min 2.8` over
+`selfplay_v2_dedup.tsv` reads **10795695 rows, 138331 past 2.0, 105 past 2.8, 33
+at 2.875** at HEAD against the **135399 / 99 / 30** S076 recorded, and each
+number reproduces at its own sha. All four pinned positions are still in the
+set, so nothing the suite asserts moved, and the weights did not move either:
 `adocs/data/S192_anchors.py` reproduces all ten anchors at the values S076
-pinned. What did move is not identified here. The scan's loop calls `load_FEN`
-and the engine's own `evaluate()` per row, and S161 changed what `load_FEN`
-keeps (`ecd735e`), which is a candidate and not a finding — nothing was
-bisected. **S206** is the step that settles it.
+pinned, and every non-zero entry of the model's starting vector is identical at
+the two shas.
+
+- **`21b4a21` — S085's SPSA vector — is the whole of 99 → 105 and 30 → 33**,
+  because it raised `LAZY_EVAL_MARGIN` from 150 to 184. `eval_model::evaluate`
+  clamps the tapered mobility-plus-king-safety sum at that margin and
+  `evaluate()` clamps the same sum at the same margin, so **wherever the clamp
+  binds, both sides return the margin exactly and the taper's truncation
+  residual is not there to be measured**. Raising the margin unclamps positions
+  and the residual reappears, which is why the count went *up*. HEAD with the
+  margin put back to 150 reads **134408 / 99 / 30** — its parent's reading, to
+  the row.
+- **`883c255` — S104's architecture flags — moved the 2.0 column alone, by
+  −991.** `CHESSO_ARCH` defaults to `native` for `build/`, and `-march=native`
+  lets GCC contract the model's `mobility[t] * params[...] + sum` into an FMA,
+  which moves the model's double by an ulp. Only that column can see it: a
+  residual is a multiple of 1/24, and **2.0 = 48/24 is a value rows sit exactly
+  on** where 2.8 is not. The same commit built with `-ffp-contract=off` reads
+  135399 again.
+- **The candidate the step was opened on moves nothing.** S161's change to what
+  `load_FEN` keeps (`ecd735e`) lands *after* `21b4a21`, and `21b4a21` already
+  reads what HEAD reads.
+
+**So the reading is re-taken after a refit — DEC-057 — and also whenever
+`LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
+from the ulp: the tolerance in "the model reproduces evaluate() on every phase"
+is 3 against a worst of 2.875, and the two bound clauses are `> 2.0` and
+`> 2.8`, so the tightest of them keeps 0.075 between the assertion and a
+rounding wobble. `adocs/data/S206_truncation_drift.sh` re-derives all six
+readings and both counterfactuals from clean worktrees, eight builds and eight
+scans: **8 of 8 reproduced in 7 m 02 s** on the workstation, 2026-09-10, with
+ccache already warm on those shas — a cold cache pays eight full builds
+instead.
 
 ### Audit what a corpus contains, per feature
 

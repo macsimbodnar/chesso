@@ -9432,3 +9432,67 @@ Consequences: `tests/test_engine.cpp`'s soft-limit case stops asserting on a
               owed. The pair `QUIET_ROOK_EVAL` / `QUIET_ROOK_EVAL_CHEAP` becomes
               the single edit point for the next refit's static anchors, beside
               `adocs/data/S192_anchors.py` which derives them.
+
+---
+
+## DEC-169  2026-09-10  The truncation-bound reading is re-taken when LAZY_EVAL_MARGIN moves, not only after a refit
+Tags:         evaluation, tuning, goldens, testing, build
+Context:      DEC-057 says a truncation residual belongs to the weights and not
+              to the position, so `tests/test_eval_model.cpp`'s four pinned
+              positions are re-chosen at every refit and at no other time.
+              S206 bisected a drift in the instrument that chooses them --
+              `truncation_scan` read 135399 / 99 / 30 at S076 and 138331 / 105 /
+              33 on 2026-09-10, over the same corpus, with every non-zero entry
+              of the model's starting vector identical at the two shas -- and
+              found two movers, neither of them a weight and neither of them a
+              defect. **`21b4a21`, S085's SPSA vector, is all of 99 -> 105 and
+              30 -> 33**: it raised `LAZY_EVAL_MARGIN` from 150 to 184, and both
+              `eval_model::evaluate` and `evaluate()` clamp the tapered
+              mobility-plus-king-safety sum at that margin, so wherever the
+              clamp binds the two agree exactly and the taper's truncation
+              residual is not there to be measured. Unclamping restores it.
+              HEAD with the margin at 150 reads its parent's 134408 / 99 / 30 to
+              the row. **`883c255`, S104's `CHESSO_ARCH=native`, moved the 2.0
+              column alone by -991**: `-march=native` lets GCC contract the
+              model's `mobility[t] * params[...] + sum` into an FMA and the
+              model's double moves by an ulp, which only a threshold rows sit
+              exactly on can see -- a residual is a multiple of 1/24 and
+              2.0 = 48/24, where 2.8 is not. The same commit with
+              `-ffp-contract=off` reads 135399 again.
+Decision:     By the agent, 2026-09-10, on the measurement, since it names a
+              second trigger rather than choosing between options. **The four
+              pinned positions are re-derived after a refit *and* after any
+              change to `LAZY_EVAL_MARGIN`**, which is what S039 exists to do,
+              and the `GOLDEN (DEC-142)` note in `tests/test_eval_model.cpp`
+              says so at its site. Both movers are classified **(a)**, a
+              deliberate change whose effect on this reading is correct: the
+              margin is a search parameter that legitimately governs where the
+              two implementations are forced to agree, and the arch flag makes
+              the model's arithmetic no less right than it was. Neither is a
+              bug and the BUGS rule does not arm. The counts recorded in
+              `DEV_MANUAL.md` and at the golden's site are HEAD's.
+Rejected:     **Calling the FMA a defect and building the tools with
+              `-ffp-contract=off`.** It would pin the 2.0 column against build
+              flags for no gain: the column is a diagnostic, nothing asserts it,
+              and the assertions that do exist keep 0.075 between themselves and
+              a rounding wobble -- the tolerance is 3 against a worst of 2.875
+              and the bound clauses are `> 2.0` and `> 2.8`. Making the
+              measurement flag-dependent to protect a number nothing reads is
+              the wrong trade, and `-ffp-contract=off` on the engine would cost
+              speed on the path that matters.
+              **Re-pinning the four positions now.** They still qualify at
+              HEAD's weights, and re-choosing them belongs to a refit (DEC-057),
+              which is S126's business; S206's `excludes:` says so.
+              **Leaving the second trigger undocumented and letting S039 find
+              it.** S039 moves the margin by design, and an instrument whose
+              reading moves for an unnamed reason is what this step was opened
+              on in the first place.
+Consequences: S039 re-decides `LAZY_EVAL_MARGIN` and owes a fresh
+              `truncation_scan` reading with it, recorded beside the new margin;
+              so does any SPSA run that includes the margin among its axes.
+              `adocs/data/S206_truncation_drift.sh` re-derives the six readings
+              and the two counterfactuals from clean worktrees and is the
+              evidence. A timing or count taken from `build/` is on
+              `-march=native` and the model's float arithmetic is contracted
+              there, which is a difference from a `portable` build that shows up
+              only at exact thresholds.

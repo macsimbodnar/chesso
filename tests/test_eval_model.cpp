@@ -138,7 +138,12 @@ using test_eval_positions::positions;
 // Measured 2026-09-10 on .tuning/selfplay_v2_dedup.tsv at the shipped weights:
 // 10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at the maximum 2.875, and
 // all four below are among them.
-// Moves legitimately on: a refit. Margin: each of the four is asserted past
+// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the model
+// and evaluate() both clamp the tapered mobility-plus-king-safety sum at that
+// margin, so while the clamp binds the two agree exactly and the residual this
+// pins is not there to be measured. S085 raising it from 150 to 184 took the
+// corpus from 99 rows past 2.8 to 105 at unmoved weights, which is half of what
+// S206 bisected. Margin: each of the four is asserted past
 // 2.0 and the worst of them past 2.8, against a maximum of 2.875 -- so the
 // tightest of the two clauses has 0.075 of room, which is the point, and
 // re-choosing four from a fresh scan is the re-derivation.

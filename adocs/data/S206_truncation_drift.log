@@ -1,0 +1,13 @@
+sha          what                               past2.0 past2.8 at2.875 verdict
+77d7450      S076's fit pasted                  135399 99 30          as recorded
+38ad4fe      883c255^, before the arch flag     135399 99 30          as recorded
+883c255      S104: CHESSO_ARCH=native           134408 99 30          as recorded
+3488506      21b4a21^, margin still 150         134408 99 30          as recorded
+21b4a21      S085: margin 150 -> 184            138331 105 33         as recorded
+214a9f1      HEAD                               138331 105 33         as recorded
+
+counterfactuals:
+883c255      S104, -ffp-contract=off            135399 99 30          as recorded
+214a9f1      HEAD, margin back at 150           134408 99 30          as recorded
+
+8 of 8 reproduced
