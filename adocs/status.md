@@ -1381,8 +1381,9 @@ Updated: 2026-09-10, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `04effb3` 12:48**, the
-  first run there has ever been, on the tree `04effb3` committed. The sha is
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `4795ef4` 12:54**, on the tree
+  `4795ef4` committed -- the re-run after the fast check's four fixes, 774 s
+  against the 768 s of the first green run on `04effb3`. The sha is
   filled in by the commit after the one it names, because a commit cannot
   contain its own hash and an amend that tries moves it again. DEC-141 clause 3 is the cadence -- before a
   step that touched `make_move`, `unmake_move`, the generator or the search
