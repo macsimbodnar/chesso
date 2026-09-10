@@ -2261,6 +2261,36 @@ both with the reading of all three outcomes written down *before* launch.
 its point estimate is biased upward and is never reported as the effect size.
 S068's pooled estimate fell from +12.18 to +5.02 on that correction.
 
+#### What each pair costs, before the run and after it
+
+Two numbers, and a pre-registration states the first one (DEC-143). The nElo
+run-length formula prices the **worst** run — the truth sitting at the
+interval's midpoint, where the test has least to go on
+(`adocs/testing_strategy.md` section 1.1 has the derivation and the sources).
+The ledger of this project's own eight verdicts since S105 prices the
+**expected** one, and `adocs/plan.md`'s "What this costs" carries that table
+and is re-derived at every verdict-landing commit (DEC-136).
+
+| pair | truth at the midpoint | truth on a bound | hours here, at 2277 g/h |
+|---|---|---|---|
+| `{-5, 5}`, alpha=beta=0.05 | 10465 games | 6398 games | 4.6 h / 2.8 h |
+| `{0, 5}` or `{-5, 0}`, alpha=beta=0.05 | 41861 games | 25591 games | **18.4 h / 11.2 h** |
+| `{0, 10}`, alpha=beta=0.10 (`--fast`) | 5828 games worst case | | 2.6 h |
+
+**2277 games an hour is the measured figure on this workstation** (S198,
+2026-09-08; the table under "What a verdict costs, measured" below). Budget
+from it, never from the wall clock of a previous run.
+
+**The ledger's realized cost is lower than the midpoint column and that is not
+a contradiction.** Eight verdicts, mean **4 h 52 m**, median **5 h 53 m**,
+2337.9 games an hour across 91108 games — and five of the eight hit a bound
+rather than sitting at the midpoint, which is why the mean lands at about
+15660 games. Split by where the truth sat: the three fast runs mean **1 h 49 m**
+(S149, S107, S093 v1) and the five slow ones **6 h 42 m** (S108, S148,
+S093 v2, S130, S165). **A step that budgets on the mean and gets the midpoint
+waits three times as long**, which is the whole reason the worst case goes in
+the script before the first game.
+
 ### What the run prints when it ends
 
 Every run writes to its own stamped directory — `/tmp/chesso_sprt_<tag>_<stamp>/`

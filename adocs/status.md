@@ -88,7 +88,30 @@ Updated: 2026-09-11, by hand.
   verdicts in that order, S099/S110/S111 stay where DEC-133 put them; what
   changes is what those files may claim. Documents and API reads only.
 
-  **Next**, without waiting for the owner (DEC-172): S182 and S183 while
+  **Done, S182**: the plan prices a verdict from its own ledger of eight runs
+  since S105 and the answer is **287 to 354 machine-hours against a struck 75
+  to 110**. Every row read from its owning step's completion stamp: **mean
+  4 h 52 m, median 5 h 53 m**, 91108 games in 38.97 hours, **2337.9 games an
+  hour with every run between 2328 and 2346** -- S148 on the workstation at
+  2341 against seven MacBook runs, so the wall-time spread is game count and
+  nothing else. Two classes, split by where the truth sat relative to the
+  bounds: **fast 1 h 49 m** (S149, S107, S093 v1), **slow 6 h 42 m** (S108,
+  S148, S093 v2, S130, S165), three of those five on a null or a small
+  negative. The pending list is almost all slow class -- one block-class
+  effect, S109, and two steps with a sourced figure above +20 -- so
+  `3 x 1 h 49 m + 42 to 52 x 6 h 42 m`, with the flat mean's 219 to 268 hours
+  named as the **floor**. DEC-143's worst-case table sits beside it, **18.4 h
+  at the midpoint and 11.2 h on a bound at 2277** for the `{-5,0}` / `{0,5}`
+  pair every strength verdict uses, and the slow mean is *below* the
+  on-a-bound case because five of eight hit a bound. **DEC-136's rule is
+  written twice**, in the section and beside the status-rewrite rule: a step
+  that lands a verdict re-derives the section in its own completing commit.
+  `DEV_MANUAL.md` "Which bounds" carries the same table. **S159 and S203 were
+  checked as candidate rows and neither is one** -- S159's scheme was reverted
+  unrun and S203's 3000 games were a fixed-rounds drift reading. Documents
+  only.
+
+  **Next**, without waiting for the owner (DEC-172): S183 while
   the match plays; S207 completed and committed when the verdict lands; then
   S208 and S209, node-identical and owning no run; then S024's first verdict as
   the next night's run.
