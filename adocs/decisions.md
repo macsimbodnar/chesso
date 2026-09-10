@@ -9203,3 +9203,102 @@ Consequences: `negamax` is a template with two instantiations, and a future
               `adocs/data/2026-09-04_test_review/mutants.py` as tracked
               evidence; S196 folds both into `tools/mutants/`.
 
+
+## DEC-165  2026-09-10  A mutation run's `(Timeout)` is `unmeasured` only when the ceiling is the whole evidence; beside a `(Failed)` it is a kill
+Tags:         testing, tooling, s196, dec-141, mutation
+Context:      S196's guide wrote one rule for a ctest ceiling: "Any `(Timeout)`
+              row: `unmeasured`, not a kill." The trap it was written against is
+              real -- Release ceilings are 60 s per test, a busy machine hits
+              them, and a naive parser reads the resulting non-zero exit as the
+              suite detecting the mutant when nothing asserted anything.
+              The first full pass produced the case the rule did not
+              anticipate. `M22_castling_rights_on_capture` leaves
+              `test_uci_surface` still running at its 60.07 s ceiling -- the
+              same test passes in **9.26 s on the unmutated worktree in the same
+              run** -- while `test_chesso`, `test_movegen`, `test_engine` and
+              `test_invariants` fail on assertions, `test_invariants` on
+              `after make e8g8 castling ... material expected -880 got -85`.
+              Four binaries caught the mutant and the tool called the row
+              `unmeasured`. It is not one row: `M31_lazy_bound_no_margin` hangs
+              the same test in the same pass with `test_search` and
+              `test_engine` red beside it, so the rule cost two of forty
+              mutants on its first outing.
+              The re-run the rule prescribes does not recover it. The hang is
+              the mutant's own behaviour, not the machine's load, so a quiet
+              machine reproduces it exactly and the row is `unmeasured`
+              for good -- a kill hidden by the rule meant to protect the score.
+Decision:     By the owner, 2026-09-10: narrow it. `unmeasured` when the run's
+              only failing rows are `(Timeout)`, or when the build hits its
+              ceiling; a `(Timeout)` beside any `(Failed)` is `killed`. In
+              `tools/mutation_check.py` the ctest reader reports `asserted` --
+              a row that failed for any reason other than its ceiling -- and
+              `inconclusive`, which is the run saying nothing: this tool's own
+              ceiling over the whole of ctest, or a non-zero exit with no
+              failing row parsed, which is ctest failing to run rather than a
+              test failing.
+              The rule generalises past the ceiling, and the same reading of the
+              evidence settles the other two places it could bite. `killed` is
+              now decided before `unmeasured`, so **an assertion that fired is a
+              detection whatever else in the run was inconclusive** -- a mutant
+              that leaves the engine unable to print a bench line reports its
+              kill instead of hiding behind the unreadable signature. And a
+              non-zero ctest that ran nothing is `unmeasured` rather than a
+              kill, which is the naive-parser trap in its other form.
+Rejected:     **Keeping the original rule.** M22 then reads `unmeasured` on
+              every pass, the run exits non-zero by design, and the score is a
+              mutant short with no way to earn it back.
+              **Trusting the exit code alone**, which is what the rule was
+              written against: ctest exits non-zero on a bare ceiling, and a
+              busy machine would then manufacture kills.
+              **Raising `test_uci_surface`'s ceiling** so the hang becomes a
+              plain failure. It treats one mutant's symptom, leaves the rule
+              wrong for the next one, and slows a red run by a minute.
+Consequences: `tests/test_mutation_check.py` holds both halves as cases --
+              a stub ceiling alone reads `unmeasured` and its verdict differs
+              from `expected`, a ceiling beside a real red reads `killed` and
+              carries the failing assertion, an engine that stops printing a
+              bench line still reports its kill, and a ctest that exits non-zero
+              having run nothing reads `unmeasured`. All four were observed red
+              against the tool's own earlier semantics before the fix landed.
+              A row that is genuinely the machine's still reads `unmeasured`
+              and is still re-run with `--only` on a quiet machine, which is
+              why no pass runs beside a match (MACHINE rule).
+              DEV_MANUAL.md "Mutation check" states the amended table, and
+              S196's guide is amended in the two places that carried the old
+              rule rather than silently overtaken.
+
+## DEC-166  2026-09-10  The full mutation pass stays on demand and out of the weekly gate; its table is evidence under `adocs/data/`
+Tags:         testing, tooling, s196, s197, dec-141, workflow
+Context:      S196's section 10 deferred two questions to the owner, and S197's
+              section 10 asks the first of them again from the other side.
+              **Whether `tools/gate_extra.sh` runs a full pass weekly.** A pass
+              is forty builds and forty runs of the fast suite. DEC-141 clause 3
+              names the Debug binaries, a sanitizer build, deep perft and the
+              prose checks in that script and does not name this; S197's
+              `accepts:` does not list it either. `adocs/testing_strategy.md` R9
+              asks for a pass "after any change to `tests/` that adds or removes
+              coverage", which is a trigger and not a schedule.
+              **Where the kill table lives.** The stamp always carries it; the
+              question is whether the rows are also written where the next pass
+              can diff against them.
+Decision:     By the owner, 2026-09-10: **on demand only** -- S197 does not call
+              the full pass, its `accepts:` needs no amendment, and R9's trigger
+              is what runs it. And **both** -- the stamp carries the table, and
+              `adocs/data/S196_full_pass.tsv` carries the machine-readable rows
+              with a line in `adocs/data/README.md`, so the pass after the next
+              change to `tests/` has a baseline to diff rather than a paragraph
+              to read.
+Rejected:     **A weekly full pass in `gate_extra`.** About an hour added to a
+              weekly run whose value is the whole picture in one place, for a
+              measurement whose input -- the mutant list and the suite -- moves
+              only when somebody changes one of them, and who then runs it.
+              **The stamp alone.** A table in prose is not something the next
+              pass can diff; the point of a kill rate is the second reading.
+Consequences: `adocs/data/` joined S196's `touches:`, as did
+              `tests/test_mutation_check.py` and `tests/CMakeLists.txt` for the
+              self-test the same section proposed and the owner took.
+              The 2026-09-04 review's evidence directory is unchanged and stays
+              unchanged: `adocs/data/README.md`'s rule is added, never edited,
+              and the live mutant list is the copy under `tools/mutants/`.
+              S197's section 10 question 3 is answered here; an implementer who
+              reads it needs no new interview.

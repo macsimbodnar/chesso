@@ -1464,6 +1464,111 @@ In production the store lands at the session bump, which is where the audit's
 depth-1 instant reply comes from. The widening moves *when* the store lands, not
 whether.
 
+### Mutation check, `tools/mutation_check.py`
+
+What the fast suite is worth is not how much of the engine it executes but how
+much of it breaking the engine gets caught. This tool measures that: it applies
+one hand-written bug at a time to a linked worktree, rebuilds, runs the fast
+label and the bench, records what went red, and reverts. The mutants live in
+`tools/mutants/`, one file per area, and are data — `m(...)` calls that the tool
+`exec`s with `m` bound, so a mutant file carries no driver of its own.
+
+```bash
+git worktree add --detach .ref-builds/mut HEAD
+git -C .ref-builds/mut submodule update --init tests/doctest tests/json
+cmake -S .ref-builds/mut -B .ref-builds/mut/build \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+export CLANG_FORMAT_MAJOR=22                       # this machine, DEC-146
+python3 tools/mutation_check.py tools/mutants .ref-builds/mut            # all
+python3 tools/mutation_check.py tools/mutants .ref-builds/mut --only M26 # one
+```
+
+**The submodule line is not optional and `fastchess.sh`'s recipe omits it**,
+because that script builds `src/chesso` and nothing else. This tool builds the
+tests, and `tests/doctest` and `tests/json` are submodules: a fresh worktree
+without them fails at `fatal error: doctest.h: No such file or directory` and
+the tool refuses the run with "the unmutated worktree does not build". The
+`CLANG_FORMAT_MAJOR` export is the same override the gate needs here: without
+it `test_clang_format_script` is red on the unmutated tree and the run refuses
+before the first mutant, which is the guard working — a suite already red
+cannot say whether it saw the mutant.
+
+**Release only.** The root `CMakeLists.txt` adds `-Wall -Wextra -Werror`
+everywhere and turns the unused-* warnings off in `Debug` alone, so a mutant
+that deletes the last use of a local does not compile in the build the gate
+runs. That is a fact about the mutant, and a Debug build would hide it. The two
+mutants in that class consume the symbol they orphan — `M08` inserts
+`(void)is_check_move;` and `M12` inserts `(void)depth;` — and any new mutant
+that orphans a symbol needs the same.
+
+**Verdicts.** The suite is the first oracle and the bench signature is the
+second: OpenBench requires a `bench` node count that is the same every time and
+Stockfish defines a functional change as one that leads to a different search
+tree, so a signature that moves is a changed tree.
+
+| suite | bench signature | `expected` | verdict |
+|---|---|---|---|
+| red | either | either | `killed` |
+| green | moved | either | `survived` — a proved gap, no declaration can rescue it |
+| green | same | `equivalent` | `equivalent` — not scored |
+| green | same | `killed` | `survived` — the bench-blind class |
+
+A mutant that does not compile is `stillborn`. A build that hits its ceiling, or
+a run whose only failing rows are `(Timeout)`, is `unmeasured` -- not a kill,
+and re-run with `--only` when the machine is quiet. **A `(Timeout)` beside a
+`(Failed)` is a kill**, because the ceiling is then not the whole evidence and
+the hang may be the mutant's own: `M22` leaves `test_uci_surface`, 9.26 s
+unmutated, still running at 60 s while four other binaries fail on assertions,
+`M31` does the same beside two, and a quiet machine reproduces both exactly.
+Those are the only two ceilings in a 40-mutant pass and the rule that called
+them unmeasured cost both (DEC-165). The score is killed over total less
+equivalent, stillborn and unmeasured. The run exits 0 only when every verdict
+equals its `expected`, which is what a completing step reads.
+
+**`expected="equivalent"` is a declaration, never an inference.** Equivalent
+mutants are undecidable in general, so a person argues it in the mutant file and
+the tool believes them. A still bench never argues equivalence on its own: 12 of
+the 33 mutants of the 2026-09-04 review left the depth-9 counts and best moves
+unchanged, and the suite caught ten of those anyway. Of the remaining two, one
+is the declared equivalent and the other is the survivor S193 was written to
+kill -- neither was ever equivalent because its bench held still.
+
+**A new search rule ships with a mutant its test kills.** DEC-141 clause 2: add
+the mutant to the matching `tools/mutants/*.py` with the next free id and
+`origin="S<id>"`, commit the rule and its test, refresh the worktree to that
+commit, run `--only M<nn>`, and paste the row — id, verdict, the killing binary
+and its first assertion — into the step stamp. A `survived` row means the guard
+test does not bite: fix the test, not the mutant. The tool prints every failing
+binary rather than a count, because a kill by one golden alone is a weak one
+(DEC-142) and only the list shows it.
+
+**Cost, and it is in no gate.** **40 mutants in 3948 s — 66 minutes — on the
+workstation, 2026-09-10**: about 85 s a row, being a ccache rebuild, the bench
+and one serial run of the fast label. Three rows run long because the mutant
+makes the engine search more, `M22` worst at 442 s. One row on its own is
+**168 s** measured, the baseline included — `--only M26` — which is what a
+completing step pays under DEC-141 clause 2. Nothing runs it automatically; run
+it after a change to `tests/` that adds or removes coverage, and not beside a
+match — the coordinator holds the machine, and a busy one turns a passing test
+into an `unmeasured` row. Detach it and watch the marker, which is
+`MUTATION-RUN-DONE` or `MUTATION-RUN-FAILED` on every exit path:
+
+```bash
+nohup python3 tools/mutation_check.py tools/mutants .ref-builds/mut \
+      > /tmp/mutation.log 2>&1 &
+```
+
+Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
+`.ref-builds/mut/build/mutation/`, which `.gitignore` covers.
+
+`tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
+throwaway git repository, a four-line `src/x.cpp`, and `cmake`, `ctest` and the
+engine as stubs on PATH. Twenty-one cases in about 1.3 s, and it is what catches
+an anchor counted wrong, a revert that leaves a mutant behind, a verdict on the
+wrong branch or a missing marker. Each was observed red under a cut to the guard
+it names before it was kept -- the tool held to its own rule (DEC-141).
+
 ## Format
 
 ```bash

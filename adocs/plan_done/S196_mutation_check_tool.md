@@ -1,14 +1,118 @@
 id:         S196
 goal:       the fault-injection driver becomes `tools/mutation_check.py` over a tracked mutant list, so the suite's kill rate is measured by running it and a new search rule ships with a mutant its test kills
 accepts:    `tools/mutation_check.py` takes a mutant file and a worktree path, applies each mutant, builds, runs the fast label and the bench, reverts, and prints the kill table with the failing assertion per mutant; the 33 mutants of `adocs/data/2026-09-04_test_review/mutants.py` move to `tools/mutants/` in the two `(void)` forms that compile under `-Werror`; the tool refuses an ambiguous anchor and reports an equivalent mutant (bench unchanged, suite green) apart from a survivor; a full pass at the current tree reproduces 31 of 32, and 32 of 32 once S193 has landed; `DEV_MANUAL.md` "Test" documents the tool, the per-rule mutant rule of DEC-141 and the cost of a full pass; the evidence directory keeps its copy unchanged (`adocs/data/README.md`: added, never edited)
-touches:    tools/mutation_check.py, tools/mutants/, DEV_MANUAL.md
+touches:    tools/mutation_check.py, tools/mutants/, tests/test_mutation_check.py, tests/CMakeLists.txt, adocs/data/, DEV_MANUAL.md
 excludes:   mull, dextool or any dependency (DEPS rule; considered in `adocs/testing_strategy.md` section 5); changing any mutant's meaning
 decisions:  DEC-139, DEC-141
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     agent (Claude Opus 5), coordinator, 2026-09-10
+done:       2026-09-10. `tools/mutation_check.py` and the 40 mutants of
+            `tools/mutants/` are the standing instrument, and the first full
+            pass on this workstation reads **39 of 39 killed, 100 %** -- M26 the
+            one declared equivalent, **nothing survived, nothing stillborn,
+            nothing unmeasured**. 3948 s wall, 40 mutants over a baseline that
+            was green at 31 tests with `bench 26851183`, worktree
+            `.ref-builds/mut` at `44440b4`. The table is
+            `adocs/data/S196_full_pass.tsv` (DEC-166) and it is what the next
+            pass diffs against. `src/` is untouched, so no Bench line is owed
+            and no INV-6, timing or Debug self-play is due.
+
+            **M19 is dead and the tool is what proves it.** The `accepts` asked
+            for 31 of 32 at the current tree and 32 of 32 once S193 landed;
+            S193 and S191 had both landed when this started, so the list is 40
+            and the score is 39 of 39. The fifty-move survivor of the
+            2026-09-04 review is `killed` by `test_search`, alone.
+
+            **The run found a bug in the rule the guide wrote for it, and it
+            cost two mutants of the forty. DEC-165.** "Any `(Timeout)` row is
+            `unmeasured`, not a kill" was written against a real trap -- a busy
+            machine hits a 60 s ceiling and a naive parser reads the non-zero
+            exit as detection. But `M22_castling_rights_on_capture` leaves
+            `test_uci_surface` running at its ceiling, **9.26 s on the
+            unmutated worktree in the same run**, while `test_chesso`,
+            `test_movegen`, `test_engine` and `test_invariants` fail on
+            assertions; `M31_lazy_bound_no_margin` does the same beside
+            `test_search` and `test_engine`. The hang is the mutant's, so the
+            prescribed re-run on a quiet machine reproduces it exactly and the
+            kill is hidden for good. Those two are the only ceilings in the
+            whole pass. Narrowed: `unmeasured` only when the ceiling is the
+            whole evidence. Two further readings of the same evidence went in
+            with it -- `killed` is decided before `unmeasured`, so a mutant that
+            leaves the engine unable to print a bench line still reports its
+            kill, and a non-zero `ctest` that ran nothing reads `unmeasured`
+            rather than a kill. The first pass, on the pre-fix tool, was
+            abandoned at 17 of 40 and re-run whole rather than patched with two
+            rows from a second run.
+
+            **What the table says beyond the score.** 19 of the 40 are caught by
+            a single binary, and **not one of them is caught by
+            `test_mate_carry` alone**: 15 by `test_search`, 3 by `test_engine`,
+            1 by `test_chesso`. That is F02 and F03 closed and measured --
+            the 2026-09-04 review found five guards whose only catcher was that
+            golden, and DEC-142 makes a kill by a golden alone a weak one.
+            `test_mate_carry` is red on 11 of 40 now, against 21 of 22 search
+            mutants in the review, which is S204's narrowing showing up from
+            the other side. The bench signature is still blind to a quarter:
+            **10 of 40 leave the total and all eight best moves unchanged** and
+            the suite catches 9 of them, M26 being the equivalent -- so a still
+            bench still argues nothing.
+
+            **Acceptance, run on the shipped tool after the pass.** `--only M26`
+            reproduces its row exactly -- `yes 0/31 same equivalent equivalent`,
+            168 s including the baseline -- which is also what proves the three
+            edits made while the pass ran (a flushed header, `n/a` for a bench
+            that would not read, one corrected citation) moved no verdict. The
+            four refusals fire on the real tree in one run and before any write:
+            `int depth` in `src/search.cpp` **occurs 9 times**, an invented
+            anchor 0 times, a pair that replaces its anchor with itself, and a
+            `file` outside `src/`. Worktree clean after, `MUTATION-RUN-FAILED`
+            last, exit 1.
+
+            **The mutants are the review's, unaltered, and that is checked
+            rather than asserted.** All 40 ids, files and `(old, new)` pairs
+            compare byte for byte against `adocs/data/2026-09-04_test_review/mutants.py`
+            and `adocs/data/S191_mutants.py`; every one carries an `origin`; M26
+            is the only `expected="equivalent"`. Both evidence files are
+            unchanged, as is the whole of `adocs/data/2026-09-04_test_review/`
+            (`adocs/data/README.md`: added, never edited).
+
+            **The tool's own gate, and it holds to DEC-141's rule.**
+            `tests/test_mutation_check.py` is registered in the fast label,
+            **21 cases in 1.33 s** under `ctest`, over a throwaway git
+            repository with `cmake`, `ctest` and the engine as stubs on PATH.
+            Every verdict branch has a case -- killed, survived on a moved
+            bench, the bench-blind survivor, equivalent, stillborn, unmeasured
+            -- as does every refusal in `validate()`, and **each was observed
+            red under a cut to the guard it names before it was kept**: the four
+            of DEC-165 against the tool's earlier semantics, and the six others
+            against a removal of the branch they guard. It never builds the
+            engine, so the fast suite grew by 1.33 s and not by an hour.
+
+            **Gate.** `ctest -L fast` **32 of 32 in both builds**, 80.98 s
+            Release and 81.76 s tune, `./clang-format.sh --check` exit 0 with
+            `CLANG_FORMAT_MAJOR=22` (DEC-146). `plan_prose_check.py --touches`
+            0 flagged, `--citations` 0 flagged. `git status --porcelain -- src/`
+            empty.
+
+            **Docs.** `DEV_MANUAL.md` "Mutation check, `tools/mutation_check.py`"
+            at the end of "Test": the command and the worktree recipe including
+            **the submodule line `fastchess.sh` does not need and this tool
+            does**, Release-only and why `-Werror` makes it a fact about the
+            mutant, the verdict table with DEC-165's amendment, equivalence as
+            a declaration, DEC-141 clause 2 in full, and the cost measured
+            (66 minutes for a pass, 168 s for one row). `MANUAL.md`: no UCI
+            surface change -- nothing under `src/` moved and `test_uci_surface`
+            passes -- concluded unchanged. `adocs/specs.md`: no behaviour
+            change and it carries no inventory of test binaries; the kill rate
+            is a test fact and lives in the evidence file, concluded unchanged.
+
+            **Decisions.** DEC-165 (the ceiling rule, narrowed on the run's own
+            evidence) and DEC-166 (the owner's answers: the full pass stays on
+            demand and out of S197's weekly script, and its table is evidence
+            under `adocs/data/`). Section 10's four questions are all answered
+            in the file.
 
 ## Why this exists
 
@@ -164,7 +268,13 @@ the two markers (WATCHERS rule).
 bench moved: `survived` (a behaviour change no test sees). Suite green, bench
 same, `expected="equivalent"`: `equivalent`. Suite green, bench same,
 `expected="killed"`: `survived` (bench-blind, the M19 class). Any `(Timeout)`
-row: `unmeasured`, not a kill. Score printed as `killed / (total - equivalent
+row: `unmeasured`, not a kill. **Amended 2026-09-10, on the run: only when
+the ceiling is the whole evidence.** A `(Timeout)` beside a `(Failed)` is a
+kill -- M22 hangs `test_uci_surface` past its 60 s ceiling, 9.26 s unmutated,
+while `test_chesso`, `test_movegen`, `test_engine` and `test_invariants` fail
+on assertions in the same run. The hang is the mutant's, so a quiet machine
+reproduces it and `unmeasured` would hide that kill for good. Proposed as
+DEC-165. Score printed as `killed / (total - equivalent
 - stillborn - unmeasured)`. Exit 0 only when every mutant's verdict equals its
 `expected` and nothing is stillborn or unmeasured; that exit is what a
 completing step relies on.
@@ -207,7 +317,10 @@ once S193's fifty-move pair kills M19.
 - **Timeouts read as kills to a naive parser.** Release ceilings are 60 s per
   test (`test_mate_breadth` 24.4 s against 120 s); a busy machine produces
   `(Timeout)`. No pass beside a match (MACHINE rule: the coordinator holds the
-  machine); re-run an `unmeasured` row with `--only`.
+  machine); re-run an `unmeasured` row with `--only`. **And a timeout is not
+  always the machine's** -- see the amended verdict rule in section 3: M22 hangs
+  a test that passes in 9.26 s unmutated, so a row carrying both a `(Timeout)`
+  and a `(Failed)` is a kill and re-running it changes nothing.
 - **Single points of detection.** The review found ten mutants caught by one
   case each and `test_mate_carry` red on 21 of 22 search mutants; a kill by a
   golden alone is weak (DEC-142), and S191's `accepts` asks for red "in a
@@ -327,6 +440,13 @@ the mutant.
   bench regex, worktree creation.
 
 ### 10. Questions deferred to the owner
+
+**All four answered 2026-09-10.** 1: registered, and `tests/` joined
+`touches:`. 2 and 3: DEC-166 -- the full pass stays on demand, S197 does not
+call it, and the table goes in the stamp *and* `adocs/data/S196_full_pass.tsv`
+with a line in `adocs/data/README.md`. 4: moot, S191 and S193 both landed
+before this step started, so the list is 40 mutants and M19 is expected
+`killed`.
 
 1. **Registering the self-test** adds `tests/test_mutation_check.py` and a
    `tests/CMakeLists.txt` entry, outside `touches:`. Recommended; if refused,

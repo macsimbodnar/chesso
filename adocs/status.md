@@ -5,7 +5,54 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-09, by hand.
+Updated: 2026-09-10, by hand.
+
+- **S196 is done, 2026-09-10: the fault-injection driver is `tools/mutation_check.py`
+  over 40 tracked mutants, and the fast suite's kill rate is a measured number
+  -- 39 of 39, 100 %.** 3948 s wall on this workstation, worktree at `44440b4`,
+  baseline green at 31 tests with `bench 26851183`. M26 is the one declared
+  equivalent; nothing survived, nothing was stillborn, nothing unmeasured. The
+  table is `adocs/data/S196_full_pass.tsv` and it is what the next pass diffs
+  against. **M19 is dead**: the fifty-move survivor of the 2026-09-04 review is
+  killed by `test_search` alone, which is S193 proved by an instrument.
+- **The run found a bug in the rule the guide wrote for it, and it cost two of
+  the forty. DEC-165.** "Any `(Timeout)` row is `unmeasured`" was written
+  against a real trap -- a busy machine hits a 60 s ceiling and a naive parser
+  reads the non-zero exit as detection. But `M22` and `M31` hang
+  `test_uci_surface`, **9.26 s on the unmutated worktree in the same run**,
+  while four and two other binaries fail on assertions. The hang is the
+  mutant's, so the prescribed re-run on a quiet machine reproduces it exactly
+  and the kill is hidden for good. Narrowed to "only when the ceiling is the
+  whole evidence", with two further readings of the same evidence: `killed` is
+  decided before `unmeasured`, so a mutant that leaves the engine unable to
+  print a bench line still reports its kill, and a non-zero `ctest` that ran
+  nothing reads `unmeasured` rather than a kill. The first pass was abandoned at
+  17 of 40 and re-run whole rather than patched with two rows from a second run.
+- **19 of 40 are single-binary kills and not one of them is `test_mate_carry`
+  alone** -- 15 `test_search`, 3 `test_engine`, 1 `test_chesso`. That is F02 and
+  F03 closed and counted: the review found five guards whose only catcher was
+  that golden. `test_mate_carry` is red on 11 of 40 now against 21 of 22 search
+  mutants in the review, which is S204's narrowing from the other side. The
+  bench signature is still blind to **10 of 40**, so a still bench argues
+  nothing.
+- **The tool's own gate is 21 cases in 1.33 s**, over a throwaway git repository
+  with `cmake`, `ctest` and the engine stubbed on PATH -- it never builds the
+  engine. Every verdict branch and every refusal in `validate()` has a case, and
+  **each was observed red under a cut to the guard it names**. All 40 mutants
+  compare byte for byte against `adocs/data/2026-09-04_test_review/mutants.py`
+  and `adocs/data/S191_mutants.py`, both unchanged.
+- **DEC-166 answers section 10.** The full pass stays on demand and out of
+  S197's weekly script -- so **S197 needs no amendment to its `accepts:`**, and
+  its own section 10 question 3 is answered there -- and the table is evidence
+  under `adocs/data/` rather than living only in a stamp. The self-test is
+  registered, which is why `tests/` joined `touches:`.
+- **What the next step should know.** A `--only M<nn>` row costs 168 s including
+  the baseline, which is what DEC-141 clause 2 charges a completing step. Do not
+  run a pass beside a match. The worktree recipe needs a line `fastchess.sh`'s
+  does not -- `git -C .ref-builds/mut submodule update --init tests/doctest
+  tests/json` -- or the run refuses at "the unmutated worktree does not build",
+  and `CLANG_FORMAT_MAJOR=22` must be exported here or the baseline suite is red
+  and the run refuses before the first mutant (DEC-146).
 
 - **S191 is done, 2026-09-09: every guard on null move pruning, reverse
   futility and late move reduction now has a case of its own, and each was

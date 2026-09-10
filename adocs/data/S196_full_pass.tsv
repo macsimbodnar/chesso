@@ -1,0 +1,42 @@
+id	class	origin	built	fast_failed	fast_total	bench	verdict	expected	seconds	failing_tests	note
+BASELINE	-	-	yes	0	-	26851183 nodes	-	-	-	-	unmutated worktree, engine oracle
+N01_nmp_double_null	search/pruning	S191	yes	1	31	moved	killed	killed	88.2	test_search(Failed)	a second consecutive null move: the parent's pass no longer stops it
+N02_nmp_mate_band_pos	search/pruning	S191	yes	1	31	moved	killed	killed	89.4	test_search(Failed)	null move at beta >= MATE_MIN: the positive edge of the band dropped
+N03_rfp_in_check	search/pruning	S191	yes	1	31	same	killed	killed	89.6	test_search(Failed)	reverse futility fires in check, on the TT_EVAL_NONE sentinel
+N04_rfp_pv	search/pruning	S191	yes	2	31	moved	killed	killed	86.9	test_search(Failed) test_mate_carry(Failed)	reverse futility fires at a PV node, so a reported line gets a bound
+N05_rfp_depth_bound	search/pruning	S191	yes	1	31	same	killed	killed	86.5	test_search(Failed)	reverse futility is depth-unbounded: RFP_MAX_DEPTH dropped
+N06_rfp_mate_band_neg	search/pruning	S191	yes	3	31	moved	killed	killed	64.0	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed)	reverse futility fails high against a mate bound: negative edge dropped
+M22_castling_rights_on_capture	board/make_move	2026-09-04_test_review	yes	5	31	moved	killed	killed	442.5	test_chesso(Failed) test_movegen(Failed) test_engine(Failed) test_invariants(Failed) test_uci_surface(Timeout)	castling right not lost when the rook is captured
+M23_ep_hash_skipped	board/hash	2026-09-04_test_review	yes	1	31	moved	killed	killed	81.9	test_engine(Failed)	en-passant square changes without touching the hash
+M24_halfmove_not_reset_on_capture	board/make_move	2026-09-04_test_review	yes	1	31	same	killed	killed	84.5	test_chesso(Failed)	halfmove clock not reset by a capture
+M25_insufficient_two_minors	rules	2026-09-04_test_review	yes	1	31	same	killed	killed	84.1	test_search(Failed)	two minors called insufficient material
+M26_repetition_skips_first	rules	2026-09-04_test_review	yes	0	31	same	equivalent	equivalent	84.3		repetition scan starts four plies back
+M27_castle_through_check	movegen	2026-09-04_test_review	yes	2	31	moved	killed	killed	83.4	test_chesso(Failed) test_movegen(Failed)	king-side castling ignores an attacked f-square
+M28_see_ge_ep_victim	see	2026-09-04_test_review	yes	1	31	same	killed	killed	84.3	test_search(Failed)	see_ge forgets the en-passant victim
+M29_eval_expensive_sign	eval	2026-09-04_test_review	yes	4	31	moved	killed	killed	81.6	test_evaluation(Failed) test_search(Failed) test_engine(Failed) test_eval_model(Failed)	mobility/king-safety sign flipped for the side to move
+M30_mvv_lva_sign	ordering	2026-09-04_test_review	yes	2	31	moved	killed	killed	87.5	test_evaluation(Failed) test_engine(Failed)	MVV-LVA adds the attacker value instead of subtracting
+M31_lazy_bound_no_margin	eval/lazy	2026-09-04_test_review	yes	3	31	moved	killed	killed	185.6	test_search(Failed) test_engine(Failed) test_uci_surface(Timeout)	lazy shortcut taken without its margin
+M01_nmp_in_check	search/pruning	2026-09-04_test_review	yes	1	31	moved	killed	killed	84.5	test_search(Failed)	null move allowed while in check
+M02_nmp_mate_band_neg	search/pruning	2026-09-04_test_review	yes	1	31	moved	killed	killed	64.3	test_search(Failed)	S165 guard dropped: null move at beta <= -MATE_MIN
+M03_nmp_zugzwang	search/pruning	2026-09-04_test_review	yes	1	31	moved	killed	killed	84.5	test_search(Failed)	null move in pawn endings (game_phase 0)
+M04_nmp_mate_artifact	search/pruning	2026-09-04_test_review	yes	1	31	same	killed	killed	85.4	test_search(Failed)	null-move mate score returned as a real score
+M05_rfp_margin_flat	search/pruning	2026-09-04_test_review	yes	2	31	moved	killed	killed	76.5	test_mate_breadth(Failed) test_mate_carry(Failed)	RFP margin not scaled by depth
+M06a_rfp_ply_floor_minus1	search/pruning	2026-09-04_test_review	yes	2	31	moved	killed	killed	82.1	test_search(Failed) test_engine(Failed)	RFP ply floor one ply lower
+M06b_rfp_ply_floor_minus2	search/pruning	2026-09-04_test_review	yes	4	31	moved	killed	killed	77.9	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed) test_mate_carry(Failed)	RFP ply floor two plies lower
+M07_lmr_captures	search/reduction	2026-09-04_test_review	yes	1	31	moved	killed	killed	75.8	test_search(Failed)	LMR reduces captures
+M08_lmr_checks	search/reduction	2026-09-04_test_review	yes	3	31	moved	killed	killed	70.0	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed)	LMR reduces checking moves (S107 exemption dropped)
+M09_lmr_no_research	search/reduction	2026-09-04_test_review	yes	2	31	moved	killed	killed	81.9	test_search(Failed) test_engine(Failed)	reduced search beating alpha is believed, no re-search
+M10_pvs_no_research	search/pvs	2026-09-04_test_review	yes	4	31	moved	killed	killed	77.5	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed) test_mate_carry(Failed)	null-window fail-high never re-searched with the full window
+M11_tt_cut_on_pv	search/tt	2026-09-04_test_review	yes	2	31	moved	killed	killed	83.8	test_search(Failed) test_mate_carry(Failed)	TT cutoffs taken at PV nodes
+M12_tt_depth_ignored	search/tt	2026-09-04_test_review	yes	4	31	moved	killed	killed	96.0	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed) test_mate_carry(Failed)	TT entry answers regardless of stored depth
+M13_tt_bounds_swapped	search/tt	2026-09-04_test_review	yes	2	31	moved	killed	killed	181.9	test_search(Failed) test_mate_carry(Failed)	lower/upper bound types confused on probe
+M14_mate_normalize_sign	search/mate	2026-09-04_test_review	yes	4	31	moved	killed	killed	84.7	test_search(Failed) test_mate_breadth(Failed) test_mate_pv(Failed) test_mate_carry(Failed)	mate score normalised with the wrong sign
+M15_killer_slot1_dead	search/ordering	2026-09-04_test_review	yes	1	31	moved	killed	killed	82.2	test_search(Failed)	second killer slot never written
+M16_history_malus_sign	search/ordering	2026-09-04_test_review	yes	1	31	moved	killed	killed	83.9	test_search(Failed)	history malus applied as a bonus
+M17_qs_standpat_in_check	search/quiescence	2026-09-04_test_review	yes	4	31	moved	killed	killed	73.6	test_search(Failed) test_engine(Failed) test_mate_breadth(Failed) test_mate_carry(Failed)	standing pat allowed while in check
+M18_qs_see_prune_in_check	search/quiescence	2026-09-04_test_review	yes	2	31	moved	killed	killed	84.0	test_mate_pv(Failed) test_mate_carry(Failed)	losing captures pruned even when in check
+M19_fifty_off_by_one	rules	2026-09-04_test_review	yes	1	31	same	killed	killed	83.6	test_search(Failed)	fifty-move draw one halfmove late
+M20_mated_distance_off	search/mate	2026-09-04_test_review	yes	2	31	moved	killed	killed	83.5	test_search(Failed) test_mate_carry(Failed)	main-search mate distance off by one ply
+M21_standpat_lower_bound_lowers	search/tt	2026-09-04_test_review	yes	1	31	moved	killed	killed	83.4	test_search(Failed)	a lower bound lowers the stand pat (DEC-102 inverted)
+M32_hard_limit_no_overhead	time	2026-09-04_test_review	yes	1	31	same	killed	killed	85.4	test_engine(Failed)	hard limit ignores MOVE_OVERHEAD_MS
+M33_soft_limit_unbounded	time	2026-09-04_test_review	yes	1	31	same	killed	killed	85.9	test_engine(Failed)	soft limit not capped by the hard limit

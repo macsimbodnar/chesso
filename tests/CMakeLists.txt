@@ -309,6 +309,21 @@ add_test(NAME test_spsa_driver
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_driver.py)
 set_tests_properties(test_spsa_driver PROPERTIES LABELS "fast" TIMEOUT 120)
 
+# S196: the gate on tools/mutation_check.py, the driver that measures what this
+# suite detects by breaking the engine on purpose. Also python, also no engine:
+# `cmake`, `ctest` and the engine are stubs on PATH over a four-line sandbox
+# source in a throwaway git repository, so a full pass -- forty builds and forty
+# runs of this suite, better than an hour -- is not what proves the driver
+# right. What can break in it is an anchor counted wrong, a revert that leaves a
+# mutant behind, a verdict on the wrong branch or a missing marker, and every
+# one of those resolves in under a second. Registered on DEC-118's argument: the
+# moment somebody next needs this tool is the moment they are adding a pruning
+# rule and want to know their new test bites (DEC-141 clause 2). 21 cases,
+# ~1.3 s.
+add_test(NAME test_mutation_check
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py)
+set_tests_properties(test_mutation_check PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
 # suite. The other two are not, and DEV_MANUAL.md says why: any source commit
 # shifts lines under fifty step files at once, so gating on citation freshness
