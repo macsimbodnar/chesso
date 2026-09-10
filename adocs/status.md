@@ -1344,8 +1344,10 @@ Updated: 2026-09-10, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `d68cfa6` 12:48**, the
-  first run there has ever been. DEC-141 clause 3 is the cadence -- before a
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `04effb3` 12:48**, the
+  first run there has ever been, on the tree `04effb3` committed. The sha is
+  filled in by the commit after the one it names, because a commit cannot
+  contain its own hash and an amend that tries moves it again. DEC-141 clause 3 is the cadence -- before a
   step that touched `make_move`, `unmake_move`, the generator or the search
   completes, and otherwise weekly -- and this bullet is where a missed week
   shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first
