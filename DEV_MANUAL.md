@@ -537,13 +537,26 @@ ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
 `test_perft`, the slow label's one binary, **exits non-zero on a missing or an
-unparseable asset** and on a mismatch in any of the five columns it reads —
-`nodes`, `captures`, `en_passant`, `castles`, `promotions`. Both used to be
+unparseable asset** and on a mismatch in any of the **nine** columns it reads —
+`nodes`, `captures`, `en_passant`, `castles`, `promotions`, `checks`,
+`discovery_checks`, `double_checks`, `checkmates`. Both refusals used to be
 `assert`, which the Release build the gate runs compiles out, so a missing asset
 iterated zero cases and exited 0; and only `nodes` reached the pass flag, so the
-other four printed red and the run passed anyway (S193). It reads its assets
-relative to the working directory, so run it through `ctest` or from
-`build/tests`.
+other four printed red and the run passed anyway (S193). The last four were
+parsed or ignored and never compared until S205, which is why the binary went
+from about 53 s to about 67 s: a check test at every leaf and a move generation
+at every check leaf. It reads its assets relative to the working directory, so
+run it through `ctest` or from `build/tests`.
+
+**The four check columns are not four independent counts**, and reading them as
+such puts the run red on Kiwipete at depth 5. `checks` is every check leaf,
+mates included; `checkmates` is every mate; `double_checks` and
+`discovery_checks` describe the **non-mating** checks only and are exclusive of
+each other, a double check that is also discovered being counted once as
+double; and the rook of a castle has moved, so the check it gives is not a
+discovery. `adocs/data/S205_check_columns.py` re-derives both the census of
+which asset layers carry which column and, with python-chess as an independent
+board, the convention itself over every layer under a node budget.
 
 Every doctest binary fills the attack tables through a **fixture**, not through
 a first case that happens to run first. So `-tc=<glob>` over a single case and

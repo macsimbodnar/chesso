@@ -146,11 +146,11 @@ std::string print_stats_headline()
      << std::setw(30) << "|captures"
      << std::setw(width) << "|en_passant"
      << std::setw(width) << "|castles"
-     << std::setw(width) << "|promotions";
-    //  << std::setw(width) << "|checks"
-    //  << std::setw(width) << "|discovery_checks"
-    //  << std::setw(width) << "|double_checks"
-    //  << std::setw(width) << "|checkmates";
+     << std::setw(width) << "|promotions"
+     << std::setw(width) << "|checks"
+     << std::setw(width) << "|discovery"
+     << std::setw(width) << "|double"
+     << std::setw(width) << "|checkmates";
   // clang-format on
   return ss.str();
 }
@@ -166,11 +166,11 @@ std::string print_stats_headline_second_line()
      << std::setw(30) << "|expected      real"
      << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real"
+     << std::setw(width) << "|expected real"
      << std::setw(width) << "|expected real";
-    //  << std::setw(width) << "|expected real"
-    //  << std::setw(width) << "|expected real"
-    //  << std::setw(width) << "|expected real"
-    //  << std::setw(width) << "|expected real";
   // clang-format on
   return ss.str();
 }
@@ -216,6 +216,12 @@ expected_stats_t load_expected_stats(const json& stats_dict)
   if (!stats_dict["checks"].is_null()) {
     result.checks = stats_dict["checks"].get<uint64_t>();
   }
+  if (!stats_dict["discovery_checks"].is_null()) {
+    result.discovery_checks = stats_dict["discovery_checks"].get<uint64_t>();
+  }
+  if (!stats_dict["double_checks"].is_null()) {
+    result.double_checks = stats_dict["double_checks"].get<uint64_t>();
+  }
   if (!stats_dict["checkmates"].is_null()) {
     result.checkmates = stats_dict["checkmates"].get<uint64_t>();
   }
@@ -255,7 +261,62 @@ json load_json(const std::string& filename)
 }
 
 
-stats_t get_move_stats(const move_t& move)
+// The pieces of the side that just moved bearing on the side to move's king,
+// computed on the position `move` has already been made into. is_attacked()
+// answers "any", and three of the four columns need the set itself: how many
+// checkers there are, and whether one of them is a piece that did not move.
+// It is the same six lookups is_attacked() does, without its early exits, and
+// the king is left out because a king cannot give check. S205.
+static bb_t checkers_of(const game_t* game)
+{
+  const board_t* board = &game->board;
+  const color_t us = board->active_color;
+
+  const bb_t king = board->bitboards[(us == WHITE) ? W_KING : B_KING];
+
+  // Same guard as is_check(): a side with no king is not in check, and
+  // get_lsb_index() would return 64 into every attack table. Reachable through
+  // a malformed FEN, not through any asset here.
+  if (king == BB_0) { return BB_0; }
+
+  const index_t index = get_lsb_index(king);
+  const bb_tables_t* tables = game_tables();
+  const bb_t occupancy = board->occupancies[BOTH];
+
+  // Contiguous per-side bitboards, as is_attacked() reads them: index 0 is the
+  // pawn of the side that just moved, 4 its queen.
+  const bb_t* pieces = &board->bitboards[(us == WHITE) ? B_PAWN : W_PAWN];
+  const bb_t queens = pieces[4];
+
+  return (tables->pawn_attacks[us][index] & pieces[0]) |
+         (tables->knight_attacks[index] & pieces[1]) |
+         (get_bishop_attacks(tables, index, occupancy) & (pieces[2] | queens)) |
+         (get_rook_attacks(tables, index, occupancy) & (pieces[3] | queens));
+}
+
+
+// The squares this move put a piece on. Normally just the target; a castle
+// moves two pieces, and a rook that checks from f1 or d1 has moved, so it is
+// not a discovered check. The rook's destination is the square the king
+// stepped over, which is the midpoint of the king's own two squares for both
+// sides and both wings.
+static bb_t moved_to_mask(const move_t& move)
+{
+  bb_t mask = BB_1 << MOVE_TO(move);
+
+  if (MOVE_CASTLING(move)) {
+    mask |= BB_1 << ((MOVE_FROM(move) + MOVE_TO(move)) / 2);
+  }
+
+  return mask;
+}
+
+
+// `game` is the position after `move` was made, which is where all four check
+// columns are decided. Before S205 the four were set to 0 unconditionally
+// while 33 of the 58 asset layers a run reads carried real expected values for
+// two of them, so the columns were parsed and never compared.
+stats_t get_move_stats(const move_t& move, const game_t* game)
 {
   stats_t stats;
   stats.nodes += 1;
@@ -263,10 +324,38 @@ stats_t get_move_stats(const move_t& move)
   stats.en_passants += (MOVE_EN_PASSANT(move) ? 1 : 0);
   stats.castles += (MOVE_CASTLING(move) ? 1 : 0);
   stats.promotions += (MOVE_PROMOTED(move) > 0 ? 1 : 0);
-  stats.checks = 0;
-  stats.discovery_checks = 0;
-  stats.double_checks = 0;
-  stats.checkmates = 0;
+
+  const bb_t checkers = checkers_of(game);
+
+  if (checkers != BB_0) {
+    stats.checks = 1;
+
+    // generate_moves() emits legal moves only, so mate is an empty list and
+    // needs no make_move to confirm it. Paid at check nodes alone, which is
+    // why counting all four columns costs a quarter of the run and not a
+    // multiple of it.
+    move_t replies[270];
+    const bool mate =
+        (generate_moves(game_tables(), &game->board, replies) == 0);
+
+    // The convention the assets are written in, established in S205 by
+    // classifying every layer that carries a value under each reading and
+    // taking the one that matched all 29 with no exception: `checks` is every
+    // check leaf including mates, `checkmates` is every mate, and the two
+    // classification columns describe the non-mating checks only and are
+    // exclusive of each other -- a double check that is also discovered is
+    // counted once, as double. The one layer that decides each exclusion is
+    // Kiwipete at depth 5: 8 of its 2645 two-checker leaves are mate (2637
+    // expected), and 12 of its 19895 discovered checks are castles (19883
+    // expected).
+    if (mate) {
+      stats.checkmates = 1;
+    } else if (count_bits(checkers) > 1) {
+      stats.double_checks = 1;
+    } else if ((checkers & ~moved_to_mask(move)) != BB_0) {
+      stats.discovery_checks = 1;
+    }
+  }
 
   return stats;
 }
@@ -293,7 +382,7 @@ stats_t perft(int depth, game_t* game)
   for (size_t i = 0; i < moves_count; ++i) {
     if (make_move(game, moves[i])) {
       if (depth == 1) {
-        node_stats += get_move_stats(moves[i]);
+        node_stats += get_move_stats(moves[i], game);
       } else {
         node_stats.nodes += 1;
       }
@@ -329,7 +418,11 @@ static bool columns_match(const expected_stats_t& expected, const stats_t& real)
          column_matches(expected.captures, real.captures) &&
          column_matches(expected.en_passants, real.en_passants) &&
          column_matches(expected.castles, real.castles) &&
-         column_matches(expected.promotions, real.promotions);
+         column_matches(expected.promotions, real.promotions) &&
+         column_matches(expected.checks, real.checks) &&
+         column_matches(expected.discovery_checks, real.discovery_checks) &&
+         column_matches(expected.double_checks, real.double_checks) &&
+         column_matches(expected.checkmates, real.checkmates);
 }
 
 
@@ -370,10 +463,29 @@ std::string print_stats(const expected_stats_t& expected, const stats_t real)
     ss << std::setw(width) << "| - " << std::setw(width) << real.promotions;
   }
 
-    //  << ((expected.checks == real.checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.checks) << std::setw(width) << real.checks << RESET
-    //  << ((expected.discovery_checks == real.discovery_checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.discovery_checks) << std::setw(width) << real.discovery_checks << RESET
-    //  << ((expected.double_checks == real.double_checks) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.double_checks) << std::setw(width) << real.double_checks << RESET
-    //  << ((expected.checkmates == real.checkmates) ? GREEN : RED) << std::setw(width) << "|" + STR(expected.checkmates) << std::setw(width) << real.checkmates << RESET;
+  if (expected.checks.has_value()) { 
+    ss << (column_matches(expected.checks, real.checks) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.checks.value())) << std::setw(width) << real.checks << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.checks;
+  }
+
+  if (expected.discovery_checks.has_value()) { 
+    ss << (column_matches(expected.discovery_checks, real.discovery_checks) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.discovery_checks.value())) << std::setw(width) << real.discovery_checks << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.discovery_checks;
+  }
+
+  if (expected.double_checks.has_value()) { 
+    ss << (column_matches(expected.double_checks, real.double_checks) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.double_checks.value())) << std::setw(width) << real.double_checks << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.double_checks;
+  }
+
+  if (expected.checkmates.has_value()) { 
+    ss << (column_matches(expected.checkmates, real.checkmates) ? GREEN : RED) << std::setw(width) << std::string("|").append(STR(expected.checkmates.value())) << std::setw(width) << real.checkmates << RESET;
+  } else {
+    ss << std::setw(width) << "| - " << std::setw(width) << real.checkmates;
+  }
   // clang-format on
   return ss.str();
 }
@@ -454,7 +566,7 @@ int main()
             // In case depth 1 we try for legal moves and count stats
             for (size_t i = 0; i < moves_count; ++i) {
               if (make_move(&game, moves[i])) {
-                stats += get_move_stats(moves[i]);
+                stats += get_move_stats(moves[i], &game);
                 unmake_move(&game);
               }
             }

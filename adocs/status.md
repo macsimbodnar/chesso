@@ -7,6 +7,43 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S205 is complete: `test_perft` gates nine columns, not five, and the four
+  it never compared do not mean what they look like.** `perft()` counts
+  `checks`, `discovery_checks`, `double_checks` and `checkmates` at the depth-1
+  leaf, `load_expected_stats` parses the two it never parsed, `columns_match`
+  decides on all four. The census, `adocs/data/S205_check_columns.py`,
+  reproduces the 42/30/30/42 the step was opened on and corrects it where it
+  matters: **the glob count includes the six layers of the commented-out
+  `debug_perft.json` and seven layers past their `depth_limit`**, so what a run
+  compares is **58 layers, 33 with checks and checkmates, 21 with discovery and
+  double** -- 29 distinct layers, **84 expected values in tracked assets that no
+  run had ever read**. **The obvious reading of the four columns is wrong**: a
+  check, two checkers, a checker that is not the mover matched 22 of the 29 and
+  put the run red on seven layers. Classifying every affordable layer under each
+  candidate reading left exactly one that matched all 29 -- `checks` includes
+  mates, `checkmates` is every mate, and the two classification columns describe
+  the **non-mating** checks only, are exclusive of each other, and count a
+  castle's rook as having moved. **Kiwipete at depth 5 decides both exclusions
+  and nothing else does**: 8 of its 2645 two-checker leaves are mate (the
+  asset's 2637) and 12 of its 19895 discovered checks are castles (the asset's
+  19883). **The first conclusion was that the asset was wrong, and the tool
+  killed it** -- the 2645 paths were dumped and replayed through python-chess,
+  a different board and legality test and check detector, **2645 of 2645 legal
+  and ending in a two-checker position**. Engine and asset are both right and
+  were counting different things; nothing under `tests/assets/` was touched,
+  which is what the step's `excludes:` is for. Cost **+27 %**: 53.35/52.67/52.69
+  s before, 67.47/67.23/67.39 s after, **68.90 s through `ctest -L slow`**
+  against the 53 s the step quoted -- so the extra gate's `perft` stage is now
+  about 68 s, not the 54 s S197 recorded. It is cheap because `generate_moves()`
+  is legal-only, so a mate is an empty move list needing no make/unmake, and
+  because the whole classification is paid at check leaves alone. Each of the
+  four was **observed red** under a scratch asset one off at Kiwipete depth 4 --
+  one red cell each, in the perturbed column and no other -- then restored to
+  exit 0. `--max-nodes 5000000` recounts 23 layers up to Kiwipete depth 4 with
+  python-chess as the board and every column agrees. No `src/` change, no
+  `Bench:` line, no SPRT. Gate green in both builds, 33/33 and 33/33, format
+  clean, slow label green.
+
 - **S192's Tier-1 fast check found five real defects and a proved coverage gap;
   all six are closed in the commit after it** -- `plan_done/` is history and was
   not edited. (1) `test_invariants.cpp`'s five census floors were self-declared
@@ -1050,8 +1087,10 @@ Updated: 2026-09-10, by hand.
   `game_tables()` uninitialised -- which is what running the binary with a
   `-tc=` filter and no earlier case does -- they all pass vacuously. Under
   `ctest` the case is sound; the vacuity is the class S193 was written for.
-- In progress: **nothing.** `adocs/plan_current/` is empty; S192 completed into
-  `plan_done/` on 2026-09-10. **The enrichment
+- In progress: **nothing.** `adocs/plan_current/` is empty; S205 completed into
+  `plan_done/` on 2026-09-10, S192 the same day. **The next step is Open entry
+  1, S206** -- `truncation_scan`'s model-against-engine counts, which S192 found
+  moved at unchanged weights. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
   entry 10.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
@@ -1457,13 +1496,10 @@ Updated: 2026-09-10, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S205**, now Open entry 1 -- `test_perft` parses four check columns it
-  never compares, and 42 of 71 asset layers carry real values for two of them,
-  so the step decides between counting them and deleting the dead fields. Behind
-  it **S206**, entry 2, the `truncation_scan` count drift S192 turned up and did
-  not diagnose; then **S195** and **S194**, entries 3 and 4. S151's pair, Open
-  entry 5, is still the owner question parked below. The enrichment pass's next
-  file is **S181**, today Open entry 6.
+- Next: **S206**, now Open entry 1 -- the `truncation_scan` count drift S192
+  turned up and did not diagnose. Behind it **S195** and **S194**, entries 2 and
+  3. S151's pair, Open entry 4, is still the owner question parked below. The
+  enrichment pass's next file is **S181**, today Open entry 5.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --
@@ -1475,7 +1511,10 @@ Updated: 2026-09-10, by hand.
   numbers in tracked assets that no run has ever compared. It is a step and not
   a one-liner because counting checks means `is_check()` at every perft node
   and the slow label runs 53 s -- the measurement is what decides between
-  counting them and deleting the dead fields. Open entry 5. The rest of the
+  counting them and deleting the dead fields. **Done: the measurement said
+  count them, +27 %, and it also said the reviewer's 42/30/30/42 counts layers
+  a run never reads -- 33/21/21/33 is the number, and the four columns do not
+  mean what they look like.** See the S205 bullet at the top. The rest of the
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 

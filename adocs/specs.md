@@ -175,7 +175,7 @@ place, and the ledger's other 88 rows were per-step records already held by
 
 | invariant | what fails when it breaks |
 |---|---|
-| INV-1 | `test_movegen` *"shallow perft matches every column"*; `test_perft`, `ctest` label `slow`; `bench_movegen`, which verifies its counts before printing a single timing |
+| INV-1 | `test_movegen` *"shallow perft matches every column"*; `test_perft`, `ctest` label `slow`, over **nine** columns since S205 -- the four check columns its assets carry were parsed or ignored and never compared before that; `bench_movegen`, which verifies its counts before printing a single timing |
 | INV-2 | `test_engine` *"hash and board survive make/unmake"*; `test_invariants` *"accumulators and squares survive make/unmake over the corpus"*, which compares `squares[]` against the bitboards and the whole `board_t` against its pre-make copy after every make and unmake, in every build (S190); `squares_match_bitboards`, asserted in `make_move_impl` and `unmake_move_impl` in Debug |
 | INV-3 | `test_movegen` *"captures and quiets partition the list"*, 90.5 M assertions over a three-ply tree from every test FEN |
 | INV-4 | `test_invariants` *"accumulators and squares survive make/unmake over the corpus"*, 2.1 M make_move calls, and *"the oracles see a planted drift"* for its precondition; `eval_accumulators_match`, asserted in `make_move_impl` and `unmake_move_impl` in Debug, called by the test in every build. Both gated builds are Release, where the asserts are dead, so until S190 nothing the gate ran enforced this (2026-09-04_test_review-F01) |
