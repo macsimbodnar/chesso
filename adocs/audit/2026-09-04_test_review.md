@@ -356,9 +356,12 @@ binary's bench to the message. Not applied here.
 
 ### 2026-09-04_test_review-F08  low  three determinism exposures are documented in one place or none
 
-Status: closed — S203 took the key generator (DEC-154, not S179) and S195 the
-warm-table exposure; the LMR `std::log` exposure stays recorded in `status.md`
-as cross-machine and is not repaired
+Status: closed — all three items of the suggested resolution are done: the
+project's own generator draws the keys (S203, DEC-154, not S179), `DEV_MANUAL.md`
+"Measure" records the warm-table rule (S195), and `bench` sends the whole of
+`ucinewgame` before every position (S189). The LMR `std::log` is evidence rather
+than a fourth item — no resolution was asked for it, it stays recorded in
+`status.md` as cross-machine, and it is not repaired
 
 Evidence: the Zobrist keys come from
 `std::uniform_int_distribution<uint64_t>` over `mt19937_64`

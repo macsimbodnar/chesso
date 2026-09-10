@@ -41,7 +41,9 @@ Updated: 2026-09-10, by hand.
   0.343 / 0.021 / 0.205 s, Debug 7.01 / 0.47 / 5.19 s inside a 65.26 s
   `test_engine` against that build's 600 s ceiling. Gate green in both builds,
   33/33 and 33/33 under `CLANG_FORMAT_MAJOR=22` (DEC-146), format clean. Closes
-  `2026-09-04_test_review-F08` with S203, which took the key half (DEC-154).
+  `2026-09-04_test_review-F08` with S203 and S189: all three items of its
+  suggested resolution are done, and the LMR `std::log` line in its evidence
+  asked for none and stays recorded, not repaired.
 
 - **S206 is complete: `truncation_scan`'s drift is two commits and neither is a
   defect.** Both readings reproduce at their own shas -- 135399 / 99 / 30 at
