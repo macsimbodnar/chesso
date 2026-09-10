@@ -1658,6 +1658,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 |---|---|---|
 | `test_evaluation.cpp` "each piece is worth what the tables say" | 135, 244, 325, 563, 787, 0 | `python3 adocs/data/S192_anchors.py` |
 | `test_search.cpp` `QUIET_ROOK_EVAL`, `QUIET_ROOK_EVAL_CHEAP` | 563 and 567, over nine cases | the same script, case "rook on d1" |
+| `test_search.cpp` "a stand pat that is itself a bound is still capped" | 383, the pair's cheap score less `LAZY_EVAL_MARGIN` | the same script and `src/search_params.hpp` |
 | `test_search.cpp` "a side in check may not stand pat" | 198 | the same script, case "black in check, Re8" |
 | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
@@ -1668,6 +1669,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
 | `test_search_params.cpp` `golden_defaults` | 28 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
+| `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
 `test_engine.cpp`'s `MATE_DEPTH_SLACK` is marked **NOT A GOLDEN** at its site
 for the same reason the others are marked: it is a depth budget the mate reading
@@ -1762,7 +1764,8 @@ binary rather than a count, because a kill by one golden alone is a weak one
 (DEC-142) and only the list shows it.
 
 **Cost, and it is in no gate.** **40 mutants in 3948 s — 66 minutes — on the
-workstation, 2026-09-10**: about 85 s a row, being a ccache rebuild, the bench
+workstation, 2026-09-10** (41 since S192's fast check added `M34`, whose row is
+92 s): about 85 s a row, being a ccache rebuild, the bench
 and one serial run of the fast label. Three rows run long because the mutant
 makes the engine search more, `M22` worst at 442 s. One row on its own is
 **168 s** measured, the baseline included — `--only M26` — which is what a

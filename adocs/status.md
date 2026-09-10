@@ -7,6 +7,44 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S192's Tier-1 fast check found five real defects and a proved coverage gap;
+  all six are closed in the commit after it** -- `plan_done/` is history and was
+  not edited. (1) `test_invariants.cpp`'s five census floors were self-declared
+  "Goldens (DEC-142)" with a script and a margin but **not in the marker's
+  shape**, so the `grep` listing `DEV_MANUAL.md` introduces as "list every site"
+  missed all five; S190 landed after F03 was written, so the pass never saw
+  them. Exactly the miss the stamp records for `test_uci_surface.cpp`. (2) A
+  **thirteenth golden**: `REQUIRE_EQ(lazy, 383)` sits beside the symbolic
+  assertion in "a stand pat that is itself a bound is still capped", is
+  `QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN`, and moves with a refit **and**
+  with any SPSA run that touches the margin -- so the new block's "a refit edits
+  two lines" was wrong by one. (3) The node band's Margin line quoted the
+  original 4x and a fifth, ten lines under the re-taken count at which the real
+  headroom is 2.4x and a ninth -- the wrong number for judging a future red.
+  (4) "holds at any weights" was false of the property beside the truncation
+  positions: the same file asserts that a fitted tempo takes the bound to 3.833
+  and the tolerance to 4. (5) `adocs/testing_strategy.md` cited
+  `test_engine.cpp:1005` for the case this step moved to 1192, which is the
+  `file:line` form DEC-135 bans; that file is outside the prose check's set, so
+  nothing caught it. `adocs/data/S192_node_budget.py`'s source slice ran to end
+  of file and would have reported **200000**, a later case's budget, if the case
+  ever lost its own line -- observed, and it is bounded at the next `TEST_CASE`
+  now.
+- **The gap was measured, not argued, and it was real.** With the old case's
+  `REQUIRE(scaled.drop > 0)` gone, nothing in the suite failed if the iteration
+  loop handed `search_time_scale_percent` a constant zero fall: the identity the
+  replacement asserts holds trivially, because the loop records the same zero it
+  passed. **`M34_score_drop_always_zero` survived the whole fast label at
+  `0abe648`**, and `bench same` -- the node signature is blind to it, so only a
+  test could ever catch it. The first form of the mutant was **stillborn**,
+  `variable 'previous_score' set but not used` under -Werror, and carries a
+  `(void)` of both orphaned symbols now, which is the class `tools/mutants/search.py`
+  already documents. What kills it is a subcase asserting **over a set rather
+  than over one position's tree**: four positions driven at depth 8, at least
+  one must report a fall. All four do -- 22, 5, 15 and 31 cp -- so a search
+  change has to stop every one of them falling before it reddens. Same shape as
+  `test_mate_carry`'s majority (DEC-162). Red first, then green: 1 of 33 on
+  `REQUIRE( falling > 0 )`. The registry is 41 mutants now.
 - **S192 is done, 2026-09-10: twelve goldens in `tests/` are named, scripted and
   paired with a property, and the case that fired on eight search mutants for no
   defect is a construction now.** `grep -rn 'GOLDEN (DEC-142)' tests/` lists

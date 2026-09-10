@@ -64,7 +64,14 @@ def read_count(binary):
 def read_shipping():
     """The two numbers the source asserts today, so the run can be compared."""
     text = open(SOURCE).read()
-    case = text[text.index('"' + CASE + '"'):]
+    start = text.index('"' + CASE + '"')
+
+    # Bounded at the next TEST_CASE, so a case that loses one of the two lines
+    # hits the refusal below instead of silently reporting the next case's
+    # number. Nothing else in this file separates them.
+    end = text.find("TEST_CASE", start + 1)
+    case = text[start:] if end < 0 else text[start:end]
+
     budget = re.search(r"state\.node_limit = (\d+);", case)
     floor = re.search(r"result\.explored_nodes > (\d+)", case)
     if not budget or not floor:

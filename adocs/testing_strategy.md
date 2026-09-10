@@ -720,8 +720,10 @@ is the pattern and DEC-116 the rule for one of them. (b) `.tuning/anchors.py`
 or its equivalent is committed, so the piece anchors are re-derivable from
 the repository (`status.md` has parked this since 2026-08-23) -- S192 committed
 it as `adocs/data/S192_anchors.py`. (c)
-`test_engine.cpp:1005` asserts the soft-limit scaling on a constructed
-stability history, not on a search of a fixed position. (d) The rule is
+`tests/test_engine.cpp` "the iteration loop scales its soft limit by the
+history it counted" asserts the scaling on a constructed stability history, not
+on a search of a fixed position -- named by its `TEST_CASE` and not by a line
+number, which is DEC-135 and which the line this replaced had already outlived. (d) The rule is
 generalised: a floor is re-derived whenever either end of it moves, by its
 script, with the margin stated -- a decision extending DEC-116 to every
 golden.

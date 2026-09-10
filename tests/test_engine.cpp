@@ -1272,6 +1272,49 @@ TEST_SUITE("engine: uci layer")
       }
     }
 
+    SUBCASE("a fall reaches the time manager on at least one position")
+    {
+      // S192's fast check proved this one is needed rather than argued it:
+      // with the old case's `REQUIRE(scaled.drop > 0)` gone, mutant
+      // M34_score_drop_always_zero -- the loop handing the time manager a
+      // constant zero fall -- **survived the whole fast label**. The identity
+      // below cannot catch it, because the loop records the same zero it
+      // passed.
+      //
+      // A fall between iterations is a property of a tree and cannot be
+      // constructed, so what is asserted is over the set and not per position:
+      // at least one of these falls. A search change that stops one position
+      // falling leaves this green; only a loop that reports no fall anywhere
+      // takes it red, which is what a defect looks like. The counts are printed
+      // either way, so a set drifting toward vacuity is visible before it
+      // arrives. Same shape as `test_mate_carry`'s majority (DEC-162).
+      const std::vector<std::string> positions = {TRICKY_POS, CMK_POS,
+                                                  KILLER_POS, DEFAULT_POSITION};
+
+      int falling = 0;
+      std::string counts;
+
+      for (const std::string& fen : positions) {
+        const probe_t p = probe("position fen " + fen, 8, true);
+
+        // The identity, at every position and at whatever fall it produced.
+        CHECK_EQ(p.scale, search_time_scale_percent(p.stability, p.drop));
+
+        if (p.drop > 0) { falling++; }
+
+        counts += "  " + std::to_string(p.stability) + " stable, " +
+                  std::to_string(p.drop) + " cp, " + std::to_string(p.scale) +
+                  "%\n";
+      }
+
+      MESSAGE("per position:\n" << counts);
+
+      REQUIRE_MESSAGE(falling > 0,
+                      ("no position reported a fall, so nothing here shows the "
+                       "loop measuring one:\n" +
+                       counts));
+    }
+
     SUBCASE("the fall the loop counted is the fall the scale was computed from")
     {
       // The other half of the rule, and the half no construction reaches: a

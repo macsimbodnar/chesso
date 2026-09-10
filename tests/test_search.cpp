@@ -23,7 +23,9 @@ static transposition_table_t tt;
 // GOLDEN (DEC-142): evaluate() and evaluate_cheap() of the quiet rook position
 // "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
 // cases in this file assert one or both, so they are named once here and a
-// refit edits two lines rather than eleven (S192).
+// refit edits these two lines rather than eleven. A third line moves with them:
+// the written-out 383 of "a stand pat that is itself a bound is still capped",
+// which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
 // Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
 // computes both from src/evaluation.cpp's specification rather than from the
 // engine -- an anchor copied from the thing it anchors asserts nothing (S028).
@@ -910,8 +912,10 @@ TEST_SUITE("search: move ordering state")
   // Moves legitimately on: any ordering or search change -- re-derive when the
   // count leaves the middle half of the band, and never widen the budget to
   // clear a red without taking the count again.
-  // Margin: the budget is 4x the count and the floor a fifth of it, so the
-  // count has to move by either factor before anything fires.
+  // Margin: at the count re-taken above the budget is 2.4x it and the floor a
+  // ninth of it, so the tree has to grow by 2.4 or shrink by 9 before either
+  // end fires. Those are the headroom figures to judge a future red by, not the
+  // 4x and fifth the two bounds were originally set at.
   // An in-process search(5, ...) on a cold table
   // with no aspiration is what is counted; a UCI `go depth 5` of the same FEN
   // gives a different number and is not this golden.
@@ -1697,6 +1701,17 @@ TEST_SUITE("search: quiescence transposition entries")
     REQUIRE_FALSE(exact);
     REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
     REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
+
+    // GOLDEN (DEC-142): 383, the same number written out, so the line above
+    // cannot pass by both sides moving together -- an assertion spelled only in
+    // the symbols it is about asserts nothing (S028).
+    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 567 - 184;
+    // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
+    // second from src/search_params.hpp.
+    // Moves legitimately on: a refit, and **also** an SPSA run or any step that
+    // moves LAZY_EVAL_MARGIN -- S039 is the step that re-decides it.
+    // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
+    // says the shortcut fired at all and carries no number.
     REQUIRE_EQ(lazy, 383);
     REQUIRE_NE(lazy, evaluate(&game.board));
     REQUIRE(PLANTED > ALPHA);

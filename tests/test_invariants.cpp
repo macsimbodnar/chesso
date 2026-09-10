@@ -178,12 +178,22 @@ TEST_SUITE("invariants: accumulators and squares")
                        << " promotions, " << capture_promotions
                        << " capture promotions");
 
-    // Goldens (DEC-142). Floors at about half the census of 2026-09-09 --
-    // 2,132,167 makes, 15,023 castlings, 181 en passants, 221,928 promotions,
-    // 206,212 capture promotions -- so a corpus edit that halves a class stays
-    // green and one that empties it goes red. Re-derived by
-    // adocs/data/S190_walk_census.py, which counts the same tree with
-    // python-chess; re-run it whenever the corpus or either depth moves.
+    // GOLDEN (DEC-142): the five census floors below, at about half the census
+    // of 2026-09-09 -- 2,132,167 makes, 15,023 castlings, 181 en passants,
+    // 221,928 promotions, 206,212 capture promotions.
+    // Re-derive: python3 adocs/data/S190_walk_census.py, which counts the same
+    // tree with python-chess. Moves legitimately on: a corpus edit or a change
+    // to either depth -- re-run it whenever one moves.
+    // Margin: a factor of about two on every one of the five, so a corpus edit
+    // that halves a class stays green and one that empties it goes red.
+    // Property beside it: what this case actually guards -- every make is
+    // undone exactly -- which holds at any census, and the MESSAGE above, which
+    // prints the counts a drift would show in before a floor is reached.
+    //
+    // The floors were written under a "Goldens (DEC-142)" heading from S190 and
+    // are in the marker's shape since S192's fast check: the listing command
+    // DEV_MANUAL.md gives is a grep for that exact string, and a golden the
+    // listing misses is one nobody re-derives.
     REQUIRE(makes >= 1000000);
     REQUIRE(castlings >= 7000);
     REQUIRE(en_passants >= 90);

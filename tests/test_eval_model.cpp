@@ -143,7 +143,10 @@ using test_eval_positions::positions;
 // tightest of the two clauses has 0.075 of room, which is the point, and
 // re-choosing four from a fresh scan is the re-derivation.
 // Property beside it: "the model reproduces evaluate() on every phase", which
-// holds over the whole corpus at any weights.
+// holds over the whole corpus rather than over four chosen rows -- but not at
+// any weights: its tolerance is a function of how many taperings truncate, and
+// a fitted tempo takes the bound to 4 x 23/24 = 3.833 and the tolerance to 4,
+// which "the pinned positions reach the truncation bound" asserts below.
 static const std::vector<std::string> truncation_positions = {
     "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
     "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",

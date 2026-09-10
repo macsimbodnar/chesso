@@ -28,3 +28,25 @@ m("M33_soft_limit_unbounded", C, "time",
   ('soft_ms = std::max<int64_t>(std::min(soft_ms, hard_ms), 1);',
    'soft_ms = std::max<int64_t>(soft_ms, 1);'),
   origin="2026-09-04_test_review")
+
+# S192's fast check asked for this one, and the first answer was a survivor.
+# The replaced soft-limit case no longer carries `REQUIRE(scaled.drop > 0)` --
+# that precondition fired on eight search mutants that were not
+# time-management defects, which is why it went (DEC-168) -- and the identity
+# the replacement asserts holds trivially on a loop that passes a constant zero
+# fall, because the same zero is what it records. Run against `0abe648` this
+# mutant **survived the whole fast label**: a proved gap, not an argued one.
+# What kills it is the subcase written for it, "a fall reaches the time manager
+# on at least one position", which asserts over a set of four rather than
+# pinning one position's tree.
+#
+# It carries a `(void)` of each symbol it orphans, for the reason search.py's
+# header gives: the Release build this tool runs is -Werror, and without them
+# `previous_score` and `previous_score_ready` are set but never read, so the
+# mutant is stillborn instead of measured. Observed: the first form failed to
+# compile at src/chesso.cpp:823, `variable 'previous_score' set but not used`.
+m("M34_score_drop_always_zero", C, "time",
+  'the loop passes a constant zero fall to the time manager',
+  ('      const int score_drop =\n          previous_score_ready\n              ? std::max(0, previous_score - search_result.score)\n              : 0;',
+   '      const int score_drop = 0;\n      (void) previous_score;\n      (void) previous_score_ready;'),
+  origin="S192 fast check")
