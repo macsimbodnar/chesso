@@ -10,12 +10,22 @@ running this against the weights the engine ships must reproduce every value the
 suite asserts today. That is the check that the derivation is right; the same run
 against a fitted header then gives the new anchors.
 
-Usage: anchors.py [emitted.hpp]     no argument means the shipped weights
+Usage: S192_anchors.py [emitted.hpp]     no argument means the shipped weights
+
+With no argument it reads the shipped weights and exits 1 on any mismatch, so
+"10 of 10 reproduced" is the statement that the derivation is still right. With
+a fitted header it prints "got (was old)" and exits 0: that run is what supplies
+the new anchors after a refit.
+
+Was .tuning/anchors.py until S192, which moved it here, computed the repository
+root from __file__ instead of hard-coding it, and named each anchor by the
+TEST_CASE that asserts it instead of by a line number (DEC-135, DEC-142).
 """
+import os
 import re
 import sys
 
-ROOT = "/home/max/ws/chesso/"
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # index 0 is a8, 63 is h1
 def sq(name):
@@ -52,7 +62,7 @@ CASES = [
     dict(
         title="pawn on e2",
         fen="4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-        anchors={"evaluate": 135},   # test_evaluation.cpp:247
+        anchors={"evaluate": 135},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=0,
         material=[("PAWN", 1)],
@@ -70,7 +80,7 @@ CASES = [
     dict(
         title="knight on b1",
         fen="4k3/8/8/8/8/8/8/1N2K3 w - - 0 1",
-        anchors={"evaluate": 244},   # test_evaluation.cpp:248
+        anchors={"evaluate": 244},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("KNIGHT", 1)],
@@ -85,7 +95,7 @@ CASES = [
     dict(
         title="bishop on c1",
         fen="4k3/8/8/8/8/8/8/2B1K3 w - - 0 1",
-        anchors={"evaluate": 325},   # test_evaluation.cpp:249
+        anchors={"evaluate": 325},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("BISHOP", 1)],
@@ -100,7 +110,8 @@ CASES = [
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 563, "cheap": 567},   # test_evaluation.cpp:250, test_search.cpp:592-593
+        anchors={"evaluate": 563, "cheap": 567},   # test_evaluation.cpp "each piece is worth what the tables say";
+        # test_search.cpp "a quiet position stands pat" and eight more sites
         stm="w",
         phase=2,
         material=[("ROOK", 1)],
@@ -115,7 +126,7 @@ CASES = [
     dict(
         title="queen on d1",
         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
-        anchors={"evaluate": 787},   # test_evaluation.cpp:251
+        anchors={"evaluate": 787},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=4,
         material=[("QUEEN", 1)],
@@ -147,7 +158,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 198},   # test_search.cpp:653
+        anchors={"evaluate": 198},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -174,7 +185,7 @@ CASES = [
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -569},  # test_search.cpp:1133
+        anchors={"evaluate": -569},  # test_search.cpp "the losing side takes an available repetition"
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -266,13 +277,14 @@ LEAVES = [
     ),
 ]
 
-QUIESCE_IN_CHECK = -505  # test_search.cpp:696, on the shipped weights
+QUIESCE_IN_CHECK = -505  # test_search.cpp
+# "a quiet evasion is a legal answer to a check", on the shipped weights
 
 
 def weights(source):
     if source is None:
-        text = open(ROOT + "src/eval_tables.hpp").read() + open(
-            ROOT + "src/evaluation.cpp"
+        text = open(os.path.join(REPO, "src", "eval_tables.hpp")).read() + open(
+            os.path.join(REPO, "src", "evaluation.cpp")
         ).read()
     else:
         text = open(source).read()

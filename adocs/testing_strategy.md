@@ -718,7 +718,8 @@ re-derivation (F03).
 it a golden and the script that re-derives it; `adocs/data/S154_floor_margin_sweep.py`
 is the pattern and DEC-116 the rule for one of them. (b) `.tuning/anchors.py`
 or its equivalent is committed, so the piece anchors are re-derivable from
-the repository (`status.md` has parked this since 2026-08-23). (c)
+the repository (`status.md` has parked this since 2026-08-23) -- S192 committed
+it as `adocs/data/S192_anchors.py`. (c)
 `test_engine.cpp:1005` asserts the soft-limit scaling on a constructed
 stability history, not on a search of a fixed position. (d) The rule is
 generalised: a floor is re-derived whenever either end of it moves, by its

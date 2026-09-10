@@ -343,9 +343,24 @@ static bool line_ends_in_mate(const std::string& fen,
 }
 
 
-// The most short mating PVs a case may report. S204, DEC-162: this replaces
-// the per-case floor on mate lines, which was a single cell of a sparse grid
-// and was re-pinned by every change that moved the tree.
+// GOLDEN (DEC-142): the most short mating PVs a case may report -- 5, 11, 0, 1,
+// 8 and 2, one per replayed game of adocs/data/S170_cases.tsv at its own budget
+// and stride.
+// Re-derive: adocs/data/S203_case_sweep.sh --ceilings
+// adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
+// (the rule and the worst cells are tabled below). Moves legitimately on: a
+// re-sweep of the budgets, which is a Zobrist redraw (DEC-154); S202 closing
+// lowers the ceilings. Margin: 0 -- each ceiling is the worst cell of the
+// recorded grid, so a case that gets worse goes red on the first extra short
+// line. Widening it is a decision, not a re-derivation. Property beside it: "a
+// mate score carried across searches keeps a line that reaches it", whose two
+// other assertions -- a full-length line ends in checkmate, and a majority of
+// the guarded cases reports a mate line at all -- carry no per-case number and
+// do not move with the tree.
+//
+// S204, DEC-162: this replaces the per-case floor on mate lines, which was a
+// single cell of a sparse grid and was re-pinned by every change that moved the
+// tree.
 //
 // A short line is DEC-122's expected residue -- the walk found no entry it
 // could certify, so the line stays exactly as the search produced it -- and

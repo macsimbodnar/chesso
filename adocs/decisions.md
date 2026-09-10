@@ -9370,3 +9370,65 @@ Consequences: `adocs/specs.md` joins S197's `touches:` for the INV-6 row alone;
               `tools/gate.sh`'s signature check and `tools/search_bench.py`'s
               per-position counts -- the first that compares two *builds* of
               the same commit rather than two commits.
+
+## DEC-168  2026-09-10  S192's three open questions: form A for the drop half, two named constants for the 563/567 pair, and the M06a guard decided by measurement
+Tags:         testing, goldens, time management, mutation
+Context:      S192 reached the owner with five section-10 questions and two of
+              them had been answered by events. **Question 1, row 6's margin,**
+              asked whether the five `test_mate_carry` per-case floors should
+              stay at the observed count or drop to `max(1, count - 1)`. S204
+              deleted those floors on 2026-09-09 (DEC-162): what the fixture
+              guards now is a per-case *ceiling* on short mating PVs, derived by
+              `adocs/data/S203_case_sweep.sh --ceilings` from two recorded
+              grids, plus a fixture-wide majority with no per-case number in it.
+              There is no floor left to set a margin on. **Question 5,** the
+              stale `status.md` Parked note and F03's "gitignored" premise, is a
+              coordinator edit rather than a decision: `.tuning/anchors.py` has
+              been tracked since `c56ab41`.
+              The other three change what the step writes.
+Decision:     By the owner, 2026-09-10, answering S192 section 10:
+              **(3) form A, no `src/` hook.** The soft-limit case is rebuilt on
+              a root with exactly one mate in one, where the loop counts a
+              stability of exactly `depth - 1` and a fall of exactly 0 whatever
+              the pruning rules do deeper. The loop's two update rules are *not*
+              extracted into a pure function for the test to feed, so `src/`
+              does not move, no INV-6 run and no `Bench:` trailer is owed, and
+              DEC-141's Debug self-play tier does not arm. What the loop owes
+              for a non-zero fall stays the identity
+              `scale == search_time_scale_percent(stability, drop)`, asserted at
+              whatever fall the tree produces, with no precondition on the
+              number; the arithmetic of the fall is held by the pure case
+              "the time scale moves with stability and with a falling score",
+              which runs no search.
+              **(4) two named constants.** `QUIET_ROOK_EVAL` and
+              `QUIET_ROOK_EVAL_CHEAP` at file scope in `tests/test_search.cpp`,
+              one golden comment over the pair, eleven sites reading them. A
+              refit edits two lines instead of eleven.
+              **(2) measure, then decide.** Whether the reverse-futility ply
+              floor needs a guard case of its own is settled by re-running M06a
+              against the replaced suite, not by argument.
+Rejected:     **Extracting the loop's update rules into `src/`.** It is the only
+              way to feed the loop a constructed *non-zero* fall, and the
+              extraction is outside any hot path, but it turns a tests-only step
+              into one that owes INV-6, a bench signature and a self-play tier
+              for a single assertion whose arithmetic is already held by a pure
+              case.
+              **A comment at each of the nine 563/567 sites.** The literal
+              reading of the `accepts:`; it leaves a refit editing nine numbers
+              and nine comments, which is the re-derivation-under-pressure the
+              step exists to remove.
+              **Adding the ply-floor guard unconditionally.** Completes S191's
+              guard set by construction, but writes a case before knowing
+              whether anything is uncovered.
+              **Accepting a single golden detector for the ply floor.** Would
+              have been recorded as a finding rather than fixed, and the BUGS
+              rule's spirit is against carrying a known gap forward when the
+              measurement that resolves it costs one mutation run.
+Consequences: `tests/test_engine.cpp`'s soft-limit case stops asserting on a
+              fixed position's tree, so the eight search mutants that reddened
+              it for no defect stop doing so -- and M06a loses that detector,
+              which is why (2) is measured before the step completes. `src/` is
+              untouched by S192, so no measured figure moves and no SPRT is
+              owed. The pair `QUIET_ROOK_EVAL` / `QUIET_ROOK_EVAL_CHEAP` becomes
+              the single edit point for the next refit's static anchors, beside
+              `adocs/data/S192_anchors.py` which derives them.

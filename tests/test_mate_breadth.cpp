@@ -77,6 +77,20 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
+// GOLDEN (DEC-142): 143, the fewest exact mate distances the engine may find
+// over the 318 mined positions of the tracked TSV at depth 10. Its two ends are
+// tabled above: 145 with the guard shipping, 141 with it weakened.
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py, which builds a
+// throwaway worktree because the red end is no longer reachable by setoption.
+// Moves legitimately on: a search change that costs or buys mate finding --
+// re-derive when either end moves, and never read a replacement off the failing
+// run.
+// Margin: 2 below the shipping count, 2 above the weakened one. The gap was 7
+// when S145 placed the same floor at 146 and is 4 now, so a red here is a
+// reason to re-measure the table rather than to lower the number.
+// Property beside it: the `wrong_sign == 0` assertion in the same case -- a
+// mate score for the side being mated is a defect at any total, so it is
+// asserted at zero and carries no floor.
 static constexpr int EXACT_FLOOR = 143;
 
 

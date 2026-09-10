@@ -518,7 +518,8 @@ TEST_SUITE("uci surface")
     // comparison above grows a generated half in the tune build, and this half
     // must not.
     //
-    // GOLDEN: 5, the number of `option name` lines the release binary prints.
+    // GOLDEN (DEC-142): 5, the number of `option name` lines the release
+    // binary prints.
     // Re-derive with
     //   printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'
     // -- no search runs on that pipe, so `quit` cannot truncate it. Read off

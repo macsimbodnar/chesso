@@ -7,6 +7,68 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-10, by hand.
 
+- **S192 is done, 2026-09-10: twelve goldens in `tests/` are named, scripted and
+  paired with a property, and the case that fired on eight search mutants for no
+  defect is a construction now.** `grep -rn 'GOLDEN (DEC-142)' tests/` lists
+  thirteen sites over eight files -- twelve goldens and `MATE_DEPTH_SLACK`
+  marked **not** one, because it is a budget the mate reading is taken under and
+  widening it changes what the floor means. Two sites the step's inventory did
+  not have: `test_uci_surface.cpp`'s option-line count, already a golden with
+  its own re-derivation since S193 but not in the marker's shape, and
+  `test_eval_model.cpp`'s four truncation positions, which were the inventory's
+  one open row and are resolved by naming the tool that re-derives them.
+  Closes `2026-09-04_test_review-F03`.
+- **`.tuning/anchors.py` is `adocs/data/S192_anchors.py` and it runs here.**
+  Root from `__file__` instead of the hard-coded `/home/max/ws/chesso/`, every
+  `file:line` citation replaced by the `TEST_CASE` title the anchor belongs to
+  (DEC-135), contract unchanged -- **`10 of 10 reproduced`, exit 0** at
+  `4732d8f`, logged. The Parked item that called the fit scripts gitignored is
+  retired: all five have been tracked since `c56ab41` and this one has left
+  `.tuning/` altogether. What stays parked is the corpus.
+- **The old soft-limit case was observed red under M06a before it was deleted.**
+  `REQUIRE( scaled.drop == 0 )`, one case of 56 in `test_engine`, and
+  `kills.txt` carries eight such rows over the 2026-09-04 mutants -- every one
+  on `scaled.drop`, none of them a time-management defect. DEC-168's form A
+  replaces it: the suite's tool-verified mate in one at depths 2, 5 and 8, where
+  the loop counts **stability exactly `depth - 1` and a fall of exactly 0** on
+  any machine and after any search change. The fall half keeps one subcase with
+  **no precondition on the number** -- it reports `stability 1, fall 22 cp,
+  scale 107%` and asserts only the identity against
+  `search_time_scale_percent`.
+- **The four-mutant re-run: 4 of 4 killed, 431 s**, against a worktree carrying
+  this step's `tests/`. **M06a is caught by S191's "a null-move fail-high
+  against a mate returns the bound"**, so section 10's question 2 is answered by
+  measurement and no ply-floor guard case is owed -- the ply floor is covered by
+  construction, not by a golden and not by `test_mate_carry` as the step
+  expected. The red lands on that case's *precondition*, because the mating node
+  sits at exactly `RFP_MIN_PLY` and one ply lower lets reverse futility answer
+  with a static score; whoever wants the louder signal has S191's pattern. M09
+  likewise on an S191 case. M29 on fifteen cases in three binaries, M30 on its
+  two predicted properties -- and **both lost `test_engine`**, which was the
+  replaced case. That is the trade, made deliberately.
+- **The node band was re-derived and it is the one number that had drifted.**
+  `adocs/data/S192_node_budget.py` reads the count off a `MESSAGE` the case
+  gains: **179851 nodes**, against the 109575 the band was placed on in
+  2026-08. The tree has grown 64 % under a band that did not move, so the budget
+  is 2.4x the count rather than 4x. Still inside the middle half, which is the
+  condition on leaving 440000 and 20000 alone, and `excludes:` forbade moving
+  them anyway.
+- **`truncation_scan` no longer reproduces its recorded counts, and that is
+  S206.** Run to verify the inventory's last open row, it reads **10795695 rows,
+  138331 past 2.0, 105 past 2.8, 33 at 2.875** against `DEV_MANUAL.md`'s
+  135399 / 99 / 30 on the same corpus file. Deterministic over two runs, all
+  four pinned positions still in the set, the suite green, and the weights
+  proved unmoved -- the anchors script reproduces all ten at the S076 values. It
+  is not diagnosed and is not called a bug until it is: the manual carries the
+  measured numbers and says so, and S206 bisects it. The instrument re-chooses
+  those four positions at every refit (DEC-057), so it wants explaining before
+  S126.
+- **`DEV_MANUAL.md`'s mate-in-three floor said 8 and the test has said 11 since
+  2026-09-01.** S168 enlarged the set to 82 the same day S154 re-derived the 8,
+  which moved both ends to 12 and 10. Corrected here, a month late, which is the
+  class of drift the new "Goldens: named, scripted, re-derived" section exists
+  to stop.
+
 - **S197 is done, 2026-09-10: the second tier of the gate is a script with one
   marker, and its first green run says the tree is clean under instrumentation.**
   `tools/gate_extra.sh`, five stages cheapest first, **GATE-EXTRA-DONE 5 stages
@@ -950,8 +1012,8 @@ Updated: 2026-09-10, by hand.
   `game_tables()` uninitialised -- which is what running the binary with a
   `-tc=` filter and no earlier case does -- they all pass vacuously. Under
   `ctest` the case is sound; the vacuity is the class S193 was written for.
-- In progress: **nothing.** `adocs/plan_current/` is empty; S204 completed into
-  `plan_done/` on 2026-09-09. **The enrichment
+- In progress: **nothing.** `adocs/plan_current/` is empty; S192 completed into
+  `plan_done/` on 2026-09-10. **The enrichment
   pass of DEC-145 is stopped at the owner's word after twenty of the then 74
   files -- S178, since done, through S151; the next file is S181, today Open
   entry 10.** Resume by handing `adocs/data/2026-09-05_enrichment_brief.md` and
@@ -1357,15 +1419,13 @@ Updated: 2026-09-10, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S192**, now Open entry 1 -- every golden in `tests/` named at its site
-  with the script that re-derives it (DEC-142). Its row 6 is already done, and
-  S193, S191 and S204 each named further goldens in that form since it was
-  written: the option-line count, the defender set's 104 rows, and
-  `test_mate_carry`'s five per-case ceilings with
-  `adocs/data/S203_case_sweep.sh --ceilings` as their deriver. Behind it
-  **S205**, **S195**, **S194**, entries 2 to 4; S151's pair, Open entry 5, is
-  still the owner question parked below. The enrichment pass's next file is
-  **S181**, today Open entry 6.
+- Next: **S205**, now Open entry 1 -- `test_perft` parses four check columns it
+  never compares, and 42 of 71 asset layers carry real values for two of them,
+  so the step decides between counting them and deleting the dead fields. Behind
+  it **S206**, entry 2, the `truncation_scan` count drift S192 turned up and did
+  not diagnose; then **S195** and **S194**, entries 3 and 4. S151's pair, Open
+  entry 5, is still the owner question parked below. The enrichment pass's next
+  file is **S181**, today Open entry 6.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --
@@ -1503,8 +1563,10 @@ Updated: 2026-09-10, by hand.
     `apply_fit.py`, `verify_fit.py`, `reanchor.py`, `diff_fit.py` 4 K each.
     `anchors.py` is still the only executable record of how ten pinned test
     values are derived, including the quiescence composite no evaluation model
-    can produce. Committing 32 KB would end that exposure for good and it is the
-    owner's call, not the agent's, which is why it is written here and not done.
+    can produce. **Answered on 2026-09-10:** all five have been tracked since
+    `c56ab41` and S192 moved that one out of `.tuning/` altogether, to
+    `adocs/data/S192_anchors.py`. The corpus is what still does not survive a
+    move.
     `.ref-builds/` is 2.2 GB of gitignored worktrees and is worth nothing --
     `fastchess.sh` rebuilds them on demand.
 
@@ -1601,17 +1663,20 @@ Updated: 2026-09-10, by hand.
     medium. F05 was this file's own two parked items and S069 has rewritten
     them; it is `planned` until the re-run, like the rest.
   - **The corpus is gitignored and does not survive a machine move; the fit
-    scripts do -- corrected 2026-09-05.** `.tuning/` holds `selfplay_v2.tsv`
-    (715 MB, 11003693 positions), which is gitignored and was not on this
-    MacBook. The five scripts S065 leaned on — `apply_fit.py`, `verify_fit.py`,
-    `anchors.py`, `reanchor.py`, `diff_fit.py` — **are tracked** since `c56ab41`
+    scripts do -- corrected 2026-09-05, and the anchors half is closed by S192,
+    2026-09-10.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693
+    positions) and `selfplay_v2_dedup.tsv` (706 MB), both gitignored, and both
+    are on this workstation though neither was on the MacBook. The five scripts
+    S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
+    `reanchor.py`, `diff_fit.py` — **are tracked** since `c56ab41`
     (`.gitignore` carries `!.tuning/*.py`), which this item wrongly called
-    gitignored until S192's enrichment agent checked. What is true instead:
-    `anchors.py` hard-codes `ROOT = "/home/max/ws/chesso/"` and does not run
-    here; patched in a scratch copy it reproduces 10 of 10 pinned values at
-    HEAD. S192 owns the fix. This is the
-    same class of loss `2026-08-13_plan_review.2-F02` recorded when
-    `selfplay_v1.tsv` did not survive DEC-049, and it cost S065 a night of
+    gitignored until S192's enrichment agent checked. **The one that did not
+    run is fixed:** `anchors.py` hard-coded `ROOT = "/home/max/ws/chesso/"` and
+    is now `adocs/data/S192_anchors.py`, root from `__file__`, printing
+    `10 of 10 reproduced` at HEAD (`adocs/data/S192_anchors.log`). The other
+    four stay in `.tuning/`. What remains parked is the corpus itself, which is
+    the same class of loss `2026-08-13_plan_review.2-F02` recorded when
+    `selfplay_v1.tsv` did not survive DEC-049, and which cost S065 a night of
     regeneration. Found while completing S065. Parked, not planned: a step is
     created by a decision and none has been taken on this.
   - **DEC-033's ordering conclusion is superseded by DEC-081; its measurement

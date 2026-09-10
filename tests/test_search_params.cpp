@@ -46,6 +46,16 @@
 // change on purpose. What a bound *means* is not checkable here and is not
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
+//
+// GOLDEN (DEC-142): the 28 defaults and their ranges below. A deliberate-change
+// detector rather than a measurement -- there is no script and none is owed,
+// because src/search_params.hpp is the derivation and a diff of the two is the
+// re-derivation. A step that moves a default edits both in the same commit.
+// Moves legitimately on: a step that moves a default or a bound.
+// Margin: exact, on every one of the three columns.
+// Property beside it: "the table is populated and every name is distinct" and
+// "both builds start from the same defaults, member by member", which hold
+// whatever the values are.
 // clang-format off
 struct golden_param_t { const char* name; int value; int min; int max; };
 

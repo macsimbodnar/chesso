@@ -1,0 +1,17 @@
+weights from src/eval_tables.hpp + src/evaluation.cpp
+pawn on e2             evaluate 135 vs 135 OK             positional    73 tempo    0 mobility    0 safety   -32
+knight on b1           evaluate 244 vs 244 OK             positional   -83 tempo    0 mobility    0 safety     0
+bishop on c1           evaluate 325 vs 325 OK             positional   -18 tempo    0 mobility   35 safety     0
+rook on d1             evaluate 563 vs 563 OK, cheap 567 vs 567 OK positional    80 tempo    0 mobility    6 safety   -10
+queen on d1            evaluate 787 vs 787 OK             positional   110 tempo    0 mobility  -76 safety    37
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0
+black in check, Re8    evaluate 198 vs 198 OK             positional  -312 tempo    0 mobility  124 safety    14
+black a rook down, Kh7 evaluate -569 vs -569 OK           positional    74 tempo    0 mobility    8 safety     0
+
+  after Ke1-d1           evaluate   555  -> root  -555
+  after Ke1-d2           evaluate   505  -> root  -505
+  after Ke1-f1           evaluate   570  -> root  -570
+  after Ke1-f2           evaluate   522  -> root  -522
+white in check, Re8    quiesce -505 vs -505 OK
+
+10 of 10 reproduced

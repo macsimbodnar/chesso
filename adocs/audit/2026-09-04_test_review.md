@@ -175,7 +175,7 @@ patterns. Not applied here.
 
 ### 2026-09-04_test_review-F03  medium  a large share of the suite's sensitivity is golden numbers that every legitimate search or evaluation change will also redden
 
-Status: planned — S192
+Status: closed — S192 (2026-09-10)
 
 Evidence, three groups. **Static-score anchors:** 563/567 pinned at
 `tests/test_search.cpp:957-958` and repeated at `:1219-1220`, `:1282`,

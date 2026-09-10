@@ -20,6 +20,21 @@ static game_t game;
 static transposition_table_t tt;
 
 
+// GOLDEN (DEC-142): evaluate() and evaluate_cheap() of the quiet rook position
+// "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
+// cases in this file assert one or both, so they are named once here and a
+// refit edits two lines rather than eleven (S192).
+// Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
+// computes both from src/evaluation.cpp's specification rather than from the
+// engine -- an anchor copied from the thing it anchors asserts nothing (S028).
+// Moves legitimately on: a refit. Margin: exact.
+// Property beside it: "the lazy shortcut cannot change a decision" in
+// tests/test_evaluation.cpp, which holds over the whole corpus and does not
+// move with a fit.
+static constexpr int QUIET_ROOK_EVAL = 563;
+static constexpr int QUIET_ROOK_EVAL_CHEAP = 567;
+
+
 struct search_fixture_t
 {
   search_fixture_t()
@@ -880,6 +895,28 @@ TEST_SUITE("search: move ordering state")
   // when the evaluation constants change - they order the moves, and S065 is a
   // pending 827-constant paste. Tighten it when a fit lands, not before.
   // 2026-08-14_test_review-F06.
+  //
+  // GOLDEN (DEC-142): the pair 440000 and 20000, a band around the depth-5
+  // node count of TRICKY_POS from a cold table -- 109575 when measured
+  // 2026-08-14, held inside [count / 5, 4 x count]. Both ratios are the band
+  // this case has always carried and neither is a new constant (DEC-105 (b)).
+  // Re-taken 2026-09-10 by S192: **179851 nodes**, so the tree has grown 64 %
+  // under a band that did not move and the budget is 2.4x the count rather than
+  // 4x. Still inside the middle half of the band, which is the condition on
+  // leaving both numbers alone; the next reading outside it re-derives them.
+  // Re-derive: python3 adocs/data/S192_node_budget.py, which runs this case
+  // through build/tests/test_search --success, reads the count off the MESSAGE
+  // below and prints both bounds by those ratios.
+  // Moves legitimately on: any ordering or search change -- re-derive when the
+  // count leaves the middle half of the band, and never widen the budget to
+  // clear a red without taking the count again.
+  // Margin: the budget is 4x the count and the floor a fifth of it, so the
+  // count has to move by either factor before anything fires.
+  // An in-process search(5, ...) on a cold table
+  // with no aspiration is what is counted; a UCI `go depth 5` of the same FEN
+  // gives a different number and is not this golden.
+  // Property beside it: "a search fills the ordering tables" and the rest of
+  // this suite, which assert what ordering does rather than what it costs.
   TEST_CASE_FIXTURE(search_fixture_t, "ordering keeps the tree small")
   {
     REQUIRE(load_FEN(TRICKY_POS, &game));
@@ -899,6 +936,10 @@ TEST_SUITE("search: move ordering state")
 
     REQUIRE_FALSE(state.aborted);
     REQUIRE(result.best_move != 0);
+
+    // What S192_node_budget.py reads. Printed rather than returned because the
+    // re-derivation runs the binary and does not link against it.
+    MESSAGE("ordering node count: " << result.explored_nodes);
 
     // The budget has to stay a bound on something, not a number nothing
     // approaches: if the tree ever shrinks far below it the case has stopped
@@ -953,11 +994,9 @@ TEST_SUITE("search: quiescence")
     // S065's fit, DEC-059: 530 to 509. The cheap score does not move -- the
     // fit changed what the tables say, not the two terms evaluate_cheap() adds.
     // S076's refit on the deduplicated corpus moved both: 509 to 563 and 524 to
-    // 567. Both re-derived by `.tuning/anchors.py`, which computes this
-    // position's evaluate() and evaluate_cheap() from the specification rather
-    // than from the engine.
-    REQUIRE_EQ(static_score, 563);
-    REQUIRE_EQ(cheap_score, 567);
+    // 567. Both are the file-scope goldens above.
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
+    REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
 
     // The precondition for the shortcut. Without it the assertions below would
     // pass on a build where the shortcut never fires at all.
@@ -992,6 +1031,14 @@ TEST_SUITE("search: quiescence")
 
   // The one case where standing pat is not on offer: the side to move is in
   // check and has to reply, so every evasion is searched instead.
+  //
+  // GOLDEN (DEC-142): 198, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+  // 1" with Black to move and in check -- the number the case needs a stand pat
+  // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
+  // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
+  // assertions that carry the property are the two inequalities below it, which
+  // have the whole gap between 198 and a mate score of slack. Property beside
+  // it: "a quiet evasion is a legal answer to a check".
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
     // Black is ahead on material, so standing pat would report a comfortable
@@ -1031,6 +1078,19 @@ TEST_SUITE("search: quiescence")
   // Being in check is not the same as being mated, and the reply need not be
   // a capture. A quiescence that only ever looks at captures finds no move
   // here and calls a perfectly ordinary position a mate.
+  //
+  // GOLDEN (DEC-142): -505, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
+  // check -- a one-ply negamax, the best of four leaves' -evaluate(), not an
+  // evaluation call.
+  // Re-derive: python3 adocs/data/S192_anchors.py, LEAVES and QUIESCE_IN_CHECK.
+  // Moves legitimately on: a refit; **and** any change to how quiescence treats
+  // a checked side. That second end is the property under test, so before
+  // re-deriving after a search change, confirm the four leaves are still the
+  // four king moves each standing pat -- if they are not, the case has caught
+  // something and the number is not the thing to fix.
+  // Margin: exact. Property beside it: the loop inside this case, which asserts
+  // that no legal reply here is a capture, and "a side in check may not stand
+  // pat".
   TEST_CASE_FIXTURE(search_fixture_t,
                     "a quiet evasion is a legal answer to a check")
   {
@@ -1210,16 +1270,16 @@ TEST_SUITE("search: quiescence transposition entries")
   {
     // White is a rook up with nothing to capture, so quiescence stands pat and
     // the number stored is the static evaluation of this position and nothing
-    // else. The two anchors are `a quiet position stands pat`'s, re-derived by
-    // .tuning/anchors.py from the specification rather than read off the
-    // engine.
+    // else. The two anchors are the file-scope goldens, named there with the
+    // script that re-derives them from the specification rather than reading
+    // them off the engine.
     const std::string fen = "4k3/8/8/8/8/8/8/3RK3 w - - 0 1";
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
     const int cheap_score = evaluate_cheap(&game.board);
-    REQUIRE_EQ(static_score, 563);
-    REQUIRE_EQ(cheap_score, 567);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
+    REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
 
     static std::atomic_bool never_stop = false;
 
@@ -1281,7 +1341,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     // Precondition: with nothing in the table quiescence works the number out
     // for itself. Without this the assertion below would pass on an engine
@@ -1355,7 +1415,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     // Precondition for every case below. With nothing planted the node works
     // the number out for itself, so any other answer came from the entry and
@@ -1436,7 +1496,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     // A mating lower bound would raise the stand pat all the way to it, and
     // this node would report a mate it never searched for. Without the band
@@ -1493,7 +1553,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     // Precondition, and the whole reason the two assertions below are not
     // vacuous: with nothing planted this node stores its stand pat **exact**,
@@ -1635,8 +1695,8 @@ TEST_SUITE("search: quiescence transposition entries")
     bool exact = true;
     const int lazy = evaluate_lazy(&game.board, ALPHA, BETA, &exact);
     REQUIRE_FALSE(exact);
-    REQUIRE_EQ(evaluate_cheap(&game.board), 567);
-    REQUIRE_EQ(lazy, 567 - LAZY_EVAL_MARGIN);
+    REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
+    REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
     REQUIRE_EQ(lazy, 383);
     REQUIRE_NE(lazy, evaluate(&game.board));
     REQUIRE(PLANTED > ALPHA);
@@ -1712,7 +1772,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     const int pruned = static_score - RFP_MARGIN * DEPTH;
     REQUIRE(pruned >= BETA);
@@ -1762,7 +1822,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     REQUIRE(load_FEN(fen, &game));
     const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, 563);
+    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
 
     tt_reset(&tt);
     tt_new_search(&tt);
@@ -2638,6 +2698,14 @@ TEST_SUITE("search: transposition table")
   // wrong with the table. Read a failure as "one of these two things changed"
   // and not as "the table is broken". S027.
   //
+  // Two more paths break the stated purity and are already in the tree.
+  // S130: quiescence() in src/search.cpp raises or lowers `stand_pat` from a
+  // table entry's bound -- `stand_pat_type` carries which -- so a warm table
+  // changes the stand pat. S094 and S130: tt_entry_answers() accepts a
+  // main-search entry at TT_DEPTH_QS, so quiescence can answer from a node the
+  // main search stored. Depth 2 to 3 over this corpus exposes neither; a
+  // failure here reads as "one of three things changed".
+  //
   // The table's own logic is pinned directly by "transposition table: storage"
   // below, which does not care what the search does.
   TEST_CASE_FIXTURE(search_fixture_t, "the table never changes the answer")
@@ -2964,6 +3032,16 @@ TEST_SUITE("search: draws")
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook. S065's fit, DEC-059: -491 to -537, and S076's refit
     // on the deduplicated corpus to -569.
+    //
+    // GOLDEN (DEC-142): -569, evaluate() with Black to move a rook down, after
+    // the three moves above. It is the precondition, not the property: what the
+    // case asserts is that a draw score beats it.
+    // Re-derive: python3 adocs/data/S192_anchors.py, case
+    // "black a rook down, Kh7". Moves legitimately on: a refit.
+    // Margin: exact -- but the assertion it feeds needs only that the number is
+    // below zero, so a refit that moves it changes nothing else here.
+    // Property beside it: the repetition assertion below, which compares
+    // against 0 and not against this value.
     REQUIRE_EQ(evaluate(&game.board), -569);
 
     static std::atomic_bool never_stop = false;

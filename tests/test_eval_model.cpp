@@ -127,6 +127,23 @@ using test_eval_positions::positions;
 // *these* stop disagreeing with the model, which is a different statement from
 // the whole corpus agreeing within tolerance. S038, re-measured at S065 and at
 // S076.
+//
+// GOLDEN (DEC-142): the four positions themselves, drawn from the rows that
+// reach the maximum a chain of truncating divisions can produce. A residual
+// belongs to the weights and not to the position (DEC-057), so a refit is
+// expected to stop these four qualifying.
+// Re-derive: build/tools/truncation_scan --data <corpus> --min 2.8, which
+// prints `difference, phase, side to move, fen` per hit; the four are chosen
+// from the hits at the maximum to span the taper with both sides to move.
+// Measured 2026-09-10 on .tuning/selfplay_v2_dedup.tsv at the shipped weights:
+// 10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at the maximum 2.875, and
+// all four below are among them.
+// Moves legitimately on: a refit. Margin: each of the four is asserted past
+// 2.0 and the worst of them past 2.8, against a maximum of 2.875 -- so the
+// tightest of the two clauses has 0.075 of room, which is the point, and
+// re-choosing four from a fresh scan is the re-derivation.
+// Property beside it: "the model reproduces evaluate() on every phase", which
+// holds over the whole corpus at any weights.
 static const std::vector<std::string> truncation_positions = {
     "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
     "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",

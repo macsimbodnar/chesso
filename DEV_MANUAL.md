@@ -1254,12 +1254,18 @@ instead: **no mate score for the side being mated and none closer than the
 proved minimum** — both provably false claims, measured 0 and 0 over twelve
 reverse-futility settings; **every mate in two at the first iteration that can
 hold it**, which is the assertion that fences the tuner and goes red the moment
-the ply floor drops below 2; and **a floor of 8 on the mate in three count**,
-placed strictly between the shipping 9 and the 7 the removed guard produces. The
-mate in four and five counts are printed by the test as a `MESSAGE` rather than
-asserted, because a floor of zero asserts nothing. Observed red under a stated
-mutation: `RFP_MIN_PLY` 3 → 1 fails the mate-in-two timing at iteration 5
-against 3, and the floor at `REQUIRE( 7 >= 8 )`.
+the ply floor drops below 2; and **a floor of 11 on the mate in three count**,
+placed strictly between the shipping 12 and the 10 the removed guard produces.
+The mate in four and five counts are printed by the test as a `MESSAGE` rather
+than asserted, because a floor of zero asserts nothing. Observed red under a
+stated mutation: `RFP_MIN_PLY` 3 → 1 fails the mate-in-two timing at iteration 5
+against 3, and the floor at `REQUIRE( 10 >= 11 )`.
+
+The floor was 8 over S145's 48 positions and this paragraph said so until S192.
+S168 enlarged the set to 82 the same day S154 re-derived the 8, which moved both
+ends -- 12 shipping against 10 weakened -- so the number in `tests/test_engine.cpp`
+has been 11 since 2026-09-01 and the prose was a month stale
+(`adocs/data/S168_floor_sweep.log`).
 
 **The mate-in-two clause is stronger than a count and the difference is seven
 positions.** It asks that the mate be found *and* that `first_exact` be
@@ -1616,6 +1622,65 @@ The widened hits report depth 5 and depth 4 rather than depth 1, because a store
 In production the store lands at the session bump, which is where the audit's
 depth-1 instant reply comes from. The widening moves *when* the store lands, not
 whether.
+
+### Goldens: named, scripted, re-derived
+
+DEC-142, applied over `tests/` by S192. **Every golden value or floor in
+`tests/` is named as a golden at its site with the command that re-derives it; a
+golden is re-derived by its script whenever either end of it moves, with the
+margin stated, and never re-read from a run; a golden that cannot be scripted is
+a finding. Where a golden stands in for a property, the property gets its own
+case so coverage survives a re-derivation.**
+
+A golden is a number the suite asserts that was read from a measurement rather
+than derived from a rule — a static score of 563, a floor of 143 mates, a node
+budget of 440000. They are the suite's best detectors: the 2026-09-04
+fault-injection pass killed 31 of 32 mutants and the goldens did much of the
+killing. Their cost is that every legitimate change to the same code moves them
+too, so each search step and each refit reddens several and someone re-derives a
+number under time pressure. S145 surveyed two engines that met that by disabling
+their mate tests rather than their pruning.
+
+The chesso rule is stricter than approval testing on one point: a golden is
+re-derived from a **specification or a rule**, never re-approved from a run.
+`S192_anchors.py` is a second implementation of `evaluate()` written from
+`src/evaluation.cpp`'s prose; a floor sits strictly between two measured ends
+(DEC-116). S028 is why: an anchor copied from the thing it anchors asserts
+nothing.
+
+List every site:
+
+```bash
+grep -rn 'GOLDEN (DEC-142)' tests/
+```
+
+| site | what it pins | re-derive with |
+|---|---|---|
+| `test_evaluation.cpp` "each piece is worth what the tables say" | 135, 244, 325, 563, 787, 0 | `python3 adocs/data/S192_anchors.py` |
+| `test_search.cpp` `QUIET_ROOK_EVAL`, `QUIET_ROOK_EVAL_CHEAP` | 563 and 567, over nine cases | the same script, case "rook on d1" |
+| `test_search.cpp` "a side in check may not stand pat" | 198 | the same script, case "black in check, Re8" |
+| `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
+| `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
+| `test_search.cpp` "ordering keeps the tree small" | 440000 and 20000 | `python3 adocs/data/S192_node_budget.py` |
+| `test_mate_carry.cpp` `short_line_ceiling` | 5, 11, 0, 1, 8, 2 | `adocs/data/S203_case_sweep.sh --ceilings` over the two recorded grids |
+| `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
+| `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
+| `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
+| `test_search_params.cpp` `golden_defaults` | 28 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
+
+`test_engine.cpp`'s `MATE_DEPTH_SLACK` is marked **NOT A GOLDEN** at its site
+for the same reason the others are marked: it is a depth budget the mate reading
+is taken under, priced by `S154_floor_margin_sweep.py slack`, and widening it
+changes what the floor means rather than re-deriving it.
+
+Two traps live in this list. `S192_anchors.py` parses the weight header by
+regex, so a refit that emits another layout breaks the parse silently — run it
+with no argument first and require `10 of 10 reproduced` before feeding it a
+fitted header. And the `-505` of the quiescence case has two ends: it moves with
+the weights *and* with how quiescence treats a checked side, so before
+re-deriving it after a search change, confirm the four leaves are still the four
+king moves each standing pat. If they are not, the case has caught something.
 
 ### Mutation check, `tools/mutation_check.py`
 
@@ -3036,13 +3101,25 @@ this run's own pair prices that bound at **3.87 logistic Elo** (`nElo 34.44`
 against `Elo +26.68`, ratio 1.29).
 
 **Refitting fires two guards, and both are answered by re-deriving rather than
-by relaxing.** `.tuning/anchors.py` recomputes the ten pinned absolute anchors
-from the specification — 10 of 10 at the new weights, and the suite asserts them
-as exact equalities. `build/tools/truncation_scan` re-measures the four
-positions `tests/test_eval_model.cpp` pins for the truncation bound, which
+by relaxing.** `adocs/data/S192_anchors.py` — `.tuning/anchors.py` until S192
+moved it into the tracked data directory — recomputes the ten pinned absolute
+anchors from the specification: 10 of 10 at the new weights, and the suite
+asserts them as exact equalities. `build/tools/truncation_scan` re-measures the
+four positions `tests/test_eval_model.cpp` pins for the truncation bound, which
 belong to the weights and not to the positions (DEC-057): S065's four fell to
-between 0.08 and 1.83 under S076's constants, and 30 of the 10795695 rows reach
-the 2.875 maximum instead. Expect both on the next fit.
+between 0.08 and 1.83 under S076's constants, and the rows that reach the 2.875
+maximum are where the replacements come from. Expect both on the next fit.
+
+**The counts here were re-taken 2026-09-10 and they had drifted**, at the same
+constants and on the same corpus: `--min 2.8` over `selfplay_v2_dedup.tsv` now
+reads **10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at 2.875**, against the
+135399 / 99 / 30 this paragraph carried from S076. All four pinned positions are
+still in the set, so nothing the suite asserts moved, and the weights have not:
+`adocs/data/S192_anchors.py` reproduces all ten anchors at the values S076
+pinned. What did move is not identified here. The scan's loop calls `load_FEN`
+and the engine's own `evaluate()` per row, and S161 changed what `load_FEN`
+keeps (`ecd735e`), which is a candidate and not a finding — nothing was
+bisected. **S206** is the step that settles it.
 
 ### Audit what a corpus contains, per feature
 

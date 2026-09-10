@@ -1,14 +1,108 @@
 id:         S192
 goal:       every golden number in `tests/` is named as one with the script that re-derives it, the piece anchors are re-derivable from the repository, and the soft-limit scaling test asserts the rule on a constructed history
 accepts:    an inventory in this file of every golden in `tests/` -- the static-score anchors 563/567/198/-505/-569 and the piece anchors 135/244/325/563/787, the `test_mate_carry` per-game floors, the `test_mate_breadth` floor, the mate-in-three floor, the node budgets of "ordering keeps the tree small", the `test_search.cpp` table-independence claim -- each with a comment at its site naming it a golden and the command that re-derives it; `.tuning/anchors.py` committed as `adocs/data/S192_anchors.py` (rewritten if it is lost) and shown to reproduce 135/244/325/563/787 and 563/567 at the shipped weights; `tests/test_engine.cpp`'s "the iteration loop scales its soft limit by what the search found" replaced by a case that feeds the loop's scaling from a constructed stability and score-drop history and asserts the rule, with the tree-dependent assertions removed; `tests/test_search.cpp`'s "the table never changes the answer" comment names the S130 stand-pat substitution and quiescence answering from main-search entries as the property's known exceptions; the fault-injection driver re-run over M06a, M09, M29 and M30 shows each still caught, by a golden or by S191's cases; fast suite green in both builds
-touches:    tests/, adocs/data/, .gitignore, DEV_MANUAL.md
+touches:    tests/, adocs/data/, .gitignore, DEV_MANUAL.md; amended on completion with what the work reached and the list did not name -- `adocs/testing_strategy.md`, whose R4 named `.tuning/anchors.py` as the file to commit and now names where it was committed; `adocs/decisions.md` for DEC-168, the three section-10 answers; `adocs/plan_todo/S206_truncation_scan_drift.md`, the finding row 14 turned up; and `adocs/plan.md`, `adocs/status.md` through the coordinator
 excludes:   changing any golden's value; any retune or refit
 decisions:  DEC-139, DEC-142
 closes:     2026-09-04_test_review-F03
 blocks:
 paused_by:
-author:
-done:
+author:     agent (Claude Opus 5), coordinator, 2026-09-10
+done:       2026-09-10. **Twelve goldens in `tests/` are named, scripted and
+            paired with a property, one constant is named as not a golden, and
+            the case that fired on eight search mutants for no defect is
+            replaced by a construction.** `grep -rn 'GOLDEN (DEC-142)' tests/`
+            lists thirteen sites across eight files; the table of what was
+            marked is above under "What the pass actually marked". Two sites the
+            `accepts:` inventory did not have: `test_uci_surface.cpp`'s
+            option-line count, already a golden with its own re-derivation
+            (S193) but not in the marker's shape so `grep` missed it, and
+            `test_eval_model.cpp`'s four truncation positions, which were row
+            14's open question and are resolved in the "add the name"
+            direction. **Row 6 was not this step's to do**: DEC-162 deleted
+            `expected_mate_lines` on 2026-09-09, so section 10's question 1 is
+            moot and what is marked is the ceiling S204 left.
+            **`adocs/data/S192_anchors.py` is `.tuning/anchors.py`, moved,
+            repaired and run**: root from `__file__` instead of the hard-coded
+            `/home/max/ws/chesso/`, every `file:line` citation replaced by the
+            `TEST_CASE` title the anchor belongs to (DEC-135), contract
+            unchanged. **`10 of 10 reproduced`, exit 0**, at `4732d8f`, saved as
+            `adocs/data/S192_anchors.log`. The four other `.tuning/*.py` stay
+            where they are; `.gitignore`'s rules are untouched and only its
+            comment, which named the file that left, is corrected.
+            **The node band was re-derived and it is the one number that had
+            drifted**: `adocs/data/S192_node_budget.py` runs the case through
+            `build/tests/test_search --success` and reads the count off a
+            `MESSAGE` the case gains -- **179851 nodes**, against the 109575 the
+            band was placed on in 2026-08. The tree has grown 64 % under a band
+            that did not move, so the budget is 2.4x the count rather than 4x;
+            the count is still inside the middle half of the band, which is the
+            condition on leaving 440000 and 20000 alone, and `excludes:` forbids
+            moving them anyway. Recorded at the site and in the log.
+            **The soft-limit case was observed red under M06a before it was
+            deleted**, which is what makes the replacement a recorded trade:
+            `test_engine` 1 of 56 cases failed, `REQUIRE( scaled.drop == 0 )`,
+            and nothing else in that binary. `kills.txt` carries eight such rows
+            over the 2026-09-04 mutants, every one on `scaled.drop`. The
+            replacement (DEC-168, form A) drives the suite's own tool-verified
+            mate in one at depths 2, 5 and 8: **stability exactly `depth - 1`
+            and fall exactly 0** by construction, the identity against
+            `search_time_scale_percent`, `scale < 100` scaled and `100`
+            unscaled. The fall half keeps one subcase on the S094 position with
+            **no precondition on the number** -- it reports `stability 1, fall
+            22 cp, scale 107%` through a `MESSAGE` and asserts only the
+            identity, so it cannot redden on a tree change. No `src/` hook, so
+            `git diff HEAD -- src/` is empty, no `Bench:` trailer is owed
+            (DEC-140) and DEC-141's self-play tier does not arm.
+            **The four-mutant re-run: 4 of 4 killed, 431 s**, worktree at
+            `4732d8f` carrying this step's `tests/`, baseline green at 33 tests
+            with `bench 26851183`. M29 `killed` on `test_evaluation`,
+            `test_search`, `test_eval_model` -- fifteen cases including the
+            twelve anchor sites, "the unclamped terms are the engine's own" and
+            `test_eval_model`; it **lost `test_engine`**, which was the old
+            soft-limit case, exactly the trade this step makes. M30 `killed` on
+            `test_evaluation` alone, both predicted properties: "MVV-LVA prefers
+            a cheap attacker" and "the declared history ceiling clears the band
+            above it"; it lost `test_engine` for the same reason. M09 `killed`
+            on S191's "a reduced move that beats alpha is searched again at full
+            depth". **M06a `killed` on S191's "a null-move fail-high against a
+            mate returns the bound"** -- so section 10's question 2 is answered
+            by measurement and **no ply-floor guard case is owed**: the ply
+            floor is covered by construction, not by a golden and not by
+            `test_mate_carry`, which the step expected. One caveat for whoever
+            reads that red: it lands on the case's **precondition**,
+            `REQUIRE( null_score >= MATE_MIN_LOCAL )`, because the mating node
+            sits at exactly `RFP_MIN_PLY` and one ply lower lets reverse
+            futility answer with a static score -- which that case's own comment
+            already describes. It reports as "the setup no longer holds" rather
+            than as a named ply-floor assertion; a step that wants the louder
+            signal has S191's pattern to follow.
+            **Found and filed, not fixed: `build/tools/truncation_scan` no
+            longer reproduces its recorded counts.** Run to verify row 14's
+            claim, it reads **10795695 rows, 138331 past 2.0, 105 past 2.8, 33
+            at 2.875** against `DEV_MANUAL.md`'s 135399 / 99 / 30 on the same
+            corpus file. Deterministic over two runs, all four pinned positions
+            still in the set, the suite green, and the weights proved unmoved --
+            `S192_anchors.py` reproduces all ten anchors at the S076 values. Not
+            diagnosed and not a bug until it is: `DEV_MANUAL.md` now carries the
+            measured numbers and says the delta is unexplained, and
+            **S206** is the step that bisects it.
+            Gate green in both builds, **33 of 33 each**, plus
+            `./clang-format.sh --check` with this machine's documented
+            `CLANG_FORMAT_MAJOR=22` (DEC-146). INV-6 and the Debug self-play are
+            not owed -- `git diff --stat HEAD -- src/` is empty.
+            `python3 tools/plan_prose_check.py --touches` prints **touches
+            flagged: 0 over 61 files**. DOCS: `DEV_MANUAL.md` gains "Goldens:
+            named, scripted, re-derived" with DEC-142's sentence, the twelve-row
+            script table and the `grep` listing, has its **mate-in-three floor
+            corrected from 8 to 11** (stale since S168 moved both ends on
+            2026-09-01) and its `.tuning/anchors.py` citations repointed;
+            `adocs/data/README.md` gains four rows; `adocs/testing_strategy.md`
+            R4 gains the path the script was committed at; `MANUAL.md` checked,
+            no UCI surface moved, no change; `adocs/specs.md` checked, no
+            behaviour changed, no change; `README.md` is human-owned and
+            untouched. DEC-168 records the owner's three live section-10
+            answers and why questions 1 and 5 were moot.
 
 ## Why this exists
 
@@ -100,7 +194,7 @@ movement is a defect first.
 | 1 | `tests/test_evaluation.cpp` "each piece is worth what the tables say" | 135, 244, 325, 563, 787, 0 | `evaluate()` of six one-piece positions, White to move, at the shipped weights | `.tuning/anchors.py` (tracked; root hard-coded, fails here) | `adocs/data/S192_anchors.py`, reads `src/eval_tables.hpp` and `src/evaluation.cpp` | a refit; an evaluation term added or changed (section 5) |
 | 2 | `tests/test_search.cpp` "a quiet position stands pat" | 563 `evaluate`, 567 `evaluate_cheap` | the rook-on-d1 position, two evaluation paths | same | same. The pair recurs in "a quiescence entry carries the static score, never a bound", "quiescence stands pat on the stored static score", "quiescence stands pat on the stored score where the bound allows it", "a mate score is never used as a stand pat", "a substituted stand pat is stored as the bound it is", "a capped stand pat beaten by a capture is still a bound", "reverse futility prunes on the stored static score", "a main-search store records this node's evaluation": two named constants in `tests/test_search.cpp` with one golden comment, so a refit edits two lines and not eleven | a refit |
 | 3 | `tests/test_search.cpp` "a side in check may not stand pat" | 198 | `evaluate()`, Black to move, in check | `anchors.py` case "black in check, Re8" | `S192_anchors.py` | a refit |
-| 4 | `tests/test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | `quiescence()` in check: a one-ply negamax, best of four leaves' `-evaluate()`, not an evaluation call | `anchors.py` `LEAVES` and `QUIESCE_IN_CHECK` | `S192_anchors.py` | a refit; **also** any change to how quiescence treats a checked side -- that end is the property under test, so a move there is a finding before it is a re-derivation |
+| 4 | `tests/test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | `quiescence()` in check: a one-ply negamax, best of four leaves' `-evaluate()`, not an evaluation call | `adocs/data/S192_anchors.py` `LEAVES` and `QUIESCE_IN_CHECK` | `S192_anchors.py` | a refit; **also** any change to how quiescence treats a checked side -- that end is the property under test, so a move there is a finding before it is a re-derivation |
 | 5 | `tests/test_search.cpp` "the losing side takes an available repetition" | -569 | `evaluate()`, Black to move, a rook down | `anchors.py` case "black a rook down, Kh7" | `S192_anchors.py` | a refit |
 | 6 | `tests/test_mate_carry.cpp` `short_line_ceiling` in "a mate score carried across searches keeps a line that reaches it" | 5, 11, 0, 1, 8 | ceiling on the short mating PVs per replayed game of `adocs/data/S170_cases.tsv` at the row's `go` budget, the worst cell the recorded grid shows for that case | `adocs/data/S203_case_sweep.sh --ceilings` over `adocs/data/S204_sweep_head.txt` and `adocs/data/S204_sweep_killer_iter_clear.txt` | **done by S204, DEC-162.** The row read `expected_mate_lines`, a per-case floor on mate lines, and this row's own "21 of 22 search mutants moved it" was the defect: it was one cell of a sparse grid and every tree-moving change re-pinned it. Vacuity moved to a fixture-wide majority with no per-case number to re-derive | a re-sweep of the budgets, which is a Zobrist redraw (DEC-154); S202 closing lowers the ceilings |
 | 7 | `tests/test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | exact mates over the 318 mined positions at depth 10; ends 145 shipping, 141 guard weakened | `adocs/data/S156_mined_floor_sweep.py`, runs, builds a throwaway worktree | keep; add the golden header | a search change that costs or buys mate finding; re-derive when either end moves |
@@ -108,7 +202,7 @@ movement is a defect first.
 | 9 | `tests/test_engine.cpp` `MATE_DEPTH_SLACK` | 8 | **not a golden**: a depth budget, priced by `S154_floor_margin_sweep.py slack` | that script | comment says "a measured window, not a golden" and names the mode | S154 re-decides it |
 | 10 | `tests/test_search.cpp` "ordering keeps the tree small" | `node_limit` 440000, lower bound 20000 | depth-5 `search()` node count on `TRICKY_POS` from a cold table, 109575 when measured 2026-08-14, held inside [count / 5, 4 x count] | none | `adocs/data/S192_node_budget.py`: runs `build/tests/test_search --test-case="ordering keeps the tree small" --success`, reads the count from a `MESSAGE` the case gains, prints both bounds by the stated ratios | any ordering or search change; re-derive when the count leaves the middle half of the band |
 | 11 | `tests/test_search.cpp` "the table never changes the answer" | none | a property: the answer at depth 2 and 3 is independent of table contents | -- | the comment names the three known exceptions (section 6) | -- |
-| 12 | `tests/test_engine.cpp` "the iteration loop scales its soft limit by what the search found" | `drop == 0`, `drop > 0`, `scale < 100` at depth 8 on two fixed positions | that the loop feeds `search_time_scale_percent()` the stability and drop it counted | none | replaced by a constructed-history case (section 6) | -- |
+| 12 | `tests/test_engine.cpp`, the case now titled "the iteration loop scales its soft limit by the history it counted" | `drop == 0`, `drop > 0`, `scale < 100` at depth 8 on two fixed positions | that the loop feeds `search_time_scale_percent()` the stability and drop it counted | none | replaced by a constructed-history case (section 6) | -- |
 | 13 | `tests/test_search_params.cpp` `golden_defaults` | 28 defaults with ranges | a deliberate-change detector, already named golden; `src/search_params.hpp` is its derivation | the source table | no script owed; one comment line says so | a step that moves a default |
 | 14 | outside the accepts, unresolved | -- | `tests/test_eval_model.cpp`'s four pinned positions: S076's commit message says `tools/truncation_scan` re-derives them and the test does not name it -- verify at HEAD, add the name or record a finding. `tests/test_uci_surface.cpp`'s lists are the SURFACE rule's, out of scope. The two `explored_nodes < 100000` ceilings in `tests/test_search.cpp` carry orders of magnitude of slack and are not goldens | | | |
 
@@ -350,3 +444,41 @@ bounds) and the four-mutant kill table.
    comment at its site". Approve, or comment each site.
 5. `status.md`'s Parked `anchors.py` item and F03's premise are stale: retire
    with this step's stamp, or by a separate status rewrite now.
+
+## What the pass actually marked, 2026-09-10
+
+Twelve golden sites carry `GOLDEN (DEC-142)` and one carries
+`NOT A GOLDEN (DEC-142)`. `grep -rn 'GOLDEN (DEC-142)' tests/` lists all
+thirteen. Against section 3's inventory:
+
+| site | inventory row | script |
+|---|---|---|
+| `test_evaluation.cpp` "each piece is worth what the tables say" | 1 | `adocs/data/S192_anchors.py` |
+| `test_search.cpp` `QUIET_ROOK_EVAL`, `QUIET_ROOK_EVAL_CHEAP` | 2 | the same, case "rook on d1" |
+| `test_search.cpp` "a side in check may not stand pat" | 3 | the same, case "black in check, Re8" |
+| `test_search.cpp` "a quiet evasion is a legal answer to a check" | 4 | the same, `LEAVES` and `QUIESCE_IN_CHECK` |
+| `test_search.cpp` "the losing side takes an available repetition" | 5 | the same, case "black a rook down, Kh7" |
+| `test_mate_carry.cpp` `short_line_ceiling` | 6 | `adocs/data/S203_case_sweep.sh --ceilings` |
+| `test_mate_breadth.cpp` `EXACT_FLOOR` | 7 | `adocs/data/S156_mined_floor_sweep.py` |
+| `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 8 | `adocs/data/S154_floor_margin_sweep.py floor` and `red` |
+| `test_engine.cpp` `MATE_DEPTH_SLACK` | 9 | marked **not** a golden; `S154_floor_margin_sweep.py slack` prices it |
+| `test_search.cpp` "ordering keeps the tree small" | 10 | `adocs/data/S192_node_budget.py` |
+| `test_search_params.cpp` `golden_defaults` | 13 | none owed: `src/search_params.hpp` is the derivation |
+| `test_eval_model.cpp` `truncation_positions` | 14 | `build/tools/truncation_scan --min 2.8` |
+| `test_uci_surface.cpp` option-line count | **not in the inventory** | the `uci` pipe S193 wrote beside it |
+
+Two sites the inventory did not have. `test_uci_surface.cpp`'s option-line
+count was already a golden with its own re-derivation, written by S193 under
+DEC-142 but not in the marker's shape, so `grep` missed it; it is normalised
+here and nothing else in that file is touched -- its lists are the SURFACE
+rule's. `test_eval_model.cpp`'s four positions were row 14's open question and
+are resolved in the "add the name" direction: `build/tools/truncation_scan`
+does re-derive them, verified by running it.
+
+Row 11 (`"the table never changes the answer"`) carries no number and gains the
+paragraph naming its two known exceptions instead. Row 12 is the replaced case.
+
+**Row 6 is S204's, not this step's.** DEC-162 deleted `expected_mate_lines`
+before this step started, so the per-case floors the `accepts:` names no longer
+exist and section 10's question 1 is moot. What is marked is the ceiling S204
+left.

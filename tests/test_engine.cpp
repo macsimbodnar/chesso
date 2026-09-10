@@ -1170,10 +1170,27 @@ TEST_SUITE("engine: uci layer")
   // measured and the scale it ended on have to be the same three numbers the
   // function relates.
   //
+  // S192, DEC-142: **construction, not measurement.** Until this step both
+  // subcases read their stability and their fall off a fixed position's tree,
+  // and eight of the twenty-two search mutants of the 2026-09-04 review turned
+  // this case red without being time-management defects at all -- M06a, one ply
+  // off the reverse futility floor, took `REQUIRE(scaled.drop == 0)` red and
+  // nothing else in this binary. A guard that fires on any change to the tree
+  // says nothing about the rule it is named after.
+  //
+  // The root below is the suite's mate in one, tool-verified where it is used
+  // for that ("mate in one" in tests/test_search.cpp, whose row for this FEN
+  // asserts Ra1-a8 and mate in 1; DEC-023). The best move is the mating move at
+  // every iteration and the score is the same mate score, whatever the pruning
+  // rules do deeper, so at [go depth d] with no clock the loop counts a
+  // stability of exactly d - 1 and a fall of exactly 0 on any machine and after
+  // any search change.
+  //
   // Both runs are fixed-depth with no clock and no node budget, so nothing
-  // arms a timer, the iteration count is not whatever the machine got through,
-  // and every number below is the same on any machine.
-  TEST_CASE("the iteration loop scales its soft limit by what the search found")
+  // arms a timer and the iteration count is not whatever the machine got
+  // through.
+  TEST_CASE(
+      "the iteration loop scales its soft limit by the history it counted")
   {
     struct probe_t
     {
@@ -1223,63 +1240,60 @@ TEST_SUITE("engine: uci layer")
     SUBCASE("a settled best move ends up with less time than the allocation")
     {
       const std::string position =
-          "position fen r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/"
-          "RNB1K1NR b KQkq - 3 3";
+          "position fen 7k/6pp/8/8/8/8/8/R6K w - - 0 1";
 
-      const probe_t scaled = probe(position, 8, true);
+      for (int depth : {2, 5, 8}) {
+        const probe_t scaled = probe(position, depth, true);
 
-      // Preconditions. Without a run of iterations that kept the same move
-      // there is no discount to find, and with a fall in the last one the
-      // discount would not be the only thing moving the scale.
-      REQUIRE(scaled.stability > 0);
-      REQUIRE(scaled.drop == 0);
+        // The construction held. Both are exact numbers rather than
+        // inequalities on whatever the tree did: the first iteration cannot
+        // repeat a previous move and has no previous score, and every one
+        // after it repeats Ra1-a8 at the same mate score.
+        REQUIRE_EQ(scaled.stability, depth - 1);
+        REQUIRE_EQ(scaled.drop, 0);
 
-      CHECK_EQ(scaled.scale,
-               search_time_scale_percent(scaled.stability, scaled.drop));
-      CHECK(scaled.scale < 100);
+        CHECK_EQ(scaled.scale,
+                 search_time_scale_percent(scaled.stability, scaled.drop));
 
-      // And the search does not get to move a time the GUI named. Same
-      // position, same depth, same two inputs - the loop still records them -
-      // and no scaling, which is what [go movetime] and the no-limit fallback
-      // ask for. The run above is what makes this one non-vacuous: without it
-      // a scale that never moved at all would satisfy it.
-      const probe_t fixed = probe(position, 8, false);
+        // TM_STABILITY_PERCENT > 0 is asserted by the pure case above, so a
+        // stability of one or more has to buy a discount here.
+        CHECK(scaled.scale < 100);
 
-      REQUIRE(fixed.stability == scaled.stability);
-      REQUIRE(fixed.drop == scaled.drop);
-      CHECK_EQ(fixed.scale, 100);
+        // And the search does not get to move a time the GUI named. Same
+        // position, same depth, same two inputs - the loop still records them -
+        // and no scaling, which is what [go movetime] and the no-limit fallback
+        // ask for. The run above is what makes this one non-vacuous: without it
+        // a scale that never moved at all would satisfy it.
+        const probe_t fixed = probe(position, depth, false);
+
+        REQUIRE_EQ(fixed.stability, scaled.stability);
+        REQUIRE_EQ(fixed.drop, scaled.drop);
+        CHECK_EQ(fixed.scale, 100);
+      }
     }
 
-    SUBCASE("a score that fell buys time back")
+    SUBCASE("the fall the loop counted is the fall the scale was computed from")
     {
-      // The score at depth 8 here is 29 centipawns below the score at depth 7,
-      // and the best move has been stable for three iterations. The fall has
-      // to outweigh that discount or it is not reaching the scale at all: 14
-      // points of grant against 12 of discount, so the scale lands at 102.
+      // The other half of the rule, and the half no construction reaches: a
+      // root whose score falls is a property of the tree, so what is asserted
+      // is the identity alone, at whatever fall this position produces today.
+      // No precondition on the number - that is what made the old case fire on
+      // eight mutants - and the fall itself is reported rather than pinned.
       //
-      // Depth 6 until S094, where the score fell 62 between depths 5 and 6.
-      // The quiescence transposition probe changed the scores the search
-      // reports and this position no longer falls there -- -68 at both depths.
-      // Re-targeted rather than relaxed: same position, same assertions, a
-      // depth at which the precondition the case is about is really present.
-      // Measured at S094's first commit: cp -34 -34 -68 -59 -68 -68 -80 -109
-      // for depths 1 to 8, best move e2a6 from depth 5 on.
+      // What the fall *does* to the scale is held as arithmetic by "the time
+      // scale moves with stability and with a falling score" above, which
+      // cannot move with the tree because it never runs a search.
       const probe_t scaled = probe(
           "position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/"
           "R3K2R w KQkq - 0 1",
           8, true);
 
-      // Precondition: the score actually fell. On a loop that passed a
-      // constant zero for the fall this is what goes red.
-      REQUIRE(scaled.drop > 0);
+      MESSAGE("loop counted stability " << scaled.stability << ", fall "
+                                        << scaled.drop << " cp, scale "
+                                        << scaled.scale << "%");
 
       CHECK_EQ(scaled.scale,
                search_time_scale_percent(scaled.stability, scaled.drop));
-
-      // Against the same position's own stability, so the comparison isolates
-      // the fall rather than reading a number that a settled move would have
-      // produced anyway.
-      CHECK(scaled.scale > search_time_scale_percent(scaled.stability, 0));
     }
   }
 
@@ -2135,6 +2149,12 @@ TEST_SUITE("engine: mate safety")
   // mate in two assertion is the one that does not depend on the window at
   // all, because it asks for the first iteration and not the last.
   // adocs/data/S154_floor_margin_sweep.log, mode `slack`.
+  //
+  // NOT A GOLDEN (DEC-142): a measured window, not a pinned observation. It is
+  // a depth budget the reading is taken under, priced by
+  // `python3 adocs/data/S154_floor_margin_sweep.py slack`; widening it changes
+  // what MATE_IN_THREE_FLOOR means rather than re-deriving it, and S154 is what
+  // re-decides it.
   static constexpr int MATE_DEPTH_SLACK = 8;
 
   // WHAT IS ASSERTED, AND WHY IT IS NOT "EVERY MATE IS FOUND".
@@ -2240,6 +2260,20 @@ TEST_SUITE("engine: mate safety")
   //
   // adocs/data/S145_rfp_sweep.log holds S145's sweep and
   // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
+  //
+  // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
+  // may find over the 82 constructed positions at depth 2m - 1 +
+  // MATE_DEPTH_SLACK. Its two ends are above: 12 at the shipping guard, 10 with
+  // the guard weakened by one ply. Re-derive: python3
+  // adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
+  // weakened end; adocs/data/S168_floor_sweep.log is the reading over the
+  // enlarged set. Moves legitimately on: a search change that costs or buys
+  // mate finding, and a change to the position set -- either end moving obliges
+  // the number to be taken again, not read again. Margin: 1 on each side, which
+  // is the narrowest DEC-116 accepts, and is why the split by motif is recorded
+  // above. Property beside it: the two assertions that are defects at any count
+  // -- no mate score for the side being mated, and none closer than the proved
+  // minimum -- which carry no floor at all.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

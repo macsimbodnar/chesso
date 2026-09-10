@@ -226,14 +226,23 @@ TEST_SUITE("evaluation: score")
   // cancelling -- and every one of the five went **up** while `PAWN` fell by 1
   // and `BISHOP` rose by 2. That is the same degeneracy read from the other
   // side: what moved is the piece-square tables these pieces stand on, not the
-  // material defines. Each value below was re-derived by `.tuning/anchors.py`,
-  // the second implementation, and matched the engine on all ten of its cases
-  // before any of them was pasted here. Re-targeted, not relaxed: the
-  // assertion is the same exact equality it always was.
+  // material defines. Each value below was re-derived by the second
+  // implementation, and matched the engine on all ten of its cases before any
+  // of them was pasted here. Re-targeted, not relaxed: the assertion is the
+  // same exact equality it always was.
   //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
+  //
+  // GOLDEN (DEC-142): evaluate() of six one-piece positions, White to move, at
+  // the shipped weights -- what one piece plus its tables is worth.
+  // Re-derive: python3 adocs/data/S192_anchors.py. Moves legitimately on: a
+  // refit; an evaluation term added or changed, which is a new field in every
+  // case of the script and in its score(), written from src/evaluation.cpp's
+  // prose and never by calling the engine.
+  // Margin: exact. Property beside it: "the lazy shortcut cannot change a
+  // decision", which holds over the whole corpus and does not move with a fit.
   TEST_CASE_FIXTURE(eval_fixture_t, "each piece is worth what the tables say")
   {
     struct case_t

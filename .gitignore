@@ -10,10 +10,12 @@ config.json
 
 # The corpus, the fit outputs and the logs stay out: selfplay_v2.tsv alone is
 # 715 MB and every one of them is reproducible from a recorded command. The
-# scripts do not -- anchors.py is the only executable record of how the pinned
-# test values are derived, including the quiescence composite no evaluation
-# model can produce. Children of an ignored directory cannot be re-included,
-# hence the star.
+# scripts do not -- they are the only executable record of how a fit is applied
+# and checked. anchors.py, which derives the pinned test values including the
+# quiescence composite no evaluation model can produce, left this directory at
+# S192 and is tracked as adocs/data/S192_anchors.py; the four that remain are
+# still re-included here. Children of an ignored directory cannot be
+# re-included, hence the star.
 .tuning/*
 !.tuning/*.py
 .reprofile

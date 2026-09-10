@@ -1,0 +1,8 @@
+binary        /home/max/ws/chesso/build/tests/test_search
+count         179851 nodes, depth 5 on TRICKY_POS, cold table
+budget        719404  (4x the count)
+floor         35970  (the count over 5)
+
+shipping      budget 440000, floor 20000
+the count is  8.99x the shipping floor and 0.41 of the shipping budget
+middle half   [125000, 335000]: the count is inside it
