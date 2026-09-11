@@ -7,6 +7,70 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S215 is complete, 2026-09-11 afternoon: the line S207's rule hangs its
+  boundary on is read by the suite at last, and both of its neighbours die on
+  it.**
+
+  S207's rule has two halves and only one was pinned. `classify_repetition()`'s
+  comparison is held by M35 and M36; the value it compares against --
+  `search()`'s `state->root_history_size = game->history.size` -- was read by
+  **nothing**, which the Tier-1 fast check over `23f926d` found and measured
+  rather than suspected: mutated to `history.size - 1` the whole fast suite
+  stayed green while `bench` read **26117924** against the tree's **30046849**,
+  a tree **13 %** different. What `- 1` restores is the root position recurring
+  once inside its own tree scoring `DRAW_SCORE` again -- part of the F08 shape,
+  and the class whose removal moved `bench` by 1.34 % at S207.
+
+  **One board, three searches, all of them through `search()`.** The board is a
+  forced perpetual, `6k1/r4pp1/6p1/8/7Q/8/6K1/q7 w - - 10 40`: White a rook and
+  three pawns down, **exactly one legal reply to every check**, **no capture
+  anywhere in the cycle**, so the winning side never has to cooperate and
+  nothing but the boundary decides the line's score. Stockfish at depth 22 says
+  **0** on `Qd8+ Kh7 Qh4+ Kg8 Qd8+`; python-chess says `Status.VALID` and counts
+  the single reply. (1) **Depth 4** from a root with one entry behind it that is
+  not the root position: the cycle returns to the root's *own* entry, not
+  strictly inside the tree, no draw, the material -- **-909**, against a
+  static **-929**. (2) The same
+  board and history at **depth 5**: the ply-1 position returns at ply 5,
+  strictly above the root's entry, a draw -- **0**, and the only one available,
+  which is the `accepts`' draw that can come from `index > root_history_size`
+  alone. (3) The same board with the cycle played *before* the root: two
+  occurrences at or below the root, a draw wherever both lie -- **0** at the
+  depth that answered the material. (1) and (3) are asserted the same position
+  by board hash with `history.size` **1 against 4**, which is S207's rule from
+  the other side: same board, other history, other score.
+
+  **All four wrong boundaries observed red before the case was called done**,
+  each on the assertion written for it: `- 1` and `0` fail (1) at
+  `REQUIRE_LT( 0, -300 )`, `+ 1` and the deleted assignment -- the `SIZE_MAX`
+  default -- fail (2) at `REQUIRE_EQ( -841, 0 )`. The history behind (1) and (2)
+  is built from a FEN one ply earlier for a reason: at `history.size == 0` the
+  `- 1` underflows to `SIZE_MAX` and survives. Under each mutant the **only**
+  failing assertion across 33 test binaries is this case's, which is the gap
+  restated from the other end.
+
+  **M39 and M40 killed, 2 of 2, from a worktree at `cfe2406`** -- the commit
+  carrying the case and the mutants -- baseline green at 33 tests and
+  `bench 30046849`, each killed by its own assertion and by `test_search`
+  alone. The first run of the pair was taken at `177171e`, the same tree before
+  it was amended to carry the trailer every other commit here has, and read the
+  same two kills.
+
+  **INV-6 discharged**: `search_bench` depth 9 **121530 / 801481 / 72924**,
+  `c3d5` / `e2a6` / `d7c8q`, `bench` **30046849**, the parent's total --
+  identical because **no `src/` file was touched**, which is also why the commit
+  carries neither a `Bench:` line nor `No functional change` (`tools/gate.sh`:
+  a commit touching no `src/` file needs neither). No SPRT: a test and two
+  mutants cannot alter play. DEC-141's second tier does not bind and
+  `gate_extra` last ran 2026-09-10, inside its cadence. `ctest -L fast` 33/33 in
+  **both** builds, format clean under `CLANG_FORMAT_MAJOR=22`.
+
+  **Docs**: `specs.md`'s repetition paragraph names the third case and the
+  mutants; `DEV_MANUAL.md`'s mutation-cost line said **41** where the tree holds
+  **47** and now names S207's, S208's and this step's additions, the measured
+  3948 s staying with the 40 rows it was taken on; `MANUAL.md` checked,
+  unchanged, nothing on the UCI surface moved.
+
 - **S209 is complete, 2026-09-11 midday: the UCI option surface follows the
   protocol on case, `Hash` says so when it refuses, and `clean-tt` no longer
   clears the table under a running search.**
@@ -1936,14 +2000,13 @@ Updated: 2026-09-11, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S215**, Open entry 1 -- the assignment S207's repetition rule hangs
-  on, pinned by a test through `search()` and by a mutant that test kills; then
-  **S216**, entry 2, the killer-slot census that measures a position the engine
-  now refuses. Both are the Tier-1 fast checks' own findings, node-identical,
-  and neither owns a run. **The next run-owning entry is S024**, entry 3, the
-  largest ordering gain surveyed -- one SPRT, slow class by S182's ledger, so a
-  night run -- with **S214** as its filler. Behind it **S211**, then **S151**,
-  entry 6: DEC-172 takes design (iii), a fixed 1000-pair estimate at
+- Next: **S216**, Open entry 1 -- the killer-slot census that measures a
+  position the engine now refuses, the second of the two Tier-1 fast-check
+  findings and the last entry before the run-owning work; node-identical and it
+  owns no run. **The next run-owning entry is S024**, entry 2, the largest
+  ordering gain surveyed -- one SPRT, slow class by S182's ledger, so a night
+  run -- with **S214** as its filler. Behind it **S211**, then **S151**,
+  entry 5: DEC-172 takes design (iii), a fixed 1000-pair estimate at
   `32+0.32`, `Hash=64`, about 3.4 h and a daytime run.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
@@ -1973,9 +2036,13 @@ Updated: 2026-09-11, by hand.
   shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first
   or stage 4 goes red on the formatter (DEC-146).
 - Blocked: **nothing.**
-- Watching: **nothing. No run is armed.** S148's SPRT finished at 01:57 on
-  2026-09-09 and its watcher exited on `SPRT-RUN-DONE`, acknowledged and read
-  in the same turn; the verdict is recorded above and in DEC-158. Its PGN,
+- Watching: **nothing. No run is armed.** S215 armed two, both on
+  `MUTATION-RUN-(DONE|FAILED)` over a polled log with a 30-minute ceiling and a
+  liveness check on the run's pid, and both exited on `MUTATION-RUN-DONE` --
+  329 s for the pair at `177171e`, and the re-run at `cfe2406` -- each
+  acknowledged and read in the turn that armed it. Before them, S148's SPRT
+  finished at 01:57 on 2026-09-09 and its watcher exited on `SPRT-RUN-DONE`,
+  acknowledged and read in the same turn; the verdict is recorded above and in DEC-158. Its PGN,
   73 MB at `/tmp/chesso_sprt_nonreg_20260908_193719/games.pgn`, is **not**
   committed and `/tmp` will take it; the log is, and carries every game's
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.

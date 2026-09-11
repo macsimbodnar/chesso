@@ -1778,7 +1778,8 @@ binary rather than a count, because a kill by one golden alone is a weak one
 
 **Cost, and it is in no gate.** **40 mutants in 3948 s — 66 minutes — on the
 workstation, 2026-09-10** (41 since S192's fast check added `M34`, whose row is
-92 s): about 85 s a row, being a ccache rebuild, the bench
+92 s, and 47 since S207 added `M35` and `M36`, S208 `M37` and `M38`, and S215
+`M39` and `M40`): about 85 s a row, being a ccache rebuild, the bench
 and one serial run of the fast label. Three rows run long because the mutant
 makes the engine search more, `M22` worst at 442 s. One row on its own is
 **168 s** measured, the baseline included — `--only M26` — which is what a
