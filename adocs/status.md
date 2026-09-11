@@ -7,6 +7,36 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S215's fast check found two real things, both prose, both fixed in the
+  commit below and neither a step.**
+
+  **(1) The mechanism blamed for M39's 13 % bench move was wrong**, in the step
+  stamp, in `specs.md`, in `status.md` twice and in M39's own description
+  string. `- 1` was described as restoring the pre-S207 root-recurrence draw.
+  It does that only to a root that has a history behind it. Every `bench` root
+  is a FEN, `load_FEN` calls `cleanup_board` which zeroes `history.size`, and
+  `size` is `size_t`, so on a bench root `size - 1` is **`SIZE_MAX`** and *no*
+  entry is ever in-tree: M39 removes every in-tree draw rather than adding one
+  class back. **Measured, not argued: an explicit `SIZE_MAX` benches 26117924,
+  M39's total to the node, against 30046849 shipped.** The direction agrees --
+  fewer draws detected, fewer nodes, the same sign S207 measured. The step knew
+  about the underflow (it is why the case builds its history from a FEN one ply
+  earlier) and did not connect it to bench, where every root is size 0. The
+  13 % and both kills stand; only the explanation was wrong.
+
+  **(2) `specs.md` contradicted the case it describes**, saying the depth-4
+  search runs "with nothing behind the root" where the root has exactly one
+  entry behind it and must have, for (1)'s reason. `plan.md` had it right.
+
+  **The stamp in `adocs/plan_done/` is not edited** -- `plan_done/` is history
+  (AGENTS.md) -- so the correction lives here, in `specs.md` and at the mutant.
+  Everything else came back clean: the three searches re-derived (**-909 / 0 /
+  0**, static **-929**), the perpetual re-verified through python-chess and
+  Stockfish, chesso's own PV checked to confirm search 2's `0` is the
+  repetition and not another draw, the anchor found exactly once in
+  `src/search.cpp`, both mutants' `old` strings exact, 47 `m(` entries against
+  `DEV_MANUAL.md`'s 47, and the `done:` stamp present in the commit.
+
 - **S215 is complete, 2026-09-11 afternoon: the line S207's rule hangs its
   boundary on is read by the suite at last, and both of its neighbours die on
   it.**
@@ -17,9 +47,15 @@ Updated: 2026-09-11, by hand.
   **nothing**, which the Tier-1 fast check over `23f926d` found and measured
   rather than suspected: mutated to `history.size - 1` the whole fast suite
   stayed green while `bench` read **26117924** against the tree's **30046849**,
-  a tree **13 %** different. What `- 1` restores is the root position recurring
-  once inside its own tree scoring `DRAW_SCORE` again -- part of the F08 shape,
-  and the class whose removal moved `bench` by 1.34 % at S207.
+  a tree **13 %** different. **What moves the bench is the underflow, not the
+  root-recurrence class** -- S215's own fast check caught the stamp saying
+  otherwise, and an A/B settled it: every `bench` root is a FEN and `load_FEN`
+  zeroes the history, so `size - 1` is `SIZE_MAX` there and *no* entry is ever
+  in-tree; an explicit `SIZE_MAX` benches **26117924**, M39's total to the node.
+  The root-recurrence reading -- the root position recurring once inside its own
+  tree scoring `DRAW_SCORE` again, part of the F08 shape and the class whose
+  removal moved `bench` 1.34 % at S207 -- is what `- 1` does to a root that has a
+  history behind it, which is ordinary play and is what the case asserts.
 
   **One board, three searches, all of them through `search()`.** The board is a
   forced perpetual, `6k1/r4pp1/6p1/8/7Q/8/6K1/q7 w - - 10 40`: White a rook and
@@ -193,9 +229,10 @@ Updated: 2026-09-11, by hand.
   `state->root_history_size = game->history.size`, and **nothing in the suite
   reads that line**: mutated to `history.size - 1` the whole fast suite stays
   green while `bench` moves **26117924 against 30046849**, a tree 13 %
-  different. What `- 1` does is restore the pre-S207 behaviour for the
-  root-recurrence class -- part of the F08 shape and the class whose removal
-  moved bench 1.34 % at S207. The three existing cases all miss it for reasons
+  different. What `- 1` does to a root with a history behind it is restore the
+  pre-S207 behaviour for the root-recurrence class -- part of the F08 shape and
+  the class whose removal moved bench 1.34 % at S207 -- but that is **not** what
+  moved the bench: corrected by S215's fast check, see the S215 bullet. The three existing cases all miss it for reasons
   written into S215: two reach `search()` but land on the two-match or the
   pre-root path either way, and the boundary control sets the field by hand and
   calls `negamax()`. **Verified by measurement before it was written down**,

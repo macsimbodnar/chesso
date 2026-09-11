@@ -166,8 +166,18 @@ m("M21_standpat_lower_bound_lowers", S, "search/tt",
 # killed by the same case and are not mutants here: `0` fails exactly where
 # `- 1` does, and deleting the assignment -- leaving the SIZE_MAX default --
 # fails exactly where `+ 1` does.
+#
+# M39 IS TWO BUGS IN ONE, AND THE BENCH SEES THE SECOND. With a history behind
+# the root -- ordinary play, and what the case asserts -- `- 1` makes the root's
+# own entry read as in-tree, so the root recurring once inside its own tree is a
+# draw again, which is part of the F08 shape. With an empty history it underflows
+# to SIZE_MAX and no entry is ever in-tree, so every in-tree draw disappears
+# instead. Every `bench` root is a FEN and load_FEN zeroes the history
+# (cleanup_board), so the 13 % is the underflow: an explicit SIZE_MAX benches
+# 26117924, M39's total to the node, against 30046849 shipped. Found by S215's
+# fast check, measured rather than argued.
 m("M39_root_boundary_one_low", S, "rules",
-  "the root's own entry read as in-tree, the pre-S207 rule for that class",
+  "the root's own entry read as in-tree with a history, SIZE_MAX without one",
   ('state->root_history_size = game->history.size;',
    'state->root_history_size = game->history.size - 1;'),
   origin="S215")
