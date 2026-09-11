@@ -70,6 +70,22 @@ Updated: 2026-09-11, by hand.
   `CLANG_FORMAT_MAJOR=22`. Closes `2026-09-10_adversarial-F11`, `-F12` and
   `-F13`.
 
+  **The fast check over `5c11b72` found one real thing and it was trivial**, so
+  it is fixed in `52f4c37` and earned no step: two comments in `src/` and
+  `tests/` carried the *audit's* figure of 11 races where every document in the
+  same commit carried this step's measured 38 / 41 / 36, and the audit says of
+  its own number "the TSan run not re-executed" -- so the number a reader met
+  first, in `src/`, was the unreproduced one. The same commit moves the
+  `Status:` lines of F08 to F13 from planned to closed, which is the one edit an
+  audit report takes. Everything else came back clean, including the fold's
+  coverage (every name comparison folds, `Book File`'s value and the spin values
+  verbatim, `search_param_set` on the canonical spelling), the reentrancy of the
+  new join, and every added case's ability to fail. Two inputs that used to work
+  and no longer do, checked against the project's own harnesses rather than
+  argued: `+64` and `64 extra` -- `fastchess.sh` sends `option.Hash=16`,
+  `rating.sh` `128`, `tools/spsa_driver.py` coerces with `int(...)`, so nothing
+  here sends either.
+
 - **S208 is complete and the fast check over S207 earned a new step, 2026-09-11
   morning.**
 
