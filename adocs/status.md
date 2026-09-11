@@ -34,6 +34,21 @@ Updated: 2026-09-11, by hand.
   builds**, format clean; `Bench: 26491479`, verified against the very binary
   the match played by `sha256sum`.
 
+  **The two mutants, re-validated through the tool after the commit** at
+  `23f926d`, from a linked worktree as `tools/mutation_check.py` requires:
+  **M35 killed, 1 of 33 failed, bench moved, 210 s** -- caught by *the root's
+  own occurrence is the boundary* -- and **M36 killed, 1 of 33, bench moved,
+  179 s** -- caught by that case **and** by *one occurrence before the root is
+  not a draw*. Both signatures moved, so neither can be argued equivalent.
+  **A process note, since the stamp cannot be edited**: S207's `done:` stamp
+  says the two were "re-validated by `tools/mutation_check.py` from a worktree
+  at this commit", and that clause was written **before** the run rather than
+  after it -- the hand-applied observation it also records was genuine and
+  pre-commit, but the tool run was a prediction at the time. It is confirmed
+  here, and the lesson is the ordinary one: the tool needs the commit to exist,
+  so the stamp should have said what it *would* run and this file should carry
+  the result, which is what it now does.
+
 - **How S207 and the night's four document steps were built, 2026-09-11 night.**
 
   **In progress, S207** (`plan_current/`): a repetition is scored as a draw only
