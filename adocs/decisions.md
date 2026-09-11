@@ -10505,3 +10505,42 @@ Consequences: `adocs/plan.md`'s Open list is re-sorted by one move; S042's
               after over the same games (the S219 PGNs replayed, or a fresh
               1500-game match), and a count that does not fall to zero is a
               second cause.
+
+## DEC-188  2026-09-12  The step subagent is Sonnet 5, not Opus 5: DEC-185's model clause is amended, the rest of it stands
+Tags:         workflow, agents, coordinator, model, dec-185
+Context:      DEC-185 (2026-09-11) set the operating rule: one clean subagent
+              per plan step, briefed by the coordinator, which implements
+              nothing itself, one task at a time, and named Opus 5 as the
+              model, rejecting Sonnet with "the owner named Opus 5; quality
+              over cost". Resuming the session on 2026-09-12 at 00:30, after
+              S219's comparison had finished, the owner wrote: "continue the
+              work as discussed in the session. You coordinate and fresh
+              sonnet5 agents do the implementation. Continue and don't stop
+              until I tell you."
+Decision:     **By the owner.** The step subagent is **Sonnet 5** (`model:
+              sonnet`) from this point on. Everything else in DEC-185 stands
+              unchanged: one fresh subagent per step or self-contained part,
+              a self-contained brief and a bounded report, the coordinator
+              holds the machine and the shared documents and commits, one
+              task at a time with the blocked-task exception, the handover
+              written into `status.md` at each task close so the conversation
+              can be compacted. DEC-185's rejection of Sonnet is VOID on this
+              point; its other rejections stand. The coordinator does not stop
+              at task boundaries to ask whether to continue: the owner's
+              standing instruction is to keep going until told otherwise, and
+              the reserved questions (goal, ethic, workstation risk) are the
+              only ones that block.
+Rejected:     **Keeping Opus 5 for steps that touch `src/`** and Sonnet for
+              documents only -- the owner drew no such line, and a split rule
+              needs a judgement call per step that the coordinator would then
+              own; if Sonnet's work fails the Tier-1 fast check or the gate
+              repeatedly, that is a number to bring to the owner, not a
+              reason to deviate silently. **Treating the message as a slip**
+              -- it names the model explicitly and repeats the coordinator
+              framing, so it is an instruction.
+Consequences: `AGENTS.md`'s AGENTS rule names Sonnet 5 with this id. A step's
+              `author:` names the model that did it, so a future reader can
+              attribute quality to the model that produced it: S219's
+              pre-launch work was Opus 5, its reading and switch and everything
+              after are Sonnet 5. The fast check after each step stays and is
+              the instrument that says whether the change cost anything.

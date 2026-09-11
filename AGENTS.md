@@ -160,11 +160,12 @@ migration that way (DEC-109).
   DEC-017.
 - SURFACE: `test_uci_surface` is the golden guard over the UCI surface;
   refresh it only after `specs.md` and `MANUAL.md` describe the change.
-- AGENTS: **every plan step is implemented by one clean Opus 5 subagent,
+- AGENTS: **every plan step is implemented by one clean Sonnet 5 subagent,
   briefed by the coordinator, which implements nothing itself** (DEC-185,
-  2026-09-11). The brief is self-contained: the step file, the decisions it
-  cites, the files to read, what not to touch, the shape of the report. The
-  subagent writes code, tests, its data files and its own step file; the
+  2026-09-11; the model was Opus 5 until DEC-188 on 2026-09-12). The brief
+  is self-contained: the step file, the decisions it cites, the files to
+  read, what not to touch, the shape of the report. The subagent writes code,
+  tests, its data files and its own step file; the
   coordinator holds the machine, owns the shared documents, runs the Tier-1
   fast check over the result and commits. **One task at a time**: a second
   subagent starts only while the first is blocked on something long -- a match
