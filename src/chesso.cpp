@@ -1967,12 +1967,15 @@ bool command_clean_TT(std::queue<std::string>& args)
   LOG_I << "Command [command_clean_TT]. Args: " << args << END_I;
 
   // Every path that mutates the table calls this first, the rule stated at
-  // stop_and_join_search() and the only one this command broke. A TSan build
-  // driving `go infinite` and 40 `clean-tt` reported 11 races between
-  // tt_get_entry() and the memset, where the same harness with every other
-  // mid-search command reported 0: memset clears low to high, so a probe can
-  // match a key not yet cleared and read a zeroed score under an un-zeroed
-  // type. S209, 2026-09-10_adversarial-F11.
+  // stop_and_join_search() and the only one this command broke. Measured on
+  // `013600d` under a TSan build driving `go infinite` and 40 `clean-tt`:
+  // 38, 41 and 36 reports over three runs, tt_reset()'s memset against
+  // tt_store_entry() and tt_get_entry() in the search thread, against 0 with
+  // this line in the same build tree. memset clears low to high, so a probe
+  // can match a key not yet cleared and read a zeroed score under an
+  // un-zeroed type. The audit that found it reported 11 without re-running
+  // the harness; the figures here are this step's own. S209, DEC-178,
+  // 2026-09-10_adversarial-F11.
   stop_and_join_search();
   tt_reset(&tt);
 

@@ -1805,10 +1805,13 @@ TEST_SUITE("engine: uci go")
   // without joining the search, against the rule the file states at
   // stop_and_join_search(): every path that mutates the board or the table must
   // call it first. A TSan build driving `go infinite` and 40 `clean-tt`
-  // reported 11 races between tt_get_entry() and the memset where the same
-  // harness with every other mid-search command reported 0. memset clears low
-  // to high, so a probe can match a key not yet cleared and read a zeroed score
-  // under an un-zeroed type.
+  // reported 38, 41 and 36 races over three runs -- tt_reset()'s memset against
+  // tt_store_entry() and tt_get_entry() in the search thread -- where the same
+  // harness with every other mid-search command reported 0, and where the same
+  // build tree with the fix in reports 0. memset clears low to high, so a probe
+  // can match a key not yet cleared and read a zeroed score under an un-zeroed
+  // type. The audit's own figure was 11, taken without re-running the harness;
+  // these are S209's measurements (DEC-178).
   //
   // The race itself is a sanitizer's to see. What a suite in either build can
   // see is the join: the answer to the infinite search has to be on stdout the

@@ -428,7 +428,7 @@ figure left in the file that reads more precisely than it is.
 
 ### 2026-09-10_adversarial-F08  high  A two-fold repetition whose first occurrence is in the pre-root game history is scored as a dead draw, and a fast-suite test pins that as correct
 
-Status: planned -- S207 (DEC-170, DEC-173). VERIFIED with two oracles.
+Status: closed -- S207 (DEC-170, DEC-173). VERIFIED with two oracles.
 
 Evidence. `src/bitboard.cpp:1412-1437` `is_position_repeated` scans back over
 the whole history window and returns `true` on the **first** hash match. Nothing
@@ -477,7 +477,7 @@ agent's. This finding is the reason to make it.
 
 ### 2026-09-10_adversarial-F09  high  `generate_moves()` overruns its 270-entry stack buffer, so one `position fen` line aborts the shipping binary
 
-Status: planned -- S208 (DEC-170). VERIFIED.
+Status: closed -- S208 (DEC-170). VERIFIED.
 
 Evidence, against `build/src/chesso`, the Release binary that ships and that
 every SPRT measures. The FEN loads cleanly first -- the `fen` command echoes it
@@ -528,7 +528,7 @@ not a proof.
 
 ### 2026-09-10_adversarial-F10  high  A pawn on the first or eighth rank indexes the passed-pawn table out of bounds, read and write, from `position fen`
 
-Status: planned -- S208 (DEC-170). VERIFIED.
+Status: closed -- S208 (DEC-170). VERIFIED.
 
 Evidence. `src/evaluation.cpp:511` computes `bucket = 6 - (get_lsb_index(white_passed) >> 3)`
 and `:524` computes `bucket = (get_lsb_index(black_passed) >> 3) - 1`. Under the
@@ -575,7 +575,7 @@ other two semantic classes, with a red-first test. Clamping the bucket inside
 
 ### 2026-09-10_adversarial-F11  medium  `clean-tt` clears the transposition table without joining the search, and ThreadSanitizer reports the race
 
-Status: planned -- S209 (DEC-170). Reported by the board/UCI reviewer under TSan; the code path
+Status: closed -- S209 (DEC-170, DEC-178). Reported by the board/UCI reviewer under TSan; the code path
 verified here, the TSan run not re-executed.
 
 Evidence. `src/chesso.cpp:1894-1900` `command_clean_TT` calls `tt_reset`
@@ -599,7 +599,7 @@ Suggested resolution. One line: `stop_and_join_search();` at the top of
 
 ### 2026-09-10_adversarial-F12  medium  `setoption` is case-sensitive, against the spec, and the shipping binary says nothing when it refuses
 
-Status: planned -- S209 (DEC-170). VERIFIED.
+Status: closed -- S209 (DEC-170, DEC-178). VERIFIED.
 
 Evidence. The repository's own copy of the spec, `UCI.txt:90`: *"The name and
 value of the option in `<id>` should not be case sensitive and can inlude
@@ -629,7 +629,7 @@ comparing. The `Book File` *value* must stay verbatim: it is a path.
 
 ### 2026-09-10_adversarial-F13  medium  `Hash` is parsed with `std::stoll`, so `0x40` silently buys 1 MB, in the same function that already does this correctly
 
-Status: planned -- S209 (DEC-170). VERIFIED by reading both parse sites; the reviewer's node-count
+Status: closed -- S209 (DEC-170, DEC-178). VERIFIED by reading both parse sites; the reviewer's node-count
 probe is the behavioural evidence.
 
 Evidence. `src/chesso.cpp:1208-1212`:
