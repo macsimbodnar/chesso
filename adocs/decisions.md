@@ -9919,3 +9919,75 @@ Consequences: S181's stamp carries the table. DEC-087 gains a second `Amended:`
               closed in the README's favour; S098's "honest split" is redrawn;
               S099, S109, S110, S023 and S132 carry ranges. `2026-09-04_plan_review-F02`
               is closed by S181.
+
+
+## DEC-177  2026-09-11  The 16-a-side load bound stands and KILLER_POS becomes legal: one white pawn is removed, and the bench signature moves once as the price
+Tags:         rules, fen, bench, testing, s208, dec-170
+Amends:       S208's accepts, whose "identical `bench` signature" clause this
+              replaces
+Context:      S208 refuses a placement with more than 16 pieces of one colour
+              at the load boundary, which is what stops the F09 crash -- 27
+              white pieces generating 277 moves into a `move_t[270]` on the
+              stack, `*** stack smashing detected ***`, exit 134 in the
+              Release binary that ships. Its accepts also asks for INV-6
+              discharged on an identical `bench` signature, "because no legal
+              position changes".
+              **Those two clauses contradict each other and the step could not
+              have known it.** `KILLER_POS`
+              (`src/data_structures.hpp`) is one of the eight bench positions
+              and has **17 white pieces** -- nine pawns -- and
+              `src/chesso.cpp`'s own provenance comment says so: "knowingly
+              illegal by FIDE piece count ... It is kept: **the engine loads
+              it**, `test` already searches it, it carries both the en passant
+              capture and twelve promotions, and a signature needs determinism
+              and not legality." S208 is exactly the change that makes "the
+              engine loads it" false. Measured: with the refusal in and the
+              constant untouched, `set_position` refuses it and leaves the
+              previous board, so `bench` searches a duplicate position and the
+              signature reads **30746008** against 26491479.
+              The constant is also reached by `position killer`, by the `test`
+              command's expected-bestmove table, and by two position lists in
+              `tests/`, so there is no resolution in which it stays unloadable.
+Decision:     By the agent under the owner's delegation of 2026-09-11
+              (engine-related questions are the agent's; the owner is asked
+              only when the workstation is at risk, the ethic would change or
+              the goal is not served). **The bound stays at 16 a side and
+              `KILLER_POS` becomes a legal position**, by deleting the pawn on
+              h3: `rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq
+              e6 0 1`. Checked with python-chess 1.11.2, not reasoned about:
+              `Status.VALID`, 16 white and 14 black, **12 promotions** and the
+              **f5e6** en-passant capture both still present, legal moves 42 ->
+              **48**. So every property the constant was kept for survives and
+              the one that justified an exception is gone.
+              **The bench signature therefore moves once**, S208's commit
+              carries a `Bench:` line rather than "No functional change", and
+              the accepts' identical-signature clause is read as satisfied by
+              `tools/search_bench.py` instead -- its three positions do not
+              include `KILLER_POS`, so node-identity there still says what
+              INV-6 wants it to say about every legal position.
+Rejected:     **Refusing at the UCI `position fen` path only**, leaving
+              `load_FEN` permissive for internal callers -- it keeps the
+              signature, but it splits the contract S161 established in as many
+              words ("the load boundary is the contract every downstream
+              consumer assumes") and leaves `datagen`, `pgn_to_positions` and
+              any corpus tool on the crashing path. **Replacing `KILLER_POS` in
+              the bench set alone** -- it does not solve anything: `position
+              killer`, `test` and the two test lists would still call
+              `load_FEN(KILLER_POS)` and get false. **Raising the bound to 17
+              or 18** -- the audit's maximiser was run under the 16-a-side rule
+              and returned 224 against a 270 buffer; 17 and 18 are unmeasured,
+              and a bound nobody has measured is not a bound. **A move-count
+              bound at load time instead of a piece count** -- the honest form
+              of the rule, since what threatens the buffer is the move count
+              and not the pieces, but counting means generating into a buffer
+              larger than `MAX_MOVES` and it is a design this step's `excludes`
+              does not carry. Recorded as the better rule if `MAX_MOVES` ever
+              has to be defended again.
+Consequences: S208's stamp records the contradiction, the measurement that
+              exposed it and this ruling. `src/data_structures.hpp`'s constant,
+              `src/chesso.cpp`'s bench provenance table (42 -> 48 moves,
+              "valid NO" -> "yes") and its `test` expected-bestmove row are
+              re-derived; `adocs/specs.md` and `DEV_MANUAL.md` carry the new
+              bench signature. The eight-FEN set keeps promotions, en passant,
+              castling and quiescence mates, and is now legal throughout --
+              which is strictly better than the note explaining why it was not.

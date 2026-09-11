@@ -1858,7 +1858,7 @@ chesso bench 9                        # a shallower run; NOT the signature
 ```
 
 **At `S189`, on the workstation: `24880255`. At `S203`: `26851183`. At `S207`:
-`26491479`.** Quote it
+`26491479`. At `S208`: `30046849`.** Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

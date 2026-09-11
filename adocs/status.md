@@ -7,6 +7,58 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S208 is complete and the fast check over S207 earned a new step, 2026-09-11
+  morning.**
+
+  **S208**: `load_FEN()` refuses **more than 16 pieces of one colour** and **a
+  pawn on rank 1 or rank 8**, each naming its own reason through a new
+  defaulted `std::string* reason` out-parameter that `set_position()` prints in
+  S176's shape. Both reds observed on `23f926d` before a line was written --
+  **`*** stack smashing detected ***`, exit 134, core dumped** in the Release
+  binary for the 27-piece placement, and **`index 6 out of bounds for type
+  'int [6]'`** at `src/evaluation.cpp:516` and `:529` under `build-sanitize` --
+  and after the fix all three FENs are refused with **0** sanitizer reports.
+  Four red-first ctest cases in S161's file, **all four observed red** by
+  disabling the refusals (16 passed, 4 failed), two of them pinning the reason
+  string's content so a refusal for the wrong reason is not green; four
+  controls that must stay green and do.
+
+  **The discovery is a decision, DEC-177.** The accepts asked for the refusal
+  **and** an identical `bench` signature, and those contradict each other:
+  `KILLER_POS` is one of the eight bench positions, carries **17 white
+  pieces**, and `src/chesso.cpp`'s own comment kept it because "**the engine
+  loads it**" -- which S208 makes false. Measured, not reasoned: with the
+  refusal in and the constant untouched, bench reads **30746008** because
+  `set_position` leaves the previous board and the set searches a duplicate.
+  There is no resolution in which the constant stays unloadable. So the bound
+  stays at 16 a side and **`KILLER_POS` becomes legal by deleting its h3
+  pawn** -- python-chess says `Status.VALID`, and the **twelve promotions** and
+  the **f5e6** en-passant capture it was kept for are intact, legal moves
+  42 -> **48**. **`bench` therefore moves 26491479 -> 30046849 and the commit
+  carries a `Bench:` line**, while `tools/search_bench.py` stays
+  node-identical at `121530 / 801481 / 72924`: **no legal position's tree
+  changed**, which is the half of INV-6 that speaks here. `MAX_MOVES` now
+  states what defends it -- 218 published, 224 the audit maximiser's best under
+  the 16-a-side rule and named as a search result rather than a proof, 270 the
+  buffer -- and DEC-177 records that the honest rule is a bound on the move
+  count and why that form was not taken. Gate **33/33 in both builds**, format
+  clean; `test_uci_surface` needed no refresh and that was checked rather than
+  assumed.
+
+  **The Tier-1 fast check over S207's diff found one real gap and it is now
+  S215.** `src/search.cpp` `search()` sets
+  `state->root_history_size = game->history.size`, and **nothing in the suite
+  reads that line**: mutated to `history.size - 1` the whole fast suite stays
+  green while `bench` moves **26117924 against 30046849**, a tree 13 %
+  different. What `- 1` does is restore the pre-S207 behaviour for the
+  root-recurrence class -- part of the F08 shape and the class whose removal
+  moved bench 1.34 % at S207. The three existing cases all miss it for reasons
+  written into S215: two reach `search()` but land on the two-match or the
+  pre-root path either way, and the boundary control sets the field by hand and
+  calls `negamax()`. **Verified by measurement before it was written down**,
+  not taken from the reviewer's prose. It is a test gap and not a defect, so
+  the BUGS rule does not arm (DEC-171); S215 sits second in Open, behind S209.
+
 - **S207 is complete: H1 accepted, and the night's four document steps with
   it, 2026-09-11.** `--nonreg` `{-5, 0}` nElo: **LLR 2.96, H1 accepted, Elo
   +3.32 +/- 5.00, nElo +4.47 +/- 6.72, LOS 90.36 %, PairsRatio 1.05, Ptnml

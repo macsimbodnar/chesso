@@ -405,9 +405,16 @@ bool set_position(const std::string& fen)
   // silent in the binary that ships (the S137 pattern).
   const game_t previous = game;
 
-  if (!load_FEN(fen, &game)) {
+  // S208: the loader names a semantic refusal -- more than 16 pieces of a
+  // colour, a pawn on a back rank -- and a syntax failure names nothing, which
+  // is what "does not load" covers. Same shape either way, so a harness reading
+  // the channel sees one message class.
+  std::string reason;
+
+  if (!load_FEN(fen, &game, &reason)) {
     game = previous;
-    uci_reply("info string refused [position fen] " + fen + ", does not load");
+    uci_reply("info string refused [position fen] " + fen + ", " +
+              (reason.empty() ? "does not load" : reason));
     return false;
   }
 
@@ -1715,7 +1722,7 @@ bool command_test(std::queue<std::string>& args)
   std::array<test_entry_t, 7> entries = {{
       {DEFAULT_POSITION,  "DEFAULT_POSITION"},
       {TRICKY_POS,        "TRICKY_POS         bestmove e2a6 ponder b4c3"},
-      {KILLER_POS,        "KILLER_POS         bestmove g7h8q ponder d8h4"},
+      {KILLER_POS,        "KILLER_POS         bestmove g7h8q ponder c5d4"},
       {CMK_POS,           "CMK_POS            bestmove h7h6 ponder c2c3"},
       {FINE_70_POS,       "FINE_70_POS        bestmove a1b2 ponder a7b7"},
       {MATE_IN_2_W_POS,   "MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8"},
@@ -1815,19 +1822,24 @@ constexpr int BENCH_DEPTH = 14;
 //   midgame             46   -           -                 0  yes
 //   kiwipete            48   -           e1g1, e1c1        0  yes
 //   tactical            44   -           e1g1              4  yes
-//   KILLER_POS          42   f5e6        -                12  NO
+//   KILLER_POS          48   f5e6        -                12  yes
 //   CMK_POS             43   -           -                 0  yes
 //   FINE_70_POS          3   -           -                 0  yes
 //   MATE_IN_2_W_POS     29   -           -                 0  yes, #+2
 //   MATE_IN_2_B_POS     29   -           -                 0  yes, #-2
 //
-// Eight distinct FENs; the accepts asks for quiescence mates, promotions, en
-// passant and castling and every one of the four is present. KILLER_POS is
-// knowingly illegal by FIDE piece count -- python-chess reports
-// TOO_MANY_WHITE_PAWNS|TOO_MANY_WHITE_PIECES, nine white pawns. It is kept:
-// the engine loads it, `test` already searches it, it carries both the en
-// passant capture and twelve promotions, and a signature needs determinism and
-// not legality. The first three are `tools/search_bench.py`'s POSITIONS, so
+// Eight distinct FENs, **all eight legal since 2026-09-11**; the accepts asks
+// for quiescence mates, promotions, en passant and castling and every one of
+// the four is present. KILLER_POS used to be knowingly illegal by FIDE piece
+// count -- nine white pawns, 17 pieces -- and was kept on the grounds that
+// "the engine loads it". S208 made that false: the load boundary now refuses
+// more than 16 pieces of a colour, because 17 is one step from the placement
+// that overran the move buffer. So the pawn on h3 is gone and the position is
+// `Status.VALID` to python-chess, keeping the twelve promotions and the f5e6
+// en-passant capture it was kept for; its legal move count went 42 -> 48,
+// because removing that pawn opens lines rather than closing them, and the
+// bench signature moved once as the price. DEC-177.
+// The first three are `tools/search_bench.py`'s POSITIONS, so
 // the two instruments cover the same ground; kiwipete is TRICKY_POS verbatim.
 // clang-format off
 static const std::array<std::string, 8> bench_positions = {{

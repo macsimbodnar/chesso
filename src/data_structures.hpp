@@ -14,7 +14,7 @@
 #define DEFAULT_POSITION "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define EMPTY_POS "8/8/8/8/8/8/8/8 b - - 0 1"
 #define TRICKY_POS "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
-#define KILLER_POS "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+#define KILLER_POS "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 #define CMK_POS "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9"
 #define FINE_70_POS "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1"  // best move: Kb1
 #define MATE_IN_2_W_POS "4k3/Q7/8/4K3/8/8/8/8 w - - 0 1"
@@ -37,7 +37,27 @@ typedef uint64_t bb_t;
 typedef uint64_t hash_t;
 typedef uint32_t move_t;
 
-// The maximum number of legal moves that is possible to generate
+// The move buffer, and what actually defends it. Every caller declares
+// move_t[MAX_MOVES] on the stack and src/search.cpp negamax_at appends
+// captures and quiets into one such array, so an overrun is a stack smash and
+// not a dropped move.
+//
+//   218  the largest number of legal moves any legal position is known to
+//        allow -- the published maximum, a bound on legal chess.
+//   224  the largest count the 2026-09-10 audit's maximiser found while
+//        searching placements constrained to 16 pieces a side. **A search
+//        result, not a proof**: nothing says 224 is the maximum under that
+//        rule, only that the maximiser did not beat it.
+//   270  this buffer. 46 of headroom over the 224 above.
+//
+// So 270 is defended by a measurement plus the load boundary that makes the
+// measurement apply: src/bitboard.cpp load_FEN() refuses more than 16 pieces
+// of one colour, which is what stops an unconstrained placement reaching the
+// generator (S208, 2026-09-10_adversarial-F09 -- a 27-piece placement
+// generated 277 moves and aborted the Release binary). **Re-run the maximiser
+// if the generator changes**, and if the honest bound is ever needed, it is a
+// bound on the move count rather than on the piece count: DEC-177 records why
+// that form was not taken here.
 #define MAX_MOVES 270
 #define MAX_PLY 128
 #define MAX_DEPTH (MAX_PLY - 2)  // Must be +2 in order to be safe

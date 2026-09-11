@@ -1580,7 +1580,7 @@ hash_t compute_full_hash(game_t* game)
 }
 
 
-bool load_FEN(const std::string& FEN, game_t* game)
+bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
 {
   assert(game != nullptr);
   board_t* board = &game->board;
@@ -1893,6 +1893,85 @@ bool load_FEN(const std::string& FEN, game_t* game)
    * side not to move in check -- is deliberately not checked: only the two
    * classes that corrupt. 2026-08-22_adversarial-F01, S161.
    **************************************************************************/
+  /***************************************************************************
+   * 6a. The two classes that are refused rather than repaired, S208
+   *
+   * `2026-09-10_adversarial-F09` and `-F10`. S161's block below clears a field
+   * the position cannot support, because a stale castling right or en-passant
+   * square is what GUIs and conversion tools actually send and a legal position
+   * can never carry one. These two are different in kind: neither can be
+   * repaired without inventing a position, and each corrupts memory in the
+   * Release build that ships and is measured.
+   *
+   * **More than 16 pieces of a colour overruns the move buffer.** Every caller
+   * of generate_moves() declares move_t[MAX_MOVES] on the stack and
+   * src/search.cpp negamax_at appends captures and quiets into one such array.
+   * MAX_MOVES is 270 and that is defended by a measurement over legal
+   * placements, not by a run-time bound (see its definition in
+   * src/data_structures.hpp). The F09 placement -- 26 queens of one colour,
+   * which the loader accepted -- generates 277 moves and aborts the Release
+   * binary with `*** stack smashing detected ***`, exit 134; a near-miss
+   * corrupts the adjacent scores[] and quiets_tried[] instead of aborting.
+   * Sixteen a side is the rule of the game and the bound the audit's maximiser
+   * was run under.
+   *
+   * **A pawn on rank 1 or rank 8 indexes the passed-pawn table out of bounds.**
+   * src/evaluation.cpp evaluate_pawns() computes the bucket as `6 - rank` for
+   * White and `rank - 1` for Black over a six-entry table, and what keeps it in
+   * range is exactly that a pawn cannot stand on either back rank. Under the
+   * sanitizer build both colours' sites print `index 6 out of bounds for type
+   * 'int [6]'`; in Release the collecting instantiation writes one int past the
+   * caller's int[2][6] and the engine answers a score and a move.
+   *
+   * Refusing at the load boundary is free: it is the contract every downstream
+   * consumer already assumes (S161's words), and a run-time bound inside
+   * generate_moves()'s hot loop would tax every node to guard an input that
+   * costs nothing to reject here. Position legality at large is still not
+   * checked -- one king a side is deliberately allowed, because EMPTY_POS and
+   * two "survivable" cases in tests/test_search.cpp are kingless on purpose.
+   **************************************************************************/
+  {
+    size_t piece_count[2] = {0, 0};
+    bool back_rank_pawn = false;
+
+    for (index_t square = 0; square < 64; ++square) {
+      const piece_t piece = board->squares[square];
+
+      if (piece == EMPTY) { continue; }
+
+      const int color = (piece <= W_KING) ? WHITE : BLACK;
+      piece_count[color]++;
+
+      // Rank 8 is squares 0..7 and rank 1 is squares 56..63, this board being
+      // indexed from a8.
+      if ((piece == W_PAWN || piece == B_PAWN) &&
+          (square < 8 || square >= 56)) {
+        back_rank_pawn = true;
+      }
+    }
+
+    if (piece_count[WHITE] > 16 || piece_count[BLACK] > 16) {
+      if (reason != nullptr) {
+        *reason = "more than 16 pieces of one colour (" +
+                  STR(piece_count[WHITE]) + " white, " +
+                  STR(piece_count[BLACK]) + " black)";
+      }
+
+      LOG_E << "Refused: more than 16 pieces of one colour. FEN: " << FEN
+            << END_E;
+
+      return false;
+    }
+
+    if (back_rank_pawn) {
+      if (reason != nullptr) { *reason = "a pawn on rank 1 or rank 8"; }
+
+      LOG_E << "Refused: a pawn on rank 1 or rank 8. FEN: " << FEN << END_E;
+
+      return false;
+    }
+  }
+
   if (board->squares[e1] != W_KING) { board->castling &= ~(WK | WQ); }
   if (board->squares[h1] != W_ROOK) { board->castling &= ~WK; }
   if (board->squares[a1] != W_ROOK) { board->castling &= ~WQ; }

@@ -202,10 +202,27 @@ two shapes (S176):
 ```
 info string refused [position fen] <fen>, fewer than four fields
 info string refused [position fen] <fen>, does not load
+info string refused [position fen] <fen>, more than 16 pieces of one colour (<n> white, <n> black)
+info string refused [position fen] <fen>, a pawn on rank 1 or rank 8
 ```
 
 A move in the `moves` list that does not parse or is not legal is skipped with
 a warning, and the rest of the list is still applied.
+
+**The last two shapes are refusals of a well-formed FEN, and they are the only
+two placement rules the engine enforces** (S208, 2026-09-11). More than 16
+pieces of a colour is refused because the move buffer is sized for legal
+chess: a placement with 27 pieces of one colour generates 277 moves into a
+270-entry array on the stack and aborted the shipping binary. A pawn on rank 1
+or rank 8 is refused because the passed-pawn evaluation indexes a six-entry
+table by the pawn's rank and has no entry for either back rank. Both were
+reachable from this command in every released build, and neither is reachable
+from legal play or from any GUI.
+
+**Legality at large is still not checked and that is deliberate.** One king a
+side is not required -- `position empty` is a valid command and two of the
+engine's own test positions are kingless on purpose -- pawn counts below 16 a
+side are not checked, and the side not to move may be in check.
 
 A FEN carrying a castling right or an en-passant square the board cannot
 support is **accepted with that field cleared**, not refused. A right survives

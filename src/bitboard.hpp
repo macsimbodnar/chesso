@@ -13,7 +13,15 @@ void initialize_game_const_data(game_t* game);
 const bb_tables_t* game_tables();
 
 // FEN
-bool load_FEN(const std::string& FEN, game_t* game);
+// Loads a FEN, or returns false having written part of the board -- a caller
+// that has to survive a refusal saves the game first, as src/chesso.cpp
+// set_position() does (S176). `reason` is filled in with a short phrase for the
+// UCI channel when the refusal is a semantic one the loader names; it is left
+// untouched on success and on a syntax failure, whose caller says "does not
+// load". S208.
+bool load_FEN(const std::string& FEN,
+              game_t* game,
+              std::string* reason = nullptr);
 std::string generate_FEN(const board_t* board);
 
 // Board manipulation
