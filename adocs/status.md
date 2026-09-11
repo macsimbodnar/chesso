@@ -5,7 +5,50 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-11, by hand.
+Updated: 2026-09-12, by hand.
+
+- **S219 is done, the harness plays `noob_3moves.epd`, and the A/A that
+  followed disagreed with the comparison until the two were read on one
+  footing -- DEC-189 and DEC-190, 2026-09-12 01:45.** The night's comparison
+  finished 00:35: 12000 games, 0 forfeits; the reader
+  (`adocs/data/S219_read.py`) agrees with fastchess to the digit on all eight
+  matches, and by the pre-registered M = nElo^2 x games/h the balanced
+  `noob_3moves.epd` won outright, 154.1M against the incumbent's 123.8M, hours
+  per verdict 0.80 +/- 0.07 (`adocs/data/S219_book_compare.md`). Switched in
+  `5047070` (DEC-189): `fastchess.sh` `book=`, `fetch_book.sh` default and
+  unpacked pin, DEV_MANUAL, specs. **Zip digest not pinned**: the owner
+  deleted the zips and nothing is fetched without their word, so the pin table
+  carries `-`, a fetch of the absent file refuses, `--list` marks it. Then the
+  DEC-143 A/A, 00:55 to 01:23: **1000 games, 0 forfeits, 2110 games an hour
+  (`powersave`; S198's 2277 was under `performance`), draws 35.3 %, pair
+  variance 0.2905 +/- 0.0184 against S198's 0.2430 +/- 0.0154.** Under the
+  step's own rule -- variance over throughput -- that is 1.29x the cost and the
+  reading recommends the revert (`adocs/data/S219_aa_calibration.md`). The
+  rule assumed the score a real strength difference produces does not depend
+  on the book; the comparison measured 1.13x on the balanced book. Noise from
+  the A/A, signal from the comparison, throughput from the A/A: **0.97 to 1.01
+  +/- 0.12 -- a tie, and the tie keeps the balanced book, DEC-190**, which
+  amends the rule, resets the DEC-143 band to this A/A and is **the owner's to
+  overrule in one commit**. `popularpos_lichess_v3.epd` and `UHO_4060_v4.epd`
+  deleted; `UHO_Lichess_4852_v1.epd` kept, pinned and fetchable;
+  `UHO_4060_v3.epd` stays for S127; `rating.sh` keeps `8moves_v3.pgn`.
+  **Two deviations to know:** the switch commit `5047070` was red on
+  `test_fastchess_script.sh` (its stub book carried the old name) until the
+  close commit -- the coordinator committed it without the gate while the
+  machine was free, which the fast check caught; and the operating rule
+  changed: **step subagents are Sonnet 5 from 00:30, DEC-188**, on the owner's
+  word, everything else in DEC-185 unchanged. Three Sonnet 5 agents did S219's
+  reading, switch and A/A reading; their reports, not transcripts, are what the
+  coordinator read. **Next: S216's completion** (gate in both builds, the
+  two-line refusal-guard fix, the optional verification, stamp), then **S042**
+  by a fresh agent (red-first case, key in three places, `Bench:`, Debug
+  self-play), then **S042's `--nonreg` SPRT as the night run** on
+  `noob_3moves.epd` -- its pre-registration names the book, 2110 games an hour,
+  the 0.2905 band and S042 itself (DEC-171); the A/A's 328 repetition
+  warnings in 1000 games are S042's before-count on this book. For the owner:
+  the zip digest (re-download into `books/` or authorise one fetch, ~10 MB);
+  the governor (`performance` before the next A/A, and the reading says what
+  `powersave` cost); DEC-190 to confirm or overrule. **Compaction point.**
 
 - **S219's first match found an engine bug, and S042 is now Open entry 1,
   DEC-187 (2026-09-11 night).** 236 fastchess warnings "PV continues after
@@ -2415,10 +2458,13 @@ Updated: 2026-09-11, by hand.
     games — and one that goes the distance costs the full window. Nothing else
     is measured while a match runs, and data generation and fits compete for the
     same machine.
-    **The book question is answered 2026-09-11, DEC-182:** S219 surveyed the
-    open-licence books, the owner downloads three CC0 candidates, a time-odds
-    comparison picks one, and the DEC-143 A/A on the pick decides whether it
-    stays; until then verdicts run on this book and say so.
+    **The book question is closed 2026-09-12, DEC-182, DEC-189, DEC-190:**
+    S219 measured four CC0 books and the harness plays the balanced
+    `noob_3moves.epd`; the A/A on it read 2110 games an hour and pair variance
+    0.2905 +/- 0.0184, the band every later A/A on this book is read against.
+    The x1.20 the unbalanced book bought in game length is given back (114
+    plies a game against 102), and the balanced book gives 1.13x the score for
+    the same strength difference; a verdict costs what it did, +/- 12 %.
   - **The bounds decide whether a night buys a verdict at all, DEC-063.** S068
     measured one constant twice with the same binaries: `elo0=0 elo1=5` ran
     6 h 36 m over 9036 games and returned nothing, `elo0=-5 elo1=5` returned

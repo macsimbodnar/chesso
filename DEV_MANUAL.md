@@ -2096,9 +2096,9 @@ default of the per-change instrument: S160, closing
   the engine.
 
 **Fetch the book first, once per machine.** `fastchess.sh` plays
-`noob_3moves.epd`, balanced, 150932 positions -- picked over three unbalanced
-candidates and the harness's own former book by S219's measured verdicts per
-hour (DEC-189):
+`noob_3moves.epd`, balanced, 150932 positions -- picked over the harness's own
+former book and two other CC0 candidates (one of them, `popularpos_lichess_v3.epd`,
+balanced) by S219's measured verdicts per hour (DEC-189):
 
 ```bash
 ./books/fetch_book.sh           # noob_3moves.epd, 9.4 MB unpacked
@@ -2279,15 +2279,19 @@ The ledger of this project's own eight verdicts since S105 prices the
 **expected** one, and `adocs/plan.md`'s "What this costs" carries that table
 and is re-derived at every verdict-landing commit (DEC-136).
 
-| pair | truth at the midpoint | truth on a bound | hours here, at 2277 g/h |
+| pair | truth at the midpoint | truth on a bound | hours here, at 2110 g/h |
 |---|---|---|---|
-| `{-5, 5}`, alpha=beta=0.05 | 10465 games | 6398 games | 4.6 h / 2.8 h |
-| `{0, 5}` or `{-5, 0}`, alpha=beta=0.05 | 41861 games | 25591 games | **18.4 h / 11.2 h** |
-| `{0, 10}`, alpha=beta=0.10 (`--fast`) | 5828 games worst case | | 2.6 h |
+| `{-5, 5}`, alpha=beta=0.05 | 10465 games | 6398 games | 5.0 h / 3.0 h |
+| `{0, 5}` or `{-5, 0}`, alpha=beta=0.05 | 41861 games | 25591 games | **19.8 h / 12.1 h** |
+| `{0, 10}`, alpha=beta=0.10 (`--fast`) | 5828 games worst case | | 2.8 h |
 
-**2277 games an hour is the measured figure on this workstation** (S198,
-2026-09-08; the table under "What a verdict costs, measured" below). Budget
-from it, never from the wall clock of a previous run.
+**2110 games an hour is the measured figure on this workstation on the
+current book** (`noob_3moves.epd`; S219's DEC-143 A/A, 2026-09-12;
+`adocs/data/S219_aa_calibration.md`; the table under "What a verdict costs,
+measured" below). Budget from it, never from the wall clock of a previous
+run. S198 measured **2277 games an hour** on the book this harness played
+before (`UHO_Lichess_4852_v1.epd`, 2026-09-08) -- kept here as the figure
+recorded for that book, not the current one.
 
 **The ledger's realized cost is lower than the midpoint column and that is not
 a contradiction.** Nine verdicts, mean **4 h 49 m**, median **5 h 27 m**,
@@ -2337,21 +2341,38 @@ which makes a fixed-rounds A/A follow every harness change — here the move to
 the workstation, the seed and the two PGN fields. `adocs/data/S198_*` is its
 evidence and `adocs/data/S198_pairs.py` is the band check.
 
-| | before: 10+0.2, `8moves_v3.pgn` | after: 8+0.08, UHO | workstation, 2026-09-08 |
-|---|---|---|---|
-| games a minute | 23.1 | **38.7** | **37.9** |
-| seconds a game | 30.4 | 17.9 | 18.3 |
-| seconds a ply | 0.2579 | 0.1831 | 0.1791 |
-| plies a game | 117.8 | 98.0 | 102.1 |
-| draws | 40.3 % | **29.5 %** | 32.3 % |
-| time forfeits | 0 of 1000 | **0 of 1000** | **0 of 1000** |
-| pair score variance | 0.2343 ± 0.0148 | 0.2395 ± 0.0152 | 0.2430 ± 0.0154 |
+| | before: 10+0.2, `8moves_v3.pgn` | after: 8+0.08, UHO | workstation, 2026-09-08 | workstation, 2026-09-12, `noob3` |
+|---|---|---|---|---|
+| games a minute | 23.1 | **38.7** | **37.9** | 35.2 |
+| seconds a game | 30.4 | 17.9 | 18.3 | 19.8 |
+| seconds a ply | 0.2579 | 0.1831 | 0.1791 | 0.1733 |
+| plies a game | 117.8 | 98.0 | 102.1 | 114.0 |
+| draws | 40.3 % | **29.5 %** | 32.3 % | 35.3 % |
+| time forfeits | 0 of 1000 | **0 of 1000** | **0 of 1000** | 0 of 1000 |
+| pair score variance | 0.2343 ± 0.0148 | 0.2395 ± 0.0152 | 0.2430 ± 0.0154 | 0.2905 ± 0.0184 |
 
 **Budget a verdict at 2277 games an hour**, the measured figure: 1000 games in
 26 m 21 s. The pair variance is inside its band at `z = +0.16`, so what a
 verdict costs at fixed bounds has not moved. The throughput difference against
 S105 is game length and not machine speed — seconds a ply went *down* while
 plies a game went up, which is the engine, not the harness.
+
+**The book changed again on 2026-09-12** (S219, DEC-189), and the fourth
+column is the DEC-143 A/A that followed, read the same way
+(`adocs/data/S219_aa_calibration.md`). Budget a verdict at **2110 games an
+hour** now, the current measured figure: 1000 games in 28 m 26 s, under
+governor `powersave` rather than the first three columns' `performance` --
+games an hour fell about 7 % against S198, and the time control bounds a
+game's wall time regardless of governor, so nothing beyond that number is
+claimed here. The pair variance moved to 0.2905 ± 0.0184: outside S105's band
+(`z = +2.14`) and at the edge of S198's own figure (`z = +1.98`, diff 0.0475
+over a combined error of 0.0240) -- the noise per pair rose, as a book change
+is expected to move it. Read alone, variance over throughput would price a
+verdict at 1.29 ± 0.12 times S198's; read with S219's comparison, which
+measured the balanced book turning the same strength difference into 1.13
+times the score, a verdict on `nElo` bounds costs **0.97 to 1.01 ± 0.12** of
+what it did -- a tie, and DEC-190 keeps the balanced book on it and resets the
+DEC-143 band to this run's 0.2905 ± 0.0184.
 
 **Throughput went up ×1.67, not ×3.** DEC-083 priced the change at "roughly
 three times the verdicts per night"; measured, it is 23.1 → 38.7 games a

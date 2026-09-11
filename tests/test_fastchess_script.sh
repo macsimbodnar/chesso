@@ -61,12 +61,13 @@ make_sandbox()
 
   printf '#!/bin/sh\nexit 0\n' > "$tmp/build/src/chesso"
   chmod +x "$tmp/build/src/chesso"
-  # The book the script reads is 175 MB and gitignored (books/fetch_book.sh
-  # fetches it), so the sandbox seeds an empty file of the same name: the
-  # script checks that the path is readable, and fastchess is a stub that
-  # never opens it. The name has to track fastchess.sh -- a renamed book fails
-  # this test at the readability check rather than silently.
-  : > "$tmp/books/UHO_Lichess_4852_v1.epd"
+  # The book the script reads is 9.4 MB unpacked and gitignored
+  # (books/fetch_book.sh fetches it), so the sandbox seeds an empty file of
+  # the same name: the script checks that the path is readable, and
+  # fastchess is a stub that never opens it. The name has to track
+  # fastchess.sh -- a renamed book fails this test at the readability check
+  # rather than silently.
+  : > "$tmp/books/noob_3moves.epd"
 
   # The stub records that it ran and plays nothing. It reports its own
   # invocation through a file rather than through stdout, so the assertion

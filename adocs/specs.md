@@ -671,9 +671,18 @@ The order stands.
   M = nElo^2 x games per hour, and `noob_3moves.epd` won outright: M
   154101610 +/- 8564337 against the incumbent's 123838572 +/- 7907059, hours
   per verdict 0.80 +/- 0.07 of the old book's. `adocs/data/S219_book_compare.md`
-  is the reading. The DEC-143 A/A on the new book is read against S198's
-  figures below -- variance, games an hour, draw rate -- and its result is
-  recorded here when it lands.
+  is the reading. **The DEC-143 A/A on it, 2026-09-12** (1000 games, 0
+  forfeits, governor `powersave`; `adocs/data/S219_aa_calibration.md`): **2110
+  games an hour**, draws 35.3 %, plies a game 114, pair score variance
+  **0.2905 +/- 0.0184** against S198's 0.2430 +/- 0.0154 -- outside the old
+  band, as a book change is expected to be. Variance over throughput alone
+  would price a verdict at 1.29 times S198's; combined with the comparison's
+  measured signal (the balanced book turns the same strength difference into
+  1.13 times the score) a verdict on `nElo` bounds costs **0.97 to 1.01 +/-
+  0.12** of what it did: a tie, kept balanced by S219's tie rule, **DEC-190**,
+  which also amends the step's cost rule. **The band for the next A/A on this
+  book is this run's**; budget from 2110 games an hour until a run under
+  `performance` re-measures it.
   `adocs/data/S105_calibration*` is the evidence. **0 time forfeits in 1000
   games at the faster control**, checked from the PGN before anything else was
   read -- both `fastchess.log` files were 0 bytes, the WARN-only default again.

@@ -1,0 +1,35 @@
+=== /home/max/ws/chesso/adocs/data/S219_aa_calibration.pgn ===
+games            1000
+draws            353, 35.3 %
+decisive         647, 64.7 %
+plies per game   mean 114.0, median 101
+seconds per game mean 19.8, median 19
+seconds per ply  0.1733
+complete pairs   500
+  pair score 0.0     54   10.8 %
+  pair score 0.5     91   18.2 %
+  pair score 1.0    198   39.6 %
+  pair score 1.5    118   23.6 %
+  pair score 2.0     39    7.8 %
+white won both   65 of 500, 13.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9970, variance 0.2905, sd 0.5390
+
+=== /home/max/ws/chesso/adocs/data/S105_calibration_after.pgn ===
+games            1000
+draws            295, 29.5 %
+decisive         705, 70.5 %
+plies per game   mean 98.0, median 89
+seconds per game mean 17.9, median 18
+seconds per ply  0.1831
+complete pairs   500
+  pair score 0.0     34    6.8 %
+  pair score 0.5    101   20.2 %
+  pair score 1.0    234   46.8 %
+  pair score 1.5     94   18.8 %
+  pair score 2.0     37    7.4 %
+white won both   99 of 500, 19.8 %  (the pair Pohl's floor is about)
+pair score       mean 0.9990, variance 0.2395, sd 0.4894
+
+pair variance    0.2905 +/- 0.0184  vs  0.2395 +/- 0.0152  (this run vs S105 after)
+ratio            1.213
+z                +2.14  (OUTSIDE the band, |z| < 1.96)

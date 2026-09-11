@@ -10629,3 +10629,91 @@ Consequences: Every pre-registration written from this commit on names
               S198's rate scaled by the time odds, so the effect on games an
               hour is expected to be small, and the reading says which way it
               went.
+
+## DEC-190  2026-09-12  The A/A on `noob_3moves.epd` read the other way under S219's cost rule; the two measurements are reconciled, the book stays on the tie, and the rule is amended
+Tags:         harness, book, calibration, measurement, s219, dec-143, dec-189, nelo
+Context:      DEC-143's A/A after the switch (1000 games, `5047070` against
+              itself, 8+0.08, `Hash=16`, concurrency 12, `noob_3moves.epd`,
+              governor `powersave`; `adocs/data/S219_aa_calibration.md`):
+              0 forfeits, 2110 games an hour, draws 35.3 %, pair score
+              variance **0.2905 +/- 0.0184** against S198's 0.2430 +/- 0.0154
+              on the old book (z +1.98 against S198, +2.14 against S105's
+              band), plies a game 114 against 102. S219's `accepts:` priced a
+              verdict as variance divided by throughput: **1.29 +/- 0.12 times
+              S198's**, and by its own wording "a worse cost per verdict
+              reverts `book=`". The pre-registered comparison the same step
+              ran the night before (DEC-189) had said the opposite: hours per
+              verdict 0.80 +/- 0.07 of the incumbent's. Both numbers are right
+              and they measure different things. The A/A measures the noise
+              per pair at zero strength difference and the throughput. The
+              comparison measured signal and noise together at one doubling
+              of time: on the balanced book the same handicap produced
+              **1.13 times the score** (pair score above one half 0.2323
+              against 0.2055; 174.85 against 151.76 logistic Elo). The
+              `accepts:` rule assumed the score a real strength difference
+              produces does not depend on the book, and the comparison
+              measured that it does. On `nElo` bounds (`model=normalized`)
+              the games a verdict needs go as one over the square of the nElo
+              a real difference is worth, which is signal over noise, so both
+              belong in the price. Read on one footing -- the A/A's noise at
+              zero, the comparison's signal, the A/A's throughput -- the
+              balanced book's hours per verdict are **0.97 to 1.01 times the
+              old book's, +/- 0.12** (score or Elo slope; the ratio's error
+              propagated from the four measured quantities, throughput taken
+              exact). The comparison's 0.80 was flattered by the handicap:
+              at one doubling the balanced book's pair spread is slightly
+              *smaller* than the incumbent's (0.500 against 0.508 points)
+              while at zero difference it is larger (0.539 against 0.493),
+              and SPRTs here run near zero difference.
+Decision:     By the coordinator under DEC-182 and the delegation. **(1) The
+              book stays `noob_3moves.epd`.** The reconciled reading is a tie
+              by the standard S219 itself pre-registered -- a difference under
+              one combined standard error -- and the `accepts:` breaks a tie
+              toward the balanced book, the owner's stated leaning. **(2) The
+              `accepts:` cost rule is amended by this entry, not silently:**
+              after a *book* change the DEC-143 A/A reads noise, throughput
+              and forfeits and is combined with the comparison's signal
+              measurement to price a verdict; variance over throughput alone
+              prices a *harness* change on the same book, which is what
+              DEC-143 was written for and still does. **(3) The DEC-143 band
+              resets:** the next A/A on this book is read against 0.2905 +/-
+              0.0184 and 2110 games an hour; S105's and S198's bands stay the
+              record for the old book. **(4) Budget from 2110 games an hour**
+              until a run under `performance` re-measures it; the 7 % drop
+              against S198 is the book's longer games, the governor, or both,
+              and is not attributed further. **(5) Both readings stand as
+              evidence**: `adocs/data/S219_book_compare.md` and
+              `adocs/data/S219_aa_calibration.md`, the second recommending
+              the revert its literal rule gives. **(6)** `popularpos_lichess_v3.epd`
+              and `UHO_4060_v4.epd` are deleted from `books/` per DEC-189;
+              `UHO_Lichess_4852_v1.epd` stays pinned and fetchable.
+              **This is the owner's to overrule in the morning**: the revert
+              is one commit, `book=` and `default_book` back to the old name,
+              and every verdict taken meanwhile is attributed to the book it
+              ran on.
+Rejected:     **Reverting on the literal rule** -- the rule mis-priced a book
+              change, and the number it would revert on, 1.29, becomes 0.97
+              to 1.01 the moment the signal the comparison measured is put
+              beside the noise; reverting would spend the night's 12000 games
+              and the switch on a rule the step's own other measurement
+              refutes, and would drop the balanced book the owner asked for on
+              a tie. **Keeping on the comparison's 0.80 alone** -- it is not
+              the small-difference regime SPRTs run in, and the A/A's variance
+              says so at two standard errors. **A third measurement at a small
+              handicap** -- resolving a difference the size of this one at 10
+              to 20 nElo takes tens of thousands of games per book for an
+              answer that is a tie either way; the machine is owed to S042.
+              **Waiting for the owner** -- the standing instruction is to
+              continue; the tree already plays the new book, so keeping is the
+              no-action path and reverting is the action, which the owner can
+              take in one commit.
+Consequences: S219 completes with both readings in its stamp. Every
+              pre-registration from here names `noob_3moves.epd`, 2110 games an
+              hour and the 0.2905 band. `adocs/specs.md`'s harness paragraph
+              and `DEV_MANUAL.md`'s cost table carry the reconciled reading,
+              not the literal one. A future book comparison pre-registers the
+              A/A's noise at zero as part of its metric, or measures at a
+              small handicap, so this reconciliation is not needed twice.
+              The 328 repetition warnings in the A/A are S042's before-count
+              on this book at the S198 regime (both sides equally), the figure
+              S042's stamp compares its after-count against.
