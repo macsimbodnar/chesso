@@ -7,7 +7,7 @@ decisions:  DEC-142, DEC-160, DEC-177
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185); started 2026-09-11 evening while S219's match holds the machine, so no engine run beyond a sub-minute red-first demonstration until it ends
 done:
 
 ## Why this exists

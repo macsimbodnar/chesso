@@ -28,6 +28,22 @@ Updated: 2026-09-11, by hand.
   needs, `8moves_v3.pgn` is tracked and `rating.sh`'s. The losing candidates
   are deleted after the reading.
 
+  **Launched 2026-09-11 20:41:10**, once the box was quiet (13 % of a core),
+  under governor `powersave` -- recorded, not changed; **do not switch the
+  governor while it runs**, the passes would stop being comparable. Engine
+  `98bf3e1`, bench-identical to `1138bd3`. Output
+  `.tuning/s219_compare_20260911_204110/` (one directory per match,
+  `results.tsv` at the top), console `.tuning/s219_compare.log`, pid in
+  `.tuning/s219_compare.pid`, launched through the gitignored
+  `.tuning/s219_launch.sh`, which waits for a quiet machine and is not part of
+  the pre-registration. Watcher armed through `Monitor`, persistent, four exits
+  (DONE, FAILED, process gone, 14 h ceiling). Expected end 03:00 to 03:30.
+  **The reading is a fresh agent's job in the morning**: `adocs/data/S219_read.py
+  <outdir>`, then the pins, the switch and the A/A. **S216 runs beside it** as
+  the second task DEC-185 allows while the machine is held: an Opus 5 subagent
+  does its reader and its row proposal tonight; the census re-run it may owe
+  and the full gate run after the match.
+
 - **The parked list was reviewed with the owner, 2026-09-11 evening: six
   rulings, three steps, one archive, and the Parked block below loses the
   items they close.** Every question that had waited on the owner was
