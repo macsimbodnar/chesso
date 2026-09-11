@@ -70,3 +70,45 @@ otherwise idle. The re-sizing from the file's first draft (1000 games and a
 header: at 1000 games the metric's error would have exceeded the differences
 the published record shows between books. Then the A/A on the pick, about half
 an hour, a daytime run; the pins land in the same commit as the switch.
+
+## Reading, 2026-09-12
+
+`adocs/data/S219_book_compare.md` is the reading; all eight matches
+cross-check against fastchess's own printed Elo/nElo/Ptnml to the digit. `M =
+nElo^2 x games/hour`, pooled over both passes, largest first:
+
+    noob3       balanced    M 154101610 +/- 8564337   nElo +228.27 +/- 12.43   2957.3 games/h
+    uho4060v4   unbalanced  M 132307458 +/- 8270825   nElo +202.95 +/- 12.43   3212.4 games/h
+    popularpos  balanced    M 128933263 +/- 7903361   nElo +206.96 +/- 12.43   3010.0 games/h
+    uho4852     unbalanced  M 123838572 +/- 7907059   nElo +198.69 +/- 12.43   3136.8 games/h  (current)
+
+Pick: `noob_3moves.epd` -- the largest M outright, more than one combined
+standard error clear of every other book, so the tie rule is never reached
+(DEC-189).
+
+Hours per verdict, pick relative to current: `M_current / M_pick` = 0.80 +/-
+0.07 (1 sd) -- about a fifth fewer machine-hours per verdict at the same nElo
+bounds.
+
+The pick is **balanced**: `noob_3moves.epd`, fishtest's old shallow default,
+against the harness's unbalanced incumbent.
+
+## A/A pre-registration, 2026-09-12 00:55
+
+Written before the run starts. `ROUNDS=500 AA=1 ./fastchess.sh` -- HEAD
+against itself, 1000 games at the S198 regime (8+0.08, `Hash=16`, concurrency
+12, the adjudication `fastchess.sh` carries) on `books/noob_3moves.epd`, the
+book this commit switches to (DEC-189). Detached, watcher armed on
+`SPRT-RUN-(DONE|FAILED)`, process death and a two-hour ceiling. Expected
+length: S198's 2277 games an hour scaled by the S219 rate ratio 2957/3137 gives
+about 2150 an hour, so 28 minutes; under DEC-155's line. Machine: workstation,
+load average 0.12 at launch, on mains, governor `powersave` -- S198 ran under
+`performance`, and the reading says what that did to games an hour. Open
+defect named per DEC-171: S042, the en passant key, on both sides equally.
+
+Read with `adocs/data/S198_pairs.py` and decided by the rule in `accepts:`:
+pair score variance inside S105's band (S198 read 0.2430 +/- 0.0154) at a
+lower or equal cost per verdict keeps the book; a worse cost per verdict
+reverts `book=` in a second commit and records the number. Reported beside
+S198's figures: variance, games an hour, draw rate, share of pairs decided by
+the opening, forfeits.

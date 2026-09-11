@@ -648,8 +648,10 @@ The order stands.
   was never formally concluded.
 - Measurement capacity is the binding constraint on the whole plan. The
   harness runs the surveyed engines' regime since 2026-08-20 (S105, DEC-083,
-  DEC-088): `tc=8+0.08`, `Hash=16`, the unbalanced `UHO_Lichess_4852_v1.epd`,
-  all 12 threads of the DEC-049 machine. **Calibrated at 38.7 games a minute
+  DEC-088): `tc=8+0.08`, `Hash=16`, all 12 threads of the DEC-049 machine, and
+  the book `books/noob_3moves.epd`, balanced, since 2026-09-12 (S219, DEC-189)
+  -- the unbalanced `UHO_Lichess_4852_v1.epd` before that, and every verdict
+  taken until then stays attributed to it. **Calibrated at 38.7 games a minute
   against the old regime's 23.1, measured over two A/A runs of 1000 games each
   in the same hour** -- so **x1.67, not the x3 DEC-083 priced**. It decomposes
   as x1.41 from the control (0.2579 to 0.1831 seconds a ply) and x1.20 from
@@ -659,13 +661,19 @@ The order stands.
   and pairs decided by the opening 13.4 % to 19.8 %. **Pohl's >= 45 % draw
   floor is unreachable at this strength** and was already breached before the
   change: chesso self-plays the *balanced* book at 40.3 % draws where Pohl
-  measured 91.6 % between engines 600 points stronger. The book is kept on the
-  x1.20 and on DEC-083; its stated reason does not hold here.
-  **Re-decided 2026-09-11 by the owner, DEC-182:** S219 surveys the
-  open-licence books, the owner downloads the pick, its digests are pinned,
-  and the DEC-143 A/A that follows is read against S198's -- variance, games
-  an hour, draw rate -- before `fastchess.sh` keeps it. Until then verdicts
-  run on this book and say so.
+  measured 91.6 % between engines 600 points stronger. The book was kept on
+  the x1.20 and on DEC-083 until 2026-09-12; its stated reason did not hold
+  here.
+  **Re-decided by measurement, DEC-182 and DEC-189:** S219 compared four CC0
+  books by fishtest's method re-sized for power -- one binary against itself
+  at one doubling of time, 3000 games per book in two counterbalanced passes,
+  pre-registered in `adocs/data/S219_book_compare.sh` -- on
+  M = nElo^2 x games per hour, and `noob_3moves.epd` won outright: M
+  154101610 +/- 8564337 against the incumbent's 123838572 +/- 7907059, hours
+  per verdict 0.80 +/- 0.07 of the old book's. `adocs/data/S219_book_compare.md`
+  is the reading. The DEC-143 A/A on the new book is read against S198's
+  figures below -- variance, games an hour, draw rate -- and its result is
+  recorded here when it lands.
   `adocs/data/S105_calibration*` is the evidence. **0 time forfeits in 1000
   games at the faster control**, checked from the PGN before anything else was
   read -- both `fastchess.log` files were 0 bytes, the WARN-only default again.

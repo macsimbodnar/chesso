@@ -136,15 +136,21 @@ git()
 # header already describes. S160, 2026-08-22_adversarial-F02.
 REF="${REF:-HEAD}"
 
-# THE BOOK IS UNBALANCED, AND THAT IS THE POINT. Between two builds of the
-# same engine a balanced book draws about 91 % (Pohl's measurement over the
-# book class), and a drawn pair carries no information about which side is
-# stronger -- so a balanced book spends the night to say less. UHO books are
-# human openings filtered to a stated evaluation band; the decisive rate they
-# buy is measurement capacity, not strength, and nothing about the engine is
-# being flattered. It is 175 MB, gitignored, and fetched by books/fetch_book.sh
-# against a pinned digest. DEC-083, S105.
-book="$repo/books/UHO_Lichess_4852_v1.epd"
+# THE BOOK IS PICKED BY MEASUREMENT. S219 (2026-09-12) compared four CC0
+# books -- one HEAD binary against itself at a fixed time handicap, pooled
+# over two counterbalanced passes -- by M = nElo^2 x games/hour: noob3
+# 154101610, uho4060v4 132307458, popularpos 128933263, uho4852 (the
+# incumbent) 123838572 -- adocs/data/S219_book_compare.md. noob_3moves.epd
+# won outright, more than one combined standard error clear of the rest, and
+# it is balanced (DEC-189). The old argument for an unbalanced book (DEC-083)
+# was that a balanced book draws about 91 % between engines of equal strength
+# (Pohl's measurement) and a drawn pair carries no signal; S105 measured
+# chesso itself drawing only 40.3 % on a balanced book, already under Pohl's
+# own 45 % floor, so that argument did not hold at this engine's strength. It
+# is 9.4 MB unpacked, gitignored, and fetched by books/fetch_book.sh against a
+# pinned digest -- the zip digest is not yet pinned, and that script's header
+# says why.
+book="$repo/books/noob_3moves.epd"
 book_format="epd"
 candidate="$repo/build/src/chesso"
 
@@ -453,9 +459,11 @@ echo
 echo "=== $games games in $pgnfile ==="
 terminations || true
 if ((games > 0)); then
-  # Decisive rate is what the unbalanced book is for. Pohl's floor is about
-  # 45 % draws -- below that the opening is simply winning and the pair scores
-  # 1:1 with no signal in it -- and a balanced book sits near 91 %.
+  # Decisive rate is reported for interpretation, not because the book is
+  # chosen to keep it high: Pohl's floor is about 45 % draws -- below that the
+  # opening is simply winning and the pair scores 1:1 with no signal in it --
+  # and chesso runs under that floor on every book measured so far, book
+  # choice included (S219, DEC-189).
   awk -v g="$games" -v d="$draws" -v f="$forfeits" 'BEGIN {
     printf "draws     %d of %d, %.1f %%\n", d, g, 100 * d / g
     printf "decisive  %d of %d, %.1f %%\n", g - d, g, 100 * (g - d) / g

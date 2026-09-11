@@ -10544,3 +10544,88 @@ Consequences: `AGENTS.md`'s AGENTS rule names Sonnet 5 with this id. A step's
               pre-launch work was Opus 5, its reading and switch and everything
               after are Sonnet 5. The fast check after each step stays and is
               the instrument that says whether the change cost anything.
+
+## DEC-189  2026-09-12  The harness book is `noob_3moves.epd`, picked by S219's pre-registered measurement over the incumbent and two other CC0 candidates
+Tags:         harness, book, fastchess, measurement, s219, dec-182, dec-143, dec-083
+Context:      DEC-182 (the owner, 2026-09-11): find the best open-licence book,
+              prefer balanced where the numbers are close, the owner downloads,
+              re-calibrate after the change. S219 surveyed
+              (`adocs/data/S219_book_survey.md`), the owner downloaded three
+              CC0 candidates from `official-stockfish/books`, and the pick was
+              pre-registered as a measurement in
+              `adocs/data/S219_book_compare.sh`'s header before the first game:
+              one `98bf3e1` binary against itself at one doubling of time
+              (8+0.08 against 4+0.04), 1500 games per book per pass, two
+              counterbalanced passes, the pick is the largest
+              M = nElo^2 x games per hour, a tie (under one combined standard
+              error) breaks toward the balanced book. The run finished
+              2026-09-12 00:35, 12000 games, 0 forfeits, no match voided.
+              Read by `adocs/data/S219_read.py`, cross-checked to the digit
+              against fastchess's printed Elo, nElo and pentanomial on all
+              eight matches; `adocs/data/S219_book_compare.md` is the reading.
+              Pooled M, largest first: `noob3` 154101610 +/- 8564337
+              (nElo +228.27 +/- 12.43, 2957 games an hour, balanced);
+              `uho4060v4` 132307458 +/- 8270825; `popularpos` 128933263
+              +/- 7903361; `uho4852`, the incumbent, 123838572 +/- 7907059
+              (nElo +198.69 +/- 12.43, 3137 an hour). `noob3` is clear of
+              every other book by more than one combined standard error
+              (differences 21.8, 25.2 and 30.3 million against combined
+              errors of 11.9, 11.7 and 11.7 million), so the tie rule is never
+              reached. Hours per verdict at the same nElo bounds, pick
+              against incumbent: 0.80 +/- 0.07.
+Decision:     By the coordinator under DEC-182, mechanically from the
+              pre-registered rule. **(1) `fastchess.sh` plays
+              `books/noob_3moves.epd` (`book_format=epd`) from this commit;**
+              `books/fetch_book.sh`'s default moves with it and the unpacked
+              sha256 is pinned. **(2) The zip digest is not pinned yet:** the
+              owner deleted the zips after unpacking and nothing is downloaded
+              without the owner's word, so the pin table carries `-` in the
+              zip column, a present file is verified against the unpacked
+              digest as any other, a fetch of the absent file is refused with
+              a message naming what completes the pin, and `--list` marks it.
+              The gap closes when the owner re-downloads the zip or authorises
+              one fetch. **(3) The DEC-143 A/A follows at once:** 1000 games at
+              the S198 regime on the new book, read with
+              `adocs/data/S198_pairs.py` against S198's figures; the reading
+              decides in writing whether the pick stays, by the rule in S219's
+              `accepts:`. **(4) `rating.sh` keeps `books/8moves_v3.pgn`:** it
+              is a gauntlet against other engines read with ordo for an
+              absolute-scale figure, its throughput is not a constraint on the
+              plan, its book is committed and pinned, and keeping it leaves
+              every past rating comparable with the next; S219 measured
+              self-play sensitivity, which is not that script's job. **(5) The
+              embedded book is out of scope:** the pick is an EPD position
+              list, not a PGN game collection, so `src/openings.bin` is not
+              rebuilt from it (S219's `accepts:` names this case). **(6)** The
+              losing candidates `popularpos_lichess_v3.epd` and
+              `UHO_4060_v4.epd` are deleted from `books/` once the A/A
+              confirms the pick; `UHO_Lichess_4852_v1.epd` stays -- pinned
+              with both digests and fetchable, so any verdict taken on it can
+              be re-run -- and `UHO_4060_v3.epd` stays as S085's tuning book.
+Rejected:     **Keeping the incumbent on the throughput argument** -- it has
+              the second-highest games an hour and the lowest M; verdicts are
+              priced in hours, and M is hours. **Picking `uho4060v4` for its
+              3212 games an hour** -- its nElo sensitivity is 25 points lower
+              and its M trails by 1.8 combined errors. **Reading the fastchess
+              warning counts as a book signal** (`noob3` 101 against `uho4852`
+              519 over both passes) -- they are the S042 defect firing from
+              both sides of a self-match and cancel in the comparison; they
+              are carried for the record only. **Changing `rating.sh`'s book
+              in the same step** -- no measurement was taken for that use, and
+              a change there would break the rating list's continuity for no
+              stated gain.
+Consequences: Every pre-registration written from this commit on names
+              `noob_3moves.epd`; every verdict before it stays attributed to
+              `UHO_Lichess_4852_v1.epd`, as DEC-049 attributes a figure to its
+              machine. `adocs/specs.md`'s harness paragraph, `DEV_MANUAL.md`
+              and `fastchess.sh`'s comments state the new book and why;
+              `TOOLCHAIN.md` and `MANUAL.md` name no current book and are
+              unchanged. The A/A's numbers, not this entry, say what the book
+              costs and buys at the S198 regime; if that reading reverts the
+              book, the reversion is a second commit and a further decision.
+              One stated confound: the A/A runs under governor `powersave`
+              where S198 ran under `performance`; game wall time is bound by
+              the time control, and S219's eight matches ran within 3 % of
+              S198's rate scaled by the time odds, so the effect on games an
+              hour is expected to be small, and the reading says which way it
+              went.

@@ -7,13 +7,15 @@ set -euo pipefail
 #   ./books/fetch_book.sh UHO_Lichess_4852_v1.epd  a named one
 #   ./books/fetch_book.sh --list                   what is pinned here
 #
-# WHY THIS EXISTS. fastchess.sh plays an unbalanced book (S105, DEC-083):
-# balanced openings draw about 91 % between engines of equal strength, and a
-# drawn pair carries no signal, so a balanced book spends a night of the
-# machine to say less than it could have. The unbalanced books that do the job
-# are large -- UHO_Lichess_4852_v1.epd is 175 MB against the 8.0 MB of
-# books/8moves_v3.pgn -- and a 175 MB blob in the history, for a file that is
-# reproducible from a URL and a digest, is the trade .tuning/ already refused.
+# WHY THIS EXISTS. fastchess.sh plays books too large to commit -- the largest
+# pinned candidate, UHO_Lichess_4852_v1.epd, is 175 MB against the 8.0 MB of
+# books/8moves_v3.pgn -- and a blob that size in the history, for a file that
+# is reproducible from a URL and a digest, is the trade .tuning/ already
+# refused. Which book to play is a measured choice, not an assumed one: S219
+# (2026-09-12) compared four CC0 candidates by verdicts per hour of machine
+# time and picked noob_3moves.epd, balanced -- the earlier draw-floor argument
+# for an unbalanced book (DEC-083) was measured (S105) and did not hold at
+# this engine's strength (DEC-189).
 #
 # WHERE IT COMES FROM AND UNDER WHICH LICENCE. official-stockfish/books is
 # CC0-1.0, which is why it and not sp-cc.de is the source. Stefan Pohl's own
@@ -27,12 +29,22 @@ set -euo pipefail
 # checking only the unpacked file cannot say whether a mismatch was the
 # download or the unpack. A book is a measurement input: a silently different
 # one moves every verdict taken with it and leaves no trace in the engine.
+#
+# WHY A ZIP COLUMN CAN READ "-". noob_3moves.epd was already unpacked on this
+# machine when S219 picked it, and the owner deletes a zip once it is
+# unpacked -- so there is no zip left to hash, and one must never be guessed or
+# fetched just to fill the column in. "-" marks that gap honestly: the
+# unpacked file below is still verified against its own pinned digest exactly
+# as any other entry, but a *fetch* of a book pinned this way (the file
+# absent) is refused rather than trusting an unpinned zip. The gap closes when
+# the owner re-downloads the zip, or authorises one fetch here, and its digest
+# is recorded.
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 books="$repo/books"
 base_url="https://github.com/official-stockfish/books/raw/master"
 
-default_book="UHO_Lichess_4852_v1.epd"
+default_book="noob_3moves.epd"
 
 # name <tab> zip sha256 <tab> unpacked sha256
 #
@@ -41,11 +53,17 @@ default_book="UHO_Lichess_4852_v1.epd"
 # measurement adopted it -- not in advance, because an unverified pin is a
 # number nobody has checked.
 #
-# UHO_Lichess_4852_v1.epd is what fastchess.sh plays and every SPRT verdict is
-# taken on.  UHO_4060_v3.epd was added by S085: an SPSA run must not tune on
-# the book its verification match plays (eval_tuning_strategy.md par.7), and
-# 242201 openings is more than the 30000 rounds that run walks through -- 1250
-# iterations of 24 pairs, one round per pair -- so it never wraps.
+# noob_3moves.epd is what fastchess.sh plays and every SPRT verdict is taken
+# on since S219 (2026-09-12), picked over three CC0 candidates -- including
+# UHO_Lichess_4852_v1.epd, the previous default -- by measured verdicts per
+# hour (DEC-189). adocs/data/S219_book_compare.md has the numbers.
+#
+# UHO_Lichess_4852_v1.epd stays pinned: every verdict taken on it before S219
+# stays attributed to it, and it was itself a comparison candidate.
+# UHO_4060_v3.epd was added by S085: an SPSA run must not tune on the book its
+# verification match plays (eval_tuning_strategy.md par.7), and 242201 openings
+# is more than the 30000 rounds that run walks through -- 1250 iterations of 24
+# pairs, one round per pair -- so it never wraps.
 #
 # 8moves_v3.pgn is the exception: it is 8.0 MB, committed rather than fetched
 # (.gitignore says why), and rating.sh plays it. It is pinned here anyway so
@@ -60,6 +78,7 @@ pinned="$(
 UHO_Lichess_4852_v1.epd	4e298f11e8acfa106babe02968f2e61582145e7874c59284690b20b9650e0e07	7a7f6470615a69c6cf23d565417701d38732876f480af90d67b42abade35644a
 UHO_4060_v3.epd	62fe32cda02f605acd5938887d574730c91208812f2bb1e839f28eee10869af8	419844f8c43a9c1fa3e279518bb79e89a5ed3d181f27c180ea9eb7444a1b9885
 8moves_v3.pgn	7e1e9dd118b4bb97d8a8b5b8a790c86e21f8509d59a27d2883767d94477be02e	5835239f88cc2c7511b177c32392a69f3ede21819cf0616f80a7f907cd21d17e
+noob_3moves.epd	-	2011193b4854e9a8cfdc05312ca2dbaffa6ceae3abbdee20e2ead2a18a603347
 PINS
 )"
 
@@ -68,7 +87,10 @@ fail() { echo "FETCH-BOOK-FAILED: $*" >&2; exit 1; }
 if [[ "${1:-}" == "--list" ]]; then
   echo "pinned books, in $books/ -- fetched and gitignored, except the"
   echo "committed 8moves_v3.pgn, which is only verified against its pin:"
-  awk -F'\t' '{ printf "  %s\n", $1 }' <<< "$pinned"
+  awk -F'\t' '{ if ($2 == "-")
+                  printf "  %s  (zip digest not recorded -- verify only, fetch refused)\n", $1
+                else
+                  printf "  %s\n", $1 }' <<< "$pinned"
   echo "default: $default_book"
   exit 0
 fi
@@ -104,6 +126,14 @@ if [[ -r "$target" ]]; then
   fi
   fail "$target exists and its sha256 is $got, not the pinned $file_sha"
 fi
+
+# "-" marks a book whose zip digest was never recorded (WHY A ZIP COLUMN CAN
+# READ "-" above) -- refuse before curl runs rather than trusting an unpinned
+# zip, so this is checked ahead of the download it would otherwise start.
+[[ "$zip_sha" != "-" ]] \
+  || fail "$book has no pinned zip digest yet; re-download the zip, record its" \
+          "sha256 in $(basename "$0")'s pin table, then fetch again. $target is" \
+          "not present, so nothing can be verified without it either"
 
 # Download to a scratch name and move into place only after both digests
 # check, so an interrupted fetch never leaves a short file that looks like a

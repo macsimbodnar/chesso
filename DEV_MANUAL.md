@@ -498,7 +498,7 @@ parameters, 1250 x 24 pairs, 60000 games in 8 h 21 m, 0 forfeits, verified at
 **Tune and verify on different openings and a different control.**
 `adocs/eval_tuning_strategy.md` par.7. `books/fetch_book.sh` pins a second
 UHO-class book, `UHO_4060_v3.epd`, for exactly this: the run tunes on it and
-`fastchess.sh` verifies on `UHO_Lichess_4852_v1.epd`.
+`fastchess.sh` verifies on `noob_3moves.epd` (S219, DEC-189).
 
 ### What decides whether it worked
 
@@ -883,7 +883,7 @@ real clock, on positions no test FEN reaches:
 cmake --build build-debug -j8
 fastchess -engine cmd=build-debug/src/chesso name=debug-a \
           -engine cmd=build-debug/src/chesso name=debug-b \
-          -openings file=books/UHO_Lichess_4852_v1.epd format=epd order=random \
+          -openings file=books/noob_3moves.epd format=epd order=random \
           -each tc=4+0.04 option.Hash=16 option.Threads=1 \
           -rounds 4 -repeat -concurrency 8 -recover -check-mate-pvs \
           -pgnout file=/tmp/debug_selfplay.pgn \
@@ -2095,22 +2095,28 @@ default of the per-change instrument: S160, closing
   adjudication, forfeit rate, the variance floor concurrency leaves — and never
   the engine.
 
-**Fetch the book first, once per machine.** `fastchess.sh` plays an unbalanced
-book that is 175 MB and therefore not committed:
+**Fetch the book first, once per machine.** `fastchess.sh` plays
+`noob_3moves.epd`, balanced, 150932 positions -- picked over three unbalanced
+candidates and the harness's own former book by S219's measured verdicts per
+hour (DEC-189):
 
 ```bash
-./books/fetch_book.sh           # UHO_Lichess_4852_v1.epd, ~43 MB zipped
+./books/fetch_book.sh           # noob_3moves.epd, 9.4 MB unpacked
 ./books/fetch_book.sh --list    # what is pinned
 ```
 
 It checks the zip's sha256 and the unpacked file's, refuses on either, and is a
-no-op when the file is already there and matches. The source is
-`official-stockfish/books`, which is **CC0-1.0**; Stefan Pohl's own UHO pages
-state no usage licence, so nothing is taken from there. The committed
-`8moves_v3.pgn` is pinned in the same table and comes from the same CC0
-repository -- `./books/fetch_book.sh 8moves_v3.pgn` verifies the tracked copy
-against upstream instead of downloading it. The script fails with
-`FETCH-BOOK-FAILED:` and `fastchess.sh` refuses to start without the file.
+no-op when the file is already there and matches -- which is the case for
+`noob_3moves.epd` today. Its zip digest is not pinned yet: the local copy was
+already unpacked when S219 picked it, so `--list` marks the entry and a fetch
+of it (the file absent) refuses until the owner re-downloads the zip and its
+digest is recorded. The source is `official-stockfish/books`, which is
+**CC0-1.0**; Stefan Pohl's own UHO pages state no usage licence, so nothing is
+taken from there. The committed `8moves_v3.pgn` is pinned in the same table
+and comes from the same CC0 repository -- `./books/fetch_book.sh 8moves_v3.pgn`
+verifies the tracked copy against upstream instead of downloading it. The
+script fails with `FETCH-BOOK-FAILED:` and `fastchess.sh` refuses to start
+without the file.
 
 ### What the PGN carries, and how a run's openings are replayed
 
@@ -2185,10 +2191,10 @@ is about.
 |---|---|---|
 | time control | `8+0.08` | what the engines this plan reads figures from test at, and about 29 s a game against 52 s at the old `10+0.2` — DEC-083 |
 | hash | `16` MB | matches table **pressure**, not table size: at the rating list's 2'+1" a game writes ~660 M nodes against 5.6–11 M entries, 60–120 overwrites per entry, and 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about eightfold — DEC-088 |
-| book | `UHO_Lichess_4852_v1.epd` | unbalanced. A balanced book draws about 91 % between engines of equal strength and a drawn pair carries no signal, so it spends the night to say less — DEC-083 |
+| book | `noob_3moves.epd` | balanced, 150932 positions. S219 measured four CC0 candidates by `nElo^2 x games/hour` of a fixed doubling-of-time handicap and picked the largest, which was this one — DEC-189, superseding DEC-083's unbalanced pick |
 | threads | `1` | the target is the CCRL Blitz **1CPU** scale — DEC-089 |
 | concurrency | every core the machine reports: `sysctl -n hw.physicalcpu`, else `nproc` | DEC-048, DEC-050 |
-| pairing | `-repeat` | paired colours. This is what makes an unbalanced book sound, and it is never dropped |
+| pairing | `-repeat` | paired colours, controlling for any one opening's own bias regardless of the book. Never dropped |
 | adjudication | `-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400` | unchanged by S105, deliberately: the book was the one variable moved |
 
 `rating.sh` deliberately does **not** match this. It runs `Hash=128` because
@@ -2313,10 +2319,11 @@ The census reports, it does not void the run: both sides are chesso, so a thin
 time-management margin costs both about equally. `rating.sh` is the one that
 voids, because there the margin is a foreign engine's too.
 
-**Watch the draw rate.** The unbalanced book is there to keep it down, but
-**below about 45 % draws is a failure mode, not a win** — at that point the
-opening is simply winning for one side and the pair scores 1:1 with no signal
-in it. That is Pohl's own floor for the book class.
+**Watch the draw rate anyway.** **Below about 45 % draws is a failure mode,
+not a win** — at that point the opening is simply winning for one side and the
+pair scores 1:1 with no signal in it. That is Pohl's own floor for the book
+class, and the harness already runs under it on every book measured so far,
+book choice included (S219, DEC-189) — see below.
 
 ### What a verdict costs, measured
 
@@ -2370,6 +2377,10 @@ The book is kept — it costs nothing measurable and buys ×1.20 — but the rea
 DEC-083 gives for it does not hold at this strength, and if the book ever comes
 up again this is the measurement to argue from. Re-run it with
 `adocs/data/S105_pairs.py`.
+
+**2026-09-12: the book did come up again.** S219 measured four CC0 candidates
+by verdicts per hour and picked `noob_3moves.epd`, balanced (DEC-189) -- the
+regime table above and `adocs/data/S219_book_compare.md` carry the numbers.
 
 **0 time forfeits in 1000 games at 8+0.08** was checked first, because the
 faster control leaves `MOVE_OVERHEAD_MS 50` about 2.5× less room per move.
