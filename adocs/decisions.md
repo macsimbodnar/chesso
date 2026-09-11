@@ -10068,3 +10068,274 @@ Consequences: `MANUAL.md` and `adocs/specs.md` state the case rule, the two
               mapping`, ASLR, `setarch -R` -- is written into `TOOLCHAIN.md`
               beside the build line, because a sanitizer that never started
               and a fixed engine print the same number.
+
+
+## DEC-179  2026-09-11  The goal stands at 3000 CCRL Blitz without a network, reached by a longer hand-crafted list; the network comes after the mark
+Tags:         planning, rating, nnue, dec-071, dec-054, s183, s217
+Context:      S183 re-derived the plan's Elo arithmetic from recorded inputs
+              and applied the project's own measured published-to-measured
+              ratio (0.38 at its most generous, median 0.00). The whole
+              remaining list lands at **2658** from recorded inputs and at
+              **2707 to 2817** on the plan's own range, against the 2559 soft
+              anchor and the 3000 mark; the high end is 183 short. Its stamp
+              named DEC-071 as the decision it put to the owner. Four options
+              were presented on 2026-09-11 in an interactive review of the
+              parked list, with the agent recommending the first: un-park
+              S029 after the search block and let the network replace block
+              3's hand-crafted rebuild; change nothing and re-derive after
+              S024 and S109 (DEC-136); extend the hand-crafted list; write a
+              trigger that un-parks S029 if the post-S109 re-derivation still
+              falls short.
+Decision:     **By the owner**: "Extend the hand-crafted list. My plan is to
+              add the network after the goal of 3000 Elo. Multiple engines did
+              that, so should we." DEC-071 and DEC-054 stand unamended: the
+              mark is 3000 without a network, S029 stays parked, and it is
+              un-parked by a decision taken when S152 reads the mark, not
+              before. **S217** is created: a sourced inventory of the
+              hand-crafted techniques that engines rated 3000 to 3130 on the
+              CCRL Blitz 1CPU list carried at a network-free version, and this
+              plan lacks -- banded per DEC-087 as corrected by DEC-176, priced
+              per DEC-143 -- from release notes, commit-message prose, papers
+              and the authors' own statements, never from source (DEC-016).
+              The coordinator turns the gap into steps and records which gap
+              techniques got none and why.
+Rejected:     **Un-park S029 after the search block** -- the agent's
+              recommendation, on the end goal naming its own network and on
+              block 3's cost; the owner's order is a hand-crafted engine at
+              the mark first, as the engines DEC-071 lists did, and the
+              network on top of it. **Change nothing** -- leaves the shortfall
+              unaddressed until two verdicts land and starts no new work.
+              **A trigger** -- defers the same question to a date; the owner
+              answered it now.
+Consequences: `adocs/plan.md`'s Elo paragraph says the question is answered
+              and by what; S217 sits in the Open list as documents-only filler
+              behind S024's run. DEC-136's re-derivation runs over the
+              extended list when S217's steps are created, and a finding that
+              the gap is empty is recorded as such -- then the shortfall is
+              the discount and not a missing technique, and the decision that
+              follows says what the extended list is instead. The delegation
+              of 2026-09-11 is unchanged: dropping or reopening the goal stays
+              the owner's.
+
+
+## DEC-180  2026-09-11  S109 ships late move pruning in its published form; the gives-check exemption is S218, its own step and its own SPRT
+Tags:         search, pruning, lmp, s109, s218, dec-082, dec-141
+Context:      S109's `accepts` states that the gives-check exemption binds the
+              three per-move rules, which run after `make_move` where
+              `is_check_move` exists, and not late move pruning, whose
+              skip-quiets flag is honoured at the generation stage where no
+              pre-make gives-check predicate exists and where the published
+              form carries no exemption. Buying LMP the exemption with a
+              post-make prune departs from the published form, and the
+              `accepts` reserved that choice to the owner. Three options were
+              presented on 2026-09-11: the published form alone with the mate
+              guard as the safety net (the agent's recommendation); the
+              exemption from the start; the published form and then the
+              exemption as its own SPRT.
+Decision:     **By the owner**: the published form ships in S109 and is
+              measured by S109's one verdict; the exemption is **S218**, a
+              step of its own directly behind S109 in the Open list, decided
+              by its own SPRT against S109's shipped form. If S109's own
+              "pruning does not hide a forced mate" case goes red without the
+              exemption, the exemption is S109's fix under the TESTS rule and
+              S218 folds into it -- a red guard is a bug, not an option.
+Rejected:     **The exemption from the start** -- measures a variant with no
+              published evidence behind it and pays a make/unmake per pruned
+              quiet inside the one verdict that is supposed to price the
+              published form. **The published form with no follow-up step** --
+              the owner wants the exemption measured rather than left to the
+              guard.
+Consequences: S109's `accepts` and body name S218 where they named the
+              owner's call. S218's file carries the two shapes (post-make skip
+              behind the generation flag, or a pre-make gives-check predicate)
+              and is re-scoped if S109's verdict is negative. Each is one
+              change and one number, which is measurement rule 6.
+
+
+## DEC-181  2026-09-11  F02 and F03 of the 2026-09-04 audit fold into S210
+Tags:         uci, protocol, audit, s210, dec-171, dec-170
+Context:      Three low findings of `2026-09-04_adversarial` were still
+              `open` after DEC-170 sent F01 (`go infinite` printing `bestmove`
+              unasked) to S210. **F02**: a `moves` token that does not parse
+              or is not legal is skipped and the rest of the list applied, so
+              `position` ends on a board the GUI did not send -- the S176 rule
+              for the FEN half, not applied to the moves half -- and the skip
+              is silent in the shipped binary. **F03**: the root's move order
+              after an aborted iteration rests on the root's table entry
+              surviving the iteration, which the replacement rule does not
+              guarantee; mechanism shown, occurrence not reproduced.
+Decision:     **By the owner**, on the agent's recommendation: both fold into
+              S210, the batch of low engine defects with a reach census and
+              one SPRT only where the census finds reach. S210's goal,
+              `accepts` and `closes` are amended; the report's two `Status:`
+              lines move to `planned`.
+Rejected:     **Fix F02 now under BUGS** -- reach needs a GUI or harness to
+              send a move the engine cannot parse, which is a notation
+              mismatch and not ordinary play; DEC-171 scopes the first-fix
+              clause to ordinary play, the UCI surface as it is driven, and a
+              reported score, move or line. **Accept both** -- F02's silent
+              skip is the class S176 already refused on the FEN half of the
+              same command, and F03's premise is written in a comment and
+              enforced nowhere.
+Consequences: S210 closes nine findings. F03's remedy is either a best move
+              carried in the search state instead of re-read from the table,
+              or the premise asserted and counted over the F22 census sample;
+              the step decides and the comment in `src/chesso.cpp` says what
+              is enforced.
+
+
+## DEC-182  2026-09-11  The harness opening book is re-decided from a survey of open-licence books; the owner downloads the pick; a fixed-rounds A/A read against S198's decides whether it stays
+Tags:         harness, book, sprt, measurement, dec-083, dec-143, s105, s198, s219
+Context:      S105 moved the harness to `UHO_Lichess_4852_v1.epd` for the
+              surveyed engines' regime (DEC-083). Measured: games a fifth
+              shorter (x1.20 of the x1.67), pair score variance unchanged
+              (ratio 1.022), and Pohl's draw-floor argument does not hold at
+              this strength -- chesso draws 40.3 % on the balanced book.
+              `status.md` carried "whether to keep it is the owner's to
+              revisit". Three options were presented on 2026-09-11: keep (the
+              agent's recommendation), revert to `8moves_v3.pgn`, or
+              re-measure both at the next block boundary.
+Decision:     **By the owner**: "find the best book possible online that we
+              can use, recompile them; the best type possible for us
+              (balanced?) with the only restriction that we use open-source
+              material, no stealing from other work that is not permitted;
+              find the book yourself but let me download it; after the change
+              we re-evaluate everything." **S219** is the step, in four parts:
+              (1) the agent surveys the open-licence books -- CC0, public
+              domain or permissive, verified at the source, none with an
+              unstated licence, which keeps `books/fetch_book.sh`'s rule that
+              sp-cc.de is not a source -- and names the candidates with URLs;
+              (2) the owner downloads the pick; (3) both digests are pinned
+              in `books/fetch_book.sh` and `fastchess.sh`'s `book=` moves to
+              it; (4) DEC-143's fixed-rounds A/A of 1000 games follows and is
+              read against S198's -- pair score variance, games an hour, draw
+              rate and the share of pairs decided by the opening -- and that
+              reading, not the survey, decides whether the pick stays: lower
+              or equal cost per verdict at variance inside S105's band keeps
+              it; a worse cost reverts `book=` and records the number. Where
+              two candidates are close the balanced one is preferred, which
+              is the owner's stated leaning. **Assumptions, stated for the
+              owner's veto on reading**: the decision covers the book
+              `fastchess.sh` plays and the one `rating.sh` plays; the engine's
+              embedded Polyglot book (`src/openings.bin`, `tools/make_book`)
+              is rebuilt from the same material only if that material is a
+              PGN game collection under a licence that permits it, and S219
+              decides that half or leaves it; "re-evaluate everything" is
+              read as the A/A and a re-reading of S105's variance question
+              with the new book, **not** as re-running past verdicts -- every
+              recorded verdict stays attributed to the book it was taken on,
+              the way DEC-049 attributes a figure to its machine. Until the
+              pick is downloaded and calibrated, verdicts run on the current
+              book and say so.
+Rejected:     **Keep as is** -- the owner wants the best open material
+              surveyed rather than the first CC0 book that worked. **Revert to
+              `8moves_v3.pgn` without a measurement** -- re-baselines every
+              verdict on an argument. **Re-measure at the next block
+              boundary** -- the owner asked for the change now, and the A/A
+              is about half an hour of machine.
+Consequences: `fastchess.sh` prints the book in its banner already, so what a
+              run measured stays on screen; every pre-registration after the
+              change names the book. S199's drift match and S152's rating use
+              the new book from then on. The ledger in `adocs/plan.md` notes
+              the book change at its row. A book whose licence cannot be
+              verified is not a candidate, whatever its quality. **The survey
+              ran the same evening** (`adocs/data/S219_book_survey.md`): the
+              pick cannot be read off the literature -- three CC0 candidates
+              beside the current book, and a documented method, fishtest's
+              time-odds fixed-games comparison -- so S219 measures the
+              candidates first and the A/A follows the winner; the step file
+              carries the amended `accepts`.
+
+
+## DEC-183  2026-09-11  The self-play corpus stays gitignored and is archived off the repository with its recipe
+Tags:         data, corpus, tuning, s065, dec-111, machine
+Context:      `.tuning/selfplay_v2.tsv` -- 11003693 positions from 120000
+              self-play games, 715 MB -- is the corpus S065's refit and every
+              fit since were taken on. It is gitignored, it did not survive
+              the move from the MacBook, and regenerating it costs a night;
+              the fit scripts are tracked since S192. Three options were
+              presented on 2026-09-11: accept the regeneration cost (the
+              agent's recommendation, because S082 and S083 replace how the
+              corpus is built), archive off-repo with the recipe recorded, or
+              chunked gzip on an orphan branch as the S024 evidence was.
+Decision:     **By the owner**: it stays gitignored **and** one archive with
+              everything needed to restore or regenerate it goes to
+              `/home/max/Synckeeper/`, in a compression that works on Linux
+              and macOS out of the box. The archive is
+              `chesso_selfplay_v2_corpus_2026-09-11.tar.xz`: the TSV, the two
+              run logs (`datagen_v2.log`, `dedupe_v2.log`) and
+              `CORPUS_README.md` with the row format, the restore command,
+              the digests, the generating commit `67eed7e` and the exact
+              `datagen` invocation (`--games 120000 --nodes 100000 --threads
+              12 --seed 20260814 --allow-tactical 1`, `--quiet-limit` 1000),
+              and the `corpus_dedupe` command that rebuilds the derived dedup
+              file, which is not archived. Digests: the TSV is
+              `ad8c5dfe1a236af8cbf946a67692e5fbfe533c7d38b6c7468c8a8ec202d14e05`;
+              the dedup file it rebuilds is
+              `0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`;
+              the archive is 91999956 bytes, sha256
+              `d91bd9b2a86939043a8ca744428fed6d4e7c9d7038593d06bd03e86be3c8797d`,
+              written beside it as `<archive>.sha256`; the listing and the
+              streamed digest of the TSV inside it were verified on
+              2026-09-11 before this entry was finished.
+Rejected:     **Accept the regeneration cost alone** -- a night of the machine
+              is the plan's scarcest resource, and the current corpus is what
+              every recorded fit is reproducible from. **An orphan branch** --
+              150 to 250 MB in the remote for a file that is not source.
+Consequences: A machine move restores from the archive and verifies the
+              digest before any fit is trusted. A new corpus -- S082, S083 --
+              gets the same treatment when it lands: archive plus recipe,
+              named in its step's stamp. The archive is the owner's file; the
+              repository records only the recipe and the digests, here.
+
+
+## DEC-184  2026-09-11  Seven parked hygiene findings are folded into S210, S213 and S214 or accepted; S194's two deferred questions are answered; the enrichment pass continues as filler
+Tags:         docs, tests, tooling, hygiene, s210, s213, s214, s194, enrichment
+Context:      `status.md`'s Parked block carried seven items "parked, not
+              planned: a step is created by a decision and none has been
+              taken", some since 2026-08. Each was presented on 2026-09-11
+              with a proposed home, against accepting all seven unchanged or
+              deciding them one by one.
+Decision:     **By the owner**, on the agent's proposal, all seven as
+              proposed:
+              **1.** Nothing checks that `AGENTS.md`'s TESTS command and
+              `DEV_MANUAL.md`'s test-section command agree (S143, DEC-118) --
+              a `--gate` mode in `tools/plan_prose_check.py` that fails when
+              they differ, registered in the fast suite; **S214**.
+              **2.** The `info` line's fields are outside the UCI golden
+              (found by S037) -- `test_uci_surface` gains a golden over the
+              field set as `MANUAL.md` documents it, values excluded; **S213**.
+              **3.** `command_bench`'s per-position `reset_for_new_game()` is
+              unobservable and untestable (S195) -- **accepted and kept**: it
+              is what makes the signature independent of position order and
+              of a list that may one day repeat a position.
+              **4.** The tuner's last `--only` group runs to `PARAM_COUNT`, a
+              blind spot S041's partition test cannot see (S041) --
+              **accepted as to structure**; the precondition assertion that
+              does fire gets a message naming what it detects; **S214**.
+              **5.** `MANUAL.md` says nothing about what `ucinewgame` resets,
+              and its `nodes` wording omits that the last `info` line can be
+              under the `go nodes` budget when the final iteration aborts
+              (S195, measured 2917 of 5000) -- one sentence each; **S210**.
+              **6.** S194's two deferred questions: `adocs/specs.md` joins
+              its `touches:` and the coordinator writes the sentence, which
+              the PLAN rule already provides for; an unparsable
+              `CHESSO_BOOK_SEED` is **refused with an `info string` line**
+              rather than ignored silently in Release, `MANUAL.md` first --
+              the S172 and S176 pattern: what the engine drops, it says so on
+              the channel.
+              **7.** The enrichment pass: 37 of the 59 pending files carry
+              neither the 2026-08-19 research section nor the 2026-09-05
+              implementation guide. It **continues as filler** under the
+              2026-09-11 delegation, one file at a time as steps approach the
+              top of the Open list, agent-only and owning no run; it is not a
+              plan step and never blocks one.
+Rejected:     **Accept all seven unchanged** -- items 1, 2 and 6 are each an
+              hour that closes a class of drift the project has already paid
+              for once (S037, DEC-118, S172). **One by one** -- the owner
+              took the bundle.
+Consequences: S210, S213, S214 and S194 are amended in their `goal:`,
+              `accepts:`, `touches:` and `decisions:` fields; `status.md`'s
+              Parked block loses the six items this entry closes and rewrites
+              the seventh. Items 3 and 4 are the DEC-138 form: an audit that
+              finds them again cites this entry.

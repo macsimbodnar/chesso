@@ -661,6 +661,11 @@ The order stands.
   change: chesso self-plays the *balanced* book at 40.3 % draws where Pohl
   measured 91.6 % between engines 600 points stronger. The book is kept on the
   x1.20 and on DEC-083; its stated reason does not hold here.
+  **Re-decided 2026-09-11 by the owner, DEC-182:** S219 surveys the
+  open-licence books, the owner downloads the pick, its digests are pinned,
+  and the DEC-143 A/A that follows is read against S198's -- variance, games
+  an hour, draw rate -- before `fastchess.sh` keeps it. Until then verdicts
+  run on this book and say so.
   `adocs/data/S105_calibration*` is the evidence. **0 time forfeits in 1000
   games at the faster control**, checked from the PGN before anything else was
   read -- both `fastchess.log` files were 0 bytes, the WARN-only default again.

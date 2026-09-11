@@ -154,7 +154,7 @@ discharged it: nothing here touches a searched node.
 
 ### 2026-09-04_adversarial-F02  low  a `moves` token that does not parse or is not legal is skipped and the rest of the list is applied, so `position` ends on a board the GUI did not send -- the S176 rule for the FEN half of the same command, not applied to the moves half -- and the skip is silent in the shipped binary
 
-Status: open
+Status: planned -- S210 (DEC-181)
 
 **Evidence.** `src/chesso.cpp:1378-1407`, the `moves` loop: a token
 `algebraic_to_uci_move()` rejects is passed over, a move `try_move()` cannot
@@ -201,7 +201,7 @@ layer suite beside the S176 cases. Not on a search path; INV-6 on node counts.
 
 ### 2026-09-04_adversarial-F03  low  the root's move order after an aborted iteration rests on the root's table entry surviving the iteration, which the replacement rule does not guarantee; the premise is written in a comment and enforced nowhere. Mechanism shown, occurrence not reproduced
 
-Status: open
+Status: planned -- S210 (DEC-181)
 
 **Evidence.** `src/chesso.cpp:906-911` accepts an aborted iteration's move on
 this argument: "the root replaces its move only when that move beats every

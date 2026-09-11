@@ -1,9 +1,9 @@
 id:         S194
 goal:       the UCI book path is executed by the fast suite, with the weighted draw seeded through an environment variable
-accepts:    `CHESSO_BOOK_SEED`, read once at startup, seeds the book's `mt19937_64` when set and leaves `std::random_device` in place when absent; two fast cases on the embedded book: with `OwnBook true`, `position startpos` and `go depth 1` the `bestmove` is one of the moves the library returns for the start key, over several seeds; with `Best Book Move true` it is the heaviest entry; the S175 repaired position (`rnb1kb1r/2pqnpp1/1p2p3/p2pP2p/P2P1P2/2P5/1P1N2PP/R1BQKBNR w KQkq h6 0 8`) answers `bestmove d2f3` with no `info` line; the previously unexecuted block of `src/chesso.cpp` (the probe, the draw and `Best Book Move`) is shown executed, by the S197 coverage recipe or by an observable in the test; `MANUAL.md` documents the variable in its book section; no UCI option is added and the golden surface is unchanged; fast suite green in both builds
-touches:    src/chesso.cpp, tests/test_engine.cpp, MANUAL.md, DEV_MANUAL.md
+accepts:    `CHESSO_BOOK_SEED`, read once at startup, seeds the book's `mt19937_64` when set and leaves `std::random_device` in place when absent; two fast cases on the embedded book: with `OwnBook true`, `position startpos` and `go depth 1` the `bestmove` is one of the moves the library returns for the start key, over several seeds; with `Best Book Move true` it is the heaviest entry; the S175 repaired position (`rnb1kb1r/2pqnpp1/1p2p3/p2pP2p/P2P1P2/2P5/1P1N2PP/R1BQKBNR w KQkq h6 0 8`) answers `bestmove d2f3` with no `info` line; the previously unexecuted block of `src/chesso.cpp` (the probe, the draw and `Best Book Move`) is shown executed, by the S197 coverage recipe or by an observable in the test; `MANUAL.md` documents the variable in its book section; no UCI option is added and the golden surface is unchanged; an unparsable `CHESSO_BOOK_SEED` is **refused, not ignored** -- one `info string` line at startup naming the variable and the value it could not read, in both builds, after which the seed falls back to `std::random_device` -- documented in `MANUAL.md`'s book section before `test_uci_surface` is touched (DEC-184); fast suite green in both builds
+touches:    src/chesso.cpp, tests/test_engine.cpp, MANUAL.md, DEV_MANUAL.md, adocs/specs.md
 excludes:   the book format, `src/openings.cpp`, `tools/make_book`
-decisions:  DEC-139
+decisions:  DEC-139, DEC-184
 closes:     2026-09-04_test_review-F06
 blocks:
 paused_by:
@@ -274,3 +274,8 @@ checked by S189's `tools/gate.sh`).
 - An unparsable `CHESSO_BOOK_SEED` is proposed to be ignored silently in
   Release (Debug logs it). An `info string` refusal instead is a
   protocol-visible startup line and needs `MANUAL.md` first.
+
+**Answered 2026-09-11, DEC-184.** `adocs/specs.md` joins `touches:` and the
+coordinator writes its sentence, which the PLAN rule already provides for. The
+unparsable seed is refused with an `info string` line, `MANUAL.md` first -- the
+S172 and S176 pattern: what the engine drops, it says so on the channel.

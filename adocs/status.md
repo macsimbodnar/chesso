@@ -7,6 +7,65 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **The parked list was reviewed with the owner, 2026-09-11 evening: six
+  rulings, three steps, one archive, and the Parked block below loses the
+  items they close.** Every question that had waited on the owner was
+  presented with options and the agent's recommendation; the answers are
+  DEC-179 to DEC-184, all by the owner. **Nothing in the engine changed, no
+  run was started, no `src/` file was touched.**
+
+  **(1) The goal stands: 3000 without a network, the list gets longer, the
+  network comes after the mark.** S183's arithmetic put the whole list at
+  2658 to 2817. The agent recommended un-parking S029 after the search block;
+  the owner ruled the other way -- "multiple engines did that, so should we"
+  -- so DEC-071 and DEC-054 stand and **S217** inventories, from release notes
+  and papers and never from source, what the 3000-to-3130 hand-crafted engines
+  carried that this plan lacks, priced and banded, for the coordinator to turn
+  into steps. DEC-179. **(2) S109 ships the published LMP form; the
+  gives-check exemption is S218**, its own step and SPRT behind it. DEC-180.
+  **(3) F02 and F03 of the 2026-09-04 audit fold into S210**; the report's
+  `Status:` lines moved. DEC-181. **(4) The harness book is re-decided,
+  S219.** The survey ran the same evening (`adocs/data/S219_book_survey.md`):
+  every licence that could be verified points to `official-stockfish/books`,
+  CC0, which is where both books this harness has played came from; Pohl's own
+  downloads and the OpenBench book set state no licence and stay out. Three
+  CC0 candidates are named for the owner to download -- `popularpos_lichess_v3`
+  (balanced, 200 k), `noob_3moves` (balanced, shallow) and `UHO_4060_v4`
+  (unbalanced, 242 k) -- and the pick is **measured**: fishtest's own book
+  comparison, one binary against itself at a fixed time handicap on each book,
+  read as normalized Elo per hour; then the DEC-143 A/A on the winner.
+  Balanced preferred where close. S219 waits on the download and blocks
+  nothing. DEC-182. **(5) The corpus stays gitignored and is archived**:
+  `/home/max/Synckeeper/chesso_selfplay_v2_corpus_2026-09-11.tar.xz`,
+  91999956 bytes, sha256 `d91bd9b2...8797d` beside it, holding the TSV
+  (`ad8c5dfe...4e05`, verified by streaming it back out), the two run logs
+  and a README with the `datagen` recipe at `67eed7e`; the dedup file is
+  derived and documented, not archived. DEC-183. **(6) Seven hygiene items**:
+  the gate-copy check and the tuner-group message to S214, the `info`-line
+  golden to S213, the two `MANUAL.md` sentences to S210, `bench`'s reset
+  accepted, S194's two questions answered (specs sentence by the coordinator;
+  a bad `CHESSO_BOOK_SEED` refused on the channel), and the enrichment pass
+  continues as filler. DEC-184.
+
+  **Files:** S109, S210, S213, S214 and S194 amended in their fields; S217,
+  S218 and S219 created; `plan.md` gains the review section and three Open
+  entries, S217 and S219 behind S024 as filler and S218 behind S109;
+  `specs.md`'s harness paragraph and the Elo paragraph carry the two answers.
+  `DEV_MANUAL.md` and `MANUAL.md` checked: no behaviour changed, nothing to
+  state yet; S210, S213 and S219 will. `README.md` untouched, human-owned.
+
+  **Pruned from Parked below, each closed by a later step and only now
+  removed:** S151's pair (DEC-172); `RfpMinPly`'s floor (S142 set it to 2,
+  S148 re-decided the ceiling); the three 2026-08-20 questions (the pass is
+  DEC-184's item 7, S085's goal line is history, the re-measurement was S184);
+  the 2026-08-16 plan-review re-run (the 2026-09-04 review re-assessed all
+  ten); `anchors.py` (S192). What stays parked stays for the reason its item
+  gives.
+
+  **Next**, unchanged: S216, then S024 as the night's run with S214, S217 and
+  S219 as its filler. S219's comparison starts when the three zips are in
+  `books/`; about two and a half hours of machine, a daytime run.
+
 - **S215's fast check found two real things, both prose, both fixed in the
   commit below and neither a step.**
 
@@ -2085,37 +2144,17 @@ Updated: 2026-09-11, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
-  - **Three findings filed by S195, none of them planned.** (1) `MANUAL.md` has
-    no sentence saying what `ucinewgame` resets; the owner decided on
-    2026-09-10 that S195 would not add one, so the surface stays undocumented
-    on that point. (2) `MANUAL.md`'s `nodes` wording, "counting every
-    iteration", is not the whole truth: the last `info` line is printed only
-    when the iteration had a result, so a final iteration that aborts before it
-    has a PV leaves the reported count **under** the budget -- measured
-    2026-09-10, `go nodes 5000` reports 2917. Same decision, not added. (3)
-    **`command_bench`'s per-position `reset_for_new_game()` is unobservable and
-    no test can reach it.** Commenting it out leaves `bench 9`'s output
-    byte-identical on every `nodes`, `score` and `pv` field and on the
-    signature total, because the eight FENs are pairwise distinct and
-    `set_position` already resets on a differing FEN. It is a guard against a
-    bench list that ever repeats a position, and that list cannot be
-    constructed from outside the binary; the only thing that would make it
-    testable is surface `command_bench` does not have. Parked, not planned: a
-    step is created by a decision and none has been taken on any of the three.
+  - ~~**Three findings filed by S195, none of them planned.**~~ **Closed
+    2026-09-11, DEC-184:** the `ucinewgame` and `nodes` sentences go to
+    S210; `command_bench`'s per-position `reset_for_new_game()` is accepted
+    and kept -- it is what makes the signature independent of position order.
   - ~~**Calibrate the harness on the workstation.**~~ **Taken 2026-09-08 as
     S198's A/A and retired**: 1000 fixed rounds, 0 forfeits, pair variance
     0.2430 +/- 0.0154 inside S105's band at `z = +0.16`, 2277 games an hour.
     The next machine change owes the next one under DEC-143.
-  - **S151's pair, the owner question from the 2026-09-05 reorder, is answered
-    by DEC-172 on 2026-09-11 under the owner's delegation**: design (iii), a
-    fixed 1000-pair match at `32+0.32` and `Hash=64` read as an estimate, about
-    3.4 h, and the longer-control rule in its block-boundary form. Its accepts
-    is amended in its file. Kept here one turn so the owner sees the question
-    closed; prune at the next rewrite.
-  - **The three lows of the 2026-09-04 audit re-run still wait on the owner**
-    (`go infinite` printing `bestmove` unasked; a bad token in `position ...
-    moves` skipped silently; the aborted-iteration best move assuming its table
-    entry survives) -- one decision or steps, unchanged by the reorder.
+  - ~~**The three lows of the 2026-09-04 audit re-run still wait on the
+    owner.**~~ **Closed 2026-09-11, DEC-181:** F01 was already S210's; F02 and
+    F03 fold into it, and the report's `Status:` lines say `planned`.
   - **HANDOVER TO THE MACBOOK, 2026-08-23. Discharged 2026-08-27 -- kept for
     what it explains, not as a thing to do.**
 
@@ -2222,14 +2261,9 @@ Updated: 2026-09-11, by hand.
     direction-certified table score as a pruning margin's input, written up in
     its step file under `## Inherited from S108` -- so that decision is waiting
     where the step that takes it will be read, not here.
-  - **Nothing checks that the two copies of the completion gate agree.** S143
-    put the command in `AGENTS.md`'s TESTS rule and in DEV_MANUAL.md's Test
-    section and made them identical; DEC-118 says they are changed together,
-    which is an assumption and not a guard. `tools/plan_prose_check.py
-    --params` is the precedent for turning exactly this class of prose drift
-    into a `fast` test -- it already reads documents and compares them to the
-    code. Parked, not planned: a step is created by a decision and none has
-    been taken on this.
+  - ~~**Nothing checks that the two copies of the completion gate agree.**~~
+    **Closed 2026-09-11, DEC-184:** a `--gate` mode in
+    `tools/plan_prose_check.py`, registered in the fast suite; S214.
   - **The gitignored-evidence exposure was real and S024's share of it is
     discharged, DEC-111.** This item used to say `.tuning/` held the only copy
     of S024's aborted run and that it would die with the machine. It would
@@ -2241,82 +2275,38 @@ Updated: 2026-09-11, by hand.
     describes, which are the larger stakes. What changed is that the pattern
     has a worked example now: a branch nobody merges is a cheap place to put
     evidence that must outlive a machine.
-  - **A fourth question, from S085's run: what should `RFP_MIN_PLY`'s declared
-    minimum be?** Measured 2026-08-20: the tested floor is **2**, not the 3 the
-    comment argues for, and **0 and 1 are the same engine** because `!is_pv`
-    exempts the root, not this parameter. 3 of 18 mate cases fail at 0 and 1;
-    all pass at 2. Narrowing to 2 is measurement-backed; narrowing to 3 matches
-    the stated purpose but rests on an argument no test exercises. The wrong
-    claims in `src/search_params.hpp` are corrected; the bound is left at 0
-    because changing it is a decision. `RFP_MAX_DEPTH` has the same shape and no
-    red test -- its comment says "the last few plies" and its max of 63 permits
-    every depth. Full measurement in S085's step file.
-  - **Three questions banked for the owner while working overnight, 2026-08-20.**
-    Asked here rather than blocking the run. (1) **Resume the SOTA enrichment
-    pass?** 20 pending steps are still unenriched and it was stopped at S120 by
-    your instruction earlier the same day; it is machine-free and parallelises
-    one agent per step, but it is not a plan step, so it did not fit the
-    instruction that plan steps run in sequence. (2) **S085's goal line says
-    "the twenty search parameters that exist today" and the frozen run is 12** --
-    your decision at freeze time, with the nine `Tm*` and `OrderHistoryMax`
-    excluded for reasons recorded in the step file. Amend the goal line, or let
-    the `done:` stamp carry the deviation? The step's own Scope concern already
-    flags that the live surface is 22 rather than the goal's twenty. (3) **The
-    fourth plan_review is running documents-and-citations only**, because its
-    method re-measures every numeric claim from the tool the step names and the
-    machine is committed to S085; each unverifiable number is being recorded as
-    deferred with the command that would settle it. Schedule the re-measurement
-    pass as its own run, or fold each deferred number into the step that owns it?
-  - **The SOTA enrichment pass over the 3000-Elo steps stopped at S120, by the
-    owner's instruction, 2026-08-20.** One research agent per pending step
-    appends a `## Technical details (SOTA research, 2026-08-19)` section —
-    published form, traced records, file:line grounding, seeds per DEC-084,
-    measurement plan per DEC-083/S105. Done: all of block 0 (commit 0edfd26)
-    and block 1 (commit c0954ec), plus S020, S055, S117, S120 of block 2.
-    **The remainder is derived and is no longer enumerated here.** The
-    enumeration this item used to carry — "28 of 48" and twenty ids — was
-    already three steps stale the day after it was written, because both ends
-    move: every completion shrinks the denominator and every new step grows it.
-    The recipe is the answer and it is self-updating:
-    `grep -L 'Technical details (SOTA research' adocs/plan_todo/*.md` names
-    what is left, `grep -l` the same pattern names what is done, and neither
-    reaches a step sitting in `plan_current/`. **Snapshot, 2026-08-21, stated
-    as a snapshot and not as a census: 22 enriched, 44 not, over the 66 files
-    in `plan_todo/`.** Of the 44, five are excluded by design (reserve
-    S023/S025/S110/S111 and parked S029) and nineteen are steps created after
-    the pass stopped — S134 to S136 and S141 onward — so what the pass itself
-    left behind is the other twenty. Several sections flag scope concerns for
-    owner decision — the largest: S097's section notes Lynx's README
-    self-rating (3144/3293) against DEC-087's ~2850 banding of Lynx-derived
-    records. S109's no-prune-when-giving-check clause was the other one and is
-    resolved: S139 split it, and what is left is the owner question the field
-    now states, whether to buy late move pruning the exemption with a post-make
-    prune.
-  - **The 2026-08-16 plan_review findings are planned, not closed, and closing
-    them needs a re-run.** Ten findings, one high and three medium: nine went to
-    steps (S069 to S072, S074, S078 to S081) and F08 to DEC-062. A finding moves
-    to `closed` only when a re-run no longer reports it, so a fourth plan_review
-    is owed once those steps land — and the severity profile says the loop has
-    not reached its stopping condition, which is a re-run with no high and no
-    medium. F05 was this file's own two parked items and S069 has rewritten
-    them; it is `planned` until the re-run, like the rest.
-  - **The corpus is gitignored and does not survive a machine move; the fit
-    scripts do -- corrected 2026-09-05, and the anchors half is closed by S192,
-    2026-09-10.** `.tuning/` holds `selfplay_v2.tsv` (715 MB, 11003693
-    positions) and `selfplay_v2_dedup.tsv` (706 MB), both gitignored, and both
-    are on this workstation though neither was on the MacBook. The five scripts
-    S065 leaned on — `apply_fit.py`, `verify_fit.py`, `anchors.py`,
-    `reanchor.py`, `diff_fit.py` — **are tracked** since `c56ab41`
-    (`.gitignore` carries `!.tuning/*.py`), which this item wrongly called
-    gitignored until S192's enrichment agent checked. **The one that did not
-    run is fixed:** `anchors.py` hard-coded `ROOT = "/home/max/ws/chesso/"` and
-    is now `adocs/data/S192_anchors.py`, root from `__file__`, printing
-    `10 of 10 reproduced` at HEAD (`adocs/data/S192_anchors.log`). The other
-    four stay in `.tuning/`. What remains parked is the corpus itself, which is
-    the same class of loss `2026-08-13_plan_review.2-F02` recorded when
-    `selfplay_v1.tsv` did not survive DEC-049, and which cost S065 a night of
-    regeneration. Found while completing S065. Parked, not planned: a step is
-    created by a decision and none has been taken on this.
+  - ~~**A fourth question, from S085's run: what should `RFP_MIN_PLY`'s
+    declared minimum be?**~~ **Closed before 2026-09-11 and only now
+    removed:** S142 set the floor to 2, the measured one, and S148 re-decided
+    the ceiling by SPRT and kept 15; `src/search_params.hpp` carries both
+    with their reasons.
+  - ~~**Three questions banked for the owner while working overnight,
+    2026-08-20.**~~ **Closed 2026-09-11:** (1) the enrichment pass is DEC-184's
+    item 7, continuing as filler; (2) S085's goal line is history in
+    `plan_done/` and its stamp carries the deviation; (3) the re-measurement
+    of deferred numbers was S184.
+  - **The enrichment pass continues as filler, DEC-184 (2026-09-11).** Two
+    passes have run: the 2026-08-19 research sections (`## Technical details
+    (SOTA research`, stopped at S120 by the owner on 2026-08-20) and the
+    2026-09-05 implementation guides (DEC-145, twenty instrument-lane files).
+    **Snapshot 2026-09-11: 37 of the 59 pending files carry neither**, and the
+    recipe is self-updating -- a file with neither section is one
+    `grep -L` away. Under the 2026-09-11 delegation the pass continues one
+    file at a time as a step nears the top of the Open list, agent-only,
+    owning no run and blocking none; it is not a plan step. The scope
+    concerns earlier sections flagged are resolved: S097's Lynx banding by
+    S181 and DEC-176, S109's LMP exemption by DEC-180.
+  - ~~**The 2026-08-16 plan_review findings are planned, not closed, and
+    closing them needs a re-run.**~~ **Closed:** the 2026-09-04 plan review
+    re-assessed all ten -- nine closed, F08 accepted at DEC-062 -- under its
+    "Verdicts on prior findings". Removed 2026-09-11.
+  - ~~**The corpus is gitignored and does not survive a machine move.**~~
+    **Closed 2026-09-11, DEC-183:** it stays gitignored and is archived with
+    its recipe at `/home/max/Synckeeper/chesso_selfplay_v2_corpus_2026-09-11.tar.xz`
+    (91999956 bytes, sha256 in the DEC and beside the file); the TSV's digest
+    was verified by streaming it back out of the archive. The fit scripts were
+    already tracked (S192). A new corpus -- S082, S083 -- gets the same
+    treatment in its stamp.
   - **DEC-033's ordering conclusion is superseded by DEC-081; its measurement
     is not.** 160 expensive moves re-asked at 16 times the search removed 24.1 %
     of the error and left 95 of 160 unchanged, and that is still true. What it
@@ -2352,6 +2342,10 @@ Updated: 2026-09-11, by hand.
     games — and one that goes the distance costs the full window. Nothing else
     is measured while a match runs, and data generation and fits compete for the
     same machine.
+    **The book question is answered 2026-09-11, DEC-182:** S219 surveyed the
+    open-licence books, the owner downloads three CC0 candidates, a time-odds
+    comparison picks one, and the DEC-143 A/A on the pick decides whether it
+    stays; until then verdicts run on this book and say so.
   - **The bounds decide whether a night buys a verdict at all, DEC-063.** S068
     measured one constant twice with the same binaries: `elo0=0 elo1=5` ran
     6 h 36 m over 9036 games and returned nothing, `elo0=-5 elo1=5` returned
@@ -2363,26 +2357,13 @@ Updated: 2026-09-11, by hand.
     under the workflow. Their measurements are transcribed from the commits and
     from the two plan documents they replace (DEC-027). Treat their `done:`
     stamps as provenance, not as evidence that any completion gate ran.
-  - **The `info` line is UCI surface that the golden guard does not cover.**
-    `test_uci_surface` holds the command set, the option lines and the `go` and
-    `position` tokens against `MANUAL.md`; the search output has never been in
-    it, which is how S037 could add an `nps` field and change what `nodes` and
-    `time` mean without any test noticing. `MANUAL.md` now documents the fields,
-    so a golden check has something to hold them against. Found while doing
-    S037. Parked, not planned: a step is created by a decision and none has been
-    taken on this.
-  - **The tuner's last `--only` group runs to `PARAM_COUNT`, and that is a blind
-    spot S041's test cannot cover.** `tempo` ends at `PARAM_COUNT`
-    (`tools/tuner_groups.hpp`), so a parameter block appended after it and given
-    no group of its own is covered by `tempo` and all three partition properties
-    still hold. `test_tuner_groups` catches it through a precondition instead —
-    `TEMPO_EG_BASE + TEMPO_COUNT == PARAM_COUNT`, the bases chain against
-    `eval_model.hpp`'s independent width sum — which fires but names the wrong
-    thing. The structural fix is a group table the last entry cannot outrun, and
-    it would delete the four historical comments that are the only record of the
-    defect. Found while doing S041, whose `excludes:` puts it out of reach.
-    Parked, not planned: a step is created by a decision and none has been taken
-    on this.
+  - ~~**The `info` line is UCI surface that the golden guard does not
+    cover.**~~ **Closed 2026-09-11, DEC-184:** a golden over the field set,
+    values excluded, joins `test_uci_surface` in S213.
+  - ~~**The tuner's last `--only` group runs to `PARAM_COUNT`, and that is a
+    blind spot S041's test cannot cover.**~~ **Accepted 2026-09-11 as to
+    structure, DEC-184:** the precondition that does fire gets a message
+    naming what it detects, in S214; the group table stays as it is.
   - **NNUE is deferred and S029 is parked, DEC-054.** The owner's decision:
     strength comes from search and from the hand-crafted evaluation instead.
     Parked is not retired — `plan_todo/S029_nnue.md` is kept whole, its id is
@@ -2393,3 +2374,7 @@ Updated: 2026-09-11, by hand.
     the 2026-08-19 review (DEC-081 to DEC-086) is what ordered it — a search
     block that leads, an evaluation block that follows it, and one step, S109,
     where four pruning rules that are inert apart are measured together.
+    **Reaffirmed by the owner on 2026-09-11, DEC-179**, after S183 put the
+    whole hand-crafted list at 2658 to 2817: the mark is reached without a
+    network, the list is extended (S217), and S029 is un-parked by a decision
+    taken when S152 reads the mark -- not before, and not by arithmetic.

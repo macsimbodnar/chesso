@@ -633,7 +633,10 @@ disagreement in the favourable direction reaches 2939 and is still short.
 Whether the goal is met by this list, by a longer one, or only with the network
 premise DEC-054 parked, is the owner's to weigh: S183 changed no step's order
 and no step's content on this result, which its `excludes:` forbids for exactly
-this reason. **Re-derived when S024 and S109 land** — +44.68 and +204, 46 % of
+this reason. **Answered by the owner on 2026-09-11, DEC-179: the goal stands,
+without a network, and the list is extended -- S217 inventories what the
+3000-to-3130 hand-crafted engines carried that this plan lacks, and the network
+comes after the mark.** **Re-derived when S024 and S109 land** — +44.68 and +204, 46 % of
 the raw sum between them — with the measured figure replacing the published one
 and the transfer ratio re-taken over the enlarged ledger, in each of those
 steps' completing commits.
@@ -735,7 +738,7 @@ carried nothing.)
 - S209  **`setoption` follows the protocol on case, `Hash` says so when it refuses, and `clean-tt` no longer clears the table under a running search** -- the option name and a check option's value are folded once before every comparison, the search parameter names included, so `hash`, `HASH`, `ownbook`, `True` and `rfpmargin` are their canonical spellings; `Hash` is parsed with `std::from_chars` requiring the whole token and answers `not an integer` or `out of range` on the UCI channel in **both** builds, leaving the table as it was; `command_clean_TT` joins the search first. **Every red observed on `013600d`**: `hash` and `HASH` left the table at 524288 entries, `ownbook value True` ran a real search where the canonical spelling plays a book move, **`0x40` bought 1 MB and `64abc` bought 64 MB in silence**, `clean-tt` returned with `go infinite` still running, and the tune build called three casings of `RfpMargin` unknown options. **The race is measured**: a hand-built TSan tree, `go infinite` + 40 `clean-tt`, **38 / 41 / 36 reports on `013600d` against 0 / 0 / 0 on the candidate**, plus the one-line A/B inside the same build tree -- and the first run of all printed **0 on the defective tree** because ASLR killed the sanitizer before `main`, which is why `setarch -R` and a `FATAL:` guard are now in `TOOLCHAIN.md`. Five red-first cases, all five observed red; the golden `Rfpmargin` assertion **re-stated, not relaxed** (`RfpMargn`), and a new surface case pins that no two advertised names collide when folded. DEC-178 records the three choices the accepts left open. `search_bench` node- and best-move-identical (121530 / 801481 / 72924), `bench` 30046849 unchanged. `No functional change`
 - S208  **`position fen` can no longer abort the shipping binary or index the passed-pawn table off its end, and closing it cost one bench position its illegality** -- `load_FEN()` refuses more than 16 pieces of a colour and a pawn on rank 1 or rank 8, each naming its own reason on the UCI channel in S176's shape. Both reds observed on `23f926d` first: **`*** stack smashing detected ***`, exit 134, core dumped** in the Release binary for the 27-piece placement, and **`index 6 out of bounds for type 'int [6]'`** at `src/evaluation.cpp:516` and `:529` under the sanitizer; after the fix all three are refused and the sanitizer reports **0**. Four red-first ctest cases, all four observed red by disabling the refusals, two of them pinning the reason string's content; four controls that must stay green. **The discovery is a decision, DEC-177**: the accepts asked for the refusal *and* an identical `bench`, and `KILLER_POS` carries **17 white pieces** and was kept because "the engine loads it". The bound stays and the constant becomes legal -- h3 pawn deleted, `Status.VALID` to python-chess, twelve promotions and the `f5e6` en-passant capture intact, 42 -> 48 legal moves -- so **`bench` moves 26491479 -> 30046849** while `search_bench` stays node-identical: no legal position's tree changed. `MAX_MOVES` now states what defends it (218 / 224 / 270). `Bench: 30046849`
 - S207  **a repetition before or at the root is no longer a dead draw, and the SPRT accepted H1** -- `classify_repetition()` compares the matching history index against `search_state_t::root_history_size`, set in `search()` because that is the only way into ply 0, and `negamax_at` scores `DRAW_SCORE` on its `DRAW` class alone; `is_position_repeated()` keeps its two-fold contract as a wrapper, which leaves `test_engine.cpp`'s direct cases and `datagen`'s adjudication untouched. **`--nonreg` `{-5, 0}`: LLR 2.96, H1 accepted, Elo +3.32 +/- 5.00, nElo +4.47 +/- 6.72, LOS 90.36 %, Ptnml [434, 1025, 2135, 1079, 456] over 10258 games in 4 h 26 m 56 s, 0 forfeits of 10259 on either side** -- which establishes *not a regression of 5 nElo or more* and no magnitude, the point estimate being biased upward by the early stop. Reference `ae4eed4` answered the F08 board `score 0, nodes 5387, pv f6g8` with the history and `-1229, 412680` without it, a false draw behind a tree **77 times smaller**; the candidate answers `-1229 / 412680` both ways, and stockfish at depth 18 says **-703**. `search_bench` depth 9 node-identical, `bench` **26851183 -> 26491479**, the two together exact rather than contradictory. **1690 of 10259 games, 16.47 %, ended in a three-fold repetition draw, split 853 / 837 by colour** -- the rule's domain, measured, not an attribution. Two new cases including the `>` versus `>=` boundary control, **three** fast-suite cases re-stated and not relaxed (one of them a discovery the accepts did not name), two mutants added and killed, Debug self-play 8 games / 0 `Assertion`. `Bench: 26491479`
-- S183  **the Elo arithmetic is checkable for the first time, and it does not reach 3000 -- not at the midpoint and not at the high end** -- `adocs/data/S183_elo_inputs.md` records every pending step's published figure, its source or the word unverified, and the per-block sums, with the selection rule and the discount rule both fixed **before** any sum was computed. Eight published-to-measured transfers are on this project's record; of the five with a figure on both ends, **two are zero, one is the wrong sign, one is 0.10, one is 0.33** -- mean 0.061, median 0.00 -- and the headline discount is **0.38**, the largest ever measured here, as the most generous reading that is still a measurement. The plan's own +390 to +680 lands at **2707 to 2817**; the reconstruction from recorded inputs at **2658**. **2817 is 183 short**, and the anchor's whole 121.8 Elo of disagreement added favourably reaches 2939 and is still short. Block 1 reproduces (+184.6 against +180 to +280) but evaluation, speed and tuning do not, and **tuning's +50 to +90 has no published input at all** behind it. "The midpoint clears 3000" is deleted, struck and dated, and the paragraph **names DEC-071 as the decision it puts to the owner**. No step's order or content changed on the result. Re-derived when S024 and S109 land. Documents only
+- S183  **the Elo arithmetic is checkable for the first time, and it does not reach 3000 -- not at the midpoint and not at the high end** -- `adocs/data/S183_elo_inputs.md` records every pending step's published figure, its source or the word unverified, and the per-block sums, with the selection rule and the discount rule both fixed **before** any sum was computed. Eight published-to-measured transfers are on this project's record; of the five with a figure on both ends, **two are zero, one is the wrong sign, one is 0.10, one is 0.33** -- mean 0.061, median 0.00 -- and the headline discount is **0.38**, the largest ever measured here, as the most generous reading that is still a measurement. The plan's own +390 to +680 lands at **2707 to 2817**; the reconstruction from recorded inputs at **2658**. **2817 is 183 short**, and the anchor's whole 121.8 Elo of disagreement added favourably reaches 2939 and is still short. Block 1 reproduces (+184.6 against +180 to +280) but evaluation, speed and tuning do not, and **tuning's +50 to +90 has no published input at all** behind it. "The midpoint clears 3000" is deleted, struck and dated, and the paragraph **names DEC-071 as the decision it puts to the owner**. No step's order or content changed on the result. Re-derived when S024 and S109 land. Documents only -- **answered by DEC-179 on 2026-09-11: the goal stands and the list is extended, S217**
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -888,64 +891,101 @@ land, since it cannot contaminate the second verdict's attribution, and a
 play-altering one may not. Every run's pre-registration names, by finding id,
 the known defects DEC-171 has scoped behind it.
 
+## What the 2026-09-11 review of the parked list decided, DEC-179 to DEC-184
+
+The owner went through every parked question that had waited on them, on
+2026-09-11, each presented with options and the agent's recommendation. Six
+rulings, all by the owner:
+
+- **The goal stands** at 3000 CCRL Blitz without a network -- DEC-071 and
+  DEC-054 unamended -- reached by a longer hand-crafted list, and the network
+  comes after the mark, as the engines DEC-071 lists did. **S217** is the
+  sourced inventory of what those engines carried that this plan lacks, and
+  the coordinator turns its gap into steps. DEC-179. The agent had recommended
+  un-parking S029 after the search block; the owner overruled it, and the Elo
+  paragraph above says so where it asked the question.
+- **S109 ships the published late-move-pruning form**; the gives-check
+  exemption is **S218**, its own step and its own SPRT directly behind it, and
+  it folds into S109 if S109's mate guard turns out to need it. DEC-180.
+- **F02 and F03 of the 2026-09-04 audit fold into S210**, the low-defect batch
+  that already carries F01. DEC-181.
+- **The harness opening book is re-decided.** **S219**: the agent surveys the
+  open-licence books, the owner downloads the pick, its digests are pinned, and
+  one DEC-143 A/A read against S198's -- variance, games an hour, draw rate --
+  decides whether it stays. Balanced preferred where the numbers are close.
+  DEC-182.
+- **The self-play corpus stays gitignored and is archived** off the repository
+  with its recipe and digests. DEC-183.
+- **Seven hygiene items** fold into S210, S213 and S214 or are accepted, S194's
+  two deferred questions are answered, and the enrichment pass continues as
+  filler under the delegation. DEC-184.
+
+The order changes by three insertions and nothing else moves: S217 and S219
+behind S024 as its filler -- S219 waits on the owner's download and blocks
+nothing; a verdict ready before it runs on the current book and says so -- and
+S218 directly behind S109.
+
 ## Open
 
 1. S216  the S159 killer-slot census stops silently measuring the wrong position -- its `promo-mess` row is the pre-S208 `KILLER_POS` and is now refused, and the reader scrapes only `info ... nodes` so the row above is reported under its name; found by the Tier-1 fast check over `8aff8ac`
 2. S024  history indexed by the move played n plies ago and the current move
-3. S214  `analyse_game.py` refuses to return a score it never read, `spsa_driver.py check` proves every axis reaches the search, and a fit's provenance stamp records every flag that selects the emitted vector; no `src/` (F28, F29, F35)
-4. S211  the last three tables and five mask builders inherited from a GPL-3.0 tutorial engine replaced by the project's own derivations, the tutorial author's handle out of the shipped source, the artwork licensed; bench-identical (F01, F02, F03)
-5. S151  S085's shipped vector measured against `3488506` at `32+0.32`, `Hash=64`, in a fixed 1000-pair match read as an estimate -- design (iii), about 3.4 h, a daytime run -- and the longer-control rule written in its block-boundary form (DEC-172)
-6. S212  resign adjudication two-sided in both harnesses as the comment claims, `id name` stamped with the build and checked by `fastchess.sh`, a cached reference checked before it is played, a crash voids a run, the busy guard measures load, then one fixed-rounds A/A (F04, F05, F06, F07, F31, F32, DEC-174)
-7. S109  late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
-8. S199  a fixed-rounds drift match against a pinned early-S105 reference after each block boundary, read as a trend -- first point after the S109 block, on the workstation (DEC-108, DEC-139)
-9. S210  the seven low engine defects of the 2026-09-10 audit as one batch -- clock wrap, full history, `go infinite`, `movestogo 0`, the unstoppable first iteration, dead positions in quiescence, the bishops comment -- and the still-open `2026-09-04_adversarial-F01`; an SPRT only if F22's census finds reach (F17 to F23, DEC-171)
-10. S213  the evaluation header's stale zero-weight blocks, the mate-band argument that names the wrong bound, two dead public entry points and two `<cctype>` calls on a signed `char`, with a test for the bound the argument relied on; `No functional change` (F26, F27, F33)
-11. S194  the UCI book path executed by the fast suite, the weighted draw seeded through `CHESSO_BOOK_SEED` (F06)
-12. S091  skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply
-13. S098  the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
-14. S095  reduce a node whose table entry carries no move instead of searching it at full depth
-15. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
-16. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
-17. S112  quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
-18. S131  quiescence searches non-capture queen promotions instead of filtering them out
-19. S022  decide between delta pruning and the per-move futility S112 adds, by measurement -- deleting delta pruning is a valid recorded outcome
-20. S113  a shallow verification search over good captures prunes a node whose score is already far above beta
-21. S114  the null move reduction scales with how far the static score is above beta, and the base reduction is re-decided
-22. S115  the widening schedule is re-swept fail-soft, a fail-low halves beta toward alpha, and a repeated fail-high costs the root a ply
-23. S116  a node whose static score is hopelessly below alpha drops straight to quiescence, at depth one only
-24. S132  the soft time limit scales with the share of the root's nodes the best move consumed, spending less when the choice is not in doubt
-25. S202  a mate score inherited from the table at a depth too shallow to back it is given a line that reaches it or is not published as a mate -- the class S171's census measured, at a ceiling of 8 lines from 1 search in 3000 games and not a zero, free to alter play under its own SPRT where S171 was not (DEC-150)
-26. S020  compute the in-check state once per node instead of once per call site
-27. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
-28. S117  the middlegame and endgame halves of every evaluation term travel in one integer instead of two
-29. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
-30. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages
-31. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
-32. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-33. S030  move_t drops the moving piece and becomes 16 bits
-34. S186  the DEC-097 enrichment pass runs over block 3's files before block 3 starts, every figure sourced or marked unverified, every seed in a DEC-105 form (DEC-137)
-35. S134  delete rook-on-the-seventh and passer bucket 5 by folding their weights into the piece-square tables, which is bit-exact, and shrink the parameter vector to 823
-36. S082  the corpus labels a resolved position rather than the root -- the quiescence leaf, or the leaf reached by playing out a deep search's whole principal variation -- and samples few positions per game rather than many
-37. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, not by a volume target
-38. S135  unfreeze the piece placement group and refit it, one bundled SPRT over the three remaining features, by the owner's decision of 2026-08-20
-39. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- at two divisions once S055 has landed -- refit and resolve it at bounds that can
-40. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on
-41. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-42. S125  backward, phalanx, supported and weak unopposed pawns join the three terms that exist, each fitted
-43. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-44. S101  evaluation terms for a piece attacked by a lesser piece, fitted like every other constant
-45. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today -- moved to sit directly before S122, its consumer, because four steps above change the sum it clamps (F16, DEC-172); `eval_spread`'s candidates include the shipping value (F25)
-46. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks and weak squares, and it is no longer clamped
-47. S124  the endgame half of the score is scaled toward a draw by what is actually on the board
-48. S102  outpost and space terms in the evaluation, fitted like every other constant
-49. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-50. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-51. S127  an SPSA run over the whole search parameter set as it stands after the search block, and an independent SPRT of what it returns
-52. S129  three, four and five man tablebase probing, written from the format description
-53. S152  **deferred, DEC-108; closes the main order** — the engine's absolute rating is re-measured once, near the 3000 mark rather than at a block boundary, at both time controls so S128's anchor-spread question is answered by the same run
-54. S099  **reserve head, DEC-133** — a static evaluation correction learned from the difference between the static score and what the search returned, keyed on the pawn structure; the probe for the correction-history family, run on a spare night; S110 and S111 gated on its verdict
-55. S023  **reserve, DEC-087** — history indexed by piece, target and victim, to order captures MVV-LVA rates equal
-56. S025  **reserve, DEC-087** — retry searching losing captures after the quiets, now that capture history exists
-57. S110  **reserve, DEC-087** — a second correction table keyed on the non-pawn structure, split by colour
-58. S111  **reserve, DEC-087** — correction tables indexed by the move played two and four plies ago
-59. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
+3. S217  a sourced inventory of what the 3000-to-3130 hand-crafted engines carried that this plan lacks, banded and priced, turned into steps by the coordinator -- documents only, filler behind S024 (DEC-179)
+4. S219  the harness opening book re-decided -- the survey is done (`adocs/data/S219_book_survey.md`), the owner downloads three CC0 candidates, fishtest's time-odds comparison picks one, its digests are pinned, and one DEC-143 A/A read against S198's decides whether it stays; **waits on the owner's download**, and a verdict ready before it runs on the current book (DEC-182)
+5. S214  `analyse_game.py` refuses to return a score it never read, `spsa_driver.py check` proves every axis reaches the search, and a fit's provenance stamp records every flag that selects the emitted vector; no `src/` (F28, F29, F35)
+6. S211  the last three tables and five mask builders inherited from a GPL-3.0 tutorial engine replaced by the project's own derivations, the tutorial author's handle out of the shipped source, the artwork licensed; bench-identical (F01, F02, F03)
+7. S151  S085's shipped vector measured against `3488506` at `32+0.32`, `Hash=64`, in a fixed 1000-pair match read as an estimate -- design (iii), about 3.4 h, a daytime run -- and the longer-control rule written in its block-boundary form (DEC-172)
+8. S212  resign adjudication two-sided in both harnesses as the comment claims, `id name` stamped with the build and checked by `fastchess.sh`, a cached reference checked before it is played, a crash voids a run, the busy guard measures load, then one fixed-rounds A/A (F04, F05, F06, F07, F31, F32, DEC-174)
+9. S109  late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
+10. S218  late move pruning bought the gives-check exemption through a post-make prune, decided by its own SPRT against S109's shipped form; folds into S109 if S109's mate guard needs it (DEC-180)
+11. S199  a fixed-rounds drift match against a pinned early-S105 reference after each block boundary, read as a trend -- first point after the S109 block, on the workstation (DEC-108, DEC-139)
+12. S210  the seven low engine defects of the 2026-09-10 audit as one batch -- clock wrap, full history, `go infinite`, `movestogo 0`, the unstoppable first iteration, dead positions in quiescence, the bishops comment -- and the still-open `2026-09-04_adversarial-F01`; an SPRT only if F22's census finds reach (F17 to F23, DEC-171)
+13. S213  the evaluation header's stale zero-weight blocks, the mate-band argument that names the wrong bound, two dead public entry points and two `<cctype>` calls on a signed `char`, with a test for the bound the argument relied on; `No functional change` (F26, F27, F33)
+14. S194  the UCI book path executed by the fast suite, the weighted draw seeded through `CHESSO_BOOK_SEED` (F06)
+15. S091  skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply
+16. S098  the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
+17. S095  reduce a node whose table entry carries no move instead of searching it at full depth
+18. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
+19. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
+20. S112  quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
+21. S131  quiescence searches non-capture queen promotions instead of filtering them out
+22. S022  decide between delta pruning and the per-move futility S112 adds, by measurement -- deleting delta pruning is a valid recorded outcome
+23. S113  a shallow verification search over good captures prunes a node whose score is already far above beta
+24. S114  the null move reduction scales with how far the static score is above beta, and the base reduction is re-decided
+25. S115  the widening schedule is re-swept fail-soft, a fail-low halves beta toward alpha, and a repeated fail-high costs the root a ply
+26. S116  a node whose static score is hopelessly below alpha drops straight to quiescence, at depth one only
+27. S132  the soft time limit scales with the share of the root's nodes the best move consumed, spending less when the choice is not in doubt
+28. S202  a mate score inherited from the table at a depth too shallow to back it is given a line that reaches it or is not published as a mate -- the class S171's census measured, at a ceiling of 8 lines from 1 search in 3000 games and not a zero, free to alter play under its own SPRT where S171 was not (DEC-150)
+29. S020  compute the in-check state once per node instead of once per call site
+30. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
+31. S117  the middlegame and endgame halves of every evaluation term travel in one integer instead of two
+32. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
+33. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages
+34. S042  set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
+35. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+36. S030  move_t drops the moving piece and becomes 16 bits
+37. S186  the DEC-097 enrichment pass runs over block 3's files before block 3 starts, every figure sourced or marked unverified, every seed in a DEC-105 form (DEC-137)
+38. S134  delete rook-on-the-seventh and passer bucket 5 by folding their weights into the piece-square tables, which is bit-exact, and shrink the parameter vector to 823
+39. S082  the corpus labels a resolved position rather than the root -- the quiescence leaf, or the leaf reached by playing out a deep search's whole principal variation -- and samples few positions per game rather than many
+40. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, not by a volume target
+41. S135  unfreeze the piece placement group and refit it, one bundled SPRT over the three remaining features, by the owner's decision of 2026-08-20
+42. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- at two divisions once S055 has landed -- refit and resolve it at bounds that can
+43. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on
+44. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
+45. S125  backward, phalanx, supported and weak unopposed pawns join the three terms that exist, each fitted
+46. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+47. S101  evaluation terms for a piece attacked by a lesser piece, fitted like every other constant
+48. S039  re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today -- moved to sit directly before S122, its consumer, because four steps above change the sum it clamps (F16, DEC-172); `eval_spread`'s candidates include the shipping value (F25)
+49. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks and weak squares, and it is no longer clamped
+50. S124  the endgame half of the score is scaled toward a draw by what is actually on the board
+51. S102  outpost and space terms in the evaluation, fitted like every other constant
+52. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+53. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+54. S127  an SPSA run over the whole search parameter set as it stands after the search block, and an independent SPRT of what it returns
+55. S129  three, four and five man tablebase probing, written from the format description
+56. S152  **deferred, DEC-108; closes the main order** — the engine's absolute rating is re-measured once, near the 3000 mark rather than at a block boundary, at both time controls so S128's anchor-spread question is answered by the same run
+57. S099  **reserve head, DEC-133** — a static evaluation correction learned from the difference between the static score and what the search returned, keyed on the pawn structure; the probe for the correction-history family, run on a spare night; S110 and S111 gated on its verdict
+58. S023  **reserve, DEC-087** — history indexed by piece, target and victim, to order captures MVV-LVA rates equal
+59. S025  **reserve, DEC-087** — retry searching losing captures after the quiets, now that capture history exists
+60. S110  **reserve, DEC-087** — a second correction table keyed on the non-pawn structure, split by colour
+61. S111  **reserve, DEC-087** — correction tables indexed by the move played two and four plies ago
+62. S029  **parked, DEC-054** — a perspective network evaluation trained on chesso's own self-play
