@@ -7,7 +7,34 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
-- **S207's SPRT is playing and S185 is complete, 2026-09-11 night.**
+- **S207 is complete: H1 accepted, and the night's four document steps with
+  it, 2026-09-11.** `--nonreg` `{-5, 0}` nElo: **LLR 2.96, H1 accepted, Elo
+  +3.32 +/- 5.00, nElo +4.47 +/- 6.72, LOS 90.36 %, PairsRatio 1.05, Ptnml
+  [434, 1025, 2135, 1079, 456] over 10258 games in 4 h 26 m 56 s**, candidate
+  against `ae4eed4`, seed `20260911012459`. The pre-registered H1 reading is
+  applied unchanged: **not a regression of 5 nElo or more, kept, no magnitude
+  claimed** -- the point estimate is biased upward by the early stop (DEC-063).
+  **The abort rule was checked independently**: `tools/forfeit_report.py`
+  reports 0 forfeits of 10259 on each side against a 1.0 % rule, and
+  `fastchess.sh` does not call that script, so its census and this one are two
+  counts and not one. **The class is reachable in ordinary play and the run
+  says how often**: 1690 of 10259 games, **16.47 %**, ended in a three-fold
+  repetition draw, split 853 / 837 by colour -- even, so that is the rule's
+  domain and not an attribution of the Elo. **DEC-136 fired for the first
+  time**: the ledger is nine runs now, **mean 4 h 49 m, median 5 h 27 m,
+  101366 games at 2334.6 an hour**, the fast class widening from 1 h 49 m to
+  **2 h 28 m** because S207 sat outside the interval but close to the near
+  bound and took 10258 games where the other three fast runs took 2522 to 6412,
+  and the projection moving to **289 to 356 machine-hours**. S207 is also the
+  ledger's one throughput outlier at 2305.7 against a 2328-to-2346 band, and
+  the reason is known rather than guessed: the document lane ran on the same
+  machine for its first forty minutes, costing about **1.2 %** -- three minutes
+  on a four-and-a-half-hour run, which is what DEC-172's lane costs and it is
+  worth it. Gate re-run on the idle machine after the verdict, **33/33 in both
+  builds**, format clean; `Bench: 26491479`, verified against the very binary
+  the match played by `sha256sum`.
+
+- **How S207 and the night's four document steps were built, 2026-09-11 night.**
 
   **In progress, S207** (`plan_current/`): a repetition is scored as a draw only
   where the search itself walked into it, or on a third occurrence anywhere.
@@ -35,17 +62,14 @@ Updated: 2026-09-11, by hand.
   a worktree after the completing commit. Three fast-suite cases moved: two
   **re-stated, not relaxed** under DEC-173, each now reaching its position a
   third time, and one of them ("a repetition is answered before the table is")
-  was a **discovery** the accepts did not name. **The SPRT is running**:
-  `adocs/data/S207_sprt.sh`, `--nonreg` `{-5, 0}` nElo at 8+0.08, Hash 16,
-  concurrency 12, launched detached 01:24 with seed `20260911012459`, out
-  `/tmp/chesso_sprt_nonreg_20260911_012459`, log `.tuning/sprt_s207.log`,
-  candidate `ae4eed4` + uncommitted against reference `ae4eed4`. Priced at
-  **41861 games / 18.4 h** worst case at the midpoint and 25591 / 11.2 h on a
-  bound (DEC-143), against a 40000-game cap -- so **no verdict at the cap is a
-  live outcome and it is pre-registered: recorded as zero and kept.** Watcher
-  armed through `Monitor` with all four exits and a 37 h ceiling. The step
-  completes when the verdict lands; nothing is committed for it before then,
-  because the run measures the working tree.
+  was a **discovery** the accepts did not name. **The SPRT ran** from
+  `adocs/data/S207_sprt.sh`, launched detached 01:24, out
+  `/tmp/chesso_sprt_nonreg_20260911_012459`, log `.tuning/sprt_s207.log`, and
+  it was **priced at 41861 games / 18.4 h worst case at the midpoint and 25591
+  / 11.2 h on a bound (DEC-143) against a 40000-game cap**. It took 10258 games
+  in 4 h 26 m 56 s, so the pre-registered third outcome -- no verdict at the
+  cap, recorded as zero and kept -- never came near. The watcher fired on the
+  `SPRT-RUN-DONE` marker; the verdict is in the bullet above.
 
   **Done, S185**: every figure the plan and thirteen pending files argue from
   now carries its source or the word unverified where it sits. The Ethereal
@@ -141,12 +165,12 @@ Updated: 2026-09-11, by hand.
   arithmetics, opposite directions, 8 to 58 Elo apart. Re-derived when S024 and
   S109 land -- 46 % of the raw sum between them. Documents only.
 
-  **Next**, without waiting for the owner (DEC-172): the document lane behind
-  S207 is now empty -- S185, S181, S182 and S183 are all done -- so S207 is
-  completed and committed when the verdict lands, then S208 and S209 in the
-  morning, node-identical and owning no run, then S024's first verdict as the
-  next night's run. **The one thing waiting on the owner is S183's result**,
-  which is a DEC-071 question and not an agent's ruling.
+  **Next**: S208 and S209, Open entries 3 and 4, node-identical and owning no
+  run -- the load-boundary crash and the `setoption` protocol defects, both
+  reachable on the shipping UCI surface. Then S024's first verdict as the next
+  night's run, which is also one of the two inputs S183's arithmetic is
+  re-derived on. **The one thing waiting on the owner is S183's result**, which
+  is a DEC-071 question and not an agent's ruling.
 
 - **The 2026-09-10 audit is digested and the plan is re-sorted for the 3000
   mark, 2026-09-11 (DEC-170 to DEC-175).** Thirty-seven findings, five high:

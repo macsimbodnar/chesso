@@ -1857,7 +1857,8 @@ printf 'bench\nquit\n' | chesso      # the same number over stdin
 chesso bench 9                        # a shallower run; NOT the signature
 ```
 
-**At `S189`, on the workstation: `24880255`. At `S203`: `26851183`.** Quote it
+**At `S189`, on the workstation: `24880255`. At `S203`: `26851183`. At `S207`:
+`26491479`.** Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which
@@ -2282,14 +2283,21 @@ and is re-derived at every verdict-landing commit (DEC-136).
 from it, never from the wall clock of a previous run.
 
 **The ledger's realized cost is lower than the midpoint column and that is not
-a contradiction.** Eight verdicts, mean **4 h 52 m**, median **5 h 53 m**,
-2337.9 games an hour across 91108 games — and five of the eight hit a bound
+a contradiction.** Nine verdicts, mean **4 h 49 m**, median **5 h 27 m**,
+2334.6 games an hour across 101366 games — and five of the nine hit a bound
 rather than sitting at the midpoint, which is why the mean lands at about
-15660 games. Split by where the truth sat: the three fast runs mean **1 h 49 m**
-(S149, S107, S093 v1) and the five slow ones **6 h 42 m** (S108, S148,
+15600 games. Split by where the truth sat: the four fast runs mean **2 h 28 m**
+(S149, S107, S093 v1, S207) and the five slow ones **6 h 42 m** (S108, S148,
 S093 v2, S130, S165). **A step that budgets on the mean and gets the midpoint
 waits three times as long**, which is the whole reason the worst case goes in
 the script before the first game.
+
+**And "outside the interval" is not one price.** S207 landed H1 at
+**+4.47 nElo**, outside `{-5, 0}` but close to the near bound, and took
+**10258 games**; the three earlier fast runs were far outside and took 2522 to
+6412. 10258 is still under half the 25591 the pair costs with the truth *on* a
+bound, which is the case S207 nearly was. Read the two formula columns as the
+ends of a curve and not as two outcomes.
 
 ### What the run prints when it ends
 

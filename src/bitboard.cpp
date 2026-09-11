@@ -1409,7 +1409,9 @@ bool is_insufficient_material(const board_t* board)
 }
 
 
-bool is_position_repeated(const history_t* history, const board_t* board)
+repetition_kind_t classify_repetition(const history_t* history,
+                                      const board_t* board,
+                                      size_t root_history_size)
 {
   assert(history != nullptr);
   assert(board != nullptr);
@@ -1427,13 +1429,38 @@ bool is_position_repeated(const history_t* history, const board_t* board)
                            ? board->halfmove_clock
                            : history->size;
 
+  bool seen_one = false;
+
   for (size_t back = 2; back <= limit; back += 2) {
-    if (history->entries[history->size - back].hash == board->hash) {
-      return true;
-    }
+    const size_t index = history->size - back;
+
+    if (history->entries[index].hash != board->hash) { continue; }
+
+    // Strictly above the root's own entry, so this occurrence was reached
+    // inside the tree. The side that repeated there can repeat again and the
+    // horizon hides the third occurrence, so it is a draw at the first
+    // recurrence. The walk runs backwards, so this is the nearest match and no
+    // later one can be closer to the leaf.
+    if (index > root_history_size) { return repetition_kind_t::DRAW; }
+
+    // A second match is a third occurrence of the position on the board, which
+    // FIDE 9.2 lets either player claim wherever the occurrences lie.
+    if (seen_one) { return repetition_kind_t::DRAW; }
+
+    seen_one = true;
   }
 
-  return false;
+  return seen_one ? repetition_kind_t::ONCE_PRE_ROOT : repetition_kind_t::NONE;
+}
+
+
+bool is_position_repeated(const history_t* history, const board_t* board)
+{
+  // No entry is above history->size, so every match reads as pre-root and the
+  // walk stops at the first one or at the second: a two-fold anywhere, which
+  // is the contract this function has always had.
+  return classify_repetition(history, board, history->size) !=
+         repetition_kind_t::NONE;
 }
 
 

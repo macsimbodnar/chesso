@@ -61,3 +61,21 @@ m("M28_see_ge_ep_victim", B, "see",
   ('    occupancy ^= BB_1 << victim;\n    gain = see_value[0];',
    '    occupancy ^= BB_1 << victim;\n    gain = 0;'),
   origin="2026-09-04_test_review")
+
+m("M35_repetition_root_entry_counts", B, "rules",
+  "the root's own occurrence scored as an in-tree repetition",
+  ('if (index > root_history_size) { return repetition_kind_t::DRAW; }',
+   'if (index >= root_history_size) { return repetition_kind_t::DRAW; }'),
+  origin="S207")
+
+# The `(void)` orphans root_history_size, which Release builds with
+# -Werror=unused-parameter: without it the mutant does not compile, which is a
+# fact about the mutant and not about the suite.
+m("M36_repetition_ignores_the_root", B, "rules",
+  'any earlier occurrence scored as a draw, the pre-S207 rule',
+  ('    if (index > root_history_size) { return repetition_kind_t::DRAW; }\n\n'
+   '    // A second match is a third occurrence of the position on the board, which\n'
+   '    // FIDE 9.2 lets either player claim wherever the occurrences lie.\n'
+   '    if (seen_one) { return repetition_kind_t::DRAW; }',
+   '    (void) root_history_size;\n    return repetition_kind_t::DRAW;'),
+  origin="S207")

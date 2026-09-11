@@ -627,7 +627,16 @@ static int negamax_at(int alpha0,
   // does not carry the path. Both tests therefore have to run before the
   // transposition table is allowed to answer for this position.
   if (ply > 0) {
-    if (is_position_repeated(&game->history, &game->board)) {
+    // Only a repetition this search itself walked into, or a third occurrence
+    // of the position wherever the earlier two lie. A single occurrence from
+    // the game before the root is not a draw: the side to move at the root
+    // gets to choose again, and the opponent cannot force the third occurrence
+    // alone. Scoring that one as a draw published `cp 0` for positions the
+    // engine was losing by several pawns and made it play for them
+    // (2026-09-10_adversarial-F08, S207, DEC-173).
+    if (classify_repetition(&game->history, &game->board,
+                            state->root_history_size) ==
+        repetition_kind_t::DRAW) {
       return DRAW_SCORE;
     }
 
@@ -1535,6 +1544,13 @@ search_t search(int depth,
   search_t search_result = {};
 
   state->aborted = false;
+
+  // The boundary between the game and this search's tree, fixed here because
+  // this is the only way into ply 0: every entry the history holds now was
+  // played before the root, and everything the search pushes lands above it.
+  // Re-set on every call, so an aspiration re-search and the next iteration of
+  // iterative deepening each get the same root. S207.
+  state->root_history_size = game->history.size;
 
   int score = negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true);
 

@@ -128,6 +128,26 @@ move_t algebraic_to_move(std::string notation, game_t* game);
 bool is_pv_legal(game_t* game, const pv_t* pv);
 
 // Utils that must run fast
+
+// How the position on the board recurs in the history behind it, relative to
+// the search that is looking at it. `root_history_size` is history_t::size at
+// the moment the search began -- search_state_t::root_history_size -- so the
+// entry at that index is the root position and an entry above it was pushed by
+// the search.
+enum class repetition_kind_t : uint8_t
+{
+  NONE,           // no earlier occurrence inside the halfmove window
+  ONCE_PRE_ROOT,  // exactly one, at or below the root: the game, not the tree
+  DRAW,           // one strictly inside the tree, or two occurrences anywhere
+};
+
+repetition_kind_t classify_repetition(const history_t* history,
+                                      const board_t* board,
+                                      size_t root_history_size);
+
+// True on a two-fold anywhere in the window: the game-level contract, which is
+// what draw adjudication in self-play wants. A search wants
+// classify_repetition() instead.
 bool is_position_repeated(const history_t* history, const board_t* board);
 
 // True when neither side can force mate with what is left on the board.

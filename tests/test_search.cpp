@@ -2582,7 +2582,13 @@ TEST_SUITE("search: transposition bounds and mate distance")
 
     // Ra1-a3-a1 around Ke8-d8-e8 puts the same position back on the board with
     // the same side to move, and nothing irreversible happened in between.
+    // Twice over since S207: one earlier occurrence lies before the root and
+    // is no longer a draw on its own, so the shuffle is repeated to make the
+    // final position a third occurrence. What the case measures -- that the
+    // draw is answered before the table gets to -- is unchanged, and so is the
+    // mutation that kills it. DEC-173.
     const std::vector<std::pair<index_t, index_t>> line = {
+        {a1, a3}, {e8, d8}, {a3, a1}, {d8, e8},
         {a1, a3}, {e8, d8}, {a3, a1}, {d8, e8}};
 
     for (const auto& [from, to] : line) {
@@ -3029,18 +3035,49 @@ TEST_SUITE("search: draws")
   // be seen through the moves played before the search started. The losing
   // side takes the draw over the loss, which is the only way the rule shows
   // up in a score.
+  //
+  // Re-stated by S207, not relaxed (DEC-173). The property asserted is
+  // unchanged -- a draw score beats a lost position, and the losing side
+  // steers into it -- but its precondition is now a position that has already
+  // occurred **twice** before the root, which is the draw FIDE 9.2 lets a
+  // player claim. It used to be a single pre-root occurrence, which the
+  // engine's own oracles say is no draw at all: python-chess on the position
+  // after one shuffle, `is_repetition(3) False`,
+  // `can_claim_threefold_repetition() False`, `outcome(claim_draw=True) None`.
+  // That input is now the red-first case "one occurrence before the root is
+  // not a draw" below. 2026-09-10_adversarial-F08.
   TEST_CASE_FIXTURE(search_fixture_t,
                     "the losing side takes an available repetition")
   {
     REQUIRE(load_FEN("7k/8/8/8/8/8/R7/K7 w - - 0 1", &game));
 
-    // Ra2-b2 Kh8-h7 Rb2-a2 leaves Black to move with Kh7-h8 recreating the
-    // position the game started from.
-    REQUIRE(play_move(&game, a2, b2));
-    REQUIRE(play_move(&game, h8, h7));
-    REQUIRE(play_move(&game, b2, a2));
+    // The shuffle twice over: Ra2-b2 Kh8-h7 Rb2-a2 Kh7-h8 Ra2-b2 Kh8-h7
+    // Rb2-a2 puts the starting position on the board a second time on the way
+    // through and leaves Black to move with Kh7-h8 reaching it a third time.
+    for (int pass = 0; pass < 2; ++pass) {
+      REQUIRE(play_move(&game, a2, b2));
+      REQUIRE(play_move(&game, h8, h7));
+      REQUIRE(play_move(&game, b2, a2));
+
+      if (pass == 0) { REQUIRE(play_move(&game, h7, h8)); }
+    }
 
     REQUIRE_EQ(game.board.active_color, BLACK);
+
+    // Preconditions of the re-stated case: seven reversible plies behind the
+    // root, all of them inside the halfmove window, and the position Kh7-h8
+    // reaches already on the board twice. So what the search answers below is
+    // a third occurrence and not a two-fold.
+    REQUIRE_EQ(game.history.size, 7);
+    REQUIRE_EQ(game.board.halfmove_clock, 7);
+
+    {
+      game_t probe = game;
+      REQUIRE(play_move(&probe, h7, h8));
+      REQUIRE_EQ(classify_repetition(&probe.history, &probe.board,
+                                     probe.history.size - 1),
+                 repetition_kind_t::DRAW);
+    }
 
     // Black is a rook down and Black is to move, and evaluate() answers from
     // the side to move's point of view, so anything other than the repetition
@@ -3074,6 +3111,152 @@ TEST_SUITE("search: draws")
     REQUIRE_EQ(result.score, 0);
     REQUIRE_EQ(MOVE_FROM(result.best_move), h7);
     REQUIRE_EQ(MOVE_TO(result.best_move), h8);
+  }
+
+  // The F08 shape, and the reason the rule above is not the one this engine
+  // shipped until S207. The knight retreat recreates the position the game
+  // started from -- one earlier occurrence, before the root -- and the engine
+  // scored it a dead draw while a queen down.
+  //
+  // Red first, on the tree before S207: `score 0`, best move `f6g8`, against
+  // the `-9xx` every other move is worth. Reproduced outside the suite the way
+  // the audit did it, through python-chess's chess.engine at `go depth 10`:
+  // `score 0, nodes 4249, pv f6g8` with the history, `score -900,
+  // nodes 325965` without it, and the tree behind the false draw is a factor
+  // of 77 smaller. python-chess on the position after `f6g8`:
+  // `is_repetition(3) False`, `can_claim_threefold_repetition() False`;
+  // stockfish at depth 18 with the same board and history, `-687`.
+  // 2026-09-10_adversarial-F08.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "one occurrence before the root is not a draw")
+  {
+    // The start position less Black's queen: the three moves below are legal
+    // from it, and the side that can repeat is the losing one, which is the
+    // only way the rule shows up in a score.
+    REQUIRE(load_FEN("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                     &game));
+
+    // Ng1-f3 Ng8-f6 Nf3-g1 leaves Black to move with Nf6-g8 recreating the
+    // position the game started from: one occurrence, at history index 0,
+    // below the root's own entry at index 3.
+    REQUIRE(play_move(&game, g1, f3));
+    REQUIRE(play_move(&game, g8, f6));
+    REQUIRE(play_move(&game, f3, g1));
+
+    REQUIRE_EQ(game.board.active_color, BLACK);
+    REQUIRE_EQ(game.history.size, 3);
+
+    // Preconditions, asserted against zero rather than against a golden (S192):
+    // Black is a queen down with Black to move and evaluate() answers from the
+    // side to move, so the position is losing; and the repetition really is
+    // available, so what the assertions below measure is how it is scored and
+    // not whether it exists.
+    REQUIRE_LT(evaluate(&game.board), 0);
+
+    {
+      game_t probe = game;
+      REQUIRE(play_move(&probe, f6, g8));
+      REQUIRE(is_position_repeated(&probe.history, &probe.board));
+    }
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const search_t result = search(5, &game, &state);
+
+    // The property: a single pre-root occurrence is not a draw. The bound is
+    // not a golden -- it separates the two answers, `0` before S207 and the
+    // material deficit after it, with the whole queen as margin.
+    REQUIRE_LT(result.score, -300);
+  }
+
+
+  // The boundary itself, on one board and one match, at the two adjacent
+  // values that can be given for the root: the published rule is that a
+  // position repeating once is a draw when that occurrence lies **strictly**
+  // after the root, and the root's own entry is not strictly after it. This is
+  // the control for the case above and it is what separates `>` from `>=`.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the root's own occurrence is the boundary")
+  {
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R3K3 w - - 0 1", &game));
+
+    // Ra1-a2 Ke8-d8 Ra2-a1 Kd8-e8 Ra1-a2 Ke8-d8 leaves the position after the
+    // first two moves back on the board: entries 0..5 hold the positions those
+    // six moves were played from, and the only one whose key matches the board
+    // is entry 2.
+    const std::vector<std::pair<index_t, index_t>> line = {
+        {a1, a2}, {e8, d8}, {a2, a1}, {d8, e8}, {a1, a2}, {e8, d8}};
+
+    for (const auto& [from, to] : line) {
+      REQUIRE(play_move(&game, from, to));
+    }
+
+    // Preconditions: the window is open over the whole history, and exactly
+    // one entry inside it matches -- so what the two readings below differ on
+    // is where that entry sits relative to the root and nothing else.
+    REQUIRE_EQ(game.history.size, 6);
+    REQUIRE_EQ(game.board.halfmove_clock, 6);
+
+    size_t matches = 0;
+    size_t match_index = 0;
+
+    for (size_t i = 0; i < game.history.size; ++i) {
+      if (game.history.entries[i].hash == game.board.hash) {
+        ++matches;
+        match_index = i;
+      }
+    }
+
+    REQUIRE_EQ(matches, 1);
+    REQUIRE_EQ(match_index, 2);
+
+    // A search whose root is entry 2 is looking at its own root position for
+    // the second time: one occurrence, at the root, not a draw.
+    REQUIRE_EQ(classify_repetition(&game.history, &game.board, 2),
+               repetition_kind_t::ONCE_PRE_ROOT);
+
+    // A search whose root is entry 1 walked through this position at ply 1 and
+    // is back at ply 5: one occurrence strictly inside the tree, a draw.
+    REQUIRE_EQ(classify_repetition(&game.history, &game.board, 1),
+               repetition_kind_t::DRAW);
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    // And the search answers on that class. Ply matches the boundary in each
+    // call -- history size less the root's index -- so each is the node the
+    // classification above describes.
+    search_state_t in_tree = {};
+    in_tree.tt = &tt;
+    in_tree.stop = &never_stop;
+    in_tree.root_history_size = 1;
+
+    REQUIRE_EQ(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 3, 5, &game,
+                       &in_tree, 0, false),
+               0);
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t at_root = {};
+    at_root.tt = &tt;
+    at_root.stop = &never_stop;
+    at_root.root_history_size = 2;
+
+    // White is a rook up with White to move and no draw to answer, so the
+    // score is not zero. Asserted against zero and not against a value: what
+    // the case is about is the class, and DRAW_SCORE is zero.
+    REQUIRE_GT(negamax(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 3, 4, &game,
+                       &at_root, 0, false),
+               0);
   }
 
   TEST_CASE_FIXTURE(search_fixture_t, "the fifty move rule is a draw")

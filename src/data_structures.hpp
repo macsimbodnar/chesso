@@ -525,6 +525,20 @@ struct search_state_t
   uint64_t explored_nodes;
   uint64_t node_limit = NODE_BUDGET_UNLIMITED;
 
+  // history_t::size at the moment search() was entered, which is the boundary
+  // between the game and this search's own tree: the entry at this index is
+  // the root position itself -- written when the search played its first move
+  // -- so a match above it was pushed by the search and a match at or below it
+  // is an occurrence from before or at the root. classify_repetition() wants
+  // it; the search scores a two-fold as a draw only inside the tree. S207.
+  //
+  // search() sets it unconditionally and is the only way into ply 0, so the
+  // default is seen only by a test driving negamax() directly. SIZE_MAX and
+  // not 0 on purpose: an unset boundary then reads the whole history as
+  // pre-root, which can only miss a draw, where 0 would score a two-fold from
+  // the game before the root as one -- the defect S207 removed.
+  size_t root_history_size = SIZE_MAX;
+
   // Attached by a test that needs to see one node's pruning and reduction
   // decisions. Null everywhere else, and written through but never read by the
   // search, so the tree is the same tree with one attached. S191.
