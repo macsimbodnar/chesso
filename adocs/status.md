@@ -7,6 +7,23 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S216 is done, 2026-09-12 02:05; S042 is next and starts now.** A Sonnet 5
+  subagent closed the Tier-1 gap in `adocs/data/S216_census_run.py` -- the
+  refusal guard keyed on the reason string's truthiness, now on the refusal
+  line, shown on a synthetic stub as `42 nodes best e2e4` exit 0 before and
+  `REFUSED` exit 1 after -- ran the promised verification over S159's original
+  positions at HEAD (exactly one `REFUSED` row, `promo-mess`, exit 1, ten rows
+  searched, 2.75 s) and the gate in both builds, green. `DEV_MANUAL.md` and
+  `MANUAL.md` name nothing this step changes. The census is not re-derived
+  (DEC-186). **Next: S042**, Open entry 1, by a fresh Sonnet 5 agent: the en
+  passant key only when a pawn can capture, in `make_move`, `load_FEN` and the
+  full hash; the red-first four-ply case (history A scores -313 on HEAD, must
+  read the draw); the incremental-equals-recomputed-hash case; `Bench:`; Debug
+  self-play four rounds; then its `--nonreg` SPRT as the night run on
+  `noob_3moves.epd`, pre-registered with 2110 games an hour, the 0.2905 band and
+  the defect's own name. The fast check over S219's close commit `6272149` is
+  still out; its findings, if any, land as a follow-up. **Compaction point.**
+
 - **S219 is done, the harness plays `noob_3moves.epd`, and the A/A that
   followed disagreed with the comparison until the two were read on one
   footing -- DEC-189 and DEC-190, 2026-09-12 01:45.** The night's comparison

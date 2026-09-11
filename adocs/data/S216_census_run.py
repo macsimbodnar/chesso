@@ -49,6 +49,11 @@ waited on until `bestmove` before the next command is written -- writing `quit`
 behind an un-awaited `go` kills the search before it looks at a node, which is
 TOOLCHAIN.md's "the one way to ask it that lies" and it silently reported 0
 killer stores over the whole set when S159 first hit it.
+
+**Guard fix, 2026-09-12.** A row is now flagged refused by a flag set when the
+`REFUSAL` line itself is seen, not by the truthiness of the trailing reason
+text -- an empty reason used to read as not-refused. The depth-2 demonstration
+recorded in S216's step file was produced at `f302b8c`, before this fix.
 """
 import subprocess, sys, threading
 
@@ -101,11 +106,12 @@ for depth, name, fen in rows:
     # reply of its own to be read against; without it the only evidence arrives
     # interleaved with the search of the board the refusal left standing.
     send("isready")
-    refusal = ""
+    refusal, was_refused = "", False
     for l in wait_for("readyok"):
         if l.startswith(REFUSAL):
+            was_refused = True
             refusal = l.rstrip("\n")[len(REFUSAL):].strip()
-    if refusal:
+    if was_refused:
         refused_rows += 1
         per_pos.append((name, depth, None, "-"))
         print("  %-14s d%-3d %12s  REFUSED  %s" % (name, depth, "-", refusal))

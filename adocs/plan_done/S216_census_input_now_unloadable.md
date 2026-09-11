@@ -7,8 +7,8 @@ decisions:  DEC-142, DEC-160, DEC-177
 closes:
 blocks:
 paused_by:
-author:     an Opus 5 subagent briefed by the coordinator (DEC-185); started 2026-09-11 evening while S219's match holds the machine, so no engine run beyond a sub-minute red-first demonstration until it ends
-done:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185) for the reader and the row, 2026-09-11 evening while S219's match held the machine; a Sonnet 5 subagent (DEC-188) for the guard fix, the verification run and the gate, 2026-09-12; stamped by the coordinator
+done:       2026-09-12 02:05. `adocs/data/S216_census_run.py` fails a refused `position fen` row loudly and exits 1, observed red first against S159's reader on HEAD at depth 2 (the refused row inherited the start position's 452 nodes and `d2d4`, illegal on its own board by python-chess) and byte-identical to S159's on legal input; `adocs/data/S216_census_positions.txt` replaces the pre-DEC-177 `promo-mess` row by the legal `KILLER_POS` as `promo-mess-s208`, DEC-186; the recorded census (`S159_census.md`, pinned `git archive 99000c1`) is deliberately not re-derived -- it was taken on a board that loaded, and DEC-186 carries the arithmetic showing one row cannot move DEC-160's reading. Tier-1 finding closed: the refusal guard keys on the refusal line, not the reason's truthiness, shown before (`42 nodes best e2e4`, exit 0) and after (`REFUSED`, exit 1) on a synthetic stub. Verification run over `S159_census_positions.txt` at HEAD: exactly one `REFUSED` row, exit 1, ten rows searched, 18021401 nodes, 2.75 s. Gate green in both builds (33/33, `clang-format.sh --check` silent). `DEV_MANUAL.md` and `MANUAL.md` checked, nothing names this reader; `README.md` human-owned, untouched. Reader and rows by an Opus 5 subagent, completion by a Sonnet 5 subagent (DEC-185, DEC-188)
 
 ## Why this exists
 
@@ -157,3 +157,62 @@ fifteen positions" above counts the line number, 16, in a file with five header
 lines. The refusal is therefore one row of eleven. And S159's six evidence
 files have no row in `adocs/data/README.md` -- the index gained a row for the
 new reader only.
+
+## Completion, 2026-09-12
+
+**The guard fix.** The Tier-1 fast check over `f302b8c` found that the refusal
+check tested `refusal` -- the reason text after the `REFUSAL` prefix -- for
+truthiness, so a refusal whose line carried no reason (and no FEN) would read
+as falsy and the row would fall through to `go depth N` unrefused: the same
+silent-inheritance class this file exists to stop, unreachable at HEAD because
+every refusal here names a reason, but latent. Fixed by a `was_refused` flag
+set inside the `readyok` loop when the `REFUSAL` line is seen, checked instead
+of `refusal`'s content -- two lines changed, nothing else. Demonstrated with a
+synthetic one-row stub engine (scratchpad only, not committed) that answers
+`isready` after `position fen` with exactly `info string refused [position
+fen]`, no reason, no FEN. Before the fix: `stub-row d1 42 nodes best e2e4`,
+exit 0 -- the row was silently searched and reported as clean. After the fix:
+`stub-row d1 - REFUSED`, exit 1. A header comment was added noting the fix and
+that the Findings' depth-2 demonstration above was produced at `f302b8c`,
+before it, so that output stays attributable to the pre-fix reader.
+
+**The verification run.** `python3 adocs/data/S216_census_run.py
+build/src/chesso adocs/data/S159_census_positions.txt <out>`, HEAD, Release,
+this machine (i7-8700K, the one `S159_census.md` was taken on). All eleven
+rows attempted; exactly one `REFUSED` -- `promo-mess`, d12, the pre-DEC-177
+constant, reason "more than 16 pieces of one colour (17 white, 14 black)"; the
+other ten searched at their own depth: startpos d13 3292523 nodes (e2e4),
+kiwipete d13 6638840 (e2a6), midgame d13 926398 (c3d5), tactical d13 648113
+(d7c8q), cmk d13 2759923 (d8e7), lasker d18 12355 (a1b2), locked-pawns d22
+39783 (f2f3), perpetual d16 2695927 (c3g3), 9bishops d14 283371 (g1h2),
+underpromo d14 724168 (h7g8q). Total 18021401 nodes over the ten loaded rows.
+Exit 1, matching `REFUSED_ROWS 1`. Wall time 2.75 s real (`time`), one core --
+well inside the 15-minute budget, so no re-derivation question is raised by
+cost. This is the optional verification DEC-186's Consequences promised, not a
+re-derivation of the recorded census: `S159_census.md`'s numbers stay pinned to
+`git archive 99000c1` plus the instrumentation patch, untouched.
+
+**The gate.** Both builds, per `AGENTS.md`'s TESTS rule, `CLANG_FORMAT_MAJOR=22`
+set (DEC-146, this machine only): `cmake --build build -j8` clean, `ctest
+--test-dir build -L fast` 33/33 passed (82.70 s), `cmake --build build-tune -j8`
+clean, `ctest --test-dir build-tune -L fast` 33/33 passed (83.48 s),
+`./clang-format.sh --check` silent, exit 0. Combined chain exit 0. `src/` and
+`tests/` are untouched by this step, as expected, so a red gate would have been
+reported unfixed; it was green.
+
+**Documents check.** `grep -n
+"S159_census_run\|S216_census_run\|S159_census_positions\|S216_census_positions"
+DEV_MANUAL.md MANUAL.md` matches nothing in either file (exit 1). The generic
+word "census" appears several times in `DEV_MANUAL.md` -- S190's walk census,
+S155's motif census, a mate-count census (`mate_trace`), and the PGN/match
+census `rating.sh` and the fastchess wrapper read -- none of them this reader
+or its positions file, checked by reading each hit's surrounding paragraph.
+No change needed to either document: the reader's only documented row is
+`adocs/data/README.md`'s, written under DEC-186, and this step changes nothing
+in the documented contract -- same inputs, same outputs, the same
+byte-identical-on-legal-input guarantee, the same `REFUSED`/exit-1 shape on a
+refused row. It closes a case that was never reachable and never documented.
+
+**Files touched.** `adocs/data/S216_census_run.py` (the guard fix and the
+header note) and this step file (this section). `git status --short` shows
+exactly those two paths modified and no new untracked file in the repository.
