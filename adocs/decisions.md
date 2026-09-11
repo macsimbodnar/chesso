@@ -10435,3 +10435,73 @@ Consequences: `S216_census_run.py` is the reader from here on; S159's reader
               minutes, and is recorded in S216's stamp. S159's six evidence
               files have no `adocs/data/README.md` row (the subagent's
               finding); S216 adds them.
+
+
+## DEC-187  2026-09-11  The en passant key is a correctness defect, not an efficiency item: S042 is re-scoped as a bug fix and moves to the top of the Open list under the BUGS rule
+Tags:         bugs, repetition, zobrist, en-passant, s042, s207, dec-171, dec-173, audit
+Context:      S219's first match printed 236 fastchess warnings in 1500 games,
+              "PV continues after threefold repetition", from both sides of a
+              self-match. A subagent replayed every case with python-chess:
+              **236 of 236 are genuine threefolds by the rules of chess** at
+              the flagged node, the earlier occurrences before the root (184)
+              or at the root (52), never inside the line -- so DEC-173's
+              convention is not the cause. The engine reproduces cold, and a
+              four-ply case isolates it: the same position with the same
+              history reached in two ways scores **-313** one way and **0**
+              the other, and python-chess confirms the threefold. **Cause:**
+              `make_move` sets the en passant square and xors `ep_randoms`
+              on every double pawn push whether or not an enemy pawn can
+              capture, so the position immediately after the push hashes
+              differently from the identical position reached otherwise, and
+              `classify_repetition`'s key compare skips that occurrence --
+              which, in every one of the 236, was the oldest of the three.
+              The compare itself is right; the key it compares is not. Of the
+              236, **52 publish a non-zero score for a drawn line**; the other
+              184 read 0 because the search meets a later repetition one ply
+              deeper, right by accident. Depths 2 to 27, so not a
+              first-iteration artefact.
+              The defect was known and mis-triaged: `2026-08-13_adversarial-F08`
+              wrote "Efficiency, not correctness ... repetition detection
+              cannot be hurt, because a position carrying an en passant
+              square always has halfmove_clock == 0 and the lookback is
+              bounded by that clock." The lookback is `back <= limit` and the
+              tainted entry sits at exactly `back == halfmove_clock`, the last
+              iteration -- the argument is off by one, and S042's own file
+              carried a section "Not a correctness bug" on it.
+Decision:     By the agent under the 2026-09-11 delegation. **(1) S042 is a
+              bug fix under DEC-171's first clause** -- reachable in ordinary
+              play, moving a reported score and line -- and **moves to Open
+              entry 1**, ahead of S024; it is the next step to start when the
+              machine frees. **(2) Re-scoped:** a minimized red-first case
+              from the reproduction (two histories, one position, the scores
+              must agree and be the draw) beside the perft and FEN checks its
+              accepts already had; the key moves in every place it is built --
+              `make_move`, `load_FEN`, the full-hash recomputation -- as the
+              2026-09-04 plan review's F08 said; the tree changes, so the
+              commit carries `Bench:`, the Debug binary self-plays four rounds
+              (DEC-141), and one `--nonreg` SPRT decides it, priced per
+              DEC-143 in its pre-registration. **(3) S219's comparison
+              stands**: the same binary carries the defect on both sides of
+              every match and the reading is relative; its A/A runs before
+              S042's SPRT so the SPRT plays on the calibrated book. S216's
+              completion, documents and one instrument, is unaffected.
+              **(4)** The F08 triage is corrected here and in S042's file; the
+              2026-08-13 report is evidence and keeps its text, its `Status:`
+              already `planned`.
+Rejected:     **Leave S042 in block 4 as efficiency** -- the rule is that a
+              known defect in the tree contaminates every measurement taken
+              after it, and this one moves published scores in one game of
+              six. **Fix it inside S207's repetition work retroactively** --
+              S207 is history in `plan_done/`. **Abort the S219 run** -- it
+              measures books with one binary on both sides; the defect
+              cancels in the comparison and the night is not lost.
+Consequences: `adocs/plan.md`'s Open list is re-sorted by one move; S042's
+              file loses its "Not a correctness bug" section for the finding
+              and its accepts gains the red-first case, the bench line, the
+              Debug self-play and the SPRT. Every pre-registration written
+              while S042 is open names it, per DEC-171's last sentence. fastchess's
+              "PV continues after threefold repetition" count is now an
+              instrument for this class: S042's stamp records it before and
+              after over the same games (the S219 PGNs replayed, or a fresh
+              1500-game match), and a count that does not fall to zero is a
+              second cause.

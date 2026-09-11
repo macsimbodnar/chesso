@@ -1,9 +1,9 @@
 id:         S042
 goal:       set the en passant square only when an enemy pawn can take it, so transposing move orders share a hash
-accepts:    perft counts are identical over the existing suite; two move orders reaching the same position produce the same hash and the same FEN; generate_FEN's fourth field agrees with Stockfish over a corpus sample; an SPRT against the preceding commit returns a verdict
+accepts:    perft counts are identical over the existing suite; two move orders reaching the same position produce the same hash and the same FEN; generate_FEN's fourth field agrees with Stockfish over a corpus sample; **re-scoped by DEC-187 as a bug fix**: a red-first case pins the reproduction in the section below -- history A scores the draw at depth 4 after the fix, observed red on HEAD at -313 -- and a second case asserts the incremental key equals the recomputed full hash after a double push with and without a capturing pawn; the key moves in every place it is built, `make_move`, `load_FEN` and the full-hash recomputation; fastchess's "PV continues after threefold repetition" count over a 1500-game self-match at the S198 regime is recorded before (236 in S219's pass 1) and after, and falls to zero or the residual is named as a second cause; the tree changes, so the commit carries `Bench:` and the Debug binary self-plays four rounds at 4+0.04 with `Assertion` grepped (DEC-141); one `--nonreg` SPRT against the parent decides it, pre-registered per DEC-143 with its worst-case games and naming this defect per DEC-171; `MANUAL.md` and `adocs/specs.md` state the en passant convention where they describe the FEN or the repetition rule
 touches:    src/bitboard.cpp make_move_impl, load_FEN, set_en_passant, compute_full_hash, tests/test_audit_fen_semantics.cpp
 excludes:   any other zobrist change, including the single side-to-move key that was S031 -- retired, no successor step, `adocs/plan.md` "under 1 % by its own file, below every instrument here"
-decisions:
+decisions:  DEC-187, DEC-171, DEC-173, DEC-141, DEC-143
 closes:     2026-08-13_adversarial-F08
 blocks:
 paused_by:
@@ -28,21 +28,58 @@ hashes equal:    no
 en passant square and only 392 of those have a capture available — so on 4.6 %
 of all positions the square is one no pawn can use.
 
-## Not a correctness bug
+## A correctness bug after all -- 2026-09-11, DEC-187
 
-Move generation is unaffected: the audit compared legal moves against Stockfish
-over 3000 positions and found zero disagreements. Repetition detection cannot be
-hurt either, because a position carrying an en passant square always has
-`halfmove_clock == 0` and `is_position_repeated`'s lookback is bounded by that
-clock.
+The section this replaces was headed "Not a correctness bug" and argued that
+repetition detection could not be hurt because a position carrying an en
+passant square has `halfmove_clock == 0` and the lookback is bounded by that
+clock. The lookback is `back <= limit` and the tainted entry sits at exactly
+`back == halfmove_clock`, the last iteration: the argument was off by one, and
+the 2026-08-13 audit's F08 triage ("Efficiency, not correctness") inherited it.
 
-What is lost is transpositions. 4.6 % of quiet positions get a key that the same
-position reached by another move order cannot match, so the transposition table
-misses on entries it holds.
+**What S219's first match showed, 2026-09-11.** 236 fastchess warnings "PV
+continues after threefold repetition" in 1500 self-play games. A subagent
+replayed every one with python-chess: **236 of 236 are genuine threefolds**
+at the flagged node, the earlier occurrences before the root (184) or at the
+root (52), never inside the line. In every case the oldest occurrence is the
+position immediately after a double pawn push. `src/bitboard.cpp` `make_move` sets
+`en_passant` and xors `ep_randoms` on every double push with no test for a
+capturing pawn, so that occurrence hashes differently from the identical
+position reached otherwise, and `src/bitboard.cpp` `classify_repetition`'s key compare
+skips it. The DEC-173 logic is right; the key it compares is not. **52 of the
+236 publish a non-zero score for a drawn line**; 184 still read 0 because the
+search meets a later repetition one ply deeper -- right by accident. Depths 2
+to 27.
 
-The emitted FENs also disagree with the convention Stockfish and most tooling
-use, which is how this became visible — `generate_FEN` against Stockfish's `d`
-output differs in the fourth field on every double push.
+**Minimal reproduction, depth 4, White a rook down.** Same position, same
+FIDE history (python-chess `can_claim_threefold_repetition()` is True after
+the last move in both):
+
+```
+A  position fen r5k1/8/8/8/8/8/6PP/6K1 w - - 0 1 moves g2g4 a8b8 g1f1 b8a8 f1g1 a8b8 g1f1 b8a8
+   go depth 4 -> score -313  pv g4g5 a8a2 h2h4 g8g7
+B  position fen r5k1/8/8/8/6P1/8/7P/6K1 b - - 0 1 moves a8b8 g1f1 b8a8 f1g1 a8b8 g1f1 b8a8
+   go depth 6 -> score 0     pv f1g1
+```
+
+A alone is the red-first case: after the fix it scores the draw like B.
+
+**What the fix must cover.** The key changes in every place it is built --
+`make_move`, `load_FEN` and the full-hash recomputation -- as
+`2026-09-04_plan_review-F08` already said, and one test asserts the
+incremental key equals the recomputed one after a double push with and
+without a capturing pawn. `set_en_passant` in `touches:` has zero callers and
+S213 deletes it; whichever step lands first, the other adjusts. The tree
+changes, so the commit carries `Bench:`, the Debug binary self-plays four
+rounds (DEC-141), and one `--nonreg` SPRT decides the step, pre-registered
+per DEC-143 and naming this defect per DEC-171. fastchess's warning count is
+the instrument: recorded before and after over the same games, it falls to
+zero or the residual is a second cause.
+
+What the old section said about transpositions and FENs still holds and is
+now the smaller half: 4.6 % of quiet positions get a key the same position
+reached by another move order cannot match, and `generate_FEN`'s fourth field
+disagrees with Stockfish's convention on every double push.
 
 ## Shape
 

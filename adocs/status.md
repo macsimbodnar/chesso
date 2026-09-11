@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S219's first match found an engine bug, and S042 is now Open entry 1,
+  DEC-187 (2026-09-11 night).** 236 fastchess warnings "PV continues after
+  threefold repetition" in 1500 games; a subagent replayed all 236 with
+  python-chess and every one is a real threefold. Cause: `make_move` xors the
+  en passant key on every double push, capturable or not, so the oldest
+  occurrence of the repeated position hashes differently and
+  `classify_repetition`'s compare skips it. **52 of the 236 publish a non-zero
+  score for a drawn line**; a four-ply A/B reproduction reads -313 against 0
+  for the same position and history. The 2026-08-13 F08 triage ("efficiency,
+  not correctness") was off by one in its lookback argument. **S042 is
+  re-scoped as the bug fix and starts first when the machine frees**; the
+  comparison stands (same binary both sides) and its A/A runs before S042's
+  `--nonreg` SPRT. Morning order: S219 reading -> pins and switch -> A/A;
+  S042 implemented by a fresh agent meanwhile -> gate, Debug self-play ->
+  S042's SPRT as the next night run; S216's gate and stamp in between.
+
 - **S216 is landed and waits only for the gate, 2026-09-11 night.** Two Opus 5
   subagents (DEC-185) did the work while S219's match holds the machine:
   `adocs/data/S216_census_run.py` refuses a refused `position fen` row and
