@@ -252,6 +252,70 @@ TEST_SUITE("search parameters")
   }
 
 
+  // S209. The protocol's case rule is about the name, and a parameter's name is
+  // an option name like any other: `UCI.txt` says the name "should not be case
+  // sensitive", so the fold command_setoption applies to Hash and OwnBook
+  // reaches this chain too. Until S209 `rfpmargin` came back as an unknown
+  // option, which is a refusal the tuner driving this build had no way to
+  // distinguish from a misspelling.
+  TEST_CASE("a mis-cased parameter name is still the parameter")
+  {
+    uci_init();
+
+    const int index = index_of("RfpMargin");
+    REQUIRE(index >= 0);
+
+    const size_t i = static_cast<size_t>(index);
+
+    REQUIRE(search_param_value(i) == search_param_info(i).default_value);
+
+    // Both directions from the canonical spelling, because the fold has to be
+    // applied to the name in the table as well as the one that arrived.
+    for (const std::string& name :
+         {std::string("rfpmargin"), std::string("RFPMARGIN"),
+          std::string("RfPmArGiN")}) {
+      std::vector<std::string> printed;
+      {
+        stdout_capture_t capture;
+        uci_process_line("setoption name " + name + " value 55");
+        printed = capture.lines();
+      }
+
+      CHECK_MESSAGE(search_param_value(i) == 55,
+                    ("[" + name + "] did not reach the parameter"));
+
+      // A legal value prints nothing, so an honoured name is silent and the
+      // unknown-option line is gone with it.
+      CHECK_MESSAGE(
+          printed.empty(),
+          ("[" + name + "] was answered [" +
+           (printed.empty() ? std::string() : printed.front()) + "]"));
+
+      uci_process_line("setoption name RfpMargin value " +
+                       std::to_string(search_param_info(i).default_value));
+
+      REQUIRE(search_param_value(i) == search_param_info(i).default_value);
+    }
+
+    // The other half, which the fold must not swallow: a name that is not a
+    // parameter in any casing is still refused.
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name RfpMargn value 55");
+
+      const std::vector<std::string> printed = capture.lines();
+
+      REQUIRE(printed.size() == 1);
+      CHECK(printed.front() ==
+            "info string refused [RfpMargn], unknown option");
+    }
+
+    CHECK(search_param_value(i) == search_param_info(i).default_value);
+
+    uci_shutdown();
+  }
+
+
   TEST_CASE("every parameter in the table is settable over UCI")
   {
     uci_init();

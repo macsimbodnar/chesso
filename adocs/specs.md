@@ -440,13 +440,40 @@ an option the build does not have. A legal value prints nothing, and the release
 build prints nothing in any of the three cases. `OwnBook`, `Book File`,
 `Best Book Move`, `Hash` and `Threads` are outside this: their handlers are the
 release build's, so a bad value for one of them stays log-only in both builds --
-except a book `Book File` cannot load, which is reported on the UCI channel in
-both builds, S172. Before S137 all three were silent -- the
+except two, both reported on the UCI channel in **both** builds because silence
+there reads as success: a book `Book File` cannot load (S172), and a `Hash`
+value that is not an integer in full, `info string refused [Hash] <value>, not
+an integer`, or a well-formed integer no `long long` can hold, `..., out of
+range` (S209). Before S137 all three were silent -- the
 refusal went to a macro that compiles to nothing under `NDEBUG` and `build-tune`
 is a Release build -- so a tuner could spend a night playing games against a
 compiled default and read it as success. There is still no readback: `uci`
 re-prints each parameter's compiled default, not its live value.
 (2026-08-20, S137, DEC-093.)
+
+**An option name is compared without regard to case, and so is a check option's
+value.** The protocol requires it -- `UCI.txt`: the name and value of the option
+"should not be case sensitive" -- and until S209 `command_setoption` compared
+with `==`, so `hash` and `ownbook` were answered `unknown option` in the tune
+build and ignored in silence in the release one, and `True` was ignored for a
+check option. Every advertised name folds, the search parameters included, so
+`rfpmargin` is `RfpMargin` and `unknown option` now means a name that is not an
+option in any casing; the setter is still called with the canonical spelling
+from `src/search_params.hpp` `search_param_info`. Two values are **not** folded
+and are taken as sent: `Book File`, which is a path, and a spin value, which is
+a number. `tests/test_uci_surface.cpp` "no two advertised option names collide
+when folded" is the precondition the fold needs -- two names differing only in
+case would be one option to a folded comparison -- and it holds over the 33 the
+tune build advertises. (2026-09-11, S209, 2026-09-10_adversarial-F11 to F13.)
+
+**Every path that mutates the board or the transposition table stops and joins
+the search first**, the rule `src/chesso.cpp` `stop_and_join_search` states at
+its definition. `clean-tt` was the one path that did not, until S209: a TSan
+build driving `go infinite` and 40 `clean-tt` reported races between
+`src/transposition_table.cpp` `tt_get_entry` and the `memset` where the same
+harness with every other mid-search command reported none, and `memset` clears
+low to high, so a probe could match a key not yet cleared and read a zeroed
+score under an un-zeroed type.
 
 **The binary that ships is not the binary that gets measured here, and both are
 new since 2026-08-19.** `-DCHESSO_ARCH=` has four values: **`bmi2`

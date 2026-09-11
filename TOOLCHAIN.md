@@ -272,6 +272,47 @@ The binary paths above are this machine's. `.moltke.local.md` is where they are
 recorded per machine; the tools in the table take the engine as an argument and
 hardcode nothing.
 
+## ThreadSanitizer, and the zero it prints when it never started
+
+`CMakeLists.txt`'s `SANITIZER` option is ASan plus UBSan, and `build-sanitize`
+is that tree. **TSan cannot join it**: ASan and TSan cannot be linked into one
+binary, so a thread-race check is a fourth build and not a flag on the third,
+and it is configured by hand:
+
+```bash
+cmake -S . -B build-tsan -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+      -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer -g" \
+      -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+cmake --build build-tsan -j8 --target chesso
+```
+
+**The trap, and it reads as a clean result.** On this kernel TSan's shadow
+mapping collides with ASLR at random, and when it does the process dies before
+`main` with one line on stderr —
+
+```
+FATAL: ThreadSanitizer: unexpected memory mapping 0x…-0x…
+```
+
+— and a harness that counts `WARNING: ThreadSanitizer` lines reports **0
+reports**, which is what a fixed engine also reports. S209 met this on its
+first run: 0 on a tree whose defect was still in it, then 38, 41 and 36 on the
+next three runs of the same binary. Run it under `setarch -R`, which disables
+randomization for that process, and grep the log for `FATAL:` before believing
+any count:
+
+```bash
+setarch -R ./build-tsan/src/chesso < commands.txt 2> tsan.log
+grep -q "FATAL: ThreadSanitizer" tsan.log && echo "the count below means nothing"
+grep -c "WARNING: ThreadSanitizer" tsan.log
+```
+
+A report count is a measurement like any other, so it needs its A/B: the same
+build tree with one line changed, not two trees built differently. S209's race
+went 38/41/36 to 0/0 by adding `stop_and_join_search()` to
+`src/chesso.cpp` `command_clean_TT` in the tree that had just produced the
+reports. DEC-178.
+
 ## The rule the tools exist to serve
 
 Node counts first, timings second. A change under 3 % has not been shown to do

@@ -2,6 +2,7 @@
 #include <array>
 #include <atomic>
 #include <cassert>
+#include <cctype>
 #include <charconv>
 #include <chrono>
 #include <future>
@@ -218,6 +219,22 @@ std::string trim_whitespace(const std::string& str)
 
   // If the string is all whitespace, return an empty string
   return (start < end) ? std::string(start, end) : std::string();
+}
+
+
+// `UCI.txt`, the copy of the protocol this repository ships: "The name and
+// value of the option in <id> should not be case sensitive". Folded with an
+// unsigned char because std::tolower() on a negative char is undefined, and an
+// option name arrives from a GUI. S209.
+static std::string fold_case(const std::string& text)
+{
+  std::string folded = text;
+
+  std::transform(folded.begin(), folded.end(), folded.begin(), [](char c) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  });
+
+  return folded;
 }
 
 
@@ -1178,28 +1195,42 @@ bool command_setoption(std::queue<std::string>& args)
     }
   }
 
+  // The protocol's case rule, S209 and 2026-09-10_adversarial-F12. `==` was
+  // compared here, so `hash` and `ownbook` -- both of them legal UCI -- came
+  // back unknown and `True` was ignored for a check option, and the release
+  // build printed nothing about either: a harness that wrote `hash` measured
+  // the default and never learned, the failure class DEC-093 and S137 exist
+  // for.
+  //
+  // Folded once, before every comparison below, and `option_name` itself is
+  // left as it arrived so a refusal quotes back what was sent. A *value* is
+  // folded only where the option is a check: `Book File` is a path, a search
+  // parameter is a number, and neither of those is case-insensitive.
+  const std::string folded_name = fold_case(option_name);
+  const std::string folded_value = fold_case(option_value);
+
   // Handle specific options
-  if (option_name == "OwnBook" && option_value == "true") {
+  if (folded_name == "ownbook" && folded_value == "true") {
     opening_book_enabled = true;
     LOG_I << "OwnBook ON" << END_I;
   }
 
-  if (option_name == "OwnBook" && option_value == "false") {
+  if (folded_name == "ownbook" && folded_value == "false") {
     opening_book_enabled = false;
     LOG_I << "OwnBook OFF" << END_I;
   }
 
-  if (option_name == "Best Book Move" && option_value == "true") {
+  if (folded_name == "best book move" && folded_value == "true") {
     opening_book_best_move = true;
     LOG_I << "Best Book Move ON" << END_I;
   }
 
-  if (option_name == "Best Book Move" && option_value == "false") {
+  if (folded_name == "best book move" && folded_value == "false") {
     opening_book_best_move = false;
     LOG_I << "Best Book Move OFF" << END_I;
   }
 
-  if (option_name == "Book File") {
+  if (folded_name == "book file") {
     // Reloading under a live search would free the bytes that search is
     // probing, for the same reason resizing the hash would.
     stop_and_join_search();
@@ -1212,19 +1243,41 @@ bool command_setoption(std::queue<std::string>& args)
     still_in_opening = true;
   }
 
-  if (option_name == "Hash") {
-    try {
-      const long long megabytes = std::stoll(option_value);
+  if (folded_name == "hash") {
+    // The whole token has to be consumed, and the refusal has to be audible.
+    // std::stoll() was here and it stops at the first character it cannot use:
+    // `0x40` bought 1 MB (0, clamped to the minimum) and `64abc` bought 64,
+    // each of them silently, while the `abc` it did throw on was reported
+    // through LOG_W, which is `if (false)` under NDEBUG. DEC-088 pins the
+    // harness's hash deliberately and a typo that buys 1 MB measures an engine
+    // nobody configured. This is the from_chars form the search parameters
+    // below have used since S137, on the channel that is legal UCI in every
+    // build state. S209, 2026-09-10_adversarial-F13.
+    long long megabytes = 0;
+    const char* const last = option_value.data() + option_value.size();
+    const std::from_chars_result parsed =
+        std::from_chars(option_value.data(), last, megabytes);
 
+    if (parsed.ec == std::errc::result_out_of_range) {
+      // A well-formed integer that no long long can hold is out of range, not
+      // malformed, whichever end it ran off -- the distinction stoll()'s single
+      // catch could not make.
+      uci_reply("info string refused [Hash] " + option_value +
+                ", out of range");
+    } else if (parsed.ec != std::errc() || parsed.ptr != last) {
+      uci_reply("info string refused [Hash] " + option_value +
+                ", not an integer");
+    } else {
+      // A whole integer outside the range is still clamped rather than
+      // refused: what `Hash` clamps to is not what this changes.
+      //
       // Reallocating under a live search would free the table it is probing.
       stop_and_join_search();
       tt_resize(&tt, static_cast<size_t>(std::max<long long>(megabytes, 0)));
-    } catch (...) {
-      LOG_W << "Hash value is not a number: " << option_value << END_W;
     }
   }
 
-  if (option_name == "Threads" && option_value != "1") {
+  if (folded_name == "threads" && option_value != "1") {
     LOG_W << "Only one search thread is supported, ignoring Threads="
           << option_value << END_W;
   }
@@ -1243,7 +1296,9 @@ bool command_setoption(std::queue<std::string>& args)
   bool is_search_param = false;
 
   for (size_t i = 0; i < search_param_count(); ++i) {
-    if (option_name != search_param_info(i).name) { continue; }
+    // Folded on both sides: a parameter's name is an option name like any
+    // other, so `rfpmargin` is `RfpMargin` and not an unknown option. S209.
+    if (folded_name != fold_case(search_param_info(i).name)) { continue; }
 
     is_search_param = true;
 
@@ -1254,6 +1309,10 @@ bool command_setoption(std::queue<std::string>& args)
     // Changing a parameter under a live search would move the ground that
     // search is standing on, for the same reason resizing the hash would.
     stop_and_join_search();
+
+    // The canonical spelling from the table, never the folded one: the setter
+    // compares the name it is given against the same table.
+    const char* const canonical_name = param.name;
 
     // The whole token has to be consumed. std::stoi() was here and it stops at
     // the first character it cannot use without complaining, so `0x50` set 0,
@@ -1273,7 +1332,7 @@ bool command_setoption(std::queue<std::string>& args)
     } else if (parsed.ec != std::errc() || parsed.ptr != last) {
       uci_reply("info string refused [" + option_name + "] value " +
                 option_value + ", not an integer, range " + range);
-    } else if (!search_param_set(option_name.c_str(), value)) {
+    } else if (!search_param_set(canonical_name, value)) {
       // The raw token rather than the parsed value, so the line quotes back
       // exactly what was sent.
       uci_reply("info string refused [" + option_name + "] value " +
@@ -1288,9 +1347,9 @@ bool command_setoption(std::queue<std::string>& args)
   // an if-chain with nothing to enumerate -- tests/test_uci_surface.cpp drives
   // every name the `uci` reply advertises through here and fails if one of them
   // comes back unknown.
-  if (!is_search_param && option_name != "OwnBook" &&
-      option_name != "Book File" && option_name != "Best Book Move" &&
-      option_name != "Hash" && option_name != "Threads") {
+  if (!is_search_param && folded_name != "ownbook" &&
+      folded_name != "book file" && folded_name != "best book move" &&
+      folded_name != "hash" && folded_name != "threads") {
     uci_reply("info string refused [" + option_name + "], unknown option");
   }
 #endif
@@ -1906,6 +1965,15 @@ bool command_bench(std::queue<std::string>& args)
 bool command_clean_TT(std::queue<std::string>& args)
 {
   LOG_I << "Command [command_clean_TT]. Args: " << args << END_I;
+
+  // Every path that mutates the table calls this first, the rule stated at
+  // stop_and_join_search() and the only one this command broke. A TSan build
+  // driving `go infinite` and 40 `clean-tt` reported 11 races between
+  // tt_get_entry() and the memset, where the same harness with every other
+  // mid-search command reported 0: memset clears low to high, so a probe can
+  // match a key not yet cleared and read a zeroed score under an un-zeroed
+  // type. S209, 2026-09-10_adversarial-F11.
+  stop_and_join_search();
   tt_reset(&tt);
 
   return true;

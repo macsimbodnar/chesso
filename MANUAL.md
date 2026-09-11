@@ -49,8 +49,16 @@ uciok
 | `OwnBook` | check | `false` | — | play from the engine's own opening book when the position is in it. Only `true` and `false` are recognised; any other value leaves the setting unchanged. Was `Use Book` until S172 |
 | `Book File` | string | `<embedded>` | — | which book. `<embedded>` and an empty value both mean the book compiled into the binary — see "The book it ships with" below; anything else is a path to a Polyglot `.bin`, loaded when the option is set. A file that does not open, is not a whole number of 16-byte entries, or whose keys are not sorted is **refused**, and the engine then plays with no book at all rather than falling back to the built-in one — the refusal and its reason are printed as `info string book [<path>] not loaded: <why>. Playing without a book`. The value runs to the end of the line, so a path with spaces in it needs no quoting |
 | `Best Book Move` | check | `false` | — | `false` draws among the position's book moves in proportion to their Polyglot weight; `true` always plays the heaviest entry. Before S172 the draw was uniform and the weight was never read |
-| `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Not honoured exactly — see known bugs. A non-numeric value is ignored with a warning in the log |
+| `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Not honoured exactly — see known bugs. A value that is not an integer in full is **refused** on the UCI channel in every build, and the table keeps the size it had — `0x40`, `64abc` and `12.5` are refused rather than read as 0, 64 and 12, which is what they bought until S209 |
 | `Threads` | spin | 1 | 1 to 1 | present so GUIs that insist on setting it do not fail. **The search is single-threaded**; any value other than `1` is ignored with a warning in the log |
+
+**An option name is not case sensitive, and neither is a check option's value.**
+`setoption name hash value 64`, `HASH`, `ownbook` and `Best BOOK Move` are the
+options above, and `True`, `TRUE` and `true` are all `true` — the protocol's own
+rule (`UCI.txt`: the name and value "should not be case sensitive"), which this
+engine did not follow until S209. The **value** of `Book File` is not folded,
+because it is a path and a filesystem may care; neither is a spin value, which
+is a number.
 
 Set them the usual way:
 
@@ -132,14 +140,30 @@ The whole value has to be an integer: `0x50`, `120.9` and `12x` are refused, not
 read up to the first character that does not fit. A number too large for the
 range, and one too large for any `int`, both get the first line.
 
+The **name** is matched without regard to case, like every other option name, so
+`rfpmargin` sets `RfpMargin` and the third line is for a name that is not a
+parameter in any casing. Until S209 a mis-cased name was answered `unknown
+option`, which a tuner had no way to tell from a misspelling.
+
 Two things are outside this. `OwnBook`, `Book File`, `Best Book Move`, `Hash`
 and `Threads` are handled by code the release build shares, so a bad *value* for
 one of them is log-only as described above — only an unrecognised *name* is
-answered. `Book File` is the exception within the exception: a book it cannot
-load is reported on the UCI channel in both builds, because the value is a path
-a person typed and silence there reads as success. And the release build
-prints nothing in any of the three cases: the parameters are not options there,
-and the lines are `CHESSO_TUNE` only.
+answered. Two exceptions within the exception, both because silence there reads
+as success: a book `Book File` cannot load, and a `Hash` value that is not an
+integer in full, are reported on the UCI channel in **both** builds, in these
+two shapes:
+
+```
+info string refused [Hash] <value>, not an integer
+info string refused [Hash] <value>, out of range
+```
+
+The first is for a token `Hash` cannot read in full (`0x40`, `64abc`, `12.5`,
+`+64`, an empty value); the second for a well-formed integer no `long long` can
+hold. A whole integer outside 1–4096 is neither: it is still clamped, so
+`value -5` buys the minimum and prints nothing. And the release build
+prints nothing in any of the three cases above: the parameters are not options
+there, and the three parameter lines are `CHESSO_TUNE` only.
 
 A legal value prints nothing, and there is still **no readback** — `uci`
 re-prints each parameter's compiled default, not its live value — so the absence
@@ -276,7 +300,7 @@ Convenience only, not part of UCI. A GUI never sends these.
 | `help` | list commands |
 | `test` | run the built-in self-test over seven positions. `test <n>` sets the depth, default 6 |
 | `bench` | print the node signature — see below. `bench <n>` sets the depth, but only the bare form is the signature |
-| `clean-tt` | clear the transposition table |
+| `clean-tt` | clear the transposition table. Stops and joins a search in progress first, since S209 — it used to clear the table under the running search |
 
 ### The node signature, `bench`
 
@@ -419,4 +443,6 @@ here as the FEN each one loads. A GUI never sends them.
   divide, so the table is usually smaller than asked for. If the allocation
   fails the engine halves the count and retries, and if every size fails it runs
   **without a transposition table** rather than refusing to play. Nothing is
-  reported back over UCI in any of these cases; the log records them.
+  reported back over UCI in any of these cases; the log records them. A value
+  that is not an integer in full is the one case that *is* reported, since
+  S209 — see the two lines under "Options" above.

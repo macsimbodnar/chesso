@@ -930,6 +930,92 @@ TEST_SUITE("engine: uci layer")
     uci_shutdown();
   }
 
+  // S209, 2026-09-10_adversarial-F12. `UCI.txt`, the copy of the protocol this
+  // repository ships: "The name and value of the option in <id> should not be
+  // case sensitive". command_setoption compared with `==`, so `hash` and
+  // `ownbook` -- both of them legal UCI -- were refused as unknown options and
+  // `True` was ignored for a check option, and the release build said nothing
+  // about any of it: a harness that wrote `hash` measured the default and never
+  // learned. That is the failure class DEC-093 and S137 exist for, one option
+  // along.
+  TEST_CASE("setoption folds the option name and a check value")
+  {
+    uci_init();
+
+    // There is no readback of a live option value (specs.md), so each half
+    // needs an observable. For a spin option it is the table: what proves the
+    // option was honoured is the size it asked for arriving.
+    const size_t at_default = uci_tt()->entry_count;
+
+    REQUIRE(at_default > 0);
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name hash value 64");
+    }
+    CHECK(uci_tt()->entry_count > at_default);
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name HASH value 1");
+    }
+    CHECK(uci_tt()->entry_count < at_default);
+
+    // The control, in the spelling that always worked.
+    uci_process_line("setoption name Hash value 16");
+    REQUIRE_EQ(uci_tt()->entry_count, at_default);
+
+    // For a check option it is the book. A book hit answers with `bestmove`
+    // alone -- command_go's info line is commented out -- so an `info score`
+    // line is what says a real search ran, the observable S193 put under the
+    // case above. The book has to be the embedded one for that: the case above
+    // leaves it there, and this says so rather than inheriting it.
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+
+    {
+      // The precondition. With the book off the search runs and prints, so its
+      // silence below is a book move and not a dead stream.
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      REQUIRE(capture.contains("info score "));
+      REQUIRE(capture.contains("bestmove "));
+    }
+
+    {
+      // Both halves at once: a folded name and a folded check value.
+      stdout_capture_t capture;
+      uci_process_line("setoption name ownbook value True");
+      uci_process_line("position startpos");
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      CHECK(capture.contains("bestmove "));
+      CHECK_FALSE(capture.contains("info score "));
+    }
+
+    {
+      // And off again, folded the other way, which is the `false` branch of
+      // the same comparison.
+      stdout_capture_t capture;
+      uci_process_line("setoption name OWNBOOK value FALSE");
+      uci_process_line("position startpos");
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      CHECK(capture.contains("info score "));
+    }
+
+    // Cleanup, whichever way the checks above went: these are process globals
+    // and the next case would inherit a book that is still on.
+    uci_process_line("setoption name OwnBook value false");
+
+    uci_shutdown();
+  }
+
+
   TEST_CASE("first_legal_move agrees with the generator")
   {
     uci_init();
@@ -1492,6 +1578,104 @@ TEST_SUITE("engine: uci layer")
 
     uci_shutdown();
   }
+
+
+  // S209, 2026-09-10_adversarial-F13. std::stoll() was here and it stops at the
+  // first character it cannot use without complaining, so `0x40` bought 1 MB
+  // (0, clamped) and `64abc` bought 64, both of them silently; the `abc` it did
+  // refuse went to LOG_W, which is `if (false)` under NDEBUG. DEC-088 pins the
+  // harness's hash deliberately, and a typo that buys 1 MB measures an engine
+  // nobody configured. The from_chars form the search parameters have used
+  // since S137 is what this asks of Hash.
+  TEST_CASE("setoption Hash refuses a value that is not an integer in full")
+  {
+    uci_init();
+
+    const size_t at_default = uci_tt()->entry_count;
+
+    REQUIRE(at_default > 0);
+
+    // The precondition for every case below: a good value does resize, and it
+    // prints nothing at all. Without it an unchanged count would not be a
+    // refusal and a printed line would only show that the engine narrates
+    // every setoption.
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name Hash value 64");
+
+      CHECK(capture.lines().empty());
+    }
+    REQUIRE(uci_tt()->entry_count > at_default);
+
+    uci_process_line("setoption name Hash value 16");
+    REQUIRE_EQ(uci_tt()->entry_count, at_default);
+
+    for (const std::string& token :
+         {std::string("0x40"), std::string("64abc"), std::string("12.5"),
+          std::string("+64"), std::string("abc"), std::string("")}) {
+      std::vector<std::string> printed;
+      {
+        stdout_capture_t capture;
+        uci_process_line("setoption name Hash value " + token);
+        printed = capture.lines();
+      }
+
+      const std::string first =
+          printed.empty() ? std::string() : printed.front();
+
+      CHECK_MESSAGE(printed.size() == 1,
+                    ("[" + token + "] was answered with " +
+                     std::to_string(printed.size()) + " lines"));
+      CHECK_MESSAGE(
+          first == "info string refused [Hash] " + token + ", not an integer",
+          ("[" + token + "] was answered [" + first + "]"));
+
+      // The refusal is a refusal: the line is not a warning printed on the way
+      // to resizing anyway.
+      CHECK_MESSAGE(uci_tt()->entry_count == at_default,
+                    ("[" + token + "] moved the table to " +
+                     std::to_string(uci_tt()->entry_count)));
+    }
+
+    // A well-formed integer that no long long can hold is out of range, not
+    // malformed, whichever end it ran off -- the distinction the search
+    // parameters have made since S137 and that stoll()'s single catch could
+    // not.
+    for (const std::string& token : {std::string("99999999999999999999"),
+                                     std::string("-99999999999999999999")}) {
+      std::vector<std::string> printed;
+      {
+        stdout_capture_t capture;
+        uci_process_line("setoption name Hash value " + token);
+        printed = capture.lines();
+      }
+
+      const std::string first =
+          printed.empty() ? std::string() : printed.front();
+
+      CHECK_MESSAGE(printed.size() == 1,
+                    ("[" + token + "] was answered with " +
+                     std::to_string(printed.size()) + " lines"));
+      CHECK_MESSAGE(
+          first == "info string refused [Hash] " + token + ", out of range",
+          ("[" + token + "] was answered [" + first + "]"));
+      CHECK_MESSAGE(uci_tt()->entry_count == at_default,
+                    ("[" + token + "] moved the table to " +
+                     std::to_string(uci_tt()->entry_count)));
+    }
+
+    // What is not refused and must not become refused: a whole integer outside
+    // the range is still clamped, which is what S209 excludes from its scope.
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name Hash value -5");
+
+      CHECK(capture.lines().empty());
+    }
+    CHECK(uci_tt()->entry_count < at_default);
+
+    uci_shutdown();
+  }
 }
 
 
@@ -1612,6 +1796,54 @@ TEST_SUITE("engine: uci go")
     }
 
     require_playable(reply);
+
+    uci_shutdown();
+  }
+
+
+  // S209, 2026-09-10_adversarial-F11. command_clean_TT called tt_reset()
+  // without joining the search, against the rule the file states at
+  // stop_and_join_search(): every path that mutates the board or the table must
+  // call it first. A TSan build driving `go infinite` and 40 `clean-tt`
+  // reported 11 races between tt_get_entry() and the memset where the same
+  // harness with every other mid-search command reported 0. memset clears low
+  // to high, so a probe can match a key not yet cleared and read a zeroed score
+  // under an un-zeroed type.
+  //
+  // The race itself is a sanitizer's to see. What a suite in either build can
+  // see is the join: the answer to the infinite search has to be on stdout the
+  // moment `clean-tt` returns, with no [stop] and no uci_wait_for_search()
+  // behind it.
+  TEST_CASE("clean-tt joins the search before it clears the table")
+  {
+    uci_init();
+
+    std::string reply;
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+      uci_process_line("go infinite");
+
+      // Long enough that the search is inside the table rather than still
+      // starting up.
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+      uci_process_line("clean-tt");
+
+      // Not bestmove_of(): a missing line is exactly the red case here, and a
+      // REQUIRE inside a helper would skip the cleanup below and leave an
+      // infinite search running through the rest of the suite.
+      for (const std::string& line : capture.lines()) {
+        if (line.rfind("bestmove ", 0) == 0) { reply = line; }
+      }
+    }
+
+    CHECK_MESSAGE(!reply.empty(),
+                  "clean-tt returned with the search still running");
+
+    // Cleanup whichever way the check went.
+    uci_process_line("stop");
+    uci_wait_for_search();
 
     uci_shutdown();
   }

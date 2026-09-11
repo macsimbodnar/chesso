@@ -7,6 +7,69 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S209 is complete, 2026-09-11 midday: the UCI option surface follows the
+  protocol on case, `Hash` says so when it refuses, and `clean-tt` no longer
+  clears the table under a running search.**
+
+  `command_setoption` folds the option name once, before every comparison, and
+  folds a check option's value before comparing it to `true`/`false`;
+  `option_name` is left as it arrived so a refusal quotes back what was sent,
+  and the two values that are **not** folded are `Book File`'s, a path, and a
+  spin value, a number. `Hash` is parsed with `std::from_chars` requiring the
+  whole token and answers `info string refused [Hash] <value>, not an integer`
+  or `..., out of range` on the UCI channel in **both** builds, leaving the
+  table the size it had; `-5` still clamps to the minimum and still prints
+  nothing, because what `Hash` clamps to is outside this step.
+  `command_clean_TT` calls `stop_and_join_search()` first.
+
+  **Every red observed on `013600d` before a line was written.**
+  `setoption name hash value 64` and `name HASH value 1` both left the table at
+  **524288 entries** -- the name was not an option at all -- and
+  `setoption name ownbook value True` then `go depth 1` printed
+  `info score cp 72 ... pv e2e4`, a real search, where the canonical spelling
+  answers `bestmove e2e4` alone. **`0x40` bought 32768 entries (1 MB, the
+  clamped 0) and `64abc` bought 2097152 (64 MB)**, both in silence, as did
+  `+64`, `12.5`, `abc`, an empty value and both twenty-digit tokens. `clean-tt`
+  during `go infinite` returned with **no `bestmove` on stdout**. In the tune
+  build, `rfpmargin`, `RFPMARGIN` and `RfPmArGiN` were each answered
+  `unknown option` and left `RfpMargin` at 63.
+
+  **The race is measured, and the first measurement lied.** ASan and TSan
+  cannot be linked into one binary and `build-sanitize` is the ASan tree, so
+  this is the `accepts`' second branch: a fourth, hand-built TSan tree,
+  `go infinite` then 40 `clean-tt`. **38, 41 and 36 reports on `013600d`
+  against 0, 0, 0 on the candidate**, and the A/B taken inside the *same* build
+  tree -- the one line added to the worktree that had just produced 36 takes it
+  to 0, 0. `tt_reset`'s `memset` against `tt_store_entry` and `tt_get_entry` in
+  the search thread, which is F11's claim. **The very first run reported 0 on
+  the defective tree**: `FATAL: ThreadSanitizer: unexpected memory mapping`,
+  this kernel's ASLR against TSan's shadow map, and a sanitizer that never
+  started prints the same number as a fixed engine. `setarch -R` and a
+  `grep -q FATAL:` guard are now in `TOOLCHAIN.md` with the numbers, because
+  that zero would have closed the finding.
+
+  **Five red-first cases, all five observed red**, three in
+  `tests/test_engine.cpp`, one in `tests/test_search_params.cpp`, and the
+  fold's precondition in `tests/test_uci_surface.cpp` -- "no two advertised
+  option names collide when folded", 529 assertions over the 33 names the tune
+  build advertises, green before and after. **DEC-178 records the three choices
+  the `accepts` left open**: the fold reaches the search parameter names too,
+  so S137's golden `Rfpmargin` assertion is **re-stated and not relaxed**
+  (`RfpMargn` is the unknown option now); `Hash` answers two shapes rather than
+  one, because "not an integer" about `99999999999999999999` is false; and the
+  suite guards the **join** -- a deterministic observable in both builds --
+  rather than the race.
+
+  **INV-6 discharged**: `search_bench` depth 9 **121530 / 801481 / 72924**,
+  best moves `c3d5` / `e2a6` / `d7c8q`, and `bench` **30046849**, the parent's
+  total, so the commit says `No functional change`. No SPRT: nothing on a
+  search path moved. DEC-141's second tier does not bind -- `make_move`,
+  `unmake_move`, the generator and the search are untouched and no pruning rule
+  was added -- and the extra gate last ran green on 2026-09-10, inside its
+  weekly cadence. `ctest -L fast` 33/33 in both builds, format clean under
+  `CLANG_FORMAT_MAJOR=22`. Closes `2026-09-10_adversarial-F11`, `-F12` and
+  `-F13`.
+
 - **S208 is complete and the fast check over S207 earned a new step, 2026-09-11
   morning.**
 
@@ -1857,12 +1920,15 @@ Updated: 2026-09-11, by hand.
   earlier sessions: they are that log's chronology and this is the live
   pointer. Nothing here reconciles them -- a flat list carrying three of the
   same field is a hygiene finding and not S184's scope.)
-- Next: **S207**, Open entry 1 -- the repetition rule, F08, one `--nonreg`
-  SPRT, the night run of 2026-09-11. Its filler while the run plays: **S185**,
-  **S181**, **S182**, **S183**, entries 2 to 5, documents only. Behind them
-  **S208** and **S209**, the two audit bug steps the owner's criterion selects,
-  then **S024**. S151's pair is answered, DEC-172: design (iii), a fixed
-  1000-pair estimate at `32+0.32`, entry 11.
+- Next: **S215**, Open entry 1 -- the assignment S207's repetition rule hangs
+  on, pinned by a test through `search()` and by a mutant that test kills; then
+  **S216**, entry 2, the killer-slot census that measures a position the engine
+  now refuses. Both are the Tier-1 fast checks' own findings, node-identical,
+  and neither owns a run. **The next run-owning entry is S024**, entry 3, the
+  largest ordering gain surveyed -- one SPRT, slow class by S182's ledger, so a
+  night run -- with **S214** as its filler. Behind it **S211**, then **S151**,
+  entry 6: DEC-172 takes design (iii), a fixed 1000-pair estimate at
+  `32+0.32`, `Hash=64`, about 3.4 h and a daytime run.
 
 - **S193's fast check found one real thing and it is S205, not a mid-step
   fix.** `tests/test_perft.cpp` parses four more columns than it compares --

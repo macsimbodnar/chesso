@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -69,6 +70,11 @@ static const std::vector<std::string> expected_refusal_templates = {
     "info string refused [<name>] value <value>, not an integer, range [<min>, "
     "<max>]",
     "info string refused [<name>], unknown option",
+    // S209: the two `Hash` refusals, which are release-build surface -- the
+    // three above are `CHESSO_TUNE` only. MANUAL.md and specs.md described
+    // them before these lines were added (SURFACE).
+    "info string refused [Hash] <value>, not an integer",
+    "info string refused [Hash] <value>, out of range",
     // S176: `position fen` refusals. MANUAL.md and specs.md described them
     // before these lines were added (SURFACE).
     "info string refused [position fen] <fen>, fewer than four fields",
@@ -676,6 +682,43 @@ TEST_SUITE("uci surface")
   }
 
 
+  // S209's precondition, and it is the one thing case-insensitive names can
+  // break that no other case here would catch: two options whose names differ
+  // only in case are one option to a folded comparison, and the first branch of
+  // the chain would silently take both. 33 names in the tune build, 5 in the
+  // release build, and nothing stops a future parameter from colliding with an
+  // existing one except this.
+  TEST_CASE("no two advertised option names collide when folded")
+  {
+    uci_init();
+
+    const std::vector<std::string> names = option_names_from_uci();
+
+    REQUIRE(!names.empty());
+
+    std::vector<std::string> folded;
+
+    for (const std::string& name : names) {
+      std::string lowered = name;
+
+      std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                     [](char c) {
+                       return static_cast<char>(
+                           std::tolower(static_cast<unsigned char>(c)));
+                     });
+
+      for (const std::string& seen : folded) {
+        CHECK_MESSAGE(seen != lowered,
+                      ("[" + name + "] folds onto another advertised option"));
+      }
+
+      folded.push_back(lowered);
+    }
+
+    uci_shutdown();
+  }
+
+
   TEST_CASE("what uci advertises, setoption recognises")
   {
     // command_setoption keeps its own list of the option names that are not
@@ -792,12 +835,16 @@ TEST_SUITE("uci surface")
     }
 
     // A misspelled name, which is the other half of DEC-093 and the one no
-    // range check can catch.
+    // range check can catch. `Rfpmargin` stood here until S209 and is not a
+    // misspelling any more: the protocol's case rule makes it the parameter, so
+    // what is left for this half is a name that is no option in any casing.
+    // test_search_params "a mis-cased parameter name is still the parameter"
+    // holds the other side of that change.
     const std::vector<std::string> unknown =
-        lines_from_setoption("setoption name Rfpmargin value 100");
+        lines_from_setoption("setoption name RfpMargn value 100");
 
     REQUIRE(unknown.size() == 1);
-    CHECK(unknown.front() == "info string refused [Rfpmargin], unknown option");
+    CHECK(unknown.front() == "info string refused [RfpMargn], unknown option");
 
     uci_shutdown();
   }
@@ -821,6 +868,7 @@ TEST_SUITE("uci surface")
         "setoption name RfpMargin value 0x50",
         "setoption name RfpMargin value 99999999999",
         "setoption name Rfpmargin value 100",
+        "setoption name RfpMargn value 100",
         "setoption name NoSuchOption value 1",
         "setoption name Threads value 4",
     };

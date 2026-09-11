@@ -9991,3 +9991,80 @@ Consequences: S208's stamp records the contradiction, the measurement that
               bench signature. The eight-FEN set keeps promotions, en passant,
               castling and quiescence mates, and is now legal throughout --
               which is strictly better than the note explaining why it was not.
+
+## DEC-178  2026-09-11  The protocol's case rule wins over DEC-093's mis-cased-name refusal; `Hash` refuses in two shapes; the `clean-tt` race is guarded by the join, and measured by hand under TSan
+Tags:         uci, protocol, tests, surface, sanitizers, tooling
+Context:      S209 closes three findings of the 2026-09-10 audit (F11 to F13)
+              and its `accepts` left three things open that had to be decided
+              rather than assumed. **First**, `UCI.txt` says an option's name
+              "should not be case sensitive" and the step's Shape says to fold
+              the name once before the chain of comparisons -- which reaches
+              the search parameters too, and `tests/test_uci_surface.cpp`
+              pinned `setoption name Rfpmargin value 100` answering
+              `info string refused [Rfpmargin], unknown option`. That
+              assertion is S137's and DEC-093's: a tuner sending a misspelled
+              name must hear about it. The two cannot both stand. **Second**,
+              the `accepts` names one refusal line for `Hash`, and
+              `std::from_chars` distinguishes two cases where `std::stoll`'s
+              single `catch` distinguished none. **Third**, the `accepts` asks
+              for a TSan-driven case in `build-sanitize` or, failing that, the
+              reproduction by hand -- and `build-sanitize` is the ASan tree.
+Decision:     By the agent, under the RUNS and BUGS rules. **(a) Every
+              advertised option name folds, the search parameters included**,
+              and the setter is still called with the canonical spelling from
+              `src/search_params.hpp` `search_param_info`, so `rfpmargin` is
+              `RfpMargin`. `unknown option` now means a name that is no option
+              in any casing, and the golden assertion is **re-stated, not
+              relaxed**: `RfpMargn`, one letter short, still answers
+              `unknown option`, and `tests/test_search_params.cpp` "a mis-cased
+              parameter name is still the parameter" holds the other side.
+              DEC-093's half that matters -- a tuner hears its mistake --
+              survives; what it loses is a mistake the protocol says is not
+              one. The fold needs a precondition and gets a case:
+              `tests/test_uci_surface.cpp` "no two advertised option names
+              collide when folded", over the 33 the tune build advertises,
+              because two names differing only in case would be one option to
+              a folded comparison and the first branch of the chain would take
+              both. **(b) `Hash` answers two lines**, `not an integer` for a
+              token it cannot read in full and `out of range` for a
+              well-formed integer no `long long` can hold, the same split the
+              search parameters have made since S137. **(c) The suite guards
+              the join, not the race**: after `go infinite`, `clean-tt` has to
+              have put `bestmove` on stdout by the time it returns, which is
+              deterministic in both builds and is the cause rather than the
+              symptom. The race itself is measured by hand under a fourth,
+              TSan build: **38, 41 and 36 reports on `013600d`, 0 on the
+              candidate**, and the A/B taken in the same build tree by adding
+              the one line to it -- `tt_reset`'s `memset` against
+              `tt_store_entry` and `tt_get_entry` in the search thread, which
+              is F11's claim.
+Rejected:     **Folding only the five non-parameter names** -- `hash` would
+              work and `rfpmargin` would be refused, two rules on one surface
+              and neither of them the protocol's. **Special-casing the
+              parameter names to keep DEC-093's mis-cased refusal** -- it
+              preserves a refusal the protocol this repository ships forbids,
+              and a tuner reading `unknown option` for a name that differs only
+              in case has been told something false. **One `Hash` message for
+              both classes** -- "not an integer" for `99999999999999999999`
+              says something false about a well-formed integer, which is the
+              failure class S137 removed one layer down. **A `TSAN` option in
+              `CMakeLists.txt` and a fourth gate build** -- ASan and TSan
+              cannot share a binary, so it is a build configuration and a gate
+              stage of its own for one command no GUI sends, and the join test
+              already fails if the cause returns. Recorded as the thing to
+              build if a second race is ever found. **Leaving `clean-tt` alone
+              because a GUI never sends it** -- it is documented in `MANUAL.md`
+              and reachable from any script, and DEC-171 scopes the UCI surface
+              as harnesses drive it.
+Consequences: `MANUAL.md` and `adocs/specs.md` state the case rule, the two
+              `Hash` lines and the join before `tests/test_uci_surface.cpp` is
+              refreshed (SURFACE). A parameter added later must not collide
+              with an existing name when folded, and the new surface case is
+              what says so. The `go` tokens `command_go` reads with
+              `std::stoll` are the same class and are **not** changed here:
+              S210's `accepts` already owns that decision by name. The TSan
+              trap that made the first reproduction print 0 reports on a
+              defective tree -- `FATAL: ThreadSanitizer: unexpected memory
+              mapping`, ASLR, `setarch -R` -- is written into `TOOLCHAIN.md`
+              beside the build line, because a sanitizer that never started
+              and a fixed engine print the same number.
