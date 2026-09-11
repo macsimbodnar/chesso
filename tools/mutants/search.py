@@ -154,3 +154,26 @@ m("M21_standpat_lower_bound_lowers", S, "search/tt",
   ('(tt_entry->type == TT_BETA_NODE && tt_score > stand_pat) ||',
    '(tt_entry->type == TT_BETA_NODE && tt_score < stand_pat) ||'),
   origin="2026-09-04_test_review")
+
+
+# S215's pair, both anchored on the one line that hands classify_repetition()
+# its boundary. M35 and M36 pin the comparison; nothing pinned the value it is
+# compared against until the case "search() hands the rule the root's own
+# index" was written -- `- 1` left the whole fast suite green while `bench`
+# moved 13 %. Neither is equivalent and both are killed: `- 1` by the depth-4
+# search that must answer the material, `+ 1` by the depth-5 search that must
+# answer the draw. The two settings that are not arithmetic on the size are
+# killed by the same case and are not mutants here: `0` fails exactly where
+# `- 1` does, and deleting the assignment -- leaving the SIZE_MAX default --
+# fails exactly where `+ 1` does.
+m("M39_root_boundary_one_low", S, "rules",
+  "the root's own entry read as in-tree, the pre-S207 rule for that class",
+  ('state->root_history_size = game->history.size;',
+   'state->root_history_size = game->history.size - 1;'),
+  origin="S215")
+
+m("M40_root_boundary_one_high", S, "rules",
+  'the first entry the search pushed read as pre-root',
+  ('state->root_history_size = game->history.size;',
+   'state->root_history_size = game->history.size + 1;'),
+  origin="S215")

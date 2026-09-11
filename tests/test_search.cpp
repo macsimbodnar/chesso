@@ -3259,6 +3259,140 @@ TEST_SUITE("search: draws")
                0);
   }
 
+  // The case above sets `root_history_size` by hand and calls negamax(), so
+  // the one line that hands the rule its boundary -- `search()`'s
+  // `state->root_history_size = game->history.size` -- is never executed by
+  // it, and no other case in the suite reads it either: mutated to
+  // `game->history.size - 1` the whole fast suite stayed green while `bench`
+  // moved 13 %. Found by the Tier-1 fast check over S207's completing commit
+  // `23f926d`, 2026-09-11, S215.
+  //
+  // This case reaches the assignment through `search()` and separates
+  // `history.size` from both of its neighbours. One board, three searches:
+  //
+  //   1. root P, nothing like it behind the root, depth 4. The cycle comes
+  //      back to the root's own entry, which is not inside the tree, so there
+  //      is no draw. `- 1` calls it one and answers `0`.
+  //   2. the same board and history, depth 5. The position at ply 1 comes
+  //      back at ply 5, strictly above the root's entry, which is a draw.
+  //      `+ 1` calls it pre-root and answers the material instead.
+  //   3. the same board with the cycle played *before* the root, depth 4.
+  //      Two occurrences at or below the root are a draw wherever they lie,
+  //      which is S207's rule from the other side: same position as 1, other
+  //      history, other score. Both neighbours agree with the engine here,
+  //      which is the point -- it is the pair with 1 that shows the rule
+  //      reading the path and not the board.
+  //
+  // Scores are asserted against zero and a material bound, not against a
+  // golden (S192): what separates the two answers is `0` against the whole
+  // rook and three pawns.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "search() hands the rule the root's own index")
+  {
+    // White is a rook and three pawns down with a perpetual: every check
+    // below leaves Black exactly one legal reply, so the cycle needs no
+    // cooperation from the winning side and nothing but the boundary decides
+    // what it scores. Verified with python-chess -- `Status.VALID`, one legal
+    // move in each of the two checked positions, no capture available
+    // anywhere in the cycle, and the fourth ply back on the starting board.
+    // Stockfish at depth 22 answers `0` with `Qd8+ Kh7 Qh4+ Kg8 Qd8+` as its
+    // principal variation.
+    const std::string root_fen = "6k1/r4pp1/6p1/8/7Q/8/6K1/q7 w - - 10 40";
+
+    // The same position one ply earlier, Black in check with `Kg8` its only
+    // legal move. It is what gives searches 1 and 2 a history that is not
+    // empty and does not hold the root: at size 0 the `- 1` above underflows
+    // to `SIZE_MAX`, which reads every entry as pre-root and survives.
+    const std::string one_ply_before = "8/r4ppk/6p1/8/7Q/8/6K1/q7 b - - 9 39";
+
+    static std::atomic_bool never_stop = false;
+
+    const auto search_after =
+        [](const std::string& fen,
+           const std::vector<std::pair<index_t, index_t>>& line, int depth) {
+          REQUIRE(load_FEN(fen, &game));
+
+          for (const auto& [from, to] : line) {
+            REQUIRE(play_move(&game, from, to));
+          }
+
+          never_stop = false;
+
+          tt_reset(&tt);
+          tt_new_search(&tt);
+
+          search_state_t state = {};
+          state.tt = &tt;
+          state.stop = &never_stop;
+
+          return search(depth, &game, &state);
+        };
+
+    const std::vector<std::pair<index_t, index_t>> forced_reply = {{h7, g8}};
+    const std::vector<std::pair<index_t, index_t>> cycle = {
+        {h4, d8}, {g8, h7}, {d8, h4}, {h7, g8}};
+
+    // Preconditions of 1 and 2, asserted on the structure the three scores
+    // hang on rather than on the scores. The root has one entry behind it and
+    // it is not the root position; the cycle inside the tree returns to the
+    // root's own entry at ply 4, which is not a draw, and to the ply-1
+    // position at ply 5, which is.
+    {
+      REQUIRE(load_FEN(one_ply_before, &game));
+      REQUIRE(play_move(&game, h7, g8));
+      REQUIRE_EQ(game.history.size, 1);
+      REQUIRE_NE(game.history.entries[0].hash, game.board.hash);
+
+      // White to move a rook and three pawns down, and evaluate() answers
+      // from the side to move, so the position is losing: what the searches
+      // measure is how the repetition is scored and not whether it beats the
+      // alternative.
+      REQUIRE_LT(evaluate(&game.board), 0);
+
+      game_t probe = game;
+
+      for (const auto& [from, to] : cycle) {
+        REQUIRE(play_move(&probe, from, to));
+      }
+
+      REQUIRE_EQ(classify_repetition(&probe.history, &probe.board, 1),
+                 repetition_kind_t::ONCE_PRE_ROOT);
+
+      REQUIRE(play_move(&probe, h4, d8));
+
+      REQUIRE_EQ(classify_repetition(&probe.history, &probe.board, 1),
+                 repetition_kind_t::DRAW);
+    }
+
+    // 1. The root's own occurrence, reached through search(). No draw, so the
+    // score is the material. The bound is not a golden: it separates `0` from
+    // a rook and three pawns with most of the rook as margin.
+    const search_t root_recurrence =
+        search_after(one_ply_before, forced_reply, 4);
+    const uint64_t root_board = game.board.hash;
+    const size_t shallow_history = game.history.size;
+
+    REQUIRE_LT(root_recurrence.score, -300);
+
+    // 2. One ply deeper on the same board and the same history: the draw is
+    // an in-tree one and it is the only one available.
+    const search_t in_tree = search_after(one_ply_before, forced_reply, 5);
+
+    REQUIRE_EQ(in_tree.score, 0);
+
+    // 3. The same board, the cycle played before the root instead of inside
+    // it: a draw at the same depth that answered the material above.
+    const search_t pre_root = search_after(root_fen, cycle, 4);
+
+    REQUIRE_EQ(pre_root.score, 0);
+
+    // And 1 and 3 really are the same position, differing in the history
+    // behind it and in nothing else.
+    REQUIRE_EQ(game.board.hash, root_board);
+    REQUIRE_EQ(shallow_history, 1);
+    REQUIRE_EQ(game.history.size, 4);
+  }
+
   TEST_CASE_FIXTURE(search_fixture_t, "the fifty move rule is a draw")
   {
     // Halfmove clock already at 100: every node below the root is a draw.
