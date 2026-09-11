@@ -111,10 +111,42 @@ Updated: 2026-09-11, by hand.
   unrun and S203's 3000 games were a fixed-rounds drift reading. Documents
   only.
 
-  **Next**, without waiting for the owner (DEC-172): S183 while
-  the match plays; S207 completed and committed when the verdict lands; then
-  S208 and S209, node-identical and owning no run; then S024's first verdict as
-  the next night's run.
+  **Done, S183 -- and this is the one the owner has to read.** The Elo
+  arithmetic is checkable for the first time and **it does not reach 3000, not
+  at the midpoint and not at the high end**. `adocs/data/S183_elo_inputs.md`
+  records every pending step's published figure, its source or the word
+  unverified, the block it sums into and the per-block sums, with the selection
+  rule and the discount rule both fixed **in writing before any sum was
+  computed**. The record behind the discount: **eight** published-to-measured
+  transfers, five with a figure on both ends, of which **two are exactly zero,
+  one is the wrong sign, one is 0.10 and one is 0.33** -- mean 0.061, median
+  0.00. The headline discount is **0.38**, the largest ever measured here, as
+  the most generous reading that is still a measurement. **The plan's own +390
+  to +680 lands at 2707 to 2817; the reconstruction from recorded inputs at
+  2658.** 2817 is **183 short**, and adding the anchor's whole 121.8 Elo of
+  internal disagreement in the favourable direction reaches 2939 and is still
+  short. Block 1 reproduces almost exactly (+184.6 against the quoted +180 to
+  +280), so the original arithmetic was the same shape -- but evaluation reads
+  +54.3 against +90 to +160, speed +22.7 against +40 to +90, and **tuning's +50
+  to +90 has no published input behind it at all**, its only evidence being
+  S028's one-time +188.74 from hand-picked to fitted. "The midpoint clears
+  3000" is **deleted**, struck and dated at the site, and the paragraph
+  **names DEC-071 as the decision it puts to the owner**: whether the goal is
+  met by this list, by a longer one, or only with the network premise DEC-054
+  parked. **No step's order and no step's content changed on the result** --
+  the step's `excludes:` forbids it, and this is a question for the owner and
+  not a ruling the agent should take. A convergence worth noting: the
+  2026-08-23 estimate reached 2600 to 2650 by summing what had already been
+  kept; this reconstruction reaches 2658 by summing what is still owed. Two
+  arithmetics, opposite directions, 8 to 58 Elo apart. Re-derived when S024 and
+  S109 land -- 46 % of the raw sum between them. Documents only.
+
+  **Next**, without waiting for the owner (DEC-172): the document lane behind
+  S207 is now empty -- S185, S181, S182 and S183 are all done -- so S207 is
+  completed and committed when the verdict lands, then S208 and S209 in the
+  morning, node-identical and owning no run, then S024's first verdict as the
+  next night's run. **The one thing waiting on the owner is S183's result**,
+  which is a DEC-071 question and not an agent's ruling.
 
 - **The 2026-09-10 audit is digested and the plan is re-sorted for the 3000
   mark, 2026-09-11 (DEC-170 to DEC-175).** Thirty-seven findings, five high:
