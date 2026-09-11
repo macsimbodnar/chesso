@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S219 started, 2026-09-11 evening, under a new operating rule, DEC-185.**
+  The owner downloaded the three CC0 candidate books into `books/` and, the
+  same evening, set the rule the rest of the plan runs under: **every step is
+  implemented by one clean Opus 5 subagent briefed by the coordinator, which
+  implements nothing itself; one task at a time; the coordinator's context is
+  kept small and the owner told when a task closes so the conversation can be
+  compacted.** `AGENTS.md`'s AGENTS rule is rewritten to it. S219 is the first
+  step run this way: the coordinator wrote the pre-registered comparison
+  (`adocs/data/S219_book_compare.sh` -- one doubling of time, four books,
+  8 matches of 1500 games in two counterbalanced passes, pick by
+  M = nElo^2 x games per hour, tie to the balanced book) and an Opus 5
+  subagent reviews it, smoke-tests it and writes the reader
+  (`adocs/data/S219_read.py`); the coordinator launches the match as the
+  machine holder once the box is idle -- at 20:15 Firefox held about 85 % of a
+  core, above the script's 60 % refusal. The zips were not kept, so
+  `books/fetch_book.sh`'s pins wait for the zip digests. Old books stay:
+  `UHO_Lichess_4852_v1.epd` is the comparison's baseline and the harness's
+  book until the reading, `UHO_4060_v3.epd` is S085's tuning book that S127
+  needs, `8moves_v3.pgn` is tracked and `rating.sh`'s. The losing candidates
+  are deleted after the reading.
+
 - **The parked list was reviewed with the owner, 2026-09-11 evening: six
   rulings, three steps, one archive, and the Parked block below loses the
   items they close.** Every question that had waited on the owner was

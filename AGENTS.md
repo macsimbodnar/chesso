@@ -160,9 +160,18 @@ migration that way (DEC-109).
   DEC-017.
 - SURFACE: `test_uci_surface` is the golden guard over the UCI surface;
   refresh it only after `specs.md` and `MANUAL.md` describe the change.
-- AGENTS: subagents allowed freely — audits, fast checks, parallel exploration,
-  anything. Nothing requires or forbids spawning one; the Tier-1 check after a
-  completed step stays a habit and how it runs is the agent's call. DEC-106.
+- AGENTS: **every plan step is implemented by one clean Opus 5 subagent,
+  briefed by the coordinator, which implements nothing itself** (DEC-185,
+  2026-09-11). The brief is self-contained: the step file, the decisions it
+  cites, the files to read, what not to touch, the shape of the report. The
+  subagent writes code, tests, its data files and its own step file; the
+  coordinator holds the machine, owns the shared documents, runs the Tier-1
+  fast check over the result and commits. **One task at a time**: a second
+  subagent starts only while the first is blocked on something long -- a match
+  holding the machine, a download not yet made. After each task closes the
+  coordinator reads the report and not the transcript, writes the handover into
+  `status.md`, and says so, so the conversation can be compacted. Audits, fast
+  checks and exploration stay free (DEC-106).
 - REVIEW: fast check after each completed step, over that step's diff.
 - AUDIT: on demand only — `/moltke:audit` when the user asks for it.
 - DEPS: never add a dependency without asking; state what it buys and what

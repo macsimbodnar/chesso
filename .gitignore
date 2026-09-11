@@ -35,6 +35,8 @@ config.json
 # still plays it.
 books/UHO_*
 books/*.zip
+# S219's candidate books, same class: fetched, pinned by digest, never committed.
+books/*.epd
 
 # S084. SPSA run directories: the frozen config, the checkpoint, the trajectory,
 # the engine snapshot and the run's PGN. Same trade as .ref-builds/ and

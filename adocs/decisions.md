@@ -10339,3 +10339,51 @@ Consequences: S210, S213, S214 and S194 are amended in their `goal:`,
               Parked block loses the six items this entry closes and rewrites
               the seventh. Items 3 and 4 are the DEC-138 form: an audit that
               finds them again cites this entry.
+
+
+## DEC-185  2026-09-11  Every plan step is executed by one clean Opus 5 subagent under the coordinator's instruction; the coordinator implements nothing itself, and one task runs at a time
+Tags:         workflow, agents, coordinator, context, dec-106, dec-113
+Context:      DEC-106 left how a step is executed to the agent's call, and the
+              coordinator of the 2026-09-11 sessions implemented most steps in
+              its own context. The owner's instruction, given mid-turn on
+              2026-09-11 while S219 was being started: "for each plan step,
+              don't do it yourself but coordinate and instruct Opus 5 agents.
+              One clean agent each time. This will reduce the context of each
+              task and keep the quality high and you will be the coordinator.
+              Also compress the context after each task is completed. Don't
+              run more than one task at the time if not in particular
+              occasions like something is busy and waiting a long time so you
+              can move forward with something else."
+Decision:     **By the owner.** (1) A plan step's implementation is done by
+              **one fresh Opus 5 subagent** per step, or per self-contained
+              part of a step, instructed by the coordinator with a
+              self-contained brief and a bounded report; the subagent writes
+              code, tests, the step's own data files and its own step file,
+              and never the shared documents. (2) The coordinator coordinates:
+              it orients, writes briefs, reads reports, runs the Tier-1 fast
+              check over the result, holds the machine (a match, a fit, a
+              timing is started by it and by nobody else -- the PLAN rule
+              unchanged), owns `plan.md`, `status.md`, `specs.md` and
+              `decisions.md`, and commits. (3) **One task at a time.** A second
+              subagent starts only while the first is blocked on something
+              long -- a match holding the machine, a download the owner has
+              not made -- so the machine and the agent are never both idle.
+              (4) After each task closes the coordinator keeps its context
+              small: it reads the subagent's report and not its transcript,
+              writes the handover into `status.md`, and tells the owner that
+              a task closed so the conversation can be compacted; the
+              coordinator has no tool that compacts on its own.
+Rejected:     **The coordinator implementing steps itself** -- its context
+              grows with every file read and quality drifts with it, which is
+              what the owner observed. **Several subagents in parallel by
+              default** -- they contend for the machine and for the shared
+              documents, and DEC-113's bound on active steps already says
+              "strictly necessary"; parallelism stays the exception for a
+              blocked task. **Sonnet or Haiku for step work** -- the owner named
+              Opus 5; quality over cost.
+Consequences: `AGENTS.md`'s AGENTS rule is rewritten to this. A step's
+              `author:` names the subagent and the coordinator. Briefs are
+              self-contained -- the step file, the decisions it cites, the
+              files to read, what not to touch, the report's shape -- because
+              a clean agent knows nothing the brief does not say. Audits, fast
+              checks and exploration stay free (DEC-106).
