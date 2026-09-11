@@ -79,3 +79,20 @@ m("M36_repetition_ignores_the_root", B, "rules",
    '    if (seen_one) { return repetition_kind_t::DRAW; }',
    '    (void) root_history_size;\n    return repetition_kind_t::DRAW;'),
   origin="S207")
+
+# S208's two load-boundary rules. Both were shipped with tests and without
+# mutants, and the Tier-1 fast check over 8aff8ac found the gap by trying M37
+# by hand: it leaks a pawn on h8 and the whole fast suite stayed green, because
+# no FEN anywhere in the tree has one. The cases that kill these two now cover
+# all four back-rank corners and both sides of the 16-piece bound.
+m("M37_back_rank_pawn_off_by_one", B, "rules",
+  'the back-rank pawn refusal leaks the h8 corner',
+  ('          (square < 8 || square >= 56)) {',
+   '          (square < 7 || square >= 56)) {'),
+  origin="S208")
+
+m("M38_piece_count_bound_off_by_one", B, "rules",
+  'the piece-count refusal admits seventeen of a colour',
+  ('    if (piece_count[WHITE] > 16 || piece_count[BLACK] > 16) {',
+   '    if (piece_count[WHITE] > 17 || piece_count[BLACK] > 17) {'),
+  origin="S208")

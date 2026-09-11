@@ -59,6 +59,37 @@ Updated: 2026-09-11, by hand.
   not taken from the reviewer's prose. It is a test gap and not a defect, so
   the BUGS rule does not arm (DEC-171); S215 sits second in Open, behind S209.
 
+  **The fast check over S208 then found three more, all confirmed at the file
+  or by running the mutation rather than taken from its prose.** Two were mine
+  and are fixed in this commit; one is **S216**.
+  (1) **`MANUAL.md`'s `position killer` table still listed the pre-DEC-177
+  FEN**, so the one statement that table makes -- "the FEN each one loads" --
+  was false in the very commit that changed it. Fixed.
+  (2) **The back-rank refusal had one untested corner.** Only a8 and a1 were
+  pinned; mutating `square < 8` to `square < 7` loads a pawn on **h8** and the
+  whole fast suite stays green at **33/33**, because no FEN anywhere in the
+  tree has a pawn there. Both cases now sweep all four corners in both
+  colours, and the two mutants S208 shipped without -- **M37** (that
+  off-by-one) and **M38** (`> 16` becoming `> 17`) -- are in
+  `tools/mutants/board.py` and observed killed, 1 of 20 cases each. The "pawns
+  on ranks 2 and 7" case is restated as the control it actually is: a2 is index
+  48, eight squares from the boundary, so it never probed anything.
+  (3) **S216**: `adocs/data/S159_census_positions.txt`'s `promo-mess` row is
+  the pre-S208 `KILLER_POS` and is now refused, and
+  `adocs/data/S159_census_run.py` scrapes only `info ... nodes` -- so the
+  refusal line is skipped and the row **above** it is reported under
+  `promo-mess`. DEC-160 reads that census as the evidence that refuted S149's
+  ageing reading before a match was spent, so this is DEC-142's "either end
+  moved" trigger. The instrument has to fail loudly first; whether the census
+  is re-derived is the judgement S216 takes.
+  (4) And a **pre-existing** one, added to S213 rather than fixed here: three
+  labels in the `test` command's table disagree with what the engine prints --
+  `TRICKY_POS` and `FINE_70_POS` in their ponder move, **`CMK_POS` in its
+  bestmove too**. Checked by running `test`. The fast check's fourth claim, a
+  duplicated `MATE_IN_2_B_POS` label, is **not** a defect: the engine really
+  does print the same line for both, those two positions being colour swaps
+  rather than rank mirrors.
+
 - **S207 is complete: H1 accepted, and the night's four document steps with
   it, 2026-09-11.** `--nonreg` `{-5, 0}` nElo: **LLR 2.96, H1 accepted, Elo
   +3.32 +/- 5.00, nElo +4.47 +/- 6.72, LOS 90.36 %, PairsRatio 1.05, Ptnml

@@ -273,20 +273,47 @@ TEST_SUITE(
     CHECK(reason.find("16 black") != std::string::npos);
   }
 
-  TEST_CASE_FIXTURE(fen_fixture_t, "a pawn on the eighth rank is refused")
+  // Both ends of both back ranks, and the far corners are not decoration: the
+  // rule is `square < 8 || square >= 56` over a board indexed a8 = 0, so an
+  // off-by-one at either comparison leaks exactly one corner and nothing else.
+  // Mutating `square < 8` to `square < 7` loads a pawn on **h8** and leaves the
+  // whole fast suite green when only a8 is tested -- observed on `8aff8ac`,
+  // 33/33 -- because no FEN anywhere in src/, tests/, tools/, adocs/ or books/
+  // has a pawn on h8. Found by the Tier-1 fast check over that commit.
+  // `tools/mutants/board.py` M37 is that mutant and this case is what kills it.
+  TEST_CASE_FIXTURE(fen_fixture_t, "a pawn on either end of rank 8 is refused")
   {
-    std::string reason;
-    CHECK_FALSE(load_FEN("P7/8/8/8/8/8/8/K6k w - - 0 1", &game, &reason));
-    CHECK(reason.find("rank 1 or rank 8") != std::string::npos);
+    const char* cases[] = {
+        "P7/8/8/8/8/8/8/K6k w - - 0 1",  // a8, white
+        "7P/8/8/8/8/8/8/K6k w - - 0 1",  // h8, white -- the leaked corner
+        "p7/8/8/8/8/8/8/K6k w - - 0 1",  // a8, black
+        "7p/8/8/8/8/8/8/K6k w - - 0 1",  // h8, black
+    };
+
+    for (const char* fen : cases) {
+      std::string reason;
+      CHECK_FALSE_MESSAGE(load_FEN(fen, &game, &reason), fen);
+      CHECK_MESSAGE(reason.find("rank 1 or rank 8") != std::string::npos, fen);
+    }
   }
 
-  TEST_CASE_FIXTURE(fen_fixture_t, "a black pawn on the first rank is refused")
+  TEST_CASE_FIXTURE(fen_fixture_t, "a pawn on either end of rank 1 is refused")
   {
     // The mirror, because evaluate_pawns() computes the bucket separately per
-    // colour and the sanitizer reported both sites.
-    std::string reason;
-    CHECK_FALSE(load_FEN("K6k/8/8/8/8/8/8/p7 b - - 0 1", &game, &reason));
-    CHECK(reason.find("rank 1 or rank 8") != std::string::npos);
+    // colour and the sanitizer reported both sites. `>= 56` is the comparison
+    // here and `>= 57` is its off-by-one, which leaks a1.
+    const char* cases[] = {
+        "K6k/8/8/8/8/8/8/p7 b - - 0 1",  // a1, black
+        "K6k/8/8/8/8/8/8/7p b - - 0 1",  // h1, black
+        "K6k/8/8/8/8/8/8/P7 b - - 0 1",  // a1, white
+        "K6k/8/8/8/8/8/8/7P b - - 0 1",  // h1, white
+    };
+
+    for (const char* fen : cases) {
+      std::string reason;
+      CHECK_FALSE_MESSAGE(load_FEN(fen, &game, &reason), fen);
+      CHECK_MESSAGE(reason.find("rank 1 or rank 8") != std::string::npos, fen);
+    }
   }
 
   TEST_CASE_FIXTURE(fen_fixture_t, "a refusal names no reason on bad syntax")
@@ -329,12 +356,18 @@ TEST_SUITE(
 
   TEST_CASE_FIXTURE(fen_fixture_t, "pawns on ranks 2 and 7 still load")
   {
-    // One square inside the refused rank on each side, which is where an
-    // off-by-one in the square comparison would show.
-    REQUIRE(load_FEN("8/P7/8/8/8/8/p7/K6k w - - 0 1", &game));
+    // One rank inside the refused rank on each side. This is a control and not
+    // the boundary probe it was first written as: a7 is index 8 and a2 is 48,
+    // so only the `< 8` comparison is one step away from a7, and the square
+    // where a `>= 56` off-by-one would show is h2 at 55 -- which
+    // DEFAULT_POSITION and TRICKY_POS below already cover, having pawns on
+    // every file of rank 2. The corners are pinned by the two cases above.
+    REQUIRE(load_FEN("8/P6P/8/8/8/8/p6p/K6k w - - 0 1", &game));
 
     CHECK_EQ(game.board.squares[a7], W_PAWN);
+    CHECK_EQ(game.board.squares[h7], W_PAWN);
     CHECK_EQ(game.board.squares[a2], B_PAWN);
+    CHECK_EQ(game.board.squares[h2], B_PAWN);
   }
 
   TEST_CASE_FIXTURE(fen_fixture_t, "the kingless debug positions still load")

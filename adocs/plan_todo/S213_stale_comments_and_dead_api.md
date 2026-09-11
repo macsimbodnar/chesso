@@ -36,3 +36,34 @@ code nothing calls, scheduled as daytime filler under DEC-171.
 ## Cost
 
 Agent work, an hour or two; no run.
+
+
+## Added 2026-09-11: three stale labels in the `test` command's table
+
+Found by the Tier-1 fast check over S208's completing commit `8aff8ac` and
+**confirmed by running `test`**, label against what the engine actually prints:
+
+| position | the label in `src/chesso.cpp` | what the engine prints |
+|---|---|---|
+| `TRICKY_POS` | `bestmove e2a6 ponder b4c3` | `bestmove e2a6 ponder e6d5` |
+| `CMK_POS` | `bestmove h7h6 ponder c2c3` | `bestmove a7a6 ponder f3g5` |
+| `FINE_70_POS` | `bestmove a1b2 ponder a7b7` | `bestmove a1b2 ponder a7b6` |
+
+So two ponder moves are stale and **`CMK_POS`'s expected bestmove is stale
+too**. Nothing asserts these -- they are printed beside the result as a
+human-readable expectation -- which is why no test caught them, and it is also
+why they are worth either re-deriving or deleting: a label nobody checks that
+disagrees with the output beside it is worse than no label.
+
+Two that were checked and are **correct**, so they are not in the list:
+`KILLER_POS`'s label was re-derived by S208 (`ponder c5d4`), and
+`MATE_IN_2_B_POS`'s label reads identically to `MATE_IN_2_W_POS`'s because the
+engine genuinely prints `bestmove e5e6 ponder e8d8` for both -- the two
+positions are colour swaps on the same squares, not rank mirrors. The fast
+check read that as a copy-paste duplication; it is not one.
+
+Decide which: re-derive all three from the engine and say at the site that they
+are re-derived at every step that moves the tree (which is most of them, and is
+why they went stale), or drop the expectation from the label and leave the
+title. The second is the cheaper contract and this step should prefer it unless
+the owner wants the expectations.
