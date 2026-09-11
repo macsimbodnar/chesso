@@ -10387,3 +10387,51 @@ Consequences: `AGENTS.md`'s AGENTS rule is rewritten to this. A step's
               files to read, what not to touch, the report's shape -- because
               a clean agent knows nothing the brief does not say. Audits, fast
               checks and exploration stay free (DEC-106).
+
+
+## DEC-186  2026-09-11  The S159 census set's `promo-mess` row is replaced by the legal `KILLER_POS` under a new name in a new file, and the census is not re-derived
+Tags:         instruments, census, data, s216, s159, s208, dec-142, dec-160, dec-177
+Context:      S216. DEC-177 made `KILLER_POS` legal by removing one white pawn,
+              because S208's load bound refuses more than 16 pieces of a
+              colour; row 6 of `adocs/data/S159_census_positions.txt`
+              (`promo-mess`, the sixth of eleven rows -- the step file's "row
+              16" was a line number) is the old constant, verbatim, and is now
+              refused. S159's reader scraped only `info ... nodes` lines, so
+              the refusal was skipped and the row inherited the previous
+              board's numbers under its own name; S216's subagent showed it
+              red on HEAD at depth 2 -- the start position's 452 nodes and
+              `d2d4`, illegal on the promo-mess board, printed under
+              `promo-mess`. The accepts named three resolutions for the row
+              and asked whether the census is re-derived at all.
+Decision:     By the agent under the 2026-09-11 delegation, on the subagent's
+              proposal. **(a) Replace**, as a new file
+              `adocs/data/S216_census_positions.txt` beside S159's (the
+              directory is append-only), with the legal `KILLER_POS` -- 16
+              white pieces, twelve promotions and the `f5e6` en-passant
+              capture kept -- **under the new name `promo-mess-s208`**, so no
+              future table's row is read against the recorded 142852 nodes.
+              **(b) Not re-derived.** The recorded census (`S159_census.md`)
+              pins `git archive 99000c1` of 2026-09-09; the bound landed at
+              `8aff8ac` on 2026-09-11 and its refusal text is absent from
+              `src/chesso.cpp` at 99000c1, so the recorded numbers were
+              measured on a board that loaded, and the output says the same:
+              142852 / `g7h8q` against the row above's 648113 / `d7c8q`, and
+              `g7h8q` is not legal there. Its margin is stated anyway: the
+              row is 0.79 % of 18166063 nodes, DEC-160's reading rests on a
+              gap of 43.4 points (45.4 % against 88.8 %), and removing the
+              row bounds HEAD to 44.6 to 46.0 %. A census run today at HEAD,
+              41 commits on, would be a new experiment and not a
+              re-derivation, and none is owed.
+Rejected:     **Drop the row** -- shrinks a set a recorded decision rests on
+              and loses its only en-passant row. **Keep it and report it
+              refused** -- every future run on that input is red by
+              construction. **Re-derive now** -- see (b); DEC-142's trigger is
+              an end that moved, and the recorded census's end did not move,
+              the input file did.
+Consequences: `S216_census_run.py` is the reader from here on; S159's reader
+              and positions file stay as history. An optional verification --
+              the new reader over S159's positions at HEAD, expecting exactly
+              one `REFUSED` row and exit 1 -- runs after the S219 match, in
+              minutes, and is recorded in S216's stamp. S159's six evidence
+              files have no `adocs/data/README.md` row (the subagent's
+              finding); S216 adds them.

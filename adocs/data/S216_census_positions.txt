@@ -1,0 +1,31 @@
+# S216 killer-table census driver set, 2026-09-11. One position per line:
+# depth<TAB>name<TAB>FEN.
+#
+# Replaces `adocs/data/S159_census_positions.txt` (2026-09-09), which stays
+# beside this file unedited -- `adocs/data/` is append-only. The same eleven
+# rows in the same order, with one row changed and nothing else changed.
+#
+# S159's sixth row, `promo-mess`, is the pre-DEC-177 `KILLER_POS`: 17 white
+# pieces, which S208's load bound refuses, so no post-S208 engine will search
+# it. It is replaced here by DEC-177's legal `KILLER_POS` -- 16 white, 14 black,
+# one white pawn fewer and everything else the same board, keeping the twelve
+# promotions and the `f5e6` en-passant capture the row is in the set for. The
+# name changes with it, to `promo-mess-s208`, because it is a different position
+# and a future table's `promo-mess` line must not be read against the 142852
+# nodes recorded for the old one. DEC-186.
+#
+# The recorded census is not re-derived and `adocs/data/S159_census.md` still
+# reproduces from S159's file, which was measured at `99000c1` before the bound
+# existed. That document's "Why the driver set is new" is why these eleven
+# positions are these eleven, and every FEN here has one recorded source.
+13	startpos	rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+13	kiwipete	r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
+13	midgame	r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10
+13	tactical	rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8
+13	cmk	r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9
+12	promo-mess-s208	rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq e6 0 1
+18	lasker	8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1
+22	locked-pawns	8/4k3/1p1p1p1p/pPpPpPpP/P1P1P1P1/8/5K2/8 w - - 0 1
+16	perpetual	5rk1/pp4pp/4p3/2R3Q1/3n4/2q4r/P1P2PPP/5RK1 b - - 0 1
+14	9bishops	B2k4/1B6/2B5/3B4/4B3/1B3B2/5KB1/6BB w - - 0 1
+14	underpromo	nnnnnnnn/PPPPPPPP/8/8/8/8/8/K6k w - - 0 1

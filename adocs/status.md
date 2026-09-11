@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-11, by hand.
 
+- **S216 is landed and waits only for the gate, 2026-09-11 night.** Two Opus 5
+  subagents (DEC-185) did the work while S219's match holds the machine:
+  `adocs/data/S216_census_run.py` refuses a refused `position fen` row and
+  exits non-zero, **observed red first against S159's reader on HEAD at depth
+  2** -- the start position's 452 nodes and `d2d4`, illegal on the promo-mess
+  board, printed under `promo-mess` -- and byte-identical to S159's on legal
+  input; `adocs/data/S216_census_positions.txt` replaces row 6 (the sixth of
+  eleven -- "row 16" was a line number) by the legal `KILLER_POS` under the
+  name `promo-mess-s208`, DEC-186, one-row diff verified; seven
+  `adocs/data/README.md` rows added, six of them S159's evidence files that
+  had none. **Not re-derived**: the recorded census pins `99000c1`, which
+  predates the load bound, so its numbers were measured on a board that
+  loaded (DEC-186 has the arithmetic). **The Tier-1 check found one latent
+  gap**, unreachable at HEAD: the reader's refusal guard tests the reason
+  string, so an empty reason would pass; the two-line fix, the optional
+  verification (the new reader over S159's positions at HEAD, expecting one
+  `REFUSED` row and exit 1, minutes of one core) and the full gate in both
+  builds are the morning's work, by a fresh agent once the match ends; the
+  `done:` stamp is written after them.
+
 - **S219 started, 2026-09-11 evening, under a new operating rule, DEC-185.**
   The owner downloaded the three CC0 candidate books into `books/` and, the
   same evening, set the rule the rest of the plan runs under: **every step is
