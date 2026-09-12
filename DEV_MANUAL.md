@@ -1860,7 +1860,8 @@ chesso bench 9                        # a shallower run; NOT the signature
 
 **At `S189`, on the workstation: `24880255`. At `S203`: `26851183`. At `S207`:
 `26491479`. At `S208`: `30046849`. At `S042`: `27322394`. At `S024` v1:
-`22363740`.** Quote it
+`22363740`, reverted the same day on H0 (DEC-194), so the shipping total is
+`27322394` again.** Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

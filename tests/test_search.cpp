@@ -515,7 +515,6 @@ TEST_SUITE("search: move ordering state")
 
     size_t history_entries = 0;
     size_t counters = 0;
-    size_t cont_hist_entries = 0;
 
     for (int piece = W_PAWN; piece <= B_KING; ++piece) {
       for (int square = 0; square < 64; ++square) {
@@ -527,23 +526,6 @@ TEST_SUITE("search: move ordering state")
       for (int from = 0; from < 64; ++from) {
         for (int to = 0; to < 64; ++to) {
           if (state.quiet_history[side][from][to] != 0) { history_entries++; }
-        }
-      }
-    }
-
-    // S024. A real search visits ply 0 and passes through null moves
-    // throughout its tree -- exactly the two places prev_move is 0 -- so a
-    // dropped guard here would show up as a table that still fills, just
-    // with some of it landing on the wrong cell. This case cannot see that;
-    // it only asks that the table this step adds is not simply dead code.
-    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
-      for (int prev_to = 0; prev_to < 64; ++prev_to) {
-        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
-          for (int to = 0; to < 64; ++to) {
-            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
-              cont_hist_entries++;
-            }
-          }
         }
       }
     }
@@ -579,7 +561,6 @@ TEST_SUITE("search: move ordering state")
     REQUIRE(killers_1_duplicated > 0);
     REQUIRE(history_entries > 0);
     REQUIRE(counters > 0);
-    REQUIRE(cont_hist_entries > 0);
   }
 
   // A quiet move that gives check was excluded from all three tables until
@@ -652,12 +633,6 @@ TEST_SUITE("search: move ordering state")
                                [MOVE_TO(killer)] != 0);
     REQUIRE_EQ(state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)],
                killer);
-
-    // S024. The same fail-high, driven through negamax rather than called on
-    // the table directly, reaches the one-ply continuation table too -- this
-    // node has a real previous move, so the guard that skips ply 0 and the
-    // node after a null move does not apply here.
-    REQUIRE(continuation_entry(&state, prev_move, killer) != 0);
   }
 
 
@@ -763,10 +738,7 @@ TEST_SUITE("search: move ordering state")
     const move_t cutoff = quiets[0];
     const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
 
-    // No previous move at this node -- the sentinel S024 adds: ply 0 and the
-    // node right after a null move both reach history_on_quiet_cutoff() this
-    // way, ambiguously represented as move 0.
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, 0);
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8);
 
     CHECK(state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)] > 0);
 
@@ -787,94 +759,6 @@ TEST_SUITE("search: move ordering state")
     // from-to pairs is untouched. A butterfly board that dropped the colour
     // axis would let White's cutoffs order Black's moves.
     CHECK_EQ(state.quiet_history[!side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)], 0);
-
-    // S024. No previous move means no cell to credit or charge, in the
-    // continuation table specifically -- plain history above still moved.
-    // Scanned whole rather than probed at one cell: a wrong guard could as
-    // easily write the wrong cell as fail to guard at all, and a single-cell
-    // probe would not catch that.
-    size_t cont_hist_entries = 0;
-
-    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
-      for (int prev_to = 0; prev_to < 64; ++prev_to) {
-        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
-          for (int to = 0; to < 64; ++to) {
-            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
-              cont_hist_entries++;
-            }
-          }
-        }
-      }
-    }
-
-    CHECK_EQ(cont_hist_entries, 0);
-  }
-
-
-  // S024. The companion case: the same node, the same cutoff, with a real
-  // previous move this time, so the one-ply table has something to index.
-  TEST_CASE_FIXTURE(
-      search_fixture_t,
-      "a quiet cutoff with a previous move updates continuation history")
-  {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-
-    move_t moves[MAX_MOVES];
-    const size_t count = legal_moves(&game, moves);
-
-    move_t quiets[4] = {};
-    size_t quiet_count = 0;
-
-    for (size_t i = 0; i < count && quiet_count < 4; ++i) {
-      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
-        quiets[quiet_count++] = moves[i];
-      }
-    }
-
-    REQUIRE_EQ(quiet_count, 4);
-
-    const color_t side = game.board.active_color;
-
-    for (size_t a = 0; a < 4; ++a) {
-      for (size_t b = a + 1; b < 4; ++b) {
-        const bool same_cell = MOVE_FROM(quiets[a]) == MOVE_FROM(quiets[b]) &&
-                               MOVE_TO(quiets[a]) == MOVE_TO(quiets[b]);
-        REQUIRE_FALSE(same_cell);
-      }
-    }
-
-    search_state_t state = {};
-
-    const move_t cutoff = quiets[0];
-    const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
-
-    // A synthetic previous move -- Black's e7e5, which this node never
-    // actually played. history_on_quiet_cutoff() only ever decodes a move's
-    // (piece, to), so nothing here depends on the move being reachable from
-    // the position on the board.
-    const move_t prev_move = NEW_MOVE(e7, e5, B_PAWN, TO_NONE, 0, 1, 0, 0);
-    REQUIRE(prev_move != 0);
-
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, prev_move);
-
-    // Plain history moved exactly as the sentinel case above already
-    // establishes; what is new here is the table this step adds.
-    CHECK(continuation_entry(&state, prev_move, cutoff) > 0);
-
-    for (const move_t move : tried) {
-      CHECK_MESSAGE(
-          continuation_entry(&state, prev_move, move) < 0,
-          ("A quiet tried before the cutoff scores " +
-           std::to_string(continuation_entry(&state, prev_move, move)) +
-           " in the continuation table and not a malus."));
-    }
-
-    // A different previous move indexes a different row of the table
-    // entirely -- the countermove precedent this table follows keys on the
-    // previous move too, and a table that ignored it would not be a
-    // continuation table at all.
-    const move_t other_prev = NEW_MOVE(d7, d5, B_PAWN, TO_NONE, 0, 1, 0, 0);
-    CHECK_EQ(continuation_entry(&state, other_prev, cutoff), 0);
   }
 
 
@@ -997,26 +881,6 @@ TEST_SUITE("search: move ordering state")
     }
 
     CHECK_EQ(black_entries, 0);
-
-    // S024. This node's own prev_move is 0 -- the sentinel case, reached here
-    // through negamax's real fail-high block rather than by calling
-    // history_on_quiet_cutoff() directly as the unit-level cases do. The
-    // whole table stays zero, not just the cells this node's moves touch.
-    size_t cont_hist_entries = 0;
-
-    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
-      for (int prev_to = 0; prev_to < 64; ++prev_to) {
-        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
-          for (int to = 0; to < 64; ++to) {
-            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
-              cont_hist_entries++;
-            }
-          }
-        }
-      }
-    }
-
-    CHECK_EQ(cont_hist_entries, 0);
   }
 
   // Filling the tables is not the point: searching a smaller tree is. A

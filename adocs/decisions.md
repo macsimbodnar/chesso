@@ -10896,3 +10896,67 @@ Consequences: S220's file gains "Power, re-checked" and an amended
               sigma figures. The ledger in `adocs/plan.md` "What this costs"
               gains a book column from S042's verdict on, so option (ii) is
               readable without extra work.
+
+## DEC-194  2026-09-12  S024's one-ply continuation history is reverted on H0: the table was exercised, so the verdict is about the technique as built, and it returns with its own fitted scale as S222 behind the tuning lane
+Tags:         search, ordering, continuation-history, s024, s222, s127, sprt, h0, dec-019
+Context:      S024 verdict 1 (`cace216`): a one-ply continuation history
+              table written and read beside plain history with the same
+              graded bonus and malus and the same `QuietHistoryMax`, no
+              constant of its own, unfitted. Gainer SPRT `{0, 5}` nElo,
+              alpha=beta=0.05, against `b5c357a` on `noob_3moves.epd`:
+              **H0, LLR -2.96, nElo -5.48 +/- 7.20, Elo -4.42 +/- 5.81 over
+              8954 games in 4 h 10 m 11 s, 0 forfeits either side**. The
+              pre-registered H0 clause asked whether the table was exercised
+              before H0 is believed as a verdict on the technique. The census
+              (`adocs/data/S024_census_run.py`, 400 positions sampled one per
+              game at the midpoint of the S219 A/A corpus, depth 10,
+              112638096 nodes): **97.56 % of `history_on_quiet_cutoff` calls
+              reach the guarded branch, 96.19 % of quiet `score_move` reads
+              consult the table, 27.14 % of consulted reads find a non-zero
+              entry** (per position 4 % to 48 %, median 24 %). Neither failure
+              mode holds: the table is not barely touched and not untouched.
+              `bench` moved 27322394 -> 22363740 (-18 %), so the ordering
+              changed a great deal and the games say the change did not help.
+              The published record for this technique is the widest spread on
+              the plan -- Weiss +44.68 at one patch, Lynx +2.16 -- and DEC-019
+              says published figures do not transfer.
+Decision:     By the coordinator under the delegation. **(1) The table is
+              reverted from the tree**: `src/data_structures.hpp`,
+              `src/evaluation.cpp`, `src/search.cpp`, `src/search.hpp`,
+              `tests/test_evaluation.cpp` and `tests/test_search.cpp` return
+              to `b5c357a`'s content and `tools/mutants/S024_continuation_history.py`
+              goes; `bench` is 27322394 again. The MEASUREMENT rule lets a
+              measured zero stay with a reason, but this is not a zero: the
+              interval's upper end is +1.7 nElo and its centre -5.5, so
+              keeping it would carry a probable small regression into every
+              measurement after it. **(2) S024 completes with verdict 1 = H0
+              and verdict 2 not attempted**: the two-ply table was to build on
+              the one-ply table, which is gone. **(3) The technique returns as
+              S222, behind S127**: the one-ply table with **its own scale** --
+              a bonus/malus multiplier or bound of its own, and the weight of
+              the continuation term against plain history in the quiet band
+              -- exposed as tune-build parameters and **fitted in S127's SPSA
+              lane before its SPRT**, then the same gainer SPRT; the two-ply
+              table only after that passes. Two hypotheses for this H0 are
+              written into S222 for the fit to test: summing two terms of
+              equal weight doubled plain history's share of the quiet band
+              against killers and the countermove band; and the shared
+              gravity bound clipped the table where its own bound would not.
+              **(4) The ledger gains the row**; the slow-class mean moves from
+              6 h 42 m to 6 h 17 m and the set's rate to 2308.9 games an hour.
+Rejected:     **Keeping the table unfitted until S127 fits it** -- weeks of
+              verdicts on a tree with a probable -5 nElo in it. **A `--nonreg`
+              retest** -- a gainer that failed is not kept on "not a
+              regression". **Re-running at guessed constants now** -- guessing
+              the scale is what S127's lane exists to avoid, and DEC-084/105
+              forbid taking anyone else's. **Building the two-ply table
+              anyway** -- it inherits the same unfitted scale on top of a
+              table the games rejected.
+Consequences: The revert commit carries `Bench: 27322394` and the gate in
+              both builds. `adocs/specs.md`'s search row records the H0 and
+              the revert; `DEV_MANUAL.md`'s bench ledger keeps the 22363740
+              line annotated as reverted the same day. S024 closes into
+              `plan_done/` with both readings in its stamp; S222 sits behind
+              S127 in `adocs/plan.md`'s Open list. The census script and its
+              positions file are evidence for S222's own census, which
+              re-runs the same driver.

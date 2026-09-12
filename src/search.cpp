@@ -58,18 +58,12 @@ void history_on_quiet_cutoff(search_state_t* state,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
-                             int depth,
-                             move_t prev_move)
+                             int depth)
 {
   const int bonus = HISTORY_BONUS_QUAD * depth * depth +
                     HISTORY_BONUS_LIN * depth + HISTORY_BONUS_CONST;
   const int malus = HISTORY_MALUS_QUAD * depth * depth +
                     HISTORY_MALUS_LIN * depth + HISTORY_MALUS_CONST;
-
-  // S024. Guards both spans below: 0 is not "no update", it is the real
-  // (W_PAWN, a8) cell, so the branch has to be explicit rather than left to
-  // arithmetic that would happily index it.
-  const bool has_prev = prev_move != 0;
 
   // The maluses first, so that when two moves in the span share a butterfly
   // cell with the cutoff move -- two promotions from the same square, say --
@@ -81,23 +75,11 @@ void history_on_quiet_cutoff(search_state_t* state,
     history_gravity_update(state->quiet_history[side][MOVE_FROM(
                                quiets_tried[i])][MOVE_TO(quiets_tried[i])],
                            -malus);
-
-    // One-ply continuation history: the same malus, charged to this node's
-    // own (prev_move, quiets_tried[i]) cell.
-    if (has_prev) {
-      history_gravity_update(
-          continuation_entry(state, prev_move, quiets_tried[i]), -malus);
-    }
   }
 
   history_gravity_update(
       state->quiet_history[side][MOVE_FROM(cutoff_move)][MOVE_TO(cutoff_move)],
       bonus);
-
-  if (has_prev) {
-    history_gravity_update(continuation_entry(state, prev_move, cutoff_move),
-                           bonus);
-  }
 }
 
 
@@ -1095,8 +1077,7 @@ static int negamax_at(int alpha0,
         // move again -- the same side score_move indexed the table with when it
         // ordered the node.
         history_on_quiet_cutoff(state, game->board.active_color, moves[i],
-                                quiets_tried, quiets_tried_count, depth,
-                                prev_move);
+                                quiets_tried, quiets_tried_count, depth);
 
         if (prev_move != 0) {
           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
