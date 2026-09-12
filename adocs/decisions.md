@@ -10846,3 +10846,53 @@ Consequences: S217 completes; `adocs/plan.md`'s Elo paragraph says the
               is owed again when S024 and S109 land (DEC-136), and that
               re-derivation is the moment to answer the owner's question with
               numbers if they choose (b).
+
+## DEC-193  2026-09-12  S220's power is re-checked and found short of its own rule: the step is gated on the owner, its options re-stated, and S024 is the next night run after S042
+Tags:         harness, book, s220, power, dec-191, measurement
+Context:      DEC-191 created S220 to close the 0.97-to-1.29 bracket with 12000
+              games at a quarter time handicap and a rule (H at or under 1.00
+              keeps the book, over 1.10 reverts). Before writing the script
+              the coordinator priced the error. fastchess's nElo 95 % interval
+              at 1500 games was +/- 17.58 in S219; it scales with one over the
+              square root of the games, so 6000 games per book give +/- 8.8
+              and 12000 give +/- 6.2. A quarter handicap is worth roughly 85
+              to 95 nElo by the doubling's 200 to 230, so one book's slope
+              carries about 5 % one-sigma error at 6000 games, the two books'
+              ratio 7 %, its square in H 14 %, and with the two A/A variance
+              errors (6.3 % each) **H carries about 17 % one-sigma error at
+              12000 games total, about 13 % at 24000.** The rule's thresholds
+              are 10 % apart; the bracket's ends are 0.32 apart, 1.7 sigma at
+              one night and 2.3 sigma at two. Extrapolating from two handicap
+              points to zero, as the accepts asked, adds error rather than
+              removing it.
+Decision:     By the coordinator. **(1) S220 does not start without the
+              owner's word**; its `accepts:` is amended to a reading without
+              an automatic rule and with the power stated first. **(2) The
+              options put to the owner are re-stated**: (i) two nights, 24000
+              games at the quarter handicap, for a 2.3-sigma answer on which
+              end of the bracket is true and no answer finer than that; (ii)
+              no run -- the ledger of realized SPRT games per verdict class on
+              the new book, read against the old book's nine-verdict ledger
+              after five or so verdicts, is a free measurement of the same
+              quantity in the regime that matters, noisy but costless; (iii)
+              decide without measuring, on the owner's leaning and the
+              mechanism (an unbalanced opening masks a small strength
+              difference at every handicap), and revert only if the ledger
+              says so. **The coordinator recommends (iii) with (ii) as the
+              check.** **(3) S024 is the next night run after S042's SPRT
+              lands**, so no night waits on this question; S220 keeps Open
+              entry 2 as the owner's gate and is skipped in the order until
+              answered.
+Rejected:     **Running S220 as pre-registered** -- a night for a number that
+              cannot reach its own thresholds is the kind of run DEC-063
+              warns about. **Deleting S220** -- the question is real and the
+              owner may want the two-night answer; the file carries the
+              priced options. **Deciding the book here** -- the coordinator
+              already recorded a conclusion once that a review withdrew; the
+              choice between a measurement and a leaning is the owner's.
+Consequences: S220's file gains "Power, re-checked" and an amended
+              `accepts:`; `adocs/plan.md`'s entry 2 says it is gated; the owner
+              question in `adocs/status.md` carries the three options with the
+              sigma figures. The ledger in `adocs/plan.md` "What this costs"
+              gains a book column from S042's verdict on, so option (ii) is
+              readable without extra work.

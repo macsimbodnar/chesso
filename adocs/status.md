@@ -92,10 +92,17 @@ Updated: 2026-09-12, by hand.
   comparison for the same regime mismatch. **DEC-191 corrects the reading to
   a bracket, 0.97 to 1.29 of the old book's hours per verdict**, keeps the
   book provisionally on the owner's leaning, and creates **S220** (Open entry
-  2, behind S042's SPRT): the two books at a quarter handicap, 12000 games,
-  about 4.8 hours, a night run, with the decision rule written first. **For
-  the owner: revert now on the pessimistic end, or keep and skip S220 on the
-  leaning -- either is one commit.** `DEV_MANUAL.md`'s cost paragraph still
+  2): the two books at a quarter handicap. **Its power, re-checked at 04:50
+  (DEC-193): one night resolves the hours ratio to about +/- 17 %, two nights
+  to +/- 13 % -- enough to say which end of the bracket is likelier at 2.3
+  sigma after two nights, never enough for the 1.00/1.10 rule first written.
+  So S220 is gated on your word and S024 is the next night run after S042.
+  Your options: (i) two nights for that 2.3-sigma answer; (ii) no run, read
+  the ledger of realized games per verdict on the new book after about five
+  verdicts against the old book's nine; (iii) keep the balanced book on your
+  leaning and the mechanism (an unbalanced opening masks a small strength
+  difference at every handicap), with the ledger as the check -- recommended;
+  or revert now on the pessimistic end. Each is one commit or none.** `DEV_MANUAL.md`'s cost paragraph still
   says "a tie" until S042's completing commit, because the S042 agent holds
   that file. **Compaction point.**
 
