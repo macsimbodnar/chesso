@@ -1,0 +1,19 @@
+python-chess 1.11.2
+unique FENs: 3204  pass the king/opposite-check gate: 3188  would be refused: 16
+  NO_WHITE_KING,NO_BLACK_KING      8/8/8/8/8/8/8/8 b - - 0 1                                  src/data_structures.hpp:15
+  NO_WHITE_KING                    4k3/8/8/8/8/8/8/R6R w KQ - 0 1                             tests/test_audit_fen_semantics.cpp:173
+  OPPOSITE_CHECK                   4k3/8/4R3/3Pp3/8/8/8/4K3 w - e6 0 1                        tests/test_audit_fen_semantics.cpp:195
+  OPPOSITE_CHECK                   QQQQQQQQ/k6Q/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1        tests/test_audit_fen_semantics.cpp:229 tests/test_audit_fen_semantics.cpp:252
+  NO_WHITE_KING,NO_BLACK_KING      8/3p4/8/8/8/8/3P4/8 w - - 0 1                              tests/test_audit_fen_semantics.cpp:380 tests/test_search.cpp:3029
+  OPPOSITE_CHECK                   3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1          tests/test_chesso.cpp:637 tests/test_chesso.cpp:660 tests/test_chesso.cpp:662
+  OPPOSITE_CHECK                   3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1          tests/test_chesso.cpp:639 tests/test_chesso.cpp:664 tests/test_chesso.cpp:666
+  NO_BLACK_KING                    4r3/8/8/8/4N3/8/8/4K3 w - - 0 1                            tests/test_engine.cpp:2213 tests/test_engine.cpp:2339 tests/test_movegen.cpp:268
+  OPPOSITE_CHECK                   8/PPPPPPPP/8/2k5/2K5/8/pppppppp/8 w - - 0 1                tests/test_eval_positions.hpp:40
+  NO_WHITE_KING                    4k3/8/8/8/8/8/8/8 w - - 0 1                                tests/test_evaluation.cpp:574
+  NO_BLACK_KING                    8/8/8/8/8/8/8/4K3 w - - 0 1                                tests/test_evaluation.cpp:577
+  unparseable: expected 8 columns per row in position part of fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNRR' rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNRR w KQkq - 0 1  tests/test_movegen.cpp:562
+  NO_BLACK_KING                    pppppppp/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1          tests/test_movegen.cpp:563
+  unparseable: expected 8 columns per row in position part of fen: 'rnbqkbn/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR' rnbqkbn/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1    tests/test_movegen.cpp:564
+  OPPOSITE_CHECK                   7k/8/8/8/8/8/8/K6R w - - 0 1                               tests/test_search.cpp:3022
+  OPPOSITE_CHECK                   2k5/8/8/8/8/8/1q6/K1R5 w - - 0 1                           tests/test_search.cpp:435
+audit FEN status: 1024 OPPOSITE_CHECK

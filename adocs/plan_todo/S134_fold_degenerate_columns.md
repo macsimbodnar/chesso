@@ -1,10 +1,10 @@
 id:         S134
 goal:       delete rook-on-the-seventh and passer bucket 5 by folding their weights into the piece-square tables, which is bit-exact, and shrink the parameter vector to 823
-accepts:    the engine-side identity is measured before anything is deleted -- `passed_pawn_counts()` and `piece_placement_counts()` read out of the engine, not out of `eval_model`, and compared against the signed piece-square occupancy of squares 8..15 over the whole corpus, 0 violations required and the non-zero row count reported so the check is not vacuous; the fold is **bit-exact and shown to be**, by identical scores on the seven pinned anchor positions and by `tools/search_bench.py` returning identical node counts and best moves at two depths (INV-6 discharged on node counts, no SPRT owed -- DEC-090); `PIECE_PLACEMENT_COUNT` 4 to 3 and `PASSED_PAWN_COUNT` 6 to 5, `PARAM_COUNT` 827 to 823, with `test_tuner_groups`' three partition properties green **and observed red** under a base left unshifted; `test_eval_model`'s hand cases, differential sweep and non-vacuity lists re-targeted to the narrowed features rather than deleted; `tools/feature_audit` still runs and its identity report now has nothing left to check, which is stated rather than silently dropped; the fast suite green
+accepts:    the engine-side identity is measured before anything is deleted -- `passed_pawn_counts()` and `piece_placement_counts()` read out of the engine, not out of `eval_model`, and compared against the signed piece-square occupancy of squares 8..15 over the whole corpus, 0 violations required and the non-zero row count reported so the check is not vacuous; the fold is **bit-exact and shown to be**, by identical scores on the seven pinned anchor positions and by `tools/search_bench.py` returning identical node counts and best moves at two depths (INV-6 discharged on node counts, no SPRT owed -- DEC-090); `PIECE_PLACEMENT_COUNT` 4 to 3 and `PASSED_PAWN_COUNT` 6 to 5, `PARAM_COUNT` 827 to 823, with `test_tuner_groups`' three partition properties green **and observed red** under a base left unshifted; `test_eval_model`'s hand cases, differential sweep and non-vacuity lists re-targeted to the narrowed features rather than deleted; `tools/feature_audit` still runs and its identity report states the rank/identity result for the **remaining** parameterisation, including the method, corpus rows and every exact dependency found -- no unreported exact degeneracy remains after the two folds, or a new finding is filed before a fit; that measurement is the recorded basis for DEC-170's decision against global regularisation, and S126 reopens it if its fit shows another ridge; the fast suite green
 touches:    src/evaluation.cpp (the two terms and their accumulation), src/eval_tables.hpp (the sixteen folded entries), tools/eval_model.hpp (widths and bases), tools/tuner_model.hpp (the phase column), tools/tuner_groups.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, DEV_MANUAL.md, adocs/specs.md
 excludes:   any change to the other three placement features, which is S135; tempo, which is S136; any refit -- this step moves numbers between two places that add up to the same score and fits nothing
 decisions:  DEC-090
-closes:     2026-09-10_adversarial-F36
+closes:     2026-09-10_adversarial-F34, 2026-09-10_adversarial-F36, 2026-09-12_adversarial-F02
 blocks:     S135
 paused_by:
 done:
@@ -109,3 +109,18 @@ obligation -- and S117's implementer re-checks the column if the packing turns
 out to touch the phase. This step makes the tuner recompute the phase from the placement (or assert
 equality with the column and refuse on a mismatch, naming the row) before any
 fit is taken on the new value, and states which.
+
+## Amended 2026-09-12, DEC-197: F34 and the 2026-09-12 audit's F02
+
+DEC-170 decided `2026-09-10_adversarial-F34` against regularisation on
+2026-09-11 -- the two exact degeneracies are removed structurally here, and the
+question reopens only if S126's fit shows another ridge -- but wrote the
+finding by its short id, so a search for the verbatim id found no home and the
+2026-09-12 audit reported that as `2026-09-12_adversarial-F02`. Both ids now
+sit in `closes:`, and the accepts asks `tools/feature_audit` for more than a
+report with nothing left to check: the rank and exact-dependency result over
+the **remaining** 823 columns, method and non-zero row count stated, so
+DEC-170's ruling rests on a measurement rather than on the two proofs S100
+gave. A dependency found is a new finding filed before any fit, not a silent
+fold. The accepts wording is the audit's own sharpening, kept.
+

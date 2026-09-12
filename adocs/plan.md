@@ -502,6 +502,12 @@ and S152's two five-hour gauntlets at the end.
 what this project's own ledger says it costs, and the ledger is four to nine
 times that estimate.**
 
+**The book's cost is read from this ledger, not measured (DEC-196).** At the
+fifth verdict on `noob_3moves.epd` the realized games per verdict, by class,
+are compared against the old book's nine and the reading is recorded as a
+decision; S220's two priced nights were retired unrun, and DEC-191's
+0.97-to-1.29 bracket stands until that reading replaces it.
+
 ### The ledger: every SPRT verdict since the S105 regime
 
 Read from each step's own completion stamp, not from a run log. The first nine ran at 8+0.08, Hash 16, UHO, `model=normalized`; S042 and S024 v1 on
@@ -962,20 +968,47 @@ its commit showed the advantage was measured only at the doubling, and
 **DEC-191 corrects the reading to the bracket 0.97 to 1.29**, keeps the book
 provisionally on the owner's leaning, and creates **S220**: the same two books
 at a quarter handicap, one night, to measure the trend toward zero and decide
-by a rule written first. S220 is Open entry 2, behind S042's SPRT. Budget from
-2110 games an hour until a run under `performance` re-measures it.
+by a rule written first. S220 was priced at two nights (DEC-193) and **retired unrun on
+2026-09-12 by the owner, DEC-196**: the ledger's realized games per verdict is
+the free measurement, read at the fifth verdict on the new book. Budget from
+2110 games an hour, the A/A's figure on this book; the governor is recorded and
+never set (DEC-195).
+
+## What the 2026-09-12 audit inserted, DEC-197
+
+The owner ran a Codex audit against `98af071` in parallel with the day's work
+(`adocs/audit/2026-09-12_adversarial.md`): two findings, one broadening of a
+prior one, and a check that every 2026-09-10 finding has a home. **F01**:
+`position fen` accepts a position whose side not to move is in check and then
+a move that captures the king -- reproduced, `7R/8/8/8/8/8/8/K7 b - - 0 1`
+with the black king gone. Real, and a defect that needs an illegal position:
+nothing a GUI or a harness sends, no memory corrupted, the search survives it
+by S067's cases -- so under DEC-171 it is filler behind S109 and not the
+fix-first bug the report calls it. **S223** closes it beside S210: one king a
+side and no check against the side not to move, refused at the load boundary
+in S208's shape; seven test positions re-picked with python-chess's word,
+`position empty` gone, three no-king branches on hot paths turned into
+assertions -- which is the reason to do it at all, since S133 and S029 both
+index by the king's square. **F02**: the report found no home for
+`2026-09-10_adversarial-F34`; DEC-170 had decided it against regularisation
+by short id, so the gap was the id and not the decision. S134 carries both
+ids and now measures the remaining parameterisation's exact dependencies
+instead of asserting there are none. **F19 widened**: `go infinite nodes 1`
+answers before `stop` like `depth N`; `movetime` and the clock already yield
+-- measured -- and S210's clause names all four. DEC-197 is the digest; the
+report's own placement of S223 at Open entry 1 is overruled there.
 
 ## Open
 
-1. S220  **gated on the owner, DEC-193** -- the balanced book's cost per verdict near zero measured at a quarter time handicap, `noob_3moves.epd` against `UHO_Lichess_4852_v1.epd`; priced honestly, two nights for a 2.3-sigma answer on which end of DEC-191's 0.97-to-1.29 bracket is true and nothing finer; the free alternative is the ledger of realized games per verdict on the new book; **does not start without the owner's word; S211 is the next step when work resumes**
-2. S214  `analyse_game.py` refuses to return a score it never read, `spsa_driver.py check` proves every axis reaches the search, and a fit's provenance stamp records every flag that selects the emitted vector; no `src/` (F28, F29, F35)
-3. S211  the last three tables and five mask builders inherited from a GPL-3.0 tutorial engine replaced by the project's own derivations, the tutorial author's handle out of the shipped source, the artwork licensed; bench-identical (F01, F02, F03)
-4. S151  S085's shipped vector measured against `3488506` at `32+0.32`, `Hash=64`, in a fixed 1000-pair match read as an estimate -- design (iii), about 3.4 h, a daytime run -- and the longer-control rule written in its block-boundary form (DEC-172)
-5. S212  resign adjudication two-sided in both harnesses as the comment claims, `id name` stamped with the build and checked by `fastchess.sh`, a cached reference checked before it is played, a crash voids a run, the busy guard measures load, then one fixed-rounds A/A (F04, F05, F06, F07, F31, F32, DEC-174)
-6. S109  late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
-7. S218  late move pruning bought the gives-check exemption through a post-make prune, decided by its own SPRT against S109's shipped form; folds into S109 if S109's mate guard needs it (DEC-180)
-8. S199  a fixed-rounds drift match against a pinned early-S105 reference after each block boundary, read as a trend -- first point after the S109 block, on the workstation (DEC-108, DEC-139)
-9. S210  the seven low engine defects of the 2026-09-10 audit as one batch -- clock wrap, full history, `go infinite`, `movestogo 0`, the unstoppable first iteration, dead positions in quiescence, the bishops comment -- and the still-open `2026-09-04_adversarial-F01`; an SPRT only if F22's census finds reach (F17 to F23, DEC-171)
+1. S214  `analyse_game.py` refuses to return a score it never read, `spsa_driver.py check` proves every axis reaches the search, and a fit's provenance stamp records every flag that selects the emitted vector; no `src/` (F28, F29, F35)
+2. S211  the last three tables and five mask builders inherited from a GPL-3.0 tutorial engine replaced by the project's own derivations, the tutorial author's handle out of the shipped source, the artwork licensed; bench-identical (F01, F02, F03)
+3. S151  S085's shipped vector measured against `3488506` at `32+0.32`, `Hash=64`, in a fixed 1000-pair match read as an estimate -- design (iii), about 3.4 h, a daytime run -- and the longer-control rule written in its block-boundary form (DEC-172)
+4. S212  resign adjudication two-sided in both harnesses as the comment claims, `id name` stamped with the build and checked by `fastchess.sh`, a cached reference checked before it is played, a crash voids a run, the busy guard measures load, then one fixed-rounds A/A (F04, F05, F06, F07, F31, F32, DEC-174)
+5. S109  late move pruning, futility pruning, history pruning and quiet SEE pruning enter the move loop together, gated on the reduction-adjusted depth, as one step and one verdict
+6. S218  late move pruning bought the gives-check exemption through a post-make prune, decided by its own SPRT against S109's shipped form; folds into S109 if S109's mate guard needs it (DEC-180)
+7. S199  a fixed-rounds drift match against a pinned early-S105 reference after each block boundary, read as a trend -- first point after the S109 block, on the workstation (DEC-108, DEC-139)
+8. S210  the seven low engine defects of the 2026-09-10 audit as one batch -- clock wrap, full history, `go infinite`, `movestogo 0`, the unstoppable first iteration, dead positions in quiescence, the bishops comment -- and the still-open `2026-09-04_adversarial-F01`; an SPRT only if F22's census finds reach (F17 to F23, DEC-171)
+9. S223  the load boundary requires one king a side and refuses a position whose side not to move is in check, so no `position` line can leave a board without a king or let a supplied move capture one; seven test positions re-picked with the oracle's word, `position empty` gone, three no-king branches become assertions; node-identical, `No functional change` (2026-09-12_adversarial-F01; DEC-171 filler behind S109, DEC-197)
 10. S213  the evaluation header's stale zero-weight blocks, the mate-band argument that names the wrong bound, two dead public entry points and two `<cctype>` calls on a signed `char`, with a test for the bound the argument relied on; `No functional change` (F26, F27, F33)
 11. S194  the UCI book path executed by the fast suite, the weighted draw seeded through `CHESSO_BOOK_SEED` (F06)
 12. S091  skip captures the exchange evaluation says lose material, in the main search rather than in quiescence alone, and reduce a negative-SEE move by an extra ply

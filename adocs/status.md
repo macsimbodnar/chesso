@@ -7,21 +7,35 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
-- **Adversarial audit recorded, 2026-09-12.** A clean reviewer audited
-  `98af071` across the implemented engine and the future plan in
-  `adocs/audit/2026-09-12_adversarial.md`. **F01 is high:** public `position
-  fen` accepts an impossible position whose supplied pseudo-legal move captures
-  the enemy king, leaving a kingless board. **S223** is created as Open entry
-  1 and must run before every strength step. **F02 is low:** the prior
-  regularisation finding was not named precisely enough; **S134** now closes it
-  only after its rank/identity audit proves the remaining parameterisation has
-  no unreported exact dependency. The reviewer also re-demonstrated F19 with
-  `go infinite nodes 1`; **S210** now requires `infinite` to clear every finite
-  stop condition. The reviewer changed only the new report, found no change to
-  implement now, and ran `ctest build -L fast`: 33/34 passed; the sole failure
-  was the known clang-format-23 machine mismatch, while
-  `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` passed. `plan_current/`
-  remains empty; S220 remains owner-gated at Open entry 2.
+- **The Codex audit of 2026-09-12 is digested, 16:21, DEC-197.** The owner's
+  Codex session audited `98af071` (`adocs/audit/2026-09-12_adversarial.md`).
+  **F01 is real and reproduced** -- `position fen 7k/8/8/8/8/8/8/K6R w - - 0 1
+  moves h1h8` leaves `7R/8/8/8/8/8/8/K7 b - - 0 1`, the black king captured --
+  and it is **not** the fix-first bug the report calls it: it needs an
+  illegal position, nothing a GUI or harness sends, no memory is corrupted
+  and the search survives it (S067's cases), so DEC-171 places it behind
+  S109. **S223** (the session's draft, rewritten to the house shape) sits at
+  **Open entry 9 beside S210**: one king a side and no check against the
+  side not to move, refused at load in S208's shape; a census over 3204 FEN
+  literals (`adocs/data/S223_fen_census.py`, 16 flagged) names seven
+  positions to re-pick with python-chess's word and three that become
+  refusal cases; `position empty` goes; three no-king branches become
+  assertions -- the reason to do it, since S133 and S029 index by the king's
+  square. **F02**: DEC-170 had already decided F34 against regularisation,
+  by short id -- the gap was the verbatim id; S134 now carries
+  `2026-09-10_adversarial-F34` and `2026-09-12_adversarial-F02` and measures
+  the remaining columns' exact dependencies (the session's sharpening, kept).
+  **F19 widened**: `go infinite nodes 1` answers before `stop`; measured
+  that `movetime` and the clock already yield; S210's clause reworded to the
+  four tokens. **Two corrections**: the report's `Status:` lines carry the
+  dispositions, and the paragraph that stood here before this one -- written
+  by the Codex session and carried into `c870005` unnoticed when the
+  coordinator staged the whole file -- said S223 was Open entry 1 and had to
+  run before every strength step; superseded. **plan.md's two owed edits are
+  done**: S220 out of Open (retired, DEC-196), the ledger sentence in "What
+  this costs". `plan_current/` empty; nothing running, no agents, no
+  watchers. **Next when work resumes: S214 (tools only, no `src/`), then
+  S211** -- Open entries 1 and 2. **Compaction point.**
 
 - **S024 is done on H0 and reverted, 2026-09-12 13:05, and the coordinator
   stopped here on the owner's instruction ("stop after all the current tasks
@@ -46,9 +60,8 @@ Updated: 2026-09-12, by hand.
   repetition` from the candidate in 8955 games, the S042 residual class.
 
   **Where things stand for whoever picks this up.** `plan_current/` is
-  empty. The Open list: 1. S220 (gated on the owner, DEC-193), 2. S211, then
-  S151, S212, S109, S218, S199, S210, S213, S221 done, S194, S091 ... S222
-  behind S127. Commits today, none pushed: 5540e96 (DEC-188), 5047070 (book
+  empty. The Open list: 1. S214, 2. S211, then S151, S212, S109, S218, S199,
+  S210, S223, S213, S194, S091 ... S222 behind S127. Commits today, none pushed: 5540e96 (DEC-188), 5047070 (book
   switch), 6272149 (S219 close), 92b1dba (S216), a3e84e1 (DEC-191, S220),
   50b1ff9 (S042 fix), 13af16d, 31f4b7d, be35058 (S217), ffdbdc0 (DEC-193),
   9502175/ae1df15/b5c357a (S042 close), cace216 (S024 v1), 47344f3,
@@ -58,10 +71,8 @@ Updated: 2026-09-12, by hand.
   ledger measures it (a reading at the fifth verdict on the new book; S220
   retired unrun, its file stamped and moved); the priced effects land first
   and S183's ratio is re-derived on them before the goal is discussed again.
-  **Owed to `adocs/plan.md` once the Codex session releases it**: S220 out of
-  the Open list, one sentence in "What this costs" naming the ledger reading. **The untracked `adocs/audit/2026-09-12_adversarial.md` is
-  a Codex audit the owner runs in parallel**; not read here, dispositioned
-  when the owner asks. **Compaction point.**
+  **The two edits owed to `adocs/plan.md` landed with DEC-197** (S220 out of
+  the Open list, the ledger sentence in "What this costs"). **The Codex audit is dispositioned, DEC-197** -- the entry above. **Compaction point.**
 
 - **S221 is done, 2026-09-12 12:25.** The citation checker now stitches a
   doctest title split across adjacent string literals before matching a

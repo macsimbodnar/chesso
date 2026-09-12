@@ -11040,3 +11040,98 @@ Consequences: S220 leaves the Open list (the coordinator edits `adocs/plan.md`
               at the fifth verdict on the new book; `adocs/status.md`'s owner
               list is empty. The ledger's book column (DEC-193) is what makes
               the reading possible without new work.
+
+## DEC-197  2026-09-12  The Codex audit of 2026-09-12 is digested: F01 is real and sits behind S109 as S223 under DEC-171, F02's gap was an id and not a decision, F19 is wider than its reproducer, and the report's own placement is overruled
+Tags:         audit, plan, correctness, fen, uci, tuning, dec-171, dec-170, s223, s134, s210
+Context:      The owner ran a Codex session over `98af071` in parallel with
+              the day's work and asked the coordinator to say whether the
+              report makes sense and to turn what is useful into steps
+              (`adocs/audit/2026-09-12_adversarial.md`). Two findings, one
+              broadening of `2026-09-10_adversarial-F19`, a mapping check over
+              the 37 prior findings, and three uncommitted edits: a new
+              `S223` at Open entry 1 marked "must run before every strength
+              step", an amended `S134`, an amended `S210`. The session also
+              wrote a paragraph into `adocs/status.md` that the coordinator
+              carried into `c870005` unnoticed by staging the whole file.
+              Every claim was re-run before this entry: the F01 reproducer,
+              the four `go infinite` variants, the finding-to-step mapping by
+              verbatim id, and a python-chess census of the 3204 FEN literals
+              in `tests/`, `src/` and `tools/` (`adocs/data/S223_fen_census.py`).
+Decision:     By the agent under the owner's delegation of 2026-09-11, on the
+              owner's instruction to turn the useful parts into tasks.
+              **F01 is real, reproduced, and not the fix-first bug the
+              report calls it.** `position fen 7k/8/8/8/8/8/8/K6R w - - 0 1
+              moves h1h8` leaves `7R/8/8/8/8/8/8/K7 b - - 0 1`. It needs a
+              position no game reaches; no GUI, book, harness or corpus tool
+              sends one; no memory is corrupted -- the square array and the
+              bitboards agree, which is what S067's two "survivable" cases
+              pin -- and no legal position's score, move or line changes. By
+              DEC-171 that is filler behind S109, not a step ahead of it:
+              **S223 sits at Open entry 9 beside S210**, closed by the block
+              boundary, its id named in every pre-registration while open.
+              It is done at all because it is S208's class one boundary
+              further and free where S208's was free, because three hot-path
+              branches (`is_check()`, `generate_moves_impl()`,
+              `king_shelter_features()`) exist only for the state it removes
+              and become assertions, and because S133 and S029 index by the
+              king's square with no guard of their own. The census puts the
+              cost at seven test positions re-picked with the oracle's word,
+              three that become refusal cases, and the `empty` shortcut
+              removed from `position` -- a shortcut for a board that cannot
+              load has no use. The S208 control case and the two survivable
+              cases are **re-stated as refusals**, which this entry records
+              as the TESTS rule requires; none is relaxed or deleted.
+              **F02 is half right.** DEC-170 decided
+              `2026-09-10_adversarial-F34` *against* regularisation on
+              2026-09-11 and said why; it wrote the finding by short id, so
+              the report's grep for the verbatim id found nothing. The gap is
+              the id, and it is closed: S134's `closes:` carries
+              `2026-09-10_adversarial-F34` and `2026-09-12_adversarial-F02`,
+              and its accepts -- the report's own sharpening, kept -- now
+              measures the remaining 823 columns for exact dependencies
+              rather than asserting there are none, which is the better
+              footing for DEC-170's ruling anyway. The same verbatim-id gap
+              holds for `2026-09-10_adversarial-F14`, ruled by DEC-172; it is
+              written out here so the next grep finds it.
+              **F19 is wider than either report's reproducer**, and the
+              report's amendment overstated it. Measured on the Release
+              binary: `go infinite depth 1` and `go infinite nodes 1` answer
+              before `stop`; `go infinite movetime 100` and `go infinite
+              wtime 50 btime 50` answer after it, because the infinite
+              branch already takes precedence over both, and `mate` is not
+              parsed as a limit. S210's F19 clause is reworded to those four
+              facts and its red-first case covers `nodes` as well as `depth`.
+              **The mapping check is confirmed**: 35 of 37 prior ids resolve
+              to a step or a decision by verbatim id; F14 and F34 resolve by
+              short id to DEC-172 and DEC-170.
+              **Two of the session's three edits are kept** (S134, S210,
+              reworded) and the third is replaced: S223 is rewritten to the
+              house shape -- red-first cases named, the oracle named, the
+              census, the re-picks, the SURFACE order, the `No functional
+              change` footer -- and moved from entry 1 to entry 9. The
+              `status.md` paragraph in `c870005` is superseded by today's
+              handover. The report's two `Status:` lines carry these
+              dispositions, the one edit a report takes.
+Rejected:     **Fixing F01 before S109** -- DEC-171 is the owner's ruling and
+              reach is its test; this defect fails all three clauses.
+              **Accepting the boundary as it is with a decision** -- cheap
+              today, and it leaves three guards on hot paths and two planned
+              steps that would each have to learn about kingless boards.
+              **Folding F01 into S210** -- ten findings already; the two
+              `position`-command edits are kept adjacent in the order instead.
+              **Keeping `empty` as a kings-only board** -- a shortcut named
+              for a board it no longer loads. **Regularising the tuner** --
+              DEC-170 stands; S134 measures instead. **Editing the 2026-09-10
+              report to add `Status:` lines under its Part E paragraphs** --
+              they never had one, and adding is not the moving a report takes.
+Consequences: `adocs/plan_todo/S223_position_fen_legality_boundary.md`
+              rewritten; id 223 allocated by the Codex session and kept.
+              `adocs/plan.md`: S223 at Open entry 9, S220 out (DEC-196,
+              retired), the S219 paragraph's S220 sentence corrected, the
+              ledger sentence in "What this costs" landed, a dated section on
+              this audit. S134 and S210 carry dated amendment sections.
+              `adocs/data/S223_fen_census.py` and `.txt` are the census.
+              `adocs/status.md` rewritten. Pre-registrations name
+              `2026-09-12_adversarial-F01` beside F17 to F23 until S223
+              closes. The next adversarial re-run reads DEC-170 and this
+              entry before reporting F14, F34 or F01 again.
