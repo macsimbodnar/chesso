@@ -3,7 +3,7 @@ goal:       the late move reduction is scaled by history, by node type and by wh
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
 touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
 excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md` "the improving flag, was first in the pending order"; no `decisions.md` entry records that merge) and which is an input here
-decisions:  DEC-071, DEC-105, DEC-134
+decisions:  DEC-071, DEC-105, DEC-134, DEC-198
 closes:
 blocks:
 paused_by:
@@ -12,13 +12,29 @@ done:
 ## Why it comes after the history steps
 
 The refinement's largest single input is the move's history score, and the
-tables it reads are queued ahead of it: S093 malus and gravity, then S024
-continuation history. Scaling a reduction by a table that is about to change
+tables it reads are queued ahead of it: S093 malus and gravity, then S222's
+fitted continuation history -- S024's unfitted table measured H0 and was
+reverted (DEC-194), and S222 sits directly before this step since DEC-198.
+Scaling a reduction by a table that is about to change
 means measuring it twice. The improving flag is S108's, ahead of it too.
 Capture history is **not** an input here -- this engine reduces only quiets --
 and S023 sits in the reserve tail (DEC-087); if it ever lands, reducing
 tacticals with bad capture history is its consumer, back in this file's scope
 at that time (Ethereal measured that consumer at +7.2/+2.4).
+
+## Amended 2026-09-12, DEC-198: read S222 where this file says S024
+
+S024 built the one-ply table on plain history's scale, measured H0 and was
+reverted the same day (DEC-194). The table returns as S222 with a scale of its
+own, fitted in a narrow lane that also fits plain history's six coefficients
+-- never fitted until then -- and S222 sits directly before this step, so
+every "S093/S024" below reads S093/S222. Two figures move with it: the sum
+this step reads saturates at plain history's bound plus S222's own weighted
+bound, not at three times one bound as the two-table arithmetic below
+assumes, and `LMR_HIST_DIV`'s natural seed is that saturated sum over
+`LMR_HIST_CLAMP`; the two-ply table is S222's follow-up and lands after this
+step, when the divisor is re-swept with it. The three verdicts and their
+order are unchanged.
 
 ## Technical details (SOTA research, 2026-08-19)
 

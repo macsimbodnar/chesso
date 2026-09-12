@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **DEC-198 recorded, 2026-09-12 18:05: S222 moves to Open entry 13,
+  directly before S098, with a narrow SPSA lane of its own -- nothing
+  implemented, on the owner's instruction ("record but don't proceed").**
+  The owner asked for feedback on four techniques from a Gemini list (Texel
+  tuning, singular extensions, split history tables, continuation history);
+  all four are shipped (S028, S093), planned (S097, S023, S099) or measured
+  and retried (S024 -> S222), and no step was added. The reading found one
+  ordering defect: S098 was written assuming the continuation table lands
+  before it (twelve S024 references, none to S222), so after DEC-194 it would
+  have been scaled by plain history alone and measured twice -- and plain
+  history's six coefficients ship as depth-squared seeds that S085 never
+  tuned (`tools/spsa_s085.json` has no history axis). S222's lane fits the
+  six, `QuietHistoryMax` and its own tunables in one night before its gainer
+  SPRT; S127 still refits everything after the block. S098 carries a dated
+  amendment; the old entries 13 to 50 are 14 to 51. **Next when work
+  resumes: S214, then S211 -- unchanged.** The owner's next question, being
+  answered in the same session: whether the Open order puts the steps with
+  the most Elo potential first, NNUE excluded. `plan_current/` empty; nothing
+  running, no agents, no watchers.
+
 - **The Codex audit of 2026-09-12 is digested, 16:21, DEC-197.** The owner's
   Codex session audited `98af071` (`adocs/audit/2026-09-12_adversarial.md`).
   **F01 is real and reproduced** -- `position fen 7k/8/8/8/8/8/8/K6R w - - 0 1

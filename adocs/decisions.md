@@ -11135,3 +11135,62 @@ Consequences: `adocs/plan_todo/S223_position_fen_legality_boundary.md`
               `2026-09-12_adversarial-F01` beside F17 to F23 until S223
               closes. The next adversarial re-run reads DEC-170 and this
               entry before reporting F14, F34 or F01 again.
+
+## DEC-198  2026-09-12  S222 moves before S098 and fits the history scale in a narrow lane of its own: plain history's six coefficients were never fitted, and S098 reads the sum it would otherwise measure twice
+Tags:         search, ordering, continuation-history, history, spsa, plan,
+              s222, s098, s127, s085, dec-194, dec-019
+Context:      The owner asked for feedback on four techniques from a Gemini
+              list -- Texel tuning, singular extensions, split history tables,
+              continuation history -- against the plan. All four are shipped
+              (S028, S093), planned (S097, S023, S099) or measured and retried
+              (S024, S222); no step was added. The reading found one ordering
+              defect instead. DEC-194 placed S222 -- the one-ply continuation
+              table with a scale of its own -- at Open entry 51 behind S127,
+              the full SPSA after the search block. S098 (history-scaled
+              reduction, entry 13) was written on 2026-08-19 assuming the
+              continuation table lands before it: "the tables it reads are
+              queued ahead of it: S093 malus and gravity, then S024
+              continuation history", a history sum in [-3M, +3M], twelve
+              references to S024 and none to S222, and its own rule --
+              "scaling a reduction by a table that is about to change means
+              measuring it twice". After DEC-194 its input was plain history
+              alone until entry 51. And plain history's own scale is a seed:
+              the six `HISTORY_BONUS_*` and `HISTORY_MALUS_*` coefficients in
+              `src/search_params.hpp` ship as bonus = malus = depth squared,
+              S085 predates S093 and tuned none of them (`tools/spsa_s085.json`
+              names twelve axes and no history axis), and nothing before S127
+              fits them.
+Decision:     By the owner, 2026-09-12, on the coordinator's recommendation
+              between two stated options, with the instruction to record and
+              not implement. **S222 moves to directly before S098** -- Open
+              entry 13, S098 becomes 14 -- and **its fit becomes a narrow
+              SPSA lane of its own** rather than S127's: the six plain history
+              coefficients and `QuietHistoryMax` beside S222's own bonus,
+              malus, bound and weight, one night at S085's regime,
+              pre-registered with the estimate from the measured throughput,
+              then S222's gainer SPRT exactly as DEC-194 wrote it. S098 then
+              scales reductions by a sum whose both terms are fitted and is
+              measured once. S127 still refits every axis after the block;
+              this lane does not replace it. S098's file carries a dated
+              amendment reading S222 for S024 and the sum's saturated range
+              as plain history's bound plus S222's own, not three times one
+              bound.
+Rejected:     **Keeping the order and re-wording S098 to plain history alone**
+              -- one file edit, but S098 would be scaled by a table whose
+              constants are seeds and measured again when S222 lands, the
+              double measurement its own file forbids. **Guessing S222's
+              scale now** -- rejected by DEC-194 and still rejected; this lane
+              fits, it does not guess. **Fitting the six plain coefficients
+              first as a step of their own** -- one more night and one more
+              SPRT for axes S222's lane fits in the same pass, and the two
+              hypotheses DEC-194 wrote (equal-weight doubling, the shared
+              bound) are about the two tables' relative scale, testable only
+              with both sets of axes in one run.
+Consequences: `adocs/plan.md`: S222 at Open entry 13, S098 at 14, the old
+              entries 13 to 50 renumbered 14 to 51, a dated section, one
+              clause in the block 1 paragraph. `adocs/plan_todo/S222_*.md`
+              goal, accepts, cost and a dated section reworded to the narrow
+              lane; `adocs/plan_todo/S098_*.md` carries the amendment. When
+              S222's lane runs, its pre-registration states the axes, the
+              regime and the estimate from `.moltke.local.md`'s throughput
+              (RUNS). Nothing is implemented on this entry.
