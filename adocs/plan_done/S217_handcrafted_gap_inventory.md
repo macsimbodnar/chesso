@@ -7,8 +7,8 @@ decisions:  DEC-071, DEC-179, DEC-136, DEC-087, DEC-176, DEC-143, DEC-016, DEC-1
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     a Sonnet 5 subagent briefed by the coordinator (DEC-185, DEC-188); started 2026-09-12 04:05 while S042's SPRT holds the machine
+done:       2026-09-12 04:40. `adocs/data/S217_handcrafted_gap.md` tables five DEC-071 engines at their last network-free version -- Weiss 1.2 (3055), Texel 1.07 (3129), Laser 1.7 (3291), rofChade 2.3 (3319), Ethereal 11.75 (3344), ratings re-read on the CCRL Blitz complete list 2026-09-12, network-free claims verified against release notes or the author -- with every technique sourced from prose, no source file opened, and the intersection computed against a checklist of what chesso ships and has pending. **The gap is three evaluation terms** (complexity scaling, fortress detection, castling ability), none with a published figure, all above the 3100 band, so **no step is opened** and the three go to the Reserve as candidates, DEC-192. S183 re-derived over the extended list: **unchanged, 2658 and 2707 to 2817**; DEC-179's premise is not borne out and the question of what a longer list means is put to the owner with three options. README row added; `plan_prose_check.py --citations` and `--prose` clean. `DEV_MANUAL.md` and `MANUAL.md` unaffected (documents only), `README.md` human-owned, untouched. By a Sonnet 5 subagent (DEC-185, DEC-188) while S042's SPRT held the machine; recorded by the coordinator
 
 ## Why this exists
 
@@ -55,3 +55,33 @@ in a decision rather than assumed either way.
 
 Documents only. About half a day of reading and one table. Filler behind
 S024's run; owns no machine time.
+
+## Findings, 2026-09-12
+
+Five DEC-071 engines surveyed, not four: Weiss 1.2 (3055), Texel 1.07 (3129),
+Laser 1.7 (3291), rofChade 2.3 (3319), Ethereal 11.75 (3344), all re-read on
+the CCRL Blitz complete list 2026-09-12 and each verified network-free against
+its own release notes or the author's statement. `adocs/data/S217_handcrafted_gap.md`
+has the full table and the per-technique sourcing. **The gap is three
+evaluation terms**: complexity/conversion-chances scaling (carried by
+Ethereal and, independently, rofChade), fortress detection (Texel, three
+version-dated additions), and castling ability (Ethereal only, no version
+pinned, weakest of the three). None carries a published Elo figure anywhere
+in the sources read. Everything else across all five codebases -- the whole
+standard search stack and the whole standard evaluation stack -- already has a
+`ships` or `pending` row; two more (Mate Distance Pruning, quiescence checks)
+are not gaps but decisions already declined (DEC-087), and Lazy SMP is
+deferred whole to phase two (DEC-175) and is in any case irrelevant to the
+1CPU ratings this survey read. **All three gap rows sit above the 3100 band**
+this step's own rule needs to open a step automatically (3129, 3319-3344, and
+an unpinned figure no lower than 3344), so none qualifies by the rule as
+written -- the same test that already keeps S023/S025/S110/S111 in the
+Reserve. The recommendation is to file the three outlines as Reserve
+candidates rather than open steps now. S183's arithmetic, re-derived over the
+extended list under its own rule (a technique with no published figure
+contributes zero), **adds nothing**: the landing points are unchanged at 2658
+reconstructed and 2707 to 2817 on the plan's own range, still 183 to 342 Elo
+short of 3000 at the high end. DEC-179's premise -- that a longer hand-crafted
+list would close the shortfall -- is not borne out; the Coverage section of
+the data file lays out three options for what "a longer list" could mean
+instead, for the coordinator's decision.

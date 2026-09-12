@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S217 is done, 2026-09-12 04:40, and it puts a question to the owner.** A
+  Sonnet 5 subagent surveyed five DEC-071 engines at their last network-free
+  version -- Weiss 1.2 (3055), Texel 1.07 (3129), Laser 1.7 (3291), rofChade
+  2.3 (3319), Ethereal 11.75 (3344), ratings re-read on the CCRL Blitz list
+  that day, network-free claims verified -- from prose sources only, no source
+  file opened (`adocs/data/S217_handcrafted_gap.md`). **Everything they
+  carried has a `ships` or `pending` row here except three evaluation
+  terms** (complexity scaling, fortress detection, castling ability), none
+  with a published figure, all above the 3100 band, so no step is opened and
+  they are Reserve candidates (DEC-192). **S183 re-derived over the extended
+  list: unchanged, 2658 and 2707 to 2817, still 183 to 342 short at the high
+  end.** DEC-179's premise -- a longer hand-crafted list closes the shortfall
+  -- is not borne out by this survey. **Your call, three options:** (a) read
+  more engines (Defenchess, Booot and other network-free engines of the era),
+  cheap but shrinking return; **(b) recommended: treat it as the
+  transfer-discount question S183 named -- land S024 and S109, the two largest
+  sourced effects and the next steps anyway, re-derive the ratio with two more
+  published-to-measured transfers, then decide with numbers;** (c) re-price
+  the order, or revisit the network's timing, which only you reopen. Until you
+  answer, the order stands. **Compaction point.**
+
 - **S042 is landed as `50b1ff9` and its `--nonreg` SPRT is running, launched
   03:57 -- the night run.** The fix: one helper, `en_passant_is_capturable`,
   mirrors the generator's own candidate test and is applied in

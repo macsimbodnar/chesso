@@ -10782,3 +10782,67 @@ Consequences: S220 is created in `adocs/plan_todo/` with its pre-registration
               2110 games an hour) stand. A future book comparison
               pre-registers two handicaps, not one, so the trend is measured
               in the same run.
+
+## DEC-192  2026-09-12  S217's inventory finds the hand-crafted gap nearly empty: no step is opened, three evaluation terms go to the Reserve as candidates, the extended list lands where S183 left it, and what "a longer list" means is put to the owner
+Tags:         plan, elo, s217, s183, dec-179, dec-071, reserve, goal
+Context:      DEC-179 (the owner): the goal stands at 3000 without a network
+              and the hand-crafted list is extended, because "multiple engines
+              did that". S217 surveyed five DEC-071 engines at their last
+              network-free version -- Weiss 1.2 (3055), Texel 1.07 (3129),
+              Laser 1.7 (3291), rofChade 2.3 (3319), Ethereal 11.75 (3344),
+              ratings re-read on the CCRL Blitz complete list on 2026-09-12,
+              each network-free claim verified against release notes or the
+              author's statement, techniques from prose sources only, no
+              source file opened (`adocs/data/S217_handcrafted_gap.md`). Every
+              search and evaluation technique those five carried has a
+              `ships` or `pending` row in this plan except three evaluation
+              terms: complexity or conversion-chances scaling (Ethereal and,
+              independently, rofChade), fortress detection (Texel) and a
+              castling-ability term (Ethereal, version unpinned). None
+              carries a published Elo figure anywhere read; all three sit
+              above the 3100 band S217's `accepts:` requires for a step to be
+              opened. Two more items are not gaps but recorded refusals (mate
+              distance pruning and quiescence checks, DEC-087) and one is
+              deferred whole (Lazy SMP, DEC-175, irrelevant to 1CPU ratings).
+              S183's arithmetic re-derived over the extended list under its
+              own rule -- a technique with no published figure contributes
+              nothing -- lands unchanged: 2658 reconstructed, 2707 to 2817 on
+              the plan's own range, 183 to 342 short of 3000 at the high end.
+Decision:     By the coordinator, within S217's `accepts:`. **(1) No step is
+              opened**: all three gap rows are above the 3100 band, the same
+              test that keeps S023, S025, S110 and S111 in the Reserve. **(2)
+              The three outlines are filed as Reserve candidates** in
+              `adocs/plan.md`'s Reserve paragraph, without step ids, with the
+              data file as their source; a candidate becomes a step when a
+              published figure appears for it or when the owner says so.
+              **(3) The finding is recorded as such**: the gap is nearly
+              empty, coverage is not the shortfall, and DEC-179's premise --
+              a longer list closes it -- is not borne out by this survey. **(4)
+              What "a longer list" means instead is the owner's question**,
+              because it touches the goal (the reserved class of question
+              under the delegation), and it is put in `status.md` with three
+              options and a recommendation: (a) survey more engines
+              (Defenchess 2.2 and Booot 6.3.1 were read for rating only; other
+              network-free engines of the era exist unread) at a shrinking
+              return; (b) treat the shortfall as the transfer-discount
+              question S183 already named -- land S024 and S109, the two
+              largest sourced effects pending, re-derive the ratio with two
+              more published-to-measured transfers, then decide; (c) re-price
+              the order rather than extend it, or revisit the network's timing,
+              which only the owner reopens. **The coordinator recommends (b)**:
+              two verdicts move the number that matters more than any further
+              reading, and both steps are next in the order anyway. Until the
+              owner answers, the order stands.
+Rejected:     **Opening three steps to fill the table** -- S217's `accepts:`
+              forbids exactly that, and none of the three has a figure to
+              price a verdict against. **Reading more engines now** -- a
+              document-only task is cheap, but the survey's own coverage
+              paragraph says the return is shrinking, and the owner should
+              choose where the reading goes. **Reopening DEC-179 here** -- the
+              goal is the owner's; the coordinator reports the number.
+Consequences: S217 completes; `adocs/plan.md`'s Elo paragraph says the
+              extended list lands at 2658 and 2707 to 2817, unchanged; the
+              Reserve paragraph names the three candidates. S183's re-derivation
+              is owed again when S024 and S109 land (DEC-136), and that
+              re-derivation is the moment to answer the owner's question with
+              numbers if they choose (b).
