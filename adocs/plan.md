@@ -504,8 +504,8 @@ times that estimate.**
 
 ### The ledger: every SPRT verdict since the S105 regime
 
-Read from each step's own completion stamp, not from a run log. All eight ran
-at 8+0.08, Hash 16, UHO, `model=normalized`.
+Read from each step's own completion stamp, not from a run log. The first nine ran at 8+0.08, Hash 16, UHO, `model=normalized`; S042 on
+`noob_3moves.epd` (DEC-189), the first verdict on the new book.
 
 | run | what it measured | wall | games | bounds | verdict |
 |---|---|---|---|---|---|
