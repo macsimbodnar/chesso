@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S211 started, 2026-09-12 19:28, by an Opus 5 subagent (DEC-199).** The
+  originality step: the three tables and five mask builders inherited from
+  the GPL-3.0 tutorial engine re-derived from the geometry, `CMK_POS` and
+  `TRICKY_POS` renamed, the GUI artwork licensed, `books/fetch_book.sh`'s
+  false sentence made true -- proved `No functional change` on the bench
+  signature, `search_bench.py` at depths 9 and 12 and perft, with the Debug
+  self-play; `tools/gate_extra.sh` runs before it completes (DEC-141).
+  `plan_current/`: S211. Machine idle apart from the subagent's builds; the
+  owner's Codex session is live at low load. **Next: S151** (the `32+0.32`
+  estimate match, coordinator-run, on an idle machine), then S212.
+
 - **S214 is done, 2026-09-12 19:05, by an Opus 5 subagent (DEC-199), the first
   step under the evening's rules.** Three measurement tools stop failing
   silently: `tools/analyse_game.py` raises and exits 1 naming the ply, the
