@@ -42,7 +42,12 @@ Updated: 2026-09-12, by hand.
   ledger, two nights on S220, or revert); what a longer hand-crafted list
   means (DEC-192; recommendation: land S109 next among the priced effects,
   then re-derive the transfer ratio). **Next step when work resumes: S211**,
-  unless the owner answers S220 first. **Compaction point.**
+  unless the owner answers S220 first -- and before either, **an audit report
+  `adocs/audit/2026-09-12_adversarial.md` appeared untracked at 15:02**, written
+  against `98af071` by something other than this coordinator's agents (none
+  was briefed to write one); it is not read, not committed and not acted on
+  here, and per the AUDIT rule its findings become steps or decisions when
+  work resumes. **Compaction point.**
 
 - **S221 is done, 2026-09-12 12:25.** The citation checker now stitches a
   doctest title split across adjacent string literals before matching a
