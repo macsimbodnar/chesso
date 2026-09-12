@@ -21,8 +21,19 @@ Updated: 2026-09-12, by hand.
   read the draw); the incremental-equals-recomputed-hash case; `Bench:`; Debug
   self-play four rounds; then its `--nonreg` SPRT as the night run on
   `noob_3moves.epd`, pre-registered with 2110 games an hour, the 0.2905 band and
-  the defect's own name. The fast check over S219's close commit `6272149` is
-  still out; its findings, if any, land as a follow-up. **Compaction point.**
+  the defect's own name. **The fast check over S219's close commit `6272149`
+  came back at 02:10: every figure in DEC-190 reproduces, and its conclusion
+  does not** -- the balanced book's 1.13 score advantage was measured only at
+  the doubling, and DEC-190 reused it at zero while discounting the
+  comparison for the same regime mismatch. **DEC-191 corrects the reading to
+  a bracket, 0.97 to 1.29 of the old book's hours per verdict**, keeps the
+  book provisionally on the owner's leaning, and creates **S220** (Open entry
+  2, behind S042's SPRT): the two books at a quarter handicap, 12000 games,
+  about 4.8 hours, a night run, with the decision rule written first. **For
+  the owner: revert now on the pessimistic end, or keep and skip S220 on the
+  leaning -- either is one commit.** `DEV_MANUAL.md`'s cost paragraph still
+  says "a tie" until S042's completing commit, because the S042 agent holds
+  that file. **Compaction point.**
 
 - **S219 is done, the harness plays `noob_3moves.epd`, and the A/A that
   followed disagreed with the comparison until the two were read on one

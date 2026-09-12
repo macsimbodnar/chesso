@@ -10717,3 +10717,68 @@ Consequences: S219 completes with both readings in its stamp. Every
               The 328 repetition warnings in the A/A are S042's before-count
               on this book at the S198 regime (both sides equally), the figure
               S042's stamp compares its after-count against.
+
+## DEC-191  2026-09-12  DEC-190's reconciliation is corrected: the balanced book's cost per verdict is bracketed 0.97 to 1.29, not tied at 1.0; the book stays provisionally and S220 measures the missing quantity
+Tags:         harness, book, calibration, measurement, s219, s220, dec-190, review
+Context:      The fast check over S219's close commit `6272149` reproduced
+              every figure in DEC-190 to rounding (pair-score means 0.2323 and
+              0.2055, sd 0.500 and 0.508 at the handicap, variances 0.2905
+              and 0.2430 at zero, cost ratio 1.290 +/- 0.116, reconciled ratio
+              0.9719 to 1.0096; its own error 0.129 to 0.134 against the
+              stated 0.12, "optimistic, not wrong") and found one flaw in the
+              reasoning: the 1.13 signal advantage was measured only at one
+              doubling of time, and DEC-190 discounted the comparison's 0.80
+              for being taken far from the regime SPRTs run in, then reused
+              that same handicap-measured slope at zero without noting the
+              symmetry. The one quantity measured in both regimes, the pair
+              spread, reverses order between them (0.500 against 0.508 at the
+              handicap, 0.539 against 0.493 at zero), so the slope ratio may
+              move too. The reviewer is right.
+Decision:     By the coordinator. **(1) The honest reading is a bracket:** the
+              balanced book's hours per verdict on nElo bounds are between
+              **0.97 and 1.29** of the old book's -- 0.97 if the score
+              advantage measured at the doubling holds at zero, 1.29 if it
+              vanishes there -- and no measurement taken so far says where in
+              the bracket the truth is. DEC-190's "a tie" is withdrawn as a
+              conclusion; its arithmetic stands as the favourable end. The
+              mechanism argues for the favourable end -- an unbalanced
+              opening masks a small strength difference, since the opening
+              decides the game, and the masking is a property of the opening
+              at every handicap -- but that is an argument, not a number, and
+              this project does not decide on arguments. **(2) The book stays
+              `noob_3moves.epd` provisionally:** the tree already plays it,
+              the owner's leaning is balanced, and the pessimistic end costs
+              at most a quarter more hours per verdict until the bracket is
+              closed; every verdict meanwhile is attributed to the book it ran
+              on. **(3) S220 closes the bracket:** the same two books compared
+              at a medium time handicap (8+0.08 against 6+0.06), pre-registered
+              in its own script's header, 6000 games per book in two
+              counterbalanced passes; the reading is the trend of the score
+              slope ratio from the doubling (1.13) through the quarter toward
+              zero, combined with the A/A variances, and the decision rule is
+              written before the run: an extrapolated ratio at or under 1.00
+              keeps the book, over 1.10 reverts it, between is the owner's.
+              About 4.8 hours at the time-odds rate, a night run behind S042's
+              SPRT, Open entry 2. **(4) The documents carry the bracket,** not
+              the tie: `adocs/specs.md`, `adocs/plan.md`, `adocs/status.md`
+              now; `DEV_MANUAL.md`'s cost paragraph in S042's completing
+              commit, because a subagent holds that file at this hour.
+              **(5)** This is the owner's to short-circuit: revert now on the
+              pessimistic end, or keep and skip S220 on the leaning; either is
+              one commit, and the coordinator does not spend the night run on
+              S220 before S042's SPRT in any case.
+Rejected:     **Leaving DEC-190 as written** -- a conclusion the review shows
+              unestablished stays in the record only as evidence, never as
+              the current reading. **Reverting now** -- the bracket's
+              favourable end is a book the owner asked for, and its
+              pessimistic end is bounded; a 4.8 hour measurement is cheaper
+              than being wrong either way for weeks. **Measuring near zero
+              directly** -- resolving a 13 % slope difference at 20 nElo
+              takes on the order of 100000 games; the quarter handicap gives
+              the trend at one night's cost.
+Consequences: S220 is created in `adocs/plan_todo/` with its pre-registration
+              outline; the agent that runs it writes the script with the
+              header first. DEC-190's band reset and budget figure (0.2905,
+              2110 games an hour) stand. A future book comparison
+              pre-registers two handicaps, not one, so the trend is measured
+              in the same run.

@@ -678,11 +678,14 @@ The order stands.
   band, as a book change is expected to be. Variance over throughput alone
   would price a verdict at 1.29 times S198's; combined with the comparison's
   measured signal (the balanced book turns the same strength difference into
-  1.13 times the score) a verdict on `nElo` bounds costs **0.97 to 1.01 +/-
-  0.12** of what it did: a tie, kept balanced by S219's tie rule, **DEC-190**,
-  which also amends the step's cost rule. **The band for the next A/A on this
-  book is this run's**; budget from 2110 games an hour until a run under
-  `performance` re-measures it.
+  1.13 times the score) a verdict on `nElo` bounds costs **0.97** of what it
+  did if that advantage holds near zero difference, where SPRTs run, and
+  **1.29** if it vanishes there -- **a bracket, not a tie: DEC-191** corrects
+  DEC-190's reading after the fast check showed the slope was measured only
+  at the doubling. The book stays provisionally on the owner's leaning and
+  **S220** measures the trend at a quarter handicap to close the bracket.
+  **The band for the next A/A on this book is this run's**; budget from 2110
+  games an hour until a run under `performance` re-measures it.
   `adocs/data/S105_calibration*` is the evidence. **0 time forfeits in 1000
   games at the faster control**, checked from the PGN before anything else was
   read -- both `fastchess.log` files were 0 bytes, the WARN-only default again.
