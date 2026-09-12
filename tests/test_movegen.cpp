@@ -509,6 +509,45 @@ TEST_SUITE("movegen: perft")
 }
 
 
+// S042 moved en-passant to the X-FEN convention: load_FEN keeps a parsed
+// en-passant square only when a pawn of the side to move could capture on it
+// (src/bitboard.cpp's en_passant_is_capturable). The rampart fixtures
+// all_test_fens() reads from predate that and record a square after every
+// double push, capturable or not -- 126 of the 138 non-"-" fourth fields
+// across the eight files disagree with python-chess's xfen oracle (script
+// run at S042's hand-off, not kept). Three examples, confirmed uncapturable
+// with python-chess 1.11.2 (`chess.Board(fen).has_pseudo_legal_en_passant()`
+// is False on all three):
+//   castling.json rnbq1k1r/pp1Pbppp/2p5/8/P1B5/8/1PP1N1PP/RNBQK2n b Q a3 0 8
+//     -- b4, the only square a black pawn could retake from, is empty.
+//   castling.json rnbqk2N/1pp1n1pp/8/p1b5/8/2P5/PP1pBPPP/RNBQ1K1R w q a6 0 9
+//     -- b5, the only square a white pawn could retake from, is empty.
+//   castling.json rnbq1k1r/pp1Pbppp/2p5/8/2B3P1/8/PPP1N2P/RNBQK2n b Q g3 0 8
+//     -- f4 and h4, the only squares a black pawn could retake from, are
+//        both empty.
+// A literal string round trip against these fixtures is therefore no longer
+// defensible: load_FEN can only ever move the en-passant field in one
+// direction, from a specific square to "-" (the S161 sanitiser only clears,
+// per en_passant_is_capturable; it never invents a square or relocates one),
+// so every field is still compared exactly except the en-passant one, which
+// is checked against the only two outcomes that direction admits.
+static bool matches_pre_xfen_fixture(const std::string& generated,
+                                     const std::string& fixture)
+{
+  const std::vector<std::string> gen_parts = split_string(generated);
+  const std::vector<std::string> fix_parts = split_string(fixture);
+
+  if (gen_parts.size() != 6 || fix_parts.size() != 6) { return false; }
+
+  for (const size_t field :
+       {size_t{0}, size_t{1}, size_t{2}, size_t{4}, size_t{5}}) {
+    if (gen_parts[field] != fix_parts[field]) { return false; }
+  }
+
+  return gen_parts[3] == fix_parts[3] || gen_parts[3] == "-";
+}
+
+
 TEST_SUITE("movegen: FEN validation")
 {
   // Regressions for the out-of-bounds reads and undefined shifts that a
@@ -541,7 +580,10 @@ TEST_SUITE("movegen: FEN validation")
   {
     for (const std::string& fen : all_test_fens()) {
       REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-      REQUIRE_EQ(generate_FEN(&game.board), fen);
+
+      const std::string result = generate_FEN(&game.board);
+      REQUIRE_MESSAGE(matches_pre_xfen_fixture(result, fen),
+                      ("FEN: " + fen + "\nGenerated: " + result));
     }
   }
 

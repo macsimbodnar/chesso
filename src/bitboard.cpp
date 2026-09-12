@@ -736,6 +736,31 @@ static inline void move_piece(board_t* board,
 }
 
 
+// S042/DEC-187. The one rule every site that decides whether an en-passant
+// square belongs in the position must apply: it is kept only when a pawn of
+// the side that would capture stands on a square from which it attacks the
+// target. This is generate_moves_body's own en-passant candidate test
+// (`all_pawns & tables->pawn_attacks[opponent][board->en_passant]`, further
+// down this file), lifted into one helper so make_move_impl and load_FEN
+// cannot each reason about it separately and drift apart -- which is exactly
+// how a double push and a loaded FEN of the same position used to disagree.
+// Pseudo-legal, like the candidate test it mirrors: pins are not examined,
+// matching the generator before its own legality check and the X-FEN reading
+// ("if legal") the owner picked for this step.
+static inline bool en_passant_is_capturable(const bb_tables_t* tables,
+                                            const board_t* board,
+                                            index_t target,
+                                            color_t capturer)
+{
+  if (target == INVALID_INDEX) { return false; }
+
+  const bb_t capturer_pawns =
+      board->bitboards[(capturer == WHITE) ? W_PAWN : B_PAWN];
+
+  return (capturer_pawns & tables->pawn_attacks[!capturer][target]) != BB_0;
+}
+
+
 // The side to move is constant for the whole call, so it is a template
 // parameter rather than a value read from the board. Every `(us == WHITE) ? a
 // : b` below then folds at compile time: the promotion maps, the en-passant
@@ -824,15 +849,25 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   // ep_randoms has an entry for INVALID_INDEX and it must be folded in and out
   // like any other square. Skipping it when there is no en-passant square (as
   // this used to) leaves the incremental hash offset by a constant from
-  // compute_full_hash() and from set_en_passant(), both of which apply it
-  // unconditionally, so the two would disagree about the key for the same
-  // position.
+  // compute_full_hash(), which applies it unconditionally, so the two would
+  // disagree about the key for the same position.
   // Almost every move goes INVALID -> INVALID, where the two xors cancel. Only
   // pay for them when the square actually changes.
+  //
+  // S042/DEC-187: a double push sets the square only when `them` -- the side
+  // to move in the resulting position -- has a pawn that attacks it.
+  // Unconditional used to hash the position after every double push
+  // differently from the identical position reached another way (two orders
+  // of the same two moves, or the same position loaded from a FEN), which is
+  // what let a pre-root repetition escape classify_repetition()'s key compare
+  // undetected and score a lost position as a draw (DEC-187).
   const index_t push =
       static_cast<index_t>((us == WHITE) ? (move.to + 8) : (move.to - 8));
   const index_t new_en_passant =
-      move.double_push ? push : static_cast<index_t>(INVALID_INDEX);
+      (move.double_push &&
+       en_passant_is_capturable(game_tables(), board, push, them))
+          ? push
+          : static_cast<index_t>(INVALID_INDEX);
 
   if (new_en_passant != board->en_passant) {
     board->hash ^= randoms->ep_randoms[board->en_passant];
@@ -1497,16 +1532,6 @@ void swap_side(game_t* game)
 }
 
 
-void set_en_passant(game_t* game, index_t en_passant_index)
-{
-  assert(game != nullptr);
-
-  game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
-  game->board.en_passant = en_passant_index;
-  game->board.hash ^= game->hash_randoms.ep_randoms[game->board.en_passant];
-}
-
-
 bool is_capturing_king(const board_t* board, move_t move)
 {
   assert(board != nullptr);
@@ -1998,8 +2023,17 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
       const index_t victim = static_cast<index_t>(
           white_to_move ? (board->en_passant + 8) : (board->en_passant - 8));
 
-      supported = board->squares[board->en_passant] == EMPTY &&
-                  board->squares[victim] == (white_to_move ? B_PAWN : W_PAWN);
+      // S042/DEC-187: the target being empty and the victim pawn standing
+      // where the capture's xor expects it are necessary but say nothing
+      // about whether any pawn can actually play the capture -- a square
+      // nothing can capture on is exactly the class this step removes, so the
+      // mover having a pawn that attacks the target is a third, independent
+      // term, not a replacement for the first two.
+      supported =
+          board->squares[board->en_passant] == EMPTY &&
+          board->squares[victim] == (white_to_move ? B_PAWN : W_PAWN) &&
+          en_passant_is_capturable(game_tables(), board, board->en_passant,
+                                   board->active_color);
     }
 
     if (!supported) { board->en_passant = INVALID_INDEX; }

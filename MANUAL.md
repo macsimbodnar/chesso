@@ -252,11 +252,18 @@ A FEN carrying a castling right or an en-passant square the board cannot
 support is **accepted with that field cleared**, not refused. A right survives
 only if the king and that rook are still on their own squares, and an
 en-passant square survives only if it is on rank 6 for White to move or rank 3
-for Black, its own square is empty, and the enemy pawn that would be captured
-is standing behind it. Nothing is reported back over UCI; the position simply
+for Black, its own square is empty, the enemy pawn that would be captured is
+standing behind it, **and a pawn of the side to move stands where it could
+actually play the capture** (S042, 2026-09-12). The last condition is the
+X-FEN reading: pseudo-legal, so a pin that would make the capture illegal does
+not clear the field. Nothing is reported back over UCI; the position simply
 loads without the field. Stale rights and stale en-passant squares are common
 in books, converted games and GUI output, and until 2026-08-22 the engine
-believed them and corrupted its own board playing the moves they licensed.
+believed them and corrupted its own board playing the moves they licensed; an
+en-passant square nothing could actually capture survived that fix and is
+cleared only from S042 on, because it is not an in-play corruption but a wrong
+key -- two positions differing only by an uncapturable en-passant square are
+the same position and must hash the same, or a repetition can go undetected.
 
 `ponderhit` is accepted; pondering itself is not implemented.
 

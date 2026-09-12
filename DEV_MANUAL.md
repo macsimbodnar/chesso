@@ -1859,7 +1859,7 @@ chesso bench 9                        # a shallower run; NOT the signature
 ```
 
 **At `S189`, on the workstation: `24880255`. At `S203`: `26851183`. At `S207`:
-`26491479`. At `S208`: `30046849`.** Quote it
+`26491479`. At `S208`: `30046849`. At `S042`: `27322394`.** Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which
@@ -2370,9 +2370,13 @@ over a combined error of 0.0240) -- the noise per pair rose, as a book change
 is expected to move it. Read alone, variance over throughput would price a
 verdict at 1.29 ± 0.12 times S198's; read with S219's comparison, which
 measured the balanced book turning the same strength difference into 1.13
-times the score, a verdict on `nElo` bounds costs **0.97 to 1.01 ± 0.12** of
-what it did -- a tie, and DEC-190 keeps the balanced book on it and resets the
-DEC-143 band to this run's 0.2905 ± 0.0184.
+times the score, a verdict on `nElo` bounds costs **0.97** of what it did if
+that advantage holds near zero difference, where SPRTs run, and **1.29** if it
+does not -- a bracket, not a tie (DEC-190 read it as a tie; DEC-191 corrected
+that after the fast check showed the slope was measured only at the
+doubling). The book stays provisionally and S220 measures the trend at a
+quarter handicap. The DEC-143 band for the next A/A on this book is this run's
+0.2905 ± 0.0184.
 
 **Throughput went up ×1.67, not ×3.** DEC-083 priced the change at "roughly
 three times the verdicts per night"; measured, it is 23.1 → 38.7 games a

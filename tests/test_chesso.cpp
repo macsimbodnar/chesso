@@ -231,6 +231,45 @@ int make_random_move(int depth, game_t* g)
 }
 
 
+// S042 moved en-passant to the X-FEN convention: load_FEN keeps a parsed
+// en-passant square only when a pawn of the side to move could capture on it
+// (src/bitboard.cpp's en_passant_is_capturable). test_files' rampart fixtures
+// predate that and record a square after every double push, capturable or
+// not -- 126 of the 138 non-"-" fourth fields across the eight files disagree
+// with python-chess's xfen oracle (script run at S042's hand-off, not kept).
+// Three examples, confirmed uncapturable with python-chess 1.11.2
+// (`chess.Board(fen).has_pseudo_legal_en_passant()` is False on all three):
+//   castling.json rnbq1k1r/pp1Pbppp/2p5/8/P1B5/8/1PP1N1PP/RNBQK2n b Q a3 0 8
+//     -- b4, the only square a black pawn could retake from, is empty.
+//   castling.json rnbqk2N/1pp1n1pp/8/p1b5/8/2P5/PP1pBPPP/RNBQ1K1R w q a6 0 9
+//     -- b5, the only square a white pawn could retake from, is empty.
+//   castling.json rnbq1k1r/pp1Pbppp/2p5/8/2B3P1/8/PPP1N2P/RNBQK2n b Q g3 0 8
+//     -- f4 and h4, the only squares a black pawn could retake from, are
+//        both empty.
+// A literal string comparison against these fixtures' fourth field is
+// therefore no longer defensible: load_FEN can only ever move the en-passant
+// field in one direction, from a specific square to "-" (the S161 sanitiser
+// only clears, per en_passant_is_capturable; it never invents a square or
+// relocates one), so every field is still compared exactly except the
+// en-passant one, which is checked against the only two outcomes that
+// direction admits.
+static bool matches_pre_xfen_fixture(const std::string& generated,
+                                     const std::string& fixture)
+{
+  const std::vector<std::string> gen_parts = split_string(generated);
+  const std::vector<std::string> fix_parts = split_string(fixture);
+
+  if (gen_parts.size() != 6 || fix_parts.size() != 6) { return false; }
+
+  for (const size_t field :
+       {size_t{0}, size_t{1}, size_t{2}, size_t{4}, size_t{5}}) {
+    if (gen_parts[field] != fix_parts[field]) { return false; }
+  }
+
+  return gen_parts[3] == fix_parts[3] || gen_parts[3] == "-";
+}
+
+
 // Every case in this file reaches the attack tables through generate_moves(),
 // load_FEN() or make_move(). They used to be filled by a case named "Test
 // INITIALIZATION" that ran first only because doctest's default order is file
@@ -266,7 +305,9 @@ TEST_SUITE("Test utils")
           REQUIRE(load_FEN(expected_FEN, &game));
 
           const std::string result_FEN = generate_FEN(&game.board);
-          REQUIRE_EQ(result_FEN, expected_FEN);
+          REQUIRE_MESSAGE(
+              matches_pre_xfen_fixture(result_FEN, expected_FEN),
+              ("Expected: " + expected_FEN + "\nGot: " + result_FEN));
         }
 
         for (const json& expected : test_case["expected"]) {
@@ -274,7 +315,9 @@ TEST_SUITE("Test utils")
           REQUIRE(load_FEN(expected_FEN, &game));
 
           const std::string result_FEN = generate_FEN(&game.board);
-          REQUIRE_EQ(result_FEN, expected_FEN);
+          REQUIRE_MESSAGE(
+              matches_pre_xfen_fixture(result_FEN, expected_FEN),
+              ("Expected: " + expected_FEN + "\nGot: " + result_FEN));
         }
       }
     }
@@ -461,17 +504,51 @@ TEST_SUITE("Test move generator")
 
             std::string new_fen = generate_FEN(&game.board);
 
+            // S042 moved en-passant to the X-FEN convention (see the comment
+            // above matches_pre_xfen_fixture): `fen`, the fixture's expected
+            // result, predates that and can carry a now-uncapturable square a
+            // real double push still produces. Comparing `new_fen` to `fen`
+            // literally would fail on exactly the positions this convention
+            // change targets, so `fen` is instead loaded through the same
+            // load_FEN sanitiser the played-out position went through, and the
+            // two boards' own generate_FEN output is compared -- both
+            // canonicalised the same way, so a real divergence in placement,
+            // side to move, castling, halfmove clock or fullmove number still
+            // fails this exactly as before.
+            game_t expected_game = {};
+            REQUIRE(load_FEN(fen, &expected_game));
+            const std::string expected_fen_canonical =
+                generate_FEN(&expected_game.board);
+
+            // Unmake before asserting, not after: found while doing S042, but
+            // the mechanism is orthogonal to the en-passant convention and
+            // predates it. REQUIRE_MESSAGE's diagnostic argument is only
+            // evaluated by doctest if the assertion fails, and that lambda
+            // walks moves[] -- generated from the position before
+            // move_to_make -- through move_to_algebraic(), which calls
+            // make_move() internally to disambiguate. With `game.board`
+            // still advanced past move_to_make, that replays a stale move
+            // against the wrong side's board: silently wrong in Release (the
+            // diagnostic prints a bogus difference/board), and a
+            // move_belongs_to_side_to_move abort in Debug, because the
+            // now-mutated board and the pre-mutation moves[] disagree on
+            // whose move it is. Unmaking first restores exactly the board
+            // moves[] was generated from, so the diagnostic -- if it ever
+            // runs -- walks moves[] against the board it belongs to.
+            unmake_move(&game);
+
             REQUIRE_MESSAGE(
-                new_fen == fen,
+                new_fen == expected_fen_canonical,
                 ("\nStarting FEN: " + starting_pos +
                  "\nExpect move: " + move_str + "\n" +
                  "Translated into: " + print_move(move_to_make) + "\nin:\n" +
                  moves_to_string(moves, moves_count, &game) + "Difference:\n" +
                  difference_to_string(expected_moves, moves, moves_count,
                                       &game) +
-                 print_nice_board(&game.board)));
-
-            unmake_move(&game);
+                 print_nice_board(&game.board) +
+                 "\nFixture FEN (pre-X-FEN): " + fen +
+                 "\nFixture FEN (canonicalised): " + expected_fen_canonical +
+                 "\nGot: " + new_fen));
           }
         }
       }

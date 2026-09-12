@@ -114,6 +114,15 @@ target_include_directories(test_corpus_dedupe PRIVATE ../tools)
 # test like the rest.
 add_doctest_target(test_audit_fen_semantics)
 
+# S042: the en-passant square is kept only when a pawn of the side to move can
+# capture it. 2026-09-11_adversarial (DEC-187) -- make_move_impl keyed the
+# square unconditionally on every double push, so a position that recurs by
+# the rules of chess hashed differently depending on how it was reached, and
+# classify_repetition()'s key compare never saw the recurrence. No dataset and
+# no deep search -- one fixed-depth search over a handful of plies and a
+# handful of load_FEN/make_move calls -- so it is a fast test like the rest.
+add_doctest_target(test_en_passant_key)
+
 # S175: the Polyglot key on an edge-file en-passant square.
 # 2026-09-03_adversarial-F01 -- get_key() looked for the capturing pawn with
 # +7/+9 (-9/-7) index offsets, which wrap round the board edge for an en-passant

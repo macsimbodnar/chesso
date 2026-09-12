@@ -53,13 +53,32 @@ const std::string START_BLACK_TO_MOVE =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
 
 // A real position with an en passant square, and the same placement without
-// one. Nothing in the corpus format or in load_FEN checks that a pawn can
-// actually take, which is `2026-08-13_adversarial-F08` and S042; the key covers
-// the square either way and so does this pair.
+// one -- except the square is not one a pawn can reach: no white pawn stands
+// on b5 or d5, confirmed uncapturable with python-chess 1.11.2
+// (`chess.Board(AFTER_C5_EP).has_pseudo_legal_en_passant()` is False, xfen
+// prints "-"). Before S042 the key covered the square either way, so this
+// pair separated; after it, load_FEN's sanitiser clears AFTER_C5_EP's fourth
+// field on load and the two key identically, correctly, since X-FEN makes
+// them the same position (S042/DEC-187, the owner's 2026-09-08 choice). That
+// merge is asserted below, in "an en passant square with no capturing pawn no
+// longer separates two positions". Kept here too as a filler distinct
+// position for the tests that just need a third FEN unrelated to castling or
+// side to move: its placement alone already separates it from START and
+// AFTER_E4, regardless of the en-passant convention.
 const std::string AFTER_C5_EP =
     "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2";
 const std::string AFTER_C5_NO_EP =
     "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+
+// The pair that now exercises "the en passant square separates two
+// positions" in its place: a white pawn on e5 stands beside black's fresh
+// double push to d5, so d6 is genuinely capturable -- confirmed with
+// python-chess 1.11.2 (`has_pseudo_legal_en_passant()` is True; xfen keeps
+// "d6" unchanged). S042.
+const std::string AFTER_D5_EP =
+    "rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
+const std::string AFTER_D5_NO_EP =
+    "rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3";
 
 // A different placement altogether.
 const std::string AFTER_E4 =
@@ -148,10 +167,15 @@ TEST_CASE(
     std::string right;
   };
 
+  // AFTER_C5_EP/AFTER_C5_NO_EP moved out of this list, S042: that pair's en
+  // passant square (c6) has no capturing pawn, so under X-FEN the two are the
+  // same position and are expected to merge, not separate -- see the
+  // dedicated case below. AFTER_D5_EP/AFTER_D5_NO_EP takes its place: d6 is
+  // genuinely capturable, so that pair still must separate.
   const std::vector<pair_t> pairs = {
       {START, START_NO_WHITE_QUEENSIDE},
       {START, START_BLACK_TO_MOVE},
-      {AFTER_C5_EP, AFTER_C5_NO_EP},
+      {AFTER_D5_EP, AFTER_D5_NO_EP},
   };
 
   for (const pair_t& pair : pairs) {
@@ -168,6 +192,39 @@ TEST_CASE(
     CHECK(stats.rows_dropped == 0);
     CHECK(out == first + "\n" + second + "\n");
   }
+}
+
+
+// AFTER_C5_EP/AFTER_C5_NO_EP used to be one of the pairs above, back when the
+// key covered any en passant square the FEN carried, whether or not a pawn
+// could reach it. S042 changed that to X-FEN: a pawn of the side to move must
+// stand where it attacks the target. AFTER_C5_EP's fourth field (c6) fails
+// that test -- no white pawn on b5 or d5, confirmed with python-chess 1.11.2
+// (`has_pseudo_legal_en_passant()` is False, `fen(en_passant="xfen")` prints
+// "-"). load_FEN's sanitiser now clears it on load, so AFTER_C5_EP and
+// AFTER_C5_NO_EP key identically -- correctly, since under X-FEN they are the
+// same position (S042/DEC-187, the owner's 2026-09-08 choice). The intent the
+// old pairing encoded, "the en passant field always separates", does not
+// survive that convention; this case restates it as its replacement, the two
+// rows collapsing to one.
+TEST_CASE(
+    "an en passant square with no capturing pawn no longer separates two "
+    "positions")
+{
+  const std::string first = row(AFTER_C5_EP, "1.0", "31", "24");
+  const std::string second = row(AFTER_C5_NO_EP, "0.0", "-58", "24");
+
+  std::string out;
+  std::string error;
+  corpus_dedupe::stats_t stats;
+
+  REQUIRE(dedupe(corpus({first, second}), false, &out, &stats, &error));
+
+  CHECK(stats.rows_written == 1);
+  CHECK(stats.rows_dropped == 1);
+
+  // The first row survives, byte for byte, the same rule DEC-065 states above.
+  CHECK(out == first + "\n");
 }
 
 
