@@ -13,7 +13,7 @@ closes:
 blocks:
 paused_by:
 author:     a Sonnet 5 subagent briefed by the coordinator (DEC-185, DEC-188); started 2026-09-12 07:15
-done:
+done:       2026-09-12 13:05, verdict 1 H0 and reverted, verdict 2 not attempted (DEC-194). The one-ply continuation history -- `cont_hist[12][64][12][64]` on `search_state_t`, one index helper, S093's bonus/malus and `QuietHistoryMax` reused unfitted, guarded on a previous move existing -- landed as `cace216` (`Bench: 22363740`) with red-first tests, two mutants killed, gate and `gate_extra.sh` green, Debug self-play 8 games 0 `Assertion`. **Gainer SPRT `{0, 5}` against `b5c357a` on `noob_3moves.epd`: H0, LLR -2.96, nElo -5.48 +/- 7.20, Elo -4.42 +/- 5.81, 8954 games in 4 h 10 m 11 s, 0 forfeits either side.** The pre-registered census (`adocs/data/S024_census_run.py`, 400 positions, depth 10, 112638096 nodes): the table reached in 97.6 % of quiet cutoffs and 96.2 % of quiet reads, non-zero in 27.1 % of consulted reads -- exercised, so the H0 is about the technique as built. **Reverted in `ecdfadb`, `Bench: 27322394` again**; the technique returns as S222 with its own fitted scale behind S127. Documents: `specs.md` records the H0 and the revert, `DEV_MANUAL.md`'s ledger keeps the 22363740 line annotated, `MANUAL.md` unaffected, `README.md` human-owned, untouched. Two Sonnet 5 subagents built and read it (DEC-185, DEC-188); the coordinator launched, reverted and stamped
 
 ## Note
 
@@ -738,3 +738,231 @@ defects of BUGS class at launch: none (`adocs/status.md` checked). Started
 in the morning rather than at night because the machine would otherwise have
 idled: the ledger's fast class prices a real effect at about 2.5 h, and a null
 runs to the 19.8 h wall, which the pre-registration accepts.
+
+## Verdict 1, 2026-09-12
+
+### SPRT: H0
+
+`./fastchess.sh` against `b5c357a`, `elo0=0 elo1=5` nElo, `alpha=beta=0.05`,
+`noob_3moves.epd`, 8+0.08, Hash 16 -- the pre-registration above, as run:
+
+```
+Elo: -4.42 +/- 5.81, nElo: -5.48 +/- 7.20
+Games: 8954, Wins: 2936, Losses: 3050, Draws: 2968
+Ptnml(0-2): [487, 1042, 1520, 954, 474]
+LLR: -2.96 (-100.5%) (-2.94, 2.94) [0.00, 5.00]
+Total Time: 04:10:11
+```
+
+**H0**: not worth 5 nElo, per the pre-registered reading -- a regression of 5
+or more is not excluded either; the interval sits inside `[-5, 5]`,
+0 has not been distinguished from a real effect either side of it. Forfeits
+**0 of 8955** on both sides, `tools/forfeit_report.py` run over the run's own
+PGN independently of the harness banner (the PGN itself holds 8955 game
+records -- `grep -c '^\[Event' games.pgn` -- one more than the banner's own
+`Games: 8954`; decisive-plus-draws from the forfeit report, 5987 + 2968,
+matches the PGN's 8955 exactly, so nothing is missing from the record, and
+the one-game gap is the banner's summary line printing before the PGN writer
+appends the game that triggered the stop, not a discrepancy in what was
+played). Rate: 8954 games in 4 h 10 m 11 s (15011 s) is **2147.4 games an
+hour** -- next to S042's 2142.8 and well under the nine UHO-book entries'
+2305 to 2346, both of this ledger's two `noob_3moves.epd` runs sharing the
+new book's longer games (DEC-190: 114 plies against 102). Console
+`.tuning/s024v1_sprt.log`, run directory
+`.tuning/s024v1_sprt_20260912_080633/` (`games.pgn`, `fastchess.log`).
+
+Console warnings: **22** `Incomplete mating PV` from the reference, **8**
+from the candidate, and **1** `PV continues after threefold repetition` from
+the candidate -- the S042 residual class named in the brief; noted, not
+analysed here.
+
+### The H0 census
+
+**No fixed 400-position corpus file exists in this repository.** Grepped
+before sampling anything: `adocs/data/`, every `S165`/`S103`/`S108` file, and
+`src/search.cpp`'s own comments. `src/search.cpp`'s null-move mate-band note
+("over 400 corpus positions at depth 10...") and S103's reverse-futility
+hit-rate note ("300 positions...") both cite ad hoc, uncommitted instrumented
+passes -- neither left a checked-in FEN list behind. So this census samples
+its own 400, from `adocs/data/S219_aa_calibration.pgn` (S219's 1000-game
+book-comparison self-play, the newest corpus of real chesso games on disk).
+
+**Not through `build/tools/pgn_to_positions`, the brief's first-choice
+method.** That tool hardcodes `DEFAULT_POSITION` as its replay start
+(`tools/pgn_to_positions.cpp`), and every one of this PGN's 1000 games
+carries its own `[SetUp "1"]`/`[FEN ...]` book-opening header -- confirmed by
+grep, 1000 `[SetUp "1"]` for 1000 `[Event`. This is the exact wall S042 already
+hit over this exact file (`adocs/plan_done/S042_en_passant_only_when_capturable.md`,
+"FEN conformance" section): "these are self-play games from an opening book,
+not from the default position, so `build/tools/pgn_to_positions` cannot
+replay them, it hardcodes DEFAULT_POSITION." S042 drove the engine directly
+over UCI instead, to test the engine's own FEN writer; this census's need is
+narrower -- valid FENs of real-game positions, not a test of the writer -- so
+`adocs/data/S024_census_run.py sample` reads each game's `[FEN]` header and
+mainline with `python-chess`, already this codebase's oracle wherever a
+position is checked against or built from outside the engine itself (S042's
+own X-FEN comparison, S165's mate-set construction). No move is tracked by
+hand (CLAUDE.md, DEC-023): python-chess replays every game and the sampled
+FEN is the board after N of its own validated pushes.
+
+**Sampling rule, deterministic.** `random.Random(24)` (this step's own id)
+shuffles the 1000 game indices, then visits them in that order and takes,
+from each, the position at that game's own midpoint ply
+(`len(mainline_moves) // 2`) -- one position per game, so 400 distinct games
+rather than several plies clustered in a few. First 400 games in shuffle
+order that clear a 10-ply minimum are kept (all 1000 do -- shortest game is
+31 plies, checked directly). The seed alone reproduces the set; written to
+`adocs/data/S024_census_positions.txt`.
+
+**Instrumentation.** A throwaway worktree (`git worktree add ... HEAD`,
+removed after this run) at HEAD (`ef43bff`, which already carries `cace216`;
+the two commits between them -- `47344f3`, `ef43bff` itself -- touch neither
+`src/search.cpp`, `src/evaluation.cpp`, `src/data_structures.hpp` nor
+`src/chesso.cpp`, checked by path-filtered `git log`, so the continuation-history
+mechanism this census measures is byte-identical to what verdict 1's SPRT
+played). Five `mutable uint64_t` counters added to `search_state_t`
+(zeroed the same way `cont_hist` itself is, by `state = {}` at the top of
+every `iterative_deepening_search()`): `history_on_quiet_cutoff()` increments
+`census_writes_total` on every call and `census_writes_with_prev` when
+`has_prev` is true; `score_move()`'s final quiet-scoring path (past the
+TT/capture/promotion/killer/counter early returns) increments
+`census_reads_total` on every call, and inside its own `prev_move != 0` guard,
+`census_reads_with_prev` and -- when `continuation_entry(...)` reads non-zero
+-- `census_reads_nonzero`. `iterative_deepening_search()` prints
+`info string cont_hist_census <writes_total> <writes_with_prev> <reads_total>
+<reads_with_prev> <reads_nonzero>` once per search, before `return result;`.
+Release build in the worktree's own `build/` (`cmake -S . -B build
+-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache && cmake
+--build build -j12 --target chesso`), never touching the real tree's `build/`.
+
+**Driven correctly, and the trap this avoided.** `printf
+'...\ngo depth 10\n' | build/src/chesso` (no persistent pipe) answers depth 1
+at 49 nodes -- confirmed on both an unmodified `build/src/chesso` and this
+census's own instrumented binary, same input. Closing stdin the instant the
+piped input is written reaches the engine the same way an explicit `quit`
+would: it races `go` and the search never gets past its first iteration --
+TOOLCHAIN.md's chess-oracle warning, general to this engine and not only to
+Stockfish. `adocs/data/S024_census_run.py`'s `Engine` class instead keeps one
+`subprocess.Popen` alive for the whole run: `uci`/`uciok`, `setoption name
+Hash value 16`, `isready`/`readyok`; per position, `position fen`, then
+`isready`/`readyok` (also the S216 precedent -- a refused `position fen` is
+read from that reply and exits loudly rather than silently measuring the
+previous board), then `go depth 10` with every line read through to
+`bestmove` before anything else is sent, then `ucinewgame`; `quit` only after
+the 400th `bestmove`, never behind an un-awaited `go`.
+
+**Totals**, `adocs/data/S024_census.tsv`, 400 positions, depth 10, Hash 16:
+
+```
+total nodes:    112638096
+wall time:      15.1 s
+writes_total:          1388919   writes_with_prev:   1354960   (97.56 %)
+reads_total:          83257904   reads_with_prev:   80083780   (96.19 %)
+reads_nonzero:        21735125   of reads_with_prev: 80083780  (27.14 %)
+per-position reads_nonzero/reads_with_prev share:
+  min 4.15 %   median 24.06 %   max 48.37 %
+```
+
+**Reading, per the pre-registration's own two failure modes -- barely
+touched, or never touched.** Neither holds. 97.56 % of
+`history_on_quiet_cutoff()` calls reach the `prev_move != 0` branch and
+96.19 % of quiet `score_move()` evaluations consult the continuation term
+across 400 real positions at depth 10, 112638096 nodes total -- writes and
+reads both reach their guarded branch on nearly every attempt, the small
+remainder being exactly the root ply and the node right after a null move,
+where `prev_move` is genuinely 0 by construction. Of the reads that consult
+the table, 27.14 % find a non-zero entry, and this is not a property of one
+or two favourable positions carrying the average: the per-position share of
+non-zero-among-consulted ranges 4.15 % to 48.37 %, median 24.06 %, so every
+position in the sample has the table returning a real, non-zero signal on a
+substantial fraction of its own quiet-move reads. This is the opposite
+profile from the null-move census this pre-registration's H0 clause is
+modelled on (`src/search.cpp`: 0 of 301620 eligible nodes in ordinary play,
+inert wiring where any verdict would have been a verdict on the wiring and
+not the technique). Here the table is exercised almost everywhere a quiet
+move is scored, and what it holds is read back as a real number roughly a
+quarter of the time it is consulted. If H0 stands as the verdict on
+continuation history, this census says it is not for want of the table being
+touched.
+
+### Ledger arithmetic
+
+`adocs/plan.md` "## What this costs", recomputed with S024 v1 added to the
+ledger (wall `4 h 10 m 11 s` = 15011 s exactly, 8954 games, bounds `{0, 5}`,
+verdict H0, slow class -- an effect inside the interval). All eleven wall
+times, converted to seconds and sorted:
+
+| run | wall | seconds |
+|---|---|---|
+| S149 | 1 h 05 m | 3900 |
+| S107 | 1 h 37 m 52 s | 5872 |
+| S042 | 2 h 40 m 45 s | 9645 |
+| S093 v1 | 2 h 44 m | 9840 |
+| S024 v1 | 4 h 10 m 11 s | 15011 |
+| S207 | 4 h 26 m 56 s | 16016 |
+| S108 | 5 h 26 m 38 s | 19598 |
+| S148 | 6 h 19 m 35 s | 22775 |
+| S093 v2 | 6 h 35 m | 23700 |
+| S130 | 7 h 12 m | 25920 |
+| S165 | 7 h 58 m 07 s | 28687 |
+
+Sum of the ten (cross-check against plan.md's own "107107 games in 46.10
+hours"): 165953 s = 46.09806 h -> **46.0981 h**, matches to the digit; ten-set
+mean 16595.3 s = 4 h 36 m 35 s -> rounds to the stated "4 h 37 m"; ten-set
+median (5th+6th)/2 = (16016+19598)/2 = 17807 s = 4 h 56 m 47 s -> rounds to
+the stated "4 h 57 m". Method cross-checked against the document's own
+published figures before extending it.
+
+**Eleven, with S024 v1 added.** Sum = 165953 + 15011 = **180964 s**.
+- **Mean**: 180964 / 11 = 16451.2727 s = **4 h 34 m 11 s** (rounds to 4 h 34 m).
+- **Median** (6th of 11 sorted): **16016 s = 4 h 26 m 56 s** -- S024 v1's
+  15011 s slots in just below S207's 16016 s, so the two middle values of the
+  old ten-set collapse to one exact data point rather than an average.
+
+**Slow class, six now**: S024 v1 (15011), S108 (19598), S148 (22775),
+S093 v2 (23700), S130 (25920), S165 (28687). Sum = **135691 s**.
+Mean = 135691 / 6 = 22615.17 s = **6 h 16 m 55 s** (rounds to 6 h 17 m),
+against the five-run 6 h 42 m 16 s ("6 h 42 m") before this verdict.
+
+**Fast class, unchanged**: S149, S107, S093 v1, S207, S042 -- none of this
+step's business, still five, still 45273 s / 5 = 9054.6 s = 2 h 30 m 55 s,
+**"2 h 31 m"**.
+
+**Totals across the set**: games 107107 + 8954 = **116061**; hours
+180964 / 3600 = **50.2678 h**; rate 116061 x 3600 / 180964 = **2308.9 games
+an hour** (2308.85 unrounded) -- against the ten-set's 2323.5, pulled down by
+S024 v1's own 2147.4.
+
+**S024 v1's own rate**: 8954 x 3600 / 15011 = **2147.4 games an hour**.
+
+**Priced totals, plan.md's "Priced by class" formulas, same 42-52 / 45-55
+verdict-count ranges, new means substituted:**
+
+```
+42 to 52 slow-class  x 6 h 16 m 55 s (6.2820 h) =  264 to 327 h
+        (42 x 6.2820 = 263.8 h;  52 x 6.2820 = 326.7 h)
+
+flat mean 4 h 34 m 11 s (4.5698 h)  x 45 to 55  =  206 to 251 h
+        (45 x 4.5698 = 205.6 h;  55 x 4.5698 = 251.3 h)
+```
+
+For reference only, not requested but following the section's own structure
+(fast class unchanged at 3 x 2 h 31 m = 7.5 h): class-split total
+7.5 + 264 to 327 = **271 to 334 machine-hours**, against the pre-S024-v1
+289 to 356. Both totals fall as the new slow mean (6 h 17 m) is lower than
+the five-run figure it replaces (6 h 42 m) -- S024 v1 landed faster than the
+slow class's previous average, not because the pair was cheaper (same
+`{0, 5}`) but because `noob_3moves.epd` runs at a lower games-an-hour rate
+that this ledger has now seen twice (S042, S024 v1) and both land on the low
+side of the games *count* a `{0, 5}` pair needs, not the wall time -- the
+two effects partially cancel and are not the same thing. **Not applied to
+plan.md**: this subagent's hard limit; the coordinator recomputes the
+document itself from these figures.
+
+Note, separate from anything this subagent was asked to touch: the section's
+existing prose reads "The flat mean gives **217 to 265 hours** (4 h 37 m x 45
+to 55, 207 to 254 hours)" -- the parenthetical (207-254) is the arithmetic
+that `4 h 37 m x 45 to 55` actually gives (4.6167 h x 45 = 207.75,
+x 55 = 253.9), and the headline figure beside it (217-265) does not match
+either that parenthetical or the formula it glosses. Flagged for the
+coordinator, not corrected here (plan.md is this subagent's hard limit).

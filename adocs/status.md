@@ -7,6 +7,43 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S024 is done on H0 and reverted, 2026-09-12 13:05, and the coordinator
+  stopped here on the owner's instruction ("stop after all the current tasks
+  are completed").** Verdict 1's gainer SPRT on `noob_3moves.epd` against
+  `b5c357a`: **H0, LLR -2.96, nElo -5.48 +/- 7.20, Elo -4.42 +/- 5.81, 8954
+  games in 4 h 10 m 11 s, 0 forfeits either side.** The pre-registered census
+  (`adocs/data/S024_census_run.py`, 400 positions from the S219 A/A corpus,
+  depth 10): the table reached in 97.6 % of quiet cutoffs and 96.2 % of quiet
+  reads, non-zero in 27.1 % of consulted reads -- exercised, so H0 is about
+  the technique as built (plain history's formula and bound, two equal terms,
+  unfitted). **Reverted in `ecdfadb`** (`src/` and the two test files back to
+  `b5c357a`, the mutant script gone, `Bench: 27322394`, gate 34/34 both trees
+  minus one: `test_plan_citation_freshness` was red on that commit because
+  the step file cited a test title the revert removed, and green again from
+  this commit, which moves the file to `plan_done/` -- the coordinator's
+  pipeline masked ctest's exit status and committed red, stated here rather
+  than hidden). **DEC-194** records the decision; **S222** files the retry
+  with the table's own scale fitted in S127's lane first, placed behind S127.
+  Verdict 2 (the two-ply table) was not attempted. The ledger: eleven
+  verdicts, mean 4 h 34 m, median 4 h 27 m, slow class 6 h 17 m over six,
+  2308.9 games an hour across the set. One `PV continues after threefold
+  repetition` from the candidate in 8955 games, the S042 residual class.
+
+  **Where things stand for whoever picks this up.** `plan_current/` is
+  empty. The Open list: 1. S220 (gated on the owner, DEC-193), 2. S211, then
+  S151, S212, S109, S218, S199, S210, S213, S221 done, S194, S091 ... S222
+  behind S127. Commits today, none pushed: 5540e96 (DEC-188), 5047070 (book
+  switch), 6272149 (S219 close), 92b1dba (S216), a3e84e1 (DEC-191, S220),
+  50b1ff9 (S042 fix), 13af16d, 31f4b7d, be35058 (S217), ffdbdc0 (DEC-193),
+  9502175/ae1df15/b5c357a (S042 close), cace216 (S024 v1), 47344f3,
+  ef43bff (S221), ecdfadb (revert), and this one. **The four owner items
+  stand**: the zip digest for `noob_3moves.epd`; governor `performance`
+  before the next A/A; the book bracket (DEC-191/193: keep and watch the
+  ledger, two nights on S220, or revert); what a longer hand-crafted list
+  means (DEC-192; recommendation: land S109 next among the priced effects,
+  then re-derive the transfer ratio). **Next step when work resumes: S211**,
+  unless the owner answers S220 first. **Compaction point.**
+
 - **S221 is done, 2026-09-12 12:25.** The citation checker now stitches a
   doctest title split across adjacent string literals before matching a
   phrase citation, red first on a planted fixture, unit tests 19/19,
