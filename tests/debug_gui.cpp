@@ -12,9 +12,6 @@
 
 static constexpr char FONT_PATH[] = "assets/gui/font/PressStart2P.ttf";
 
-static constexpr char PICK_SOUND[] = "tick_2";
-static constexpr char RELEASE_SOUND[] = "tick_4";
-
 #define U32(x) static_cast<uint32_t>(x)
 #define INT(x) static_cast<int>(x)
 
@@ -294,7 +291,6 @@ private:
   control_panel_conf panel_conf;
 
   std::map<piece_t, texture_t> piece_textures;
-  std::map<std::string, sound_t> sound_fx;
   std::map<char, texture_t> files_and_ranks_textures;
   std::map<int, font_t> fonts;
   std::map<std::string, button_t> buttons;
@@ -408,14 +404,6 @@ void gui_t::on_init(void*)
   // it. The pieces stay: those are Cburnett's, used under the BSD option of
   // their licence, and the same file carries the notice.
 
-  sound_fx["tick_1"] = load_sound("assets/gui/sound/tick_1.wav");
-  sound_fx["tick_2"] = load_sound("assets/gui/sound/tick_2.wav");
-  sound_fx["tick_3"] = load_sound("assets/gui/sound/tick_3.wav");
-  sound_fx["tick_4"] = load_sound("assets/gui/sound/tick_4.wav");
-  sound_fx["tick_5"] = load_sound("assets/gui/sound/tick_5.wav");
-  sound_fx["click"] = load_sound("assets/gui/sound/click.wav");
-  sound_fx["wow"] = load_sound("assets/gui/sound/anime-wow-sound-effect.mp3");
-
   {  // Generate the files and ranks text textures
     const font_t coordinates_font = load_font(
         "assets/gui/font/ubuntu_mono/UbuntuMono-Bold.ttf", board_conf.padding);
@@ -467,8 +455,6 @@ void gui_t::on_init(void*)
     buttons["reset"] = create_button({p.x, p.y, text.w + 10, text.h + 10},
                                      0xFFFFFFFF, text, 0xAAAAAAFF);
   }
-
-  // play_sound(sound_fx["wow"]);
 }
 
 
@@ -578,8 +564,6 @@ void gui_t::start_animation(const position_t& from,
   // Calculate the total distance to move in both X and Y directions
   animation.total_distance = {(animation.end_pos.x - animation.start_pos.x),
                               (animation.end_pos.y - animation.start_pos.y)};
-
-  play_sound(sound_fx[PICK_SOUND]);
 }
 
 
@@ -1012,20 +996,17 @@ void gui_t::update_state()
 
   // Check if flip the board
   if (is_mouse_in(buttons["flip"].rect) && mouse.left_button.click) {
-    play_sound(sound_fx["click"]);
     board_conf.flipped = !board_conf.flipped;
   }
 
   // Check copy FEN to clipboard button
   if (is_mouse_in(buttons["to_clipboard"].rect) && mouse.left_button.click) {
-    play_sound(sound_fx["click"]);
     const std::string FEN = game.get_fen();
     set_to_clipboard(FEN);
   }
 
   // Reset game
   if (is_mouse_in(buttons["reset"].rect) && mouse.left_button.click) {
-    play_sound(sound_fx["click"]);
     game.reset();
   }
 
@@ -1075,9 +1056,6 @@ void gui_t::update_state()
     // Stop animation
     animation.state = piece_animation_t::OFF;
 
-    // Sound
-    play_sound(sound_fx[RELEASE_SOUND]);
-
     // Set the piece
     const game_move_t move = {animation.piece, animation.piece_from,
                               animation.piece_to};
@@ -1118,9 +1096,6 @@ void gui_t::update_mouse_in_chessboard()
 
     held_piece.selected = true;
     held_piece.piece_board_position = mouse_board_pos;
-
-    // Play the soft sound
-    play_sound(sound_fx[PICK_SOUND]);
   }
 
   // Reset the selected state
@@ -1141,9 +1116,6 @@ void gui_t::update_mouse_in_chessboard()
     held_piece.selected = false;
     held_piece.offset.x = 0;
     held_piece.offset.y = 0;
-
-    // Play sound
-    play_sound(sound_fx[RELEASE_SOUND]);
   }
 
   // Click on the square

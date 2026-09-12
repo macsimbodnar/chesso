@@ -7,13 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
-- **S224 started, 2026-09-12 23:58, by an Opus 5 subagent (DEC-199), as
-  filler before S151's match.** The seven unsourced sound files under
-  `tests/assets/gui/sound/` and their loader in `tests/debug_gui.cpp` go
-  (DEC-201); `THIRD_PARTY.md` then lists every file with a licence it can
-  quote and `books/fetch_book.sh` may say so again. Tests only, no `src/`,
-  the GUI build is the proof. `plan_current/`: S151 (run pending), S224.
-  The match starts when S224 closes and the machine is idle.
+- **S224 is done, 2026-09-12 23:40, by an Opus 5 subagent (DEC-199), the
+  filler before S151's match.** The seven sound files under
+  `tests/assets/gui/sound/` are deleted with their loader: `tests/debug_gui.cpp`
+  lost 28 lines and nothing else (the effect-name constants, the `sound_fx`
+  map, seven `load_sound` lines, eight `play_sound` call sites and their
+  comments; `sound_t`, `load_sound` and `play_sound` are pixello's API and
+  were never declared here). The GUI built with `CHESSO_BUILD_GUI=ON`, 0
+  warnings, and ran against the display for five seconds with no output --
+  no missing asset, no audio message. `THIRD_PARTY.md` opens with the claim
+  that all 29 files in the directory are listed with a licence it can quote,
+  and `books/fetch_book.sh` states the blanket again in DEC-201's words.
+  Gate 37/37 both builds, format clean; MANUAL.md and DEV_MANUAL.md checked,
+  no change. **Left as they are, stated:** the SDL_mixer linkage is
+  pixello's (`init()` opens audio whether or not a clip is loaded) and the
+  submodule is outside the step; stale byte copies of the seven files in
+  eight gitignored build trees were removed. **One item for the owner,
+  parked below:** the pixello submodule ships two test sounds of its own
+  (`tests/pixello/tests/assets/sound/`) with no stated origin -- a gitlink,
+  never built here (`PIXELLO_ENABLE_TESTS` off), covered by pixello's own
+  licence in `fetch_book.sh`'s list, but a reader of the blanket sentence
+  could ask. Fast check over the diff: on the line below. **Next: S151's
+  match starts now on the idle machine** (about 3.8 h), with S186 -- the
+  documents-only block-3 enrichment -- beside it under DEC-185's
+  blocked-task exception. **Compaction point** after the commit.
 
 - **S151's harness half landed, 2026-09-12 23:00, by an Opus 5 subagent
   (DEC-199); the run is still to come.** `fastchess.sh` gains `TC`, `HASH`
@@ -2654,6 +2671,12 @@ Updated: 2026-09-12, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
+  - **pixello's two test sounds** (`tests/pixello/tests/assets/sound/doom.wav`,
+    `dspunch.wav`, in the MIT submodule, never built here): no stated origin
+    of their own. Not this repository's files, but the blanket sentence in
+    `books/fetch_book.sh` could be read to cover a submodule's contents. The
+    owner's call whether that sentence should say "tracked here" or the
+    submodule should be asked; found by S224, 2026-09-12.
   - ~~**Three findings filed by S195, none of them planned.**~~ **Closed
     2026-09-11, DEC-184:** the `ucinewgame` and `nodes` sentences go to
     S210; `command_bench`'s per-position `reset_for_new_game()` is accepted

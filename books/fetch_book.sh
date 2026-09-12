@@ -32,11 +32,13 @@ set -euo pipefail
 # through this script from the CC0 source above; the three submodules under
 # tests/ -- pixello, nlohmann/json, doctest -- carry their own MIT-compatible
 # licences; the debug GUI's artwork and fonts are inventoried with their
-# licences in tests/assets/gui/THIRD_PARTY.md, which also names the one thing
-# in the repository whose origin nobody can state, seven sound files committed
-# in 2025. S211 wrote that inventory and deleted the three image files that
-# could not be sourced; before it, the sentence here was false in its own
-# repository (2026-09-10_adversarial-F03).
+# licences in tests/assets/gui/THIRD_PARTY.md, every file in that directory
+# covered and none excepted. The list checks out, so the blanket is true again
+# and this comment may state it: the repository bundles nothing whose licence
+# is unstated. It was false when this comment first claimed it
+# (2026-09-10_adversarial-F03) -- S211 wrote the inventory and deleted the
+# three image files that could not be sourced, and S224 deleted the seven audio
+# clips that were the last gap (DEC-201).
 #
 # WHY BOTH DIGESTS ARE PINNED. The zip is what the network returned and the
 # unpacked file is what the match reads. Checking only the zip trusts unzip;

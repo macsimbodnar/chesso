@@ -5,10 +5,18 @@ optional debug board behind `CHESSO_BUILD_GUI` (OFF by default). None of it is
 linked into `chesso` and none of it is part of the engine. It is redistributed
 with this repository all the same, so it is inventoried here with its licence.
 
+**Every file in this directory is listed below with its licence, and there is no
+exception left**: twelve piece renders, two font families -- each present twice,
+under `font/` and again beside it (`PressStart2P.ttf` at the top level,
+Ubuntu Mono under `ubuntu_mono/`) -- the licence and FONTLOG files that carry
+their terms, and this file. That is 29 files, which is what
+`find tests/assets/gui -type f | wc -l` counts.
+
 Written by S211, from `2026-09-10_adversarial-F03`: twelve of the files below
 were being redistributed with no licence and no attribution, and three more had
-no stated origin at all. The repository is MIT and stays MIT (DEC-104), so every
-entry here is either under a licence MIT can carry or is gone.
+no stated origin at all. S224 closed the last gap it left (DEC-201). The
+repository is MIT and stays MIT (DEC-104), so every entry here is either under a
+licence MIT can carry or is gone.
 
 ## The chess pieces -- Cburnett, Wikimedia Commons, used under BSD
 
@@ -77,20 +85,7 @@ that changes the licence: they are a copy in another resolution.
 Both were already stated when S211 ran; they are listed so that this file is the
 whole inventory and not only the part that was missing.
 
-## The sounds -- origin not recorded, and that is the remaining gap
-
-`sound/click.wav`, `sound/tick_1.wav` .. `sound/tick_5.wav`,
-`sound/anime-wow-sound-effect.mp3`.
-
-Committed on 2025-03-09 in `766465f` ("Start the test gui") with no source.
-Their files carry no author, no copyright and no origin metadata -- the WAVs
-carry only a RIFF header and the MP3 only its encoder's tags -- so nobody can
-state where they came from, and this file will not guess. They are named here
-rather than left silent. They sit outside `2026-09-10_adversarial-F03`, which
-counted the images, so removing them is not S211's to do; the honest reading is
-that this directory is fully licensed **except** these seven files.
-
-## Deleted by S211, because their origin could not be stated
+## Deleted by S211 and S224, because their origin could not be stated
 
 | file | what it was | why it went |
 |---|---|---|
@@ -101,3 +96,12 @@ that this directory is fully licensed **except** these seven files.
 Deleting was the accepted outcome for these three (S211's `accepts`). They could
 not be sourced: `git log --follow` reaches one commit each, and the metadata in
 the files names a tool and a date, never a rights holder.
+
+S224 deleted seven more from that same 2025 commit on the same ground: the audio
+clips the debug board played when a piece was picked up, put down, or a button
+clicked. The subdirectory that held them went with them, and DEC-201 names the
+seven files and is the record of what they were. Their files carried
+no author, no copyright and no origin metadata either -- the WAVs a RIFF header,
+the MP3 its encoder's tags -- so nobody could state where they came from, and
+disclosure needs a rights holder to disclose. `tests/debug_gui.cpp` loads and
+plays nothing now; nothing on screen changed, because they were never on screen.
