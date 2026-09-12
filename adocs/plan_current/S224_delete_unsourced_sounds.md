@@ -7,7 +7,7 @@ decisions:  DEC-201
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-12 23:58 as filler before S151's match
 done:
 
 ## Why this exists

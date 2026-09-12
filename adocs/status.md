@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S224 started, 2026-09-12 23:58, by an Opus 5 subagent (DEC-199), as
+  filler before S151's match.** The seven unsourced sound files under
+  `tests/assets/gui/sound/` and their loader in `tests/debug_gui.cpp` go
+  (DEC-201); `THIRD_PARTY.md` then lists every file with a licence it can
+  quote and `books/fetch_book.sh` may say so again. Tests only, no `src/`,
+  the GUI build is the proof. `plan_current/`: S151 (run pending), S224.
+  The match starts when S224 closes and the machine is idle.
+
 - **S151's harness half landed, 2026-09-12 23:00, by an Opus 5 subagent
   (DEC-199); the run is still to come.** `fastchess.sh` gains `TC`, `HASH`
   and `CAND=<ref>` -- both sides built through one `build_ref`, the A/A guard
