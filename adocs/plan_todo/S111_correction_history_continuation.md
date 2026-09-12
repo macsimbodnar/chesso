@@ -19,7 +19,20 @@ Stockfish pull request #5617 is where continuation correction history landed
 and that CPW's page carries no Elo number for any variant
 (https://www.chessprogramming.org/Static_Evaluation_Correction_History). The
 demotion rests on S110's sourced pawn figure and on the reserve's own logic,
-not on +1.8 to +4.6. S186 owns resolving it (DEC-137).
+not on +1.8 to +4.6.
+
+**Searched again 2026-09-13**, after S186's fast check: an open web search for
+the continuation figures and for the rating band, the CPW page again, and the
+engine changelogs that search turns up. **The band stays unverified** -- no
+source anywhere states a rating floor for this feature. **One figure for the
+feature itself is now sourced**, and it is a different engine's and a
+different number: Tcheran's `CHANGELOG.md`, "Added 1-ply continuation
+correction history (8.23 +- 5.04)", in its unreleased section
+(https://raw.githubusercontent.com/tcheran-chess/tcheran/master/CHANGELOG.md;
+changelog entry only, DEC-016, and the file states no time control for it). It
+is above the +1.8-to-+4.6 range this file could not source, it is one engine's
+single measurement, and it is direction only (DEC-019): the demotion stands on
+S110's sourced pawn figure and the step is still gated on S099's verdict.
 
 ## The free second use
 

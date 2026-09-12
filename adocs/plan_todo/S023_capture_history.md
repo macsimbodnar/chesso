@@ -30,9 +30,19 @@ short control against **+3.66 +/- 3.29** at long -- Weiss pull request #428,
 author's own summary being "hurts STC, but LTC shows decent gain"
 (https://github.com/TerjeKir/weiss/pull/428; the -4.2 and +3.7 quoted here
 before 2026-09-11 were that pair rounded). Its documented value arrives as an
-*input* -- reducing tacticals with bad capture history measured +7.2/+2.4 at
-Ethereal, **unverified**: the 2026-09-04 literature check found no source for
-that pair, and S186 owns resolving it -- and capture futility
+*input* -- reducing tacticals with bad capture history measured **+7.22 +/-
+4.72** at 10.0+0.1s over 7696 games and **+2.37 +/- 1.90** at 60.0+0.6s over
+31984 games at Ethereal, **sourced 2026-09-13** (after S186's fast check):
+commit dcb8560cb3c8b6bb37b6fbaa5cc57c681db7809b, 2020-09-26, "Use Capture
+History to apply LMR to some Tactical Moves", whose message says the reduction
+goes "from R=1 to R=2, for Tactical moves which have a negative Capture
+History score"
+(https://api.github.com/search/commits?q=repo:AndyGrant/Ethereal+%22capture+history%22;
+commit message only, DEC-016). The "+7.2/+2.4" this file quoted before was
+that pair rounded. Note the direction: the *input* use **shrinks** at long
+control, where the ordering use above **grows** (Weiss, -4.17 short against
++3.66 long), so the two halves of this step are not priced by one number --
+and capture futility
 and SEE margins read it, which is work for the 3000-plus phase this reserve
 exists for. The order note below stands for whenever it runs.
 

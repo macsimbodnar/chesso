@@ -52,9 +52,14 @@ hardest.
 
 **Expect the replacement scheme itself to be worth little** -- the surveyed
 consensus is 5 to 15 Elo for bucket-plus-aging over always-replace
-(**unverified**: the 2026-09-04 literature check fetched CPW *Transposition
-Table*, https://www.chessprogramming.org/Transposition_Table, which describes
-bucket systems sized to a cache line and ageing by the halfmove clock modulo a
-power of two but **states no figure**, and found no other source for the
-range), and the one part that is not optional is the aging. The layout, the alignment and the
+(**unverified, and searched twice**: the 2026-09-04 literature check fetched
+CPW *Transposition Table*,
+https://www.chessprogramming.org/Transposition_Table, which describes bucket
+systems sized to a cache line and ageing by the halfmove clock modulo a power
+of two but **states no figure**, and found no other source for the range;
+searched again 2026-09-13 after S186's fast check -- an open web search over
+the TalkChess replacement-scheme threads, which discuss depth-preferred
+against always-replace and ageing at length and price **none** of them in
+Elo. No source states this range and no run here is priced on it), and the one
+part that is not optional is the aging. The layout, the alignment and the
 prefetch are where the measured 21 % lives.

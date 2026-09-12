@@ -14,8 +14,21 @@ done:
 The rating list does allow four, five and six man tablebases. The published
 gain for a hand-crafted engine of roughly this class is about **13 Elo**, and
 one report of the standard route calls it "two thousand lines of foreign code
-that I don't understand for a mere 5 Elo" (**unverified**: the 2026-09-04
-literature check found no source for that quotation).
+that I don't understand" for "a mere 5 Elo gain at TCEC". **Sourced
+2026-09-13**, after S186's fast check, where the 2026-09-04 literature check
+had found nothing: it is **Morgan Houppin**, Stash's author, on the CCC forum,
+2021-03-25, explaining why Stash carries no Syzygy probing code
+(https://talkchess.com/forum3/viewtopic.php?f=2&t=76927#p888045), quoted at
+CPW *Syzygy Bases* footnote 32
+(https://www.chessprogramming.org/Syzygy_Bases). Forum post only (DEC-016).
+**The quotation as this file used to give it was a splice**: the original runs
+the two clauses either side of a passage about the motivation to learn the
+file format and the further code needed to read it, and the "5 Elo" is stated
+of TCEC conditions. Two things follow for this step. The speaker is refusing
+the *licence-and-foreign-code* trade, which is this step's own argument and
+now has a name behind it; and his 5 is a figure for probing code in general
+at TCEC, not a three-to-five-men figure, so it joins the 13 and the 25 below
+as a number measured on a set this step excludes.
 
 **And the 13 is a six-men figure, which this step is not.** Corrected by S185
 on 2026-09-11 (2026-09-04_plan_review-F06, row A29). Both endpoints the plan

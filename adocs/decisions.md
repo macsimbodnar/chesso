@@ -11404,3 +11404,82 @@ Consequences: `fastchess.sh`'s "WHICH BOUNDS" block and `DEV_MANUAL.md` "Which
               DEC-143 calibration covering the harness change. The block
               boundary S199 sits at is the point two readings are taken at,
               not one.
+
+## DEC-203  2026-09-13  S186's pass deletes the fourteen figures two searches could not source, restates the datagen density as a hypothesis S083 measures, and corrects what the pawn-hash slowdown was evidence of
+Tags:         plan, evidence, evaluation, datagen, s186, s082, s083, s118,
+              s124, dec-097, dec-105, dec-137
+Context:      S186 enriched the sixteen block-3 step files (2026-09-13):
+              ten figures resolved with URLs, nineteen restated as
+              unverified with what this pass searched, fourteen of those
+              proposed for deletion because they survived the 2026-09-04
+              literature check and this pass unresolved. The fast check then
+              found two of the fourteen wrongly proposed -- Stash's
+              `CHANGELOG.md` v32.0 does state "a dataset of 4.5M positions
+              coming from selfplay games" and "doesn't overfit for datasets
+              > 500k positions", and the pass had read it as stating none --
+              and found S135 keeping three comparable unsourced figures
+              (+16.7, +4.2, +9.2) that the same rule deletes. **What is
+              deleted is twelve items, seventeen numerals, over nine files**:
+              S082 one, S121 one, S123 one, S118 two, S122 two, S124 two
+              items (five numerals: the four opening figures and the "at
+              3300" band), S102 one, S126 one, S135 one item (three
+              numerals); S083's three are restored with the URL, its "4.5 to
+              10 M" band whole (the 10 M end is Ethereal's three published
+              dumps, TalkChess t=75350), only the "per generation" reading
+              gone. None carried an ordering argument that nothing else
+              supports. Two findings changed an argument
+              without moving an order: the 10 % pawn-hash slowdown S118
+              cites is real (TalkChess t=72195, 2019-10-28) but its
+              published diagnosis is a 17 MB table against a 16 MB L3, not a
+              cheap pawn evaluation cached, so DEC-087 (h)'s reading of it
+              was wrong while the order it supports stands on its own
+              reasoning; and the traced endgame-scaling additions are +1.09
+              to +3.94, three to four times below the deleted +11.3 class,
+              so S124 rests on the coverage gap and not on "the largest
+              group chesso has none of". The only sourced positions-per-game
+              density is Texel's about 140 a game (CPW), against the files'
+              unsourced "two to four rows a game is the published practice"
+              from which S083's "50 M rows is 12 to 25 M games" followed.
+Decision:     By the coordinator under the owner's delegation. **(1) The
+              twelve unverified items are deleted** from the pending
+              files, each sentence rewritten to stand without its number or
+              removed when the number was the sentence; an unverified figure
+              carries no weight and a deleted one cannot be mistaken for
+              evidence later. **(2) The datagen density is a hypothesis, not
+              a published practice**: S082 and S083 state few positions a
+              game as chesso's own choice, with the reason (correlation
+              within a game), and S083 measures rows-per-game and games
+              needed against held-out error at its own start (its `accepts`
+              already says the corpus size is decided by held-out error). The
+              "12 to 25 M games" figure goes with the density it followed
+              from. **(3) The pawn-hash slowdown is cited for what it was**:
+              an oversized table, in S118 and in `plan.md`'s sentence about
+              it; DEC-087 (h) is not amended, its order being unchanged.
+              **(4) No step moves.** Block 3's ordering paragraph rests on
+              Stash-ledger entries that all carry URLs, and none moved.
+              **(5) Two seeds the pass had called literature values are
+              engine constants and are re-formed**: CPW *Outposts* attributes
+              its 10 cp knight-outpost bonus to the Toga log user manual, and
+              CPW's rook-on-open-file "8 to 20 cp" takes its 20 cp end from
+              the same manual, so S102 and S135 now seed those terms as
+              declared range midpoints of chesso's own bounds (form (c)),
+              the Toga figures read for form and refused -- the treatment
+              the pass gave CPW's Stockfish attack units and the Glaurung
+              table. **(6) The six S185 work-list rows outside the sixteen
+              files** (S023, S110, S111, S119, S129) are resolved or
+              restated in their own files with no pointer left at S186.
+Rejected:     **Keeping the fourteen as "unverified"** -- the evidence
+              standard allows it, but a number that has failed two searches
+              stays in a file only to be quoted again by the next reader.
+              **Re-deriving the density from chesso's own games now** -- that
+              is S083's first act and it needs the datagen the step owns.
+              **Reordering S124** -- the coverage gap was always the reason
+              it sits where it does; the deleted figures only overstated it.
+Consequences: Ten step files lose a number each or more (S186's follow-up,
+              documents only, before S186 closes); `adocs/plan.md`'s S118
+              sentence names the oversized table. `adocs/eval_tuning_strategy.md`
+              carries S186's four dated F37 notes: mini-batch Adam recorded
+              as a decided departure (the tuner is full-batch and an epoch
+              is seconds), Phase A's in-engine trace and UCI exposure
+              corrected to the flat array and feature extractor that exist
+              in `tools/eval_model.hpp`.

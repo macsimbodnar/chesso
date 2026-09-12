@@ -5,7 +5,55 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-12, by hand.
+Updated: 2026-09-13, by hand.
+
+- **S186 is done, 2026-09-13 00:25, by two Opus 5 subagents (DEC-199)
+  beside S151's match, documents only.** All sixteen block-3 step files
+  carry a "Technical details (SOTA research, 2026-09-13)" section in the
+  block-1 shape: ten figures resolved with URLs, seventeen newly sourced
+  ones added (Berserk #73's pawn hash +14.97 +/- 7.80, Stash v26's endgame
+  scaling 3.94 +/- 3.09, three Ethereal scaling additions, five passed-pawn,
+  three king-safety and four Lynx king-bucket figures), three literature
+  seeds located in DEC-105's form (a), the CPW attack-unit weights and the
+  Glaurung table named as engines' tuned output and refused. Nineteen
+  figures survived two searches unsourced; **DEC-203** deleted the fourteen
+  items (seventeen numerals) among them, restated the datagen density as
+  chesso's own hypothesis that S083 measures (Texel's about 140 a game is
+  the one sourced density), and corrected what the pawn-hash slowdown was
+  evidence of -- a 17 MB table against a 16 MB L3, not a cheap evaluation
+  cached -- in S118 and `plan.md`; S124 now rests on the coverage gap, the
+  traced scaling additions being +1.09 to +3.94. No step moved. **F37**:
+  `adocs/eval_tuning_strategy.md` records mini-batch Adam as a decided
+  departure and corrects Phase A to the flat array and feature extractor
+  that exist in `tools/eval_model.hpp`. The four prose checks exit 0; no
+  build ran and none was owed. The S185 work-list table in S186's file is
+  kept as the search record with a dated line saying so. **The fast check
+  found seven real problems, two on the founding rule:** S102 declared the
+  Toga log manual's 10 cp outpost bonus a form-(a) seed and S135 leaned on a
+  Toga-sourced 20 cp range end, both engine constants republished on the
+  wiki and both re-formed as declared range midpoints; two DEC-203
+  deletions were unjustified because Stash's changelog v32 does carry the
+  4.5 M positions and the "> 500k" statement, restored with the URL and
+  DEC-203 corrected; `plan.md` had 8.8 M attributed to Stash where it is
+  Texel's; S125's body contradicted its new section and cited two deleted
+  phrases; S121 gave a queen 28 and 27 reachable squares in two places,
+  settled by python-chess; six S185 work-list rows outside the sixteen
+  files still pointed at S186 and S135 kept three unsourced figures the
+  rule deletes. A third Opus 5 agent repaired all seven before the commit:
+  S083's 4.5 M and "> 500k" restored with the changelog URL and the 10 M
+  end sourced to Ethereal's three dumps (TalkChess t=75350); S102's outpost
+  and S135's rook-on-open-file seeds re-formed as declared midpoints of
+  chesso's own bounds; S125's body and citations agree with its section
+  (`--citations` prints no `note MISSING` anywhere); the queen's 27 from
+  python-chess in all three places; S023 and S129 resolved with URLs, S110,
+  S111 and S119 restated with what was searched, no pointer left at S186;
+  S135's three deleted. DEC-203 now states twelve items, seventeen
+  numerals, over nine files, and its clauses (5) and (6) record the seeds
+  and the six rows; a second short check confirmed all six points against
+  the raw Stash changelog. Committed with the four prose checks only, the
+  match holding the machine; no C++ changed. `plan_current/`: S151
+  (running). **Compaction point.** **Next:
+  S151's reading when the match ends, then S212** (brief ready).
 
 - **S151's match is running since 2026-09-12 23:37, and S186 runs beside it
   (documents only).** `adocs/data/S151_ltc.sh` launched detached, pid in
@@ -15,8 +63,10 @@ Updated: 2026-09-12, by hand.
   `build_ref`, `tc 32+0.32 hash 64 concurrency 12 of 12`, book
   `noob_3moves.epd`, seed `20260912233659`, `bounds none -- fixed 1000
   rounds`, governor `performance` as found (DEC-195). Estimate 3.8 h at 528
-  games an hour; the first hour's `Finished game` count is the check;
-  watcher armed through `Monitor` (persistent) on the `SPRT-RUN-(DONE|FAILED)`
+  games an hour; **the first hour's check at 00:38: 556 games finished
+  (about 547 an hour), 0 forfeits on either side, load 12.4 on 12 cores**,
+  so the run is on pace for about 03:15; watcher armed through `Monitor`
+  (persistent) on the `SPRT-RUN-(DONE|FAILED)`
   markers, pid death and a 27360 s ceiling. **S186** -- the block-3
   enrichment pass, sixteen step files and the F37 correction to
   `adocs/eval_tuning_strategy.md` -- started 23:40 by an Opus 5 subagent

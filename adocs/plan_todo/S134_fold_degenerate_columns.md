@@ -124,3 +124,149 @@ DEC-170's ruling rests on a measurement rather than on the two proofs S100
 gave. A dependency found is a new finding filed before any fit, not a silent
 fold. The accepts wording is the audit's own sharpening, kept.
 
+
+## Technical details (SOTA research, 2026-09-13)
+
+S186's enrichment pass, DEC-097 as amended by DEC-137. Every figure carries a
+URL or the word **unverified** with what this pass searched. Citations into
+code name a symbol and no line (DEC-135). Every engine record read below is a
+commit message, a pull-request body, a changelog entry, a release note or a
+forum post -- never a source file and never a table (DEC-016).
+
+### 1. State of the art
+
+**The published method does not describe this problem, and that is the
+finding.** CPW *Texel's Tuning Method*
+(https://www.chessprogramming.org/Texel%27s_Tuning_Method, fetched 2026-09-13)
+states the objective -- positions labelled 0, 0.5 and 1 from the game result,
+the quiescence score through a sigmoid with a scaling constant `K` fitted once
+and "never changed again by the algorithm", parameters moved until `E` is "a
+local minimum in parameter space". It says **nothing** about linearly
+dependent parameters, nothing about redundant features, nothing about
+regularisation and nothing about overfitting. CPW *Automated Tuning*
+(https://www.chessprogramming.org/Automated_Tuning, fetched 2026-09-13) is the
+same: the only regularisation mention on the page is a note that Vladimir
+Medvedev "further used cross-entropy and regularization" in a logistic
+regression, and redundancy, holdout splits and dataset size are all absent.
+Its one sentence about parameter choice is Ingo Althofer's, quoted there: "It
+is one of the best arts to find the right SMALL set of parameters and to tune
+them."
+
+So the technique this step performs -- proving an exact linear dependency
+between two features and folding one into the other -- **is not on the wiki**,
+and the form check owes that statement rather than a departure list. Where it
+does appear in the published record is as the shape of the fix rather than as
+a named method: Ethereal's "Remove SCALE_OCB_TWO_KNIGHTS (#61)"
+(https://github.com/AndyGrant/Ethereal/commit/8db27ad52de3e0d029d3a122b4f22e17d099ce37,
+2018-07-18, **+0.94 +/- 2.36** at 10.0+0.1s over 35725 games) and "Remove
+scaling for OCB with 2 Rooks"
+(https://github.com/AndyGrant/Ethereal/commit/874e509ea284520c450159d3924ce09e2cc453a2,
+2018-08-26, **+0.18 +/- 1.71** short and **+0.11 +/- 1.39** long) are the
+published form of deleting a term the rest of the evaluation already
+expresses, and both were run as full SPRTs because in those cases the deletion
+was *not* bit-exact. This step's is, which is why it owes node counts and no
+match (DEC-090).
+
+The one quantitative statement in the published record that bears on the
+degeneracy at all is `src/eval_tables.hpp`'s own comment, not a citation: the
+piece-square tables are "degenerate by five dimensions" against
+`piece_value`, which is the same class of defect one level up and was
+accepted rather than folded.
+
+### 2. Shape for chesso
+
+The identity is `S100`'s and is restated in "Why this is worth a step of its
+own" above; nothing in this section re-derives it. What the enrichment adds is
+where the published method's silence bites:
+
+- A Texel fit minimises `E` over the parameter vector. On an exactly
+  rank-deficient design matrix the minimiser is a **set**, not a point, and
+  Adam's trajectory picks one member of it by construction -- from the
+  initialisation and the step sequence, not from the data. The three fits
+  quoted above (bucket 5 reading +22, -1 and -17 while buckets 0 to 4 move by
+  at most 4) are that set being sampled three times.
+- The fold is a change of basis inside one summand of one division:
+  `src/evaluation.cpp` `evaluate_cheap` adds `pawn_mg` to `board->psqt_mg`
+  before the taper divides, so moving a weight between them is exact.
+- After the fold the column is gone rather than pinned, so no later fit can
+  re-enter the ridge. Pinning it at zero would leave the column in
+  `tools/eval_model.hpp` and in `tools/tuner_groups.hpp`, where the next
+  `--only` fit would free it again.
+
+### 3. Implementation sketch
+
+Order matters and the accepts fixes it: **measure the identity out of the
+engine first**, then delete. The engine-side check reads
+`src/evaluation.cpp` `evaluate_pawns` through the counts the accepts names and
+compares them against the signed piece-square occupancy of squares 8 to 15;
+`tools/feature_audit.cpp` is where the report lands. Only then do the widths
+in `tools/eval_model.hpp` move, and every base after them with the widths.
+
+### 4. Constants and seeds
+
+**None, and the step must not acquire any.** Nothing here is fitted: the two
+folded values are read out of `src/evaluation.cpp` `passed_pawn_mg` and
+`src/evaluation.cpp` `passed_pawn_eg` at this step's own HEAD and written into
+sixteen table entries, and the arithmetic is exact. DEC-105's three seed forms
+do not apply because there is no seed. A "seed" appearing in this step's diff
+is a scope breach, not a tuning choice -- the refit is S126's.
+
+### 5. Pitfalls
+
+- **The rook half looks free and is not.** Zero times anything is zero, so the
+  fold is arithmetically a no-op; the column still has to leave
+  `tools/eval_model.hpp`, or the next fit puts a weight on an unidentified
+  feature and DEC-170's ruling against regularisation loses its basis.
+- **Off-by-one on the narrowed arrays.** A 7th-rank pawn that still computes
+  bucket 5 reads past the end of a five-entry array. The accumulation states
+  the exclusion explicitly rather than relying on the fold.
+- **The bases are chained.** Every base from `PP_MG_BASE` onward moves; the
+  partition properties in `tests/test_tuner_groups.cpp` are what catch a miss,
+  and the accepts requires the red observed first.
+- **A published fit's value for a degenerate column is not a seed and not a
+  check.** If a later reader finds another engine's number for a
+  rook-on-seventh bonus, it is that engine's constant wherever it is
+  republished (DEC-105, DEC-134) and it says nothing about whether this fold
+  is exact.
+
+### 6. Measurement
+
+Bit-exactness, not Elo. `tools/search_bench.py` at two depths returning
+identical node counts and identical best moves discharges INV-6 (DEC-090); the
+seven pinned anchor positions scoring identically is the direct check. No SPRT
+is owed and one would be a category error -- the engines play identical games.
+The identity report over the remaining 823 columns is the measurement DEC-170's
+ruling against global regularisation now rests on, and it states method, corpus
+rows and every exact dependency found.
+
+### 7. Interactions
+
+- **S135 (blocked by this)**: the placement group becomes three identified
+  features, which is what makes its bundled verdict attributable.
+- **S123 and S133 (after)**: a per-square table keeps this degeneracy for any
+  feature defined on a single rank. S123's new passer terms and S133's buckets
+  each need the same identity check, run through `tools/feature_audit.cpp`.
+- **S126 (after)**: DEC-170 reopens the regularisation question only if S126's
+  fit shows a second ridge, and this step's report is the baseline it is read
+  against.
+- **S117 (phase column)**: the F36 amendment above is this step's because this
+  step moves `phase_value` by its own text.
+
+### 8. References
+
+- - https://www.chessprogramming.org/Texel%27s_Tuning_Method -- objective,
+  sigmoid, `K` fitted once, "local minimum in parameter space"; **no**
+  treatment of dependent parameters, redundancy, regularisation or
+  overfitting. Fetched 2026-09-13.
+- - https://www.chessprogramming.org/Automated_Tuning -- supervised learning of
+  evaluation weights; regularisation named only for Medvedev's logistic
+  regression; redundancy, validation splits and dataset size absent; Althofer
+  on small parameter sets. Fetched 2026-09-13.
+- - https://github.com/AndyGrant/Ethereal/commit/8db27ad52de3e0d029d3a122b4f22e17d099ce37
+  -- "Remove SCALE_OCB_TWO_KNIGHTS (#61)", +0.94 +/- 2.36, 10.0+0.1s, 35725
+  games. Commit message only.
+- - https://github.com/AndyGrant/Ethereal/commit/874e509ea284520c450159d3924ce09e2cc453a2
+  -- "Remove scaling for OCB with 2 Rooks", +0.18 +/- 1.71 short, +0.11 +/-
+  1.39 long. Commit message only.
+- - `adocs/data/S100_feature_audit.txt` -- the two R^2 = 1.000000 results and
+  the violation counts this step acts on. Local evidence, not literature.

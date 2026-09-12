@@ -21,7 +21,12 @@ supports "only above ~3100"; Starzix pull request #98, "Pieces correction
 history", publishes no Elo figure at all
 (https://github.com/zzzzz151/Starzix/pull/98), and CPW's page states none
 (https://www.chessprogramming.org/Static_Evaluation_Correction_History, which
-does say gains grow with the time control). The pawn table (S099, which stays
+does say gains grow with the time control). **Searched again 2026-09-13**,
+after S186's fast check: the same page, an open web search for the band and
+for the rating claim, and the engine changelogs that search turns up -- no
+source for "+3 to +8" and none for "only above ~3100"; the one ledger that
+prices these tables separately (below) carries no rating band at all. The
+band stays unverified and the order does not rest on it. The pawn table (S099, which stays
 in the main order) has its figure sourced: **+11.35 +/- 5.16** at 8+0.08 over
 7502 games, bounds [0, 3], Lynx pull request #1662, merged 2025-04-15
 (https://github.com/lynx-chess/Lynx/pull/1662) -- the "+11.4" this file quoted
@@ -47,13 +52,29 @@ non-pawn +6.98 / +12.28 and +2.80 / +6.84, continuation +2.58 / +5.46 and
 
 **Every one of those twelve numbers is unverified** and has been since it was
 written down: the 2026-09-04 literature check looked for their source and found
-none (row A22), which is recorded here rather than left to the next reader to
-rediscover. They are kept because the *shape* they carry -- separate effects,
-long control about twice short -- is what the step's argument uses, and that
-shape is independently visible in the one figure that is sourced (S099's
-+11.35 above) and in CPW's statement that the family's gains grow with the time
-control. S186 resolves them or records what it searched (DEC-137). Do not price
-a run on them.
+none (row A22), and a third search on 2026-09-13, after S186's fast check,
+found none either -- an open web search for the numerals themselves against
+"correction history", the CPW page below, and the engine changelogs it leads
+to. They are kept because the *shape* they carry -- separate effects, long
+control about twice short -- is what the step's argument uses. Do not price a
+run on them.
+
+**The shape has a source even though the twelve numerals do not** (2026-09-13,
+after the fast check). Tcheran's `CHANGELOG.md`
+(https://raw.githubusercontent.com/tcheran-chess/tcheran/master/CHANGELOG.md,
+changelog entries only, DEC-016) prices four correction-history tables as four
+separate patches in one engine, release 10.0: "Add pawn eval correction
+history (21.76 +- 8.62)", "Add major and minor piece eval correction history
+(18.86 +- 7.99)", "Add non-pawn eval correction history (12.69 +- 6.30)", "Add
+threat eval correction history (9.30 +- 5.31)". Four tables, four positive
+verdicts, each measured on top of the ones before it -- which is exactly the
+"not inert apart" claim this section makes, now with a URL behind it, and the
+non-pawn entry is the class this step is. **The changelog states one figure per
+line and no time control for these entries**, so nothing here reads on the
+short-versus-long doubling; that half of the shape still rests on CPW's
+statement that the family's gains grow with the time control and on S099's
+sourced +11.35. One engine's ledger is direction, not a prediction for this
+one (DEC-019).
 
 Two things follow. **The long-control figure is consistently about twice the
 short one**, so `--fast` at 8+0.08 will under-measure this family by half --

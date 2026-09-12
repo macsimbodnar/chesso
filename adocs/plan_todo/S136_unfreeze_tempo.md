@@ -125,3 +125,141 @@ hardware sets the cost of a verdict, and `--fast` at `elo0=0 elo1=10` is what
 returned nothing last time over 3000 games. If the run reaches neither bound
 again, that is recorded as unresolved a second time and the term stays at zero --
 which is a legitimate outcome and the one S027's row is the template for.
+
+## Technical details (SOTA research, 2026-09-13)
+
+S186's enrichment pass, DEC-097 as amended by DEC-137. Every figure carries a
+URL or the word **unverified** with what this pass searched. Citations into
+code name a symbol and no line (DEC-135). Every engine record read below is a
+commit message, a pull-request body, a changelog entry, a release note or a
+forum post -- never a source file and never a table (DEC-016).
+
+### 1. State of the art
+
+**The wiki defines the term and states no figure.** CPW *Tempo*
+(https://www.chessprogramming.org/Tempo, fetched 2026-09-13): "To avoid score
+oscillations on the parity of the search depth, some programs give a small
+bonus for having the right to move", and such a bonus is "useful mainly in the
+opening and middle game positions, but can be counterproductive in the
+endgame". **No centipawn value and no Elo figure anywhere on the page.**
+chesso's form is exactly the page's -- a constant 1 for the side to move,
+tapered -- so there is no departure to state, and the page's endgame clause is
+the published reason to keep the middlegame and endgame halves separate rather
+than fit one number, which chesso already does.
+
+**One traced figure, and it is the right one.** Weiss pull request #241,
+"Tempo", 2020-04-11: **+12.99 +/- 7.35** at 10.0+0.1s and **+6.67 +/- 4.67** at
+40.0+0.4s (https://github.com/TerjeKir/weiss/pull/241). The 2026-09-04
+literature check established that this is where the plan's "+12.99" comes
+from and that the plan had it attached to the wrong feature -- it was written
+as a rook-on-the-seventh figure (row A28). It is a *tempo* figure and it prices
+adding the term from nothing at Weiss's band, which is not what this step does:
+chesso already computes the feature and holds its weight at zero, so what is
+being measured here is the weight, not the term.
+
+**The published size and this engine's own measured signal disagree by a
+factor of three, and the local number is the one that binds.** S100's corpus
+measurement -- 5437085 White-to-move rows at mean result 0.556559 against
+5358610 Black-to-move rows at 0.548682, a gap of 0.007878, which at the corpus
+mean and `K` = 0.7624 is 7.26 cp of score and a tempo weight near 3.6 cp -- is
+this project's own data and is confounded as that paragraph says. Nothing in
+the published record contradicts it or supports it; the two are measurements of
+different things (an Elo delta at one engine against a label-side gap here).
+
+**Nothing published addresses the truncation interaction at all**, and it is
+the reason this step is hard here. The guard, the four pinned FENs and the
+non-vacuity threshold are chesso's own machinery from DEC-053 and DEC-057.
+Searched this pass: CPW *Tapered Eval*
+(https://www.chessprogramming.org/Tapered_Eval, fetched 2026-09-13) gives the
+interpolation as "eval = ((opening * (256 - phase)) + (endgame * phase)) /
+256" -- one division over the summed score, with the phase itself divided once
+more -- and **says nothing about integer truncation, rounding or remainders**.
+So the published form is the one-division shape S055 moves toward, and the
+per-term divisions chesso still carries are this engine's own history, not a
+published choice.
+
+### 2. Shape for chesso
+
+Nothing about the feature changes. `src/evaluation.cpp` `tempo_mg` and
+`src/evaluation.cpp` `tempo_eg` are two constants; the work is the freeze list,
+the label, the guard arithmetic and the bounds.
+
+The guard arithmetic is derived in "One division fewer by the time this runs"
+above and **is re-derived at this step's own HEAD**, from the number of taper
+divisions that can round when the step starts. That derivation is the
+accepts' and nothing in this enrichment moves it.
+
+### 3. Implementation sketch
+
+- `--only tempo` for the fit, `--lambda 0` for the label, both stated rather
+  than defaulted.
+- `build/tools/truncation_scan` re-drawn under the new weights; the four pins
+  come out of its output, because a residual belongs to the weights and not to
+  the position (DEC-057, DEC-053).
+- `tests/test_eval_model.cpp` "the model reproduces evaluate() on every phase"
+  is the test whose tolerance, pins and non-vacuity threshold move, and the
+  arithmetic for each is written in the commit message.
+
+### 4. Constants and seeds
+
+**No seed, and this is the clearest case in block 3 for why.** Weiss's +12.99
+is an Elo figure, not a constant; that engine's shipped tempo bonus is its
+tuned output and is not a seed here wherever it is republished (DEC-105,
+DEC-134). The two candidate values this project already has -- S027's
+`--only` fit at mg 10 / eg 0 and the unfrozen S065 fit at mg 39 / eg 21 -- are
+its own fits, and the fourfold disagreement between them is the reason the
+step exists rather than a range to split.
+
+The guard's three numbers are **(b) derived**, from the division count at this
+step's HEAD, and the derivation is written out in the accepts. They are not
+tuning constants and they are never chosen to make a test pass.
+
+### 5. Pitfalls
+
+- **The relaxation trap.** DEC-092's literals are the pre-S055 numbers. Taking
+  them after S055 lands raises the tolerance a full unit above what the
+  arithmetic supports and sets a non-vacuity threshold no position can reach,
+  silently disarming the guard. AGENTS.md's TESTS rule forbids relaxing a test
+  and this is what relaxing it would look like from inside.
+- **It already broke once.** S065's first fit put tempo at 39 / 21 and `ctest
+  -L fast` came back 9 of 12 on this guard. The guard change is planned and
+  pre-authorised (DEC-057); an unplanned one is the failure.
+- **A second unresolved run is unresolved, not zero.** S027's run reached
+  neither bound over 3000 games. DEC-063 is the lesson: the pair sets the cost.
+  If the properly-bounded run also fails to resolve, that is recorded again and
+  the term stays at zero.
+- **`--lambda` defaults matter.** A score-blend label cannot teach a term the
+  current evaluator scores at zero; the accepts states `--lambda 0` for exactly
+  that reason and the run records the flag it used.
+
+### 6. Measurement
+
+One SPRT at bounds chosen to resolve single digits, stated in advance with the
+nElo worst case and the abort rule (DEC-143). The fit is minutes. The
+truncation scan is seconds. The guard's red is observed before the
+re-targeting lands, not assumed.
+
+### 7. Interactions
+
+- **S055 (before, by plan order)**: removes a taper division and re-pins both
+  numbers. This step puts one division back with tempo in it, which is the
+  cheap check on the derivation.
+- **S135 (beside)**: the other half of the freeze. Separate fit, separate
+  verdict.
+- **S082 and S083 (before)**: the corpus. Tempo's label-side signal is measured
+  on the corpus, so a corpus change changes the 3.6 cp figure and the step
+  re-reads it rather than quoting S100's.
+- **S126 (block end)**: refits everything including tempo, and its early
+  stopping is on the held-out split.
+
+### 8. References
+
+- - https://github.com/TerjeKir/weiss/pull/241 -- "Tempo", 2020-04-11,
+  +12.99 +/- 7.35 at 10.0+0.1s and +6.67 +/- 4.67 at 40.0+0.4s. Pull-request
+  body only. This is the figure the plan had attached to rook-on-the-seventh.
+- - https://www.chessprogramming.org/Tempo -- the side-to-move bonus as a small
+  constant; **no Elo figure**.
+- - https://www.chessprogramming.org/Tapered_Eval -- phase interpolation; says
+  nothing about integer truncation or division count. Fetched 2026-09-13.
+- - `adocs/data/2026-09-04_plan_review_literature_check.md` row A28 -- where the
+  +12.99 misattribution was found.

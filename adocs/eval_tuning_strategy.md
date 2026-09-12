@@ -140,6 +140,12 @@ sparse feature vector `f(leaf)` and the phase `p` at the qsearch leaf. Build thi
 tuning from a 1000-dimensional finite-difference problem into a single sparse matrix-vector
 operation per epoch.
 
+> **Correction, 2026-09-13 (S186, `2026-09-10_adversarial-F37`).** "Build this" was not built in
+> the engine, and the thing that was built instead is in the tools: `tools/eval_model.hpp`,
+> `evaluate()` rewritten as a linear model over its own constants, which produces exactly the
+> sparse feature vector and the phase this paragraph asks for. Phase A in section 8 below carries
+> the full correction, including what that choice costs and what keeps it honest.
+
 **Non-linear terms need care.** King safety implemented as a table lookup indexed by accumulated
 attack units, or any term with a `max`/`min`/threshold, is not linear in the parameters being
 tuned. Options: (a) tune the table entries themselves as free parameters, which restores linearity;
@@ -158,6 +164,25 @@ If the feature vector is precomputed and cached, an epoch over 50M positions is 
   16k to 64k positions.
 - **AdaGrad** is also common in engine tuners and is more forgiving of the wildly different scales
   between, say, a pawn PST entry and a bishop pair bonus.
+
+> **Departure, decided and recorded 2026-09-13 (S186, `2026-09-10_adversarial-F37`).**
+> The paragraph above is the published state of the art and stays as written. **chesso's tuner
+> does not follow it and is not going to**: `tools/tuner.cpp` is **full-batch** Adam, not
+> mini-batch. Its `--epochs` option is documented in its own help text as "maximum full-batch
+> steps", and a comment in the same file records that "the full-batch gradient moved to
+> tools/tuner_model.hpp at S100 so that a test and tools/feature_audit.cpp can reach them".
+> There is no batch-size option and none is planned.
+>
+> Why the departure is right here, in this document's own terms: section 2.4 above already says
+> that "if the feature vector is precomputed and cached, an epoch over 50M positions is seconds,
+> not hours". That is what this tuner does -- the features are stored once and the gradient is
+> closed form -- so the reason mini-batching exists, an epoch too expensive to take a step on,
+> does not apply. Full-batch also makes a run deterministic given its seed, which is what lets a
+> fitted vector be re-derived from its own stamp. The learning rate of 1.0 this section
+> recommends **is** the tuner's default; only the batching differs.
+>
+> **A departure, not an error in the document.** If a future step wants mini-batching it is a
+> change with its own held-out comparison and its own record, not a bug fix.
 
 Quantize to integers only at the very end, and re-measure: rounding a few hundred parameters can
 cost measurable Elo if any of them sit near a decision boundary.
@@ -457,6 +482,42 @@ Eval parameters exposed as a flat, addressable array. Eval trace mode returning 
 vector and phase at the qsearch leaf. UCI options for every tunable so external tools can set them.
 Prerequisite for everything else; produces no Elo by itself.
 
+> **Correction, 2026-09-13 (S186, `2026-09-10_adversarial-F37`). The paragraph above describes
+> two tools that do not exist. Here is the tool that does.**
+>
+> - **The flat parameter array exists, in the tools.** `tools/eval_model.hpp` lays every fitted
+>   evaluation constant out as one indexed vector -- material, then the piece-square tables, then
+>   mobility, king safety, passers, pawn structure, placement and tempo, each with its own base
+>   and width -- and `PARAM_COUNT` is its length. It is addressable and flat, as asked. It is not
+>   in `src/`.
+> - **There is no eval trace mode in the engine.** Nothing in `src/` returns a feature vector.
+>   `tools/eval_model.hpp` is a **second implementation** of `evaluate()` written as a linear
+>   model, and it is what emits the features the fit consumes. That is a real divergence from
+>   this document and it carries a real risk -- two implementations of one function drift -- so
+>   the mitigation is named here rather than assumed: `tests/test_eval_model.cpp` loads positions
+>   into the engine and holds the two against each other on every phase, and the file's own header
+>   comment states the claim as a test: "a model that drifts from the engine would otherwise tune
+>   the wrong function and nothing downstream would notice."
+> - **There are no UCI options for evaluation constants, in any build.** What exists is
+>   `search_param_info()` over the **search** parameters, exposed as UCI options only under
+>   `CHESSO_TUNE`; the release binary's option surface is Hash, Threads and the book options, and
+>   `tests/test_uci_surface.cpp` is the golden that holds both shapes. No evaluation weight is
+>   settable over UCI and none is planned, because the fit runs offline over stored features and
+>   never asks the engine for a score.
+>
+> **Which way this was settled.** The document is corrected, not the code. Section 10 below says
+> "Keep the tuner **out of the engine binary**", and a trace mode plus a UCI surface for 823
+> evaluation constants is the tuner's needs pushed back into `src/` -- more code on the hot path,
+> a wider golden surface, and no benefit the stored-feature route does not already give. The one
+> thing the chosen route costs is the second implementation, and that cost is paid by a test that
+> runs in the fast suite. What this document should have said at Phase A is: *a flat parameter
+> array and a feature extractor in the tools, held against the engine by a test.* That is now
+> what it says.
+>
+> Read Phase A's remaining sentence as written: it is still the prerequisite for everything else,
+> and the trace it names is still what every later phase depends on -- it just lives in
+> `tools/`.
+
 **Phase B. Data pipeline.**
 Self-play generation at fixed nodes with randomized openings, position filtering, Zobrist dedupe,
 compact binary storage format. Target 50M+ positions. Shared prerequisite for Phase C and Phase E.
@@ -527,7 +588,9 @@ Ordered as cited.
 
 - Do not treat tuning loss as the success criterion. SPRT is the success criterion.
 - Phase A is not optional and is not glamorous. Every later phase depends on the eval trace and the
-  flat parameter array.
+  flat parameter array. **(2026-09-13, S186: both live in `tools/`, not in `src/`, and the eval
+  trace is a second implementation of `evaluate()` held against the engine by a test. See the
+  correction under Phase A in section 8.)**
 - Keep the tuner **out of the engine binary**. The engine should expose parameters and a trace mode;
   the optimizer is a separate program (Python is fine, and better for Phase E).
 - Version every weight vector alongside the git commit of the engine and the dataset hash that
