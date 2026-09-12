@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S151 started, 2026-09-12 22:20, harness half by an Opus 5 subagent
+  (DEC-199), the run the coordinator's.** `TC`, `HASH` and `CAND` enter
+  `fastchess.sh` with their properties in `tests/test_fastchess_script.sh`,
+  defaults byte-identical; `adocs/data/S151_ltc.sh` pre-registers design
+  (iii), DEC-172: S085's vector `21b4a21` against its parent `3488506`,
+  `32+0.32`, `Hash=64`, 1000 pairs on `noob_3moves.epd`, about 3.8 h at 528
+  games an hour (DEC-190's 2110 over four), read as an estimate. The match
+  starts when the harness lands and the machine is idle; `.ref-builds/3488506`
+  (2026-08-21) is removed first so both sides build fresh. `plan_current/`:
+  S151. **Next after it: S224** (filler, tests only), then S212.
+
 - **S211 is done, 2026-09-12 20:40, by an Opus 5 subagent (DEC-199): the
   code-level originality exposure the 2026-09-10 audit measured is zero.**
   `src/bb_tables.hpp` opens with twenty lines of board geometry and the two
