@@ -11245,3 +11245,59 @@ Consequences: `AGENTS.md`'s AGENTS rule names Opus 5 with this id. A step's
               `author:` names Opus 5 from S214 on; S219's reading and S024,
               S220, S221 stay attributed to Sonnet 5. DEC-188 carries a VOID
               line on its model clause pointing here.
+
+## DEC-200  2026-09-12  `TmHardPercent` is not an SPSA axis: S214's every-axis reachability check finds it the one parameter no node-count probe reaches, so S127's config excludes it and states why
+Tags:         tuning, spsa, time-management, s214, s127, s222, dec-094,
+              dec-019
+Context:      S214 replaced `spsa_driver.py check`'s single hardcoded
+              reachability probe (`RfpMargin`) with a probe of every axis in
+              the config, down a four-rung ladder (fixed depth, deeper, a
+              second position, the clock) that fails by name when both
+              bounds search identically. Over the full 28-axis set: 27 reach
+              the search, 19 at depth 9 and eight `Tm*` axes on the clock
+              rung, and **`TmHardPercent` is reached by nothing** -- at the
+              shipped `TmSoftPercent` 60 the scaled soft limit tops out at
+              0.9 of the base allocation (`search_time_scale_percent` caps at
+              150 %) while the hard limit at the probe's low value is 1.0 of
+              it, so `soft = min(soft, hard)` never binds and the hard timer
+              fires only when an iteration overruns its start by more than
+              11 %. Depths 9 and 13, three positions and five clock forms
+              tied. The check states this by name and lists what it tried.
+              S127's goal line says "the full set in `src/search_params.hpp`",
+              which includes it. DEC-094 excluded `OrderHistoryMax` from S085
+              on the same shape of argument: an axis the search consults only
+              at a saturation nobody reaches random-walks under SPSA and a
+              meaningless endpoint lands in the vector the SPRT judges.
+Decision:     By the coordinator under the owner's delegation of engine
+              matters. **`TmHardPercent` is excluded from S127's SPSA config
+              and from S222's history lane**, with this id in the config's
+              comment, and S127's file carries a dated amendment. Its value
+              is decided the way S089 decided the time manager -- by a direct
+              SPRT of a proposed change -- or by a step that first makes it
+              bind at the probe's control, never by SPSA. `check` remains the
+              gate a config passes before a run starts: a config that lists an
+              unreachable axis is refused by name, which is the F29 property
+              working. `tools/spsa_s085.json` is left as written: it is the
+              record of what S085 ran, not a runnable config, and its
+              `RfpMinPly` minimum of 0 against the binary's 2 is that record
+              standing still while the binary moved; every new run writes its
+              own config and passes `check` on the day.
+Rejected:     **Adding a second option held off-default so the probe can make
+              the hard limit bind** -- the name-keyed hardcoding F29 objected
+              to, reintroduced for one axis. **Keeping the axis in S127 and
+              pre-registering it as unmeasurable** -- SPSA still moves it, the
+              endpoint still ships, and the SPRT cannot attribute what it
+              measures. **Editing `spsa_s085.json`'s bounds** -- it would
+              falsify the record of a completed run's inputs.
+Consequences: `adocs/plan_todo/S127_*.md` gains a dated section; S222's
+              lane, when its config is written, lists the history axes and
+              `QuietHistoryMax` only, so nothing changes there beyond the
+              exclusion being stated. The full search set for SPSA purposes is
+              27 axes until a step makes the hard limit reachable.
+              The clock rung is load-sensitive and fails closed: with the
+              machine at load 0.87 under a second agent session, one to
+              three `Tm*` axes read "not repeatable" in nine runs of ten,
+              never "reachable"; six of ten runs were clean at load 0.3.
+              `check` is therefore run on an idle machine before a run
+              starts, the precondition the run itself has (MACHINE), and a
+              not-repeatable verdict means "measure again idle", not "dead".

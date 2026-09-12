@@ -333,6 +333,40 @@ add_test(NAME test_spsa_driver
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_driver.py)
 set_tests_properties(test_spsa_driver PROPERTIES LABELS "fast" TIMEOUT 120)
 
+# S214, 2026-09-10_adversarial-F28: tools/analyse_game.py, the tool CLAUDE.md
+# mandates *because* agent chess judgement is banned. It used to initialise
+# `score, best = 0, "-"` and return them when no `info` line carrying a score
+# and a pv arrived, so an engine answering `bestmove` alone produced a game in
+# which every position was a dead draw -- and the cost table that came out of
+# that is indistinguishable from a real one.
+#
+# The engine is a four-line /bin/sh stub, the same device test_mutation_check
+# uses: the three answers under test -- none, a bound only, a bound after a real
+# score -- are ones no correct engine produces on demand, so a real engine
+# could not reach the cases and would be testing itself anyway. 0.1 s, stdlib
+# only, nothing built.
+add_test(NAME test_analyse_game
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_analyse_game.py)
+set_tests_properties(test_analyse_game PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S214, and the Tier-1 fast check over S214's own diff: the reachability probe
+# in tools/spsa_driver.py `check`, which is what stands between an SPSA run and
+# an axis wired to a variable nothing reads. It had no test at all, and three
+# things were wrong with it -- a one-sided jitter guard that passed a bimodal
+# dead axis as reachable about a fifth of the time per axis, a failure message
+# quoting a measurement that had not happened, and bounds that round to one UCI
+# value being probed twice at that value and then blamed by name.
+#
+# The engine is a stub whose `info ... nodes N` is a formula over the option,
+# the `go` command and how many probes came before it, so a case can be a live
+# axis, a dead one, one only a clock rung can see, or a machine whose clock
+# count alternates on its own. None of the four is a sequence a correct engine
+# produces on demand, and the jittery one cannot be produced at all without
+# controlling the clock. 12 cases, ~1 s, stdlib only, nothing built.
+add_test(NAME test_spsa_probe
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_probe.py)
+set_tests_properties(test_spsa_probe PROPERTIES LABELS "fast" TIMEOUT 120)
+
 # S196: the gate on tools/mutation_check.py, the driver that measures what this
 # suite detects by breaking the engine on purpose. Also python, also no engine:
 # `cmake`, `ctest` and the engine are stubs on PATH over a four-line sandbox
@@ -392,6 +426,24 @@ add_test(NAME test_plan_params
          COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
                          --params)
 set_tests_properties(test_plan_params PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S214, DEC-184 item 1: `--gate`, the fourth mode in the suite. The
+# step-completion command is written out in two documents -- AGENTS.md's TESTS
+# rule, which an agent obeys, and DEV_MANUAL.md's test section, which a human
+# reads -- and nothing held them equal. S143 added `build-tune` to the gate
+# (DEC-118) by editing both by hand, and the next such edit has no reason to
+# find the second copy; a gate that two documents disagree about is one that
+# gets run in whichever form the reader happened to open.
+#
+# It belongs here for the same reason as `--touches` and `--params`: it holds no
+# line numbers, so no source commit can move it, and what turns it red is one
+# document being edited without the other -- one line to fix, in the commit that
+# made the difference. Both copies are found by content, not by position. 0.01 s,
+# stdlib only, reads two files.
+add_test(NAME test_plan_gate
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/plan_prose_check.py
+                         --gate)
+set_tests_properties(test_plan_gate PROPERTIES LABELS "fast" TIMEOUT 60)
 
 # S187: the planted-case gate on `--citations` itself. Not a check over the
 # plan -- that is test_plan_citations' sibling below -- but a check that the

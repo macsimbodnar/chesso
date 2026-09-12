@@ -60,7 +60,9 @@ clamp plays its games against a silently-default parameter and converges
 confidently to nonsense. Every value is clamped here -- theta, and theta+c and
 theta-c separately -- and `check` compares the config's bounds against the
 binary's own `uci` listing before a single game, so the run does not start wrong
-in the first place.
+in the first place. It then searches EVERY axis at both of its bounds and
+requires the two node counts to differ, because an option the binary accepts
+and no code reads is accepted in silence too (S214, F29).
 
 Integers are floats internally and rounded only at the UCI boundary. An integer
 parameter with c_end < 0.5 is refused at config load: round(x+c) == round(x-c)
@@ -68,6 +70,7 @@ below that, so the perturbation vanishes and the axis never moves.
 """
 
 import argparse
+import collections
 import hashlib
 import json
 import math
@@ -77,6 +80,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 # Spall 1998 section 2, and OpenBench's defaults, which are the same figures:
 # the lowest exponents the convergence proof allows, and they beat the
@@ -389,8 +393,8 @@ def read_engine_options(engine):
     return out
 
 
-def probe_nodes(engine, name, value, fen, depth):
-    """Node count at fixed depth with one option set. Proves a `setoption`
+def probe_nodes(engine, name, value, fen, go):
+    """Node count for one `go` command with one option set. Proves a `setoption`
     reached the search. S137 made a *refused* option observable, which this does
     not replace: an accepted value still has no readback -- `uci` re-prints the
     compiled default -- so the node count stays the only evidence the search is
@@ -405,7 +409,7 @@ def probe_nodes(engine, name, value, fen, depth):
     script = ["uci"]
     if value is not None:
         script.append(f"setoption name {name} value {value}")
-    script += [f"position fen {fen}", f"go depth {depth}"]
+    script += [f"position fen {fen}", go]
     try:
         proc.stdin.write("\n".join(script) + "\n")
         proc.stdin.flush()
@@ -425,15 +429,168 @@ def probe_nodes(engine, name, value, fen, depth):
             proc.wait(timeout=30)
         except subprocess.TimeoutExpired:
             proc.kill()
+        # One process per probe and up to ten probes per axis once a clock rung
+        # is confirmed, so the pipes are closed rather than left to the garbage
+        # collector: a check over 28 axes would otherwise hold hundreds of open
+        # descriptors and Python warns about every one of them.
+        proc.stdin.close()
+        proc.stdout.close()
     if nodes is None:
-        raise ConfigError(f"{engine} reported no node count at depth {depth}")
+        raise ConfigError(f"{engine} reported no node count under `{go}`")
     return nodes
 
 
 # tools/search_bench.py's midgame position, which DEV_MANUAL's tune-build
-# paragraph already quotes node counts on.
+# paragraph already quotes node counts on, and its tactical one.
 PROBE_FEN = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
+PROBE_FEN_TACTICAL = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
 PROBE_DEPTH = 9
+
+# The ladder one axis is probed down, cheapest first, stopping at the first
+# probe whose two values search different numbers of nodes. S214, F29: the
+# check probed `RfpMargin` alone and nothing else, so an axis wired to a
+# variable nothing reads would random-walk through a run and be
+# indistinguishable from a tuned one.
+#
+# `stable` says whether the node count is a function of the position and the
+# options alone. A fixed depth is; a clock is not, because how deep the search
+# gets depends on how fast the machine ran -- so a clock rung's separation is
+# confirmed by re-measuring BOTH bounds, and is believed only when every sample
+# at each bound agrees exactly. Without that, timing jitter alone would report
+# a dead axis as reachable, which is the failure this whole check exists to
+# catch.
+#
+# A fixed depth cannot reach the time-management block at all: nothing under
+# `go depth` consults a clock. Measured 2026-09-12 on the tune build, the
+# clock probe separates eight of the nine Tm* axes; TmHardPercent is the one
+# it does not, and the report of this step says why.
+PROBES = (
+    ("depth 9, midgame", PROBE_FEN, f"go depth {PROBE_DEPTH}", True),
+    ("depth 13, midgame", PROBE_FEN, "go depth 13", True),
+    ("depth 13, tactical", PROBE_FEN_TACTICAL, "go depth 13", True),
+    ("a 1 s clock, sudden death with increment", PROBE_FEN,
+     "go wtime 1000 btime 1000 winc 200 binc 200", False),
+)
+
+
+# Measurements at EACH bound on an unstable rung. Every one has to give the
+# same count or the rung's verdict is "not repeatable", never "reachable".
+#
+# Why five and not two. Model a dead axis whose clock count is bimodal, mode A
+# with probability p and mode B with 1-p, samples independent. The guard this
+# replaced re-measured the low bound alone, so it fell for lo,lo on one mode
+# and the single hi on the other: p^2(1-p) + (1-p)^2 p = p(1-p), which is 21 %
+# at a 70/30 split and 25 % at the worst case, per axis, over the nine Tm* axes
+# only a clock rung reaches. Requiring n agreeing samples at each bound leaves
+# 2 * (p(1-p))^n: at the worst case 12.5 % for n = 2, 3.1 % for n = 3, 0.78 %
+# for n = 4 and 0.20 % for n = 5. Two is therefore not enough -- it halves a
+# number that needed two orders of magnitude, and over nine axes still fails
+# seven times in ten. Five puts the whole nine-axis sweep under 2 % in the
+# worst case.
+#
+# It is affordable because it is paid only where it buys something. The 19
+# axes that separate at depth 9 never reach a clock rung; a rung whose two
+# bounds agree costs one pair and nothing more; and a jittery one bails at the
+# first disagreeing sample, so the full ten probes are spent only on axes that
+# really do separate repeatably. Measured on the tune build, the cost is the
+# eight clock-reachable Tm* axes and about 0.1 s a probe.
+UNSTABLE_SAMPLES = 5
+
+# What one rung of the ladder did. `verdict` is the whole vocabulary: the two
+# failures need different answers from a reader, because "both bounds searched
+# the same tree" is a wiring bug in the engine or the config and "the rung did
+# not repeat" is a machine that was busy.
+Rung = collections.namedtuple("Rung", "label lo_nodes hi_nodes verdict detail")
+Probe = collections.namedtuple(
+    "Probe", "separated label lo hi lo_nodes hi_nodes rungs")
+
+
+def bound_repeats(engine, name, value, fen, go, first):
+    """Re-measure one bound until a sample disagrees or UNSTABLE_SAMPLES agree.
+
+    Returns None when every sample gave `first`, else the first count that did
+    not. Bailing on the first disagreement is what keeps the cost where it
+    belongs: a jittery axis is rejected after one or two extra probes, and only
+    an axis that really does repeat pays for all of them."""
+    for _ in range(UNSTABLE_SAMPLES - 1):
+        again = probe_nodes(engine, name, value, fen, go)
+        if again != first:
+            return again
+    return None
+
+
+def probe_axis(engine, param):
+    """Search two values of one parameter until the node counts differ.
+
+    Returns a `Probe`: whether a rung separated the two values, which one, and
+    `rungs` -- what every rung tried actually did, so a failure can report the
+    measurement that happened rather than the one the caller assumed. The two
+    values are the axis's own bounds, which is the widest pair the run will
+    ever send, so an axis that moves nothing here moves nothing anywhere in the
+    run.
+    """
+    lo, hi = param.uci_value(param.lo), param.uci_value(param.hi)
+    rungs = []
+
+    for label, fen, go, stable in PROBES:
+        low = probe_nodes(engine, param.name, lo, fen, go)
+        high = probe_nodes(engine, param.name, hi, fen, go)
+        if low == high:
+            rungs.append(Rung(label, low, high, "identical", ""))
+            continue
+        if not stable:
+            # Both bounds, not just the low one. Confirming one leaves the
+            # whole failure in place: a single unconfirmed sample at the other
+            # bound landing on the other mode of a bimodal dead axis reads
+            # exactly like separation.
+            odd_lo = bound_repeats(engine, param.name, lo, fen, go, low)
+            odd_hi = (None if odd_lo is not None else
+                      bound_repeats(engine, param.name, hi, fen, go, high))
+            if odd_lo is not None or odd_hi is not None:
+                at, first, again = ((lo, low, odd_lo) if odd_lo is not None
+                                    else (hi, high, odd_hi))
+                rungs.append(Rung(
+                    label, low, high, "not repeatable",
+                    f"a re-run at {at} searched {again} nodes and not {first}, "
+                    "so that separation is the machine and not the parameter"))
+                continue
+        rungs.append(Rung(label, low, high, "separated", ""))
+        return Probe(True, label, lo, hi, low, high, rungs)
+
+    return Probe(False, None, lo, hi, None, None, rungs)
+
+
+def unreached(param, got):
+    """Why one axis failed the probe, rung by rung and in the measurements that
+    were taken.
+
+    The message this replaced asserted a measurement that had not happened: a
+    rung rejected for jitter fell out of the loop and was reported as "both
+    searched N nodes ... and every probe before it agreed", and neither clause
+    was true of it. The two failures also want different answers -- a dead axis
+    is wiring to look at, an unrepeatable one is a machine to re-run on -- so
+    they are named apart."""
+    trail = []
+    for r in got.rungs:
+        if r.verdict == "identical":
+            trail.append(f"    {r.label}: both searched {r.lo_nodes} nodes")
+        else:
+            trail.append(
+                f"    {r.label}: {got.lo} -> {r.lo_nodes} nodes, {got.hi} -> "
+                f"{r.hi_nodes}, but not repeatable -- {r.detail}")
+    shaky = [r for r in got.rungs if r.verdict == "not repeatable"]
+    if shaky:
+        head = (f"{param.name}: no probe separates {got.lo} from {got.hi} "
+                f"repeatably -- {len(shaky)} of {len(got.rungs)} separated "
+                "them once and did not repeat, which is the machine and not "
+                "the parameter; re-run on an idle machine before believing "
+                "this axis is dead")
+    else:
+        head = (f"{param.name} {got.lo} and {got.hi} searched the same number "
+                "of nodes under every probe tried; nothing shows this value "
+                "reaching the search, so the axis would random-walk and read "
+                "as tuned")
+    return head + ":\n" + "\n".join(trail)
 
 
 def check(cfg, engine):
@@ -441,29 +598,51 @@ def check(cfg, engine):
     problems = []
     if engine:
         options = read_engine_options(engine)
+        reachable = []
         for p in cfg.params:
             if p.name not in options:
                 problems.append(
                     f"{p.name} is not an option of {engine}; the engine ignores an "
                     "unknown name in silence and the axis would never move")
                 continue
-            _, lo, hi = options[p.name]
-            if (lo, hi) != (int(p.lo), int(p.hi)):
+            # One conversion, here and in the probe: `uci_value` is what the
+            # run actually sends, so comparing anything else -- int(), which
+            # truncates where this rounds -- quotes the binary a value nothing
+            # uses. Both bounds go through it before either is compared.
+            cfg_lo, cfg_hi = p.uci_value(p.lo), p.uci_value(p.hi)
+            # Checked before the binary's range, because it is a fault in the
+            # config alone and it is the more specific one: bounds a hair apart
+            # are the same integer by the time they are sent, so the probe
+            # below would measure the same engine twice and fail the axis by
+            # name as one the search never sees. A run would perturb it and
+            # never move it.
+            if cfg_lo == cfg_hi:
                 problems.append(
-                    f"{p.name}: config bounds [{int(p.lo)}, {int(p.hi)}] against the "
+                    f"{p.name}: bounds [{p.lo:g}, {p.hi:g}] collapse to one UCI "
+                    f"value, {cfg_lo}; every setoption the run sends is that "
+                    "value, so the axis cannot move and no probe could tell")
+                continue
+            _, lo, hi = options[p.name]
+            if (lo, hi) != (cfg_lo, cfg_hi):
+                problems.append(
+                    f"{p.name}: config bounds [{cfg_lo}, {cfg_hi}] against the "
                     f"binary's [{lo}, {hi}]; a value outside the binary's range is "
                     "refused, not clamped, and the refusal is invisible")
+                continue  # a probe at a refused value proves nothing
+            reachable.append(p)
 
-        # Does setoption reach the search in this binary at all?
-        low = probe_nodes(engine, "RfpMargin", 75, PROBE_FEN, PROBE_DEPTH)
-        high = probe_nodes(engine, "RfpMargin", 2000, PROBE_FEN, PROBE_DEPTH)
-        if low == high:
-            problems.append(
-                f"RfpMargin 75 and 2000 both searched {low} nodes, so setoption is "
-                "not reaching the search; is this the tune build?")
-        else:
-            print(f"setoption reaches the search: RfpMargin 75 -> {low} nodes, "
-                  f"2000 -> {high}")
+        # Does setoption reach the search, for every axis and not for one?
+        started = time.time()
+        for p in reachable:
+            got = probe_axis(engine, p)
+            if got.separated:
+                print(f"setoption reaches the search: {p.name} {got.lo} -> "
+                      f"{got.lo_nodes} nodes, {got.hi} -> {got.hi_nodes} "
+                      f"({got.label})")
+            else:
+                problems.append(unreached(p, got))
+        print(f"probed {len(reachable)} of {len(cfg.params)} parameters in "
+              f"{time.time() - started:.1f} s")
     return problems
 
 

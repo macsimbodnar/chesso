@@ -7,17 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
-- **S214 started, 2026-09-12 18:20, by an Opus 5 subagent (DEC-199).** The
-  owner's evening instruction reopened the work: the step subagent is Opus 5
-  again (DEC-188's model clause VOID), strength and correctness outrank
-  machine time, the governor is ignored, questions stay in the reserved set.
-  S214 is tools-only (`analyse_game.py` refuses an unread score,
-  `spsa_driver.py check` probes every axis, the tuner's provenance stamp
-  carries the four missing flags, `plan_prose_check.py --gate` compares the
-  two copies of the completion command, the tuner-groups assertion names
-  what it detects); no `src/`, no run. `plan_current/`: S214. Machine idle
-  apart from the subagent's builds. **Next: S211**, brief being prepared
-  while S214 runs.
+- **S214 is done, 2026-09-12 19:05, by an Opus 5 subagent (DEC-199), the first
+  step under the evening's rules.** Three measurement tools stop failing
+  silently: `tools/analyse_game.py` raises and exits 1 naming the ply, the
+  move and the FEN when no `info` line with both a score and a `pv` arrived
+  before `bestmove`, and reads past bound lines (F28); `tools/spsa_driver.py
+  check` probes every axis in the config down a four-rung ladder and fails by
+  name when both bounds search identically -- 28 axes in 15.4 s, 27 reach the
+  search, **`TmHardPercent` is the one no node-count probe reaches**, a
+  property of the parameter (the soft limit never exceeds the hard one at the
+  shipped `TmSoftPercent`), so **DEC-200** takes it out of S127's set and
+  S222's lane, with a dated amendment on S127's file (F29); `tools/tuner.cpp`'s
+  provenance stamp carries `--epochs`, `--report`, `--patience` and
+  `--threads` (F35); `tools/plan_prose_check.py --gate` holds `AGENTS.md`'s
+  TESTS command against `DEV_MANUAL.md`'s test section and is `test_plan_gate`
+  in the fast suite; the tuner-groups precondition names what it detects
+  (DEC-184). Every new check was observed red before green; gate 36/36 in
+  both builds, format clean. `tools/spsa_s085.json` no longer passes `check`
+  (`RfpMinPly` min 0 against the binary's 2) and is left as the record of
+  what S085 ran, DEC-200. `DEV_MANUAL.md` follows in four places; MANUAL.md
+  checked, no change. No `src/`, no run. **The fast check found four real
+  problems in the new probe and its test, repaired by a second Opus 5 agent
+  before this commit:** the clock rung's jitter guard was one-sided (a
+  bimodal dead axis passed as reachable about 21 % of the time; both bounds
+  now repeat over five samples, 0.2 % per axis), the failure message stated
+  a measurement that had not happened, the stub-engine test leaked its temp
+  directories, and bounds that round to one UCI value were failed as a dead
+  axis instead of refused as a config fault. `tests/test_spsa_probe.py`
+  drives the probe against a stub engine and was red on every one before
+  the fix. The probe pipes were never closed, fixed in passing. **One
+  limitation stands:** the clock rung is load-sensitive and fails closed --
+  at load 0.87 with the owner's Codex session live, one to three `Tm*` axes
+  read not-repeatable in nine runs of ten; `check` runs on an idle machine
+  before a run, as the run itself does (MACHINE), recorded in DEC-200.
+  `plan_current/` empty after this commit. **Next: S211**, the
+  originality step, brief ready. **Compaction point.**
 
 - **DEC-198 recorded, 2026-09-12 18:05: S222 moves to Open entry 13,
   directly before S098, with a narrow SPSA lane of its own -- nothing

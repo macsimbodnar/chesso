@@ -40,3 +40,17 @@ verdict SPRT is wall time regardless and that the bias -- a change that spends
 time to save nodes looks better than it plays -- is accepted for the sweep
 only. Half a day to build, behaviour-neutral in the shipping build, proved on
 the bench signature.
+
+## Amended 2026-09-12: `TmHardPercent` is out of the set, DEC-200
+
+S214's `spsa_driver.py check` probes every axis for reachability and fails by
+name when both bounds search identically. Over the full 28-axis set it reached
+27 and named **`TmHardPercent`** as the one no node-count probe reaches: at the
+shipped `TmSoftPercent` the scaled soft limit never exceeds the hard one, so
+the hard timer fires only on an iteration overrunning its start by more than
+11 %, and depths 9 and 13, three positions and five clock forms all tied.
+"The full set in `src/search_params.hpp`" in the goal line therefore reads as
+**27 axes**: this run's config excludes `TmHardPercent` with DEC-200 in its
+comment, and `check` is the gate the config passes before the run starts. Its
+value is decided by a direct SPRT, the way S089 decided the time manager, or by
+a step that first makes it bind at the probe's control.

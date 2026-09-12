@@ -258,6 +258,20 @@ void write_tables(const std::string& path,
       "// error      %.6f train, %.6f validation\n"
       "// seed       %" PRIu64
       ", lr %.3f, validation split %.2f\n"
+      // S214, 2026-09-10_adversarial-F35: --report and --patience pick which
+      // vector comes out of a run -- the best of the epochs that reported, and
+      // the run stops after --patience reports without a new best -- so a fit
+      // was not reproducible from its own stamp without them. --epochs is the
+      // other way a run ends. --threads is here because error_range() and
+      // gradient() stride by it and sum the partials in thread order, so the
+      // summation order is a function of it; the rounded constants absorbed
+      // that on every fit measured so far, which is not the same as neutral.
+      "// run        %d epochs max, report every %d, patience %d reports, %u "
+      "threads\n"
+      "//            the emitted vector is the best reported epoch, so "
+      "--report "
+      "and\n"
+      "//            --patience choose it as much as the data does\n"
       "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
       "// only       %s\n"
       "// freeze     %s\n"
@@ -274,7 +288,8 @@ void write_tables(const std::string& path,
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
       corpus.rows, corpus.bytes, opts.k, train_error, validation_error,
-      opts.seed, opts.lr, opts.validation, games, validation_rows,
+      opts.seed, opts.lr, opts.validation, opts.epochs, opts.report,
+      opts.patience, opts.threads, games, validation_rows,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
       opts.only.c_str(),

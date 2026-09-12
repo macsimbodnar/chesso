@@ -98,8 +98,25 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   //
   // If this fires, a parameter block was appended after tempo. Give it a group,
   // move `tempo`'s end to the new block, and name the new last block here.
-  REQUIRE(eval_model::TEMPO_EG_BASE + eval_model::TEMPO_COUNT ==
-          eval_model::PARAM_COUNT);
+  //
+  // The message is the whole value of this assertion (DEC-184 item 4): without
+  // it a failure reads as two constants disagreeing, which is the symptom and
+  // not the event, and the reader has to re-derive the event from the comment
+  // above. S041 left the structure accepted -- the last `--only` group still
+  // runs to PARAM_COUNT and the partition below still cannot see past it -- so
+  // this line is the only thing standing between an appended block and a fit
+  // that silently hands its weights back unchanged.
+  REQUIRE_MESSAGE(
+      eval_model::TEMPO_EG_BASE + eval_model::TEMPO_COUNT ==
+          eval_model::PARAM_COUNT,
+      "a parameter block was appended after `tempo` and given no group of its "
+      "own, so `tempo` -- the last group, whose range runs to PARAM_COUNT -- "
+      "silently covers it: TEMPO_EG_BASE "
+          << eval_model::TEMPO_EG_BASE << " + TEMPO_COUNT "
+          << eval_model::TEMPO_COUNT << " = "
+          << (eval_model::TEMPO_EG_BASE + eval_model::TEMPO_COUNT)
+          << " against PARAM_COUNT " << eval_model::PARAM_COUNT
+          << ". The partition cases below cannot see this and will all pass.");
 
   std::vector<uint8_t> mask;
 

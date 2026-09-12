@@ -328,9 +328,81 @@ That is not a formality. Every name is checked against the binary's own `uci`
 listing and every bound against the binary's, before any option is sent — the
 `info string` refusals S137 added are a backstop for a run already under way,
 not a substitute for validating a config that has not started. Then it proves
-`setoption` reaches the search at all: measured at S137's commit, `RfpMargin` 75
-searched **164302** nodes and 2000 searched **742729** on the midgame position
-at depth 9, the same two figures this file quotes above.
+`setoption` reaches the search, **for every parameter in the config and not for
+one** (S214, `2026-09-10_adversarial-F29`): each axis is searched at both of its
+own bounds and the two node counts have to differ, or the axis fails the check
+by name. An option the binary accepts and no code reads is accepted in silence,
+so such an axis would random-walk through a run and read exactly like a tuned
+one. Bounds that round to the *same* UCI value — `uci_value` clamps and rounds,
+so `min 1.2 / max 1.4` is 1 and 1 — are refused by name as a config fault
+before any probe, because both probes would then be the same probe and the axis
+would be blamed for the config.
+
+The probes are a ladder, cheapest first, stopping at the first one that
+separates: depth 9 on the midgame position, depth 13 on it, depth 13 on the
+tactical position, then a one-second clock with an increment
+(`go wtime 1000 btime 1000 winc 200 binc 200`). The clock rung exists because
+nothing under `go depth` consults a clock, so the nine `Tm*` parameters are
+invisible to a fixed-depth probe however deep it goes.
+
+A clock probe's node count is not a function of the options alone, so a clock
+rung that separates is confirmed: **five measurements at each bound, and every
+one of the five has to give the same count**, or the rung's verdict is *not
+repeatable* and never *reachable*. Both bounds, not one. Confirming the low
+bound alone — which is what this did until the fast check over S214 caught it —
+leaves the whole failure standing: a dead axis whose clock count is bimodal,
+mode A with probability p, passes whenever the two low samples land on one mode
+and the single unconfirmed high sample lands on the other, which is `p(1-p)`,
+21 % at a 70/30 split, per axis, over the nine axes only this rung reaches.
+Requiring n agreeing samples at each bound leaves `2(p(1-p))^n`: at the worst
+case 12.5 % for n = 2, 0.78 % for n = 4 and 0.20 % for n = 5. Two is a halving
+where two orders of magnitude were needed, which is why it is five. The cost is
+paid only where it buys something — the 19 axes that separate at depth 9 never
+reach this rung, an axis that agrees at both bounds is done after one pair, and
+a jittery one bails at the first disagreeing sample.
+
+Measured here 2026-09-12 on the tune build, 28 tunable axes (every spin option
+but `Hash` and `Threads`): **15.4 s, 27 reachable**. The 19 search parameters
+all separate at the first rung — `RfpMargin` 0 searched 54843 nodes and 2000
+searched 569950 at depth 9 — and eight of the nine `Tm*` ones separate on the
+clock. `tools/spsa_dryrun.json` costs 0.2 s and the 12-axis
+`tools/spsa_s085.json` 0.7 s, both unchanged: neither reaches the clock rung.
+
+**Expect a `Tm*` axis to come back *not repeatable*, and how often depends on
+what else the machine is doing.** Ten runs at load ~0.3: six named
+`TmHardPercent` alone, four named one further `Tm*` axis. Ten runs at load 0.87
+with a second agent session live: one clean, the rest naming one to three of
+`TmSuddenDeathPercent`, `TmStabilityPercent`, `TmScaleMinPercent`. That is the
+guard working — a clock count that moves on its own cannot decide anything, and
+the check says so instead of reporting the axis as reached — but it means
+**this check is not a gate you can clear while an agent session is running**.
+Run it on an idle machine, as you would a match.
+
+More samples of the same rung will not help, and it is worth knowing why: the
+clock counts quantise to a handful of iteration boundaries, and where the
+repetition fails the jitter is between *the same two values that also appear at
+the other bound* — five samples each of all nine `Tm*` axes gave
+`TmStabilityMax` `{638719, 949446}` low against `{638719}` high, and
+`TmScaleMinPercent` the mirror. A looser criterion buys nothing there: asking
+for disjoint sample bands rather than exact repetition separates the same 6 of
+9. Deciding `Tm*` reachability on a busy machine needs a different instrument,
+not a bigger sample.
+
+The failure lists what every rung actually measured, so the two cases read
+apart — *both searched N nodes* on every rung is a dead axis, *separated once
+and did not repeat* is a busy machine.
+
+**`TmHardPercent` is the one axis no probe here reaches, and that is a property
+of the parameter.** At the shipped `TmSoftPercent` 60 the scaled soft limit is
+at most `0.6 * 1.5 = 0.9` of the base allocation (`search_time_scale_percent`
+tops out at 150 % with `TmStabilityPercent` 4 and `TmFallingPercent` 50), and the
+hard limit at the probe's low value of 100 — the lowest that range allows, and
+well below the 300 that ships — is a full `1.0` of it, so the clamp
+`soft = min(soft, hard)` can never bind and the hard timer only fires when a
+single iteration overruns its start-plus-11 %. Nothing observable moves.
+Tuning that axis on its own is therefore tuning something the search almost
+never consults — which is what the check is telling you, and not a false alarm
+to be silenced.
 
 Run it:
 
@@ -508,6 +580,17 @@ optimum, because a driver tested by playing games cannot tell a bug in itself
 from noise in the objective at any budget this machine can afford — a sign error
 and a parameter that does not matter produce the same flat trajectory. The
 sign-flipped run is asserted to **fail** the criterion the honest one passes.
+
+`tests/test_spsa_probe.py` is the other half, also in the fast suite, 12 cases
+and about a second: the reachability probe of "Tune search parameters with
+SPSA" above, driven against an engine stub whose `info ... nodes N` is a formula
+over the option, the `go` command and how many probes came before it. That last
+term is what makes a jittery clock reproducible, so the guard that has to reject
+it can be tested at all — and a live axis, a dead one and one only a clock rung
+can see are each a line of formula. The probe shipped without a test and had
+three defects when one was written: a one-sided jitter guard, a failure message
+quoting a measurement that had not happened, and collapsed bounds blamed on the
+axis.
 
 The constants are measured there, not inherited. On that objective, at 20000
 pairs, with the axis starting 300 units from its optimum:
@@ -967,17 +1050,19 @@ at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
-`tools/plan_prose_check.py` carries four plan-hygiene checks. Three of the
-four -- `--touches`, `--params` and `--citations` -- are in the fast suite as
-`test_plan_touches`, `test_plan_params` and `test_plan_citation_freshness`;
-`--prose` is not, and the paragraph after them says why:
+`tools/plan_prose_check.py` carries five plan-hygiene checks. Four of the
+five -- `--touches`, `--params`, `--citations` and `--gate` -- are in the fast
+suite as `test_plan_touches`, `test_plan_params`,
+`test_plan_citation_freshness` and `test_plan_gate`; `--prose` is not, and the
+paragraph after them says why:
 
 ```bash
-tools/plan_prose_check.py             # all four, exits non-zero on any
+tools/plan_prose_check.py             # all five, exits non-zero on any
 tools/plan_prose_check.py --prose     # plan.md's tense only
 tools/plan_prose_check.py --citations # pending step files' citations only
 tools/plan_prose_check.py --touches   # pending step files' touches only
 tools/plan_prose_check.py --params    # doc numbers against the compiled params
+tools/plan_prose_check.py --gate      # the two copies of the completion command
 ```
 
 **`--prose`.** `plan.md`'s ordered list is maintained by the workflow checker
@@ -1130,6 +1215,26 @@ file is covered the day it is written, since the set comes from the same
 excluded because it is history and records what was true when it was written.
 Cost on the workstation with 68 pending files: **0.37 s** over the four
 documents, **1.27 s** over the whole set.
+
+**`--gate`.** The step-completion command is written out twice — `AGENTS.md`'s
+TESTS rule, which an agent obeys, and this file's test section, which a human
+reads — and nothing held the two equal. S143 added `build-tune` to the gate
+(DEC-118) by editing both by hand, and the next such edit has no reason to find
+the second copy; a gate two documents disagree about is one that gets run in
+whichever form the reader happened to open. DEC-184 item 1, S214 the step.
+
+Both copies are located by **content, not position**: a command containing both
+`ctest --test-dir build -L fast` and `clang-format.sh --check`, backticked
+inside the `- TESTS:` bullet in one document and inside a fence in the other.
+Two anchors rather than one, because this file also prints `ctest --test-dir
+build -L fast` on its own as the everyday invocation and that line is not the
+gate. Exactly one copy each, byte-equal after stripping, or the run fails —
+and a copy wrapped over two lines is reported missing rather than rejoined,
+since a shell would read the wrap differently than a reader would.
+
+It holds no line numbers and reads two files, so no source commit can move it;
+what turns it red is one document edited without the other, one line to fix in
+the commit that made the difference. **0.01 s.**
 
 `--prose` is **not** registered with ctest, and that is deliberate rather than
 an omission: which tense a sentence should take is a judgement, and a rewrite
@@ -2958,6 +3063,17 @@ the engine's own `algebraic_to_move`, so there is no `python-chess` dependency.
 It also emits the engine's own `game_phase()` as a fifth column, which
 `error_profile.py` reads and this script ignores.
 
+**It refuses rather than defaulting** (S214, `2026-09-10_adversarial-F28`). A
+position the engine answered without one `info` line carrying both a score and a
+`pv` exits 1 naming the ply, the move and the FEN; so does an engine that closes
+its output before `uciok` or before `bestmove`. `lowerbound` and `upperbound`
+lines are read past, because the search proved "at least beta" and nothing more
+and the number beside one is a window edge. Until S214 each of those returned
+`0, "-"` instead, which is a dead draw for every position of the game and a
+table of costs that looks exactly like a real one — the DEC-023 failure arriving
+through the instrument that exists to prevent it. `tests/test_analyse_game.py`
+is the gate, a `/bin/sh` stub engine per case.
+
 That one game took about 45 seconds at depth 18. **Do not budget from it.**
 Fixed depth has no bounded cost: over 12 positions sampled from real games,
 depth 18 ran a median of 0.71 s and a maximum of 925.90 s. Use node limits for
@@ -3363,6 +3479,36 @@ files on two machines, and S082 and S083 write two more:
 
 The same two lines are printed to stderr before the fit starts, so a run log
 carries them even when the emitted file is lost.
+
+**Every flag that decides the answer is in the stamp** (S214,
+`2026-09-10_adversarial-F35`). Below the corpus come `K`, the train and
+validation errors, the seed, `--lr` and `--validation`, and then the line S214
+added — `--epochs`, `--report`, `--patience` and `--threads`:
+
+```
+// seed       1, lr 1.000, validation split 0.10
+// run        20 epochs max, report every 5, patience 3 reports, 4 threads
+//            the emitted vector is the best reported epoch, so --report and
+//            --patience choose it as much as the data does
+```
+
+Two of the four are not bookkeeping. The vector that comes out is the best of
+the epochs that *reported*, and the run stops after `--patience` reports without
+a new best, so the same corpus, seed and learning rate at `--report 100
+--patience 20` and at `--report 1000 --patience 3` emit different constants. A
+fit was not reproducible from its own stamp without them. `--epochs` is the
+other way a run ends.
+
+`--threads` is in the line for a weaker reason and it is not "so a timing can be
+read": `error_range()` and `gradient()` in `tools/tuner_model.hpp` stride their
+range by the thread count and sum the per-thread partials in thread order, so
+the summation order is a function of `--threads` and floating-point addition is
+not associative. Measured on a 2000-row corpus at 200 epochs, 1, 4 and 8 threads
+emitted byte-identical constants and the same train and validation errors to six
+decimals — the constants are rounded to integers, which absorbs a last-bit
+difference — but that is one small fit and not a proof of bit-identity over
+11 million rows and 20000 epochs. The stamp records it rather than claiming it
+does not matter.
 
 **The hash is SHA-256 over the file's bytes, written from FIPS 180-4 in
 `tools/corpus_hash.hpp`, precisely so `sha256sum` can check it** — a hash only

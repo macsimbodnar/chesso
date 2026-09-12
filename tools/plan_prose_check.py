@@ -1,21 +1,31 @@
 #!/usr/bin/env python3
-"""Plan hygiene: stale tense, citations, touches, and doc numbers vs the code.
+"""Plan hygiene: stale tense, citations, touches, doc numbers, and the gate.
 
-Four checks over the plan and manual documents. They report and do not rewrite
+Five checks over the plan and manual documents. They report and do not rewrite
 -- which tense a sentence should take and which symbol a citation meant are
 judgements, and the fix belongs in the same commit as the landing that made it
-stale. `--touches`, `--params` and `--citations` are in the ctest suite;
-`--prose` is not and DEV_MANUAL.md says why.
+stale. `--touches`, `--params`, `--citations` and `--gate` are in the ctest
+suite; `--prose` is not and DEV_MANUAL.md says why.
 
-    tools/plan_prose_check.py             # all four checks
+    tools/plan_prose_check.py             # all five checks
     tools/plan_prose_check.py --prose     # plan.md tense only
     tools/plan_prose_check.py --citations # pending step files' citations only
     tools/plan_prose_check.py --touches   # pending step files' touches only
     tools/plan_prose_check.py --params    # doc numbers against search_param_info()
+    tools/plan_prose_check.py --gate      # AGENTS.md's TESTS command vs DEV_MANUAL's
     tools/plan_prose_check.py --prose adocs/plan.md          # explicit files
     tools/plan_prose_check.py --citations adocs/plan_todo/S091_*.md
 
 Exits non-zero when any check flags anything.
+
+**--gate: the completion command, written out twice, held equal.** `AGENTS.md`'s
+TESTS rule is the copy an agent obeys and `DEV_MANUAL.md`'s test section is the
+copy a human reads, and nothing kept them the same -- S143 added `build-tune` to
+both by hand (DEC-118), and the next such edit had no reason to reach the second
+document. Both copies are located by content: a command holding the whole chain,
+the `fast` label and the format check, backticked in the TESTS bullet and fenced
+in DEV_MANUAL. One copy each, byte-equal after stripping, or the run fails.
+DEC-184 item 1; S214 is the step.
 
 **--params: a document sentence that states a different number for a search
 parameter than the engine compiles.** 2026-08-21_adversarial-F02 found three:
@@ -1107,20 +1117,105 @@ def check_all_params(paths, adocs=None):
     return bad
 
 
+# --gate. The step-completion command is written out in two documents and
+# nothing held them equal: AGENTS.md's TESTS rule is the one an agent obeys and
+# DEV_MANUAL.md's test section is the one a human reads, and S143 added
+# `build-tune` to the gate (DEC-118) by editing both by hand. DEC-184 item 1.
+#
+# Both copies are found by content and not by line: a command that holds the
+# whole chain, the fast label and the format check. Two anchors rather than one,
+# because DEV_MANUAL also prints `ctest --test-dir build -L fast` on its own as
+# the everyday invocation and that line is not the gate.
+GATE_ANCHORS = ("ctest --test-dir build -L fast", "clang-format.sh --check")
+
+# A backticked span in AGENTS.md, and a line inside a fence in DEV_MANUAL.md.
+GATE_INLINE = re.compile(r"`([^`\n]+)`")
+GATE_RULE = re.compile(r"^- [A-Z]+:")
+
+
+def _gate_agents(path):
+    """The command inside AGENTS.md's `- TESTS:` bullet."""
+    with open(path) as handle:
+        lines = handle.read().splitlines()
+
+    body, inside = [], False
+    for line in lines:
+        if line.startswith("- TESTS:"):
+            inside = True
+        elif inside and GATE_RULE.match(line):
+            break
+        if inside:
+            body.append(line)
+
+    return [m for line in body for m in GATE_INLINE.findall(line)
+            if all(a in m for a in GATE_ANCHORS)]
+
+
+def _gate_manual(path):
+    """The same command in DEV_MANUAL.md, wherever it is fenced. One line: a
+    copy wrapped over two is reported as missing rather than rejoined, because
+    a shell would read the wrap differently than a reader would."""
+    with open(path) as handle:
+        lines = handle.read().splitlines()
+
+    out, fenced = [], False
+    for line in lines:
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        if fenced and all(a in line for a in GATE_ANCHORS):
+            out.append(line.strip())
+    return out
+
+
+def check_gate(agents=None, manual=None):
+    """AGENTS.md's TESTS command against DEV_MANUAL.md's. Returns failures."""
+    agents = agents or os.path.join(REPO, "AGENTS.md")
+    manual = manual or os.path.join(REPO, "DEV_MANUAL.md")
+    found = ((agents, "TESTS rule", _gate_agents(agents)),
+             (manual, "test section", _gate_manual(manual)))
+
+    bad = 0
+    for path, where, hits in found:
+        if len(hits) != 1:
+            print("GATE   {}'s {} holds {} copies of the completion command, "
+                  "not one -- the two anchors are {}".format(
+                      os.path.relpath(path, REPO), where, len(hits),
+                      " and ".join(repr(a) for a in GATE_ANCHORS)))
+            bad += 1
+    if bad:
+        return bad
+
+    one, two = found[0][2][0].strip(), found[1][2][0].strip()
+    if one != two:
+        print("GATE   AGENTS.md's TESTS command and DEV_MANUAL.md's test "
+              "section give different completion gates:")
+        print("         AGENTS.md      {}".format(one))
+        print("         DEV_MANUAL.md  {}".format(two))
+        return 1
+
+    print("gate command agrees in both documents")
+    return 0
+
+
 def main():
     adocs = os.path.join(REPO, "adocs")
     args = sys.argv[1:]
     mode = "all"
-    if args and args[0] in ("--prose", "--citations", "--touches", "--params"):
+    if args and args[0] in ("--prose", "--citations", "--touches", "--params",
+                            "--gate"):
         mode, args = args[0][2:], args[1:]
-    if mode == "all" and args:
+    # `--gate` reads two named documents and nothing else, so a file list after
+    # it means the caller expected something this mode does not do.
+    if args and mode in ("all", "gate"):
         # Refused rather than ignored: before the citation check existed a bare
         # path meant "check this plan file's prose", and silently dropping it
         # would report a green run over a file nobody looked at.
         print("usage: plan_prose_check.py "
-              "[--prose|--citations|--touches|--params] [files...]",
+              "[--prose|--citations|--touches|--params|--gate] [files...]",
               file=sys.stderr)
-        print("  a file list needs the mode it belongs to", file=sys.stderr)
+        print("  a file list needs the mode it belongs to, and --gate takes "
+              "none", file=sys.stderr)
         return 2
 
     bad = 0
@@ -1133,6 +1228,8 @@ def main():
         bad += touches(args if mode == "touches" else [], adocs)
     if mode in ("all", "params"):
         bad += check_all_params(args if mode == "params" else [], adocs)
+    if mode in ("all", "gate"):
+        bad += check_gate()
     return 1 if bad else 0
 
 
