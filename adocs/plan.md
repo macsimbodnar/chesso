@@ -492,7 +492,7 @@ whole with their evidence; they are 3100-band techniques by the record.
 ## What this costs
 
 The pending order owes **roughly 45 to 55 SPRT verdicts** once multi-verdict
-steps are counted honestly (S024 two, S098 three, S097 and S022 two each, the
+steps are counted honestly (S222 one and its two-ply follow-up one more, S098 three, S097 and S022 two each, the
 evaluation groups per-term), plus two SPSA nights, one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
@@ -560,7 +560,7 @@ single digits to +25, which is inside or beside the interval. So:
     3 fast-class verdicts    x 2 h 31 m  =    7.5 h
     42 to 52 slow-class      x 6 h 17 m  =  264 to 327 h
     --------------------------------------------------
-    total                                =  272 to 335 machine-hours
+    total                                =  271 to 334 machine-hours
 
 against the struck 75 to 110. The flat mean gives **206 to 251 hours**
 (4 h 34 m x 45 to 55) and that is the **floor**, not the estimate: the ledger's
@@ -582,10 +582,10 @@ game counts:
 | `{0, 10}`, alpha=beta=0.10 (`--fast`) | 5828 games worst case, 2.5 h | | 2.8 h |
 
 The hour figures in the middle two columns are at the ledger's 2337; the last
-column is at S198's measured 2277 on this machine. **The slow-class mean of
-6 h 42 m is about 15660 games, below even the on-a-bound case** — because five
-of the nine runs hit a bound rather than sitting at the midpoint, and S207
-reached H1 in 10258. A step that
+column is at DEC-190's measured 2110 on this machine and book. **The slow-class
+mean of 6 h 17 m is about 14680 games at the ledger's 2337, below even the
+on-a-bound case** — because most runs hit a bound well before the worst case
+rather than sitting at the midpoint, and S207 reached H1 in 10258. A step that
 budgets on the mean and gets the midpoint waits three times as long, which is
 the reason DEC-143 asks for the worst case in writing.
 
@@ -967,7 +967,7 @@ by a rule written first. S220 is Open entry 2, behind S042's SPRT. Budget from
 
 ## Open
 
-1. S220  **gated on the owner, DEC-193** -- the balanced book's cost per verdict near zero measured at a quarter time handicap, `noob_3moves.epd` against `UHO_Lichess_4852_v1.epd`; priced honestly, two nights for a 2.3-sigma answer on which end of DEC-191's 0.97-to-1.29 bracket is true and nothing finer; the free alternative is the ledger of realized games per verdict on the new book; **does not start without the owner's word, and S024 is the next night run after S042**
+1. S220  **gated on the owner, DEC-193** -- the balanced book's cost per verdict near zero measured at a quarter time handicap, `noob_3moves.epd` against `UHO_Lichess_4852_v1.epd`; priced honestly, two nights for a 2.3-sigma answer on which end of DEC-191's 0.97-to-1.29 bracket is true and nothing finer; the free alternative is the ledger of realized games per verdict on the new book; **does not start without the owner's word; S211 is the next step when work resumes**
 2. S214  `analyse_game.py` refuses to return a score it never read, `spsa_driver.py check` proves every axis reaches the search, and a fit's provenance stamp records every flag that selects the emitted vector; no `src/` (F28, F29, F35)
 3. S211  the last three tables and five mask builders inherited from a GPL-3.0 tutorial engine replaced by the project's own derivations, the tutorial author's handle out of the shipped source, the artwork licensed; bench-identical (F01, F02, F03)
 4. S151  S085's shipped vector measured against `3488506` at `32+0.32`, `Hash=64`, in a fixed 1000-pair match read as an estimate -- design (iii), about 3.4 h, a daytime run -- and the longer-control rule written in its block-boundary form (DEC-172)
