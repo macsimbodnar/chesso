@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S221 is done, 2026-09-12 12:25.** The citation checker now stitches a
+  doctest title split across adjacent string literals before matching a
+  phrase citation, red first on a planted fixture, unit tests 19/19,
+  `--citations` and `--prose` clean, gate green in both trees run by the
+  coordinator once the machine freed. **S024 verdict 1 landed on H0 at
+  12:17** -- LLR -2.96, nElo -5.48 +/- 7.20, Elo -4.42 +/- 5.81, 8954 games in
+  4 h 10 m 11 s, 0 forfeits either side; the pre-registered H0 reading (an
+  exercise census of the table over 400 corpus positions) is running by a
+  fresh agent, and the keep-or-revert decision follows it. **The owner asked
+  at 11:5x to stop after the current tasks**: nothing new starts; after
+  S024's reading and its commit the coordinator writes the final handover.
+
 - **S024 verdict 1 is landed as `cace216` and its gainer SPRT is running,
   launched 08:06.** A Sonnet 5 subagent built the one-ply continuation
   history: `cont_hist[12][64][12][64]` on `search_state_t` (1.125 MiB, a value

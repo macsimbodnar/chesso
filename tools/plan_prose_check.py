@@ -330,9 +330,56 @@ GAP = re.compile(r"`?[ \t]*\n?[ \t]*")
 # rstrip("()"), which turns `CHESSO_SEARCH_PARAMS(X)` into `CHESSO_SEARCH_PARAMS(X`
 # and then finds nothing.
 SYMBOL = re.compile(r"`([A-Za-z_][A-Za-z0-9_:]*)(?:\s*\([^`)]*\))?`")
+
+# The macro name and its optional fixture argument, up to but not including
+# the title's opening quote -- the trailing lookahead keeps the match end
+# sitting exactly on the `"` so `_stitched_literal` below has a fixed start.
+# `SUBCASE` never takes a fixture argument, but the optional group is
+# zero-width for it exactly as for the plain `TEST_CASE("...")` form, so one
+# pattern reads all four macros DEC-135's docstring above promises: S221.
+# The leading negative lookbehind is not cosmetic: `tests/doctest/.../doctest.h`
+# defines `DOCTEST_SUBCASE`, and without it `SUBCASE` would match the tail of
+# that name wherever a step ever cites that vendored header.
 TITLE = re.compile(
-    r"TEST_(?:CASE|CASE_FIXTURE|SUITE)\s*\(\s*(?:[A-Za-z_][\w]*\s*,\s*)?"
-    r'"((?:[^"\\]|\\.)*)"', re.S)
+    r"(?<![A-Za-z0-9_])(?:TEST_(?:CASE|CASE_FIXTURE|SUITE)|SUBCASE)\s*\(\s*"
+    r"(?:[A-Za-z_][\w]*\s*,\s*)?(?=\")")
+
+# One string literal, reused to walk a run of adjacent ones one at a time.
+# clang-format wraps a title at the column limit by closing the literal it is
+# on and opening another a line below, and it does that as many times as the
+# title needs -- S042's wraps once, but nothing bounds it to once -- so a
+# single regex over the whole run would have to hardcode a maximum.
+_STRING_LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"', re.S)
+
+# What a C++ compiler accepts between two literals it will concatenate:
+# whitespace only, and \s already spans the newline clang-format inserts. A
+# comment between two literals is legal C++ too, but no title here has ever
+# needed one, so it is not special-cased.
+_ADJACENT_GAP = re.compile(r"\s*")
+
+
+def _stitched_literal(text, start):
+    """The run of adjacent string literals opening at `text[start]` ('"'),
+    concatenated the way a C++ compiler joins them -- no separator inserted,
+    each literal's own escapes untouched -- and the index just past the last
+    one consumed. S221: this is what lets a phrase citation spanning the join
+    between two clang-format-wrapped literals still resolve.
+    """
+    parts = []
+    pos = start
+    while True:
+        m = _STRING_LITERAL.match(text, pos)
+        if not m:
+            break
+        parts.append(m.group(1))
+        pos = m.end()
+        gap_end = _ADJACENT_GAP.match(text, pos).end()
+        if gap_end < len(text) and text[gap_end] == '"':
+            pos = gap_end
+        else:
+            break
+    return "".join(parts), pos
+
 
 _blob = {}
 _titles = {}
@@ -366,14 +413,22 @@ def _at(rev, path):
 
 
 def titles_of(path):
-    """{doctest title: line the TEST_CASE token opens on} in the working tree."""
+    """{doctest title: line the TEST_CASE token opens on} in the working tree.
+
+    A title clang-format has wrapped across the column limit is two or more
+    adjacent string literals, not one -- `"...en " "passant..."` -- and a C++
+    compiler reads those as a single string with nothing inserted between
+    them. `_stitched_literal` does the same before the title becomes a dict
+    key, so a phrase citation spanning the join still resolves. S221.
+    """
     if path not in _titles:
         found = {}
         lines = _at(None, path)
         if lines:
             text = "\n".join(lines)
             for m in TITLE.finditer(text):
-                title = " ".join(m.group(1).replace('\\"', '"').split())
+                content, _end = _stitched_literal(text, m.end())
+                title = " ".join(content.replace('\\"', '"').split())
                 found.setdefault(title, text.count("\n", 0, m.start()) + 1)
         _titles[path] = found
     return _titles[path]
@@ -495,6 +550,16 @@ def holds_phrase(phrase, path):
     """
     if phrase in titles_of(path):
         return True
+    # S221: left as it is, on purpose, not taught the same literal-stitching
+    # as titles_of() above. A split *string literal* is a lexical rule about
+    # code; the phrases this fallback exists for are quoted out of comments,
+    # which a C++ compiler never joins across a line break at all, so there
+    # is no matching gap here to stitch -- only the whitespace-flattening
+    # this fallback already does. Teaching it to bridge a `" "` sequence
+    # would risk matching two unrelated fragments across an incidental pair
+    # of quote characters in a comment, for a case this fallback is not
+    # asked to cover: a title is found in titles_of() above before this is
+    # ever reached.
     lines = _at(None, path)
     if lines is None:
         return False

@@ -24,6 +24,9 @@ WHAT IS NOT ASSERTED. Relevance. `src/search.cpp` `state` passes because
 the mapping a conversion is made through is where relevance is proved.
 """
 
+import contextlib
+import importlib.util
+import io
 import os
 import subprocess
 import sys
@@ -32,6 +35,14 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHECKER = os.path.join(ROOT, "tools", "plan_prose_check.py")
+
+# Loaded once as a module, not only run as a subprocess, for the one case
+# below that needs to hand `check_citations` a `tracked` set of its own
+# (S221's test_title_split_across_adjacent_literals_passes) -- see that
+# case's docstring for why.
+_spec = importlib.util.spec_from_file_location("plan_prose_check", CHECKER)
+CHECKER_MODULE = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(CHECKER_MODULE)
 
 
 class CitationChecks(unittest.TestCase):
@@ -163,6 +174,49 @@ class CitationChecks(unittest.TestCase):
         self.assert_clean('Run it:\n\n```bash\n'
                           'python3 -c \'open("src/no_such_file.cpp:3")\'\n'
                           '```\n\nand read the output.\n')
+
+    # --- a title split across adjacent string literals (S221) --------------
+
+    def run_direct(self, body, tracked):
+        """Like run_on, but resolved against a hand-built `tracked` set
+        instead of `_tracked()`'s `git ls-files`.
+
+        `check_citations` is called in-process rather than through
+        `CHECKER` as a subprocess: the fixture this case cites,
+        tests/S221_split_title_fixture.cpp, is deliberately never
+        `git add`ed by this suite (a fixture that only clang-format-wraps a
+        title needs no CMakeLists.txt entry and no tracked-file status,
+        and this repository's agents do not stage files on their own), so
+        `_tracked()`'s real `git ls-files` would answer MISSING for the file
+        itself and never reach the title-stitching this case is about.
+        Every other case in this file cites a file already tracked in this
+        checkout and goes through the real CLI; this is the one exception.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "S999_planted.md")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(body)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                flagged = CHECKER_MODULE.check_citations(path, tracked, {})
+        return flagged, buf.getvalue()
+
+    def test_title_split_across_adjacent_literals_passes(self):
+        """S042's and S024's titles both wrapped across clang-format's
+        80-column limit into two adjacent string literals, and both times
+        the checker read only the first one, flagged a true phrase MISSING,
+        and the fix was to reword the citation or the title rather than the
+        checker (S221's own step file has both). This fixture keeps the
+        case a `TITLE`-stitching regression would break.
+        """
+        rel = "tests/S221_split_title_fixture.cpp"
+        fixture = os.path.join(ROOT, rel)
+        self.assertTrue(os.path.isfile(fixture), fixture)
+        body = ('The split-literal fixture is `{}` '
+               '"first half of a title continued".\n').format(rel)
+        flagged, out = self.run_direct(body, {rel})
+        self.assertEqual(flagged, 0, out)
+        self.assertNotIn("MISSING", out)
 
 
 if __name__ == "__main__":
