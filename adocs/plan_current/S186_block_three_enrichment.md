@@ -7,7 +7,7 @@ decisions:  DEC-097, DEC-105, DEC-134, DEC-137
 closes:     2026-09-10_adversarial-F37
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-12 23:40 beside S151's match under the blocked-task exception, documents only
 done:
 
 ## Why this exists

@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S151's match is running since 2026-09-12 23:37, and S186 runs beside it
+  (documents only).** `adocs/data/S151_ltc.sh` launched detached, pid in
+  `.tuning/sprt_s151.pid`, log `.tuning/sprt_s151.log`, output under
+  `.tuning/s151_ltc_20260912_233659/`. Banner as pre-registered: candidate
+  `21b4a21` 2026-08-21, reference `3488506` 2026-08-20, both built fresh by
+  `build_ref`, `tc 32+0.32 hash 64 concurrency 12 of 12`, book
+  `noob_3moves.epd`, seed `20260912233659`, `bounds none -- fixed 1000
+  rounds`, governor `performance` as found (DEC-195). Estimate 3.8 h at 528
+  games an hour; the first hour's `Finished game` count is the check;
+  watcher armed through `Monitor` (persistent) on the `SPRT-RUN-(DONE|FAILED)`
+  markers, pid death and a 27360 s ceiling. **S186** -- the block-3
+  enrichment pass, sixteen step files and the F37 correction to
+  `adocs/eval_tuning_strategy.md` -- started 23:40 by an Opus 5 subagent
+  under DEC-185's blocked-task exception: no builds, no test binaries, the
+  Python prose checks only. `plan_current/`: S151 (running), S186.
+
 - **S224 is done, 2026-09-12 23:40, by an Opus 5 subagent (DEC-199), the
   filler before S151's match.** The seven sound files under
   `tests/assets/gui/sound/` are deleted with their loader: `tests/debug_gui.cpp`
