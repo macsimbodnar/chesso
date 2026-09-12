@@ -66,9 +66,12 @@ TEST_SUITE("en passant: only when capturable (S042, DEC-187)")
   // The step's minimized reproduction, history A: White a rook down, and the
   // only way the search can answer anything but a lost score is to find a
   // draw that is not there. python-chess 1.11.2 on the position after the
-  // eighth move, replayed independently of the engine: `is_repetition(3)
-  // True`, `can_claim_threefold_repetition() True` -- a genuine threefold by
-  // the rules of chess, confirming the position the search must call a draw.
+  // eighth move, replayed independently of the engine:
+  // `can_claim_threefold_repetition() True` while `is_repetition(3)` is False
+  // -- the position stands twice in the history and the claim looks one legal
+  // move ahead to the third, which is the move the search finds; a claimable
+  // threefold by the rules of chess, the case S207's two-fold-in-search rule
+  // scores as the draw (the fast check over 50b1ff9 corrected this comment).
   //
   // On HEAD (en-passant keyed unconditionally on the g2g4 double push, no
   // black pawn anywhere on the board to capture it) this search returns the

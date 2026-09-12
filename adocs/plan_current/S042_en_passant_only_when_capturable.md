@@ -231,7 +231,8 @@ target-empty/victim-present/rank, not on whether a pawn can reach the target).
   own tests and are not touched -- see "A pre-existing corpus finding" below.
 - `tools/gate_extra.sh`: launched `CLANG_FORMAT_MAJOR=22 nohup tools/gate_extra.sh`,
   detached, polled to its marker. **`GATE-EXTRA-FAILED: debug sanitize`**,
-  1502 s total (`prose` 0 s, `citations` 0 s, `debug` 891 s, `sanitize` 516 s,
+  1502 s wall, the stages summing to 1462 s and the remaining 40 s spent between
+  stages (`prose` 0 s, `citations` 0 s, `debug` 891 s, `sanitize` 516 s,
   `perft` 55 s). Both failing stages are the same corpus finding below and
   nothing else: `debug` runs six binaries and two of them are on the known
   list, `test_movegen` (`Failed`, the usual FEN mismatch) and `test_chesso`
