@@ -2162,6 +2162,9 @@ OUT=<dir> ./fastchess.sh        # where the pgn and log land
 AA=1 ./fastchess.sh             # A/A: identical builds, calibrates the harness
 SRAND=<n> ./fastchess.sh        # replay another run's openings, seed off its banner
 ROUNDS=<n> AA=1 ./fastchess.sh  # fixed rounds, no SPRT: never a verdict
+TC=32+0.32 ./fastchess.sh       # another time control; the default is 8+0.08
+HASH=64 ./fastchess.sh          # another hash per engine; the default is 16 MB
+CAND=<ref> REF=<ref> ./fastchess.sh   # play two commits; the tree is not played
 ```
 
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
@@ -2202,6 +2205,43 @@ default of the per-change instrument: S160, closing
   adjudication, forfeit rate, the variance floor concurrency leaves — and never
   the engine.
 
+**`CAND=<ref>` makes the candidate a commit too**, which is what a reading
+taken long after a change landed needs — S151 replays S085's shipped vector
+against its own parent, and neither is checked out. Both sides are then built
+by the same `build_ref` into `.ref-builds/<sha>`, and a build that fails stops
+the run with `SPRT-RUN-FAILED: building the candidate <sha> ...` before a game
+is played rather than handing fastchess a path to a binary that was never
+produced.
+
+**Only the candidate is snapshotted, in either mode.** It is copied to a
+`mktemp` file before the first game, so a rebuild of `build/` — or of its
+`.ref-builds/<sha>` worktree under `CAND` — cannot swap it under the match.
+The **reference is not**: it is played straight from
+`.ref-builds/<sha>/build/src/chesso`, so clearing or rebuilding that worktree
+while a match is running does swap the reference. `fastchess.sh` never does so
+itself, which is why a stale cached reference is cleared before a run starts
+and never during one.
+
+Three consequences of `CAND` the banner and the PGN show:
+
+- the candidate line carries that commit and its own date **with no dirty
+  flag** — the flag describes the working tree and the working tree is not
+  being played;
+- the engine is named `cand-<sha>` rather than `candidate`, so the PGN says
+  which commit it held. Anything reading the PGN by engine name has to be told
+  that name, `adocs/data/S105_pairs.py` included: its default is `chesso-a`
+  and a name matching neither side inflates the variance silently;
+- the A/A guard asks whether the two **commits** are the same one, and a dirty
+  tree does not rescue a run where they are. `AA=1` is still the opt-in.
+
+**`TC=` and `HASH=` override the regime, and they travel together.** The
+defaults — `8+0.08` and `16` MB — are what every verdict this project has
+taken was taken at, so a run that moves either is a different regime and says
+so in its pre-registration. They are not independent: four times the clock is
+about four times the nodes a game writes, so `TC=32+0.32` at the default hash
+would quadruple the overwrites per entry that DEC-088 fixed 16 MB to hold, and
+`TC=32+0.32 HASH=64` is the pair that keeps it (fishtest's own LTC setting).
+
 **Fetch the book first, once per machine.** `fastchess.sh` plays
 `noob_3moves.epd`, balanced, 150932 positions -- picked over the harness's own
 former book and two other CC0 candidates (one of them, `popularpos_lichess_v3.epd`,
@@ -2239,7 +2279,8 @@ book       UHO_Lichess_4852_v1.epd
 seed       20260908021500
 ```
 
-`SRAND=<n>` overrides it, which is how a sequence is played again; a value that
+(That excerpt is from the 2026-09-08 run it was measured on; the book line
+reads `noob_3moves.epd` since DEC-189.) `SRAND=<n>` overrides it, which is how a sequence is played again; a value that
 is not an unsigned integer is refused by name before the output directory is
 made. The parser is 64-bit — a 20-digit value is refused with `stoull: out of
 range`, and `seed + 2^32` gives a different sequence, so nothing is truncated.
@@ -2375,6 +2416,56 @@ both with the reading of all three outcomes written down *before* launch.
 **An SPRT stops early exactly when the observed effect has run favourable**, so
 its point estimate is biased upward and is never reported as the effect size.
 S068's pooled estimate fell from +12.18 to +5.02 on that correction.
+
+#### The longer control, once per block
+
+**A verdict that moves a pruning or reduction parameter has its class's
+transfer to a longer control measured — once per block, not once per verdict.**
+The parameters are the margins, depth bounds, reduction coefficients and
+divisors in `src/search_params.hpp` that decide whether a node or move is
+searched at all, or how much shallower: `RFP_*`, `NULL_MOVE_*`, `LMR_*`,
+`MAX_QSEARCH_DEPTH`, and every constant the pruning steps add. The reading is
+**one fixed 1000-pair match at `TC=32+0.32 HASH=64`**, taken beside S199's
+drift point at the block boundary, read as an estimate with its own interval
+and never as a verdict. The `8+0.08` SPRT still decides whether a change ships;
+the longer control decides what may be written about its magnitude, and a
+regression there is a finding that opens a decision rather than an automatic
+revert. Outside it: evaluation weights, ordering tables, `TM_*`, hash and table
+layout, and any change proved behaviour-neutral on node counts. S151, DEC-202.
+
+**Why it is per block and not per verdict, in the only currency that decides
+anything here.** The scope holds 13 bound verdicts (16 counting extensions). A
+`{-5, 0}` re-take of each averages about four times the ledger's mean per
+verdict, roughly 19 h, so 13 of them is about 240 h — more than the whole
+plan's budget, which is the "roughly doubles the plan's machine budget" the
+step's `accepts:` refuses. The same 13 as fixed 1000-pair matches is about
+50 h at the measured 2110 games an hour divided by the control ratio (the step
+file's 44 h is the same arithmetic at the older 584 games an hour), around
++20 % on `plan.md`'s "What this costs" range — and the block boundary takes
+**one** of them, not 13. That is the arithmetic, not a preference.
+
+**The reason the reading exists at all is published and specific.** vondele's
+`nevergrad4sf`: optimal parameters "are often time sensitive, i.e. can be
+verified to be a gain at the VSTC used for tuning, but regress at STC or LTC".
+Stockfish issue #2600 counted, of the last 40 LTC tests with gaining bounds,
+"23 reds, 16 yellows, 1 green". A depth-bounded pruning rule is exercised
+differently at every control — the wiki's own phrasing is that such a change
+"may only be effectively tested on time controls where this new condition is
+triggered frequently enough". S085's vector, tuned at `2+0.02` and verified
+once at `8+0.08`, is the first instance and `adocs/data/S151_ltc.sh` is its
+pre-registration.
+
+**What 1000 pairs buys, and it is not a verdict's resolution.** With pair score
+on the 0-to-2 scale `adocs/data/S105_pairs.py` uses, the nElo half-width is
+`1.96 C / sqrt(2N)` with `C = 800 / ln 10`, which depends on the pair count
+alone — not on the book, not on the draw rate — and the logistic half-width is
+`1.96 × 694.8 × sd_pair / (2 sqrt(N))`. At `N = 1000` pairs and the current
+book's measured pair variance of 0.2905 that is **± 15.2 nElo and about ± 11.6
+logistic Elo**. Both formulas reproduce S085's own printed run at its 1473
+pairs — `nElo 26.81 ± 12.55` exactly, and 9.82 against its printed `Elo ±
+9.86`. So the reading separates "the gain transfers" from "it is gone" and
+cannot separate −4 from 0, which is why DEC-143's "an estimate is not a
+verdict" is the sentence that governs it.
 
 #### What each pair costs, before the run and after it
 

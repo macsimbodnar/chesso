@@ -136,6 +136,11 @@ place, and the ledger's other 88 rows were per-step records already held by
   compared the final iteration alone — about half the search — so a change that
   altered depths 1..n-1 could pass. Every node figure recorded from the tool
   before that date is a sum of last iterations.)
+  A verdict that moves a pruning or reduction parameter has its class read
+  once more at a control four times `8+0.08` -- one fixed 1000-pair match at
+  `32+0.32` with `Hash=64`, at the block boundary beside S199's drift point,
+  an estimate with its interval and never a verdict -- before its magnitude is
+  banked (2026-09-12, S151, DEC-202).
 
   **The baseline the tool reproduces today, from S203 on 2026-09-08:**
   `121530 / 801481 / 72924` at depth 9 and `636677 / 3520847 / 494098` at depth

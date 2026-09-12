@@ -11340,3 +11340,67 @@ Consequences: `adocs/plan_todo/S224_*.md` exists; `THIRD_PARTY.md`'s gap
               rewritten by S224 in the same commit as the deletion. After
               S224 the repository bundles nothing whose licence is unstated,
               and `fetch_book.sh` may say so again in those words.
+
+## DEC-202  2026-09-12  The longer-control reading is one fixed 1000-pair match at a block boundary, and `fastchess.sh` gains `TC`, `HASH` and `CAND` to take it
+Tags:         measurement, sprt, time-control, harness, fastchess, s085,
+              s151, s199, dec-172, dec-088, dec-143, dec-155
+Context:      Every verdict this project has taken was taken at one control,
+              `8+0.08` (DEC-083). S085 tuned twelve search parameters at
+              `2+0.02`, verified its vector once at `8+0.08` -- `Elo 21.02
+              +/- 9.86`, `nElo 26.81 +/- 12.55` -- and shipped it, and every
+              axis it moved went toward more pruning and more reduction. The
+              published record says that is the class that does not transfer:
+              vondele's `nevergrad4sf` ("often time sensitive ... verified to
+              be a gain at the VSTC used for tuning, but regress at STC or
+              LTC") and Stockfish issue #2600 ("23 reds, 16 yellows, 1 green"
+              of the last 40 LTC tests with gaining bounds). Nothing here had
+              looked, and `fastchess.sh` could not express the run: the
+              control, the hash and the candidate were hard-wired, the
+              candidate being the working tree. DEC-172 chose design (iii) --
+              a fixed 1000-pair estimate, not an SPRT -- and the block-boundary
+              form of the rule; this entry records the harness and the rule as
+              S151 landed them.
+Decision:     By the coordinator under the owner's delegation of engine
+              matters, implementing DEC-172. **(1) The harness gains three
+              overrides** -- `TC`, `HASH` and `CAND=<ref>` -- whose defaults
+              leave the argv fastchess is handed byte-identical to the previous
+              script (proved by diff over one sandbox, 44 argv words, one
+              `mktemp` snapshot path normalised), so no past verdict is
+              re-priced. `CAND` builds both sides through one `build_ref` and
+              the A/A guard then keys on the two commits; a dirty tree does not
+              rescue a same-commit pair. **(2) The longer-control reading is
+              one fixed 1000-pair match at `TC=32+0.32 HASH=64`, taken at each
+              block boundary beside S199's drift point, not a re-take per
+              verdict.** It binds verdicts that move a pruning or reduction
+              parameter -- a margin, depth bound, reduction coefficient or
+              divisor in `src/search_params.hpp` that decides whether a node
+              or move is searched at all, or how much shallower -- and
+              extensions, which the record names. It does not bind evaluation
+              weights, ordering tables, the `Tm*` family, hash or table layout,
+              or a change proved behaviour-neutral on node counts. **(3) It is
+              an estimate and never a verdict** (DEC-143): the `8+0.08` SPRT
+              decides whether a change ships, the longer control decides what
+              may be written about its magnitude, and a regression there opens
+              a decision rather than an automatic revert. **(4) S085's vector
+              is the first instance**, pre-registered in `adocs/data/S151_ltc.sh`
+              before any game: 528 games an hour from DEC-190's 2110 over
+              four, about 3.8 h, ceiling 27360 s, abort only on a forfeit rate
+              over 1.0 % on a side.
+Rejected:     **A `{-5, 0}` re-take per verdict** -- 13 bound verdicts at about
+              19 h each is about 240 h, more than the whole plan, which S151's
+              `accepts:` refuses; the same 13 as fixed 1000-pair matches is
+              about 50 h and the block boundary takes one of them. **`Hash=16`
+              at the longer control** -- four times the clock is about four
+              times the nodes a game writes, quadrupling the pressure DEC-088
+              fixed the default to reproduce. **Ratio 6 (`48+0.48`)**,
+              fishtest's -- 1.5x the hours for no stated gain over the accepts'
+              floor. **Reading the estimate as a verdict** -- +/- 11.6 logistic
+              Elo at the current pair variance separates "the gain transfers"
+              from "it is gone" and cannot separate -4 from 0.
+Consequences: `fastchess.sh`'s "WHICH BOUNDS" block and `DEV_MANUAL.md` "Which
+              bounds" carry the rule; `specs.md` INV-6 gains one sentence.
+              Every pre-registration that sets `TC` or `HASH` says so and
+              states its regime. S212's A/A, which follows this step, is the
+              DEC-143 calibration covering the harness change. The block
+              boundary S199 sits at is the point two readings are taken at,
+              not one.

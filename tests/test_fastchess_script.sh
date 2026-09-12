@@ -2,10 +2,14 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Eleven properties. The second is the one that stops F01 recurring; 3 to 8 are
-# the default reference and the A/A guard -- the trap S160 disarmed and the
+# Seventeen properties. The second is the one that stops F01 recurring; 3 to 8
+# are the default reference and the A/A guard -- the trap S160 disarmed and the
 # defects its own first attempt shipped, each one reproduced before it was
-# fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode:
+# fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode; 12 to 15
+# are S151's control, hash and commit-candidate overrides, each asserted on
+# the argv as well as on the banner, and each with its default asserted beside
+# it so a hard-wired override cannot pass; 16 and 17 are the reference build
+# itself, which every case before them skips:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -21,11 +25,22 @@
 #  10. the pgn records node counts and the clock left after every move
 #  11. ROUNDS runs fixed rounds with no SPRT, and the banner says it is not a
 #      verdict
+#  12. TC reaches the engines and the banner prints it; unset, it is 8+0.08
+#  13. HASH reaches the engines and the banner prints it; unset, it is 16
+#  14. CAND plays that commit's own build rather than the working tree's, and
+#      the candidate line is the commit, dated, with no dirty flag
+#  15. CAND resolving to REF is refused with the A/A guard's sentence on a
+#      dirty tree, and AA=1 is how it is asked for on purpose
+#  16. a commit with no cached worktree is built, and that build is the one
+#      played, on both sides of a CAND run
+#  17. a build that fails stops the run, with a marker naming the sha, before
+#      a game is played -- on both sides
 #
-# No game is played and no engine is built. `fastchess` is a stub on PATH, the
-# candidate and the reference are one-line shell scripts, and the whole run
+# No game is played and no engine is compiled. `fastchess` is a stub on PATH,
+# the candidate and the reference are one-line shell scripts, and the whole run
 # happens inside a throwaway git repository, so the real .ref-builds/ and the
-# real build/ are never read or written.
+# real build/ are never read or written. Cases 16 and 17 stub `cmake` as well
+# and let `git worktree add` run for real inside that repository.
 #
 # Usage: test_fastchess_script.sh [path-to-fastchess.sh]
 # The argument exists so a past revision of the script can be run through the
@@ -59,7 +74,15 @@ make_sandbox()
   tmp="$(mktemp -d "${TMPDIR:-/tmp}/chesso-fastchess-smoke.XXXXXX")"
   mkdir -p "$tmp/build/src" "$tmp/books" "$tmp/stub"
 
-  printf '#!/bin/sh\nexit 0\n' > "$tmp/build/src/chesso"
+  # Each stub engine says which one it is when run, and the stub fastchess
+  # below runs every binary it is handed and records what it said. That is the
+  # only way to tell the two candidate sources apart: fastchess.sh copies the
+  # candidate to a `mktemp` snapshot before the first game (DEC-020) and
+  # removes it on exit, so the argv's `cmd=` is a random /tmp path in both
+  # modes and the file it named is gone by the time an assertion could read
+  # it. What the binary is survives the copy; where it came from does not.
+  # Case 14.
+  printf '#!/bin/sh\necho working-tree\nexit 0\n' > "$tmp/build/src/chesso"
   chmod +x "$tmp/build/src/chesso"
   # The book the script reads is 9.4 MB unpacked and gitignored
   # (books/fetch_book.sh fetches it), so the sandbox seeds an empty file of
@@ -77,10 +100,21 @@ make_sandbox()
   # cases 9 to 11 read: what the banner says and what fastchess is handed are
   # two different claims, and only the second one decides which games are
   # played.
+  #
+  # And it asks each binary it was pointed at which one it is, in the order the
+  # engines were given, into fastchess_engines. See the stub engines above for
+  # why that is asked instead of read off the `cmd=` path.
   cat > "$tmp/stub/fastchess" << 'STUB'
 #!/bin/sh
-touch "$(dirname "$0")/../fastchess_invoked"
-printf '%s\n' "$@" > "$(dirname "$0")/../fastchess_args"
+here="$(dirname "$0")/.."
+touch "$here/fastchess_invoked"
+printf '%s\n' "$@" > "$here/fastchess_args"
+: > "$here/fastchess_engines"
+for arg in "$@"; do
+  case "$arg" in
+    cmd=*) "${arg#cmd=}" >> "$here/fastchess_engines" ;;
+  esac
+done
 exit 0
 STUB
   chmod +x "$tmp/stub/fastchess"
@@ -113,11 +147,58 @@ STUB
   for rev in HEAD HEAD~1; do
     sha="$(git -C "$tmp" rev-parse --short "$rev")"
     mkdir -p "$tmp/.ref-builds/$sha/build/src"
-    printf '#!/bin/sh\nexit 0\n' > "$tmp/.ref-builds/$sha/build/src/chesso"
+    printf '#!/bin/sh\necho ref-build %s\nexit 0\n' "$sha" \
+      > "$tmp/.ref-builds/$sha/build/src/chesso"
     chmod +x "$tmp/.ref-builds/$sha/build/src/chesso"
   done
 
   echo "$tmp"
+}
+
+# Turns a sandbox into one where `build_ref`'s build branch is actually taken.
+#
+# Every sandbox above pre-builds `.ref-builds/<sha>/build/src/chesso` for both
+# commits, so `if [[ ! -x "$binary" ]]` is false on every path and the three
+# commands inside it -- the worktree, the configure, the build -- never run in
+# any of cases 1 to 15. That is the gap cases 16 and 17 close: the branch that
+# is skipped is exactly the branch the real run takes, because a commit that
+# has never been built has no cached worktree (2026-09-12 fast check).
+#
+# `git worktree add` is left real: the sandbox is a git repository and the
+# checkout is one empty file. `cmake` is the stub, and it is the whole
+# difference between the two cases -- `ok` produces a binary that says which
+# sha it was built from, `fail` produces nothing and exits 1, which is what a
+# broken compiler, a missing generator or a failed link all look like from
+# here.
+unbuild_sandbox()
+{
+  local tmp="$1" mode="$2"
+
+  rm -rf "$tmp/.ref-builds"
+
+  if [[ "$mode" == ok ]]; then
+    cat > "$tmp/stub/cmake" << 'STUB'
+#!/bin/sh
+# `cmake --build <dir> --target chesso` is the call that produces the binary;
+# the configure call is a no-op here. <dir> is .ref-builds/<sha>/build, so the
+# sha the binary names itself with is read back out of the path -- which is how
+# case 16 tells the two sides of a CAND run apart.
+if [ "$1" = "--build" ]; then
+  sha=$(basename "$(dirname "$2")")
+  mkdir -p "$2/src"
+  printf '#!/bin/sh\necho fresh-build %s\nexit 0\n' "$sha" > "$2/src/chesso"
+  chmod +x "$2/src/chesso"
+fi
+exit 0
+STUB
+  else
+    cat > "$tmp/stub/cmake" << 'STUB'
+#!/bin/sh
+echo "stub cmake: deliberate failure" >&2
+exit 1
+STUB
+  fi
+  chmod +x "$tmp/stub/cmake"
 }
 
 # Runs the sandboxed script and prints its exit status. Output lands in
@@ -131,12 +212,36 @@ STUB
 # cannot be supplied by the harness. They are unset explicitly rather than
 # merely not set, so a value exported into the test's own environment cannot
 # decide the result.
+#
+# TC, HASH and CAND come through this function's own environment -- written
+# `TC=32+0.32 run_sandbox "$dir" HEAD~1` at the call -- rather than as a sixth,
+# seventh and eighth positional argument, because five placeholders already
+# have to be counted at every call site. They are captured before the subshell
+# and then set or unset inside it under the same rule as the five above: the
+# default is the thing under test, so the harness never supplies it by
+# accident. Cases 12 to 15.
 run_sandbox()
 {
   local tmp="$1" ref="${2-}" aa="${3-}" srand="${4-}" rounds="${5-}"
+  local tc="${TC-}" hash="${HASH-}" cand="${CAND-}"
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub:$PATH" OUT="$tmp/out"
+    if [[ -n "$tc" ]]; then
+      export TC="$tc"
+    else
+      unset TC
+    fi
+    if [[ -n "$hash" ]]; then
+      export HASH="$hash"
+    else
+      unset HASH
+    fi
+    if [[ -n "$cand" ]]; then
+      export CAND="$cand"
+    else
+      unset CAND
+    fi
     if [[ -n "$ref" ]]; then
       export REF="$ref"
     else
@@ -448,9 +553,219 @@ elif ! grep -q 'NOT a verdict' "$rounds_dir/out.txt"; then
   show "$rounds_dir"
 fi
 
+# 12. TC=<control> reaches the engines, and the banner says so.
+#
+# Two claims, asserted separately for the same reason as case 9: a banner line
+# built from something other than the value passed would satisfy either one
+# alone. The argv is the one that decides which games are played.
+#
+# The control exists because every verdict this project has taken was taken at
+# one control, and a vector tuned at a short one is the class the published
+# record says regresses at a longer one (S151).
+tc_dir="$(make_sandbox "$script_under_test")"
+tc_status="$(TC=32+0.32 run_sandbox "$tc_dir" HEAD~1)"
+
+if ((tc_status != 0)); then
+  fail "TC=32+0.32: the script exited $tc_status"
+  show "$tc_dir"
+elif ! grep -q -x -- 'tc=32+0.32' "$tc_dir/fastchess_args"; then
+  fail "TC=32+0.32 did not reach fastchess in the -each line"
+  show "$tc_dir"
+elif ! grep -qE '^tc 32\+0\.32  ' "$tc_dir/out.txt"; then
+  fail "the banner does not print the time control override"
+  show "$tc_dir"
+fi
+
+# The default is the thing under test as much as the override is: a mutation
+# that hard-wires 32+0.32 would pass everything above.
+if ! grep -q -x -- 'tc=8+0.08' "$reached_dir/fastchess_args"; then
+  fail "TC unset: fastchess was not given the default 8+0.08"
+  show "$reached_dir"
+fi
+
+# 13. HASH=<n> reaches the engines, and the banner says so.
+#
+# It travels with TC and not separately: four times the clock is about four
+# times the nodes a game writes, so a longer control at the default 16 MB
+# quadruples the overwrites per entry that DEC-088 fixed the default to hold.
+hash_dir="$(make_sandbox "$script_under_test")"
+hash_status="$(HASH=64 run_sandbox "$hash_dir" HEAD~1)"
+
+if ((hash_status != 0)); then
+  fail "HASH=64: the script exited $hash_status"
+  show "$hash_dir"
+elif ! grep -q -x -- 'option.Hash=64' "$hash_dir/fastchess_args"; then
+  fail "HASH=64 did not reach fastchess in the -each line"
+  show "$hash_dir"
+elif ! grep -qE '^tc [^ ]+  hash 64  ' "$hash_dir/out.txt"; then
+  fail "the banner does not print the hash override"
+  show "$hash_dir"
+fi
+
+if ! grep -q -x -- 'option.Hash=16' "$reached_dir/fastchess_args"; then
+  fail "HASH unset: fastchess was not given the default 16"
+  show "$reached_dir"
+fi
+
+# 14. CAND=<ref> plays that commit's build and not the working tree's.
+#
+# This is the DEC-020 class on the candidate side: a change that resolves CAND
+# for the banner and still hands fastchess `build/src/chesso` prints a run that
+# is attributable to a commit and plays one that is not. The `cmd=` path cannot
+# see it -- the candidate is snapshotted to a random /tmp name in both modes --
+# so the assertion reads the identifying line of the binary fastchess was
+# handed, which survives the copy. make_sandbox's stub engines carry it.
+#
+# The tree is dirtied first, and that is not decoration. The dirty flag belongs
+# to the working tree and the working tree is not being played, so a candidate
+# line carrying `+ uncommitted changes` beside a commit would be saying the
+# opposite of what the run measures -- and on a clean tree there is no flag to
+# print, which would make the assertion below pass against that mutation.
+#
+# THE CANDIDATE IS HEAD~1 AND THE REFERENCE IS HEAD, WHICH IS THE WAY ROUND
+# THAT CAN FAIL. With CAND=HEAD the candidate's sha is HEAD's sha and its
+# commit date is HEAD's date, so `echo "candidate  $head_sha ..."` and
+# `commit_date HEAD` both print exactly what the correct line prints and the
+# case is blind to either mutant -- both were observed surviving it
+# (2026-09-12 fast check over S151's harness). HEAD~1 carries a different sha
+# and the forced committer date 2020-01-02, so the two claims separate.
+cand_dir="$(make_sandbox "$script_under_test")"
+echo change >> "$cand_dir/tracked.txt"
+cand_status="$(CAND=HEAD~1 run_sandbox "$cand_dir" HEAD)"
+cand_head="$(git -C "$cand_dir" rev-parse --short HEAD)"
+cand_older="$(git -C "$cand_dir" rev-parse --short HEAD~1)"
+cand_head_date="$(git -C "$cand_dir" show -s --date=short --format=%cd HEAD)"
+
+if ((cand_status != 0)); then
+  fail "CAND=HEAD~1 REF=HEAD: the script exited $cand_status"
+  show "$cand_dir"
+elif ! grep -q -x -- "ref-build $cand_older" "$cand_dir/fastchess_engines"; then
+  fail "CAND=HEAD~1: fastchess was not handed the .ref-builds binary for $cand_older"
+  show "$cand_dir"
+elif grep -q -x -- 'working-tree' "$cand_dir/fastchess_engines"; then
+  fail "CAND=HEAD~1: fastchess was handed build/src/chesso, so the tree was played"
+  show "$cand_dir"
+elif ! grep -qE "^candidate  $cand_older  2020-01-02\$" "$cand_dir/out.txt"; then
+  fail "CAND=HEAD~1: the candidate line is not that commit, its own date, undecorated"
+  show "$cand_dir"
+elif ! grep -qE "^reference  $cand_head  $cand_head_date\$" "$cand_dir/out.txt"; then
+  fail "CAND=HEAD~1: the reference line does not carry HEAD's sha and its own date"
+  show "$cand_dir"
+elif ! grep -q -x -- "name=cand-$cand_older" "$cand_dir/fastchess_args"; then
+  fail "CAND=HEAD~1: the engine is not named for the commit it holds"
+  show "$cand_dir"
+fi
+
+# 15. CAND resolving to REF is refused, and a dirty tree does not rescue it.
+#
+# Same guard as cases 4 and 6 and the same reason -- an SPRT between identical
+# engines random-walks to a bound rather than returning zero -- but it has to
+# ask a different question here. The working-tree guard also requires a clean
+# tree, and under it this run would be played: the tree is dirty, so the
+# candidate "differs" from the reference while the two binaries are one commit.
+same_dir="$(make_sandbox "$script_under_test")"
+echo change >> "$same_dir/tracked.txt"
+same_status="$(CAND=HEAD~1 run_sandbox "$same_dir" HEAD~1)"
+
+if [[ -e "$same_dir/fastchess_invoked" ]]; then
+  fail "CAND and REF at the same commit played a match between two identical builds"
+  show "$same_dir"
+elif ((same_status == 0)); then
+  fail "CAND and REF at the same commit exited 0 instead of refusing"
+  show "$same_dir"
+elif ! grep -q 'SPRT-RUN-FAILED.*both sides are the same build' "$same_dir/out.txt"; then
+  fail "CAND and REF at the same commit refused, but not with the A/A guard's message"
+  show "$same_dir"
+fi
+
+# The positive control for the case above, as case 7 is for case 4: the same
+# sandbox and the same two refs with AA=1, which must reach fastchess. Without
+# it the refusal could be some other objection to a CAND run entirely.
+same_aa_dir="$(make_sandbox "$script_under_test")"
+echo change >> "$same_aa_dir/tracked.txt"
+same_aa_status="$(CAND=HEAD~1 run_sandbox "$same_aa_dir" HEAD~1 1)"
+
+if [[ ! -e "$same_aa_dir/fastchess_invoked" ]]; then
+  fail "AA=1 with CAND and REF at the same commit was refused (exit $same_aa_status)"
+  show "$same_aa_dir"
+elif ! grep -q 'A/A CALIBRATION' "$same_aa_dir/out.txt"; then
+  fail "AA=1 with CAND played the match without saying it measures the harness"
+  show "$same_aa_dir"
+fi
+
+# 16. A commit with no cached worktree is built, and that build is played.
+#
+# The branch under test is `build_ref`'s `if [[ ! -x "$binary" ]]`, which every
+# case above skips. Both sides are asserted, because the function is called
+# twice and a mistake on one call site is invisible from the other: the
+# reference here is built from HEAD~1 and the candidate from HEAD, and each
+# stub binary names the sha its build directory sat under.
+build_dir="$(make_sandbox "$script_under_test")"
+unbuild_sandbox "$build_dir" ok
+build_status="$(CAND=HEAD run_sandbox "$build_dir" HEAD~1)"
+build_head="$(git -C "$build_dir" rev-parse --short HEAD)"
+build_older="$(git -C "$build_dir" rev-parse --short HEAD~1)"
+
+if ((build_status != 0)); then
+  fail "no cached build: the script exited $build_status"
+  show "$build_dir"
+elif [[ ! -e "$build_dir/fastchess_invoked" ]]; then
+  fail "no cached build: fastchess was never invoked"
+  show "$build_dir"
+elif ! grep -q -x -- "fresh-build $build_head" "$build_dir/fastchess_engines"; then
+  fail "no cached build: the candidate $build_head was not built and played"
+  show "$build_dir"
+elif ! grep -q -x -- "fresh-build $build_older" "$build_dir/fastchess_engines"; then
+  fail "no cached build: the reference $build_older was not built and played"
+  show "$build_dir"
+elif grep -q -x -- 'working-tree' "$build_dir/fastchess_engines"; then
+  fail "no cached build: fastchess was handed build/src/chesso"
+  show "$build_dir"
+fi
+
+# 17. A build that fails stops the run before a game is played, on both sides.
+#
+# This is the case the fast check of 2026-09-12 found open, and it is not a
+# hypothetical: `set -e` does not reach inside a command substitution, so a
+# `cmake` that exits 1 inside `build_ref` left the function running on to
+# `echo "$binary"` and the caller taking a path to a file that was never
+# produced. Observed against the script as it then stood: the reference side
+# reached `SPRT-RUN-DONE` with fastchess handed a non-existent binary, and the
+# candidate side died at `cp` with no sentence saying what had gone wrong.
+#
+# Pinned to the guard's own sentence rather than the bare marker, as case 4 is
+# and for the same reason: every fail() prints SPRT-RUN-FAILED, so a bare grep
+# would stay green on an unrelated abort -- and on the candidate side one
+# already existed.
+for side in reference candidate; do
+  broken_dir="$(make_sandbox "$script_under_test")"
+  unbuild_sandbox "$broken_dir" fail
+  if [[ "$side" == candidate ]]; then
+    broken_status="$(CAND=HEAD run_sandbox "$broken_dir" HEAD~1)"
+    broken_sha="$(git -C "$broken_dir" rev-parse --short HEAD)"
+  else
+    broken_status="$(run_sandbox "$broken_dir" HEAD~1)"
+    broken_sha="$(git -C "$broken_dir" rev-parse --short HEAD~1)"
+  fi
+
+  if [[ -e "$broken_dir/fastchess_invoked" ]]; then
+    fail "$side build failed and the match was played anyway"
+    show "$broken_dir"
+  elif ((broken_status == 0)); then
+    fail "$side build failed but the script exited 0"
+    show "$broken_dir"
+  elif ! grep -q "SPRT-RUN-FAILED.*building the $side $broken_sha" \
+    "$broken_dir/out.txt"; then
+    fail "$side build failed without naming $broken_sha in a terminal marker"
+    show "$broken_dir"
+  fi
+  rm -rf "$broken_dir"
+done
+
 rm -rf "$reached_dir" "$default_dir" "$clean_dir" "$older_dir" \
        "$explicit_dir" "$aa_dir" "$nogit_dir" "$seed_dir" \
-       "$override_dir" "$pgn_dir" "$rounds_dir"
+       "$override_dir" "$pgn_dir" "$rounds_dir" "$tc_dir" "$hash_dir" \
+       "$cand_dir" "$same_dir" "$same_aa_dir" "$build_dir"
 [[ -n "${abort_dir:-}" ]] && rm -rf "$abort_dir"
 
 if ((failures > 0)); then
@@ -458,4 +773,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 11 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT"
+echo "$script_under_test: 17 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, and stops on a failed build before a game is played"

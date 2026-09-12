@@ -7,16 +7,54 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
-- **S151 started, 2026-09-12 22:20, harness half by an Opus 5 subagent
-  (DEC-199), the run the coordinator's.** `TC`, `HASH` and `CAND` enter
-  `fastchess.sh` with their properties in `tests/test_fastchess_script.sh`,
-  defaults byte-identical; `adocs/data/S151_ltc.sh` pre-registers design
-  (iii), DEC-172: S085's vector `21b4a21` against its parent `3488506`,
-  `32+0.32`, `Hash=64`, 1000 pairs on `noob_3moves.epd`, about 3.8 h at 528
-  games an hour (DEC-190's 2110 over four), read as an estimate. The match
-  starts when the harness lands and the machine is idle; `.ref-builds/3488506`
-  (2026-08-21) is removed first so both sides build fresh. `plan_current/`:
-  S151. **Next after it: S224** (filler, tests only), then S212.
+- **S151's harness half landed, 2026-09-12 23:00, by an Opus 5 subagent
+  (DEC-199); the run is still to come.** `fastchess.sh` gains `TC`, `HASH`
+  and `CAND=<ref>` -- both sides built through one `build_ref`, the A/A guard
+  keyed on the two commits, the candidate line dated and undecorated --
+  with the defaults proved byte-identical (44 argv words, one `mktemp` path
+  normalised, `.tuning/coord/S151_defaults_diff.sh`); four properties 12 to
+  15 in `tests/test_fastchess_script.sh`, five reds observed against HEAD's
+  script first. `adocs/data/S151_ltc.sh` pre-registers design (iii):
+  `CAND=21b4a21 REF=3488506 TC=32+0.32 HASH=64 ROUNDS=1000` on
+  `noob_3moves.epd`, 528 games an hour from DEC-190's 2110 over four, about
+  3.8 h, ceiling 27360 s, abort only on forfeits over 1.0 % a side,
+  `Incomplete mating PV` counted per side and never a stop, read against
+  zero and against `Elo 21.02 +/- 9.86` with an expected half-width of about
+  +/- 11.6 logistic Elo (+/- 15.2 nElo) at the current 0.2905. **DEC-202**
+  records the rule in its block-boundary form; `specs.md` INV-6 carries the
+  sentence; `DEV_MANUAL.md` "Which bounds" has "The longer control, once per
+  block". `adocs/plan_todo/S119_*.md` re-worded where it argued no hash
+  override exists. `.ref-builds/3488506` (2026-08-21) removed so both sides
+  build fresh. **The fast check found a blocker before any game:** the
+  factored `build_ref` runs inside a command substitution, where `set -e` is
+  off, so a failing `git worktree add` or `cmake` still returned a path and
+  the sandbox reached `SPRT-RUN-DONE` with a nonexistent binary -- exactly
+  this run's path, since neither commit is cached. Two test gaps came with
+  it (no property exercised the build branch; property 14's `CAND=HEAD`
+  could not tell the candidate's sha and date from HEAD's) and three
+  trivial items (the snapshot wording claimed the reference is snapshotted
+  too, the run script's `exec` could die without a marker, a three-mode
+  command line in the step file). A second Opus 5 agent repaired all six
+  before this commit: `build_ref` fails fast inside and both call sites
+  check the returned path, properties 16 and 17 exercise the build branch
+  (17 observed red -- `reference build failed and the match was played
+  anyway`), property 14 plays `CAND=HEAD~1` so the candidate's sha and date
+  are its own, and the run script arms `shopt -s execfail` with an explicit
+  marker because bash runs no EXIT trap out of a failed `exec` (measured on
+  5.2.21). 17 properties in 1.14 s, defaults still identical (44 argv
+  words), gate 37/37 both builds. A second short check over the run path
+  found no real problem -- every `build_ref` failure caught, one marker on
+  each of the four fail/ok paths, property 17 non-vacuous against the
+  pre-repair script, both commits uncached so both build fresh -- and two
+  header sentences of the run script were reworded by the coordinator (the
+  worktree removal form; what a failed `exec` can and cannot catch); the
+  candidate's progress line still says "reference", cosmetic, left. **The
+  match starts after S224** (filler, tests only, about an hour) so nothing
+  builds beside it; the reading and the `done:` stamp are the coordinator's.
+  `plan_current/`: S151 (run pending). **Compaction point** after the
+  commit.
+
+
 
 - **S211 is done, 2026-09-12 20:40, by an Opus 5 subagent (DEC-199): the
   code-level originality exposure the 2026-09-10 audit measured is zero.**

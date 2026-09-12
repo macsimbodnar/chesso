@@ -14,17 +14,17 @@ done:
 Applied by S139, and it is DEC-088's own `Consequences:` line rather than a new
 choice: *"S119's SPRT clause changes from 'at Hash 128' to 'at the S105 harness
 setting, with the pressure ratio stated'"*. The harness is what settles it --
-`fastchess.sh` "option.Hash=16 option.Threads=1" is
+`fastchess.sh` "${HASH:-16}" is the default its `-each` line plays:
 
 ```
-  -each tc="$tc" option.Hash=16 option.Threads=1 \
+  -each tc="$tc" option.Hash="$hash" option.Threads=1 \
 ```
 
-and `grep -n Hash fastchess.sh` returns that line and the `echo` above it at
-`:215` and nothing else, so there is no hash override to pass. A clause asking
-for 128 could only be run by editing the harness, which this step's `touches:`
-does not include, and DEC-088's reason for refusing 128 is that it flatters
-exactly this step.
+S151 added the `HASH` override after this paragraph was written, so a clause
+asking for 128 is now one environment variable rather than the harness edit it
+used to be. That changes nothing here. DEC-088's reason for refusing 128 is
+that it flatters exactly this step, which is about the number and not about
+how hard it is to pass, and this step's verdict is taken at the default.
 
 The rating regime is still reachable and is a different tool: `rating.sh`
 `hash_mb` is `hash_mb=128`, fed to `-each` at `:172`. If a second verdict there

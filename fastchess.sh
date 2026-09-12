@@ -15,6 +15,11 @@ set -euo pipefail
 #                                   seed read off its banner
 #   ROUNDS=<n> AA=1 ./fastchess.sh  fixed rounds and no SPRT: a calibration or
 #                                   a drift reading, never a verdict
+#   TC=32+0.32 ./fastchess.sh       play at another control; default 8+0.08
+#   HASH=64 ./fastchess.sh          another hash per engine; default 16 MB
+#   CAND=<ref> REF=<ref> ./fastchess.sh
+#                                   play two commits against each other. The
+#                                   working tree is not played and not read
 #
 # WHICH BOUNDS, AND WHY THE PAIR IS NOT A DETAIL. The hypothesis pair sets the
 # cost of a verdict as much as the hardware does. S068 measured one constant
@@ -49,6 +54,19 @@ set -euo pipefail
 # cannot contain the truth random-walks to the round limit. When the expected
 # effect is genuinely two-sided, pass the bounds by editing this block for the
 # run and record which pair ran, as S021 and S076 did.
+#
+# AND ONE READING THAT IS NOT A BOUND PAIR: THE LONGER CONTROL, ONCE PER BLOCK.
+# A verdict that moves a pruning or reduction parameter -- a margin, depth
+# bound, reduction coefficient or divisor in src/search_params.hpp deciding
+# whether a node or move is searched at all, or how much shallower -- has its
+# class read once more at `TC=32+0.32 HASH=64`, as one fixed 1000-pair match
+# beside S199's drift point at the block boundary, never a re-take per verdict:
+# an estimate with its own interval, never a verdict. The 8+0.08 SPRT decides
+# whether a change ships; the longer control decides what may be written about
+# its magnitude. Per verdict the rule would cost more than the whole plan --
+# 13 re-takes at {-5, 0} -- which is the reason it is per block. Outside it:
+# evaluation weights, ordering tables, TM_*, hash and table layout, and any
+# change proved behaviour-neutral on node counts. S151, DEC-202.
 #
 # The reference is built from a git ref into a worktree under .ref-builds/, so
 # what the number means is always attributable to a commit range. It used to be
@@ -136,6 +154,15 @@ git()
 # header already describes. S160, 2026-08-22_adversarial-F02.
 REF="${REF:-HEAD}"
 
+# A CANDIDATE THAT IS A COMMIT INSTEAD OF THE WORKING TREE. CAND=<ref> builds
+# that ref the same way the reference is built and plays it, so a run can
+# measure two commits neither of which is checked out -- which is what a
+# reading taken long after the change landed needs (S151 replays S085's
+# shipped vector against its own parent). The working tree is then neither
+# read nor played: no build/ is required, the dirty flag does not apply, and
+# the A/A guard below keys on the two commits.
+CAND="${CAND:-}"
+
 # THE BOOK IS PICKED BY MEASUREMENT. S219 (2026-09-12) compared four CC0
 # books -- one HEAD binary against itself at a fixed time handicap, pooled
 # over two counterbalanced passes -- by M = nElo^2 x games/hour: noob3
@@ -157,7 +184,25 @@ candidate="$repo/build/src/chesso"
 # 8+0.08, the control the engines this plan reads figures from test at, and
 # about 29 s a game against the 52 s of the 10+0.2 that ran until S105 -- the
 # same resolution for a little over half the machine time. DEC-083.
-tc="8+0.08"
+#
+# TC overrides it, and the default is what every verdict this project has taken
+# was taken at, so a run that sets it is a different regime and says so in its
+# pre-registration. The longer-control reading above is the one use there is a
+# rule for; anything else is a new question and needs its own decision. S151.
+tc="${TC:-8+0.08}"
+
+# 16 MB, because what transfers across time controls is table *pressure* and
+# not table size: at the rating list's 2'+1" a game writes on the order of
+# 660 M nodes against 5.6 to 11 M entries, 60 to 120 overwrites per entry, and
+# 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about
+# eightfold. DEC-088.
+#
+# HASH overrides it, and the reason the two knobs exist together is that they
+# are not independent: four times the clock is about four times the nodes a
+# game writes, so holding Hash at 16 while TC goes to 32+0.32 quadruples the
+# pressure instead of holding it. `TC=32+0.32 HASH=64` is the pair that keeps
+# DEC-088's invariant, and it is fishtest's own LTC practice. S151.
+hash="${HASH:-16}"
 
 # Every core the machine reports, whatever kind it is: efficiency cores on
 # Apple silicon (DEC-048, superseding DEC-042), SMT siblings on the Linux
@@ -257,6 +302,14 @@ fi
 head_sha="$(git rev-parse --short HEAD)"
 ref_sha="$(git rev-parse --short "$REF")"
 
+# Empty unless CAND was set, and that emptiness is what every branch below
+# reads to tell the two modes apart. Resolved beside the other two so a typo
+# costs a message rather than a build.
+cand_sha=""
+if [[ -n "$CAND" ]]; then
+  cand_sha="$(git rev-parse --short "$CAND")"
+fi
+
 # IS THE TREE DIRTY, ASKED ONCE. `git diff --quiet HEAD` and not a bare
 # `git diff --quiet`: the bare form compares the tree against the index, so a
 # fully staged diff read as clean -- while the binary being played was built
@@ -278,10 +331,34 @@ git diff --quiet HEAD || diff_status=$?
 # the refusal message said "pass REF=<sha>", walking the reader straight into
 # it. AA=1 is the opt-in instead, because an A/A calibration of the harness is a
 # thing somebody asks for by name, not something a ref spelling falls into.
-if [[ "$ref_sha" == "$head_sha" ]] && ((diff_status == 0)); then
+#
+# WITH CAND SET THE GUARD ASKS A DIFFERENT QUESTION, because the tree is not
+# the candidate. Two commits that resolve to the same sha are the same build
+# whatever the working tree holds, so a dirty tree must not rescue the run --
+# under the working-tree guard it would, and the run would be an unannounced
+# A/A between two copies of one commit.
+same_build=0
+if [[ -n "$cand_sha" ]]; then
+  if [[ "$cand_sha" == "$ref_sha" ]]; then
+    same_build=1
+  fi
+elif [[ "$ref_sha" == "$head_sha" ]] && ((diff_status == 0)); then
+  same_build=1
+fi
+
+if ((same_build == 1)); then
+  if [[ -n "$cand_sha" ]]; then
+    aa_why="candidate $cand_sha and reference $ref_sha are the same commit"
+  else
+    aa_why="reference $ref_sha is HEAD and the tree is clean"
+  fi
   [[ -n "${AA:-}" ]] \
-    || fail "reference $ref_sha is HEAD and the tree is clean, so both sides are the same build and there is nothing to measure; change something, or set AA=1 to calibrate the harness against itself on purpose"
-  echo "A/A CALIBRATION: both sides are $ref_sha with a clean tree, so this run"
+    || fail "$aa_why, so both sides are the same build and there is nothing to measure; change something, or set AA=1 to calibrate the harness against itself on purpose"
+  if [[ -n "$cand_sha" ]]; then
+    echo "A/A CALIBRATION: both sides are the commit $ref_sha, so this run"
+  else
+    echo "A/A CALIBRATION: both sides are $ref_sha with a clean tree, so this run"
+  fi
   echo "                 measures the harness and not the engine. AA is set."
   echo
 fi
@@ -330,8 +407,68 @@ pgnfile="$outdir/games.pgn"
 [[ ! -e "$pgnfile" ]] \
   || fail "$pgnfile already exists; fastchess appends, so this run's census would mix it with an earlier match"
 
-[[ -x "$candidate" ]] || fail "no candidate at $candidate, build it first"
 [[ -r "$book" ]] || fail "no book at $book, fetch it with books/fetch_book.sh"
+
+# BUILD A COMMIT INTO ITS OWN WORKTREE, ONCE PER COMMIT, AND PRINT THE BINARY.
+# One function for both sides, called twice, because the two sides of a CAND
+# run have to be built the same way or the difference between them is the
+# build and not the change. It was the reference's block alone until S151.
+#
+# The progress line goes to stderr: stdout is the binary path this function
+# returns, and a `Building ...` on it would be captured into the caller's
+# variable instead of read. Both streams land in the same log for a detached
+# run, which is the only place either is read.
+#
+# EVERY COMMAND IN HERE IS CHECKED BY HAND, BECAUSE `set -e` DOES NOT REACH
+# INSIDE A COMMAND SUBSTITUTION. Both call sites are `x="$(build_ref ...)"`,
+# and bash does not apply errexit to the subshell that runs: a `cmake` exiting
+# 1 left the function running on to its final `echo` and the caller taking a
+# path to a file that was never produced. Measured 2026-09-12 on the reference
+# side: the banner printed, fastchess was handed `cmd=<nonexistent>`, every
+# game failed to start and the script reached `SPRT-RUN-DONE` -- a run that
+# looks finished and played nothing. The inline block this function replaced
+# was not exposed, because it ran in the script's own shell where errexit
+# applies; the factoring is what moved it into a subshell.
+#
+# So each command ends in `|| return 1` and the binary is re-checked before the
+# path is printed. Returning without printing is deliberate: the caller then
+# gets an empty string, and its own `[[ -x ]]` check is the second line of
+# defence rather than the first. Case 17 of tests/test_fastchess_script.sh.
+build_ref()
+{
+  local sha="$1"
+  local dir binary
+  dir="$(git rev-parse --show-toplevel)/.ref-builds/$sha" || return 1
+  binary="$dir/build/src/chesso"
+
+  if [[ ! -x "$binary" ]]; then
+    echo "Building reference $sha ..." >&2
+    git worktree add --detach "$dir" "$sha" > /dev/null || return 1
+    cmake -S "$dir" -B "$dir/build" -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache > /dev/null \
+      || return 1
+    cmake --build "$dir/build" --target chesso \
+      -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null || return 1
+    # A build that exits 0 and produces nothing is the same failure as one that
+    # exits 1, and it is the one a wrong target name or a moved output path
+    # gives.
+    [[ -x "$binary" ]] || return 1
+  fi
+
+  echo "$binary"
+}
+
+# The candidate is the working tree unless CAND named a commit. In that mode
+# build/ is neither read nor required, so the readability check that guards the
+# working-tree binary would be asking about a file nothing plays.
+if [[ -n "$cand_sha" ]]; then
+  candidate="$(build_ref "$cand_sha")" \
+    || fail "building the candidate $cand_sha failed; its output is above"
+  [[ -x "$candidate" ]] \
+    || fail "building the candidate $cand_sha left no binary at '$candidate'"
+else
+  [[ -x "$candidate" ]] || fail "no candidate at $candidate, build it first"
+fi
 
 # Snapshot the candidate before playing a single game.
 #
@@ -344,6 +481,17 @@ pgnfile="$outdir/games.pgn"
 # The template is spelled out rather than passed to `mktemp -t`, which is a
 # BSD-ism: GNU mktemp rejects a template with no X's in it and the script died
 # here on Linux, before a single game.
+#
+# A CAND candidate is snapshotted too, deliberately: one code path, and a
+# `.ref-builds/` worktree rebuilt or removed during a run swaps the engine
+# under the match exactly as a `build/` rebuild does.
+#
+# WHAT IS NOT SNAPSHOTTED, IN EITHER MODE, IS THE REFERENCE. It is played
+# straight from `.ref-builds/$ref_sha/build/src/chesso`, so clearing or
+# rebuilding *that* worktree while a match runs does swap the reference under
+# it. Nothing in this script does so -- `build_ref` skips a worktree whose
+# binary is already there -- and the exposure is an outside hand, which is why
+# a stale cached reference is cleared before a run starts and never during one.
 snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-candidate.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
@@ -355,18 +503,10 @@ chmod +x "$snapshot"
 # (2026-08-13_adversarial-F01).
 candidate="$snapshot"
 
-# Build the reference from the ref, in its own worktree, once per ref.
-ref_dir="$(git rev-parse --show-toplevel)/.ref-builds/$ref_sha"
-reference="$ref_dir/build/src/chesso"
-
-if [[ ! -x "$reference" ]]; then
-  echo "Building reference $ref_sha ..."
-  git worktree add --detach "$ref_dir" "$ref_sha" > /dev/null
-  cmake -S "$ref_dir" -B "$ref_dir/build" -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache > /dev/null
-  cmake --build "$ref_dir/build" --target chesso \
-    -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null
-fi
+reference="$(build_ref "$ref_sha")" \
+  || fail "building the reference $ref_sha failed; its output is above"
+[[ -x "$reference" ]] \
+  || fail "building the reference $ref_sha left no binary at '$reference'"
 
 # A busy machine invalidates a timed match, and it is worth knowing before
 # spending an hour rather than after.
@@ -394,9 +534,20 @@ commit_date()
 dirty=""
 ((diff_status == 0)) || dirty="  + uncommitted changes"
 
-echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
+# With CAND the candidate line carries that commit and NO dirty flag: the flag
+# describes the working tree, the working tree is not being played, and a run
+# that reported `+ uncommitted changes` beside a commit candidate would be
+# saying the opposite of what it measured. The engine name follows the same
+# rule, so the PGN says which commit it held.
+cand_name="candidate"
+if [[ -n "$cand_sha" ]]; then
+  cand_name="cand-$cand_sha"
+  echo "candidate  $cand_sha  $(commit_date "$cand_sha")"
+else
+  echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
+fi
 echo "reference  $ref_sha  $(commit_date "$ref_sha")"
-echo "tc $tc  hash 16  concurrency $concurrency of $all_cores cores"
+echo "tc $tc  hash $hash  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
 echo "seed       $seed"
 if [[ -n "$sprt_args" ]]; then
@@ -408,11 +559,11 @@ echo "out        $outdir"
 echo
 
 fastchess \
-  -engine cmd="$candidate" name=candidate \
+  -engine cmd="$candidate" name="$cand_name" \
   -engine cmd="$reference" name="ref-$ref_sha" \
   -openings file="$book" format="$book_format" order=random \
   -srand "$seed" \
-  -each tc="$tc" option.Hash=16 option.Threads=1 \
+  -each tc="$tc" option.Hash="$hash" option.Threads=1 \
   $sprt_args \
   $adjudication \
   $mate_pv_check \

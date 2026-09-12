@@ -1,12 +1,13 @@
 id:         S151
 goal:       a change that moves a pruning or reduction parameter has its verdict re-taken at a control at least four times longer before the number is banked, starting with S085's shipped vector
 accepts:    S085's shipped vector is measured against `3488506` at `32+0.32` and `Hash=64` in a fixed 1000-pair match read as an estimate with its 95 % interval -- design (iii) of section 7, DEC-172 -- with the control and its cost stated before the run is committed to, and whatever it returns is recorded -- including a regression, which is the outcome the published record says to expect if it exists; the rule is written where the bounds rule already lives in `fastchess.sh` and `DEV_MANUAL.md`, in its block-boundary form: the longer-control reading is one fixed 1000-pair match at `32+0.32` and `Hash=64` taken beside S199's drift point at each block boundary, so a block's pruning and reduction verdicts are read at the longer control before their magnitudes are banked; the rule is scoped so it does **not** apply to all 45 to 55 pending verdicts, because that roughly doubles the plan's machine budget, and the scoping reason is stated
-touches:    fastchess.sh, DEV_MANUAL.md, adocs/data/, adocs/decisions.md, adocs/specs.md
+touches:    fastchess.sh, tests/test_fastchess_script.sh, tests/CMakeLists.txt, DEV_MANUAL.md, adocs/data/, adocs/decisions.md, adocs/specs.md
 excludes:   a second SPSA run at the longer control, which is a tuning step and not a verification one; re-testing the earlier verdicts S021, S068, S076, S089 or S107, which is a separate decision about history; changing any default, which only the verdict may do and which would be its own step
 decisions:  DEC-019, DEC-063, DEC-094
 closes:     2026-08-21_adversarial-F03
 blocks:
 paused_by:
+author:     an Opus 5 subagent briefed by the coordinator for the harness half (DEC-185, DEC-199); the run is the coordinator's; started 2026-09-12 22:09 after the power cut
 done:
 
 ## The evidence, and the one instance that matters most
@@ -544,3 +545,350 @@ rejected option and DEC-172 says why. The harness additions of section 3
 (`TC`, `HASH`, `CAND`) are still this step's first work; their defaults leave
 the regime byte-identical, and S212's A/A, which follows this step in the
 order, is the DEC-143 calibration that covers them.
+
+## Harness landed 2026-09-12 22:40
+
+The harness half only. **The run has not started**: `adocs/data/S151_ltc.sh` is
+written, executable and never executed, and the verdict block, the `done:` stamp
+and the `specs.md` / `decisions.md` entries are the coordinator's after it.
+
+### A. Three additions to `fastchess.sh`
+
+- **`tc="${TC:-8+0.08}"`** and **`hash="${HASH:-16}"`**, each under a comment
+  saying what the default holds and why the two travel together: four times the
+  clock is about four times the nodes a game writes, so `TC=32+0.32` at the
+  default hash quadruples the overwrites per entry DEC-088 fixed 16 MB to
+  reproduce, and `HASH=64` is what holds it. The banner reads both --
+  `tc $tc  hash $hash  concurrency ...` -- and the `-each` line carries
+  `option.Hash="$hash"`.
+- **`CAND=<ref>`**: resolved to `cand_sha` beside `head_sha` and `ref_sha`, so a
+  typo costs a message and not a build. The reference-build block was factored
+  into **`build_ref <sha>`**, which prints the binary path on stdout and its
+  `Building reference ...` progress line on stderr, and it is called for both
+  sides -- one function, so the two sides of a `CAND` run cannot differ by how
+  they were built. The candidate is snapshotted anyway (one code path; a
+  `.ref-builds/` rebuild mid-run is as fatal as a `build/` one). The banner's
+  candidate line carries `cand_sha` and its own commit date **with no dirty
+  flag**, and the engine is named `cand-$cand_sha`. The A/A guard was split:
+  with `CAND` set it asks whether the two commits are the same one and the
+  `diff_status` clause does not apply, so a dirty tree cannot rescue a run
+  between two copies of one commit.
+- Everything else about the default path is unchanged, `build/src/chesso`'s
+  executability check included -- it is now skipped only in `CAND` mode, where
+  `build/` is neither read nor played.
+
+**Byte-identical defaults, proved rather than asserted.** With `TC`, `HASH` and
+`CAND` unset, one sandbox ran `git show HEAD:fastchess.sh` and the changed
+script in turn with the same `OUT`, the same refs and a stubbed `date` (the
+script derives the run stamp and the default seed from it, and nothing else
+calls it), and the two recorded argv files were diffed:
+
+    === diff head.argv changed.argv, mktemp path normalised ===
+    IDENTICAL: 44 argv words, no difference
+
+One word is normalised and it is named in the script: the candidate snapshot's
+`cmd=` path comes from `mktemp`, which draws six fresh random characters on
+every invocation and so cannot repeat across two runs of the *same* script
+either. The engine names, book, seed, `-each` line, bounds, round count,
+concurrency, event string and both output paths are compared as written. The
+scratch harness is `.tuning/coord/S151_defaults_diff.sh` (gitignored; not a
+committed test -- the smoke test's fifteen properties are the committed guard).
+
+### B. Four properties in `tests/test_fastchess_script.sh`, 12 to 15
+
+`run_sandbox` gained `TC`, `HASH` and `CAND` through its own environment --
+written `TC=32+0.32 run_sandbox "$dir" HEAD~1` at the call -- set or unset
+inside the subshell under the same rule as the five positional ones. The
+closing message moved from **11 to 15 properties** and the header's list with
+it. `tests/CMakeLists.txt` needed no change: the whole file runs in **0.96 s**
+against a 60 s timeout.
+
+Each red observed first, against `git show HEAD:fastchess.sh` saved to a file
+and passed as the script argument (`.tuning/coord/S151_red.txt` holds the run):
+
+    FAIL: TC=32+0.32 did not reach fastchess in the -each line
+    FAIL: HASH=64 did not reach fastchess in the -each line
+    FAIL: CAND=HEAD: fastchess was not handed the .ref-builds binary for d5186dc
+    FAIL: CAND and REF at the same commit played a match between two identical builds
+    FAIL: AA=1 with CAND played the match without saying it measures the harness
+    .tuning/coord/fastchess_head.sh: 5 assertion(s) failed
+
+The eleven existing properties stayed green in that same run, and the changed
+script prints `15 properties hold`.
+
+**One deviation from section 6's sketch, and it makes the property stronger.**
+The sketch asserts the candidate binary with `grep "cmd=.*\.ref-builds/$sha/"`
+over the argv. That can never pass: section 3 asks for the candidate to be
+snapshotted, so `cmd=` is a random `/tmp/chesso-candidate.XXXXXX` in **both**
+modes and the file it names is removed by the EXIT trap before an assertion
+could read it. The stub engines now say which one they are when run and the
+stub `fastchess` records what each binary it was handed said, so property 14
+asserts on the identity of the engine fastchess would have played -- which
+survives the copy, where the path does not. Two mutants confirm it: playing
+`build/src/chesso` while resolving `CAND` for the banner fails property 14's
+`ref-build` line, and printing `$dirty` beside a commit candidate fails its
+banner line (the tree is dirtied in that case for exactly that reason -- on a
+clean tree there is no flag to print and the assertion would pass vacuously).
+Properties 12 and 13 each assert the **default** beside the override, so a
+mutation that hard-wires `32+0.32` or `64` cannot pass either.
+
+### C. `adocs/data/S151_ltc.sh`, written before any game
+
+Header first, in the `S165_sprt.sh` / `S148_sprt.sh` shape. Verified at HEAD
+`1fc0beb` and quoted in it: `git rev-parse --short 21b4a21^` prints `3488506`;
+`git diff --stat 3488506 21b4a21 -- src/` touches `src/search_params.hpp` (52
+lines) and `src/evaluation.hpp` (9, comment only); `git diff 21b4a21 43bf189
+-- src/` is empty. The ten defaults were re-read from the diff itself, not from
+section 1, and agree with it on every value.
+
+Design (iii) as DEC-172 decided: `ROUNDS=1000` (1000 pairs, 2000 games),
+`TC=32+0.32`, `HASH=64`, the harness's **current** book `noob_3moves.epd`
+(DEC-189/190/191 -- the guide names the UHO book because it predates the
+switch, and the header says so), concurrency 12, governor recorded and never
+waited on (DEC-195), the seed off the banner. `ROUNDS` removes `-sprt`
+entirely, so the run prints `bounds none -- fixed 1000 rounds ... NOT a
+verdict` where the log's reader meets it.
+
+**The estimate is measured, not guessed**: 2110 games an hour at `8+0.08` on
+this book with concurrency 12 (S219's DEC-143 A/A), control ratio 4, so about
+**528 games an hour and about 3.8 h for 2000 games** -- under DEC-155's four
+hour line, a daytime run. The first hour's `Finished game` count is the check,
+about 528 at the estimate, and the two effects that push the other way (the
+draw rate rising with the control, the eight-move draw adjudication) are named
+as excluded from it. **Watcher ceiling 27360 s (7 h 36 m)**, twice the
+estimate, wall-clock only while the machine is awake.
+
+**Abort rule**: stop only for a time-forfeit rate over 1.0 % on a side, by
+`python3 tools/forfeit_report.py <outdir>/games.pgn --max-pct 1.0` (the tool's
+flag checked against its `--help`). `Incomplete mating PV` from **both** sides
+is expected -- both commits predate S147, S170 and S171 -- and is counted per
+side and recorded, never a stop. Nothing else stops the run: there is no bound
+to cross and no cap to reach.
+
+**The three readings** are in the header. The second one is re-derived there
+rather than copied: with pair score on `S105_pairs.py`'s 0-to-2 scale the nElo
+half-width is `1.96 C / sqrt(2N)` with `C = 800 / ln 10`, which depends on the
+pair count alone, and the logistic one is `1.96 x 694.8 x sd_pair / (2 sqrt N)`.
+At 1000 pairs and the current book's measured variance 0.2905 that is **+/-
+15.2 nElo and about +/- 11.6 logistic Elo**; section 7's +/- 10.5 was the same
+arithmetic at the old book's 0.2395. Both formulas reproduce S085's own printed
+run at its 1473 pairs -- `nElo 26.81 +/- 12.55` to the digit, and 9.82 against
+its printed `Elo +/- 9.86` -- which is what makes the figure an arithmetic
+result rather than an assertion. The third reading names the engine-name trap:
+this run's sides are `cand-21b4a21` and `ref-3488506`, and `S105_pairs.py`'s
+`main` defaults to `chesso-a`, where a name matching neither side inflates the
+variance with nothing printed to say so.
+
+`OUT` is set to `.tuning/s151_ltc_<stamp>` rather than left at the `/tmp`
+default, because the PGN is read after the run for the forfeit census and the
+pair variance and `/tmp` is wiped at boot. Launch line, for the coordinator:
+
+    nohup adocs/data/S151_ltc.sh > .tuning/sprt_s151.log 2>&1 &
+    echo $! > .tuning/sprt_s151.pid
+
+Markers are `fastchess.sh`'s own `SPRT-RUN-DONE` / `SPRT-RUN-FAILED`, on every
+exit path including the `cd`. The header says to remove the cached
+`.ref-builds/3488506` first so both sides are built fresh by the same
+`build_ref`; that removal is the coordinator's and was not done here.
+
+### D. Documents
+
+- `DEV_MANUAL.md` "Play games": three lines in the usage block, then two
+  paragraphs -- what `CAND` does and its three visible consequences (undecorated
+  candidate line, `cand-<sha>` engine name and what that costs a PGN reader,
+  the guard on commits), and why `TC` and `HASH` travel together.
+- `DEV_MANUAL.md` "Which bounds": a new subsection **"The longer control, once
+  per block"** -- the rule in DEC-172's block-boundary form with its scope and
+  its exclusions, the 13-re-take arithmetic that is the reason it is per block
+  and not per verdict (about 240 h against about 44 h), the published reason
+  the reading exists, and what 1000 pairs buys with the formulas above.
+- `fastchess.sh` header, under "WHICH BOUNDS": the same rule in eleven lines.
+- `MANUAL.md`: **checked, no change.** `HASH` sets fastchess's `option.Hash`,
+  which is the existing UCI option at its existing default; no UCI surface
+  moves, so `test_uci_surface` is untouched (SURFACE).
+- `adocs/data/README.md`: one row for `S151_ltc.sh`. The `.log` row is the
+  coordinator's after the run.
+- `adocs/specs.md` INV-6 and the `decisions.md` entry are **proposed in the
+  report, not written** (PLAN: shared documents go through the coordinator).
+- One repair the change forced: `adocs/plan_todo/S119_tt_cluster_layout.md`
+  cited the harness's old `-each` spelling, with 16 written into it, and argued
+  that there was no hash override to pass. The citation stopped resolving and
+  the sentence stopped being true, so both were rewritten in place -- the
+  paragraph's conclusion is unchanged, since DEC-088 refuses 128 for what the
+  number does to this step and not for how hard it is to pass.
+
+### The gate, and what is not owed
+
+`export CLANG_FORMAT_MAJOR=22` (DEC-146), `-j12`:
+
+    ctest --test-dir build      -L fast   37/37 passed
+    ctest --test-dir build-tune -L fast   37/37 passed
+    ./clang-format.sh --check             clean, exit 0
+
+`tools/plan_prose_check.py` reports nothing flagged in each of its three
+relevant modes, run one per invocation — `--citations`, then `--touches`, then
+`--params`; the tool takes one mode at a time and two together is a traceback.
+**No `src/` file is touched**, so no `Bench:` line and no `No
+functional change` line is owed (DEC-140 binds `src/` commits only), and
+section 6's list holds: no search rule, no `make_move`, no generator, so no
+guard test, no mutant, no Debug self-play and no INV-6 node-count run.
+
+## Repairs 2026-09-12 23:05, after the fast check
+
+Six findings over the harness above, all repaired before the run. Still the
+harness half only: **the run has not started**, `done:` stays empty.
+
+### 1. `build_ref` swallowed every build failure — REAL, it blocked the run
+
+`set -e` does not reach inside a command substitution, and both call sites are
+`x="$(build_ref ...)"`. A failing `git worktree add` or `cmake` inside the
+function therefore did not abort it: it ran on to its final `echo "$binary"`
+and handed the caller a path to a file that was never produced. Confirmed as
+bash behaviour first, in isolation — a function whose `false` is followed by
+more statements runs them all and the caller survives with status 0 — and then
+in the test sandbox. The inline block this function replaced was **not**
+exposed, because it ran in the script's own shell; **the S151 factoring is
+what moved it into a subshell**, so this is a defect the harness half
+introduced and not one it inherited.
+
+Reproduced red, reference side, against the script as it then stood
+(`.tuning/coord/S151_fix_red.txt`):
+
+    FAIL: reference build failed and the match was played anyway
+        Building reference 78b0884 ...
+        stub cmake: deliberate failure
+        candidate  8cec434  2026-09-12
+        reference  78b0884  2020-01-02
+        ...
+        stub/fastchess: .ref-builds/78b0884/build/src/chesso: not found
+        === 0 games in .../games.pgn ===
+        SPRT-RUN-DONE fast /tmp/chesso-fastchess-smoke.LGYLsc/out
+
+A run that looks finished, played nothing, and would have been read as a
+result. The candidate side was caught only incidentally, by `cp: cannot stat`,
+with no sentence saying what had gone wrong:
+
+    FAIL: candidate build failed without naming 8cec434 in a terminal marker
+        cp: cannot stat '.../.ref-builds/8cec434/build/src/chesso'
+        SPRT-RUN-FAILED: exited 1
+
+The trigger on this run's own path is not hypothetical: neither `21b4a21` nor
+`3488506` is cached under `.ref-builds/` once the stale `3488506` worktree is
+cleared as the header instructs, so both sides are built for the first time.
+
+**Fixed in two layers, in `fastchess.sh`'s `build_ref` and at both of its
+call sites — the `cand_sha` branch that sets `candidate`, and the
+`reference=` assignment below the snapshot.** Inside, each command ends `|| return 1` and the
+binary is re-checked before the path is printed, so a build that exits 0 and
+produces nothing fails too; the function returns without printing, which is
+what makes the caller's check meaningful. At each call site, `|| fail` on the
+substitution and then `[[ -x "$path" ]] || fail`, both naming the sha:
+`SPRT-RUN-FAILED: building the candidate <sha> ...`.
+
+### 2. Nothing exercised `build_ref`'s build branch — REAL, the gap behind 1
+
+Every sandbox pre-builds `.ref-builds/<sha>/build/src/chesso` for both commits,
+so `if [[ ! -x "$binary" ]]` was false in all fifteen cases and the three
+commands inside it never ran. The branch that is skipped is exactly the branch
+a real run takes, because a commit that has never been built has no cached
+worktree.
+
+`unbuild_sandbox <dir> ok|fail` removes the cached builds and puts a stub
+`cmake` on PATH; `git worktree add` is left real inside the sandbox
+repository. The `ok` stub writes a binary that names the sha its build
+directory sat under, which is how the two sides of a `CAND` run are told
+apart; the `fail` stub exits 1.
+
+- **Property 16**, both sides of a `CAND=HEAD REF=HEAD~1` run with no cached
+  build: the run reaches fastchess and the two engines it is handed are
+  `fresh-build <head>` and `fresh-build <head~1>`, with no `working-tree`.
+  Green before the fix as well — it is the positive control that says the
+  build branch works when `cmake` works, without which case 17 could pass for
+  the wrong reason.
+- **Property 17**, the same sandbox with the failing stub, run once per side:
+  fastchess is not invoked, the status is non-zero, and the marker names the
+  sha. Pinned to the guard's own sentence rather than the bare marker, as case
+  4 is — on the candidate side a bare `SPRT-RUN-FAILED` already existed, from
+  `cp`, and would have kept the case green. Both red lines are quoted above.
+
+Mutants, against the repaired script:
+
+- dropping the caller checks and keeping `build_ref`'s own → **red on both
+  sides**, `build failed without naming <sha> in a terminal marker`. The
+  caller check is load-bearing.
+- dropping `build_ref`'s own checks and keeping the callers' → **green**, and
+  that is honest rather than a gap: the caller's `[[ -x ]]` delivers the same
+  observable guarantee with the same sentence. The inner checks are the second
+  layer the fast check asked for — they stop `cmake` running against a
+  worktree that was never created — and the property pins the behaviour, not
+  the layer that produces it.
+
+### 3. Property 14 could not see two mutants — REAL
+
+It ran `CAND=HEAD`, so the candidate's sha *was* `$head_sha` and its commit
+date *was* HEAD's: a banner built from either printed exactly the correct line.
+Now `CAND=HEAD~1 REF=HEAD`, where the candidate carries a different sha and the
+committer date `make_sandbox` forces to 2020-01-02, and the case asserts both.
+
+Verified by applying each mutant to a copy and running the test against it:
+
+    mutant A  echo "candidate  $head_sha  $(commit_date "$cand_sha")"
+    mutant B  echo "candidate  $cand_sha  $(commit_date HEAD)"
+
+    old property 14:  15 properties hold        (both survive)
+    new property 14:  FAIL: CAND=HEAD~1: the candidate line is not that
+                            commit, its own date, undecorated
+
+### 4. The snapshot claim was too wide — trivial
+
+`fastchess.sh`'s comment over the `snapshot=` block, and `DEV_MANUAL.md`
+"Play games", said a `.ref-builds/` rebuild
+mid-run "cannot swap an engine under the match". **Only the candidate is
+snapshotted.** The reference is played straight from
+`.ref-builds/$ref_sha/build/src/chesso` in both modes, so clearing or
+rebuilding *that* worktree during a match does swap the reference. Behaviour
+unchanged — the defaults' byte-identical argv is a guarantee this step made —
+and both places now say what is and is not copied, and that the exposure is an
+outside hand because `fastchess.sh` never rebuilds a worktree whose binary is
+already there.
+
+### 5. `S151_ltc.sh` could die without a marker — trivial
+
+`set -uo pipefail` and no `-e`: a failed `exec env ... ./fastchess.sh` died
+with `env`'s message and no `SPRT-RUN-FAILED`, so the watcher would have spun
+to its 27360 s ceiling on that silence. Two guards now: `[[ -x ./fastchess.sh
+]]` before the exec, and a marker line after it.
+
+**The fast check's suggested form does not work and the script says so.** An
+EXIT trap armed before the `exec` never fires: a non-interactive bash whose
+exec fails exits from inside the builtin without running EXIT traps — measured
+on bash 5.2.21, `trap 'echo fired' EXIT; exec /nonexistent/env` prints only the
+shell's own error and exits 127. `shopt -s execfail` is what makes the shell
+survive the failure, and with it the marker is written out rather than left to
+a trap. Tested on all three paths with dry copies:
+
+    bash -n adocs/data/S151_ltc.sh                       OK
+    no ./fastchess.sh   SPRT-RUN-FAILED: no executable ./fastchess.sh in ...   1
+    exec fails          SPRT-RUN-FAILED: exec env ./fastchess.sh             127
+    exec succeeds       no marker of its own, the child's markers stand        0
+
+### 6. Three modes written as one invocation — trivial
+
+The gate paragraph above wrote `plan_prose_check.py --citations --touches
+--params` as one command; the tool takes one mode per invocation and two
+together is a traceback. Corrected in place to three.
+
+### The gate, after the repairs
+
+`export CLANG_FORMAT_MAJOR=22`, `-j12`:
+
+    tests/test_fastchess_script.sh fastchess.sh   17 properties hold, 1.1 s
+    .tuning/coord/S151_defaults_diff.sh           IDENTICAL: 44 argv words
+    ctest --test-dir build      -L fast           37/37 passed
+    ctest --test-dir build-tune -L fast           37/37 passed
+    ./clang-format.sh --check                     clean, exit 0
+
+The defaults diff is the one that matters most here: `build_ref` changed, and
+with `TC`, `HASH` and `CAND` unset the argv fastchess is handed is still
+word-for-word what `git show HEAD:fastchess.sh` produces. No `src/` file is
+touched by the repairs either.
