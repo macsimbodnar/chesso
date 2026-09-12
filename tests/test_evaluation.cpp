@@ -945,6 +945,136 @@ TEST_SUITE("evaluation: score_move ordering")
          "]."));
   }
 
+
+  // S024. The case above pins one table at its declared extreme; this one
+  // re-pins the same property for the sum score_move() now returns, both
+  // tables driven to QuietHistoryMax's declared maximum at once -- the
+  // MacBook attempt's own note on what "re-pinned for the sum" means. The
+  // quiet band this engine can produce is [-2*QuietHistoryMax,
+  // +2*QuietHistoryMax] from here on, and clearance against the countermove
+  // band above has to hold against that doubled bound, not the single one.
+  TEST_CASE_FIXTURE(
+      eval_fixture_t,
+      "the continuation term re-pins the band for the sum of two tables")
+  {
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/4p3/R3K3 w - - 0 1", &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t king_takes_pawn = 0;
+    move_t quiets[4] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_CAPTURE(moves[i])) {
+        if (MOVE_PIECE(moves[i]) == W_KING) { king_takes_pawn = moves[i]; }
+      } else if (MOVE_PROMOTED(moves[i]) == TO_NONE && quiet_count < 4) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE(king_takes_pawn != 0);
+    REQUIRE_EQ(quiet_count, 4);
+
+    int declared_max = -1;
+
+    for (size_t i = 0; i < search_param_count(); ++i) {
+      if (std::string("QuietHistoryMax") == search_param_info(i).name) {
+        declared_max = search_param_info(i).max_value;
+      }
+    }
+
+    REQUIRE(declared_max > 0);
+
+    const size_t ply = 3;
+
+    search_state_t state = {};
+    state.killer_moves[0][ply] = quiets[0];
+    state.killer_moves[1][ply] = quiets[1];
+
+    // plain == prev_move: the table's own self-referencing cell, indexed by
+    // (this move's piece, this move's to) on both halves. That is a
+    // well-defined entry like any other -- nothing requires the previous
+    // move and the current one to differ -- and it lets one quiet drive both
+    // tables through the one local pair below.
+    const move_t prev_move = quiets[3];
+    state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = quiets[2];
+
+    const move_t plain = quiets[3];
+    int16_t& entry = state.quiet_history[game.board.active_color]
+                                        [MOVE_FROM(plain)][MOVE_TO(plain)];
+    int16_t& cont_entry = continuation_entry(&state, prev_move, plain);
+
+    entry = static_cast<int16_t>(declared_max);
+    cont_entry = static_cast<int16_t>(declared_max);
+
+    const int s_capture =
+        score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
+    const int s_killer0 =
+        score_move(&game, &state, quiets[0], 0, ply, prev_move);
+    const int s_killer1 =
+        score_move(&game, &state, quiets[1], 0, ply, prev_move);
+    const int s_counter =
+        score_move(&game, &state, quiets[2], 0, ply, prev_move);
+    const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
+
+    entry = static_cast<int16_t>(-declared_max);
+    cont_entry = static_cast<int16_t>(-declared_max);
+    const int s_history_malused =
+        score_move(&game, &state, plain, 0, ply, prev_move);
+
+    // Preconditions 1 and 2, unchanged from the single-table case: the band
+    // spacing this position is built on.
+    REQUIRE_EQ(s_capture - s_killer0, 100);
+    REQUIRE(s_killer0 > s_killer1);
+    REQUIRE(s_killer1 > s_counter);
+
+    // Precondition 3, doubled: both tables actually reached score_move() and
+    // neither term was clamped a second time on the way out.
+    REQUIRE_EQ(s_history, 2 * declared_max);
+    REQUIRE_EQ(s_history_malused, -2 * declared_max);
+
+    CHECK_MESSAGE(
+        s_counter - s_history >= 100,
+        ("Two tables at QuietHistoryMax's declared maximum of " +
+         std::to_string(declared_max) + " score " + std::to_string(s_history) +
+         " against the countermove band's " + std::to_string(s_counter) +
+         ", a clearance of " + std::to_string(s_counter - s_history) +
+         " and not the 100 the ordering bands are spaced by."));
+
+    CHECK_MESSAGE(
+        s_counter - s_history_malused >= 100,
+        ("Two tables at QuietHistoryMax's declared minimum of " +
+         std::to_string(-declared_max) + " score " +
+         std::to_string(s_history_malused) +
+         " against the countermove band's " + std::to_string(s_counter) +
+         ", a clearance of " + std::to_string(s_counter - s_history_malused) +
+         " and not the 100 the ordering bands are spaced by."));
+
+    const int lowest_other_band =
+        std::min({s_capture, s_killer0, s_killer1, s_counter});
+
+    CHECK_MESSAGE(lowest_other_band - 2 * declared_max >= 100,
+                  ("The lowest non-history band scores " +
+                   std::to_string(lowest_other_band) +
+                   ", which does not stand 100 clear of the whole quiet band "
+                   "[-2*declared_max, 2*declared_max] = [" +
+                   std::to_string(-2 * declared_max) + ", " +
+                   std::to_string(2 * declared_max) + "]."));
+
+    // The overflow guard the pitfalls note names. Each entry is int16_t and
+    // stays within [-declared_max, declared_max] by history_gravity_update's
+    // own contract, so the sum of two reaches +/-2*declared_max -- at the
+    // declared ceiling this does NOT fit back inside an int16_t (max 32767).
+    // That is exactly why score_move's `score` is `int` and why this is
+    // asserted here rather than assumed: REQUIRE_EQ(s_history, 2 *
+    // declared_max) above already came back as the full, un-wrapped value,
+    // which it could not have if the sum were ever accumulated into a
+    // same-width entry on the way out.
+    REQUIRE(2 * declared_max > 32767);
+  }
+
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")
   {
     REQUIRE(load_FEN("6k1/4P3/8/8/8/8/8/4K3 w - - 0 1", &game));

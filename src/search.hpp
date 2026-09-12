@@ -123,12 +123,19 @@ void history_gravity_update(int16_t& entry, int bonus);
 // to every quiet tried at that node before it. `quiets_tried` never contains
 // `cutoff_move` -- the caller appends after the cutoff test, so the exclusion
 // is structural. S093.
+//
+// `prev_move` additionally updates the one-ply continuation table
+// (`continuation_entry`, src/data_structures.hpp) at the same two spans, and
+// only when it is non-zero: 0 means there is no previous move to index --
+// ply 0, or the node right after a null move -- and the table is left
+// untouched rather than crediting or charging its (W_PAWN, a8) cell. S024.
 void history_on_quiet_cutoff(search_state_t* state,
                              color_t side,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
-                             int depth);
+                             int depth,
+                             move_t prev_move);
 
 // The reduction the built table holds for a (depth, move number) pair. It
 // exists for two tests. S073's: LMR_BASE and LMR_DIVISOR are read once, when

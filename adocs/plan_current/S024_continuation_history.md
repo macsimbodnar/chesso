@@ -8,10 +8,11 @@ accepts:    two SPRT verdicts, one per table: the one-ply table first, the two-p
             continuation pointer or the child indexes garbage.)
 touches:    src/search.cpp, src/evaluation.cpp score_move, src/data_structures.hpp
 excludes:
-decisions:
+decisions:  DEC-019, DEC-063, DEC-084, DEC-086, DEC-087, DEC-109, DEC-111, DEC-141, DEC-143, DEC-189, DEC-190
 closes:
 blocks:
 paused_by:
+author:     a Sonnet 5 subagent briefed by the coordinator (DEC-185, DEC-188); started 2026-09-12 07:15
 done:
 
 ## Note
@@ -409,3 +410,313 @@ first game.
    write the `done:` stamp, move this file to `plan_done/`, move S024's entry
    out of `plan.md`'s Open list into `Done recently` and drop the oldest of the
    five, rewrite `status.md`, commit.
+
+## Evidence taken, 2026-09-12
+
+### What was built, verdict 1 only
+
+One-ply continuation history (countermove history), keyed on the previous
+move's (piece, to) and this move's (piece, to), summed into the quiet
+ordering score alongside plain `quiet_history`.
+
+**No `moves_played[MAX_PLY]` array.** The "Implementation sketch" lists it
+under "Verdict 1", but its own text motivates it entirely by the *ply-2* read
+verdict 2 needs -- "the ply-2 move is reachable nowhere today" -- and the
+"What is left" section (from the discarded MacBook attempt, which built
+verdict 1 alone) confirms this reading: it lists `moves_played` only under
+"2. Verdict 2", guarded on `previous_move != 0` for verdict 1. `negamax_at`
+already carries a `prev_move` parameter that is a true one source of truth
+for the one-ply case -- the root call in `search()` passes `0` and the
+null-move child at `src/search.cpp`'s null-move block passes the literal `0`
+-- so verdict 1 reads and writes through that parameter directly. This
+matches "the `prev_move` parameter and `moves_played[ply - 1]` then say the
+same thing -- keep one source of truth" from the step file's own shape
+section, read the other way: introducing `moves_played` now, before verdict 2
+needs ply-2, would make two sources of truth for the same ply-1 fact, which
+is exactly what that sentence warns against. `moves_played` is verdict 2's to
+add, against this commit.
+
+**Consequently "the known crash" does not apply verbatim.** The step file's
+`accepts` describes the sentinel hazard as "(ss-1)... must be valid... or the
+child indexes garbage" -- a hazard of a pointer or an array slot that can be
+stale or uninitialised. `prev_move` is a function parameter, supplied fresh
+on every call, and cannot go stale; `move_t` value `0` decodes to a *valid*
+in-range cell, `(W_PAWN, a8)`, not an out-of-range index. So there is no
+crash and no sanitizer finding available to have here -- confirmed
+experimentally below, mutant S024_M02. What a dropped guard costs instead is
+a silent wrong-cell write, which is what the sentinel tests and that mutant
+are built to catch.
+
+**Shape:**
+- `src/data_structures.hpp`: `int16_t cont_hist[12][64][12][64]` (1.125 MiB)
+  added as a plain value member of `search_state_t`, beside `counter_moves`.
+  Not a `unique_ptr` as the discarded MacBook attempt used: that machine's
+  search thread carried a 512 KB stack; `ulimit -s` here is 8192 KB and
+  `search_state_t state = {};` (`src/chesso.cpp` `iterative_deepening_search`)
+  is already rebuilt zeroed at the top of every search, which is also why
+  `ucinewgame` needs no separate clear for this table, matching
+  `quiet_history` and `counter_moves` today (neither has one either --
+  checked; `tests/test_engine.cpp` "ucinewgame puts the board and the table
+  back" tests only the position and the TT).
+- One index helper, `continuation_entry()`, two overloads (`search_state_t*`
+  returning `int16_t&`, `const search_state_t*` returning `int16_t`), both
+  indexing `cont_hist[MOVE_PIECE(prev)][MOVE_TO(prev)][MOVE_PIECE(move)][MOVE_TO(move)]`
+  -- MOVE_PIECE, not MOVE_FROM, matching `counter_moves`' existing convention
+  (a promotion's mover is the pawn on the source square).
+- `src/search.cpp` `history_on_quiet_cutoff()` gains a `prev_move` parameter
+  and, guarded on `prev_move != 0`, applies the *same* `history_gravity_update`
+  call S093 already uses for `quiet_history` to `continuation_entry()`'s cell
+  -- malus for each quiet in `quiets_tried`, bonus for the cutoff move. No new
+  bonus/malus formula, no new constant: `HISTORY_BONUS_*`/`HISTORY_MALUS_*`/
+  `QUIET_HISTORY_MAX` are reused unchanged, exactly as section 4 of the step
+  file says verdict 1 should ("Verdict 1 introduces no new constant"). The
+  tune build needs no new parameter for the same reason.
+- `src/evaluation.cpp` `score_move()`: the final quiet return becomes
+  `quiet_history[...] + (prev_move != 0 ? continuation_entry(...) : 0)`,
+  summed in `int`.
+- **Band bound.** Two terms, each in `[-QuietHistoryMax, QuietHistoryMax]`, so
+  the quiet band is now `[-2*QuietHistoryMax, +2*QuietHistoryMax]`. Clearance
+  against `ORDER_COUNTER` (700000): `2*QuietHistoryMax + 100 <= 700000` holds
+  to `QuietHistoryMax <= 349950`, and the declared range's own ceiling is
+  32767 (`int16_t`'s own max), so the bound holds at every value the tuner can
+  ever set it to, by construction of the declared range and not as a
+  coincidence of today's default (8192). Asserted directly, not argued --
+  `tests/test_evaluation.cpp` "the continuation term re-pins the band for the
+  sum of two tables", both edges, plus the arithmetic fact that
+  `2*QuietHistoryMax` (65534 at the declared ceiling) exceeds `int16_t`'s own
+  32767, which is why the sum has to be carried in `int`.
+- Initial constants: **none are new.** The formula, the clamp and the ceiling
+  are all reused from S093, unfitted at their current shipped values, exactly
+  as they already are for `quiet_history` -- S127's SPSA lane covers both
+  tables' weights together whenever it runs, per the step file's own section
+  4 and the DEC-084/DEC-105 seed rule (nothing here is a seed pulled from
+  another engine; the formula shape is CPW's, the coefficients are this
+  codebase's own S093 values, already shipped and already subject to a future
+  fit).
+
+### Tests, red first (DEC-141 clause 2, DEC-142)
+
+Red observed by disabling the write side only (`const bool has_prev = false;`
+in `history_on_quiet_cutoff`, temporarily) with the struct, helper and read
+side all in place -- so red is a real assertion failure and not a compile
+error:
+
+```
+tests/test_search.cpp:582: FATAL ERROR: REQUIRE( cont_hist_entries > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+tests/test_search.cpp:660: FATAL ERROR: REQUIRE( continuation_entry(&state, prev_move, killer) != 0 ) is NOT correct!
+  values: REQUIRE( 0 != 0 )
+tests/test_search.cpp:862: ERROR: CHECK( continuation_entry(&state, prev_move, cutoff) > 0 ) is NOT correct!
+  values: CHECK( 0 >  0 )
+tests/test_search.cpp:865: ERROR: CHECK( continuation_entry(&state, prev_move, move) < 0 ) is NOT correct!
+  values: CHECK( 0 <  0 )   (x3, one per tried quiet)
+[doctest] test cases: 98 | 95 passed | 3 failed | assertions: 886491 | 6 failed
+```
+Reverted, rebuilt: 98/98 test cases, 889244/889244 assertions, green
+(`build/tests/test_search`, run from `tests/`). `test_evaluation`: 24/24,
+54402/54402, green, after fixing one self-inflicted wrong assertion of my own
+first draft (`REQUIRE(2 * declared_max < 32767)`, backwards -- the point is
+that the sum does *not* fit in int16_t, corrected to `>`).
+
+Per numbered item:
+1. **Sentinels.** Root / no-previous-move: "a quiet cutoff maluses the quiets
+   tried before it" (direct call, `prev_move=0`) and "the cutoff move is
+   credited and the quiets before it are charged" (through `negamax`,
+   `prev_move=0`) both now additionally scan the whole `cont_hist` table and
+   require it at 0. Real previous move: "a quiet cutoff with a previous move
+   updates continuation history" (direct call) and the extended "a
+   quiet move that gives check enters the ordering tables" (through
+   `negamax`, real `prev_move`) both require the (prev, move) cell to move.
+   "a search fills the ordering tables" (a real depth-8 search from
+   `TRICKY_POS`) requires at least one `cont_hist` entry to be non-zero after
+   real play, so the table is not simply dead code. Debug build: `test_search`
+   passes under `build-debug` too (56.06 s under `ctest -R
+   '^(test_chesso|...|test_search|...)$'`, `gate_extra.sh` stage `debug`),
+   every `assert(` in `src/` live. Sanitizer: `gate_extra.sh` stage
+   `sanitize` (below). **Mutant, guard dropped**
+   (`const bool has_prev = true;`): no crash, no sanitizer finding -- an
+   in-range cell is silently written instead. Killed by the sentinel scans:
+   `CHECK_EQ( cont_hist_entries, 0 )` reads `CHECK_EQ( 4, 0 )` and
+   `CHECK_EQ( 5, 0 )` at the two sentinel sites. Added to
+   `tools/mutants/S024_continuation_history.py` as `S024_M02_cont_hist_no_prev_guard`;
+   applied by hand and reverted (not through `tools/mutation_check.py`, which
+   needs a linked worktree at a commit that includes this work -- re-validate
+   there once this lands, S207's own precedent).
+2. **Bookkeeping.** "a quiet cutoff with a previous move updates continuation
+   history": cutoff cell `> 0`, each tried-quiet cell `< 0`, a
+   different previous move's row untouched. A capture cutoff never reaches
+   `history_on_quiet_cutoff()` at all (`if (!is_capture)` guards the whole
+   call in `negamax_at`, unchanged by this step) so "leaves it unchanged" is
+   structural, not a separate case to construct.
+3. **Band bound.** "the continuation term re-pins the band for the sum of two
+   tables": both tables driven to `QuietHistoryMax`'s declared maximum
+   (32767) at once via the self-referencing cell `plain == prev_move`;
+   `s_history == 2*declared_max`, `s_history_malused == -2*declared_max`,
+   clearance against the countermove band `>= 100` both edges, and
+   `2*declared_max > 32767` pins the int16_t-overflow fact the `int` sum has
+   to survive.
+4. **`ucinewgame`.** Structural, not a dedicated test: `search_state_t` is
+   rebuilt `= {}` fresh at the top of every `iterative_deepening_search()`,
+   so `cont_hist` clears the same way `quiet_history` and `counter_moves`
+   already do, and neither of those has a dedicated `ucinewgame` test either
+   (checked: `tests/test_engine.cpp`'s only such case covers the board and
+   the TT).
+5. **Mutation** (DEC-141 clause 2, S196). Two mutants,
+   `tools/mutants/S024_continuation_history.py`:
+   - `S024_M01_cont_hist_malus_sign` (the malus sign flipped): killed.
+     `CHECK( continuation_entry(&state, prev_move, move) < 0 )`
+     reads `CHECK( 64 < 0 )`, "A quiet tried before the cutoff scores 64 in
+     the continuation table and not a malus."
+   - `S024_M02_cont_hist_no_prev_guard` (above): killed by the two sentinel
+     scans.
+   Both applied by hand (edit, rebuild `test_search`, observe, revert,
+   rebuild, confirm green); both validated syntactically (`load_mutants` +
+   `validate` against the working tree, anchors unique); full
+   `tools/mutation_check.py` run deferred to a committed worktree.
+
+### Measurements
+
+`tools/search_bench.py`, depth 9, best moves unchanged all three:
+
+| position | before (`b5c357a`) | after (v1) |
+|---|---|---|
+| midgame | 121515 nodes, `c3d5` | 122266 nodes, `c3d5` |
+| kiwipete | 801408 nodes, `e2a6` | 794606 nodes, `e2a6` |
+| tactical | 72895 nodes, `d7c8q` | 75802 nodes, `d7c8q` |
+
+`chesso bench`: **27322394 -> 22363740**, -4958654 nodes, -18.15 %. Commit
+carries `Bench: 22363740`. `DEV_MANUAL.md`'s ledger line gains "At `S024` v1:
+`22363740`."
+
+Debug self-play (DEC-141 clause 1): 4 rounds at 4+0.04, `noob_3moves.epd`,
+concurrency 8, **8 games in 19 s, 0 `Assertion`, 0 `disconnect`** (both
+`level=trace engine=true` log and tee'd stdout). Time forfeits not checked --
+not the failure condition at this control.
+
+Gate, both builds, `CLANG_FORMAT_MAJOR=22`:
+```
+cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure
+  -> 100% tests passed, 0 tests failed out of 34
+cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure
+  -> 100% tests passed, 0 tests failed out of 34
+./clang-format.sh --check
+  -> clean (no output)
+```
+Run twice end to end (once mid-implementation, once after the stash-based
+before/after bench comparison put the tree back), both green.
+
+`tools/gate_extra.sh` (five stages), `CLANG_FORMAT_MAJOR=22`:
+```
+-- prose ...       ok, 0s
+-- citations ...   ok, 1s
+-- debug ...       ok, 271s
+-- sanitize ...    ok, 540s
+-- perft ...       ok, 53s
+GATE-EXTRA-DONE 5 stages 865 s
+```
+All five green. `citations` reports
+`adocs/plan_current/S024_continuation_history.md: 4 code citations, 0
+flagged` and `citations flagged: 0 over 59 files`; `prose` reports `0`
+sentences flagged. `debug` is `ctest -R
+'^(test_chesso|test_openings|test_movegen|test_evaluation|test_search|test_engine)$'`
+under a fresh Debug build -- `test_search` 56.06 s, `test_evaluation` 0.22 s,
+both green, every `assert(` in `src/` live. `sanitize` is the full `fast`
+label under `-fsanitize=address,undefined` -- `test_movegen` 58.62 s,
+`test_search` 13.03 s, all 34 green -- plus DEC-167's cross-build INV-6
+check, sanitizer `bench` against a fresh Release `bench`: **22363740 nodes
+both builds**, matching this step's own `after` figure exactly. `perft` is
+`test_perft` at depths the fast label does not reach: green, 53.23 s.
+
+### Documents
+
+- `DEV_MANUAL.md`: bench ledger line, done (above).
+- `MANUAL.md`: checked, no change. `QuietHistoryMax`'s documented option
+  (name, default 8192, range 1-32767) is unchanged; it now additionally
+  bounds `cont_hist` entries, which is an implementation detail under the
+  option's existing wording ("the gravity bound on a quiet history entry"),
+  not a new option, default or surface for `test_uci_surface` to catch.
+- `adocs/specs.md`: not edited (hard limit). Two sentences handed to the
+  coordinator for the search row, below.
+
+## Measurement, verdict 1, pre-registered 2026-09-12
+
+Modelled on `adocs/plan_done/S207_repetition_before_root.md`'s "## Measurement"
+and `adocs/plan_done/S042_en_passant_only_when_capturable.md`'s "## Measurement,
+pre-registered".
+
+**`./fastchess.sh`**, default gainer bounds `elo0=0 elo1=5` (nElo),
+`alpha=beta=0.05`, against the parent commit (`REF=<parent sha> ./fastchess.sh`;
+the working tree at this step's commit is the candidate, so the banner prints
+both shas with their commit dates) -- 8+0.08, `Hash=16`,
+**`books/noob_3moves.epd`** (DEC-189), 12 threads.
+
+**Worst-case games**, from the nElo run-length formula (DEC-143's own
+figures for a `{0,5}` pair): **41861** at the interval's midpoint, **25591**
+on a bound. Converted at **2110 games an hour** (DEC-190's calibration on this
+book): **19.8 h** at the midpoint, **12.1 h** on a bound -- 12 to 20 hours
+worst case, a night run (DEC-155). Launch detached, `Monitor` watcher armed
+with the WATCHERS loop, four exits, ceiling 2x the worst case (40 h).
+
+**Abort rule**: forfeit rate over 1.0 % on a side, `tools/forfeit_report.py`
+over the run's own PGN, checked independently of the harness banner.
+
+**Direction, discounted per DEC-019**: the step file's published range for
+this technique runs from Weiss's +44.68 STC / +33.95 LTC (PR #477, 2021, the
+plan's own headline figure) down to Lynx's +2.16 STC / +9.12 LTC (PR #645,
+2024) -- the widest spread recorded for any technique on this plan, which is
+why the bounds sit at the low end (`elo0=0`, not a larger floor) rather than
+assuming the top of that range. A verdict of zero is a live, recordable
+outcome and not a surprise (DEC-019, S005/S006/S015 precedent).
+
+**Readings, pre-registered before the first game:**
+- **H1**: the table is worth at least 5 nElo. Kept; magnitude is not the
+  claim -- an SPRT that stops on a favourable swing is biased upward by
+  construction (DEC-063), so the pair's own point estimate is not quoted as
+  the effect size.
+- **H0**: not worth 5 nElo (costs 5 or more, or gains less than 5). Before
+  believing it: whether the table is actually being exercised in ordinary
+  play is checked first, the same way S165's defender census and S162's
+  clock census precede believing a pruning verdict -- an instrumented
+  depth-10 pass over 400 corpus positions (the same corpus S165 and the
+  reverse-futility notes in `src/search.cpp` already use) counting how often
+  `history_on_quiet_cutoff()` reaches the `prev_move != 0` branch and how
+  often `score_move()`'s continuation term is non-zero when read. A table
+  that is barely touched cannot be the cause of a real regression; one that
+  is never touched at all means the wiring, not the technique, is what H0
+  measured, and either finding is checked before H0 is recorded as a verdict
+  on continuation history itself.
+- **No verdict at the cap**: recorded as zero. Kept or reverted per the step
+  file's own rule -- a verdict of zero is recorded as zero and the feature
+  may still be kept with the reason stated (DEC-019), and here the reason
+  would be that S127's SPSA lane has not yet fitted `HISTORY_BONUS_*`/
+  `HISTORY_MALUS_*`/`QuietHistoryMax` for the two-table sum this step creates,
+  so an unfitted zero is not yet evidence that a fitted one would also be
+  zero.
+
+**The open defects named per DEC-171**: none of BUGS class is open at this
+commit -- `adocs/plan_current/` holds only this step, and nothing in
+`adocs/plan_todo/` is framed as an open defect (checked by listing both
+directories; the coordinator's own tracking of `adocs/status.md` is the
+authoritative source and should be re-checked at launch time, since this
+subagent does not hold that document).
+
+**Verified before the run, not assumed**: `sha256sum` of the candidate binary
+the match actually plays should be checked against this commit's tree, as
+S207's and S042's stamps did, once the coordinator snapshots it for the
+launch.
+
+**`adocs/data/S024_sprt.sh` already exists and is not this pre-registration.**
+It predates this reimplementation, is pinned to macOS (`cd /Users/max/...`,
+`caffeinate`, `pmset`), pins `REF=25998fe` -- a commit that is not this
+commit's parent -- and plays `fastchess.sh`'s default book rather than
+`noob_3moves.epd` (DEC-189 postdates it). Its own header already says it is
+stale and names exactly two things to redo: `REF` and the bound pair; a third
+now applies that its header does not know about, the book and the
+throughput figure DEC-189/190 set. Not edited here -- `adocs/data/` existing
+files are this subagent's hard limit -- but re-pointing it is more than the
+one-line fix "re-point it at whatever commit the reimplementation sits on"
+(the step file's own "What is left") suggests: it needs the workstation's
+`fastchess.sh` invocation shape (no `caffeinate`/`pmset`; POWER and WATCHERS
+per current `AGENTS.md`), this commit's sha as `REF`, and `noob_3moves.epd`.
+`adocs/data/S024_pair_stats.py` beside it is generic PGN pair-statistics
+tooling, not machine- or match-specific, and needs no change.

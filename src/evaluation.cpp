@@ -1170,6 +1170,18 @@ int score_move(const game_t* game,
   // from zero. Gravity bounds it on the way in, so it can never reach the
   // countermove band above, and nothing sits below it -- both edges are
   // asserted in tests/test_evaluation.cpp.
-  return state
-      ->quiet_history[game->board.active_color][MOVE_FROM(move)][MOVE_TO(move)];
+  int score = state->quiet_history[game->board.active_color][MOVE_FROM(move)]
+                                  [MOVE_TO(move)];
+
+  // S024. The one-ply continuation term, on the same footing as plain
+  // history: gravity-bounded to the same QuietHistoryMax, summed in `int` (an
+  // int16_t plus an int16_t promotes there without help), guarded on there
+  // being a previous move to index at all. With both terms at their extreme
+  // the band this returns widens to [-2*QuietHistoryMax, +2*QuietHistoryMax]
+  // and clearance against the countermove band above is re-measured against
+  // that doubled bound in tests/test_evaluation.cpp "the declared history
+  // ceiling clears the band above it".
+  if (prev_move != 0) { score += continuation_entry(state, prev_move, move); }
+
+  return score;
 }
