@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **Adversarial audit recorded, 2026-09-12.** A clean reviewer audited
+  `98af071` across the implemented engine and the future plan in
+  `adocs/audit/2026-09-12_adversarial.md`. **F01 is high:** public `position
+  fen` accepts an impossible position whose supplied pseudo-legal move captures
+  the enemy king, leaving a kingless board. **S223** is created as Open entry
+  1 and must run before every strength step. **F02 is low:** the prior
+  regularisation finding was not named precisely enough; **S134** now closes it
+  only after its rank/identity audit proves the remaining parameterisation has
+  no unreported exact dependency. The reviewer also re-demonstrated F19 with
+  `go infinite nodes 1`; **S210** now requires `infinite` to clear every finite
+  stop condition. The reviewer changed only the new report, found no change to
+  implement now, and ran `ctest build -L fast`: 33/34 passed; the sole failure
+  was the known clang-format-23 machine mismatch, while
+  `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` passed. `plan_current/`
+  remains empty; S220 remains owner-gated at Open entry 2.
+
 - **S024 is done on H0 and reverted, 2026-09-12 13:05, and the coordinator
   stopped here on the owner's instruction ("stop after all the current tasks
   are completed").** Verdict 1's gainer SPRT on `noob_3moves.epd` against
@@ -36,18 +52,15 @@ Updated: 2026-09-12, by hand.
   switch), 6272149 (S219 close), 92b1dba (S216), a3e84e1 (DEC-191, S220),
   50b1ff9 (S042 fix), 13af16d, 31f4b7d, be35058 (S217), ffdbdc0 (DEC-193),
   9502175/ae1df15/b5c357a (S042 close), cace216 (S024 v1), 47344f3,
-  ef43bff (S221), ecdfadb (revert), and this one. **The four owner items
-  stand**: the zip digest for `noob_3moves.epd`; governor `performance`
-  before the next A/A; the book bracket (DEC-191/193: keep and watch the
-  ledger, two nights on S220, or revert); what a longer hand-crafted list
-  means (DEC-192; recommendation: land S109 next among the priced effects,
-  then re-derive the transfer ratio). **Next step when work resumes: S211**,
-  unless the owner answers S220 first -- and before either, **an audit report
-  `adocs/audit/2026-09-12_adversarial.md` appeared untracked at 15:02**, written
-  against `98af071` by something other than this coordinator's agents (none
-  was briefed to write one); it is not read, not committed and not acted on
-  here, and per the AUDIT rule its findings become steps or decisions when
-  work resumes. **Compaction point.**
+  ef43bff (S221), ecdfadb (revert), and this one. **Two of the four owner items closed at 15:10, DEC-195**: the zip digest
+  is pinned (`68fe2691...e9f3`, checked to unpack to the pinned file) and the
+  governor is recorded, never set -- runs proceed regardless. **Two stand**:
+  the book bracket (DEC-191/193: keep and watch the ledger, two nights on
+  S220, or revert); what a longer hand-crafted list means (DEC-192;
+  recommendation: land S109 next among the priced effects, then re-derive the
+  transfer ratio). **The untracked `adocs/audit/2026-09-12_adversarial.md` is
+  a Codex audit the owner runs in parallel**; not read here, dispositioned
+  when the owner asks. **Compaction point.**
 
 - **S221 is done, 2026-09-12 12:25.** The citation checker now stitches a
   doctest title split across adjacent string literals before matching a

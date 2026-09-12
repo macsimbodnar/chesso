@@ -30,15 +30,16 @@ set -euo pipefail
 # download or the unpack. A book is a measurement input: a silently different
 # one moves every verdict taken with it and leaves no trace in the engine.
 #
-# WHY A ZIP COLUMN CAN READ "-". noob_3moves.epd was already unpacked on this
-# machine when S219 picked it, and the owner deletes a zip once it is
-# unpacked -- so there is no zip left to hash, and one must never be guessed or
-# fetched just to fill the column in. "-" marks that gap honestly: the
-# unpacked file below is still verified against its own pinned digest exactly
-# as any other entry, but a *fetch* of a book pinned this way (the file
-# absent) is refused rather than trusting an unpinned zip. The gap closes when
-# the owner re-downloads the zip, or authorises one fetch here, and its digest
-# is recorded.
+# WHY A ZIP COLUMN MAY READ "-". A book can be pinned before its zip digest is
+# known -- noob_3moves.epd was, for half a day on 2026-09-12: it was already
+# unpacked when S219 picked it and the zip was gone, and a digest is never
+# guessed or fetched just to fill the column in. "-" marks that gap honestly:
+# the unpacked file is still verified against its own pinned digest exactly as
+# any other entry, but a *fetch* of a book pinned this way (the file absent) is
+# refused rather than trusting an unpinned zip. The gap closes when the owner
+# downloads the zip and its digest is recorded, which is how noob_3moves.epd's
+# zip digest below was taken: the owner's download of 2026-09-12, checked here
+# to unpack to the pinned file byte for byte.
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 books="$repo/books"
@@ -78,7 +79,7 @@ pinned="$(
 UHO_Lichess_4852_v1.epd	4e298f11e8acfa106babe02968f2e61582145e7874c59284690b20b9650e0e07	7a7f6470615a69c6cf23d565417701d38732876f480af90d67b42abade35644a
 UHO_4060_v3.epd	62fe32cda02f605acd5938887d574730c91208812f2bb1e839f28eee10869af8	419844f8c43a9c1fa3e279518bb79e89a5ed3d181f27c180ea9eb7444a1b9885
 8moves_v3.pgn	7e1e9dd118b4bb97d8a8b5b8a790c86e21f8509d59a27d2883767d94477be02e	5835239f88cc2c7511b177c32392a69f3ede21819cf0616f80a7f907cd21d17e
-noob_3moves.epd	-	2011193b4854e9a8cfdc05312ca2dbaffa6ceae3abbdee20e2ead2a18a603347
+noob_3moves.epd	68fe2691e0876d0de54fffb68c797e752138d5ed363beab2ac6ca34be68ee9f3	2011193b4854e9a8cfdc05312ca2dbaffa6ceae3abbdee20e2ead2a18a603347
 PINS
 )"
 

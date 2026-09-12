@@ -10960,3 +10960,42 @@ Consequences: The revert commit carries `Bench: 27322394` and the gate in
               S127 in `adocs/plan.md`'s Open list. The census script and its
               positions file are evidence for S222's own census, which
               re-runs the same driver.
+
+## DEC-195  2026-09-12  The owner's afternoon answers: runs proceed under whatever governor is set, the book's zip digest is pinned, and the Codex audit of 2026-09-12 is acknowledged
+Tags:         machine, governor, harness, book, audit, owner
+Context:      Three items waited on the owner in `adocs/status.md`. (1) The
+              governor: S198 calibrated under `performance`, everything since
+              the reboot ran under `powersave`, and DEC-190 carried that as a
+              stated confound on games an hour. (2) `noob_3moves.epd`'s zip
+              digest was unpinned (`-`) because the zip was gone (DEC-189).
+              (3) An audit report `adocs/audit/2026-09-12_adversarial.md`
+              appeared untracked at 15:02 while the coordinator was closing
+              S024. The owner, 2026-09-12 afternoon: "Ignore the performance
+              configuration and run everything that needs to run regardless
+              of the governor settings"; the zip digest
+              `68fe2691e0876d0de54fffb68c797e752138d5ed363beab2ac6ca34be68ee9f3`
+              from their own download, which the coordinator checked unpacks
+              to the pinned file byte for byte; and the report is a Codex
+              audit the owner is running in this repository in parallel.
+Decision:     **By the owner.** (1) **The governor is never waited on**: a run
+              starts when it is ready under whatever governor the machine has,
+              the pre-registration records which (as they already do), and
+              throughput is budgeted from the figure measured under the
+              prevailing governor -- 2110 games an hour on `noob_3moves.epd`
+              under `powersave` today. DEC-190's confound stays a statement,
+              not an action item; if a later run under `performance` moves the
+              figure, that run's A/A records it. (2) **The zip digest is
+              pinned** in `books/fetch_book.sh`; the `-` mechanism stays as a
+              documented way to pin a book before its zip is known. (3) **The
+              Codex audit is the owner's**: the coordinator neither commits nor
+              reads it as a task; its findings are dispositioned into steps or
+              decisions when the owner asks (the AUDIT rule, on demand).
+Rejected:     **Asking the owner for the password before each timed run** --
+              the owner ruled it out; the machine's clock speed under load is
+              the same either way within what the A/A can see, and the record
+              of which governor ran is what keeps figures comparable.
+Consequences: `.moltke.local.md` says the governor is recorded, never set;
+              `adocs/status.md`'s owner list loses two items and names the
+              audit as Codex's. The remaining owner questions are the book
+              bracket (DEC-191, DEC-193) and what a longer hand-crafted list
+              means (DEC-192).
