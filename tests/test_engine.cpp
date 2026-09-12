@@ -1374,8 +1374,8 @@ TEST_SUITE("engine: uci layer")
       // takes it red, which is what a defect looks like. The counts are printed
       // either way, so a set drifting toward vacuity is visible before it
       // arrives. Same shape as `test_mate_carry`'s majority (DEC-162).
-      const std::vector<std::string> positions = {TRICKY_POS, CMK_POS,
-                                                  KILLER_POS, DEFAULT_POSITION};
+      const std::vector<std::string> positions = {
+          KIWIPETE_POS, BLOCKED_CENTRE_POS, KILLER_POS, DEFAULT_POSITION};
 
       int falling = 0;
       std::string counts;
@@ -2320,11 +2320,11 @@ TEST_SUITE("engine: uci parsing")
   {
     uci_init();
 
-    REQUIRE(set_position(TRICKY_POS));
-    REQUIRE_EQ(generate_FEN(&uci_game()->board), std::string(TRICKY_POS));
+    REQUIRE(set_position(KIWIPETE_POS));
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), std::string(KIWIPETE_POS));
 
     REQUIRE_FALSE(set_position("not a fen at all"));
-    REQUIRE_EQ(generate_FEN(&uci_game()->board), std::string(TRICKY_POS));
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), std::string(KIWIPETE_POS));
 
     uci_shutdown();
   }

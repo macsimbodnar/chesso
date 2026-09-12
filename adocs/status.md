@@ -7,16 +7,51 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
-- **S211 started, 2026-09-12 19:28, by an Opus 5 subagent (DEC-199).** The
-  originality step: the three tables and five mask builders inherited from
-  the GPL-3.0 tutorial engine re-derived from the geometry, `CMK_POS` and
-  `TRICKY_POS` renamed, the GUI artwork licensed, `books/fetch_book.sh`'s
-  false sentence made true -- proved `No functional change` on the bench
-  signature, `search_bench.py` at depths 9 and 12 and perft, with the Debug
-  self-play; `tools/gate_extra.sh` runs before it completes (DEC-141).
-  `plan_current/`: S211. Machine idle apart from the subagent's builds; the
-  owner's Codex session is live at low load. **Next: S151** (the `32+0.32`
-  estimate match, coordinator-run, on an idle machine), then S212.
+- **S211 is done, 2026-09-12 20:40, by an Opus 5 subagent (DEC-199): the
+  code-level originality exposure the 2026-09-10 audit measured is zero.**
+  `src/bb_tables.hpp` opens with twenty lines of board geometry and the two
+  relevant-bit tables and the castling mask are `constexpr` derivations from
+  it -- all 192 values compared equal to the deleted literals, the
+  trailing-space fingerprint gone (`grep -c ' $'` 0, was 16); the eight mask
+  builders in `src/bitboard.cpp` come from one `(dr, dc)` offset list per
+  leaper and step lists walked to the first blocker, `set_occupancy` is the
+  index-th subset in the project's words, and the compared-against source
+  was never opened. `TRICKY_POS` is `KIWIPETE_POS`, `CMK_POS` is
+  `BLOCKED_CENTRE_POS` (named from the placement python-chess reports, not
+  judged), shortcuts `kiwipete` and `blocked`, `MANUAL.md` first and the
+  surface golden after. `tests/test_movegen.cpp` had no attack-table cases
+  and gained seven, each a predicate over the answer; two planted mutants
+  were caught. Cburnett's twelve pieces carry the BSD option in
+  `tests/assets/gui/THIRD_PARTY.md` (licence read from the Commons wikitext
+  on 2026-09-12); the three unsourced images are deleted and the debug GUI
+  draws a flat background and a text button instead. **Neutral by INV-6**:
+  bench 27322394 on both trees, `search_bench.py` node counts and best
+  moves identical at depths 9 and 12, perft green over nine columns in
+  55.6 s, magics `128 of 128`, Debug self-play 8 games 0 `Assertion` 0
+  `disconnect`; gate 37/37 both builds; `tools/gate_extra.sh` run before
+  completion, result on the line below. **DEC-201**: the seven sound files
+  under `tests/assets/gui/sound/` are the last thing bundled without a
+  nameable rights holder and are deleted through **S224**, Open entry 2
+  behind S151. `CLAUDE.md`'s piece-square sentence now says what
+  `eval_tables.hpp` says. **The fast check re-derived every value
+  independently** -- three tables over 64 indices, eight builders over 64
+  squares, both sliders over every subset of their relevant masks, 0
+  mismatches -- and raised one real item, that DEC-141's `gate_extra.sh`
+  was owed and unstamped (the coordinator was already running it; its
+  marker is in the stamp), and two trivial ones: a `DEV_MANUAL.md` sentence
+  saying `magics` writes the header when it prints to stdout, fixed by the
+  coordinator in one line, and the pawn builder's unreachable third colour
+  value, left as it is behind its precondition assert and two fixed callers.
+  **A power cut at about 21:50 turned the workstation off while this
+  step's completing gate was running**; the git index survived intact
+  (working tree equal to the index on reboot), the `/tmp` scratchpad did
+  not, and the gate was re-run on cleaned `build/` and `build-tune/` trees
+  before the commit. Coordinator working files now live under
+  `.tuning/coord/`, which is gitignored and survives a reboot.
+  `plan_current/` empty after this commit. **Next: S151's harness half**
+  (agent), then the `32+0.32` estimate match on an idle machine (about
+  3.8 h at 528 games an hour, DEC-190's figure over four), S224 as filler
+  before or beside it. **Compaction point.**
 
 - **S214 is done, 2026-09-12 19:05, by an Opus 5 subagent (DEC-199), the first
   step under the evening's rules.** Three measurement tools stop failing
@@ -2540,15 +2575,15 @@ Updated: 2026-09-12, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-10 `4795ef4` 12:54**, on the tree
-  `4795ef4` committed -- the re-run after the fast check's four fixes, 774 s
-  against the 768 s of the first green run on `04effb3`. The sha is
-  filled in by the commit after the one it names, because a commit cannot
-  contain its own hash and an amend that tries moves it again. DEC-141 clause 3 is the cadence -- before a
-  step that touched `make_move`, `unmake_move`, the generator or the search
-  completes, and otherwise weekly -- and this bullet is where a missed week
-  shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first
-  or stage 4 goes red on the formatter (DEC-146).
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-12 20:20, 5 stages 882 s**, on
+  S211's completing tree before its commit (log
+  `.tuning/gate_extra_2026-09-12_S211.log`: prose, citations, Debug 281 s,
+  sanitize 546 s, deep perft 55 s); the one before it 2026-09-10 `4795ef4`
+  12:54, 774 s. DEC-141 clause 3 is the cadence -- before a step that touched
+  `make_move`, `unmake_move`, the generator or the search completes, and
+  otherwise weekly -- and this bullet is where a missed week shows (DEC-167).
+  Export `CLANG_FORMAT_MAJOR=22` in the launching shell first or stage 4 goes
+  red on the formatter (DEC-146).
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S215 armed two, both on
   `MUTATION-RUN-(DONE|FAILED)` over a polled log with a 30-minute ceiling and a

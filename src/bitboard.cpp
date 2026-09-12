@@ -2898,45 +2898,83 @@ void init_zobrist(zobrist_randoms_t* zobrist)
 }
 
 
+// S211. The `index`-th subset of a mask's squares, so that running index over
+// [0, 2^n) with n = the mask's bit count visits every arrangement of blockers
+// on that mask exactly once. The pairing is positional: bit k of the index
+// says whether the mask's k-th square counting up from a8 is occupied. Which
+// square gets which bit does not matter -- any bijection enumerates the same
+// 2^n sets -- only that the same one is used when the table is filled and when
+// it is read, and it is, because both go through here.
 bb_t set_occupancy(uint64_t index, int mask_bit_count, bb_t attack_mask)
 {
   bb_t occupancy = BB_0;
 
-  for (int count = 0; count < mask_bit_count; ++count) {
-    const uint64_t square = get_lsb_index(attack_mask);
+  for (int bit = 0; bit < mask_bit_count; ++bit) {
+    const index_t square = get_lsb_index(attack_mask);
     assert(square < 64);
 
-    POP_BIT(attack_mask, square);
+    // Consume that square, so the next iteration reads the following one.
+    attack_mask &= attack_mask - 1;
 
-    // Check if on board
-    if (index & (BB_1 << count)) { occupancy |= BB_1 << square; }
+    if (index & (BB_1 << bit)) { occupancy |= BB_1 << square; }
   }
 
   return occupancy;
 }
 
 
-bb_t precompute_pawn_attacks(color_t color, index_t square)
+// The leapers. Their moves are offsets rather than rays, so each one is a
+// single list of (row, col) steps and one shared walk that keeps whatever
+// lands on the board. Both lists are written as the definition of the piece's
+// move and not as a set of shifts: the knight is every pair that moves two
+// along one axis and one along the other, the king every neighbour, which is
+// every pair but (0, 0).
+static constexpr step_t KNIGHT_OFFSETS[8] = {
+    {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
+
+static constexpr step_t KING_OFFSETS[8] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
+                                           {0, 1},   {1, -1}, {1, 0},  {1, 1}};
+
+
+template <size_t N>
+static bb_t leaper_attacks(index_t square, const step_t (&offsets)[N])
 {
   assert(square < 64);
 
+  const int row = square_row(square);
+  const int col = square_col(square);
+
   bb_t attacks = BB_0;
-  bb_t board = BB_0;
-  SET_BIT(board, square);
 
-  switch (color) {
-    case WHITE:
-      if ((board >> 7) & (~file_masks[0])) { attacks |= (board >> 7); }
-      if ((board >> 9) & (~file_masks[7])) { attacks |= (board >> 9); }
-      break;
+  for (const step_t& offset : offsets) {
+    const int to_row = row + offset.dr;
+    const int to_col = col + offset.dc;
 
-    case BLACK:
-      if ((board << 7) & (~file_masks[7])) { attacks |= (board << 7); }
-      if ((board << 9) & (~file_masks[0])) { attacks |= (board << 9); }
-      break;
+    if (square_on_board(to_row, to_col)) {
+      attacks |= BB_1 << square_at(to_row, to_col);
+    }
+  }
 
-    default:
-      assert(false);
+  return attacks;
+}
+
+
+// A pawn captures one row forward and one column to either side. White's
+// forward is the falling index, because bb_squares_t counts from a8 down.
+bb_t precompute_pawn_attacks(color_t color, index_t square)
+{
+  assert(square < 64);
+  assert(color == WHITE || color == BLACK);
+
+  const int to_row = square_row(square) + ((color == WHITE) ? -1 : 1);
+  const int col = square_col(square);
+
+  bb_t attacks = BB_0;
+
+  for (const int to_col : {col - 1, col + 1}) {
+    if (square_on_board(to_row, to_col)) {
+      attacks |= BB_1 << square_at(to_row, to_col);
+    }
   }
 
   return attacks;
@@ -2944,166 +2982,42 @@ bb_t precompute_pawn_attacks(color_t color, index_t square)
 
 
 bb_t precompute_knight_attacks(index_t square)
-{
-  bb_t attacks = BB_0;
-  bb_t board = BB_0;
-  SET_BIT(board, square);
-
-  if ((board >> 17) & (~file_masks[7])) { attacks |= (board >> 17); }
-  if ((board >> 15) & (~file_masks[0])) { attacks |= (board >> 15); }
-  if ((board >> 10) & (~(file_masks[6] | file_masks[7]))) {
-    attacks |= (board >> 10);
-  }
-  if ((board >> 6) & (~(file_masks[0] | file_masks[1]))) {
-    attacks |= (board >> 6);
-  }
-
-  if ((board << 17) & (~file_masks[0])) { attacks |= (board << 17); }
-  if ((board << 15) & (~file_masks[7])) { attacks |= (board << 15); }
-  if ((board << 10) & (~(file_masks[0] | file_masks[1]))) {
-    attacks |= (board << 10);
-  }
-  if ((board << 6) & (~(file_masks[6] | file_masks[7]))) {
-    attacks |= (board << 6);
-  }
-
-  return attacks;
-}
+{ return leaper_attacks(square, KNIGHT_OFFSETS); }
 
 
 bb_t precompute_king_attacks(index_t square)
-{
-  bb_t attacks = BB_0;
-  bb_t board = BB_0;
-  SET_BIT(board, square);
-
-  if (board >> 8) { attacks |= (board >> 8); }
-  if ((board >> 9) & (~file_masks[7])) { attacks |= (board >> 9); }
-  if ((board >> 7) & (~file_masks[0])) { attacks |= (board >> 7); }
-  if ((board >> 1) & (~file_masks[7])) { attacks |= (board >> 1); }
-
-  if (board << 8) { attacks |= (board << 8); }
-  if ((board << 9) & (~file_masks[0])) { attacks |= (board << 9); }
-  if ((board << 7) & (~file_masks[7])) { attacks |= (board << 7); }
-  if ((board << 1) & (~file_masks[0])) { attacks |= (board << 1); }
-
-  return attacks;
-}
+{ return leaper_attacks(square, KING_OFFSETS); }
 
 
+// The sliders. The geometry is in bb_tables.hpp, where the relevant-bit counts
+// are derived from these same masks at compile time; these four are the
+// runtime entry points the table build and tools/magic_gen call, and having
+// them forward keeps one definition of what a bishop on a square reaches.
 bb_t precompute_bishop_attack_masks(index_t square)
 {
-  bb_t attacks = BB_0;
-
-  const int tr = square / 8;  // Target rank
-  const int tf = square % 8;  // Target file
-
-  int r, f;  // Current rank and file
-  for (r = tr + 1, f = tf + 1; r < 7 && f < 7; ++r, ++f) {
-    attacks |= (BB_1 << ((r * 8) + f));
-  }
-  for (r = tr - 1, f = tf + 1; r > 0 && f < 7; --r, ++f) {
-    attacks |= (BB_1 << ((r * 8) + f));
-  }
-  for (r = tr + 1, f = tf - 1; r < 7 && f > 0; ++r, --f) {
-    attacks |= (BB_1 << ((r * 8) + f));
-  }
-  for (r = tr - 1, f = tf - 1; r > 0 && f > 0; --r, --f) {
-    attacks |= (BB_1 << ((r * 8) + f));
-  }
-
-  return attacks;
+  assert(square < 64);
+  return bishop_relevant_mask(square);
 }
 
 
 bb_t precompute_rook_attack_masks(index_t square)
 {
-  bb_t attacks = BB_0;
-
-  const int tr = square / 8;  // Target rank
-  const int tf = square % 8;  // Target file
-
-  int r, f;  // Current rank and file
-  for (r = tr + 1; r < 7; ++r) {
-    attacks |= (BB_1 << ((r * 8) + tf));
-  }
-  for (r = tr - 1; r > 0; --r) {
-    attacks |= (BB_1 << ((r * 8) + tf));
-  }
-  for (f = tf + 1; f < 7; ++f) {
-    attacks |= (BB_1 << ((tr * 8) + f));
-  }
-  for (f = tf - 1; f > 0; --f) {
-    attacks |= (BB_1 << ((tr * 8) + f));
-  }
-
-  return attacks;
+  assert(square < 64);
+  return rook_relevant_mask(square);
 }
 
 
 bb_t precompute_bishop_attacks(index_t square, bb_t blocks)
 {
-  bb_t attacks = BB_0;
-
-  const int tr = square / 8;  // Target rank
-  const int tf = square % 8;  // Target file
-
-  int r, f;  // Current rank and file
-  for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; ++r, ++f) {
-    const bb_t candidate = (BB_1 << ((r * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (r = tr - 1, f = tf + 1; r >= 0 && f <= 7; --r, ++f) {
-    const bb_t candidate = (BB_1 << ((r * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (r = tr + 1, f = tf - 1; r <= 7 && f >= 0; ++r, --f) {
-    const bb_t candidate = (BB_1 << ((r * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (r = tr - 1, f = tf - 1; r >= 0 && f >= 0; --r, --f) {
-    const bb_t candidate = (BB_1 << ((r * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-
-  return attacks;
+  assert(square < 64);
+  return bishop_attacks_from(square, blocks);
 }
 
 
 bb_t precompute_rook_attacks(index_t square, bb_t blocks)
 {
-  bb_t attacks = BB_0;
-
-  const int tr = square / 8;  // Target rank
-  const int tf = square % 8;  // Target file
-
-  int r, f;  // Current rank and file
-  for (r = tr + 1; r <= 7; ++r) {
-    const bb_t candidate = (BB_1 << ((r * 8) + tf));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (r = tr - 1; r >= 0; --r) {
-    const bb_t candidate = (BB_1 << ((r * 8) + tf));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (f = tf + 1; f <= 7; ++f) {
-    const bb_t candidate = (BB_1 << ((tr * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-  for (f = tf - 1; f >= 0; --f) {
-    const bb_t candidate = (BB_1 << ((tr * 8) + f));
-    attacks |= candidate;
-    if (candidate & blocks) { break; }
-  }
-
-  return attacks;
+  assert(square < 64);
+  return rook_attacks_from(square, blocks);
 }
 
 

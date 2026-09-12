@@ -19,10 +19,24 @@ set -euo pipefail
 #
 # WHERE IT COMES FROM AND UNDER WHICH LICENCE. official-stockfish/books is
 # CC0-1.0, which is why it and not sp-cc.de is the source. Stefan Pohl's own
-# UHO pages carry "(C) 2024 Stefan Pohl (SPCC)" and no usage licence, and this
-# repository bundles nothing whose licence is unstated (CLAUDE.md's first
-# foundation, DEC-016). The Pohl-derived books redistributed *by the CC0
-# repository* are fine to fetch from there; his site is not.
+# UHO pages carry "(C) 2024 Stefan Pohl (SPCC)" and no usage licence, so no
+# book is taken from there and none is pinned below whose licence this file
+# cannot name (CLAUDE.md's first foundation, DEC-016). The Pohl-derived books
+# redistributed *by the CC0 repository* are fine to fetch from there; his site
+# is not.
+#
+# AND WHAT THE REPOSITORY BUNDLES, which is the claim this comment used to make
+# as a blanket and got wrong. The list, because a list can be checked and a
+# blanket cannot: the engine, its tools and its tests are MIT (LICENSE);
+# books/8moves_v3.pgn is the only book committed here and every other one comes
+# through this script from the CC0 source above; the three submodules under
+# tests/ -- pixello, nlohmann/json, doctest -- carry their own MIT-compatible
+# licences; the debug GUI's artwork and fonts are inventoried with their
+# licences in tests/assets/gui/THIRD_PARTY.md, which also names the one thing
+# in the repository whose origin nobody can state, seven sound files committed
+# in 2025. S211 wrote that inventory and deleted the three image files that
+# could not be sourced; before it, the sentence here was false in its own
+# repository (2026-09-10_adversarial-F03).
 #
 # WHY BOTH DIGESTS ARE PINNED. The zip is what the network returned and the
 # unpacked file is what the match reads. Checking only the zip trusts unzip;

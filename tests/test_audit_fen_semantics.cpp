@@ -360,7 +360,7 @@ TEST_SUITE(
     // the boundary probe it was first written as: a7 is index 8 and a2 is 48,
     // so only the `< 8` comparison is one step away from a7, and the square
     // where a `>= 56` off-by-one would show is h2 at 55 -- which
-    // DEFAULT_POSITION and TRICKY_POS below already cover, having pawns on
+    // DEFAULT_POSITION and KIWIPETE_POS below already cover, having pawns on
     // every file of rank 2. The corners are pinned by the two cases above.
     REQUIRE(load_FEN("8/P6P/8/8/8/8/p6p/K6k w - - 0 1", &game));
 
@@ -378,7 +378,7 @@ TEST_SUITE(
     // large.
     REQUIRE(load_FEN(EMPTY_POS, &game));
     REQUIRE(load_FEN("8/3p4/8/8/8/8/3P4/8 w - - 0 1", &game));
-    REQUIRE(load_FEN(TRICKY_POS, &game));
+    REQUIRE(load_FEN(KIWIPETE_POS, &game));
     REQUIRE(load_FEN(KILLER_POS, &game));
   }
 }

@@ -45,12 +45,12 @@ Found by the Tier-1 fast check over S208's completing commit `8aff8ac` and
 
 | position | the label in `src/chesso.cpp` | what the engine prints |
 |---|---|---|
-| `TRICKY_POS` | `bestmove e2a6 ponder b4c3` | `bestmove e2a6 ponder e6d5` |
-| `CMK_POS` | `bestmove h7h6 ponder c2c3` | `bestmove a7a6 ponder f3g5` |
+| `KIWIPETE_POS` | `bestmove e2a6 ponder b4c3` | `bestmove e2a6 ponder e6d5` |
+| `BLOCKED_CENTRE_POS` | `bestmove h7h6 ponder c2c3` | `bestmove a7a6 ponder f3g5` |
 | `FINE_70_POS` | `bestmove a1b2 ponder a7b7` | `bestmove a1b2 ponder a7b6` |
 
-So two ponder moves are stale and **`CMK_POS`'s expected bestmove is stale
-too**. Nothing asserts these -- they are printed beside the result as a
+So two ponder moves are stale and **`BLOCKED_CENTRE_POS`'s expected bestmove
+is stale too**. Nothing asserts these -- they are printed beside the result as a
 human-readable expectation -- which is why no test caught them, and it is also
 why they are worth either re-deriving or deleting: a label nobody checks that
 disagrees with the output beside it is worse than no label.

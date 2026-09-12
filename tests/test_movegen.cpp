@@ -1,5 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <cstdlib>
+#include <set>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -593,5 +595,273 @@ TEST_SUITE("movegen: FEN validation")
     REQUIRE_EQ(game.board.halfmove_clock, 255);
 
     REQUIRE_FALSE(load_FEN("4k3/8/8/8/8/8/8/4K3 w - - 256 200", &game));
+  }
+}
+
+
+// Defined in src/bitboard.cpp and deliberately not in a header: only the table
+// build, tools/magic_gen and the cases below call them. Same note as the
+// declarations in tools/magic_gen.cpp.
+bb_t set_occupancy(uint64_t index, int mask_bit_count, bb_t attack_mask);
+bb_t precompute_pawn_attacks(color_t color, index_t square);
+bb_t precompute_knight_attacks(index_t square);
+bb_t precompute_king_attacks(index_t square);
+bb_t precompute_bishop_attack_masks(index_t square);
+bb_t precompute_rook_attack_masks(index_t square);
+bb_t precompute_bishop_attacks(index_t square, bb_t blocks);
+bb_t precompute_rook_attacks(index_t square, bb_t blocks);
+
+
+namespace
+{
+
+// The index convention, spelled out here rather than borrowed from the header
+// under test: index 0 is a8 and index 63 is h1 (bb_squares_t), so a rising row
+// walks down the board from the eighth rank and a rising column walks from the
+// a-file to the h-file.
+int test_row(int square)
+{ return square / 8; }
+int test_col(int square)
+{ return square % 8; }
+
+constexpr bb_t EVERY_SQUARE = ~BB_0;
+
+}  // namespace
+
+
+// S211 rewrote the eight builders in src/bitboard.cpp from the board geometry.
+// These cases say what each table *is*, as a predicate over the answer rather
+// than as a second way of computing it, so they hold whatever the builder does
+// inside and would have read the same before the rewrite. No case here stores
+// a value, so there is no golden to re-derive (DEC-142).
+TEST_SUITE("movegen: attack tables")
+{
+  // Both directions for each leaper, which together say the table is exactly
+  // the set of legal offsets that stay on the board. A builder that lost a
+  // move fails the second direction; one that let a move wrap around the edge
+  // of the board fails the first.
+  TEST_CASE("a leaper reaches every legal offset and nothing else")
+  {
+    struct case_t
+    {
+      const char* name;
+      bb_t (*table)(index_t);
+      bool (*legal_offset)(int, int);
+    };
+
+    const std::vector<case_t> cases = {
+        {"knight", precompute_knight_attacks,
+         [](int dr, int dc) {
+           // Two along one axis and one along the other.
+           return (dr != 0) && (dc != 0) &&
+                  ((std::abs(dr) + std::abs(dc)) == 3);
+         }},
+        {"king", precompute_king_attacks, [](int dr, int dc) {
+           // Every neighbour, which is every offset but standing still.
+           return (std::abs(dr) <= 1) && (std::abs(dc) <= 1) &&
+                  ((dr != 0) || (dc != 0));
+         }}};
+
+    for (const case_t& test : cases) {
+      for (int from = 0; from < 64; ++from) {
+        const bb_t attacks = test.table(static_cast<index_t>(from));
+
+        for (int to = 0; to < 64; ++to) {
+          const int dr = test_row(to) - test_row(from);
+          const int dc = test_col(to) - test_col(from);
+          const bool reached = (attacks & (BB_1 << to)) != BB_0;
+
+          REQUIRE_MESSAGE(reached == test.legal_offset(dr, dc),
+                          (std::string(test.name) + " " + std::to_string(from) +
+                           " -> " + std::to_string(to)));
+        }
+      }
+    }
+  }
+
+  // A pawn captures one row towards the promotion rank and one column to
+  // either side, and White's promotion rank is the falling index.
+  TEST_CASE("a pawn attacks the two squares diagonally ahead of it")
+  {
+    for (const color_t color : {WHITE, BLACK}) {
+      const int forward = (color == WHITE) ? -1 : 1;
+
+      for (int from = 0; from < 64; ++from) {
+        const bb_t attacks =
+            precompute_pawn_attacks(color, static_cast<index_t>(from));
+
+        for (int to = 0; to < 64; ++to) {
+          const int dr = test_row(to) - test_row(from);
+          const int dc = test_col(to) - test_col(from);
+          const bool reached = (attacks & (BB_1 << to)) != BB_0;
+
+          REQUIRE_MESSAGE(reached == ((dr == forward) && (std::abs(dc) == 1)),
+                          ((color == WHITE ? "white " : "black ") +
+                           std::to_string(from) + " -> " + std::to_string(to)));
+        }
+      }
+    }
+  }
+
+  // The relevant mask has one defining job: it names the squares whose
+  // occupancy the answer depends on. So put a single blocker on each of the 64
+  // squares in turn and see whether the attack set moves. It moves for a
+  // square in the mask and stands still for every other -- a piece on the last
+  // square of a ray shadows nothing behind it, which is why that square is out
+  // of the mask even though the slider attacks it.
+  TEST_CASE("a blocker changes a slider's attacks exactly on its relevant mask")
+  {
+    for (int square = 0; square < 64; ++square) {
+      const index_t from = static_cast<index_t>(square);
+
+      const bb_t open_bishop = precompute_bishop_attacks(from, BB_0);
+      const bb_t open_rook = precompute_rook_attacks(from, BB_0);
+
+      for (int blocker = 0; blocker < 64; ++blocker) {
+        if (blocker == square) { continue; }
+
+        const bb_t one = BB_1 << blocker;
+
+        const bool bishop_moved =
+            precompute_bishop_attacks(from, one) != open_bishop;
+        const bool rook_moved = precompute_rook_attacks(from, one) != open_rook;
+
+        REQUIRE_MESSAGE(
+            bishop_moved == ((precompute_bishop_attack_masks(from) & one) != 0),
+            ("bishop " + std::to_string(square) + " blocked on " +
+             std::to_string(blocker)));
+        REQUIRE_MESSAGE(
+            rook_moved == ((precompute_rook_attack_masks(from) & one) != 0),
+            ("rook " + std::to_string(square) + " blocked on " +
+             std::to_string(blocker)));
+      }
+    }
+  }
+
+  // With every square occupied each ray is one square long, so the eight rays
+  // of a bishop and a rook together are the eight squares around the piece --
+  // which is the king's move. It ties the two builders that walk rays to the
+  // one that does not, without either of them being used to check the other.
+  TEST_CASE("a full board leaves a slider its neighbours, which is the king")
+  {
+    for (int square = 0; square < 64; ++square) {
+      const index_t from = static_cast<index_t>(square);
+
+      REQUIRE_EQ(precompute_bishop_attacks(from, EVERY_SQUARE) |
+                     precompute_rook_attacks(from, EVERY_SQUARE),
+                 precompute_king_attacks(from));
+    }
+  }
+
+  // set_occupancy is "the index-th subset of a mask's squares". Run the index
+  // over its whole range on a real mask and that is exactly what has to come
+  // out: every result inside the mask, no result twice, and 2^n of them.
+  TEST_CASE("set_occupancy enumerates every subset of a mask exactly once")
+  {
+    for (int square = 0; square < 64; ++square) {
+      const index_t from = static_cast<index_t>(square);
+
+      for (const bb_t mask : {precompute_bishop_attack_masks(from),
+                              precompute_rook_attack_masks(from)}) {
+        const int bits = count_bits(mask);
+        const uint64_t subsets = BB_1 << bits;
+
+        std::set<bb_t> seen;
+        for (uint64_t index = 0; index < subsets; ++index) {
+          const bb_t occupancy = set_occupancy(index, bits, mask);
+
+          REQUIRE_EQ(occupancy & ~mask, BB_0);
+          REQUIRE(seen.insert(occupancy).second);
+        }
+
+        REQUIRE_EQ(seen.size(), subsets);
+      }
+    }
+  }
+
+  // The whole point of the magics: the table lookup the search runs must give
+  // the same answer as walking the rays, for every blocker arrangement that
+  // can reach it. Exhaustive -- 64 squares by up to 2^12 occupancies -- so a
+  // magic that collides destructively, a relevant-bit count off by one or a
+  // ray that stops a square early is caught here and not by a perft mismatch.
+  TEST_CASE_FIXTURE(movegen_fixture_t,
+                    "the magic lookup agrees with a walked ray everywhere")
+  {
+    const bb_tables_t* tables = game_tables();
+
+    for (int square = 0; square < 64; ++square) {
+      const index_t from = static_cast<index_t>(square);
+
+      const bb_t bishop_mask = precompute_bishop_attack_masks(from);
+      const int bishop_bits = count_bits(bishop_mask);
+
+      for (uint64_t index = 0; index < (BB_1 << bishop_bits); ++index) {
+        const bb_t occupancy = set_occupancy(index, bishop_bits, bishop_mask);
+        REQUIRE_EQ(get_bishop_attacks(tables, from, occupancy),
+                   precompute_bishop_attacks(from, occupancy));
+      }
+
+      const bb_t rook_mask = precompute_rook_attack_masks(from);
+      const int rook_bits = count_bits(rook_mask);
+
+      for (uint64_t index = 0; index < (BB_1 << rook_bits); ++index) {
+        const bb_t occupancy = set_occupancy(index, rook_bits, rook_mask);
+        REQUIRE_EQ(get_rook_attacks(tables, from, occupancy),
+                   precompute_rook_attacks(from, occupancy));
+      }
+    }
+  }
+
+  // The castling table is read by make_move against both the from-square and
+  // the to-square of every move, so it is checked here through make_move and
+  // not against a second copy of itself. Eight moves off one skeleton cover
+  // all six squares that carry a right, and the two rook-takes-rook moves land
+  // on a right-carrying square as well as leaving one, so they exercise both
+  // lookups in a single move. "castling rights are lost" above is the same
+  // idea on one capture; this is the whole set.
+  TEST_CASE_FIXTURE(movegen_fixture_t, "every move that ends a right ends it")
+  {
+    struct case_t
+    {
+      const char* fen;
+      index_t from;
+      index_t to;
+      int cleared;
+    };
+
+    const char* white = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+    const char* black = "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1";
+
+    const std::vector<case_t> cases = {
+        {white, a1, b1, WQ},      {white, h1, g1, WK},
+        {white, e1, d1, WK | WQ}, {white, a1, a8, WQ | BQ},
+        {white, h1, h8, WK | BK}, {black, a8, b8, BQ},
+        {black, h8, g8, BK},      {black, e8, d8, BK | BQ}};
+
+    const int all = WK | WQ | BK | BQ;
+
+    for (const case_t& test : cases) {
+      REQUIRE(load_FEN(test.fen, &game));
+      REQUIRE_EQ(game.board.castling, all);
+
+      move_t moves[MAX_MOVES];
+      const size_t count = legal_moves(&game, moves);
+
+      bool played = false;
+      for (size_t i = 0; i < count; ++i) {
+        if (MOVE_FROM(moves[i]) != test.from || MOVE_TO(moves[i]) != test.to) {
+          continue;
+        }
+
+        REQUIRE(make_move(&game, moves[i]));
+        played = true;
+        break;
+      }
+
+      const std::string title =
+          std::to_string(test.from) + " -> " + std::to_string(test.to);
+      REQUIRE_MESSAGE(played, title);
+      REQUIRE_MESSAGE(game.board.castling == (all & ~test.cleared), title);
+    }
   }
 }

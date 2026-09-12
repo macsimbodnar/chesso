@@ -143,7 +143,7 @@ static const std::vector<std::string> expected_go_tokens = {
 static const std::vector<std::string> expected_position_tokens = {
   "startpos", "fen", "moves",
   // non-standard shortcuts
-  "empty", "mate2w", "mate2b", "3frep", "tricky", "killer", "cmk", "fine70",
+  "empty", "mate2w", "mate2b", "3frep", "kiwipete", "killer", "blocked", "fine70",
 };
 // clang-format on
 

@@ -1,44 +1,197 @@
 #pragma once
+#include <array>
+#include <bit>
 #include "data_structures.hpp"
 
 
-// clang-format off
+//-#####################  THE GEOMETRY OF A SQUARE  #########################-//
+// S211. Every table further down that is not a magic is derived here rather
+// than typed, so the only board knowledge in this file is the four lines
+// below and the step lists that follow them.
+//
+// A square is `row * 8 + col`. Row 0 is the eighth rank and col 0 the a-file,
+// because bb_squares_t counts from a8, so one step of (dr, dc) lands on
+// `(row + dr) * 8 + (col + dc)`. Every bounds test in this file is on the two
+// coordinates and never on a shifted bitboard: a move that leaves the board
+// fails the test instead of reappearing on the opposite file, so there is no
+// wrap to mask away afterwards and no mask to get the wrong way round.
+constexpr int square_row(int square)
+{ return square / 8; }
+constexpr int square_col(int square)
+{ return square % 8; }
+constexpr int square_at(int row, int col)
+{ return (row * 8) + col; }
 
-// Bishop relevant occupancy bit count for every square on board 
-static inline constexpr uint8_t bishop_relevant_bits_count[64] = {
-  6, 5, 5, 5, 5, 5, 5, 6, 
-  5, 5, 5, 5, 5, 5, 5, 5, 
-  5, 5, 7, 7, 7, 7, 5, 5, 
-  5, 5, 7, 9, 9, 7, 5, 5, 
-  5, 5, 7, 9, 9, 7, 5, 5, 
-  5, 5, 7, 7, 7, 7, 5, 5, 
-  5, 5, 5, 5, 5, 5, 5, 5, 
-  6, 5, 5, 5, 5, 5, 5, 6
+constexpr bool square_on_board(int row, int col)
+{ return (row >= 0) && (row < 8) && (col >= 0) && (col < 8); }
+
+
+// One move of a piece, as the row and column it shifts by.
+struct step_t
+{
+  int dr;
+  int dc;
 };
 
-// Rook relevant occupancy bit count for every square on board 
-static inline constexpr uint8_t rook_relevant_bits_count[64] = {
-  12, 11, 11, 11, 11, 11, 11, 12, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  11, 10, 10, 10, 10, 10, 10, 11, 
-  12, 11, 11, 11, 11, 11, 11, 12
-};
+// The directions a slider travels: a bishop changes both coordinates by one, a
+// rook exactly one of them. Listed in (dr, dc) order, which is an arbitrary
+// order -- nothing below depends on it, because every ray is walked to its own
+// end and the four results are unioned.
+static inline constexpr step_t BISHOP_STEPS[4] = {{-1, -1},
+                                                  {-1, 1},
+                                                  {1, -1},
+                                                  {1, 1}};
 
-static inline constexpr uint8_t castling_rights[64] = {
-     7, 15, 15, 15,  3, 15, 15, 11,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15,
-    13, 15, 15, 15, 12, 15, 15, 14
-};
-// clang-format on
+static inline constexpr step_t ROOK_STEPS[4] = {{-1, 0},
+                                                {0, -1},
+                                                {0, 1},
+                                                {1, 0}};
+
+
+// What a slider attacks along one direction: every square it crosses, plus the
+// first occupied one, which is where the ray ends because that square is the
+// capture and nothing behind it is reachable.
+constexpr bb_t ray_attacks(int square, step_t step, bb_t blockers)
+{
+  bb_t ray = BB_0;
+  int row = square_row(square) + step.dr;
+  int col = square_col(square) + step.dc;
+
+  while (square_on_board(row, col)) {
+    const bb_t reached = BB_1 << square_at(row, col);
+    ray |= reached;
+
+    if (reached & blockers) { break; }
+
+    row += step.dr;
+    col += step.dc;
+  }
+
+  return ray;
+}
+
+
+// The squares on one ray whose occupancy can change the answer above. A piece
+// on the last square of a ray shadows nothing -- there is no further square to
+// hide -- so the attack set is the same whether it stands there or not, and
+// the square is left out. A square is in, then, exactly when one more step in
+// the same direction is still on the board.
+//
+// Leaving those four squares out is what makes the magic hashing possible at
+// all: it is the difference between a rook index of up to 14 bits and one of
+// up to 12, and so between tables of 16384 and 4096 entries per square.
+constexpr bb_t ray_relevant(int square, step_t step)
+{
+  bb_t ray = BB_0;
+  int row = square_row(square) + step.dr;
+  int col = square_col(square) + step.dc;
+
+  while (square_on_board(row + step.dr, col + step.dc)) {
+    ray |= BB_1 << square_at(row, col);
+    row += step.dr;
+    col += step.dc;
+  }
+
+  return ray;
+}
+
+
+constexpr bb_t bishop_attacks_from(int square, bb_t blockers)
+{
+  bb_t attacks = BB_0;
+  for (const step_t& step : BISHOP_STEPS) {
+    attacks |= ray_attacks(square, step, blockers);
+  }
+  return attacks;
+}
+
+
+constexpr bb_t rook_attacks_from(int square, bb_t blockers)
+{
+  bb_t attacks = BB_0;
+  for (const step_t& step : ROOK_STEPS) {
+    attacks |= ray_attacks(square, step, blockers);
+  }
+  return attacks;
+}
+
+
+constexpr bb_t bishop_relevant_mask(int square)
+{
+  bb_t mask = BB_0;
+  for (const step_t& step : BISHOP_STEPS) {
+    mask |= ray_relevant(square, step);
+  }
+  return mask;
+}
+
+
+constexpr bb_t rook_relevant_mask(int square)
+{
+  bb_t mask = BB_0;
+  for (const step_t& step : ROOK_STEPS) {
+    mask |= ray_relevant(square, step);
+  }
+  return mask;
+}
+
+
+//-########################  THE DERIVED TABLES  ############################-//
+
+// How many bits a square's occupancy index needs: the number of squares in its
+// relevant mask. std::popcount and not count_bits() only because bitboard.hpp,
+// where count_bits() lives, includes this file and not the other way round --
+// count_bits() is that same call. Both tables come out of one walk, so the
+// geometry above cannot move one of them without moving the other.
+constexpr std::array<uint8_t, 64> relevant_bits_table(bool rook)
+{
+  std::array<uint8_t, 64> counts = {};
+
+  for (int square = 0; square < 64; ++square) {
+    const bb_t mask =
+        rook ? rook_relevant_mask(square) : bishop_relevant_mask(square);
+    counts[static_cast<size_t>(square)] =
+        static_cast<uint8_t>(std::popcount(mask));
+  }
+
+  return counts;
+}
+
+static inline constexpr std::array<uint8_t, 64> bishop_relevant_bits_count =
+    relevant_bits_table(false);
+
+static inline constexpr std::array<uint8_t, 64> rook_relevant_bits_count =
+    relevant_bits_table(true);
+
+
+// Which castling rights survive a move that touches a square. Six squares
+// carry a right and the other 58 carry none, so the table starts with all four
+// rights everywhere and clears what each of the six destroys: a king's square
+// loses both rights of its colour, a rook's corner loses the right on its own
+// wing. make_move ANDs it against both the from-square and the to-square,
+// which is what makes one table cover three different losses -- the king
+// moving, the rook moving, and the rook being captured where it stands.
+constexpr std::array<castling_t, 64> castling_rights_table()
+{
+  std::array<castling_t, 64> rights = {};
+  for (castling_t& entry : rights) {
+    entry = static_cast<castling_t>(WK | WQ | BK | BQ);
+  }
+
+  rights[e1] = static_cast<castling_t>(rights[e1] & ~(WK | WQ));
+  rights[h1] = static_cast<castling_t>(rights[h1] & ~WK);
+  rights[a1] = static_cast<castling_t>(rights[a1] & ~WQ);
+
+  rights[e8] = static_cast<castling_t>(rights[e8] & ~(BK | BQ));
+  rights[h8] = static_cast<castling_t>(rights[h8] & ~BK);
+  rights[a8] = static_cast<castling_t>(rights[a8] & ~BQ);
+
+  return rights;
+}
+
+static inline constexpr std::array<castling_t, 64> castling_rights =
+    castling_rights_table();
+
 
 // Provenance, S179 under DEC-132. Both arrays below are this project's own
 // output, drawn under seed 20260904 -- the date of DEC-132, the decision that

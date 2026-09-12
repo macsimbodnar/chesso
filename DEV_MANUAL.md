@@ -2822,6 +2822,15 @@ derived: the 128 sliding-attack magic numbers in `src/bb_tables.hpp`, and the
 `CHESSO_PROJECT_SEED` in `src/bitboard.cpp`, 20260904 — so that neither is a
 table whose origin can only be argued (S179, DEC-132, DEC-139).
 
+Since S211 the magics are the only *typed* numbers left in
+`src/bb_tables.hpp`. Everything else there is derived at compile time from the
+twenty lines of board geometry at the top of the file — the relevant-bit counts
+are `std::popcount` of the masks those lines build, the castling table is the
+four right bits cleared on the six squares that carry them — so `magics` is the
+only generator whose output is transcribed into that file (it prints to stdout;
+nothing writes the file), and a table there that looks wrong is a bug in the
+geometry rather than a transcription to re-check.
+
 ```bash
 cmake --build build -j12 --target magic_gen
 

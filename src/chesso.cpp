@@ -1410,9 +1410,9 @@ bool command_position(std::queue<std::string>& args)
     if (token == "mate2w") { set_position(MATE_IN_2_W_POS); }
     if (token == "mate2b") { set_position(MATE_IN_2_B_POS); }
     if (token == "3frep") { set_position(THREE_FOLD_REP_POS); }
-    if (token == "tricky") { set_position(TRICKY_POS); }
+    if (token == "kiwipete") { set_position(KIWIPETE_POS); }
     if (token == "killer") { set_position(KILLER_POS); }
-    if (token == "cmk") { set_position(CMK_POS); }
+    if (token == "blocked") { set_position(BLOCKED_CENTRE_POS); }
     if (token == "fine70") { set_position(FINE_70_POS); }
 
     if (token == "fen") {
@@ -1779,13 +1779,13 @@ bool command_test(std::queue<std::string>& args)
 
   // clang-format off
   std::array<test_entry_t, 7> entries = {{
-      {DEFAULT_POSITION,  "DEFAULT_POSITION"},
-      {TRICKY_POS,        "TRICKY_POS         bestmove e2a6 ponder b4c3"},
-      {KILLER_POS,        "KILLER_POS         bestmove g7h8q ponder c5d4"},
-      {CMK_POS,           "CMK_POS            bestmove h7h6 ponder c2c3"},
-      {FINE_70_POS,       "FINE_70_POS        bestmove a1b2 ponder a7b7"},
-      {MATE_IN_2_W_POS,   "MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8"},
-      {MATE_IN_2_B_POS,   "MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8"}
+      {DEFAULT_POSITION,    "DEFAULT_POSITION"},
+      {KIWIPETE_POS,        "KIWIPETE_POS       bestmove e2a6 ponder b4c3"},
+      {KILLER_POS,          "KILLER_POS         bestmove g7h8q ponder c5d4"},
+      {BLOCKED_CENTRE_POS,  "BLOCKED_CENTRE_POS bestmove h7h6 ponder c2c3"},
+      {FINE_70_POS,         "FINE_70_POS        bestmove a1b2 ponder a7b7"},
+      {MATE_IN_2_W_POS,     "MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8"},
+      {MATE_IN_2_B_POS,     "MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8"}
     }};
   // clang-format on
 
@@ -1877,15 +1877,15 @@ constexpr int BENCH_DEPTH = 14;
 // python-chess 1.11.2 (~/.venv/chess) and stockfish dev-20260810-5062aee5 at
 // `go depth 20` through the safe invocation (TOOLCHAIN.md, "The chess oracle"):
 //
-//   position         legal  en passant  castling      promo  valid
-//   midgame             46   -           -                 0  yes
-//   kiwipete            48   -           e1g1, e1c1        0  yes
-//   tactical            44   -           e1g1              4  yes
-//   KILLER_POS          48   f5e6        -                12  yes
-//   CMK_POS             43   -           -                 0  yes
-//   FINE_70_POS          3   -           -                 0  yes
-//   MATE_IN_2_W_POS     29   -           -                 0  yes, #+2
-//   MATE_IN_2_B_POS     29   -           -                 0  yes, #-2
+//   position            legal  en passant  castling      promo  valid
+//   midgame                46   -           -                 0  yes
+//   kiwipete               48   -           e1g1, e1c1        0  yes
+//   tactical               44   -           e1g1              4  yes
+//   KILLER_POS             48   f5e6        -                12  yes
+//   BLOCKED_CENTRE_POS     43   -           -                 0  yes
+//   FINE_70_POS             3   -           -                 0  yes
+//   MATE_IN_2_W_POS        29   -           -                 0  yes, #+2
+//   MATE_IN_2_B_POS        29   -           -                 0  yes, #-2
 //
 // Eight distinct FENs, **all eight legal since 2026-09-11**; the accepts asks
 // for quiescence mates, promotions, en passant and castling and every one of
@@ -1899,14 +1899,15 @@ constexpr int BENCH_DEPTH = 14;
 // because removing that pawn opens lines rather than closing them, and the
 // bench signature moved once as the price. DEC-177.
 // The first three are `tools/search_bench.py`'s POSITIONS, so
-// the two instruments cover the same ground; kiwipete is TRICKY_POS verbatim.
+// the two instruments cover the same ground; the second is the same FEN under
+// the same name in both since S211 renamed the macro to it.
 // clang-format off
 static const std::array<std::string, 8> bench_positions = {{
     "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",  // midgame
-    TRICKY_POS,                                                                  // kiwipete
+    KIWIPETE_POS,                                                                // kiwipete
     "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",                 // tactical
     KILLER_POS,
-    CMK_POS,
+    BLOCKED_CENTRE_POS,
     FINE_70_POS,
     MATE_IN_2_W_POS,
     MATE_IN_2_B_POS

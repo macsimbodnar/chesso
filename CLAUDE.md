@@ -84,10 +84,12 @@ This is the rule the branch exists to test. Copying is exactly what made the
 earlier work stop being interesting, and there is a licensing reason on top: the
 owner wants no GPL question anywhere in this codebase or in a future network.
 
-Consequences you will meet: the piece-square tables in `eval_tables.hpp` are
-hand-written and untuned, because the tuned published ones were available and
-refused. Running another engine's *binary* as a tool creates no derivative work
-and is encouraged. DEC-016.
+Consequences you will meet: the piece-square tables in `eval_tables.hpp` were
+hand-written from ordinary positional principles, because the tuned published
+ones were available and refused, and have since been fitted by this project's
+own tuner over its own self-play (S028, 1490839 quiet positions from 20000
+games); no published table seeded them (DEC-105). Running another engine's
+*binary* as a tool creates no derivative work and is encouraged. DEC-016.
 
 ### 2. Nothing is believed without a measurement
 

@@ -153,8 +153,10 @@
      `!is_pv && ... ply >= RFP_MIN_PLY`, and search() calls the root at :1461  \
      with is_pv true, so `!is_pv` exempts it at every setting. **0 and 1 are   \
      therefore the same engine** -- byte-identical node counts and best moves, \
-     TRICKY 329568, CMK 260802, KILLER 53310 at depth 8 (S085) -- so 0 was a   \
-     value no tuner could tell from its neighbour.                             \
+     329568, 260802 and 53310 at depth 8 on the three positions S085 measured  \
+     (KIWIPETE_POS, BLOCKED_CENTRE_POS and KILLER_POS, the first two under the \
+     names they carried then) -- so 0 was a value no tuner could tell from its \
+     neighbour.                                                                \
                                                                                \
      **The declared minimum is 2: DEC-095 decided it and S145 earned it.**     \
      It stood at 0 until S142, and the evidence for raising it used to be      \

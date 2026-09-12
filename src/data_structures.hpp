@@ -10,12 +10,28 @@
 #include <string>
 
 //-############################# POSITIONS ##################################-//
+// The fixed positions the engine is developed and self-tested against. Each is
+// named for what it holds, so that a bench or test line says which case it is
+// reporting on.
+//
+// KIWIPETE_POS is the perft position the Chess Programming Wiki publishes under
+// that name -- castling both ways for both sides, an en-passant-free but pin-
+// and check-heavy tree -- and `tools/search_bench.py` already calls it that.
+// BLOCKED_CENTRE_POS is named for its placement, checked with python-chess
+// 2026-09-12 and not judged by eye: the square in front of each of the four
+// central pawns is occupied, d3 against d4 and e4 against e5, so all four are
+// immobile while every piece of both sides is still on the board.
+//
+// S211 gave those two their names. The first was TRICKY_POS, which said
+// nothing; the second was named after the author of the tutorial series the
+// `bitboard` branch followed, which is not a thing this project's source
+// should carry. 2026-09-10_adversarial-F02.
 // clang-format off
 #define DEFAULT_POSITION "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define EMPTY_POS "8/8/8/8/8/8/8/8 b - - 0 1"
-#define TRICKY_POS "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+#define KIWIPETE_POS "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 #define KILLER_POS "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq e6 0 1"
-#define CMK_POS "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9"
+#define BLOCKED_CENTRE_POS "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9"
 #define FINE_70_POS "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1"  // best move: Kb1
 #define MATE_IN_2_W_POS "4k3/Q7/8/4K3/8/8/8/8 w - - 0 1"
 #define MATE_IN_2_B_POS "4K3/q7/8/4k3/8/8/8/8 b - - 0 1"

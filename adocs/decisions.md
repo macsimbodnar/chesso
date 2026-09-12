@@ -11301,3 +11301,42 @@ Consequences: `adocs/plan_todo/S127_*.md` gains a dated section; S222's
               `check` is therefore run on an idle machine before a run
               starts, the precondition the run itself has (MACHINE), and a
               not-repeatable verdict means "measure again idle", not "dead".
+
+## DEC-201  2026-09-12  The seven sound files under `tests/assets/gui/sound/` are deleted with their loader: no rights holder can be named, so they are the last thing in the repository whose licence cannot be stated
+Tags:         originality, licence, assets, gui, s211, s224, dec-104, dec-170
+Context:      S211 wrote `tests/assets/gui/THIRD_PARTY.md` as an inventory of
+              the whole directory -- Cburnett's twelve pieces under the BSD
+              option of their quad licence, the two fonts under the licence
+              files beside them -- deleted the three images whose metadata
+              named a tool and a date but no rights holder, and named the
+              remaining gap: `click.wav`, `tick_1.wav` to `tick_5.wav` and
+              `anime-wow-sound-effect.mp3`, committed 2025-03-09 in `766465f`
+              on the mailbox branch with no author, copyright or origin
+              recorded, loaded by `tests/debug_gui.cpp` for the debug GUI's
+              move and click effects. They sit outside F03's scope, so S211
+              did not touch them; `books/fetch_book.sh` now names them
+              instead of claiming a blanket. The audit's point stands
+              (2026-09-10_adversarial Part A): the project's exposure is the
+              accusation that something was taken, and a file whose origin
+              nobody can state is exactly what a reader looking for that
+              would find first.
+Decision:     By the coordinator under the owner's delegation of engine
+              matters, on the owner's stated ground that acceptance runs on
+              provenance and disclosure. **The seven files are deleted**, the
+              loader and the `sound_fx` map in `tests/debug_gui.cpp` go with
+              them, and `THIRD_PARTY.md` then covers every file in the
+              directory with a licence it can quote. A debug GUI's sounds
+              are worth nothing against the founding rule. The work is
+              **S224**, placed directly after S151 in the Open order as
+              filler: tests only, no `src/`, a GUI build with
+              `-DCHESSO_BUILD_GUI=ON` as its proof.
+Rejected:     **Accepting the gap with a recorded disclosure** -- disclosure
+              needs a rights holder to disclose, and there is none to name.
+              **Re-recording the sounds** -- a debug tool does not need them.
+              **Folding the deletion into S211** -- outside its `accepts`, and
+              a step's scope is not widened after its stamp is written.
+Consequences: `adocs/plan_todo/S224_*.md` exists; `THIRD_PARTY.md`'s gap
+              section and `fetch_book.sh`'s sentence about the sounds are
+              rewritten by S224 in the same commit as the deletion. After
+              S224 the repository bundles nothing whose licence is unstated,
+              and `fetch_book.sh` may say so again in those words.

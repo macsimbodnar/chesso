@@ -367,13 +367,19 @@ here as the FEN each one loads. A GUI never sends them.
 | shortcut | FEN |
 |---|---|
 | `empty` | `8/8/8/8/8/8/8/8 b - - 0 1` |
-| `tricky` | `r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1` |
+| `kiwipete` | `r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1` |
 | `killer` | `rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq e6 0 1` |
-| `cmk` | `r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9` |
+| `blocked` | `r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9` |
 | `fine70` | `8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1` |
 | `mate2w` | `4k3/Q7/8/4K3/8/8/8/8 w - - 0 1` |
 | `mate2b` | `4K3/q7/8/4k3/8/8/8/8 b - - 0 1` |
 | `3frep` | `2r3k1/R7/8/1R6/8/8/P4KPP/8 w - - 0 1` |
+
+Two of these names changed in S211 and the old spellings are gone: `tricky` is
+now `kiwipete`, which is what the Chess Programming Wiki calls that position
+and what `tools/search_bench.py` already called it, and `cmk` is now `blocked`,
+named for the two mutually blocked pairs of central pawns its FEN places -- d3
+against d4 and e4 against e5.
 
 ## Known bugs and limitations
 

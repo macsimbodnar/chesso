@@ -477,7 +477,7 @@ TEST_SUITE("search: move ordering state")
   // only slower.
   TEST_CASE_FIXTURE(search_fixture_t, "a search fills the ordering tables")
   {
-    REQUIRE(load_FEN(TRICKY_POS, &game));
+    REQUIRE(load_FEN(KIWIPETE_POS, &game));
 
     static std::atomic_bool never_stop = false;
     never_stop = false;
@@ -899,7 +899,7 @@ TEST_SUITE("search: move ordering state")
   // 2026-08-14_test_review-F06.
   //
   // GOLDEN (DEC-142): the pair 440000 and 20000, a band around the depth-5
-  // node count of TRICKY_POS from a cold table -- 109575 when measured
+  // node count of KIWIPETE_POS from a cold table -- 109575 when measured
   // 2026-08-14, held inside [count / 5, 4 x count]. Both ratios are the band
   // this case has always carried and neither is a new constant (DEC-105 (b)).
   // Re-taken 2026-09-10 by S192: **179851 nodes**, so the tree has grown 64 %
@@ -923,7 +923,7 @@ TEST_SUITE("search: move ordering state")
   // this suite, which assert what ordering does rather than what it costs.
   TEST_CASE_FIXTURE(search_fixture_t, "ordering keeps the tree small")
   {
-    REQUIRE(load_FEN(TRICKY_POS, &game));
+    REQUIRE(load_FEN(KIWIPETE_POS, &game));
 
     static std::atomic_bool never_stop = false;
     never_stop = false;
@@ -948,11 +948,11 @@ TEST_SUITE("search: move ordering state")
     // The budget has to stay a bound on something, not a number nothing
     // approaches: if the tree ever shrinks far below it the case has stopped
     // discriminating and the budget wants re-measuring rather than leaving.
-    REQUIRE_MESSAGE(
-        result.explored_nodes > 20000,
-        ("depth 5 on TRICKY_POS cost " + std::to_string(result.explored_nodes) +
-         " nodes; the 440000 budget was set from 109575 and no "
-         "longer bounds anything - re-measure it"));
+    REQUIRE_MESSAGE(result.explored_nodes > 20000,
+                    ("depth 5 on KIWIPETE_POS cost " +
+                     std::to_string(result.explored_nodes) +
+                     " nodes; the 440000 budget was set from 109575 and no "
+                     "longer bounds anything - re-measure it"));
   }
 }
 
@@ -2641,7 +2641,7 @@ TEST_SUITE("search: transposition bounds and mate distance")
         {MATE_IN_2_W_POS, 6},
         {"7k/Q5b1/6K1/8/8/8/8/8 w - - 0 1", 6},
         {DEFAULT_POSITION, 6},
-        {TRICKY_POS, 5},
+        {KIWIPETE_POS, 5},
     };
 
     size_t written = 0;
@@ -2681,8 +2681,8 @@ TEST_SUITE("search: transposition table")
   // clang-format off
   static const std::vector<std::string> tt_positions = {
     DEFAULT_POSITION,
-    TRICKY_POS,
-    CMK_POS,
+    KIWIPETE_POS,
+    BLOCKED_CENTRE_POS,
     KILLER_POS,
     FINE_70_POS,
     CLOSED_POSITION,

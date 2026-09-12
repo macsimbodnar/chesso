@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Re-derive the node band of tests/test_search.cpp "ordering keeps the tree small".
 
-S192, DEC-142. The case searches TRICKY_POS to depth 5 from a cold table and
+S192, DEC-142. The case searches KIWIPETE_POS to depth 5 from a cold table and
 asserts the cost is inside a band: below a budget of 440000 and above a floor of
 20000. Neither number is a measurement of anything on its own -- both are ratios
 of the count the case actually costs, 4x above and a fifth below, chosen so the
@@ -94,7 +94,7 @@ def main():
     shipping_budget, shipping_floor = read_shipping()
 
     print("binary        %s" % binary)
-    print("count         %d nodes, depth 5 on TRICKY_POS, cold table" % count)
+    print("count         %d nodes, depth 5 on KIWIPETE_POS, cold table" % count)
     print("budget        %d  (%dx the count)" % (budget, BUDGET_RATIO))
     print("floor         %d  (the count over %d)" % (floor, FLOOR_DIVISOR))
     print()

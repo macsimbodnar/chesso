@@ -293,7 +293,6 @@ private:
   chessboard_conf_t board_conf;
   control_panel_conf panel_conf;
 
-  std::map<std::string, texture_t> textures;
   std::map<piece_t, texture_t> piece_textures;
   std::map<std::string, sound_t> sound_fx;
   std::map<char, texture_t> files_and_ranks_textures;
@@ -402,8 +401,12 @@ void gui_t::on_init(void*)
   piece_textures[B_QUEEN] = load_image("assets/gui/Chess_qdt60.png");
   piece_textures[B_KING] = load_image("assets/gui/Chess_kdt60.png");
 
-  textures["background"] = load_image("assets/gui/background_l.jpg");
-  textures["flip"] = load_image("assets/gui/flip_icon.png");
+  // S211: the window background and the flip button used to be two image files
+  // committed in 2025 with no stated origin, so they were deleted rather than
+  // redistributed unlicensed (tests/assets/gui/THIRD_PARTY.md). The background
+  // is a flat colour now and the flip button carries text, like the two beside
+  // it. The pieces stay: those are Cburnett's, used under the BSD option of
+  // their licence, and the same file carries the notice.
 
   sound_fx["tick_1"] = load_sound("assets/gui/sound/tick_1.wav");
   sound_fx["tick_2"] = load_sound("assets/gui/sound/tick_2.wav");
@@ -431,14 +434,17 @@ void gui_t::on_init(void*)
   // Buttons
   {  // Flip board button
 
-    const int32_t button_h = 18;
-    const int32_t button_w = 20;
+    const texture_t text =
+        create_text("Flip", 0x000000FF, fonts[panel_conf.font_size]);
+
+    const int32_t button_h = text.h + 10;
+    const int32_t button_w = text.w + 10;
     const int32_t x = panel_conf.rect.x + panel_conf.text_padding;
     const int32_t y = panel_conf.rect.y + panel_conf.rect.h - button_h -
                       panel_conf.text_padding;
 
-    buttons["flip"] = create_button({x, y, button_w, button_h}, 0xFFFFFFFF,
-                                    textures["flip"], 0xAAAAAAFF);
+    buttons["flip"] =
+        create_button({x, y, button_w, button_h}, 0xFFFFFFFF, text, 0xAAAAAAFF);
   }
 
   {  // Copy FEN to clipboard button
@@ -825,7 +831,7 @@ void gui_t::draw_static_board(const rect_t& rect,
 
 
 void gui_t::draw_background()
-{ draw_texture(textures["background"], {0, 0, screen.w, screen.h}); }
+{ draw_rect({0, 0, screen.w, screen.h}, 0x2E2E32FF); }
 
 
 void gui_t::draw_panel()
@@ -961,7 +967,7 @@ void gui_t::draw_panel()
 
   {  // Flip button
     const button_t& button = buttons["flip"];
-    draw_button_with_icon(button);
+    draw_button(button);
   }
 
   {  // Copy to flip button
