@@ -521,7 +521,7 @@ Read from each step's own completion stamp, not from a run log. The first nine r
 | S042 | en passant key only when capturable, `noob_3moves.epd` | 2 h 40 m 45 s | 5741 | `{-5, 0}` | H1 |
 
 **Mean 4 h 37 m, median 4 h 57 m** over the ten; 107107 games in 46.10 hours,
-**2323.4 games an hour** across the set. Eight of the first nine sit between 2328 and
+**2323.5 games an hour** across the set. Eight of the first nine sit between 2328 and
 2346 — including S148, at 2341, the first played on the workstation. **S207 is
 the one outlier at 2305.7 and the reason is known rather than guessed**: the
 coordinator wrote four document steps on the same machine for the first
@@ -562,7 +562,7 @@ single digits to +25, which is inside or beside the interval. So:
     total                                =  289 to 356 machine-hours
 
 against the struck 75 to 110. The flat mean gives **217 to 265 hours**
-(4 h 37 m x 45 to 55, 208 to 254 hours) and that is the **floor**, not the estimate: the ledger's
+(4 h 37 m x 45 to 55, 207 to 254 hours) and that is the **floor**, not the estimate: the ledger's
 fast runs are three of eight where the pending list's fast-class effects are
 three of about fifty. Add the two SPSA nights, the one to three datagen nights
 and S152's two gauntlets on top, none of which is in either figure.
