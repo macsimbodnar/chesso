@@ -7,8 +7,8 @@ decisions:  DEC-193, DEC-191, DEC-190, DEC-189, DEC-182, DEC-143
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     nobody -- retired unrun by the owner's decision DEC-196, recorded by the coordinator
+done:       2026-09-12 15:20, **retired without running, DEC-196**: the owner chose the free measurement -- the ledger of realized games per verdict on `noob_3moves.epd`, read against the old book's nine after about five verdicts -- over two nights at a quarter handicap; the file keeps the priced options (DEC-193: 17 % one-sigma after one night, 13 % after two, never the 1.00/1.10 rule) as the record of why. No script written, no game played. The id is not reused
 
 ## Why this exists
 

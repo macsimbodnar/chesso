@@ -10999,3 +10999,44 @@ Consequences: `.moltke.local.md` says the governor is recorded, never set;
               audit as Codex's. The remaining owner questions are the book
               bracket (DEC-191, DEC-193) and what a longer hand-crafted list
               means (DEC-192).
+
+## DEC-196  2026-09-12  The owner's two remaining answers: the balanced book stays and the ledger is its measurement, S220 is retired unrun; the priced effects land first and the transfer ratio is re-derived before the goal is discussed again
+Tags:         harness, book, s220, s217, s183, elo, goal, owner, dec-191, dec-193, dec-192
+Context:      Two questions stood in `adocs/status.md`. The book: S219's
+              switch to `noob_3moves.epd` left its cost per verdict bracketed
+              0.97 to 1.29 of the old book's (DEC-191), and S220 priced the
+              measurement that would close it at two nights for a 2.3-sigma
+              answer (DEC-193). The list: S217 found the hand-crafted gap
+              nearly empty and the extended list unchanged at 2658 and 2707
+              to 2817 (DEC-192). Put to the owner as menus on 2026-09-12
+              afternoon, the coordinator's recommendation first in each.
+Decision:     **By the owner.** **(1) The book stays `noob_3moves.epd` and the
+              ledger measures it**: no machine time is spent on the bracket;
+              every SPRT on the new book is a data point, and after about
+              five verdicts on it the coordinator compares realized games per
+              verdict, by class (fast: an effect outside the interval; slow:
+              inside or a null), against the old book's nine, and records the
+              reading as a decision -- a revert follows only if that reading
+              says so. **S220 is retired without running**; its file keeps the
+              priced options as the record of why a run was declined, and its
+              id is not reused. **(2) "A longer list" means the priced
+              effects land first**: the Open order stands, S109 and the other
+              steps with sourced figures run as planned, each verdict adds a
+              published-to-measured transfer, and S183's discount ratio is
+              re-derived on the larger sample (DEC-136) before anything about
+              the 3000 mark or the network's timing is discussed again. No
+              further engine survey now; the three S217 candidates stay in the
+              Reserve.
+Rejected:     **Two nights on S220** -- the owner chose the free measurement
+              over the night-priced one. **Reverting to the old book now** --
+              the pessimistic end is a bound, not a reading. **Surveying more
+              engines** -- shrinking return, S217's own finding. **Reopening
+              DEC-179** -- not before the ratio is re-derived on more
+              transfers.
+Consequences: S220 leaves the Open list (the coordinator edits `adocs/plan.md`
+              once the parallel Codex session has released it -- it holds
+              uncommitted edits to that file at this hour); `adocs/plan.md`'s
+              "What this costs" gains one sentence naming the ledger reading
+              at the fifth verdict on the new book; `adocs/status.md`'s owner
+              list is empty. The ledger's book column (DEC-193) is what makes
+              the reading possible without new work.

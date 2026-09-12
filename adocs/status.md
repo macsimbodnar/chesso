@@ -54,11 +54,12 @@ Updated: 2026-09-12, by hand.
   9502175/ae1df15/b5c357a (S042 close), cace216 (S024 v1), 47344f3,
   ef43bff (S221), ecdfadb (revert), and this one. **Two of the four owner items closed at 15:10, DEC-195**: the zip digest
   is pinned (`68fe2691...e9f3`, checked to unpack to the pinned file) and the
-  governor is recorded, never set -- runs proceed regardless. **Two stand**:
-  the book bracket (DEC-191/193: keep and watch the ledger, two nights on
-  S220, or revert); what a longer hand-crafted list means (DEC-192;
-  recommendation: land S109 next among the priced effects, then re-derive the
-  transfer ratio). **The untracked `adocs/audit/2026-09-12_adversarial.md` is
+  governor is recorded, never set -- runs proceed regardless. **The last two closed at 15:20, DEC-196**: the book stays and the
+  ledger measures it (a reading at the fifth verdict on the new book; S220
+  retired unrun, its file stamped and moved); the priced effects land first
+  and S183's ratio is re-derived on them before the goal is discussed again.
+  **Owed to `adocs/plan.md` once the Codex session releases it**: S220 out of
+  the Open list, one sentence in "What this costs" naming the ledger reading. **The untracked `adocs/audit/2026-09-12_adversarial.md` is
   a Codex audit the owner runs in parallel**; not read here, dispositioned
   when the owner asks. **Compaction point.**
 
