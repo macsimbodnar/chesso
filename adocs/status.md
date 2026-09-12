@@ -7,6 +7,49 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S042 is landed as `50b1ff9` and its `--nonreg` SPRT is running, launched
+  03:57 -- the night run.** The fix: one helper, `en_passant_is_capturable`,
+  mirrors the generator's own candidate test and is applied in
+  `make_move_impl` and `load_FEN`; `set_en_passant` (no caller) deleted.
+  Red first: the four-ply case reads -313 on the parent and 0 after; two move
+  orders that hashed apart hash equal; incremental key equals the full hash
+  with and without a capturing pawn; python-chess confirms the threefold.
+  FEN fourth field agrees with python-chess's X-FEN on all 115021 positions
+  of the S219 A/A corpus, 0 disagreements. Perft identical. **`Bench:
+  27322394`** (was 30046849). Debug self-play 8 games, 0 `Assertion`. **Four
+  pre-existing tests encoded the always-set convention** (`test_chesso`,
+  `test_movegen` on the third-party JSON fixtures; `test_corpus_dedupe`'s
+  `AFTER_C5_EP`; `test_audit_polyglot_key`'s S175 cases) and are re-stated,
+  not relaxed -- every case kept, each site carries an oracle quote, Polyglot
+  goldens unchanged and re-derived by `adocs/data/S042_polyglot_key_cases.py`
+  (12 cases, 0 mismatches); the step file's "Tests re-stated" section has
+  each mechanism. **A Debug-only abort in `test_chesso`'s own diagnostic code**
+  (a stale move list applied to an advanced board while building a failure
+  message, latent until a message was first built) is fixed by moving
+  `unmake_move` before the `REQUIRE_MESSAGE`. Gate green both trees (34/34),
+  `gate_extra.sh` green on all five stages after two citation fixes (a test
+  title split over two string literals the checker cannot stitch; a line-form
+  citation). **Launch**: `REF=a3e84e1 ./fastchess.sh --nonreg`, candidate
+  `50b1ff9`, `noob_3moves.epd`, seed `20260912035728`, pid 2753254, out
+  `.tuning/s042_nonreg_20260912_035728/`, console `.tuning/s042_nonreg.log`,
+  candidate sha256 `7dd144df...0252`; pre-registered in the step file (2110
+  games an hour, 12 to 20 h worst case, abort at 1 % forfeits on a side, the
+  repetition-warning count per side as the instrument: `ref-a3e84e1`'s is
+  the before-figure, `candidate`'s must be zero). Watcher armed, 40 h
+  ceiling. **Two launches before it were aborted within two minutes** under a
+  busy-core warning from a gate run a woken subagent had started; not
+  evidence, kept as `..._ABORTED_busy_core`. Lesson recorded: end stray
+  processes by exact name, never `pkill -f` with a pattern that is also in
+  the command being typed -- twice the coordinator's own shell died of it.
+  **When the SPRT lands**: read verdict, `tools/forfeit_report.py` over the
+  PGN, the warning counts per side; stamp S042 with the verdict, move to
+  `plan_done/`, re-derive plan.md's "What this costs" ledger (DEC-136), then
+  **S220** (Open entry 2, the book bracket, a night run) and **S024**. The
+  fast check over `50b1ff9` is out; its findings land as a follow-up. **Three
+  more owner items**: the zip digest for `noob_3moves.epd`; the governor
+  (`performance` before the next A/A); DEC-190/191 -- keep the book and run
+  S220, or revert now. **Compaction point.**
+
 - **S216 is done, 2026-09-12 02:05; S042 is next and starts now.** A Sonnet 5
   subagent closed the Tier-1 gap in `adocs/data/S216_census_run.py` -- the
   refusal guard keyed on the reason string's truthiness, now on the refusal

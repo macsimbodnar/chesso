@@ -608,3 +608,27 @@ substring inside one literal, or teach `plan_prose_check.py`'s `TITLE` regex
 to concatenate adjacent literals. The second is what was applied. The
 checker's own gap (adjacent string literals in a doctest title) is otherwise
 unfixed and will recur wherever a future title wraps the same way.
+
+## Launch note, coordinator, 2026-09-12 03:57
+
+`REF=a3e84e1 OUT=.tuning/s042_nonreg_20260912_035728 ./fastchess.sh --nonreg`,
+detached, pid 2753254, console `.tuning/s042_nonreg.log`. Banner: candidate
+`50b1ff9`, reference `a3e84e1`, 8+0.08, hash 16, concurrency 12 of 12,
+`noob_3moves.epd`, seed `20260912035728`, bounds `elo0=-5 elo1=0
+alpha=0.05 beta=0.05`; no busy warning. Candidate binary the match plays,
+`build/src/chesso` at launch: sha256
+`7dd144df70c130c0bc72b99cf47432e13cf4fa03f2ab84584301fbde9f200252`, the tree
+this stamp benches (27322394). Governor `powersave`, on mains. Watcher armed
+through `Monitor`, persistent: `SPRT-RUN-(DONE|FAILED)`, process death, 40 h
+ceiling, polled every 60 s.
+
+**Two launches before this one were aborted within two minutes each and are
+not evidence**: `.tuning/s042_nonreg_20260912_035128_ABORTED_busy_core` and
+`..._035437_ABORTED_busy_core`. Both banners warned "about 109 % of a core is
+already busy": a gate run (`ctest -L fast` over the Release trees) was still
+executing on the machine -- the test subagent, woken by its own watcher after
+its brief had been fulfilled and the commit made, had started the full gate
+its brief asked for. It was stopped, its processes ended by exact name, and
+the machine checked quiet (top process 2.7 %) before this launch. The
+pre-registration is unchanged; only the seed differs between the three
+banners, as it must.
