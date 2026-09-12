@@ -7,8 +7,8 @@ decisions:  DEC-187, DEC-171, DEC-173, DEC-141, DEC-143
 closes:     2026-08-13_adversarial-F08
 blocks:
 paused_by:
-author:     a Sonnet 5 subagent briefed by the coordinator (DEC-185, DEC-188); started 2026-09-12 02:00
-done:
+author:     Sonnet 5 subagents briefed by the coordinator (DEC-185, DEC-188): the fix and its tests, the re-stated fixtures and the gate, the verdict reading; started 2026-09-12 02:00, closed 07:20 by the coordinator
+done:       2026-09-12 07:20. The en passant square enters the position and its Zobrist key only when a pawn of the side to move attacks it: one helper, `en_passant_is_capturable`, mirrors the generator's own candidate test and is applied in `make_move_impl` and `load_FEN`; `set_en_passant` (no caller) deleted. Red first: history A scored -313 on the parent and 0 after, python-chess confirming a claimable threefold; the incremental key equals the recomputed hash with and without a capturing pawn; 1.d4 d5 2.c4 and 1.c4 d5 2.d4 hash equal. FEN fourth field agrees with python-chess X-FEN on all 115021 positions of the S219 A/A corpus, 0 disagreements (4091 squares under the old convention, 132 capturable). Perft identical; `Bench: 27322394` (was 30046849). Four pre-existing tests encoded the always-set convention and are re-stated at their sites with oracle quotes, none relaxed, Polyglot goldens unchanged (`adocs/data/S042_polyglot_key_cases.py`); a Debug-only abort in `test_chesso`'s diagnostic code fixed by reordering one `unmake_move`. Debug self-play 8 games, 0 `Assertion`; gate green both builds (34/34); `gate_extra.sh` green on all five stages. **SPRT `--nonreg` against `a3e84e1` on `noob_3moves.epd`: H1, LLR 2.95, nElo +9.93 +/- 8.99, Elo +7.87 +/- 7.12, 5741 games in 2 h 40 m 45 s, 2143 games an hour, 0 forfeits either side** -- not a regression of 5 nElo, no magnitude claimed. The instrument: 427 repetition warnings from the reference side, **1 from the candidate**, attributed to game 3504 and replayed: a genuine threefold whose oldest occurrence follows a queen move, which the engine's own convention scores a draw when walked and which cold search does not reproduce -- the PV-instability shape DEC-187 named, not a key defect. `MANUAL.md` and `adocs/specs.md` state the convention; `DEV_MANUAL.md` carries the bench; `README.md` human-owned, untouched. Two Sonnet 5 subagents implemented and re-stated, one read the verdict (DEC-185, DEC-188); the coordinator launched, stamped and committed
 
 ## What happens now
 
@@ -633,3 +633,239 @@ its brief asked for. It was stopped, its processes ended by exact name, and
 the machine checked quiet (top process 2.7 %) before this launch. The
 pre-registration is unchanged; only the seed differs between the three
 banners, as it must.
+
+## Verdict, 2026-09-12
+
+**The run.** `.tuning/s042_nonreg.log` final block: **Elo 7.87 +/- 7.12, nElo
+9.93 +/- 8.99, LOS 98.48 %, DrawRatio 35.75 %, PairsRatio 1.10, Games 5740,
+Wins 1974, Losses 1844, Draws 1922, Points 2935.0 (51.13 %), Ptnml(0-2) [274,
+603, 1026, 653, 314], WL/DD Ratio 2.08, LLR 2.95 (100.3 %) (-2.94, 2.94)
+[-5.00, 0.00]** -- `SPRT ([-5.00, 0.00]) completed - H1 was accepted`. `Total
+Time: 02:40:45`. The PGN (`.tuning/s042_nonreg_20260912_035728/games.pgn`,
+5741 games -- one more than the SPRT engine's own last-printed tally, which
+updates on an interval and not on every game) reads `draws 1922 of 5741
+(33.5 %), decisive 3819 of 5741 (66.5 %), forfeits 0 of 5741 (0.00 %)`,
+4278 adjudication terminations, 1463 normal. `python3 tools/forfeit_report.py
+.tuning/s042_nonreg_20260912_035728/games.pgn --max-pct 1.0`, re-run for this
+section rather than read off the earlier claim: `candidate 5741 games, 0
+forfeits, 0.00 %` and `ref-a3e84e1 5741 games, 0 forfeits, 0.00 %`. **The
+reading is H1** exactly as pre-registered: not a regression of 5 nElo or
+more, kept, no magnitude claimed -- an SPRT that stops on a favourable swing
+is biased upward by construction (DEC-063). Games an hour, this run alone:
+5741 / (9645 s / 3600) = **2142.8 games an hour** (the pre-registration's
+2110 was DEC-190's calibration estimate, not this run's own figure).
+
+**The instrument.** `grep -c` over `.tuning/s042_nonreg.log`: **427** lines
+`from ref-a3e84e1`, **1** line `from candidate` (`PV continues after
+threefold repetition`), plus **2** `Incomplete mating PV - from candidate`
+and 0 from `ref-a3e84e1`. The 427 fold into **50 distinct move-decisions**
+(one decision prints once per remaining search depth, so a single flagged
+move can repeat many times in the raw count). Per DEC-187's own consequence,
+a non-zero candidate count is a second cause to be named, not evidence
+against the fix -- classified below.
+
+### The residual: one candidate warning, game 3504
+
+**Attribution.** The single `from candidate` line
+(`.tuning/s042_nonreg.log:9418`, block at 9418-9421) carries no game number
+itself, so it was pinned three independent ways rather than read off
+adjacency in the log:
+
+1. Its `Position;`/`Moves;` block is a 39-ply prefix from book FEN
+   `r1bqkb1r/ppp1pppp/2n4n/3p4/5P2/P4N2/1PPPP1PP/RNBQKB1R w KQkq - 0 4`. That
+   FEN appears in exactly two games in `games.pgn` (a mirrored pair, `Round
+   1752`). `python-chess` 1.11.2 replayed both games' full move lists: only
+   one (White `ref-a3e84e1`, Black `candidate`, `Result 0-1`, `PlyCount 41`)
+   has the 39-move sequence as an exact prefix; the other (`candidate` White)
+   diverges immediately after the shared book and does not.
+2. That game's `GameEndTime` is `2026-09-12T05:35:40 +0200`; the matching
+   block in `fastchess.log` (the `-log` file, which records the identical
+   Warning/Info/Position/Moves quadruple with a timestamp) is stamped
+   `05:35:40.552545` -- within one second of the game ending, consistent with
+   the flagged move being two plies before adjudication (39 + 2 = 41 =
+   `PlyCount`).
+3. `games.pgn` is written in finish order, the same order the console prints
+   `Finished game N`. Reading `games.pgn` sequentially with `chess.pgn`, the
+   matching game is the **3499th** game in the file; the **3499th**
+   `Finished game` line in `.tuning/s042_nonreg.log` (counting occurrences
+   from the top) is `Finished game 3504 (ref-a3e84e1 vs candidate): 0-1
+   {Black wins by adjudication}` at line 9422 -- the line immediately after
+   the warning block.
+
+All three agree: **game 3504**, White `ref-a3e84e1`, Black `candidate`,
+`Round 1752`, adjudicated at ply 41. The flagged move is candidate's own
+23rd move (ply 40, UCI `f8f3`, immediately following the PV move fastchess
+names, `h1g1`); `checkParsedPvLine` (`fastchess`
+`app/src/matchmaking/match/match.cpp`) reports the PV move at the point
+*before* which `board_` is already a threefold, which is why the named move
+is the 8th ply of the printed PV rather than the move candidate actually
+played.
+
+**Reconstruction, `python-chess` 1.11.2.** Book FEN + the 39 played moves,
+then the info line's own PV (`d6h2 g1h1 h2d6 h1g1 d6h2 g1h1 h2d6 h1g1 f8f3
+f1f2 f3f2 e4f2 h3h2 g1f1 h2f2`, `score mate 8`, `depth 4`, from
+`fastchess.log:1262`), checked ply by ply exactly as `checkParsedPvLine`
+does -- gameover tested on the board *before* each PV move is applied:
+
+| PV ply (move) | overall ply | `is_repetition(3)` | `is_repetition(2)` | `can_claim_threefold_repetition()` |
+|---|---|---|---|---|
+| 1 (`d6h2`) | 39 | False | False | False |
+| 2 (`g1h1`) | 40 | False | False | False |
+| 3 (`h2d6`) | 41 | False | False | False |
+| 4 (`h1g1`) | 42 | False | **True** | False |
+| 5 (`d6h2`) | 43 | False | True | False |
+| 6 (`g1h1`) | 44 | False | True | False |
+| 7 (`h2d6`) | 45 | False | True | **True** |
+| **8 (`h1g1`)** | **46** | **True** | True | True |
+
+At overall ply 46 (before PV move 8, `h1g1` -- the exact move fastchess
+names) `board.fen()` is
+`r4r1k/1pp3pp/p2b4/n2p2P1/3PN1n1/P3PN1q/QP1BB3/R4R1K w - - 8 27`, and this
+FEN recurs at three plies: **38, 42, 46** (castling `-`, en passant `-` at
+all three; `_transposition_key()` identical). The **oldest occurrence is
+ply 38**, reached by `g3h3`, a queen move -- not a pawn move of any kind.
+The entire game carries only three double pushes (`d2d4` ply 1, `c2c4` ply
+3, `g2g4` ply 23), all early, all confirmed
+`has_pseudo_legal_en_passant() == False` at the time, and none within reach
+of this repetition's key. **Class (a) does not apply**: no double push, no
+en passant square, no castling-rights difference anywhere near the repeated
+position.
+
+**Classification: (b), and more precisely an iterative-deepening PV artefact,
+not a hash defect.** `src/bitboard.cpp` `classify_repetition` (read directly,
+DEC-173): walking backward with step 2 from overall ply 46, the nearest hash
+match is ply 42, which is strictly inside the search tree (its history index
+is above `root_history_size`, the root being ply 39) -- so the function
+returns `DRAW` at the first recurrence found, by DEC-173's own rule, and
+`src/search.cpp:640` returns `DRAW_SCORE` (0) the instant that happens,
+clearing the PV row for that ply. That is: **if the search actually walked
+this exact path to this exact node, its own convention says draw**, the same
+convention S207 built and this step's fix does not touch. The printed PV
+nonetheless continues seven more plies past that node to a `mate 8` claim.
+Class (c) (a fastchess false positive) is ruled out the same way class (a)
+is: `python-chess` independently confirms a genuine, rules-real threefold at
+that exact ply.
+
+**Cold reproduction, `build/src/chesso` (sha256
+`7dd144d...200252`, the exact candidate binary the match played) through
+`python-chess`'s `SimpleEngine.popen_uci`, which waits for `bestmove` itself
+(no `quit`-races-`go` risk, `TOOLCHAIN.md`), position = book FEN + the 39
+played moves:
+
+```
+go depth 4:  score +470            pv d5e4 d2a5 e4f3 e2d3
+go depth 6:  score #+4 (mate 4)    pv f8f3 f1f2 f3f2 e4f2 h3h2 g1f1 h2f2
+go depth 8:  score #+4 (mate 4)    pv f8f3 f1f2 f3f2 e4f2 h3h2 g1f1 h2f2
+go depth 10: score #+4 (mate 4)    pv f8f3 f1f2 f3f2 e4f2 h3h2 g1f1 h2f2
+```
+
+A fresh process at the flagged depth (4) does not reproduce the flagged line
+at all -- an unrelated, non-mate score. From depth 6 on, the engine
+converges stably on a **different, shorter, non-repeating** forced mate
+(mate in 4, seven plies) that reuses the flagged PV's own final seven moves
+verbatim (`f8f3 f1f2 f3f2 e4f2 h3h2 g1f1 h2f2`) with no king-shuffle prefix
+at all. This corroborates the classification: the `mate 8`-via-repetition
+line was a snapshot specific to that one moment's in-game search state (a
+persistent process's transposition table and move-ordering history built up
+over the whole game, which a fresh single query does not carry), not a
+stable or independently reproducible property of the bare position -- the
+same "right by accident, one ply deeper" shape DEC-187 already recorded for
+most of the pre-fix 236, just without a hash bug behind it this time. One
+occurrence in 5741 games; nothing here reopens the en passant fix or asks
+for one.
+
+### Three of the reference side's 427, confirmed the fixed class
+
+Three distinct decisions (of the 50), replayed the same way:
+
+- **Line 616, move `e7d6`** (`ref-a3e84e1`): first genuine threefold
+  (`is_repetition(3)` True) exactly at the named move; oldest occurrence
+  immediately after `h2h4` (`has_pseudo_legal_en_passant() == False`). Cold,
+  `.ref-builds/a3e84e1/build/src/chesso` and `build/src/chesso` at `go depth
+  6` from that position **agree with each other** (score -14, `pv e7d6 c6b5
+  d6d5 b5e8 d5c4 g1f2`) but not with the original flagged line -- same
+  fresh-process caveat as the residual.
+- **Line 4102, move `d1f3`** (`ref-a3e84e1`): first genuine threefold exactly
+  at the named move; oldest occurrence immediately after `h2h4`
+  (uncapturable). Cold at `go depth 5`, both binaries agree: score +33, `pv
+  c5c4 e8h5 d1a4 h5f7 c4c3`.
+- **Line 10944, move `e5e6`** (`ref-a3e84e1`): first genuine threefold
+  exactly at the named move; oldest occurrence immediately after `a2a4`
+  (uncapturable). Cold at `go depth 5`: both binaries agree on the score
+  (+47) and differ by one non-mating king square in the PV (`g6h5` vs
+  `g6h6`), immaterial to the point being checked.
+
+All three: oldest occurrence of the repeated position follows a double pawn
+push, and that push's en passant square was not capturable
+(`has_pseudo_legal_en_passant() == False`) -- exactly the class this step
+fixes, independently reproduced rather than assumed from the aggregate
+count.
+
+### The two `Incomplete mating PV` warnings, candidate
+
+Both fire at `info depth 1` with a one-move PV against a claimed mate several
+moves longer. Attributed the same way as the residual above (book
+FEN unique among the mirrored pair once the move prefix is matched, and the
+console's Nth `Finished game` line lands immediately after each warning
+block): **game 842** (White `ref-a3e84e1`, Black `candidate`, `Round 421`,
+`Result 0-1`, console line 2318, `score mate 5, pv a1c1`) and **game 2287**
+(White `candidate`, Black `ref-a3e84e1`, `Round 1144`, `Result 1-0`, console
+line 6116, `score mate 7, pv g1f1`) -- `checkParsedPvLine`'s
+`IncompleteMatingPv` branch, which compares `info.pv.size()` against
+`2*|mate| - 1` and fires whenever a depth-1 iteration reports a mate score
+too short a PV to prove, the ordinary shape of a transposition-table hit
+returning a stored mate value before the shallow iteration has walked out
+the moves that justify it. This class predates S042: engine `98bf3e1`
+(dated 2026-09-11, the day before S042 started at 2026-09-12 02:00) shows
+it in `.tuning/
+s219_compare_20260911_204110/pass1_uho4852/stdout.log` (6), `pass1_noob3`
+(2), `pass1_uho4060v4` (5) and `pass2_popularpos` (2) -- a same-engine,
+same-time-control-family comparison (`full` 8+0.08 vs `half` 4+0.04) wholly
+unrelated to en passant or repetition; `adocs/data/S219_aa_calibration.log`
+(a same-engine A/A) shows 0, so the rate is situational rather than
+constant. No fix proposed here, per the brief.
+
+### Ledger arithmetic, `adocs/plan.md` "What this costs"
+
+Sanity check first: recomputing the existing nine verdicts' wall times in
+seconds reproduces the published **mean 4 h 49 m, median 5 h 27 m, 101366
+games in 43.42 h, 2334.6 games an hour** to the minute and the first decimal
+(4 h 49 m 27.6 s, 5 h 26 m 38 s exactly), so the same method is used to
+extend the table.
+
+**S042 added**: wall `2 h 40 m 45 s` (9645 s = 2.679 h), 5741 games, bounds
+`{-5, 0}`, verdict H1.
+
+- **Mean over ten**: (156308 + 9645) s / 10 = 16595.3 s = **4 h 36 m 35 s**
+  (down from 4 h 49 m).
+- **Median over ten**: sorted wall times put S207 (16016 s) and S108
+  (19598 s) as the 5th and 6th of ten; (16016 + 19598) / 2 = 17807 s =
+  **4 h 56 m 47 s** (down from 5 h 27 m).
+- **Fast class, S042 joins S149/S107/S093 v1/S207** (an effect outside the
+  interval, S042's nElo point estimate +9.93 positive): sum 3900 + 5872 +
+  9840 + 16016 + 9645 = 45273 s over 5, mean **2 h 30 m 55 s** (was 2 h 28 m
+  over 4).
+- **Slow class unchanged** (S108, S148, S093 v2, S130, S165): mean **6 h 42
+  m**, untouched -- S042 is not a slow-class member.
+- **Games an hour across the set**: (101366 + 5741) games / (43.42 h +
+  2.679 h) = 107107 / 46.099 = **2323.4 games an hour** (down from 2334.6;
+  S042's own 2142.8 g/h is well below the existing band of 2305.7-2346,
+  which pulls the ten-run figure down).
+- **DEC-143 worst-case table, converted at 2110 games an hour** (this
+  book's pre-registered calibration, not the ledger's 2337 or S198's 2277):
+
+  | pair | games | hours at 2110 g/h |
+  |---|---|---|
+  | `{-5, 5}`, midpoint | 10465 | 4.960 h (4 h 57 m 35 s) |
+  | `{-5, 5}`, on a bound | 6398 | 3.032 h (3 h 1 m 56 s) |
+  | `{0, 5}`/`{-5, 0}`, midpoint | 41861 | 19.839 h (19 h 50 m 22 s) |
+  | `{0, 5}`/`{-5, 0}`, on a bound | 25591 | 12.128 h (12 h 7 m 42 s) |
+  | `{0, 10}`, `--fast` worst case | 5828 | 2.762 h (2 h 45 m 44 s) |
+
+  (The 19.839 h / 12.128 h pair matches the step file's own pre-registration
+  above, 19.84 h / 12.13 h, to the rounding already recorded there.)
+
+These four figures (mean, median, fast-class mean, games-an-hour-across-the-
+set) are what DEC-136 requires `adocs/plan.md`'s own table to carry once this
+step lands; that edit is the coordinator's, not this section's, since this
+file may not touch `adocs/plan.md`.

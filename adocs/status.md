@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S042 is done, 2026-09-12 07:20: H1, and the instrument fell 427 -> 1.**
+  The `--nonreg` SPRT on `noob_3moves.epd` against `a3e84e1`: **LLR 2.95, H1,
+  nElo +9.93 +/- 8.99, Elo +7.87 +/- 7.12, 5741 games in 2 h 40 m 45 s, 2143
+  games an hour, 0 forfeits either side** -- not a regression of 5 nElo, no
+  gain claimed. fastchess's "PV continues after threefold repetition": 427 from
+  the reference side, **1 from the candidate**; a Sonnet 5 subagent attributed
+  the one to game 3504 three independent ways and replayed it with
+  python-chess: a genuine threefold whose oldest occurrence follows a **queen
+  move**, not a pawn push -- the engine's own convention scores it a draw when
+  walked and cold search converges on a different mate, so it is the
+  PV-instability shape DEC-187 named, not a second key defect. Three sampled
+  reference-side warnings are the fixed class (oldest occurrence after an
+  uncapturable double push). Two `Incomplete mating PV` warnings from the
+  candidate predate S042 (present in S219's comparison logs at `98bf3e1`);
+  noted, no step. The ledger: ten verdicts, **mean 4 h 37 m, median 4 h 57 m**,
+  fast class 2 h 31 m over five, 2323.4 games an hour across the set; S042 is
+  the first verdict on the new book and ran at 2142.8, the book's longer
+  games. `adocs/specs.md`'s position-input and search rows carry the
+  convention and the verdict. **Next: S024** (continuation history, two
+  verdicts) by a fresh Sonnet 5 agent, its first SPRT as tonight's run; S220
+  waits on the owner (DEC-193). **Owner items unchanged**: zip digest;
+  governor; the book bracket (DEC-191/193); what a longer list means
+  (DEC-192). **Compaction point.**
+
 - **S217 is done, 2026-09-12 04:40, and it puts a question to the owner.** A
   Sonnet 5 subagent surveyed five DEC-071 engines at their last network-free
   version -- Weiss 1.2 (3055), Texel 1.07 (3129), Laser 1.7 (3291), rofChade
