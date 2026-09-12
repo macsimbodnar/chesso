@@ -67,3 +67,10 @@ are re-derived at every step that moves the tree (which is most of them, and is
 why they went stale), or drop the expectation from the label and leave the
 title. The second is the cheaper contract and this step should prefer it unless
 the owner wants the expectations.
+
+## Amended 2026-09-12 by the coordinator
+
+`set_en_passant` is gone: S042 deleted it on 2026-09-12 (`50b1ff9`), having
+found zero callers, as this step's own list anticipated ("whichever step lands
+first, the other adjusts"). Whatever this file says about deleting it is
+done; the rest of the step stands.

@@ -720,3 +720,21 @@ one-line fix "re-point it at whatever commit the reimplementation sits on"
 per current `AGENTS.md`), this commit's sha as `REF`, and `noob_3moves.epd`.
 `adocs/data/S024_pair_stats.py` beside it is generic PGN pair-statistics
 tooling, not machine- or match-specific, and needs no change.
+
+## Launch note, verdict 1, coordinator, 2026-09-12 08:06
+
+Committed as `cace216` (`Bench: 22363740`) after the coordinator re-ran the
+gate in both trees (34/34, 34/34, `clang-format.sh --check` clean) on the
+final tree. `REF=b5c357a OUT=.tuning/s024v1_sprt_20260912_080633 ./fastchess.sh`,
+detached, pid 4149701, console `.tuning/s024v1_sprt.log`. Banner: candidate
+`cace216`, reference `b5c357a`, 8+0.08, hash 16, concurrency 12 of 12,
+`noob_3moves.epd`, seed `20260912080633`, bounds `elo0=0 elo1=5 alpha=0.05
+beta=0.05`; no busy warning, top process 2.2 % before launch. Candidate
+binary the match plays, `build/src/chesso` at launch: sha256
+`ad57cc154363d4f6984b530309766d405d707847e7b9b7381a0eb0a12bcf174f`. Governor
+`powersave`, on mains. Watcher armed through `Monitor`, persistent:
+`SPRT-RUN-(DONE|FAILED)`, process death, 40 h ceiling, polled every 60 s. Open
+defects of BUGS class at launch: none (`adocs/status.md` checked). Started
+in the morning rather than at night because the machine would otherwise have
+idled: the ledger's fast class prices a real effect at about 2.5 h, and a null
+runs to the 19.8 h wall, which the pre-registration accepts.

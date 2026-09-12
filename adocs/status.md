@@ -7,6 +7,39 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S024 verdict 1 is landed as `cace216` and its gainer SPRT is running,
+  launched 08:06.** A Sonnet 5 subagent built the one-ply continuation
+  history: `cont_hist[12][64][12][64]` on `search_state_t` (1.125 MiB, a value
+  member zeroed with the state), one index helper `continuation_entry` for
+  the write in `history_on_quiet_cutoff` (which gains `prev_move`) and the read
+  in `score_move`, S093's bonus/malus formula and `QuietHistoryMax` reused
+  unfitted (no new constant; S127's lane fits both tables), guarded on a
+  previous move existing -- ply 0 and the node after a null move pass 0 and
+  touch nothing. **Red first**: three cases, six assertions reading 0 where
+  a signed value was required, quoted in the step file; **two mutants
+  killed** (malus sign; the guard dropped -- a silent wrong-cell write, not a
+  crash, caught by the table-scan cases). `search_bench` moves under 4 %,
+  best moves unchanged; **`Bench: 22363740`** from 27322394 (-18.15 %). Debug
+  self-play 8 games, 0 `Assertion`; gate 34/34 both trees (the coordinator
+  re-ran it before committing); `gate_extra.sh` five of five, sanitizer bench
+  equal to Release. **Launch**: `REF=b5c357a ./fastchess.sh`, gainer bounds
+  `{0, 5}`, `noob_3moves.epd`, seed `20260912080633`, pid 4149701, out
+  `.tuning/s024v1_sprt_20260912_080633/`, candidate sha256 `ad57cc15...174f`;
+  pre-registered in the step file at 2110 games an hour (19.8 h worst case;
+  the ledger's fast class prices a real effect at about 2.5 h); watcher armed,
+  40 h ceiling. Started in the morning because the machine would otherwise
+  idle. **When it lands**: verdict, forfeit report, the H0 census if H0
+  (the pre-registration says how), the ledger row (DEC-136), then **verdict
+  2** -- the two-ply table with a per-ply move stack, against `cace216` -- by
+  a fresh agent. **Filed**: S221, the citation checker stitching test titles
+  clang-format splits across string literals (found twice today); S213
+  amended, `set_en_passant` already gone. The fast check over `cace216` is
+  out. **Subagent stalls**: twice today an agent armed a watcher and ended its
+  turn waiting on it; the coordinator now arms its own watcher on any run a
+  subagent starts and takes over from the step file when the report does not
+  come. **Owner items unchanged**: zip digest; governor; the book bracket
+  (DEC-191/193); what a longer list means (DEC-192). **Compaction point.**
+
 - **S042 is done, 2026-09-12 07:20: H1, and the instrument fell 427 -> 1.**
   The `--nonreg` SPRT on `noob_3moves.epd` against `a3e84e1`: **LLR 2.95, H1,
   nElo +9.93 +/- 8.99, Elo +7.87 +/- 7.12, 5741 games in 2 h 40 m 45 s, 2143
