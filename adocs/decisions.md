@@ -10507,6 +10507,7 @@ Consequences: `adocs/plan.md`'s Open list is re-sorted by one move; S042's
               second cause.
 
 ## DEC-188  2026-09-12  The step subagent is Sonnet 5, not Opus 5: DEC-185's model clause is amended, the rest of it stands
+**VOID as to the model, 2026-09-12 18:20 -- superseded by DEC-199: the step subagent is Opus 5 again.** The rest of the entry stands.
 Tags:         workflow, agents, coordinator, model, dec-185
 Context:      DEC-185 (2026-09-11) set the operating rule: one clean subagent
               per plan step, briefed by the coordinator, which implements
@@ -11194,3 +11195,53 @@ Consequences: `adocs/plan.md`: S222 at Open entry 13, S098 at 14, the old
               S222's lane runs, its pre-registration states the axes, the
               regime and the estimate from `.moltke.local.md`'s throughput
               (RUNS). Nothing is implemented on this entry.
+
+## DEC-199  2026-09-12  The step subagent is Opus 5 again, and the owner's evening priorities are recorded: strength and correctness over machine time, the governor ignored, questions kept to the reserved set
+Tags:         workflow, agents, coordinator, model, priorities, dec-185,
+              dec-188, dec-195, dec-155
+Context:      DEC-188 (2026-09-12, 00:30) amended DEC-185's model clause from
+              Opus 5 to Sonnet 5 on the owner's instruction. Opening the
+              evening session at 18:12 on 2026-09-12, with `plan_current/`
+              empty and nothing running, the owner wrote: "you are the master
+              and coordinator. You should execute the plan one step at the
+              time. Per each step use a fresh Opus 5 agent so the context is
+              always clean. ... Normally use only one agent but if there is
+              some work in progress that does not block the whole machine but
+              requires long time to wait you can move to another task. Try to
+              keep questions for me at minimum and pick the best path for the
+              project. strength and correctness are more valuable then machine
+              time. Ignore the governor status. Now go. Report to me time to
+              time and try to not get blocked."
+Decision:     **By the owner.** (1) The step subagent is **Opus 5** (`model:
+              opus`) from this point on; DEC-188's model clause is VOID and
+              everything else in DEC-185 stands -- one fresh subagent per step
+              or self-contained part, a self-contained brief and a bounded
+              report, the coordinator holds the machine and the shared
+              documents and commits, one task at a time with the blocked-task
+              exception, the handover into `status.md` at each task close.
+              (2) **Strength and correctness outrank machine time.** Where a
+              choice trades measurement or machine time against a cleaner
+              result or a stronger engine, the cleaner or stronger result
+              wins: a fix is not skipped to keep a run going, a verdict is not
+              read early to save hours, and a run that improves the evidence
+              is taken even when it costs the machine a night. The four-hour
+              line (DEC-155) still decides *when* a run starts, not *whether*.
+              (3) The governor is not asked about, waited for or recorded as a
+              blocker: DEC-195 stands as written, and the pre-registration
+              records whichever governor the machine has. (4) Questions to the
+              owner stay in the reserved set -- goal, ethic, workstation risk
+              -- and the coordinator does not stop at task boundaries.
+Rejected:     **Keeping Sonnet 5** -- the owner named Opus 5 explicitly and
+              gave the reason (a clean context per step, quality). **Reading
+              "strength over machine time" as a new bounds rule** -- it is a
+              tie-breaker between options, not a change to DEC-143's
+              pre-registration or to the bounds pairs; a run still states its
+              worst-case games and its abort rule before it starts.
+              **Running steps in parallel to use the idle machine during
+              agent-only work** -- the owner repeated "normally use only one
+              agent", so a second task starts only behind a long wait, as
+              DEC-185 (3) already says.
+Consequences: `AGENTS.md`'s AGENTS rule names Opus 5 with this id. A step's
+              `author:` names Opus 5 from S214 on; S219's reading and S024,
+              S220, S221 stay attributed to Sonnet 5. DEC-188 carries a VOID
+              line on its model clause pointing here.

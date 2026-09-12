@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-12, by hand.
 
+- **S214 started, 2026-09-12 18:20, by an Opus 5 subagent (DEC-199).** The
+  owner's evening instruction reopened the work: the step subagent is Opus 5
+  again (DEC-188's model clause VOID), strength and correctness outrank
+  machine time, the governor is ignored, questions stay in the reserved set.
+  S214 is tools-only (`analyse_game.py` refuses an unread score,
+  `spsa_driver.py check` probes every axis, the tuner's provenance stamp
+  carries the four missing flags, `plan_prose_check.py --gate` compares the
+  two copies of the completion command, the tuner-groups assertion names
+  what it detects); no `src/`, no run. `plan_current/`: S214. Machine idle
+  apart from the subagent's builds. **Next: S211**, brief being prepared
+  while S214 runs.
+
 - **DEC-198 recorded, 2026-09-12 18:05: S222 moves to Open entry 13,
   directly before S098, with a narrow SPSA lane of its own -- nothing
   implemented, on the owner's instruction ("record but don't proceed").**
