@@ -7,7 +7,7 @@ decisions:  DEC-170, DEC-171, DEC-181, DEC-184
 closes:     2026-09-10_adversarial-F17, 2026-09-10_adversarial-F18, 2026-09-10_adversarial-F19, 2026-09-10_adversarial-F20, 2026-09-10_adversarial-F21, 2026-09-10_adversarial-F22, 2026-09-10_adversarial-F23, 2026-09-04_adversarial-F01, 2026-09-04_adversarial-F02, 2026-09-04_adversarial-F03
 blocks:
 paused_by:
-author:
+author:     Opus 5 subagents briefed by the coordinator, one per half (DEC-185, DEC-199); any SPRT is the coordinator's; started 2026-09-13 14:50 on the idle machine
 done:
 
 ## Why this exists, and why it sits behind the strength steps

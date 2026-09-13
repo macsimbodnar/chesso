@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S210 started, 2026-09-13 14:50, first half by an Opus 5 subagent (DEC-199).**
+  The seven low engine defects of the 2026-09-10 audit and three of the
+  2026-09-04 report, in two halves: the first lands F17 (the halfmove clock
+  cannot wrap), F18 (a full history refuses), F19 (`go infinite` waits for
+  `stop` whatever the line carries, closing 2026-09-04 F01), F20 (`movestogo
+  0` is sudden death), F21 (the first iteration can be stopped), F23 (the
+  bishops comment), 2026-09-04 F02 (a bad `moves` token refuses the whole
+  `position`) and F03 (the aborted iteration's root answer), plus DEC-184's
+  `MANUAL.md` sentences -- each red first, `No functional change` proved on
+  the bench and both depths, Debug self-play owed; the second half lands F22
+  (quiescence scores a dead position as a draw) in its own commit with a
+  bench signature after a reach census decides whether an SPRT is owed
+  (DEC-107). `plan_current/`: S210.
+
 - **S227 is done, 2026-09-13 14:40, by an Opus 5 subagent on the owner's
   instruction (DEC-207): pixello and the debug GUI are out of the branch.**
   Removed: the `tests/pixello` gitlink and its `.gitmodules` entry
