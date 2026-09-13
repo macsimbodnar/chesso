@@ -1,15 +1,20 @@
 #include "utils.hpp"
 #include <bitset>
 #include <cassert>
+#include <cctype>
 #include <iterator>
 #include <sstream>
 #include <unordered_map>
 
 
+// Through an unsigned char because std::isdigit() on a negative char is
+// undefined, and the strings reaching here come off a UCI line a GUI wrote --
+// any byte above 127 is negative on a platform with a signed char. Same defect
+// and same fix as fold_case() in src/chesso.cpp, S209. S213.
 bool is_uint(const std::string& str)
 {
   for (const char c : str) {
-    if (!isdigit(c)) { return false; }
+    if (!std::isdigit(static_cast<unsigned char>(c))) { return false; }
   }
 
   return true;

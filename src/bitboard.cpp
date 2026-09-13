@@ -1568,16 +1568,6 @@ bool is_check(const game_t* game)
 }
 
 
-void swap_side(game_t* game)
-{
-  assert(game != nullptr);
-
-  game->board.hash ^= game->hash_randoms.side_randoms[game->board.active_color];
-  game->board.active_color = !game->board.active_color;
-  game->board.hash ^= game->hash_randoms.side_randoms[game->board.active_color];
-}
-
-
 bool is_capturing_king(const board_t* board, move_t move)
 {
   assert(board != nullptr);

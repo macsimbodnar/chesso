@@ -57,10 +57,17 @@ extern const int mobility_eg[4];
 // tools/eval_model.hpp starts from what the engine ships instead of from a copy
 // of it that would be free to drift.
 //
-// Zero until the tuner fits them, so that the SPRT measures the fitted term
-// rather than a guess. Six buckets rather than one weight scaled by the rank
-// because the value is not linear in the rank and the tuner fits only a linear
-// function of its parameters -- see evaluation.cpp.
+// Fitted and shipping non-zero since S027 -- see the weights themselves and
+// the fit that produced them in evaluation.cpp. They are a residual on top of
+// the pawn piece-square table and not a valuation of a passed pawn, which is
+// why a bucket is allowed to be negative. The last bucket is not "nearly
+// nothing": S100 read it at +22, -1 and -17 across three fits, a 39-point
+// spread that changes sign twice, so it is a direction the fits do not agree
+// on -- S134 folds it into the tables for that reason.
+//
+// Six buckets rather than one weight scaled by the rank because the value is
+// not linear in the rank and the tuner fits only a linear function of its
+// parameters -- see evaluation.cpp.
 extern const int passed_pawn_mg[6];
 extern const int passed_pawn_eg[6];
 
@@ -68,17 +75,20 @@ extern const int passed_pawn_eg[6];
 // that side's own passed pawns in the buckets the weights above are indexed by;
 // the White-minus-Black difference the term scores is one subtraction away.
 //
-// It exists for tests/test_eval_model, and only because the weights ship at
-// zero. While they do, comparing the engine's score against the tuner's model
-// compares 0 against 0 for this term and would pass just as happily if the two
-// disagreed about every bucket. The model has a test of its own against
-// hand-computed positions, which says it matches the written specification;
-// nothing said the engine reads that specification the same way, and a tuner
-// fitted against a model the engine disagrees with fits the wrong function.
+// It exists for tests/test_eval_model. The weights ship non-zero, so comparing
+// the engine's score against the tuner's model is a real comparison of this
+// term today -- it was not while they were zero, where 0 against 0 passed
+// whatever the two believed about the buckets -- but it is a comparison of the
+// weighted White-minus-Black difference and nothing finer. The model has a
+// test of its own against hand-computed positions, which says it matches the
+// written specification; nothing said the engine reads that specification the
+// same way, and a tuner fitted against a model the engine disagrees with fits
+// the wrong function.
 //
 // Per colour and not as the difference, for the same reason
 // king_safety_features() is: a miscount that hits both sides equally cancels in
-// the difference, so a check that sees only the difference cannot see it.
+// the difference, so a check that sees only the difference cannot see it -- and
+// that stays true at any weight, which is why the accessor outlived the zeros.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -90,8 +100,9 @@ void passed_pawn_counts(const board_t* board, int out[2][6]);
 // tuner's model in tools/eval_model.hpp starts from what the engine ships
 // instead of from a copy of it that would be free to drift.
 //
-// Zero until the tuner fits them, so that the SPRT measures the fitted term
-// rather than a guess.
+// Fitted and shipping non-zero since S027 -- see evaluation.cpp. A residual on
+// top of the pawn piece-square table like the passed pawn buckets above, which
+// is why a sign here is not a chess statement.
 //
 // The three definitions, stated exactly, because the tuner's model is written
 // from this comment and the two have to mean the same thing. Each is about one
@@ -121,9 +132,9 @@ extern const int pawn_structure_eg[3];
 
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
-// than as the difference, for the reasons written out over passed_pawn_counts()
-// -- while the weights are zero the score compares 0 against 0, and a miscount
-// that hits both sides equally cancels in a difference.
+// than as the difference, for the reason written out over passed_pawn_counts():
+// a miscount that hits both sides equally cancels in a difference, so the score
+// comparison cannot see it whatever the weights are.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -136,8 +147,14 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // starts from what the engine ships instead of from a copy of it that would be
 // free to drift.
 //
-// Zero until the tuner fits them, so that the SPRT measures the fitted term
-// rather than a guess.
+// **Zero in evaluation.cpp, and not because the tuner has not reached them.**
+// S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
+// its bundled SPRT read -5.48 +/- 11.46 and H0, and the weights were then
+// zeroed by hand and held there by `--freeze piece_placement` in every fit
+// since S065 (DEC-057) -- held at zero, not fitted to it; evaluation.cpp says
+// so beside the weights and adocs/plan_done/S100_*.md carries the ledger. The
+// passed pawn, pawn structure and king safety weights above and below ship
+// fitted since S027; tempo is zero for its own reason, stated at its block.
 //
 // The four definitions, stated exactly, because the tuner's model is written
 // from this comment and the two have to mean the same thing. Each is about one
@@ -186,9 +203,11 @@ extern const int piece_placement_eg[4];
 
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
-// than as the difference, for the reasons written out over passed_pawn_counts()
-// -- while the weights are zero the score compares 0 against 0, and a miscount
-// that hits both sides equally cancels in a difference.
+// than as the difference, for the reasons written out over
+// passed_pawn_counts(). Both of them apply here at full strength: these weights
+// are still zero, so the score comparison is 0 against 0 and sees nothing at
+// all, and a miscount that hits both sides equally would stay invisible in a
+// difference after they are fitted.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -200,8 +219,12 @@ void piece_placement_counts(const board_t* board, int out[2][4]);
 // above: the tuner's model in tools/eval_model.hpp starts from what the engine
 // ships instead of from a copy of it that would be free to drift.
 //
-// Zero until the tuner fits them, so that the SPRT measures the fitted term
-// rather than a guess.
+// **Zero, and not because the tuner has not reached them.** It has: `--only
+// tempo` fitted mg 10, eg 0 at S027 and the SPRT that followed reached neither
+// bound over 3000 games. The pair was put back to zero and the plumbing kept,
+// so what ships is a measured "smaller than this instrument can see" and not a
+// term still waiting for its first fit -- evaluation.cpp has the run and what
+// S100 added to it.
 //
 // **The only term here that is not a function of the board**, which is what
 // makes its placement the whole definition. evaluate() answers from the side to
@@ -241,8 +264,10 @@ enum king_safety_feature_t
 // as the mobility weights: the tuner's model in tools/eval_model.hpp starts
 // from what the engine ships instead of from a copy of it that can drift.
 //
-// Zero until the tuner fits them, so that the SPRT measures the fitted term
-// rather than a guess. See evaluation.cpp for why the model is linear.
+// Fitted and shipping non-zero since S027 -- see evaluation.cpp for the fit,
+// for why the model is linear, and for why a sign here is not a chess
+// statement: the four attacker counts and the incidence count are collinear by
+// construction, so what was fitted is their sum (DEC-044).
 extern const int king_safety_mg[KS_FEATURE_COUNT];
 extern const int king_safety_eg[KS_FEATURE_COUNT];
 
@@ -250,11 +275,14 @@ extern const int king_safety_eg[KS_FEATURE_COUNT];
 // row is about its own king: the attackers are the other side's pieces bearing
 // on it, the shelter is its own pawns in front of it.
 //
-// It exists for tests/test_eval_model, and only because the weights ship at
-// zero. While they do, comparing the engine's score against the tuner's model
-// compares 0 against 0 for this term and would pass just as happily if the two
-// disagreed about every one of the nine counts. The counts themselves are the
-// only thing that can be checked today, so they are exposed.
+// It exists for tests/test_eval_model. The weights ship non-zero, so the score
+// comparison does now exercise this term -- while they were zero it compared 0
+// against 0 and would have passed just as happily if the two disagreed about
+// every one of the nine counts. What it still cannot see is the shape of the
+// disagreement: the score is one weighted White-minus-Black sum over nine
+// collinear counts, so a miscount in one feature offset by another, or one that
+// hits both sides equally, cancels before it reaches the number. The counts are
+// exposed so that each is checked on its own.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate() calls, so there is one extraction and no second implementation to
@@ -290,10 +318,16 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // shortcut's soundness argument is unchanged by the move. S039 re-decides this
 // number from measured spread and should expect the moved incumbent.
 //
-// It bounds the sum of every expensive term, not each one, so king safety now
-// shares the same budget. That figure is still the whole correction only
-// because king safety ships at zero weight; the margin is re-decided from
-// measured data once it is fitted, and tools/eval_spread is what measures it.
+// It bounds the sum of every expensive term, not each one, so king safety
+// shares the same budget -- and it has shipped at fitted, non-zero weights
+// since S027, so the mobility figures above are no longer the whole correction.
+// The whole correction was measured at that point: tools/eval_spread over the
+// same 1490839 positions put the combined number at p50 27, p95 90, p99 128,
+// p99.9 178 and a maximum of 330, clamping 0.365 % of them against 0.104 % with
+// king safety at zero. That was taken at the margin of 150 that shipped then,
+// so the clamped share at 184 is lower and has not been re-measured. S039
+// re-decides the margin from measured data, and tools/eval_spread is what
+// measures it.
 //
 // The value itself moved to src/search_params.hpp at S073, where it is one of
 // the parameters the tune build exposes over UCI. What it means stays here,

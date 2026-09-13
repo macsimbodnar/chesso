@@ -211,12 +211,18 @@ std::ostream& operator<<(std::ostream& os, std::queue<std::string> q)
 }
 
 
+// The predicate takes an unsigned char because std::isspace() on a negative
+// char is undefined, and this trims a line a GUI wrote -- any byte above 127 is
+// negative on a platform with a signed char. Same defect and same fix as
+// fold_case() below, S209. S213.
 std::string trim_whitespace(const std::string& str)
 {
+  const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+
   // Find the first non-whitespace character
-  auto start = std::find_if_not(str.begin(), str.end(), ::isspace);
+  auto start = std::find_if_not(str.begin(), str.end(), is_space);
   // Find the last non-whitespace character
-  auto end = std::find_if_not(str.rbegin(), str.rend(), ::isspace).base();
+  auto end = std::find_if_not(str.rbegin(), str.rend(), is_space).base();
 
   // If the string is all whitespace, return an empty string
   return (start < end) ? std::string(start, end) : std::string();
@@ -2003,15 +2009,26 @@ bool command_test(std::queue<std::string>& args)
     std::string title;
   };
 
+  // The title is the position's name and nothing else. It carried an expected
+  // `bestmove ... ponder ...` beside the name until S213, printed next to the
+  // line the engine had just produced -- and nothing asserted the two agreed.
+  // Three of the seven had gone stale without a test noticing: KIWIPETE_POS's
+  // and FINE_70_POS's ponder move, and BLOCKED_CENTRE_POS's best move as well.
+  // Every change that moves the tree moves these, which is most of them, so the
+  // choice was to re-derive them at every such step or to stop claiming them.
+  // A label nobody checks that disagrees with the output beside it is worse
+  // than no label, so they are gone; what the search actually plays is printed
+  // one line below, and the assertions that do have to hold live in the test
+  // suite.
   // clang-format off
   std::array<test_entry_t, 7> entries = {{
       {DEFAULT_POSITION,    "DEFAULT_POSITION"},
-      {KIWIPETE_POS,        "KIWIPETE_POS       bestmove e2a6 ponder b4c3"},
-      {KILLER_POS,          "KILLER_POS         bestmove g7h8q ponder c5d4"},
-      {BLOCKED_CENTRE_POS,  "BLOCKED_CENTRE_POS bestmove h7h6 ponder c2c3"},
-      {FINE_70_POS,         "FINE_70_POS        bestmove a1b2 ponder a7b7"},
-      {MATE_IN_2_W_POS,     "MATE_IN_2_W_POS    bestmove e5e6 ponder e8d8"},
-      {MATE_IN_2_B_POS,     "MATE_IN_2_B_POS    bestmove e5e6 ponder e8d8"}
+      {KIWIPETE_POS,        "KIWIPETE_POS"},
+      {KILLER_POS,          "KILLER_POS"},
+      {BLOCKED_CENTRE_POS,  "BLOCKED_CENTRE_POS"},
+      {FINE_70_POS,         "FINE_70_POS"},
+      {MATE_IN_2_W_POS,     "MATE_IN_2_W_POS"},
+      {MATE_IN_2_B_POS,     "MATE_IN_2_B_POS"}
     }};
   // clang-format on
 

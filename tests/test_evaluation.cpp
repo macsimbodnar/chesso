@@ -1,7 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <algorithm>
+#include <array>
+#include <cctype>
 #include <cstdlib>
+#include <random>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -14,6 +17,49 @@
 
 static game_t game;
 static game_t mirrored;
+
+
+// A board as 64 characters in board-index order -- 0 is a8 and 63 is h1, which
+// is the order a FEN writes its ranks -- turned into a FEN with the four
+// trailing fields at their neutral settings: no castling rights, no en passant
+// square, and two clocks a load will accept. '\0' is an empty square.
+//
+// Only the placement and the side to move are varied by the caller, because
+// those are the two fields evaluate() reads.
+static std::string placement_to_fen(const std::array<char, 64>& squares,
+                                    char side_to_move)
+{
+  std::string fen;
+  int empty = 0;
+
+  for (index_t square = 0; square < 64; ++square) {
+    if (squares[square] == '\0') {
+      empty++;
+    } else {
+      if (empty > 0) {
+        fen += static_cast<char>('0' + empty);
+        empty = 0;
+      }
+
+      fen += squares[square];
+    }
+
+    if ((square % 8) == 7) {
+      if (empty > 0) {
+        fen += static_cast<char>('0' + empty);
+        empty = 0;
+      }
+
+      if (square != 63) { fen += '/'; }
+    }
+  }
+
+  fen += ' ';
+  fen += side_to_move;
+  fen += " - - 0 1";
+
+  return fen;
+}
 
 
 struct eval_fixture_t
@@ -37,6 +83,12 @@ struct eval_fixture_t
 
 TEST_SUITE("evaluation: score")
 {
+  // search.cpp's `#define MATE_MIN 48000`, which is not exported. Pinned here
+  // rather than shared, the way tests/test_search.cpp pins this bound and
+  // MATE_MAX beside it, so that moving it is a visible disagreement instead of
+  // a silent agreement.
+  static constexpr int MATE_MIN_LOCAL = 48000;
+
   // The strongest property an evaluation has: mirroring the board and swapping
   // both colours must negate the score exactly. A one-sided term, a wrong
   // sign, or a table indexed from the wrong side all show up here.
@@ -587,9 +639,153 @@ TEST_SUITE("evaluation: score")
     REQUIRE(game.board.material > 0);
 
     // The score has to stay well inside the mate band, or search() reports a
-    // material imbalance as a mate.
+    // material imbalance as a mate. One position here; the case below is the
+    // general statement.
     REQUIRE(load_FEN("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", &game));
-    REQUIRE(std::abs(evaluate(&game.board)) < 48000);
+    REQUIRE(std::abs(evaluate(&game.board)) < MATE_MIN_LOCAL);
+  }
+
+  // `2026-09-10_adversarial-F27`, and the test the reverse futility argument
+  // never had. That rule returns `static_eval - margin` as a lower bound on the
+  // node, and a static score that reached the mate band would make it claim a
+  // mate nothing proved. The comment at the site used to say the score
+  // "provably cannot approach one, because evaluate_expensive() clamps the
+  // whole king-safety correction to +/-LAZY_EVAL_MARGIN". That clamp bounds one
+  // of the two stages. What bounds the other is the arithmetic of
+  // evaluate_cheap(): material, the two tapered piece-square sums and the pawn
+  // terms, every constant in them a two- or three-digit number and every sum
+  // taken over at most sixteen men a side. The conclusion held; the reason
+  // given did not establish it, and nothing asserted either. S213.
+  //
+  // Two populations, because they fail differently. The corpus is what ordinary
+  // play looks like and would catch a term that runs away on a normal board.
+  // The placements below are the other end of the range the load boundary
+  // admits, where a piece value or a table entry multiplied by fifteen is the
+  // thing that could reach 48000.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the static score never reaches the mate band")
+  {
+    int corpus_max = 0;
+    size_t corpus_checked = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+      const int score = std::abs(evaluate(&game.board));
+
+      REQUIRE_MESSAGE(score < MATE_MIN_LOCAL, ("FEN: " + fen));
+
+      corpus_max = std::max(corpus_max, score);
+      corpus_checked++;
+    }
+
+    REQUIRE(corpus_checked > 100);
+
+    // The pathological half. The rule is mechanical on purpose and is not a
+    // chess one: squares come from a fixed seed, the piece mix is the largest
+    // the refusals in load_FEN() leave standing -- sixteen men of a colour, one
+    // king each, no pawn on rank 1 or rank 8 -- and whether a placement is a
+    // position at all is load_FEN()'s answer rather than this loop's. Nothing
+    // here is required to be reachable in a game; the point is the opposite,
+    // that the bound holds on boards no game reaches.
+    //
+    // Family "maximal" is one side at sixteen men with fifteen of them queens
+    // against a lone king, which is the largest material sum the boundary
+    // permits and larger than promotions could ever deliver. Family "mixed"
+    // draws both counts and every piece type, so the tables are exercised over
+    // combinations the first family never produces.
+    std::mt19937 rng(20260913U);
+
+    int pathological_max = 0;
+    size_t accepted = 0;
+    size_t maximal_accepted = 0;
+    std::string worst_fen;
+
+    for (size_t trial = 0; trial < 80000; ++trial) {
+      const bool maximal = (trial % 2) == 0;
+
+      std::array<char, 64> squares{};
+      squares.fill('\0');
+
+      std::vector<index_t> order(64);
+      for (index_t square = 0; square < 64; ++square) {
+        order[square] = square;
+      }
+      std::shuffle(order.begin(), order.end(), rng);
+
+      size_t next = 0;
+      squares[order[next++]] = 'K';
+      squares[order[next++]] = 'k';
+
+      // The two men counts, kings included, so 16 is the cap the boundary
+      // states.
+      std::uniform_int_distribution<int> men(1, 16);
+      const int white_men = maximal ? 16 : men(rng);
+      const int black_men = maximal ? 1 : men(rng);
+
+      // Queens only for "maximal"; the whole non-king set for "mixed". The
+      // king is not in either list: a second one of a colour is refused.
+      static const char white_mixed[] = {'P', 'N', 'B', 'R', 'Q'};
+      std::uniform_int_distribution<size_t> pick(0, sizeof(white_mixed) - 1);
+
+      const auto place = [&](int count, bool white) {
+        for (int i = 1; i < count; ++i) {
+          const index_t square = order[next++];
+          char piece = maximal ? 'Q' : white_mixed[pick(rng)];
+
+          // Rank 1 and rank 8 in board indices, where 0 is a8 and 63 is h1.
+          const bool back_rank = (square / 8) == 0 || (square / 8) == 7;
+
+          if (piece == 'P' && back_rank) { piece = 'Q'; }
+
+          squares[square] = white ? piece
+                                  : static_cast<char>(std::tolower(
+                                        static_cast<unsigned char>(piece)));
+        }
+      };
+
+      place(white_men, true);
+      place(black_men, false);
+
+      // Both sides to move are offered and load_FEN() takes whichever it will:
+      // the boundary refuses a board where the side not to move stands in
+      // check, and on a board this full that refuses most of one orientation.
+      for (const char side : {'w', 'b'}) {
+        const std::string fen = placement_to_fen(squares, side);
+
+        if (!load_FEN(fen, &game)) { continue; }
+
+        const int score = std::abs(evaluate(&game.board));
+
+        REQUIRE_MESSAGE(score < MATE_MIN_LOCAL, ("FEN: " + fen));
+
+        if (score > pathological_max) {
+          pathological_max = score;
+          worst_fen = fen;
+        }
+
+        accepted++;
+        if (maximal) { maximal_accepted++; }
+      }
+    }
+
+    // Non-vacuity, both halves. A boundary change that started refusing these
+    // boards, or a generator that stopped producing one-sided ones, would
+    // otherwise leave the case green while asserting nothing.
+    REQUIRE_MESSAGE(accepted > 1000,
+                    ("load_FEN accepted only " + std::to_string(accepted) +
+                     " of the placements; the generator or the load boundary "
+                     "moved and this case has stopped covering anything"));
+    REQUIRE(maximal_accepted > 0);
+    REQUIRE_MESSAGE(pathological_max > corpus_max,
+                    "the placements are supposed to be the extreme end; they "
+                    "are not separating from ordinary positions");
+
+    MESSAGE("corpus: " << corpus_checked << " positions, max |evaluate()| "
+                       << corpus_max << "; placements: " << accepted
+                       << " accepted, max |evaluate()| " << pathological_max
+                       << " on " << worst_fen << "; MATE_MIN "
+                       << MATE_MIN_LOCAL);
   }
 }
 

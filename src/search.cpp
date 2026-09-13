@@ -1044,11 +1044,28 @@ static int negamax_at(int alpha0,
   // What this rule cannot do, and no setting of it can. The bound it returns is
   // a lower bound on the node, and a forced mate for the opponent is the one
   // thing that bound cannot respect: a static evaluation is never a mate score,
-  // and in this engine it provably cannot approach one, because
-  // evaluate_expensive() clamps the whole king-safety correction to
-  // +/-LAZY_EVAL_MARGIN. S033 measured five guards against that and none of
-  // them worked; the depth and ply bounds are what contain it. A mate deeper
-  // than ply 3 can still be missed for an iteration, and no test covers that.
+  // and in this engine it cannot approach one.
+  //
+  // **What bounds it is the material and table sums, not the lazy clamp.** The
+  // clamp inside evaluate_expensive() bounds one stage -- mobility and king
+  // safety -- to +/-LAZY_EVAL_MARGIN, and until S213 this comment named it as
+  // the whole reason, which it never was: evaluate_cheap() carries material,
+  // the two tapered piece-square sums and the pawn terms, and the clamp says
+  // nothing about any of them. They are bounded by their own arithmetic
+  // instead. Each is a sum of table entries and piece values over at most
+  // sixteen men a side -- the load boundary refuses a seventeenth -- and every
+  // one of those constants is a two- or three-digit number, so the total is
+  // thousands of centipawns where MATE_MIN is 48000.
+  //
+  // Asserted rather than argued, because an argument from the size of some
+  // constants is exactly the kind that a refit walks through: test_evaluation
+  // "the static score never reaches the mate band" runs |evaluate()| against
+  // MATE_MIN over the whole test corpus and over pathological placements built
+  // to make the sums as large as the boundary permits.
+  //
+  // S033 measured five guards against a hidden mate and none of them worked;
+  // the depth and ply bounds are what contain it. A mate deeper than
+  // RFP_MIN_PLY can still be missed for an iteration, and no test covers that.
   //
   // The cast on ply is the tune build's, for the reason quiescence's depth
   // bound carries: a parameter is a plain int there and ply is a size_t.

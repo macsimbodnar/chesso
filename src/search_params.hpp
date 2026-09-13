@@ -107,8 +107,8 @@
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
-     assumption is made at -- `depth <= RFP_MAX_DEPTH` at src/search.cpp:766,  \
-     so it is a distance to the leaves and not a distance from the root.       \
+     assumption is made at -- `depth <= RFP_MAX_DEPTH` in negamax_at(), so it  \
+     is a distance to the leaves and not a distance from the root.             \
                                                                                \
      Both were a first setting, one pawn per ply and the last few plies, and   \
      **both are SPSA-tuned since S085**: 75 -> 63 and 6 -> 15 over 60000 games \
@@ -117,9 +117,13 @@
      this engine actually reaches -- median 11 at the tuning control -- so     \
      reverse futility is depth-unbounded in practice, and `RFP_MIN_PLY` below  \
      is the guard that is left. Not `beta < MATE_MIN`, which S145 measured     \
-     inert: evaluate_expensive() is clamped to +/-LAZY_EVAL_MARGIN, so the     \
-     static score cannot approach the mate band and the condition never binds  \
-     (src/search.cpp:754-761 says the same in its own words).                  \
+     inert: the static score cannot approach the mate band, so the condition   \
+     never binds. **What bounds the static score is the material and table     \
+     sums** -- finite sums of two- and three-digit constants over at most      \
+     sixteen men a side -- and not evaluate_expensive()'s clamp, which this    \
+     comment named until S213 and which bounds only the expensive stage.       \
+     test_evaluation "the static score never reaches the mate band" asserts    \
+     it, and negamax_at() says the same there in its own words.                \
                                                                                \
      **The declared range stays 0 to 63 (DEC-095), and that is a decision.**   \
      S145 swept the ceiling against 48 constructed forced mates with the floor \
@@ -149,14 +153,14 @@
      saves; exempting a third costs 27 %. S033.                                \
                                                                                \
      The root is not exempt because of this parameter, and that is still the   \
-     caveat to read the bound with. The guard at src/search.cpp:765 is         \
-     `!is_pv && ... ply >= RFP_MIN_PLY`, and search() calls the root at :1461  \
-     with is_pv true, so `!is_pv` exempts it at every setting. **0 and 1 are   \
-     therefore the same engine** -- byte-identical node counts and best moves, \
-     329568, 260802 and 53310 at depth 8 on the three positions S085 measured  \
-     (KIWIPETE_POS, BLOCKED_CENTRE_POS and KILLER_POS, the first two under the \
-     names they carried then) -- so 0 was a value no tuner could tell from its \
-     neighbour.                                                                \
+     caveat to read the bound with. The guard in negamax_at() is               \
+     `!is_pv && ... ply >= RFP_MIN_PLY`, and search() enters negamax_at() at   \
+     ply 0 with is_pv true, so `!is_pv` exempts it at every setting.           \
+     **0 and 1 are therefore the same engine** -- byte-identical node counts   \
+     and best moves, 329568, 260802 and 53310 at depth 8 on the three          \
+     positions S085 measured (KIWIPETE_POS, BLOCKED_CENTRE_POS and             \
+     KILLER_POS, the first two under the names they carried then) -- so 0 was  \
+     a value no tuner could tell from its neighbour.                           \
                                                                                \
      **The declared minimum is 2: DEC-095 decided it and S145 earned it.**     \
      It stood at 0 until S142, and the evidence for raising it used to be      \

@@ -2906,6 +2906,32 @@ TEST_SUITE("engine: uci parsing")
   }
 
 
+  // `2026-09-10_adversarial-F33`. Both functions used to hand a plain `char`
+  // to a <cctype> classifier, which is undefined for every value outside
+  // `unsigned char` and EOF -- and a `char` is signed here, so any byte above
+  // 127 arrives negative. A UCI line is bytes a GUI wrote and nothing upstream
+  // restricts them to ASCII, so the input exists. Both cast through
+  // `unsigned char` since S213, as fold_case() has since S209.
+  //
+  // 0xE9 rather than a character: what is being asserted is the byte, not a
+  // spelling, and it is written as an escape so that the file's own encoding
+  // cannot change what the test feeds in.
+  TEST_CASE("a byte above 127 classifies as neither a digit nor a space")
+  {
+    const std::string high = "\xE9";
+
+    REQUIRE_FALSE(is_uint(high));
+    REQUIRE_FALSE(is_uint("12" + high));
+    REQUIRE(is_uint("12"));
+
+    // Not whitespace, so it survives the trim at either end and stops the trim
+    // where it stands.
+    REQUIRE_EQ(trim_whitespace("  " + high + "  "), high);
+    REQUIRE_EQ(trim_whitespace(high), high);
+    REQUIRE_EQ(trim_whitespace(" " + high + " go "), high + " go");
+  }
+
+
   // `where` is the whole bracket text the refusal prints, so it is one of the
   // names `command_go` actually passes -- `Depth` and `Nodes` were the option
   // names these two cases carried before S210 gave the helper a UCI channel,

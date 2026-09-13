@@ -177,4 +177,3 @@ bool see_ge(const board_t* board, move_t move, int threshold);
 bool capture_cannot_lose(const board_t* board, move_t move);
 
 bool is_check(const game_t* game);
-void swap_side(game_t* game);

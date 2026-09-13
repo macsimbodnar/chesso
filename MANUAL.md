@@ -405,6 +405,18 @@ info score cp 80 time 10 depth 6 nodes 77104 nps 7165799 pv c3d5 e7d8 c2c3 f8e8 
 bestmove c3d5
 ```
 
+**The fields above are the whole set, in that order, and the example is the
+specification of it rather than an illustration.** `score` is always first and
+`pv` always last, since `pv` runs to the end of the line; a search's `info` line
+carries no other field — no `hashfull`, no `multipv`, no `currmove`, no
+`seldepth`, no `tbhits`. `info string` is a different line and not a field of
+this one: it carries the refusals and the book message documented elsewhere in
+this manual, never a score or a pv. Adding a field here, dropping one or
+reordering them is a surface change: `test_uci_surface` reads the field names
+off a fixed-depth search and off the example line above and requires both to
+match the golden it carries, so the change fails there until this section is
+rewritten with it (S213, DEC-184).
+
 | field | meaning |
 |---|---|
 | `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |

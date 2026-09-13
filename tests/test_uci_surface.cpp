@@ -55,6 +55,25 @@ static const std::vector<std::string> expected_option_lines = {
 static const std::vector<std::string> expected_option_names = {
   "OwnBook", "Book File", "Best Book Move", "Hash", "Threads",
 };
+
+// **Golden, DEC-142 and DEC-184.** The field names of one `info` line, in the
+// order the engine writes them and with every value dropped -- `cp` is here
+// because `score cp` and `score mate` are two different fields as far as a GUI
+// reading the number is concerned, and the start position at a fixed depth is a
+// `cp` line. S037 found this set outside the golden: a field added, removed or
+// reordered passed every case in this file.
+//
+// Re-derive from the binary rather than from here. `go` is asynchronous, so a
+// `quit` on the same pipe kills the search mid-iteration and prints a depth 1
+// line -- the trap TOOLCHAIN.md records for stockfish, one engine over:
+//   (printf 'position startpos\ngo depth 6\n'; sleep 2; printf 'quit\n') |
+//     ./build/src/chesso
+// MANUAL.md's "What a search prints" is the other end of this golden and is
+// rewritten first (SURFACE); the case below reads the field names back out of
+// its example line and requires the three to agree.
+static const std::vector<std::string> expected_info_fields = {
+  "score", "cp", "time", "depth", "nodes", "nps", "pv",
+};
 // clang-format on
 
 
@@ -245,6 +264,75 @@ static std::string set_difference_report(const std::vector<std::string>& actual,
   report += ". Update MANUAL.md and this test together.";
 
   return report;
+}
+
+
+// A token that stands for a value rather than naming a field. Two shapes: an
+// integer, which is what `time`, `depth`, `nodes`, `nps` and the number after
+// `cp` or `mate` are -- signed, because a mate score for the other side is
+// negative -- and a UCI move, which is what `pv` is followed by.
+static bool is_value_token(const std::string& token)
+{
+  if (token.empty()) { return false; }
+
+  size_t at = (token[0] == '-' || token[0] == '+') ? 1 : 0;
+  bool integer = at < token.size();
+
+  for (size_t i = at; i < token.size(); ++i) {
+    if (!std::isdigit(static_cast<unsigned char>(token[i]))) {
+      integer = false;
+      break;
+    }
+  }
+
+  if (integer) { return true; }
+
+  const bool sized = token.size() == 4 || token.size() == 5;
+
+  if (!sized) { return false; }
+
+  const bool squares = token[0] >= 'a' && token[0] <= 'h' && token[1] >= '1' &&
+                       token[1] <= '8' && token[2] >= 'a' && token[2] <= 'h' &&
+                       token[3] >= '1' && token[3] <= '8';
+
+  if (!squares) { return false; }
+
+  return token.size() == 4 || token[4] == 'q' || token[4] == 'r' ||
+         token[4] == 'b' || token[4] == 'n';
+}
+
+
+// The field names of one `info` line, values dropped, in the order they appear.
+// Anything that is not a value is a name, so a field this engine does not print
+// today would come out as a name rather than being silently swallowed -- which
+// is the whole point of the golden it feeds.
+static std::vector<std::string> info_fields(const std::string& line)
+{
+  std::vector<std::string> fields;
+
+  if (line.rfind("info", 0) != 0) { return fields; }
+
+  std::istringstream stream(line.substr(4));
+  std::string token;
+
+  while (stream >> token) {
+    if (!is_value_token(token)) { fields.push_back(token); }
+  }
+
+  return fields;
+}
+
+
+static std::string joined(const std::vector<std::string>& values)
+{
+  std::string text;
+
+  for (const std::string& value : values) {
+    if (!text.empty()) { text += " "; }
+    text += value;
+  }
+
+  return text;
 }
 
 
@@ -929,6 +1017,77 @@ TEST_SUITE("uci surface")
 
       CHECK(current_fen() != start_fen);
     }
+
+    uci_shutdown();
+  }
+
+
+  // DEC-184, the second of the seven parked findings it settled, and the gap
+  // S037 left: the `info` line is the entire running commentary a GUI reads,
+  // and until now nothing here looked at what it carries. Values are excluded
+  // deliberately -- a node count moves with every search change and a golden
+  // over one would be re-derived away within a week. The field set does not
+  // move unless the surface moves.
+  //
+  // Three ends held together: this file's golden, the engine's own line, and
+  // MANUAL.md's example. A field added to the engine and written into the
+  // manual still fails here, and a field added to both without touching the
+  // manual's example fails too.
+  TEST_CASE("the info line's fields are exactly the documented ones")
+  {
+    uci_init();
+
+    std::vector<std::string> lines;
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos");
+      uci_process_line("go depth 6");
+      uci_wait_for_search();
+      lines = capture.lines();
+    }
+
+    // The last completed iteration's line, which is the one a GUI acts on.
+    // `info string` is a different surface with its own cases above.
+    std::string last_info;
+
+    for (const std::string& line : lines) {
+      if (line.rfind("info ", 0) == 0 && line.rfind("info string", 0) != 0) {
+        last_info = line;
+      }
+    }
+
+    REQUIRE_MESSAGE(!last_info.empty(),
+                    "a fixed-depth search on the start position printed no "
+                    "info line for the golden to read");
+
+    CHECK_MESSAGE(
+        info_fields(last_info) == expected_info_fields,
+        ("the info line's fields changed. Engine: [" +
+         joined(info_fields(last_info)) + "], golden: [" +
+         joined(expected_info_fields) +
+         "]. Rewrite MANUAL.md's \"What a search prints\" first, then this "
+         "golden. Line: " +
+         last_info));
+
+    // MANUAL.md's example, read through the same extractor. It is the only
+    // line in the manual that starts an `info score`, and the section says in
+    // so many words that it is the specification and not an illustration.
+    const std::string manual = read_manual();
+    const size_t at = manual.find("\ninfo score ");
+
+    REQUIRE_MESSAGE(at != std::string::npos,
+                    "MANUAL.md no longer carries an example info line in "
+                    "\"What a search prints\"");
+
+    const size_t end = manual.find('\n', at + 1);
+    const std::string documented = manual.substr(at + 1, end - at - 1);
+
+    CHECK_MESSAGE(info_fields(documented) == expected_info_fields,
+                  ("MANUAL.md's example line does not carry the golden field "
+                   "set. Manual: [" +
+                   joined(info_fields(documented)) + "], golden: [" +
+                   joined(expected_info_fields) + "]. Line: " + documented));
 
     uci_shutdown();
   }

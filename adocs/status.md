@@ -7,15 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S213 started, 2026-09-13 19:15, by an Opus 5 subagent (DEC-199).** The
-  evaluation header's five stale zero-weight blocks, the mate-band argument
-  that names the wrong bound (with a test asserting `|evaluate()| <
-  MATE_MIN` over the corpus and the audit's pathological placements), two
-  dead public entry points, two `<cctype>` calls on a signed `char`, the
-  `tt_entry_t` comment, the `test` command's three stale labels, the `info`
-  line's field set into the UCI golden (DEC-184), and -- from S223's report
-  -- `king_zone()`'s no-king branch as a Debug assertion; `No functional
-  change`. `plan_current/`: S210 (SPRT tonight), S213.
+- **S213 is done, 2026-09-13 20:50, by an Opus 5 subagent (DEC-199).** Three
+  of the five "zero until the tuner fits them" blocks in `src/evaluation.hpp`
+  were false -- `passed_pawn`, `pawn_structure` and `king_safety` have
+  shipped fitted since S027; `piece_placement` and `tempo` are zero and the
+  tempo block now says why -- and the four dependent accessor reasons were
+  rewritten to the one that survives a fit; two more of the class fixed in
+  passing (the `LAZY_EVAL_MARGIN` block, a `pawn_structure` illustration).
+  The mate-band argument at the reverse-futility site and `RFP_MARGIN` names
+  the material and table sums, with a case asserting `|evaluate()| <
+  MATE_MIN` over 2696 corpus positions (max 14948) and 66430 accepted
+  generated placements from a seeded mechanical rule (max 22945) against
+  48000, observed red at bounds 20000 and 14000. `swap_side` deleted (zero
+  callers; `set_en_passant` had gone with S042); `is_uint` and
+  `trim_whitespace` cast to `unsigned char` (no red possible: glibc's table
+  is defined over the negative range and neither sanitizer instruments the
+  precondition, stated); `tt_entry_t` 22 of 24 bytes, `sizeof` 24 compiled;
+  the `test` command's three stale labels dropped. **DEC-184**: `MANUAL.md`'s
+  "What a search prints" is normative and `test_uci_surface`'s
+  `expected_info_fields` holds the golden, one `go depth 6` and the manual's
+  example together, red from both directions. `king_zone()`'s no-king branch
+  is the fourth Debug assertion (S223's three). `No functional change`:
+  bench 7105111, the six `search_bench` rows identical; gate 38/38 both
+  builds twice; the Debug fast suite ran clean for the new assert (no
+  self-play owed: no `make_move`, generator or search rule change).
+  `specs.md`: "four branches" and the `info` golden sentence. **The fast
+  check found two comment-truth items of the step's own class**, fixed by
+  the coordinator before the commit: the `piece_placement` block still said
+  "zero until the tuner fits them" and gained "this term has not" -- S027
+  fitted it, the SPRT was H0 and the weights have been held at zero by
+  `--freeze` since S065, as `evaluation.cpp` says -- and the passed-pawn
+  bucket-5 sentence restated a "nearly nothing" that S100's three fits
+  (+22, -1, -17) refute; the `tt_entry_t` headroom sentence now quotes the
+  step's own 22945. Everything else held: weights, the mate-band case (0.40
+  s), the `info` golden from both ends, the assert in Debug only. `plan_current/`: S210 (SPRT tonight).
+  **Next: the F22 SPRT launches now for the night; S091 tomorrow.**
 
 - **S223 is done, 2026-09-13 18:50, by an Opus 5 subagent (DEC-199).**
   `load_FEN()` refuses two further classes after S208's two, each with its

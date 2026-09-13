@@ -514,16 +514,20 @@ struct tt_entry_t
   // position and not of the visit that recorded it. Across a key change it is
   // erased -- see tt_eval_to_store(). S108.
   //
-  // Free in space. The struct is 8-byte aligned for the key and was 20 bytes
-  // of content in 24, so this lands in padding that was already being paid
-  // for: sizeof(tt_entry_t) is 24 before and after, and the entry count for a
-  // given Hash is untouched. tt_resize() floors that count to a power of two
-  // as well, so anything from 17 to 32 bytes an entry would have produced the
-  // same count regardless.
+  // Free in space. The struct is 8-byte aligned for the key, and the fields
+  // around this one come to 20 bytes of content in 24 -- 8 for the key, 4 for
+  // the score, 4 for the move, 2 for the depth, 1 each for the type and the
+  // generation -- so this lands in padding that was already being paid for and
+  // the content is 22 bytes in 24 with it. sizeof(tt_entry_t) is 24 before and
+  // after, and the entry count for a given Hash is untouched. tt_resize()
+  // floors that count to a power of two as well, so anything from 17 to 32
+  // bytes an entry would have produced the same count regardless.
   //
   // 16 bits is not a constraint anything real approaches. evaluate() is
-  // material plus tapered tables, and a board of nine queens comes to a few
-  // thousand centipawns against the 32767 this holds.
+  // material plus tapered tables: S213's case measured a maximum |evaluate()|
+  // of 22945 over 66430 accepted generated placements (fifteen queens against
+  // a lone king among them), against the 32767 this holds -- 1.4x headroom,
+  // and the case asserts the score stays below MATE_MIN's 48000.
   int16_t eval;
 
   uint8_t type;        // node_type_t

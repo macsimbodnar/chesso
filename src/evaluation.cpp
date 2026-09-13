@@ -100,12 +100,15 @@ enum
 // error 0.000304 and measured +20.87 Elo, passed pawns 0.000206 and measured
 // +17.34, this one 0.000126 against a 4.1 % speed cost it has to pay back.
 //
-// A residual, not a valuation, and the middlegame doubled weight is the one
-// that shows it: +5, which read as chess would say doubling a pawn helps. It
-// says nothing of the kind. The three features overlap by construction -- the
-// header says they are not exclusive -- and they sit on top of a pawn
-// piece-square table that has already priced the files, so the fit distributes
-// one effect across whatever is available to it. Third time in this file;
+// A residual, not a valuation. The middlegame doubled weight was the one that
+// showed it while S027's fit stood: +5, which read as chess would say doubling
+// a pawn helps. It said nothing of the kind, and the two refits since -- S065
+// to {-9, -10, -12} and S076's deduplicated corpus to what ships -- moved it to
+// a sign that happens to read the other way, which is the same non-statement.
+// The three features overlap by construction -- the header says they are not
+// exclusive -- and they sit on top of a pawn piece-square table that has
+// already priced the files, so the fit distributes one effect across whatever
+// is available to it. Third time in this file;
 // DEC-044 and the passed pawn comment above record the other two.
 //
 // The exact definition of each of the three is in evaluation.hpp, written out
@@ -793,20 +796,22 @@ const int king_safety_eg[KS_FEATURE_COUNT] = {-6,  -13, -5,  -61, 10,
                                               -10, -10, -14, 22};
 
 
-// A king's own zone: its square and the eight around it. Empty when that king
-// is not on the board. Since S223 (2026-09-13) load_FEN refuses a board
-// without a king of each colour, so this branch is unreachable from any
-// accepted position and stays only as a guard against get_lsb_index() of an
-// empty board answering 64, off the end of every table here; S213 turns it
-// into the Debug assertion its three siblings became in S223. An empty zone
-// costs nothing extra downstream: no attack set can intersect it.
+// A king's own zone: its square and the eight around it.
+//
+// This returned an empty zone on a kingless board until S213. S223 made
+// load_FEN refuse a board without a king of each colour, so the branch was
+// unreachable from any accepted position, and it is the fourth of the group
+// S223 converted -- is_check(), generate_moves_impl() and
+// king_shelter_features() are the three it named. Same reason as those:
+// get_lsb_index() answers 64 on an empty board, and 64 indexes king_attacks
+// and every other table here off its end.
 static bb_t king_zone(const bb_tables_t* tables,
                       const board_t* board,
                       int colour)
 {
   const bb_t king = board->bitboards[(colour == WHITE) ? W_KING : B_KING];
 
-  if (king == 0) { return 0; }
+  assert(king != 0);
 
   const index_t square = get_lsb_index(king);
 
