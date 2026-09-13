@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S199's first drift point is in, 2026-09-13 09:59, and the block's
+  longer-control reading is running since 10:01.** The drift match: `eff4b9b`
+  (the engine now, S109 block included) against the pinned early-S105
+  `f548ff4`, 1000 pairs at the regime, 2000 games in 54 m 47 s (2190 an
+  hour), 0 forfeits, 1515 adjudications and 485 natural ends: **`Elo 98.82
+  +/- 13.18`, `nElo 120.53 +/- 15.23`, `Ptnml [49, 127, 285, 299, 240]`,
+  pair variance 0.3188**, appended to `adocs/data/S199_drift.tsv` by
+  `S199_drift.py` with the verdicts landed since the pin (S085, S093 v1,
+  S107, S108, S130, S165, S207, S042, S109; conversions none). Read under
+  the rule written before the run: the kept verdicts' point estimates sum
+  to +106.88 Elo and the point's interval [+85.6, +112.0] contains that sum
+  -- **as expected**; the kept verdicts are in the engine and DEC-063's
+  upward bias on the sum is small here. No verdict on any one of them. The
+  longer-control reading of the S109 block (`adocs/data/S109_ltc.sh`,
+  `CAND=600f448 REF=50e3661 TC=32+0.32 HASH=64 ROUNDS=1000`, seed
+  `20260913100109`, out `.tuning/s109_ltc_20260913_100109/`) launched at
+  10:01, about 3.7 h, persistent `Monitor` with a 27360 s ceiling; it and
+  the drift point close S199 together (F30: a boundary is two numbers).
+  `plan_current/`: S199 (reading pending). **S210's first half after it.**
+
 - **S199's instrument landed, 2026-09-13 10:00, by an Opus 5 subagent beside
   S109's SPRT; the two boundary runs follow on the idle machine.** The pinned
   reference is **`f548ff4`** (2026-08-20, the commit right after the S105
@@ -29,9 +49,16 @@ Updated: 2026-09-13, by hand.
   ceiling 27360 s, read against the SPRT's +46.90 +/- 15.43. `plan.md`'s
   Elo paragraph cites the TSV; `DEV_MANUAL.md` has "The drift instrument,
   and what it is not". Fast check over the instrument: on the line below.
-  **Next: rebuild, the drift match, then the longer-control reading, back to
-  back; S210's first half (brief ready) after them.** `plan_current/`: S199
-  (runs pending).
+  The fast check found the scripts sound on the run path and three prose
+  items (two stale sums, a `--check` wording), fixed before the commit
+  (`eff4b9b`). **The drift match launched 09:04** after the rebuild:
+  candidate `eff4b9b` (`id name Chesso eff4b9b native`), reference
+  `f548ff4` answering the bare `Chesso` with the pre-stamp note printed,
+  seed `20260913090435`, out `.tuning/s199_drift_20260913_090435/`,
+  persistent `Monitor` on the markers with a 6750 s ceiling. The
+  longer-control reading follows it; its header now carries the SPRT figure.
+  **S210's first half (brief ready) after both.** `plan_current/`: S199
+  (drift running).
 
 - **S226 is done, 2026-09-13 08:50, by an Opus 5 subagent beside S109's SPRT,
   documents only.** `TOOLCHAIN.md` opens on "The workstation, end to end":

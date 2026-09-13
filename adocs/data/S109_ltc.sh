@@ -87,7 +87,7 @@
 # WHAT THE 8+0.08 VERDICT SAID -- the figure this run is read against, filled
 # in from the SPRT's own final block, verbatim, before this script is launched:
 #
-# S109 SPRT at 8+0.08: <filled by the coordinator at launch>
+# S109 SPRT at 8+0.08: H1, LLR 2.97, Elo 46.90 +/- 15.43, nElo 56.76 +/- 18.44, 1364 games, 0 forfeits (adocs/data/S109_sprt.log; filled by the coordinator 2026-09-13 09:10, before launch)
 #
 #   That run finished at 08:49 on 2026-09-13, while this script was being
 #   written, and its evidence is `adocs/data/S109_sprt.log`: **H1 accepted at

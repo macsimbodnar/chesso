@@ -15,3 +15,4 @@
 # columns are filled by hand: the step ids whose verdicts landed since the
 # previous point, and the ids whose conversions landed since it (F30, DEC-170).
 date	head	ref	regime	games	elo	elo_95	nelo	nelo_95	ptnml	pair_var	verdicts_since	conversions_since
+2026-09-13	eff4b9b	f548ff4	8+0.08/16/noob_3moves.epd	2000	98.82	13.18	120.53	15.23	[49,127,285,299,240]	0.3188	S085,S093v1,S107,S108,S130,S165,S207,S042,S109	none
