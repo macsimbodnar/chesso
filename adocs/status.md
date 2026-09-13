@@ -7,6 +7,23 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S109 started, 2026-09-13 05:12, by an Opus 5 subagent (DEC-199); the
+  SPRT is the coordinator's.** The shallow-depth pruning block: late move
+  pruning with a skip-quiets flag the staged generator honours, futility,
+  history pruning and quiet SEE pruning enter the move loop together, gated
+  on `depth - lmr_reduction(depth, move_number)`, all four off in check, at a
+  PV node, on the first move and in the mate band, the gives-check exemption
+  binding the three post-make rules only (S218 owns LMP's); S108's deferred
+  layer (c) as the first line; every constant chesso's own with a range and
+  an off value; the mate case observed red with the guards removed, a guard
+  test and a killed mutant per rule (DEC-141), the Debug self-play, node
+  counts at depths 9 and 12 recorded; one gainer SPRT `elo0=0 elo1=5` on
+  `noob_3moves.epd`, pre-registered in `adocs/data/S109_sprt.sh` and started
+  by the coordinator, with the bisection protocol on H0. The brief corrects
+  the file on two points: continuation history was reverted (DEC-194), so the
+  history threshold reads plain history alone; the book is `noob_3moves.epd`.
+  `plan_current/`: S109.
+
 - **S212 is done, 2026-09-13 05:00: the harness is fixed in six places and
   its A/A says the statistics did not move.** Implementation in `f9d705c`
   (Opus 5 subagent, DEC-199): two-sided resignation in both harnesses (F04),
