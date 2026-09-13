@@ -1,6 +1,3 @@
-[submodule "tests/pixello"]
-	path = tests/pixello
-	url = git@github.com:macsimbodnar/pixello.git
 [submodule "tests/json"]
 	path = tests/json
 	url = git@github.com:nlohmann/json.git

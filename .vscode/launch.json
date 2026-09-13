@@ -80,14 +80,6 @@
       "cwd": "${workspaceFolder}/build/tests",
     },
     {
-      "name": "debug_gui",
-      "type": "lldb",
-      "request": "launch",
-      "program": "${workspaceFolder}/build/tests/debug_gui",
-      "args": [],
-      "cwd": "${workspaceFolder}/build/tests",
-    },
-    {
       "name": "debug_main",
       "request": "launch",
       "program": "${workspaceFolder}/build/tests/debug_main",

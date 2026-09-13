@@ -7,7 +7,6 @@ project(Chesso C CXX ASM)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(CHESSO_BUILD_GUI "Build the debug gui. Requires SDL2" OFF)
 option(SANITIZER "Enable address and undefined behavior sanitizer" OFF)
 
 # S073. ON turns every parameter in src/search_params.hpp from a constant the

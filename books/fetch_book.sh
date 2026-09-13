@@ -29,16 +29,20 @@ set -euo pipefail
 # as a blanket and got wrong. The list, because a list can be checked and a
 # blanket cannot: the engine, its tools and its tests are MIT (LICENSE);
 # books/8moves_v3.pgn is the only book committed here and every other one comes
-# through this script from the CC0 source above; the three submodules under
-# tests/ -- pixello, nlohmann/json, doctest -- carry their own MIT-compatible
-# licences; the debug GUI's artwork and fonts are inventoried with their
-# licences in tests/assets/gui/THIRD_PARTY.md, every file in that directory
-# covered and none excepted. The list checks out, so the blanket is true again
-# and this comment may state it: the repository bundles nothing whose licence
-# is unstated. It was false when this comment first claimed it
-# (2026-09-10_adversarial-F03) -- S211 wrote the inventory and deleted the
-# three image files that could not be sourced, and S224 deleted the seven audio
-# clips that were the last gap (DEC-201).
+# through this script from the CC0 source above; the two submodules under
+# tests/ are gitlinks to MIT projects -- nlohmann/json (MIT; its own
+# repository's test tree carries third-party fixtures under Apache-2.0,
+# BSD-3-Clause and GPL-3.0-only, per its .reuse/dep5, which this project
+# neither builds, includes nor ships -- S229 carries the library as its MIT
+# single header so no such file enters a checkout at all) and doctest (MIT).
+# The list checks out, so the blanket is true again and this comment
+# may state it: the repository bundles nothing whose licence is unstated. It
+# was false when this comment first claimed it (2026-09-10_adversarial-F03):
+# the debug GUI's artwork, fonts and sounds were the gap. S211 inventoried
+# what could be sourced and deleted three images that could not, S224 deleted
+# the seven audio clips (DEC-201), and S227 removed the debug GUI itself with
+# its graphics submodule and every remaining asset, so there is no third-party
+# artwork left in the tree to inventory (DEC-207).
 #
 # WHY BOTH DIGESTS ARE PINNED. The zip is what the network returned and the
 # unpacked file is what the match reads. Checking only the zip trusts unzip;

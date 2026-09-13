@@ -7,14 +7,37 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S227 started, 2026-09-13 14:05, by an Opus 5 subagent (DEC-199), on the
-  owner's instruction (DEC-207).** Pixello and the debug GUI leave the branch:
-  the `tests/pixello` submodule and its `.gitmodules` entry, the
-  `CHESSO_BUILD_GUI` option and `debug_gui` target, `tests/debug_gui.cpp`,
-  all of `tests/assets/gui/`, the SDL2 and GUI lines in `DEV_MANUAL.md`,
-  `TOOLCHAIN.md` and `books/fetch_book.sh`; a fresh configure of `build/`
-  and the gate as proof; `README.md`'s lines for the owner listed in the
-  stamp. No `src/`. `plan_current/`: S227.
+- **S227 is done, 2026-09-13 14:40, by an Opus 5 subagent on the owner's
+  instruction (DEC-207): pixello and the debug GUI are out of the branch.**
+  Removed: the `tests/pixello` gitlink and its `.gitmodules` entry
+  (`tests/json` and `tests/doctest` remain), `.git/modules/tests/pixello`,
+  the `CHESSO_BUILD_GUI` option, the whole `debug_gui` block in
+  `tests/CMakeLists.txt`, `tests/debug_gui.cpp` (1186 lines), all 29 files
+  under `tests/assets/gui/` with `THIRD_PARTY.md`, the `.vscode/launch.json`
+  entry for the dead target; `books/fetch_book.sh` names two submodules and
+  DEC-201's blanket stands. `file(COPY ... assets)` stays for `perft_json`
+  and `test_jsons`, which five tests read. Both build caches configured
+  fresh (a stale `CHESSO_BUILD_GUI:BOOL=OFF` survives a reconfigure), 37/37
+  in both, format clean, bench 7111579. Greps for `pixello`, `Cburnett`,
+  `debug_gui`, `BUILD_GUI`, `SDL2` outside history return nothing but
+  `README.md`. The coordinator also removed the stale `[submodule
+  "pixello"]` section from `.git/config` and `.git/modules/pixello` (43 M),
+  local state from the old repo-root layout. **For the owner, `README.md`
+  untouched**: lines 33-34 (the SDL2 apt line) are now false and lines 63-69
+  ("Run the test gui application", which named `./test_gui` where the
+  binary was `debug_gui`) describe a removed target. `master` and
+  `bitboard` still declare the submodule. **The fast check found one real
+  thing, pre-existing**: the nlohmann/json submodule's own test tree
+  (`tests/thirdparty/imapdl/*`) is GPL-3.0-only per its `.reuse/dep5`,
+  present in every initialised checkout though never built, included or
+  shipped here, so `fetch_book.sh`'s "MIT-compatible" was false in detail;
+  the sentence now says exactly what the submodule carries, and **S229**
+  (filler behind S228) carries the library as its MIT single header so that
+  no GPL-licensed file enters a checkout -- the owner's "no GPL question
+  anywhere" (CLAUDE.md) is the reason; the owner may veto the form. A false
+  stamp clause about surviving stale git state was corrected before the
+  move. `plan_current/` empty after this commit. **Next: S210's first
+  half.**
 
 - **The owner's plan review of 2026-09-12 is filed and digested, 2026-09-13
   10:30 (DEC-206), and the owner's instruction to remove pixello is S227
