@@ -267,7 +267,16 @@ TEST_SUITE("movegen: generation")
   TEST_CASE_FIXTURE(movegen_fixture_t, "a pinned piece cannot leave the ray")
   {
     // The knight on e4 is pinned by the rook on e8 against the king on e1.
-    REQUIRE(load_FEN("4r3/8/8/8/4N3/8/8/4K3 w - - 0 1", &game));
+    //
+    // RE-PICKED by S223 (DEC-197): the board carried no black king at all
+    // (python-chess NO_BLACK_KING) and the load boundary refuses that from S223
+    // on. One is added on a8 -- off the pinning ray, attacked by nothing White
+    // has and adjacent to neither king -- so the pin, the white king's move
+    // list and this case's answers are untouched. python-chess reports
+    // Status.VALID on the FEN below. The same re-pick is used by the two
+    // `position fen` sites in tests/test_engine.cpp, which carried the same
+    // board.
+    REQUIRE(load_FEN("k3r3/8/8/8/4N3/8/8/4K3 w - - 0 1", &game));
 
     move_t moves[MAX_MOVES];
     const size_t count = legal_moves(&game, moves);

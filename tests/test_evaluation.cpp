@@ -556,9 +556,9 @@ TEST_SUITE("evaluation: score")
   // illegal position with an unbalanced king count scored above every mate -
   // which search() then had to guard against when deciding whether a result was
   // a mate at all.
-  TEST_CASE_FIXTURE(eval_fixture_t, "a missing king is not worth anything")
+  TEST_CASE_FIXTURE(eval_fixture_t, "a king is not worth anything")
   {
-    // A lone king still moves the score, because it stands on a square the
+    // A bare king still moves the score, because it stands on a square the
     // positional terms have an opinion about, and since S027 they price its
     // shelter as well. What it must not do is carry material, so material is
     // what is asserted: `material` is the White-relative accumulator make_move
@@ -571,10 +571,13 @@ TEST_SUITE("evaluation: score")
     // a bare king's three open files, which says nothing about what a king is
     // worth. Pinned to the accumulator, the assertion cannot be broken again by
     // a term that is not about material at all.
-    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/8 w - - 0 1", &game));
-    REQUIRE_EQ(game.board.material, 0);
-
-    REQUIRE(load_FEN("8/8/8/8/8/8/8/4K3 w - - 0 1", &game));
+    // RE-PICKED by S223 (DEC-197): this was two loads, one lone black king and
+    // one lone white king, and the load boundary refuses either from S223 on
+    // (python-chess NO_WHITE_KING and NO_BLACK_KING). The two-king board
+    // asserts the same thing about both kings at once -- a board whose only
+    // pieces are kings has material 0 only if neither is priced -- and it is a
+    // position a game really reaches. python-chess reports Status.VALID.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/4K3 w - - 0 1", &game));
     REQUIRE_EQ(game.board.material, 0);
 
     // Non-vacuous by construction: the accumulator does move for a piece that

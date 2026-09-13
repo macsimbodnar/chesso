@@ -295,13 +295,15 @@ that does not load, is **refused and ends the command there**, with the engine
 on the position it had -- board, history and every move applied since the last
 `position` -- so the moves after a refused FEN are never applied to a board they
 were not meant for. The refusal is one `info string` line on stdout, in one of
-two shapes (S176):
+the six shapes below -- two from S176, two from S208 and two from S223:
 
 ```
 info string refused [position fen] <fen>, fewer than four fields
 info string refused [position fen] <fen>, does not load
 info string refused [position fen] <fen>, more than 16 pieces of one colour (<n> white, <n> black)
 info string refused [position fen] <fen>, a pawn on rank 1 or rank 8
+info string refused [position fen] <fen>, other than one king of each colour (<n> white, <n> black)
+info string refused [position fen] <fen>, the side not to move is in check
 ```
 
 **The `moves` list follows the same rule** (S210). A token that does not parse,
@@ -339,20 +341,37 @@ back to 0, which switched off both the fifty-move draw and the repetition
 window at once. A FEN whose halfmove field is above 255 is still refused rather
 than saturated.
 
-**The last two shapes are refusals of a well-formed FEN, and they are the only
-two placement rules the engine enforces** (S208, 2026-09-11). More than 16
-pieces of a colour is refused because the move buffer is sized for legal
-chess: a placement with 27 pieces of one colour generates 277 moves into a
-270-entry array on the stack and aborted the shipping binary. A pawn on rank 1
-or rank 8 is refused because the passed-pawn evaluation indexes a six-entry
-table by the pawn's rank and has no entry for either back rank. Both were
-reachable from this command in every released build, and neither is reachable
-from legal play or from any GUI.
+**The last four shapes are refusals of a well-formed FEN, and they are the only
+four placement rules the engine enforces.** The first two are S208's,
+2026-09-11. More than 16 pieces of a colour is refused because the move buffer
+is sized for legal chess: a placement with 27 pieces of one colour generates 277
+moves into a 270-entry array on the stack and aborted the shipping binary. A
+pawn on rank 1 or rank 8 is refused because the passed-pawn evaluation indexes a
+six-entry table by the pawn's rank and has no entry for either back rank. Both
+were reachable from this command in every released build, and neither is
+reachable from legal play or from any GUI.
 
-**Legality at large is still not checked and that is deliberate.** One king a
-side is not required -- `position empty` is a valid command and two of the
-engine's own test positions are kingless on purpose -- pawn counts below 16 a
-side are not checked, and the side not to move may be in check.
+The last two are S223's, 2026-09-13. **Other than one king of each colour** is
+refused because a side with no king has no square for the attack test to run
+from, and three places in the engine carried a branch for that state rather than
+a rule. **The side not to move in check** is refused because it is a position no
+game reaches -- the previous move either left its own king attacked or was made
+while it already was -- and because the moves it licenses include capturing a
+king: `position fen 7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8` was accepted in
+every build up to 2026-09-13 and left `7R/8/8/8/8/8/8/K7 b - - 0 1`, the black
+king gone. Two kings on adjacent squares are refused by the same test and are
+not a separate rule: each attacks the other, so whichever side is not to move is
+in check. The test is the engine's own, run from the king of the side that is
+not to move.
+
+**Legality at large is still not checked beyond those four.** Pawn counts below
+16 a side are not checked, promoted-piece plausibility is not checked, the
+number of pieces giving check is not checked, and no position is tested for
+being reachable from the start of a game. The engine plays all of those
+correctly.
+
+`position empty` was a valid command until 2026-09-13 and is gone: it loaded a
+bare board, which the one-king-a-side rule no longer accepts.
 
 A FEN carrying a castling right or an en-passant square the board cannot
 support is **accepted with that field cleared**, not refused. A right survives
@@ -481,7 +500,6 @@ here as the FEN each one loads. A GUI never sends them.
 
 | shortcut | FEN |
 |---|---|
-| `empty` | `8/8/8/8/8/8/8/8 b - - 0 1` |
 | `kiwipete` | `r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1` |
 | `killer` | `rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P4/P1P1P3/RNBQKBNR w KQkq e6 0 1` |
 | `blocked` | `r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9` |

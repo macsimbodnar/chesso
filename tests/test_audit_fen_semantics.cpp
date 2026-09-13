@@ -36,6 +36,8 @@
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "doctest.h"
+#include "test_helpers.hpp"  // stdout_capture_t, for the [position fen] case
+#include "uci.hpp"
 
 namespace
 {
@@ -91,6 +93,15 @@ TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F01)")
 
     if (load_FEN(fen, &game)) {
       CHECK_EQ(count_flagged(&game, true, false), 0);
+
+      // S223: the clearing itself, which "a right with no king anywhere is
+      // cleared" held until its position stopped being loadable. A king that is
+      // not on its castling square clears both of that side's rights, and this
+      // is a placement python-chess 1.11.2 loads with
+      // Status.BAD_CASTLING_RIGHTS only -- none of the four king flags -- which
+      // is the point: the stray right is sanitised, the position itself is not
+      // refused.
+      CHECK_EQ(game.board.castling, 0);
     }
   }
 
@@ -166,14 +177,19 @@ TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F01)")
     CHECK_EQ(count_flagged(&game, true, false), 1);
   }
 
-  TEST_CASE_FIXTURE(fen_fixture_t, "a right with no king anywhere is cleared")
+  // RE-PICKED by S223 (DEC-197). This case loaded
+  // `4k3/8/8/8/8/8/8/R6R w KQ - 0 1` -- both white rooks in place and no white
+  // king at all -- and checked that the rights were cleared. python-chess
+  // reports NO_WHITE_KING on it, and the load boundary refuses such a placement
+  // from S223 on, so the premise is gone and the case states the refusal.
+  // The property it held is not lost: "castling rights with the king displaced
+  // license no castle" above now asserts the clearing on a **legal** position
+  // whose king is off e1, which is the same rule with a king on the board.
+  TEST_CASE_FIXTURE(fen_fixture_t, "a right with no king anywhere is refused")
   {
-    // Both white rooks in place, no white king at all. Nothing may be emitted
-    // from e1, and the rights must not survive to say otherwise.
-    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R6R w KQ - 0 1", &game));
-
-    CHECK_EQ(game.board.castling, 0);
-    CHECK_EQ(count_flagged(&game, true, false), 0);
+    std::string reason;
+    CHECK_FALSE(load_FEN("4k3/8/8/8/8/8/8/R6R w KQ - 0 1", &game, &reason));
+    CHECK(reason.find("one king of each colour") != std::string::npos);
   }
 
   TEST_CASE_FIXTURE(fen_fixture_t, "an ep square on the mover's own rank goes")
@@ -190,9 +206,16 @@ TEST_SUITE("audit: FEN semantic validation (2026-08-22_adversarial-F01)")
 
   TEST_CASE_FIXTURE(fen_fixture_t, "an occupied ep target square goes")
   {
-    // Victim present on e5 and a white rook standing on the target e6: the
+    // Victim present on e5 and a white knight standing on the target e6: the
     // capture's move_piece() would xor a pawn onto a square already occupied.
-    REQUIRE(load_FEN("4k3/8/4R3/3Pp3/8/8/8/4K3 w - e6 0 1", &game));
+    //
+    // RE-PICKED by S223 (DEC-197): the occupant was a **rook**, which from e6
+    // checks the black king on e8 with White to move -- python-chess reports
+    // OPPOSITE_CHECK -- and the load boundary refuses that from S223 on. A
+    // knight on e6 occupies the same square and attacks d8 and f8 rather than
+    // e8, so the property under test is untouched: python-chess reports
+    // INVALID_EP_SQUARE and nothing else, which is the case's own subject.
+    REQUIRE(load_FEN("4k3/8/4N3/3Pp3/8/8/8/4K3 w - e6 0 1", &game));
 
     CHECK_EQ(game.board.en_passant, INVALID_INDEX);
     CHECK_EQ(count_flagged(&game, false, true), 0);
@@ -370,15 +393,194 @@ TEST_SUITE(
     CHECK_EQ(game.board.squares[h2], B_PAWN);
   }
 
-  TEST_CASE_FIXTURE(fen_fixture_t, "the kingless debug positions still load")
+  // RE-STATED, not relaxed, by S223 (DEC-197). This case read "the kingless
+  // debug positions still load" and required `EMPTY_POS` and
+  // `8/3p4/8/8/8/8/3P4/8 w - - 0 1` -- S208's excludes kept one king a side out
+  // of scope and these were the inputs that made it worth keeping out. S223
+  // closes that boundary, so their premise is gone and they are refusals in the
+  // suite below; `EMPTY_POS` itself is gone with the `position empty` shortcut
+  // that was its only caller. What this case was actually holding is the other
+  // half -- that S208's bound did not eat the debug positions it was measured
+  // on -- and that half is unchanged and asserted here.
+  TEST_CASE_FIXTURE(fen_fixture_t, "the debug positions still load")
   {
-    // EMPTY_POS and the two "survivable" cases in tests/test_search.cpp are
-    // kingless or king-capturable on purpose, and S208's excludes says so:
-    // this bound is about piece counts and pawn ranks, not about legality at
-    // large.
-    REQUIRE(load_FEN(EMPTY_POS, &game));
-    REQUIRE(load_FEN("8/3p4/8/8/8/8/3P4/8 w - - 0 1", &game));
     REQUIRE(load_FEN(KIWIPETE_POS, &game));
     REQUIRE(load_FEN(KILLER_POS, &game));
+    REQUIRE(load_FEN(BLOCKED_CENTRE_POS, &game));
+    REQUIRE(load_FEN(FINE_70_POS, &game));
+    REQUIRE(load_FEN(THREE_FOLD_REP_POS, &game));
+    REQUIRE(load_FEN(THREE_FOLD_REP_2_POS, &game));
+    REQUIRE(load_FEN(MATE_IN_2_W_POS, &game));
+    REQUIRE(load_FEN(MATE_IN_2_B_POS, &game));
+    REQUIRE(load_FEN(CLOSED_POSITION, &game));
+  }
+}
+
+
+// AUDIT EVIDENCE -- 2026-09-12_adversarial-F01, added by S223. The same file
+// again, and for the same reason S208 used it: this is the rest of the sentence
+// S161 wrote and S208 quoted -- *"two kings, the side not to move in check --
+// is deliberately not checked"*. Those are the fifth and sixth classes, and
+// like S208's two they are **refused** rather than repaired.
+//
+// What it did before the fix, observed by hand on `ab5cd8e`'s Release binary,
+// because the board it leaves is not something a ctest case can watch the UCI
+// layer produce before the layer refuses it:
+//
+//   printf 'position fen 7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8\nfen\nquit\n'
+//        | ./build/src/chesso
+//   -> 7R/8/8/8/8/8/8/K7 b - - 0 1
+//
+// The black king has been captured by a move the engine accepted, and no line
+// was printed about it. The same binary loaded `8/3p4/8/8/8/8/3P4/8 w - - 0 1`
+// and `4K3/8/8/8/8/8/8/K6k w - - 0 1` -- no kings at all, and two white kings
+// -- and echoed both back from the `fen` command.
+//
+// **Every legality verdict below is python-chess 1.11.2's**, not a reading of
+// the board (CLAUDE.md). `Board.status()` over each FEN here is quoted at its
+// case, and `adocs/data/S223_fen_census.py` is the same question asked of every
+// FEN literal in `tests/`, `src/` and `tools/` at once.
+TEST_SUITE("audit: FEN king legality (2026-09-12_adversarial-F01)")
+{
+  TEST_CASE_FIXTURE(fen_fixture_t, "a board with no kings at all is refused")
+  {
+    // python-chess: NO_WHITE_KING,NO_BLACK_KING. The S208 control above used
+    // to load this one on purpose.
+    std::string reason;
+    CHECK_FALSE(load_FEN("8/3p4/8/8/8/8/3P4/8 w - - 0 1", &game, &reason));
+    CHECK(reason.find("one king of each colour") != std::string::npos);
+
+    // The count is in the reason for the same purpose S208's carries one: a
+    // harness reading the channel learns which side was wrong.
+    CHECK(reason.find("0 white") != std::string::npos);
+    CHECK(reason.find("0 black") != std::string::npos);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "one king missing on either side is refused")
+  {
+    // Both directions, because the count is per colour: a bound that only
+    // looked at the board's total would pass both of these.
+    // python-chess: NO_WHITE_KING and NO_BLACK_KING respectively.
+    std::string white_missing;
+    CHECK_FALSE(load_FEN("4k3/8/8/8/8/8/8/8 w - - 0 1", &game, &white_missing));
+    CHECK(white_missing.find("0 white") != std::string::npos);
+    CHECK(white_missing.find("1 black") != std::string::npos);
+
+    std::string black_missing;
+    CHECK_FALSE(load_FEN("8/8/8/8/8/8/8/4K3 w - - 0 1", &game, &black_missing));
+    CHECK(black_missing.find("1 white") != std::string::npos);
+    CHECK(black_missing.find("0 black") != std::string::npos);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "two kings of a colour are refused")
+  {
+    // python-chess: TOO_MANY_KINGS. Two white kings and one black one, so the
+    // refusal cannot be the missing-king branch firing by accident.
+    std::string reason;
+    CHECK_FALSE(load_FEN("4K3/8/8/8/8/8/8/K6k w - - 0 1", &game, &reason));
+    CHECK(reason.find("one king of each colour") != std::string::npos);
+    CHECK(reason.find("2 white") != std::string::npos);
+    CHECK(reason.find("1 black") != std::string::npos);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "the side not to move in check is refused")
+  {
+    // The finding's own position: White to move with the h1 rook bearing on
+    // h8, so `moves h1h8` captured the black king. python-chess:
+    // OPPOSITE_CHECK.
+    std::string reason;
+    CHECK_FALSE(load_FEN("7k/8/8/8/8/8/8/K6R w - - 0 1", &game, &reason));
+    CHECK(reason.find("side not to move is in check") != std::string::npos);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "two adjacent kings are refused")
+  {
+    // Not a separate rule and not a separate branch: each king attacks the
+    // other, so whichever side is not to move is in check and the same test
+    // catches it. python-chess: OPPOSITE_CHECK.
+    std::string reason;
+    CHECK_FALSE(load_FEN("8/8/8/3kK3/8/8/8/8 w - - 0 1", &game, &reason));
+    CHECK(reason.find("side not to move is in check") != std::string::npos);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t, "S208's two reasons still fire first")
+  {
+    // Order, and it is load-bearing twice over. The F09 placement carries one
+    // king a side and would reach the check test with 26 queens on the board;
+    // the back-rank-pawn fixture has no black king at all, so the king count
+    // would answer for it if it ran first. Both reasons are pinned by the S208
+    // cases above, and this is where the ordering that keeps them pinned is
+    // stated.
+    std::string queens;
+    CHECK_FALSE(load_FEN("QQQQQQQQ/k6Q/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1",
+                         &game, &queens));
+    CHECK(queens.find("16 pieces") != std::string::npos);
+
+    std::string back_rank;
+    CHECK_FALSE(load_FEN("pppppppp/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                         &game, &back_rank));
+    CHECK(back_rank.find("rank 1 or rank 8") != std::string::npos);
+  }
+
+  // The boundary from the other side, as S208's controls are: a bound whose
+  // failure mode is eating ordinary positions.
+  TEST_CASE_FIXTURE(fen_fixture_t, "the start position still loads")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    // The precondition, so the case cannot pass on a board that has no kings
+    // to count: one of each is exactly what the rule requires.
+    CHECK_EQ(count_bits(game.board.bitboards[W_KING]), 1);
+    CHECK_EQ(count_bits(game.board.bitboards[B_KING]), 1);
+  }
+
+  TEST_CASE_FIXTURE(fen_fixture_t,
+                    "a position whose side to move is in check still loads")
+  {
+    // The half of the check test that must not fire. White is to move and
+    // White is in check from the h1 rook, which is an ordinary position every
+    // GUI sends; python-chess reports Status.VALID and is_check() True.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R3K2r w Q - 0 1", &game));
+
+    // Non-vacuous: the position really is a check, so a test that refused
+    // every checked position would fail here rather than pass on a quiet
+    // board.
+    CHECK(is_check(&game));
+  }
+
+  // The finding end to end, on the command it arrived through. Everything above
+  // is load_FEN(); this is `position fen`, which is what a GUI or a harness
+  // drives, and the S176 contract that the refusal leaves the engine exactly
+  // where it was.
+  TEST_CASE("[position fen] refuses the king capture and keeps the board")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen " + std::string(KIWIPETE_POS));
+    }
+
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), std::string(KIWIPETE_POS));
+
+    std::string replies;
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen 7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8");
+      replies = capture.str();
+    }
+
+    CHECK_MESSAGE(
+        replies.find("info string refused [position fen] "
+                     "7k/8/8/8/8/8/8/K6R w - - 0 1, "
+                     "the side not to move is in check") != std::string::npos,
+        replies);
+
+    // The whole command is atomic (S210): the board, and with it the move that
+    // would have taken the black king off it, is the one the engine had.
+    CHECK_EQ(generate_FEN(&uci_game()->board), std::string(KIWIPETE_POS));
+
+    uci_shutdown();
   }
 }

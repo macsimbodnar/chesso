@@ -121,6 +121,15 @@ static const std::vector<std::string> expected_refusal_templates = {
     // is golden here is that MANUAL.md documents each shape.
     "info string refused [go <token>] <value>, not an integer",
     "info string refused [go <token>] <value>, out of range",
+    // S223: the last two placement rules, 2026-09-12_adversarial-F01.
+    // MANUAL.md and specs.md described them before these lines were added
+    // (SURFACE). Re-derive from the binary rather than from here:
+    //   printf 'position fen 8/3p4/8/8/8/8/3P4/8 w - - 0 1\nquit\n' | ...
+    //   printf 'position fen 7k/8/8/8/8/8/8/K6R w - - 0 1\nquit\n'  | ...
+    "info string refused [position fen] <fen>, other than one king of each "
+    "colour (<n> white, <n> black)",
+    "info string refused [position fen] <fen>, the side not to move is in "
+    "check",
 };
 
 
@@ -184,8 +193,10 @@ static const std::vector<std::string> expected_go_tokens = {
 
 static const std::vector<std::string> expected_position_tokens = {
   "startpos", "fen", "moves",
-  // non-standard shortcuts
-  "empty", "mate2w", "mate2b", "3frep", "kiwipete", "killer", "blocked", "fine70",
+  // non-standard shortcuts. `empty` left with S223: the load boundary requires
+  // one king of each colour, so a shortcut for the bare board named a position
+  // the engine no longer accepts (DEC-197).
+  "mate2w", "mate2b", "3frep", "kiwipete", "killer", "blocked", "fine70",
 };
 // clang-format on
 
@@ -898,7 +909,16 @@ TEST_SUITE("uci surface")
     CHECK(distinct.size() == reached.size());
 
     {
+      // `empty` left the command with S223 (DEC-197): the load boundary
+      // requires one king of each colour, so the bare board it named no longer
+      // loads and the token is not parsed at all. It therefore moves nothing,
+      // and this is what would fail if it came back.
+      uci_process_line("position fine70");
+      const std::string parked = current_fen();
+
       uci_process_line("position empty");
+      CHECK(current_fen() == parked);
+
       uci_process_line("position fen " + start_fen);
 
       CHECK(current_fen() == start_fen);

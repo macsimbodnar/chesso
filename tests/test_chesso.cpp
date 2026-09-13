@@ -631,12 +631,24 @@ TEST_SUITE("Test make_move and unmake_move")
       bool is_in_check;
     };
 
+    // RE-PICKED by S223 (DEC-197). The two `false` rows were the same two
+    // boards with the side to move flipped -- which is the side **not** to move
+    // standing in check, python-chess OPPOSITE_CHECK on both, and a placement
+    // the load boundary refuses from S223 on. Each is re-picked by taking the
+    // checking piece off, so the row still says "this side is not in check on a
+    // board where the other one could be". Every expected value below is
+    // python-chess 1.11.2's `Board.is_check()` and every position is
+    // `Status.VALID`, measured and not read off the board (CLAUDE.md).
     // clang-format off
       const std::array<test_case_t, 4> test_cases = {{
+        // Black to move, the a5 queen bearing on d8 through the long diagonal.
         {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 b - - 0 1", true},
-        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1", false},
+        // The same board without that queen: White to move and not in check.
+        {"3k4/8/7p/2p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1", false},
+        // White to move, the h1 rook bearing on c1 along the first rank.
         {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r w - - 0 1", true},
-        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1", false},
+        // The same board without that rook: Black to move and not in check.
+        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K5 b - - 0 1", false},
       }};
     // clang-format on
 
@@ -656,14 +668,23 @@ TEST_SUITE("Test make_move and unmake_move")
       bool expected_result;
     };
 
+    // RE-PICKED by S223 (DEC-197): the same two boards, each with the **other**
+    // side to move. is_capturing_king() reads the move and the two king
+    // bitboards and never `active_color`, so nothing here depends on whose turn
+    // it is -- and with the turn as it was, the side to move was the one
+    // attacking the enemy king, which is python-chess's OPPOSITE_CHECK and a
+    // placement the load boundary refuses from S223 on. Both rows below are
+    // `Status.VALID`; each asks whether a move by the side that is *not* to
+    // move would capture a king, which is exactly the question the function
+    // answers.
     const std::array<test_case_t, 4> test_cases = {{
-        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1",
+        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 b - - 0 1",
          NEW_MOVE(a5, d8, W_QUEEN, TO_NONE, 1, 0, 0, 0), true},
-        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 w - - 0 1",
+        {"3k4/8/7p/Q1p3pP/1pPpPpP1/1P1PpP2/N7/2K5 b - - 0 1",
          NEW_MOVE(a5, a8, W_QUEEN, TO_NONE, 0, 0, 0, 0), false},
-        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1",
+        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r w - - 0 1",
          NEW_MOVE(h1, h4, B_ROOK, TO_NONE, 1, 0, 0, 0), false},
-        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r b - - 0 1",
+        {"3k4/8/7p/2p3pP/1pPpPpPQ/1P1PpP2/N7/2K4r w - - 0 1",
          NEW_MOVE(h1, c1, B_ROOK, TO_NONE, 1, 0, 0, 0), true},
     }};
 

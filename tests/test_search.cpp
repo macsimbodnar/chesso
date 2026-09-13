@@ -3133,24 +3133,33 @@ TEST_SUITE("search: draws")
     }
   }
 
-  // Regression: an illegal FEN where the side to move can capture the enemy
-  // king used to leave a side with no king on the board, and is_check() then
-  // indexed the attack tables with square 64.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a position with a capturable king is survivable")
+  // RE-STATED by S223 (DEC-197), not relaxed. These two were "a position with a
+  // capturable king is survivable" and "a board with no kings is survivable":
+  // S067 wrote them because such a position arrived through `position fen` and
+  // the search had to survive it, and the survival was real -- the square array
+  // and the bitboards agreed afterwards, which is why
+  // `2026-09-12_adversarial-F01` is a refusal and not a corruption.
+  //
+  // S223 removes the premise instead. Neither board loads now, so "the search
+  // survives it" is not a statement about anything: what replaces it is that
+  // the boundary is where they stop, which is the stronger claim and the one
+  // the three hot-path assertions rest on (is_check(), generate_moves_impl(),
+  // king_shelter_features()). The refusal reasons themselves are pinned in
+  // tests/test_audit_fen_semantics.cpp; this is the search's end of it.
+  TEST_CASE_FIXTURE(
+      search_fixture_t,
+      "a position with a capturable king never reaches the search")
   {
-    // Black is in check with White to move, which cannot arise in a real game
-    // but does arrive through [position fen].
-    const search_t result = search_fen("7k/8/8/8/8/8/8/K6R w - - 0 1", 4);
-
-    REQUIRE(result.best_move != 0);
+    // The finding's own board: Black is in check with White to move, so Rxh8
+    // would take the black king. python-chess reports OPPOSITE_CHECK.
+    REQUIRE_FALSE(load_FEN("7k/8/8/8/8/8/8/K6R w - - 0 1", &game));
   }
 
-  TEST_CASE_FIXTURE(search_fixture_t, "a board with no kings is survivable")
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a board with no kings never reaches the search")
   {
-    const search_t result = search_fen("8/3p4/8/8/8/8/3P4/8 w - - 0 1", 4);
-
-    REQUIRE(result.best_move != 0);
+    // python-chess reports NO_WHITE_KING,NO_BLACK_KING.
+    REQUIRE_FALSE(load_FEN("8/3p4/8/8/8/8/3P4/8 w - - 0 1", &game));
   }
 
   // A repetition is a property of the path, not of the position, so it has to

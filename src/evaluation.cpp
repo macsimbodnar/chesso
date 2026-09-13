@@ -794,11 +794,12 @@ const int king_safety_eg[KS_FEATURE_COUNT] = {-6,  -13, -5,  -61, 10,
 
 
 // A king's own zone: its square and the eight around it. Empty when that king
-// is not on the board -- evaluate() is called on such positions,
-// test_evaluation prices one to check the king carries no material, and
-// get_lsb_index() of an empty board answers 64, which is off the end of every
-// table here. An empty zone then costs nothing extra downstream: no attack set
-// can intersect it.
+// is not on the board. Since S223 (2026-09-13) load_FEN refuses a board
+// without a king of each colour, so this branch is unreachable from any
+// accepted position and stays only as a guard against get_lsb_index() of an
+// empty board answering 64, off the end of every table here; S213 turns it
+// into the Debug assertion its three siblings became in S223. An empty zone
+// costs nothing extra downstream: no attack set can intersect it.
 static bb_t king_zone(const bb_tables_t* tables,
                       const board_t* board,
                       int colour)
@@ -833,7 +834,11 @@ static inline void king_shelter_features(const board_t* board,
 
   const bb_t king = board->bitboards[(colour == WHITE) ? W_KING : B_KING];
 
-  if (king == 0) { return; }
+  // Until S223 this returned early on a kingless board, which load_FEN() let
+  // through. It refuses one now, so the early return is an assertion:
+  // get_lsb_index() answers 64 on an empty board and every index below is
+  // derived from it.
+  assert(king != 0);
 
   const index_t king_square = get_lsb_index(king);
 

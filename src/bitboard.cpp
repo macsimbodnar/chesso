@@ -476,8 +476,9 @@ static size_t generate_moves_body(const bb_tables_t* tables,
 //   pinned      our pieces standing alone between the king and an enemy
 //               slider. Such a piece may only move along that same line.
 //
-// A side with no king is reachable (EMPTY_POS, and illegal FENs), and then
-// nothing constrains the move list.
+// Until S223 a side with no king was reachable (EMPTY_POS, and illegal FENs)
+// and nothing constrained the move list. load_FEN() refuses such a placement
+// now, so the king square below is an index and not a maybe.
 template <color_t Color, gen_type_t Type>
 static size_t generate_moves_impl(const bb_tables_t* tables,
                                   const board_t* board,
@@ -492,47 +493,49 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
       &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
 
   const bb_t king_bb = my_bitboards[5];
-  const index_t king_square =
-      king_bb ? get_lsb_index(king_bb) : static_cast<index_t>(INVALID_INDEX);
+
+  // S223. get_lsb_index() answers 64 on an empty board, and 64 indexes
+  // tables->between and every attack table off its end.
+  assert(king_bb != BB_0);
+
+  const index_t king_square = get_lsb_index(king_bb);
 
   bb_t check_mask = ~BB_0;
   bb_t pinned = BB_0;
 
-  if (king_bb) {
-    const bb_t all_occupancy = board->occupancies[BOTH];
-    const bb_t checkers = attackers_to(tables, board, king_square, opponent);
-    const int checker_count = count_bits(checkers);
+  const bb_t all_occupancy = board->occupancies[BOTH];
+  const bb_t checkers = attackers_to(tables, board, king_square, opponent);
+  const int checker_count = count_bits(checkers);
 
-    if (checker_count == 1) {
-      const index_t checker_square = get_lsb_index(checkers);
-      check_mask = tables->between[king_square][checker_square] | checkers;
-    } else if (checker_count > 1) {
-      check_mask = BB_0;
+  if (checker_count == 1) {
+    const index_t checker_square = get_lsb_index(checkers);
+    check_mask = tables->between[king_square][checker_square] | checkers;
+  } else if (checker_count > 1) {
+    check_mask = BB_0;
+  }
+
+  // Sliders that would hit the king on an empty board are the only ones that
+  // can pin anything; a single one of our pieces in the way is pinned.
+  bb_t snipers = (get_rook_attacks(tables, king_square, BB_0) &
+                  (opp_bitboards[3] | opp_bitboards[4])) |
+                 (get_bishop_attacks(tables, king_square, BB_0) &
+                  (opp_bitboards[2] | opp_bitboards[4]));
+
+  while (snipers) {
+    const index_t sniper_square = get_lsb_index(snipers);
+    snipers &= snipers - 1;
+
+    const bb_t blockers =
+        tables->between[king_square][sniper_square] & all_occupancy;
+
+    if (blockers && (blockers & (blockers - 1)) == BB_0) {
+      pinned |= blockers & board->occupancies[color];
     }
+  }
 
-    // Sliders that would hit the king on an empty board are the only ones that
-    // can pin anything; a single one of our pieces in the way is pinned.
-    bb_t snipers = (get_rook_attacks(tables, king_square, BB_0) &
-                    (opp_bitboards[3] | opp_bitboards[4])) |
-                   (get_bishop_attacks(tables, king_square, BB_0) &
-                    (opp_bitboards[2] | opp_bitboards[4]));
-
-    while (snipers) {
-      const index_t sniper_square = get_lsb_index(snipers);
-      snipers &= snipers - 1;
-
-      const bb_t blockers =
-          tables->between[king_square][sniper_square] & all_occupancy;
-
-      if (blockers && (blockers & (blockers - 1)) == BB_0) {
-        pinned |= blockers & board->occupancies[color];
-      }
-    }
-
-    if (check_mask != ~BB_0 || pinned != BB_0) {
-      return generate_moves_body<Color, true, Type>(
-          tables, board, moves, check_mask, pinned, king_square);
-    }
+  if (check_mask != ~BB_0 || pinned != BB_0) {
+    return generate_moves_body<Color, true, Type>(
+        tables, board, moves, check_mask, pinned, king_square);
   }
 
   return generate_moves_body<Color, false, Type>(
@@ -938,15 +941,22 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   // After black turn update the full move counter as well
   if (us == BLACK) { board->fullmove_counter++; }
 
+  // S223. The load boundary admits one king a side and INV-1 generates legal
+  // moves only, so no move that reaches here can take a king off the board.
+  // That is the whole of "no accepted input can remove a king": a bound at the
+  // entrance, a generator that cannot emit the capture, and this, which is what
+  // fails the four-round Debug self-play if either of the other two stops being
+  // true. `2026-09-12_adversarial-F01` is the state it forbids.
+  assert(count_bits(board->bitboards[W_KING]) == 1);
+  assert(count_bits(board->bitboards[B_KING]) == 1);
+
   // No legality check here. generate_moves() emits legal moves only, so the
   // king cannot be left en prise by anything that reaches this point, and
   // every caller feeds this function a generated move. The assertion is the
   // net that catches a caller that does not.
-  assert(board->bitboards[(us == WHITE) ? W_KING : B_KING] == BB_0 ||
-         !is_attacked(
-             game_tables(), board,
-             get_lsb_index(board->bitboards[(us == WHITE) ? W_KING : B_KING]),
-             them));
+  assert(!is_attacked(
+      game_tables(), board,
+      get_lsb_index(board->bitboards[(us == WHITE) ? W_KING : B_KING]), them));
 
   return true;
 }
@@ -1544,13 +1554,12 @@ bool is_check(const game_t* game)
                         ? game->board.bitboards[W_KING]
                         : game->board.bitboards[B_KING];
 
-  // A side with no king cannot be in check. This is reachable: EMPTY_POS has
-  // no kings at all, and an illegal FEN where the side to move is already
-  // giving check lets the search capture the enemy king. get_lsb_index()
-  // returns 64 for an empty board, which is out of bounds for every attack
-  // table is_attacked() touches. make_move() already guards its own king test
-  // the same way.
-  if (king == BB_0) { return false; }
+  // Until S223 this returned false on an empty king bitboard, because the state
+  // was reachable: EMPTY_POS had no kings at all and an illegal FEN let the
+  // search capture the enemy king. load_FEN() refuses both classes now, so the
+  // branch is an assertion -- get_lsb_index() answers 64 for an empty board and
+  // 64 is out of bounds for every attack table is_attacked() touches.
+  assert(king != BB_0);
 
   const index_t index = get_lsb_index(king);
 
@@ -1992,12 +2001,32 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
    * Refusing at the load boundary is free: it is the contract every downstream
    * consumer already assumes (S161's words), and a run-time bound inside
    * generate_moves()'s hot loop would tax every node to guard an input that
-   * costs nothing to reject here. Position legality at large is still not
-   * checked -- one king a side is deliberately allowed, because EMPTY_POS and
-   * two "survivable" cases in tests/test_search.cpp are kingless on purpose.
+   * costs nothing to reject here.
+   **************************************************************************/
+  /***************************************************************************
+   * 6b. One king of each colour, S223
+   *
+   * `2026-09-12_adversarial-F01`, the rest of the sentence S161 wrote and S208
+   * quoted: "two kings, the side not to move in check -- is deliberately not
+   * checked". Both halves are checked from here on, and this is the first of
+   * them. It runs **after** S208's two so that their reasons keep firing first:
+   * the back-rank-pawn fixture in tests/test_audit_fen_semantics.cpp has no
+   * black king, and two of those cases pin the reason text.
+   *
+   * A side without a king is not a position that behaves oddly, it is one three
+   * hot paths carried a branch for: is_check() answered false on an empty king
+   * bitboard, generate_moves_impl() carried an INVALID_INDEX king square, and
+   * king_shelter_features() returned early -- because get_lsb_index() answers
+   * 64 for an empty board and 64 indexes every attack table off its end. All
+   * three are assertions now, and this refusal is what makes them sound. S133's
+   * king-relative tables and S029's network features index by the same square.
+   *
+   * Counted in 6a's one pass over the squares, and tested after both of its
+   * refusals.
    **************************************************************************/
   {
     size_t piece_count[2] = {0, 0};
+    size_t king_count[2] = {0, 0};
     bool back_rank_pawn = false;
 
     for (index_t square = 0; square < 64; ++square) {
@@ -2007,6 +2036,8 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
 
       const int color = (piece <= W_KING) ? WHITE : BLACK;
       piece_count[color]++;
+
+      if (piece == W_KING || piece == B_KING) { king_count[color]++; }
 
       // Rank 8 is squares 0..7 and rank 1 is squares 56..63, this board being
       // indexed from a8.
@@ -2033,6 +2064,19 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
       if (reason != nullptr) { *reason = "a pawn on rank 1 or rank 8"; }
 
       LOG_E << "Refused: a pawn on rank 1 or rank 8. FEN: " << FEN << END_E;
+
+      return false;
+    }
+
+    if (king_count[WHITE] != 1 || king_count[BLACK] != 1) {
+      if (reason != nullptr) {
+        *reason = "other than one king of each colour (" +
+                  STR(king_count[WHITE]) + " white, " + STR(king_count[BLACK]) +
+                  " black)";
+      }
+
+      LOG_E << "Refused: other than one king of each colour. FEN: " << FEN
+            << END_E;
 
       return false;
     }
@@ -2088,6 +2132,40 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
 
   board->occupancies[BOTH] |= board->occupancies[WHITE];
   board->occupancies[BOTH] |= board->occupancies[BLACK];
+
+  /***************************************************************************
+   * 6c. The side not to move may not be in check, S223
+   *
+   * The other half of `2026-09-12_adversarial-F01`, and the half the finding
+   * was reported for: `position fen 7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8`
+   * loaded, played, and left `7R/8/8/8/8/8/8/K7 b - - 0 1` -- a king captured
+   * by a move the engine accepted. Such a position is one no game reaches: the
+   * previous move either left its own king attacked or was made while it
+   * already was.
+   *
+   * The engine's own attack test rather than a rule restated here, which is the
+   * same construction tests/test_helpers.hpp position_is_reachable() uses. Two
+   * kings on adjacent squares fail it in both directions and need no rule of
+   * their own.
+   *
+   * It sits here, below the occupancies, and not in 6b: is_attacked() reads
+   * occupancies[BOTH] for the slider rays, and above this point that word is
+   * still zero. 6b is what makes the king bitboard safe to take an index from.
+   **************************************************************************/
+  {
+    const color_t them = !board->active_color;
+    const index_t their_king =
+        get_lsb_index(board->bitboards[(them == WHITE) ? W_KING : B_KING]);
+
+    if (is_attacked(game_tables(), board, their_king, board->active_color)) {
+      if (reason != nullptr) { *reason = "the side not to move is in check"; }
+
+      LOG_E << "Refused: the side not to move is in check. FEN: " << FEN
+            << END_E;
+
+      return false;
+    }
+  }
 
   board->hash = compute_full_hash(game);
 

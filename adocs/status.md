@@ -7,16 +7,38 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S223 started, 2026-09-13 17:30, by an Opus 5 subagent (DEC-199).** The
-  load boundary requires one king a side and refuses a position whose side
-  not to move is in check, so no `position` line can leave a board without
-  a king or let a supplied move capture one (the 2026-09-12 Codex audit's
-  F01); red first on the audit's `7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8`,
-  the refusal agreeing with python-chess's `Board.status()` over every FEN
-  literal in the tree, the seven census positions re-picked with the
-  oracle's word, `position empty` gone, three no-king branches assertions;
-  `No functional change` expected and shown. `plan_current/`: S210 (SPRT
-  tonight), S223.
+- **S223 is done, 2026-09-13 18:50, by an Opus 5 subagent (DEC-199).**
+  `load_FEN()` refuses two further classes after S208's two, each with its
+  own reason: other than one king of each colour, and the side not to move
+  in check (the engine's own `is_attacked()` from that king's square, below
+  the occupancy fill; adjacent kings fall out of the same test). Red first
+  on `ab5cd8e`: the Codex audit's `7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8`
+  left `7R/8/8/8/8/8/8/K7 b` with the black king gone, the kingless and
+  two-white-king boards loaded and echoed back -- nine new cases, 6 failing,
+  20 assertions; 29/29 after. `adocs/data/S223_fen_census.py` gained an
+  engine pass: 3214 unique FEN literals, 3199 compared with python-chess
+  1.11.2 `Board.status()`, **0 disagreements**; eight literals re-picked
+  over fourteen sites with the oracle's verdict each, none deleted, no
+  golden moved. Three no-king branches are Debug assertions (`is_check()`,
+  `generate_moves_impl()`, `king_shelter_features()`) and `make_move_impl`
+  gained two king-count asserts -- shown not vacuous: with the refusals
+  neutered the audit line trips `count_bits(B_KING) == 1` in Debug.
+  `king_zone()` is a fourth such branch, unreachable now, left for S213.
+  `No functional change`: bench 7105111, the six `search_bench` rows and
+  `bench_movegen`'s counts identical. Debug self-play 8 games 0 `Assertion`;
+  the agent ran `gate_extra.sh` itself: `GATE-EXTRA-DONE 5 stages 1059 s`.
+  `MANUAL.md` first, the surface golden after; `specs.md`'s position-input
+  row carries the proposal. **The fast check killed both mutants the agent
+  named** (a king count accepting two, the check test from the wrong king --
+  every variant red on named cases), re-ran the census byte-identical, and
+  went past the accepts: 150932 `noob_3moves.epd` positions, 242201 of
+  `UHO_4060_v3.epd`, 400000 of the UHO Lichess book and 291776 rows of the
+  tuner corpus hold **0 positions the new bound refuses**. Three text items
+  fixed by the coordinator before the commit: a comment and the stamp
+  quoting python-chess as `VALID` for `3k4/8/8/8/8/8/8/3K3R w K - 0 1` where
+  it says `BAD_CASTLING_RIGHTS` only, the stale comment on `king_zone()`'s
+  now-unreachable branch, a `****` in `specs.md`. `plan_current/`: S210
+  (SPRT tonight). **Next: S213**, then the F22 SPRT at night, then S091.
 
 - **S210's second half landed, 2026-09-13 17:05, by an Opus 5 subagent
   (DEC-199): F22, and its census says the SPRT is owed.** Quiescence scores
@@ -3035,15 +3057,14 @@ Updated: 2026-09-13, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-13 17:27, 5 stages 1042 s**, on
-  S210's tree at `da0cfed` (log `.tuning/gate_extra_2026-09-13_S210.log`);
-  before it 2026-09-13 07:40 on S109's `1952c56` (859 s, after the sanitizer
-  build was repaired) and 2026-09-12 20:20 on S211's tree (882 s). DEC-141
-  clause 3 is the cadence -- before a step that touched `make_move`,
-  `unmake_move`, the generator or the search completes, and otherwise
-  weekly -- and this bullet is where a missed week shows (DEC-167). Export
-  `CLANG_FORMAT_MAJOR=22` in the launching shell first or stage 4 goes red on
-  the formatter (DEC-146).
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-13 18:40, 5 stages 1059 s**, on
+  S223's tree (log `.tuning/gate_extra_2026-09-13_S223.log`); before it the
+  same day on S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s), and
+  2026-09-12 on S211's tree (882 s). DEC-141 clause 3 is the cadence --
+  before a step that touched `make_move`, `unmake_move`, the generator or the
+  search completes, and otherwise weekly -- and this bullet is where a missed
+  week shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell
+  first or stage 4 goes red on the formatter (DEC-146).
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S215 armed two, both on
   `MUTATION-RUN-(DONE|FAILED)` over a polled log with a 30-minute ceiling and a

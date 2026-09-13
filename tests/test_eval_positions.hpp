@@ -37,7 +37,16 @@ inline const std::vector<std::string> positions = {
     "8/2k5/8/8/3B4/2K5/8/8 b - - 0 1",
     // Promotion, which is how the phase sum can exceed a full board and where
     // game_phase() clamps.
-    "8/PPPPPPPP/8/2k5/2K5/8/pppppppp/8 w - - 0 1",
+    //
+    // RE-PICKED by S223 (DEC-197): the kings stood on c5 and c4, adjacent, so
+    // whichever side was not to move was in check -- python-chess reports
+    // OPPOSITE_CHECK -- and the load boundary refuses that from S223 on. They
+    // move to b5 and g4, which is the same two pawn walls and the same file
+    // relationship to them: three own-pawn files under each king, so every
+    // pawn, passed-pawn and king-shelter count this row contributes is the one
+    // it contributed before, and only the two kings' piece-square entries move.
+    // python-chess reports Status.VALID on the FEN below.
+    "8/PPPPPPPP/8/1k6/6K1/8/pppppppp/8 w - - 0 1",
     // Lopsided material, so a wrong sign cannot cancel itself.
     "3qk3/8/8/8/8/8/8/3QK2R w K - 0 1",
     // King safety, added at S027 because the positions above leave most of the

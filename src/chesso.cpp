@@ -431,10 +431,11 @@ static bool load_position(const std::string& fen)
   // silent in the binary that ships (the S137 pattern).
   const game_t previous = game;
 
-  // S208: the loader names a semantic refusal -- more than 16 pieces of a
-  // colour, a pawn on a back rank -- and a syntax failure names nothing, which
-  // is what "does not load" covers. Same shape either way, so a harness reading
-  // the channel sees one message class.
+  // S208, extended by S223: the loader names a semantic refusal -- more than 16
+  // pieces of a colour, a pawn on a back rank, other than one king of each
+  // colour, the side not to move in check -- and a syntax failure names
+  // nothing, which is what "does not load" covers. Same shape either way, so a
+  // harness reading the channel sees one message class.
   std::string reason;
 
   if (!load_FEN(fen, &game, &reason)) {
@@ -1542,8 +1543,10 @@ bool command_position(std::queue<std::string>& args)
     const std::string token = args.front();
     args.pop();
 
+    // `empty` was here until S223, loading a bare board. The load boundary
+    // requires one king of each colour from that step on, so the shortcut
+    // named a position the engine no longer accepts. DEC-197.
     if (token == "startpos") { load_base(DEFAULT_POSITION); }
-    if (token == "empty") { load_base(EMPTY_POS); }
     if (token == "mate2w") { load_base(MATE_IN_2_W_POS); }
     if (token == "mate2b") { load_base(MATE_IN_2_B_POS); }
     if (token == "3frep") { load_base(THREE_FOLD_REP_POS); }

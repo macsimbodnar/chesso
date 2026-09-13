@@ -2860,9 +2860,12 @@ TEST_SUITE("engine: uci go")
         move_t(0));
 
     // A pinned piece is in the generated list but never survives make_move.
+    // The black king on a8 is S223's re-pick (DEC-197): this board had no black
+    // king at all and the load boundary refuses that now. Off the pinning ray
+    // and out of every white attack, so the pin is what it was.
     {
       stdout_capture_t capture;
-      uci_process_line("position fen 4r3/8/8/8/4N3/8/8/4K3 w - - 0 1");
+      uci_process_line("position fen k3r3/8/8/8/4N3/8/8/4K3 w - - 0 1");
     }
 
     REQUIRE_EQ(
@@ -3021,9 +3024,10 @@ TEST_SUITE("engine: uci parsing")
   {
     uci_init();
 
+    // The black king on a8 is S223's re-pick (DEC-197); see the site above.
     {
       stdout_capture_t capture;
-      uci_process_line("position fen 4r3/8/8/8/4N3/8/8/4K3 w - - 0 1");
+      uci_process_line("position fen k3r3/8/8/8/4N3/8/8/4K3 w - - 0 1");
     }
 
     REQUIRE(check_move_legality(NEW_MOVE(e1, d1, W_KING, TO_NONE, 0, 0, 0, 0)));
