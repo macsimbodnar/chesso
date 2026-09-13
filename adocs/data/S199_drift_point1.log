@@ -1,0 +1,34 @@
+# S199 drift point 1, run 2026-09-13 09:04:35 to 09:59:22 (SPRT-RUN-DONE), read 10:00 by adocs/data/S199_drift.py into S199_drift.tsv.
+# Full run log .tuning/s199_drift.log and PGN under .tuning/s199_drift_20260913_090435 are gitignored.
+
+## banner and identity lines
+candidate  eff4b9b  2026-09-13
+reference  f548ff4  2026-08-20
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260913090435
+bounds     none -- fixed 1000 rounds, a calibration or drift reading, NOT a verdict
+out        /home/max/ws/chesso/.tuning/s199_drift_20260913_090435
+id name    candidate  Chesso eff4b9b native
+id name    ref-f548ff4  Chesso
+           ^ no build stamp: every commit before S212 answers the bare
+             literal, so what this binary holds cannot be checked here.
+
+## fastchess final block
+Results of candidate vs ref-f548ff4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 98.82 +/- 13.18, nElo: 120.53 +/- 15.23
+LOS: 100.00 %, DrawRatio: 28.50 %, PairsRatio: 3.06
+Games: 2000, Wins: 976, Losses: 422, Draws: 602, Points: 1277.0 (63.85 %)
+Ptnml(0-2): [49, 127, 285, 299, 240], WL/DD Ratio: 2.24
+
+## terminations
+   1515 [Termination "adjudication"]
+    485 [Termination "normal"]
+
+## forfeits
+  candidate         2000 games, 0 forfeits, 0.00 %
+  ref-f548ff4       2000 games, 0 forfeits, 0.00 %
+
+## timing
+2000 games in 54 m 47 s: 2190 an hour

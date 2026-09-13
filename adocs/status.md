@@ -23,25 +23,23 @@ Updated: 2026-09-13, by hand.
   pixello's test sounds closes with the submodule. `plan_current/`: S199
   (reading pending).
 
-- **S199's first drift point is in, 2026-09-13 09:59, and the block's
-  longer-control reading is running since 10:01.** The drift match: `eff4b9b`
-  (the engine now, S109 block included) against the pinned early-S105
-  `f548ff4`, 1000 pairs at the regime, 2000 games in 54 m 47 s (2190 an
-  hour), 0 forfeits, 1515 adjudications and 485 natural ends: **`Elo 98.82
-  +/- 13.18`, `nElo 120.53 +/- 15.23`, `Ptnml [49, 127, 285, 299, 240]`,
-  pair variance 0.3188**, appended to `adocs/data/S199_drift.tsv` by
-  `S199_drift.py` with the verdicts landed since the pin (S085, S093 v1,
-  S107, S108, S130, S165, S207, S042, S109; conversions none). Read under
-  the rule written before the run: the kept verdicts' point estimates sum
-  to +106.88 Elo and the point's interval [+85.6, +112.0] contains that sum
-  -- **as expected**; the kept verdicts are in the engine and DEC-063's
-  upward bias on the sum is small here. No verdict on any one of them. The
-  longer-control reading of the S109 block (`adocs/data/S109_ltc.sh`,
-  `CAND=600f448 REF=50e3661 TC=32+0.32 HASH=64 ROUNDS=1000`, seed
-  `20260913100109`, out `.tuning/s109_ltc_20260913_100109/`) launched at
-  10:01, about 3.7 h, persistent `Monitor` with a 27360 s ceiling; it and
-  the drift point close S199 together (F30: a boundary is two numbers).
-  `plan_current/`: S199 (reading pending). **S210's first half after it.**
+- **S199 is done, 2026-09-13 14:00: the S109 block boundary's two numbers
+  are in, both as expected.** Drift point 1 (`eff4b9b` against the pinned
+  `f548ff4`, 1000 pairs at the regime, 54 m 47 s): **`Elo 98.82 +/- 13.18`,
+  `nElo 120.53 +/- 15.23`**, 0 forfeits, in `adocs/data/S199_drift.tsv` with
+  the verdicts landed since the pin; the kept verdicts' sum of +106.88 sits
+  inside the point's interval, so under the rule written before the run the
+  verdicts are in the engine and DEC-063's bias is small. DEC-202's
+  longer-control reading of the block (`600f448` against `50e3661` at
+  `32+0.32`, `Hash=64`, 1000 pairs, 3 h 44 m 52 s at 534 an hour): **`Elo
+  30.65 +/- 12.11`, `nElo 38.75 +/- 15.23`**, 0 forfeits, 0 `Incomplete
+  mating PV`, pair variance 0.3113 -- within noise of the SPRT's +46.90 +/-
+  15.43 (z 0.83), the gain transferring compressed; an estimate, nothing
+  changes. A boundary costs the machine about 4 h 40 m (`plan.md`, "What
+  this costs"). Evidence `adocs/data/S199_drift_point1.log`, `S109_ltc.log`,
+  `S109_ltc_pairs.txt`. `plan_current/` empty after this commit; machine
+  idle. **Next: S227 (pixello out, the owner's instruction), then S210's
+  two halves, S223, S213.** **Compaction point.**
 
 - **S199's instrument landed, 2026-09-13 10:00, by an Opus 5 subagent beside
   S109's SPRT; the two boundary runs follow on the idle machine.** The pinned

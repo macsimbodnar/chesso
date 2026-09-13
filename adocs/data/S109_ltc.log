@@ -1,0 +1,36 @@
+# S109 block, DEC-202 longer-control reading, run 2026-09-13 10:01:09 to 13:46:01 (SPRT-RUN-DONE), read 13:48.
+# Full run log .tuning/s109_ltc.log and PGN under .tuning/s109_ltc_20260913_100109 are gitignored.
+
+## banner and identity lines
+candidate  600f448  2026-09-13
+reference  50e3661  2026-09-13
+config     arch native  tune off
+tc 32+0.32  hash 64  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260913100109
+bounds     none -- fixed 1000 rounds, a calibration or drift reading, NOT a verdict
+out        /home/max/ws/chesso/.tuning/s109_ltc_20260913_100109
+id name    cand-600f448  Chesso 600f448 native
+id name    ref-50e3661  Chesso 50e3661 native
+
+## fastchess final block
+Results of cand-600f448 vs ref-50e3661 (32+0.32, 1t, 64MB, noob_3moves.epd):
+Elo: 30.65 +/- 12.11, nElo: 38.75 +/- 15.23
+LOS: 100.00 %, DrawRatio: 33.30 %, PairsRatio: 1.50
+Games: 2000, Wins: 706, Losses: 530, Draws: 764, Points: 1088.0 (54.40 %)
+Ptnml(0-2): [80, 187, 333, 277, 123], WL/DD Ratio: 1.22
+
+## terminations
+   1428 [Termination "adjudication"]
+    572 [Termination "normal"]
+
+## forfeits
+  cand-600f448      2000 games, 0 forfeits, 0.00 %
+  ref-50e3661       2000 games, 0 forfeits, 0.00 %
+
+## Incomplete mating PV: 0 from either side (both commits post-date S147/S170/S171)
+
+## timing
+2000 games in 3 h 44 m 52 s: 534 an hour against S151's 545 and the pre-registered 528
+
+## read against the 8+0.08 SPRT (Elo 46.90 +/- 15.43): difference 16.25 on a combined error 19.62, z 0.83 -- agreement within noise; the interval [18.5, 42.8] excludes zero; an estimate, never a verdict

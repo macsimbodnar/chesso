@@ -1,0 +1,16 @@
+=== .tuning/s109_ltc_20260913_100109/games.pgn ===
+games            2000
+draws            764, 38.2 %
+decisive         1236, 61.8 %
+plies per game   mean 114.9, median 102
+seconds per game mean 80.1, median 77
+seconds per ply  0.6976
+complete pairs   1000
+  pair score 0.0     80    8.0 %
+  pair score 0.5    187   18.7 %
+  pair score 1.0    333   33.3 %
+  pair score 1.5    277   27.7 %
+  pair score 2.0    123   12.3 %
+white won both   83 of 1000, 8.3 %  (the pair Pohl's floor is about)
+pair score       mean 1.0880, variance 0.3113, sd 0.5579
+
