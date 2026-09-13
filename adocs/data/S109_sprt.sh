@@ -141,6 +141,10 @@
 # step's fix under the TESTS rule and S218 folds into it. DEC-180's own words:
 # a red guard is a bug, not an option. S218 is re-scoped by the coordinator.
 #
+# OPEN WHILE THIS RUNS, added 2026-09-13 before launch: S225, the STAGES
+# environment leak in tools/gate_extra.sh found by this step's second-tier
+# gate -- a harness-test defect, not reachable in play (DEC-171).
+#
 # AGENTS.md WATCHERS and DEC-061: fastchess.sh prints SPRT-RUN-DONE or
 # SPRT-RUN-FAILED on every exit path, so a watcher has a terminal marker.
 

@@ -245,7 +245,7 @@ harness's assertion about what it meant to build, the class DEC-020 cost +301
 Elo. A binary answering the bare literal `Chesso` predates the stamp and
 plays, with the run printing that the check did not happen.
 `tests/test_uci_surface.cpp` "the uci reply carries the identification a GUI
-needs" holds the form as a pattern. (2026-09-13, S212,
+needs" holds the form as a token check -- `<regex>` left the test on 2026-09-13 because gcc 13 under `-Werror` with the sanitizer flags cannot compile libstdc++'s regex, which had broken `build-sanitize` since S212. (2026-09-13, S212,
 2026-09-10_adversarial-F05.)
 
 **`position fen` takes four to six fields, and a FEN that does not load changes

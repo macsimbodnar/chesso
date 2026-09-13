@@ -4,7 +4,6 @@
 #include <cctype>
 #include <fstream>
 #include <iterator>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -351,6 +350,125 @@ static bool field_after(const std::string& line,
 }
 
 
+// S212's `id name` form, read by hand instead of by `std::regex`.
+//
+//     id name Chesso <sha>[-dirty] <arch>[ tune]
+//
+// S225 replaced the pattern with these four functions and dropped `<regex>`
+// from this file: gcc 13's `<regex>` header emits -Wmaybe-uninitialized inside
+// libstdc++'s own `std::function` moves under -O2, which the Release and tune
+// builds compile anyway and the sanitizer build turns into a -Werror failure,
+// so every automatic gate since S212 was green while `build-sanitize` could not
+// be built at all. The acceptance below is the pattern's, token for token; it
+// is not suppressed with a pragma, because a pragma would leave the header
+// included and the next test to reach for it in the same trap.
+//
+// GOLDEN (DEC-142): the form these four accept. Re-derive what it has to match
+// with
+//   printf 'uci\nquit\n' | ./build/src/chesso | sed -n 's/^id name //p'
+//   printf 'uci\nquit\n' | ./build-tune/src/chesso | sed -n 's/^id name //p'
+// -- no search runs on either pipe, so `quit` cannot truncate it. The arch
+// names are `cmake/arch.cmake`'s four plus the `unknown` that
+// `cmake/build_info.cmake` writes when ARCH does not reach it. Read them off
+// the binary and off those two files, never off this one.
+
+// Split on single spaces and not on whitespace runs: a double space leaves an
+// empty field here and every check below rejects it, which is what anchoring
+// the pattern at both ends did. A tab or a newline stays inside its token and
+// fails the same way.
+static std::vector<std::string> split_on_space(const std::string& line)
+{
+  std::vector<std::string> fields;
+  std::string::size_type start = 0;
+
+  for (;;) {
+    const std::string::size_type space = line.find(' ', start);
+
+    if (space == std::string::npos) {
+      fields.push_back(line.substr(start));
+      return fields;
+    }
+
+    fields.push_back(line.substr(start, space - start));
+    start = space + 1;
+  }
+}
+
+
+// `[0-9a-f]{7,}`: seven or more, and no upper bound, because `git rev-parse
+// --short` lengthens the abbreviation as a repository grows. Lower case only --
+// git emits lower case and `fastchess.sh` compares the two ends as strings.
+static bool is_short_sha(const std::string& token)
+{
+  if (token.size() < 7) { return false; }
+
+  for (const char c : token) {
+    const bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+
+    if (!hex) { return false; }
+  }
+
+  return true;
+}
+
+
+// `unknown|[0-9a-f]{7,}(-dirty)?`. A sha carries no `-`, so stripping one
+// trailing `-dirty` and asking for hex accepts exactly what the alternation
+// did: `unknown-dirty` is rejected, since `-dirty` hangs off the hex branch
+// alone, and so is `<sha>-dirty-dirty`.
+static bool is_build_sha(const std::string& token)
+{
+  if (token == "unknown") { return true; }
+
+  const std::string dirty = "-dirty";
+
+  if (token.size() > dirty.size() &&
+      token.compare(token.size() - dirty.size(), dirty.size(), dirty) == 0) {
+    return is_short_sha(token.substr(0, token.size() - dirty.size()));
+  }
+
+  return is_short_sha(token);
+}
+
+
+// cmake/arch.cmake's four CHESSO_ARCH values, and cmake/build_info.cmake's
+// `unknown` for a build whose ARCH did not reach the stamping script.
+static bool is_build_arch(const std::string& token)
+{
+  return token == "bmi2" || token == "avx2" || token == "portable" ||
+         token == "native" || token == "unknown";
+}
+
+
+static bool has_id_name_form(const std::string& line)
+{
+  const std::vector<std::string> fields = split_on_space(line);
+
+  if (fields.size() != 5 && fields.size() != 6) { return false; }
+  if (fields[0] != "id" || fields[1] != "name" || fields[2] != "Chesso") {
+    return false;
+  }
+  if (!is_build_sha(fields[3])) { return false; }
+  if (!is_build_arch(fields[4])) { return false; }
+  if (fields.size() == 6 && fields[5] != "tune") { return false; }
+
+  return true;
+}
+
+
+// The tune stamp, asked of the whole line so the case below can feed it a
+// string. Within the form above the two readings agree: no field can hold a
+// space, `tune` is not a sha and not an arch, so ` tune` occurs in an accepted
+// line exactly when it is the last token.
+static bool ends_with_tune(const std::string& line)
+{
+  const std::string suffix = " tune";
+
+  return line.size() >= suffix.size() &&
+         line.compare(line.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+
 TEST_SUITE("uci surface")
 {
   TEST_CASE("the command set is exactly the documented one")
@@ -560,22 +678,12 @@ TEST_SUITE("uci surface")
     // already closed on every opponent and could not close on itself
     // (DEC-068, 2026-09-10 adversarial F05).
     //
-    // A pattern and not a literal, because the sha moves with every commit --
-    // so what is pinned here is the shape, and the shape is the surface.
-    // `unknown` is the sha of a binary built outside a git checkout, from a
-    // tarball say, and is accepted for the same reason cmake emits it rather
-    // than failing the build.
-    //
-    // GOLDEN (DEC-142): the pattern below. Re-derive what it has to match with
-    //   printf 'uci\nquit\n' | ./build/src/chesso | sed -n 's/^id name //p'
-    //   printf 'uci\nquit\n' | ./build-tune/src/chesso | sed -n 's/^id name
-    //   //p'
-    // -- no search runs on either pipe, so `quit` cannot truncate it. Read off
-    // the binary, never off this file.
-    const std::regex id_name_form(
-        "^id name Chesso (unknown|[0-9a-f]{7,}(-dirty)?) "
-        "(bmi2|avx2|portable|native|unknown)( tune)?$");
-
+    // A shape and not a literal, because the sha moves with every commit -- so
+    // what is pinned here is the form, and the form is the surface. `unknown`
+    // is the sha of a binary built outside a git checkout, from a tarball say,
+    // and is accepted for the same reason cmake emits it rather than failing
+    // the build. `has_id_name_form` above is the check and carries the golden;
+    // the case below it is what proves the check can say no.
     std::string id_line;
 
     for (const std::string& line : capture.lines()) {
@@ -584,18 +692,18 @@ TEST_SUITE("uci surface")
 
     REQUIRE_MESSAGE(!id_line.empty(),
                     "the uci reply carries no 'id name' line");
-    CHECK_MESSAGE(std::regex_match(id_line, id_name_form), id_line);
+    CHECK_MESSAGE(has_id_name_form(id_line), id_line);
 
     // Which build answered is not decoration: the tune build exposes every
     // search parameter as a UCI option and is never the binary a strength
     // figure is taken from, so a run that played it has to be able to say so
     // from the PGN alone. Asserted in both directions -- a stamp that always
-    // said `tune`, or never did, would satisfy the pattern above.
+    // said `tune`, or never did, would satisfy the form above.
 #ifdef CHESSO_TUNE
-    CHECK_MESSAGE(id_line.rfind(" tune") == id_line.size() - 5,
+    CHECK_MESSAGE(ends_with_tune(id_line),
                   ("the tune build does not say so in id name: " + id_line));
 #else
-    CHECK_MESSAGE(id_line.find(" tune") == std::string::npos,
+    CHECK_MESSAGE(!ends_with_tune(id_line),
                   ("the release build says tune in id name: " + id_line));
 #endif
 
@@ -603,6 +711,50 @@ TEST_SUITE("uci surface")
     CHECK(capture.contains("uciok"));
 
     uci_shutdown();
+  }
+
+
+  TEST_CASE("the id name form check refuses a malformed identification")
+  {
+    // The case above can only ever feed `has_id_name_form` one string, the one
+    // this build answers, so on its own it does not show the check can say no
+    // -- a matcher that returned true unconditionally would pass it. That is
+    // what a hand-written check costs against a pattern, and this is the
+    // payment. Every string below was run against the check inverted, and each
+    // negative was observed red before being written this way round. S225.
+    CHECK(has_id_name_form("id name Chesso 600f448 native"));
+    CHECK(has_id_name_form("id name Chesso 600f448-dirty bmi2"));
+    CHECK(has_id_name_form("id name Chesso 47be85b avx2 tune"));
+    CHECK(has_id_name_form("id name Chesso unknown unknown"));
+    // No upper bound on the abbreviation: git lengthens it as a repository
+    // grows, and a binary built from a longer one is not malformed.
+    CHECK(has_id_name_form("id name Chesso 0123456789abcdef portable tune"));
+
+    // The pre-stamp literal every binary before S212 answers. DEC-204 (b) lets
+    // such a side play a match with the identity check announced as skipped;
+    // it is not the form this build may answer in.
+    CHECK_FALSE(has_id_name_form("id name Chesso"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f44 native"));   // 6 digits
+    CHECK_FALSE(has_id_name_form("id name Chesso 600F448 native"));  // upper
+    CHECK_FALSE(has_id_name_form("id name Chesso 600g448 native"));  // not hex
+    CHECK_FALSE(has_id_name_form("id name Chesso unknown-dirty native"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448-dirty-dirty native"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448-clean native"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448 riscv"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448 tune"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448 native tune extra"));
+    CHECK_FALSE(
+        has_id_name_form("id name Chesso  600f448 native"));  // 2 spaces
+    CHECK_FALSE(has_id_name_form("id name chesso 600f448 native"));
+    CHECK_FALSE(has_id_name_form("id author Chesso 600f448 native"));
+    CHECK_FALSE(has_id_name_form("id name Chesso 600f448 native\n"));
+    CHECK_FALSE(has_id_name_form(""));
+
+    // And the direction check the two builds read in opposite senses.
+    CHECK(ends_with_tune("id name Chesso 600f448 native tune"));
+    CHECK_FALSE(ends_with_tune("id name Chesso 600f448 native"));
+    CHECK_FALSE(ends_with_tune("id name Chesso 600f448 native tuned"));
   }
 
 

@@ -60,7 +60,36 @@ Updated: 2026-09-13, by hand.
   41861 games / 19.8 h at the midpoint and 25591 / 12.1 h on a bound at
   2133 an hour, expected far shorter if the literature's effect is real,
   abort over 1.0 % forfeits a side, a crash voids, bisection legs the caps
-  at 0. `plan_current/`: S109 (SPRT pending).
+  at 0. **Landed in `600f448` at 06:56**, `build/` rebuilt (`id name Chesso
+  600f448 native`); the mutant pass runs detached at that commit
+  (`.tuning/mutation_s109.log`, worktree `.ref-builds/mut` moved from
+  `cfe2406` to `600f448` after a first refusal on absent anchors, and
+  relaunched once more with `CLANG_FORMAT_MAJOR=22` exported after the
+  baseline read red on `test_clang_format_script` without it):
+  **`MUTATION-RUN-DONE`, P01 to P0A all `killed`, each as expected.**
+  `tools/gate_extra.sh` launched detached at 07:19
+  (`.tuning/gate_extra_2026-09-13_S109.log`): prose, citations, Debug
+  (294 s) and deep perft green, **the sanitizer stage red at build time** --
+  `tests/test_uci_surface.cpp` has included `<regex>` since S212's `id name`
+  pattern check, and gcc 13.3 under `-Werror` with the sanitizer flags
+  trips its known false positive inside libstdc++'s regex (`std::function`
+  move in `_NFA::_M_insert_repeat`), so `build-sanitize` has been broken
+  since `f9d705c` while the release and tune gates passed. Not an engine
+  defect, but the sanitizer stage is what exercises S109's new code under
+  instrumentation, so it is fixed **before the SPRT**: an Opus 5 agent
+  replaces the regex with a plain token matcher of the same acceptance,
+  observed red on malformed replies -- done: `has_id_name_form` splits on
+  single spaces and checks five or six fields, 24 assertions observed red
+  inverted, `<regex>` out of the compiled tree; **the full `gate_extra.sh`
+  re-run on the fixed tree: `GATE-EXTRA-DONE 5 stages 859 s`**, sanitizer
+  bench 7111579 equal to the release's (log
+  `.tuning/coord/S225_gate_extra_full/`). Found on the way: `STAGES="sanitize"
+  tools/gate_extra.sh` -- the header's own documented form -- cannot pass,
+  because `STAGES` leaks into the fast label and `test_gate_extra_script`'s
+  nested run then expects five stages; filed as **S225**, filler behind S213
+  (DEC-171), named in the SPRT's pre-registration as open. `specs.md` says
+  the surface check is a token check now. `plan_current/`: S109 (SPRT
+  pending).
 
 - **S212 is done, 2026-09-13 05:00: the harness is fixed in six places and
   its A/A says the statistics did not move.** Implementation in `f9d705c`

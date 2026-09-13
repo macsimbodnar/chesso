@@ -857,6 +857,27 @@ A red `citations` stage means fix the citation in the step file, by symbol
 (DEC-135) — never relax the check. A red anything else is a bug and the BUGS
 rule applies: fix it before anything else starts.
 
+**A red `sanitize` stage can be a *compile* failure the automatic gate cannot
+see.** Stage 4 is the only build of `tests/` at `-O2` with the sanitizer flags,
+and gcc 13.3 reports `-Wmaybe-uninitialized` inside libstdc++'s own `<regex>`
+there — a known false positive in a `std::function` move, fatal under `-Werror`.
+`tests/test_uci_surface.cpp` included `<regex>` from `f9d705c` (S212's `id name`
+pattern check) until S225, so `build-sanitize` could not be built at all while
+both gated builds stayed green, and the first `gate_extra` run after S212 is
+what found it. The fix was to drop the header for a token matcher of the same
+acceptance, not to suppress the warning: a pragma leaves the header included and
+the next test to reach for it in the same trap. (2026-09-13, S225.)
+
+**Never pass `STAGES` as a command prefix.** `STAGES="sanitize"
+tools/gate_extra.sh` puts the variable in the script's *environment*, every
+child inherits it, and `test_gate_extra_script` — which runs inside stage 4's
+`fast` label and drives a nested `gate_extra.sh` over a fake tree — then sees a
+`STAGES` its cases did not set: nine of its checks, over two cases, expect the
+default five-stage run, get one stage, and the sanitize stage goes red for a
+reason that has nothing to do with the tree. Measured 2026-09-13: `test_gate_extra_script` fails with
+`STAGES` set in its environment and passes with `env -u STAGES`. Until the
+script unexports it, run the whole thing, or accept that one test's red. S225.
+
 **It presumes the automatic gate is green.** Stage 4 runs the whole `fast`
 label under the sanitizer, so any red in that label fails the sanitize stage —
 and the marker then names the sanitizers for something that is not theirs, after
