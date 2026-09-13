@@ -7,7 +7,7 @@ decisions:  DEC-170, DEC-174
 closes:     2026-09-10_adversarial-F04, 2026-09-10_adversarial-F05, 2026-09-10_adversarial-F06, 2026-09-10_adversarial-F07, 2026-09-10_adversarial-F31, 2026-09-10_adversarial-F32
 blocks:
 paused_by:
-author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); the closing A/A is the coordinator's; started 2026-09-13 03:40 on the idle machine
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); the closing A/A is the coordinator's; started 2026-09-13 03:23 on the idle machine
 done:
 
 ## Why this exists

@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S212 started, 2026-09-13 03:40, by an Opus 5 subagent (DEC-199); the
+- **S212 started, 2026-09-13 03:23, by an Opus 5 subagent (DEC-199); the
   closing A/A is the coordinator's.** Harness hygiene from the 2026-09-10
   audit's Part B: two-sided resignation in both harnesses (F04), the engine's
   `id name` carrying the build's sha and arch through a build-time header

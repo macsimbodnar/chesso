@@ -273,7 +273,7 @@ on the English phrase, which means the phrase set is the maintenance cost.
 
 ### 2026-08-21_adversarial-F03 — medium — every verdict in the plan is taken at one short control, the target list plays one about an order of magnitude longer, and the published record says that transfer is poor
 
-Status: open
+Status: closed — S151, 2026-09-13: S085's vector read at `32+0.32` as a fixed 1000-pair estimate (`Elo 11.99 +/- 11.57`), the block-boundary rule DEC-202 (previously: open)
 
 **Evidence.** The regime is single-control by construction. `fastchess.sh` plays
 `8+0.08` (S105, DEC-088). S085's SPSA ran at `2+0.02`. The target is stated in
