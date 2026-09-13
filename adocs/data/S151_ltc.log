@@ -1,0 +1,33 @@
+# S151 longer-control estimate, run 2026-09-12 23:37 to 2026-09-13 03:17 (SPRT-RUN-DONE), read 03:17.
+# Full run log: .tuning/sprt_s151.log (gitignored); PGN and fastchess log under .tuning/s151_ltc_20260912_233659 (gitignored).
+
+## banner
+candidate  21b4a21  2026-08-21
+reference  3488506  2026-08-20
+tc 32+0.32  hash 64  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260912233659
+bounds     none -- fixed 1000 rounds, a calibration or drift reading, NOT a verdict
+out        /home/max/ws/chesso/.tuning/s151_ltc_20260912_233659
+
+## fastchess final block
+Results of cand-21b4a21 vs ref-3488506 (32+0.32, 1t, 64MB, noob_3moves.epd):
+Elo: 11.99 +/- 11.57, nElo: 15.81 +/- 15.23
+LOS: 97.90 %, DrawRatio: 36.10 %, PairsRatio: 1.22
+Games: 2000, Wins: 625, Losses: 556, Draws: 819, Points: 1034.5 (51.73 %)
+Ptnml(0-2): [83, 205, 361, 262, 89], WL/DD Ratio: 1.05
+
+## terminations
+   1349 [Termination "adjudication"]
+    651 [Termination "normal"]
+
+## forfeits
+  cand-21b4a21      2000 games, 0 forfeits, 0.00 %
+  ref-3488506       2000 games, 0 forfeits, 0.00 %
+
+## Incomplete mating PV (both commits predate S147/S170/S171; recorded, not a stop)
+cand-21b4a21: 57
+ref-3488506: 67
+
+## timing
+log created 2026-09-12 23:36:59, last write 2026-09-13 03:16:57: 3 h 40 m for 2000 games, 545 an hour against the pre-registered 528

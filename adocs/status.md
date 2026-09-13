@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S151 is done, 2026-09-13 03:30: S085's vector read at `32+0.32` is
+  `Elo 11.99 +/- 11.57`, `nElo 15.81 +/- 15.23` -- not gone, and how much of
+  the `8+0.08` +21.02 transfers this estimate cannot say.** `SPRT-RUN-DONE`
+  at 03:17 after 3 h 40 m, 2000 games at 545 an hour (pre-registered 528;
+  110.6 plies and 78.2 s a game), 0 forfeits either side, LOS 97.90 %,
+  DrawRatio 36.10 %, `Ptnml [83, 205, 361, 262, 89]`, pair variance 0.2876
+  (`adocs/data/S151_ltc_pairs.txt`); `Incomplete mating PV` 57 from the
+  candidate and 67 from the reference, both pre-S147 commits, recorded.
+  Read as pre-registered: the logistic interval [+0.42, +23.56] excludes
+  zero at its edge, and against +21.02 +/- 9.86 the difference is 9.0 on a
+  combined error of 15.2 -- agreement within noise, no attribution, **nothing
+  in the engine changes**. The rule stands in DEC-202's block-boundary form;
+  the next reading is at the S109 block boundary beside S199's drift point.
+  Evidence in `adocs/data/S151_ltc.log`; the `32+0.32` throughput is in
+  `.moltke.local.md`. Read and stamped by the coordinator. `plan_current/`
+  empty after this commit; machine idle. **Next: S212** (harness hygiene and
+  the DEC-143 A/A), brief ready. **Compaction point.**
+
 - **S186 is done, 2026-09-13 00:25, by two Opus 5 subagents (DEC-199)
   beside S151's match, documents only.** All sixteen block-3 step files
   carry a "Technical details (SOTA research, 2026-09-13)" section in the
