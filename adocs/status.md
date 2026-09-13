@@ -7,6 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S226 started, 2026-09-13 08:25, beside S109's SPRT (DEC-185's blocked-task
+  exception), documents only.** `TOOLCHAIN.md` gains the Linux workstation's
+  section -- `.moltke.local.md`'s standing Open item, every statement traced
+  to a probe run here, the oracle section re-verified on this machine's
+  `stockfish` -- so the next agent is not told the machine in its brief.
+  No builds, one core. `plan_current/`: S109 (SPRT running), S226.
+
 - **S109's SPRT is running since 2026-09-13 08:11.** `adocs/data/S109_sprt.sh`
   detached, pid in `.tuning/sprt_s109.pid`, log `.tuning/sprt_s109.log`,
   output `.tuning/sprt_s109_20260913_081118/`: candidate `1952c56` (the
