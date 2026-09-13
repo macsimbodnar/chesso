@@ -7,6 +7,16 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S213 started, 2026-09-13 19:15, by an Opus 5 subagent (DEC-199).** The
+  evaluation header's five stale zero-weight blocks, the mate-band argument
+  that names the wrong bound (with a test asserting `|evaluate()| <
+  MATE_MIN` over the corpus and the audit's pathological placements), two
+  dead public entry points, two `<cctype>` calls on a signed `char`, the
+  `tt_entry_t` comment, the `test` command's three stale labels, the `info`
+  line's field set into the UCI golden (DEC-184), and -- from S223's report
+  -- `king_zone()`'s no-king branch as a Debug assertion; `No functional
+  change`. `plan_current/`: S210 (SPRT tonight), S213.
+
 - **S223 is done, 2026-09-13 18:50, by an Opus 5 subagent (DEC-199).**
   `load_FEN()` refuses two further classes after S208's two, each with its
   own reason: other than one king of each colour, and the side not to move
