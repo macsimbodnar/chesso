@@ -7,37 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S212's implementation half landed, 2026-09-13 04:10, by an Opus 5
-  subagent (DEC-199); the closing A/A follows the commit.** Both harnesses
-  pass `-resign movecount=3 score=400 twosided=true` (F04, DEC-174 cited at
-  both sites); `fastchess.sh` plays a cached `.ref-builds/<sha>` only if
-  clean, at its sha and configured like `build/`, else `build_ref` rebuilds
-  it with that configuration, and the banner prints `config arch native
-  tune off` (F06); the engine answers `id name Chesso <sha>[-dirty]
-  <arch>[ tune]` from `cmake/build_info.cmake`'s build-time header and
-  `fastchess.sh`'s `check_identity` refuses a side whose sha is not the one
-  it labelled, a bare pre-stamp `Chesso` playing with a note (F05); a
-  termination outside `normal`, `adjudication` and `time forfeit` prints
-  `SPRT-RUN-INVALID: <n>` and then `SPRT-RUN-FAILED` last, so every watcher
-  still ends (F31); both scripts warn above a one-minute load average of
-  0.25 per core, read from `/proc/loadavg` (F32); the S088 regime gets no
-  flag (F07). Twelve new properties (17 to 26 in `test_fastchess_script.sh`,
-  5 to 6 in `test_rating_script.sh`), each observed red against HEAD's
-  scripts. `bench` 27322394 before and after and `search_bench.py` identical
-  at depth 9, so the `src/chesso.cpp` literal is `No functional change`.
-  **DEC-204** records the four rulings the accepts did not fix (build-time
-  `rev-parse` over configure-time `describe`, nine old tags making
-  `describe` unusable; the pre-stamp note; no flag; 0.25 per core);
-  `specs.md` Behaviour carries the `id name` form and the F07 sentence,
-  `CLAUDE.md`'s founding rule 4 now says to read the load average and never
-  sum `ps` percentages, S222's file notes that its SPSA config carries
-  `twosided=true` (the frozen `S085_spsa_run.json` stays one-sided as a
-  record). Fast check over the diff: on the line below. **Next, in this
-  order: gate with `--build-parent`, commit, rebuild `build/` (the stamp
-  moves with HEAD), then `ROUNDS=500 AA=1 ./fastchess.sh` -- 1000 games,
-  about 28 minutes at 2110 an hour, ceiling 3400 s, read with
-  `adocs/data/S198_pairs.py` against 0.2905 +/- 0.0184 (DEC-143), games an
-  hour beside S219's figure -- then S212's stamp.** `plan_current/`: S212.
+- **S212 is done, 2026-09-13 05:00: the harness is fixed in six places and
+  its A/A says the statistics did not move.** Implementation in `f9d705c`
+  (Opus 5 subagent, DEC-199): two-sided resignation in both harnesses (F04),
+  `id name Chesso <sha>[-dirty] <arch>[ tune]` from `cmake/build_info.cmake`'s
+  build-time header with `fastchess.sh` refusing a side whose sha is not its
+  label (F05), a cached reference played only if clean, at its sha and
+  configured like `build/` (F06), `SPRT-RUN-INVALID` before the terminal
+  marker on a crash or disconnect (F31), the busy guard on the one-minute
+  load average at 0.25 per core (F32), no S088 flag (F07); twelve
+  properties observed red first; `No functional change`; DEC-204 records the
+  four rulings. **The DEC-143 A/A**, coordinator-run after the rebuild the
+  stamp demands: 1000 games in 28 m 08 s, **2133 an hour against S219's
+  2110**, so `twosided` costs nothing measurable; `Elo 8.69 +/- 16.53`, 0
+  forfeits, crash census quiet; **pair variance 0.2939 +/- 0.0186 against
+  the book's 0.2905 +/- 0.0184, z +0.13, inside the band.**
+  `adocs/data/S198_pairs.py`'s band constant now points at S219's PGN
+  (against S105's UHO-book band every run on this book read "outside" by
+  construction). Evidence `adocs/data/S212_aa.log`, `S212_aa_pairs.txt`.
+  One coverage gap noted, not a finding: no property plays a `-dirty` stamp
+  against a clean tree. `plan_current/` empty after this commit; machine
+  idle. **Next: S109**, the shallow-depth pruning block -- the first
+  strength step of this session -- brief ready. **Compaction point.**
 
 - **S151 is done, 2026-09-13 03:30: S085's vector read at `32+0.32` is
   `Elo 11.99 +/- 11.57`, `nElo 15.81 +/- 15.23` -- not gone, and how much of

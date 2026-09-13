@@ -1,0 +1,32 @@
+# S212 closing A/A, DEC-143: run 2026-09-13 04:17:30 to 04:45:38 (SPRT-RUN-DONE), read 04:46.
+# Full run log .tuning/aa_s212.log and PGN under .tuning/s212_aa_20260913_041730 are gitignored.
+
+## banner and identity lines
+candidate  f9d705c  2026-09-13
+reference  f9d705c  2026-09-13
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260913041730
+bounds     none -- fixed 500 rounds, a calibration or drift reading, NOT a verdict
+out        /home/max/ws/chesso/.tuning/s212_aa_20260913_041730
+id name    candidate  Chesso f9d705c native
+id name    ref-f9d705c  Chesso f9d705c native
+
+## fastchess final block
+Results of candidate vs ref-f9d705c (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 8.69 +/- 16.53, nElo: 11.33 +/- 21.53
+LOS: 84.88 %, DrawRatio: 37.40 %, PairsRatio: 1.11
+Games: 1000, Wins: 343, Losses: 318, Draws: 339, Points: 512.5 (51.25 %)
+Ptnml(0-2): [42, 106, 187, 115, 50], WL/DD Ratio: 2.17
+
+## terminations (the SPRT-RUN-INVALID census stayed quiet: none outside normal/adjudication)
+    739 [Termination "adjudication"]
+    261 [Termination "normal"]
+
+## forfeits
+  candidate         1000 games, 0 forfeits, 0.00 %
+  ref-f9d705c       1000 games, 0 forfeits, 0.00 %
+
+## timing
+1000 games in 28 m 08 s: 2133 an hour against S219's 2110 on the same book (DEC-190) -- twosided costs nothing measurable

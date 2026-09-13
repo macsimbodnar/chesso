@@ -1,0 +1,35 @@
+=== .tuning/s212_aa_20260913_041730/games.pgn ===
+games            1000
+draws            339, 33.9 %
+decisive         661, 66.1 %
+plies per game   mean 111.6, median 99
+seconds per game mean 19.5, median 19
+seconds per ply  0.1746
+complete pairs   500
+  pair score 0.0     42    8.4 %
+  pair score 0.5    106   21.2 %
+  pair score 1.0    187   37.4 %
+  pair score 1.5    115   23.0 %
+  pair score 2.0     50   10.0 %
+white won both   57 of 500, 11.4 %  (the pair Pohl's floor is about)
+pair score       mean 1.0250, variance 0.2939, sd 0.5421
+
+=== /home/max/ws/chesso/adocs/data/S219_aa_calibration.pgn ===
+games            1000
+draws            353, 35.3 %
+decisive         647, 64.7 %
+plies per game   mean 114.0, median 101
+seconds per game mean 19.8, median 19
+seconds per ply  0.1733
+complete pairs   500
+  pair score 0.0     54   10.8 %
+  pair score 0.5     91   18.2 %
+  pair score 1.0    198   39.6 %
+  pair score 1.5    118   23.6 %
+  pair score 2.0     39    7.8 %
+white won both   65 of 500, 13.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9970, variance 0.2905, sd 0.5390
+
+pair variance    0.2939 +/- 0.0186  vs  0.2905 +/- 0.0184  (this run vs S219 A/A, the current book, DEC-190)
+ratio            1.012
+z                +0.13  (inside the band, |z| < 1.96)

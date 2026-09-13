@@ -40,7 +40,10 @@ sys.path.insert(0, HERE)
 
 import S105_pairs  # noqa: E402  -- the path above is what makes it importable
 
-BAND = os.path.join(HERE, 'S105_calibration_after.pgn')
+# 2026-09-13, S212: the band is the current book's. DEC-190 reset it to S219's
+# A/A on noob_3moves.epd (0.2905 +/- 0.0184); S105's 0.2395 was the UHO book's
+# regime and reads every run on this book as 'outside' by construction.
+BAND = os.path.join(HERE, 'S219_aa_calibration.pgn')
 
 
 def main(argv):
@@ -49,14 +52,16 @@ def main(argv):
         return 2
 
     v_ws, n_ws = S105_pairs.report(argv[1], engine='candidate')
-    v_ref, n_ref = S105_pairs.report(BAND, engine='chesso-a')
+    # S219's A/A named its sides `candidate` and `ref-<sha>` (fastchess.sh's AA
+    # naming); S105's were `chesso-a`/`chesso-b`. The band file's own name.
+    v_ref, n_ref = S105_pairs.report(BAND, engine='candidate')
 
     e_ws = v_ws * (2 / (n_ws - 1)) ** 0.5
     e_ref = v_ref * (2 / (n_ref - 1)) ** 0.5
     z = (v_ws - v_ref) / (e_ws ** 2 + e_ref ** 2) ** 0.5
 
     print(f'pair variance    {v_ws:.4f} +/- {e_ws:.4f}  vs  '
-          f'{v_ref:.4f} +/- {e_ref:.4f}  (this run vs S105 after)')
+          f'{v_ref:.4f} +/- {e_ref:.4f}  (this run vs S219 A/A, the current book, DEC-190)')
     print(f'ratio            {v_ws / v_ref:.3f}')
     print(f'z                {z:+.2f}  '
           f'({"inside" if abs(z) < 1.96 else "OUTSIDE"} the band, |z| < 1.96)')
