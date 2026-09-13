@@ -204,6 +204,143 @@
   X(LMR_BASE,          "LmrBase",         52,     0, 400)                      \
   X(LMR_DIVISOR,       "LmrDivisor",      182,    1, 2000)                     \
                                                                                \
+  /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \
+     of them gated on the **reduction-adjusted** depth                          \
+     `lmr_depth = max(0, depth - lmr_reduction(depth, move_number))` and not    \
+     on the node's own remaining depth: a move the ordering put late is         \
+     already searched shallower than the node is deep, so the margin it is      \
+     pruned against is the shallow one.                                         \
+                                                                               \
+     **Every cap below reads `lmr_depth < CAP`, not `<=`.** `lmr_depth` can be  \
+     0, so `<= 0` would still fire and no setting of the cap would switch its   \
+     rule off; with `<` the cap counts the lmr depths its rule covers and **0   \
+     is an exact off value**. That is what the bisection protocol of a failing  \
+     block needs (S109 section 6): one release rebuild per half, no SPRT on     \
+     the tune build (S073). Each rule has a second off value in its own         \
+     margin, named below.                                                       \
+                                                                               \
+     Under DEC-105 every default here is one of three things and says which:    \
+     a value from a publication about the technique, a derivation over          \
+     chesso's own data or scale, or the declared range's midpoint. No engine's  \
+     shipped threshold, margin or depth cap seeds any of them, wherever it is   \
+     republished (DEC-084 as amended by DEC-105, DEC-134). All of them are      \
+     first settings and S127 sweeps them.                                       \
+                                                                               \
+     LATE MOVE PRUNING. Past a move count that grows with the reduced depth,    \
+     the quiet stage is abandoned: `skip_quiets` is set and the generator is    \
+     not asked for quiets at all. The count is in **hundredths of a move**, so  \
+     the comparison is `100 * move_number > LMP_BASE + LMP_DEPTH_COEFF *        \
+     lmr_depth`, doubled when improving -- hundredths for the reason LmrBase    \
+     and LmrDivisor are hundredths, that the fit behind them is not an integer  \
+     and rounding at the source throws away what was measured.                  \
+                                                                               \
+     Both are **(b) a derivation over chesso's own tree**, the census in        \
+     adocs/data/S109_lmp_census.py over the 300-position stratified pick of     \
+     adocs/data/S018_raw.tsv at depth 10 with all four caps off: one row per    \
+     remaining depth, the 95th percentile of the index of the move that caused  \
+     a quiet beta cutoff -- the count past which 19 of 20 quiet cutoffs have    \
+     already happened, which is what "late enough to skip" means -- fitted by   \
+     least squares over remaining depths 1 to 3, each row placed at the lmr     \
+     depth the rule would test that count at. 904472 cutoffs.                   \
+     adocs/data/S109_lmp_census.tsv is the census, _fit.txt the reading.        \
+                                                                               \
+     **The census does not support a count that grows with depth, and the       \
+     coefficient therefore ships at its floor.** The 95th percentile *falls*    \
+     with remaining depth -- 8 8 6 5 6 6 4 5 3 3 over depths 1 to 10 -- and the \
+     unconstrained line is `10.00 - 2.00 * lmr_depth`. It is not an artefact of \
+     the axis: the fall is there on the remaining-depth axis too, and at the    \
+     99th percentile, and over depths 1 to 8. A deeper node in this tree cuts   \
+     off earlier in the move order, because its table move and its killers are  \
+     better. LMP_DEPTH_COEFF's range is non-negative by **stated purpose** and  \
+     not by a guess at where the good values are: a negative coefficient prunes \
+     harder the deeper the node, which inverts the mechanism rather than tuning \
+     it. Fitted subject to that bound the line is flat at 7.33 moves. S127      \
+     sweeps both axes and the quadratic form is re-tried there.                 \
+                                                                               \
+     LMP_MAX_LMRDEPTH was to be **(b)** from the same census -- the largest lmr \
+     depth at which the fitted threshold still sits below the median number of  \
+     quiet moves a node generates, 25, because a threshold past the end of the  \
+     move list never binds and cannot be measured. A flat 7.33 is below 25 at   \
+     every depth in range, so the criterion discriminates nothing and does not  \
+     get to set the cap by accident: it takes **(c) the declared midpoint** of  \
+     0 to 16 instead, which is what the other three caps are.                   \
+                                                                               \
+     Off: 0, or LMP_BASE at 27000 -- MAX_MOVES in hundredths, a threshold no    \
+     move list reaches. */                                                      \
+  X(LMP_BASE,          "LmpBase",         733,    0, 27000)                    \
+  X(LMP_DEPTH_COEFF,   "LmpDepthCoeff",   0,      0, 27000)                    \
+  X(LMP_MAX_LMRDEPTH,  "LmpMaxLmrDepth",  8,      0, 16)                       \
+                                                                               \
+  /* FUTILITY. A quiet whose node's static score plus a margin still does not   \
+     reach alpha is skipped, with the remaining quiets, at a shallow reduced    \
+     depth: `static + FUT_BASE + FUT_SLOPE * lmr_depth <= alpha`.               \
+                                                                               \
+     FUT_BASE and FUT_SLOPE are **(a) literature**, Heinz's margins as the      \
+     wiki states them -- https://www.chessprogramming.org/Futility_Pruning,     \
+     fetched 2026-09-05: the depth-1 margin "should not exceed the value of a   \
+     minor piece" and the depth-2 margin is "more like the value of a rook".    \
+     Read in **chesso's own material scale**, src/eval_tables.hpp, where a      \
+     minor is `(KNIGHT + BISHOP) / 2` = 317 (the integer below 317.5) and a     \
+     rook is 487: FUT_SLOPE = 487 - 317 = 170 and FUT_BASE = 317 - 170 = 147.   \
+     The scale matters and an earlier pass got it wrong -- a margin compared    \
+     against `evaluate()` is in `piece_value`'s units, where a pawn is 94, and  \
+     not in `see_value`'s, where it is 100.                                     \
+                                                                               \
+     FUT_MAX_LMRDEPTH is **(c) the midpoint** of a range declared by purpose,   \
+     0 to 16: 0 is off and 16 is above the median depth 11 that RfpMaxDepth's   \
+     comment records, where the gate stops binding at all. Off: 0, or FUT_BASE  \
+     at 48000, past every non-mate alpha the guard admits. */                   \
+  X(FUT_BASE,          "FutBase",         147,    0, 48000)                    \
+  X(FUT_SLOPE,         "FutSlope",        170,    0, 2000)                     \
+  X(FUT_MAX_LMRDEPTH,  "FutMaxLmrDepth",  8,      0, 16)                       \
+                                                                               \
+  /* HISTORY PRUNING. A quiet whose butterfly history sits below a margin that  \
+     scales with the reduced depth is skipped: `history < -HP_COEFF *           \
+     lmr_depth`. The **raw table entry** and never score_move()'s return --     \
+     a killer scores 900000 there and a countermove 700000, so reading the      \
+     ordering score would silently exempt both and nothing else.                \
+                                                                               \
+     HP_COEFF is **(c) the midpoint** of a per-lmr-depth region declared on     \
+     chesso's own history scale: `M/64` to `M/8` with `M` = QuietHistoryMax,    \
+     that is 128 to 1024, midpoint (128 + 1024) / 2 = 576. The region is        \
+     declared and not taken from anywhere: below M/64 the threshold is inside   \
+     the noise a single malus writes, above M/8 it reaches an eighth of the     \
+     whole band in one ply.                                                     \
+                                                                               \
+     HP_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16, declared by the same   \
+     purpose as FutMaxLmrDepth. **Off is the cap at 0, and nothing else.**      \
+     The threshold is `-HP_COEFF * lmr_depth`, so at lmr_depth 0 it is 0        \
+     whatever HP_COEFF holds and the rule still skips every quiet whose entry   \
+     is negative. 16384 is the range top -- twice the band's own edge, so no    \
+     entry sits below it at any lmr_depth of 1 or more -- and a range top is    \
+     not an off value. */                                                       \
+  X(HP_COEFF,          "HistPruneCoeff",  576,    0, 16384)                    \
+  X(HP_MAX_LMRDEPTH,   "HistPruneMaxLmrDepth", 8, 0, 16)                       \
+                                                                               \
+  /* QUIET SEE PRUNING. A quiet whose exchange evaluation loses more than a     \
+     margin scaled by the reduced depth squared is skipped:                     \
+     `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`.        \
+                                                                               \
+     SEE_QUIET_COEFF is **(b) chesso's own exchange scale**: the bar at         \
+     lmr_depth 1 must stay under one pawn of `see_value` in src/bitboard.cpp,   \
+     which is 100 there and not the 94 `piece_value` uses, so the interval the  \
+     purpose declares is 0 to 100 and 50 is its midpoint. Every see_value       \
+     difference is a multiple of 100, so the whole interval prunes the same     \
+     set at lmr_depth 1 -- quiets that lose a pawn or more -- and the choice    \
+     inside it only shows up at the depths the square scales.                   \
+                                                                               \
+     SEE_QUIET_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16 as above.        \
+     **Off is the cap at 0, and nothing else.** The bar is                      \
+     `-(SEE_QUIET_COEFF * lmr_depth * lmr_depth)`, so at lmr_depth 0 it is 0    \
+     whatever the coefficient holds and the rule still skips every quiet whose  \
+     exchange evaluation loses material. 10000 is the range top -- larger than  \
+     any see_value, so every exchange clears the bar at any lmr_depth of 1 or   \
+     more -- and a range top is not an off value. The power is a parameter of   \
+     the form and not of this list: linear and squared both appear in the       \
+     surveyed descriptions and S127 is where the form is re-tried. */           \
+  X(SEE_QUIET_COEFF,   "SeeQuietCoeff",   50,     0, 10000)                    \
+  X(SEE_QUIET_MAX_LMRDEPTH, "SeeQuietMaxLmrDepth", 8, 0, 16)                   \
+                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \

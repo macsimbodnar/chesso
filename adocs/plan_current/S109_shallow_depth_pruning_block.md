@@ -7,6 +7,7 @@ decisions:  DEC-071, DEC-082, DEC-084, DEC-087, DEC-105, DEC-134
 closes:
 blocks:
 paused_by:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); the SPRT is the coordinator's; started 2026-09-13 04:51 on the idle machine
 done:
 
 ## Why this is one step and not four
@@ -321,8 +322,12 @@ pawn is 100. **The two pawns differ and the 2026-08-19 pass conflated them.**
   minor piece" and the depth-2 margin as "more like the value of a rook". In
   chesso's material scale (units above) a minor is `(KNIGHT + BISHOP) / 2` =
   317 and a rook is `ROOK` = 487, so with `margin = FUT_BASE + FUT_SLOPE *
-  depth`: `FUT_SLOPE` = 487 - 317 = **170** and `FUT_BASE` = 317 - 170 =
-  **147**. The 2026-08-19 pass read the same two words in `see_value`'s scale
+  depth` the slope is 487 - 317 = **170** and the base is 317 - 170 = **147**.
+  (Written with the words rather than the symbols since 2026-09-13: a symbol
+  followed by an equals sign and the first term of its own derivation reads to
+  `tools/plan_prose_check.py --params` as a claim that the parameter is that
+  term, which is its NEAR rule doing its job on an intermediate.)
+  The 2026-08-19 pass read the same two words in `see_value`'s scale
   and got 100 / 200; that was the wrong pawn. `FUT_MAX_LMRDEPTH` **8** --
   **(c) midpoint** of a range declared by purpose, 0..16: 0 is off, and 16 is
   above the median depth 11 the `RFP_MAX_DEPTH` comment in
@@ -533,3 +538,333 @@ seeds re-derived 2026-09-04 under DEC-105 (DEC-134)
   https://github.com/official-stockfish/Stockfish/commit/93b14a17d168e87e7f05fc09e3ba93e737b0757e
   -- title only ("Don't direct prune a move if it's a retake"): a later
   exemption refinement, not opened.
+
+## Landed 2026-09-13 06:10
+
+Everything in `accepts:` except the SPRT, which is the coordinator's. The
+`done:` stamp is theirs to write with the verdict.
+
+### The one deviation, and it is the one the accepts pre-authorised
+
+**The gives-check exemption binds late move pruning too.** The published form
+shipped first, with the flag ending the quiet stage at the generation branch
+and no exemption, exactly as the `accepts` and DEC-180 say. The mate case then
+went red -- three of them did -- and DEC-180's own clause fires: *a red guard
+is a bug, not an option*, the exemption is this step's fix and **S218 folds
+into it**. Recorded rather than argued:
+
+- `4K3/q7/8/4k3/8/8/8/8 b` (`MATE_IN_2_B_POS`), mate in two by a7b8 after
+  e5e6 e8d8, **lost at depth 3** in `tests/test_search.cpp` "pruning does not
+  hide a forced mate" -- `REQUIRE( black.mate_found ) values: REQUIRE( false )`,
+  and the same position red in "mate in two is found at the right distance"
+  and `4K1R1/q7/5P2/4k3/8/1P6/2P5/1B2N3 b` red in "pruning does not hide a mate
+  against the material leader", all at depth 3.
+- Which rule: one release rebuild per cap at its off value. **Late move pruning
+  alone.** With `LmpMaxLmrDepth` 0 the case is green; with `FutMaxLmrDepth`,
+  `HistPruneMaxLmrDepth` or `SeeQuietMaxLmrDepth` 0 instead it stays red.
+- Not the count being too tight: a sweep of `LmpBase` over one release rebuild
+  each reads **red at 733, 1200 and 2000 hundredths and green at 3000, 5000 and
+  27000** -- 30 moves, at a node whose median quiet count is 25, is a rule that
+  never fires. The mating move is one of twenty-eight queen moves at a node
+  whose history table has never seen any of them, so no useful count reaches
+  it. The choice was the exemption or the rule.
+- The shape is the first of the two DEC-180 names: the flag still decides, at
+  the generation stage, and the skip happens **after `make_move`** where
+  `is_check_move` exists. The price is stated rather than hidden -- the quiet
+  stage can no longer be left ungenerated, because a stage that is never
+  generated cannot be searched for the checking move inside it, so what late
+  move pruning saves here is the subtrees and not the move list, and every
+  skipped quiet costs one make/unmake and one `is_check`.
+- **S218 is now empty of its own content** and is the coordinator's to re-scope
+  or retire; its id is not reused.
+
+### Per accepts clause
+
+| clause | where |
+|---|---|
+| four rules, one commit, one SPRT | `adocs/data/S109_sprt.sh`, pre-registration written, **not run** |
+| every threshold a constant with a stated range, none copied | `src/search_params.hpp`, ten parameters, derivations below |
+| gated on `depth - lmr_reduction(depth, move_number)` | `lmr_depth_of()` in `src/search.cpp`, clamped at 0, `move_number = legal_moves_counter + 1` |
+| the late-move rule sets a skip-quiets flag the staged generator honours, so the quiet stage is abandoned and not merely skipped over | **departed from, under the clause DEC-180 wrote for it (DEC-205)**, see below |
+| a forced mate inside the pruned depth, red first | "pruning does not hide a forced mate" gains `6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43` |
+| no quiet pruned in check, at a PV node, on the first move, near mate | `pruning_node` and `may_prune`, one case each |
+| the gives-check exemption | binds all four now, see above |
+| the fast suite green | 37 of 37 in both builds |
+
+**The skip-quiets clause, departed from and what is left of it.** The flag
+itself is there and still decides: `skip_quiets` in `negamax_at` is set at the
+top of the move loop, before any move of that iteration is made, by a count
+read from the reduced depth, and past it no quiet is searched. What the clause
+asked for on top of that -- a flag *the staged generator honours*, so the quiet
+stage is **abandoned** -- is what the exemption cost, and `src/search.cpp`
+carries the whole of the price in one place: nothing between the second
+generation stage and the skip reads the flag. Every quiet past the count is
+still generated, scored, `make_move`d and `is_check`-scanned, and only then
+skipped, because `is_check_move` exists nowhere earlier. So late move pruning
+saves this node's *subtrees* and not its move list, and the make/unmake and
+attack scan per skipped quiet are part of the 7.58 M -> 4.31 M nodes per second
+below. The deviation is the first of the two shapes DEC-180 names and it was
+taken under that decision's own clause, the mate guard having gone red without
+it; DEC-205 records it, and the section above -- "The one deviation, and it is
+the one the accepts pre-authorised" -- is the evidence and the measurements.
+
+### Layer (c): which comparisons read the adjusted value
+
+`pruning_eval` in `negamax_at`, computed once beside `static_eval`. A
+`TT_BETA_NODE` whose de-normalised score is above the static evaluation raises
+it; a `TT_ALPHA_NODE` whose score is below it lowers it; the mate band is
+excluded. **Exactly one comparison reads it: the futility margin,**
+`pruning_eval + FUT_BASE + FUT_SLOPE * lmr_depth <= alpha`. Everything else
+reads the raw static evaluation -- `improving_at()` compares
+`state->static_evals[]` across plies, reverse futility compares `static_eval`
+against beta, and `tt_store_entry` stores `static_eval`. `TT_PV_NODE` is
+deliberately **not** taken: an exact score certifies both directions, but the
+licence this file states covers the two bound types and widening it is a change
+with its own verdict.
+
+### The ten constants
+
+| name | default | range | off | form |
+|---|---|---|---|---|
+| `LmpBase` | 733 | 0..27000 | 27000 | (b) census, 95th percentile of the quiet-cutoff index, hundredths of a move |
+| `LmpDepthCoeff` | 0 | 0..27000 | 0 | (b) census, **at its floor**: the fitted slope is negative and the range is non-negative by purpose |
+| `LmpMaxLmrDepth` | 8 | 0..16 | 0 | (c) midpoint; the census criterion does not discriminate under a flat threshold |
+| `FutBase` | 147 | 0..48000 | 48000 | (a) CPW's minor piece in chesso's material scale, 317 - 170 |
+| `FutSlope` | 170 | 0..2000 | 0 | (a) CPW's rook less its minor, 487 - 317 |
+| `FutMaxLmrDepth` | 8 | 0..16 | 0 | (c) midpoint of a range declared by purpose |
+| `HistPruneCoeff` | 576 | 0..16384 | its cap at 0 | (c) midpoint of `M/64 .. M/8` on chesso's own history scale |
+| `HistPruneMaxLmrDepth` | 8 | 0..16 | 0 | (c) midpoint |
+| `SeeQuietCoeff` | 50 | 0..10000 | its cap at 0 | (b) chesso's exchange scale: under one pawn of `see_value` at lmr depth 1 |
+| `SeeQuietMaxLmrDepth` | 8 | 0..16 | 0 | (c) midpoint |
+
+**Every cap reads `lmr_depth < CAP` and not `<=`**, so 0 is an exact off value;
+`lmr_depth` reaches 0 and `<= 0` would still fire. That is what the bisection
+protocol needs: one release rebuild per half, never an SPRT on the tune build.
+
+**The two coefficients have no off value of their own, and their range top is
+not one.** Both margins are the coefficient times the reduced depth --
+`-HP_COEFF * lmr_depth` and `-(SEE_QUIET_COEFF * lmr_depth * lmr_depth)` -- so
+at `lmr_depth == 0` each is `C * 0` whatever `C` holds: history pruning at
+16384 still skips every quiet whose entry is negative, and quiet SEE at 10000
+still skips every quiet that loses material. What the range top buys is
+silence at lmr_depth 1 and above, which is a range top and not an off switch.
+The two additive margins are different and their off values stand: `FutBase`
+at 48000 and `LmpBase` at 27000 hundredths are unreachable at every lmr depth,
+0 included. So the bisection turns a rule off by its cap, never by its
+coefficient. `src/search_params.hpp` says the same beside each parameter.
+
+**The census, and its finding.** `adocs/data/S109_lmp_census.py`, 300
+stratified positions of `adocs/data/S018_raw.tsv` at depth 10 with all four
+caps off, **904472 quiet beta cutoffs**; `adocs/data/S109_lmp_census.tsv` is
+the census and `_fit.txt` the reading. The 95th percentile of the cutoff index
+per remaining depth 1..10 is **8 8 6 5 6 6 4 5 3 3** -- it *falls* with depth,
+so the published shape "a count that grows with depth" is **not supported by
+chesso's own tree**: a deeper node here cuts off earlier in the move order
+because its table move and killers are better. The unconstrained line is
+`10.00 - 2.00 * lmr_depth`; the range is non-negative by stated purpose, since
+a negative coefficient prunes harder the deeper the node and inverts the
+mechanism; fitted subject to that bound it is flat at 7.33 moves. Read on the
+lmr-depth axis directly the first pass returned `12.67 - 3.50 * lmr_depth`,
+which is the axis being a function of the move number and not the tree -- that
+wrong table is recorded in the script, because it is the plausible-looking one.
+
+### What the block does to the tree, measured
+
+`tools/search_bench.py`, before -> after, `HEAD` = `50e3661`:
+
+| position | depth 9 | depth 12 |
+|---|---|---|
+| midgame | 121515 -> 47635 | 638719 -> 141455 |
+| kiwipete | 801408 -> 213916 | 3514653 -> 1038779 |
+| tactical | 72895 -> 26130 | 341715 -> 175684 |
+
+Best moves at depth 9 unchanged (`c3d5` / `e2a6` / `d7c8q`); at depth 12
+kiwipete moves `e2a6` -> `d5e6`. `chesso bench` **27322394 -> 7111579**, -74.0 %,
+which is the `Bench:` line the commit carries (DEC-140). Nodes per second fall
+with it, 7.58 M -> 4.31 M on the bench: the block adds a `see_ge` and two table
+reads per candidate quiet and a make/unmake per skipped one, and what it removes
+is mostly cheap quiescence leaves. Wall time for the same bench is 3.60 s ->
+1.65 s.
+
+Per rule, each alone against all four off, 300 positions at depth 10
+(`adocs/data/S109_lmp_census.py sweep`; nodes, relative, best moves changed):
+
+    all off   57276904  1.0000   0
+    Lmp       24675444  0.4308  72
+    Fut       42250613  0.7377  13
+    HistPrune 56807807  0.9918   3
+    SeeQuiet  45805722  0.7997  49
+    all on    20321365  0.3548  65
+
+**History pruning is nearly inert at its first setting** -- 0.8 % of the nodes,
+3 of 300 best moves -- and that is DEC-194's shadow: with S024's continuation
+history reverted the sum this rule reads is plain butterfly history alone, and
+most entries at a fresh node are zero. The block's verdict prices late move
+pruning, futility and quiet SEE. S222 is where the other term returns.
+
+### Tests, and the red each was observed at
+
+New cases in `tests/test_search.cpp`, all in the S191 suite "search: pruning
+and reduction guards", each killed by the mutant named beside it in
+`tools/mutants/S109_shallow_pruning.py` -- the last row excepted, which is
+breadth and kills nothing, see under the table.
+
+Every line below is the printout doctest produced, copied from a run and never
+paraphrased: `.tuning/coord/S109_mutant_kills.txt` from the landing, and
+`.tuning/coord/S109_reobserve.log` from the re-observation the fast check asked
+for, one release rebuild per mutant, the two agreeing line for line.
+
+| case | mutant | observed red |
+|---|---|---|
+| the late move pruning count doubles exactly when improving | P06 | `REQUIRE_EQ( doubled, 2 * flat )` values `( 366, 1466 )` |
+| history pruning skips the quiet the table has written off | P07 | `REQUIRE_EQ( rule_that_pruned(probe, planted), PRUNE_HISTORY )` values `( 0, 2 )` |
+| quiet SEE pruning skips the quiets that lose material and no others | P08 | `REQUIRE_NE( rule_that_pruned(probe, safe), PRUNE_SEE )` values `( 3, 3 )` |
+| futility pruning skips a quiet that cannot reach alpha | P09 | `REQUIRE_EQ( futile, 0 )` values `( 40, 0 )` |
+| a quiet move that gives check is not pruned | P05 | `REQUIRE_EQ( rule_that_pruned(probe, checking), PRUNE_NONE )` values `( 1, 0 )` |
+| no quiet is pruned at a PV node | P01 | `REQUIRE_EQ( probe.pruned_count, 0 )` values `( 40, 0 )` |
+| no quiet is pruned at a node in check | P02 | `REQUIRE( probe.move_count > 1 )` values `( 1 >  1 )` |
+| a node's only legal move is never pruned | P03 | `REQUIRE_EQ( probe.move_count, 1 )` values `( 0, 1 )` |
+| no quiet is pruned against a beta inside the mate band | P04 | `REQUIRE_EQ( probe.pruned_count, 0 )` values `( 40, 0 )` |
+| no quiet is pruned against an alpha inside the mate band | P0A | `REQUIRE_EQ( static_cast<size_t>(probe.move_count), legal_count )` values `( 4, 5 )` |
+| no defender node inside the mate band prunes a quiet | breadth, none | 104 rows, 0 violations |
+
+**Two of these reds are the assertion before the one the rule is about, and
+that is a property of the case rather than an accident.** P0A and P02 both go
+red at a whole-loop or precondition count, because a move a rule skips is a
+move the node never searches: the move list falls short before `pruned_count`
+is read. **And P09 can only be killed by its case's second half.** The first
+drive's window is `FUTILE_ALPHA, FUTILE_ALPHA + 1`, so comparing the margin
+with beta instead of alpha is the same comparison one point wider and the
+case's own precondition makes both true -- the wide window is what separates
+them. The three in-test comments said otherwise until the fast check over this
+step caught them; they now carry the printouts above.
+
+**The last row kills nothing, and that too is measured.** All ten mutants
+leave "no defender node inside the mate band prunes a quiet" green. Its drives
+pass `beta = alpha + 1` with the S165 defender set's alpha between -48997 and
+-48991, so `pruning_node`'s `beta > -MATE_MIN` refuses every node before
+`may_prune`'s alpha clause is read, and P0A -- which drops exactly that clause
+-- cannot show here. The case is reach over 104 positions, and the single-node
+case above it is the guard test DEC-141 clause 2 asks for.
+
+**The mate case's own red.** The position added to "pruning does not hide a
+forced mate" is `6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43`, whose key
+is a late quiet rook move onto a square the black queen attacks. Oracle, and
+not a reading of the board: stockfish through python-chess at depth 20 reports
+`#+2`, 1918 nodes, pv `e5e8 g8e8 g4g7`; python-chess reports `is_valid() True`,
+`is_check() False`, 36 legal moves of which 1 is a capture, `Re8` in its list of
+quiet moves onto an attacked square and not in its list of quiet moves that give
+check. Found by filtering `adocs/data/S145_mate_set.tsv` and
+`S145_mined_set.tsv` for that shape, not invented. **Observed red with the
+exemption removed** (mutant P05, the whole block otherwise as it ships):
+
+    TEST CASE:  pruning does not hide a forced mate
+    FATAL ERROR: REQUIRE( result.mate_in == 2 ) is NOT correct!
+      values: REQUIRE( 3 == 2 )
+      logged: mate by a hanging quiet, depth 6
+
+The mating move `Qg7#` is the checking quiet the exemption keeps; without it
+the engine reports mate in three.
+
+Mutants: `tools/mutants/S109_shallow_pruning.py`, ten, **10 of 10 killed**,
+verified by applying each pair to the working tree and running its case
+(`.tuning/coord/S109_mutant_kills.txt`). `tools/mutation_check.py` wants a
+worktree at a commit holding the rule, so the tool's own pass is the
+coordinator's after the commit -- `python3 tools/mutation_check.py tools/mutants
+.ref-builds/mut --only P01 P02 P03 P04 P05 P06 P07 P08 P09 P0A`.
+
+**Three cases of S191's own suite were re-stated, not relaxed.** "a capture is
+not reduced", "a quiet move that gives check is not reduced" and "a reduced move
+that beats alpha is searched again at full depth" all need the node to run its
+whole move loop, and `FAIL_LOW_BETA`'s fail-low window is exactly the window
+futility fires on: at a non-PV node the first read 8 of 48 moves. They drive a
+**PV node** now, where the block is off and late move reduction -- which does
+not read `is_pv` -- decides exactly what it decided before; the assertions are
+unchanged. The third also needed a different position, because with the block
+live in the children no late quiet at perft position 2 comes back from its
+reduced search worth more than the ordering thought (40 reduced, 0 re-searched,
+at every depth from 4 to 8). It uses
+`6k1/1p1b1pb1/1r1p2p1/3Pp2p/1B1p4/3P1BP1/2P2PKP/1R6 w - - 2 28`, row 234 of
+`adocs/data/S024_census_positions.txt`, found by scanning that committed set --
+3 to 5 of its 26 reduced moves re-search at every depth from 4 to 8.
+
+### Goldens re-derived (DEC-142)
+
+- `tests/test_search_params.cpp` `golden_defaults`: 28 rows -> **38**, the ten
+  new parameters with their ranges. Derivation is `src/search_params.hpp` and
+  the diff of the two is the re-derivation; `DEV_MANUAL.md`'s table row moved
+  with it.
+- `tests/test_mate_carry.cpp` `short_line_ceiling`: re-derived with
+  `adocs/data/S203_case_sweep.sh --ceilings` over the two S204 grids **and this
+  step's own**, `adocs/data/S109_sweep_block.txt` (108 cells, the script's full
+  grid, taken with the block live). **Three ceilings rise**: D 1 -> 2, E 8 -> 9,
+  F 2 -> 5. A and B are unchanged and C stays at its earned 0. **A rise is a
+  decision and not a re-derivation, and this one is proposed rather than
+  assumed**: a block that takes 74 % of the tree stores fewer lines, so the walk
+  certifies fewer, and DEC-122's guarantee beside them -- a line published at
+  its claimed length ends in checkmate -- is **0 unreached across the whole of
+  this grid**, as it was across S204's. What rose is the residue, not the
+  promise. S202 still owns closing the class.
+
+### Debug self-play (DEC-141 clause 1)
+
+`cmake --build build-debug -j12`, then four rounds at 4+0.04 on
+`noob_3moves.epd` with `-log ... level=trace engine=true`: **8 games in 15 s, 0
+`Assertion`, 0 `disconnect`**, in both the trace log and the tee'd stdout.
+
+### Gate
+
+`cmake --build build -j12 && ctest --test-dir build -L fast` **37 of 37**;
+`cmake --build build-tune -j12 && ctest --test-dir build-tune -L fast` **37 of
+37**; `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` clean. Run again after
+this section was written. `tools/gate_extra.sh` is the coordinator's.
+
+**The export is not optional on this machine**: `clang-format.sh` pins major
+23, this machine has 18 and 22 only, and without `CLANG_FORMAT_MAJOR=22` the
+script resolves Ubuntu's unsuffixed 18.1.3, refuses it by version and takes
+`test_clang_format_script` red in both builds (`.moltke.local.md`, DEC-146).
+
+### The pre-registration
+
+`adocs/data/S109_sprt.sh`, written and **not run**. `./fastchess.sh` at its own
+default bounds, `elo0=0 elo1=5`, alpha = beta = 0.05, nElo, against `HEAD`;
+8+0.08, Hash 16, `noob_3moves.epd`, concurrency 12. Worst case **41861 games /
+19.8 h** with the truth at the interval's midpoint and **25591 / 12.1 h** with
+it on a bound, at the measured 2110 games an hour. Abort at a time-forfeit rate
+over 1.0 % a side; a crash voids. The three outcomes, the bisection protocol on
+H0 with its two legs and its first suspects, and the open findings the run is
+taken while open -- S210, S223, S213 by finding id -- are all in the header.
+
+### What still needs a decision
+
+1. **The three raised mate-carry ceilings** above: `tests/test_mate_carry.cpp`
+   says in as many words that raising one needs a decision.
+2. **S218's re-scope or retirement**, its content having landed here.
+3. One prose line of this file was reworded so `tools/plan_prose_check.py
+   --params` stops reading a derivation's intermediate as a parameter value;
+   no number changed.
+
+### Repaired before the commit, after the Tier-1 fast check
+
+Documentation only -- no value, no behaviour, `chesso bench` still **7111579**
+and the two builds still 37 of 37.
+
+1. **Three in-test recorded reds were wrong and are now the real printouts**,
+   re-observed one release rebuild per mutant and logged to
+   `.tuning/coord/S109_reobserve.log`: P09 (its recorded assertion cannot fail
+   at all), P0A and P01. Three more were repaired with them, found by the same
+   pass: P02 named a different assertion, P04 a different number, P07 a
+   different case. The remaining four were spelled as `REQUIRE( a == b )` where
+   doctest prints `REQUIRE_EQ( a, b )` and now read as printed. The breadth
+   case claimed a P0A red that no mutant here can produce; it says what it is
+   instead. The table above is the record and it needed no number changed.
+2. **The two coefficients' `off` column said their range top.** It is not one:
+   both margins are the coefficient times the reduced depth, so at
+   `lmr_depth == 0` they are 0 whatever the coefficient holds and both rules
+   still prune. Corrected in the table, in the paragraph under it and in
+   `src/search_params.hpp`, where the history comment also contradicted itself.
+3. **The skip-quiets accepts row claimed the clause was met.** It is departed
+   from under DEC-180's own clause (DEC-205); the row says so and the paragraph
+   under that table says what is honoured, what is not and what it costs.
+4. `src/data_structures.hpp`: `enum prune_rule_t` was reading as the tail of
+   `search_node_probe_t`'s doc block. It has its own comment now.

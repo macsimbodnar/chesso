@@ -1785,7 +1785,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search_params.cpp` `golden_defaults` | 28 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search_params.cpp` `golden_defaults` | 38 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -1965,8 +1965,11 @@ chesso bench 9                        # a shallower run; NOT the signature
 
 **At `S189`, on the workstation: `24880255`. At `S203`: `26851183`. At `S207`:
 `26491479`. At `S208`: `30046849`. At `S042`: `27322394`. At `S024` v1:
-`22363740`, reverted the same day on H0 (DEC-194), so the shipping total is
-`27322394` again.** Quote it
+`22363740`, reverted the same day on H0 (DEC-194), so the shipping total went
+back to `27322394`. At `S109`: `7111579`** — the shallow-depth pruning block
+takes 74 % of the tree, which is what four rules skipping quiet moves at every
+non-PV node do, and the SPRT is what says whether the tree it leaves is a
+better one. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

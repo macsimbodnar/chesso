@@ -5,6 +5,12 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#ifdef CHESSO_TUNE
+// The late move pruning census below writes a file at exit, and only the tune
+// build has one. Nothing the release binary compiles needs either header.
+#include <cstdlib>
+#include <fstream>
+#endif
 #include "bitboard.hpp"
 #include "evaluation.hpp"
 #include "log.hpp"
@@ -132,6 +138,131 @@ static inline int lmr_reduction(int depth, int move_number)
 
 int search_lmr_reduction_probe(int depth, int move_number)
 { return lmr_reduction(depth, move_number); }
+
+
+// The depth the shallow-depth rules are gated on: what late move reduction
+// would leave below this move, and not the node's own remaining depth. A move
+// the ordering put late is already searched shallower than the node is deep, so
+// the margin it is pruned against should be the shallow one. Clamped at zero --
+// the reduction can exceed the depth on a very late move at a shallow node, and
+// a negative margin multiplier would invert every rule below it. S109.
+static inline int lmr_depth_of(int depth, int move_number)
+{
+  const int left = depth - lmr_reduction(depth, move_number);
+
+  return (left > 0) ? left : 0;
+}
+
+
+// The move count late move pruning stops generating quiets past, in hundredths
+// of a move -- the same reason LMR_BASE and LMR_DIVISOR are hundredths: the
+// fit that produced it is not an integer and rounding it to one at the source
+// throws away what the census measured.
+//
+// Doubled when the side to move is improving, which is S108's flag doing the
+// one job the published record prices highest for it: a position that is
+// getting better is one where the later quiets are worth another look.
+static inline int lmp_threshold_x100(int lmr_depth, bool improving)
+{
+  const int threshold = LMP_BASE + LMP_DEPTH_COEFF * lmr_depth;
+
+  return improving ? 2 * threshold : threshold;
+}
+
+
+int search_lmp_threshold_probe(int lmr_depth, bool improving)
+{ return lmp_threshold_x100(lmr_depth, improving); }
+
+
+#ifdef CHESSO_TUNE
+// The census the late move pruning constants were fitted from, kept in the
+// build that cannot ship so the fit can be re-run rather than re-read. Two
+// tables and the reduction the third is derived from:
+//
+//   cutoff[depth][n]   a beta cutoff on a quiet move at this remaining depth,
+//                      taken by the n-th legal move searched at the node
+//   quiets[depth][k]   a node at this remaining depth generated k quiet moves
+//
+// Written on every tune-build search and dumped at exit only when
+// CHESSO_LMP_CENSUS names a file, so a tuning run pays two increments and no
+// I/O. Never compiled into the binary an SPRT measures. S109,
+// adocs/data/S109_lmp_census.py.
+namespace
+{
+constexpr int CENSUS_DEPTHS = 64;
+constexpr int CENSUS_MOVES = 64;
+constexpr int CENSUS_QUIETS = 256;
+
+struct lmp_census_t
+{
+  uint64_t cutoff[CENSUS_DEPTHS][CENSUS_MOVES] = {};
+  uint64_t quiets[CENSUS_DEPTHS][CENSUS_QUIETS] = {};
+
+  ~lmp_census_t();
+};
+
+lmp_census_t census;
+
+lmp_census_t::~lmp_census_t()
+{
+  const char* path = std::getenv("CHESSO_LMP_CENSUS");
+
+  if (path == nullptr) { return; }
+
+  std::ofstream out(path);
+
+  if (!out) { return; }
+
+  out << "# S109 late move pruning census. depth is remaining depth at the\n"
+         "# node; move is the index of the legal move searched, from 1.\n"
+         "kind\tdepth\tmove\tcount\n";
+
+  for (int depth = 0; depth < CENSUS_DEPTHS; ++depth) {
+    for (int move = 0; move < CENSUS_MOVES; ++move) {
+      if (census.cutoff[depth][move] != 0) {
+        out << "cutoff\t" << depth << '\t' << move << '\t'
+            << census.cutoff[depth][move] << '\n';
+      }
+    }
+  }
+
+  for (int depth = 0; depth < CENSUS_DEPTHS; ++depth) {
+    for (int count = 0; count < CENSUS_QUIETS; ++count) {
+      if (census.quiets[depth][count] != 0) {
+        out << "quiets\t" << depth << '\t' << count << '\t'
+            << census.quiets[depth][count] << '\n';
+      }
+    }
+  }
+
+  // The reduction table the analysis turns (depth, move) into an lmr depth
+  // with, emitted by the same binary so the script does none of the engine's
+  // own arithmetic a second time.
+  for (int depth = 1; depth < CENSUS_DEPTHS; ++depth) {
+    for (int move = 1; move < CENSUS_MOVES; ++move) {
+      out << "reduction\t" << depth << '\t' << move << '\t'
+          << lmr_reduction(depth, move) << '\n';
+    }
+  }
+}
+
+inline void census_cutoff(int depth, int move_number)
+{
+  if (depth < 0 || depth >= CENSUS_DEPTHS) { return; }
+  if (move_number < 0 || move_number >= CENSUS_MOVES) { return; }
+
+  census.cutoff[depth][move_number]++;
+}
+
+inline void census_quiets(int depth, size_t count)
+{
+  if (depth < 0 || depth >= CENSUS_DEPTHS) { return; }
+  if (count >= CENSUS_QUIETS) { count = CENSUS_QUIETS - 1; }
+
+  census.quiets[depth][count]++;
+}
+}  // namespace
+#endif
 
 
 // Selection sort, one step per visited move. Most nodes fail high on one of the
@@ -758,6 +889,39 @@ static int negamax_at(int alpha0,
   // write cannot wait for it. S108.
   state->static_evals[ply] = static_eval;
 
+  // S108's deferred layer (c), which the owner made this step's first line.
+  // The static evaluation is what this node looks like standing still; the
+  // table's score for the same position is what a search of it came back with,
+  // and where the entry's bound type certifies a direction that score is the
+  // better input to a pruning margin.
+  //
+  // Only a certified direction is taken. A TT_BETA_NODE's score is a lower
+  // bound, so it may raise the input and never lower it; a TT_ALPHA_NODE's is
+  // an upper bound, so it may lower it and never raise it. The mate band is
+  // excluded outright -- a mate score is a distance and not a value, and
+  // feeding one to a margin would prune against a number that means something
+  // else. TT_PV_NODE is deliberately not taken: the entry is exact and
+  // certifies both directions, but the licence the step file states covers the
+  // two bound types, and widening it is a change with its own verdict.
+  //
+  // **The stack and the stored evaluation keep the raw static score.**
+  // `improving` compares statics across plies and must never compare a search
+  // score against one, and the entry this node stores must hold what
+  // `evaluate()` said or the correction compounds through the table, which is
+  // the rule S099 inherits.
+  int pruning_eval = static_eval;
+
+  if (tt_entry != nullptr && !is_in_check) {
+    const int tt_score = de_normalize_score(tt_entry->score, ply);
+
+    if (tt_score < MATE_MIN && tt_score > -MATE_MIN) {
+      if ((tt_entry->type == TT_BETA_NODE && tt_score > static_eval) ||
+          (tt_entry->type == TT_ALPHA_NODE && tt_score < static_eval)) {
+        pruning_eval = tt_score;
+      }
+    }
+  }
+
   // Reverse futility pruning, also called static null move pruning. The null
   // move observation without the null move: if the static score is so far
   // above beta that the opponent cannot claw the difference back in the plies
@@ -881,6 +1045,39 @@ static int negamax_at(int alpha0,
 
   node_type_t type = TT_ALPHA_NODE;
 
+  // The shallow-depth pruning block's node-level guards, S109. Four rules --
+  // late move pruning, futility, history pruning and quiet SEE -- and not one
+  // of them fires at a node that fails any of these:
+  //
+  //   PV node       these lines get reported and played, and a pruned quiet is
+  //                 a move the node never looked at
+  //   in check      the move list is evasions; pruning one risks a mate this
+  //                 search never sees. It is off by data as well as by guard --
+  //                 `static_evals[ply]` is the sentinel here
+  //   ply 0         the root decides the move that gets played. `!is_pv`
+  //                 already covers it at every call search() makes; this is
+  //                 what covers a test driving the root directly
+  //   beta near mate  a bound inside the mate band means this node sits inside
+  //                 a mate proof, where a static margin and a history count
+  //                 are answering a question nobody asked them
+  //
+  // The alpha edge of the same band and the first-move guard are per move and
+  // sit in the loop. This is the fourth, fifth, sixth and seventh pruning rule
+  // in this engine, and three of the three before them hid a mate at least
+  // once: the guards are the accepts' own list and the mate cases in
+  // tests/test_search.cpp are what holds them.
+  const bool pruning_node =
+      !is_pv && !is_in_check && ply > 0 && beta < MATE_MIN && beta > -MATE_MIN;
+
+  // S108 supplies it and this is its first in-search call site: the side to
+  // move is better off here than it was the last time it moved. Late move
+  // pruning doubles its count when it is true.
+  const bool improving = improving_at(state, ply, is_in_check);
+
+  // Set once by late move pruning and never cleared: past its count the quiet
+  // stage is over for this node.
+  bool skip_quiets = false;
+
   int legal_moves_counter = 0;
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
@@ -917,8 +1114,14 @@ static int negamax_at(int alpha0,
   // With no captures there is nothing to fail high on, so the second stage is
   // needed immediately and staging saves nothing here.
   if (tt_move_is_quiet || moves_count == 0) {
-    moves_count +=
+    const size_t added =
         generate_quiets(game_tables(), &game->board, moves + moves_count);
+
+#ifdef CHESSO_TUNE
+    census_quiets(depth, added);
+#endif
+
+    moves_count += added;
     quiets_generated = true;
   }
 
@@ -933,6 +1136,60 @@ static int negamax_at(int alpha0,
   move_t best_move = 0;
 
   for (size_t i = 0;; ++i) {
+    // Everything the four shallow-depth rules require of the node and of the
+    // window, read once per candidate. `alpha` is read live rather than from
+    // `alpha0`: a move that beat alpha earlier in this loop can have carried it
+    // into the mate band, and the guard has to follow it there.
+    //
+    // `legal_moves_counter >= 1` is the first-move guard and it is
+    // load-bearing twice over. It is CPW's own "requires the existence of at
+    // least one legal move", and it is what keeps the no-legal-moves return
+    // below unreachable by pruning: these rules skip legal moves without
+    // counting them, so a node whose every legal move was pruned would report
+    // a mate or a stalemate that is not there.
+    const bool may_prune = pruning_node && legal_moves_counter >= 1 &&
+                           alpha < MATE_MIN && alpha > -MATE_MIN;
+
+    // Late move pruning. Past a move count that grows with the reduced depth
+    // the node gives up on its quiets: the flag is set here, before any move of
+    // this iteration is made, and every quiet from here on is skipped unless it
+    // gives check.
+    //
+    // **The gives-check exemption binds this rule too, and that is S109's own
+    // finding rather than its plan.** The published form ends the quiet stage
+    // outright, which is what the accepts asked for and what this shipped
+    // first; DEC-180 reserved the exemption to S218 *unless* the mate case went
+    // red without it, and it did. `4K3/q7/8/4k3/8/8/8/8 b`, mate in two by
+    // a7b8 after e5e6 e8d8, is lost at depth 3 at every count below 30 moves --
+    // measured, one release rebuild per setting -- because the mating move is
+    // one of twenty-eight queen moves at a node whose history table has never
+    // seen any of them. A count of 30 is a rule that never fires. So the choice
+    // was not between a safe count and an unsafe one; it was the exemption or
+    // the rule, and DEC-180's own words are that a red guard is a bug and not
+    // an option.
+    //
+    // The shape is the first of the two that decision names: the flag is still
+    // set here, by a count read before any move of this iteration is made, and
+    // the skip it causes happens **after `make_move`**, where `is_check_move`
+    // exists. The price is that the quiet stage can no longer be left
+    // ungenerated -- a stage that is never generated cannot be searched for the
+    // checking move inside it -- so what the rule saves is the subtrees and not
+    // the move list, and every quiet it skips costs one make, one unmake and
+    // one attack scan.
+    if (!skip_quiets && may_prune) {
+      const int move_number = legal_moves_counter + 1;
+      const int lmr_depth = lmr_depth_of(depth, move_number);
+
+      if (lmr_depth < LMP_MAX_LMRDEPTH &&
+          100 * move_number > lmp_threshold_x100(lmr_depth, improving)) {
+        skip_quiets = true;
+
+        if constexpr (PROBING) {
+          if (probe != nullptr) { probe->skip_quiets_set = true; }
+        }
+      }
+    }
+
     if (i == moves_count) {
       // The captures ran out without a cutoff, so the quiets are needed after
       // all. This is the branch staging exists to avoid.
@@ -940,6 +1197,10 @@ static int negamax_at(int alpha0,
 
       const size_t added =
           generate_quiets(game_tables(), &game->board, moves + moves_count);
+
+#ifdef CHESSO_TUNE
+      census_quiets(depth, added);
+#endif
 
       for (size_t j = moves_count; j < moves_count + added; ++j) {
         scores[j] = score_move(game, state, moves[j], tt_move, ply, prev_move);
@@ -953,9 +1214,58 @@ static int negamax_at(int alpha0,
 
     pick_next_move(moves, scores, moves_count, i);
 
-    if (!make_move(game, moves[i])) { continue; }
-
     const bool is_capture = MOVE_CAPTURE(moves[i]);
+    const bool is_quiet = !is_capture && !MOVE_PROMOTED(moves[i]);
+
+    // The three per-move rules. Their inputs are all properties of **this**
+    // position -- the node's own static score, the history table and the
+    // exchange evaluation -- so the decision is taken before make_move, where
+    // the board is still this one, and applied after it, where `is_check_move`
+    // exists and the gives-check exemption can bind. Lynx measured moving such
+    // rules before make at -0.6 +/-2.6, so the wasted make costs nothing worth
+    // chasing and the subtree saved dominates it either way.
+    prune_rule_t prune_rule = PRUNE_NONE;
+
+    if (may_prune && is_quiet) {
+      const int move_number = legal_moves_counter + 1;
+      const int lmr_depth = lmr_depth_of(depth, move_number);
+
+      // A node in check has no static score and `pruning_node` excludes one,
+      // so the margin below never reads the sentinel.
+      assert(pruning_eval != TT_EVAL_NONE);
+
+      // Futility. The static score plus everything the remaining plies are
+      // assumed able to win back still does not reach alpha, so neither this
+      // quiet nor any quiet ordered behind it is worth a subtree. The margin
+      // shrinks as lmr_depth falls with the move number, so later quiets are
+      // pruned more easily -- monotone at a fixed node.
+      if (lmr_depth < FUT_MAX_LMRDEPTH &&
+          pruning_eval + FUT_BASE + FUT_SLOPE * lmr_depth <= alpha) {
+        prune_rule = PRUNE_FUTILITY;
+      }
+
+      // History pruning. The raw butterfly entry, read through the table and
+      // never through score_move(), whose killer and countermove bands would
+      // exempt themselves silently. The threshold is negative because history
+      // is signed since S093: a sign slip here prunes the *good* quiets and
+      // has no symptom but lost rating.
+      if (prune_rule == PRUNE_NONE && lmr_depth < HP_MAX_LMRDEPTH &&
+          state->quiet_history[game->board.active_color][MOVE_FROM(moves[i])]
+                              [MOVE_TO(moves[i])] < -HP_COEFF * lmr_depth) {
+        prune_rule = PRUNE_HISTORY;
+      }
+
+      // Quiet SEE pruning. see_ge() scores a quiet as a capture of nothing --
+      // gain 0 -- so this asks whether the move loses more than the margin once
+      // the opponent is allowed to take the piece and the exchange resolves.
+      if (prune_rule == PRUNE_NONE && lmr_depth < SEE_QUIET_MAX_LMRDEPTH &&
+          !see_ge(&game->board, moves[i],
+                  -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))) {
+        prune_rule = PRUNE_SEE;
+      }
+    }
+
+    if (!make_move(game, moves[i])) { continue; }
 
     // The late move reduction guard below is the only consumer: a move that
     // gives check is not reduced. It is deliberately *not* consulted by the
@@ -966,6 +1276,32 @@ static int negamax_at(int alpha0,
     //
     // is_check() is an attack scan - do not pay for it on captures.
     const bool is_check_move = is_capture ? false : is_check(game);
+
+    // Late move pruning's own skip, here rather than at the generation stage
+    // so that the exemption above it can bind. A quiet past the count is
+    // searched only if it gives check.
+    if (prune_rule == PRUNE_NONE && skip_quiets && is_quiet) {
+      prune_rule = PRUNE_LATE_MOVE;
+    }
+
+    // The gives-check exemption. A checking quiet is forcing, and none of the
+    // four inputs -- a static score, a history count, an exchange evaluation,
+    // a move number -- says anything about a line the opponent has no choice
+    // in. It binds every rule of the block since the mate case above forced it
+    // onto late move pruning as well (DEC-180).
+    if (prune_rule != PRUNE_NONE && !is_check_move) {
+      if constexpr (PROBING) {
+        if (probe != nullptr && probe->pruned_count < MAX_MOVES) {
+          probe->pruned_moves[probe->pruned_count] = moves[i];
+          probe->pruned_rule[probe->pruned_count] = prune_rule;
+          probe->pruned_count++;
+        }
+      }
+
+      unmake_move(game);
+      continue;
+    }
+
     legal_moves_counter++;
 
     // Principal variation search. Move ordering is good enough that the first
@@ -1078,6 +1414,12 @@ static int negamax_at(int alpha0,
         // ordered the node.
         history_on_quiet_cutoff(state, game->board.active_color, moves[i],
                                 quiets_tried, quiets_tried_count, depth);
+
+#ifdef CHESSO_TUNE
+        // The one observation S109's late move pruning constants were fitted
+        // from: how far down the order the quiet that actually cut off sits.
+        census_cutoff(depth, legal_moves_counter);
+#endif
 
         if (prev_move != 0) {
           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =

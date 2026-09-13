@@ -7,8 +7,8 @@ decisions:  DEC-180, DEC-082, DEC-141, DEC-143, DEC-105
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     nobody -- folded into S109 by DEC-180's own clause, recorded as DEC-205 by the coordinator
+done:       2026-09-13 06:30, **retired: folded into S109 (DEC-205)**. S109 shipped the published late-move form first, as DEC-180 ordered, and three mate cases went red -- `MATE_IN_2_B_POS`'s mate in two lost at depth 3 at every count below 30 moves -- so the gives-check exemption became S109's fix under the TESTS rule and this step's question is answered by a red guard, not by an SPRT. The shape that shipped is the first of the two DEC-180 names: the skip-quiets flag set at generation, applied after `make_move` where `is_check_move` exists; its price (the quiet stage generated, a make and unmake per skipped quiet) is stated in S109's stamp and DEC-205. No run, no `src/` of its own; the file is history.
 
 ## Why this exists
 

@@ -1,0 +1,47 @@
+census .tuning/coord/S109_lmp_census.tsv
+  quiet beta cutoffs   904472
+  nodes generating quiets 2005723
+
+depth  cutoffs      p50  p95  p99   max   lmr_depth(depth, p95)  median quiets
+    1     574463     2    8   22    61                      1             26
+    2     161160     1    8   23    56                      1             24
+    3      90278     1    6   17    59                      2             26
+    4      42172     1    5   15    52                      3             24
+    5      19686     1    6   14    48                      3             26
+    6       7582     1    6   19    42                      4             23
+    7       5721     1    4   11    49                      5             26
+    8       1784     1    5   20    41                      6             25
+    9       1605     1    3   10    28                      8             31
+   10         21     1    3    7     7                      9             23
+
+fit rows (lmr_depth, count) over remaining depths (1, 2, 3): [(1, 8), (1, 8), (2, 6)]
+least squares, unconstrained: threshold = 10.0000 + -2.0000 * lmr_depth
+  the slope is negative, and the declared range is not: refitted at LmpDepthCoeff = 0
+least squares, in range:      threshold = 7.3333 + 0.0000 * lmr_depth
+  LmpBase        733   (hundredths of a move)
+  LmpDepthCoeff  0
+
+median quiet moves generated at a node: 25
+cap: the largest lmr_depth whose fitted threshold is still below it
+lmr_depth  threshold  binds
+        0       7.33  yes
+        1       7.33  yes
+        2       7.33  yes
+        3       7.33  yes
+        4       7.33  yes
+        5       7.33  yes
+        6       7.33  yes
+        7       7.33  yes
+        8       7.33  yes
+        9       7.33  yes
+       10       7.33  yes
+       11       7.33  yes
+       12       7.33  yes
+       13       7.33  yes
+       14       7.33  yes
+       15       7.33  yes
+       16       7.33  yes
+
+  the criterion does not discriminate: the threshold binds at every lmr depth in range,
+  so the cap is not derived and takes the declared midpoint instead (DEC-105 form (c))
+  LmpMaxLmrDepth 8   (midpoint of 0..16; the rule reads `lmr_depth < cap`)

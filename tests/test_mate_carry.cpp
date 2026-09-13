@@ -370,12 +370,13 @@ static bool line_ends_in_mate(const std::string& fen,
 //
 // The rule, stated once and applied to every row: the ceiling is the largest
 // short-line count any cell of the recorded grid shows for that case, at the
-// stride its TSV row carries, over both recorded sweeps. Re-derive it with
+// stride its TSV row carries, over every recorded sweep. Re-derive it with
 //
-//   adocs/data/S203_case_sweep.sh --ceilings F1 F2
+//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3
 //
 // as one command line, where F1 and F2 are `adocs/data/S204_sweep_head.txt` and
 // `adocs/data/S204_sweep_killer_iter_clear.txt`, the two grids S204 recorded,
+// and F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded,
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -383,10 +384,10 @@ static bool line_ends_in_mate(const std::string& fen,
 //   case                       ceiling  worst cell
 //   A_mate8_shallow                  5  3000000, with the killer clear
 //   B_mate6_shallow                 11  1000000, with the killer clear
-//   C_mate7_depth11                  0  none: 0 short in all 18 of its cells
-//   D_mate_minus6_depth10            1  five cells, both sides
-//   E_mate_minus9                    8  1000000 at HEAD
-//   F_mate6_inherited_no_line        2  1200000 at HEAD (not guarded)
+//   C_mate7_depth11                  0  none: 0 short in all 27 of its cells
+//   D_mate_minus6_depth10            2  1500000 with the S109 block
+//   E_mate_minus9                    9  1500000 with the S109 block
+//   F_mate6_inherited_no_line        5  1000000 with the S109 block
 //
 // C's zero is earned rather than chosen, which is the difference this file now
 // keeps: a ceiling of 0 says the grid has never shown one, and a budget where
@@ -394,14 +395,25 @@ static bool line_ends_in_mate(const std::string& fen,
 //
 // A step that lowers a ceiling is recording progress on S202. A step that
 // raises one is relaxing a test and needs a decision.
+//
+// **Three of them rose at S109 and that is the decision the block owes.** The
+// shallow-depth pruning block takes 74 % of the tree, and a line the search
+// never stored is a line the walk cannot certify, so short lines are what a
+// block of that size produces more of: D from 1 to 2, E from 8 to 9 and F from
+// 2 to 5, each read off this step's own grid by the script above and none off
+// the failing run that found them. What did **not** move is the guarantee
+// beside them -- `unreached.empty()`, the clause that says a line published at
+// its claimed length ends in checkmate -- which is 0 across the whole of this
+// grid as it was across S204's. So what rose is the residue DEC-122 already
+// calls expected, not the promise. S202 still owns closing the class.
 static size_t short_line_ceiling(const std::string& name)
 {
   if (name == "A_mate8_shallow") { return 5; }
   if (name == "B_mate6_shallow") { return 11; }
   if (name == "C_mate7_depth11") { return 0; }
-  if (name == "D_mate_minus6_depth10") { return 1; }
-  if (name == "E_mate_minus9") { return 8; }
-  if (name == "F_mate6_inherited_no_line") { return 2; }
+  if (name == "D_mate_minus6_depth10") { return 2; }
+  if (name == "E_mate_minus9") { return 9; }
+  if (name == "F_mate6_inherited_no_line") { return 5; }
 
   FAIL("unknown case " << name);
   return 0;

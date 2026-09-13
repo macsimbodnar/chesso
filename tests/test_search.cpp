@@ -2920,6 +2920,39 @@ TEST_SUITE("search: draws")
       REQUIRE_MESSAGE(black.mate_in == 2,
                       ("black, depth " + std::to_string(depth)));
     }
+
+    // S109's own case, and the accepts' own clause. The two positions above
+    // are answered by a checking key, which the shallow-depth block exempts
+    // from three of its four rules; this one is answered by the class the
+    // block was built to throw away.
+    //
+    // The mating key is **a late, quiet, hanging rook move**: Re8, onto a
+    // square the black queen attacks, with nothing defending it, giving no
+    // check. Every rule of the block has a reason to skip it -- quiet SEE
+    // because it loses a rook outright, futility because a rook down is below
+    // any alpha this node meets, history because the table has never seen it,
+    // and late move pruning because it is one of 36 legal moves and only one
+    // of them is a capture.
+    //
+    // Not read off the board (CLAUDE.md). Found by filtering the S145 mate and
+    // mined sets with python-chess for "the mating key is a quiet move onto a
+    // square the opponent attacks", and confirmed by the oracle: stockfish at
+    // depth 20 reports `#+2`, 1918 nodes, pv e5e8 g8e8 g4g7. python-chess
+    // reports `is_valid() True`, `is_check() False`, 36 legal moves of which 1
+    // is a capture and none a promotion, and Re8 in its list of quiet moves
+    // onto an attacked square and not in its list of quiet moves that give
+    // check.
+    const std::string mate_by_a_hanging_quiet =
+        "6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43";
+
+    for (int depth = 3; depth <= 6; ++depth) {
+      const std::string title =
+          "mate by a hanging quiet, depth " + std::to_string(depth);
+      const search_t result = search_fen(mate_by_a_hanging_quiet, depth);
+
+      REQUIRE_MESSAGE(result.mate_found, title);
+      REQUIRE_MESSAGE(result.mate_in == 2, title);
+    }
   }
 
   // The same hazard from the other side, and the one reverse futility pruning
@@ -3891,6 +3924,11 @@ TEST_SUITE("search: pruning and reduction guards")
   static constexpr int MATE_MAX_LOCAL = 49000;
   static constexpr int MATE_MIN_LOCAL = 48000;
 
+  // search.cpp's DRAW_SCORE, pinned here for the same reason: what a node with
+  // no legal move returns when it is not in check, and therefore the number a
+  // false stalemate would come back as.
+  static constexpr int DRAW_SCORE_LOCAL = 0;
+
   // The drive depth for every null-move case. The only depth at which the
   // block's own `depth - 1 - null_reduction >= 1` clears by exactly one ply,
   // which each case asserts rather than assumes: at 4 the reduced search is
@@ -4487,6 +4525,16 @@ TEST_SUITE("search: pruning and reduction guards")
   // fails low, the node runs its whole move loop, and the reduction each move
   // was searched with is the reduction the guards decided on -- nothing is cut
   // short and nothing is re-searched.
+  //
+  // **The three reduction cases below drive a PV node since S109**, and the
+  // premise above is why. A fail-low window is exactly the window the
+  // shallow-depth block's futility rule fires on -- a static score plus a
+  // margin that cannot reach an alpha of 5000 is every quiet at this node --
+  // so at a non-PV node the loop no longer runs to its end and
+  // `move_count == legal_count` read 8 of 48. The block exempts PV nodes
+  // outright and late move reduction does not read `is_pv` at all, so the
+  // guard each case is about decides exactly what it decided before. The
+  // assertions are unchanged; what moved is the node the drive asks them at.
   static constexpr int FAIL_LOW_BETA = 5001;
 
   // The drive depth for the two reduction cases. The block's own bound is
@@ -4520,7 +4568,7 @@ TEST_SUITE("search: pruning and reduction guards")
     const size_t legal_count = legal_moves(&game, buffer);
 
     negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
-                   &state, 0, false);
+                   &state, 0, true);
 
     // The whole loop ran, so no move was skipped and no cutoff hid one.
     REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
@@ -4580,7 +4628,7 @@ TEST_SUITE("search: pruning and reduction guards")
     const size_t legal_count = legal_moves(&game, buffer);
 
     negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
-                   &state, 0, false);
+                   &state, 0, true);
 
     REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
 
@@ -4627,8 +4675,18 @@ TEST_SUITE("search: pruning and reduction guards")
       guard_fixture_t,
       "a reduced move that beats alpha is searched again at full depth")
   {
+    // A middlegame-into-endgame position from this engine's own self-play,
+    // row 234 of adocs/data/S024_census_positions.txt. **It replaced perft
+    // position 2 at S109**, and the reason is the case's own second comment
+    // below: with the shallow-depth block live in the children, no late quiet
+    // at that node comes back from its reduced search worth more than the
+    // ordering thought, so `reduced` read 40 and `researched` read 0 at every
+    // depth from 4 to 8. This one re-searches at every one of those depths --
+    // 3 to 5 of its 26 reduced moves -- and it was found by scanning the 400
+    // committed census positions rather than picked. python-chess reports
+    // `is_valid() True` and `is_check() False`.
     const std::string fen =
-        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        "6k1/1p1b1pb1/1r1p2p1/3Pp2p/1B1p4/3P1BP1/2P2PKP/1R6 w - - 2 28";
 
     // Wide enough that a move beating alpha does not also reach beta, so the
     // loop keeps running past the first one that does. A null window would end
@@ -4645,8 +4703,11 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(!is_check(&game));
 
     // Zero as the previous move keeps the null-move block out of the drive,
-    // so what the probe records below is the move loop's own arithmetic.
-    negamax_probed(alpha, beta, depth, 1, &game, &state, 0, false);
+    // so what the probe records below is the move loop's own arithmetic. A PV
+    // node for the reason FAIL_LOW_BETA's comment gives: the shallow-depth
+    // block skips the late quiets this case is about at a non-PV node, and
+    // `researched` then reads 0 because there is nothing left to re-search.
+    negamax_probed(alpha, beta, depth, 1, &game, &state, 0, true);
 
     size_t reduced = 0;
     size_t researched = 0;
@@ -4669,5 +4730,685 @@ TEST_SUITE("search: pruning and reduction guards")
     // nothing else. Believing its score is how a move gets played on a search
     // that was never run at the depth its score claims.
     REQUIRE(researched > 0);
+  }
+
+
+  // --------------------------------------------------------------------
+  // S109, the shallow-depth pruning block: late move pruning, futility,
+  // history pruning and quiet SEE.
+  //
+  // Four rules sharing one guard list -- not a PV node, not in check, not
+  // ply 0, alpha and beta outside the mate band, never the first legal move --
+  // and one exemption that binds three of them, the move that gives check
+  // (DEC-180). Every case below establishes the condition that would make its
+  // rule fire and then asserts the guard refused it, which is the shape the
+  // six cases above take. The probe is what is read: `skip_quiets_set` for the
+  // stage late move pruning ends, `pruned_moves` and `pruned_rule` for the
+  // three per-move rules.
+
+  // Perft position 2. 48 legal moves, 8 of them captures and none a promotion
+  // (python-chess), so it has enough quiets for a count to reach its threshold
+  // and enough hanging ones for the exchange evaluation to have something to
+  // say.
+  static const std::string PRUNE_POS =
+      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+
+  // The drive depth for the block's cases. Deep enough that the reduction
+  // table returns more than zero on a late move -- which is what makes the
+  // lmr-depth gate a gate -- and shallow enough that a 48-move node is cheap.
+  static constexpr int PRUNE_DRIVE_DEPTH = 3;
+
+  // A window no move can beat, so the node runs its whole loop, and an alpha
+  // far enough above any static score here that the futility margin cannot
+  // reach it: `static + FutBase + FutSlope * lmr_depth <= alpha` holds for
+  // every quiet at every lmr depth in range. Asserted per case rather than
+  // assumed, against the node's own `evaluate()`.
+  static constexpr int FUTILE_ALPHA = 5000;
+
+  // A window wide enough that nothing fails high and nothing fails low, so the
+  // loop runs with alpha at the node's own score rather than at a bound the
+  // caller invented. What history pruning and quiet SEE are read under.
+  static constexpr int WIDE_ALPHA = -30000;
+  static constexpr int WIDE_BETA = 30000;
+
+  // Was this move skipped by one of the three per-move rules, and by which?
+  static int rule_that_pruned(const search_node_probe_t& probe, move_t move)
+  {
+    for (int i = 0; i < probe.pruned_count; ++i) {
+      if (probe.pruned_moves[i] == move) { return probe.pruned_rule[i]; }
+    }
+
+    return PRUNE_NONE;
+  }
+
+
+  static bool probe_searched(const search_node_probe_t& probe, move_t move)
+  {
+    for (int i = 0; i < probe.move_count; ++i) {
+      if (probe.moves[i] == move) { return true; }
+    }
+
+    return false;
+  }
+
+
+  // The quiet move from `from` to `to` at this position, through the engine's
+  // own generator. A move is never built by hand here: the flags decide which
+  // rules apply to it.
+  static move_t quiet_move(game_t * board_game, index_t from, index_t to)
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(board_game, moves);
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_FROM(moves[i]) != from || MOVE_TO(moves[i]) != to) { continue; }
+      if (MOVE_CAPTURE(moves[i]) || MOVE_PROMOTED(moves[i])) { continue; }
+
+      return moves[i];
+    }
+
+    return 0;
+  }
+
+
+  // src/search.cpp's own lmr_depth, which is not exported: the reduction probe
+  // is, and this is the one line built on it.
+  static int lmr_depth_of(int depth, int move_number)
+  {
+    const int left = depth - search_lmr_reduction_probe(depth, move_number);
+
+    return (left > 0) ? left : 0;
+  }
+
+
+  // Mutation: P06_lmp_improving_halves -- improving divides the count instead
+  // of doubling it.
+  //
+  //   search: pruning and reduction guards
+  //    the late move pruning count doubles exactly when improving
+  //   REQUIRE_EQ( doubled, 2 * flat )
+  //   values: REQUIRE_EQ( 366, 1466 )
+  TEST_CASE("the late move pruning count doubles exactly when improving")
+  {
+    for (int lmr_depth = 0; lmr_depth <= 16; ++lmr_depth) {
+      const int flat = search_lmp_threshold_probe(lmr_depth, false);
+      const int doubled = search_lmp_threshold_probe(lmr_depth, true);
+
+      // The rule reads the two parameters and nothing else, so a coefficient
+      // moved without the threshold moving would be invisible from outside.
+      REQUIRE_EQ(flat, LMP_BASE + LMP_DEPTH_COEFF * lmr_depth);
+
+      // The whole of S108's flag in this rule: exactly twice, at every depth.
+      REQUIRE_EQ(doubled, 2 * flat);
+    }
+
+    // The off value is off. The comparison is `100 * move_number > threshold`
+    // and a move list holds at most MAX_MOVES moves, so at LmpBase's declared
+    // maximum no move number can clear it -- which is what makes a release
+    // rebuild with the rule disabled possible at all (the bisection protocol,
+    // S109 section 6).
+    int lmp_base_max = -1;
+
+    for (size_t i = 0; i < search_param_count(); ++i) {
+      if (std::string(search_param_info(i).name) == "LmpBase") {
+        lmp_base_max = search_param_info(i).max_value;
+      }
+    }
+
+    REQUIRE(lmp_base_max > 0);
+    REQUIRE(100 * MAX_MOVES <= lmp_base_max);
+  }
+
+
+  // The positive control for the whole block, and the precondition every
+  // exemption case below is measured against: at an ordinary non-PV node the
+  // rules do fire. Without this, "nothing was pruned" would be evidence about
+  // the guards in a build where the block does nothing at all.
+  //
+  // Mutation: P07_history_sign -- the history threshold's sign is flipped, so
+  // the rule prunes the quiets with the best history instead of the worst.
+  // (Killed by the second half, which plants an entry at the bottom of the
+  // band and asserts the move it belongs to is skipped for it.)
+  //
+  //   search: pruning and reduction guards
+  //    history pruning skips the quiet the table has written off
+  //   REQUIRE_EQ( rule_that_pruned(probe, planted), PRUNE_HISTORY )
+  //   values: REQUIRE_EQ( 0, 2 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "history pruning skips the quiet the table has written off")
+  {
+    // Four blocked pawn pairs two files apart and the two kings: python-chess
+    // reports `is_valid() True`, `is_check() False` and 5 legal moves, all of
+    // them king moves. Five is what this case needs and it is not incidental
+    // -- late move pruning ends the quiet stage past its count, and a node
+    // with five moves never reaches one, so what the probe records below is
+    // this rule and no other. It is also why the case cannot be asked of a
+    // busy position: history pruning's targets are the quiets the ordering
+    // puts last, which is exactly where the stage has already ended.
+    const std::string fen = "4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    REQUIRE_EQ(legal_count, 5u);
+
+    // A king step onto an empty square nothing attacks -- generation is
+    // legal-only, so a king move that exists is a king move to a safe square
+    // -- so the exchange evaluation has no reason to skip it and the only rule
+    // that can is the one this case plants for. From the generator, never
+    // built by hand.
+    const move_t planted = quiet_move(&game, e1, e2);
+
+    REQUIRE(planted != 0);
+    REQUIRE(see_ge(&game.board, planted, 0));
+
+    // First without the plant, so the second drive's difference is the plant's
+    // and not the position's.
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+    REQUIRE_EQ(probe.pruned_count, 0);
+    REQUIRE(!probe.skip_quiets_set);
+
+    // Now the same node with one history entry driven to the bottom of the
+    // band. Nothing else about the drive changes -- and the entry is at the
+    // bottom, so the move also sorts last of the five, which is the move
+    // number the threshold below is read at.
+    load(fen, 1);
+    state.quiet_history[game.board.active_color][e1][e2] =
+        static_cast<int16_t>(-QUIET_HISTORY_MAX);
+
+    const int lmr_depth =
+        lmr_depth_of(PRUNE_DRIVE_DEPTH, static_cast<int>(legal_count));
+
+    REQUIRE(lmr_depth < HP_MAX_LMRDEPTH);
+    REQUIRE(-QUIET_HISTORY_MAX < -HP_COEFF * lmr_depth);
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    // The differential is the whole case: the same move, the same window, the
+    // same node, skipped only once the table says it has failed before.
+    REQUIRE_EQ(rule_that_pruned(probe, planted), PRUNE_HISTORY);
+  }
+
+
+  // Mutation: P08_see_threshold_sign -- the quiet SEE threshold is passed
+  // positive, so the rule asks whether the move *gains* the margin and skips
+  // every quiet that does not.
+  //
+  //   search: pruning and reduction guards
+  //    quiet SEE pruning skips the quiets that lose material and no others
+  //   REQUIRE_NE( rule_that_pruned(probe, safe), PRUNE_SEE )
+  //   values: REQUIRE_NE( 3, 3 )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "quiet SEE pruning skips the quiets that lose material and no others")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // From the engine's own exchange evaluation, which is the thing under
+    // test, and not from a reading of the board: a2a3 is safe and d2h6 hangs
+    // a bishop on a square only Black defends.
+    const move_t safe = quiet_move(&game, a2, a3);
+    const move_t hangs = quiet_move(&game, d2, h6);
+
+    REQUIRE(safe != 0);
+    REQUIRE(hangs != 0);
+    REQUIRE(see_ge(&game.board, safe, 0));
+    REQUIRE(!see_ge(&game.board, hangs, 0));
+
+    // Both are ordered to the top of the quiet stage, because otherwise late
+    // move pruning ends that stage before either is reached -- 8 captures and
+    // 6 quiets at this node, against a count of 14. The plant moves where the
+    // two sit in the order and nothing else: the exchange evaluation does not
+    // read the history table.
+    state.quiet_history[game.board.active_color][d2][h6] =
+        static_cast<int16_t>(QUIET_HISTORY_MAX);
+    state.quiet_history[game.board.active_color][a2][a3] =
+        static_cast<int16_t>(QUIET_HISTORY_MAX - 1);
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    // The rule fires, and on the move that loses material.
+    REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_SEE);
+
+    // And not on the one that does not. A move may still be skipped here by
+    // futility once alpha has risen -- that is a different rule and a
+    // different clause -- so what is asserted is the rule and not the skip.
+    REQUIRE_NE(rule_that_pruned(probe, safe), PRUNE_SEE);
+  }
+
+
+  // Mutation: P09_futility_against_beta -- the futility comparison is made
+  // against beta instead of alpha, so a node whose window is wide open prunes
+  // on a bound no move was measured against.
+  //
+  // **The second half is what kills it, and only the second half can.** The
+  // first drive's window is `FUTILE_ALPHA, FUTILE_ALPHA + 1`, so a comparison
+  // against beta is the same comparison one point wider, and the precondition
+  // the case asserts -- no margin reaches alpha -- makes the mutated form true
+  // as well, so `futile > 0` still holds there. The wide window is the one
+  // that separates the two comparisons.
+  //
+  //   search: pruning and reduction guards
+  //    futility pruning skips a quiet that cannot reach alpha
+  //   REQUIRE_EQ( futile, 0 )
+  //   values: REQUIRE_EQ( 40, 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "futility pruning skips a quiet that cannot reach alpha")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // The precondition, against the node's own number: the table was wiped, so
+    // negamax's static score is this call, and the margin cannot reach alpha
+    // at any lmr depth the rule covers.
+    const int static_eval = evaluate(&game.board);
+
+    for (int lmr_depth = 0; lmr_depth < FUT_MAX_LMRDEPTH; ++lmr_depth) {
+      REQUIRE(static_eval + FUT_BASE + FUT_SLOPE * lmr_depth <= FUTILE_ALPHA);
+    }
+
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    int futile = 0;
+
+    for (int i = 0; i < probe.pruned_count; ++i) {
+      if (probe.pruned_rule[i] == PRUNE_FUTILITY) { futile++; }
+    }
+
+    REQUIRE(futile > 0);
+
+    // And the other half, which is what says the comparison is against alpha
+    // and not against the other end of the window: the same node with a window
+    // whose beta is far above every margin and whose alpha is far below one.
+    // A rule reading beta would skip every quiet here; the rule reading alpha
+    // skips none for being futile.
+    REQUIRE(static_eval + FUT_BASE > WIDE_ALPHA);
+    REQUIRE(static_eval + FUT_BASE + FUT_SLOPE * (FUT_MAX_LMRDEPTH - 1) <=
+            WIDE_BETA);
+
+    load(PRUNE_POS, 1);
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    futile = 0;
+
+    for (int i = 0; i < probe.pruned_count; ++i) {
+      if (probe.pruned_rule[i] == PRUNE_FUTILITY) { futile++; }
+    }
+
+    REQUIRE_EQ(futile, 0);
+  }
+
+
+  // Mutation: P0A_prune_mate_band_neg -- `alpha > -MATE_MIN` is dropped from
+  // the block's guard. That is the edge a node inside a mate proof actually
+  // meets: its alpha is the mate bound its parent passed down, and a rule that
+  // skips a quiet there is a rule that can talk the search out of the defence.
+  //
+  // The whole-loop assertion is what goes red, and it is written first: a move
+  // a rule skips is a move the node never searches, so the mutant's one
+  // skipped quiet costs the move list its fifth entry before `pruned_count` is
+  // read at all.
+  //
+  //   search: pruning and reduction guards
+  //    no quiet is pruned against an alpha inside the mate band
+  //   REQUIRE_EQ( static_cast<size_t>(probe.move_count), legal_count )
+  //   values: REQUIRE_EQ( 4, 5 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "no quiet is pruned against an alpha inside the mate band")
+  {
+    // The defender node of the mate case in "pruning does not hide a forced
+    // mate": the position after Re8, the hanging quiet key. python-chess
+    // reports `is_valid() True`, `is_check() False`, 5 legal moves, the side
+    // not to move not in check, and -- enumerated rather than argued -- **every
+    // one of the five replies is mated in one**. That is what makes the drive
+    // below run its whole loop against a mate bound: no move can fail high on a
+    // window whose beta is above every mate score.
+    const std::string fen = "4R1qk/7p/2p2p1B/7P/4P1Q1/1p4P1/5P2/6K1 b - - 2 43";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    REQUIRE_EQ(legal_count, 5u);
+
+    // -MATE_MIN itself, the first alpha the guard excludes, with beta one point
+    // above it -- **inside** the band `pruning_node` admits, so the beta clause
+    // is not what stops this drive and the alpha clause is the only thing left.
+    const int alpha = -MATE_MIN_LOCAL;
+    const int beta = alpha + 1;
+
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+
+    // The precondition: a quiet at this node that the exchange evaluation would
+    // skip. Qf8 walks the queen onto the square the rook on e8 attacks.
+    const move_t hangs = quiet_move(&game, g8, f8);
+
+    REQUIRE(hangs != 0);
+    REQUIRE(!see_ge(&game.board, hangs, 0));
+
+    negamax_probed(alpha, beta, PRUNE_DRIVE_DEPTH, 1, &game, &state, 0, false);
+
+    // The whole loop ran: nothing failed high, so every move was a candidate
+    // and "nothing was pruned" is a decision rather than an early exit.
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+    REQUIRE_EQ(probe.pruned_count, 0);
+  }
+
+
+  // Mutation: P05_prune_gives_check -- the gives-check exemption is dropped
+  // from the three per-move rules.
+  //
+  //   search: pruning and reduction guards
+  //    a quiet move that gives check is not pruned
+  //   REQUIRE_EQ( rule_that_pruned(probe, checking), PRUNE_NONE )
+  //   values: REQUIRE_EQ( 1, 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a quiet move that gives check is not pruned")
+  {
+    // The position the reduction cases above use, for the same reason: it has
+    // exactly one quiet move that gives check, Bd7+, and four captures ahead
+    // of every quiet. python-chess reports `is_valid() True`,
+    // `is_check() False`, 45 legal moves, 4 captures, no promotions, and
+    // `Bd7+` as the one quiet move in its gives-check list.
+    const std::string fen =
+        "1r2kb1r/pbn1pp1p/1q1p1n1p/1pP3Q1/4P3/P1P2NPB/RP3P1P/1N2K2R w Kk - 6 "
+        "17";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    const move_t checking = quiet_move(&game, h3, d7);
+
+    REQUIRE(checking != 0);
+
+    // That it gives check comes from the engine's own is_check() after its own
+    // make_move(), the way the exemption itself decides it.
+    REQUIRE(make_move(&game, checking));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(gives_check);
+
+    // Two of the three rules would otherwise skip it: it hangs a bishop, and
+    // at this alpha no quiet's margin reaches the window.
+    REQUIRE(!see_ge(&game.board, checking, 0));
+
+    const int static_eval = evaluate(&game.board);
+
+    REQUIRE(static_eval + FUT_BASE <= FUTILE_ALPHA);
+
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    // The precondition: other quiets at this node were skipped, so the rules
+    // were live and this move's survival is the exemption and not an inert
+    // block.
+    REQUIRE_MESSAGE(probe.pruned_count > 0,
+                    "nothing was skipped at this node, so the exemption "
+                    "decided nothing here");
+
+    REQUIRE_EQ(rule_that_pruned(probe, checking), PRUNE_NONE);
+    REQUIRE(probe_searched(probe, checking));
+  }
+
+
+  // Mutation: P01_prune_pv -- `!is_pv` is dropped from the block's guard.
+  //
+  //   search: pruning and reduction guards
+  //    no quiet is pruned at a PV node
+  //   REQUIRE_EQ( probe.pruned_count, 0 )
+  //   values: REQUIRE_EQ( 40, 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t, "no quiet is pruned at a PV node")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    // Two drives, one window each, because the two halves of the block are
+    // reached by different windows: futility fires when alpha is out of a
+    // quiet's reach, and late move pruning counts the moves that were
+    // *searched*, so at a futile alpha the count never climbs to its
+    // threshold. Both are the precondition -- this position and these windows
+    // do prune when the guard admits them.
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    REQUIRE(probe.pruned_count > 0);
+
+    load(PRUNE_POS, 1);
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    REQUIRE(probe.skip_quiets_set);
+    REQUIRE(static_cast<size_t>(probe.move_count) < legal_count);
+
+    // And now the same two with nothing changed but the one flag under test.
+    load(PRUNE_POS, 1);
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, true);
+
+    REQUIRE_EQ(probe.pruned_count, 0);
+
+    load(PRUNE_POS, 1);
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, true);
+
+    REQUIRE_EQ(probe.pruned_count, 0);
+    REQUIRE(!probe.skip_quiets_set);
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+  }
+
+
+  // Mutation: P02_prune_in_check -- `!is_in_check` is dropped from the same
+  // guard, which lets the futility margin read the TT_EVAL_NONE sentinel an
+  // in-check node leaves in the stack.
+  //
+  // Its own precondition is what goes red: without the guard the node prunes
+  // every quiet past the first, so the move list never reaches a second entry
+  // and the `REQUIRE_MESSAGE` above `pruned_count` fails first.
+  //
+  //   search: pruning and reduction guards
+  //    no quiet is pruned at a node in check
+  //   REQUIRE( probe.move_count > 1 )
+  //   values: REQUIRE( 1 >  1 )
+  TEST_CASE_FIXTURE(guard_fixture_t, "no quiet is pruned at a node in check")
+  {
+    // 1.e4 c5 2.Nf3 d6 3.Bb5+, the position the null-move and reverse-futility
+    // in-check cases use. python-chess: `is_valid() True`, `is_check() True`,
+    // 4 legal replies.
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    load(fen, 1);
+
+    REQUIRE(is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    REQUIRE(legal_count > 1);
+
+    // What makes the guard removable-and-detectable here, the way the
+    // reverse-futility in-check case is built: in check the node's static
+    // score is the TT_EVAL_NONE sentinel, and a futility margin added to that
+    // sentinel is below any ordinary alpha, so a mutant without the guard
+    // prunes every quiet past the first.
+    REQUIRE(TT_EVAL_NONE + FUT_BASE <= WIDE_ALPHA);
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    REQUIRE_MESSAGE(probe.move_count > 1,
+                    "the node searched at most one move, so nothing here is "
+                    "evidence about a rule that never reaches a second");
+    REQUIRE_EQ(probe.pruned_count, 0);
+  }
+
+
+  // Mutation: P03_prune_first_move -- `legal_moves_counter >= 1` is dropped,
+  // so a node's only legal move can be skipped and the no-legal-moves return
+  // below reports a stalemate that is not there.
+  //
+  //   search: pruning and reduction guards
+  //    a node's only legal move is never pruned
+  //   REQUIRE_EQ( probe.move_count, 1 )
+  //   values: REQUIRE_EQ( 0, 1 )
+  TEST_CASE_FIXTURE(guard_fixture_t, "a node's only legal move is never pruned")
+  {
+    // Black has exactly one legal move, Kb8: a7 is taken by the white pawn on
+    // b6 and b7 by its own pawn. python-chess reports `is_valid() True`,
+    // `is_check() False`, 1 legal move, and the rook on h1 -- far from
+    // everything Black can reach -- is there so that the node's true score is
+    // nowhere near the draw score a false stalemate would return.
+    const std::string fen = "k7/1p6/1P6/8/8/8/8/K6R b - - 0 1";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 1u);
+
+    // The precondition: at this alpha the one move on offer is futile, so the
+    // first-move guard is the only thing between it and a skip.
+    const int static_eval = evaluate(&game.board);
+    const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, 1);
+
+    REQUIRE(lmr_depth < FUT_MAX_LMRDEPTH);
+    REQUIRE(static_eval + FUT_BASE + FUT_SLOPE * lmr_depth <= FUTILE_ALPHA);
+
+    const int score =
+        negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1,
+                       &game, &state, 0, false);
+
+    // The move was searched rather than skipped...
+    REQUIRE_EQ(probe.move_count, 1);
+    REQUIRE_EQ(probe.pruned_count, 0);
+
+    // ...and the node therefore did not fall through to its no-legal-moves
+    // return, which at a node that is not in check is the draw score. Black is
+    // a rook down here, so the two are not the same number and the false
+    // stalemate is visible rather than argued about.
+    REQUIRE(score < DRAW_SCORE_LOCAL);
+  }
+
+
+  // Mutation: P04_prune_mate_band_pos -- `beta < MATE_MIN` is dropped from the
+  // block's guard.
+  //
+  //   search: pruning and reduction guards
+  //    no quiet is pruned against a beta inside the mate band
+  //   REQUIRE_EQ( probe.pruned_count, 0 )
+  //   values: REQUIRE_EQ( 40, 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "no quiet is pruned against a beta inside the mate band")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // MATE_MIN itself, the first beta the guard excludes, with alpha one point
+    // below it -- inside the band the guard admits, so the alpha clause is not
+    // what stops this drive. A window this high fails low on every move, so
+    // the node runs its whole loop either way.
+    const int beta = MATE_MIN_LOCAL;
+
+    REQUIRE(beta - 1 < MATE_MIN_LOCAL);
+    REQUIRE(beta - 1 > -MATE_MIN_LOCAL);
+
+    negamax_probed(beta - 1, beta, PRUNE_DRIVE_DEPTH, 1, &game, &state, 0,
+                   false);
+
+    REQUIRE_MESSAGE(probe.move_count > 1,
+                    "the node searched at most one move, so the guard decided "
+                    "nothing here");
+    REQUIRE_EQ(probe.pruned_count, 0);
+    REQUIRE(!probe.skip_quiets_set);
+  }
+
+
+  // Breadth, and not a mutant kill: **all ten mutants of
+  // `tools/mutants/S109_shallow_pruning.py` leave this case green**, measured
+  // one release rebuild each. Every drive below passes `beta = alpha + 1` and
+  // this set's alpha runs -48997 to -48991, so beta never climbs above -48990
+  // and `pruning_node`'s own `beta > -MATE_MIN` refuses the node before
+  // `may_prune`'s alpha clause is read at all. Dropping that clause (P0A) can
+  // therefore change nothing here; the single-node case above is what kills
+  // it. What this case adds is reach -- 104 defender positions against the
+  // whole guard list -- and not a guard of its own.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "no defender node inside the mate band prunes a quiet")
+  {
+    const std::vector<defender_row_t> rows = read_defender_set();
+
+    // Golden, DEC-142. Re-derive with
+    //   grep -vc '^#' adocs/data/S165_defender_set.tsv
+    // which counts the header row as well, or by regenerating the file with
+    //   ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py generate
+    REQUIRE_MESSAGE(rows.size() == 104,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(rows.size()) + " rows, expected 104"));
+
+    std::string violations;
+    size_t with_a_loop = 0;
+
+    for (const defender_row_t& row : rows) {
+      load(row.fen, row.ply);
+
+      // The same arithmetic the null-move case above uses: a mate against the
+      // side to move in k is 2k plies away, and alpha is that score seen from
+      // this node -- the bound a search proving the mate passes down.
+      const int alpha = -(MATE_MAX_LOCAL - row.ply - 2 * row.mated_in);
+
+      REQUIRE_MESSAGE(alpha <= -MATE_MIN_LOCAL,
+                      (row.fen + ": alpha " + std::to_string(alpha) +
+                       " is not inside the mate band"));
+      REQUIRE_MESSAGE(!is_check(&game),
+                      (row.fen + " is in check, so the block stops on the "
+                                 "wrong guard"));
+
+      negamax_probed(alpha, alpha + 1, PRUNE_DRIVE_DEPTH,
+                     static_cast<size_t>(row.ply), &game, &state, PREV_MOVE,
+                     false);
+
+      if (probe.move_count > 1) { with_a_loop++; }
+
+      if (probe.pruned_count > 0 || probe.skip_quiets_set) {
+        violations += row.fen + "\n";
+      }
+    }
+
+    // The precondition. A set whose every drive returned before its move loop
+    // would satisfy the assertion below by never deciding anything.
+    REQUIRE(with_a_loop > 0);
+
+    REQUIRE_MESSAGE(
+        violations.empty(),
+        ("defender nodes that pruned a quiet inside the mate band:\n" +
+         violations));
   }
 }

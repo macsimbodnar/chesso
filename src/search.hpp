@@ -138,3 +138,12 @@ void history_on_quiet_cutoff(search_state_t* state,
 // move says nothing unless the table would have reduced it, and that has to be
 // checkable in the build the gate ships as well as the one it tunes.
 int search_lmr_reduction_probe(int depth, int move_number);
+
+// The late move pruning threshold the block computes, in hundredths of a move,
+// so a test can hold the doubling rule directly instead of inferring it from a
+// tree: the count is doubled exactly when `improving_at()` is true and at no
+// other time, and a wrong-side default there costs rating without ever
+// crashing. Compiled in both builds for the reason the reduction probe is,
+// that a case asserting a guard refused to prune says nothing unless the rule
+// would otherwise have pruned. S109.
+int search_lmp_threshold_probe(int lmr_depth, bool improving);

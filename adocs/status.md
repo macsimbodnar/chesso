@@ -7,22 +7,60 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S109 started, 2026-09-13 05:12, by an Opus 5 subagent (DEC-199); the
-  SPRT is the coordinator's.** The shallow-depth pruning block: late move
-  pruning with a skip-quiets flag the staged generator honours, futility,
-  history pruning and quiet SEE pruning enter the move loop together, gated
-  on `depth - lmr_reduction(depth, move_number)`, all four off in check, at a
-  PV node, on the first move and in the mate band, the gives-check exemption
-  binding the three post-make rules only (S218 owns LMP's); S108's deferred
-  layer (c) as the first line; every constant chesso's own with a range and
-  an off value; the mate case observed red with the guards removed, a guard
-  test and a killed mutant per rule (DEC-141), the Debug self-play, node
-  counts at depths 9 and 12 recorded; one gainer SPRT `elo0=0 elo1=5` on
-  `noob_3moves.epd`, pre-registered in `adocs/data/S109_sprt.sh` and started
-  by the coordinator, with the bisection protocol on H0. The brief corrects
-  the file on two points: continuation history was reverted (DEC-194), so the
-  history threshold reads plain history alone; the book is `noob_3moves.epd`.
-  `plan_current/`: S109.
+- **S109 landed, 2026-09-13 06:40, by an Opus 5 subagent (DEC-199); its SPRT
+  is next and is the coordinator's.** The four shallow-depth rules are in
+  `negamax_at`'s move loop at `lmr_depth = max(0, depth - lmr_reduction)`,
+  quiet moves only, off in check, at PV nodes, on the first move and in the
+  mate band: late move pruning past `LmpBase` 7.33 moves doubled when
+  improving, futility at `pruning_eval + 147 + 170 * lmr_depth <= alpha`,
+  history pruning below `-576 * lmr_depth` on the raw entry, quiet SEE below
+  `-50 * lmr_depth^2`, each to lmr depth 8 and each off exactly at cap 0;
+  S108's layer (c) feeds the futility margin and nothing else. **The
+  published LMP form went red on three mate cases** (`MATE_IN_2_B_POS` at
+  depth 3, at every count below 30 moves), so DEC-180's clause fired: the
+  gives-check exemption binds all four, S218 folds in and is retired,
+  **DEC-205**. Ten constants in `search_params.hpp`, each chesso's own: the
+  LMP count from `adocs/data/S109_lmp_census.py` (the cutoff index falls with
+  depth, so the depth coefficient ships at 0), the futility margins CPW's
+  classic minor and rook in chesso's scale, the rest range midpoints. Mate
+  case `6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43` (Stockfish `#+2`,
+  `e5e8`) observed red with the guards removed; ten guard cases and ten
+  mutants P01 to P0A each killed; Debug self-play 8 games 0 `Assertion`;
+  gate 37/37 both builds. Node counts: depth 9 121515 -> 47635, 801408 ->
+  213916, 72895 -> 26130 (best moves unchanged); **`bench` 27322394 ->
+  7111579** (-74 %), nps 7.58 M -> 4.31 M, same-depth wall time 3.60 s ->
+  1.65 s. Per rule at depth 10: LMP 0.43 of the nodes, futility 0.74, quiet
+  SEE 0.80, **history pruning 0.99, nearly inert** without the continuation
+  table (DEC-194) -- the verdict prices the other three, S222 re-prices it.
+  Three mate-carry ceilings rose with the block (D 2, E 9, F 5), re-derived
+  by `S203_case_sweep.sh --ceilings` with `unreached.empty()` still 0, DEC-205
+  clause 2; S202's file says the residue grew. `specs.md`'s search and
+  absent rows follow. **The fast check found no code defect** -- every guard,
+  the no-legal-moves interlock, layer (c)'s directions, both sign-sensitive
+  rules and the mate oracle held under direct checking, the ceilings
+  re-derived exactly, bench and all six `search_bench` rows reproduced --
+  and six documentation-level items: three recorded "observed red"
+  printouts named the wrong assertion (P01, P09, P0A), the two
+  coefficients' "off" values are not off (only the caps at 0 are), the
+  accepts row for the skip-quiets clause read as fully met where DEC-180's
+  fix departs from it, a spliced doc block; a repair agent re-observed the
+  three printouts and corrected the texts before the commit -- and, by
+  re-observing every mutant with a release rebuild each, found four more
+  comment mismatches of the same class and one breadth case no mutant can
+  redden (its alpha sits in the mate band, refused before the clause is
+  read), now labelled breadth, not a kill; `.tuning/coord/S109_reobserve.log`
+  reproduces the step's own kill list line for line. One thing to keep in view, not a finding: `LmpBase` counts
+  captures toward the threshold, so a capture-rich node can skip its whole
+  quiet stage, killers included, unless a quiet gives check -- the
+  pre-registration already names the count as the first suspect on H0.
+  **Next,
+  in order: gate with `Bench: 7111579`, commit, `tools/mutation_check.py`
+  over P01 to P0A at the commit, `tools/gate_extra.sh`, then
+  `adocs/data/S109_sprt.sh`** -- `{0, 5}` nElo against `HEAD`, worst case
+  41861 games / 19.8 h at the midpoint and 25591 / 12.1 h on a bound at
+  2133 an hour, expected far shorter if the literature's effect is real,
+  abort over 1.0 % forfeits a side, a crash voids, bisection legs the caps
+  at 0. `plan_current/`: S109 (SPRT pending).
 
 - **S212 is done, 2026-09-13 05:00: the harness is fixed in six places and
   its A/A says the statistics did not move.** Implementation in `f9d705c`

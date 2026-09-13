@@ -44,3 +44,7 @@ which `git show cace216` holds in full.
 ## Note 2026-09-13, from S212: the lane's fastchess config carries `twosided=true`
 
 S212 made resignation two-sided in both harnesses (DEC-174). `adocs/data/S085_spsa_run.json`'s `extra` is one-sided and is a frozen record of S085's run, not a template: the SPSA config this lane writes carries `-resign movecount=3 score=400 twosided=true`, the regime every verdict is taken in from S212 on, and its pre-registration says so.
+
+## Note 2026-09-13, from S109: history pruning ships nearly inert, DEC-205
+
+S109's history pruning rule reads plain quiet history below `-HistPruneCoeff * lmr_depth` (576, a range midpoint) and removes 0.8 % of the nodes at depth 10 over 300 positions, because the continuation table the rule was written for was reverted (DEC-194) and plain history alone rarely reaches the threshold. This lane fits the history scale and lands the table; `HistPruneCoeff` belongs in its axis list, and the lane's SPRT re-prices the rule.

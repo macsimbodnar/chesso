@@ -207,6 +207,16 @@ of a refusal is the only confirmation the value was taken.
 | `NullMoveDivisor` | 6 | 1 to 64 | the depth-dependent part: the reduction is `NullMoveBase + depth / NullMoveDivisor` |
 | `LmrBase` | 52 | 0 to 400 | late move reduction, the constant term of the log fit, in hundredths. 52 is 0.52 |
 | `LmrDivisor` | 182 | 1 to 2000 | late move reduction, the divisor of the log term, in hundredths. 182 is 1.82 |
+| `LmpBase` | 733 | 0 to 27000 | late move pruning: the constant term of the move count past which the quiet stage is abandoned, in **hundredths of a move**, so 733 is 7.33. Doubled when the side to move is improving. 27000 is `MAX_MOVES` in hundredths and switches the rule off |
+| `LmpDepthCoeff` | 0 | 0 to 27000 | the same count's coefficient on the reduction-adjusted depth, in hundredths. Non-negative by purpose: a negative one prunes harder the deeper the node, which inverts the mechanism. It ships at the floor because chesso's own census of where quiet cutoffs happen found the count *falling* with depth (S109) |
+| `LmpMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths late move pruning covers: the rule reads `lmr_depth < LmpMaxLmrDepth`, so **0 switches it off** and the value counts the depths, rather than naming the last one |
+| `FutBase` | 147 | 0 to 48000 | futility pruning: the constant term of the margin added to this node's static score before it is compared with alpha. 147 and `FutSlope` 170 put the depth-1 margin at a minor piece and the depth-2 margin at a rook, in chesso's own material scale |
+| `FutSlope` | 170 | 0 to 2000 | the same margin's coefficient on the reduction-adjusted depth |
+| `FutMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths futility pruning covers, read as `lmr_depth < FutMaxLmrDepth`; 0 switches it off |
+| `HistPruneCoeff` | 576 | 0 to 16384 | history pruning: a quiet whose butterfly history is below `-HistPruneCoeff * lmr_depth` is skipped. The region 128 to 1024 is `QuietHistoryMax/64` to `QuietHistoryMax/8` and 576 is its midpoint |
+| `HistPruneMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths history pruning covers, read as `lmr_depth < HistPruneMaxLmrDepth`; 0 switches it off |
+| `SeeQuietCoeff` | 50 | 0 to 10000 | quiet SEE pruning: a quiet whose exchange evaluation loses more than `SeeQuietCoeff * lmr_depth * lmr_depth` is skipped. In `see_value`'s scale, where a pawn is 100 — not `piece_value`'s, where it is 94 |
+| `SeeQuietMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths quiet SEE pruning covers, read as `lmr_depth < SeeQuietMaxLmrDepth`; 0 switches it off |
 | `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
 | `AspirationMinDepth` | 2 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
 | `AspirationDelta` | 21 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |

@@ -11547,3 +11547,78 @@ Consequences: `specs.md` Behaviour carries the `id name` form and the F07
               of S085's run; S222's lane writes its own config with
               `twosided=true` (its file carries the note). S212's closing
               A/A is the DEC-143 calibration that covers all of this.
+
+## DEC-205  2026-09-13  S109's mate guard went red without the gives-check exemption, so DEC-180's clause fires: the exemption binds late move pruning too and S218 folds into S109; the three mate-carry ceilings that rose are DEC-122's residue; the LMP count is flat by chesso's own census
+Tags:         search, pruning, lmp, futility, history, see, mate, s109, s218,
+              s202, s222, dec-180, dec-122, dec-141, dec-194, dec-105
+Context:      S109 landed the four shallow-depth rules. The published late
+              move pruning form -- the quiet stage abandoned at the generation
+              branch, no gives-check exemption -- shipped first, as DEC-180
+              ordered, and three mate cases in `tests/test_search.cpp` went
+              red: `MATE_IN_2_B_POS` lost its mate in two at depth 3
+              (`REQUIRE( black.mate_found )` false), "mate in two is found at
+              the right distance" and "pruning does not hide a mate against
+              the material leader". Bisected by one release rebuild per cap
+              to LMP alone, and not to a too-tight count: an `LmpBase` sweep
+              reads red at 7.33, 12 and 20 moves and green only at 30 and
+              above, against a median of 25 quiets -- a rule that never
+              fires. DEC-180 says "if S109's own 'pruning does not hide a
+              forced mate' case goes red without the exemption, the exemption
+              is S109's fix under the TESTS rule and S218 folds into it -- a
+              red guard is a bug, not an option." Three more things the
+              landing found: the mate-carry ceilings in `tests/test_mate_carry.cpp`
+              rose (D 1 to 2, E 8 to 9, F 2 to 5), re-derived by
+              `adocs/data/S203_case_sweep.sh --ceilings` over the recorded
+              grids plus S109's own, while `unreached.empty()` stayed 0 across
+              the whole grid; history pruning is nearly inert (0.9918 of the
+              nodes at depth 10 over 300 positions) because DEC-194 reverted
+              the continuation table the threshold was written for; and the
+              project's own census (`adocs/data/S109_lmp_census.py`, 300
+              positions, depth 10, 904472 quiet cutoffs) finds the 95th
+              percentile of the cutoff index *falling* with depth, so a count
+              that grows with depth is not what chesso's tree supports.
+Decision:     By the coordinator under the owner's delegation, the first
+              point being DEC-180's own clause. **(1) The gives-check
+              exemption binds all four rules, late move pruning included**, in
+              the first of the two shapes DEC-180 names: the skip-quiets flag
+              is set at the generation stage and applied after `make_move`,
+              where `is_check_move` exists. The price is stated, not hidden:
+              the quiet stage is generated, and each skipped quiet costs a
+              make, an unmake and one attack scan. **S218 folds into S109 and
+              is retired**: its question is answered by a red guard, not by
+              an SPRT, and S109's one verdict prices the form that ships.
+              **(2) The three ceilings rise as measured** -- D 2, E 9, F 5 --
+              because a block that removes 74 % of the tree stores fewer
+              lines and a line never stored is a line the walk cannot
+              certify; the promise beside them, that a line published at its
+              claimed length ends in checkmate, is unmoved at 0 unreached, so
+              what rose is the residue DEC-122 already calls expected. S202
+              still owns closing the class and its file says the residue grew.
+              **(3) The LMP depth coefficient ships at 0 and the count flat
+              at 7.33 moves, doubled when improving**, because the range is
+              non-negative by stated purpose and the fit lands below it; the
+              published growing-with-depth form is recorded as not supported
+              by this tree today and is re-tried at S127 with the block live.
+              **(4) History pruning ships nearly inert and is priced inside
+              S109's one verdict as it stands**; S222's lane, which fits the
+              history scale and lands the continuation table, re-prices it
+              -- its file gains the note. No verdict is split.
+Rejected:     **Shipping the no-exemption form and letting S218 measure the
+              exemption** -- DEC-180 already rejected shipping a red guard.
+              **Raising `LmpBase` to 30 to keep the published form** -- a rule
+              that never fires measures nothing. **Holding the ceilings and
+              disabling the cases** -- the goldens are re-derived by their
+              script, never edited to a run, and the guarantee they sit
+              beside did not move. **Dropping history pruning from the
+              block** -- an inert rule costs two table reads a candidate and
+              nothing else, and removing it now would measure the block twice
+              once S222 lands.
+Consequences: `adocs/plan_done/S218_*.md` carries a retirement stamp; the
+              Open list loses S218 and `plan.md`'s block-1 paragraph reads
+              S109 for the exemption. `specs.md`'s search row states the four
+              rules and their exemptions; `tests/test_mate_carry.cpp` names
+              this id beside the three ceilings. `adocs/plan_todo/S202_*.md`
+              and `adocs/plan_todo/S222_*.md` gain dated notes. S109's SPRT
+              is pre-registered in `adocs/data/S109_sprt.sh` and prices LMP,
+              futility and quiet SEE with history pruning present; its H0
+              bisection legs are the caps at 0.

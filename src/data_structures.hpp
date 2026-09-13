@@ -524,6 +524,23 @@ struct search_t
 // reads a field of this struct, so the tree a probed search explores is the
 // tree it explores without one. The pointer in search_state_t is null in every
 // caller but a test, and INV-6 at depths 9 and 12 is what holds the claim.
+
+// `prune_rule_t` -- which rule of the shallow-depth block skipped a quiet, as
+// the probe below records it.
+//
+// All four are in the list: late move pruning decides at the generation
+// stage, with its own flag, but skips the move after `make_move` like the
+// other three so that the gives-check exemption can bind (S109, DEC-180).
+enum prune_rule_t
+{
+  PRUNE_NONE = 0,
+  PRUNE_FUTILITY = 1,
+  PRUNE_HISTORY = 2,
+  PRUNE_SEE = 3,
+  PRUNE_LATE_MOVE = 4
+};
+
+
 struct search_node_probe_t
 {
   // The ply to record. Nothing is recorded at any other ply, and -1 -- what a
@@ -549,6 +566,18 @@ struct search_node_probe_t
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];
   bool researched[MAX_MOVES];
+
+  // Late move pruning set its flag at this node, so the quiet stage ended
+  // early -- either ungenerated or unsearched from the first quiet on.
+  bool skip_quiets_set = false;
+
+  // One entry per quiet the three per-move rules skipped, in the order they
+  // were skipped, with the rule that did it. A pruned move never reaches
+  // `moves` above: it is not counted as a legal move searched, which is the
+  // whole reason the first-move guard exists. S109.
+  int pruned_count = 0;
+  move_t pruned_moves[MAX_MOVES];
+  int pruned_rule[MAX_MOVES];
 };
 
 

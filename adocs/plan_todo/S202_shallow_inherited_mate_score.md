@@ -111,3 +111,7 @@ absent from the other only by which side met the position. It is a reporting
 defect with an unmeasured search-side question behind it. It sits after the
 search block's own steps rather than before them, and DEC-150's ceiling of 8
 is what a later census is read against.
+
+## Note 2026-09-13, from S109: the residue grew with the pruning block, DEC-205
+
+S109's four shallow-depth rules take 74 % of the tree, and `tests/test_mate_carry.cpp`'s ceilings rose with them, re-derived by `adocs/data/S203_case_sweep.sh --ceilings` over the recorded grids plus `adocs/data/S109_sweep_block.txt`: D_mate_minus6_depth10 1 to 2, E_mate_minus9 8 to 9, F_mate6_inherited_no_line 2 to 5. `unreached.empty()` stayed 0 across the whole grid, so the promise held and the residue this step closes grew; the census this step's accepts asks for is taken against the tree with the block live.
