@@ -1,0 +1,38 @@
+# S109 SPRT, run 2026-09-13 08:11:18 to 08:49:09 (SPRT-RUN-DONE, H1 accepted), read 08:50.
+# Full run log .tuning/sprt_s109.log and PGN under .tuning/sprt_s109_20260913_081118 are gitignored.
+
+## banner and identity lines
+candidate  1952c56  2026-09-13
+reference  50e3661  2026-09-13
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260913081118
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s109_20260913_081118
+id name    candidate  Chesso 1952c56 native
+id name    ref-50e3661  Chesso 50e3661 native
+
+## fastchess final block
+Results of candidate vs ref-50e3661 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 46.90 +/- 15.43, nElo: 56.76 +/- 18.44
+LOS: 100.00 %, DrawRatio: 31.38 %, PairsRatio: 1.74
+Games: 1364, Wins: 556, Losses: 373, Draws: 435, Points: 773.5 (56.71 %)
+Ptnml(0-2): [55, 116, 214, 185, 112], WL/DD Ratio: 2.19
+LLR: 2.97 (101.0%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+SPRT ([0.00, 5.00]) completed - H1 was accepted
+
+## terminations
+   1028 [Termination "adjudication"]
+    339 [Termination "normal"]
+
+## forfeits
+  candidate         1367 games, 0 forfeits, 0.00 %
+  ref-50e3661       1367 games, 0 forfeits, 0.00 %
+
+## Incomplete mating PV (both commits post-date S147/S170/S171)
+candidate: 1; ref-50e3661: 2
+
+## timing
+1364 games in 37 m 51 s: 2162 an hour; a first launch at 08:10 with a /tmp output directory was stopped at 9 games and is .tuning/sprt_s109_aborted_tmp_outdir.log

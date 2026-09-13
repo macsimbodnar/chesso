@@ -44,27 +44,24 @@ Updated: 2026-09-13, by hand.
   with the prose checks only, the SPRT holding the machine.
   `plan_current/`: S109 (SPRT running).
 
-- **S109's SPRT is running since 2026-09-13 08:11.** `adocs/data/S109_sprt.sh`
-  detached, pid in `.tuning/sprt_s109.pid`, log `.tuning/sprt_s109.log`,
-  output `.tuning/sprt_s109_20260913_081118/`: candidate `1952c56` (the
-  block plus the tests-only sanitizer-build fix), reference `50e3661` (the
-  commit before the block) built fresh, identity lines `Chesso 1952c56
-  native` / `Chesso 50e3661 native`, `tc 8+0.08 hash 16 concurrency 12`,
-  `noob_3moves.epd`, seed `20260913081118`, `bounds elo0=0 elo1=5
-  alpha=0.05 beta=0.05`. Worst case 41861 games / 19.8 h at the midpoint,
-  25591 / 12.1 h on a bound at 2133 an hour; expected far shorter if the
-  literature's effect is real; abort over 1.0 % forfeits a side, a crash
-  voids; bisection legs the caps at 0 on H0. Watcher: persistent `Monitor`
-  on the markers, pid death and a 142560 s ceiling. **A first launch at
-  08:10 was stopped after 9 games and relaunched one minute later**
-  because its output directory had defaulted to `/tmp`, which this machine
-  wipes at boot -- the PGN is evidence and a second power cut would have
-  erased it; the relaunch carried `OUT` under `.tuning/` and the new busy
-  guard warned at a one-minute load of 5.04 from the stopped run's own
-  decaying processes, nothing else running. Before the launch the second
-  tier closed: mutant pass P01 to P0A all killed at `600f448`,
-  `gate_extra.sh` five stages green at `1952c56` after the sanitizer build
-  was repaired. `plan_current/`: S109 (SPRT running). **Compaction point.**
+- **S109 is done, 2026-09-13 09:20: H1, `Elo +46.90 +/- 15.43`, `nElo +56.76
+  +/- 18.44`, 1364 games in 37 m 51 s -- the shallow-depth pruning block is
+  the session's first strength verdict and the ledger's shortest run.**
+  `adocs/data/S109_sprt.sh` as pre-registered: candidate `1952c56` against
+  the pre-block `50e3661`, `{0, 5}` nElo at `8+0.08` on `noob_3moves.epd`,
+  seed `20260913081118`; LLR 2.97, LOS 100 %, `Ptnml [55, 116, 214, 185,
+  112]`, 0 forfeits, crash census quiet, `Incomplete mating PV` 1 and 2,
+  pair variance 0.3372. The parts are not attributed (one verdict for four
+  rules, DEC-082); the bisection protocol was not needed. Ledger: twelve
+  verdicts, mean 4 h 14 m, median 4 h 19 m, 2307 games an hour across the
+  set. `specs.md`'s search row carries the verdict. Evidence
+  `adocs/data/S109_sprt.log`, `S109_sprt_pairs.txt`. **The S109 block
+  boundary is now**: S199's first drift point (about 56 min) and DEC-202's
+  longer-control reading of the block (`adocs/data/S109_ltc.sh`, about 3.7 h)
+  run back to back on the idle machine as soon as S199's agent lands the
+  scripts; nothing builds beside them. After the boundary: S210, S223, S213
+  (defect batches, `No functional change` or their own census), then S091.
+  `plan_current/`: S199 (instrument being written). **Compaction point.**
 
 - **S109 landed, 2026-09-13 06:40, by an Opus 5 subagent (DEC-199); its SPRT
   is next and is the coordinator's.** The four shallow-depth rules are in
