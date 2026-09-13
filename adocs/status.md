@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S223 started, 2026-09-13 17:30, by an Opus 5 subagent (DEC-199).** The
+  load boundary requires one king a side and refuses a position whose side
+  not to move is in check, so no `position` line can leave a board without
+  a king or let a supplied move capture one (the 2026-09-12 Codex audit's
+  F01); red first on the audit's `7k/8/8/8/8/8/8/K6R w - - 0 1 moves h1h8`,
+  the refusal agreeing with python-chess's `Board.status()` over every FEN
+  literal in the tree, the seven census positions re-picked with the
+  oracle's word, `position empty` gone, three no-king branches assertions;
+  `No functional change` expected and shown. `plan_current/`: S210 (SPRT
+  tonight), S223.
+
 - **S210's second half landed, 2026-09-13 17:05, by an Opus 5 subagent
   (DEC-199): F22, and its census says the SPRT is owed.** Quiescence scores
   a capture into a dead position as a draw -- one test after `make_move` in
@@ -34,8 +45,16 @@ Updated: 2026-09-13, by hand.
   the gate figures stated as taken with `CLANG_FORMAT_MAJOR=22` exported,
   the census script exiting on a bench mismatch, the manual's "capture" and
   "saving" wording, the pre-registration's uninstrumented abort clause
-  reworded to a post-run reading with `CAND` documented and pinned.
-  `plan_current/`: S210 (SPRT pending, tonight). **Next on the machine now: S223, then S213.**
+  reworded to a post-run reading with `CAND` documented and pinned. **F22
+  is `9ef06f3`; the pre-registration's `CAND` defaults to it (`da0cfed`)**,
+  so the day's neutral steps cannot enter tonight's candidate.
+  `tools/gate_extra.sh` on that tree: **`GATE-EXTRA-DONE 5 stages 1042 s`**
+  (Debug 302 s, sanitize 681 s, deep perft 59 s;
+  `.tuning/gate_extra_2026-09-13_S210.log`), so DEC-141's second tier is
+  closed for both halves before the stamp. The SPRT
+  launches tonight: `nohup adocs/data/S210_f22_sprt.sh >
+  .tuning/sprt_s210_f22.log 2>&1 &`, ceiling 142560 s, S210's stamp after
+  the verdict. `plan_current/`: S210 (SPRT pending, tonight). **Next on the machine now: S223, then S213.**
 
 
 
@@ -3016,15 +3035,15 @@ Updated: 2026-09-13, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-12 20:20, 5 stages 882 s**, on
-  S211's completing tree before its commit (log
-  `.tuning/gate_extra_2026-09-12_S211.log`: prose, citations, Debug 281 s,
-  sanitize 546 s, deep perft 55 s); the one before it 2026-09-10 `4795ef4`
-  12:54, 774 s. DEC-141 clause 3 is the cadence -- before a step that touched
-  `make_move`, `unmake_move`, the generator or the search completes, and
-  otherwise weekly -- and this bullet is where a missed week shows (DEC-167).
-  Export `CLANG_FORMAT_MAJOR=22` in the launching shell first or stage 4 goes
-  red on the formatter (DEC-146).
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-13 17:27, 5 stages 1042 s**, on
+  S210's tree at `da0cfed` (log `.tuning/gate_extra_2026-09-13_S210.log`);
+  before it 2026-09-13 07:40 on S109's `1952c56` (859 s, after the sanitizer
+  build was repaired) and 2026-09-12 20:20 on S211's tree (882 s). DEC-141
+  clause 3 is the cadence -- before a step that touched `make_move`,
+  `unmake_move`, the generator or the search completes, and otherwise
+  weekly -- and this bullet is where a missed week shows (DEC-167). Export
+  `CLANG_FORMAT_MAJOR=22` in the launching shell first or stage 4 goes red on
+  the formatter (DEC-146).
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S215 armed two, both on
   `MUTATION-RUN-(DONE|FAILED)` over a polled log with a 30-minute ceiling and a
