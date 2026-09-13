@@ -11622,3 +11622,85 @@ Consequences: `adocs/plan_done/S218_*.md` carries a retirement stamp; the
               is pre-registered in `adocs/data/S109_sprt.sh` and prices LMP,
               futility and quiet SEE with history pruning present; its H0
               bisection legs are the caps at 0.
+
+## DEC-206  2026-09-13  The owner's plan review of 2026-09-12 is digested: both findings were overtaken by S151 and S212 as they ran, one test it asked for is filed as S228, and its literature context changes no order
+Tags:         audit, plan, measurement, provenance, s151, s212, s228, dec-202,
+              dec-204
+Context:      The owner handed over `chesso_plan_adversarial_review_2026-09-12.md`
+              on 2026-09-13, written against `72f0fad` while S151 was being
+              moved to `plan_current/`, filed here as
+              `adocs/audit/2026-09-12_plan_adversarial_review.md`. Two medium
+              findings. **F01**: S151's guide pre-registered the longer-control
+              run against the retired UHO book and the S105 calibration. **F02**:
+              S212's accepts said the `id name` stamp is generated at configure
+              time, the trap S077's `cmake/build_info.cmake` exists to avoid.
+              A literature section (Stockfish 19, the NNUE documentation,
+              Viridithas's disclosed history, Torch, fishtest's methodology and
+              book FAQ, TDLeaf and an NNUE-dataset study) is offered as
+              context for S029, S082 and S083 and for the eventual phase
+              transition, not as findings.
+Decision:     By the coordinator under the owner's delegation. **F01 is closed
+              by S151 as run**: its brief and `adocs/data/S151_ltc.sh` pinned
+              `noob_3moves.epd`, re-derived the half-width at the 0.2905 pair
+              variance and the throughput from DEC-190, and stated that the
+              pair `21b4a21` against `3488506` is intentionally historical --
+              the vector and its parent -- while the regime is the current
+              one; the result (+11.99 +/- 11.57) stands as the first
+              block-boundary reading under DEC-202. **F02 is closed as to the
+              mechanism by S212**: DEC-204 (a) records the build-time stamp
+              and why configure time and `git describe` were refused; the
+              freshness test the review asks for -- configure once, flip the
+              commit or the dirty state, rebuild without reconfiguring, assert
+              `id name` follows -- does not exist and is **S228**, filler
+              behind S225. **The literature context changes no order**: the
+              own-data rule (DEC-104) already forbids the external-teacher
+              workflow it describes; S082 and S083 already hold held-out
+              error, provenance and label stability as separate acceptance
+              dimensions after S186; the phase-transition specification it
+              asks for is DEC-014's recorded transition and is written when
+              that decision is made. The review's transient-state note (S151
+              moved while it read) is what the plan directories are for and
+              needs nothing.
+Rejected:     **Re-running S151 on the UHO book as a "historical experiment"**
+              -- the current regime is the one every future verdict is taken
+              in, and the run already used it. **Reopening S212's accepts
+              wording** -- `plan_done/` is history; DEC-204 is where the
+              deviation is recorded.
+Consequences: The report's two `Status:` lines carry these dispositions.
+              `adocs/plan_todo/S228_*.md` exists, behind S225 in the Open
+              list.
+
+## DEC-207  2026-09-13  Pixello and the debug GUI leave the branch: the submodule, its CMake option and target, `tests/debug_gui.cpp` and every asset under `tests/assets/gui/` are removed
+Tags:         dependencies, licence, originality, gui, pixello, s227, s211,
+              s224, dec-201, dec-104
+Context:      The owner, 2026-09-13: "Remove Pixello from the dependencies of
+              this branch, remove all the related code to it, cmake parts and
+              assets. It's not required anymore here. I was using it to debug
+              at the early stage of the engine." Pixello is the owner's own
+              MIT pixel-graphics library, pulled in as the `tests/pixello`
+              submodule for `tests/debug_gui.cpp`, an SDL2 board viewer built
+              only under `CHESSO_BUILD_GUI=ON` and never by the gate. It is
+              the reason the branch carried Cburnett's pieces, two font
+              families, three images (deleted by S211) and seven sounds
+              (deleted by S224), and the one item still parked for the owner
+              -- the submodule's own two test sounds of unstated origin --
+              exists because of it.
+Decision:     **By the owner.** Pixello and everything that exists for it
+              leave the branch as one step, **S227**, first in the Open list
+              because it is the owner's instruction and it removes a
+              dependency: the `tests/pixello` gitlink and its `.gitmodules`
+              entry, the `CHESSO_BUILD_GUI` option and the `debug_gui` target,
+              `tests/debug_gui.cpp`, the whole of `tests/assets/gui/` with its
+              `THIRD_PARTY.md` (nothing then needs the notice), the
+              `file(COPY ... assets)` line's GUI part, the SDL2 packages from
+              every document an agent owns, and `books/fetch_book.sh`'s
+              submodule list. `README.md`'s SDL2 and "test gui" lines are the
+              owner's to remove (DOCS: no agent writes there) and the stamp
+              says so. No `src/` change; the fast suite is the proof.
+Rejected:     **Keeping the GUI without the submodule** -- there is no GUI
+              without it. **Deleting only the assets** -- an unbuildable
+              target left behind is a trap for the next reader.
+Consequences: The parked item about pixello's test sounds closes with the
+              submodule. `tests/assets/` keeps `perft_json` and `test_jsons`.
+              DEC-201's blanket sentence in `fetch_book.sh` needs one fewer
+              exception and names two submodules.

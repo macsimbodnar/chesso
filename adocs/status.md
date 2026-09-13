@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **The owner's plan review of 2026-09-12 is filed and digested, 2026-09-13
+  10:30 (DEC-206), and the owner's instruction to remove pixello is S227
+  (DEC-207).** `adocs/audit/2026-09-12_plan_adversarial_review.md`: F01
+  (S151 pre-registered against the retired UHO book) was overtaken by S151
+  as run -- current book, re-derived interval, the historical pair stated --
+  and is closed; F02 (S212's configure-time stamp) was overtaken by DEC-204's
+  build-time mechanism, and the freshness test it asks for is **S228**,
+  filler behind S225; the literature context changes no order. **S227**:
+  pixello, the `CHESSO_BUILD_GUI` option and `debug_gui` target,
+  `tests/debug_gui.cpp` and all of `tests/assets/gui/` leave the branch on
+  the owner's word -- Open entry 1, no `src/`, run as soon as the machine is
+  free of the longer-control match; `README.md`'s SDL2 and GUI lines are the
+  owner's to remove and the stamp will list them. The parked item about
+  pixello's test sounds closes with the submodule. `plan_current/`: S199
+  (reading pending).
+
 - **S199's first drift point is in, 2026-09-13 09:59, and the block's
   longer-control reading is running since 10:01.** The drift match: `eff4b9b`
   (the engine now, S109 block included) against the pinned early-S105
@@ -2960,12 +2976,8 @@ Updated: 2026-09-13, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
-  - **pixello's two test sounds** (`tests/pixello/tests/assets/sound/doom.wav`,
-    `dspunch.wav`, in the MIT submodule, never built here): no stated origin
-    of their own. Not this repository's files, but the blanket sentence in
-    `books/fetch_book.sh` could be read to cover a submodule's contents. The
-    owner's call whether that sentence should say "tracked here" or the
-    submodule should be asked; found by S224, 2026-09-12.
+  - ~~pixello's two test sounds~~ **closed 2026-09-13 by DEC-207**: the
+    submodule leaves the branch with S227.
   - ~~**Three findings filed by S195, none of them planned.**~~ **Closed
     2026-09-11, DEC-184:** the `ucinewgame` and `nodes` sentences go to
     S210; `command_bench`'s per-position `reset_for_new_game()` is accepted
