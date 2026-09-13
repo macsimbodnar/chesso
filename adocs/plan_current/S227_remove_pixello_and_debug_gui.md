@@ -7,7 +7,7 @@ decisions:  DEC-207, DEC-201
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-13 14:05 on the idle machine, the owner's instruction of the same day (DEC-207)
 done:
 
 ## Why this exists

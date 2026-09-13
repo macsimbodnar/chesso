@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S227 started, 2026-09-13 14:05, by an Opus 5 subagent (DEC-199), on the
+  owner's instruction (DEC-207).** Pixello and the debug GUI leave the branch:
+  the `tests/pixello` submodule and its `.gitmodules` entry, the
+  `CHESSO_BUILD_GUI` option and `debug_gui` target, `tests/debug_gui.cpp`,
+  all of `tests/assets/gui/`, the SDL2 and GUI lines in `DEV_MANUAL.md`,
+  `TOOLCHAIN.md` and `books/fetch_book.sh`; a fresh configure of `build/`
+  and the gate as proof; `README.md`'s lines for the owner listed in the
+  stamp. No `src/`. `plan_current/`: S227.
+
 - **The owner's plan review of 2026-09-12 is filed and digested, 2026-09-13
   10:30 (DEC-206), and the owner's instruction to remove pixello is S227
   (DEC-207).** `adocs/audit/2026-09-12_plan_adversarial_review.md`: F01
