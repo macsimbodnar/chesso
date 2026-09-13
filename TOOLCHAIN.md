@@ -6,11 +6,308 @@ to come out of a command as text. These tools are what turn "the change feels
 faster" into a number, and they are the difference between an agent that
 measures and an agent that guesses.
 
-All commands below are verified working on macOS arm64 (Apple M1, Apple clang
-16 for builds, Homebrew LLVM 22 for analysis). The gotchas are recorded because
-every one of them cost a debugging round to find.
+**This file describes two machines.** The one the project runs on now is the
+Linux workstation — Pop!_OS 24.04 on an i7-8700K — and it is the section
+immediately below. Everything after it was verified on macOS arm64 (Apple M1,
+Apple clang 16 for builds, Homebrew LLVM 22 for analysis) and is labelled as
+the MacBook's, kept whole because that machine is still one this repository is
+worked from and because DEC-146 holds the two side by side. The gotchas are
+recorded because every one of them cost a debugging round to find.
 
-## Install
+Two later sections are the workstation's wherever they sit in the file, because
+that is where the finding was made: "The chess oracle, and the one way to ask
+it that lies" and "ThreadSanitizer, and the zero it prints when it never
+started". Each says so at its head. A figure does not cross the two machines —
+DEC-049 — so a number quoted here always names the machine that printed it.
+
+## The workstation, end to end
+
+The machine in use. Every fact in this section is followed by the command that
+printed it, run here on 2026-09-13 while an SPRT held the other cores.
+
+```bash
+head -2 /etc/os-release   # NAME="Pop!_OS"   VERSION="24.04 LTS"
+uname -srm                # Linux 7.1.5-76070105-generic x86_64
+nproc                     # 12
+free -h                   # Mem: 15Gi total
+lscpu | grep -E "^Model name|^Thread|^Core"
+#   Model name:  Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz
+#   Thread(s) per core: 2      Core(s) per socket: 6
+```
+
+Six physical cores with SMT, not a second core type — which is what DEC-050
+decided the concurrency on. The ISA reaches x86-64-v3 and stops: `grep -m1 -o
+' avx2\| bmi2\| popcnt' /proc/cpuinfo` prints all three, `grep -c avx512f
+/proc/cpuinfo` prints `0`. So `cmake/arch.cmake`'s `bmi2` target
+(`-march=x86-64-v3`) is the one that matches this part, and `build_release.sh`
+records that `-march=native` here emits AVX2 and BMI2 for the same reason.
+
+### Install
+
+Suffixed LLVM, because that is what the apt line carries. `grep -rhoE
+"llvm-toolchain-[a-z]+-[0-9]+" /etc/apt/sources.list.d/` prints
+`llvm-toolchain-noble-22` and nothing else, from
+`archive_uri-https_apt_llvm_org_noble_-noble.list`:
+
+```bash
+sudo apt install g++-13 ccache hyperfine clang-format-22 clang-tidy-22 llvm-22
+```
+
+Those are the packages `dpkg -S` names for the binaries: `g++-13`, `ccache`,
+`hyperfine`, `clang-format-22`, `clang-tidy-22` (which also ships
+`run-clang-tidy-22`) and `llvm-22` (which ships `llvm-mca-22`). `samply` is not
+an apt package and lives at `~/.cargo/bin/samply`, which is on PATH here in
+both `bash` and `fish` (`command -v samply` resolves it in each).
+
+`stockfish`, `cutechess`, `sgambetto`, `fastchess` and `ordo` are all installed
+by hand: `dpkg -S` answers `no path found matching pattern` for every one of
+them, so apt will not update them and their versions are the ones below.
+
+> Do not point CMake at `clang++-22`. `g++ 13.3` is the reference compiler here
+> and changing it restarts the baseline — DEC-049, which is the local form of
+> the Homebrew warning in the MacBook's section.
+
+### Every path, and what printed it
+
+`command -v` for the path, `--version` for the string.
+
+| tool | path here | version, as printed |
+|---|---|---|
+| `c++`, `g++` | `/usr/bin/c++` → `/etc/alternatives/c++` → `/usr/bin/g++` | `g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0` — the reference compiler, DEC-049 |
+| `clang++-22` | `/usr/bin/clang++-22` | `Ubuntu clang version 22.1.8` — a second front end for warnings, never the build compiler |
+| `clang-tidy-22`, `run-clang-tidy-22` | `/usr/bin/` | `Ubuntu LLVM version 22.1.8` |
+| `llvm-mca-22` | `/usr/bin/llvm-mca-22` | `Ubuntu LLVM version 22.1.8`, default target `x86_64-pc-linux-gnu` |
+| `clang-format-22` | `/usr/bin/clang-format-22` | `Ubuntu clang-format version 22.1.8` |
+| `clang-format`, unsuffixed | `/usr/bin/clang-format` | `Ubuntu clang-format version 18.1.3` — what the gate resolves without the override, and refuses |
+| `lld-22`, `lldb-22`, `llvm-symbolizer-22` | `/usr/bin/` | LLVM 22, same package set |
+| `ccache` | `/usr/bin/ccache` | `ccache version 4.9.1` |
+| `hyperfine` | `/usr/bin/hyperfine` | `hyperfine 1.18.0` |
+| `samply` | `/home/max/.cargo/bin/samply` | `samply 0.13.1` |
+| `cmake`, `ninja` | `/usr/bin/` | `cmake version 3.28.3`, ninja `1.11.1` |
+| `stockfish` | `/usr/games/stockfish` | `Stockfish dev-20260810-5062aee5` |
+| `fastchess` | `/usr/local/bin/fastchess` | `fastchess alpha 1.8.1 20260720-daa3ea2` — the build S105, S087 and S145 measured with |
+| `ordo` | `/usr/local/bin/ordo` | `ordo 1.2.6` — `rating.sh` needs it and finds it, so its refusal path does not fire here |
+| `cutechess` | `/usr/games/cutechess` | `Cute Chess 1.5.1` on Qt 6.4.2 — **the GUI**, see below |
+| `sgambetto` | `/usr/games/sgambetto` | answers nothing to `--version` |
+| python | `~/.venv/chess/bin/python` | `Python 3.12.3` with `python-chess 1.11.2`; the system pip is `EXTERNALLY-MANAGED` |
+| `nproc`, `timeout`, `sha256sum`, `setarch` | `/usr/bin/` | GNU coreutils and util-linux, native — the MacBook section at the end of this file is about their absence |
+
+Two absences worth naming rather than discovering:
+
+- **`cutechess-cli` is not installed.** `command -v cutechess-cli` finds
+  nothing, and `/usr/games/cutechess` is the Qt GUI. `cutechess --version`
+  prints and exits; **`cutechess --help` does not return** — it was still
+  running after two minutes here and had to be killed. Nothing in the
+  repository drives it; `fastchess` is the harness.
+- **`perf` is not installed.** `command -v perf` finds nothing. samply is the
+  profiler and its own complaint below names only a sysctl, not `perf`.
+
+### Concurrency, and the `-j` counts
+
+`nproc` prints **12**, and DEC-050 settles every parallel tool at 12 here:
+`-j12` for builds, concurrency 12 for `fastchess.sh` (which reaches it through
+`sysctl -n hw.physicalcpu 2> /dev/null || nproc`), and
+`hardware_concurrency()` as the default in `tools/datagen.cpp` and
+`tools/tuner.cpp`. `CONCURRENCY=6` is one game per physical core, for a run
+that has to be as clean as this machine can make it.
+
+Every command in this section therefore says `-j12`, and every command in the
+MacBook's sections says `-j8`. The one deliberate exception is the completion
+command itself: `tools/gate.sh` builds with `-j8`, and so does the TESTS rule
+in `AGENTS.md` and the copy of it in `DEV_MANUAL.md` — two copies that
+`tools/plan_prose_check.py --gate` holds byte-equal. That wording is the gate's
+and is not edited to suit a machine.
+
+### The format gate needs `CLANG_FORMAT_MAJOR=22` here (DEC-146)
+
+`clang-format.sh` pins major **23** and the pin has not moved. This machine
+cannot install 23 from what it carries, so export the override for every gate
+run:
+
+```bash
+export CLANG_FORMAT_MAJOR=22
+```
+
+Without it the gate is red for a reason that has nothing to do with the tree.
+`CLANG_FORMAT_MAJOR=23 ./clang-format.sh --check` exits **1** and prints
+
+```
+clang-format 23 not found.
+Found, but wrong version:
+  /usr/bin/clang-format (18.1.3)
+```
+
+— Ubuntu's unsuffixed 18.1.3 being what the search falls through to. DEC-146
+measured the two majors formatting this tree identically, which is why the
+override is free; it stops being free the day a construct formats differently,
+and the arbiter is 23, which this machine cannot run. Every committed document
+keeps the number 23.
+
+### ccache
+
+Wired already: `build`, `build-tune`, `build-debug`, `build-prof` and
+`build-sanitize` each carry `CMAKE_CXX_COMPILER_LAUNCHER:UNINITIALIZED=ccache`
+in their `CMakeCache.txt`, on `CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++`. A
+directory configured without the launcher gets nothing from an installed
+ccache, so check the cache line before trusting a rebuild time.
+`ccache --show-stats` here:
+
+```
+Cacheable calls:    2480 / 2485 (99.80%)
+  Hits:              883 / 2480 (35.60%)
+Local storage:
+  Cache size (GiB):  1.1 /  5.0 (22.09%)
+```
+
+The 0.34 s full rebuild in the MacBook's ccache section is the MacBook's and
+has not been re-measured here.
+
+### hyperfine, and the governor it runs under
+
+The interleaving argument is the same on both machines. What is different here
+is that the clock policy is readable and is **recorded, never set** — DEC-195:
+
+```bash
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor   # performance
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+#   performance powersave
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver     # intel_pstate
+```
+
+A run starts under whatever governor is set, the pre-registration records
+which, and throughput is budgeted from the figure measured under that
+governor. So a `hyperfine` pair records the governor beside its numbers rather
+than waiting for one, and two figures taken under different governors are not
+compared without saying so.
+
+### samply — no `dsymutil`, one sysctl, and it is off by default
+
+Linux samply reads DWARF out of the binary, so the MacBook's two silent
+failures (`dsymutil` not run, `--unstable-presymbolicate` missing) are not
+failures here. What replaces them is a kernel setting, and it is **not** set on
+this machine as it stands:
+
+```bash
+sysctl kernel.perf_event_paranoid      # kernel.perf_event_paranoid = 2
+```
+
+`samply record --save-only -o /tmp/x.json.gz -- /bin/true` therefore records
+nothing at all and says so:
+
+```
+'/proc/sys/kernel/perf_event_paranoid' is currently set to 2.
+In order for samply to work with a non-root user, this level needs
+to be set to 1 or lower.
+```
+
+It is loud rather than silent, which is the one mercy. Lower it first, and it
+resets at reboot:
+
+```bash
+sudo sysctl kernel.perf_event_paranoid=1
+```
+
+Then the recipe is the MacBook's minus the `dsymutil` line:
+
+```bash
+cmake -S . -B build-prof -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -DNDEBUG -g -fno-omit-frame-pointer"
+cmake --build build-prof -j12
+
+samply record --save-only -r 2000 -o /tmp/prof.json.gz \
+  -- ./build-prof/tests/bench_movegen
+
+tools/samply_report.py /tmp/prof.json.gz
+```
+
+### clang-tidy-22
+
+No `xcrun`, no `-isysroot`: the SDK problem is Apple's. `build/compile_commands.json`
+exists here, so `-p build` is the whole configuration. There is no `.clang-tidy`
+in the tree, so a check set has to be given or the run means nothing:
+
+```bash
+clang-tidy-22 -p build --quiet --checks='-*,bugprone-*' src/bitboard.cpp
+```
+
+Whole project in parallel — `run-clang-tidy-22 --help` confirms its options
+take **one** dash each, `-p`, `-j`, `-quiet`, `-checks`, `-extra-arg`:
+
+```bash
+run-clang-tidy-22 -p build -j 12 -quiet -checks='-*,bugprone-*' 'src/.*'
+```
+
+### llvm-mca-22 — and here the numbers are real
+
+The MacBook's section ends by saying to treat `llvm-mca` as directional only,
+because LLVM's models for Apple cores are approximate. **That caveat does not
+apply on this machine.** Coffee Lake is Skylake-derived and LLVM has a real
+scheduling model for it, so `-mcpu=skylake` gives numbers worth reading:
+
+```bash
+c++ -std=gnu++20 -O3 -DNDEBUG -march=x86-64-v3 -I src -S -o /tmp/x.s src/bitboard.cpp
+
+awk '/LLVM-MCA-BEGIN/{f=1;next} /LLVM-MCA-END/{f=0} f' /tmp/x.s \
+  | grep -vE '^\s*\.' > /tmp/region.s
+
+llvm-mca-22 -mtriple=x86_64-pc-linux-gnu -mcpu=skylake -iterations=100 /tmp/region.s
+```
+
+The first two lines are the MacBook recipe with this machine's triple and arch
+flag. The third was run here on a hand-written three-instruction region
+(`addq`, `blsrq`, `popcntq`) and printed
+
+```
+Iterations:        100
+Instructions:      300
+Total Cycles:      107
+Total uOps:        300
+
+Dispatch Width:    6
+uOps Per Cycle:    2.80
+IPC:               2.80
+Block RThroughput: 1.0
+```
+
+A dispatch width of 6 is Skylake's, so it is that model answering and not a
+generic one. The `asm volatile` marker rule and the extracted-region rule from
+the MacBook's section both still hold — feed `llvm-mca` the region, never a
+whole assembly file, and never ship the markers.
+
+### The tablebase, and the venv that reads it
+
+`ls ~/syzygy | wc -l` prints **290** files and `du -sh ~/syzygy` prints `939M`.
+That is 145 tables, 3-4-5 exactly and nothing above it:
+
+```bash
+ls ~/syzygy | sed 's/\..*//' | sort -u \
+  | awk '{n=gsub(/[KQRBNP]/,"&"); print n}' | sort -n | uniq -c
+#       5 3
+#      30 4
+#     110 5
+```
+
+The engine itself does not probe them — `grep -rli syzygy src/` finds nothing,
+and S129 in `adocs/plan_todo/` is the step that would — so this is the oracle's
+tablebase, for the endgame question `CLAUDE.md` forbids answering from memory:
+
+```bash
+~/.venv/chess/bin/python -c '
+import chess, chess.syzygy
+with chess.syzygy.open_tablebase("/home/max/syzygy") as tb:
+    b = chess.Board("8/8/8/8/8/8/R7/K6k w - - 0 1")
+    print("wdl", tb.probe_wdl(b), "dtz", tb.probe_dtz(b))'
+```
+
+```
+wdl 2 dtz 13
+```
+
+Those two integers are `python-chess`'s own encoding and what they mean is its
+documentation. Reading a verdict out of them by eye is the thing `CLAUDE.md`
+forbids; the probe is the answer, not the start of one.
+
+## Install, on the MacBook
 
 ```bash
 brew install hyperfine ccache samply llvm
@@ -38,14 +335,14 @@ command -v c++                   # must stay /usr/bin/c++
 | tool | answers | without it |
 |---|---|---|
 | `hyperfine` | is B actually faster than A | eyeballing interleaved runs, 3 % noise swamps the result |
-| `ccache` | rebuild cost | ~25 s per ablation instead of 0.3 s |
+| `ccache` | rebuild cost | ~25 s per ablation instead of 0.3 s (the MacBook's figures; the workstation's are in its section) |
 | `samply` + `tools/samply_report.py` | where the time goes, per function | guessing which function to optimise |
 | `clang-tidy` | narrowing, sign and lifetime bugs | they surface later as a wrong perft count |
 | `llvm-mca` | is this loop front-end or dependency bound | hand-tuning blind |
 | `ctest`, `bench_movegen` | correctness, then speed | everything else is meaningless |
 | `stockfish` and `python-chess` | every chess question `CLAUDE.md` forbids the agent to answer itself | a confident wrong answer, DEC-023. **Driven wrong it also gives one** -- see the chess-oracle section below |
 
-## ccache
+## ccache, and how the MacBook was wired
 
 Wire it into every build directory. Installed but unwired does nothing:
 
@@ -55,9 +352,11 @@ cmake -S . -B build-debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 cmake -S . -B build-prof  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 ```
 
-Measured here: full rebuild 0.34 s at a 100 % hit rate.
+Measured on the MacBook: full rebuild 0.34 s at a 100 % hit rate. The
+workstation's cache is already wired and its `ccache --show-stats` is in the
+section above; the 0.34 s has not been re-measured there.
 
-## hyperfine
+## hyperfine, on the MacBook
 
 The engine benchmark reports its own best-of-N sweep. Let hyperfine own the
 repetition instead, and give it two binaries so the runs interleave and machine
@@ -69,9 +368,11 @@ hyperfine --warmup 1 --runs 10 \
 ```
 
 Interleaving matters more than the run count. A before/after pair measured
-minutes apart on this machine can disagree by 3 % from thermal drift alone.
+minutes apart on the MacBook can disagree by 3 % from thermal drift alone. The
+workstation has the same problem with a different cause — see its governor
+note above.
 
-## samply
+## samply, on the MacBook
 
 samply targets the Firefox Profiler UI, which is useless in a terminal.
 `tools/samply_report.py` reads the profile and prints self time per function.
@@ -79,7 +380,7 @@ samply targets the Firefox Profiler UI, which is useless in a terminal.
 ```bash
 cmake -S . -B build-prof -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -DNDEBUG -g -fno-omit-frame-pointer"
-cmake --build build-prof -j12
+cmake --build build-prof -j8
 
 # macOS keeps debug info in the .o files until dsymutil collects it
 dsymutil build-prof/tests/bench_movegen
@@ -98,7 +399,7 @@ Two failure modes, both silent:
 macOS `sample <pid>` is the zero-setup fallback. It gives function names but no
 line numbers and no call counts.
 
-## clang-tidy
+## clang-tidy, on the MacBook
 
 Homebrew clang-tidy does not know where Apple's SDK headers live, so it fails
 on `#include <bit>` unless told:
@@ -111,14 +412,14 @@ Whole project, in parallel — note `run-clang-tidy` takes **one** dash on
 `-extra-arg`, unlike `clang-tidy`:
 
 ```bash
-run-clang-tidy -p build -j 12 -quiet \
+run-clang-tidy -p build -j 8 -quiet \
   -extra-arg=-isysroot"$(xcrun --show-sdk-path)" 'src/.*'
 ```
 
 `compile_commands.json` comes from the build directory, so configure before
 running.
 
-## llvm-mca
+## llvm-mca, on the MacBook
 
 Mark the hot region in the source, emit assembly with the real build flags,
 extract the region, analyse it:
@@ -148,11 +449,13 @@ Two limits worth stating plainly:
 - The `asm volatile` markers are optimisation barriers. Measure with them,
   never ship them.
 - LLVM's scheduling models for Apple cores are approximate — Apple publishes no
-  port layout or latency tables. On this machine treat `llvm-mca` as
+  port layout or latency tables. On the MacBook treat `llvm-mca` as
   directional only (front-end bound vs. dependency bound), never as a number.
-  It becomes trustworthy on x86 (`-mcpu=znver4`, `-mcpu=skylake-avx512`).
+  It becomes trustworthy on x86 (`-mcpu=znver4`, `-mcpu=skylake-avx512`), which
+  is the workstation's case and why its `llvm-mca-22` section reads the numbers
+  rather than only their direction.
 
-## clang-format
+## clang-format, on both machines
 
 The version is pinned, because clang-format changes its output between major
 versions and an unpinned formatter rewrites files nobody touched.
@@ -171,9 +474,16 @@ CLANG_FORMAT_MAJOR=15 ./clang-format.sh --check
 
 On macOS it finds Homebrew's keg-only binary at
 `/opt/homebrew/opt/llvm/bin/clang-format` even when that is not on PATH. On
-Ubuntu it looks for `clang-format-23`.
+Ubuntu it looks for `clang-format-23`, which the workstation cannot install —
+DEC-146, and the override it needs is in that machine's section above.
 
 ## The chess oracle, and the one way to ask it that lies
+
+**This section is the workstation's**, not the MacBook's: every path in it
+(`/usr/games/stockfish`, `~/.venv/chess/bin/python`) is that machine's, and
+every invocation below was re-run there on 2026-09-13 against
+`Stockfish dev-20260810-5062aee5`. They print what is written here, to the
+node — the re-verification is at the end of the section.
 
 `CLAUDE.md` forbids the agent from judging a position, a move, an ending or a
 material balance from its own reasoning, and names a tool per question. This
@@ -268,11 +578,44 @@ position class its network scores badly wrong — on S145's constructed set it
 reported no mate on 1 of 48 and a longer mate on another, both re-proved by
 enumeration, which is why it corroborates there and never decides.
 
+**Re-verified on the workstation, 2026-09-13**, S226, on
+`Stockfish dev-20260810-5062aee5` at the depths written above. The trap still
+loses the race:
+
+```
+info depth 1 seldepth 0 multipv 1 score cp 0 nodes 0 nps 0 hashfull 0 tbhits 0 time 1 pv
+bestmove a1b1
+```
+
+and the `position startpos` / `go depth 8` variant of the same pipe still
+answers `bestmove a2a3`. Both safe forms print what they printed when this was
+written. python-chess:
+
+```
+#+1 20 320 [Move.from_uci('a1a8')]
+```
+
+and the pipe that sleeps before `quit`:
+
+```
+info depth 20 seldepth 2 multipv 1 score mate 1 nodes 320 nps 320000 hashfull 0 tbhits 0 time 1 pv a1a8
+bestmove a1a8
+```
+
+Same node count, same depth, same move, three weeks on. It is the same
+workstation and the same binary S166 wrote the section from — `/usr/games/stockfish`
+has not been touched since 2026-08-13 — so this confirms the section is current
+and its paths still resolve, and claims nothing about other builds or other
+machines.
+
 The binary paths above are this machine's. `.moltke.local.md` is where they are
 recorded per machine; the tools in the table take the engine as an argument and
 hardcode nothing.
 
 ## ThreadSanitizer, and the zero it prints when it never started
+
+**This section is the workstation's too.** `setarch` is util-linux and exists
+only there, and S209 met the failure below on that machine on 2026-09-11.
 
 `CMakeLists.txt`'s `SANITIZER` option is ASan plus UBSan, and `build-sanitize`
 is that tree. **TSan cannot join it**: ASan and TSan cannot be linked into one
@@ -283,7 +626,7 @@ and it is configured by hand:
 cmake -S . -B build-tsan -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer -g" \
       -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
-cmake --build build-tsan -j8 --target chesso
+cmake --build build-tsan -j12 --target chesso
 ```
 
 **The trap, and it reads as a clean result.** On this kernel TSan's shadow
@@ -316,10 +659,15 @@ reports. DEC-178.
 ## The rule the tools exist to serve
 
 Node counts first, timings second. A change under 3 % has not been shown to do
-anything on this machine unless `hyperfine` says otherwise with a tight sigma.
-One change at a time — two at once and neither number means anything.
+anything on either machine unless `hyperfine` says otherwise with a tight
+sigma. One change at a time — two at once and neither number means anything.
 
 ## GNU coreutils on macOS
+
+None of this applies to the workstation: `nproc`, `timeout`, `sha256sum` and
+`setarch` are all at `/usr/bin/` there, `ordo 1.2.6` is at `/usr/local/bin/`,
+and `uname -srm` answers `x86_64`, so the arm64 refusal in the last paragraph
+does not arise. It is the MacBook that needs the rest of this section.
 
 `nproc`, `timeout` and `sha256sum` are GNU coreutils and are not on a stock
 Mac. The scripts here do not assume them: `fastchess.sh` (S167), `rating.sh`

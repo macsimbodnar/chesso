@@ -7,12 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S226 started, 2026-09-13 08:25, beside S109's SPRT (DEC-185's blocked-task
-  exception), documents only.** `TOOLCHAIN.md` gains the Linux workstation's
-  section -- `.moltke.local.md`'s standing Open item, every statement traced
-  to a probe run here, the oracle section re-verified on this machine's
-  `stockfish` -- so the next agent is not told the machine in its brief.
-  No builds, one core. `plan_current/`: S109 (SPRT running), S226.
+- **S226 is done, 2026-09-13 08:50, by an Opus 5 subagent beside S109's SPRT,
+  documents only.** `TOOLCHAIN.md` opens on "The workstation, end to end":
+  eleven subsections mirroring the tool order, every version, path and
+  setting quoted from a probe run here -- Pop!_OS 24.04, i7-8700K 6c/12t,
+  gcc 13.3 (DEC-049), LLVM 22 suffixed with the unsuffixed `clang-format`
+  at 18.1.3 and DEC-146's override shown from its failing side, ccache
+  4.9.1, hyperfine 1.18.0, `fastchess alpha 1.8.1 20260720-daa3ea2`,
+  Stockfish dev-20260810, python-chess 1.11.2, Syzygy 290 files 3-4-5,
+  governor `performance` read and never set (DEC-195), `llvm-mca-22
+  -mcpu=skylake` printing real numbers. The macOS content is kept whole and
+  labelled the MacBook's; the oracle and ThreadSanitizer sections, written
+  on this machine, are relabelled the workstation's; the oracle's trap and
+  both safe invocations re-verified on `/usr/games/stockfish`. **Two facts
+  the old text lacked**: `kernel.perf_event_paranoid` is 2 here, so `samply
+  record` refuses until it is 1; `cutechess-cli` is not installed
+  (`/usr/games/cutechess` is the Qt GUI) and neither is `perf`. Two
+  inconsistencies it found outside its scope fixed by the coordinator:
+  `.moltke.local.md`'s "samply not on PATH" (it is), and `DEV_MANUAL.md`
+  naming the MacBook's `fastchess alpha 1.8.2` as the installed one where
+  every verdict since S105 ran on the workstation's `1.8.1`. `--prose` and
+  `--citations` exit 0. The fast check re-ran sixteen probes and every
+  quoted value matched byte for byte; one unlabelled MacBook figure in the
+  "What each one is for" table was labelled by the coordinator. Committed
+  with the prose checks only, the SPRT holding the machine.
+  `plan_current/`: S109 (SPRT running).
 
 - **S109's SPRT is running since 2026-09-13 08:11.** `adocs/data/S109_sprt.sh`
   detached, pid in `.tuning/sprt_s109.pid`, log `.tuning/sprt_s109.log`,

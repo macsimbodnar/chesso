@@ -312,7 +312,7 @@ per iteration whatever the dimensionality, so twenty-two parameters cost what
 one costs. The alternative is what S068 and S039 did — one step, one source
 edit, one rebuild and one SPRT per number.
 
-The installed `fastchess alpha 1.8.2 20260729-74deac2` has no tuning mode of its
+The installed fastchess -- `alpha 1.8.1 20260720-daa3ea2` on the workstation, the build every verdict since S105 was measured with, `alpha 1.8.2 20260729-74deac2` on the MacBook (S226, 2026-09-13) -- has no tuning mode of its
 own, so the driver builds the match itself: one short `fastchess` run per
 iteration, theta+ as the first `-engine` and theta- as the second, `-games 2
 -repeat -rounds <pairs>`, no `-sprt`. `fastchess.sh` is untouched — that is the
