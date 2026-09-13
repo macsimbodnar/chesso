@@ -84,6 +84,26 @@ typedef uint32_t move_t;
 #define HISTORY_MAX_SIZE 5000
 #define NODE_BUDGET_UNLIMITED 0
 
+// The halfmove clock is 8 bits and saturates here instead of wrapping. See
+// board_t below for why the field is not widened and why 255 is enough.
+#define HALFMOVE_CLOCK_MAX 255
+
+// The longest game prefix [position ... moves ...] may leave on the board.
+//
+// make_move() refuses once the history holds HISTORY_MAX_SIZE - 1 entries, so
+// a `position` line stopped only by that guard leaves a board the search
+// cannot push a single ply from: every root move is refused, first_legal_move()
+// is refused too because it calls make_move(), and the engine answers
+// `bestmove 0000` in a position with legal moves
+// (2026-09-10_adversarial-F18). The command therefore keeps MAX_PLY of the
+// history for the search, which is more than the search can use: no node makes
+// a move at ply MAX_PLY - 1 or deeper (src/search.cpp), so the deepest line
+// pushes MAX_PLY - 1 entries above the root.
+//
+// 4871 plies is 2435 moves, several times what the 75-move rule allows, so no
+// game and no GUI meets this bound; an `absurdly long moves list` does. S210.
+#define POSITION_MAX_PLIES (HISTORY_MAX_SIZE - MAX_PLY - 1)
+
 // Transposition table size, in megabytes. The table is heap allocated so the
 // UCI [Hash] option can pick the size.
 #define TT_DEFAULT_MB 16
@@ -342,9 +362,28 @@ struct board_t
   int32_t psqt_eg;
   int32_t phase;
 
-  color_t active_color;       // Side to move
-  uint8_t castling;           // Castling permissions
-  uint8_t halfmove_clock;     // Moves with respect to the 50 move draw rule
+  color_t active_color;  // Side to move
+  uint8_t castling;      // Castling permissions
+
+  // Moves with respect to the 50 move draw rule. **Saturates at
+  // HALFMOVE_CLOCK_MAX, it does not wrap**, and every site that raises it says
+  // so: 256 reversible plies -- reachable from a [position ... moves ...] list,
+  // never from the search -- took this back to 0 and switched off both of its
+  // consumers at once, the `>= 100` fifty-move test in negamax_at() and
+  // classify_repetition()'s window min(halfmove_clock, history size).
+  // 2026-09-10_adversarial-F17, S210.
+  //
+  // 8 bits and not 16 because the same field is in history_entry_t, one per
+  // ply of an array HISTORY_MAX_SIZE long: there the record is exactly 16
+  // bytes and widening any field of it pushes the record to 24 under an
+  // 8-byte alignment, growing history_t from 80 KB to 120 KB and, worse,
+  // costing classify_repetition() half its entries per cache line on a walk it
+  // runs at every node. Saturation buys the same correctness for one cmov in
+  // make_move. What the ceiling costs is a FEN field that reads 255 where the
+  // line played 300, in a position the fifty-move rule called dead 155 plies
+  // earlier.
+  uint8_t halfmove_clock;
+
   index_t en_passant;         // Active en-passant square index, if any
   uint16_t fullmove_counter;  // Total number of full moves played
 };
@@ -363,6 +402,9 @@ struct history_entry_t
   piece_t captured;  // piece taken off the target square, EMPTY if none
   uint8_t castling;
   index_t en_passant;
+
+  // Saturating, like the board's. Sixteen bytes exactly, and board_t's comment
+  // on this field is why it stays that way.
   uint8_t halfmove_clock;
 };
 
@@ -637,6 +679,19 @@ struct search_state_t
   int16_t quiet_history[2][64][64];
   transposition_table_t* tt;
   move_t best_move;
+
+  // The last completed iteration's best move, supplied by the iterative
+  // deepening loop and read at ply 0 only, and only when the root's table entry
+  // is gone.
+  //
+  // The root has no move list of its own: score_move() orders it by the
+  // tt_move and nothing else puts a move first, so "the first move the root
+  // searches is the previous iteration's best" -- the sentence that licenses
+  // keeping an aborted iteration's move -- held only while the root's entry
+  // survived the iteration, which the replacement rule does not promise. This
+  // makes it hold either way. 0 from every other caller, which is exactly the
+  // behaviour they had before. 2026-09-04_adversarial-F03, S210.
+  move_t root_move_hint = 0;
 
   // Triangular PV table: pv_table[ply] holds the PV from that ply onward.
   move_t pv_table[MAX_PLY][MAX_PLY];

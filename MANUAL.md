@@ -236,8 +236,51 @@ of a refusal is the only confirmation the value was taken.
 Standard UCI: `uci`, `debug`, `isready`, `setoption`, `register`, `ucinewgame`,
 `position`, `go`, `stop`, `ponderhit`, `quit`.
 
+`ucinewgame` **joins any running search, puts the board back on the start
+position with an empty move history, clears the transposition table, drops the
+proved mate line, and re-opens the book for a new game** — `reset_for_new_game`
+in `src/chesso.cpp`. Nothing set by `setoption` is touched: the `Hash` size,
+`OwnBook`, `Best Book Move` and `Book File` survive it. The killer, history and
+counter-move tables are per `go` and have nothing to reset. `bench` runs the
+same reset between its positions, which is what makes its total independent of
+the order they are searched in.
+
 `go` understands `depth`, `movetime`, `nodes`, `wtime`, `btime`, `winc`, `binc`,
 `movestogo` and `infinite`.
+
+`go infinite` answers `stop` and **nothing else, whatever else the line
+carries** (S210). `infinite` clears every finite limit on the line — `depth`,
+`nodes`, `movetime` and the clock — and the search is then held open after the
+depth loop ends, so a root with no tree to search does not answer either. Until
+S210 `go infinite depth N` and `go infinite nodes N` printed `bestmove` at once,
+and so did `go infinite` on a root whose tree collapses: a dead draw by
+insufficient material, a stalemate, a checkmate. The protocol's words are "do
+not exit the search without being told so in this mode".
+
+`movestogo 0` means **sudden death**, which is what a GUI sends when no move
+boundary is coming, and is not read as one move left (S210). Anything below 0
+means the same. The allocation is then a share of the clock, as the
+`TmSuddenDeathPercent` row below describes, rather than the whole clock less
+the move overhead.
+
+A `go` limit that is not a whole integer is **refused** — the token is dropped,
+the rest of the line is still read, and the search still answers — on the UCI
+channel in every build, in one of two shapes (S210):
+
+```
+info string refused [go <token>] <value>, not an integer
+info string refused [go <token>] <value>, out of range
+```
+
+The first is for a value `go` cannot read in full (`0x4`, `4abc`, `4.5`,
+`1e6`, `+5`); the second for a well-formed integer no `long long` can hold. A
+leading `+` is refused the same way `Hash` refuses `+64`, and for the same
+reason: `std::from_chars` does not read a sign it was not asked for, and
+`std::stoll` read `+5` as 5 until S210. A whole
+integer outside a field's own range is neither: it is still clamped, so
+`depth 999` searches to the maximum depth and `depth -3` to depth 1, both in
+silence. `bench <depth>` and `test <depth>` read their argument the same way
+and name themselves the same way, as `[bench depth]` and `[test depth]`.
 
 `go mate`, `go searchmoves` and `go ponder` are **accepted and ignored**, with a
 warning in the log. UCI says to ignore what is not implemented, and the rest of
@@ -261,8 +304,40 @@ info string refused [position fen] <fen>, more than 16 pieces of one colour (<n>
 info string refused [position fen] <fen>, a pawn on rank 1 or rank 8
 ```
 
-A move in the `moves` list that does not parse or is not legal is skipped with
-a warning, and the rest of the list is still applied.
+**The `moves` list follows the same rule** (S210). A token that does not parse,
+one that is not legal on the board it arrives at, and one the move history has
+no room for each **end the whole command**, with the engine on the position it
+had before the command — the moves already applied by this line included. The
+refusal is one `info string` line on stdout, in one of three shapes:
+
+```
+info string refused [position moves] <move>, does not parse
+info string refused [position moves] <move>, not a legal move here
+info string refused [position moves] <move>, the move stack is full at 4871 plies
+```
+
+Until S210 such a token was skipped and the rest of the list applied over the
+hole, with nothing said about it in the shipped binary, so `position` could end
+on a board the GUI had not sent and every later `bestmove` was answered for a
+position the engine had not been given.
+
+**Nothing else the command would have changed is changed either.** A refused
+`position` does not clear the transposition table, does not move the base the
+engine remembers, and does not put the opening book back on for the line it
+refused. A new base still does all three — that is what makes a new base a new
+base — but only once the whole command has played.
+
+**The bound is 4871 plies**, which is `HISTORY_MAX_SIZE - MAX_PLY - 1`: the
+move history holds 5000 entries and the search needs `MAX_PLY` of them above
+whatever the command left, so a line that fills the history to the brim leaves
+a position the search cannot play a move in. 4871 plies is 2435 moves, several
+times the longest game the 75-move rule allows.
+
+The **halfmove clock saturates at 255** rather than wrapping, for the same
+class of input: a line of 256 or more reversible plies used to take the field
+back to 0, which switched off both the fifty-move draw and the repetition
+window at once. A FEN whose halfmove field is above 255 is still refused rather
+than saturated.
 
 **The last two shapes are refusals of a well-formed FEN, and they are the only
 two placement rules the engine enforces** (S208, 2026-09-11). More than 16
@@ -321,7 +396,16 @@ bestmove c3d5
 | `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**: the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver. Measured at 8 such lines from 1 search in 3000 games (DEC-150) |
 
 `bestmove 0000` means no legal move at all. A search cut off before it finished
-even one move still answers with a legal one.
+even one move still answers with a legal one — including a search cut inside
+its very first iteration, which then reports `depth 0` or prints no `info` line
+at all before the `bestmove` (S210).
+
+**`nodes` on the last `info` line can be under a `go nodes` budget**, and that
+is not a shortfall. The budget bounds the whole search and the loop stops
+starting iterations once it is reached, but an iteration that runs into the
+budget is aborted, and an aborted iteration with no line to play prints
+nothing — so the last line a GUI sees is the previous iteration's total.
+Measured at `go nodes 5000`: 2917 reported (S195).
 
 Until 2026-08-13 `nodes` was the current iteration's count and `time` the
 current iteration's duration, so the count fell between depths and the

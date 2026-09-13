@@ -3904,6 +3904,126 @@ TEST_SUITE("search: windowed root")
     // that never failed high at the root at all.
     REQUIRE(fail_highs_with_a_pv > 0);
   }
+
+
+  // S210, 2026-09-04_adversarial-F03. iterative_deepening_search() keeps an
+  // aborted iteration's move on this argument: "the root replaces its move only
+  // when that move beats every move searched before it at this depth, and the
+  // first move it searches is the previous iteration's best". Nothing ordered
+  // the root that way except the table. score_move() puts one move first, the
+  // tt_move, and the root read it from tt_get_entry(); there is no root move
+  // list carrying the previous iteration's result. tt_store_entry() replaces an
+  // entry of the current generation whenever depth >= entry->depth and the
+  // generation is per `go` rather than per iteration, so any unreduced ply-1
+  // node of the next iteration whose key indexes the root's slot evicts it, and
+  // the aspiration re-search that follows probes a miss and orders the root by
+  // captures, killers and history instead. Under the aspiration window the
+  // first move to beat `score - delta` is then published before the previous
+  // best has been searched at this depth, and an abort right there played it.
+  //
+  // The mechanism was read off the code and never reproduced, which is why the
+  // repair is a premise made true rather than a bug fixed: search_state_t
+  // carries root_move_hint, the last completed iteration's best move, and the
+  // root falls back to it exactly where the table has nothing.
+  //
+  // A missing entry is what the table cannot be made to guarantee, so the case
+  // takes it directly: the table is wiped between the two drives, which is the
+  // same thing an eviction leaves behind.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the root's first move survives a lost table entry")
+  {
+    const std::string fen =
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - "
+        "0 10";
+
+    static std::atomic_bool never_stop = false;
+
+    // One drive of ply 0 against a table that holds nothing, with the hint the
+    // caller supplies. Returns the first move the root searched.
+    auto first_root_move = [&fen](move_t hint) {
+      REQUIRE(load_FEN(fen, &game));
+
+      never_stop = false;
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+      state.root_move_hint = hint;
+
+      search_node_probe_t probe = {};
+      probe.ply = 0;
+      state.probe = &probe;
+
+      negamax_probed(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 2, 0, &game, &state,
+                     0, true);
+
+      REQUIRE(probe.move_count > 0);
+
+      return probe.moves[0];
+    };
+
+    // What the root does with nothing to go on: captures, killers and history.
+    const move_t without_a_hint = first_root_move(0);
+
+    REQUIRE(without_a_hint != 0);
+
+    // A legal quiet that the ordering above does not put first, so the hint has
+    // something to change. Taken from the position's own move list rather than
+    // written down, so a change to the generator or to score_move() moves it
+    // with them.
+    move_t hint = 0;
+    {
+      REQUIRE(load_FEN(fen, &game));
+
+      move_t moves[MAX_MOVES];
+      const size_t count = legal_moves(&game, moves);
+
+      for (size_t i = 0; i < count; ++i) {
+        if (moves[i] == without_a_hint || MOVE_CAPTURE(moves[i])) { continue; }
+
+        hint = moves[i];
+        break;
+      }
+    }
+
+    REQUIRE(hint != 0);
+    REQUIRE(hint != without_a_hint);
+
+    // The claim: with the table empty the root searches the hint first anyway,
+    // which is exactly the sentence the iterative deepening loop relies on.
+    CHECK_EQ(first_root_move(hint), hint);
+
+    // And the hint reaches the root and nowhere else. A node below ply 0 orders
+    // itself from the table and from its own history, so the same drive one ply
+    // in must be untouched by it.
+    auto first_move_at_ply_one = [&fen](move_t root_hint) {
+      REQUIRE(load_FEN(fen, &game));
+
+      never_stop = false;
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+      state.root_move_hint = root_hint;
+
+      search_node_probe_t probe = {};
+      probe.ply = 1;
+      state.probe = &probe;
+
+      negamax_probed(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 2, 1, &game, &state,
+                     0, true);
+
+      REQUIRE(probe.move_count > 0);
+
+      return probe.moves[0];
+    };
+
+    CHECK_EQ(first_move_at_ply_one(hint), first_move_at_ply_one(0));
+  }
 }
 
 

@@ -135,6 +135,18 @@ add_doctest_target(test_en_passant_key)
 # rest.
 add_doctest_target(test_audit_polyglot_key)
 
+# S210: `go infinite` answers `stop` and nothing else.
+# 2026-09-04_adversarial-F01 wrote this file and observed it red at 36b9f36 --
+# a root whose tree collapses (insufficient material, a stalemate, a checkmate)
+# reaches MAX_DEPTH in under a millisecond, so the depth loop ended and
+# `bestmove` was printed unasked -- and left it out of this file deliberately,
+# for the fix to register. 2026-09-10_adversarial-F19 is the same defect
+# reached through a limit on the line instead of through the position, and
+# DEC-197 widened it to `nodes` as well as `depth`; both live here now. No
+# dataset, three short searches and three held-open ones, so it is a fast test
+# like the rest.
+add_doctest_target(test_audit_go_infinite)
+
 # S190: INV-2 and INV-4 in the Release gate. Both gated builds are Release, so
 # the assert(squares_match_bitboards) / assert(eval_accumulators_match) pairs in
 # src/bitboard.cpp are dead in the only builds the gate runs, and neither

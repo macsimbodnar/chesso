@@ -7,19 +7,49 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S210 started, 2026-09-13 14:50, first half by an Opus 5 subagent (DEC-199).**
-  The seven low engine defects of the 2026-09-10 audit and three of the
-  2026-09-04 report, in two halves: the first lands F17 (the halfmove clock
-  cannot wrap), F18 (a full history refuses), F19 (`go infinite` waits for
-  `stop` whatever the line carries, closing 2026-09-04 F01), F20 (`movestogo
-  0` is sudden death), F21 (the first iteration can be stopped), F23 (the
-  bishops comment), 2026-09-04 F02 (a bad `moves` token refuses the whole
-  `position`) and F03 (the aborted iteration's root answer), plus DEC-184's
-  `MANUAL.md` sentences -- each red first, `No functional change` proved on
-  the bench and both depths, Debug self-play owed; the second half lands F22
-  (quiescence scores a dead position as a draw) in its own commit with a
-  bench signature after a reach census decides whether an SPRT is owed
-  (DEC-107). `plan_current/`: S210.
+- **S210's first half landed, 2026-09-13 16:00, by an Opus 5 subagent
+  (DEC-199); F22 and the stamp follow.** Nine items, each red first: the
+  halfmove clock saturates at 255 (F17; `history_entry_t` stays 16 bytes,
+  DEC-208), a `moves` list past `POSITION_MAX_PLIES` 4871 is refused and the
+  whole `position` command is atomic on any refusal (F18, 2026-09-04 F02;
+  the parent answered `bestmove 0000` at 4999 plies), `go infinite` clears
+  every finite limit and the search holds open on `stop` (F19, closing
+  2026-09-04 F01), `movestogo 0` is sudden death (F20; the clamp to 1 bought
+  1877 ms of a 2 s clock), the first iteration honours `stop` and the hard
+  timer with a legal move still answered (F21; p99 depth-1 latency
+  re-measured, `adocs/data/S210_depth1_latency.py`; `timer_race_stress.py`
+  21297 iterations clean), the bishops comment names FIDE 5.2.2 and 6.9 and
+  the accepted omission (F23), a carried `root_move_hint` replaces the
+  table premise at the root (2026-09-04 F03, DEC-208), and every `go`
+  number takes S209's whole-token rule (`wtime 0x1000` was a clock of 0,
+  DEC-208). `No functional change`: bench 7111579, all six `search_bench`
+  rows identical to the parent; Debug self-play 88 games, 0 `Assertion`;
+  gate **38/38** both builds (`test_audit_go_infinite` is new). `MANUAL.md`
+  first, the surface golden after; `specs.md` carries five passages. **The
+  fast check found three real items and three trivial ones**: the one-node
+  test lost its precondition (a stale `stop` flag now aborts the search
+  before the budget does, so the case passed with the feature deleted --
+  the DEC-163 hazard the three sibling cases already guard against); the
+  atomicity was `game`'s only (`set_position` reset the table and re-armed
+  the book flag before a refused `moves` token); the 4871 bound is
+  hand-written in two goldens with no trigger if its constants move; plus
+  four stale comments, two old option names printing undocumented shapes,
+  and `+5` missing from the manual's refused list. A repair agent takes all
+  six before the commit: the one-node case has the `go depth 1` preamble
+  and a budget precondition and was shown to fail with its fallback
+  neutered; `position` is transactional -- `load_position()` then one
+  `commit_position_base()` at the end, so a refused command leaves the table,
+  the remembered base and the book flag untouched, red first with a table
+  probe; the surface template is built from `POSITION_MAX_PLIES` with a
+  `static_assert` naming the manual's three copies; comments, option names
+  and the manual's `+5` fixed; gate 38/38 both builds, bench 7111579 and the
+  depth-9 rows identical. Everything else
+  the check drove held: `go infinite` plus `quit` exits cleanly, fixed
+  depth untouched by F21, the carried root move can never be illegal, the
+  restored `game` carries the history whole. `plan_current/`: S210 (F22
+  pending).
+
+
 
 - **S227 is done, 2026-09-13 14:40, by an Opus 5 subagent on the owner's
   instruction (DEC-207): pixello and the debug GUI are out of the branch.**

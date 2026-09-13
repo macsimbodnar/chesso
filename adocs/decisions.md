@@ -11704,3 +11704,51 @@ Consequences: The parked item about pixello's test sounds closes with the
               submodule. `tests/assets/` keeps `perft_json` and `test_jsons`.
               DEC-201's blanket sentence in `fetch_book.sh` needs one fewer
               exception and names two submodules.
+
+## DEC-208  2026-09-13  S210's three choices: the halfmove clock saturates instead of widening, the aborted iteration's root answer is a carried move, and the `go` numbers take S209's whole-token rule
+Tags:         uci, protocol, search, history, s210, s209, s176, dec-171,
+              dec-184, dec-197
+Context:      S210's first half landed the low engine defects F17 to F21 and
+              F23 of the 2026-09-10 audit and F01 to F03 of the 2026-09-04
+              report. Three of its accepts clauses left a choice open and
+              the implementing agent made it on evidence: F17 offered
+              `uint16_t` or saturation at 255; 2026-09-04 F03 offered a carried
+              best move or an asserted premise with a census; the `go` tokens
+              read with `std::stoll` were to be decided for or against S209's
+              whole-token rule.
+Decision:     By the coordinator under the owner's delegation, on the agent's
+              evidence. **(1) The halfmove clock saturates at 255** in
+              `make_move_impl` and `make_null_move`; `load_FEN` still refuses
+              a clock above 255. `history_entry_t` is exactly 16 bytes, so
+              widening the field pushes the record to 24, the history from
+              80 to 120 KB, and `classify_repetition()` from four entries a
+              cache line to 2.67 on a walk it runs at every node; saturation
+              costs a compare at two sites and keeps both consumers correct
+              (the fifty-move test fires, the repetition window stays open).
+              **(2) The root's answer after an aborted iteration is a carried
+              move**: `search_state_t::root_move_hint` holds the last
+              completed iteration's best, read at ply 0 on a table miss only,
+              so a root entry evicted between iterations no longer decides
+              the move played; the census route was the other option and the
+              F22 census stays the second half's. **(3) The `go` numbers take
+              the whole-token rule**: `std::from_chars` with `ptr == last`,
+              S209's two refusal shapes on the UCI channel in both builds, the
+              refused token dropped and the rest of the line still read, a
+              whole integer out of range still clamped; `bench` and `test`
+              share the helper. `wtime 0x1000` was a clock of 0 and dropped
+              the search onto the one-second fallback -- a forfeit class,
+              silent in the shipped binary.
+Rejected:     **`uint16_t` for the clock** -- correct too, but it makes the
+              repetition walk slower for a field whose whole legal range fits
+              a byte. **Asserting the root entry survives** -- the premise is
+              false under table pressure and an assert is not a fix.
+              **Leaving `stoll`** -- a misparsed clock is a lost game.
+              **Refusing the whole `go` line on one bad token** -- a `go` that
+              answers nothing hangs a GUI.
+Consequences: `specs.md` Behaviour carries the five S210 passages; `MANUAL.md`
+              the shapes; `tests/test_audit_go_infinite.cpp` is the 38th
+              fast test. F20, F21 and the carried move alter play only under
+              inputs no harness here sends and were discharged node-identical
+              at fixed depth (`bench` 7111579, the six `search_bench` rows).
+              F22 lands in its own commit with a bench signature after its
+              census (S210's second half).

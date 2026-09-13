@@ -813,7 +813,18 @@ static int negamax_at(int alpha0,
 
   // Copied out now: a deeper node can overwrite this slot while we recurse, and
   // the move is wanted for ordering even when no cutoff is taken.
-  const move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
+  move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
+
+  // At the root, and only where the table has nothing, the previous completed
+  // iteration's best move orders the node instead. Any unreduced ply-1 node of
+  // this iteration can evict the root's slot, and an aspiration re-search then
+  // orders the root by captures, killers and history and can publish a move
+  // that never beat the previous best -- which the caller keeps if the hard
+  // timer aborts right there. Ordering is all this changes: the hint is a move
+  // the previous iteration already returned from this position, so it is legal
+  // here, and a node that had an entry is untouched.
+  // 2026-09-04_adversarial-F03, S210.
+  if (ply == 0 && tt_move == 0) { tt_move = state->root_move_hint; }
 
   // The static evaluation this position was already scored with, where an
   // earlier node recorded one. Copied out here for the reason above and read

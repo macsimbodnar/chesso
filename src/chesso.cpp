@@ -409,7 +409,15 @@ bool check_move_legality(move_t move)
 
 //-#############################    FUNCTIONS    ############################-//
 
-bool set_position(const std::string& fen)
+// The load half of set_position(), and all of it that command_position() may
+// run before it knows the whole command succeeds. Puts `fen` on the board or
+// leaves the game exactly as it was, and touches none of the three pieces of
+// state a *new base* owns -- `initial_position`, the transposition table and
+// `still_in_opening`. S210, raised by the fast check over its first half: the
+// moves loop's refusal restored `game` and none of those three, so
+// `position <a different base> moves zzzz` wiped a table the GUI had paid a
+// search for and re-armed the book for a command that never took effect.
+static bool load_position(const std::string& fen)
 {
   // S176 (2026-09-03_adversarial-F04). A FEN that does not load leaves the
   // engine exactly where it was, moves included: the whole game -- board,
@@ -436,12 +444,31 @@ bool set_position(const std::string& fen)
     return false;
   }
 
-  if (initial_position != fen) {
-    initial_position = fen;
+  return true;
+}
 
-    tt_reset(&tt);
-    still_in_opening = true;
-  }
+
+// The commit half: a base the engine was not already standing on gets a cold
+// table and a re-armed book, and `initial_position` remembers which base that
+// is so the next command can tell. Idempotent on the same FEN, which is what
+// keeps a repeated `position startpos moves ...` from resetting the table
+// between a GUI's moves.
+static void commit_position_base(const std::string& fen)
+{
+  if (initial_position == fen) { return; }
+
+  initial_position = fen;
+
+  tt_reset(&tt);
+  still_in_opening = true;
+}
+
+
+bool set_position(const std::string& fen)
+{
+  if (!load_position(fen)) { return false; }
+
+  commit_position_base(fen);
 
   return true;
 }
@@ -799,8 +826,24 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
   tt_new_search(state.tt);
 
-  std::atomic_bool never_stop = false;
-  state.stop = &never_stop;
+  // S210, 2026-09-10_adversarial-F21. The real signal, from the first
+  // iteration on. It used to be a local `never_stop` that the loop swapped out
+  // only after the first search() had returned, so depth 1 answered neither
+  // `stop` nor the hard timer.
+  //
+  // Nothing noticed because depth 1 is short: over 400 corpus positions,
+  // round-tripped through the UCI pipe, the median is 1.36 ms and the p99
+  // 3.16 ms, and the same measurement on the binary that could not be stopped
+  // reads 1.33 and 2.99 -- the same engine (adocs/data/S210_depth1_latency.py;
+  // the audit's own 0.56 / 1.04 was taken without the pipe). On a pathological
+  // board the reviewer measured 254 ms burned against a 100 ms clock, which is
+  // a forfeit with no rule broken above it, and the board this repository's
+  // case uses spends 13.5 ms and 42371 nodes finishing a depth-1 iteration
+  // that was told to stop before it began.
+  //
+  // A depth-1 iteration that is cut still owes a move and still produces one:
+  // it publishes no PV, so the first_legal_move() fallback below answers.
+  state.stop = &stop_search_signal;
 
   const auto beguine_of_the_search = std::chrono::steady_clock::now();
 
@@ -853,6 +896,15 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
     // Reset the explored nodes in the previous iteration
     state.explored_nodes = 0;
+
+    // What the root falls back to when the table no longer holds its entry,
+    // which is what makes the "first move searched is the previous iteration's
+    // best" sentence below true by construction rather than by luck. Carried
+    // from the last iteration that *completed*: an aborted one's best move is
+    // the partial answer this is protecting against. 0 before the first
+    // completed iteration, which is the root's ordering as it always was.
+    // 2026-09-04_adversarial-F03, S210.
+    state.root_move_hint = previous_best_move;
 
     // Cap this iteration at whatever is left of the overall budget, so the
     // limit is honoured inside the search instead of only being noticed after
@@ -928,8 +980,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     const auto elapsed =
         std::chrono::steady_clock::now() - beguine_of_the_search;
 
-    state.stop = &stop_search_signal;
-
     result.total_node_explored += search_result.explored_nodes;
 
     // An aborted iteration is still worth to evaluate. The root replaces its
@@ -938,6 +988,21 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // so a non-empty PV means the partial iteration knows something the
     // completed one did not. Its *score* is meaningless, which is why nothing
     // is reported for it.
+    //
+    // **That second clause is now enforced rather than asserted in prose.**
+    // Nothing orders the root except the table: score_move() puts the tt_move
+    // first and the root reads it from tt_get_entry(), with no root move list
+    // behind it. tt_store_entry() replaces an entry of the current generation
+    // whenever depth >= entry->depth and the generation is per `go` rather than
+    // per iteration, so any unreduced ply-1 node of this iteration whose key
+    // indexes the root's slot evicts the root's entry -- and an aspiration
+    // re-search then probes a miss, orders by captures, killers and history,
+    // and can publish the first move to beat `previous score - delta` before
+    // the previous best has been searched at this depth. An abort at that
+    // moment played it. state.root_move_hint carries the last completed
+    // iteration's best move into the root and is used exactly where the table
+    // has nothing, so the sentence above is true whether the entry survived or
+    // not. 2026-09-04_adversarial-F03, S210.
     const bool has_result = search_result.pv.length > 0;
 
     if (has_result) {
@@ -1069,6 +1134,24 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 
       if (elapsed_ms >= static_cast<double>(soft_limit_ms)) { break; }
     }
+  }
+
+  // UCI.txt: "infinite -- search until the stop command. Do not exit the search
+  // without being told so in this mode!" The depth loop above ends on its own
+  // at MAX_DEPTH, and on a root whose tree collapses -- insufficient material,
+  // a stalemate, a checkmate -- it gets there in under a millisecond: 126
+  // iterations, 1134 nodes, `bestmove f1e3` a full second before the `stop` the
+  // GUI was going to send. The GUI then has an answer it did not ask for and a
+  // `stop` for a search that no longer exists. Command_go clears every finite
+  // limit for this mode; this is what holds the search open once they are gone.
+  //
+  // A poll and not a condition variable: stop_search_signal is raised from a
+  // timer thread, from `stop`, and from every stop_and_join_search() caller,
+  // and a millisecond of latency on a command that has been waiting for the
+  // user is not worth a second synchronisation object on the search path.
+  // 2026-09-04_adversarial-F01, 2026-09-10_adversarial-F19, S210.
+  while (conf.infinite && !stop_search_signal) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   // A node or time budget small enough to abort before the first root move
@@ -1415,19 +1498,59 @@ bool command_position(std::queue<std::string>& args)
 
   stop_and_join_search();
 
+  // S210, 2026-09-04_adversarial-F02 and 2026-09-10_adversarial-F18. The whole
+  // command is atomic: anything it refuses puts the engine back on the state it
+  // had before the command, moves included. set_position() already did this for
+  // the board (S176) and the reason it gave holds word for word for the moves
+  // half -- applying the rest of a list after a token that did not play puts
+  // the engine somewhere the GUI did not send it, and every later `bestmove` is
+  // judged against a board it did not compute on. The copy is about 100 KB and
+  // `position` is on no search path.
+  //
+  // The fast check over the first half found the same command atomic for
+  // `game` and for nothing else, which is why the base is committed at the
+  // bottom instead of inside the loop: the three pieces of state a new base
+  // owns -- `initial_position`, the cleared table and `still_in_opening` --
+  // were written before the moves were applied and no refusal took them back.
+  // Nothing but the board is touched until the command has succeeded, so there
+  // is nothing to restore; `pending_base` is the base the line asked for and
+  // only a whole command that played gets to install it.
+  const game_t previous = game;
+  std::string pending_base = initial_position;
+
+  // One line, in the S176 shape, on the UCI channel in every build: LOG_W is
+  // `if (false)` under NDEBUG, which is what made the old skip invisible in the
+  // binary that ships.
+  const auto refuse_moves = [&previous](const std::string& token,
+                                        const std::string& why) {
+    game = previous;
+    uci_reply("info string refused [position moves] " + token + ", " + why);
+    return false;
+  };
+
+  // A shortcut token that loads is the line's base so far. A later token in the
+  // same line replaces it, and only the last one survives to the commit.
+  const auto load_base = [&pending_base](const std::string& fen) {
+    if (!load_position(fen)) { return false; }
+
+    pending_base = fen;
+
+    return true;
+  };
+
   while (!args.empty()) {
     const std::string token = args.front();
     args.pop();
 
-    if (token == "startpos") { set_position(DEFAULT_POSITION); }
-    if (token == "empty") { set_position(EMPTY_POS); }
-    if (token == "mate2w") { set_position(MATE_IN_2_W_POS); }
-    if (token == "mate2b") { set_position(MATE_IN_2_B_POS); }
-    if (token == "3frep") { set_position(THREE_FOLD_REP_POS); }
-    if (token == "kiwipete") { set_position(KIWIPETE_POS); }
-    if (token == "killer") { set_position(KILLER_POS); }
-    if (token == "blocked") { set_position(BLOCKED_CENTRE_POS); }
-    if (token == "fine70") { set_position(FINE_70_POS); }
+    if (token == "startpos") { load_base(DEFAULT_POSITION); }
+    if (token == "empty") { load_base(EMPTY_POS); }
+    if (token == "mate2w") { load_base(MATE_IN_2_W_POS); }
+    if (token == "mate2b") { load_base(MATE_IN_2_B_POS); }
+    if (token == "3frep") { load_base(THREE_FOLD_REP_POS); }
+    if (token == "kiwipete") { load_base(KIWIPETE_POS); }
+    if (token == "killer") { load_base(KILLER_POS); }
+    if (token == "blocked") { load_base(BLOCKED_CENTRE_POS); }
+    if (token == "fine70") { load_base(FINE_70_POS); }
 
     if (token == "fen") {
       // S176. Four to six fields. The clocks are optional in practice --
@@ -1454,6 +1577,7 @@ bool command_position(std::queue<std::string>& args)
       fen = trim_whitespace(fen);
 
       if (fields.size() < 4) {
+        game = previous;
         uci_reply("info string refused [position fen] " +
                   (fen.empty() ? std::string("(none)") : fen) +
                   ", fewer than four fields");
@@ -1463,44 +1587,67 @@ bool command_position(std::queue<std::string>& args)
       if (fields.size() == 4) { fen += " 0"; }
       if (fields.size() <= 5) { fen += " 1"; }
 
-      // The refusal, if any, has already been reported by set_position().
-      if (!set_position(fen)) { return false; }
+      // The refusal, if any, has already been reported by load_position(),
+      // which restores the board it was given. `previous` is the board this
+      // command started from, which is the same one unless the line carried a
+      // shortcut or a second position token before the FEN.
+      if (!load_base(fen)) {
+        game = previous;
+        return false;
+      }
 
       LOG_I << "Set fen " << fen << END_I;
     }
 
     if (token == "moves") {
-      // Assuming all the next tokens are moves to execute. Skip the one that
-      // are not valid. Doing best effort
-
+      // Every token from here is a move and every one of them has to play. A
+      // token that does not parse, one that is not legal on the board it
+      // arrives at, and one the history has no room for each end the command
+      // with the engine where it started.
       while (!args.empty()) {
         const std::string move_str = args.front();
         args.pop();
 
         const auto parsing_result = algebraic_to_uci_move(move_str);
 
-        if (parsing_result.has_value()) {
-          // Apply the move
-          const uci_move_t move_candidate = parsing_result.value();
-
-          unpacked_move_t move(0);
-          move.from = move_candidate.from;
-          move.to = move_candidate.to;
-          move.promoted_to = move_candidate.promotion;
-
-          // Attempt the move. We ignore if move happened or not
-          bool res = try_move(&move);
-
-          if (res) {
-            LOG_I << "Applied move [" << move_str << "]" << END_I;
-          } else {
-            LOG_W << "Failed move [" << move_str << "]" << END_W;
-          }
+        if (!parsing_result.has_value()) {
+          return refuse_moves(move_str, "does not parse");
         }
+
+        // Checked before the move rather than after make_move() refuses it, and
+        // against a bound that leaves the search MAX_PLY of the stack: a
+        // position make_move() merely tolerates is one the search cannot push a
+        // single ply from. POSITION_MAX_PLIES carries the arithmetic. S210.
+        if (game.history.size >= POSITION_MAX_PLIES) {
+          return refuse_moves(move_str, "the move stack is full at " +
+                                            STR(POSITION_MAX_PLIES) + " plies");
+        }
+
+        const uci_move_t move_candidate = parsing_result.value();
+
+        unpacked_move_t move(0);
+        move.from = move_candidate.from;
+        move.to = move_candidate.to;
+        move.promoted_to = move_candidate.promotion;
+
+        // The guard above is what makes this unambiguous: make_move()'s only
+        // refusal is the full stack, so a false here means the move is not in
+        // this board's legal list.
+        if (!try_move(&move)) {
+          return refuse_moves(move_str, "not a legal move here");
+        }
+
+        LOG_I << "Applied move [" << move_str << "]" << END_I;
       }
     }
   }
 
+  // The commit. Every refusal above returned before reaching it, so a command
+  // that did not play in full leaves the table, the book flag and the
+  // remembered base exactly as they were. Ordering against the moves loop costs
+  // nothing: try_move() does not read the table, and a cold table for a new
+  // base is still cold once the line's moves are on the board.
+  commit_position_base(pending_base);
 
   LOG_I << print_nice_board(&game.board) << END_I;
 
@@ -1508,25 +1655,48 @@ bool command_position(std::queue<std::string>& args)
 }
 
 
-bool pop_int(std::queue<std::string>& args,
-             const char* name,
-             int& out,
-             int min,
-             int max)
+// S210, and the decision S209 left to this step. The `go` numbers were read
+// with std::stoll(), which stops at the first character it cannot use and
+// reports nothing: `wtime 0x1000` was a clock of 0 and dropped the search onto
+// the no-limit fallback, `movetime 100abc` was 100 ms, `depth 5.5` was 5, and
+// the only token that said anything was one stoll() threw on -- through LOG_W,
+// which is `if (false)` under NDEBUG. That is the same silent misparse S209
+// removed from `Hash`, on a line that decides how much clock a move gets, so
+// the whole-token rule reaches here in the same two shapes and on the same
+// channel, legal UCI in every build state.
+//
+// `where` is the whole bracket text, `go depth` or `bench depth`, so the
+// message names the command as well as the token.
+//
+// A refused token is not applied and the rest of the line still is: UCI says to
+// ignore what cannot be used, and a `go` that answers nothing is worse than a
+// `go` that answers on a default. A well-formed integer outside [min, max] is
+// still clamped rather than refused, which is what it always was.
+static bool pop_whole_integer(std::queue<std::string>& args,
+                              const char* where,
+                              long long& out)
 {
   if (args.empty()) {
-    LOG_W << name << " is missing its value" << END_W;
+    LOG_W << where << " is missing its value" << END_W;
     return false;
   }
 
   const std::string token = args.front();
   args.pop();
 
-  try {
-    const long long value = std::stoll(token);
-    out = static_cast<int>(std::clamp<long long>(value, min, max));
-  } catch (...) {
-    LOG_W << name << " is not a number: " << token << END_W;
+  const char* const last = token.data() + token.size();
+  const std::from_chars_result parsed =
+      std::from_chars(token.data(), last, out);
+
+  if (parsed.ec == std::errc::result_out_of_range) {
+    uci_reply("info string refused [" + std::string(where) + "] " + token +
+              ", out of range");
+    return false;
+  }
+
+  if (parsed.ec != std::errc() || parsed.ptr != last) {
+    uci_reply("info string refused [" + std::string(where) + "] " + token +
+              ", not an integer");
     return false;
   }
 
@@ -1534,24 +1704,31 @@ bool pop_int(std::queue<std::string>& args,
 }
 
 
-bool pop_u64(std::queue<std::string>& args, const char* name, uint64_t& out)
+bool pop_int(std::queue<std::string>& args,
+             const char* where,
+             int& out,
+             int min,
+             int max)
 {
-  if (args.empty()) {
-    LOG_W << name << " is missing its value" << END_W;
-    return false;
-  }
+  long long value = 0;
 
-  const std::string token = args.front();
-  args.pop();
+  if (!pop_whole_integer(args, where, value)) { return false; }
 
-  try {
-    // Parsed as signed on purpose: stoull silently wraps a negative literal
-    const long long value = std::stoll(token);
-    out = static_cast<uint64_t>(std::max<long long>(value, 0));
-  } catch (...) {
-    LOG_W << name << " is not a number: " << token << END_W;
-    return false;
-  }
+  out = static_cast<int>(std::clamp<long long>(value, min, max));
+
+  return true;
+}
+
+
+bool pop_u64(std::queue<std::string>& args, const char* where, uint64_t& out)
+{
+  // Read as signed on purpose: an unsigned parse turns a negative literal into
+  // an enormous budget instead of no budget.
+  long long value = 0;
+
+  if (!pop_whole_integer(args, where, value)) { return false; }
+
+  out = static_cast<uint64_t>(std::max<long long>(value, 0));
 
   return true;
 }
@@ -1586,21 +1763,29 @@ bool command_go(std::queue<std::string>& args)
     args.pop();
 
     if (token == "depth") {
-      depth_given = pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
+      depth_given =
+          pop_int(args, "go depth", search_options.depth, 1, MAX_DEPTH);
     } else if (token == "movetime") {
-      pop_int(args, "Movetime", search_options.movetime_ms, 0, int_max);
+      pop_int(args, "go movetime", search_options.movetime_ms, 0, int_max);
     } else if (token == "nodes") {
-      pop_u64(args, "Nodes", search_options.nodes);
+      pop_u64(args, "go nodes", search_options.nodes);
     } else if (token == "wtime") {
-      pop_int(args, "Wtime", search_options.wtime_ms, 0, int_max);
+      pop_int(args, "go wtime", search_options.wtime_ms, 0, int_max);
     } else if (token == "btime") {
-      pop_int(args, "Btime", search_options.btime_ms, 0, int_max);
+      pop_int(args, "go btime", search_options.btime_ms, 0, int_max);
     } else if (token == "winc") {
-      pop_int(args, "Winc", search_options.winc_ms, 0, int_max);
+      pop_int(args, "go winc", search_options.winc_ms, 0, int_max);
     } else if (token == "binc") {
-      pop_int(args, "Binc", search_options.binc_ms, 0, int_max);
+      pop_int(args, "go binc", search_options.binc_ms, 0, int_max);
     } else if (token == "movestogo") {
-      pop_int(args, "Movestogo", search_options.movestogo, 1, int_max);
+      // S210, 2026-09-10_adversarial-F20. Clamped to 1 here until this step,
+      // which made `movestogo 0` the tightest control a GUI can name -- 46 % of
+      // the clock on one move, 4.64 s of 10 s measured, identical to
+      // `movestogo 1`. 0 is what a GUI sends for sudden death and uci.hpp says
+      // so at the field: it is not a stand-in for some number of moves, and
+      // compute_search_time_budget() has a branch for exactly it (S089). A
+      // negative count is not a control either, so it clamps to the same 0.
+      pop_int(args, "go movestogo", search_options.movestogo, 0, int_max);
     } else if (token == "infinite") {
       search_options.infinite = true;
     } else if (token == "mate" || token == "searchmoves" || token == "ponder") {
@@ -1634,7 +1819,31 @@ bool command_go(std::queue<std::string>& args)
 
   // These three cases are mutually exclusive.
   if (search_options.infinite) {
+    // UCI.txt: "infinite -- search until the stop command. Do not exit the
+    // search without being told so in this mode!" Until S210 this branch
+    // cleared the clock and nothing else, so every other limit on the line
+    // survived and answered: `go infinite depth 1` and `go infinite nodes 1`
+    // both printed `bestmove` before any `stop`, measured 2026-09-12 on the
+    // Release binary (2026-09-10_adversarial-F19, re-triggered by the
+    // 2026-09-12 audit, DEC-197). `movetime` and the clock tokens already
+    // yielded to this branch and are cleared here too, so what holds is the
+    // rule and not the order of the chain.
+    //
+    // Clearing the limits is half the fix. The other half is in
+    // iterative_deepening_search(), which must not return when its depth loop
+    // ends: MAX_DEPTH is reached in under a millisecond on a root whose tree
+    // collapses. 2026-09-04_adversarial-F01.
+    search_options.depth = MAX_DEPTH;
+    search_options.nodes = 0;
+    search_options.movetime_ms = 0;
+    search_options.wtime_ms = 0;
+    search_options.btime_ms = 0;
+    search_options.winc_ms = 0;
+    search_options.binc_ms = 0;
     search_options.search_time_ms = 0;
+    search_options.search_soft_time_ms = 0;
+    search_options.scale_time = false;
+
     LOG_I << "Infinite search. Only [stop] ends it" << END_I;
 
   } else if (search_options.movetime_ms > 0) {
@@ -1809,7 +2018,7 @@ bool command_test(std::queue<std::string>& args)
   search_options.depth = 6;
 
   if (!args.empty()) {
-    pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
+    pop_int(args, "test depth", search_options.depth, 1, MAX_DEPTH);
   }
 
 #ifdef NDEBUG
@@ -1940,7 +2149,7 @@ bool command_bench(std::queue<std::string>& args)
   // `bench <depth>` is for exploring the cost curve; the signature is the bare
   // form, which is what the gate runs.
   if (!args.empty()) {
-    pop_int(args, "Depth", search_options.depth, 1, MAX_DEPTH);
+    pop_int(args, "bench depth", search_options.depth, 1, MAX_DEPTH);
   }
 
   uint64_t total_nodes = 0;

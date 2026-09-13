@@ -537,6 +537,69 @@ TEST_SUITE("engine: move stack limits")
     REQUIRE(applied < HISTORY_MAX_SIZE);
     REQUIRE(game.history.size < HISTORY_MAX_SIZE);
   }
+
+
+  // S210, 2026-09-10_adversarial-F17. halfmove_clock is a uint8_t and `+= 1`
+  // wrapped it: 256 reversible plies through `position startpos moves` left it
+  // at 0 and 300 at 44. Both consumers then failed at once -- negamax_at's
+  // `>= 100` fifty-move test stopped firing, and classify_repetition()'s
+  // window, min(halfmove_clock, history size), collapsed to nothing, so a
+  // subtree that had already repeated four times had no draw rule of either
+  // kind. The increments saturate at HALFMOVE_CLOCK_MAX now.
+  //
+  // Driven through the UCI command, because that is the only way to reach it:
+  // the search is bounded by MAX_PLY and cannot add 256 reversible plies of
+  // its own.
+  TEST_CASE("256 reversible plies do not wrap the halfmove clock")
+  {
+    uci_init();
+
+    // A four-ply knight shuffle, which is reversible by construction: no
+    // capture, no pawn move, and the position after every cycle is the one
+    // before it.
+    std::string moves = "position startpos moves";
+    const char* cycle[4] = {" g1f3", " b8c6", " f3g1", " c6b8"};
+
+    for (int ply = 0; ply < 256; ++ply) {
+      moves += cycle[ply % 4];
+    }
+
+    {
+      stdout_capture_t capture;
+      uci_process_line(moves);
+
+      // Nothing in that line is refusable, so a refusal here would mean the
+      // shuffle is not the shuffle this case thinks it is.
+      REQUIRE_MESSAGE(!capture.contains("info string refused"), capture.str());
+    }
+
+    memcpy(&game, uci_game(), sizeof(game_t));
+
+    REQUIRE_EQ(game.history.size, 256u);
+
+    // The wrap: 256 increments of a uint8_t land back on 0.
+    CHECK_MESSAGE(game.board.halfmove_clock >= 100,
+                  ("the fifty-move test reads halfmove_clock >= 100 and this "
+                   "position is 256 reversible plies deep; clock is " +
+                   std::to_string(int(game.board.halfmove_clock))));
+
+    CHECK_EQ(int(game.board.halfmove_clock), HALFMOVE_CLOCK_MAX);
+
+    // The second consumer, exercised rather than reasoned about: the position
+    // on the board has occurred 64 times and classify_repetition() has to be
+    // able to see it. A wrapped clock makes its window
+    // min(halfmove_clock, history size) zero and the walk finds nothing.
+    //
+    // root_history_size is 0 here -- everything in the history was played
+    // before this "search" -- which is the pre-root reading, the stricter of
+    // the two classify_repetition() gives.
+    const repetition_kind_t kind =
+        classify_repetition(&game.history, &game.board, 0);
+
+    CHECK(kind != repetition_kind_t::NONE);
+
+    uci_shutdown();
+  }
 }
 
 
@@ -714,6 +777,202 @@ TEST_SUITE("engine: uci layer")
   }
 
 
+  // S210, 2026-09-10_adversarial-F20. compute_search_time_budget() has a
+  // sudden-death branch for movestogo == 0 and uci.hpp says at the field that
+  // 0 is what a GUI sends for it and "is not a stand-in for some number of
+  // moves" (S089). command_go clamped the token into [1, INT_MAX] before this
+  // step, so `movestogo 0` arrived as `movestogo 1` and bought the whole clock
+  // minus overhead for one move: 4.64 s of a 10 s clock measured, 46 %.
+  //
+  // The allocation is not exposed, so what is measured is the time the search
+  // actually spends, against the two allocations compute_search_time_budget()
+  // gives for the same clock. The third line is the precondition: it is what
+  // makes the difference visible, and without it the case would be green on
+  // any engine that ignores the token entirely.
+  TEST_CASE("movestogo 0 buys the sudden-death allocation, not movestogo 1")
+  {
+    const int clock_ms = 2000;
+
+    const search_time_budget_t sudden_death =
+        compute_search_time_budget(clock_ms, 0, 0);
+    const search_time_budget_t one_move_left =
+        compute_search_time_budget(clock_ms, 0, 1);
+
+    // Precondition. The two allocations have to be far enough apart that a
+    // measured time can tell them apart at all.
+    REQUIRE(one_move_left.soft_ms > 4 * sudden_death.soft_ms);
+
+    auto elapsed_ms = [](const std::string& line) {
+      uci_init();
+
+      const auto started = std::chrono::steady_clock::now();
+      {
+        stdout_capture_t capture;
+        uci_process_line("position startpos moves e2e4 e7e5");
+        uci_process_line(line);
+        uci_wait_for_search();
+      }
+      const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::steady_clock::now() - started)
+                          .count();
+
+      uci_shutdown();
+
+      return static_cast<int>(ms);
+    };
+
+    const std::string clock = " wtime " + std::to_string(clock_ms) + " btime " +
+                              std::to_string(clock_ms);
+
+    const int no_token = elapsed_ms("go" + clock);
+    const int zero = elapsed_ms("go" + clock + " movestogo 0");
+    const int one = elapsed_ms("go" + clock + " movestogo 1");
+
+    const std::string measured = "no movestogo " + std::to_string(no_token) +
+                                 " ms, movestogo 0 " + std::to_string(zero) +
+                                 " ms, movestogo 1 " + std::to_string(one) +
+                                 " ms";
+
+    // The precondition again, this time on the engine rather than on the
+    // function: sending `movestogo 1` really does buy a much longer search
+    // here, so "movestogo 0 is not movestogo 1" is a claim with content.
+    REQUIRE_MESSAGE(one > 3 * no_token, measured);
+
+    // The claim. Halfway between the two allocations is a generous line and
+    // still nowhere near `movestogo 1`, which is where the clamp put it.
+    CHECK_MESSAGE(zero < (no_token + one) / 2, measured);
+  }
+
+
+  // S210, 2026-09-10_adversarial-F21. iterative_deepening_search() pointed
+  // state.stop at a local `never_stop` and swapped the real signal in only
+  // after the first search() had returned, so depth 1 answered neither `stop`
+  // nor the hard timer. Depth 1 is 0.56 ms at the median over 400 corpus
+  // positions, which is why no match ever noticed; on a pathological board the
+  // reviewer measured 254 ms burned against a 100 ms clock, which is a forfeit.
+  //
+  // What is asserted is not a duration. An iteration that was cut reports no
+  // completed depth -- last_complete_depth stays 0 and an aborted iteration
+  // never raises it -- so "no info line reports depth 1 or more" is exactly
+  // "the first iteration did not finish", and the unfixed engine finishes it
+  // every time.
+  TEST_CASE("the first iteration honours stop and the hard timer")
+  {
+    // Eight queens a side. Depth 1 here is a wide root over deep capture
+    // chains in quiescence, so the stop has a window to land in. **Golden**:
+    // 13.8 ms on this machine, re-derived with
+    // `position fen <below>` then `go depth 1`, reading the `time` field of the
+    // info line. The precondition below asserts 3 ms of it, which is where a
+    // four times faster machine would still leave the case separating; under
+    // that it needs a heavier position, not a smaller floor.
+    const std::string fen =
+        "q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1";
+    const int depth_1_floor_ms = 3;
+
+    auto deepest_completed_depth = [](const stdout_capture_t& capture) {
+      int deepest = -1;
+
+      for (const std::string& line : capture.lines()) {
+        const size_t at = line.find(" depth ");
+
+        if (line.rfind("info ", 0) != 0 || at == std::string::npos) {
+          continue;
+        }
+
+        deepest = std::max(deepest, std::atoi(line.c_str() + at + 7));
+      }
+
+      return deepest;
+    };
+
+    auto answered_a_playable_move = [](const stdout_capture_t& capture) {
+      for (const std::string& line : capture.lines()) {
+        if (line.rfind("bestmove ", 0) != 0) { continue; }
+
+        return line != "bestmove 0000";
+      }
+
+      return false;
+    };
+
+    // The precondition, measured from the engine rather than assumed: an
+    // unbounded depth-1 iteration on this position takes long enough that a
+    // command sent straight after `go` lands inside it.
+    {
+      uci_init();
+
+      stdout_capture_t capture;
+      uci_process_line("position fen " + fen);
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      REQUIRE_EQ(deepest_completed_depth(capture), 1);
+
+      int reported_ms = -1;
+
+      for (const std::string& line : capture.lines()) {
+        const size_t at = line.find(" time ");
+
+        if (line.rfind("info ", 0) != 0 || at == std::string::npos) {
+          continue;
+        }
+
+        reported_ms = std::atoi(line.c_str() + at + 6);
+      }
+
+      REQUIRE_MESSAGE(
+          reported_ms >= depth_1_floor_ms,
+          ("depth 1 on this position now takes " + std::to_string(reported_ms) +
+           " ms, which is too fast for this case to separate; "
+           "pick a heavier position"));
+
+      uci_shutdown();
+    }
+
+    // `stop`, with no timer anywhere: the hard limit is a hundred seconds out
+    // and the only thing that can end this search is the signal.
+    {
+      uci_init();
+
+      stdout_capture_t capture;
+      uci_process_line("position fen " + fen);
+      uci_process_line("go movetime 100000");
+      uci_process_line("stop");
+      uci_wait_for_search();
+
+      CHECK_MESSAGE(deepest_completed_depth(capture) < 1,
+                    ("the first iteration ran to the end through a stop:\n" +
+                     capture.str()));
+
+      CHECK_MESSAGE(
+          answered_a_playable_move(capture),
+          ("a cut depth-1 iteration still owes a move:\n" + capture.str()));
+
+      uci_shutdown();
+    }
+
+    // The hard timer, which is the same pointer reached from the other side.
+    {
+      uci_init();
+
+      stdout_capture_t capture;
+      uci_process_line("position fen " + fen);
+      uci_process_line("go movetime 1");
+      uci_wait_for_search();
+
+      CHECK_MESSAGE(
+          deepest_completed_depth(capture) < 1,
+          ("the first iteration ran past its hard limit:\n" + capture.str()));
+
+      CHECK_MESSAGE(
+          answered_a_playable_move(capture),
+          ("a cut depth-1 iteration still owes a move:\n" + capture.str()));
+
+      uci_shutdown();
+    }
+  }
+
+
   TEST_CASE("uci_init leaves the engine on the start position")
   {
     uci_init();
@@ -852,6 +1111,354 @@ TEST_SUITE("engine: uci layer")
     REQUIRE_EQ(generate_FEN(&uci_game()->board), after_e2e4);
 
     uci_shutdown();
+  }
+
+
+  // S210, 2026-09-04_adversarial-F02. The S176 rule above was the FEN half of
+  // this command; the moves half did the opposite. A token
+  // algebraic_to_uci_move() rejected was passed over, a move try_move() could
+  // not find was answered with LOG_W -- `if (false)` under NDEBUG, so silent
+  // in the binary that ships -- and the rest of the list was applied over the
+  // hole. `position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 zzzz a7a6 b5a4`
+  // ended on the board the GUI would have had after 5...a6 6.Ba4, one ply
+  // short of the line it sent, and every later `bestmove` was judged against a
+  // board the engine never computed on.
+  //
+  // The reasoning S176 wrote down for the FEN half is the reasoning here:
+  // applying the moves that follow puts the engine somewhere the GUI did not
+  // send it. Both refusals now end the command with the engine on the position
+  // it had **before the command**, which is what the third subcase pins --
+  // a legal prefix does not survive a bad token later in the same line.
+  TEST_CASE("a moves token that does not play refuses the whole command")
+  {
+    struct case_t
+    {
+      std::string line;
+      std::string refusal;
+      std::string title;
+    };
+
+    const std::vector<case_t> cases = {
+        {"position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 zzzz a7a6 b5a4",
+         "info string refused [position moves] zzzz, does not parse",
+         "a token that is not a move at all"},
+        // Syntactically a move, and not one this board has: it is Black's turn
+        // after 1.e4, and White's king is not on e1's castling squares anyway.
+        {"position startpos moves e2e4 e1g1 e7e5",
+         "info string refused [position moves] e1g1, not a legal move here",
+         "a well-formed move that is illegal here"},
+        // A promotion piece the parser does not know.
+        {"position startpos moves e2e4x",
+         "info string refused [position moves] e2e4x, does not parse",
+         "a move with a character glued to it"},
+    };
+
+    for (const case_t& test : cases) {
+      uci_init();
+
+      // The board before the command, and deliberately not the start position:
+      // a refusal that reset to `startpos` would pass a case that began there.
+      std::string before;
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position startpos moves d2d4 d7d5");
+        before = generate_FEN(&uci_game()->board);
+        REQUIRE_MESSAGE(before != std::string(DEFAULT_POSITION), test.title);
+
+        uci_process_line(test.line);
+
+        CHECK_MESSAGE(capture.contains(test.refusal),
+                      (test.title + ": " + capture.str()));
+      }
+
+      CHECK_MESSAGE(generate_FEN(&uci_game()->board) == before, test.title);
+
+      uci_shutdown();
+    }
+  }
+
+
+  // S210, raised by the Tier-1 fast check over the first half. The command was
+  // atomic for `game` and for nothing else. set_position() writes
+  // `initial_position`, calls tt_reset() and re-arms `still_in_opening`
+  // *before* the moves are applied, and the moves loop's refusal restored none
+  // of the three: `position <a different base> moves zzzz` wiped a table the
+  // GUI had just paid a search for, left `initial_position` naming a board the
+  // engine is not standing on, and put the opening book back on for a command
+  // that was refused. The board was the only thing that came back.
+  //
+  // The table is the half a test can see. uci_tt() is the engine's own table
+  // and tt_get_entry() answers for a board; `initial_position` and
+  // `still_in_opening` are file statics in src/chesso.cpp with no accessor.
+  // All three are fixed the same way -- nothing is written until the whole
+  // command has succeeded -- so the table standing is what pins the rule.
+  TEST_CASE("a refused position command leaves the table alone")
+  {
+    uci_init();
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos moves e2e4 e7e5");
+      uci_process_line("go depth 6");
+      uci_wait_for_search();
+    }
+
+    const std::string before = generate_FEN(&uci_game()->board);
+
+    // The precondition, without which the check below cannot fail: the search
+    // just filled the table, so this board has an entry there to lose.
+    memcpy(&game, uci_game(), sizeof(game_t));
+    REQUIRE(load_FEN(generate_FEN(&game.board), &game));
+    REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
+
+    // A *different* base, so set_position() takes its `initial_position != fen`
+    // branch, followed by a token that cannot play, so the command is refused
+    // after that branch would have run.
+    {
+      stdout_capture_t capture;
+      uci_process_line("position kiwipete moves zzzz");
+
+      REQUIRE_MESSAGE(
+          capture.contains(
+              "info string refused [position moves] zzzz, does not parse"),
+          capture.str());
+    }
+
+    CHECK_EQ(generate_FEN(&uci_game()->board), before);
+
+    CHECK_MESSAGE(tt_get_entry(uci_tt(), &game.board) != nullptr,
+                  "a refused [position] cleared the transposition table");
+
+    uci_shutdown();
+  }
+
+
+  // S210, 2026-09-10_adversarial-F18. At 4999 plies the root's own make_move()
+  // refused every move, first_legal_move() could not rescue it because it calls
+  // make_move() too, and the engine answered `bestmove 0000` with 22 legal
+  // moves on the board. Refusing only what make_move() refuses does not close
+  // it: the last accepted move leaves the history one entry from the end and
+  // the search still cannot push a ply. The command keeps MAX_PLY of the stack
+  // for the search instead, and POSITION_MAX_PLIES is that bound.
+  //
+  // Three assertions and the middle one is the finding: the bound is reachable,
+  // a search from a position exactly at it still answers a move, and one ply
+  // past it is refused with the board unchanged.
+  TEST_CASE("a moves list past the history bound is refused and still answers")
+  {
+    auto shuffle_line = [](size_t plies) {
+      std::string line = "position startpos moves";
+      const char* cycle[4] = {" g1f3", " b8c6", " f3g1", " c6b8"};
+
+      for (size_t ply = 0; ply < plies; ++ply) {
+        line += cycle[ply % 4];
+      }
+
+      return line;
+    };
+
+    uci_init();
+
+    std::string at_the_bound;
+
+    {
+      stdout_capture_t capture;
+      uci_process_line(shuffle_line(POSITION_MAX_PLIES));
+
+      REQUIRE_MESSAGE(!capture.contains("info string refused"), capture.str());
+
+      REQUIRE_EQ(uci_game()->history.size, size_t(POSITION_MAX_PLIES));
+      at_the_bound = generate_FEN(&uci_game()->board);
+    }
+
+    // The symptom. A position the command accepted is a position the search
+    // can move in.
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      bool answered = false;
+
+      for (const std::string& line : capture.lines()) {
+        if (line.rfind("bestmove ", 0) != 0) { continue; }
+
+        answered = true;
+        CHECK_MESSAGE(line != "bestmove 0000",
+                      "the engine answered the null move with legal moves on "
+                      "the board");
+      }
+
+      REQUIRE(answered);
+    }
+
+    // One ply further is refused, and the refusal leaves the engine on the
+    // board it had -- which here is the one the accepted line left.
+    {
+      stdout_capture_t capture;
+      uci_process_line(shuffle_line(POSITION_MAX_PLIES + 1));
+
+      CHECK_MESSAGE(capture.contains("info string refused [position moves] "),
+                    capture.str());
+      CHECK_MESSAGE(
+          capture.contains("the move stack is full at " +
+                           std::to_string(POSITION_MAX_PLIES) + " plies"),
+          capture.str());
+    }
+
+    CHECK_EQ(generate_FEN(&uci_game()->board), at_the_bound);
+
+    // The audit's own reproduction: the longest line make_move() alone
+    // tolerates. Every ply of it played before this step, leaving the history
+    // one entry from the end, and the search then had nowhere to put a move --
+    // every root move refused, first_legal_move() refused too, `bestmove 0000`
+    // with legal moves on the board. It is refused here, and the assertion
+    // that matters is the one after it: whatever the engine is standing on, it
+    // answers with a move.
+    {
+      stdout_capture_t capture;
+      uci_process_line(shuffle_line(HISTORY_MAX_SIZE - 1));
+
+      CHECK_MESSAGE(
+          capture.contains("the move stack is full at " +
+                           std::to_string(POSITION_MAX_PLIES) + " plies"),
+          capture.str());
+    }
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      bool answered = false;
+
+      for (const std::string& line : capture.lines()) {
+        if (line.rfind("bestmove ", 0) != 0) { continue; }
+
+        answered = true;
+        CHECK_MESSAGE(line != "bestmove 0000",
+                      ("the engine answered the null move after a "
+                       "position line of " +
+                       std::to_string(HISTORY_MAX_SIZE - 1) + " plies:\n" +
+                       capture.str()));
+      }
+
+      REQUIRE(answered);
+    }
+
+    uci_shutdown();
+  }
+
+
+  // S210, and the decision S209 left open. The `go` numbers were read with
+  // std::stoll(), which stops at the first character it cannot use and says
+  // nothing in a release build: `wtime 0x1000` was a clock of zero, which
+  // drops the search onto the no-limit fallback, and `movetime 100abc` was
+  // 100 ms. Same class as the `Hash` misparse S209 removed, on the line that
+  // decides how much clock a move gets, so the same whole-token rule and the
+  // same two message shapes apply -- on the UCI channel, which is legal UCI in
+  // every build state.
+  TEST_CASE("go refuses a limit that is not an integer in full")
+  {
+    struct case_t
+    {
+      std::string line;
+      std::string refusal;
+    };
+
+    // Every line carries a second, well-formed limit: a refused token is
+    // dropped, and a `go` left with no limit at all falls back to a whole
+    // second of searching that this case has no use for.
+    const std::vector<case_t> cases = {
+        {"go depth 0x4 movetime 20",
+         "info string refused [go depth] 0x4, not an integer"},
+        {"go depth 4abc movetime 20",
+         "info string refused [go depth] 4abc, not an integer"},
+        {"go depth 4.5 movetime 20",
+         "info string refused [go depth] 4.5, not an integer"},
+        {"go movetime 20x depth 1",
+         "info string refused [go movetime] 20x, not an integer"},
+        {"go nodes 1e6 depth 1",
+         "info string refused [go nodes] 1e6, not an integer"},
+        {"go wtime 0x1000 btime 1000 depth 1",
+         "info string refused [go wtime] 0x1000, not an integer"},
+        {"go movestogo abc depth 1",
+         "info string refused [go movestogo] abc, not an integer"},
+        // A leading sign std::from_chars does not read and std::stoll did:
+        // `+5` was depth 5 until S210. `Hash` refuses `+64` the same way and
+        // MANUAL.md lists both.
+        {"go depth +5 movetime 20",
+         "info string refused [go depth] +5, not an integer"},
+        // A well-formed integer no long long can hold is out of range, not
+        // malformed -- the distinction stoll()'s single catch could not make.
+        {"go depth 99999999999999999999 movetime 20",
+         "info string refused [go depth] 99999999999999999999, out of range"},
+    };
+
+    for (const case_t& test : cases) {
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position startpos");
+        uci_process_line(test.line);
+        uci_wait_for_search();
+
+        CHECK_MESSAGE(capture.contains(test.refusal),
+                      (test.line + " -> " + capture.str()));
+
+        // The refused token is dropped and the rest of the line still runs, so
+        // the search still answers. A `go` that says nothing back is worse
+        // than a `go` that answers on a default.
+        bool answered = false;
+
+        for (const std::string& line : capture.lines()) {
+          if (line.rfind("bestmove ", 0) == 0) { answered = true; }
+        }
+
+        CHECK_MESSAGE(answered, (test.line + " never answered"));
+      }
+
+      uci_shutdown();
+    }
+  }
+
+
+  // The control the case above needs: a token that *is* a whole integer is
+  // still read, and a value outside the field's range is still clamped rather
+  // than refused. Without this, refusing everything would be green up there.
+  TEST_CASE("go still reads a whole integer, and still clamps its range")
+  {
+    // `depth 999` and `depth -3` clamp into [1, MAX_DEPTH] as they always did,
+    // which is why the first carries a movetime: clamped to MAX_DEPTH it is
+    // otherwise an unbounded search. `nodes -1` is read as signed and becomes
+    // no budget rather than an enormous one, so it carries a depth.
+    const std::vector<std::string> lines = {
+        "go depth 2",
+        "go depth 999 movetime 20",
+        "go depth -3",
+        "go nodes 5000",
+        "go nodes -1 depth 1",
+        "go movetime 20",
+        "go movestogo 0 depth 1",
+    };
+
+    for (const std::string& line : lines) {
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position startpos");
+        uci_process_line(line);
+        uci_wait_for_search();
+
+        CHECK_MESSAGE(!capture.contains("info string refused"),
+                      (line + " -> " + capture.str()));
+      }
+
+      uci_shutdown();
+    }
   }
 
   TEST_CASE("unknown and empty input is ignored")
@@ -1111,6 +1718,43 @@ TEST_SUITE("engine: uci layer")
     {
       stdout_capture_t capture;
       uci_process_line("position startpos");
+
+      // [position] stops whatever was running, and [go] is the only path that
+      // clears the stop flag again - iterative_deepening_search documents that
+      // its caller has cleared it before the timer is armed. S193, DEC-163,
+      // 2026-09-04_test_review-F05, and this case is the one the sweep
+      // missed: without it the direct call below aborts on the stale flag from
+      // its first check_limits(), so the budget is not what stops it and the
+      // case cannot see the bug it names. Measured on the tree that had no
+      // preamble here: the same call with the budget removed entirely
+      // (options.nodes = 0, nothing bounding the search at all) still returned
+      // a legal move after 49 nodes. A depth-limited [go] arms no timer, so
+      // the flag stays clear afterwards.
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+    }
+
+    // The precondition, which is what makes the one-node search below mean
+    // something: with the flag clear a direct call runs to whatever budget it
+    // is given, so a budget far past the 49 nodes above has to be reachable.
+    // No golden -- the figure asserted is the budget itself, and check_limits()
+    // stops at `explored_nodes >= node_limit`.
+    {
+      uci_search_options_t roomy = {};
+      roomy.depth = MAX_DEPTH;
+      roomy.nodes = 100000;
+
+      uci_search_result_t reached;
+      {
+        stdout_capture_t capture;
+        reached = iterative_deepening_search(roomy);
+      }
+
+      REQUIRE_MESSAGE(reached.total_node_explored >= roomy.nodes,
+                      ("a 100000 node budget stopped after " +
+                       std::to_string(reached.total_node_explored) +
+                       " nodes, so something other than the budget is ending "
+                       "these searches"));
     }
 
     uci_search_options_t options = {};
@@ -1145,9 +1789,13 @@ TEST_SUITE("engine: uci layer")
     }
 
     // `position` runs stop_and_join_search(), which *sets* stop_search_signal.
-    // Without this the loop below breaks after depth 1 and the case measured
-    // about a millisecond while claiming to bound a 200 ms search -- it passed
-    // its `elapsed < 30000` for the wrong reason. A completed `go` is the only
+    // Without this the search below reads the stale flag at its first
+    // check_limits() -- since S210's F21 the first iteration reads the real
+    // signal too -- and the case measured about a millisecond while claiming to
+    // bound a 200 ms search: it passed its `elapsed < 30000` for the wrong
+    // reason, and it read depth 1 rather than depth 0 only because the flag
+    // used to be ignored until the first iteration had returned. A completed
+    // `go` is the only
     // way a test can clear the flag: begin_search_session() is what clears it
     // and no header declares it, and `ucinewgame` sets it again through the
     // same stop_and_join_search(). S193, DEC-163, 2026-09-04_test_review-F05.
@@ -1296,7 +1944,9 @@ TEST_SUITE("engine: uci layer")
         // [position] stops whatever was running, and [go] is the only path
         // that clears the stop flag again - iterative_deepening_search
         // documents that its caller has cleared it before the timer is armed.
-        // Without this the direct call below aborts after its first iteration.
+        // Without this the direct call below aborts on the stale flag at its
+        // first check_limits(), before any iteration completes, and the probe
+        // reads whatever the fallback answered instead of a searched tree.
         // A depth-limited [go] arms no timer, so the flag stays clear.
         uci_process_line("go depth 1");
         uci_wait_for_search();
@@ -1449,9 +2099,11 @@ TEST_SUITE("engine: uci layer")
       // [position] stops whatever was running, and [go] is the only path that
       // clears the stop flag again - iterative_deepening_search documents that
       // its caller has cleared it before the timer is armed. Without this the
-      // direct call below aborts after its first iteration, since that is the
-      // one that runs against a local never-stop flag. A depth-limited [go]
-      // arms no timer, so the flag stays clear afterwards.
+      // direct call below aborts on the stale flag at its first
+      // check_limits(), so no iteration completes and there is no run of info
+      // lines to compare. Until S210's F21 it got one iteration out first, the
+      // one that ran against a local never-stop flag; now it gets none. A
+      // depth-limited [go] arms no timer, so the flag stays clear afterwards.
       uci_process_line("go depth 1");
       uci_wait_for_search();
     }
@@ -2251,33 +2903,58 @@ TEST_SUITE("engine: uci parsing")
   }
 
 
+  // `where` is the whole bracket text the refusal prints, so it is one of the
+  // names `command_go` actually passes -- `Depth` and `Nodes` were the option
+  // names these two cases carried before S210 gave the helper a UCI channel,
+  // and they put two refusal shapes no document describes onto the test
+  // binary's own stdout. Captured for the same reason: a refusal is engine
+  // output now, and it is asserted rather than spilled.
   TEST_CASE("pop_int clamps instead of accepting nonsense")
   {
     int value = -1;
 
     std::queue<std::string> args;
     args.push("7");
-    REQUIRE(pop_int(args, "Depth", value, 1, 100));
+    REQUIRE(pop_int(args, "go depth", value, 1, 100));
     REQUIRE_EQ(value, 7);
 
     // Out of range on both sides is clamped, not rejected.
     args.push("1000");
-    REQUIRE(pop_int(args, "Depth", value, 1, 100));
+    REQUIRE(pop_int(args, "go depth", value, 1, 100));
     REQUIRE_EQ(value, 100);
 
     args.push("-5");
-    REQUIRE(pop_int(args, "Depth", value, 1, 100));
+    REQUIRE(pop_int(args, "go depth", value, 1, 100));
     REQUIRE_EQ(value, 1);
 
     // Garbage and a missing value both fail and leave the target alone.
     value = 42;
     args.push("abc");
-    REQUIRE_FALSE(pop_int(args, "Depth", value, 1, 100));
-    REQUIRE_EQ(value, 42);
 
-    REQUIRE(args.empty());
-    REQUIRE_FALSE(pop_int(args, "Depth", value, 1, 100));
+    std::string said;
+    {
+      stdout_capture_t capture;
+      REQUIRE_FALSE(pop_int(args, "go depth", value, 1, 100));
+      said = capture.str();
+    }
+
     REQUIRE_EQ(value, 42);
+    REQUIRE_MESSAGE(said.find("info string refused [go depth] abc, "
+                              "not an integer") != std::string::npos,
+                    said);
+
+    // A missing value says nothing on the UCI channel: there is no token to
+    // name, and UCI has no reply for a truncated line.
+    REQUIRE(args.empty());
+
+    {
+      stdout_capture_t capture;
+      REQUIRE_FALSE(pop_int(args, "go depth", value, 1, 100));
+      said = capture.str();
+    }
+
+    REQUIRE_EQ(value, 42);
+    REQUIRE_MESSAGE(said.empty(), said);
   }
 
 
@@ -2287,17 +2964,27 @@ TEST_SUITE("engine: uci parsing")
 
     std::queue<std::string> args;
     args.push("123456789");
-    REQUIRE(pop_u64(args, "Nodes", value));
+    REQUIRE(pop_u64(args, "go nodes", value));
     REQUIRE_EQ(value, 123456789u);
 
     args.push("-1");
-    REQUIRE(pop_u64(args, "Nodes", value));
+    REQUIRE(pop_u64(args, "go nodes", value));
     REQUIRE_EQ(value, 0u);
 
     value = 5;
     args.push("nope");
-    REQUIRE_FALSE(pop_u64(args, "Nodes", value));
+
+    std::string said;
+    {
+      stdout_capture_t capture;
+      REQUIRE_FALSE(pop_u64(args, "go nodes", value));
+      said = capture.str();
+    }
+
     REQUIRE_EQ(value, 5u);
+    REQUIRE_MESSAGE(said.find("info string refused [go nodes] nope, "
+                              "not an integer") != std::string::npos,
+                    said);
   }
 
 
@@ -2386,8 +3073,10 @@ TEST_SUITE("engine: aspiration windows")
       // iterative_deepening_search() directly, because that function does not
       // clear stop_search_signal - its comment says the caller does, and
       // uci_shutdown() sets it. A direct call after any earlier case in this
-      // binary therefore aborts after its first iteration, which is what the
-      // first version of this test measured.
+      // binary therefore aborts on the stale flag at its first check_limits().
+      // The first version of this test measured one iteration that way, which
+      // is what the never-stop flag S210's F21 removed used to buy it; the
+      // same call today measures none.
       stdout_capture_t capture;
       uci_process_line("go depth " + std::to_string(depth));
       uci_wait_for_search();

@@ -58,6 +58,21 @@ static const std::vector<std::string> expected_option_names = {
 // clang-format on
 
 
+// **Golden, DEC-142.** The ply bound in the refusal below and in MANUAL.md is
+// POSITION_MAX_PLIES, defined in src/data_structures.hpp as
+// `HISTORY_MAX_SIZE - MAX_PLY - 1`. The template is built from the constant, so
+// moving either of those two fails the MANUAL.md case rather than passing over
+// a stale number -- and this assert is what tells whoever moved them where the
+// number they now have to rewrite lives: MANUAL.md writes it out three times,
+// in the `position moves` refusal block, in the paragraph headed "The bound is
+// 4871 plies", and in the sentence converting it to 2435 moves. Re-derive with
+// `printf 'position startpos moves zzzz\nquit\n' | ./build/src/chesso` after a
+// line long enough to trip it, or read the two constants.
+static_assert(POSITION_MAX_PLIES == 4871,
+              "POSITION_MAX_PLIES moved: update MANUAL.md's three statements "
+              "of the 4871-ply bound, then this assert");
+
+
 // S137. The tune build answers a `setoption` it cannot honour with one
 // `info string` line, because the refusal used to go to a macro that compiles
 // to nothing in a release build and `build-tune` is one -- so a tuner sending a
@@ -79,6 +94,33 @@ static const std::vector<std::string> expected_refusal_templates = {
     // before these lines were added (SURFACE).
     "info string refused [position fen] <fen>, fewer than four fields",
     "info string refused [position fen] <fen>, does not load",
+    // S210: the `moves` half of the same command, which skipped a token it
+    // could not play and applied the rest of the list over the hole
+    // (2026-09-04_adversarial-F02), and the history bound that made the engine
+    // answer `bestmove 0000` in a position with legal moves
+    // (2026-09-10_adversarial-F18). Release-build surface, like the two above.
+    // MANUAL.md and specs.md described them before these lines were added
+    // (SURFACE).
+    "info string refused [position moves] <move>, does not parse",
+    "info string refused [position moves] <move>, not a legal move here",
+    "info string refused [position moves] <move>, the move stack is full at " +
+        std::to_string(POSITION_MAX_PLIES) + " plies",
+    // S210: the `go` numbers, which std::stoll read up to the first character
+    // it could not use and reported through a macro that compiles to nothing
+    // under NDEBUG -- the class S209 removed from `Hash`, one command along.
+    // `<token>` is the UCI word, so the bracket reads `[go wtime]`; `bench` and
+    // `test` name themselves the same way.
+    //
+    // Re-derive the five S210 lines from the binary rather than from here:
+    //   printf 'position startpos moves zzzz\nquit\n'      | ./build/src/chesso
+    //   printf 'position startpos moves e1g1\nquit\n'      | ./build/src/chesso
+    //   printf 'go depth 0x4 movetime 20\nquit\n'          | ./build/src/chesso
+    //   printf 'go depth 99999999999999999999 movetime 20\nquit\n' | ...
+    // and the ply bound from POSITION_MAX_PLIES in src/data_structures.hpp.
+    // The concrete lines are asserted verbatim in tests/test_engine.cpp; what
+    // is golden here is that MANUAL.md documents each shape.
+    "info string refused [go <token>] <value>, not an integer",
+    "info string refused [go <token>] <value>, out of range",
 };
 
 

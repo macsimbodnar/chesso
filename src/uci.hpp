@@ -94,12 +94,17 @@ std::vector<std::string> uci_command_names();
 std::queue<std::string> tokenize_input(std::string string, std::string delim);
 std::string trim_whitespace(const std::string& str);
 
+// The whole token has to be an integer, or it is refused on the UCI channel and
+// the field keeps the value it had (S210, the rule S209 gave `Hash`). `where`
+// is the bracket text the refusal names itself with -- `go depth`, `bench
+// depth` -- so it says which command as well as which token. A whole integer
+// outside [min, max] is clamped, not refused.
 bool pop_int(std::queue<std::string>& args,
-             const char* name,
+             const char* where,
              int& out,
              int min,
              int max);
-bool pop_u64(std::queue<std::string>& args, const char* name, uint64_t& out);
+bool pop_u64(std::queue<std::string>& args, const char* where, uint64_t& out);
 
 std::optional<uci_move_t> algebraic_to_uci_move(const std::string& p);
 std::string uci_move_to_algebraic(const uci_move_t* move);

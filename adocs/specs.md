@@ -259,6 +259,44 @@ the last FEN without its moves -- so one malformed FEN after `startpos moves
 e2e4` put the engine on the start position and then applied the moves that
 followed to it (2026-09-03_adversarial-F04).
 
+**The `moves` list follows the same rule since 2026-09-13, S210.** A token
+that does not parse, one that is not legal on the board it arrives at, and
+one the history has no room for each end the command with the board, the
+history and every move applied since the last `position` exactly as they were
+-- the whole command is atomic, the FEN refusals included: nothing is written
+before the line has succeeded, so a refused command also leaves the
+transposition table unreset, `initial_position` unmoved and the book flag
+`still_in_opening` as it was (`load_position()` loads, `commit_position_base()`
+commits once at the end). One `info string`
+line in three shapes (`MANUAL.md` has them). Before S210 such a token was
+skipped and the rest of the list applied over the hole, silently under
+`NDEBUG`, so `position` could end on a board the GUI never sent
+(2026-09-04_adversarial-F02). **A `moves` list is bounded at
+`POSITION_MAX_PLIES` = `HISTORY_MAX_SIZE - MAX_PLY - 1` = 4871** since the same
+step: refusing only what `make_move` refuses leaves a position the search
+cannot push a ply from -- at 4999 plies every root move was refused,
+`first_legal_move()` with it, and the engine answered `bestmove 0000` with
+legal moves on the board (2026-09-10_adversarial-F18). **The halfmove clock
+saturates at 255** rather than wrapping: 256 reversible plies took it to 0 and
+switched off the `>= 100` fifty-move test and `classify_repetition()`'s window
+together (F17); the field stays 8 bits because `history_entry_t` is exactly 16
+bytes (DEC-208), and `load_FEN` still refuses a clock above 255.
+
+**`go infinite` answers `stop` and nothing else since S210**: the infinite
+branch clears `depth`, `nodes`, `movetime` and the clock, and
+`iterative_deepening_search()` holds open on `stop_search_signal` after its
+depth loop, which is what a root whose tree collapses needs
+(2026-09-10_adversarial-F19, DEC-197; 2026-09-04_adversarial-F01).
+**`movestogo 0` is sudden death**, not one move left -- it was clamped to 1
+and bought 46 % of the clock (F20). **The first iteration honours `stop` and
+the hard timer** (F21); a cut depth-1 iteration reports no completed depth and
+answers from `first_legal_move()`. **The root's answer after an aborted
+iteration rests on a carried move, not on the table**: `search_state_t::
+root_move_hint` holds the last completed iteration's best move and `negamax_at`
+reads it at ply 0 on a table miss only (2026-09-04_adversarial-F03,
+DEC-208). All of these alter play only under inputs no harness here sends and
+were discharged node-identical at fixed depth; `bench` 7111579 unchanged.
+
 **An `info` line that claims a mate shows the mate since 2026-09-02, S147**: a
 `score mate N` carries a `pv` of `2N - 1` plies where the side to move delivers
 it and `2|N|` where it receives it, and the position that line ends on is
@@ -494,6 +532,15 @@ a number. `tests/test_uci_surface.cpp` "no two advertised option names collide
 when folded" is the precondition the fold needs -- two names differing only in
 case would be one option to a folded comparison -- and it holds over the 33 the
 tune build advertises. (2026-09-11, S209, 2026-09-10_adversarial-F11 to F13.)
+
+**The `go` numbers take the same whole-token rule since 2026-09-13, S210**:
+`std::from_chars` with `ptr == last`, answering `info string refused [go
+<token>] <value>, not an integer` or `, out of range` in both builds; the
+refused token is dropped and the rest of the line is still read -- a `go`
+that answers nothing hangs a GUI -- and a whole integer outside a field's range
+is still clamped. `bench` and `test` share the helper. Before S210 `wtime
+0x1000` read as a clock of 0 and dropped the search onto the one-second
+fallback, silently (DEC-208).
 
 **Every path that mutates the board or the transposition table stops and joins
 the search first**, the rule `src/chesso.cpp` `stop_and_join_search` states at

@@ -778,9 +778,20 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   history_t* history = &game->history;
 
   // The stack is fixed size. Refusing the move leaves the board untouched and
-  // consistent; writing past the end would corrupt whatever follows. The search
-  // can never reach this - it is bounded by MAX_PLY - so this only guards an
-  // absurdly long [position ... moves ...] line.
+  // consistent; writing past the end would corrupt whatever follows.
+  //
+  // **The search can reach this.** The old comment here said it could not, "it
+  // is bounded by MAX_PLY" - but MAX_PLY bounds the search above whatever
+  // depth the [position ... moves ...] line already left on the stack, not
+  // above zero. At 4999 plies every root move was refused here,
+  // first_legal_move() could not rescue it because it calls this function too,
+  // and the engine answered `bestmove 0000` with legal moves on the board
+  // (2026-09-10_adversarial-F18). command_position() now refuses a moves list
+  // past POSITION_MAX_PLIES, which keeps MAX_PLY of the stack for the search,
+  // so the reachable callers left are that refusal's own boundary and code that
+  // drives make_move() directly, the suite included. It stays a guard and not
+  // an assert for the reason it was made one: writing past the end corrupted a
+  // release binary in silence. S210.
   if (history->size + 1 >= HISTORY_MAX_SIZE) {
     LOG_E << "Move stack is full, refusing the move" << END_E;
     return false;
@@ -883,10 +894,13 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
     }
   }
 
-  // Handle half move clock
+  // Handle half move clock. Saturating: the field is 8 bits and `+= 1` wrapped
+  // it to 0 after 256 reversible plies, which turned off the fifty-move test
+  // and the repetition window together. 255 is past every threshold either
+  // consumer has. 2026-09-10_adversarial-F17, S210.
   if (move.capture || move.piece == W_PAWN || move.piece == B_PAWN) {
     board->halfmove_clock = 0;
-  } else {
+  } else if (board->halfmove_clock < HALFMOVE_CLOCK_MAX) {
     board->halfmove_clock += 1;
   }
 
@@ -1102,7 +1116,9 @@ void make_null_move(game_t* game)
   board->active_color = !board->active_color;
   board->hash ^= randoms->side_randoms[board->active_color];
 
-  board->halfmove_clock++;
+  // Saturating, for the reason make_move()'s increment site states: a wrap here
+  // would switch off the fifty-move test and the repetition window at once.
+  if (board->halfmove_clock < HALFMOVE_CLOCK_MAX) { board->halfmove_clock++; }
 }
 
 
@@ -1421,10 +1437,31 @@ int see(const board_t* board, move_t move)
 // drawn position to another - a centralised king scores better than a cornered
 // one - and the engine reports a bare king endgame as a small advantage.
 //
-// Deliberately strict: only the cases that are dead by rule. Two bishops on the
-// same colour, or knight against knight, are drawn in practice but not by the
-// laws, and claiming them here would throw away positions that are still won on
-// the clock.
+// Deliberately narrow, and narrower than the laws are. What is tested here is
+// king against king and a single minor against a bare king; three families the
+// FIDE Laws also kill are not tested and the engine goes on scoring them:
+//
+//   bishop against bishop on squares of the same colour, and any number of
+//   bishops a side as long as all of them stand on one colour -- no series of
+//   legal moves mates, so the position is dead under Article 5.2.2 and a
+//   flag-fall in it is a draw under Article 6.9. **This one is a rule and the
+//   comment here used to deny it**, saying the family was "drawn in practice
+//   but not by the laws" (2026-09-10_adversarial-F23).
+//
+//   knight against knight, and two knights against a bare king, where the
+//   older argument does hold: a mate exists with the defender's help, so
+//   neither is dead by Article 5.2.2 and both are still won on the clock
+//   under 6.9.
+//
+// Leaving the bishop family out is **accepted behaviour, not an oversight**:
+// `2026-08-14_test_review-F05` recorded it and S067 pinned it with a case
+// ("which material can still mate" in tests/test_search.cpp), in the direction
+// this function answers today and with python-chess's disagreeing answer
+// written beside it. The ground S067 gave is still the ground: search.cpp
+// returns DRAW_SCORE off this function at every node above the root, so
+// agreeing with Article 5.2.2 here changes what the search scores and is an
+// SPRT rather than an edit. What S210 changed is the justification, which was
+// false; the behaviour is untouched.
 bool is_insufficient_material(const board_t* board)
 {
   assert(board != nullptr);
@@ -1851,8 +1888,12 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
     const unsigned long clock = std::stoul(half_move);
 
     // The field is a uint8_t. Truncating a larger value would silently reset
-    // the fifty move counter and shrink the repetition search window.
-    if (clock > std::numeric_limits<uint8_t>::max()) {
+    // the fifty move counter and shrink the repetition search window. The
+    // increment sites saturate rather than truncate (S210); a FEN is refused
+    // rather than saturated because a loader that quietly moves the number the
+    // GUI sent is the S176 class, and above 255 the sender is wrong about
+    // something.
+    if (clock > HALFMOVE_CLOCK_MAX) {
       LOG_E << "Halfmove clock out of range [" << half_move << "]. FEN: " << FEN
             << END_E;
       return false;
