@@ -261,6 +261,52 @@ inline void census_quiets(int depth, size_t count)
 
   census.quiets[depth][count]++;
 }
+
+// The reach of quiescence's insufficient-material test, counted rather than
+// argued (2026-09-10_adversarial-F22, S210). Three totals, because the
+// question the count has to answer is "what fraction of the tree does the new
+// rule touch":
+//
+//   qnodes  quiescence nodes entered
+//   qmoves  moves quiescence made that were legal, so one child node each
+//   dead    ... of which left a position is_insufficient_material() calls dead
+//
+// `dead` is the rule's firing count. Before the fix it is the number of
+// subtrees scored by the static evaluation where the laws say nothing can
+// happen; after it, the number of subtrees the rule cuts. Same counter either
+// way, which is what makes the two runs comparable.
+//
+// Dumped at exit only when CHESSO_F22_CENSUS names a file, so an ordinary tune
+// run pays three increments and no I/O, and the release binary compiles none of
+// it. adocs/data/S210_f22_census.py.
+struct f22_census_t
+{
+  uint64_t qnodes = 0;
+  uint64_t qmoves = 0;
+  uint64_t dead = 0;
+
+  ~f22_census_t();
+};
+
+f22_census_t f22_census;
+
+f22_census_t::~f22_census_t()
+{
+  const char* path = std::getenv("CHESSO_F22_CENSUS");
+
+  if (path == nullptr) { return; }
+
+  std::ofstream out(path);
+
+  if (!out) { return; }
+
+  out << "# S210 F22 census. Quiescence's reach into positions no legal\n"
+         "# sequence can mate from. One line per counter, whole run.\n"
+         "counter\tcount\n"
+      << "qnodes\t" << f22_census.qnodes << '\n'
+      << "qmoves\t" << f22_census.qmoves << '\n'
+      << "dead\t" << f22_census.dead << '\n';
+}
 }  // namespace
 #endif
 
@@ -429,6 +475,10 @@ int quiescence(int alpha,
   assert(game != nullptr);
 
   state->explored_nodes++;
+
+#ifdef CHESSO_TUNE
+  f22_census.qnodes++;
+#endif
 
   // The bound the node started with. What gets stored below is exact only if
   // the node beat it; otherwise all the search established is a ceiling.
@@ -640,8 +690,45 @@ int quiescence(int alpha,
 
     legal_moves++;
 
+    // Nothing left on the board can force mate, so there is nothing below this
+    // move worth a look and nothing the evaluation may say about it: the game
+    // is already over and drawn. negamax_at makes the same test at the top of
+    // every node above the root; quiescence had none until S210, and a capture
+    // that took the last piece able to force anything was scored on the
+    // material left standing instead -- measured -103, +190 and +235 by
+    // 2026-09-10_adversarial-F22, whose interior-node parent caught it only one
+    // ply later.
+    //
+    // Here rather than at the top of the node, which is the placement
+    // negamax_at uses. The two are the same set: material is what this function
+    // reads, a quiet move cannot change it, and the node quiescence was entered
+    // at cannot be dead already because negamax_at answered it first. Testing a
+    // made move instead of an entered node skips the child outright -- no
+    // probe, no evaluation, no move generation -- and leaves the test off the
+    // entry path of every quiescence node there is.
+    //
+    // Unconditional and not gated on MOVE_CAPTURE. A promotion also changes the
+    // material, a quiet one included, and quiescence searches quiet moves
+    // whenever the side to move is in check.
+    //
+    // The reach was counted before the rule was written, over the 11503 sampled
+    // positions of the S219 A/A games at depth 10: 158685 of 254361785 moves
+    // made in quiescence, 0.062 %, and **194 of the 11503 root answers move**,
+    // 1.69 %. That second number is why this commit owes an SPRT rather than
+    // being discharged by census the way DEC-107's was.
+    // adocs/data/S210_f22_census.py.
+    const bool dead = is_insufficient_material(&game->board);
+
+#ifdef CHESSO_TUNE
+    f22_census.qmoves++;
+    if (dead) { f22_census.dead++; }
+#endif
+
+    // Written in the child's frame and negated like every other child score,
+    // so the site stays right if DRAW_SCORE ever stops being 0 (contempt).
     const int score =
-        -quiescence(-beta, -alpha, ply + 1, qply + 1, game, state);
+        dead ? -DRAW_SCORE
+             : -quiescence(-beta, -alpha, ply + 1, qply + 1, game, state);
 
     unmake_move(game);
 

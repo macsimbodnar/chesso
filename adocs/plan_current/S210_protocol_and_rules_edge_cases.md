@@ -388,3 +388,188 @@ pieces of state beyond `game` that it covers.
 `./clang-format.sh --check` clean under `CLANG_FORMAT_MAJOR=22`, `bench`
 7111579, `tools/search_bench.py` depth 9 identical. No match, no commit, no
 shared document touched.
+
+## Second half landed 2026-09-13 16:52
+
+**F22 alone**, in its own commit off `9075bf8` with a `Bench:` line, because it
+alters the tree. `src/search.cpp` and `tests/test_search.cpp`, plus the census
+under `CHESSO_TUNE` and three files in `adocs/data/`.
+
+### The census, taken before the fix and before any match was booked
+
+`adocs/data/S210_f22_census.py`, reading in `adocs/data/S210_f22_census.txt`.
+The corpus is **`adocs/data/S219_aa_calibration.pgn`** -- the DEC-143
+fixed-rounds A/A of 2026-09-12, 1000 chesso-against-chesso games at 8+0.08 on
+`books/noob_3moves.epd`, which is the regime every verdict here is taken in.
+Its **115021 positions** are every ply of every game; **every 10th is kept,
+11503**, systematically and not at random and not filtered to endgames, because
+one search happens per ply of a real game and a sample that keeps the ply
+distribution keeps the weighting the question is about. Each is searched to a
+fixed **depth 10** -- the corpus's own move comments report 10 to 14 -- on the
+tune build, **whose `bench` equals the release build's to the node** (7111579
+before, 7105111 after; the script checks this rather than assuming it, and it
+is the licence to read a tune-build census as a statement about the shipping
+engine).
+
+Three counters, compiled under `CHESSO_TUNE` and dumped at exit only when
+`CHESSO_F22_CENSUS` names a file -- the S109 shape, never in the release
+binary's path:
+
+| | before | after |
+|---|---|---|
+| search nodes | 996242087 | 996421227 |
+| quiescence nodes | 492702453 (49.46 %) | 492715427 (49.45 %) |
+| moves made in quiescence | 254361785 | 254442257 |
+| ... landing on a dead board | **158685 (0.06239 %)** | 126226 (0.04961 %) |
+
+**And the half a counter cannot show, which is the half that decided it:**
+
+| | |
+|---|---|
+| root best move moved | **194 of 11503, 1.687 %** |
+| root score moved | 444 of 11503, 3.860 % |
+| total nodes | x1.000180 |
+
+The 194 rows are kept whole in `adocs/data/S210_f22_changed.tsv`, with their
+FENs and both answers. The sample list and the two 11503-row tables are
+scratch: `positions` rebuilds the list byte for byte from the committed PGN in
+ten seconds, and `adocs/data/` is for output that costs hours.
+
+**So the census does not discharge the SPRT.** DEC-107's precedent was tested
+here first and does not reach: S162's census read **0** firings in 3314 games
+and its own last sentence limits it to "a correctness fix on a rare boundary,
+not ... a change that alters the tree everywhere". This one reads 194 changed
+root moves in 11503 real positions. The Debug self-play below says the same
+from the other end: **7 of 80 games ended "Draw by insufficient mating
+material"** -- the class arrives on the board, not only inside the tree.
+**One `--nonreg` `{-5, 0}` SPRT is owed for this commit alone**, pre-registered
+in `adocs/data/S210_f22_sprt.sh` with `REF=9075bf8` pinned in the script (after
+the landing commit `REF=HEAD` would name the change itself, which the A/A guard
+refuses), its bounds pair priced at **41861 games at the midpoint and 25591 on
+a bound -- 19.8 h and 12.1 h at 2110 games an hour**, so a night run (DEC-155),
+with the abort rule and all three readings written before a game is played.
+The run is the coordinator's; it was not started here.
+
+### The fix, and the red observed first
+
+`quiescence()`'s move loop, one test **after `make_move`** rather than at the
+top of the node:
+
+```
+const bool dead = is_insufficient_material(&game->board);
+const int score = dead ? DRAW_SCORE : -quiescence(...);
+```
+
+**Why after the move and not at the top of the node**, which is where
+`negamax_at` makes the same test: the two are the same set -- material is all
+this function reads, a quiet move cannot change it, and the node quiescence was
+entered at cannot be dead already because `negamax_at` answered it one ply
+higher. Testing a made move instead of an entered node skips the child outright
+(no probe, no evaluation, no move generation) and keeps the test off the entry
+path of every quiescence node there is. **Unconditional, not gated on
+`MOVE_CAPTURE`**: a promotion changes the material too, a quiet one included,
+and quiescence searches quiet moves whenever the side to move is in check.
+
+*Red*: `tests/test_search.cpp` "a quiescence capture into a dead position is a
+draw", **3 of 27 assertions**, one per family, driven through `quiescence()`
+directly because from the root `negamax_at`'s own test answers the position a
+ply higher and the case could pass on a quiescence with no rule at all:
+
+```
+CHECK( quiesce(test.fen, -10000000, 10000000) == 0 ) is NOT correct!
+  values: CHECK( 65 == 0 )    the king takes the last rook: king against king
+  values: CHECK( 361 == 0 )   the knight takes the last rook: knight against a bare king
+  values: CHECK( 407 == 0 )   the bishop takes the last rook: bishop against a bare king
+```
+
+The other 24 are the case's own preconditions, every one of them the engine's
+answer about the position and never a reading of the board (CHESS): the node
+quiescence starts from is **not** dead, so a zero can only come from below it;
+the capture exists, is legal, and leaves a position the engine **does** call
+dead; and `evaluate()` of the root is **strictly below zero**, so a return of
+exactly `DRAW_SCORE` is the capture's score and not the floor's.
+
+**The mutant, from the other side.** The absence of the rule is the first
+mutant and the red above is its kill. The over-firing one -- `const bool dead =
+true`, the rule with its condition removed -- is killed by `test_search` and
+`test_engine`, and the assertion that matters is the mate-hiding class this
+repository keeps meeting: `tests/test_search.cpp "a side in check may not stand pat": REQUIRE( score < -10000 )`,
+the forced mate that only a quiescence searching evasions can see, plus
+`REQUIRE_EQ( quiesce(fen, ...), -505 )` and "ordering keeps the tree small".
+Restored byte for byte afterwards; `bench` back to 7105111 and the diff back to
+86 insertions and 1 deletion.
+
+### Neutrality is not claimed
+
+`bench` **7111579 -> 7105111**, -6468, **-0.09 %**. That total is the commit's
+`Bench:` line.
+
+`tools/search_bench.py`, two interleaved passes each against a `9075bf8`
+worktree build, machine idle:
+
+| depth | midgame | kiwipete | tactical |
+|---|---|---|---|
+| 9 | 47635 `c3d5` | 213916 `e2a6` | 26130 `d7c8q` |
+| 12 | 141455 `c3d5` | 1038779 `d5e6` | 175684 `d7c8q` |
+
+**All six rows identical before and after**, node counts and best moves both --
+and that is a fact about those three positions rather than about the change.
+None of them ever trades down far enough to reach the class, which is exactly
+why the reach was counted over games instead of over them. `bench` does reach
+it, and moved.
+
+### Second tier, DEC-141
+
+The search is touched, so the **Debug self-play** is owed. `build-debug`,
+`-concurrency 8` at 4+0.04 on `books/noob_3moves.epd`: **8 games** (the
+DEV_MANUAL recipe's four rounds) and then **80 games** for coverage.
+`grep -c Assertion` on the trace log and the console: **0 and 0** in both runs.
+`grep -c disconnect`: **0**. No time forfeit in either. Logs under
+`.tuning/coord/s210b_debug_selfplay*.{out,log,pgn}`. The 80-game run's own
+terminations are the reach evidence quoted above: 7 games "Draw by insufficient
+mating material".
+
+No pruning, reduction or extension rule was added -- this replaces a search
+with a score the laws already fixed rather than declining to look at a move --
+but the mutant clause was satisfied anyway, above. `tools/gate_extra.sh` is the
+coordinator's.
+
+### Gate
+
+`ctest -L fast` **38/38 in `build` and 38/38 in `build-tune`**,
+`./clang-format.sh --check` clean under `CLANG_FORMAT_MAJOR=22`.
+
+### Docs
+
+**`MANUAL.md` checked, no change needed**: nothing on the UCI surface changes
+shape, no refusal is added, and the one sentence that names this family -- `go
+infinite` on "a root whose tree collapses: a dead draw by insufficient
+material" -- stays true, because `negamax_at`'s test is still guarded by
+`ply > 0` and the root is still exempt.
+
+**`DEV_MANUAL.md` updated**: the bench-signature history gains
+**`At S210: 7105111`** with its one-clause reason, beside the `S109` entry.
+
+**`adocs/specs.md` is coordinator-owned and is the one document this half did
+not write.** The wording proposed for it is in the subagent's report: one
+paragraph, that quiescence scores a position no legal sequence can mate from as
+a draw instead of evaluating it, that the test is made on the position a move
+leaves rather than on the node entered, and that the reach was counted
+(0.062 % of quiescence's move-making, 1.687 % of root answers) and the SPRT
+booked rather than discharged.
+
+### Beyond `touches:`, noted rather than hidden
+
+Nothing. `src/search.cpp`, `tests/test_search.cpp` and `adocs/data/` are all in
+`touches:`; `DEV_MANUAL.md` is the DOCS rule's own obligation. New files:
+`adocs/data/S210_f22_census.py`, `adocs/data/S210_f22_census.txt`,
+`adocs/data/S210_f22_changed.tsv`, `adocs/data/S210_f22_sprt.sh`.
+`adocs/data/README.md` was **not** touched -- the first half did not add a row
+for its own `S210_depth1_latency.py` either, so the four rows are proposed in
+the report for the coordinator rather than written here. No `git add`, no
+commit, no shared document, no match beyond the Debug self-play.
+
+
+## After the second half's fast check, 2026-09-13 17:30 (coordinator)
+
+Five trivial items, none in the fix: the dead score is now written in the child's frame (`-DRAW_SCORE`, identical while `DRAW_SCORE` is 0, explicit if contempt ever arrives); every gate figure in this file was taken with `CLANG_FORMAT_MAJOR=22` exported (DEC-146) -- the literal TESTS command is red on this machine without it; `adocs/data/S210_f22_census.py` exits non-zero when the tune build's bench differs from the release build's instead of printing and continuing, and the reading notes that its own run did not keep that line; `DEV_MANUAL.md`'s signature entry says "a move" not "a capture" and that the rule cost 0.018 % nodes over the census corpus; the pre-registration's change-specific clause is a post-run reading, not an abort trigger, and `CAND` is documented and pinned to F22's commit at commit time.

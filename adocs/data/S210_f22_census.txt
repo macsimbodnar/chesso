@@ -1,0 +1,51 @@
+# S210, 2026-09-13. The reach of 2026-09-10_adversarial-F22, measured before
+# the fix and again after it, by adocs/data/S210_f22_census.py.
+#
+# Corpus:   adocs/data/S219_aa_calibration.pgn -- the DEC-143 fixed-rounds A/A
+#           of 2026-09-12, 1000 chesso-against-chesso games at 8+0.08 on
+#           books/noob_3moves.epd. 115021 positions, every 10th kept: 11503.
+# Engine:   build-tune/src/chesso, whose `bench` equals the release build's to
+#           the node in both trees (7111579 before, 7105111 after).
+# Depth:    10, fixed. The corpus's own move comments report depths 10 to 14.
+# before:   9075bf8 plus the census counters, which change no node count.
+# after:    the same tree with quiescence's insufficient-material test.
+#
+# The verdict this file carries: the class is reached, and reached often enough
+# to move the engine's answer on 194 of 11503 real positions (1.687 %). So the
+# census does NOT discharge the SPRT the way DEC-107's did -- one --nonreg run
+# is owed, pre-registered in adocs/data/S210_f22_sprt.sh.
+#
+# The 194 rows are adocs/data/S210_f22_changed.tsv, whole; ten are shown below.
+
+
+census .tuning/coord/f22_before
+  positions searched                     11503
+  search nodes                       996242087
+  quiescence nodes                   492702453    49.46 % of nodes
+  moves made in quiescence           254361785
+  ... landing on a dead board           158685     0.06239 % of them
+
+census .tuning/coord/f22_after
+  positions searched                     11503
+  search nodes                       996421227
+  quiescence nodes                   492715427    49.45 % of nodes
+  moves made in quiescence           254442257
+  ... landing on a dead board           126226     0.04961 % of them
+
+compare .tuning/coord/f22_before -> .tuning/coord/f22_after   over 11503 positions
+  best move moved        194   1.687 %
+  score moved            444   3.860 %
+  nodes             996242087 -> 996421227   1.000180
+    c1h6 -> c1g5   [score cp -228] -> [score cp -220]   3k4/1R6/3B4/3P4/2K5/8/8/2br4 b - - 10 80
+    d7e7 -> b4a3   [score cp -191] -> [score cp -182]   8/3k4/8/3PB3/1b2K3/8/8/8 b - - 24 100
+    e7f6 -> e7a3   [score cp -199] -> [score cp -196]   8/3kb3/8/1K1P4/8/6B1/8/8 b - - 44 110
+    h4e7 -> h4f6   [score cp -199] -> [score cp -200]   1B6/3k4/8/3P4/2K4b/8/8/8 b - - 54 115
+    e7a3 -> e7f8   [score cp -189] -> [score cp -193]   8/3kb3/8/3PB3/3K4/8/8/8 b - - 74 125
+    c2d3 -> c2b3   [score cp -244] -> [score cp -234]   8/8/2N4p/4KP2/7P/4k3/2b5/8 b - - 0 61
+    g4h3 -> g4g3   [score cp 299] -> [score cp 282]   8/8/8/8/6kp/8/8/7K b - - 9 67
+    h3b3 -> h3f3   [score cp 15] -> [score cp 14]   8/4R3/8/3k4/8/7r/3K4/8 b - - 5 55
+    c4d5 -> c4d4   [score cp 10] -> [score cp 15]   8/2R5/8/8/2k5/1r6/3K4/8 b - - 15 60
+    c1c8 -> c1c2   [score cp 5] -> [score cp 0]   8/8/4k3/1K6/8/3R4/8/2r5 b - - 25 65
+  wrote adocs/data/S210_f22_changed.tsv
+
+# Note 2026-09-13 (coordinator, after the fast check): the script checks at run time that the tune build's bench equals the release build's and prints `same tree` or `DIFFERENT TREE`; this reading did not keep that line. The script now exits non-zero on a mismatch, so the next reading carries the proof in its first line.

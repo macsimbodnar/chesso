@@ -1990,7 +1990,11 @@ chesso bench 9                        # a shallower run; NOT the signature
 back to `27322394`. At `S109`: `7111579`** — the shallow-depth pruning block
 takes 74 % of the tree, which is what four rules skipping quiet moves at every
 non-PV node do, and the SPRT is what says whether the tree it leaves is a
-better one. Quote it
+better one. **At `S210`: `7105111`**, 0.09 % less on the bench positions:
+quiescence no longer enters a child that a move -- any move, not only a
+capture -- leaves without the material to mate, and scores it a draw instead
+(F22); over the census corpus the rule cost 0.018 % more nodes, so the sign is
+the positions', not a saving. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

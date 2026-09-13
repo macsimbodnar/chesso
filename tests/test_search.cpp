@@ -1185,6 +1185,95 @@ TEST_SUITE("search: quiescence")
           ("FEN: " + fen + " nodes " + std::to_string(state.explored_nodes)));
     }
   }
+
+  static move_t find_move(const std::string& from, const std::string& to)
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &game.board, moves);
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_FROM(moves[i]) == str_to_index(from) &&
+          MOVE_TO(moves[i]) == str_to_index(to)) {
+        return moves[i];
+      }
+    }
+
+    return 0;
+  }
+
+
+  // 2026-09-10_adversarial-F22, S210. is_insufficient_material() had exactly
+  // one call site -- negamax_at, guarded by `ply > 0` -- and quiescence had
+  // none. So a capture that took the last piece able to force anything was
+  // handed to evaluate(), which scored the material left standing in a
+  // position where the laws had already ended the game: measured -103, +190
+  // and +235 on the reviewer's three, and 65, 361 and 407 on the three below.
+  // The interior node catches it one ply later, which is why the reach was
+  // counted before the fix rather than argued about
+  // (adocs/data/S210_f22_census.py).
+  //
+  // Driven through quiescence() directly and not through search(), because
+  // that is the node the rule is about: from the root, negamax_at's own test
+  // answers the position one ply higher and the case could pass on a
+  // quiescence that still had no rule at all.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiescence capture into a dead position is a draw")
+  {
+    struct case_t
+    {
+      std::string fen;
+      std::string from;
+      std::string to;
+      std::string title;
+    };
+
+    // One per family the function calls dead. Each is a bare king and one
+    // undefended rook against a king and at most one minor, so the capture is
+    // the only thing quiescence has to look at and the position it leaves is
+    // the family named. The capturing side is a rook down before it, which is
+    // what makes the assertion separable: see the third precondition.
+    // clang-format off
+    const std::vector<case_t> cases = {
+      {"7k/8/8/8/8/8/1r6/K7 w - - 0 1",     "a1", "b2", "the king takes the last rook: king against king"},
+      {"7k/8/8/8/8/8/4r3/K5N1 w - - 0 1",   "g1", "e2", "the knight takes the last rook: knight against a bare king"},
+      {"7k/8/8/8/3r4/8/8/K5B1 w - - 0 1",   "g1", "d4", "the bishop takes the last rook: bishop against a bare king"},
+    };
+    // clang-format on
+
+    for (const case_t& test : cases) {
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), test.title);
+
+      // Three preconditions, every one of them the engine's own answer about
+      // the position rather than a reading of the board (the CHESS rule), and
+      // each one establishing a thing that would have to be true for the
+      // assertion below to be about anything.
+      //
+      // One: the node quiescence starts from is not itself dead, so a draw
+      // score can only have come from below it.
+      REQUIRE_FALSE_MESSAGE(is_insufficient_material(&game.board), test.title);
+
+      // Two: the capture exists, is legal, and leaves a position the engine
+      // does call dead.
+      const move_t capture = find_move(test.from, test.to);
+
+      REQUIRE_MESSAGE(capture != 0, test.title);
+      REQUIRE_MESSAGE(MOVE_CAPTURE(capture) != 0, test.title);
+      REQUIRE_MESSAGE(make_move(&game, capture), test.title);
+      REQUIRE_MESSAGE(is_insufficient_material(&game.board), test.title);
+      unmake_move(&game);
+
+      // Three: standing pat is worth strictly less than a draw. Without this
+      // the case would pass on any tree at all where the floor happened to be
+      // zero, and with it a return of exactly DRAW_SCORE can only be the
+      // capture's score.
+      REQUIRE_MESSAGE(evaluate(&game.board) < 0, test.title);
+
+      // The rule. Not "near zero": no sequence of legal moves mates from the
+      // position that capture leaves, so the position is drawn and a draw is
+      // zero.
+      CHECK_MESSAGE(quiesce(test.fen, -10000000, 10000000) == 0, test.title);
+    }
+  }
 }
 
 
