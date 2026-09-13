@@ -40,3 +40,7 @@ still refits every axis after the block.
 One SPSA pass (a night, S085's regime, a lane of its own -- DEC-198) and one gainer SPRT (2.5 h if the
 effect is real, 19.8 h at the wall), plus the rebuild from `cace216`'s shape,
 which `git show cace216` holds in full.
+
+## Note 2026-09-13, from S212: the lane's fastchess config carries `twosided=true`
+
+S212 made resignation two-sided in both harnesses (DEC-174). `adocs/data/S085_spsa_run.json`'s `extra` is one-sided and is a frozen record of S085's run, not a template: the SPSA config this lane writes carries `-resign movecount=3 score=400 twosided=true`, the regime every verdict is taken in from S212 on, and its pre-registration says so.

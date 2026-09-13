@@ -114,8 +114,14 @@ that made attribution necessary: one run reported +301 Elo and meant nothing.
 **4. Know the noise floor before believing a number.** `bench_movegen` reports
 its own resolution — the disagreement between the two halves of the run. It has
 printed 0.1 % on an idle machine and 2.0 % on a busy one. Anything smaller than
-that resolution has not been shown to exist. Check `ps aux | sort -rnk3 | head`
-first; this machine runs `opendirectoryd` at half a core often enough to matter.
+that resolution has not been shown to exist. Check the load first: `cat /proc/loadavg` (`sysctl -n vm.loadavg` on macOS),
+the one-minute figure against the core count; `ps aux | sort -rnk3 | head` then
+names the process, but never add its percentages up, because each is that
+process's average over its own lifetime and the sum read 255 here at a load
+average of 0.79 (2026-09-10 adversarial F32, S212). For a single-threaded
+timing the two say different things: half a busy core moves a twelve-core load
+average by 0.04 and moves `bench_movegen` by much more, which is what the
+MacBook's `opendirectoryd` did often enough to matter.
 
 **5. Under 3 % is noise** unless `hyperfine` says otherwise with a tight sigma
 over interleaved runs.

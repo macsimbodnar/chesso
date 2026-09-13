@@ -2174,11 +2174,16 @@ snapshotted before the first game. Both exist because an SPRT once reported
 
 **`REF` defaults to `HEAD`, so the three bare forms measure the uncommitted
 diff.** The banner prints each side's short sha and its commit date before the
-first game:
+first game, the configuration both sides were built with, and then what each
+binary answered when it was asked who it is:
 
 ```
 candidate  eaad88b  2026-08-22  + uncommitted changes
 reference  eaad88b  2026-08-22
+config     arch native  tune off
+...
+id name    candidate  Chesso eaad88b-dirty native
+id name    ref-eaad88b  Chesso eaad88b native
 ```
 
 Both shas are the same one because that is what the default means: the diff on
@@ -2221,6 +2226,63 @@ The **reference is not**: it is played straight from
 while a match is running does swap the reference. `fastchess.sh` never does so
 itself, which is why a stale cached reference is cleared before a run starts
 and never during one.
+
+**A cached `.ref-builds/<sha>` is checked before it is played, and rebuilt
+rather than refused.** It used to be played whenever its binary existed, with
+nothing asking anything else of it — so a worktree somebody had `git
+checkout`ed inside, or one built two months and one arch flag ago, was served
+under the name of a commit it no longer held. Measured over the 30 directories
+on this machine: one was dirty and 11 predated S104, whose binaries carry no
+hardware popcount — a +12.62 % nps difference by S104's own measurement, on the
+side of a match whose whole output is the difference between the two sides
+(`2026-09-10_adversarial-F06`, S212). Three questions, and any *no* clears the
+worktree and rebuilds it:
+
+- is it a git worktree, and is `git status --porcelain` empty (`build/` does
+  not disturb that — `.gitignore` covers it);
+- is it at `<sha>`;
+- does its `CMakeCache.txt` carry the same `CHESSO_ARCH` and `CHESSO_TUNE` as
+  `build/`'s.
+
+The third is also what the reference is *configured* with, which is what keeps
+the check from looping: `build_ref` passes `build/`'s pair through to `cmake`,
+so a reference built for a candidate configured `bmi2` is `bmi2` too, and it
+answers the same question green on the next run. A commit predating the options
+takes them as unused `-D`s and keeps them in its cache, so it is stable there
+as well. The banner's `config` line is the pair both sides were built with;
+with no `build/` to read it falls back to cmake's own defaults, `native` and
+`OFF`.
+
+**Both sides are asked `uci` before the first game, and a mismatch refuses the
+run.** The engine answers `id name Chesso <sha>[-dirty] <arch>[ tune]`, stamped
+through a header regenerated on every build, and `fastchess.sh` compares that
+sha with the one it labelled that side with. Until S212 the engine answered the
+literal `id name Chesso`, so every archived PGN's engine names were the
+script's assertion about what it meant to build rather than a property of what
+played — the loop the project has closed on every *opponent* since DEC-068 and
+could not close on itself (`2026-09-10_adversarial-F05`). Three answers:
+
+- the sha agreeing with the label — plays;
+- `Chesso` with nothing after it — plays, with a line saying the check did not
+  happen. Every commit before S212 answers the bare literal and most of what
+  `REF` exists to reach is one of them;
+- anything else — `SPRT-RUN-FAILED`, before a game.
+
+`-dirty` is allowed on the candidate when the banner shows `+ uncommitted
+changes` and never on the reference, whose worktree is a clean detached
+checkout. It is allowed and not required: the dirty flag is raised by any
+tracked file, `adocs/` included, so requiring it would refuse a run whose
+binary is perfectly good because a step file was edited after the build. A
+`-dirty` binary against a clean tree is refused on both sides — that binary was
+built from a state that no longer exists on disk.
+
+**One consequence to know before it surprises you: rebuild after a commit.**
+`build/src/chesso` built from a dirty tree answers `<parent>-dirty`; commit,
+and `HEAD` is a new sha the binary has never heard of, so the run is refused
+until `cmake --build build -j12` has run — about ten seconds, and the check is
+right to ask for it. The binary that plays has to be the code being measured,
+which is the whole of DEC-020. The bare `--fast` form on a dirty tree, which is
+most runs, is unaffected.
 
 Three consequences of `CAND` the banner and the PGN show:
 
@@ -2343,7 +2405,7 @@ is about.
 | threads | `1` | the target is the CCRL Blitz **1CPU** scale — DEC-089 |
 | concurrency | every core the machine reports: `sysctl -n hw.physicalcpu`, else `nproc` | DEC-048, DEC-050 |
 | pairing | `-repeat` | paired colours, controlling for any one opening's own bias regardless of the book. Never dropped |
-| adjudication | `-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400` | unchanged by S105, deliberately: the book was the one variable moved |
+| adjudication | `-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400 twosided=true` | unchanged by S105, deliberately: the book was the one variable moved. `twosided=true` since S212 — DEC-174, below |
 
 `rating.sh` deliberately does **not** match this. It runs `Hash=128` because
 its job is the rating list's absolute regime, and the list runs 128 to 256
@@ -2364,6 +2426,37 @@ physical core here if a result has to be as clean as this machine can make it.
 Everything else that parallelises follows the same policy: `-j12` for a build,
 and `datagen` and `tuner` default to every hardware thread rather than to a
 number written into the source.
+
+**A resignation needs both engines to agree, and that is not fastchess's
+default.** `twosided=true` is passed by both scripts since S212; without it the
+losing side's own score alone ends the game. What the omission was worth,
+counted from the tracked PGNs rather than argued: 76 % of the A/A's games and
+84 % of the S088 rating run's ended by adjudication, and of the decisive ones
+**11 of 676 were one-sided in self-play (1.6 %) against 514 of 2627 (19.6 %) in
+the rating run**, where chesso conceded alone 311 times and its opponents 203.
+In self-play with one evaluation scale the exposure is that 1.6 % floor, which
+is why the SPRT ledger is not corrupted by it — and why the flag is close to
+free here, while removing the hazard the evaluation block creates as soon as a
+candidate's scale moves: under one-sided adjudication the side with the larger
+scale resigns first in equal positions, and that is the candidate.
+`score=400` and `movecount=3` are unchanged — fastchess's own example and
+fishtest both use 600, so this truncates earlier than the practice it came
+from, and moving it is a throughput trade with its own decision owing.
+DEC-174, `2026-09-10_adversarial-F04`.
+
+**The busy-machine guard reads the one-minute load average against the core
+count**, and warns above **a quarter of the machine** — `3.00` of 12 cores
+here. It refuses nothing; the judgement is the reader's. It summed
+`ps -A -o %cpu=` until S212, which is each process's average over its own
+*lifetime*: at a load average of 0.79 that sum read 255 against a threshold of
+60, so it fired on every run and carried no information
+(`2026-09-10_adversarial-F32`). A quarter is the threshold because a match
+already books every core it can see, so what matters is not whether anything
+else is running — something always is — but whether enough is running that the
+games queue behind it rather than behind each other. An idle machine here reads
+0.00 to 1.00, so the guard stays quiet, which is what makes it worth reading
+when it does not. On a machine with neither `/proc/loadavg` nor `sysctl -n
+vm.loadavg` the run says the check did not happen rather than passing silently.
 
 ### Which bounds
 
@@ -2517,9 +2610,24 @@ of **that run's** PGN. The last line is `SPRT-RUN-DONE <tag> <dir>`, or
 `SPRT-RUN-FAILED:` on any abort, which is the terminal marker a watcher exits
 on (DEC-061).
 
-The census reports, it does not void the run: both sides are chesso, so a thin
-time-management margin costs both about equally. `rating.sh` is the one that
-voids, because there the margin is a foreign engine's too.
+**A crash or a disconnect voids the run; a time forfeit does not.** A game
+ending outside `normal`, `adjudication` and `time forfeit` prints
+
+```
+SPRT-RUN-INVALID: 2 crashes/disconnects -- 2 game(s) ended
+                  outside normal, adjudication and time forfeit. ...
+SPRT-RUN-FAILED: the run is void: 2 crash/disconnect termination(s) in ...
+```
+
+and exits non-zero. The `INVALID` line is *beside* the marker and never
+instead of it: every watcher breaks on `SPRT-RUN-(DONE|FAILED)` and on nothing
+else, so a void that stopped at `INVALID` would leave a detached run's watcher
+spinning to its ceiling. The forfeit rate stays a report and is not a void:
+a forfeit is a real game result and both sides are chesso, so a thin
+time-management margin costs both about equally. A crash does not divide that
+way — only one side carries the change under test — and `rating.sh` has voided
+on it since DEC-075 while this script only counted it
+(`2026-09-10_adversarial-F31`, S212).
 
 **Watch the draw rate anyway.** **Below about 45 % draws is a failure mode,
 not a win** — at that point the opening is simply winning for one side and the
@@ -2575,6 +2683,24 @@ that after the fast check showed the slope was measured only at the
 doubling). The book stays provisionally and S220 measures the trend at a
 quarter handicap. The DEC-143 band for the next A/A on this book is this run's
 0.2905 ± 0.0184.
+
+**The adjudication changed on 2026-09-13** (S212, DEC-174), which is a harness
+change, so DEC-143 asks for the next A/A before the next verdict:
+
+```bash
+ROUNDS=500 AA=1 ./fastchess.sh             # 1000 games, fixed rounds, never a verdict
+adocs/data/S198_pairs.py <run>/games.pgn   # pair variance against the band above
+```
+
+Fixed rounds and not an SPRT, for the reason the flag exists: in an A/A the
+true difference is zero by construction, so an SPRT accepts H1 with probability
+alpha exactly and stops at a game count the result itself chose — variance read
+over a denominator the answer picked. It is read against the band in the
+paragraph above, `0.2905 ± 0.0184`, and its games an hour is recorded beside
+S219's 2110 so the throughput cost of `twosided=true`, if any, is a number
+rather than an argument. The exposure the flag removes is bounded at 1.6 % of
+adjudications in self-play, so the expectation is no measurable change in
+either; the run is what turns that expectation into a measurement.
 
 **Throughput went up ×1.67, not ×3.** DEC-083 priced the change at "roughly
 three times the verdicts per night"; measured, it is 23.1 → 38.7 games a
@@ -2769,6 +2895,22 @@ rating under a given anchor is fixed by that one pairing alone -- adding a rung
 adds an independent estimate and narrows none of the existing ones. Both
 defaults carried comments computing against three pairings until S088, and were
 already wrong for the four engines DEC-069 installed.
+
+**Resignation is adjudicated two-sided here, and this is the harness where
+that matters most.** `twosided=true` since S212; the comment above the setting
+had claimed the property since the script was written, and the flag that
+provides it was missing (`2026-09-10_adversarial-F04`, DEC-174). Re-scored from
+`S088_rated_c6.pgn`, the run that produced the 2559: **514 of 2627 decisive
+adjudications were one-sided, 19.6 %** — chesso conceding alone 311 times and
+its opponents 203, and opponent-specific in direction. Against Leorik 2.1 and
+the two Blunders chesso conceded alone 311 times to their 22; against Stash
+v21.0 and Leorik 2.4, never once, to their 181. Net one-sided concessions per
+game correlate with that anchor's solved rating at `r = -0.505` on `n = 5`,
+which is the sign the mechanism predicts and a hypothesis rather than a cause
+at that sample size. It is a **second candidate beside DEC-077's time control**
+for the 121.8 Elo anchor spread, never considered when that entry was written.
+Any figure from S152 onward is played under a different adjudication from
+S088's and the comparison says so.
 
 Opponents come from `references.tsv`. The binaries are not in this repository
 and never will be — the file records which build each result was played against.
@@ -3624,10 +3766,12 @@ table with a blank provenance line. DEC-066.
 -S . -B build` runs once, so a sha captured there goes stale on the next commit
 and the table would name a commit its binary was not built from.
 `cmake/build_info.cmake` runs on every build through the `chesso_build_info`
-target, writes `build/tools/generated/chesso_build_info.hpp` only when the value
+target, writes `build/generated/chesso_build_info.hpp` only when a value
 changes, and appends `-dirty` on the same `git diff --quiet` convention
 `fastchess.sh` uses. Nothing to do by hand; a rebuild after a commit picks it up
-without reconfiguring.
+without reconfiguring. It carries the arch and the tune flag beside the commit
+since S212, and the engine's `id name` is the other reader — which is why the
+target sits in the top-level `CMakeLists.txt` rather than in `tools/`.
 
 Tables emitted before S077 carry no stamp — `.tuning/tuned_v2*.hpp` and
 everything under `adocs/data/S075_fits/` and `S076_fits/`. They are evidence,

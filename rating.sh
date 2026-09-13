@@ -77,7 +77,24 @@ concurrency="${CONCURRENCY:-$all_cores}"
 # Adjudication, as fastchess.sh. Both are two-sided -- a resign needs both
 # engines to agree for movecount moves -- so an engine whose evaluation is on a
 # different scale cannot trigger one alone.
-adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"
+#
+# THE SENTENCE ABOVE BECAME TRUE ON 2026-09-13 AND WAS WRITTEN BEFORE THAT.
+# `twosided` defaults to false in fastchess and this line did not pass it, so
+# the property the comment named -- the one this whole script depends on,
+# since chesso plays three independently scaled evaluations -- was exactly the
+# property that was missing (2026-09-10 adversarial F04). Re-scored from
+# `S088_rated_c6.pgn`, the run that produced the 2559: **514 of 2627 decisive
+# adjudications were one-sided, 19.6 %**, chesso conceding alone 311 times and
+# its opponents 203, and the direction is opponent-specific -- against Leorik
+# 2.1 and the two Blunders chesso conceded alone 311 times to their 22, against
+# Stash and Leorik 2.4 never once to their 181. Net one-sided concessions per
+# game correlate with that anchor's solved rating at r = -0.505 on n = 5: a
+# hypothesis, never considered by DEC-077, and a second candidate beside the
+# time control for the 121.8 Elo anchor spread. S152's gauntlet is the first
+# run where it cannot be the cause.
+#
+# `score=400` and `movecount=3` are unchanged and match fastchess.sh's. DEC-174.
+adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400 twosided=true"
 
 # ROUNDS is rounds PER PAIRING, and each round is two games with the colours
 # reversed. The total is rounds x pairings x 2, so it grows with the manifest
@@ -176,11 +193,33 @@ cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
 # Removed on every exit by the trap armed at the top.
 
-busy="$(ps -A -o %cpu= | awk '{ total += $1 } END { printf "%.0f", total }')"
-if ((busy > 60)); then
-  echo "WARNING: about ${busy}% of a core is already busy. A timed match on a"
-  echo "         loaded machine measures the load as much as the engine."
+# The one-minute load average against the core count, and not the sum of
+# `ps -A -o %cpu=`, which is each process's average over its own lifetime: at a
+# load average of 0.79 that sum read 255 here, so the guard fired on every run
+# and carried no information (2026-09-10 adversarial F32). The threshold is a
+# quarter of the machine, for the reason fastchess.sh's copy of this states at
+# length: a match already books every core, so what matters is whether enough
+# else is running that the games queue behind it. It warns and refuses nothing.
+load_1min=""
+if [[ -r /proc/loadavg ]]; then
+  read -r load_1min _ < /proc/loadavg || load_1min=""
+elif load_line="$(sysctl -n vm.loadavg 2> /dev/null)"; then
+  load_1min="$(echo "$load_line" | awk '{ print $2 }')"
+fi
+
+if [[ -z "$load_1min" ]]; then
+  echo "NOTE: neither /proc/loadavg nor 'sysctl -n vm.loadavg' could be read here,"
+  echo "      so whether the machine is already busy has not been checked."
   echo
+else
+  busy_threshold="$(awk -v c="$all_cores" 'BEGIN { printf "%.2f", 0.25 * c }')"
+  if awk -v l="$load_1min" -v t="$busy_threshold" 'BEGIN { exit !(l > t) }'; then
+    echo "WARNING: the one-minute load average is $load_1min over $all_cores cores,"
+    echo "         past the $busy_threshold this guard warns at -- a quarter of the"
+    echo "         machine. A timed match on a loaded machine measures the load as"
+    echo "         much as the engine."
+    echo
+  fi
 fi
 
 engine_args=(-engine "cmd=$snapshot" name=chesso)

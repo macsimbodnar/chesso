@@ -11483,3 +11483,67 @@ Consequences: Ten step files lose a number each or more (S186's follow-up,
               is seconds), Phase A's in-engine trace and UCI exposure
               corrected to the flat array and feature extractor that exist
               in `tools/eval_model.hpp`.
+
+## DEC-204  2026-09-13  S212's four rulings: the build stamp is build-time `rev-parse`, a pre-stamp `id name` plays with a note, the S088 regime gets no flag, and the busy guard's threshold is 0.25 per core
+Tags:         harness, fastchess, rating, uci, id-name, provenance, s212,
+              dec-020, dec-068, dec-174, dec-140
+Context:      S212 landed the 2026-09-10 audit's Part B: two-sided
+              resignation (F04), the engine's `id name` carrying its build
+              (F05), cached references validated before they are played
+              (F06), a crash or disconnect voiding a run (F31), the busy
+              guard on the load average (F32), and the `rating.sh` sentence
+              in `specs.md` (F07). Four choices the `accepts:` did not fix
+              were made on the way and are recorded here so nobody re-derives
+              them.
+Decision:     By the coordinator under the owner's delegation, on the
+              implementing agent's evidence. **(a) The stamp is generated at
+              build time from `git rev-parse --short HEAD` plus `-dirty` over
+              tracked files**, by `cmake/build_info.cmake` re-run on every
+              build and rewriting its header only when a value moves -- not
+              at configure time, which goes stale between a commit and the
+              next build and would make S212's own identity check refuse a
+              good run; and not `git describe --always --dirty`, which the
+              accepts named, because this repository carries nine tags from
+              before `achesso` and `describe` answers `v0.3.0-520-g47be85b`,
+              neither a short sha nor comparable with the label `fastchess.sh`
+              gives a side. The form is `id name Chesso <sha>[-dirty]
+              <arch>[ tune]`; outside a git checkout the sha reads `unknown`.
+              **(b) A side answering the bare literal `Chesso` predates the
+              stamp and plays**, the run printing that the identity check
+              did not happen -- otherwise every `REF=<older sha>` becomes
+              unrunnable, and the reference builds S151 and the drift matches
+              play are exactly those. `-dirty` is allowed on the candidate
+              side only when the banner shows `+ uncommitted changes`, never
+              required. **(c) The S088 regime gets no flag** (F07): only
+              `Hash` is hard-wired in `rating.sh`, the opening draw cannot be
+              reproduced at all since the script passes no `-srand`, and this
+              step made resignation two-sided, so no invocation at HEAD plays
+              S088's experiment whatever its hash and concurrency; 2559 is
+              the record of one run, and `specs.md` says so. **(d) The busy
+              guard warns above a one-minute load average of 0.25 per core**
+              (3.00 on this machine): a match books every core (DEC-050), so
+              the question is whether games would queue behind something
+              else, and an idle machine here reads 0.00 to 1.00, so the
+              warning stays quiet and carries information; the old
+              `ps -A -o %cpu=` sum read 255 at a load average of 0.79 and
+              fired on every run. The guard still refuses nothing.
+Rejected:     **Configure-time stamping** and **`git describe`** -- above.
+              **Refusing a pre-stamp `id name`** -- it would refuse the
+              project's own history. **A `rating.sh` flag reproducing S088**
+              -- it would assert a reproducibility its own commit falsifies.
+              **Refusing on load** -- the MACHINE rule wants the match to run
+              on every core regardless; a warning is what the coordinator
+              reads before starting, a refusal would stop a night run for a
+              transient.
+Consequences: `specs.md` Behaviour carries the `id name` form and the F07
+              sentence; `MANUAL.md` the form; `DEV_MANUAL.md` the identity
+              check, the cache validity block, `SPRT-RUN-INVALID`, the busy
+              guard and the rebuild-after-commit note (a binary stamped
+              `<sha>-dirty` is refused once HEAD moves until rebuilt -- the
+              binary that plays must be the code measured). DEC-031's
+              profiling adjudication (`-resign movecount=8 score=900`) is a
+              different regime for a different question and is untouched.
+              `adocs/data/S085_spsa_run.json` stays one-sided as the record
+              of S085's run; S222's lane writes its own config with
+              `twosided=true` (its file carries the note). S212's closing
+              A/A is the DEC-143 calibration that covers all of this.

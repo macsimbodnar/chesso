@@ -20,6 +20,14 @@ set_source_files_properties(openings_embedded.S PROPERTIES
 add_library(chesso_engine STATIC ${SRCS} openings_embedded.S)
 target_include_directories(chesso_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+# S212. `id name` carries the commit, the arch and the tune flag, and all three
+# come from the header the top-level CMakeLists.txt regenerates on every build.
+# PRIVATE because chesso.cpp is the only translation unit that includes it: a
+# test or a tool linking this library reads the answer over UCI, which is where
+# every consumer of it reads it anyway.
+add_dependencies(chesso_engine chesso_build_info)
+target_include_directories(chesso_engine PRIVATE ${CHESSO_BUILD_INFO_DIR})
+
 # PUBLIC, and it has to be: search_params.hpp declares a parameter as
 # `inline constexpr int` without the definition and as `extern int` with it, so
 # a tool or a test compiled the other way from the library it links would be an

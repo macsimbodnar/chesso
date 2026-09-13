@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <vector>
 #include "bitboard.hpp"
+#include "chesso_build_info.hpp"
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "openings.hpp"
@@ -1095,7 +1096,20 @@ bool command_uci(std::queue<std::string>& args)
 {
   LOG_I << "Command [uci]. Args: " << args << END_I;
 
-  uci_reply("id name Chesso");
+  // S212. `id name` says which build this is: the short commit it was compiled
+  // from, `-dirty` when tracked files were modified, the CHESSO_ARCH target,
+  // and ` tune` in the tuning build. All three come from a header cmake
+  // regenerates on every build, so a rebuild after a commit moves it with no
+  // reconfigure, and the whole line is one string literal at compile time.
+  //
+  // It is here because the project refuses an *opponent* whose `id name`
+  // disagrees with its manifest (DEC-068) and could not ask the same question
+  // of itself: a PGN's engine names were the harness's assertion about what it
+  // meant to build, not a property of what played, which is the class DEC-020's
+  // +301 Elo belongs to. `fastchess.sh` now compares this against the sha it
+  // labelled each side with. 2026-09-10 adversarial F05.
+  uci_reply("id name Chesso " CHESSO_BUILD_COMMIT
+            " " CHESSO_BUILD_ARCH CHESSO_BUILD_TUNE);
   uci_reply("id author MazerFaker");
   uci_reply("option name OwnBook type check default false");
   uci_reply("option name Book File type string default " BOOK_FILE_EMBEDDED);

@@ -34,8 +34,13 @@ at HEAD does not re-derive it** (2026-09-10_adversarial-F07, corrected
 2026-09-11): the script runs `Hash` 128 where S088 ran 64, every core where
 S088 ran 6 -- "this figure only", its own record says -- and a different
 unseeded opening draw, and the concurrency-12 variant of that run was voided
-as `S088_rated_c12_INVALID.pgn`. Whether the S088 regime gets a flag is
-S212's. S088, DEC-072 and DEC-075 to DEC-077.
+as `S088_rated_c12_INVALID.pgn`. **S212 decided it gets no flag**
+(2026-09-13, DEC-204): only `Hash` is hard-wired -- concurrency and rounds are
+already overrides -- the opening draw cannot be reproduced at all since
+`rating.sh` passes no `-srand`, and S212 itself made the resignation
+adjudication two-sided (DEC-174), so no invocation at HEAD plays S088's
+experiment whatever its hash and concurrency. 2559 is the record of one run,
+not something the script re-derives. S088, DEC-072 and DEC-075 to DEC-077.
 
 Soft because the reference set disagrees internally by **121.8 Elo**, four times
 the 30 the procedure allows; approximate because the games were played at
@@ -223,6 +228,25 @@ rule about which directories an agent may write to is neither. (2026-08-21, S140
 Chesso is a UCI engine. The protocol surface is the product surface, which is
 why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
 checkable.
+
+**`id name` says which build answered, since 2026-09-13, S212.** The reply is
+`id name Chesso <sha>[-dirty] <arch>[ tune]`: the short commit the binary was
+compiled from, `-dirty` when tracked files were modified at build time, the
+`CHESSO_ARCH` target, and ` tune` under `CHESSO_TUNE=ON` and nowhere else; a
+binary built outside a git checkout answers `unknown`. All three come from
+`cmake/build_info.cmake`, re-run on every build and rewriting its header only
+when a value moves, so a rebuild after a commit carries the new sha with no
+reconfigure -- configure time would go stale between the commit and the
+rebuild and refuse a good run (DEC-204). `fastchess.sh` asks each side `uci`
+before the first game and refuses when that sha disagrees with the label it
+gave that side, the check `rating.sh` has run against every opponent since
+DEC-068 and nothing ran against chesso: a PGN's engine names were the
+harness's assertion about what it meant to build, the class DEC-020 cost +301
+Elo. A binary answering the bare literal `Chesso` predates the stamp and
+plays, with the run printing that the check did not happen.
+`tests/test_uci_surface.cpp` "the uci reply carries the identification a GUI
+needs" holds the form as a pattern. (2026-09-13, S212,
+2026-09-10_adversarial-F05.)
 
 **`position fen` takes four to six fields, and a FEN that does not load changes
 nothing, since S176.** The clocks default to `0 1` when omitted and reading

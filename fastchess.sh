@@ -225,8 +225,34 @@ hash="${HASH:-16}"
 all_cores="$(sysctl -n hw.physicalcpu 2> /dev/null || nproc)"
 concurrency="${CONCURRENCY:-$all_cores}"
 
-# adjudication cuts dead games, gets to a verdict faster
-adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400"
+# Adjudication cuts dead games and gets to a verdict faster.
+#
+# RESIGNATION IS TWO-SIDED, AND THAT IS NOT THE DEFAULT. `twosided=true` makes
+# a resignation need *both* engines to agree for `movecount` moves. Without it
+# the losing side's own score alone ends the game -- the installed harness says
+# so in its own --help, "twosided - if true, enables two-sided resignation.
+# Defaults to false" (alpha 1.8.1 20260720-daa3ea2) -- and this script passed
+# `-resign movecount=3 score=400` and nothing else until S212, while
+# rating.sh's comment claimed the opposite property in the sentence that
+# justified the setting.
+#
+# What that was worth, counted from the tracked PGNs rather than argued
+# (2026-09-10 adversarial F04): 76 % of the A/A's games and 84 % of the S088
+# rating run's ended by adjudication, and of the decisive ones 11 of 676 were
+# one-sided in self-play (1.6 %) against 514 of 2627 (19.6 %) in the rating
+# run, where chesso conceded alone 311 times and its opponents 203. In
+# self-play with one evaluation scale the exposure is that 1.6 % floor, which
+# is why the SPRT ledger is not corrupted by it -- and why the flag costs this
+# harness almost nothing in throughput while removing the hazard the evaluation
+# block creates the moment a candidate's scale moves (S039, S122, S126): under
+# one-sided adjudication the side with the larger scale resigns first in equal
+# positions, and that is the candidate.
+#
+# `score=400` and `movecount=3` stay. fastchess's own example and fishtest both
+# use 600, so this truncates games earlier than the practice it was taken from;
+# moving it is a throughput trade that gets its own decision, and two
+# adjudication changes under one A/A cannot be priced apart. DEC-174.
+adjudication="-draw movenumber=40 movecount=8 score=10 -resign movecount=3 score=400 twosided=true"
 
 # THE FREE MATE CHECK. `-check-mate-pvs` makes fastchess verify, for every info
 # line that reports a mate score, that the principal variation has the length
@@ -409,6 +435,104 @@ pgnfile="$outdir/games.pgn"
 
 [[ -r "$book" ]] || fail "no book at $book, fetch it with books/fetch_book.sh"
 
+# WHAT THE CANDIDATE WAS CONFIGURED AS, AND WHAT THE REFERENCE IS CONFIGURED
+# WITH. `build/` is whatever it was last configured as; the reference used to
+# be configured with bare defaults and never compared. They agreed by luck and
+# not by check -- cmake/arch.cmake defaults CHESSO_ARCH to `native`, so both
+# got -march=native on this machine -- and 11 of the 30 cached worktrees on
+# disk predate S104 and hold binaries with no hardware popcount, which S104
+# measured at +12.62 % nps on its own (2026-09-10 adversarial F06).
+#
+# One pair is read here and used twice: the banner prints it, and `build_ref`
+# both configures with it and judges a cached worktree against it. Configuring
+# with it is what keeps the judgement from looping -- a reference configured
+# with bare defaults and judged against `build/`'s would be stale on every run
+# and rebuilt on every run.
+#
+# The fallback is cmake's own default rather than a refusal, because `build/`
+# does not have to exist: under CAND neither side is the working tree.
+cache_value()
+{
+  awk -v key="$2" 'index($0, key ":") == 1 {
+                     sub(/^[^=]*=/, "", $0); print $0; exit
+                   }' "$1" 2> /dev/null || true
+}
+
+want_arch="native"
+want_tune="OFF"
+cand_cache="$repo/build/CMakeCache.txt"
+if [[ -r "$cand_cache" ]]; then
+  cache_arch="$(cache_value "$cand_cache" CHESSO_ARCH)"
+  cache_tune="$(cache_value "$cand_cache" CHESSO_TUNE)"
+  if [[ -n "$cache_arch" ]]; then want_arch="$cache_arch"; fi
+  if [[ -n "$cache_tune" ]]; then want_tune="$cache_tune"; fi
+fi
+
+tune_label="off"
+case "$want_tune" in
+  [Oo][Nn] | 1 | [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss]) tune_label="on" ;;
+esac
+
+# IS A CACHED WORKTREE STILL THE THING IT IS NAMED AFTER. It used to be played
+# whenever its binary existed, and nothing asked anything else of it: not that
+# the worktree is still at that commit, not that it is clean, not that it was
+# built like the candidate. `.ref-builds/2b54a4f` was dirty on the day the
+# audit looked.
+#
+# Three questions, and any `no` rebuilds rather than refuses. A rebuild is
+# nearly free with ccache warm; a refusal would make a stale cache something
+# somebody has to clear by hand before the run they wanted, which is the state
+# that produced the dirty worktree in the first place.
+#
+#   1. is it a worktree at all, and is it clean -- `git status --porcelain`
+#      empty, which `build/` does not disturb because .gitignore covers it;
+#   2. is it at <sha>;
+#   3. was it configured like the candidate.
+#
+# Every reason goes to stderr: the caller captures this function's stdout, and
+# `build_ref`'s is the binary path.
+#
+# `git -C "$dir"` through the wrapper above becomes `git -C "$repo" -C "$dir"`.
+# git's -C is cumulative and an absolute path wins outright, so these ask the
+# worktree and not the repository -- which is also why the wrapper is safe to
+# reach for here rather than a second bare `git`.
+ref_cache_ok()
+{
+  local dir="$1" sha="$2"
+  local cache="$dir/build/CMakeCache.txt"
+  local at cached_arch cached_tune
+
+  if ! git -C "$dir" rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Cached reference $sha: $dir is not a git worktree." >&2
+    return 1
+  fi
+
+  if [[ -n "$(git -C "$dir" status --porcelain 2> /dev/null)" ]]; then
+    echo "Cached reference $sha: its worktree is dirty." >&2
+    return 1
+  fi
+
+  at="$(git -C "$dir" rev-parse --short HEAD 2> /dev/null || true)"
+  if [[ "$at" != "$sha" ]]; then
+    echo "Cached reference $sha: its worktree is at '$at'." >&2
+    return 1
+  fi
+
+  if [[ ! -r "$cache" ]]; then
+    echo "Cached reference $sha: no CMakeCache.txt, so how it was built is unknown." >&2
+    return 1
+  fi
+
+  cached_arch="$(cache_value "$cache" CHESSO_ARCH)"
+  cached_tune="$(cache_value "$cache" CHESSO_TUNE)"
+  if [[ "$cached_arch" != "$want_arch" || "$cached_tune" != "$want_tune" ]]; then
+    echo "Cached reference $sha: built arch '$cached_arch' tune '$cached_tune', candidate is arch '$want_arch' tune '$want_tune'." >&2
+    return 1
+  fi
+
+  return 0
+}
+
 # BUILD A COMMIT INTO ITS OWN WORKTREE, ONCE PER COMMIT, AND PRINT THE BINARY.
 # One function for both sides, called twice, because the two sides of a CAND
 # run have to be built the same way or the difference between them is the
@@ -441,11 +565,31 @@ build_ref()
   dir="$(git rev-parse --show-toplevel)/.ref-builds/$sha" || return 1
   binary="$dir/build/src/chesso"
 
+  # A cached binary that does not answer ref_cache_ok's three questions is
+  # cleared rather than played. `git worktree remove` and not a bare `rm -rf`:
+  # the directory is a registered worktree, and a bare removal leaves the
+  # registration behind, which makes the `git worktree add` below refuse the
+  # path. `prune` covers the fallback and any registration a hand-removed
+  # directory left. If the directory somehow survives, this returns rather than
+  # falling through to play what it just judged unplayable.
+  if [[ -x "$binary" ]] && ! ref_cache_ok "$dir" "$sha"; then
+    echo "Clearing that worktree and rebuilding $sha." >&2
+    git worktree remove --force "$dir" > /dev/null 2>&1 || rm -rf "$dir" || return 1
+    git worktree prune > /dev/null 2>&1 || true
+    [[ ! -e "$dir" ]] || return 1
+  fi
+
   if [[ ! -x "$binary" ]]; then
     echo "Building reference $sha ..." >&2
     git worktree add --detach "$dir" "$sha" > /dev/null || return 1
+    # Configured with the candidate's own arch and tune rather than with bare
+    # defaults, so the two sides of the match differ by the commit and not by
+    # the build. An older commit that has no such option takes the -D as an
+    # unused variable and keeps it in its cache, which is what makes the
+    # judgement above stable there too.
     cmake -S "$dir" -B "$dir/build" -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache > /dev/null \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -DCHESSO_ARCH="$want_arch" -DCHESSO_TUNE="$want_tune" > /dev/null \
       || return 1
     cmake --build "$dir/build" --target chesso \
       -j"$(sysctl -n hw.logicalcpu 2> /dev/null || nproc)" > /dev/null || return 1
@@ -510,12 +654,48 @@ reference="$(build_ref "$ref_sha")" \
 
 # A busy machine invalidates a timed match, and it is worth knowing before
 # spending an hour rather than after.
-busy="$(ps -A -o %cpu= | awk '{ total += $1 } END { printf "%.0f", total }')"
-if ((busy > 60)); then
-  echo "WARNING: about ${busy}% of a core is already busy. A timed match on a"
-  echo "         loaded machine measures the load as much as the engine."
-  echo "         Check with: ps aux | sort -rnk3 | head"
+#
+# THE ONE-MINUTE LOAD AVERAGE, AGAINST THE CORE COUNT. This summed
+# `ps -A -o %cpu=` until S212, which is each process's average over its own
+# lifetime and not what the machine is doing now: measured here at a one-minute
+# load average of 0.79 that sum read 255, over the 60 it warned at, so the
+# guard fired on every run and carried no information (2026-09-10 adversarial
+# F32). The load average is the number of tasks runnable or in uninterruptible
+# sleep, which is the quantity a match competes with.
+#
+# THE THRESHOLD IS A QUARTER OF THE MACHINE -- 3.00 here, of 12 cores. A match
+# already books every core it can see (DEC-050), so the question is not whether
+# anything else is running -- something always is -- but whether enough is
+# running that the games queue behind it rather than behind each other, and a
+# quarter of the cores is where that starts. An idle machine here reads 0.00 to
+# 1.00 one-minute, so the guard stays quiet, and that is what makes it worth
+# reading when it does not. It warns and refuses nothing, as before: the
+# judgement is the reader's.
+#
+# Neither readable is a stated non-check and not a silent pass. macOS has no
+# /proc/loadavg and answers `sysctl -n vm.loadavg` with `{ 0.79 0.91 0.95 }`,
+# whose second field is the one-minute figure; a machine with neither gets a
+# line saying the guard did not run.
+load_1min=""
+if [[ -r /proc/loadavg ]]; then
+  read -r load_1min _ < /proc/loadavg || load_1min=""
+elif load_line="$(sysctl -n vm.loadavg 2> /dev/null)"; then
+  load_1min="$(echo "$load_line" | awk '{ print $2 }')"
+fi
+
+if [[ -z "$load_1min" ]]; then
+  echo "NOTE: neither /proc/loadavg nor 'sysctl -n vm.loadavg' could be read here,"
+  echo "      so whether the machine is already busy has not been checked."
   echo
+else
+  busy_threshold="$(awk -v c="$all_cores" 'BEGIN { printf "%.2f", 0.25 * c }')"
+  if awk -v l="$load_1min" -v t="$busy_threshold" 'BEGIN { exit !(l > t) }'; then
+    echo "WARNING: the one-minute load average is $load_1min over $all_cores cores,"
+    echo "         past the $busy_threshold this guard warns at -- a quarter of the"
+    echo "         machine. A timed match on a loaded machine measures the load as"
+    echo "         much as the engine. Check with: ps aux | sort -rnk3 | head"
+    echo
+  fi
 fi
 
 # The commit date beside each sha is what makes a stale reference visible
@@ -547,6 +727,10 @@ else
   echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
 fi
 echo "reference  $ref_sha  $(commit_date "$ref_sha")"
+# What the candidate was built as, which the reference is built to match. Two
+# shas say which commits were compared and nothing about whether the two
+# binaries were compiled for the same machine; this is the other half.
+echo "config     arch $want_arch  tune $tune_label"
 echo "tc $tc  hash $hash  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
 echo "seed       $seed"
@@ -556,6 +740,110 @@ else
   echo "bounds     none -- fixed $rounds rounds, a calibration or drift reading, NOT a verdict"
 fi
 echo "out        $outdir"
+echo
+
+# WHAT EACH SIDE SAYS IT IS, ASKED BEFORE THE FIRST GAME. The two names on the
+# argv below -- `candidate` or `cand-<sha>`, and `ref-<sha>` -- are this
+# script's own variables, so until S212 every archived PGN's engine names were
+# an assertion about what was meant to be built rather than a property of what
+# played (2026-09-10 adversarial F05). The banner does not close it either: it
+# reports the same intention. `rating.sh` has refused an opponent whose
+# `id name` disagrees with the manifest since DEC-068, after exactly this class
+# of mistake put a development build where a tagged one was expected, and
+# nothing did it for chesso's own binary. DEC-020's +301 Elo is what the class
+# costs when it fires.
+#
+# The engine answers `id name Chesso <sha>[-dirty] <arch>[ tune]`, stamped
+# through a header regenerated on every build (S212), so the sha is the commit
+# the binary was compiled from.
+#
+# THE THREE ANSWERS, AND WHAT EACH ONE MEANS.
+#
+#   `Chesso <sha>` agreeing with the label   plays.
+#
+#   `Chesso` with nothing after it           plays, with a line saying the
+#     check did not happen. Every commit before S212 answers the bare literal,
+#     and most of what the reference mechanism exists to reach is one of them:
+#     refusing would make `REF=<any older sha>` unrunnable, which is a worse
+#     instrument than one that says what it could not verify.
+#
+#   anything else                            refused.
+#
+# `-dirty` is ALLOWED on the candidate side when the banner printed
+# `+ uncommitted changes`, and never on the reference -- a `.ref-builds/<sha>`
+# worktree is a clean detached checkout, and a dirty one was rebuilt above.
+# Allowed and not required, deliberately: the dirty flag is raised by any
+# tracked file, `adocs/` included, so requiring it would refuse a run whose
+# binary is correct because a step file was edited after the build. The
+# converse is refused on both sides -- a clean tree and a `-dirty` binary means
+# that binary was built from a state that no longer exists on disk, and nothing
+# can say what is in it.
+#
+# The probe is rating.sh's, guard for guard, including why `|| true` is the
+# point rather than a swallowed error: not every engine exits on `quit`, so
+# `timeout` returns 124 for a probe that in fact answered, and under
+# `set -o pipefail` that status would kill this script with no message. The
+# caller checks the string.
+if command -v timeout > /dev/null; then
+  timeout_cmd=timeout
+elif command -v gtimeout > /dev/null; then
+  timeout_cmd=gtimeout
+else
+  fail "neither timeout nor gtimeout on PATH, so neither side can be asked what it is -- brew install coreutils on macOS"
+fi
+
+engine_id()
+{
+  { printf 'uci\nquit\n' | "$timeout_cmd" -k 1 5 "$1" 2> /dev/null \
+    | sed -n 's/^id name //p' | head -1 | tr -d '\r'; } || true
+}
+
+check_identity()
+{
+  local binary="$1" label="$2" want="$3" allow_dirty="$4"
+  local got name rest token bare
+
+  got="$(engine_id "$binary")"
+  [[ -n "$got" ]] \
+    || fail "the $label printed no 'id name' line within 5s of 'uci'"
+
+  echo "id name    $label  $got"
+
+  name="${got%% *}"
+  [[ "$name" == "Chesso" ]] \
+    || fail "the $label says 'id name $got', which is not this engine"
+
+  rest="${got#"$name"}"
+  rest="${rest# }"
+  token="${rest%% *}"
+
+  if [[ -z "$token" ]]; then
+    echo "           ^ no build stamp: every commit before S212 answers the bare"
+    echo "             literal, so what this binary holds cannot be checked here."
+    return 0
+  fi
+
+  bare="${token%-dirty}"
+  if [[ "$bare" != "$token" ]] && ((allow_dirty == 0)); then
+    fail "the $label says '$token', but nothing is uncommitted on that side, so it was built from a state that no longer exists; rebuild it -- 'cmake --build build -j12' for the working tree, 'git worktree remove --force .ref-builds/<sha>' and rerun for a cached reference"
+  fi
+
+  # An abbreviation against an abbreviation: the engine's comes from
+  # `git rev-parse --short` at build time and the label's from the same command
+  # in this script, so they are the same length on the same repository.
+  # Compared as prefixes anyway, so a changed core.abbrev is a longer answer
+  # and not a refused run.
+  if [[ "$bare" != "$want"* && "$want" != "$bare"* ]]; then
+    fail "the $label says it was built from '$bare', but this run labelled that side '$want' -- the binary is not the commit the banner claims"
+  fi
+}
+
+if [[ -n "$cand_sha" ]]; then
+  check_identity "$candidate" "$cand_name" "$cand_sha" 0
+else
+  check_identity "$candidate" "$cand_name" "$head_sha" "$((diff_status != 0))"
+fi
+check_identity "$reference" "ref-$ref_sha" "$ref_sha" 0
 echo
 
 fastchess \
@@ -580,12 +868,13 @@ fastchess \
 # indistinguishable from one that was never written -- grepping it for time
 # losses passes for free (S089). The PGN is the record of what happened.
 #
-# This census reports, it does not void. Both sides here are chesso, so a thin
-# time-management margin costs both about equally and is noise rather than
-# bias; rating.sh is the one that voids, because there the margin is the
-# opponent's too. A forfeit rate that is not near zero is still a reason to
-# stop and look: 8+0.08 leaves MOVE_OVERHEAD_MS 50 about 2.5 times less room
-# per move than 10+0.2 did.
+# On forfeits this census reports and does not void. Both sides here are
+# chesso, so a thin time-management margin costs both about equally and is
+# noise rather than bias; rating.sh voids on forfeits because there the margin
+# is the opponent's too. A forfeit rate that is not near zero is still a reason
+# to stop and look: 8+0.08 leaves MOVE_OVERHEAD_MS 50 about 2.5 times less room
+# per move than 10+0.2 did. A crash or a disconnect is a different matter and
+# the block below voids the run on it (S212, 2026-09-10_adversarial-F31).
 terminations()
 {
   grep -h '^\[Termination' "$pgnfile" 2> /dev/null | sort | uniq -c | sort -rn
@@ -620,6 +909,38 @@ if ((games > 0)); then
     printf "decisive  %d of %d, %.1f %%\n", g - d, g, 100 * (g - d) / g
     printf "forfeits  %d of %d, %.2f %%\n", f, g, 100 * f / g
   }'
+fi
+
+# A CRASH OR A DISCONNECT VOIDS THE RUN. A TIME FORFEIT DOES NOT, AND THE TWO
+# ARE NOT THE SAME KIND OF THING. A forfeit is a real game result -- the loser
+# ran out of clock and the points are genuinely the opponent's -- and here it
+# costs both sides about equally, because both sides are chesso. A crash does
+# not divide: only one side carries the change under test, and a run whose
+# games ended because an engine died measures the death. `rating.sh` has voided
+# on this since DEC-075 and this script only counted it, with a justification
+# that covered forfeits alone (2026-09-10 adversarial F31). Given the two
+# `position fen` crashes the same audit found, worth closing.
+#
+# The set of expected terminations is asserted rather than a guessed spelling
+# grepped for, exactly as rating.sh does it, so a failure cannot hide behind a
+# word nobody anticipated.
+#
+# THE MARKER STILL COMES LAST, AND THAT IS NOT DECORATION. Every watcher of a
+# detached run breaks on SPRT-RUN-(DONE|FAILED) and on nothing else (DEC-061,
+# AGENTS.md WATCHERS), so a void that printed INVALID and stopped there would
+# leave the watcher spinning to its ceiling -- the S167 and S177 failure,
+# reintroduced by the fix for a different finding. fail() prints the marker.
+unexpected="$(grep -h '^\[Termination' "$pgnfile" 2> /dev/null \
+  | grep -cvE '"(normal|adjudication|time forfeit)"' || true)"
+unexpected="${unexpected:-0}"
+
+if ((unexpected > 0)); then
+  echo
+  echo "SPRT-RUN-INVALID: $unexpected crashes/disconnects -- $unexpected game(s) ended"
+  echo "                  outside normal, adjudication and time forfeit. Only one"
+  echo "                  side carries the change, so this run measured the"
+  echo "                  failure and not the difference. Nothing is reported."
+  fail "the run is void: $unexpected crash/disconnect termination(s) in $pgnfile"
 fi
 
 completed=1

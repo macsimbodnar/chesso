@@ -67,6 +67,135 @@ documents third, the A/A last -- because DEC-143 says the A/A follows the
 harness change and precedes the next verdict, and S024's verdict is the next
 entry that owns one.
 
+## Landed 2026-09-13 03:52
+
+Everything in the accepts except the closing A/A, which is the coordinator's
+and which the `done:` stamp waits on.
+
+**F04, two-sided resign.** `fastchess.sh` and `rating.sh` both pass
+`-resign movecount=3 score=400 twosided=true`. `rating.sh`'s comment claiming
+the property is unchanged and is now true; the paragraph under it says in as
+many words that it became true on this date and was written before it, and
+carries the re-scored 514 of 2627 with its per-anchor direction. `score=400`
+and `movecount=3` are untouched, with DEC-174's reason beside them in both
+scripts. Red first: `.tuning/coord/S212_head_fastchess.sh` failed
+*"the resign adjudication did not reach fastchess as 'twosided=true'"*, and
+`.tuning/coord/S212_head_rating.sh` failed the same assertion as case 6.
+
+**F06, cached reference validity.** `fastchess.sh` `ref_cache_ok` asks three
+questions of `.ref-builds/<sha>` -- a worktree with `git status --porcelain`
+empty, at `<sha>`, and a `CMakeCache.txt` carrying the `CHESSO_ARCH` and
+`CHESSO_TUNE` `build/`'s does -- and any `no` clears the worktree through
+`git worktree remove --force` and rebuilds. `build_ref` now *configures* with
+that same pair, which is what stops the check looping: a reference configured
+with bare defaults and judged against `build/`'s would be stale and rebuilt on
+every run. Verified out of band that a commit predating the options keeps
+them as `CHESSO_ARCH:UNINITIALIZED=native` in its cache, so old references are
+stable too. The banner's `config` line is that pair. Reds, all four:
+*"dirty cached reference: 417fc40 was not rebuilt before it was played"*,
+*"moved cached reference: ... was not rebuilt"*, *"a cached reference built for
+another CHESSO_ARCH was played unrebuilt"*, *"the banner does not print the
+candidate's arch and tune"* and *"... does not read the candidate's
+configuration from build/CMakeCache.txt"*. Case 22 -- a valid cache played
+with no build -- was green against HEAD by construction and is the negative
+control that stops the check being written as "rebuild always".
+
+**F05, `id name`.** `src/chesso.cpp` `command_uci` answers
+`id name Chesso <sha>[-dirty] <arch>[ tune]`, one string literal concatenated
+at compile time from `cmake/build_info.cmake`'s header. Observed:
+`id name Chesso 47be85b-dirty native` from `build/` and
+`id name Chesso 47be85b-dirty native tune` from `build-tune/`.
+
+**Build time, not configure time, and the accepts' intent is met by it.** The
+accepts says "at configure time"; a stamp captured by `cmake -S . -B build`
+goes stale on the next commit, and the check this same step adds to
+`fastchess.sh` would then refuse a run whose binary is perfectly good. S077
+had already built the build-time mechanism for the tuner's provenance line and
+had already written down that reason; this step extends that script with the
+arch and the tune flag and moves its custom target from `tools/CMakeLists.txt`
+to the top-level `CMakeLists.txt`, because it now has two readers. The header
+moved with it, `build/tools/generated/` to `build/generated/`.
+
+**The sha is `git rev-parse --short` and not `git describe --always --dirty`.**
+The accepts names the latter; this repository carries nine tags from the
+pre-`achesso` history, so `describe` answers `v0.3.0-520-g47be85b`, which is
+not a short sha and does not compare against the `git rev-parse --short` that
+`fastchess.sh` labels each side with. The value the accepts asks for -- the
+short sha, `-dirty` when the tree is dirty -- is exactly what the commands
+already in `cmake/build_info.cmake` produce.
+
+**The check, and the one answer it accepts without checking.**
+`fastchess.sh` `check_identity` asks each side `uci` through a GNU `timeout`,
+with `rating.sh` `identify`'s guards verbatim, and refuses when the sha
+disagrees with the label. A binary answering the bare literal `id name Chesso`
+-- every commit before this one -- plays with a printed line saying the check
+did not happen, because refusing would make `REF=<any older sha>` unrunnable,
+which is most of what the reference mechanism is for. `-dirty` is allowed on
+the candidate when the banner shows `+ uncommitted changes` and never on the
+reference; allowed and not required, because the dirty flag is raised by any
+tracked file and requiring it would refuse a run whose binary is correct
+because a step file was edited after the build. Reds: *"a candidate answering
+another commit's sha was played anyway"* and *"a reference predating the build
+stamp played without saying so"*.
+
+**SURFACE order.** `MANUAL.md` describes the form (the sample session and a
+paragraph under it) and the `adocs/specs.md` wording is proposed to the
+coordinator for the same commit; only then does `tests/test_uci_surface.cpp`
+"the uci reply carries the identification a GUI needs" become a pattern check.
+It is a `std::regex` over the whole line plus a both-directions assertion on
+` tune`, and it names the two commands that re-derive what it must match
+(DEC-142).
+
+**F31, a crash voids the run.** `fastchess.sh` counts terminations outside
+`normal`, `adjudication` and `time forfeit` -- `rating.sh`'s own census, so a
+failure cannot hide behind a spelling nobody guessed -- prints
+`SPRT-RUN-INVALID: <n> crashes/disconnects` and then calls `fail`, so the last
+line is `SPRT-RUN-FAILED` and every watcher still terminates. Reds: *"a run
+with a disconnect termination exited 0"*. The negative control -- a PGN of
+`adjudication` and `time forfeit` reaching `SPRT-RUN-DONE` -- was green
+against HEAD and stops the case passing for the wrong reason.
+
+**F32, the busy guard.** Both scripts read the one-minute load average from
+`/proc/loadavg`, falling back to `sysctl -n vm.loadavg` and then to a printed
+non-check, and warn above **0.25 per core** -- 3.00 of 12 here. The threshold
+is argued in the comment: a match already books every core (DEC-050), so what
+matters is not whether anything else runs but whether enough runs that the
+games queue behind it, and an idle machine here reads 0.00 to 1.00 one-minute,
+so the guard stays quiet and therefore carries information. It warns and
+refuses nothing, as before. Reds: *"the busy guard still sums ps lifetime
+percentages"*, *"the busy guard does not read the one-minute load average"*.
+
+**F07, and it does not get a flag.** The `adocs/specs.md` sentence corrected on
+2026-09-11 stays as the truth. Three reasons, the third decisive: only
+`hash_mb` is hard-wired (concurrency and rounds are already overrides), so a
+flag is small but buys little; the opening draw cannot be reproduced at all,
+since `rating.sh` passes no `-srand`; and **this same step changes the
+adjudication**, so no invocation of `rating.sh` at HEAD can play S088's
+experiment whatever its hash and concurrency. A flag named for reproducing
+S088 would assert a reproducibility the commit that added it falsifies.
+
+**Bench and INV-6.** `./build/src/chesso bench` totals **27322394 nodes**
+before and after -- the commit carries `No functional change`.
+`tools/search_bench.py ./build/src/chesso 9` identical on both:
+midgame 121515 `c3d5`, kiwipete 801408 `e2a6`, tactical 72895 `d7c8q`.
+
+**Tests.** `tests/test_fastchess_script.sh` 17 properties to 26, each new one
+observed red against `.tuning/coord/S212_head_fastchess.sh` and green after;
+the sandbox now builds real `git worktree` caches with a `CMakeCache.txt` and
+stub engines that answer `id name`, which is what the new cases need and what
+the old ones tolerate unchanged. `tests/test_rating_script.sh` 5 properties to
+6. Gate green in both builds -- `100% tests passed, 0 tests failed out of 37`
+twice, then `./clang-format.sh --check` -- with `CLANG_FORMAT_MAJOR=22`
+exported and `pipefail` set, log at `.tuning/coord/S212_gate.log`.
+`test_fastchess_script` costs 2.29 s of its 60 s ctest timeout.
+
+**Left alone, deliberately.** The profiling adjudication DEC-031 documents
+(`-resign movecount=8 score=900`) is a different regime for a different
+question. The `extra` block in `adocs/data/S085_spsa_run.json` is a frozen
+record of a past run and is history; the next SPSA config is written by the
+step that runs it and wants `twosided=true` in it -- named here because
+nothing else will.
+
 ## Cost
 
 Agent work, half a day; one 1000-game fixed-rounds A/A, about 26 minutes at

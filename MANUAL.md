@@ -32,7 +32,7 @@ In a GUI, add a new engine and give it the path to that binary. In a shell:
 ```
 $ ./build/src/chesso
 uci
-id name Chesso
+id name Chesso 47be85b native
 id author MazerFaker
 option name OwnBook type check default false
 option name Book File type string default <embedded>
@@ -41,6 +41,27 @@ option name Hash type spin default 16 min 1 max 4096
 option name Threads type spin default 1 min 1 max 1
 uciok
 ```
+
+**`id name` says which build this is**, not just which engine:
+
+```
+id name Chesso <sha>[-dirty] <arch>[ tune]
+```
+
+- `<sha>` is the short commit the binary was compiled from, stamped at build
+  time — a rebuild after a commit picks up the new one with no reconfigure. It
+  is `unknown` when the binary was built outside a git checkout.
+- `-dirty` is appended when tracked files were modified at build time, on the
+  same convention the rest of the project uses (`git diff --quiet HEAD`).
+- `<arch>` is the instruction set the binary targets: `bmi2`, `avx2`,
+  `portable` or `native` — the same four `build_release.sh` takes.
+- ` tune` is appended only by the tuning build, which exposes every search
+  parameter as a UCI option and is never the binary a result is taken from.
+
+A GUI shows the whole string in its engine list, which is the point: two
+entries called `Chesso` are two files, and this says which commit each one is.
+`fastchess.sh` refuses to start a match when a side answers a sha other than
+the one it labelled that side with.
 
 ## Options
 

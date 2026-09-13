@@ -4,6 +4,7 @@
 #include <cctype>
 #include <fstream>
 #include <iterator>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -547,7 +548,57 @@ TEST_SUITE("uci surface")
     stdout_capture_t capture;
     uci_process_line("uci");
 
-    CHECK(capture.contains("id name Chesso"));
+    // S212. `id name` carries the build and not only the engine:
+    //
+    //     id name Chesso <sha>[-dirty] <arch>[ tune]
+    //
+    // The short commit the binary was compiled from, `-dirty` when tracked
+    // files were modified at build time, the CHESSO_ARCH target, and ` tune`
+    // in the tune build and nowhere else. MANUAL.md and specs.md describe the
+    // form; `fastchess.sh` refuses a run whose engine answers a sha other than
+    // the one it labelled that side with, which is the loop the project
+    // already closed on every opponent and could not close on itself
+    // (DEC-068, 2026-09-10 adversarial F05).
+    //
+    // A pattern and not a literal, because the sha moves with every commit --
+    // so what is pinned here is the shape, and the shape is the surface.
+    // `unknown` is the sha of a binary built outside a git checkout, from a
+    // tarball say, and is accepted for the same reason cmake emits it rather
+    // than failing the build.
+    //
+    // GOLDEN (DEC-142): the pattern below. Re-derive what it has to match with
+    //   printf 'uci\nquit\n' | ./build/src/chesso | sed -n 's/^id name //p'
+    //   printf 'uci\nquit\n' | ./build-tune/src/chesso | sed -n 's/^id name
+    //   //p'
+    // -- no search runs on either pipe, so `quit` cannot truncate it. Read off
+    // the binary, never off this file.
+    const std::regex id_name_form(
+        "^id name Chesso (unknown|[0-9a-f]{7,}(-dirty)?) "
+        "(bmi2|avx2|portable|native|unknown)( tune)?$");
+
+    std::string id_line;
+
+    for (const std::string& line : capture.lines()) {
+      if (line.rfind("id name ", 0) == 0) { id_line = line; }
+    }
+
+    REQUIRE_MESSAGE(!id_line.empty(),
+                    "the uci reply carries no 'id name' line");
+    CHECK_MESSAGE(std::regex_match(id_line, id_name_form), id_line);
+
+    // Which build answered is not decoration: the tune build exposes every
+    // search parameter as a UCI option and is never the binary a strength
+    // figure is taken from, so a run that played it has to be able to say so
+    // from the PGN alone. Asserted in both directions -- a stamp that always
+    // said `tune`, or never did, would satisfy the pattern above.
+#ifdef CHESSO_TUNE
+    CHECK_MESSAGE(id_line.rfind(" tune") == id_line.size() - 5,
+                  ("the tune build does not say so in id name: " + id_line));
+#else
+    CHECK_MESSAGE(id_line.find(" tune") == std::string::npos,
+                  ("the release build says tune in id name: " + id_line));
+#endif
+
     CHECK(capture.contains("id author MazerFaker"));
     CHECK(capture.contains("uciok"));
 

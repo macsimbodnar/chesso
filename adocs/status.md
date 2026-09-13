@@ -7,19 +7,37 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S212 started, 2026-09-13 03:23, by an Opus 5 subagent (DEC-199); the
-  closing A/A is the coordinator's.** Harness hygiene from the 2026-09-10
-  audit's Part B: two-sided resignation in both harnesses (F04), the engine's
-  `id name` carrying the build's sha and arch through a build-time header
-  and `fastchess.sh` refusing a side whose sha is not the one it labelled
-  (F05), a cached reference played only if clean, at its sha and configured
-  like `build/` (F06), a crash or disconnect voiding the run with
-  `SPRT-RUN-INVALID` before the terminal marker (F31), the busy guard on the
-  one-minute load average (F32), the `rating.sh` sentence in `specs.md`
-  decided (F07); each with a property observed red first; then `ROUNDS=500
-  AA=1 ./fastchess.sh`, about 28 minutes at 2110 games an hour, read with
-  `adocs/data/S198_pairs.py` (DEC-143). The `id name` commit touches `src/`
-  and carries `No functional change`. `plan_current/`: S212.
+- **S212's implementation half landed, 2026-09-13 04:10, by an Opus 5
+  subagent (DEC-199); the closing A/A follows the commit.** Both harnesses
+  pass `-resign movecount=3 score=400 twosided=true` (F04, DEC-174 cited at
+  both sites); `fastchess.sh` plays a cached `.ref-builds/<sha>` only if
+  clean, at its sha and configured like `build/`, else `build_ref` rebuilds
+  it with that configuration, and the banner prints `config arch native
+  tune off` (F06); the engine answers `id name Chesso <sha>[-dirty]
+  <arch>[ tune]` from `cmake/build_info.cmake`'s build-time header and
+  `fastchess.sh`'s `check_identity` refuses a side whose sha is not the one
+  it labelled, a bare pre-stamp `Chesso` playing with a note (F05); a
+  termination outside `normal`, `adjudication` and `time forfeit` prints
+  `SPRT-RUN-INVALID: <n>` and then `SPRT-RUN-FAILED` last, so every watcher
+  still ends (F31); both scripts warn above a one-minute load average of
+  0.25 per core, read from `/proc/loadavg` (F32); the S088 regime gets no
+  flag (F07). Twelve new properties (17 to 26 in `test_fastchess_script.sh`,
+  5 to 6 in `test_rating_script.sh`), each observed red against HEAD's
+  scripts. `bench` 27322394 before and after and `search_bench.py` identical
+  at depth 9, so the `src/chesso.cpp` literal is `No functional change`.
+  **DEC-204** records the four rulings the accepts did not fix (build-time
+  `rev-parse` over configure-time `describe`, nine old tags making
+  `describe` unusable; the pre-stamp note; no flag; 0.25 per core);
+  `specs.md` Behaviour carries the `id name` form and the F07 sentence,
+  `CLAUDE.md`'s founding rule 4 now says to read the load average and never
+  sum `ps` percentages, S222's file notes that its SPSA config carries
+  `twosided=true` (the frozen `S085_spsa_run.json` stays one-sided as a
+  record). Fast check over the diff: on the line below. **Next, in this
+  order: gate with `--build-parent`, commit, rebuild `build/` (the stamp
+  moves with HEAD), then `ROUNDS=500 AA=1 ./fastchess.sh` -- 1000 games,
+  about 28 minutes at 2110 an hour, ceiling 3400 s, read with
+  `adocs/data/S198_pairs.py` against 0.2905 +/- 0.0184 (DEC-143), games an
+  hour beside S219's figure -- then S212's stamp.** `plan_current/`: S212.
 
 - **S151 is done, 2026-09-13 03:30: S085's vector read at `32+0.32` is
   `Elo 11.99 +/- 11.57`, `nElo 15.81 +/- 15.23` -- not gone, and how much of

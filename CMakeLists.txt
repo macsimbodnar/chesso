@@ -23,6 +23,32 @@ option(CHESSO_TUNE "Expose the search parameters as UCI options. Not the release
 # add_subdirectory(src); cmake/pgo.cmake says why.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/arch.cmake)
 
+# S077, extended by S212. What this build is -- the commit, the instruction set
+# and whether CHESSO_TUNE is on -- stamped into a generated header at BUILD
+# time and not at configure time: `cmake -S . -B build` runs once, so a sha
+# captured there goes stale on the next commit and the binary would name a
+# commit it was not built from. The script rewrites the header only when a
+# value moves, so this costs one `git rev-parse` per build and a recompile only
+# when the answer changes.
+#
+# It sits here rather than in tools/, where S077 put it, because two targets
+# read it now: `tuner` for a fit's provenance line, and `chesso_engine` for
+# `id name`, which `fastchess.sh` checks each side's answer against (S212).
+# It has to be defined before add_subdirectory(src) for that dependency to
+# exist, and after arch.cmake because CHESSO_ARCH is one of the values.
+set(CHESSO_BUILD_INFO_DIR ${CMAKE_BINARY_DIR}/generated)
+set(CHESSO_BUILD_INFO ${CHESSO_BUILD_INFO_DIR}/chesso_build_info.hpp)
+
+add_custom_target(chesso_build_info ALL
+     COMMAND ${CMAKE_COMMAND}
+          -DOUTPUT=${CHESSO_BUILD_INFO}
+          -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+          -DARCH=${CHESSO_ARCH}
+          -DTUNE=${CHESSO_TUNE}
+          -P ${CMAKE_SOURCE_DIR}/cmake/build_info.cmake
+     BYPRODUCTS ${CHESSO_BUILD_INFO}
+     COMMENT "Stamping the build's commit, arch and configuration")
+
 # Add extra compiler checks
 if(MSVC)
      add_compile_options(/W4 /WX)

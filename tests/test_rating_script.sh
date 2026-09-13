@@ -3,7 +3,7 @@
 # Smoke test for rating.sh, and a static check on build_release.sh. S177,
 # closing 2026-09-03_adversarial-F03.
 #
-# Five properties. The first is the one that stops F03 recurring: at 1d8cbac
+# Six properties. The first is the one that stops F03 recurring: at 1d8cbac
 # `./rating.sh --bracket` on a machine without GNU coreutils died at
 # `all_cores="$(nproc)"` with exit 127 and printed no marker, because the
 # RATING-RUN-* trap was armed 90 lines later. Under the WATCHERS rule a detached
@@ -20,6 +20,13 @@
 #   4. a run that gets past every check and then dies -- fastchess is a stub
 #      that writes no PGN -- still ends on a terminal marker line
 #   5. neither script uses a bare `$(nproc)`, and both parse under `bash -n`
+#   6. the gauntlet's resignation is adjudicated two-sided, which is what this
+#      script's own comment has claimed since it was written and what the run
+#      it feeds depends on: chesso plays three independently scaled
+#      evaluations, and under one-sided adjudication the side with the larger
+#      scale concedes alone. 514 of 2627 decisive adjudications in the S088
+#      rating run were one-sided, 19.6 % (2026-09-10 adversarial F04,
+#      DEC-174)
 #
 # No game is played. Everything happens in a throwaway directory whose PATH
 # holds only the utilities linked in below, so the result does not depend on
@@ -123,7 +130,14 @@ fi
 # 2. A core count and no ordo: the one marker names ordo.
 printf '#!/bin/sh\necho 8\n' > "$tmp/stub/nproc"
 chmod +x "$tmp/stub/nproc"
-printf '#!/bin/sh\nexit 0\n' > "$tmp/stub/fastchess"
+# The stub writes its argument vector one argument per line, which is what
+# case 6 reads: what the script's comment claims and what fastchess is handed
+# are two different statements, and only the second decides how a game ends.
+cat > "$tmp/stub/fastchess" << 'STUB'
+#!/bin/sh
+printf '%s\n' "$@" > "$(dirname "$0")/../fastchess_args"
+exit 0
+STUB
 chmod +x "$tmp/stub/fastchess"
 status="$(run_sandbox)"
 if [[ "$status" -eq 0 ]]; then
@@ -169,6 +183,19 @@ if ! grep -qE 'RATING-RUN-(DONE|FAILED|INVALID)' "$tmp/out.txt"; then
 fi
 if ! grep -q 'opponents   alpha bravo charlie' "$tmp/out.txt"; then
   fail "4: the run did not get past the checks to the banner"; show
+fi
+
+# 6. The resignation the gauntlet plays under is two-sided, at the score and
+#    movecount DEC-174 fixed. Read off the argument vector of the run case 4
+#    just made: the comment above the setting is prose and this is the setting.
+if [[ ! -r "$tmp/fastchess_args" ]]; then
+  fail "6: fastchess was never invoked, so the adjudication cannot be read"; show
+else
+  for token in -resign movecount=3 score=400 twosided=true; do
+    if ! grep -q -x -- "$token" "$tmp/fastchess_args"; then
+      fail "6: the resign adjudication did not reach fastchess as '$token'"
+    fi
+  done
 fi
 
 # 5. Static: no bare nproc, and both scripts parse.
