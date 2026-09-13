@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S212 started, 2026-09-13 03:40, by an Opus 5 subagent (DEC-199); the
+  closing A/A is the coordinator's.** Harness hygiene from the 2026-09-10
+  audit's Part B: two-sided resignation in both harnesses (F04), the engine's
+  `id name` carrying the build's sha and arch through a build-time header
+  and `fastchess.sh` refusing a side whose sha is not the one it labelled
+  (F05), a cached reference played only if clean, at its sha and configured
+  like `build/` (F06), a crash or disconnect voiding the run with
+  `SPRT-RUN-INVALID` before the terminal marker (F31), the busy guard on the
+  one-minute load average (F32), the `rating.sh` sentence in `specs.md`
+  decided (F07); each with a property observed red first; then `ROUNDS=500
+  AA=1 ./fastchess.sh`, about 28 minutes at 2110 games an hour, read with
+  `adocs/data/S198_pairs.py` (DEC-143). The `id name` commit touches `src/`
+  and carries `No functional change`. `plan_current/`: S212.
+
 - **S151 is done, 2026-09-13 03:30: S085's vector read at `32+0.32` is
   `Elo 11.99 +/- 11.57`, `nElo 15.81 +/- 15.23` -- not gone, and how much of
   the `8+0.08` +21.02 transfers this estimate cannot say.** `SPRT-RUN-DONE`
