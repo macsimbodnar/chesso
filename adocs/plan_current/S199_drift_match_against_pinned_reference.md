@@ -7,7 +7,7 @@ decisions:  DEC-139, DEC-108
 closes:     2026-09-10_adversarial-F30
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator for the instrument (DEC-185, DEC-199); the matches are the coordinator's; started 2026-09-13 09:05 beside S109's SPRT, scripts and documents only
 done:
 
 ## Why this exists

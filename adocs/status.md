@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S199 started, 2026-09-13 09:05, beside S109's SPRT (blocked-task
+  exception), scripts and documents only.** The block boundary S109 closes
+  produces two numbers (F30, DEC-172): the drift point against a pinned
+  early-S105 reference (`adocs/data/S199_drift.sh`, 1000 pairs at the
+  regime, about 56 min, read by `S199_drift.py` into `S199_drift.tsv` under
+  the rule written before the run) and DEC-202's longer-control reading of
+  the block (`adocs/data/S109_ltc.sh`, `32+0.32`, about 3.7 h). An Opus 5
+  agent writes both pre-registrations and the reader; the coordinator runs
+  them after the SPRT's verdict, on the idle machine. `plan_current/`: S109
+  (SPRT running), S199.
+
 - **S226 is done, 2026-09-13 08:50, by an Opus 5 subagent beside S109's SPRT,
   documents only.** `TOOLCHAIN.md` opens on "The workstation, end to end":
   eleven subsections mirroring the tool order, every version, path and
