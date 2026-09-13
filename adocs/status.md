@@ -7,16 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S199 started, 2026-09-13 09:05, beside S109's SPRT (blocked-task
-  exception), scripts and documents only.** The block boundary S109 closes
-  produces two numbers (F30, DEC-172): the drift point against a pinned
-  early-S105 reference (`adocs/data/S199_drift.sh`, 1000 pairs at the
-  regime, about 56 min, read by `S199_drift.py` into `S199_drift.tsv` under
-  the rule written before the run) and DEC-202's longer-control reading of
-  the block (`adocs/data/S109_ltc.sh`, `32+0.32`, about 3.7 h). An Opus 5
-  agent writes both pre-registrations and the reader; the coordinator runs
-  them after the SPRT's verdict, on the idle machine. `plan_current/`: S109
-  (SPRT running), S199.
+- **S199's instrument landed, 2026-09-13 10:00, by an Opus 5 subagent beside
+  S109's SPRT; the two boundary runs follow on the idle machine.** The pinned
+  reference is **`f548ff4`** (2026-08-20, the commit right after the S105
+  regime landed, its `src/` identical to the regime commit `21c1949`'s;
+  `id name` bare `Chesso`, so it plays with DEC-204's pre-stamp note).
+  `adocs/data/S199_drift.sh`: `REF=f548ff4 ROUNDS=1000` at the regime,
+  about 56 min at 2133 an hour, ceiling 6750 s, abort only on forfeits over
+  1.0 % a side. `adocs/data/S199_drift.py` reads a finished run (the last
+  results block, the pentanomial cross-checked against the PGN, the engine
+  name derived) and appends one row to `adocs/data/S199_drift.tsv`, refusing
+  an incomplete, voided or mismatched run; self-test 16 assertions green.
+  **The reading rule is in the step file before any game**: a point inside
+  the previous point plus the verdicts landed since (and the conversions at
+  2.10 Elo per percent, F30) is as expected, below names the suspects for
+  S183's discount, above says the sum under-counts; the first point reads
+  against zero and against the kept verdicts since the pin, whose point
+  estimates sum to +106.88 Elo, honestly +44 to +107 after DEC-063's bias.
+  `adocs/data/S109_ltc.sh`: DEC-202's block reading, `CAND=600f448
+  REF=50e3661 TC=32+0.32 HASH=64 ROUNDS=1000`, about 3.7 h at 545 an hour,
+  ceiling 27360 s, read against the SPRT's +46.90 +/- 15.43. `plan.md`'s
+  Elo paragraph cites the TSV; `DEV_MANUAL.md` has "The drift instrument,
+  and what it is not". Fast check over the instrument: on the line below.
+  **Next: rebuild, the drift match, then the longer-control reading, back to
+  back; S210's first half (brief ready) after them.** `plan_current/`: S199
+  (runs pending).
 
 - **S226 is done, 2026-09-13 08:50, by an Opus 5 subagent beside S109's SPRT,
   documents only.** `TOOLCHAIN.md` opens on "The workstation, end to end":

@@ -1,0 +1,17 @@
+# S199's drift series: the engine now against the pinned early-S105 commit
+# f548ff4 (2026-08-20), one fixed 1000-pair match at the harness's own regime
+# per block boundary. Appended by adocs/data/S199_drift.py, read by its
+# --check; the run is adocs/data/S199_drift.sh and the reading rule is in
+# adocs/plan_current/S199_drift_match_against_pinned_reference.md.
+#
+# NOT A VERDICT, and not a verdict on any one change inside the interval a row
+# covers: a fixed match gives a sum and per-patch attribution is what it cannot
+# give (DEC-143, DEC-108). Two rows are comparable only when `ref` and `regime`
+# agree; `regime` is tc/hash/book read off the run's own banner.
+#
+# elo_95 and nelo_95 are fastchess's printed 95 % half-widths; ptnml is the
+# pentanomial from 0 to 2 in the candidate's points; pair_var is the population
+# variance of the pair score, computed from the PGN by S105_pairs. The last two
+# columns are filled by hand: the step ids whose verdicts landed since the
+# previous point, and the ids whose conversions landed since it (F30, DEC-170).
+date	head	ref	regime	games	elo	elo_95	nelo	nelo_95	ptnml	pair_var	verdicts_since	conversions_since

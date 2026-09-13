@@ -2584,6 +2584,49 @@ pairs — `nElo 26.81 ± 12.55` exactly, and 9.82 against its printed `Elo ±
 cannot separate −4 from 0, which is why DEC-143's "an estimate is not a
 verdict" is the sentence that governs it.
 
+#### The drift instrument, and what it is not
+
+**The sum of the kept verdicts is measured, not assumed.** A one-stage `{0,5}`
+SPRT passes a true zero one run in twenty, and the fishtest FAQ's own sentence
+is that the estimates "are only unbiased if one takes all patches into account,
+both passed and non-passed ones" — so a sum of the survivors drifts up by
+construction. The answer is fishtest's regression test, at this project's
+scale: `adocs/data/S199_drift.sh` plays the engine as it stands now against a
+**pinned** early-S105 commit, `f548ff4` (2026-08-20, the first commit after the
+harness regime landed), as one fixed 1000-pair match at `fastchess.sh`'s own
+defaults — `8+0.08`, `Hash=16`, `noob_3moves.epd`, no `-sprt`, about 56 minutes
+at the measured 2133 games an hour. `adocs/data/S199_drift.py <outdir>
+<runlog>` appends one row to `adocs/data/S199_drift.tsv` — both shas, the
+regime, Elo and nElo with their 95 % half-widths, the pentanomial, the pair
+variance, and by hand the step ids whose verdicts and whose conversions landed
+since the previous point — and `--check` prints the trend. The rule, in one
+sentence: a point inside the previous point's interval plus the verdicts landed
+since, plus the conversions landed since at DEC-083's published 2.10 Elo per
+percent of nps, is as expected; a point below that band names those verdicts as
+the suspects for S183's discount; and no point is a verdict on any one of them.
+The reference never changes, which is what makes the column a series.
+
+**What it is not.** Not a rating and not `rating.sh`: it is self-play against an
+older self, on the self-play scale every verdict here is taken on, where
+`rating.sh` plays external engines with published figures and answers an
+absolute number. Not the gauntlet either — DEC-108 stands, the engine is
+re-rated once near the goal and 2559 ±25 soft is still its rating until then.
+Not a verdict, and not an attribution: a fixed match gives a sum, and per-patch
+attribution is what it cannot give, so nothing in the engine changes on any
+outcome of it. At 1000 pairs a point carries about ±11.6 logistic Elo, so two
+points differ by ±16 or more before they differ at all. S199, R14, DEC-139.
+
+**A block boundary produces two numbers, and neither is read without the
+other.** Drift at the regime is this instrument; transfer to four times the
+control is the longer-control reading above, one fixed 1000-pair match at
+`TC=32+0.32 HASH=64` over the block's own commit range. The first pair of them
+is the S109 boundary: `adocs/data/S199_drift.sh` against the pin, and
+`adocs/data/S109_ltc.sh` — `600f448` against its parent `50e3661`, the same
+pair the block's `8+0.08` SPRT measured, about 3.7 h at the measured 545 games
+an hour. One says whether the kept verdicts are in the engine at the size they
+were measured at; the other says whether this block's gain survives a longer
+clock. F30 of the 2026-09-10 audit, DEC-170 and DEC-172.
+
 #### What each pair costs, before the run and after it
 
 Two numbers, and a pre-registration states the first one (DEC-143). The nElo

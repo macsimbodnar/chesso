@@ -650,6 +650,8 @@ tuning do not, and **tuning's +50 to +90 has no published input behind it at
 all** — its only evidence is S028's +188.74, a one-time move from hand-picked
 constants to fitted ones that by construction cannot happen twice.
 
+**The one measured check on that ledger is S199's drift series, `adocs/data/S199_drift.tsv`**: one fixed 1000-pair match at the harness's own regime against the pinned early-S105 commit `f548ff4`, one point per block boundary, which prices the sum of the kept verdicts at about +/- 11.6 Elo a point -- self-play against an older self, never a rating, and never a verdict on any single change inside it (R14, DEC-139). The first point is taken at the S109 block boundary, 2026-09-13.
+
 **So the high end does not clear 3000 either, and this is the question DEC-071
 exists for.** 2817 is 183 short; adding the whole 121.8 Elo of anchor
 disagreement in the favourable direction reaches 2939 and is still short.
