@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
+- **S109's SPRT is running since 2026-09-13 08:11.** `adocs/data/S109_sprt.sh`
+  detached, pid in `.tuning/sprt_s109.pid`, log `.tuning/sprt_s109.log`,
+  output `.tuning/sprt_s109_20260913_081118/`: candidate `1952c56` (the
+  block plus the tests-only sanitizer-build fix), reference `50e3661` (the
+  commit before the block) built fresh, identity lines `Chesso 1952c56
+  native` / `Chesso 50e3661 native`, `tc 8+0.08 hash 16 concurrency 12`,
+  `noob_3moves.epd`, seed `20260913081118`, `bounds elo0=0 elo1=5
+  alpha=0.05 beta=0.05`. Worst case 41861 games / 19.8 h at the midpoint,
+  25591 / 12.1 h on a bound at 2133 an hour; expected far shorter if the
+  literature's effect is real; abort over 1.0 % forfeits a side, a crash
+  voids; bisection legs the caps at 0 on H0. Watcher: persistent `Monitor`
+  on the markers, pid death and a 142560 s ceiling. **A first launch at
+  08:10 was stopped after 9 games and relaunched one minute later**
+  because its output directory had defaulted to `/tmp`, which this machine
+  wipes at boot -- the PGN is evidence and a second power cut would have
+  erased it; the relaunch carried `OUT` under `.tuning/` and the new busy
+  guard warned at a one-minute load of 5.04 from the stopped run's own
+  decaying processes, nothing else running. Before the launch the second
+  tier closed: mutant pass P01 to P0A all killed at `600f448`,
+  `gate_extra.sh` five stages green at `1952c56` after the sanitizer build
+  was repaired. `plan_current/`: S109 (SPRT running). **Compaction point.**
+
 - **S109 landed, 2026-09-13 06:40, by an Opus 5 subagent (DEC-199); its SPRT
   is next and is the coordinator's.** The four shallow-depth rules are in
   `negamax_at`'s move loop at `lmr_depth = max(0, depth - lmr_reduction)`,
