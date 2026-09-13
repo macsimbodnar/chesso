@@ -138,5 +138,5 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # cannot enter the candidate (default below, filled at commit time).
 [[ -x ./fastchess.sh ]] || { echo "SPRT-RUN-FAILED: no executable ./fastchess.sh" >&2; exit 1; }
 shopt -s execfail
-exec env REF="${REF:-9075bf8}" CAND="${CAND:-CAND_F22_COMMIT}" ./fastchess.sh --nonreg
+exec env REF="${REF:-9075bf8}" CAND="${CAND:-9ef06f3}" ./fastchess.sh --nonreg
 echo "SPRT-RUN-FAILED: exec env ./fastchess.sh" >&2; exit 127
