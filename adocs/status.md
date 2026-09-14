@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S229 done, 2026-09-14 16:05, by an Opus 5 subagent (DEC-199); committed
+  by the coordinator after the fast check.** `tests/third_party/nlohmann/json.hpp`
+  is `v3.11.3`'s amalgamated header copied from the pinned checkout on disk,
+  sha256 `9bea4c80...` recorded in `THIRD_PARTY.md` with the commit, the URL
+  and the licence, `LICENSE.MIT` beside it; `json_fwd.hpp` not taken (nothing
+  includes it). The `tests/json` submodule is deinitialised, removed, its
+  `.gitmodules` entry and `.git/modules` directory gone; `.gitmodules` holds
+  doctest alone. Three includers, not two (`test_helpers.hpp` was the third),
+  resolve through the two rewired include lines. **Found in scope**:
+  `clang-format.sh --check` would have reformatted the vendored header and
+  made "unmodified" false -- `tests/third_party/` is excluded beside
+  `adocs/`, with a red-first seventh case of `test_clang_format_script`.
+  `books/fetch_book.sh`'s bundle paragraph, `DEV_MANUAL.md`'s and
+  `tools/mutation_check.py`'s worktree recipes name doctest alone. GPL grep:
+  seven survivors, all founding-rule sentences or dated records, none saying
+  a fixture is in a checkout; the header itself matches `GPL` twice inside
+  *SIGPLAN*, which `-w` excludes. Fresh configures of both builds from the
+  old caches' values: 39/39 and 39/39, `clang-format.sh --check` clean,
+  bench 5950740. `README.md`'s submodule line stays true (doctest remains).
+  `No functional change`, no `src/`. Fast check: three findings -- the untracked directory (added in the commit), two `adocs/data/` sweep scripts (S154, S156) still copying `tests/json` into their throwaway worktrees and a stamp sentence saying no script did (both scripts list doctest alone now, the stamp corrected), and `S223_fen_census.py`'s dead `tests/json/` exclusion moved to `tests/third_party/`. **Next**: S230,
+  the mined mate row for R01 (brief `.tuning/coord/S230_brief.md`), the last
+  filler; S091's SPRT tonight. `plan_current/`: S091 (SPRT tonight), S222
+  (fit pending).
+
 - **S229 started, 2026-09-14 15:48, by an Opus 5 subagent (DEC-199)**: the
   nlohmann/json dependency carried as its MIT single header (`v3.11.3`, the
   pinned `9cca280a`, copied from the checkout on disk, no network) under

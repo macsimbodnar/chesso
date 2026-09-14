@@ -222,9 +222,11 @@ def main():
         # them empty. They are copied out of this checkout rather than
         # initialised: `git submodule update --init` in a linked worktree
         # clones from the recorded URL, which is `git@github.com:` here, so it
-        # needs an ssh key and fails without one. Both are header-only trees
-        # the build only reads, 20 MB together, and the copy is a second.
-        for module in ("tests/doctest", "tests/json"):
+        # needs an ssh key and fails without one. A header-only tree the
+        # build only reads, and the copy is a second. tests/json was the
+        # second entry until S229 made the json header a committed file that
+        # every worktree carries on its own.
+        for module in ("tests/doctest",):
             source = os.path.join(REPO, module)
             target = os.path.join(tree, module)
 

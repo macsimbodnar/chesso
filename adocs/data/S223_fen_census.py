@@ -11,7 +11,8 @@ Run from the repository root with the python-chess interpreter:
 
 The regex takes four to six FEN fields; a four-field literal is completed
 with `0 1`, which is what `position fen` does too (S176). The vendored
-tests/json/ tree is excluded. The output is the step's cost list: DEC-197 and
+tests/third_party/ tree is excluded (tests/json/ until S229; the json header
+carries no FEN either way). The output is the step's cost list: DEC-197 and
 adocs/plan_done/S223_position_fen_legality_boundary.md read it. Written by
 the coordinator on 2026-09-12 while dispositioning
 adocs/audit/2026-09-12_adversarial.md.
@@ -50,7 +51,7 @@ while argv:
 
 print("python-chess", chess.__version__)
 pat = re.compile(r'((?:[1-8pnbrqkPNBRQK]+/){7}[1-8pnbrqkPNBRQK]+)\s+([wb])\s+(-|[KQkqA-Ha-h]{1,4})\s+(-|[a-h][36])(?:\s+(\d+)\s+(\d+))?')
-files = [f for f in glob.glob('tests/**/*', recursive=True) if re.search(r'\.(cpp|hpp|json|py|epd|txt)$', f) and not f.startswith('tests/json/')]
+files = [f for f in glob.glob('tests/**/*', recursive=True) if re.search(r'\.(cpp|hpp|json|py|epd|txt)$', f) and not f.startswith('tests/third_party/')]
 files += glob.glob('src/*.cpp') + glob.glob('src/*.hpp') + glob.glob('tools/*.cpp') + glob.glob('tools/*.hpp') + glob.glob('tools/*.py')
 seen = {}
 for f in files:

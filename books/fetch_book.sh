@@ -29,12 +29,11 @@ set -euo pipefail
 # as a blanket and got wrong. The list, because a list can be checked and a
 # blanket cannot: the engine, its tools and its tests are MIT (LICENSE);
 # books/8moves_v3.pgn is the only book committed here and every other one comes
-# through this script from the CC0 source above; the two submodules under
-# tests/ are gitlinks to MIT projects -- nlohmann/json (MIT; its own
-# repository's test tree carries third-party fixtures under Apache-2.0,
-# BSD-3-Clause and GPL-3.0-only, per its .reuse/dep5, which this project
-# neither builds, includes nor ships -- S229 carries the library as its MIT
-# single header so no such file enters a checkout at all) and doctest (MIT).
+# through this script from the CC0 source above; one submodule is left under
+# tests/, a gitlink to doctest (MIT); nlohmann/json is not a submodule any more
+# but the library's own MIT single header, committed under
+# tests/third_party/nlohmann/ with its LICENSE.MIT and a THIRD_PARTY.md that
+# records the version, the upstream commit and the header's sha256 (S229).
 # The list checks out, so the blanket is true again and this comment
 # may state it: the repository bundles nothing whose licence is unstated. It
 # was false when this comment first claimed it (2026-09-10_adversarial-F03):

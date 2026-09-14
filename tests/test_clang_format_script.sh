@@ -20,6 +20,7 @@
 #   4. a misformatted file inside a gitignored directory exits 0
 #   5. a file in the index but deleted from the worktree is not opened
 #   6. a code-shaped file under adocs/ is not scanned, tracked or not
+#   7. a source file under tests/third_party/ is not scanned, tracked or not
 #
 # 4 is the negative half. Selecting the whole worktree instead of asking git
 # would pass 1 to 3 and fail this one, and would then try to format the
@@ -248,11 +249,37 @@ if ((adocs_status != 0)); then
   show "$adocs_dir"
 fi
 
-# Non-vacuous by construction, once more: six cases were meant to run, and a
+# 7. tests/third_party/ holds a dependency's own release artefact and is never
+# formatted. S229.
+#
+# nlohmann/json is carried as its amalgamated single header, and
+# tests/third_party/nlohmann/THIRD_PARTY.md records its sha256 and says the file
+# is unmodified. Reformatting it makes that record false. It was invisible to
+# this selection while the library was the tests/json submodule -- git ls-files
+# names a gitlink as one entry with no extension -- so the exclusion arrived with
+# the vendored header and this case arrived with the exclusion.
+#
+# Assertion 2 is this case's precondition too: the same bytes under src/ exit
+# non-zero, so a zero here is the path being excluded and not the fixture.
+vendor_dir="$(make_sandbox)"
+mkdir -p "$vendor_dir/tests/third_party/nlohmann"
+misformatted "$vendor_dir/tests/third_party/nlohmann/tracked.hpp"
+misformatted "$vendor_dir/tests/third_party/nlohmann/untracked.hpp"
+git -C "$vendor_dir" add tests/third_party/nlohmann/tracked.hpp
+git -C "$vendor_dir" commit -q -m vendored
+vendor_status="$(run_check "$vendor_dir")"
+
+if ((vendor_status != 0)); then
+  fail "a source file under tests/third_party/ was scanned (exit" \
+       "$vendor_status); a vendored release artefact must not be reformatted"
+  show "$vendor_dir"
+fi
+
+# Non-vacuous by construction, once more: seven cases were meant to run, and a
 # count below that means an assertion was skipped rather than satisfied.
 sandbox_count="$(find "$sandbox_root" -mindepth 1 -maxdepth 1 -type d | wc -l)"
-if ((sandbox_count != 6)); then
-  fail "$sandbox_count of 6 sandboxes were built; a case did not run"
+if ((sandbox_count != 7)); then
+  fail "$sandbox_count of 7 sandboxes were built; a case did not run"
 fi
 
 if ((failures > 0)); then

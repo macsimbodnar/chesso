@@ -362,11 +362,12 @@ def worktree(ref, patches, targets, verify=(), overlay=(), submodules=(),
         shutil.copyfile(os.path.join(REPO, relative),
                         os.path.join(tree, relative))
 
-    # tests/doctest and tests/json are submodules and a fresh worktree gets
-    # them empty. They are copied out of this checkout rather than initialised:
-    # `git submodule update --init` in a linked worktree clones from the
-    # recorded URL, which is git@github.com: here, so it needs an ssh key and
-    # fails without one. Both are header-only trees the build only reads.
+    # tests/doctest is a submodule and a fresh worktree gets it empty. It is
+    # copied out of this checkout rather than initialised: `git submodule
+    # update --init` in a linked worktree clones from the recorded URL, which
+    # is git@github.com: here, so it needs an ssh key and fails without one. A
+    # header-only tree the build only reads. tests/json was listed beside it
+    # until S229 made the json header a committed file every worktree carries.
     for module in submodules:
         source = os.path.join(REPO, module)
 
@@ -589,7 +590,7 @@ def sweep_red(args, rows):
         [],
         verify=[(PARAMS, WEAKENED_BOUND)],
         overlay=["tests/test_engine.cpp"],
-        submodules=["tests/doctest", "tests/json"],
+        submodules=["tests/doctest"],
         build=False,
         jobs=args.jobs)
 

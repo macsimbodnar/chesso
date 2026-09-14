@@ -21,7 +21,7 @@ function(add_doctest_target name)
      add_executable(${name} ${name}.cpp)
 
      target_include_directories(${name} SYSTEM PRIVATE doctest/doctest)
-     target_include_directories(${name} SYSTEM PRIVATE json/single_include/nlohmann)
+     target_include_directories(${name} SYSTEM PRIVATE third_party/nlohmann)
      target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
      target_include_directories(${name} PRIVATE ../src)
 
@@ -528,7 +528,7 @@ set_tests_properties(test_plan_citation_freshness
 # process exit code. Minutes, not seconds, so it carries the "slow" label and
 # is skipped by `ctest -L fast`.
 add_executable(test_perft test_perft.cpp)
-target_include_directories(test_perft SYSTEM PRIVATE json/single_include/nlohmann)
+target_include_directories(test_perft SYSTEM PRIVATE third_party/nlohmann)
 target_include_directories(test_perft PRIVATE ../src)
 target_link_libraries(test_perft PRIVATE chesso_engine)
 add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)

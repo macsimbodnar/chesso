@@ -74,11 +74,20 @@ fi
 # failure that cannot be fixed without corrupting the record. The exclusion is by
 # path and not by extension, because the extension is exactly what is right about
 # those files.
+# S229: tests/third_party/ is the same case for the same reason. It holds a
+# dependency's own release artefact -- nlohmann/json's amalgamated single header
+# -- and THIRD_PARTY.md beside it states its sha256 and that it is unmodified.
+# Reformatting it makes that statement false, and under --check it would be a
+# step-completion failure on 900 kB of code nobody here wrote. While json was the
+# tests/json submodule the list never saw it: git ls-files names a gitlink as one
+# entry with no extension, so the exclusion appears in the same commit that
+# vendors the header.
 FILES=""
 while IFS= read -r FILE; do
     [ -f "$FILE" ] && FILES="$FILES $FILE"
 done < <(git ls-files --cached --others --exclude-standard |
-    grep -E '\.(c|cc|cpp|h|hpp|hh)$' | grep -v -E '^adocs/' | sort -u)
+    grep -E '\.(c|cc|cpp|h|hpp|hh)$' |
+    grep -v -E '^adocs/|^tests/third_party/' | sort -u)
 
 EXTRA_ARGS=""
 if [ "$1" == "--check" ]; then

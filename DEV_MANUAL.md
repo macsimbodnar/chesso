@@ -1855,7 +1855,7 @@ label and the bench, records what went red, and reverts. The mutants live in
 
 ```bash
 git worktree add --detach .ref-builds/mut HEAD
-git -C .ref-builds/mut submodule update --init tests/doctest tests/json
+git -C .ref-builds/mut submodule update --init tests/doctest
 cmake -S .ref-builds/mut -B .ref-builds/mut/build \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
@@ -1866,9 +1866,10 @@ python3 tools/mutation_check.py tools/mutants .ref-builds/mut --only M26 # one
 
 **The submodule line is not optional and `fastchess.sh`'s recipe omits it**,
 because that script builds `src/chesso` and nothing else. This tool builds the
-tests, and `tests/doctest` and `tests/json` are submodules: a fresh worktree
-without them fails at `fatal error: doctest.h: No such file or directory` and
-the tool refuses the run with "the unmutated worktree does not build". The
+tests, and `tests/doctest` is a submodule -- the only one left, since S229
+carried nlohmann/json as a committed single header instead: a fresh worktree
+without it fails at `fatal error: doctest.h: No such file or directory` and the
+tool refuses the run with "the unmutated worktree does not build". The
 `CLANG_FORMAT_MAJOR` export is the same override the gate needs here: without
 it `test_clang_format_script` is red on the unmutated tree and the run refuses
 before the first mutant, which is the guard working — a suite already red

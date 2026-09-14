@@ -42,13 +42,14 @@ each mutant with `git checkout --`, which in a tree holding your own work would
 revert that too. Create one as fastchess.sh does:
 
     git worktree add --detach .ref-builds/mut HEAD
-    git -C .ref-builds/mut submodule update --init tests/doctest tests/json
+    git -C .ref-builds/mut submodule update --init tests/doctest
     cmake -S .ref-builds/mut -B .ref-builds/mut/build \
           -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 The submodule line is not in fastchess.sh's recipe because that script builds
-src/chesso and nothing else. This one builds the tests, and tests/doctest and
-tests/json are submodules a fresh worktree does not carry: without them cmake
+src/chesso and nothing else. This one builds the tests, and tests/doctest is a
+submodule a fresh worktree does not carry -- the only one left, since S229
+carried nlohmann/json as a committed single header instead: without it cmake
 fails on doctest.h and the run refuses at "the unmutated worktree does not
 build".
 
