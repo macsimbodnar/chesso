@@ -19,8 +19,10 @@ Updated: 2026-09-14, by hand.
   follows; S091's SPRT tonight. `plan_current/`: S091 (SPRT tonight), S222
   (fit pending), S229.
 
-- **S228 done, 2026-09-14 16:05, by an Opus 5 subagent (DEC-199); committed
-  by the coordinator after the fast check.** `tests/test_build_info_freshness.sh`
+- **S228 done, 2026-09-14 15:48 (commit `675ea66`), by an Opus 5 subagent
+  (DEC-199); committed by the coordinator after the fast check.** The stamp
+  in `plan_done/` says 17:45, the repair agent's clock error caught after the
+  commit; `plan_done/` is history and is not edited, this line is the record. `tests/test_build_info_freshness.sh`
   (fast label, 0.15 s) drives the real `cmake/build_info.cmake` as `cmake -P`
   over a sandbox git repository -- five cases: a clean tree with `ARCH` and
   `TUNE` round-tripped, dirtied then committed against `rev-parse` read at
