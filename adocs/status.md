@@ -5,7 +5,17 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-13, by hand.
+Updated: 2026-09-14, by hand.
+
+- **S091 started, 2026-09-14 10:40, by an Opus 5 subagent (DEC-199); the SPRT
+  is the coordinator's.** Capture SEE pruning in the main search at the
+  reduction-adjusted depth with its own margin and off value, and the extra
+  reduction of a negative-SEE move -- reconciled with S109, whose quiet SEE
+  rule already meets the quiet half of the accepts (the brief says so and
+  the agent states it); a mate case red first with the oracle's line, a
+  guard test and a killed mutant per rule, Debug self-play, node counts,
+  the pre-registration `adocs/data/S091_sprt.sh` at `{0, 5}` with `OUT`
+  under `.tuning/`. `plan_current/`: S091.
 
 - **S210 is done, 2026-09-14 10:30: F22's `--nonreg` SPRT is H1, `Elo +0.01
   +/- 3.17`, `nElo +0.02 +/- 4.03`, 28598 games in 13 h 16 m 30 s.** The

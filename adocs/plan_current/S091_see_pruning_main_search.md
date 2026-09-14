@@ -7,6 +7,7 @@ decisions:  DEC-071
 closes:
 blocks:
 paused_by:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); the SPRT is the coordinator's; started 2026-09-14 10:40 on the idle machine
 done:
 
 ## The precedent that decides how this is read
