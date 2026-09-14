@@ -7,7 +7,7 @@ decisions:  DEC-207, DEC-201, DEC-104
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-14 15:48, filler while S091 waits for its SPRT night and S222 for its SPSA night
 done:
 
 ## Why this exists

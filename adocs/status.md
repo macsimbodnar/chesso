@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S229 started, 2026-09-14 15:48, by an Opus 5 subagent (DEC-199)**: the
+  nlohmann/json dependency carried as its MIT single header (`v3.11.3`, the
+  pinned `9cca280a`, copied from the checkout on disk, no network) under
+  `tests/third_party/nlohmann/` with `LICENSE.MIT` and a `THIRD_PARTY.md`,
+  the `tests/json` submodule removed, the two include paths and the docs
+  (`books/fetch_book.sh`'s bundle paragraph, `DEV_MANUAL.md`'s and
+  `tools/mutation_check.py`'s worktree recipes) following; fresh configure of
+  both builds. The owner may still veto the form (DEC-207's note); the step
+  was filed as agreed filler. Brief `.tuning/coord/S229_brief.md`. S230
+  follows; S091's SPRT tonight. `plan_current/`: S091 (SPRT tonight), S222
+  (fit pending), S229.
+
 - **S228 done, 2026-09-14 16:05, by an Opus 5 subagent (DEC-199); committed
   by the coordinator after the fast check.** `tests/test_build_info_freshness.sh`
   (fast label, 0.15 s) drives the real `cmake/build_info.cmake` as `cmake -P`
