@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S228 done, 2026-09-14 16:05, by an Opus 5 subagent (DEC-199); committed
+  by the coordinator after the fast check.** `tests/test_build_info_freshness.sh`
+  (fast label, 0.15 s) drives the real `cmake/build_info.cmake` as `cmake -P`
+  over a sandbox git repository -- five cases: a clean tree with `ARCH` and
+  `TUNE` round-tripped, dirtied then committed against `rev-parse` read at
+  that moment, an untracked file not dirty, an unchanged tree leaving the
+  2001 mtime alone and a new commit moving it, a plain directory reading
+  `unknown`. Red first against `.tuning/coord/S228_stale_build_info.cmake`,
+  a copy that caches the stamp on its first run the way a configure-time
+  capture would: five failures across cases 2, 3 and 4 (case 3's a cascade
+  of case 2's frozen value, said so in the test's header), green against the
+  real script; 39/39 fast in `build`. `DEV_MANUAL.md`'s stamp paragraph
+  names the test; F02's `Status:` in the 2026-09-12 review moved planned to
+  closed. `No functional change`, no `src/`. Fast check: four findings, one medium -- the test proved the generation script and nothing pinned the wiring that runs it on every build (`add_custom_target(chesso_build_info ALL ...)` and `add_dependencies(chesso_engine chesso_build_info)`), so three sentences overclaimed; a repair agent added case 6, a static wiring check over both CMake files red-first against copies with `ALL` and the dependency removed, softened the stamp, the manual sentence and F02's `Status:` to "script property proved, wiring pinned", unset the git environment family (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_CONFIG_GLOBAL`, `GIT_CONFIG_COUNT`) in the sandbox, replaced case 1's dead `-dirty` branch with a real precondition and made case 4's past-mtime guard require a value. **Next**:
+  S229 (json single header, brief `.tuning/coord/S229_brief.md`), then S230;
+  S091's SPRT tonight. `plan_current/`: S091 (SPRT tonight), S222 (fit
+  pending).
+
 - **S228 started, 2026-09-14 15:12, by an Opus 5 subagent (DEC-199)**: the
   fast-suite test that the `id name` build stamp follows the tree without a
   reconfigure (2026-09-12_plan_adversarial-F02, DEC-206), the second filler

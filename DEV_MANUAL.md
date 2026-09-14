@@ -3874,6 +3874,12 @@ changes, and appends `-dirty` on the same `git diff --quiet` convention
 without reconfiguring. It carries the arch and the tune flag beside the commit
 since S212, and the engine's `id name` is the other reader — which is why the
 target sits in the top-level `CMakeLists.txt` rather than in `tools/`.
+`test_build_info_freshness` covers both halves of that in the fast suite
+(S228): it drives the script over a throwaway git repository, dirties a tracked
+file and commits it, and asserts the stamp followed both times and that an
+unchanged tree leaves the header alone — and it reads the two CMake files as
+text to pin the wiring that runs the script on every build, which no run of the
+script can show.
 
 Tables emitted before S077 carry no stamp — `.tuning/tuned_v2*.hpp` and
 everything under `adocs/data/S075_fits/` and `S076_fits/`. They are evidence,

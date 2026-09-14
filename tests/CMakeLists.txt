@@ -328,6 +328,36 @@ add_test(NAME test_gate_extra_script
                       ${CMAKE_SOURCE_DIR}/tools/gate_extra.sh)
 set_tests_properties(test_gate_extra_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S228, 2026-09-12_plan_adversarial-F02: the build stamp follows the tree. The
+# commit in `id name` is generated on every build by cmake/build_info.cmake and
+# not at configure time (DEC-204 (a)), because fastchess.sh refuses a run whose
+# engine answers a sha other than the one it labelled that side with -- a stamp
+# captured once and reused refuses a good run and names a commit its binary was
+# not built from. Five cases over a throwaway git repository in a temp dir: the
+# clean sha with the arch and tune values, the dirty suffix and the commit that
+# clears it, an untracked file that is not dirty, the unchanged tree that is
+# not rewritten, and the plain directory that stamps "unknown".
+#
+# It drives the real script as `cmake -P` the way the chesso_build_info target
+# does, and takes the cmake that configured this tree rather than whatever is
+# first on PATH. There is no configure step in script mode at all, which is the
+# property: the header follows the tree from the re-run alone. Observed red
+# against a copy that captures the stamp once. Seconds, nothing compiled.
+#
+# A sixth case takes the two CMake files below as text and pins the wiring the
+# other five cannot see: the custom target exists with ALL and runs the script
+# with all four values, no configure-time execute_process() or configure_file()
+# names the script or the header, and chesso_engine still depends on the
+# target. Delete ALL or the dependency and cases 1 to 5 stay green.
+add_test(NAME test_build_info_freshness
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_build_info_freshness.sh
+                      ${CMAKE_SOURCE_DIR}/cmake/build_info.cmake
+                      ${CMAKE_COMMAND}
+                      ${CMAKE_SOURCE_DIR}/CMakeLists.txt
+                      ${CMAKE_SOURCE_DIR}/src/CMakeLists.txt)
+set_tests_properties(test_build_info_freshness
+                     PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S084: the SPSA driver. Python, and the first test in this directory that is
 # neither doctest nor shell -- the driver is a tool and the objective it has to
 # be right about is a noisy quadratic, not a chess position.
