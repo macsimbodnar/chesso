@@ -7,6 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S230 done, 2026-09-14 17:17, by an Opus 5 subagent (DEC-199); committed by
+  the coordinator after the fast check.** The fifth row of "pruning does not
+  hide a forced mate": `1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22`,
+  Stockfish's mate in 5 (`22...Rf6 23.Qd6 Rxd6 24.Kh1 Rg6 25.Bf1 Qf3+ 26.Bg2
+  Qxg2#`), depth 11, label "C02 and R01": shipped `d9 d10 d11 d12`, R01
+  `d9 d10 d12`, C02 no mate at 11, each observed by applying the mutant by
+  hand and reverting; red `REQUIRE( result.mate_found )` naming the row under
+  R01, green after the revert. What R01 reaches is the position, not the
+  oracle line -- the root's own `Qxh2+` is a losing capture that gives check
+  and `see_ge` clears both captures on the line, said so in the comment.
+  Mined by `adocs/data/S230_mine_r01_row.py` (in-process `search_fen()` at a
+  fixed depth from a cold table, the way the case searches, not UCI; it
+  reproduced the four existing rows first) over 32000 of 39987 positions from
+  both S145 sets and the last 40 plies of the S219 A/A games: 297 mates, 117
+  with a losing check capture on the line, 281 swept 3 to 12 shipped and
+  under R01, **2 separators**, each by a single depth; the one whose shipped
+  profile was a single depth rejected as the fragility DEC-209 punished; the row comes from S219 game 64, ply 37.
+  `S230_candidates.tsv` is the evidence. The table's depths and labels are
+  named a DEC-142 golden with `cmd_depths` as their script (a `DEV_MANUAL.md`
+  golden-table row, `touches:` extended); the S222 paragraph's "nowhere else"
+  sentence dated to S222. 39/39 fast, bench 5950740, `src/` byte-identical.
+  `No functional change`. Fast check: the row confirmed end to end (oracle, four depth lists, R01 and C02 red, C05/C06/C07/R02 green, `src/` byte-identical); six bookkeeping findings fixed by the same agent -- a node-count qualifier (1358 of 1367 not in check), the S222 paragraph's "four positions" re-said as S222's four rows, the DEC-142 re-derivation made runnable (`S230_table_fens.txt` and the exact `depths` command in the GOLDEN block and the manual), the R01 sweep committed as `S230_r01_sweep.tsv` (281 = 114 + 167, reconciled), one yield figure, and the manual's `golden_defaults` count 41 to 44. **The fillers are done**;
+  next is S091's SPRT, launched tonight as soon as this commit lands, 12 to
+  20 h. `plan_current/`: S091 (SPRT), S222 (fit pending).
+
 - **S230 started, 2026-09-14 16:16, by an Opus 5 subagent (DEC-199)**: a
   mined position whose mating line runs through a capture that loses
   material and gives check, restoring the "pruning does not hide a forced

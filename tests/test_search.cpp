@@ -3186,10 +3186,10 @@ TEST_SUITE("search: draws")
 
     // S091's own cases, for the two rules that act on a **capture**. The one
     // above is answered by a quiet the block throws away; each of these is a
-    // forced mate whose line runs through a capture that loses material, and
-    // each is lost when one named guard of S091 is removed. Mutants and the
-    // depths they were observed red at are in the table below; the mutant file
-    // is tools/mutants/S091_capture_see.py.
+    // forced mate whose line runs through a capture, and each is lost when one
+    // named guard of S091 is removed. Mutants and the depths they were
+    // observed red at are in the table below; the mutant file is
+    // tools/mutants/S091_capture_see.py.
     //
     // **Each row is read at one depth, and that is the position's own profile
     // rather than a depth chosen to pass.** Under this case's own search --
@@ -3203,10 +3203,12 @@ TEST_SUITE("search: draws")
     // is where the shipped build reports the mate and the mutant does not; a
     // wider loop would assert a distance this engine does not claim.
     //
-    // Not read off the board (CLAUDE.md). Every position is a row of
-    // `adocs/data/S145_mined_set.tsv`, taken one per game from this engine's
-    // own self-play and labelled by stockfish there; the oracle line beside
-    // each is stockfish at depth 20 through python-chess, re-taken here, with
+    // Not read off the board (CLAUDE.md). Every position comes from this
+    // engine's own games -- the first three are rows of
+    // `adocs/data/S145_mined_set.tsv`, one per game and labelled by stockfish
+    // there, and the fourth is a position S230 mined out of
+    // `adocs/data/S219_aa_calibration.pgn`; the oracle line beside each is
+    // stockfish at depth 20 through python-chess, re-taken here, with
     // python-chess's own reading of the root.
     struct capture_mate_t
     {
@@ -3222,7 +3224,8 @@ TEST_SUITE("search: draws")
     // rules reach is different -- and a row of this table is a measurement of
     // that, not a constant: "the depth where the shipped build reports the
     // mate and the mutant does not". The derivation was run rather than
-    // reasoned about: search_fen() over depths 3 to 12 on all four positions,
+    // reasoned about: search_fen() over depths 3 to 12 on S222's four rows --
+    // three distinct positions, the third of them read at two depths --
     // in this tree and in a worktree at the parent commit f4f70c4, on the
     // shipped build and under each of the six mutants of
     // tools/mutants/S091_capture_see.py.
@@ -3236,19 +3239,52 @@ TEST_SUITE("search: draws")
     // R02 there. The second reads `d7 d9 d10 d11 d12` in both and separates
     // C02, C05 and R02 at depth 7, so R02's kill stays inside this case.
     //
-    // **R01 is separated by none of these four positions at any depth from 3
+    // **R01 was separated by none of S222's four rows at any depth from 3
     // to 12 under S222's ordering, where the second position separated it at
     // depth 7 before** -- measured both ways, in this tree and at the parent.
     // It is stated rather than papered over, and it is not a hole: R01 is
     // still killed by its own direct guard, "a capture that gives check is not
     // reduced", which reads `probe.reduction[k]` and does not care what order
-    // the moves arrived in. Run under R01, the whole fast suite fails there
-    // and nowhere else. What this case lost is a second, incidental kill, and
-    // finding a position that restores it is a mining job and a step of its
-    // own, not a depth moved here. Nothing else in the mate suites moved --
-    // test_mate_carry's ceilings and test_engine's 48-position mate safety are
-    // both unchanged. Every label below was observed, by running the position
-    // at its own depth under its own mutant.
+    // the moves arrived in. Run under R01 at S222, the whole fast suite failed
+    // there and nowhere else. What this case lost is a second, incidental
+    // kill, and finding a position that restores it is a mining job and a step
+    // of its own, not a depth moved here. Nothing else in the mate suites moved
+    // -- test_mate_carry's ceilings and test_engine's 48-position mate safety
+    // are both unchanged. Every label below was observed, by running the
+    // position at its own depth under its own mutant.
+    //
+    // **S230 did that mining job, and the fourth row below is what it
+    // returned**: R01's incidental kill is back, at depth 11, and C02's with
+    // it. The row was not chosen, it was the survivor of a measurement --
+    // 39987 positions of this project's own games through
+    // adocs/data/S230_mine_r01_row.py, the mates among them filtered for a
+    // capture on the oracle's line that gives check, and the survivors swept
+    // over depths 3 to 12 on the shipped build and again under R01. **Two of
+    // 281 separated R01 at any depth and both by a single depth**, which is
+    // the honest measure of how thin this kill is in the tree S222 left; the
+    // one taken is the one whose shipped profile is four consecutive depths
+    // rather than one.
+    //
+    // GOLDEN (DEC-142): every `depth` below is a measured number and so is
+    // every mutant in a label -- S222 re-derived both by hand and S230 turned
+    // the procedure into a script, which is what DEC-142 asks to stand beside
+    // a golden. The four FENs below are `adocs/data/S230_table_fens.txt` in
+    // this order, so the re-derivation is a command and not a description --
+    // a row added here is added there in the same commit. One line, and the
+    // formatter is turned off around it so it stays one line:
+    //
+    // clang-format off
+    //   ~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12
+    // clang-format on
+    //
+    // Run it once on the shipped build and once per mutant of
+    // tools/mutants/S091_capture_see.py applied to the working tree; a row's
+    // depth is one the shipped sweep reports the mate at and its labelled
+    // mutants do not. Moves legitimately on: any change to ordering, pruning
+    // or reduction. Margin: exact -- the case asserts the distance too. All
+    // four were re-derived at S230 -- `d7 d9 d10 d11 d12`, `d7 d9 d10 d11
+    // d12`, `d9 d10 d11 d12`, `d9 d10 d11 d12` -- and the first three came
+    // back unchanged.
     const std::vector<capture_mate_t> capture_mates = {
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
@@ -3266,6 +3302,29 @@ TEST_SUITE("search: draws")
         // root and live in every child. 3 legal moves, 1 capture.
         {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4,
          "no S091 mutant, since S222"},
+        // S230's row, and the only one here not from the two S145 sets: ply 37
+        // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
+        // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
+        // c4f1 h3f3 f1g2 f3g2 -- `Qxg2#` is the capture on the line, and it is
+        // the mate. python-chess: is_valid True, is_check False, 45 legal
+        // moves, 5 captures, no promotion.
+        //
+        // **The class R01 reduces is everywhere in this position and not on
+        // its line**, which is why the row is a measurement and not an
+        // argument: `see_ge` clears both captures the oracle plays, and the
+        // root's own `Qxh2+` is a capture that gives check which the same
+        // `see_ge` writes off. Plies 0 to 2 hold 1367 nodes, of which **1358
+        // are not in check** -- the only ones the rule can fire at -- and over
+        // those 1358, 1487 captures give check and **1478 of them lose
+        // material by the engine's own exchange evaluation**, so R01's extra
+        // ply lands on the class wholesale here.
+        //
+        // The depth is the measurement DEC-209 clause 4 defines, over 3 to 12:
+        // shipped `d9 d10 d11 d12`, under R01 `d9 d10 d12`, under C02 no mate
+        // at 11. The other four S091 mutants report `#+5` at 11 and are not in
+        // the label.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 11,
+         5, "C02 and R01"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -6340,10 +6399,13 @@ TEST_SUITE("search: pruning and reduction guards")
   //   REQUIRE_EQ( probe.reduction[k], 0 )
   //   values: REQUIRE_EQ( 1, 0 )
   //
-  // No row of "pruning does not hide a forced mate"'s capture table takes it
-  // any more: S222's ordering moved the depth of the one that did, the
-  // table's own rule removed that row, and S230 mines its replacement
-  // (DEC-209). Until then this case is R01's only kill in the suite.
+  // "pruning does not hide a forced mate"'s capture table takes it again,
+  // through the row S230 mined for it (DEC-209): S222's ordering moved the
+  // depth of the row that used to, the table's own rule removed that row
+  // rather than re-pick its depth, and the replacement separates R01 at depth
+  // 11. That kill is incidental -- it reads a mate distance and infers the
+  // reduction -- and this case is the direct one, which reads
+  // `probe.reduction[k]` and does not care what order the moves arrived in.
   TEST_CASE_FIXTURE(guard_fixture_t,
                     "a capture that gives check is not reduced")
   {

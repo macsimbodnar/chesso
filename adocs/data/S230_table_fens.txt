@@ -1,0 +1,9 @@
+# The four rows of `capture_mates` in tests/test_search.cpp "pruning does not
+# hide a forced mate", in table order. The GOLDEN block at that table and
+# DEV_MANUAL.md's DEC-142 list both name this file: it is what makes the
+# re-derivation of the rows' depths and mutant labels a command rather than a
+# description. A row added to the table is added here in the same commit.
+3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22

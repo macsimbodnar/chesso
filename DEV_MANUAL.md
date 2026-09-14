@@ -1827,7 +1827,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search_params.cpp` `golden_defaults` | 41 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 7, 7, 9, 11 and the mutants beside them | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 44 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
