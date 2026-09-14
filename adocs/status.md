@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S230 started, 2026-09-14 16:16, by an Opus 5 subagent (DEC-199)**: a
+  mined position whose mating line runs through a capture that loses
+  material and gives check, restoring the "pruning does not hide a forced
+  mate" table's second kill of S091's R01 mutant at a measured depth
+  (DEC-209 clause 4), the last filler of the day. Brief
+  `.tuning/coord/S230_brief.md`: mined by a script over the repository's own
+  sets (`S145_mined_set.tsv`, the S219 A/A PGN), every chess fact from
+  Stockfish through python-chess, depth lists 3 to 12 in both trees, R01 and
+  every S091 mutant applied by hand and reverted, red then green observed.
+  S091's SPRT launches when it closes. `plan_current/`: S091 (SPRT tonight),
+  S222 (fit pending), S230.
+
 - **S229 done, 2026-09-14 16:05, by an Opus 5 subagent (DEC-199); committed
   by the coordinator after the fast check.** `tests/third_party/nlohmann/json.hpp`
   is `v3.11.3`'s amalgamated header copied from the pinned checkout on disk,
