@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S222 started, 2026-09-14 12:55, phases one and two by an Opus 5 subagent
+  (DEC-199); the SPSA night and the SPRT are the coordinator's.** The one-ply
+  continuation table of S024 rebuilt with its own `CONT_HIST_BONUS`,
+  `CONT_HIST_MALUS`, `ContHistMax` and a weight against plain history, all
+  tunables with ranges and midpoint seeds (a `src/` commit with a `Bench:`
+  line, the sentinel cases and two mutants, Debug self-play); then the
+  narrow SPSA lane written and `check`ed, not run -- `tools/spsa_s222.json`
+  over the new axes, `QuietHistoryMax`, plain history's six coefficients and
+  S109's `HistPruneCoeff`, `twosided=true`, no `Tm*` axis (DEC-094,
+  DEC-200) -- with `adocs/data/S222_spsa.sh` pre-registered from S085's
+  regime and the measured throughput. `plan_current/`: S091 (SPRT tonight),
+  S222.
+
 - **S091 landed, 2026-09-14 13:10, by an Opus 5 subagent (DEC-199); its SPRT
   is tonight's run.** Reconciled with S109: the quiet half of the accepts is
   S109's `SeeQuietCoeff`, so S091 adds capture SEE pruning -- pre-make,
@@ -40,7 +53,14 @@ Updated: 2026-09-14, by hand.
   attributing the test harness's single fixed-depth search to the shipped
   engine (whose `go depth N` reads those positions as centipawns), the
   node-budget script's stale docstring, and the `specs.md` sentence that
-  read as a taken verdict. `plan_current/`: S091 (SPRT pending).
+  read as a taken verdict. **Landed in `d785b89`; `adocs/data/S091_sprt.sh`
+  defaults `CAND` to it (`b0df255`)**, so S222's work today cannot enter
+  tonight's candidate. The mutant pass at `b0df255`: **`MUTATION-RUN-DONE`, all nine killed** (C02,
+  C05, C06, C07, R01, R02 and the re-pointed M07, M08, P05), each as
+  expected. `gate_extra.sh` on `b0df255`: **`GATE-EXTRA-DONE 5 stages 1055 s`** (Debug
+  312 s, sanitize 684 s, deep perft 58 s; `.tuning/gate_extra_2026-09-14_S091.log`),
+  so DEC-141's second tier is closed before the stamp that waits on the SPRT.
+  S222's first phase takes the afternoon; the SPRT launches at night. `plan_current/`: S091 (SPRT pending). `plan_current/`: S091 (SPRT pending).
 
 - **S210 is done, 2026-09-14 10:30: F22's `--nonreg` SPRT is H1, `Elo +0.01
   +/- 3.17`, `nElo +0.02 +/- 4.03`, 28598 games in 13 h 16 m 30 s.** The
@@ -3144,14 +3164,14 @@ Updated: 2026-09-14, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-13 18:40, 5 stages 1059 s**, on
-  S223's tree (log `.tuning/gate_extra_2026-09-13_S223.log`); before it the
-  same day on S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s), and
-  2026-09-12 on S211's tree (882 s). DEC-141 clause 3 is the cadence --
-  before a step that touched `make_move`, `unmake_move`, the generator or the
-  search completes, and otherwise weekly -- and this bullet is where a missed
-  week shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell
-  first or stage 4 goes red on the formatter (DEC-146).
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-14 12:52, 5 stages 1055 s**, on
+  S091's tree at `b0df255` (log `.tuning/gate_extra_2026-09-14_S091.log`);
+  before it 2026-09-13 on S223's tree (1059 s), S210's `da0cfed` (1042 s) and
+  S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
+  that touched `make_move`, `unmake_move`, the generator or the search
+  completes, and otherwise weekly -- and this bullet is where a missed week
+  shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first
+  or stage 4 goes red on the formatter (DEC-146).
 - Blocked: **nothing.**
 - Watching: **nothing. No run is armed.** S215 armed two, both on
   `MUTATION-RUN-(DONE|FAILED)` over a polled log with a 30-minute ceiling and a

@@ -7,7 +7,7 @@ decisions:  DEC-194, DEC-198, DEC-019, DEC-084, DEC-105, DEC-143, DEC-141
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator for phases one and two (DEC-185, DEC-199); the SPSA night and the SPRT are the coordinator's; started 2026-09-14 12:55 on the idle machine
 done:
 
 ## Why this exists
