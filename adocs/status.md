@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S091 done, 2026-09-14 18:05: H1, `Elo 46.52 +/- 15.43` at `8+0.08`, decided
+  in 1360 games and 38 m 11 s** (LLR 2.96, `nElo 56.38 +/- 18.47`, W 545 L 364
+  D 451, `Ptnml [52, 119, 221, 172, 116]`, 2137 games an hour, 0 forfeits
+  either side, `Incomplete mating PV` 1 candidate and 0 reference, pair
+  variance 0.3363 over 680 pairs). Both rules kept as pre-registered, the
+  bisection not needed; the stopping figure is upward-biased and the claim
+  is at least 5 nElo (DEC-063). Evidence `adocs/data/S091_sprt.log` and
+  `S091_sprt_pairs.txt`; the stamp, the ledger row (**fourteen verdicts:
+  mean 4 h 37 m, median 4 h 18 m, 2274.1 games an hour**), the specs
+  verdict and the README rows written. **S222's SPSA launches now** on the
+  freed machine (`adocs/data/S222_spsa.sh`, 8 h 30 m estimate, 17 h
+  ceiling): the fillers are all closed and nothing better waits for the
+  machine, so the night's run starts in the evening (DEC-155). Then S222
+  phase three: fitted defaults, census re-run, gainer SPRT. `plan_current/`:
+  S222 (fit running).
+
 - **S091's SPRT is running, launched 2026-09-14 17:22 by the coordinator**
   (`adocs/data/S091_sprt.sh`, pid in `.tuning/sprt_s091.pid`, log
   `.tuning/sprt_s091.log`, games under
