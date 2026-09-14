@@ -144,6 +144,7 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 [[ -x ./fastchess.sh ]] || { echo "SPRT-RUN-FAILED: no executable ./fastchess.sh" >&2; exit 1; }
 shopt -s execfail
 exec env REF="${REF:-08461e0}" \
+     CAND="${CAND:-d785b89}" \
      OUT="/home/max/ws/chesso/.tuning/sprt_s091_$(date +%Y%m%d_%H%M%S)" \
      ./fastchess.sh
 echo "SPRT-RUN-FAILED: exec env ./fastchess.sh" >&2; exit 127
