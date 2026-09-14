@@ -1014,6 +1014,18 @@ TEST_SUITE("evaluation: score_move ordering")
   // case follows the declared range instead of restating it, and the clearance
   // it demands is derived from the bands in this position rather than quoted
   // from the comment that states it. 2026-08-20_plan_review-F14.
+  //
+  // **Two tables since S222, and the widest band the ranges admit.** The quiet
+  // score is plain history plus ContHistWeight per cent of a continuation
+  // entry, each bounded by its own table's bound, so the band is no longer one
+  // declared maximum but a sum -- and the weight is settable over UCI on the
+  // tune build, which means the clearance has to hold at the *declared
+  // maximum* of the weight and not only at the value this build compiled. Both
+  // are asserted: the compiled band is what the driven entries have to produce
+  // exactly, which is what catches a score_move() that stopped adding the
+  // second term, and the widest band is what has to clear the countermove
+  // band. The arithmetic at the ceilings is 32767 + 2000 * 32767 / 100 =
+  // 688107 against 700000, a clearance of 11893.
   TEST_CASE_FIXTURE(eval_fixture_t,
                     "the declared history ceiling clears the band above it")
   {
@@ -1043,14 +1055,36 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE_EQ(quiet_count, 4);
 
     int declared_max = -1;
+    int declared_weight_max = -1;
+    int live_weight = -1;
 
     for (size_t i = 0; i < search_param_count(); ++i) {
       if (std::string("QuietHistoryMax") == search_param_info(i).name) {
         declared_max = search_param_info(i).max_value;
       }
+
+      if (std::string("ContHistWeight") == search_param_info(i).name) {
+        declared_weight_max = search_param_info(i).max_value;
+        live_weight = search_param_value(i);
+      }
     }
 
     REQUIRE(declared_max > 0);
+    REQUIRE(declared_weight_max > 0);
+    REQUIRE(live_weight >= 0);
+
+    // S222. The quiet band is a sum of two tables now, each with a bound of
+    // its own, and the second one is weighted on the way in. These are the two
+    // widths: what the band can be at the values this build compiled, and what
+    // it can be at the widest the declared ranges admit -- which is the number
+    // the clearance has to hold against, because the tune build can set the
+    // weight anywhere inside its range and no value there may reach the band
+    // above.
+    const int live_span = declared_max + (live_weight * CONT_HIST_BOUND) / 100;
+    const int widest_span =
+        declared_max + (declared_weight_max * CONT_HIST_BOUND) / 100;
+
+    REQUIRE(widest_span >= live_span);
 
     const size_t ply = 3;
 
@@ -1068,7 +1102,15 @@ TEST_SUITE("evaluation: score_move ordering")
     int16_t& entry = state.quiet_history[game.board.active_color]
                                         [MOVE_FROM(plain)][MOVE_TO(plain)];
 
+    // Both tables at once, which is the worst case the sum admits and the only
+    // one worth pinning: the continuation cell is the self-referencing one,
+    // `plain` being the previous move here as well as the move being scored,
+    // and CONT_HIST_BOUND is a definition rather than a range so the entry has
+    // exactly one extreme to be driven to. S222.
+    int16_t& cont_entry = continuation_entry(&state, prev_move, plain);
+
     entry = static_cast<int16_t>(declared_max);
+    cont_entry = static_cast<int16_t>(CONT_HIST_BOUND);
 
     const int s_capture =
         score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
@@ -1081,6 +1123,7 @@ TEST_SUITE("evaluation: score_move ordering")
     const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
 
     entry = static_cast<int16_t>(-declared_max);
+    cont_entry = static_cast<int16_t>(-CONT_HIST_BOUND);
     const int s_history_malused =
         score_move(&game, &state, plain, 0, ply, prev_move);
 
@@ -1098,20 +1141,41 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(s_killer0 > s_killer1);
     REQUIRE(s_killer1 > s_counter);
 
-    // Precondition 3. The bound is what reaches the score, at both edges. A
+    // Precondition 3. Both bounds are what reach the score, at both edges. A
     // history entry is returned unmodified, so a case that asserted the
     // clearance without this would pass on a score_move() that quietly capped
     // the value itself -- or that clamped the malused half back to zero, which
-    // would make the floor assertion below vacuous.
-    REQUIRE_EQ(s_history, declared_max);
-    REQUIRE_EQ(s_history_malused, -declared_max);
+    // would make the floor assertion below vacuous. Since S222 it is also what
+    // holds the second term in the sum: without it a score_move() that stopped
+    // adding the continuation term would pass every clearance below, because
+    // dropping a term only ever makes the band narrower.
+    REQUIRE_EQ(s_history, live_span);
+    REQUIRE_EQ(s_history_malused, -live_span);
+
+    // And the sum has to be carried in `int`. Two entries at their own bounds
+    // already exceed the type they are stored in, and the weight multiplies
+    // one of them by up to twenty on top -- so an accumulation in int16_t
+    // would wrap negative and every clearance below would pass for the wrong
+    // reason. S222.
+    CHECK(widest_span > 32767);
+
+    CHECK_MESSAGE(
+        s_counter - widest_span >= 100,
+        ("The widest quiet band the declared ranges admit, QuietHistoryMax's " +
+         std::to_string(declared_max) + " plus ContHistWeight's " +
+         std::to_string(declared_weight_max) + " per cent of " +
+         std::to_string(CONT_HIST_BOUND) + ", is " +
+         std::to_string(widest_span) + " against the countermove band's " +
+         std::to_string(s_counter) + ", a clearance of " +
+         std::to_string(s_counter - widest_span) +
+         " and not the 100 the ordering bands are spaced by."));
 
     CHECK_MESSAGE(
         s_counter - s_history >= 100,
-        ("QuietHistoryMax's declared maximum of " +
-         std::to_string(declared_max) + " scores " + std::to_string(s_history) +
-         " against the countermove band's " + std::to_string(s_counter) +
-         ", a clearance of " + std::to_string(s_counter - s_history) +
+        ("The quiet band this build compiled scores " +
+         std::to_string(s_history) + " against the countermove band's " +
+         std::to_string(s_counter) + ", a clearance of " +
+         std::to_string(s_counter - s_history) +
          " and not the 100 the ordering bands are spaced by."));
 
     // The floor. Every branch score_move() can take other than the history one
@@ -1121,8 +1185,7 @@ TEST_SUITE("evaluation: score_move ordering")
     // before S093 and the edge S025 would arrive at.
     CHECK_MESSAGE(
         s_counter - s_history_malused >= 100,
-        ("QuietHistoryMax's declared minimum of " +
-         std::to_string(-declared_max) + " scores " +
+        ("The malused edge of the quiet band scores " +
          std::to_string(s_history_malused) +
          " against the countermove band's " + std::to_string(s_counter) +
          ", a clearance of " + std::to_string(s_counter - s_history_malused) +
@@ -1131,16 +1194,17 @@ TEST_SUITE("evaluation: score_move ordering")
     // And nothing occupies the malused half. Every other band this position can
     // produce stands above the whole closed interval, so a maximally malused
     // quiet is the lowest score the ordering can hand out. A band added below
-    // history fails here.
+    // history fails here. Measured against the widest span the ranges admit and
+    // not against the compiled one, for the reason the ceiling above is.
     const int lowest_other_band =
         std::min({s_capture, s_killer0, s_killer1, s_counter});
 
     CHECK_MESSAGE(
-        lowest_other_band - declared_max >= 100,
+        lowest_other_band - widest_span >= 100,
         ("The lowest non-history band scores " +
          std::to_string(lowest_other_band) +
          ", which does not stand 100 clear of the whole quiet band [" +
-         std::to_string(-declared_max) + ", " + std::to_string(declared_max) +
+         std::to_string(-widest_span) + ", " + std::to_string(widest_span) +
          "]."));
   }
 

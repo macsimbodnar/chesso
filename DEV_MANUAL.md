@@ -567,6 +567,26 @@ S085's frozen config is `tools/spsa_s085.json` and is the worked example: 12
 parameters, 1250 x 24 pairs, 60000 games in 8 h 21 m, 0 forfeits, verified at
 +21.02 +/- 9.86 Elo.
 
+**S222's history lane is the second one, and it is narrow on purpose**:
+`tools/spsa_s222.json`, eleven axes at exactly S085's regime, with
+`adocs/data/S222_spsa.sh` as both the pre-registration and the runner —
+`nohup adocs/data/S222_spsa.sh > .tuning/spsa_s222.log 2>&1 &`, `OUT` under
+`.tuning/`, `SPSA-DONE`/`SPSA-FAILED` as the last line either way. The script
+rebuilds `build-tune`, prints the binary's sha256 and runs `check` before it
+plays a game, which is DEC-200's rule that a config passes `check` on the day.
+The axes are S222's three continuation parameters, `QuietHistoryMax`, plain
+history's six `HISTORY_BONUS_*`/`HISTORY_MALUS_*` coefficients — never fitted,
+S085 predates S093 — and `HistPruneCoeff`, which reads the same scale
+(DEC-205). No `Tm*` axis and no `TmHardPercent` (DEC-094, DEC-200). Estimated
+at **8 h 30 m** from S085's own measured 24.05 s an iteration on this machine,
+ceiling 17 h: a night run under DEC-155.
+
+Note which book each of the two plays. S085 tuned on `UHO_4060_v3.epd` and
+verified on `UHO_Lichess_4852_v1.epd`; S222's lane tunes on `UHO_4060_v3.epd`
+and its SPRT verifies on `noob_3moves.epd`, which is what `fastchess.sh` has
+played since DEC-189. The rule is the same one in both: never tune on the
+openings the verification plays.
+
 **Tune and verify on different openings and a different control.**
 `adocs/eval_tuning_strategy.md` par.7. `books/fetch_book.sh` pins a second
 UHO-class book, `UHO_4060_v3.epd`, for exactly this: the run tunes on it and
@@ -1994,7 +2014,17 @@ better one. **At `S210`: `7105111`**, 0.09 % less on the bench positions:
 quiescence no longer enters a child that a move -- any move, not only a
 capture -- leaves without the material to mate, and scores it a draw instead
 (F22); over the census corpus the rule cost 0.018 % more nodes, so the sign is
-the positions', not a saving. Quote it
+the positions', not a saving. **At `S091`: `6267842`. At `S222` phases one and
+two: `5950740`**, 5.1 % less — a one-ply continuation table summed into the
+quiet ordering score reorders every quiet, and a better order is a smaller
+tree; whether it is also a better move is the lane's SPRT to say and not this
+number's (DEC-019). Its nps cost is real and just outside what this machine
+calls noise: 3889177, 3908460, 3832251 and 3960101 before against 3771750,
+3771310, 3755609 and 3731702 after, four interleaved pairs on an idle machine.
+The two groups do not overlap — the slowest before-reading is above the fastest
+after-reading — and the means are 3897497 against 3757593, **3.6 % of nodes per
+second** for two extra dependent loads per scored quiet, one extra graded
+update per cutoff and a 1.125 MiB table. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

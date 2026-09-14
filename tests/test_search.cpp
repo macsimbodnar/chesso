@@ -471,6 +471,29 @@ TEST_SUITE("search: tactics")
 
 TEST_SUITE("search: move ordering state")
 {
+  // How many cells of the one-ply continuation table hold something. S222's
+  // sentinels are all of the form "nothing was written anywhere", which a
+  // check on one cell cannot say: the failure being guarded against is a write
+  // to the *wrong* cell, so the whole table has to be read.
+  static size_t continuation_entries(const search_state_t& state)
+  {
+    size_t used = 0;
+
+    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
+              used++;
+            }
+          }
+        }
+      }
+    }
+
+    return used;
+  }
+
   // test_evaluation checks that score_move ranks a killer above a counter
   // above a history entry. Nothing there checks that the search ever writes
   // one, and a search that fills none of these tables plays the same moves,
@@ -515,10 +538,23 @@ TEST_SUITE("search: move ordering state")
 
     size_t history_entries = 0;
     size_t counters = 0;
+    size_t cont_hist_entries = 0;
 
     for (int piece = W_PAWN; piece <= B_KING; ++piece) {
       for (int square = 0; square < 64; ++square) {
         if (state.counter_moves[piece][square] != 0) { counters++; }
+      }
+    }
+
+    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
+              cont_hist_entries++;
+            }
+          }
+        }
       }
     }
 
@@ -561,6 +597,11 @@ TEST_SUITE("search: move ordering state")
     REQUIRE(killers_1_duplicated > 0);
     REQUIRE(history_entries > 0);
     REQUIRE(counters > 0);
+
+    // S222. The continuation table is filled by real play and not only by a
+    // driven call: every node below the root has a previous move, so a table
+    // still empty after a depth-8 search is a table nothing writes.
+    REQUIRE(cont_hist_entries > 0);
   }
 
   // A quiet move that gives check was excluded from all three tables until
@@ -633,6 +674,12 @@ TEST_SUITE("search: move ordering state")
                                [MOVE_TO(killer)] != 0);
     REQUIRE_EQ(state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)],
                killer);
+
+    // S222. The same cutoff, through the same call, with a real previous move:
+    // the continuation cell for (prev_move, killer) has to have moved. This is
+    // the positive half of the sentinel pair -- the two cases below drive the
+    // same update with no previous move and require the table untouched.
+    REQUIRE(continuation_entry(&state, prev_move, killer) != 0);
   }
 
 
@@ -738,9 +785,16 @@ TEST_SUITE("search: move ordering state")
     const move_t cutoff = quiets[0];
     const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
 
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8);
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, 0);
 
     CHECK(state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)] > 0);
+
+    // S222, the sentinel at the root ply: the call above passed no previous
+    // move, and 0 indexes the legitimate (W_PAWN, a8) cell rather than an
+    // absent one, so the guard is what keeps the table alone. Dropping it
+    // writes four cells here and crashes nothing, which is why this is a scan
+    // of the whole table and not a look at one entry.
+    CHECK_EQ(continuation_entries(state), 0);
 
     // Every quiet tried before the cutoff, not all but the last one. Lynx
     // shipped exactly that off-by-one -- sparing the last tried quiet to
@@ -759,6 +813,82 @@ TEST_SUITE("search: move ordering state")
     // from-to pairs is untouched. A butterfly board that dropped the colour
     // axis would let White's cutoffs order Black's moves.
     CHECK_EQ(state.quiet_history[!side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)], 0);
+  }
+
+
+  // S222. The same fail-high with a previous move to index: what the
+  // continuation table gets out of one cutoff, held directly against the table
+  // the way the case above holds plain history. Driven by the call rather than
+  // through a search because the two spans and the guard are all decided here.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet cutoff with a previous move grades the "
+                    "continuation table")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[4] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 4; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 4);
+
+    const color_t side = game.board.active_color;
+
+    // The move this node is replying to. A Black move, so the (piece, to) pair
+    // it indexes with cannot collide with any of the four White quiets below
+    // -- the case would otherwise be reading one cell and calling it two.
+    const move_t prev_move = NEW_MOVE(e7, e5, B_PAWN, TO_NONE, 0, 1, 0, 0);
+
+    // Precondition: four distinct continuation cells under that previous move.
+    // Two quiets sharing a (piece, to) pair share a cell, and the bonus and
+    // the malus would then be arguing over one number.
+    for (size_t a = 0; a < 4; ++a) {
+      for (size_t b = a + 1; b < 4; ++b) {
+        const bool same_cell = MOVE_PIECE(quiets[a]) == MOVE_PIECE(quiets[b]) &&
+                               MOVE_TO(quiets[a]) == MOVE_TO(quiets[b]);
+        REQUIRE_FALSE(same_cell);
+      }
+    }
+
+    search_state_t state = {};
+
+    const move_t cutoff = quiets[0];
+    const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
+
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, prev_move);
+
+    // The cutoff move is credited in its own cell.
+    CHECK(continuation_entry(&state, prev_move, cutoff) > 0);
+
+    // And every quiet tried before it is charged in its own, the same span the
+    // butterfly malus is charged over.
+    for (const move_t move : tried) {
+      CHECK_MESSAGE(
+          continuation_entry(&state, prev_move, move) < 0,
+          ("A quiet tried before the cutoff scores " +
+           std::to_string(continuation_entry(&state, prev_move, move)) +
+           " in the continuation table and not a malus."));
+    }
+
+    // A different previous move's row is untouched. The table is indexed by
+    // the pair and not by the reply alone: an index that dropped the previous
+    // move would make every row the same row.
+    const move_t other_prev = NEW_MOVE(d7, d5, B_PAWN, TO_NONE, 0, 1, 0, 0);
+    REQUIRE(MOVE_TO(other_prev) != MOVE_TO(prev_move));
+    CHECK_EQ(continuation_entry(&state, other_prev, cutoff), 0);
+
+    // Exactly four cells moved, and they are the four this case names. A
+    // whole-table count rather than four reads, so an update that also wrote
+    // somewhere nobody looked fails here.
+    CHECK_EQ(continuation_entries(state), 4);
   }
 
 
@@ -881,6 +1011,14 @@ TEST_SUITE("search: move ordering state")
     }
 
     CHECK_EQ(black_entries, 0);
+
+    // S222, the same sentinel through the search rather than through the call:
+    // this node was driven with no previous move, every child of it is
+    // quiescence, and quiescence writes no history -- so the continuation
+    // table has to be empty. A guard dropped inside history_on_quiet_cutoff
+    // shows up here as three cells written under the (W_PAWN, a8) index that
+    // move 0 decodes to.
+    CHECK_EQ(continuation_entries(state), 0);
   }
 
   // Filling the tables is not the point: searching a smaller tree is. A
@@ -3078,22 +3216,56 @@ TEST_SUITE("search: draws")
       const char* mutant;
     };
 
+    // **Re-derived at S222, rows and labels together, because the tree moved
+    // under them.** S222 sums a continuation table into the quiet ordering
+    // score, so every quiet is ordered differently, so what the reduction
+    // rules reach is different -- and a row of this table is a measurement of
+    // that, not a constant: "the depth where the shipped build reports the
+    // mate and the mutant does not". The derivation was run rather than
+    // reasoned about: search_fen() over depths 3 to 12 on all four positions,
+    // in this tree and in a worktree at the parent commit f4f70c4, on the
+    // shipped build and under each of the six mutants of
+    // tools/mutants/S091_capture_see.py.
+    //
+    // What moved. The third position lost its depth 8 reading outright --
+    // `d8 d9 d10 d11 d12` at the parent, `d9 d10 d11 d12` here -- and under
+    // S222's ordering no S091 mutant separates it at any depth from 3 to 12,
+    // so its row is kept as a mate this engine must still find and its mutant
+    // column says so. The first position reads `d7 d9 d10 d11 d12` in both
+    // trees and still separates C02 and C05 at depth 7; it no longer separates
+    // R02 there. The second reads `d7 d9 d10 d11 d12` in both and separates
+    // C02, C05 and R02 at depth 7, so R02's kill stays inside this case.
+    //
+    // **R01 is separated by none of these four positions at any depth from 3
+    // to 12 under S222's ordering, where the second position separated it at
+    // depth 7 before** -- measured both ways, in this tree and at the parent.
+    // It is stated rather than papered over, and it is not a hole: R01 is
+    // still killed by its own direct guard, "a capture that gives check is not
+    // reduced", which reads `probe.reduction[k]` and does not care what order
+    // the moves arrived in. Run under R01, the whole fast suite fails there
+    // and nowhere else. What this case lost is a second, incidental kill, and
+    // finding a position that restores it is a mining job and a step of its
+    // own, not a depth moved here. Nothing else in the mate suites moved --
+    // test_mate_carry's ceilings and test_engine's 48-position mate safety are
+    // both unchanged. Every label below was observed, by running the position
+    // at its own depth under its own mutant.
     const std::vector<capture_mate_t> capture_mates = {
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
         {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
-         "C02, C05 and R02"},
+         "C02 and C05"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5, "R01"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
+         "C02, C05 and R02"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 8, 4, "R02"},
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4,
+         "no S091 mutant, since S222"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -4384,6 +4556,68 @@ TEST_SUITE("search: pruning and reduction guards")
 
     require_the_node_reached_its_move_loop();
     REQUIRE(!probe.null_move_made);
+  }
+
+
+  // S222. The other sentinel of the continuation table, and the one only the
+  // null-move block can produce: the node it searches after the pass has no
+  // previous move, so `negamax_at` hands its null child the literal 0 and not
+  // its own `prev_move`. It lives in this suite because the fixture here is
+  // what drives one node's null-move block and confirms the pass happened;
+  // the ply-0 half of the pair is in "search: move ordering state".
+  //
+  // What makes the assertion possible is the colour. Under the pass the side
+  // to move is White again, the side that played PREV_MOVE, so a cell the null
+  // child writes is keyed on a White mover under a White previous move. No
+  // ordinary node can write that pair: a node whose previous move is White's
+  // has Black to move, always, and the only thing that breaks the alternation
+  // is the pass itself. So the whole White half of PREV_MOVE's row has to be
+  // zero, and the node's own updates -- Black movers under the same row -- are
+  // left out of the scan rather than being confused with the bug.
+  //
+  // Mutation: H03_null_child_keeps_prev -- the null-move child is handed
+  // `prev_move` instead of 0.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "the node after a null move has no previous move to index")
+  {
+    // Both sides castled behind an untouched pawn wall: no capture exists for
+    // either colour, so the fail-high in the null child can only come from a
+    // quiet and the continuation table is the thing that records it. Rooks
+    // keep the phase off zero, which the null-move block requires.
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    load(fen, 1);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+
+    // Precondition: no capture for the side that moves after the pass, so the
+    // cutoff there has to be a quiet. A capture cutoff writes no history at
+    // all and the case would pass on a mutant.
+    move_t captures[MAX_MOVES];
+    make_null_move(&game);
+    const size_t white_captures =
+        generate_captures(game_tables(), &game.board, captures);
+    unmake_null_move(&game);
+    REQUIRE_EQ(white_captures, 0);
+
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false);
+
+    // Precondition, and the whole reason this case is about the null move: the
+    // pass was made. Without it nothing below is evidence.
+    REQUIRE(probe.null_move_made);
+
+    size_t white_movers_under_prev = 0;
+
+    for (int piece = W_PAWN; piece <= W_KING; ++piece) {
+      for (int to = 0; to < 64; ++to) {
+        if (state.cont_hist[MOVE_PIECE(PREV_MOVE)][MOVE_TO(PREV_MOVE)][piece]
+                           [to] != 0) {
+          white_movers_under_prev++;
+        }
+      }
+    }
+
+    CHECK_EQ(white_movers_under_prev, 0);
   }
 
 
@@ -6044,7 +6278,9 @@ TEST_SUITE("search: pruning and reduction guards")
   //   values: REQUIRE_EQ( 0, 1 )
   //
   // It also reddens "a capture is not reduced" -- whose capture then gets a ply
-  // it should not -- and the first row of the capture mate table.
+  // it should not -- and the second row of the capture mate table, the one
+  // labelled "C02, C05 and R02": S222's ordering moved the depths, and the
+  // labels above were re-derived with it (DEC-209).
   TEST_CASE_FIXTURE(guard_fixture_t,
                     "a capture that loses material is reduced by the extra ply")
   {
@@ -6104,8 +6340,10 @@ TEST_SUITE("search: pruning and reduction guards")
   //   REQUIRE_EQ( probe.reduction[k], 0 )
   //   values: REQUIRE_EQ( 1, 0 )
   //
-  // It also takes the second row of "pruning does not hide a forced mate"'s
-  // capture table with it.
+  // No row of "pruning does not hide a forced mate"'s capture table takes it
+  // any more: S222's ordering moved the depth of the one that did, the
+  // table's own rule removed that row, and S230 mines its replacement
+  // (DEC-209). Until then this case is R01's only kill in the suite.
   TEST_CASE_FIXTURE(guard_fixture_t,
                     "a capture that gives check is not reduced")
   {

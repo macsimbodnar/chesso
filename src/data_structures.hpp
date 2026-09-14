@@ -635,6 +635,35 @@ struct search_node_probe_t
 };
 
 
+// The gravity bound on a continuation history entry, and the depth its graded
+// update is expressed at. Both are definitions and not settings, which is why
+// they are here and not in src/search_params.hpp -- that file's own header
+// lists the class.
+//
+// CONT_HIST_BOUND is the entry type's own ceiling. It is fixed rather than
+// tuned because a bound and a weight over the same table are one degree of
+// freedom and not two: scaling the bound scales every entry, and only the
+// product of the bound and ContHistWeight reaches the ordering. Fixing it at
+// the widest value the storage admits leaves ContHistWeight carrying the whole
+// of that product, and it is the strongest answer available to DEC-194's
+// second suspect -- a table clipped by a bound it shares with another table
+// cannot arise when the bound is the type's own. search_params.hpp's
+// ContHistBonus comment carries the argument in full. S222.
+inline constexpr int CONT_HIST_BOUND = 32767;
+
+// The remaining depth ContHistBonus and ContHistMalus are quoted at: chesso's
+// own median, recorded in search_params.hpp's RfpMaxDepth comment and measured
+// at S085's control. Nothing about the mechanism depends on the number -- it
+// is the unit the two shares are read in, and moving it would rescale them
+// both by the same factor.
+inline constexpr int CONT_HIST_REF_DEPTH = 11;
+
+static_assert(CONT_HIST_BOUND == INT16_MAX,
+              "cont_hist entries are int16_t and gravity holds them inside "
+              "this bound, so a bound above the type's own would be a promise "
+              "the storage cannot keep");
+
+
 struct search_state_t
 {
   std::atomic_bool* stop = nullptr;
@@ -712,6 +741,36 @@ struct search_state_t
   // Countermove heuristic: best quiet reply to each (piece, to-square) pair.
   move_t counter_moves[12][64];
 
+  // One-ply continuation history -- countermove history, the CPW History
+  // Heuristic page's Continuation History section, Geschwentner's device.
+  // [previous move's piece][previous move's to][this move's piece][this move's
+  // to], graded at every quiet cutoff and summed into the quiet ordering score
+  // in score_move beside quiet_history. Reached only through
+  // continuation_entry() below, so the write in history_on_quiet_cutoff and the
+  // read in score_move cannot disagree about index order.
+  //
+  // 12 * 64 * 12 * 64 int16_t is 1.125 MiB. int16_t for quiet_history's own
+  // reason: CONT_HIST_BOUND holds every entry inside this type's range, and
+  // half the table is half the cache traffic.
+  //
+  // A value member and not a heap allocation behind a pointer: this struct is
+  // rebuilt zeroed at the top of every iterative_deepening_search(), so
+  // cont_hist clears exactly the way quiet_history and counter_moves already
+  // do and `ucinewgame` needs no separate clear for any of the three.
+  //
+  // What that costs is where the struct may be built. 1.2 MiB does not fit the
+  // 512 KiB a macOS std::thread gets by default, which the discarded MacBook
+  // attempt at S024 is the record of. So every instance built off the main
+  // thread is heap-owned by its builder -- iterative_deepening_search()'s one
+  // per `go`, run_search()'s one per datagen worker. The tests build theirs on
+  // the main thread, 8 MiB on both platforms.
+  //
+  // Guarded on the previous move existing, at ply 0 and at the node right
+  // after a null move: both pass 0, and move 0 decodes to a legitimate
+  // (W_PAWN, a8) cell rather than an out-of-range index, so a dropped guard
+  // costs a silent wrong-cell write and not a crash. S222, and S024 before it.
+  int16_t cont_hist[12][64][12][64];
+
   // Where a proved mate line is left for the searches that come after this
   // one. Null unless a caller supplies one, which keeps every direct caller of
   // search() -- every test that builds a search_state_t of its own -- on
@@ -720,3 +779,31 @@ struct search_state_t
   // outlive a `go`, which this struct does not.
   proven_mate_line_t* proven_mate = nullptr;
 };
+
+
+// The one index into cont_hist. Both the write in history_on_quiet_cutoff and
+// the read in score_move go through one of these two overloads, so the two
+// sites cannot disagree about order -- swapping the pairs inside here is a
+// symmetric relabelling of the whole table and not a bug either site could
+// observe on its own, which is the point of having one copy of the index
+// rather than two.
+//
+// Keyed on MOVE_PIECE and not MOVE_FROM, matching counter_moves: a promotion's
+// mover is the pawn standing on the source square and not the piece that ends
+// up on the target, and counter_moves already commits to reading it that way.
+// S222.
+inline int16_t& continuation_entry(search_state_t* state,
+                                   move_t prev_move,
+                                   move_t move)
+{
+  return state->cont_hist[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)]
+                         [MOVE_PIECE(move)][MOVE_TO(move)];
+}
+
+inline int16_t continuation_entry(const search_state_t* state,
+                                  move_t prev_move,
+                                  move_t move)
+{
+  return state->cont_hist[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)]
+                         [MOVE_PIECE(move)][MOVE_TO(move)];
+}

@@ -37,8 +37,11 @@ static constexpr int MIN = -SEARCH_SCORE_INF;
 
 
 void history_gravity_update(int16_t& entry, int bonus)
+{ history_gravity_update(entry, bonus, QUIET_HISTORY_MAX); }
+
+
+void history_gravity_update(int16_t& entry, int bonus, int max)
 {
-  const int max = QUIET_HISTORY_MAX;
   const int clamped = std::clamp(bonus, -max, max);
 
   assert(entry >= -max && entry <= max);
@@ -59,17 +62,52 @@ void history_gravity_update(int16_t& entry, int bonus)
 }
 
 
+// The continuation table's graded update at one remaining depth. `share` is
+// ContHistBonus or ContHistMalus, in thousandths of CONT_HIST_BOUND at
+// CONT_HIST_REF_DEPTH; the depth grading is the published quadratic, and the
+// unit is what gives the two axes resolution an integer coefficient on
+// `depth * depth` does not have (src/search_params.hpp carries the argument).
+//
+// 64-bit intermediate because the numerator reaches
+// CONT_HIST_BOUND * 1000 * MAX_DEPTH * MAX_DEPTH -- 5.2e11 at the declared
+// ceilings, four orders past int32. It is not on the hot path: this runs once
+// per quiet fail-high and not once per node.
+static int continuation_grade(int share, int depth)
+{
+  assert(share >= 0);
+  assert(depth >= 0);
+
+  const int64_t numerator =
+      static_cast<int64_t>(CONT_HIST_BOUND) * share * depth * depth;
+  const int64_t denominator =
+      1000LL * CONT_HIST_REF_DEPTH * CONT_HIST_REF_DEPTH;
+
+  // Clamped here as well as inside history_gravity_update, so the return value
+  // is an int by construction rather than by the caller's good behaviour.
+  return static_cast<int>(
+      std::min<int64_t>(numerator / denominator, CONT_HIST_BOUND));
+}
+
+
 void history_on_quiet_cutoff(search_state_t* state,
                              color_t side,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
-                             int depth)
+                             int depth,
+                             move_t prev_move)
 {
   const int bonus = HISTORY_BONUS_QUAD * depth * depth +
                     HISTORY_BONUS_LIN * depth + HISTORY_BONUS_CONST;
   const int malus = HISTORY_MALUS_QUAD * depth * depth +
                     HISTORY_MALUS_LIN * depth + HISTORY_MALUS_CONST;
+
+  // S222. Guards both spans below: 0 is not "no previous move" to the index
+  // arithmetic, it is the real (W_PAWN, a8) cell, so the branch has to be
+  // explicit rather than left to an index that would happily write it.
+  const bool has_prev = prev_move != 0;
+  const int cont_bonus = continuation_grade(CONT_HIST_BONUS, depth);
+  const int cont_malus = continuation_grade(CONT_HIST_MALUS, depth);
 
   // The maluses first, so that when two moves in the span share a butterfly
   // cell with the cutoff move -- two promotions from the same square, say --
@@ -81,11 +119,24 @@ void history_on_quiet_cutoff(search_state_t* state,
     history_gravity_update(state->quiet_history[side][MOVE_FROM(
                                quiets_tried[i])][MOVE_TO(quiets_tried[i])],
                            -malus);
+
+    // The same malus for the continuation table, charged to this node's own
+    // (prev_move, quiets_tried[i]) cell and on that table's own scale.
+    if (has_prev) {
+      history_gravity_update(
+          continuation_entry(state, prev_move, quiets_tried[i]), -cont_malus,
+          CONT_HIST_BOUND);
+    }
   }
 
   history_gravity_update(
       state->quiet_history[side][MOVE_FROM(cutoff_move)][MOVE_TO(cutoff_move)],
       bonus);
+
+  if (has_prev) {
+    history_gravity_update(continuation_entry(state, prev_move, cutoff_move),
+                           cont_bonus, CONT_HIST_BOUND);
+  }
 }
 
 
@@ -1364,6 +1415,22 @@ static int negamax_at(int alpha0,
       // exempt themselves silently. The threshold is negative because history
       // is signed since S093: a sign slip here prunes the *good* quiets and
       // has no symptom but lost rating.
+      //
+      // **Still the plain entry alone, with the continuation table live.**
+      // S222 lands that table and DEC-205 records what this rule costs without
+      // it -- 0.8 % of the nodes at depth 10, because plain history alone
+      // rarely reaches the threshold -- so reading the sum is the obvious next
+      // move and it is deliberately not made here. Two reasons. The step's one
+      // SPRT already prices a new table and a fitted history scale, and a
+      // third change inside it could not be attributed (MEASUREMENT). And
+      // HistPruneCoeff's declared range is derived from the plain band's own
+      // edge, `QuietHistoryMax/64` to `QuietHistoryMax/8` with a range top at
+      // twice that edge; against a sum whose span is QuietHistoryMax plus
+      // ContHistWeight * CONT_HIST_BOUND / 100 that derivation has to be taken
+      // again, which is a decision with its own seed and not a line moved.
+      // S222's lane fits HistPruneCoeff where it stands (DEC-205) and its SPRT
+      // re-prices the rule; the sum belongs with S098, which scales its
+      // reduction by that same sum by design.
       if (prune_rule == PRUNE_NONE && lmr_depth < HP_MAX_LMRDEPTH &&
           state->quiet_history[game->board.active_color][MOVE_FROM(moves[i])]
                               [MOVE_TO(moves[i])] < -HP_COEFF * lmr_depth) {
@@ -1600,7 +1667,8 @@ static int negamax_at(int alpha0,
         // move again -- the same side score_move indexed the table with when it
         // ordered the node.
         history_on_quiet_cutoff(state, game->board.active_color, moves[i],
-                                quiets_tried, quiets_tried_count, depth);
+                                quiets_tried, quiets_tried_count, depth,
+                                prev_move);
 
 #ifdef CHESSO_TUNE
         // The one observation S109's late move pruning constants were fitted

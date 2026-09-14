@@ -99,6 +99,76 @@
   X(HISTORY_MALUS_LIN,   "HistoryMalusLin",   0, 0, 4096)                      \
   X(HISTORY_MALUS_CONST, "HistoryMalusConst", 0, -32768, 32767)                \
                                                                                \
+  /* ONE-PLY CONTINUATION HISTORY, S222, and its own scale. The table is        \
+     `cont_hist` in src/data_structures.hpp, keyed on the previous move's       \
+     (piece, to) and this move's; it is written at every quiet cutoff beside    \
+     plain history and summed into the quiet ordering score.                    \
+                                                                               \
+     **Three axes and not four, and that is a decision.** S024 built this table \
+     on plain history's own coefficients and bound and measured H0 (DEC-194),   \
+     which named two suspects: that two terms of equal weight doubled plain     \
+     history's share of the quiet band, and that the shared gravity bound       \
+     clipped the table. The obvious retry exposes a bonus, a malus, a bound of  \
+     its own and a weight -- and those four carry an exact gauge freedom.       \
+     Under `history_gravity_update` the entry is `e' = e + b - e|b|/M`, so      \
+     scaling `b` and `M` together by k scales every entry by k and changes      \
+     nothing the search can see; the read then multiplies by the weight, so     \
+     (bonus, malus, bound, weight) enters the tree only through (bonus/bound,   \
+     malus/bound, weight*bound). One of the four directions is therefore not a  \
+     setting at all: SPSA would walk it and a meaningless endpoint would land   \
+     in the vector an SPRT judges, which is the reason DEC-094 dropped          \
+     `OrderHistoryMax` from S085 and DEC-200 dropped `TmHardPercent` from S127. \
+     So the gauge is fixed instead of tuned: **the bound is a definition**,     \
+     `CONT_HIST_BOUND` in src/data_structures.hpp, the int16_t ceiling the      \
+     entry's own type sets, which is also the widest band the table can have    \
+     and therefore the strongest available answer to the clipping suspect. The  \
+     two hypotheses are then one question -- how much of the quiet band this    \
+     term is allowed to span -- and `ContHistWeight` beside `QuietHistoryMax`   \
+     is what the lane moves to answer it.                                       \
+                                                                               \
+     ContHistBonus and ContHistMalus are the graded update, in **thousandths    \
+     of the table's own band at chesso's own median remaining depth**           \
+     (`CONT_HIST_REF_DEPTH`, 11 -- RfpMaxDepth's comment above records that     \
+     median, measured at S085's control). The published grading is quadratic in \
+     the remaining depth and it stays quadratic; what the unit buys is          \
+     resolution the axis would not otherwise have. A bare `QUAD * depth *       \
+     depth` coefficient in the shape of HistoryBonusQuad has its whole useful   \
+     region inside the integers 0 to 4, and an SPSA axis whose perturbation     \
+     cannot be smaller than a quarter of its own range is an axis that cannot   \
+     be fitted; expressed as a share of the band the same region spans 0 to     \
+     1000.                                                                      \
+                                                                               \
+     Ranges by stated purpose. 0 is off for all three and is a true off value,  \
+     not a range edge that merely behaves like one: at 0 the two update spans   \
+     write nothing and the read term is identically 0. 1000 is where one update \
+     at the reference depth already closes the whole band, past which the clamp \
+     inside history_gravity_update makes every larger value the same engine.    \
+     ContHistWeight's 2000 is the band-clearance ceiling, and it is the one-way \
+     door CLAUDE.md names: the quiet band is now                                \
+     [-(QuietHistoryMax + w*CONT_HIST_BOUND/100), +the same], and it has to     \
+     stand 100 clear of the countermove band at 700000. At both declared        \
+     maxima that is 32767 + 655340 = 688107, a clearance of 11893; at 2100 it   \
+     would be 720901 and the band would swallow the countermove and both        \
+     killers. Asserted, not argued, in tests/test_evaluation.cpp "the declared  \
+     history ceiling clears the band above it".                                 \
+                                                                               \
+     Seeds, DEC-084 as amended by DEC-105. No engine's constant is behind any   \
+     of them, and S024's reuse of plain history's numbers is not evidence for   \
+     these. Both shares are **(b), a derivation over chesso's own history       \
+     scale**: plain history's shipped grading closes 11*11 / 8192 of its own    \
+     band at the reference depth, which is 15 thousandths, so the table starts  \
+     at the same *rate* as the table it sits beside and the lane moves it.      \
+     ContHistWeight is **(b)** too: at 25 the continuation term spans           \
+     25 * 32767 / 100 = 8191 against plain history's shipped 8192, so the two   \
+     terms start with equal authority -- which is exactly the equal-weight sum  \
+     S024 measured and the null the first suspect is tested against. All three  \
+     are first settings and S222's own SPSA lane fits them, together with       \
+     QuietHistoryMax and plain history's six coefficients, which nothing has    \
+     ever fitted (DEC-198). */                                                  \
+  X(CONT_HIST_BONUS,   "ContHistBonus",   15, 0, 1000)                         \
+  X(CONT_HIST_MALUS,   "ContHistMalus",   15, 0, 1000)                         \
+  X(CONT_HIST_WEIGHT,  "ContHistWeight",  25, 0, 2000)                         \
+                                                                               \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \
      not shorten the line. At 0 quiescence returns its stand-pat score and     \

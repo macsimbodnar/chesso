@@ -1,0 +1,70 @@
+"""One-ply continuation history and its own scale, S222.
+
+Four mutants over the three sites the table has: the write in
+`history_on_quiet_cutoff`, the read in `score_move`, and the one call site that
+has to say a node has no previous move to index -- the null-move child in
+`negamax_at`. Two of them are S024's, re-established for code that no longer
+shares plain history's constants; the other two are the read side and the null
+boundary, which S024 left to a structural argument.
+
+Nothing here moves a constant. A table whose bonus is a little smaller is a
+table that is tuned differently, and the lane in `tools/spsa_s222.json` is what
+decides that; what these break is a guard, a sign or an index, which is the
+class a test can be red on without arguing about strength.
+
+The list is data: `m` is bound by tools/mutation_check.py, which execs this
+file, so nothing here is a driver of its own. `old` must occur exactly once in
+`file` -- an ambiguous anchor mutates a site nobody chose, and the tool refuses
+the whole run before it writes anything. `expected` is "killed" unless a person
+has argued the mutant is behaviourally equivalent to the engine, which no tool
+can decide.
+
+Ids are never reused: H is this file's own prefix and nothing else here uses
+it. `origin` says which step wrote the mutant.
+"""
+
+S = "src/search.cpp"
+E = "src/evaluation.cpp"
+
+m("H01_cont_hist_malus_sign", S, "search/ordering",
+  'the continuation malus is credited instead of charged, so every quiet the '
+  'node tried and rejected is promoted in the table that orders its siblings',
+  ('          continuation_entry(state, prev_move, quiets_tried[i]), '
+   '-cont_malus,',
+   '          continuation_entry(state, prev_move, quiets_tried[i]), '
+   'cont_malus,'),
+  origin="S222")
+
+m("H02_cont_hist_no_prev_guard", S, "search/ordering",
+  'the guard on there being a previous move is dropped, so the root ply and '
+  'the node after a null move write the (W_PAWN, a8) cell move 0 decodes to '
+  '-- a wrong-cell write with no crash and no sanitizer finding',
+  ('  const bool has_prev = prev_move != 0;',
+   '  const bool has_prev = true;'),
+  origin="S222")
+
+m("H03_null_child_keeps_prev", S, "search/ordering",
+  'the null-move child is handed the node\'s own previous move instead of 0, '
+  'so everything it writes is keyed on a move that is two plies back and on '
+  'the wrong side of the pass',
+  ('        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
+   'ply + 1,\n'
+   '                           game, state, 0, false);',
+   '        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
+   'ply + 1,\n'
+   '                           game, state, prev_move, false);'),
+  origin="S222")
+
+m("H04_cont_hist_unread", E, "search/ordering",
+  'score_move stops adding the continuation term, so the table is written at '
+  'every cutoff and orders nothing -- the shape a census would call exercised '
+  'and a verdict would call inert',
+  ('  if (prev_move != 0) {\n'
+   '    score +=\n'
+   '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '
+   '/ 100;\n'
+   '  }\n'
+   '\n'
+   '  return score;',
+   '  return score;'),
+  origin="S222")

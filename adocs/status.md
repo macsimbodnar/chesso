@@ -7,18 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
-- **S222 started, 2026-09-14 12:55, phases one and two by an Opus 5 subagent
-  (DEC-199); the SPSA night and the SPRT are the coordinator's.** The one-ply
-  continuation table of S024 rebuilt with its own `CONT_HIST_BONUS`,
-  `CONT_HIST_MALUS`, `ContHistMax` and a weight against plain history, all
-  tunables with ranges and midpoint seeds (a `src/` commit with a `Bench:`
-  line, the sentinel cases and two mutants, Debug self-play); then the
-  narrow SPSA lane written and `check`ed, not run -- `tools/spsa_s222.json`
-  over the new axes, `QuietHistoryMax`, plain history's six coefficients and
-  S109's `HistPruneCoeff`, `twosided=true`, no `Tm*` axis (DEC-094,
-  DEC-200) -- with `adocs/data/S222_spsa.sh` pre-registered from S085's
-  regime and the measured throughput. `plan_current/`: S091 (SPRT tonight),
-  S222.
+- **S222's phases one and two landed, 2026-09-14 14:14, by an Opus 5 subagent
+  (DEC-199); the SPSA night and the SPRT are the coordinator's.** The table
+  of S024 rebuilt with `ContHistBonus` 15 and `ContHistMalus` 15 (thousandths
+  of its own band at the reference depth 11), the bound 32767 as a
+  definition, and `ContHistWeight` 25 (equal authority to plain history's
+  8192) -- three axes, not four, because the fourth is a gauge (DEC-209);
+  the band-clearance case re-stated at 688107 against 700000; four mutants
+  killed by named cases, the null-move sentinel new; history pruning still
+  reads the raw plain entry (S098 owns the sum). **One S091 mate row was
+  removed by the table's own rule** -- its measured depth moved under the new
+  ordering -- and R01's second kill with it, S091's direct guard still
+  killing R01 alone; a replacement mined position is **S230**, filler.
+  `Bench: 5950740` (-5.1 % nodes, -3.6 % nps, both to be priced by the
+  SPRT); depth-12 kiwipete's move `e2a6 -> d5e6` again. Debug self-play 8
+  games 0 `Assertion`; gate 38/38 both builds. **The lane**: `tools/spsa_s222.json`,
+  11 axes (the three new, `QuietHistoryMax`, plain history's six,
+  `HistPruneCoeff`), `twosided=true`, **book `UHO_4060_v3.epd`** because
+  tune and verification must not share openings (three documents; the brief
+  said otherwise and was wrong, DEC-209); `check` 11 of 11 reach the search;
+  `adocs/data/S222_spsa.sh` pre-registers **8 h 30 m** from S085's measured
+  24.05 s an iteration, ceiling 17 h, `OUT` under `.tuning/`. `specs.md`'s
+  search row carries the passage. **Fast check over the diff: five findings,
+  all repaired in the landing commit** -- the 1.2 MiB `search_state_t`, a
+  local of `iterative_deepening_search` on the `std::thread` stack that macOS
+  sizes at 512 KiB, is heap-owned there now, and in `tools/datagen.cpp`'s
+  worker-thread `run_search` likewise (the table stays a value member,
+  cleared by the struct's rebuild); two mutation notes re-pointed at the
+  re-derived mate-table labels; the lane pre-registers the reading for
+  `ContHistWeight` fitted at or under 5 with an H1 -- the verdict is then the
+  six history coefficients', and a pinned-zero SPRT decides the table before
+  the two-ply step opens; the lane script's dead `exec` fallback replaced by
+  a live marker on a driver that dies without one. **The nights**: S091's SPRT tonight (12 to 20 h), S222's SPSA the
+  night after, then S222's SPRT. `plan_current/`: S091 (SPRT tonight), S222
+  (fit pending).
 
 - **S091 landed, 2026-09-14 13:10, by an Opus 5 subagent (DEC-199); its SPRT
   is tonight's run.** Reconciled with S109: the quiet half of the accepts is
@@ -60,7 +82,7 @@ Updated: 2026-09-14, by hand.
   expected. `gate_extra.sh` on `b0df255`: **`GATE-EXTRA-DONE 5 stages 1055 s`** (Debug
   312 s, sanitize 684 s, deep perft 58 s; `.tuning/gate_extra_2026-09-14_S091.log`),
   so DEC-141's second tier is closed before the stamp that waits on the SPRT.
-  S222's first phase takes the afternoon; the SPRT launches at night. `plan_current/`: S091 (SPRT pending). `plan_current/`: S091 (SPRT pending).
+  S222's first phase takes the afternoon; the SPRT launches at night. `plan_current/`: S091 (SPRT pending).
 
 - **S210 is done, 2026-09-14 10:30: F22's `--nonreg` SPRT is H1, `Elo +0.01
   +/- 3.17`, `nElo +0.02 +/- 4.03`, 28598 games in 13 h 16 m 30 s.** The

@@ -11752,3 +11752,65 @@ Consequences: `specs.md` Behaviour carries the five S210 passages; `MANUAL.md`
               at fixed depth (`bench` 7111579, the six `search_bench` rows).
               F22 lands in its own commit with a bench signature after its
               census (S210's second half).
+
+## DEC-209  2026-09-14  S222's lane tunes on `UHO_4060_v3.epd`, parameterises the table on three axes with the bound as a definition, leaves history pruning on the raw plain entry, and a mate row whose measured depth moved is removed by its own rule
+Tags:         search, ordering, continuation-history, spsa, books, s222,
+              s091, s098, dec-194, dec-198, dec-205, dec-189
+Context:      S222's first two phases landed the one-ply table with its own
+              tunables and wrote its SPSA lane. Four choices were made on
+              evidence the implementing agent laid out. (1) The coordinator's
+              brief named the harness book `noob_3moves.epd` for the lane;
+              `adocs/eval_tuning_strategy.md` paragraph 7, `DEV_MANUAL.md`'s
+              own sentence and the step's "at S085's regime" all say a tune
+              and its verification must not share openings, and
+              `books/fetch_book.sh` pins `UHO_4060_v3.epd` for exactly that.
+              (2) The accepts named four parameters -- bonus, malus, bound,
+              weight -- but the gravity update `e + b - e|b|/M` scales every
+              entry when bonus, malus and bound scale together and the read
+              multiplies by the weight, so the tree sees only (bonus/bound,
+              malus/bound, weight x bound): the fourth direction is a gauge
+              and an SPSA axis on it random-walks, DEC-094's and DEC-200's own
+              reason for excluding an axis. (3) DEC-205's note put
+              `HistPruneCoeff` in the lane; changing the pruning rule's input
+              from the plain entry to the sum would be a third change inside
+              one verdict and its range was derived from the plain band's edge.
+              (4) S091's `capture_mates` row `3N1bk1/3Q3p/...` is read at the
+              depth where the shipped build reports the mate and the mutant
+              does not; under the new ordering that depth moved from 8 to 9
+              on that position alone (measured over depths 3 to 12 in this
+              tree and at the parent, on the shipped build and under all six
+              S091 mutants), and R01's second separation with it, while
+              S091's direct guard "a capture that gives check is not reduced"
+              still kills R01 alone.
+Decision:     By the coordinator under the owner's delegation. **(1) The lane
+              tunes on `UHO_4060_v3.epd`** and every SPSA lane does, the
+              verifying SPRT on the harness book; the brief was wrong and the
+              documents right. **(2) Three axes**: `ContHistBonus` and
+              `ContHistMalus` in thousandths of the table's own band at the
+              reference depth 11 (chesso's median remaining depth), the bound
+              `CONT_HIST_BOUND` = 32767 as a definition -- the widest band the
+              `int16_t` entry can have, the strongest available answer to
+              DEC-194's clipping suspect -- and `ContHistWeight` for the
+              share of the quiet band; DEC-194's two hypotheses reduce to one
+              statement about that span and the fit tests it. **(3) History
+              pruning keeps reading the raw plain entry** in this step;
+              `HistPruneCoeff` is fitted in the lane against that input, and
+              S098, which reads the sum, owns moving the rule onto it. **(4)
+              The mate row is removed and the remaining rows' mutant labels
+              re-derived** -- the table's rule makes the depth a measurement
+              and the row no longer measures what it claimed; a mined position
+              that restores R01's second kill inside the mate table is
+              **S230**, filler.
+Rejected:     **Tuning on the harness book** -- the openings the tune saw
+              would be the openings the verdict plays. **Four axes** -- one
+              is a gauge. **Reading the sum in history pruning now** -- a
+              third change inside one verdict. **Keeping the mate row at a
+              new depth** -- the depth is defined as where the shipped build
+              reports the mate, and re-picking it to pass is what the rule
+              forbids.
+Consequences: `tools/spsa_s222.json` names the book; the lane's
+              pre-registration `adocs/data/S222_spsa.sh` (8 h 30 m estimated
+              from S085's measured 24.05 s an iteration, ceiling 17 h) runs
+              the night after S091's SPRT. `specs.md`'s search row carries
+              the passage. S098's file already reads S222 for the sum.
+              `adocs/plan_todo/S230_*.md` exists behind S229.

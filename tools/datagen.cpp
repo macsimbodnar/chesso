@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <string>
@@ -114,7 +115,11 @@ search_t run_search(game_t* game,
                     uint64_t nodes,
                     int max_depth)
 {
-  search_state_t state = {};
+  // Heap-owned, not a local: search_state_t is 1.2 MiB and play_games() calls
+  // this from a worker std::thread, whose default stack is 512 KiB on macOS.
+  // Value-initialised exactly as `= {}` was. S222.
+  auto state_owner = std::make_unique<search_state_t>();
+  search_state_t& state = *state_owner;
   state.stop = &never_stop;
   state.tt = tt;
 

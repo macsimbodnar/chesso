@@ -47,7 +47,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 41 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 44 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -68,6 +68,9 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"HistoryMalusQuad",          1,     0,    1024},
   {"HistoryMalusLin",           0,     0,    4096},
   {"HistoryMalusConst",         0, -32768,   32767},
+  {"ContHistBonus",            15,     0,    1000},
+  {"ContHistMalus",            15,     0,    1000},
+  {"ContHistWeight",           25,     0,    2000},
   {"MaxQsearchDepth",          19,     1,      64},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
