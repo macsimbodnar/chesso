@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S091's SPRT is running, launched 2026-09-14 17:22 by the coordinator**
+  (`adocs/data/S091_sprt.sh`, pid in `.tuning/sprt_s091.pid`, log
+  `.tuning/sprt_s091.log`, games under
+  `.tuning/sprt_s091_20260914_172203/`): candidate `d785b89` (S091's
+  landing) against reference `08461e0`, both built fresh into
+  `.ref-builds/` and answering `id name Chesso <sha> native`; 8+0.08, hash
+  16, 12 of 12 cores, `noob_3moves.epd`, seed 20260914172203, bounds
+  `elo0=0 elo1=5`, `alpha=beta=0.05`. Estimate 12 to 20 h at ~2150 games/h
+  against the worst case of 41861 games; persistent watcher on
+  `SPRT-RUN-(DONE|FAILED|INVALID)` with the pid and a 39.6 h ceiling. Read
+  with `.tuning/coord/read_s091.sh` when it ends, then S091's stamp, the
+  plan ledger, the specs verdict. **Nothing else runs on the machine until
+  the marker** (MACHINE). After it: S222's SPSA (`adocs/data/S222_spsa.sh`,
+  8 h 30 m, ceiling 17 h) -- by day if the SPRT ends in the morning, since
+  no better work waits for the machine (DEC-155), else the night. The
+  fillers S225, S228, S229 and S230 all closed today. `plan_current/`: S091
+  (SPRT running), S222 (fit pending).
+
 - **S230 done, 2026-09-14 17:17, by an Opus 5 subagent (DEC-199); committed by
   the coordinator after the fast check.** The fifth row of "pruning does not
   hide a forced mate": `1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22`,
