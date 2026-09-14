@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S228 started, 2026-09-14 15:12, by an Opus 5 subagent (DEC-199)**: the
+  fast-suite test that the `id name` build stamp follows the tree without a
+  reconfigure (2026-09-12_plan_adversarial-F02, DEC-206), the second filler
+  while S091 and S222 wait for their nights. Brief
+  `.tuning/coord/S228_brief.md`: `tests/test_build_info_freshness.sh` drives
+  the real `cmake/build_info.cmake` as `cmake -P` over a sandbox git
+  repository -- fresh tree, dirty then committed, untracked not dirty, no
+  rewrite on an unchanged tree, `unknown` outside a checkout -- red first
+  against a scratch copy that captures the sha once; `DEV_MANUAL.md`'s stamp
+  paragraph names the test; F02's `Status:` line moves to closed. S229 and
+  S230 follow by day; S091's SPRT tonight. `plan_current/`: S091 (SPRT
+  tonight), S222 (fit pending), S228.
+
 - **S225 done, 2026-09-14 14:55, by an Opus 5 subagent (DEC-199); committed
   by the coordinator after the fast check.** `tools/gate_extra.sh` reads
   `STAGES` once and unsets it before any stage runs, so the nested
