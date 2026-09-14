@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S225 started, 2026-09-14 14:34, by an Opus 5 subagent (DEC-199)**: the
+  `STAGES` leak in `tools/gate_extra.sh`, the first filler (DEC-171) while
+  S091 waits for its SPRT tonight and S222 for its SPSA the night after; the
+  machine is idle between checks, so a filler is the strictly necessary
+  further step (PLAN). Brief `.tuning/coord/S225_brief.md`: test red first
+  against `git show HEAD:tools/gate_extra.sh`, the fix unsets `STAGES` after
+  reading it, `DEV_MANUAL.md`'s two dated paragraphs shortened, the
+  documented `STAGES="sanitize"` run once as the proof (about ten minutes).
+  S228, S229 and S230 follow in the Open order, each as agent work by day.
+  `plan_current/`: S091 (SPRT tonight), S222 (fit pending), S225.
+
 - **S222's phases one and two landed, 2026-09-14 14:14, by an Opus 5 subagent
   (DEC-199); the SPSA night and the SPRT are the coordinator's.** The table
   of S024 rebuilt with `ContHistBonus` 15 and `ContHistMalus` 15 (thousandths
@@ -21,7 +32,12 @@ Updated: 2026-09-14, by hand.
   killing R01 alone; a replacement mined position is **S230**, filler.
   `Bench: 5950740` (-5.1 % nodes, -3.6 % nps, both to be priced by the
   SPRT); depth-12 kiwipete's move `e2a6 -> d5e6` again. Debug self-play 8
-  games 0 `Assertion`; gate 38/38 both builds. **The lane**: `tools/spsa_s222.json`,
+  games 0 `Assertion`; gate 38/38 both builds. **Second tier after the
+  commit `96fdc19`**: `tools/mutation_check.py` over H01 to H04 -- 4 of 4
+  killed, each by one fast-suite case, H02 with the bench unmoved
+  (`.tuning/mutation_s222.log`); `gate_extra` GATE-EXTRA-DONE 5 stages 1101 s
+  (bullet below), so DEC-141's second tier is closed for phases one and two.
+  **The lane**: `tools/spsa_s222.json`,
   11 axes (the three new, `QuietHistoryMax`, plain history's six,
   `HistPruneCoeff`), `twosided=true`, **book `UHO_4060_v3.epd`** because
   tune and verification must not share openings (three documents; the brief
@@ -3186,10 +3202,11 @@ Updated: 2026-09-14, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-14 12:52, 5 stages 1055 s**, on
-  S091's tree at `b0df255` (log `.tuning/gate_extra_2026-09-14_S091.log`);
-  before it 2026-09-13 on S223's tree (1059 s), S210's `da0cfed` (1042 s) and
-  S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-14 14:33, 5 stages 1101 s**, on
+  S222's landing `96fdc19` (log `.tuning/gate_extra_2026-09-14_S222.log`;
+  debug 347 s, sanitize 696 s, perft 58 s, run beside the mutation pass);
+  before it the same day on S091's `b0df255` (1055 s), 2026-09-13 on S223's
+  tree (1059 s), S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
   that touched `make_move`, `unmake_move`, the generator or the search
   completes, and otherwise weekly -- and this bullet is where a missed week
   shows (DEC-167). Export `CLANG_FORMAT_MAJOR=22` in the launching shell first

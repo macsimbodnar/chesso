@@ -340,6 +340,20 @@ the stamp):
   that could never run. The shell stays the watched pid and prints
   `SPSA-FAILED` itself when the driver exits non-zero without one.
 
+### Second tier after the landing commit `96fdc19`, 2026-09-14
+
+- `tools/mutation_check.py tools/mutants .ref-builds/mut --only
+  H01_cont_hist_malus_sign H02_cont_hist_no_prev_guard
+  H03_null_child_keeps_prev H04_cont_hist_unread`: 4 of 4 killed, each by one
+  fast-suite case (1/38 red under every mutant), the bench moved under H01,
+  H03 and H04 and stayed under H02 -- the dropped write guard hits no bench
+  position, which is why a test and not the signature kills it. 130, 170,
+  129 and 127 s. Log `.tuning/mutation_s222.log`.
+- `tools/gate_extra.sh`: GATE-EXTRA-DONE, 5 stages, 1101 s (prose 0, citations
+  0, debug 347, sanitize 696, perft 58), run beside the mutation pass. Log
+  `.tuning/gate_extra_2026-09-14_S222.log`. DEC-141's second tier is closed
+  for phases one and two; phase three re-runs whatever it touches.
+
 ### Proposed `specs.md` wording, for the coordinator
 
 For the **search** row, replacing the S024 sentence's closing clause and added
