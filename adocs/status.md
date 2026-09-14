@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S222's SPSA is running, launched 2026-09-14 18:05 by the coordinator**
+  (`adocs/data/S222_spsa.sh`; wrapper pid in `.tuning/spsa_s222.pid`, the
+  driver `python3 tools/spsa_driver.py run tools/spsa_s222.json`; log
+  `.tuning/spsa_s222.log`; output `.tuning/spsa_s222_20260914_180558/` with
+  `run.json`, `checkpoint.json`, `trajectory.tsv`, `games.pgn`,
+  `engine.snapshot`): HEAD `34a3ff6`, tree clean, `build-tune` rebuilt by the
+  script, `check` 11 of 11 axes reach the search, 1250 iterations x 24
+  pairs = 60000 games on `UHO_4060_v3.epd`, estimate 8 h 30 m (about 02:40),
+  ceiling 17 h. **Watcher caveat, a defect for phase three**: the driver
+  prints `SPSA-DONE` at the end of its `check` stage as well, so the run
+  log already carries one marker before the first game and will carry two
+  at the end; the persistent watcher fires on the **second** `SPSA-(DONE|FAILED)`
+  line (or the wrapper pid's death, or the ceiling). The S222 fast check did
+  not see this; `adocs/data/S222_spsa.sh` should send `check`'s output to
+  its own file or strip its marker, and phase three's commit does that.
+  **Nothing else runs on the machine until the second marker** (MACHINE).
+  After it: read `trajectory.tsv` and the driver's final vector against the
+  pre-registered readings in the script's header (stuck run, weight well
+  above or below 25, at or under 5 with an H1 later), then brief phase three
+  -- fitted defaults into `src/search_params.hpp`, `adocs/data/S024_census_run.py`
+  re-run, the gainer SPRT `{0, 5}` against the commit before it, and the
+  pinned-zero SPRT if the weight reading calls for it. `plan_current/`: S222
+  (fit running).
+
 - **S091 done, 2026-09-14 18:05: H1, `Elo 46.52 +/- 15.43` at `8+0.08`, decided
   in 1360 games and 38 m 11 s** (LLR 2.96, `nElo 56.38 +/- 18.47`, W 545 L 364
   D 451, `Ptnml [52, 119, 221, 172, 116]`, 2137 games an hour, 0 forfeits
