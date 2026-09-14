@@ -316,12 +316,13 @@ set_tests_properties(test_gate_script PROPERTIES LABELS "fast" TIMEOUT 60)
 # (WATCHERS rule, DEC-061), so a run that ends without exactly one
 # GATE-EXTRA-DONE or GATE-EXTRA-FAILED line leaves its watcher spinning to the
 # ceiling -- the failure S167 removed from fastchess.sh and S177 from rating.sh,
-# both found after the fact. Seven cases over the marker, the stage order and
-# the two refusals that come before any stage, in a throwaway directory whose
-# PATH holds stubs for cmake, ctest, python3 and nproc and the two engine
-# binaries. Nothing is built and no stage does real work, so it costs seconds
-# and does not depend on the machine -- which is why the script whose stages
-# take a quarter of an hour has a test in the fast label.
+# both found after the fact. Eleven cases over the marker, the stage order, the
+# refusals that come before any stage and the environment the stages run in
+# (S225), in a throwaway directory whose PATH holds stubs for cmake, ctest,
+# python3 and nproc and the two engine binaries. Nothing is built and no stage
+# does real work, so it costs seconds and does not depend on the machine --
+# which is why the script whose stages take a quarter of an hour has a test in
+# the fast label.
 add_test(NAME test_gate_extra_script
          COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_gate_extra_script.sh
                       ${CMAKE_SOURCE_DIR}/tools/gate_extra.sh)

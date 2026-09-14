@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
+- **S225 done, 2026-09-14 14:55, by an Opus 5 subagent (DEC-199); committed
+  by the coordinator after the fast check.** `tools/gate_extra.sh` reads
+  `STAGES` once and unsets it before any stage runs, so the nested
+  `gate_extra.sh` that `test_gate_extra_script` drives inside stage 4 sees
+  the default five stages; case 11 of that test is the guard -- exit 0,
+  `GATE-EXTRA-DONE 1 stages`, every `ctest` stub call saw `STAGES` unset --
+  red against the committed script first, exactly that case. The documented
+  invocation then ran for real: `GATE-EXTRA-DONE 1 stages 591 s`, 38/38 fast
+  under the sanitizer with `test_gate_extra_script` passing (the check that
+  was red on 2026-09-13), INV-6 across builds both 5950740
+  (`.tuning/gate_extra_S225_sanitize.log`). The sixteen script mutants of
+  `adocs/data/S197_script_mutants.py` regenerate and stay 16 of 16 killed.
+  `DEV_MANUAL.md`'s two dated paragraphs shortened to the fix; the "Seven
+  cases" registration comment became eleven. `No functional change`, no
+  `src/`. Fast check: one real minor hole -- the test itself inherited an ambient `STAGES` (nine reds in cases 1 and 2 from a shell that exported it) -- closed with `unset STAGES` at the top of `run_sandbox`, the test green both ways, the old script still red at case 11 alone; two wording fixes; no mutant cut for the new line, documented scope. **Next**: S228, the stamp freshness test
+  (brief `.tuning/coord/S228_brief.md`), then S229 and S230 by day; S091's
+  SPRT tonight. `plan_current/`: S091 (SPRT tonight), S222 (fit pending).
+
 - **S225 started, 2026-09-14 14:34, by an Opus 5 subagent (DEC-199)**: the
   `STAGES` leak in `tools/gate_extra.sh`, the first filler (DEC-171) while
   S091 waits for its SPRT tonight and S222 for its SPSA the night after; the

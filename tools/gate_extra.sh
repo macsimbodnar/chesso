@@ -295,6 +295,17 @@ stage_perft()
 all_stages="prose citations debug sanitize perft"
 stages="${STAGES:-$all_stages}"
 
+# Read once, then taken out of the environment before any stage runs. Stage 4
+# runs the whole `fast` label, and tests/test_gate_extra_script.sh is in it:
+# that test drives a nested gate_extra.sh over a fake tree and its cases expect
+# the default five stages. Inherited, `STAGES="sanitize" tools/gate_extra.sh`
+# gave the nested script one stage, nine of its checks over two cases went red,
+# and the documented subset invocation failed its own gate with a green C++
+# build. `unset`, not `export -n`: the variable is only exported when it was
+# passed as a command prefix, and unset covers both. Case 11 of that test is
+# the guard (S225).
+unset STAGES
+
 for name in $stages; do
   found=0
   for known in $all_stages; do

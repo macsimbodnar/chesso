@@ -35,6 +35,11 @@
 #      every FAILED marker is written to the saved fd 9 — a `fail` reached from
 #      inside a stage would otherwise put the marker in that stage's log, where
 #      no watcher polls
+#  11. the documented subset invocation, STAGES in the script's own
+#      environment: the subset still runs, and STAGES does not reach the
+#      environment of the stages — stage 4's `fast` label holds this very test,
+#      whose nested gate_extra.sh then ran one stage where nine checks over
+#      cases 1 and 2 expect five (2026-09-13, S225)
 #
 # Cases 4 and 5 exist because a first version of this file asserted only that
 # the comparison had run, and a cut replacing its condition with `false`
@@ -83,6 +88,13 @@ chmod +x "$tmp/tools/gate_extra.sh"
 : > "$tmp/tools/plan_prose_check.py"
 
 calls="$tmp/calls.log"
+# What the ctest stub saw in its own environment, one line per call. Case 11
+# reads it: the real ctest runs this test, which drives a nested gate_extra.sh,
+# so an inherited STAGES is the defect and the stub's environment is where it
+# is visible.
+ctest_env="$tmp/ctest_env.log"
+# Set by case 11 only, and exported into the sandbox by run_sandbox.
+outer_stages=""
 
 make_stub()
 {
@@ -125,8 +137,11 @@ make_stub python3 'exit 0'
 make_stub nproc 'echo 8'
 
 # The one stub with an opinion: red on the fast label, and only when the case
-# asks for it by touching the flag file.
+# asks for it by touching the flag file. It also records whether STAGES was in
+# its environment, which is all case 11 needs: a nested gate_extra.sh driven
+# from inside a ctest sees exactly this environment.
 make_stub ctest "
+echo \"STAGES=\${STAGES-unset}\" >> \"$ctest_env\"
 if [ -f \"$tmp/fail_ctest_fast\" ]; then
   for a in \"\$@\"; do
     if [ \"\$a\" = fast ]; then exit 1; fi
@@ -161,6 +176,7 @@ chmod +x "$tmp/build-sanitize/src/chesso"
 run_sandbox()
 {
   : > "$calls"
+  : > "$ctest_env"
   [[ -n "${tmp:-}" ]] && rm -rf "$tmp/out" "$tmp/build/CMakeCache.txt" \
                                "$tmp/build-debug" "$tmp/build-sanitize/CMakeCache.txt"
   # Case 9 needs the directory to exist *before* the script runs, which is the
@@ -172,6 +188,16 @@ run_sandbox()
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub" OUT="$tmp/out" TMPDIR="$tmp"
+    # The caller's shell may carry STAGES (someone typed `export STAGES=...`
+    # before ctest); cases 1 to 10 expect the default five stages, so only the
+    # case that asks for a subset gets one.
+    unset STAGES
+    # Case 11 drives the script the way its header documents the subset, with
+    # STAGES exported in the script's own environment rather than set for its
+    # shell -- which is the only way a command prefix reaches it.
+    if [[ -n "$outer_stages" ]]; then
+      export STAGES="$outer_stages"
+    fi
     ./tools/gate_extra.sh
   ) > "$tmp/out.txt" 2>&1
   echo $?
@@ -432,6 +458,32 @@ if ! grep -q 'exec 9>&2' "$gate_script"; then
 fi
 if grep -n 'echo "GATE-EXTRA-FAILED' "$gate_script" | grep -q '>&2'; then
   fail "10: a FAILED marker is written to >&2 rather than the saved fd 9"
+fi
+
+# 11. The documented subset invocation: STAGES in the script's own environment.
+#     The subset itself must work -- one stage, and the marker says one -- and
+#     the variable must not reach the stages, because stage 4 runs the whole
+#     `fast` label and this test is in it: the nested gate_extra.sh it drives
+#     inherited the outer STAGES, ran one stage where nine checks over cases 1
+#     and 2 expect five, and `STAGES="sanitize" tools/gate_extra.sh` failed its
+#     own gate with a green C++ build. Observed red against the script as it
+#     stood at that commit, which recorded STAGES=sanitize here (2026-09-13,
+#     S225).
+outer_stages="sanitize"
+status="$(run_sandbox)"
+outer_stages=""
+if [[ "$status" -ne 0 ]]; then
+  fail "11: exited $status with STAGES=sanitize and every stub succeeding"; show
+fi
+if ! grep -q '^GATE-EXTRA-DONE 1 stages ' "$tmp/out.txt"; then
+  fail "11: STAGES=sanitize did not run exactly the one stage it names"; show
+fi
+if [[ ! -s "$ctest_env" ]]; then
+  fail "11: no ctest ran, so the stage environment was never recorded"; show
+fi
+if grep -qv '^STAGES=unset$' "$ctest_env"; then
+  fail "11: STAGES reached a stage's environment ($(tr '\n' ' ' < "$ctest_env"))," \
+       "so a nested gate_extra.sh would not run all five stages"; show
 fi
 
 if [[ $failures -ne 0 ]]; then

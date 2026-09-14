@@ -882,21 +882,21 @@ see.** Stage 4 is the only build of `tests/` at `-O2` with the sanitizer flags,
 and gcc 13.3 reports `-Wmaybe-uninitialized` inside libstdc++'s own `<regex>`
 there — a known false positive in a `std::function` move, fatal under `-Werror`.
 `tests/test_uci_surface.cpp` included `<regex>` from `f9d705c` (S212's `id name`
-pattern check) until S225, so `build-sanitize` could not be built at all while
-both gated builds stayed green, and the first `gate_extra` run after S212 is
-what found it. The fix was to drop the header for a token matcher of the same
+pattern check) until `1952c56`, so `build-sanitize` could not be built at all
+while both gated builds stayed green, and the first `gate_extra` run after S212
+is what found it. The fix was to drop the header for a token matcher of the same
 acceptance, not to suppress the warning: a pragma leaves the header included and
-the next test to reach for it in the same trap. (2026-09-13, S225.)
+the next test to reach for it in the same trap. (2026-09-13.)
 
-**Never pass `STAGES` as a command prefix.** `STAGES="sanitize"
-tools/gate_extra.sh` puts the variable in the script's *environment*, every
-child inherits it, and `test_gate_extra_script` — which runs inside stage 4's
-`fast` label and drives a nested `gate_extra.sh` over a fake tree — then sees a
-`STAGES` its cases did not set: nine of its checks, over two cases, expect the
-default five-stage run, get one stage, and the sanitize stage goes red for a
-reason that has nothing to do with the tree. Measured 2026-09-13: `test_gate_extra_script` fails with
-`STAGES` set in its environment and passes with `env -u STAGES`. Until the
-script unexports it, run the whole thing, or accept that one test's red. S225.
+**`STAGES` as a command prefix is supported, because the script unsets it.**
+It is read once into the stage list and then `unset`, so no stage inherits it.
+That matters because stage 4's `fast` label holds `test_gate_extra_script`,
+which drives a nested `gate_extra.sh` over a fake tree and expects the default
+five stages: while the variable leaked, `STAGES="sanitize" tools/gate_extra.sh`
+gave that nested run one stage, nine of its checks over two cases went red, and
+the sanitize stage failed with a green C++ build (measured 2026-09-13). Case 11
+of that test is the guard — it runs the script with `STAGES` exported and
+asserts the stages' environment carries none. S225.
 
 **It presumes the automatic gate is green.** Stage 4 runs the whole `fast`
 label under the sanitizer, so any red in that label fails the sanitize stage —
@@ -944,12 +944,13 @@ GATE-EXTRA-FAILED: <stage> <stage>... <outdir>
 ```
 
 `tests/test_gate_extra_script.sh` is the guard on all of that, in the `fast`
-label at about 1.1 s: ten cases over a sandbox whose `PATH` holds stubs for
+label at about 0.4 s: eleven cases over a sandbox whose `PATH` holds stubs for
 `cmake`, `ctest`, `python3` and `nproc`, so no stage does any real work. Both
 `fastchess.sh` and `rating.sh` shipped with a path that printed no marker at
 all and both were found after the fact (S167, S177); this one is checked from
-the day the script exists. The sixteen cuts every case was observed red under
-are `adocs/data/S197_script_mutants.py`.
+the day the script exists. The sixteen cuts the first ten cases were observed
+red under are `adocs/data/S197_script_mutants.py`, all sixteen still killed at
+S225; case 11 was observed red against the script as it stood before its fix.
 
 Two of those cases guard against a stage returning a green that means nothing.
 **A build directory is configured and then verified, never trusted because it
