@@ -2,11 +2,12 @@
 """Re-derive the node band of tests/test_search.cpp "ordering keeps the tree small".
 
 S192, DEC-142. The case searches KIWIPETE_POS to depth 5 from a cold table and
-asserts the cost is inside a band: below a budget of 440000 and above a floor of
-20000. Neither number is a measurement of anything on its own -- both are ratios
-of the count the case actually costs, 4x above and a fifth below, chosen so the
-case fires on ordering that has stopped working and not on a tree that moved.
-109575 was the count when the band was placed on 2026-08-14.
+asserts the cost is inside a band: a budget of 4x the count and a floor of a
+fifth of it -- 440000 / 20000 on 109575 when the band was placed on
+2026-08-14, 69804 / 3490 on 17451 after S091 (2026-09-14). Neither number is a
+measurement of anything on its own -- both are ratios of the count the case
+actually costs, chosen so the case fires on ordering that has stopped working
+and not on a tree that moved.
 
 So the re-derivation is: run the case, read the count it prints, multiply. The
 count is read off a MESSAGE rather than recomputed here, because an in-process
@@ -30,8 +31,9 @@ BINARY = os.path.join(REPO, "build", "tests", "test_search")
 CASE = "ordering keeps the tree small"
 SOURCE = os.path.join(REPO, "tests", "test_search.cpp")
 
-# Both are the ratios the case has carried since 2026-08-14: 440000 / 109575 is
-# 4.02 and 20000 / 109575 is 1 / 5.5. Rounded to the two the comment states.
+# Both are the ratios the case has carried since 2026-08-14 (440000 / 109575 is
+# 4.02 and 20000 / 109575 is 1 / 5.5; 69804 / 17451 and 3490 / 17451 after
+# S091). Rounded to the two the comment states.
 BUDGET_RATIO = 4
 FLOOR_DIVISOR = 5
 

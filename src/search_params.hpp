@@ -345,6 +345,76 @@
   X(SEE_QUIET_COEFF,   "SeeQuietCoeff",   50,     0, 10000)                    \
   X(SEE_QUIET_MAX_LMRDEPTH, "SeeQuietMaxLmrDepth", 8, 0, 16)                   \
                                                                                \
+  /* CAPTURE SEE PRUNING, S091, and the capture half of the same technique.     \
+     A capture whose exchange evaluation loses more than a margin scaled by the \
+     reduced depth is skipped outright, where quiescence only declines it:      \
+     `!see_ge(board, move, -(SEE_CAPT_COEFF * lmr_depth))`. It reads the same   \
+     guards as the four rules above -- `may_prune` in negamax_at() -- because   \
+     the hazard is the same one, with the gives-check exemption asked of the    \
+     engine's own is_check() for the captures this rule wants to skip and for   \
+     no others.                                                                 \
+                                                                               \
+     **The margin is linear in the reduced depth and the quiet one is           \
+     quadratic**, which is the shape the wiki publishes for the two sides --    \
+     https://www.chessprogramming.org/Static_Exchange_Evaluation, "a linear     \
+     depth margin for captures, and a quadratic depth margin for quiets".       \
+     Form only: the wiki publishes no number and none is taken from one.        \
+                                                                               \
+     SEE_CAPT_COEFF is **(b) chesso's own exchange scale**, derived exactly as  \
+     SeeQuietCoeff above: the bar at lmr_depth 1 stays under one pawn of        \
+     `see_value` in src/bitboard.cpp, which is 100 there and not the 94         \
+     `piece_value` uses, so the interval the purpose declares is 0 to 100 and   \
+     50 is its midpoint. Every see_value difference is a multiple of 100, so    \
+     the whole interval skips the same set at lmr_depth 1 -- captures that lose \
+     a pawn or more -- and the choice inside it shows up only at the depths the \
+     margin scales.                                                            \
+                                                                               \
+     SEE_CAPT_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16, the range the    \
+     four caps above declare by the same purpose. It is on the                  \
+     reduction-adjusted depth and not on the node's own remaining depth, which  \
+     is a choice against this step's research note: one engine A/B'd an         \
+     lmr-depth gate for SEE pruning and measured it negative. Gating every rule \
+     of the block on one axis is worth more here than a second axis nothing in  \
+     this tree has measured, and S127 re-tries the axis with the power.         \
+     adocs/data/S091_rule_sweep.txt is what the two rules do to this tree.      \
+                                                                               \
+     **Off is the cap at 0, and nothing else**, for the reason the two rules    \
+     above state: the bar is `-(SEE_CAPT_COEFF * lmr_depth)`, so at lmr_depth 0 \
+     it is 0 whatever the coefficient holds and the rule still skips every      \
+     capture that loses material. 10000 is the range top -- larger than any     \
+     see_value, so every exchange clears the bar at any lmr_depth of 1 or more  \
+     -- and a range top is not an off value. */                                 \
+  X(SEE_CAPT_COEFF,    "SeeCaptureCoeff", 50,     0, 10000)                    \
+  X(SEE_CAPT_MAX_LMRDEPTH, "SeeCaptureMaxLmrDepth", 8, 0, 16)                  \
+                                                                               \
+  /* THE EXTRA REDUCTION, S091. A move the exchange evaluation says loses       \
+     material -- capture or quiet, the bar is 0 and not a margin -- is searched \
+     SEE_LMR_EXTRA plies shallower than late move reduction alone would have    \
+     searched it, inside that rule's own eligibility: past the third legal      \
+     move, at depth 3 or more, never in check, never on a move that gives       \
+     check, never on a promotion. A capture is still not reduced by late move   \
+     reduction itself, so on a capture this ply is the whole reduction and on a \
+     quiet it is one ply on top of the table's.                                 \
+                                                                               \
+     **(a) literature, as a form with no number in it**: CPW's late move        \
+     reduction page lists "allowing reductions of 'bad' captures (SEE < 0)"     \
+     under Uncommon Conditions and Leorik 2.4's release notes describe          \
+     searching "moves with a bad SEE score at a reduced depth in the main       \
+     search". Neither publishes a ply count, so the default is the smallest     \
+     value that is not the off value -- one ply, the narrowest form of the      \
+     published idea -- and not a number read anywhere.                          \
+                                                                               \
+     The range is 0 to 3 by **stated purpose**: 0 is off, and this is an        \
+     adjustment to the reduction the ordering already chose. At 3 it already    \
+     exceeds what the table returns for the first reducible move at every depth \
+     this engine reaches -- `lmr_reduction(11, 4)` is 2 at the median depth 11  \
+     RfpMaxDepth's comment records -- so past it the extra replaces the         \
+     ordering's own estimate instead of adjusting it, which is a different      \
+     rule and not a setting of this one. The reduced search keeps at least one  \
+     real ply either way: negamax_at() clamps the sum to `child_depth - 1`.     \
+     S127 re-tries the ply count and the bar. */                                \
+  X(SEE_LMR_EXTRA,     "SeeLmrExtra",     1,      0, 3)                        \
+                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \

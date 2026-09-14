@@ -217,6 +217,9 @@ of a refusal is the only confirmation the value was taken.
 | `HistPruneMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths history pruning covers, read as `lmr_depth < HistPruneMaxLmrDepth`; 0 switches it off |
 | `SeeQuietCoeff` | 50 | 0 to 10000 | quiet SEE pruning: a quiet whose exchange evaluation loses more than `SeeQuietCoeff * lmr_depth * lmr_depth` is skipped. In `see_value`'s scale, where a pawn is 100 — not `piece_value`'s, where it is 94 |
 | `SeeQuietMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths quiet SEE pruning covers, read as `lmr_depth < SeeQuietMaxLmrDepth`; 0 switches it off |
+| `SeeCaptureCoeff` | 50 | 0 to 10000 | capture SEE pruning: a capture whose exchange evaluation loses more than `SeeCaptureCoeff * lmr_depth` is skipped. Linear in the reduced depth where the quiet margin is quadratic, which is the pair of shapes the wiki publishes. In `see_value`'s scale, where a pawn is 100 |
+| `SeeCaptureMaxLmrDepth` | 8 | 0 to 16 | the reduction-adjusted depths capture SEE pruning covers, read as `lmr_depth < SeeCaptureMaxLmrDepth`; 0 switches it off |
+| `SeeLmrExtra` | 1 | 0 to 3 | how many plies a move the exchange evaluation says loses material is reduced by on top of late move reduction's own. Capture or quiet, inside that rule's eligibility -- past the third legal move, never in check, never on a checking move, never on a promotion. A capture is not reduced by late move reduction at all, so on a capture this is the whole reduction. 0 switches it off |
 | `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
 | `AspirationMinDepth` | 2 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
 | `AspirationDelta` | 21 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |

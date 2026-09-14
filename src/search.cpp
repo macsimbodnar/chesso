@@ -1380,6 +1380,45 @@ static int negamax_at(int alpha0,
       }
     }
 
+    // Capture SEE pruning, S091, and the fifth rule to read `may_prune`. A
+    // capture the exchange evaluation says loses more than the margin is not
+    // searched at all, where quiescence has only ever declined one -- that
+    // difference is why S015's measured zero for the quiescence rule does not
+    // settle this one. The margin is linear in the reduced depth where the
+    // quiet margin is quadratic, which is the pair of shapes the wiki
+    // publishes; the two rules are disjoint by move class and neither can
+    // reach the other's moves.
+    //
+    // Promotions are inside this class when they capture and outside it when
+    // they do not, which is where the quiet rules leave them: a promotion that
+    // takes nothing is pruned by no rule in this loop, deliberately, because a
+    // promotion mate is the shape the hazard likes best.
+    if (may_prune && is_capture) {
+      const int move_number = legal_moves_counter + 1;
+      const int lmr_depth = lmr_depth_of(depth, move_number);
+
+      if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&
+          !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {
+        prune_rule = PRUNE_SEE_CAPTURE;
+      }
+    }
+
+    // The extra reduction's own question, S091, asked here for the reason the
+    // rules above are decided here: `see_ge` reads the position the move is
+    // made from, and after `make_move` the board is the child's.
+    //
+    // It cannot share an answer with either skip. Those ask whether the move
+    // loses more than a margin; this asks whether it loses anything at all, and
+    // a move that clears `-(COEFF * lmr_depth)` may still be under zero. What
+    // keeps the second call off the hot path is the eligibility in front of it,
+    // which is late move reduction's own: no node under depth 3 pays it, no
+    // move inside the first three of a node's order pays it, and a move
+    // already skipped above pays it never.
+    const bool see_loses_material =
+        SEE_LMR_EXTRA > 0 && prune_rule == PRUNE_NONE && ply > 0 &&
+        depth >= 3 && legal_moves_counter + 1 > 3 && !is_in_check &&
+        !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);
+
     if (!make_move(game, moves[i])) { continue; }
 
     // The late move reduction guard below is the only consumer: a move that
@@ -1392,6 +1431,18 @@ static int negamax_at(int alpha0,
     // is_check() is an attack scan - do not pay for it on captures.
     const bool is_check_move = is_capture ? false : is_check(game);
 
+    // S091's two rules do want it on a capture, and this is where they ask.
+    // A capture that gives check is forcing, and neither an exchange
+    // evaluation nor a move number says anything about a line the opponent has
+    // no choice in -- the same argument that put the exemption on the four
+    // quiet rules (DEC-180, DEC-205). The scan is paid only by the captures
+    // one of those two rules is about to act on, which is what keeps
+    // `is_check_move` above hardcoded false: reusing it for capture logic is
+    // the trap S107 left the comment against.
+    const bool capture_gives_check =
+        is_capture && (prune_rule != PRUNE_NONE || see_loses_material) &&
+        is_check(game);
+
     // Late move pruning's own skip, here rather than at the generation stage
     // so that the exemption above it can bind. A quiet past the count is
     // searched only if it gives check.
@@ -1403,8 +1454,10 @@ static int negamax_at(int alpha0,
     // four inputs -- a static score, a history count, an exchange evaluation,
     // a move number -- says anything about a line the opponent has no choice
     // in. It binds every rule of the block since the mate case above forced it
-    // onto late move pruning as well (DEC-180).
-    if (prune_rule != PRUNE_NONE && !is_check_move) {
+    // onto late move pruning as well (DEC-180), and S091's capture rule with
+    // them -- through `capture_gives_check`, because `is_check_move` is
+    // hardcoded false on a capture.
+    if (prune_rule != PRUNE_NONE && !is_check_move && !capture_gives_check) {
       if constexpr (PROBING) {
         if (probe != nullptr && probe->pruned_count < MAX_MOVES) {
           probe->pruned_moves[probe->pruned_count] = moves[i];
@@ -1447,9 +1500,28 @@ static int negamax_at(int alpha0,
     // captures and will happily report that a quiet move is fine.
     int reduction = 0;
 
-    if (ply > 0 && depth >= 3 && legal_moves_counter > 3 && !is_capture &&
-        !MOVE_PROMOTED(moves[i]) && !is_in_check && !is_check_move) {
-      reduction = lmr_reduction(depth, static_cast<int>(legal_moves_counter));
+    // What makes a move reducible at all, independent of its class: the node is
+    // deep enough, the move is late enough, and neither side is in check. The
+    // class conditions -- not a capture, not a promotion -- belong to the rule
+    // and not to this list, which is what lets S091's extra ply read the same
+    // eligibility without inheriting an exemption that is about the table's
+    // guess rather than about safety.
+    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
+                            !is_in_check && !is_check_move &&
+                            !capture_gives_check;
+
+    if (may_reduce) {
+      if (!is_capture && !MOVE_PROMOTED(moves[i])) {
+        reduction = lmr_reduction(depth, static_cast<int>(legal_moves_counter));
+      }
+
+      // S091. A move that loses material is one the ordering already put late
+      // and the exchange evaluation has now also written off, so it is searched
+      // one ply shallower still. Additive on a quiet, where late move reduction
+      // has already decided a reduction; the whole of it on a capture, which
+      // that rule refuses -- a capture is tactics the ordering promoted, and
+      // being promoted is not the same as being sound.
+      if (see_loses_material) { reduction += SEE_LMR_EXTRA; }
 
       if (reduction > child_depth - 1) { reduction = child_depth - 1; }
       if (reduction < 0) { reduction = 0; }

@@ -337,3 +337,321 @@ is a **seed -- must be fitted here (sweep) and SPSA'd at S127 (DEC-084)**.
   pruning +9.10 in the 2021 removal re-run (re-cited from S109's research).
 - - Ethereal removal ledger, SEE pruning -41.5 -- repo-recorded via DEC-087;
   primary URL untraced publicly in this pass.
+
+## Landed 2026-09-14 11:25
+
+Everything in `accepts:` except the SPRT, which is the coordinator's. The
+`done:` stamp is theirs to write with the verdict.
+
+### Reconciled with S109 before a line was written
+
+This file predates S109 (landed 2026-09-13) and its own "Re-scoped 2026-08-19"
+paragraph anticipated the split without knowing what would land. What S109
+actually shipped is **quiet SEE pruning** -- `!see_ge(move, -SeeQuietCoeff *
+lmr_depth^2)` in `negamax_at`'s move loop, gated on `lmr_depth`, off at a PV
+node, in check, on the first legal move and in the mate band, with the
+gives-check exemption -- plus its `SeeQuietCoeff` and `SeeQuietMaxLmrDepth`.
+
+So the accepts' "separate margins for captures and for quiets, both constants
+in src/search_params.hpp with stated ranges" is satisfied **jointly**, exactly
+as section 2's boundary paragraph says it would be: the quiet constant was
+already there when this step started, and what this step adds is
+
+- **(a) capture SEE pruning** in the main search, its own margin and its own
+  depth cap, over `MOVE_CAPTURE` only; and
+- **(b) the extra reduction** of a negative-SEE move, capture or quiet, in the
+  late move reduction path.
+
+S109's quiet rule is untouched, and so are `see()`, `see_ge()` and quiescence.
+Nothing in `src/bitboard.cpp` changed.
+
+### Per accepts clause
+
+| clause | where |
+|---|---|
+| an SPRT verdict against a named commit | `adocs/data/S091_sprt.sh`, pre-registration written, **not run** |
+| separate margins for captures and for quiets, both constants with stated ranges | `SeeCaptureCoeff` here, `SeeQuietCoeff` from S109; `src/search_params.hpp` |
+| the depth scaling stated as what it is | linear in `lmr_depth` for captures against S109's quadratic for quiets, said in the parameter's own comment and in `MANUAL.md` |
+| a forced mate inside the pruned depth, red with the guard removed | three rows added to "pruning does not hide a forced mate", each red under a named mutant, below |
+| nothing pruned at a PV node or in check, precondition asserted | `pruning_node`, reused unchanged; the PV half is the second drive of "capture SEE pruning skips the captures that lose material and no others" |
+| `see()` and `see_ge()` unchanged, both exchange suites pass unmodified | `src/bitboard.cpp` is not in the diff; "search: static exchange evaluation" and "search: see_ge agrees with see" pass as written |
+| the fast suite green | 38 of 38 in both builds |
+
+### What landed, by file and symbol
+
+- `src/search.cpp` `negamax_at`: the capture skip, between `pick_next_move` and
+  `make_move`, `if (may_prune && is_capture)` -- **`may_prune` reused and not
+  restated**, so the five node guards and the first-move guard are S109's own
+  and there is one list, not two. `prune_rule = PRUNE_SEE_CAPTURE` when
+  `lmr_depth < SEE_CAPT_MAX_LMRDEPTH && !see_ge(board, move, -(SEE_CAPT_COEFF *
+  lmr_depth))`.
+- `src/search.cpp` `negamax_at`: `see_loses_material`, the extra ply's own
+  question, asked pre-make because `see_ge` reads the parent board. It cannot
+  share an answer with either skip -- those ask whether a move loses *more than
+  a margin* and this asks whether it loses anything -- so it is a second
+  `see_ge` call, kept off the hot path by late move reduction's own eligibility
+  in front of it and by `prune_rule == PRUNE_NONE`.
+- `src/search.cpp` `negamax_at`: `capture_gives_check`, an `is_check()` paid
+  only by the captures one of the two rules is about to act on. `is_check_move`
+  is hardcoded false on a capture (S107) and reusing it for capture logic is
+  what its own comment warns against.
+- `src/search.cpp` `negamax_at`: `may_reduce`, the class-free half of the late
+  move reduction condition, so the extra ply reads the same eligibility without
+  inheriting `!is_capture`, which is about the ordering's guess and not about
+  safety. The base reduction keeps `!is_capture && !MOVE_PROMOTED`.
+- `src/data_structures.hpp` `prune_rule_t`: `PRUNE_SEE_CAPTURE = 5`, so a probe
+  can tell the two SEE rules apart.
+- `src/search_params.hpp`: three parameters, below.
+
+**Two deliberate scope calls, both stated rather than assumed.** A capture that
+promotes is inside the skip's class, because the class is `MOVE_CAPTURE` and
+`see_ge` models the promotion gain in a branch of its own; a promotion that
+captures nothing is outside every rule in the loop, which is where S109 left it
+and why. And the extra ply exempts promotions, because that exemption is late
+move reduction's own and the brief for this step said the existing exemptions
+are kept.
+
+### Files beyond `touches:`
+
+The header's `touches:` line was written before S109 landed and names
+`src/search.cpp`, `src/search_params.hpp` and `tests/test_search.cpp`. Four
+more were needed and none of them is scope creep:
+
+- `src/data_structures.hpp` -- one enumerator, `PRUNE_SEE_CAPTURE`, so the
+  probe can tell the two SEE rules apart.
+- `tests/test_search_params.cpp` -- the `golden_defaults` table, which every
+  step that adds a parameter re-derives (DEC-142).
+- `tools/mutants/search.py` and `tools/mutants/S109_shallow_pruning.py` -- three
+  anchors that this step's restructuring invalidated. An anchor that no longer
+  occurs makes `tools/mutation_check.py` refuse the whole run, so leaving them
+  would have broken the tool for every mutant, not only for these three.
+- `MANUAL.md` and `DEV_MANUAL.md` -- the DOCS rule.
+
+Amending the field is the coordinator's call; recording the list is this
+section's job.
+
+### The three constants
+
+| name | default | range | off | form |
+|---|---|---|---|---|
+| `SeeCaptureCoeff` | 50 | 0..10000 | its cap at 0 | (b) chesso's own exchange scale: the bar at lmr depth 1 stays under one pawn of `see_value`, so the declared interval is 0 to 100 and 50 is its midpoint -- the same derivation `SeeQuietCoeff` took |
+| `SeeCaptureMaxLmrDepth` | 8 | 0..16 | 0 | (c) midpoint of the range the four S109 caps declare by purpose |
+| `SeeLmrExtra` | 1 | 0..3 | 0 | (a) literature as a form with no number in it -- CPW's late move reduction page lists "allowing reductions of 'bad' captures (SEE < 0)" and Leorik 2.4's notes say "a reduced depth"; neither publishes a ply count, so the default is the smallest value that is not the off value |
+
+`SeeCaptureMaxLmrDepth` reads `lmr_depth < CAP`, so **0 is an exact off value**
+and the bisection leg needs one release rebuild. `SeeCaptureCoeff` has no off
+value of its own for the reason S109 records for its two coefficients: the bar
+is `-(COEFF * lmr_depth)` and at lmr depth 0 it is 0 whatever the coefficient
+holds. `SeeLmrExtra` is an additive ply and 0 is off outright.
+
+**The cap's axis is a choice against this file's own section 1**, which says the
+traceable capture gate is raw depth because one engine A/B'd an lmr-depth gate
+for SEE pruning and measured it negative. Gating every rule of the block on one
+axis is worth more here than a second axis nothing in this tree has measured,
+and S127 re-tries the axis with the power. Said in the parameter's comment too.
+
+**No sweep set a default.** `adocs/data/S091_rule_sweep.txt` is what the two
+rules do to the three `search_bench` positions at depths 9 and 12, taken
+through the tune build, and it is characterisation and not a fit: a node count
+at fixed depth is not Elo (DEC-019) and picking a cap by it would be picking by
+a proxy. S127 is where these three enter SPSA.
+
+### What the two rules do to the tree, measured
+
+`tools/search_bench.py`, before -> after, `HEAD` = `08461e0`:
+
+| position | depth 9 | depth 12 |
+|---|---|---|
+| midgame | 47635 -> 74327 | 141455 -> 172303 |
+| kiwipete | 213916 -> 146873 | 1038779 -> 596588 |
+| tactical | 26130 -> 27855 | 175684 -> 190823 |
+
+Best moves at depth 9 unchanged (`c3d5` / `e2a6` / `d7c8q`); at depth 12
+kiwipete moves `d5e6` -> `e2a6` and the other two are unchanged.
+`chesso bench` **7105111 -> 6267842**, -11.8 %, which is the `Bench:` line the
+commit carries (DEC-140). Nodes per second are flat, 3.83 M -> 3.80 M on the
+bench, which is the second `see_ge` per late move against the subtrees the skip
+removes.
+
+**A skip does not always shrink the tree**, and the per-rule sweep is what says
+so rather than an argument. Each rule alone against both off, depth 12,
+`adocs/data/S091_rule_sweep.txt`:
+
+    both off    141455 / 1038779 / 175684
+    skip only   187956 /  666527 / 204486
+    extra only  133938 /  714841 / 128080
+    both on     172303 /  596588 / 190823
+
+The skip takes 36 % off kiwipete and *adds* a third to midgame -- a node that
+skips a capture has lost a move that might have cut it off and searches more of
+what is left -- and the extra ply takes 31 % off kiwipete and 27 % off tactical
+while taking 5 % off midgame. Neither rule is inert, neither dominates, and
+only `both off` reports a different best move (`d5e6` against `e2a6` on
+kiwipete). Regenerate with the driver quoted at the end of this section.
+
+### Tests, and the red each was observed at
+
+New and re-stated cases in `tests/test_search.cpp`, every one in the S191 suite
+"search: pruning and reduction guards" except the mate rows. Each line below is
+the printout doctest produced, copied from `.tuning/coord/S091_mutant_kills.txt`
+and never paraphrased; the mutants are `tools/mutants/S091_capture_see.py`, six,
+**6 of 6 killed**.
+
+| case | mutant | observed red |
+|---|---|---|
+| capture SEE pruning skips the captures that lose material and no others | C05 | `REQUIRE_NE( rule_that_pruned(probe, safe), PRUNE_SEE_CAPTURE )` values `( 5, 5 )` |
+| a capture that gives check is not pruned | C02 | `REQUIRE( k >= 1 )` values `REQUIRE( -1 >= 1 )` |
+| a node whose only legal move is a losing capture is never pruned | C07 | `REQUIRE_EQ( probe.move_count, 1 )` values `( 0, 1 )` |
+| capture SEE pruning stops at its depth cap | C06 | `REQUIRE( k >= 1 )` values `REQUIRE( -1 >= 1 )` |
+| a capture that loses material is reduced by the extra ply | R02 | `REQUIRE_EQ( probe.reduction[losing], SEE_LMR_EXTRA )` values `( 0, 1 )` |
+| a capture that gives check is not reduced | R01 | `REQUIRE_EQ( probe.reduction[k], 0 )` values `( 1, 0 )` |
+
+**Two of those reds are the precondition and not the assertion the case is
+named for, and that is a property of the case rather than an accident** -- the
+same thing S109 recorded for P02 and P0A. A move the rule skips is a move the
+node never searches, so `searched_index` reads -1 before the rule that skipped
+it can be read at all.
+
+**The mate case.** "pruning does not hide a forced mate" gains a table of three
+rows, every position a row of `adocs/data/S145_mined_set.tsv` -- one per game
+from this engine's own self-play -- and every one a forced mate whose line runs
+through a capture that loses material. Oracles, and not a reading of the board:
+stockfish at depth 20 through python-chess, with python-chess's own reading of
+the root.
+
+- `3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18`, depth 7, mate
+  in 5. `#+5` in 17073 nodes, pv `a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4`
+  -- `Qxb7+` is the capture on the line. **Red under C02, C05 and R02**:
+
+      TEST CASE:  pruning does not hide a forced mate
+      FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+        values: REQUIRE( false )
+        logged: capture mate, 3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18, depth 7, red under C02, C05 and R02
+
+- `2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55`, depth 7, mate in 5.
+  `#+5` in 7205 nodes, pv `a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q` --
+  `Qxd7+` is the capture. **Red under R01**, same assertion, its own row logged.
+- `3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33`, depths 8 and 9, mate
+  in 4. `#+4` in 8868 nodes, pv `e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7` -- the key
+  `Bxb2` and `Qxd6` are both captures, and python-chess reports the root **in
+  check**, so the block is off at the root and live in every child. Red under
+  R02 at both depths, measured in `.tuning/coord/S091_inproc_R02.txt`; in a
+  whole-suite run the first row above fires first and aborts the case, which is
+  what `REQUIRE` does.
+
+**Each row is read at one depth and that is the position's own profile, not a
+depth chosen to pass.** Under the case's own search -- `search_fen()` calls
+`search()`, one fixed-depth `negamax_at` from a cold table, not iterative
+deepening -- the mate distance is not monotone in depth: the first two are
+reported at 7, not at 8, and again at 9, 10 and 11, which is what reverse
+futility's ceiling does to a deep mate class (S148, DEC-158). The shipped
+engine's `go depth N` reports these positions as centipawn scores at those
+depths (the fast check drove it: `cp 1620`, `cp 1244`, `cp 1282` / `cp 1349`),
+so the sentence is about the guard's search path, not the UCI reply; S098's
+re-runs of this case inherit that reading. The sweep behind that statement is `.tuning/coord/S091_inproc_*.txt`,
+400 positions of the two committed mate sets at depths 3 to 11, shipped and
+under each mutant.
+
+**One case was re-stated, not relaxed**, the way S109 re-stated three of the same suite's. "a capture is not reduced"
+selected the first capture past the third move at perft position 2 and asserted
+a reduction of zero; every capture past the third there is one the exchange
+evaluation writes off, and those are reduced now. It selects the first capture
+past the third **that the exchange evaluation clears**, asserts that
+precondition, and drives `CAPTURE_POS` -- a row of `adocs/data/S018_raw.tsv`
+found by scanning that corpus for a node with such a capture where the
+reduction table would have reduced it. The assertion is unchanged and M07 still
+kills it.
+
+**Three mutants of other files were re-pointed, and each was re-observed.**
+`M07_lmr_captures` and `M08_lmr_checks` in `tools/mutants/search.py` and
+`P05_prune_gives_check` in `tools/mutants/S109_shallow_pruning.py` anchored
+lines this step restructured, and an anchor that no longer occurs makes
+`tools/mutation_check.py` refuse the **whole** run before it writes a byte. All
+three now anchor the new shape and all three were re-run by hand: M07 red at
+`a capture is not reduced` `REQUIRE_EQ( probe.reduction[k], 0 )` values
+`( 1, 0 )`; M08 red at `a quiet move that gives check is not reduced`, same
+assertion and values; P05 red at `a quiet move that gives check is not pruned`
+`REQUIRE_EQ( rule_that_pruned(probe, checking), PRUNE_NONE )` values `( 1, 0 )`.
+`validate()` over `tools/mutants/` reports **OK over 63 mutants** against this
+tree.
+
+`tools/mutation_check.py` wants a worktree at a commit holding the rule, so the
+tool's own pass is the coordinator's after the commit --
+`python3 tools/mutation_check.py tools/mutants .ref-builds/mut --only
+C02_capture_gives_check C05_capture_threshold_sign C06_capture_no_cap
+C07_capture_first_move R01_extra_reduction_gives_check R02_extra_reduction_sign
+M07_lmr_captures M08_lmr_checks P05_prune_gives_check`.
+
+**What carries no mutant, and why it is said rather than left.** The extra ply's
+`!MOVE_PROMOTED` clause mirrors late move reduction's own exemption. A scan of
+45245 positions -- the S018 and S024 corpora plus one ply of children -- found
+**no** node where a promotion the exchange evaluation writes off sits past the
+third move at a reducible node, so a mutant dropping that clause would be one
+nothing in the suite can kill. The clause stays because removing it is a silent
+widening; it ships without a mutant and this paragraph is the record.
+
+### Goldens re-derived (DEC-142)
+
+- `tests/test_search_params.cpp` `golden_defaults`: 38 rows -> **41**, the three
+  new parameters with their ranges. The derivation is `src/search_params.hpp`
+  and the diff of the two is the re-derivation; `DEV_MANUAL.md`'s golden table
+  row moved with it.
+- `tests/test_search.cpp` "ordering keeps the tree small": the pair **440000 and
+  20000 -> 69804 and 3490**, re-derived by `python3
+  adocs/data/S192_node_budget.py`, which reports `count 17451 nodes`,
+  `budget 69804 (4x the count)`, `floor 3490 (the count over 5)`. The count left
+  the band outright -- below the floor -- which is the condition the case's own
+  comment sets for re-deriving both ends. The ratios are unchanged; only the
+  count moved. Readings so far: 109575 (2026-08-14), 179851 (S192), 17451 here.
+
+  **An observation for the coordinator, not fixed here.** That script's "middle
+  half" advisory can never be satisfied by a freshly derived band: with the band
+  `[c/5, 4c]` the middle half starts at `c/5 + (4c - c/5)/4`, which is above `c`
+  for every `c`. It read OUTSIDE at 109575 in 2026-08-14's band as well. The
+  numbers it derives are right; the sentence it prints under them is not a
+  criterion anything can meet.
+
+### Debug self-play (DEC-141 clause 1)
+
+`cmake --build build-debug -j12`, then four rounds at 4+0.04 on
+`noob_3moves.epd` with `-log ... level=trace engine=true`: **8 games in 19 s, 0
+`Assertion`, 0 `disconnect`**, in both the trace log and the tee'd stdout.
+`.tuning/coord/S091_debug_selfplay.{log,out,pgn}`.
+
+### Gate
+
+`cmake --build build -j12 && ctest --test-dir build -L fast` **38 of 38**;
+`cmake --build build-tune -j12 && ctest --test-dir build-tune -L fast` **38 of
+38**; `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` clean. Run again after
+this section was written. `tools/gate_extra.sh` is the coordinator's.
+
+### Documents
+
+- `MANUAL.md`: three rows in the tune build's option table.
+- `DEV_MANUAL.md`: the golden table's `golden_defaults` row 38 -> 41, the node
+  budget row and the one prose sentence that quoted 440000.
+- `specs.md` is the coordinator's; the wording this step proposes is in the
+  report.
+
+### The pre-registration
+
+`adocs/data/S091_sprt.sh`, written and **not run**. `./fastchess.sh` at its own
+default bounds, `elo0=0 elo1=5`, alpha = beta = 0.05, nElo, against `08461e0`,
+the commit before this change; 8+0.08, Hash 16, `noob_3moves.epd`, concurrency
+12, and `OUT` under `.tuning/` rather than the `/tmp` default this machine wipes
+at boot. Worst case **41861 games / 19.8 h** with the truth at the interval's
+midpoint and **25591 / 12.1 h** with it on a bound, at the 2110 games an hour
+`.moltke.local.md` says to budget from. Abort at a time-forfeit rate over 1.0 %
+a side; a crash voids. The three outcomes, the two-leg bisection on H0 with its
+first suspect named -- `SeeLmrExtra`, the half whose published record is
+negative -- and the open findings the run is taken while open (S225, S228, S229,
+S213) are all in the header.
+
+### The driver behind the per-rule sweep
+
+`adocs/data/S091_rule_sweep.py` is what produced `S091_rule_sweep.txt`: four
+`setoption` pairs -- `SeeCaptureMaxLmrDepth` 0 or 8 against `SeeLmrExtra` 0 or 1
+-- over the tune build, the three `search_bench` positions at depths 9 and 12,
+waiting for `bestmove` between them (`TOOLCHAIN.md`'s oracle section; the race
+is chesso's too). Committed rather than left in scratch so the table above is
+re-derivable when either end of it moves.

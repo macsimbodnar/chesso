@@ -898,24 +898,27 @@ TEST_SUITE("search: move ordering state")
   // pending 827-constant paste. Tighten it when a fit lands, not before.
   // 2026-08-14_test_review-F06.
   //
-  // GOLDEN (DEC-142): the pair 440000 and 20000, a band around the depth-5
-  // node count of KIWIPETE_POS from a cold table -- 109575 when measured
-  // 2026-08-14, held inside [count / 5, 4 x count]. Both ratios are the band
-  // this case has always carried and neither is a new constant (DEC-105 (b)).
-  // Re-taken 2026-09-10 by S192: **179851 nodes**, so the tree has grown 64 %
-  // under a band that did not move and the budget is 2.4x the count rather than
-  // 4x. Still inside the middle half of the band, which is the condition on
-  // leaving both numbers alone; the next reading outside it re-derives them.
+  // GOLDEN (DEC-142): the pair 69804 and 3490, a band around the depth-5
+  // node count of KIWIPETE_POS from a cold table, held inside
+  // [count / 5, 4 x count]. Both ratios are the band this case has always
+  // carried and neither is a new constant (DEC-105 (b)).
   // Re-derive: python3 adocs/data/S192_node_budget.py, which runs this case
   // through build/tests/test_search --success, reads the count off the MESSAGE
   // below and prints both bounds by those ratios.
+  // History, because the band has now moved once and the readings are what a
+  // future red is judged against: 109575 when the band was placed 2026-08-14,
+  // 179851 re-taken 2026-09-10 by S192 with the pair left at 440000 and 20000,
+  // and **17451 at S091**, which is the first reading to leave the band
+  // outright -- below the floor, the capture skip and the extra reduction
+  // having taken the tree down by an order of magnitude in one step. Both
+  // numbers are re-derived from that count by the two ratios above, which is
+  // what DEC-142 asks when either end moves.
   // Moves legitimately on: any ordering or search change -- re-derive when the
   // count leaves the middle half of the band, and never widen the budget to
   // clear a red without taking the count again.
-  // Margin: at the count re-taken above the budget is 2.4x it and the floor a
-  // ninth of it, so the tree has to grow by 2.4 or shrink by 9 before either
-  // end fires. Those are the headroom figures to judge a future red by, not the
-  // 4x and fifth the two bounds were originally set at.
+  // Margin: at the re-derived pair the budget is 4x the count and the floor a
+  // fifth of it, so the tree has to grow by 4 or shrink by 5 before either end
+  // fires.
   // An in-process search(5, ...) on a cold table
   // with no aspiration is what is counted; a UCI `go depth 5` of the same FEN
   // gives a different number and is not this golden.
@@ -934,7 +937,7 @@ TEST_SUITE("search: move ordering state")
     search_state_t state = {};
     state.tt = &tt;
     state.stop = &never_stop;
-    state.node_limit = 440000;
+    state.node_limit = 69804;
 
     const search_t result = search(5, &game, &state);
 
@@ -948,10 +951,10 @@ TEST_SUITE("search: move ordering state")
     // The budget has to stay a bound on something, not a number nothing
     // approaches: if the tree ever shrinks far below it the case has stopped
     // discriminating and the budget wants re-measuring rather than leaving.
-    REQUIRE_MESSAGE(result.explored_nodes > 20000,
+    REQUIRE_MESSAGE(result.explored_nodes > 3490,
                     ("depth 5 on KIWIPETE_POS cost " +
                      std::to_string(result.explored_nodes) +
-                     " nodes; the 440000 budget was set from 109575 and no "
+                     " nodes; the 69804 budget was derived from 17451 and no "
                      "longer bounds anything - re-measure it"));
   }
 }
@@ -3042,6 +3045,66 @@ TEST_SUITE("search: draws")
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 2, title);
     }
+
+    // S091's own cases, for the two rules that act on a **capture**. The one
+    // above is answered by a quiet the block throws away; each of these is a
+    // forced mate whose line runs through a capture that loses material, and
+    // each is lost when one named guard of S091 is removed. Mutants and the
+    // depths they were observed red at are in the table below; the mutant file
+    // is tools/mutants/S091_capture_see.py.
+    //
+    // **Each row is read at one depth, and that is the position's own profile
+    // rather than a depth chosen to pass.** Under this case's own search --
+    // search_fen() calls search(), one fixed-depth negamax_at from a cold
+    // table, not iterative deepening -- the mate distance is not monotone in
+    // depth: the first two are reported at 7, not at 8, and again at 9, 10 and
+    // 11, which is what reverse futility's ceiling does to a deep mate class
+    // (S148, DEC-158). The shipped engine's `go depth N` reads these positions
+    // as centipawn scores at those depths; the case is the guard, not a claim
+    // about the UCI reply. The depth in the table
+    // is where the shipped build reports the mate and the mutant does not; a
+    // wider loop would assert a distance this engine does not claim.
+    //
+    // Not read off the board (CLAUDE.md). Every position is a row of
+    // `adocs/data/S145_mined_set.tsv`, taken one per game from this engine's
+    // own self-play and labelled by stockfish there; the oracle line beside
+    // each is stockfish at depth 20 through python-chess, re-taken here, with
+    // python-chess's own reading of the root.
+    struct capture_mate_t
+    {
+      std::string fen;
+      int depth;
+      int mate_in;
+      const char* mutant;
+    };
+
+    const std::vector<capture_mate_t> capture_mates = {
+        // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
+        // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
+        // is_check False, 49 legal moves, 4 captures, no promotion.
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
+         "C02, C05 and R02"},
+        // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
+        // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
+        // False, 40 legal moves, 7 captures, 4 promotions.
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5, "R01"},
+        // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
+        // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
+        // is_check **True** -- an evasion node, where the block is off at the
+        // root and live in every child. 3 legal moves, 1 capture.
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 8, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4, "R02"},
+    };
+
+    for (const capture_mate_t& row : capture_mates) {
+      const std::string title = "capture mate, " + row.fen + ", depth " +
+                                std::to_string(row.depth) + ", red under " +
+                                row.mutant;
+      const search_t result = search_fen(row.fen, row.depth);
+
+      REQUIRE_MESSAGE(result.mate_found, title);
+      REQUIRE_MESSAGE(result.mate_in == row.mate_in, title);
+    }
   }
 
   // The same hazard from the other side, and the one reverse futility pruning
@@ -4755,6 +4818,19 @@ TEST_SUITE("search: pruning and reduction guards")
   // assertions are unchanged; what moved is the node the drive asks them at.
   static constexpr int FAIL_LOW_BETA = 5001;
 
+
+  // The position the S091 capture cases drive, and the one "a capture is not
+  // reduced" moved to. A row of `adocs/data/S018_raw.tsv`, this engine's own
+  // self-play corpus: python-chess reports `is_valid() True`,
+  // `is_check() False`, 27 legal moves of which 4 are captures and none a
+  // promotion, and `Qxg6+` in its list of captures that give check. It is here
+  // because its captures are spread through the order rather than bunched at
+  // the front -- one loses material and is skipped, one loses material and
+  // gives check and is not, and one the exchange evaluation clears sits past
+  // the third move where a reduction is possible.
+  static const std::string CAPTURE_POS =
+      "1B6/4P2k/2qQ2p1/3p1p2/1p6/1P6/P6P/6K1 w - - 0 50";
+
   // The drive depth for the two reduction cases. The block's own bound is
   // `depth >= 3`, and one ply above it the reduction is clamped to
   // `child_depth - 1`, which is 1.
@@ -4770,13 +4846,17 @@ TEST_SUITE("search: pruning and reduction guards")
   //   values: REQUIRE( 1 == 0 )
   TEST_CASE_FIXTURE(guard_fixture_t, "a capture is not reduced")
   {
-    // The standard perft position 2. python-chess: `is_valid() True`,
-    // `is_check() False`, 48 legal moves of which 8 are captures and none of
-    // those is a promotion -- so the fourth move the ordering reaches is a
-    // capture, which is the only way a capture is ever eligible for a
-    // reduction at all.
-    const std::string fen =
-        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    // **The position moved at S091 and the reason is the case's own second
+    // comment below.** It was the standard perft position 2, whose eight
+    // captures the ordering sorts so that every one past the third is a capture
+    // the exchange evaluation writes off -- and those are reduced now, by the
+    // extra ply, so that node has nothing left for this case to read. This one
+    // is a row of `adocs/data/S018_raw.tsv`, the engine's own self-play corpus,
+    // found by scanning it for a capture the exchange evaluation clears sitting
+    // past the third move at a node the reduction table would reduce.
+    // python-chess reports `is_valid() True`, `is_check() False`, 27 legal
+    // moves of which 4 are captures and none a promotion.
+    const std::string fen = CAPTURE_POS;
 
     load(fen, 1);
 
@@ -4792,19 +4872,32 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
 
     // The first capture the ordering put past the reduction block's own
-    // `legal_moves_counter > 3`.
+    // `legal_moves_counter > 3`, **and that the exchange evaluation does not
+    // write off**. The second clause is S091's and it re-states this case
+    // rather than relaxing it: a capture whose SEE is negative is reduced by
+    // that step's extra ply, so a case reading a losing capture here would be
+    // asserting the absence of a rule that ships. What is under test is
+    // unchanged -- late move reduction does not reduce a capture -- and the
+    // precondition below is what says so.
     int k = -1;
 
     for (int i = 3; i < probe.move_count; ++i) {
-      if (MOVE_CAPTURE(probe.moves[i]) != 0) {
-        k = i;
-        break;
-      }
+      if (MOVE_CAPTURE(probe.moves[i]) == 0) { continue; }
+      if (!see_ge(&game.board, probe.moves[i], 0)) { continue; }
+
+      k = i;
+      break;
     }
 
     REQUIRE_MESSAGE(k >= 3,
-                    "no capture was ordered past the first three "
-                    "moves, so the guard decided nothing here");
+                    "no capture the exchange evaluation clears was ordered "
+                    "past the first three moves, so the guard decided "
+                    "nothing here");
+
+    // The S091 clause, asserted rather than assumed: this capture is not one
+    // the extra ply would reduce, so a reduction of zero below is late move
+    // reduction's guard and nothing else.
+    REQUIRE(see_ge(&game.board, probe.moves[k], 0));
 
     // A promotion is refused by its own clause of the same condition, which
     // would make the observation below ambiguous.
@@ -5026,6 +5119,51 @@ TEST_SUITE("search: pruning and reduction guards")
     }
 
     return 0;
+  }
+
+
+  // The capture from `from` to `to` at this position, through the engine's own
+  // generator, for the reason quiet_move() exists: the flags decide which rules
+  // apply to a move and a move built by hand carries the flags the test
+  // expected rather than the ones the generator emits. S091.
+  static move_t capture_move(game_t * board_game, index_t from, index_t to)
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(board_game, moves);
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_FROM(moves[i]) != from || MOVE_TO(moves[i]) != to) { continue; }
+      if (!MOVE_CAPTURE(moves[i]) || MOVE_PROMOTED(moves[i])) { continue; }
+
+      return moves[i];
+    }
+
+    return 0;
+  }
+
+
+  // Where the node searched this move, or -1. The move number the reduction
+  // table and the lmr-depth gate are read at is this index plus one.
+  static int searched_index(const search_node_probe_t& probe, move_t move)
+  {
+    for (int i = 0; i < probe.move_count; ++i) {
+      if (probe.moves[i] == move) { return i; }
+    }
+
+    return -1;
+  }
+
+
+  // How many moves one rule skipped at this node.
+  static int skipped_by(const search_node_probe_t& probe, int rule)
+  {
+    int count = 0;
+
+    for (int i = 0; i < probe.pruned_count; ++i) {
+      if (probe.pruned_rule[i] == rule) { count++; }
+    }
+
+    return count;
   }
 
 
@@ -5628,5 +5766,374 @@ TEST_SUITE("search: pruning and reduction guards")
         violations.empty(),
         ("defender nodes that pruned a quiet inside the mate band:\n" +
          violations));
+  }
+
+
+  // --------------------------------------------------------------------
+  // S091: capture SEE pruning and the extra reduction.
+  //
+  // Two rules, one over captures and one over both move classes. The first
+  // reads the same node guards as the four above -- `may_prune` -- so the five
+  // cases that hold those guards hold it too; what is new here is the rule
+  // itself, its depth cap, the gives-check exemption it needs a scan of its own
+  // for, and the ply the second rule adds. Mutants:
+  // tools/mutants/S091_capture_see.py.
+
+  // The drive depth for the depth-cap case: deep enough that the reduced depth
+  // of the fourth move clears the cap the rule ships with. The case asserts
+  // that against the engine's own reduction table rather than trusting this
+  // number.
+  static constexpr int CAP_DRIVE_DEPTH = 10;
+
+
+  // Mutation: C05_capture_threshold_sign -- the capture margin is passed
+  // positive, so the rule asks whether the capture *gains* the margin and skips
+  // every capture that does not.
+  //
+  //   search: pruning and reduction guards
+  //    capture SEE pruning skips the captures that lose material and no others
+  //   REQUIRE_NE( rule_that_pruned(probe, safe), PRUNE_SEE_CAPTURE )
+  //   values: REQUIRE_NE( 5, 5 )
+  //
+  // It also takes the first row of "pruning does not hide a forced mate"'s
+  // capture table with it.
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "capture SEE pruning skips the captures that lose material and no others")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // From the engine's own exchange evaluation, which is the thing under test,
+    // and not from a reading of the board: f3f6 takes a knight the black king's
+    // side defends twice over, and g2h3 takes a pawn and keeps one pawn of it.
+    // **The pair is chosen for the second number as much as the first**: a
+    // capture that clears the margin by a long way clears a threshold of the
+    // wrong sign as well, so the safe half of this case is a capture whose
+    // exchange value sits between zero and the margin.
+    const move_t hangs = capture_move(&game, f3, f6);
+    const move_t safe = capture_move(&game, g2, h3);
+
+    REQUIRE(hangs != 0);
+    REQUIRE(safe != 0);
+    REQUIRE(!see_ge(&game.board, hangs, 0));
+    REQUIRE(see_ge(&game.board, safe, 0));
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    // The rule fires, and on the capture that loses material.
+    REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_SEE_CAPTURE);
+
+    // And not on the one that does not. No other rule of the block can reach a
+    // capture -- the four S109 rules are quiet-only -- so for a capture "not
+    // skipped by this rule" and "searched" are the same statement, and both are
+    // asserted.
+    REQUIRE_NE(rule_that_pruned(probe, safe), PRUNE_SEE_CAPTURE);
+    REQUIRE(probe_searched(probe, safe));
+
+    // What makes the row above a statement about this rule's threshold rather
+    // than about an inert rule: the safe capture was a candidate -- past the
+    // first legal move, inside the cap -- and the margin is what cleared it. A
+    // threshold of the wrong sign is a bar this capture does not clear.
+    const int k = searched_index(probe, safe);
+
+    REQUIRE(k >= 1);
+
+    const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, k + 1);
+
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(see_ge(&game.board, safe, -(SEE_CAPT_COEFF * lmr_depth)));
+    REQUIRE(!see_ge(&game.board, safe, SEE_CAPT_COEFF * lmr_depth));
+
+    // The PV exemption, which the capture rule inherits from `pruning_node`
+    // along with the other four: the same node and the same window with nothing
+    // changed but the flag skips nothing at all.
+    load(PRUNE_POS, 1);
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, true);
+
+    REQUIRE_EQ(skipped_by(probe, PRUNE_SEE_CAPTURE), 0);
+    REQUIRE(probe_searched(probe, hangs));
+  }
+
+
+  // Mutation: C02_capture_gives_check -- the gives-check exemption stops
+  // binding the capture rule, which it reaches through `capture_gives_check`
+  // and not through `is_check_move`: that flag is hardcoded false on a capture
+  // so the attack scan is not paid on every one of them (S107).
+  //
+  // The precondition is what goes red, and that is a property of the case
+  // rather than an accident -- the same one S109 recorded for P02 and P0A. A
+  // move this rule skips is a move the node never searches, so the move's index
+  // is read as -1 before the rule it was skipped by is read at all.
+  //
+  //   search: pruning and reduction guards
+  //    a capture that gives check is not pruned
+  //   REQUIRE( k >= 1 )
+  //   values: REQUIRE( -1 >= 1 )
+  //
+  // It also takes the first row of "pruning does not hide a forced mate"'s
+  // capture table with it.
+  TEST_CASE_FIXTURE(guard_fixture_t, "a capture that gives check is not pruned")
+  {
+    load(CAPTURE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // Qxg6+, the queen taking a pawn the black king defends.
+    const move_t checking = capture_move(&game, d6, g6);
+
+    REQUIRE(checking != 0);
+
+    // That it gives check comes from the engine's own is_check() after its own
+    // make_move(), the way the exemption itself decides it.
+    REQUIRE(make_move(&game, checking));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(gives_check);
+    REQUIRE(!see_ge(&game.board, checking, 0));
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    // The precondition, in three parts. The rule was live at this node -- it
+    // skipped another capture; this move was not the first legal one, which is
+    // exempt for a different reason; and at the move number it was searched at
+    // the margin does not clear it, so the exemption is the only thing between
+    // it and a skip.
+    REQUIRE(skipped_by(probe, PRUNE_SEE_CAPTURE) > 0);
+
+    const int k = searched_index(probe, checking);
+
+    REQUIRE(k >= 1);
+
+    const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, k + 1);
+
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(!see_ge(&game.board, checking, -(SEE_CAPT_COEFF * lmr_depth)));
+
+    REQUIRE_EQ(rule_that_pruned(probe, checking), PRUNE_NONE);
+  }
+
+
+  // Mutation: C07_capture_first_move -- the capture rule reads `pruning_node`
+  // and its own alpha band instead of `may_prune`, so it loses the first-move
+  // guard alone. The same clause CPW states as "requires the existence of at
+  // least one legal move", and the mate case in "pruning does not hide a forced
+  // mate" is what it costs over a whole mating line.
+  //
+  //   search: pruning and reduction guards
+  //    a node whose only legal move is a losing capture is never pruned
+  //   REQUIRE_EQ( probe.move_count, 1 )
+  //   values: REQUIRE_EQ( 0, 1 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node whose only legal move is a losing capture is never "
+                    "pruned")
+  {
+    // Constructed for the shape and then verified, never read off the board:
+    // python-chess reports `is_valid() True`, `is_check() False` and exactly 1
+    // legal move, `Qxa6`, which is a capture -- the black queen is pinned on
+    // the a-file and the king has no square. The white queen on a1 defends a6,
+    // so the exchange evaluation calls it a loser, and Black is a whole queen
+    // down afterwards, which is what makes the false stalemate below visible.
+    const std::string fen = "k7/q7/R7/1R6/8/8/8/Q1K5 b - - 0 1";
+
+    load(fen, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 1u);
+
+    const move_t only = capture_move(&game, a7, a6);
+
+    REQUIRE(only != 0);
+
+    // The precondition: at this move number the margin does not clear it, so
+    // the first-move guard is the only thing between it and a skip.
+    const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, 1);
+
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(!see_ge(&game.board, only, -(SEE_CAPT_COEFF * lmr_depth)));
+
+    const int score = negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH,
+                                     1, &game, &state, 0, false);
+
+    // The move was searched rather than skipped...
+    REQUIRE_EQ(probe.move_count, 1);
+    REQUIRE_EQ(probe.pruned_count, 0);
+
+    // ...and the node therefore did not fall through to its no-legal-moves
+    // return, which at a node that is not in check is the draw score. Black is
+    // a queen and more down here, so the two are not the same number.
+    REQUIRE(score < DRAW_SCORE_LOCAL);
+  }
+
+
+  // Mutation: C06_capture_no_cap -- the capture rule loses its depth cap, so it
+  // skips at every reduced depth instead of the shallow ones its margin is
+  // sized for.
+  //
+  // Its precondition goes red for the reason the gives-check case's does: the
+  // move is skipped, so it has no index to read.
+  //
+  //   search: pruning and reduction guards
+  //    capture SEE pruning stops at its depth cap
+  //   REQUIRE( k >= 1 )
+  //   values: REQUIRE( -1 >= 1 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "capture SEE pruning stops at its depth cap")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    // The queen taking a knight, six hundred points of exchange down. The size
+    // is why this case does not take one of the node's cheaper losers: at the
+    // reduced depth the cap refuses, the margin alone would still skip a
+    // capture this far under water, and that is what makes the second drive
+    // below evidence about the cap and not about the margin.
+    const move_t hangs = capture_move(&game, f3, f6);
+
+    REQUIRE(hangs != 0);
+    REQUIRE(!see_ge(&game.board, hangs, 0));
+
+    // Inside the cap the rule skips it. This is the precondition and not the
+    // assertion: without it the drive below would be evidence about a rule that
+    // never fires at this node at all.
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_SEE_CAPTURE);
+
+    // And past it the same move at the same node is searched. The reduced depth
+    // is what moved, and the two lines below are what say so -- read from the
+    // engine's own reduction table rather than from a number written here.
+    load(PRUNE_POS, 1);
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, CAP_DRIVE_DEPTH, 1, &game, &state, 0,
+                   false);
+
+    const int k = searched_index(probe, hangs);
+
+    REQUIRE(k >= 1);
+
+    const int lmr_depth = lmr_depth_of(CAP_DRIVE_DEPTH, k + 1);
+
+    REQUIRE(lmr_depth >= SEE_CAPT_MAX_LMRDEPTH);
+
+    // And the margin is not what saved it: at this reduced depth the bar still
+    // sits above the capture's exchange value, so the cap is the only thing
+    // between the two.
+    REQUIRE(!see_ge(&game.board, hangs, -(SEE_CAPT_COEFF * lmr_depth)));
+
+    REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_NONE);
+  }
+
+
+  // Mutation: R02_extra_reduction_sign -- the extra ply reads the exchange
+  // evaluation the wrong way round, so the moves it reduces are the ones that
+  // win material.
+  //
+  //   search: pruning and reduction guards
+  //    a capture that loses material is reduced by the extra ply
+  //   REQUIRE_EQ( probe.reduction[losing], SEE_LMR_EXTRA )
+  //   values: REQUIRE_EQ( 0, 1 )
+  //
+  // It also reddens "a capture is not reduced" -- whose capture then gets a ply
+  // it should not -- and the first row of the capture mate table.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a capture that loses material is reduced by the extra ply")
+  {
+    // A PV node, for the reason the three reduction cases above give: at a
+    // non-PV node the capture rule skips exactly the moves this case is about,
+    // and a move that was skipped has no reduction to read. The block is off at
+    // a PV node and late move reduction does not read `is_pv` at all, so what
+    // is measured here is the extra ply and nothing else.
+    load(CAPTURE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    const move_t hangs = capture_move(&game, d6, d5);
+    const move_t safe = capture_move(&game, d6, c6);
+
+    REQUIRE(hangs != 0);
+    REQUIRE(safe != 0);
+    REQUIRE(!see_ge(&game.board, hangs, 0));
+    REQUIRE(see_ge(&game.board, safe, 0));
+
+    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
+                   &state, 0, true);
+
+    const int losing = searched_index(probe, hangs);
+    const int clear = searched_index(probe, safe);
+
+    // Both are past the reduction block's own `legal_moves_counter > 3`, which
+    // is where a reduction becomes possible at all, and neither gives check --
+    // the exemption below has its own case.
+    REQUIRE(losing >= 3);
+    REQUIRE(clear >= 3);
+
+    REQUIRE(make_move(&game, hangs));
+    const bool hangs_gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(!hangs_gives_check);
+
+    // The whole of the reduction on a capture is the extra ply: late move
+    // reduction refuses a capture outright, so the table's own value never
+    // reaches it and a reduction of SEE_LMR_EXTRA is this rule's alone.
+    REQUIRE(SEE_LMR_EXTRA > 0);
+    REQUIRE_EQ(probe.reduction[losing], SEE_LMR_EXTRA);
+
+    // And the capture the exchange evaluation clears keeps the reduction late
+    // move reduction gives a capture, which is none.
+    REQUIRE_EQ(probe.reduction[clear], 0);
+  }
+
+
+  // Mutation: R01_extra_reduction_gives_check -- the extra ply stops exempting
+  // a capture that gives check, which it reaches through `capture_gives_check`
+  // for the reason the skip does.
+  //
+  //   search: pruning and reduction guards
+  //    a capture that gives check is not reduced
+  //   REQUIRE_EQ( probe.reduction[k], 0 )
+  //   values: REQUIRE_EQ( 1, 0 )
+  //
+  // It also takes the second row of "pruning does not hide a forced mate"'s
+  // capture table with it.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a capture that gives check is not reduced")
+  {
+    load(CAPTURE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    const move_t checking = capture_move(&game, d6, g6);
+
+    REQUIRE(checking != 0);
+
+    REQUIRE(make_move(&game, checking));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(gives_check);
+
+    // The precondition: the extra ply would otherwise reduce it, the exchange
+    // evaluation having written it off.
+    REQUIRE(!see_ge(&game.board, checking, 0));
+    REQUIRE(SEE_LMR_EXTRA > 0);
+
+    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, LMR_DRIVE_DEPTH, 1, &game,
+                   &state, 0, true);
+
+    const int k = searched_index(probe, checking);
+
+    REQUIRE(k >= 3);
+    REQUIRE_EQ(probe.reduction[k], 0);
   }
 }

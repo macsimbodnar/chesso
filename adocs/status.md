@@ -7,15 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-14, by hand.
 
-- **S091 started, 2026-09-14 10:40, by an Opus 5 subagent (DEC-199); the SPRT
-  is the coordinator's.** Capture SEE pruning in the main search at the
-  reduction-adjusted depth with its own margin and off value, and the extra
-  reduction of a negative-SEE move -- reconciled with S109, whose quiet SEE
-  rule already meets the quiet half of the accepts (the brief says so and
-  the agent states it); a mate case red first with the oracle's line, a
-  guard test and a killed mutant per rule, Debug self-play, node counts,
-  the pre-registration `adocs/data/S091_sprt.sh` at `{0, 5}` with `OUT`
-  under `.tuning/`. `plan_current/`: S091.
+- **S091 landed, 2026-09-14 13:10, by an Opus 5 subagent (DEC-199); its SPRT
+  is tonight's run.** Reconciled with S109: the quiet half of the accepts is
+  S109's `SeeQuietCoeff`, so S091 adds capture SEE pruning -- pre-make,
+  under S109's `may_prune` guards, `!see_ge(move, -(SeeCaptureCoeff *
+  lmr_depth))` to lmr depth 8, linear against S109's quadratic -- and the
+  extra reduction: a move the exchange evaluation puts under zero is searched
+  one ply shallower inside LMR's eligibility (`may_reduce`), a capture's whole
+  reduction since LMR does not reduce captures; `capture_gives_check` pays an
+  `is_check()` only on captures the rules act on. Constants chesso's own:
+  `SeeCaptureCoeff` 50 (the `see_value` scale's 0..100 midpoint),
+  `SeeCaptureMaxLmrDepth` 8, `SeeLmrExtra` 1 (the smallest non-off value; the
+  literature publishes the form, no number). Six mutants killed by named
+  cases; three mined mate positions whose lines run through a losing capture
+  red under named mutants, oracle lines recorded; three foreign mutant
+  anchors re-pointed and re-observed (`validate()` OK over 63); "a capture is
+  not reduced" re-stated; the node-budget goldens re-derived by their script
+  (440000/20000 -> 69804/3490). Node counts: depth 9 `47635/213916/26130 ->
+  74327/146873/27855`, depth 12 kiwipete's best move `d5e6 -> e2a6`;
+  **`Bench: 6267842`** (-11.8 %), nps flat. Debug self-play 8 games 0
+  `Assertion`; gate 38/38 both builds. `adocs/data/S091_sprt.sh`
+  pre-registers `{0, 5}` against `08461e0` with `OUT` under `.tuning/`:
+  41861 games / 19.8 h at the midpoint, 25591 / 12.1 h on a bound; H0
+  bisects `SeeLmrExtra=0` first. A possible 12-to-20-hour run is a night run
+  (DEC-155), so **S222's first phase is the day's work and the SPRT launches
+  tonight** with `CAND` pinned to the landing commit. **The fast check found
+  nothing in the search logic** -- every guard, the no-underflow argument,
+  the `see_ge` sign, the strengthened "a capture is not reduced" case, the
+  re-pointed anchors and both neutrality figures held -- and four
+  documentation items fixed by the coordinator before the commit: a dangling
+  evidence-file name in `search_params.hpp`, the mate rows' prose
+  attributing the test harness's single fixed-depth search to the shipped
+  engine (whose `go depth N` reads those positions as centipawns), the
+  node-budget script's stale docstring, and the `specs.md` sentence that
+  read as a taken verdict. `plan_current/`: S091 (SPRT pending).
 
 - **S210 is done, 2026-09-14 10:30: F22's `--nonreg` SPRT is H1, `Elo +0.01
   +/- 3.17`, `nElo +0.02 +/- 4.03`, 28598 games in 13 h 16 m 30 s.** The

@@ -581,13 +581,17 @@ struct search_t
 // All four are in the list: late move pruning decides at the generation
 // stage, with its own flag, but skips the move after `make_move` like the
 // other three so that the gives-check exemption can bind (S109, DEC-180).
+// `PRUNE_SEE` is the quiet rule and `PRUNE_SEE_CAPTURE` the capture one: two
+// rules, two margins and two caps, so a probe that could not tell them apart
+// would leave a case unable to say which one decided (S091).
 enum prune_rule_t
 {
   PRUNE_NONE = 0,
   PRUNE_FUTILITY = 1,
   PRUNE_HISTORY = 2,
   PRUNE_SEE = 3,
-  PRUNE_LATE_MOVE = 4
+  PRUNE_LATE_MOVE = 4,
+  PRUNE_SEE_CAPTURE = 5
 };
 
 

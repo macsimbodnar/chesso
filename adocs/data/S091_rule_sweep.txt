@@ -1,0 +1,17 @@
+# S091 per-rule node sweep, tune build, the three
+# tools/search_bench.py positions. Regenerate with
+#   python3 adocs/data/S091_rule_sweep.py
+# The tune build is never SPRT'd (S073); a node count is not Elo
+# (DEC-019) and no default here was chosen from these numbers.
+
+depth 9: midgame / kiwipete / tactical, nodes and best move
+  both off        47635 c3d5     213916 e2a6      26130 d7c8q
+  skip only       96922 c3d5     155022 e2a6      25845 d7c8q
+  extra only      45209 c3d5     178396 e2a6      26424 d7c8q
+  both on         74327 c3d5     146873 e2a6      27855 d7c8q
+
+depth 12: midgame / kiwipete / tactical, nodes and best move
+  both off       141455 c3d5    1038779 d5e6     175684 d7c8q
+  skip only      187956 c3d5     666527 e2a6     204486 d7c8q
+  extra only     133938 c3d5     714841 e2a6     128080 d7c8q
+  both on        172303 c3d5     596588 e2a6     190823 d7c8q

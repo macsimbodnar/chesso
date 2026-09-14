@@ -1773,7 +1773,7 @@ case so coverage survives a re-derivation.**
 
 A golden is a number the suite asserts that was read from a measurement rather
 than derived from a rule — a static score of 563, a floor of 143 mates, a node
-budget of 440000. They are the suite's best detectors: the 2026-09-04
+budget of 69804. They are the suite's best detectors: the 2026-09-04
 fault-injection pass killed 31 of 32 mutants and the goldens did much of the
 killing. Their cost is that every legitimate change to the same code moves them
 too, so each search step and each refit reddens several and someone re-derives a
@@ -1801,12 +1801,12 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` "a side in check may not stand pat" | 198 | the same script, case "black in check, Re8" |
 | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
-| `test_search.cpp` "ordering keeps the tree small" | 440000 and 20000 | `python3 adocs/data/S192_node_budget.py` |
+| `test_search.cpp` "ordering keeps the tree small" | 69804 and 3490 | `python3 adocs/data/S192_node_budget.py` |
 | `test_mate_carry.cpp` `short_line_ceiling` | 5, 11, 0, 1, 8, 2 | `adocs/data/S203_case_sweep.sh --ceilings` over the two recorded grids |
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search_params.cpp` `golden_defaults` | 38 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search_params.cpp` `golden_defaults` | 41 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 

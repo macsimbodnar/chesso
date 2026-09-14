@@ -51,8 +51,8 @@ m("P04_prune_mate_band_pos", S, "search/pruning",
 m("P05_prune_gives_check", S, "search/pruning",
   'the gives-check exemption is dropped, so a forcing quiet is skipped like '
   'any other -- the clause S109 added after its own mate case went red',
-  ('    if (prune_rule != PRUNE_NONE && !is_check_move) {',
-   '    if (prune_rule != PRUNE_NONE) {'),
+  ('    if (prune_rule != PRUNE_NONE && !is_check_move && !capture_gives_check) {',
+   '    if (prune_rule != PRUNE_NONE && !capture_gives_check) {'),
   origin="S109")
 
 m("P06_lmp_improving_halves", S, "search/pruning",

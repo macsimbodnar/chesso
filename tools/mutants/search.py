@@ -65,14 +65,17 @@ m("M06b_rfp_ply_floor_minus2", S, "search/pruning",
 
 m("M07_lmr_captures", S, "search/reduction",
   'LMR reduces captures',
-  ('if (ply > 0 && depth >= 3 && legal_moves_counter > 3 && !is_capture &&\n        !MOVE_PROMOTED(moves[i]) && !is_in_check && !is_check_move) {',
-   'if (ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n        !MOVE_PROMOTED(moves[i]) && !is_in_check && !is_check_move) {'),
+  ('      if (!is_capture && !MOVE_PROMOTED(moves[i])) {',
+   '      if (!MOVE_PROMOTED(moves[i])) {'),
   origin="2026-09-04_test_review")
 
 m("M08_lmr_checks", S, "search/reduction",
   'LMR reduces checking moves (S107 exemption dropped)',
-  ('if (ply > 0 && depth >= 3 && legal_moves_counter > 3 && !is_capture &&\n        !MOVE_PROMOTED(moves[i]) && !is_in_check && !is_check_move) {',
-   '(void)is_check_move;\n    if (ply > 0 && depth >= 3 && legal_moves_counter > 3 && !is_capture &&\n        !MOVE_PROMOTED(moves[i]) && !is_in_check) {'),
+  ('    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
+   '                            !is_in_check && !is_check_move &&\n'
+   '                            !capture_gives_check;',
+   '    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
+   '                            !is_in_check && !capture_gives_check;'),
   origin="2026-09-04_test_review")
 
 m("M09_lmr_no_research", S, "search/reduction",
