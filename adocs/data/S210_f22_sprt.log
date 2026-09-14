@@ -1,0 +1,47 @@
+# S210 F22 --nonreg SPRT, run 2026-09-13 20:57:58 to 2026-09-14 10:14:28 (SPRT-RUN-DONE, H1 accepted at {-5, 0}), read 10:20.
+# Full run log .tuning/sprt_s210_f22.log and PGN under .tuning/sprt_s210_f22_20260913_205758 are gitignored.
+
+## banner and identity lines
+candidate  9ef06f3  2026-09-13
+reference  9075bf8  2026-09-13
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260913205758
+bounds     elo0=-5 elo1=0 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s210_f22_20260913_205758
+id name    cand-9ef06f3  Chesso 9ef06f3 native
+id name    ref-9075bf8  Chesso 9075bf8 native
+
+## fastchess final block
+Results of cand-9ef06f3 vs ref-9075bf8 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 0.01 +/- 3.17, nElo: 0.02 +/- 4.03
+LOS: 50.30 %, DrawRatio: 36.27 %, PairsRatio: 0.99
+Games: 28598, Wins: 9510, Losses: 9509, Draws: 9579, Points: 14299.5 (50.00 %)
+Ptnml(0-2): [1422, 3156, 5186, 3069, 1466], WL/DD Ratio: 2.09
+LLR: 2.98 (101.2%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+SPRT ([-5.00, 0.00]) completed - H1 was accepted
+
+## terminations
+  21125 [Termination "adjudication"]
+   7474 [Termination "normal"]
+
+## finish reasons (run log)
+   9523 {White wins by adjudication}
+   9486 {Black wins by adjudication}
+   5045 {Draw by 3-fold repetition}
+   2116 {Draw by adjudication}
+   1661 {Draw by insufficient mating material}
+    720 {Draw by fifty moves rule}
+     37 {Draw by stalemate}
+      6 {White mates}
+
+## forfeits
+  cand-9ef06f3     28599 games, 0 forfeits, 0.00 %
+  ref-9075bf8      28599 games, 0 forfeits, 0.00 %
+
+## the change-specific reading (pre-registration): games adjudicated drawn by insufficient material 1661; of those carrying a mate score in any move comment 0 (reader .tuning/coord/read_s210_f22.sh, mapping log game N to PGN round (N+1)//2 and the White name)
+
+## timing
+28598 games in 13 h 16 m 30 s: 2155 an hour; a first launch at 20:57 with a /tmp output directory was stopped within seconds

@@ -1,0 +1,16 @@
+=== .tuning/sprt_s210_f22_20260913_205758/games.pgn ===
+games            28599
+draws            9579, 33.5 %
+decisive         19020, 66.5 %
+plies per game   mean 112.8, median 100
+seconds per game mean 19.5, median 19
+seconds per ply  0.1732
+complete pairs   14299
+  pair score 0.0   1422    9.9 %
+  pair score 0.5   3156   22.1 %
+  pair score 1.0   5186   36.3 %
+  pair score 1.5   3069   21.5 %
+  pair score 2.0   1466   10.3 %
+white won both   1761 of 14299, 12.3 %  (the pair Pohl's floor is about)
+pair score       mean 1.0000, variance 0.3108, sd 0.5575
+

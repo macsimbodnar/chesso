@@ -7,25 +7,21 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-13, by hand.
 
-- **S210's F22 SPRT is running since 2026-09-13 20:58, the night's run.**
-  `adocs/data/S210_f22_sprt.sh` detached, pid in `.tuning/sprt_s210_f22.pid`,
-  log `.tuning/sprt_s210_f22.log`, output `.tuning/sprt_s210_f22_20260913_205758/`:
-  candidate `9ef06f3` (F22's commit, pinned), reference `9075bf8` (the first
-  half), both built fresh with their identity lines printed, `--nonreg`
-  `elo0=-5 elo1=0 alpha=0.05 beta=0.05`, `8+0.08`, `Hash=16`,
-  `noob_3moves.epd`, seed `20260913205758`. Worst case 25591 games / 12.1 h
-  with the truth on the bound, 41861 / 19.8 h at the midpoint (2110 an
-  hour); abort only over 1.0 % forfeits a side, a crash voids; the
-  change-specific reading (a mate score in a game adjudicated drawn by
-  insufficient material) is taken from the PGN after the run. Watcher:
-  persistent `Monitor` on the markers, pid death and a 142560 s ceiling.
-  **A first launch at 20:57 was stopped after seconds** because the output
-  directory defaulted to `/tmp` (the second pre-registration to do so; the
-  next ones set `OUT` themselves); the relaunch a minute later carries `OUT`
-  under `.tuning/`, and the busy guard's warning at that moment was the
-  stopped run's decaying load, nothing else running. S210's stamp follows
-  the verdict. `plan_current/`: S210 (SPRT running). **Tomorrow: S091, the
-  next strength step, brief ready. Compaction point.**
+- **S210 is done, 2026-09-14 10:30: F22's `--nonreg` SPRT is H1, `Elo +0.01
+  +/- 3.17`, `nElo +0.02 +/- 4.03`, 28598 games in 13 h 16 m 30 s.** The
+  truth sat on the bound, so the run walked the full 25591-game expectation
+  and a little past it, at 2155 an hour, 0 forfeits, crash census quiet,
+  pair variance 0.3108. **The change-specific reading**: 1661 games ended by
+  insufficient material and 0 carry a mate score -- the reader's first pass
+  mapped the log's game numbers to PGN rounds as if games and named one
+  wrong hit; corrected (rounds are pairs, `(N+1)//2`, the White name picks
+  the game) before anything was banked. Ten defects closed over the two
+  halves (DEC-208; the stamp has the list); `Bench` 7105111; the ledger
+  holds thirteen verdicts. `specs.md`'s F22 passage carries the figure.
+  Evidence `adocs/data/S210_f22_sprt.log`, `S210_f22_sprt_pairs.txt`.
+  `plan_current/` empty after this commit; machine idle. **Next: S091**,
+  capture SEE pruning and the extra reduction of a negative-SEE move, one
+  SPRT, brief ready and reconciled with S109. **Compaction point.**
 
 - **S213 is done, 2026-09-13 20:50, by an Opus 5 subagent (DEC-199).** Three
   of the five "zero until the tuner fits them" blocks in `src/evaluation.hpp`
