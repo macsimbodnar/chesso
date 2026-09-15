@@ -7,6 +7,42 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S098 verdict 1 landed, 2026-09-15 11:31, commit `eb0bcd6`, by an Opus 5
+  subagent (DEC-199); its SPRT waits on a lane (DEC-212).** The helper
+  `lmr_adjusted_reduction` = table less `clamp(hist_sum / LmrHistDiv,
+  +/-LmrHistClamp)`, read once per quiet pre-make through
+  `quiet_history_sum` (moved `inline` into its header, behaviour-neutral),
+  S109's gate re-pointed to it, captures pass `NO_HISTORY_SUM`; at the off
+  value the tree is the parent's exactly (5685915 on the tune build at
+  `LmrHistClamp 0`). Six red-first cases (direction, inert-at-zero over the
+  whole table, the clamp bound, a root mate `6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43`
+  Stockfish `#+2` late-low-history-quiet with its precondition asserted),
+  six mutants L01 to L06 killed by named cases, the `capture_mates` table
+  re-derived twice by its script (depths 9, 7, 9, 9 now; R01's incidental
+  kill gone again, its direct guard still killing it). **Two seeds, one
+  census**: the band seed 8675 was inert below depth 12 by the by-depth
+  ablation; a census at the rule's own sites (`adocs/data/S098_v1_hist_census.txt`,
+  S024's 400 positions, 5.46 M sites at depth 12: |sum| p50 174, p75 430,
+  p90 1442, p99 5362, 0.011 % at or above 8675) gave 430 as the p75, at
+  which the term moves a quarter of its sites and `bench` grows 60.63 %
+  (5685915 -> 9133516), `search_bench` d9 27434 / 148084 / 30174 with
+  midgame's move `c3d5 -> g5f6`. The census is one-pass (taken at 8675) and
+  says so wherever the seed is stated. **DEC-212**: the two constants are
+  fitted first -- `tools/spsa_s098v1.json`, `adocs/data/S098_v1_spsa.sh`,
+  two axes on `UHO_4060_v3.epd`, `check` 2 of 2, 8 h 37 m estimate, 17 h
+  15 m ceiling, readings fixed (stuck; clamp 0 = inert, no SPRT; divisor at
+  or above p99 agrees with the band seed, at or below p90 with the census
+  seed, between stated as between) -- then one gainer SPRT
+  (`adocs/data/S098_v1_sprt.sh`, REF `1db5b8e`'s tree, CAND the fitted
+  landing, both re-pinned by the coordinator). Fast check: code clean, six
+  evidence fixes (a stale golden row, a run-on README row, the census's
+  signature guard implemented, the one-pass caveat, a stale clamp
+  rationale) applied before the commit; the seventh was `gate_extra` at the
+  first seed only, **re-running now** on the reshaped tree
+  (`.tuning/gate_extra_2026-09-15_S098v1.log`), then the lane launches.
+  Debug self-play 8 games 0 `Assertion`. Verdicts 2 and 3 follow verdict
+  1's SPRT. `plan_current/`: S098 (verdict 1 landed, lane pending).
+
 - **S098 started, 2026-09-15 08:03, by an Opus 5 subagent (DEC-199), verdict 1
   of 3**: the late move reduction scaled by the move's history -- a helper
   over the raw table with signed terms, `r -= clamp(hist_sum / LMR_HIST_DIV,
