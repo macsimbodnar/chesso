@@ -171,7 +171,7 @@ they teach.
 
 ### 2026-08-22_adversarial-F03  low  the 50-move draw is scored before checkmate is tested, so a mate delivered on the 100th halfmove scores as a draw
 
-Status: open
+Status: closed — S162, 2026-08-22 (`ea9ba2c`, "Score checkmate ahead of the hundredth halfmove"): the `>= 100` return in `src/search.cpp` now tests `is_check` with no legal reply first, guarded by `tests/test_engine.cpp` "checkmate outranks the hundredth halfmove" and `tests/test_search.cpp` "the fifty-move boundary lands on the hundredth halfmove"; this line lagged the fix by 24 days and was moved by the coordinator on 2026-09-15 when S098's pre-registration read it as open. Previously: open.
 Verification: statically confirmed against the rule; impact demonstration
 needs-run.
 
