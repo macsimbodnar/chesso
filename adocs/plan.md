@@ -498,7 +498,7 @@ whole with their evidence; they are 3100-band techniques by the record.
 ## What this costs
 
 The pending order owes **roughly 45 to 55 SPRT verdicts** once multi-verdict
-steps are counted honestly (S222 one and its two-ply follow-up one more, S098 three, S097 and S022 two each, the
+steps are counted honestly (S231, the two-ply follow-up, one; S098 three, S097 and S022 two each, the
 evaluation groups per-term), plus two SPSA nights, one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
