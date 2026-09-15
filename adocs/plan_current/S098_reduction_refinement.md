@@ -7,6 +7,7 @@ decisions:  DEC-071, DEC-105, DEC-134, DEC-198
 closes:
 blocks:
 paused_by:
+author:     an Opus 5 subagent briefed by the coordinator for verdict 1 (DEC-185, DEC-199); the SPRTs are the coordinator's; started 2026-09-15 08:03 on the idle machine
 done:
 
 ## Why it comes after the history steps

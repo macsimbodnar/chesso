@@ -7,6 +7,21 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S098 started, 2026-09-15 08:03, by an Opus 5 subagent (DEC-199), verdict 1
+  of 3**: the late move reduction scaled by the move's history -- a helper
+  over the raw table with signed terms, `r -= clamp(hist_sum / LMR_HIST_DIV,
+  +/-LMR_HIST_CLAMP)` on the raw plain-plus-continuation sum S222 left
+  (saturated at `QuietHistoryMax` 8831 plus 26 % of 32767), inert at the
+  off value, S109's `lmr_depth` re-pointed to the same helper (S109 not
+  re-verdicted); red-first direction test, a root-mate case built by
+  python-chess and Stockfish, a mutant registry `tools/mutants/S098_lmr_history.py`,
+  Debug self-play, the SPRT pre-registered as `adocs/data/S098_v1_sprt.sh`
+  (gainer `{0, 5}`, REF the commit before the landing, CAND pinned by the
+  coordinator). Verdicts 2 (node type) and 3 (re-search rule) follow, each
+  its own landing and SPRT. Brief `.tuning/coord/S098_v1_brief.md`. The
+  step file has no `author:` field of its own; one is added.
+  `plan_current/`: S098 (verdict 1 in work).
+
 - **S194 done, 2026-09-15 07:36, by an Opus 5 subagent (DEC-199); committed by
   the coordinator after the fast check.** `seed_book_draw_from_environment`
   in `uci_init`, after the book loads: `CHESSO_BOOK_SEED` parsed with
