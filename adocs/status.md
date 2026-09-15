@@ -7,6 +7,16 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S194 started, 2026-09-15 07:02, by an Opus 5 subagent (DEC-199)**: the UCI
+  book path executed by the fast suite -- `CHESSO_BOOK_SEED` read once in
+  `uci_init`, an unparsable value refused with one `info string` in both
+  builds (DEC-184, the accepts over the 2026-09-05 guide's `LOG_W`), two fast
+  cases on the embedded book plus the S175 position answering `bestmove
+  d2f3` with no `info` line, the golden surface unchanged, `No functional
+  change` at bench 5685915. Closes `2026-09-04_test_review-F06`. Brief
+  `.tuning/coord/S194_brief.md`. Then **S098**, the block's next strength
+  step, by day with its SPRT when ready. `plan_current/`: S194.
+
 - **S222 done, 2026-09-15 07:00: H1, `Elo 11.13 +/- 6.90` at `8+0.08`, decided
   in 6278 games and 2 h 55 m** (LLR 2.95, `nElo 13.87 +/- 8.59`, W 2138 L
   1937 D 2203, `Ptnml [291, 686, 1060, 735, 367]`, 2151 games an hour, 0

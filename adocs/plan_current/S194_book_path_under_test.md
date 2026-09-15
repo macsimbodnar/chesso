@@ -7,7 +7,7 @@ decisions:  DEC-139, DEC-184
 closes:     2026-09-04_test_review-F06
 blocks:
 paused_by:
-author:
+author:     an Opus 5 subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-15 07:02 on the idle machine after S222 closed
 done:
 
 ## Why this exists
