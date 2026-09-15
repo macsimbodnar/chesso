@@ -11896,3 +11896,57 @@ Rejected:     **Reverting to the old book** -- the slow-class ratio rests on
 Consequences: `adocs/plan.md`'s cost paragraph may cite this entry in place
               of the bracket; nothing else changes. `adocs/data/S219_*` stays
               the record of the switch.
+
+## DEC-212  2026-09-15  S098 verdict 1's two constants are fitted in a narrow lane before the SPRT, because the seed alone decided whether the term was inert or grew the tree by 60 %
+Tags:         s098, lmr, history, spsa, sprt, seeds, dec-105, dec-198, dec-202, dec-209
+Context:      Verdict 1 of S098 landed `r -= clamp(hist_sum / LMR_HIST_DIV,
+              +/-LMR_HIST_CLAMP)` in the working tree with the divisor seeded
+              as half the saturated sum, 8675 (DEC-105 (b) over the band).
+              The implementing agent's own by-depth ablation showed the term
+              inert below depth 12 in the bench positions -- a history sum
+              reaches half its band only after many cutoffs -- so at 8+0.08
+              the SPRT would have priced the seed, not the technique. A
+              census at the rule's own sites (`adocs/data/S098_v1_hist_census.txt`,
+              S024's 400 positions, 5.46 M sites at depth 12) put |sum|'s
+              75th percentile at 430 and 0.011 % of sites at or above 8675.
+              Re-seeded to 430, the term moved a quarter of its sites and
+              `bench` grew 60.63 % (5685915 -> 9133516), the largest move in
+              the ledger. Two seeds, both DEC-105 (b), two searches; nothing
+              but a run can say which scale is the technique's.
+Decision:     By the coordinator under the owner's delegation. **(1) The two
+              constants are fitted first**: one narrow SPSA lane over
+              `LmrHistDiv` and `LmrHistClamp` alone, at S085's regime on
+              `UHO_4060_v3.epd` (tuning and verification never share
+              openings, DEC-209 clause 1), pre-registered in its own script
+              with the census seed as the start, `check` on the day, its
+              result recorded whatever it is; the lane runs on the machine
+              the moment the landing commit is gated, by day (DEC-155: no
+              better work waits for the machine). **(2) Then one gainer
+              SPRT** `{0, 5}` nElo at the harness regime prices the fitted
+              term against the commit before verdict 1's landing, one vector
+              under one verdict as DEC-210 read S222: H1 keeps the term with
+              its fitted scale and verdict 2 follows on that tree; H0 bisects
+              as the step's section 6 says (sign first, then the divisor's
+              scale) or, if the fit itself lands the clamp at 0, records
+              that the technique leaves the plan. **(3) The landing with the
+              census seed is committed as it stands**: the code, tests,
+              mutants and census are verdict-independent, and the lane needs
+              the two axes in the tune build. The first seed and its
+              ablation stay in the step file as the record of why the fit
+              exists. DEC-202 binds this verdict (a reduction coefficient);
+              the longer-control reading is owed at the block boundary.
+Rejected:     **Running the SPRT at 430** -- a tree 60 % larger is a
+              different search, and H0 there would have cost two more
+              verdicts of bisection to learn what a night's lane says.
+              **Running it at 8675** -- an inert term measured over 20 hours
+              teaches nothing. **Picking the 90th percentile by judgement**
+              -- a third arbitrary seed. **Fitting `LMR_BASE` and
+              `LMR_DIVISOR` in the same lane** -- the accepts prices one
+              adjustment at a time, and a refitted table is S127's.
+Consequences: `tools/spsa_s098v1.json` and `adocs/data/S098_v1_spsa.sh` are
+              written by the implementing agent, modelled on S222's lane with
+              its `check`-log plumbing; `adocs/data/S098_v1_sprt.sh` is
+              re-pinned by the coordinator after the fitted defaults land
+              (REF the commit before verdict 1's landing, CAND the fitted
+              landing). The step file's verdict-1 section records the two
+              seeds, the census and the fit.
