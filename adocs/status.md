@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S098 verdict 1's SPRT is running, launched 2026-09-15 21:19 by the
+  coordinator** (`adocs/data/S098_v1_sprt.sh`, pid in `.tuning/sprt_s098v1.pid`,
+  log `.tuning/sprt_s098v1.log`, games under
+  `.tuning/sprt_s098_v1_20260915_211910/`): candidate `0408447` -- the fitted
+  landing, `LmrHistDiv` 699 and `LmrHistClamp` 3, bench 11046420 (+94.3 % on
+  the parent, the best moves the parent's on all three `search_bench`
+  positions), committed after the light fast check brought `DEV_MANUAL.md`'s
+  bench ledger to the fitted numbers -- against reference `1db5b8e`, the
+  tree before verdict 1 (its `src/` equals `b06d53e`'s), both answering
+  `id name Chesso <sha> native`; 8+0.08, hash 16, 12 of 12 cores,
+  `noob_3moves.epd`, seed 20260915211910, bounds `elo0=0 elo1=5`. Worst
+  case 41861 games, about 19.5 h at 2150 an hour (a tree this much larger
+  may play slower games; the reading is by the marker, not the clock);
+  persistent watcher on `SPRT-RUN-(DONE|FAILED|INVALID)` with the pid and a
+  39 h ceiling; read with `.tuning/coord/read_s098v1.sh`. **Nothing else
+  runs on the machine until the marker** (MACHINE). Then, as pre-registered:
+  H1 keeps the term at its fitted scale and verdict 2 (node type) follows on
+  that tree; H0 bisects -- sign first, then the divisor upward to the p90
+  1442 -- two legs at most by one value and a Release rebuild; no verdict is
+  recorded as zero. DEC-202's longer-control reading is owed at the block
+  boundary, not here. `plan_current/`: S098 (verdict 1 under SPRT).
+
 - **S098 verdict 1's lane is done, 2026-09-15 20:37** (8 h 47 m 45 s against
   the 8 h 37 m estimate, 1250 iterations, 60000 games, `SPSA-DONE` the run
   log's only marker). Rounded vector: `LmrHistDiv` 430 -> **699**,
