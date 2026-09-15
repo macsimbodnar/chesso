@@ -521,3 +521,447 @@ verdict in the stamp.
 - - Stockfish 37c2b56 (statScore sum in LMR), 389e607 (post-LMR updates, half
   bonus), d37de3c (TC-sensitivity) — commit messages re-cited from S024's
   research.
+
+## Verdict 1 landed, 2026-09-15: the history scaling
+
+Implemented by an Opus 5 subagent briefed by the coordinator (DEC-185,
+DEC-199). **No `done:` stamp: the step completes after verdict 3.** The SPRT
+is the coordinator's and is pre-registered as `adocs/data/S098_v1_sprt.sh`
+before any game.
+
+### The rule, and where it is clamped
+
+`src/search.cpp` `lmr_adjusted_reduction` is the raw table plus one signed
+term:
+
+```
+r = lmr_reduction(depth, move_number) - clamp(hist_sum / LMR_HIST_DIV,
+                                              +/-LMR_HIST_CLAMP)
+```
+
+`hist_sum` is `src/evaluation.hpp` `quiet_history_sum`, factored out of
+`src/evaluation.cpp` `score_move` so the ordering and the reduction read one
+number and cannot disagree about what a move's history is: the raw butterfly
+entry plus S222's weighted continuation entry, **never** `score_move`'s return,
+whose killer and countermove bands would saturate the clamp for a reason that
+is not history at all.
+
+The helper is **unclamped against the depth** and the call sites clamp, exactly
+as `src/search.cpp` `negamax_at` clamped the raw table before it existed:
+
+| site | clamp | history it reads |
+|---|---|---|
+| the reduction in `src/search.cpp` `negamax_at` | `[0, child_depth - 1]`, S091's extra ply added first | the move's own sum |
+| the shallow-depth gate `src/search.cpp` `lmr_depth_of` | at 0 from below | the move's own sum at the three quiet rules; `NO_HISTORY_SUM` at late move pruning, which decides before a move is picked, and at S091's capture rule, where no history table has an entry for the move |
+
+The sum is read **once per quiet, pre-make**, in `src/search.cpp` `negamax_at`:
+the butterfly table is indexed by the side to move, so a read after
+`make_move` would score the move against the opponent's half of the table.
+`search_node_probe_t` in `src/data_structures.hpp` gains `hist_sum`, so a case
+can assert the number the node decided on rather than the number the table
+holds after the drive -- the node's own children write history as the loop
+runs.
+
+**S109's `lmr_depth` is re-pointed to the same helper** and S109 is not
+re-verdicted: its file and `adocs/plan.md` both say S098's SPRT prices the
+interaction and S127 refits its thresholds. With the term off the helper
+returns the raw table, so one release rebuild separates the term from the
+re-point -- and that is measured, not argued: at `LmrHistClamp 0` the depth-14
+bench is `5685915`, the parent's signature exactly.
+
+### The two constants, their seeds and their DEC-105 forms
+
+The band both are derived from is `QuietHistoryMax + ContHistWeight *
+CONT_HIST_BOUND / 100` = 8831 + 8519 = **17350** at the values S222 fitted.
+
+| constant | default | range | form |
+|---|---|---|---|
+| `LMR_HIST_CLAMP` | 2 | 0 to 4 | **(b)** a stated fraction of chesso's own reduction table: `src/search.cpp` `search_lmr_reduction_probe` at the census median depth 11 and the last move index 63 is `0.52 + ln(11) * ln(63) / 1.82` = 5.98, floored to 5, and half of that rounded down is 2. Fallback **(c)**: the midpoint of 0 to 4 is the same integer. Off: 0, inside the range, which is what the bisection rebuild needs |
+| `LMR_HIST_DIV` | 8675 | 1 to 34700 | **(b)** a derivation over that band: a saturated sum maps to exactly the full clamp, 17350 / 2. Floor arithmetic, a divisor. Range top twice the saturated sum, a second off value: no sum the band admits divides to anything there |
+
+No engine's coefficient seeds either (DEC-084 as amended by DEC-105). The
+records that say the technique is worth trying -- Lynx #613 +11.40 +/-7.30 in
+this engine's own band, Weiss #451 +14.11 +/-7.57 above it -- are records and
+not seeds, and section 5 above already lists them as anti-seeds.
+
+**At the shipped divisor the clamp is reached and never exceeded**, by
+construction. It is kept, and the reason is stated rather than assumed: the
+tune build sweeps the divisor down, S127 refits it, and a two-ply continuation
+table widens the band the saturated sum is computed from. `tests/test_search.cpp`
+"the history term never moves the reduction by more than its clamp" feeds the
+helper sums from outside the band for exactly that reason.
+
+### What the term actually does, measured before any game
+
+The rule fires only when the sum crosses half its band, and a history entry
+reaches half its band only after many cutoffs on the same move. So it is
+**inert in a shallow search** and that is a property of the seed, not a wiring
+fault. Measured on the tune build by the one ablation that build is allowed --
+node counts, never strength (S073) -- `bench <depth>` at the shipped clamp
+against the same binary at `LmrHistClamp 0`:
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 607842 | 935568 | 1634017 | 2364249 | 3798722 | 5968045 |
+| off | 607842 | 935536 | 1634008 | 2364815 | 3849812 | 5685915 |
+| delta | +0.00 % | +0.00 % | +0.00 % | -0.02 % | -1.33 % | +4.96 % |
+
+The elbow is at depth 13. `bench` (depth 14) moves **5685915 -> 5968045,
++4.96 %**, and `tools/search_bench.py` at depth 9 does not move at all --
+51189 / 146616 / 39389 on both trees, best moves `c3d5` / `e2a6` / `d7c8q` --
+while at depth 12 only midgame moves, 143205 -> 141782, the other two and all
+three best moves unchanged. The two instruments are complementary exactly as
+DEC-140 says, and here the signature is the one that sees the change. INV-6
+therefore takes the SPRT path.
+
+### Tests, red first, with the printouts
+
+Six cases in `tests/test_search.cpp` and one in `tests/test_search_params.cpp`.
+The red observation was taken on the shipped code at `LmrHistClamp 0` -- its
+off value -- which is both a red-first observation and the inert-at-off
+property the bisection rests on. Verbatim, release build:
+
+```
+TEST CASE:  the history term never moves the reduction by more than its clamp
+FATAL ERROR: REQUIRE( LMR_HIST_CLAMP > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+TEST CASE:  the shallow-depth gate reads the adjusted reduction
+ERROR: CHECK( search_lmr_depth_probe(CONT_HIST_REF_DEPTH, 63, sat) > search_lmr_depth_probe(CONT_HIST_REF_DEPTH, 63, -sat) ) is NOT correct!
+  values: CHECK( 6 >  6 )
+
+TEST CASE:  a quiet the history tables like is reduced less
+FATAL ERROR: REQUIRE_EQ( probe.reduction[k], raw - 1 ) is NOT correct!
+  values: REQUIRE_EQ( 2, 1 )
+
+TEST CASE:  a quiet the history tables have written off is reduced more
+FATAL ERROR: REQUIRE_EQ( probe.reduction[k], raw + 1 ) is NOT correct!
+  values: REQUIRE_EQ( 2, 3 )
+
+TEST CASE:  the reduction reads the raw history and not the ordering band
+FATAL ERROR: REQUIRE( LMR_HIST_CLAMP > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+[doctest] test cases:   6 |   1 passed | 5 failed | 119 skipped
+```
+
+The one that passes at the off value is "the history term is inert at a sum of
+zero", which is the property case and is *supposed* to hold there. The root
+case passes there too and is red under its own mutant instead.
+
+### The mutants, and the case that killed each
+
+`tools/mutants/S098_lmr_history.py`, prefix `L`, six mutants, **every one run
+by hand against the working tree and observed** -- the pass could not go
+through `tools/mutation_check.py`, which requires a linked worktree with a
+clean `src/` and reverts with `git checkout --`, and this verdict is not
+committed yet. Each was applied, built, run through the whole fast suite in
+the release build and reverted from a byte snapshot whose sha256 was compared
+after; `src/` is byte-identical to the landing, and the pass was run twice --
+once when the cases were written and once on the tree that lands, after the
+inline move below -- with the same kills both times. **A hand-driven pass
+reverts the source and not the build**: the binary in `build/` is the last
+mutant's until something rebuilds, which is a trap for any bench read by hand
+afterwards and was caught here by re-reading the signature.
+
+| mutant | what it breaks | killed by, with the values it printed |
+|---|---|---|
+| `L01_lmr_history_sign` | the term is added, not subtracted | "a quiet the history tables like is reduced less" `REQUIRE_EQ( 3, 1 )`; "... written off is reduced more" `REQUIRE_EQ( 1, 3 )`; "never moves the reduction by more than its clamp" `REQUIRE( 31752 == 0 )`; "the shallow-depth gate reads the adjusted reduction" `CHECK( 4 > 8 )` |
+| `L02_lmr_history_no_clamp` | the clamp is dropped | "the history term never moves the reduction by more than its clamp" `REQUIRE( 7938 == 0 )` |
+| `L03_lmr_gate_unscaled` | the S109 gate goes back to the raw table | "the shallow-depth gate reads the adjusted reduction" `REQUIRE( 15840 == 0 )` |
+| `L04_lmr_reduction_unscaled` | the reduction goes back to the raw table | "a quiet the history tables like is reduced less" `REQUIRE_EQ( 2, 1 )`; "... written off is reduced more" `REQUIRE_EQ( 2, 3 )` |
+| `L05_lmr_history_banded` | `score_move`'s band is divided instead of the raw sum | "the reduction reads the raw history and not the ordering band" `REQUIRE_EQ( 900000, 0 )` |
+| `L06_lmr_root` | the root exemption is dropped | "a mate found at the root is never reduced" `REQUIRE( 1 == 0 )`, and seven more mate cases -- eight in all across `test_search`, `test_engine` and `test_mate_breadth`, "mate in two is found at the right distance" among them |
+
+Each run reddened `test_search` and nothing else, except `L06`, which reddened
+three binaries.
+
+### S091's six mutants re-run, and the `capture_mates` golden re-derived
+
+DEC-142: a golden is re-derived by its own script whenever **either** end
+moves, and this verdict moves the engine end of one -- `tests/test_search.cpp`
+`capture_mates`, whose four depths and four mutant labels are measurements
+taken through the reduction. Seven sweeps of
+`adocs/data/S230_mine_r01_row.py depths` over
+`adocs/data/S230_table_fens.txt`, depths 3 to 12, once on this tree and once
+per mutant of `tools/mutants/S091_capture_see.py` applied by hand and reverted
+from a byte snapshot.
+
+**The four depths survive; three of the four labels did not.** Shipped
+profiles: `d7 d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12` (row 2 gained d8),
+`d9 d10 d11 d12`, `d10 d11 d12` (row 4 lost d9). Every row still reports its
+mate at the depth it claims, which is what the case asserts and what the green
+suite says. Under them:
+
+| row | depth | label at S230 | measured at S098 |
+|---|---|---|---|
+| 1 | 7 | C02 and C05 | unchanged |
+| 2 | 7 | C02, C05 and R02 | **C02** -- C05 and R02 report the mate at 7 now |
+| 3 | 9 | no S091 mutant, since S222 | **R02** -- it reports `d10 d11 d12` |
+| 4 | 11 | C02 and R01 | **R02** -- C02 and R01 both report `#+5` at 11 now |
+
+**R01's incidental kill is gone again**, which is the whole of what S230 went
+mining for two days ago. Stated rather than papered over, and it is not a hole:
+all six S091 mutants were then run through the **whole fast suite** on this
+tree and every one died -- C02 at "a capture that gives check is not pruned",
+C05 at "capture SEE pruning skips the captures that lose material and no
+others", C06 at "capture SEE pruning stops at its depth cap", C07 at "a node
+whose only legal move is a losing capture is never pruned", R01 at its own
+direct guard "a capture that gives check is not reduced" and nowhere else, R02
+at four cases including three of this step's. An incidental second kill is
+measured in a tree that moves under every ordering change; the direct guards
+are what the rules rest on.
+
+### The speed cost, and the one thing done about it
+
+Ten interleaved `bench` pairs against the parent binary built from `1db5b8e`
+with the same compiler, arch and build type read **-4.81 % nodes per second**
+(3815942 against 3632322, the two groups not overlapping) with
+`quiet_history_sum` defined in `src/evaluation.cpp`. There is no LTO in this
+build, so that definition is a call per quiet **scored** -- `score_move` calls
+it for every quiet in every move list -- as well as a call per quiet searched.
+
+**The definition moved into `src/evaluation.hpp` as an `inline`**, which is
+behaviour-neutral by construction and proved by the signature rather than
+argued: the bench total is `5968045` either way and `tools/search_bench.py`
+reads the same counts and the same best moves at both depths. Eight interleaved
+pairs then read **-2.80 %** (3813164 against 3706415), and the groups overlap,
+which is where this machine stops calling a difference real (CLAUDE.md, rule 5).
+What is left is not all the read either: the candidate searches a 4.96 % larger
+and differently shaped tree, and nodes per second is a property of the shape.
+No further guard was added -- an `is_in_check` conjunct on the read would be a
+second copy of two consumers' preconditions for a saving this measurement
+cannot see.
+
+`tools/mutants/S222_continuation_history.py`'s `H04` anchor followed the
+definition into the header, and its note says so.
+
+### The root-mate case, and its oracle
+
+The accepts' clause: "a mate found at the root is never reduced, asserted with
+the precondition that would otherwise reduce it". `tests/test_search.cpp` "a
+mate found at the root is never reduced" drives the root at depths 3 to 6 on
+`6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43`, the position "pruning does
+not hide a forced mate" already mines for the same class -- the key is a late,
+quiet, hanging rook move.
+
+Oracle re-run rather than quoted, through `chess.engine.SimpleEngine`
+(TOOLCHAIN.md's safe form, never a printf pipe): stockfish depth 20 reports
+**`#+2` in 1918 nodes, pv e5e8 g8e8 g4g7**. python-chess reports `is_valid()
+True`, `is_check() False`, 36 legal moves of which 1 is a capture and none a
+promotion, `is_attacked_by(BLACK, E8) True`, and the only two quiet moves that
+give check are Bg7+ and Qg7+ -- not the key.
+
+Every condition of `may_reduce` except `ply > 0` is asserted at each depth: the
+key is quiet, gives no check, its history sum is 0 before the drive, the node
+returns a mate score, its index is 10 and so past the move-number bound, and
+`search_lmr_adjusted_reduction_probe` at that index and the sum the probe
+recorded is positive. The reduction is 0.
+
+### Two S109 cases moved, and neither was relaxed
+
+`tests/test_search.cpp` "quiet SEE pruning skips the quiets that lose material
+and no others" went red. Its plant was the history band's own edge, used only
+to order two quiets to the top of their stage -- and since the gate reads
+history, a saturated plant moved the rule's own margin as well as the order, so
+the case was asserting a rule it had stopped isolating. The plant is now 2 and
+1, which order the two moves identically (every other quiet at that node sits
+at 0) and divide to nothing, so the case's own sentence -- "the plant moves
+where the two sit in the order and nothing else" -- is true again. The case's
+assertions are unchanged.
+
+`tests/test_search.cpp` "history pruning skips the quiet the table has written
+off" stayed green, and its local restatement of `lmr_depth_of` now carries the
+term and is passed the value it planted, so its preconditions are stated at the
+depth the engine uses. That restatement gained a defaulted `hist_sum` of 0,
+which is what the five other call sites read.
+
+### The suite, the signature and the second tier
+
+- Fast suite, release: **39/39**. Fast suite, tune build: **39/39**.
+  `./clang-format.sh --check` clean.
+- `Bench: 5968045`.
+- `tools/search_bench.py` depth 9 and 12 above; best moves unchanged at both.
+- Debug self-play, DEC-141 clause 1, four rounds at 4+0.04 with the Debug
+  binaries and `level=trace engine=true`: **8 games in 21 s, 0 `Assertion` in
+  both the log and the tee'd stdout, 0 `disconnect`**.
+- `tests/test_search_params.cpp`'s golden gains two rows and its count moves
+  44 -> 46, re-derived the way its own GOLDEN note says -- by diffing it
+  against `src/search_params.hpp`, which is its derivation.
+- `MANUAL.md`'s tune-option table gains `LmrHistDiv` and `LmrHistClamp`;
+  `DEV_MANUAL.md`'s bench ledger gains this verdict with the depth sweep and
+  the off-value check, and its DEC-142 golden list moves `golden_defaults` from
+  44 to 46. `tests/test_uci_surface.cpp` needed no edit: it generates the
+  option lines from `search_param_info` and requires MANUAL.md to document each
+  name, which it now does.
+- `tools/gate_extra.sh`, DEC-141 clause 3, before this verdict completes:
+  **GATE-EXTRA-DONE 5 stages 1075 s**, all five green -- prose, citations, the
+  Debug binaries (325 s), the sanitizer build and deep perft.
+
+### Proposed for `adocs/specs.md`, for the coordinator to apply
+
+The search row's late-move-reduction sentence gains:
+
+> The reduction is scaled by the move's raw history since S098: `r -=
+> clamp(hist_sum / LmrHistDiv, +/-LmrHistClamp)`, where `hist_sum` is the
+> butterfly entry plus `ContHistWeight` per cent of the continuation entry and
+> never `score_move`'s banded return. The same adjusted reduction is what the
+> four shallow-depth rules are gated on, so the gate and the reduction are one
+> number; at `LmrHistClamp 0` the helper returns the raw table and the engine
+> is the one before S098, bench signature included.
+
+### Files
+
+Changed: `src/search.cpp`, `src/search.hpp`, `src/search_params.hpp`,
+`src/evaluation.cpp`, `src/evaluation.hpp`, `src/data_structures.hpp`,
+`tests/test_search.cpp`, `tests/test_search_params.cpp`,
+`tools/mutants/S222_continuation_history.py`, `MANUAL.md`, `DEV_MANUAL.md`,
+this file. Created: `tools/mutants/S098_lmr_history.py`,
+`adocs/data/S098_v1_sprt.sh`.
+
+**For the coordinator.** The `adocs/specs.md` sentence above is proposed, not
+applied. The pre-registration's open-findings paragraph first named
+`2026-08-22_adversarial-F03` as in reach; that was read off a stale `Status:`
+line. The defect is closed and has been since S162 (`ea9ba2c`) -- the
+`halfmove_clock >= 100` return in `negamax_at` tests for a mated node first and
+falls through, guarded by `tests/test_engine.cpp` "checkmate outranks the
+hundredth halfmove", re-read in this tree -- so the paragraph now says no
+finding is open.
+
+### Re-seeded before the match, 2026-09-15
+
+**The divisor was a statement about the band and not about the tree, and the
+step's own ablation is what caught it.** At 8675 -- half the saturated sum --
+the term moved +0.00 % of the bench nodes at depths 9, 10 and 11 and -0.02 %
+at 12, so a verdict at `8+0.08`, where a game lives at depths 10 to 14, would
+have priced the seed and not the technique. The paragraphs above are left as
+the record of that first seed; this one replaces its number. The coordinator's
+ruling, before any game: re-derive the divisor from this engine's own
+distribution, still DEC-105 **(b)**, no other engine's number anywhere near it.
+
+**The census**, `adocs/data/S098_v1_hist_census.py` and `.txt`. Every site the
+rule reads history at -- one call of `lmr_adjusted_reduction`, that is a quiet
+past the third legal move at depth 3 or more with neither side in check -- over
+the 400 positions of `adocs/data/S024_census_positions.txt`, driven through
+S024's own `Engine` at `go depth 10` and `go depth 12`. A detached worktree
+carrying this working tree's `src/` with five throwaway counters patched in;
+the instrumented binary's bench signature is the shipping build's, which is
+what says the counters do not move the tree, and `src/` here was never touched.
+
+| | depth 10 | depth 12 |
+|---|---|---|
+| sites | 2105964 | 5464717 |
+| \|sum\| p50 / p75 / p90 / p99 | 107 / 258 / 689 / 4347 | 174 / **430** / 1442 / 5362 |
+| signed sum p50 / p75 | -53 / 22 | -26 / 231 |
+| zero sums | 17.72 % | 11.80 % |
+| \|sum\| >= 8675, the old seed | **0.006 %** | **0.011 %** |
+
+**`LMR_HIST_DIV` 8675 -> 430**, the 75th percentile of |sum| at depth 12, so
+the term reaches one full ply at the quartile. **One pass, and that bounds what
+the percentile means**: the census ran on the tree at 8675 -- its header's
+bench signature, 5968045, is the proof -- and 430 grows that tree by 60 %, so
+the distribution at reduction sites on the tree that ships is not the one 430
+is the 75th percentile of. A fixed point would need the census and the re-seed
+iterated to agreement; 430 is one step of that and not its limit, and DEC-212's
+lane supersedes the iteration by fitting the scale against games instead. At 430 with the clamp at 2 the
+shares at depth 12 are 74.96 % of sites moved by nothing, 10.38 % by one ply
+and 14.66 % by two. **`LMR_HIST_CLAMP` stays 2** and the coordinator's
+exception does not fire: the 99th percentile, 5362, is twelve times two
+divisors, so the clamp binds on real sites rather than only at the band's edge
+-- it is the safety and not the scale.
+
+**What the new seed does to the tree**, `bench <depth>` on the tune build at
+the shipped clamp against `LmrHistClamp 0`:
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 611512 | 1197881 | 2019830 | 3345622 | 5226045 | 9133516 |
+| off | 607842 | 935536 | 1634008 | 2364815 | 3849812 | 5685915 |
+| delta | +0.60 % | +28.04 % | +23.61 % | +41.47 % | +35.75 % | +60.63 % |
+
+The off column is the parent's totals exactly at every depth, so the
+inert-by-rebuild property is unchanged. The on column is the point of the
+re-seed and also its price: **`Bench: 9133516`, +60.63 % on the parent**.
+`tools/search_bench.py` depth 9: midgame 51189 -> 27434 with its best move
+moving `c3d5` -> `g5f6`, kiwipete 146616 -> 148084 `e2a6`, tactical
+39389 -> 30174 `d7c8q`; depth 12: 143205 -> 240137, 570238 -> 772719,
+148060 -> 185931, all three best moves unchanged. A signed term does not cost
+the same in both directions -- an un-reduced late quiet opens a subtree where
+an extra ply on an already-reduced one saves little -- which is why a rule that
+moves a quarter of its sites grows the tree by half. **That is the trade the
+SPRT is being asked to price**, and it is a real one: 60 % more nodes at a
+fixed depth is about two thirds of a ply given up elsewhere.
+
+**Re-derived with it**, all of it measured and not argued:
+
+- the driven cases now plant `LMR_HIST_DIV` and `-LMR_HIST_DIV` instead of the
+  band's edge, so they read "one ply" at any divisor S127 lands on and would
+  not have gone red at this re-seed for no defect;
+- `tests/test_search_params.cpp`'s golden row and `MANUAL.md`'s option row;
+- **`capture_mates` re-derived a second time**, seven more sweeps: rows 1 and 4
+  moved depth, 1 to `d9` and 4 from `d11` to `d9`, and the labels with them --
+  `no S091 mutant, since S098`, `C02 and C05`, `no S091 mutant, since S222`,
+  `C02 and C07`. The rule that picks them is written at the table and applied
+  uniformly: the lowest shipped depth that separates something, else the lowest
+  shipped depth with the label saying nothing separates. Row 1 lost `d7`
+  outright, which is what made the suite red and the re-derivation owed;
+- the six mutants L01 to L06 re-observed by hand with the sha256 check, **every
+  anchor unchanged** -- the re-seed moves a default and no line of
+  `src/search.cpp` -- and every one killed by the same named case as before;
+- Debug self-play again, **8 games in 20 s, 0 `Assertion`, 0 `disconnect`**;
+- both fast suites **39/39**, `clang-format.sh --check` clean;
+- `adocs/data/S098_v1_sprt.sh`'s seed paragraph, its node counts, its ablation
+  table and its H0 leg 2, which now points the divisor **upward** and names the
+  census's own p90 (1442) as the next value to try. `REF` is left at `1db5b8e`
+  for the coordinator to re-pin; `0aa64ff`, the audit-status commit made while
+  this ran, touches no `src/` file, so `.ref-builds/1db5b8e` is the right
+  reference binary either way.
+
+### The lane, DEC-212, 2026-09-15
+
+**The two constants are fitted before the verdict is taken, and the reason is
+the two paragraphs above.** One divisor, derived twice over this engine's own
+data on the same day, produced two different searches: 8675 (half the saturated
+band) is inert below depth 12 by the step's own ablation, and 430 (the census's
+depth-12 p75) grows `bench` by 60.63 %. Both are DEC-105 (b); nothing but a run
+can say which scale is the technique's, and an SPRT at either would price a
+seed. DEC-212 is the ruling.
+
+`tools/spsa_s098v1.json` and `adocs/data/S098_v1_spsa.sh`. **Two axes and no
+others**: `LmrHistDiv` 430 and `LmrHistClamp` 2, at S085's regime -- 1250
+iterations x 24 pairs = 60000 games at `2+0.02` on `books/UHO_4060_v3.epd`,
+which is not the harness book (DEC-209 clause 1). `LmrBase` and `LmrDivisor`
+are not in it: the accepts prices one adjustment at a time and the table's own
+coefficients are S127's. Neither is any history axis -- S222's lane fitted the
+eleven that decide the sum this rule divides, and fitting the input beside the
+consumer would leave neither readable.
+
+Both axes carry the **declared** bounds from `src/search_params.hpp`,
+unnarrowed, and that is forced rather than chosen: `tools/spsa_driver.py`'s
+`check` refuses a config whose bounds are not equal to the binary's own `uci`
+listing, because a value outside the binary's range is refused rather than
+clamped and the refusal is invisible mid-run. The census's region is carried by
+the seed and by `c_end` instead -- 128 for the divisor, half the gap between
+the p50 (174) and the p75 (430), which is a quarter of the distribution. What
+that resolution cannot reach in this budget is 8675, and the pre-registration
+says so rather than implying otherwise; that end is the SPRT's own H0 leg, one
+release rebuild.
+
+`check` passed on the day, both axes reaching the search -- `LmrHistDiv` 1 ->
+32857 nodes against 34700 -> 51189, `LmrHistClamp` 0 -> 51189 against
+4 -> 27458, the off values being the pre-S098 count at that position -- with
+one warning the runner records: the clamp's first iteration has `2c` = 4.11
+against a range of 4, which is one iteration of 1250 (`c` is 2.0551 at k=0 and
+1.9161 at k=1).
+
+**Estimate 8 h 37 m**, from S222's measured 24.84 s an iteration, **ceiling
+17 h 15 m**; a night run under DEC-155, on mains and on an idle machine. The
+readings are fixed before the fit, including the two that end the step: a
+rounded vector equal to the incumbent is a stuck run owing no SPRT (S085's
+rule), and `LmrHistClamp` fitted to 0 is the term inert by the fit's own word,
+where the technique leaves the plan with a decision instead of a match.
+
+**Then the SPRT**, on the fitted defaults and not on either seed:
+`adocs/data/S098_v1_sprt.sh`, `{0, 5}` nElo at the harness regime against the
+commit before this landing, which the coordinator re-pins once the fitted
+values land.

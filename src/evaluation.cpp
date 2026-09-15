@@ -1175,35 +1175,8 @@ int score_move(const game_t* game,
     return ORDER_COUNTER;
   }
 
-  // Signed since S093: a quiet that was tried and did not cut off carries a
-  // malus, so this band runs [-QuietHistoryMax, +QuietHistoryMax] rather than
-  // from zero. Gravity bounds it on the way in, so it can never reach the
-  // countermove band above, and nothing sits below it -- both edges are
-  // asserted in tests/test_evaluation.cpp.
-  int score = state->quiet_history[game->board.active_color][MOVE_FROM(move)]
-                                  [MOVE_TO(move)];
-
-  // S222. The one-ply continuation term, on a scale of its own: its entry is
-  // bounded by CONT_HIST_BOUND rather than by QuietHistoryMax, and
-  // ContHistWeight is what decides how much of the quiet band it may span
-  // against plain history's own. Summed in `int`, which the sum needs: two
-  // int16_t entries at their bounds already exceed int16_t, and the weight
-  // multiplies one of them by up to twenty.
-  //
-  // Guarded on there being a previous move to index at all -- the root ply and
-  // the node right after a null move pass 0, and 0 is the (W_PAWN, a8) cell
-  // and not an absent one.
-  //
-  // With both terms at their extremes the band this returns widens to
-  // [-(QuietHistoryMax + ContHistWeight * CONT_HIST_BOUND / 100), +the same],
-  // and the clearance against the countermove band above is asserted at both
-  // declared maxima in tests/test_evaluation.cpp "the declared history ceiling
-  // clears the band above it" -- the one-way door CLAUDE.md names, whose
-  // symptom would be lost rating and not a wrong node count.
-  if (prev_move != 0) {
-    score +=
-        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) / 100;
-  }
-
-  return score;
+  // The quiet ordering band, and it is the raw history sum: the same number
+  // late move reduction divides (S098), so the ordering and the reduction
+  // cannot disagree about what this move's history is.
+  return quiet_history_sum(game, state, move, prev_move);
 }

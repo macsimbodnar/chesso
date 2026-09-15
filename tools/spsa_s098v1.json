@@ -1,0 +1,32 @@
+{
+  "_what": "S098 verdict 1's two-axis lane, DEC-212. LmrHistDiv and LmrHistClamp alone -- the divisor and the clamp of the history-scaled late move reduction -- fitted before the verdict's SPRT, because the seed alone moved the term from inert at 8675 to a 60 % larger tree at 430 and nothing but a run can say which scale is the technique's. Two axes at S085's regime, one night. adocs/data/S098_v1_spsa.sh is the pre-registration and the runner; this file is the frozen input.",
+  "_not_here": "No LmrBase and no LmrDivisor. The step's accepts prices one adjustment at a time and the reduction table's own two coefficients are S127's refit, not this lane's (DEC-212 rejects fitting them here by name). No history axis either: S222's lane fitted the eleven that decide the sum this rule divides, and re-opening them would fit the input and the consumer in one vector. No Tm* axis, for the reason every config here excludes them -- DEC-094 on the control the run does not share, DEC-200 on TmHardPercent reaching no node-count probe.",
+  "_bounds": "Both axes carry the DECLARED bounds from src/search_params.hpp, unnarrowed, and that is forced rather than chosen: spsa_driver.py's check refuses a config whose bounds are not equal to the binary's own uci listing, because a value outside the binary's range is refused and not clamped and the refusal is invisible. The census's own region -- depth-12 |sum| p50 174, p75 430, p90 1442 -- is expressed in the seed and in c_end instead, which is where resolution belongs.",
+  "_book": "books/UHO_4060_v3.epd and not the harness book. adocs/eval_tuning_strategy.md par.7, DEV_MANUAL's 'Tune search parameters with SPSA' and DEC-209 clause 1 all say a run must not tune on the openings its verification plays, and fastchess.sh verifies on books/noob_3moves.epd since DEC-189. 30000 rounds against 242201 openings, so the book never wraps.",
+  "_adjudication": "fastchess.sh's line verbatim, including twosided=true (S212, DEC-174). adocs/data/S085_spsa_run.json's one-sided extra is the record of what S085 ran and is not a template.",
+  "iterations": 1250,
+  "pairs_per_iter": 24,
+  "seed": 98,
+  "alpha": 0.602,
+  "gamma": 0.101,
+  "a_ratio": 0.1,
+  "r_end": 0.004,
+  "match": {
+    "engine": "build-tune/src/chesso",
+    "tc": "2+0.02",
+    "book": "books/UHO_4060_v3.epd",
+    "book_format": "epd",
+    "book_size": 242201,
+    "hash": 16,
+    "threads": 1,
+    "concurrency": 12,
+    "extra": ["-draw", "movenumber=40", "movecount=8", "score=10",
+              "-resign", "movecount=3", "score=400", "twosided=true"]
+  },
+  "params": [
+    { "name": "LmrHistDiv",   "start": 430, "min": 1, "max": 34700, "c_end": 128,
+      "why": "How much raw history buys one ply back. The seed is the 75th percentile of |hist_sum| where the rule reads it, measured over 400 self-play positions at depth 12 (adocs/data/S098_v1_hist_census.txt), so a quarter of the sites reach a ply. c_end is derived from the same census and not from the seed: the gap between the p50 (174) and the p75 (430) is 256 and covers a quarter of the distribution, so 128 is half that gap -- a perturbation that moves the share of sites the rule touches by several points, which is a different rule strength, where a tenth of it would move that share by a fraction of a point and sit inside a 24-pair iteration's noise. The band seed this lane exists to weigh against, 8675, is inside the declared range so the axis is never clamped; reaching it would take more of this budget than it has, and that end is what the SPRT's own H0 leg tests by release rebuild." },
+    { "name": "LmrHistClamp", "start": 2,   "min": 0, "max": 4,     "c_end": 1,
+      "why": "The most plies the term may move a reduction, either way, and a coarse axis stated rather than hidden -- five reachable settings, and c_end is one whole ply because an integer axis below 0.5 is refused at config load (round(x+c) == round(x-c) and the perturbation vanishes). 0 is a true off value: the helper returns the raw table for every sum and every divisor there, so this axis can end the term by itself, and the runner's pre-registration says what that reading means before a game is played." }
+  ]
+}

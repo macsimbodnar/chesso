@@ -1845,8 +1845,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 7, 7, 9, 11 and the mutants beside them | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 44 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 7, 9, 9 and the mutants beside them — `no S091 mutant, since S098`, `C02 and C05`, `no S091 mutant, since S222`, `C02 and C07`, re-derived twice at S098 as the reduction moved under them | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 46 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2051,7 +2051,30 @@ history axes the lane fitted moved from their seeds to the values
 `src/search_params.hpp` now carries, and a differently graded history orders
 quiets differently, which moves every count downstream of it. Only games say
 whether the smaller tree is a better one (DEC-019), and
-`adocs/data/S222_sprt.sh` is the run that asks. Quote it
+`adocs/data/S222_sprt.sh` is the run that asks — it asked, and H1. **At `S098`
+verdict 1, the history-scaled reduction: `9133516`**, 60.6 % more and by a long
+way the largest single move this ledger records — the first entry that grows the
+tree rather than shrinking it. A quiet the history tables like is searched a ply
+or two deeper than the table alone would have searched it, the four
+shallow-depth rules price it at that deeper reduced depth too, and an un-reduced
+late quiet opens a whole subtree where the same term's other direction saves
+very little on an already-reduced one. `tools/search_bench.py` at depth 9 reads
+27434 / 148084 / 30174 against the parent's 51189 / 146616 / 39389, midgame's
+best move moving `c3d5` → `g5f6`; at depth 12, 240137 / 772719 / 185931 against
+143205 / 570238 / 148060 with all three best moves unchanged.
+
+**The first landing of that same rule read `5968045`, +4.96 %, and the
+difference between the two numbers is a seed and not a rule.** `LmrHistDiv` was
+first seeded at half the saturated history band, 8675, which the step's own
+census then measured as reached by 0.011 % of the sites the rule reads
+(`adocs/data/S098_v1_hist_census.txt`); re-seeded to that census's 75th
+percentile, 430, before any game was played. A `bench <depth>` sweep on the tune
+build at `LmrHistClamp 0` against the shipped 2 is what showed it, and is worth
+keeping as the shape of an inert setting beside a live one — at 8675: +0.00,
++0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14; at 430: +0.60,
++28.04, +23.61, +41.47, +35.75, +60.63. **The off column is the parent's totals
+exactly at both seeds and every depth**, which is the inert-by-rebuild property
+measured over the whole engine rather than argued. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

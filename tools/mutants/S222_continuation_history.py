@@ -24,7 +24,7 @@ it. `origin` says which step wrote the mutant.
 """
 
 S = "src/search.cpp"
-E = "src/evaluation.cpp"
+E = "src/evaluation.hpp"
 
 m("H01_cont_hist_malus_sign", S, "search/ordering",
   'the continuation malus is credited instead of charged, so every quiet the '
@@ -56,9 +56,13 @@ m("H03_null_child_keeps_prev", S, "search/ordering",
   origin="S222")
 
 m("H04_cont_hist_unread", E, "search/ordering",
-  'score_move stops adding the continuation term, so the table is written at '
-  'every cutoff and orders nothing -- the shape a census would call exercised '
-  'and a verdict would call inert',
+  'the quiet history sum stops adding the continuation term, so the table is '
+  'written at every cutoff and orders nothing -- the shape a census would call '
+  'exercised and a verdict would call inert. The anchor moved out of '
+  'score_move and out of the .cpp at S098, which factored the sum into '
+  'quiet_history_sum in src/evaluation.hpp so the ordering and the reduction '
+  'read one number and both inline it; the mutant now takes the term away '
+  'from both, which is the same bug reaching one site further',
   ('  if (prev_move != 0) {\n'
    '    score +=\n'
    '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '

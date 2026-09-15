@@ -1,0 +1,54 @@
+# S098 verdict 1: the history sum where the reduction reads it.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S098_v1_hist_census.py census
+# The script's docstring is the method; it holds the instrumentation
+# patch, so this file is reproducible from the repository alone.
+# 400 positions of adocs/data/S024_census_positions.txt, one
+# persistent UCI process, ucinewgame between positions, go depth N.
+# A site is one call of lmr_adjusted_reduction in negamax_at.
+# The raw-reduction column reads 100 % at both depths and that is not
+# a broken counter: the eligibility in front of the site is depth >= 3
+# past the third legal move, and the table returns at least 1
+# everywhere in that region, so every site the rule reaches already
+# had a reduction to move.
+# Percentiles are nearest-rank, so every number is one the census saw.
+# Instrumented bench signature: 5968045, equal to the shipping build's own
+# bench total on the tree this run was taken on, which is what says the
+# write-only counters do not move that tree. **That tree is the one at
+# LmrHistDiv 8675**, the first seed -- the census is what re-seeded it -- so
+# 5968045 is verdict 1's total at 8675 and not the total the step now ships,
+# which is 9133516 at the 430 this file's own p75 produced.
+#
+# ONE PASS, AND THAT IS A LIMIT ON WHAT A PERCENTILE FROM IT MEANS. The
+# distribution below belongs to the tree it was measured on. Taking 430 from
+# it changes the reduction, which changes the tree by 60 %, which changes the
+# distribution -- so 430 is the 75th percentile of the tree that was measured
+# and not of the tree that then ships. A fixed point would need the census and
+# the re-seed iterated to agreement, which this run did not do; DEC-212's SPSA
+# lane supersedes it by searching the scale against games instead of against
+# one pass of a distribution.
+depth 10
+  positions: 400   nodes: 30564496   wall: 9.4 s
+  sites: 2105964   of them with a non-zero raw reduction: 2105964 (100.00 %)
+  clipped at the histogram bound: 0
+  |sum|, all sites               p50     107  p75     258  p90     689  p99    4347
+  |sum|, raw reduction non-zero  p50     107  p75     258  p90     689  p99    4347
+  signed sum, all sites          p50     -53  p75      22  p90     669  p99    4347
+  signed sum, raw non-zero       p50     -53  p75      22  p90     669  p99    4347
+  |sum| >= 4337    21194 of 2105964 sites  (1.006 %)
+  |sum| >= 8675    120 of 2105964 sites  (0.006 %)
+  zero sums: 373254 (17.72 %)
+  at divisor 258 (this depth's p75) and clamp 2: 0 plies 74.95 %, 1 ply 12.60 %, 2 plies 12.46 %
+
+depth 12
+  positions: 400   nodes: 76312411   wall: 23.5 s
+  sites: 5464717   of them with a non-zero raw reduction: 5464717 (100.00 %)
+  clipped at the histogram bound: 0
+  |sum|, all sites               p50     174  p75     430  p90    1442  p99    5362
+  |sum|, raw reduction non-zero  p50     174  p75     430  p90    1442  p99    5362
+  signed sum, all sites          p50     -26  p75     231  p90    1442  p99    5362
+  signed sum, raw non-zero       p50     -26  p75     231  p90    1442  p99    5362
+  |sum| >= 4337    106793 of 5464717 sites  (1.954 %)
+  |sum| >= 8675    586 of 5464717 sites  (0.011 %)
+  zero sums: 644726 (11.80 %)
+  at divisor 430 (this depth's p75) and clamp 2: 0 plies 74.96 %, 1 ply 10.38 %, 2 plies 14.66 %

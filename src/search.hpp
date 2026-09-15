@@ -154,6 +154,25 @@ void history_on_quiet_cutoff(search_state_t* state,
 // checkable in the build the gate ships as well as the one it tunes.
 int search_lmr_reduction_probe(int depth, int move_number);
 
+// The same table once this move's history has adjusted it -- what
+// `lmr_adjusted_reduction` returns, before either call site's clamp. Compiled
+// in both builds for the reason above, and it carries two properties no driven
+// node can show on its own: that the term is inert at a sum of zero, over the
+// whole table rather than at the one pair a position happens to reach, and
+// that it stays inside its clamp for sums outside the band the history tables
+// can currently produce -- which is the guard that survives a fitted divisor
+// and a widened sum. S098.
+int search_lmr_adjusted_reduction_probe(int depth,
+                                        int move_number,
+                                        int hist_sum);
+
+// The reduced depth the four shallow-depth rules are gated on, for the same
+// reason the two above exist: since S098 that gate reads the adjusted
+// reduction, so "the gate followed the history" is a claim a test can hold
+// directly instead of inferring it from which quiets a node skipped. S109's
+// rule, S098's input.
+int search_lmr_depth_probe(int depth, int move_number, int hist_sum);
+
 // The late move pruning threshold the block computes, in hundredths of a move,
 // so a test can hold the doubling rule directly instead of inferring it from a
 // tree: the count is doubled exactly when `improving_at()` is true and at no

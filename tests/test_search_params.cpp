@@ -49,7 +49,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 44 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 46 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -81,6 +81,8 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                  52,     0,     400},
   {"LmrDivisor",              182,     1,    2000},
+  {"LmrHistDiv",              430,     1,   34700},
+  {"LmrHistClamp",              2,     0,       4},
   {"LmpBase",                 733,     0,   27000},
   {"LmpDepthCoeff",             0,     0,   27000},
   {"LmpMaxLmrDepth",            8,     0,      16},
@@ -458,6 +460,56 @@ TEST_SUITE("search parameters")
 
     CHECK(search_lmr_reduction_probe(probe_depth, probe_move) ==
           expected(base_default, divisor_default, probe_depth, probe_move));
+  }
+
+
+  TEST_CASE("the history term is off at LmrHistClamp 0")
+  {
+    // The off value the S109 bisection protocol rebuilds at, asserted instead
+    // of argued: at 0 the reduction helper returns the raw table for every
+    // sum, so a release build at this setting is the tree before S098 -- the
+    // gate and the reduction together, since both read the same helper -- and
+    // a failing verdict separates "the term is wrong" from "re-pointing S109's
+    // gate moved it" with one rebuild and no SPRT on this build (S073).
+    //
+    // The tune build is the only place the claim is checkable at all: in the
+    // build that ships the constant is folded, and reading the off value there
+    // means rebuilding, which is exactly what the protocol does. What is
+    // measured here is arithmetic and never strength.
+    const int index = index_of("LmrHistClamp");
+
+    REQUIRE(index >= 0);
+
+    const size_t i = static_cast<size_t>(index);
+    const int shipped = search_param_info(i).default_value;
+
+    REQUIRE(shipped > 0);
+
+    const int probe_depth = 32;
+    const int probe_move = 32;
+    const int raw = search_lmr_reduction_probe(probe_depth, probe_move);
+
+    // Precondition: at the shipped clamp the term is not inert here, or what
+    // follows would pass on a helper that never had a term in it.
+    REQUIRE(raw > shipped);
+    REQUIRE(search_lmr_adjusted_reduction_probe(probe_depth, probe_move,
+                                                LMR_HIST_DIV) != raw);
+
+    REQUIRE(search_param_set("LmrHistClamp", 0));
+
+    const std::vector<int> sums = {-1000000, -LMR_HIST_DIV, -1,     0,
+                                   1,        LMR_HIST_DIV,  1000000};
+
+    for (const int sum : sums) {
+      CHECK_MESSAGE(search_lmr_adjusted_reduction_probe(probe_depth, probe_move,
+                                                        sum) == raw,
+                    ("the term is still acting at sum " + std::to_string(sum)));
+    }
+
+    REQUIRE(search_param_set("LmrHistClamp", shipped));
+
+    CHECK(search_lmr_adjusted_reduction_probe(probe_depth, probe_move,
+                                              LMR_HIST_DIV) == raw - 1);
   }
 
 
