@@ -7,6 +7,36 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S222's phase three landed, 2026-09-15 03:41, commit `d0a6667`, by an Opus 5
+  subagent (DEC-199); the SPRT's candidate pinned to it.** The eleven fitted
+  values are the defaults in `src/search_params.hpp`, each row's comment
+  naming the 2026-09-14 fit and nothing else; the golden default table and
+  `MANUAL.md`'s option rows re-derived from the built binary; `bench`
+  5950740 -> 5685915 (-4.5 %), `search_bench` d9 51189 / 146616 / 39389 with
+  the moves unchanged, d12 kiwipete's move back to `e2a6`; census on the
+  fitted build 96.62 / 95.15 / 19.15 % against S024's 97.56 / 96.19 / 27.14,
+  the same-tree control at the incumbent vector 18.94 % putting the fall on
+  S109's and S091's smaller tree, not the fit (`adocs/data/S222_census.txt`);
+  Debug self-play 8 games 0 `Assertion`; gate 39/39 both builds; the lane
+  script sends `check`'s output to its own file so its run log carries one
+  marker; evidence `S222_spsa_trajectory.tsv`, `S222_spsa_run.json`,
+  `S222_spsa.log` committed byte-identical. **DEC-210, recorded before any
+  game**: the SPRT's reference is the tree before S222, `d785b89`, not the
+  commit before phase three (the phase-two landing was never a verdict, so
+  the table itself would have stayed unpriced); one vector under one
+  verdict; H0 reverts table and vector together to that baseline and files
+  the eight never-fitted axes as their own step; the agent's "keep the
+  eight, revert the three" is refused as an unmeasured tree. The fast check
+  over the phase found the step file carrying the superseded reference and
+  the refused proposal -- both amended with the ruling before the commit --
+  and three cosmetic items, fixed. `specs.md`'s S222 passage carries the
+  fit, the census and the reference. **Second tier now, before the match**:
+  `gate_extra` and the four S222 mutants at the fitted defaults run
+  together on the idle machine; **then the SPRT launches**
+  (`adocs/data/S222_sprt.sh`, REF `d785b89` cached in `.ref-builds/`, CAND
+  `d0a6667`, `{0, 5}` nElo, 12 to 20 h worst case, by day: nothing better
+  waits for the machine, DEC-155). `plan_current/`: S222 (SPRT pending).
+
 - **S222's SPSA is done, 2026-09-15 02:43** (8 h 37 m, 1250 iterations, 60000
   games, `SPSA-DONE` as the second marker). Rounded vector, incumbent ->
   fitted: `ContHistBonus` 15 -> 17, `ContHistMalus` 15 -> 18,
