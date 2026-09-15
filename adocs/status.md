@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S098 verdict 1's lane is running, launched 2026-09-15 11:49 by the
+  coordinator** (`adocs/data/S098_v1_spsa.sh`; wrapper pid in
+  `.tuning/spsa_s098v1.pid`, driver `python3 tools/spsa_driver.py run
+  tools/spsa_s098v1.json`; log `.tuning/spsa_s098v1.log`, `check`'s output
+  in `.tuning/spsa_s098v1_20260915_114938.check.log` so the run log carries
+  one marker; output `.tuning/spsa_s098v1_20260915_114938/`): HEAD `63cb263`
+  (src at `eb0bcd6`), tree clean, `check` 2 of 2 axes reach the search (both
+  off values read 51189, the pre-S098 depth-9 count), 1250 iterations x 24
+  pairs = 60000 games on `UHO_4060_v3.epd`, estimate 8 h 37 m (about
+  20:30), ceiling 17 h 15 m; persistent watcher on the first
+  `SPSA-(DONE|FAILED)`. **Before it, `gate_extra` on the reshaped tree:
+  GATE-EXTRA-DONE 5 stages 1072 s** (debug 323 s, sanitize 690 s, perft
+  58 s; `.tuning/gate_extra_2026-09-15_S098v1.log`). **Nothing else runs
+  on the machine until the marker** (MACHINE). Then: read the vector
+  against the pre-registered readings in the script's header (stuck; clamp
+  0 = inert, no SPRT; divisor at or above p99 5362 = the band seed's side,
+  at or below p90 1442 = the census seed's, between = between), land the
+  fitted defaults through the same agent (goldens, `MANUAL.md`, bench,
+  ablation, self-play), re-pin `adocs/data/S098_v1_sprt.sh` (REF `1db5b8e`'s
+  tree, CAND the fitted landing) and run the SPRT overnight.
+  `plan_current/`: S098 (verdict 1 landed, lane running).
+
 - **S098 verdict 1 landed, 2026-09-15 11:31, commit `eb0bcd6`, by an Opus 5
   subagent (DEC-199); its SPRT waits on a lane (DEC-212).** The helper
   `lmr_adjusted_reduction` = table less `clamp(hist_sum / LmrHistDiv,
@@ -3559,10 +3581,11 @@ Updated: 2026-09-15, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-15 03:59, 5 stages 1073 s**, on
-  S222's phase-three tree `0effd18` (log
-  `.tuning/gate_extra_2026-09-15_S222p3.log`; debug 332 s, sanitize 682 s,
-  perft 58 s, run beside the mutation pass); before it 2026-09-14 14:33 on
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-15 11:49, 5 stages 1072 s**, on
+  S098 verdict 1's tree `eb0bcd6` (log `.tuning/gate_extra_2026-09-15_S098v1.log`;
+  debug 323 s, sanitize 690 s, perft 58 s; the agent's own run at the first
+  seed read 1075 s); before it the same day 03:59 on S222's phase-three
+  tree `0effd18` (1073 s), 2026-09-14 14:33 on
   S222's landing `96fdc19` (1101 s), the same day on S091's `b0df255` (1055 s), 2026-09-13 on S223's
   tree (1059 s), S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
   that touched `make_move`, `unmake_move`, the generator or the search
