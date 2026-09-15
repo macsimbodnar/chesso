@@ -5,7 +5,25 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-14, by hand.
+Updated: 2026-09-15, by hand.
+
+- **S222's SPSA is done, 2026-09-15 02:43** (8 h 37 m, 1250 iterations, 60000
+  games, `SPSA-DONE` as the second marker). Rounded vector, incumbent ->
+  fitted: `ContHistBonus` 15 -> 17, `ContHistMalus` 15 -> 18,
+  `ContHistWeight` 25 -> 26, `QuietHistoryMax` 8192 -> 8831,
+  `HistoryBonusQuad` 1 -> 6, `HistoryBonusLin` 0 -> 19, `HistoryBonusConst`
+  0 -> 2, `HistoryMalusQuad` 1 -> 0, `HistoryMalusLin` 0 -> 17,
+  `HistoryMalusConst` 0 -> 36, `HistPruneCoeff` 576 -> 612. Not stuck (every
+  axis moved); **the weight ended near 25**, the pre-registered reading that
+  neither DEC-194 suspect is what the fit found, and the attribution row
+  (at or under 5) does not fire, so **one gainer SPRT `{0, 5}` decides, no
+  pinned-zero run**. Phase three starts now on the idle machine by a fresh
+  Opus 5 agent (brief `.tuning/coord/S222_phase3_brief.md`): the vector into
+  `src/search_params.hpp`, goldens re-derived, the census re-run, the lane
+  script's double marker fixed, the SPRT pre-registered; the coordinator
+  gates, commits, pins the shas and runs the SPRT (12 to 20 h worst case,
+  by day: nothing better waits for the machine, DEC-155). `plan_current/`:
+  S222 (phase three).
 
 - **S222's SPSA is running, launched 2026-09-14 18:05 by the coordinator**
   (`adocs/data/S222_spsa.sh`; wrapper pid in `.tuning/spsa_s222.pid`, the
