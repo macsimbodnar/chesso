@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S222's SPRT is running, launched 2026-09-15 04:00 by the coordinator**
+  (`adocs/data/S222_sprt.sh`, pid in `.tuning/sprt_s222.pid`, log
+  `.tuning/sprt_s222.log`, games under `.tuning/sprt_s222_20260915_040001/`):
+  candidate `d0a6667` (phase three's landing) against reference `d785b89`
+  (the tree before S222, DEC-210), both answering `id name Chesso <sha>
+  native`; 8+0.08, hash 16, 12 of 12 cores, `noob_3moves.epd`, seed
+  20260915040001, bounds `elo0=0 elo1=5`. Worst case 41861 games, 19.5 h at
+  2150 an hour; persistent watcher on `SPRT-RUN-(DONE|FAILED|INVALID)` with
+  the pid and a 39 h ceiling; read with `.tuning/coord/read_s222.sh` when it
+  ends. **Second tier before the match, both green**: `gate_extra`
+  GATE-EXTRA-DONE 5 stages 1073 s (debug 332 s, sanitize 682 s, perft 58 s;
+  `.tuning/gate_extra_2026-09-15_S222p3.log`) and the four S222 mutants at
+  the fitted defaults 4 of 4 killed, H02 with the bench unmoved
+  (`.tuning/mutation_s222p3.log`). **Nothing else runs on the machine until
+  the marker** (MACHINE). Then: read as pre-registered -- H1 keeps the
+  vector and files the two-ply table behind S098; H0 reverts table and
+  vector to `d785b89` and files the eight-axis lane -- stamp S222, ledger
+  row (fifteen), specs verdict, plan Open list, status. `plan_current/`:
+  S222 (SPRT running).
+
 - **S222's phase three landed, 2026-09-15 03:41, commit `d0a6667`, by an Opus 5
   subagent (DEC-199); the SPRT's candidate pinned to it.** The eleven fitted
   values are the defaults in `src/search_params.hpp`, each row's comment
@@ -3432,10 +3452,11 @@ Updated: 2026-09-15, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-14 14:33, 5 stages 1101 s**, on
-  S222's landing `96fdc19` (log `.tuning/gate_extra_2026-09-14_S222.log`;
-  debug 347 s, sanitize 696 s, perft 58 s, run beside the mutation pass);
-  before it the same day on S091's `b0df255` (1055 s), 2026-09-13 on S223's
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-15 03:59, 5 stages 1073 s**, on
+  S222's phase-three tree `0effd18` (log
+  `.tuning/gate_extra_2026-09-15_S222p3.log`; debug 332 s, sanitize 682 s,
+  perft 58 s, run beside the mutation pass); before it 2026-09-14 14:33 on
+  S222's landing `96fdc19` (1101 s), the same day on S091's `b0df255` (1055 s), 2026-09-13 on S223's
   tree (1059 s), S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
   that touched `make_move`, `unmake_move`, the generator or the search
   completes, and otherwise weekly -- and this bullet is where a missed week
