@@ -115,6 +115,28 @@ commands that reproduce the file byte for byte. An entry's weight is the number
 of those 34700 lines that played the move, which is what `Best Book Move` and
 the weighted draw select on.
 
+**The weighted draw can be pinned from outside the engine.** `CHESSO_BOOK_SEED`
+in the environment is read **once, at startup**, after the book is loaded and
+before any command: a **non-empty whole base-10 unsigned number**, consumed to
+its last character, seeds the generator the draw reads, so two processes started
+with the same seed and given the same position play the same book move. Nothing
+else in the engine reads the variable. `Best Book Move true` never consults the
+generator at all, so the seed cannot move what it plays.
+
+Anything else — letters, a sign, a decimal point, trailing text, leading space,
+an empty value, a number no 64-bit unsigned integer holds — is **refused** at
+startup, on the UCI channel and in **both** builds, in this shape:
+
+```
+info string refused [CHESSO_BOOK_SEED] <value>, not an unsigned 64-bit decimal integer. Seeding the book draw from std::random_device
+```
+
+and the seeding then falls back to `std::random_device`, which is also what an
+unset variable leaves in place. So a GUI or a match harness that sets nothing
+gets a different opening line every process, as it should; the variable exists
+so the book path can be driven by a test, and no match this project records sets
+it.
+
 Nothing in it comes from another engine. Before 2026-09-03 the shipped book was
 a 163141-entry file inherited from the `bitboard` branch that nobody could
 account for; it was deleted rather than shipped unattributed.

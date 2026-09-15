@@ -7,6 +7,33 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S194 done, 2026-09-15 07:36, by an Opus 5 subagent (DEC-199); committed by
+  the coordinator after the fast check.** `seed_book_draw_from_environment`
+  in `uci_init`, after the book loads: `CHESSO_BOOK_SEED` parsed with
+  `std::from_chars` base 10 into a `uint64_t`, consumed to the end, seeds
+  `gen`; anything else prints one `info string refused [CHESSO_BOOK_SEED]
+  <value>, not an unsigned 64-bit decimal integer. Seeding the book draw
+  from std::random_device` through `uci_reply` (stdout in every build) and
+  the `std::random_device` seeding stands (DEC-184). Three red-first cases
+  in `tests/test_engine.cpp`: the start key's draw a member of the book's
+  13 entries over seeds 1 to 13 and `second == first` across
+  `uci_shutdown(); uci_init();` (red: `g1f3 == e2e4`); `Best Book Move`
+  the heaviest entry and the S175 position answering exactly `bestmove
+  d2f3` under both rules, no `info` line -- the coverage observable; the
+  refusal line verbatim with readable and absent controls. Goldens (13 /
+  34700 / `e2e4` at 12956 / one S175 entry) re-derived by
+  `adocs/data/S194_book_start_key.py` from python-chess's own reader.
+  `test_uci_surface` byte-identical and green in both builds; 39/39 both
+  builds; bench 5685915, `No functional change`; `MANUAL.md`'s book
+  section, `DEV_MANUAL.md` and the `specs.md` book paragraph carry the
+  variable; audit F06 closed. Two agent notes worth keeping: doctest splits
+  `-tc` on commas, so a title with a comma matches nothing and still prints
+  `SUCCESS` (cut the title before the comma, then `*`; a `*` after the comma matches everything); the 2026-09-05 guide was wrong that
+  `try_load_opening_book` re-arms `still_in_opening` -- `ucinewgame` does.
+  Fast check: the seed exercised on 16 values through three binaries, the cases' preconditions shown real (8 unseeded processes, 3 distinct moves), goldens re-derived exactly; findings fixed before the commit -- the stamp's `-tc` recipe was itself the vacuous form (corrected), the manual's DEC-142 golden table gains the two `test_engine.cpp` sites, and the refusal line joins `test_uci_surface`'s docs-coverage templates the way S176/S209/S210 did, both documents carrying it first. **Next**: S098 verdict 1, the history scaling of
+  late move reduction (brief `.tuning/coord/S098_v1_brief.md`), agent work
+  by day and its SPRT when ready. `plan_current/`: none.
+
 - **S194 started, 2026-09-15 07:02, by an Opus 5 subagent (DEC-199)**: the UCI
   book path executed by the fast suite -- `CHESSO_BOOK_SEED` read once in
   `uci_init`, an unparsable value refused with one `info string` in both

@@ -422,33 +422,46 @@ three lines reproduce byte for byte on `457e355` -- and **S202** owns the class,
 free to alter play under its own SPRT where S171 was not. 8 is the ceiling a
 later census is read against, not a zero.
 
-**The engine loads an opening book over UCI on the protocol's own option
-names, since 2026-09-03, S172.** `OwnBook` (check, default false) enables it,
-`Book File` (string, default `<embedded>`) says which book, and
-`Best Book Move` (check, default false) says how a move is chosen among the
-entries for a position. `<embedded>` and an empty value both mean the 172232
-Polyglot entries compiled into the binary; any other value is a path, loaded the
-moment the option is set. **A book that will not load leaves the engine with no
-book**, reported as `info string book [<path>] not loaded: <why>` on the UCI
-channel and not only in the log -- there is no fallback to the built-in book,
-because a harness that asked for one book and silently got another is measuring
-a configuration nobody chose. Loading refuses a file that does not open, whose
-size is not a whole number of sixteen-byte entries, or whose keys are not sorted;
-the ordering is the format's own requirement and the probe is a binary search
-over it, where until S172 it was a scan of every entry in the book per position.
-Selection follows the format: the default draws in proportion to an entry's
-`weight` and `Best Book Move` takes the heaviest, where before S172 the draw was
-uniform and the weight field was never read at all. **All of it is off by
-default and no measurement this project has taken has ever played a book move**,
-which is why the selection change owes no SPRT (S158 established the same for
-the book's contents). The `setoption` value is everything after `value` to the
-end of the line, which it was not before S172 -- one token was read, so a path
-containing a space arrived truncated, invisible while `Hash`, `Threads` and the
-search parameters were the only options there were. **The book is stored as the
-raw Polyglot file `src/openings.bin` and reaches the binary through `.incbin`
-from `src/openings_embedded.S`** rather than as a 5220541-byte hex string
-decoded into the heap at every startup. `tools/make_book` builds such a book
-from a PGN and verifies one. DEC-129, DEC-130.
+**The engine loads an opening book over UCI on the protocol's own option names,
+since 2026-09-03, S172.** `OwnBook` (check, default false) enables it, `Book
+File` (string, default `<embedded>`) says which book, and `Best Book Move`
+(check, default false) says how a move is chosen among the entries for a
+position. `<embedded>` and an empty value both mean the 172232 Polyglot entries
+compiled into the binary; any other value is a path, loaded the moment the
+option is set. **A book that will not load leaves the engine with no book**,
+reported as `info string book [<path>] not loaded: <why>` on the UCI channel and
+not only in the log -- there is no fallback to the built-in book, because a
+harness that asked for one book and silently got another is measuring a
+configuration nobody chose. Loading refuses a file that does not open, whose
+size is not a whole number of sixteen-byte entries, or whose keys are not
+sorted; the ordering is the format's own requirement and the probe is a binary
+search over it, where until S172 it was a scan of every entry in the book per
+position. Selection follows the format: the default draws in proportion to an
+entry's `weight` and `Best Book Move` takes the heaviest, where before S172 the
+draw was uniform and the weight field was never read at all. **The generator
+behind that draw is seeded from `std::random_device`, and `CHESSO_BOOK_SEED` in
+the environment replaces that seed, since S194.** It is read once in `uci_init`,
+after the book is loaded and before any command: a non-empty whole base-10
+unsigned number seeds the generator, so one process replays another's book
+moves, and anything else is **refused** -- one `info string refused
+[CHESSO_BOOK_SEED] <value>, not an unsigned 64-bit decimal integer. Seeding the
+book draw from std::random_device` on the UCI channel in both builds, after
+which the `std::random_device` seeding stands exactly as it does when the
+variable is unset (DEC-184). It is not a UCI option and the golden surface is
+unchanged; nothing else in the engine reads the variable and `Best Book Move`
+never consults the generator. It exists so the UCI book path can be driven
+deterministically by the fast suite, which is what closed
+`2026-09-04_test_review-F06`. **All of it is off by default and no measurement
+this project has taken has ever played a book move**, which is why the selection
+change owes no SPRT (S158 established the same for the book's contents). The
+`setoption` value is everything after `value` to the end of the line, which it
+was not before S172 -- one token was read, so a path containing a space arrived
+truncated, invisible while `Hash`, `Threads` and the search parameters were the
+only options there were. **The book is stored as the raw Polyglot file
+`src/openings.bin` and reaches the binary through `.incbin` from
+`src/openings_embedded.S`** rather than as a 5220541-byte hex string decoded
+into the heap at every startup. `tools/make_book` builds such a book from a PGN
+and verifies one. DEC-129, DEC-130.
 
 **The built-in book is built by this project from a source it can account for,
 since 2026-09-03, S146.** It is `build/tools/make_book build

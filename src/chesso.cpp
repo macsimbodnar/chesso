@@ -5,6 +5,7 @@
 #include <cctype>
 #include <charconv>
 #include <chrono>
+#include <cstdlib>
 #include <future>
 #include <iostream>
 #include <limits>
@@ -703,6 +704,52 @@ move_t validate_book_move(move_t book_move)
   }
 
   return 0;
+}
+
+
+// The weighted draw below is the engine's one deliberate use of randomness in
+// a reply, which is why the UCI book path had never been in a deterministic
+// test: every process drew a different legal move for the same position.
+// `CHESSO_BOOK_SEED` is the hook that pins it, and nothing else in the engine
+// reads the variable. A non-empty whole base-10 unsigned number seeds `gen`;
+// anything else -- letters, a sign, trailing text, an empty value, a number no
+// uint64_t holds -- is refused on the channel and the std::random_device
+// seeding stands, so a harness that sets nothing still gets a different opening
+// every game and one that sets nonsense is told rather than quietly pinned.
+//
+// The refusal goes to uci_reply() and not to LOG_W: LOG_W compiles to
+// `if (false)` under NDEBUG and the shipping binary is a Release build, so a
+// mistyped seed would otherwise be answered by silence in the only build that
+// plays. DEC-184, the S172 and S176 pattern -- what the engine drops, it says
+// so on the channel.
+//
+// Read from uci_init() rather than from `gen`'s initialiser, which runs before
+// any main() and therefore before a test could set the variable at all. The one
+// getenv() call happens before any search thread exists, so POSIX leaving
+// getenv() free to be thread-unsafe costs nothing here. S194.
+static void seed_book_draw_from_environment()
+{
+  const char* const text = std::getenv("CHESSO_BOOK_SEED");
+
+  if (text == nullptr) { return; }
+
+  const std::string value = text;
+  const char* const last = value.data() + value.size();
+
+  uint64_t seed = 0;
+  const std::from_chars_result parsed =
+      std::from_chars(value.data(), last, seed);
+
+  // An empty value lands here too: from_chars() reports invalid_argument when
+  // it is given nothing to read.
+  if (parsed.ec != std::errc() || parsed.ptr != last) {
+    uci_reply("info string refused [CHESSO_BOOK_SEED] " + value +
+              ", not an unsigned 64-bit decimal integer. Seeding the book "
+              "draw from std::random_device");
+    return;
+  }
+
+  gen.seed(static_cast<std::mt19937_64::result_type>(seed));
 }
 
 
@@ -2244,6 +2291,7 @@ void uci_init()
 
   load_FEN(DEFAULT_POSITION, &game);
   try_load_opening_book();
+  seed_book_draw_from_environment();
 
   tt_resize(&tt, TT_DEFAULT_MB);
 

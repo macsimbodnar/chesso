@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdlib>  // setenv, unsetenv: POSIX, and there is no Windows build
 #include <cstring>
 #include <iterator>
 #include <map>
@@ -2873,6 +2874,350 @@ TEST_SUITE("engine: uci go")
         move_t(0));
 
     uci_shutdown();
+  }
+
+
+  // S194, closing 2026-09-04_test_review-F06. The case above tests
+  // validate_book_move() on a synthetic move and never reaches the probe, and
+  // tests/test_openings.cpp tests the library below the UCI layer, so coverage
+  // of the fast label found command_go's book consult, search_book_move()'s
+  // weight-proportional draw and its `Best Book Move` branch with zero
+  // executions -- the path S172 and S175 were both defects in, guarded by a
+  // command someone ran by hand and wrote into a stamp.
+  //
+  // What kept it out of a test is the draw: search_book_move() reads an
+  // mt19937_64 that uci_init() seeds from std::random_device, so the reply is
+  // a different legal book move every process. `CHESSO_BOOK_SEED` is the hook
+  // that pins it (MANUAL.md, "The book it ships with"), and these three cases
+  // are what it buys.
+  //
+  // The observable that says the block executed is the shape of the reply.
+  // command_go answers a book hit with `bestmove` and returns before any
+  // `info` line -- its own is commented out -- so a single-line answer to
+  // `go depth 1` from the start position cannot have come from a search, and
+  // the `OwnBook false` control at the end of the first case is the other half
+  // of that: with the book off the same command prints `info score` too.
+
+  struct book_entries_t
+  {
+    std::set<std::string> moves;
+    std::string heaviest;
+    uint64_t total_weight = 0;
+    uint16_t heaviest_weight = 0;
+    size_t count = 0;
+  };
+
+
+  // What the library itself offers for the position on the UCI board, as the
+  // text `bestmove` would carry. This is the test's own side of the
+  // comparison: whatever the draw picks has to be one of these.
+  static book_entries_t book_entries_here()
+  {
+    book_t book;
+    REQUIRE(load_book_embedded(&book));
+
+    move_t moves[MAX_MOVES];
+    uint16_t weights[MAX_MOVES];
+    const size_t count =
+        get_book_moves_for_key(&book, &uci_game()->board, moves, weights);
+
+    book_entries_t entries;
+    entries.count = count;
+
+    for (size_t i = 0; i < count; ++i) {
+      const uci_move_t uci = {MOVE_FROM(moves[i]), MOVE_TO(moves[i]),
+                              MOVE_PROMOTED(moves[i])};
+      const std::string text = uci_move_to_algebraic(&uci);
+
+      entries.moves.insert(text);
+      entries.total_weight += weights[i];
+
+      // Strict >, first maximum wins: search_book_move()'s own tie rule, so
+      // the `Best Book Move` case below is not comparing against a second
+      // rule that happens to agree.
+      if (weights[i] > entries.heaviest_weight) {
+        entries.heaviest_weight = weights[i];
+        entries.heaviest = text;
+      }
+    }
+
+    return entries;
+  }
+
+
+  // One whole engine session with `CHESSO_BOOK_SEED` already in the
+  // environment, answering `go depth 1` from the start position. A session and
+  // not a `ucinewgame`, because uci_init() is the only thing that reads the
+  // variable: two draws from one seed need a shutdown between them.
+  //
+  // Every option it depends on is set here rather than inherited. They are
+  // process globals that outlive uci_shutdown(), and `Book File` in particular
+  // is pointed at an unloadable path by another case in this file, which
+  // restores it -- but the order cases run in is a flag and not a contract.
+  static std::string book_reply_from_a_fresh_engine()
+  {
+    uci_init();
+
+    uci_process_line("ucinewgame");
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+    uci_process_line("setoption name OwnBook value true");
+    uci_process_line("setoption name Best Book Move value false");
+    uci_process_line("position startpos");
+
+    std::vector<std::string> lines;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      lines = capture.lines();
+    }
+
+    uci_process_line("setoption name OwnBook value false");
+    uci_shutdown();
+
+    // Read back outside the capture: doctest reports a failure on std::cout,
+    // which is what stdout_capture_t was holding.
+    REQUIRE_MESSAGE(
+        lines.size() == 1,
+        ("a book hit is one `bestmove` line and nothing else, got " +
+         std::to_string(lines.size()) + " lines"));
+    REQUIRE(lines[0].rfind("bestmove ", 0) == 0);
+
+    return lines[0].substr(std::string("bestmove ").size());
+  }
+
+
+  TEST_CASE(
+      "OwnBook draws a book move for the start key, and the seed replays it")
+  {
+    uci_init();
+    uci_process_line("ucinewgame");
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+    uci_process_line("position startpos");
+
+    const book_entries_t library = book_entries_here();
+
+    uci_shutdown();
+
+    // GOLDEN (DEC-142): 13 entries under the start key, 34700 total weight,
+    // e2e4 heaviest at 12956. Re-derive with
+    // `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py`, which
+    // reads the shipped book with python-chess's own Polyglot reader and its
+    // own zobrist_hash() -- an implementation outside this project, the same
+    // property that makes adocs/data/S175_book_conformance.py a check and not
+    // a restatement. The count is the precondition and not decoration: over an
+    // empty set the membership below is unfalsifiable.
+    REQUIRE(library.count == 13);
+    REQUIRE(library.total_weight == 34700);
+    REQUIRE(library.heaviest == "e2e4");
+    REQUIRE(library.heaviest_weight == 12956);
+
+    // Membership, never "seed 7 gives d2d4". [rand.predef] fixes what
+    // mt19937_64 produces from a seed, but [rand.dist.general] leaves the
+    // algorithm of std::uniform_int_distribution implementation-defined, so
+    // the ticket a seed buys is a fact about one standard library. The
+    // thirteen seeds are labels, one per entry, and nothing is read from them.
+    for (int seed = 1; seed <= 13; ++seed) {
+      const std::string text = std::to_string(seed);
+
+      setenv("CHESSO_BOOK_SEED", text.c_str(), 1);
+
+      const std::string first = book_reply_from_a_fresh_engine();
+      const std::string second = book_reply_from_a_fresh_engine();
+
+      REQUIRE_MESSAGE(library.moves.count(first) == 1,
+                      ("seed " + text + " answered [" + first +
+                       "], which the book does not offer for this position"));
+
+      // What makes the seed falsifiable instead of decorative. Ignored, these
+      // are two independent draws over the same thirteen weights: they agree
+      // with probability 0.298 -- the squared weights summed over 34700
+      // squared -- and over thirteen seeds with probability 1.5e-7.
+      REQUIRE_MESSAGE(second == first, ("seed " + text + " drew [" + first +
+                                        "] and then [" + second + "]"));
+    }
+
+    unsetenv("CHESSO_BOOK_SEED");
+
+    // The control. With the book off the same command searches and prints an
+    // `info score` line, so the single-line replies above are a book hit and
+    // not a dead stream.
+    uci_init();
+    uci_process_line("ucinewgame");
+    uci_process_line("setoption name OwnBook value false");
+    uci_process_line("position startpos");
+
+    std::vector<std::string> searched;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      searched = capture.lines();
+    }
+
+    uci_shutdown();
+
+    bool has_info = false;
+    bool has_bestmove = false;
+
+    for (const std::string& line : searched) {
+      has_info = has_info || line.rfind("info score ", 0) == 0;
+      has_bestmove = has_bestmove || line.rfind("bestmove ", 0) == 0;
+    }
+
+    REQUIRE(has_info);
+    REQUIRE(has_bestmove);
+  }
+
+
+  TEST_CASE(
+      "Best Book Move plays the heaviest entry, and the S175 position d2f3")
+  {
+    // No seed anywhere in this case, deliberately: `Best Book Move` reads the
+    // weights and never the generator, so a reader who found `CHESSO_BOOK_SEED`
+    // set here would think the pin depends on it.
+    unsetenv("CHESSO_BOOK_SEED");
+
+    uci_init();
+    uci_process_line("ucinewgame");
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+    uci_process_line("setoption name OwnBook value true");
+    uci_process_line("setoption name Best Book Move value true");
+    uci_process_line("position startpos");
+
+    std::vector<std::string> heaviest;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      heaviest = capture.lines();
+    }
+
+    // GOLDEN (DEC-142): e2e4, the heaviest of the thirteen start-key entries
+    // at 12956 against d2d4's 12493. Same script as the case above.
+    REQUIRE(heaviest == std::vector<std::string>{"bestmove e2e4"});
+
+    // S175's repaired position, an edge-file en-passant square: one entry
+    // under key bff7aaf88aaf9fbb, `d2f3` at weight 1. Both selection rules
+    // must answer it -- the heaviest of one entry, and a draw over a total of
+    // 1 that can only land on it -- so it is checked under both, and it is the
+    // end-to-end guard S175 left as a command in a stamp.
+    //
+    // GOLDEN (DEC-142): the single entry and its move. Re-derive with the same
+    // `adocs/data/S194_book_start_key.py`, which reports this position too;
+    // tests/test_audit_polyglot_key.cpp pins the key itself.
+    const std::string s175 =
+        "position fen rnb1kb1r/2pqnpp1/1p2p3/p2pP2p/P2P1P2/2P5/1P1N2PP/"
+        "R1BQKBNR w KQkq h6 0 8";
+
+    uci_process_line(s175);
+
+    std::vector<std::string> best_rule;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      best_rule = capture.lines();
+    }
+
+    uci_process_line("setoption name Best Book Move value false");
+    uci_process_line(s175);
+
+    std::vector<std::string> draw_rule;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      draw_rule = capture.lines();
+    }
+
+    uci_process_line("setoption name OwnBook value false");
+    uci_shutdown();
+
+    // No `info` line before either of them, which is what says command_go
+    // returned on the book and never started a search.
+    REQUIRE(best_rule == std::vector<std::string>{"bestmove d2f3"});
+    REQUIRE(draw_rule == std::vector<std::string>{"bestmove d2f3"});
+  }
+
+
+  // DEC-184: what the engine drops, it says so on the channel -- the S172 and
+  // S176 pattern, one variable along. A seed it cannot read is refused in both
+  // builds, on stdout and not through a LOG_ macro that compiles to nothing
+  // under NDEBUG, and the draw then falls back to std::random_device rather
+  // than to some silent default.
+  TEST_CASE(
+      "an unreadable CHESSO_BOOK_SEED is refused, and the engine plays on")
+  {
+    // `Book File` outlives uci_shutdown() and another case in this file leaves
+    // it unloadable, which would put a second line under the capture below.
+    uci_init();
+    uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+    uci_shutdown();
+
+    setenv("CHESSO_BOOK_SEED", "abc", 1);
+
+    std::vector<std::string> startup;
+    {
+      stdout_capture_t capture;
+      uci_init();
+      startup = capture.lines();
+    }
+
+    uci_process_line("ucinewgame");
+    uci_process_line("setoption name OwnBook value true");
+    uci_process_line("setoption name Best Book Move value false");
+    uci_process_line("position startpos");
+
+    const book_entries_t library = book_entries_here();
+
+    std::vector<std::string> reply;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+      reply = capture.lines();
+    }
+
+    uci_process_line("setoption name OwnBook value false");
+    uci_shutdown();
+
+    REQUIRE(startup == std::vector<std::string>{
+                           "info string refused [CHESSO_BOOK_SEED] abc, not an "
+                           "unsigned 64-bit decimal integer. Seeding the book "
+                           "draw from std::random_device"});
+
+    // And the refusal is a refusal of the seed and not of the book: the engine
+    // still answers from it, with one of the moves the library offers.
+    REQUIRE(reply.size() == 1);
+    REQUIRE(reply[0].rfind("bestmove ", 0) == 0);
+    REQUIRE(library.moves.count(
+                reply[0].substr(std::string("bestmove ").size())) == 1);
+
+    // The two controls, without which "exactly one line" says nothing: a seed
+    // it can read is silent, and so is no seed at all.
+    setenv("CHESSO_BOOK_SEED", "7", 1);
+
+    std::vector<std::string> readable;
+    {
+      stdout_capture_t capture;
+      uci_init();
+      readable = capture.lines();
+    }
+    uci_shutdown();
+
+    unsetenv("CHESSO_BOOK_SEED");
+
+    std::vector<std::string> absent;
+    {
+      stdout_capture_t capture;
+      uci_init();
+      absent = capture.lines();
+    }
+    uci_shutdown();
+
+    REQUIRE(readable.empty());
+    REQUIRE(absent.empty());
   }
 }
 

@@ -1007,6 +1007,12 @@ the two compilers. `.gitignore` already covers `build-*`, so keep the
 `.profraw` and `.profdata` files inside `build-coverage/` and nothing new needs
 ignoring.
 
+One region on that list has moved since: the UCI book path —
+`command_go`'s consult, `search_book_move`'s weighted draw and its `Best Book
+Move` branch — is executed by the fast label since S194, and what shows it is
+an observable rather than a second coverage run, the `bestmove`-only reply
+described under "The engine's own opening book" below.
+
 ### The Debug self-play habit
 
 DEC-141. A step that touches `make_move`, `unmake_move`, the generator or the
@@ -1834,6 +1840,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
 | `test_search.cpp` "ordering keeps the tree small" | 69804 and 3490 | `python3 adocs/data/S192_node_budget.py` |
 | `test_mate_carry.cpp` `short_line_ceiling` | 5, 11, 0, 1, 8, 2 | `adocs/data/S203_case_sweep.sh --ceilings` over the two recorded grids |
+| `test_engine.cpp` "OwnBook draws a book move for the start key, and the seed replays it" | 13 entries, total weight 34700, `e2e4` heaviest at 12956 for the start key | `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin` |
+| `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
@@ -3406,6 +3414,30 @@ Weights are two for a win, one for a draw and nothing for a loss, from the
 moving side's point of view, summed over every game that played the move; an
 entry that ends at zero is dropped, since the engine's weighted draw could never
 play it. Weights are clamped to 65535 and the build reports how many were.
+
+**Pin the draw with `CHESSO_BOOK_SEED` when you need the same book move twice.**
+`MANUAL.md`'s "The book it ships with" is the user-facing statement — read once
+at startup, a whole base-10 unsigned number, anything else refused on the
+channel and the seeding left to `std::random_device`. It is what makes the UCI
+book path testable at all, and the fast suite drives it through three cases in
+`tests/test_engine.cpp`: `OwnBook draws a book move for the start key, and the
+seed replays it`, `Best Book Move plays the heaviest entry, and the S175
+position d2f3`, and `an unreadable CHESSO_BOOK_SEED is refused, and the engine
+plays on`. The numbers they pin about the shipped book are goldens, re-derived
+from outside the project by
+
+```bash
+~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin
+```
+
+By hand, the whole of it is one pipe — and the reply to a book hit is a
+`bestmove` line with no `info` line before it, which is what says `command_go`
+answered from the book and never started a search:
+
+```bash
+printf 'setoption name OwnBook value true\nposition startpos\ngo depth 1\nquit\n' \
+  | CHESSO_BOOK_SEED=42 ./build/src/chesso
+```
 
 ## Analyse a game
 

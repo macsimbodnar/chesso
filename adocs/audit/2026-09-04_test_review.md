@@ -305,7 +305,13 @@ applied here.
 
 ### 2026-09-04_test_review-F06  low  the UCI-level book path is never executed by the fast suite, and its random draw cannot be seeded
 
-Status: planned — S194
+Status: closed — S194 (2026-09-15): `CHESSO_BOOK_SEED` is the seed hook, read
+once at startup and refused on the channel when it cannot be read (DEC-184),
+and three cases in `tests/test_engine.cpp` drive the probe, the weighted draw
+and `Best Book Move` end to end — membership over thirteen seeds with the same
+seed replaying its draw, the heaviest entry pinned, and S175's `bestmove d2f3`
+with no `info` line before it, which is the observable that says the block
+executed. Previously: planned — S194.
 
 Evidence: coverage shows `src/chesso.cpp:662-736` -- the book probe, the
 weight-proportional draw and `Best Book Move` -- with zero executions across

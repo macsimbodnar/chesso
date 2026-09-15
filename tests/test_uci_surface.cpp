@@ -149,6 +149,12 @@ static const std::vector<std::string> expected_refusal_templates = {
     "colour (<n> white, <n> black)",
     "info string refused [position fen] <fen>, the side not to move is in "
     "check",
+    // S194: the book draw's seed from the environment, refused when it is not
+    // an unsigned 64-bit decimal integer -- startup surface in every build,
+    // not a UCI option. MANUAL.md and specs.md described it before this line
+    // was added (SURFACE).
+    "info string refused [CHESSO_BOOK_SEED] <value>, not an unsigned 64-bit "
+    "decimal integer. Seeding the book draw from std::random_device",
 };
 
 
