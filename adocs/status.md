@@ -7,6 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S222 done, 2026-09-15 07:00: H1, `Elo 11.13 +/- 6.90` at `8+0.08`, decided
+  in 6278 games and 2 h 55 m** (LLR 2.95, `nElo 13.87 +/- 8.59`, W 2138 L
+  1937 D 2203, `Ptnml [291, 686, 1060, 735, 367]`, 2151 games an hour, 0
+  forfeits, `Incomplete mating PV` 0 and 0, pair variance 0.3218 over 3139
+  pairs). Read as pre-registered: the whole vector and the table stay, one
+  vector under one verdict (DEC-210), the claim at least 5 nElo (DEC-063);
+  **the two-ply table is filed as S231**, Open entry 3 behind S098. Evidence
+  `adocs/data/S222_sprt.log`, `S222_sprt_pairs.txt`; stamp, ledger row
+  (**fifteen verdicts: mean 4 h 30 m, median 4 h 10 m, 2268.8 games an
+  hour**), specs verdict, README rows written. **DEC-211**: the book's
+  cost read from six verdicts per DEC-196 -- fast class 0.87, slow class
+  1.27 on two points, per game 1.07 -- inside DEC-191's bracket, the book
+  stays, next reading at the tenth verdict. **Next**: S194 (Open entry 1,
+  the UCI book path executed by the fast suite, agent-only) now on the idle
+  machine, then S098 (late move reduction scaled by history, node type and
+  the re-search) as the block's next strength step. The block is not at a
+  boundary (S091 opened it; DEC-133's order runs on), so no drift point or
+  longer-control reading is owed here. `plan_current/`: none.
+
 - **S222's SPRT is running, launched 2026-09-15 04:00 by the coordinator**
   (`adocs/data/S222_sprt.sh`, pid in `.tuning/sprt_s222.pid`, log
   `.tuning/sprt_s222.log`, games under `.tuning/sprt_s222_20260915_040001/`):

@@ -11863,3 +11863,36 @@ Consequences: `adocs/data/S222_sprt.sh` defaults `REF` to `d785b89` and its
               that header reads as (2) and (3). `specs.md`'s S222 passage
               names the reference. `.ref-builds/d785b89` already exists from
               S091's run and its identity line is `Chesso d785b89 native`.
+
+## DEC-211  2026-09-15  The book's cost is read from six verdicts: inside DEC-191's bracket, no revert, `noob_3moves.epd` stays
+Tags:         harness, book, ledger, dec-191, dec-196, s219, measurement
+Context:      DEC-196 (1), the owner's: after about five verdicts on
+              `noob_3moves.epd` the coordinator compares realized games per
+              verdict, by class, against the old book's nine and records the
+              reading. S222's is the sixth. The classes are DEC-196's: fast,
+              an effect outside the interval; slow, inside it or a null --
+              read from each stamp's final `Elo` against its bounds.
+Decision:     By the coordinator under the owner's delegation. **The reading:
+              the new book costs what the bracket said, at its slow end, and
+              nothing in it says revert.** Old book, nine: fast S093 v1
+              (+10.73, 6412), S107 (+12.67, 3812), S149 (-11.02, 2522), mean
+              4249; slow S093 v2, S108, S165, S130, S148, S207 (15398, 12774,
+              18598, 16784, 14808, 10258), mean 14770. New book, six: fast
+              S042 (+7.87, 5741), S109 (+46.90, 1364), S091 (+46.52, 1360),
+              S222 (+11.13, 6278), mean 3686; slow S024 v1 (-5.48, 8954) and
+              S210 F22 (+0.01 on the bound, 28598), mean 18776. Ratios new
+              over old: fast 0.87, slow 1.27, the latter on two points, one of
+              them a truth sitting exactly on its bound, which costs the full
+              expectation on any book. Per game the cost is measured and not
+              inferred: 2137 to 2190 games an hour against 2305 to 2346, about
+              1.07, from the longer games DEC-190 measured (113 plies against
+              102). Both figures sit inside DEC-191's 0.97 to 1.29. **The
+              book stays; the next reading is at the tenth verdict on it.**
+Rejected:     **Reverting to the old book** -- the slow-class ratio rests on
+              two points and its worse one is bound-sitting, not book-driven.
+              **Reading games per verdict without the classes** -- the
+              unclassed means (8716 against 11263) would flatter the new book
+              on the back of two +46 effects that owe nothing to openings.
+Consequences: `adocs/plan.md`'s cost paragraph may cite this entry in place
+              of the bracket; nothing else changes. `adocs/data/S219_*` stays
+              the record of the switch.

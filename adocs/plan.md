@@ -547,6 +547,7 @@ Read from each step's own completion stamp, not from a run log. The first nine r
 | S109 | late move pruning, futility, history pruning and quiet SEE pruning as one block, `noob_3moves.epd` | 37 m 51 s | 1364 | `{0, 5}` | **H1**, +46.90 +/- 15.43 |
 | S210 F22 | quiescence scores a dead position as a draw, `noob_3moves.epd` | 13 h 16 m 30 s | 28598 | `{-5, 0}` | H1, +0.01 +/- 3.17 |
 | S091 | capture SEE pruning in the main search and an extra reduction ply for a losing capture, `noob_3moves.epd` | 38 m 11 s | 1360 | `{0, 5}` | **H1**, +46.52 +/- 15.43 |
+| S222 | one-ply continuation history on its own fitted scale, with plain history's coefficients fitted beside it, one vector, `noob_3moves.epd` | 2 h 55 m 08 s | 6278 | `{0, 5}` | **H1**, +11.13 +/- 6.90 |
 
 **Mean 4 h 34 m, median 4 h 27 m** over the eleven; 116061 games in 50.27 hours,
 **2308.9 games an hour** across the set. Eight of the first nine sit between 2328 and
@@ -561,6 +562,8 @@ neither was a strength verdict.
 **With S210's F22 the ledger holds thirteen: mean 4 h 56 m, median 4 h 27 m, 146023 games in 64.17 hours, 2275.4 an hour across the set.** F22's run is the longest since S165: a non-regression pair whose truth sat on the bound, so the SPRT walked the full 25591-game expectation and a little past it, at 2155 an hour.
 
 **With S091 the ledger holds fourteen: mean 4 h 37 m, median 4 h 18 m, 147383 games in 64.81 hours, 2274.1 an hour across the set.** S091's is the second 38-minute verdict in two days and the same shape as S109's: a gainer whose truth sat far above the interval, at 2137 an hour on the new book.
+
+**With S222 the ledger holds fifteen: mean 4 h 30 m, median 4 h 10 m, 153661 games in 67.73 hours, 2268.8 an hour across the set.** S222's is the first gainer since S105 whose truth sat above the interval without being far above it -- 6278 games, 2 h 55 m, at 2151 an hour.
 
 ### Priced by class, which is what the spread is
 
@@ -768,11 +771,11 @@ carried nothing.)
 
 ## Done recently
 
+- S222  **one-ply continuation history returns on its own fitted scale, with plain history's six coefficients fitted for the first time** -- the lane (11 axes, 60000 games on `UHO_4060_v3.epd`) moved every axis and put the weight at 26 against its seed 25; the gainer SPRT against the tree before S222 (DEC-210): **H1, `Elo 11.13 +/- 6.90` at `8+0.08`**, LLR 2.95, 6278 games in 2 h 55 m, one vector under one verdict; `bench` 6267842 -> 5950740 -> 5685915; census 96.62 / 95.15 / 19.15 % with a same-tree control; the two-ply table is S231. 2026-09-15.
 - S091  **captures the exchange evaluation says lose material are skipped in the main search, and a negative-SEE move takes an extra reduction ply** -- decided by one SPRT at `{0, 5}`: **H1, `Elo 46.52 +/- 15.43` at `8+0.08`**, LLR 2.96, 1360 games in 38 m 11 s, 0 forfeits, both rules kept and the bisection not needed; every rule with a direct guard and a killed mutant, three mined mates red under named mutants; `bench` 7105111 -> 6267842. 2026-09-14.
 - S230  **the mate table's second kill of S091's R01 mutant is back, on a mined position** -- `1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22`, Stockfish's mate in 5, read at depth 11 where the shipped build finds it (`d9 d10 d11 d12`) and R01 does not (`d9 d10 d12`), label "C02 and R01" observed under each mutant by hand; mined by `S230_mine_r01_row.py` over 32000 positions from the S145 sets and the S219 A/A games (297 mates, 281 swept over depths 3 to 12, 2 separators each by a single depth, the one whose shipped profile was a single depth rejected); the table's depths are a DEC-142 golden with `cmd_depths` as their script. `No functional change`, no `src/`. 2026-09-14.
 - S229  **the json dependency is its MIT single header, and no GPL-licensed file enters a checkout** -- `tests/third_party/nlohmann/json.hpp` byte-identical to `v3.11.3`'s amalgamated header (sha256 recorded in `THIRD_PARTY.md`, `LICENSE.MIT` beside it), the `tests/json` submodule and its `.gitmodules` entry gone, three includers rewired, `clang-format.sh` excludes the directory with a red-first seventh case of its test, `books/fetch_book.sh`, both worktree recipes and the two sweep scripts' worktree copies name doctest alone; fresh configures 39/39 in both builds, bench 5950740. `No functional change`, no `src/`. 2026-09-14.
 - S228  **the `id name` build stamp is proved to follow the tree without a reconfigure** -- `test_build_info_freshness` drives `cmake/build_info.cmake` as `cmake -P` over a throwaway git repository: clean tree, dirtied then committed, untracked not dirty, an unchanged tree leaves the header's mtime alone, a plain directory reads `unknown`; five failures against a scratch copy that caches the stamp once, green against the real script; the wiring that runs the script on every build (`add_custom_target(chesso_build_info ALL ...)`, `add_dependencies(chesso_engine chesso_build_info)`) pinned by a static case red-first against copies missing `ALL` and the dependency; 39/39 fast. F02 of the owner's 2026-09-12 review closed (DEC-206). `No functional change`, no `src/`. 2026-09-14.
-- S225  **`gate_extra`'s documented subset invocation passes its own gate** -- `STAGES` is read once and unset before any stage runs, so the nested `gate_extra.sh` that `test_gate_extra_script` drives inside stage 4 sees the default five stages; case 11 red against the committed script first, then the real `STAGES="sanitize"` run: `GATE-EXTRA-DONE 1 stages 591 s`, 38/38 under the sanitizer, INV-6 across builds 5950740; the sixteen script mutants still 16 of 16 killed; `DEV_MANUAL.md`'s two dated paragraphs shortened to the fix. `No functional change`, no `src/`. 2026-09-14.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1062,8 +1065,8 @@ free (DEC-207).
 ## Open
 
 1. S194  the UCI book path executed by the fast suite, the weighted draw seeded through `CHESSO_BOOK_SEED` (F06)
-2. S222  one-ply continuation history retried with a scale of its own -- bonus, malus, bound and weight against plain history as tunables, **fitted first in a narrow SPSA lane of its own** together with plain history's six never-fitted coefficients and `QuietHistoryMax`, then one gainer SPRT; S024's table on plain history's scale measured H0 and was reverted (DEC-194); placed directly before S098, which reads the sum (DEC-198); the two-ply table only after this passes
-3. S098  the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
+2. S098  the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
+3. S231  a two-ply continuation history table beside S222's one-ply one, on its own scale, fitted in the shared lane and decided by one gainer SPRT against the tree before it (DEC-210) -- opened by S222's H1, behind S098 which reads the sum
 4. S095  reduce a node whose table entry carries no move instead of searching it at full depth
 5. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
 6. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
