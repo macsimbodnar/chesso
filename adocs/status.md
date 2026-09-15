@@ -7,6 +7,21 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-15, by hand.
 
+- **S098 verdict 1's lane is done, 2026-09-15 20:37** (8 h 47 m 45 s against
+  the 8 h 37 m estimate, 1250 iterations, 60000 games, `SPSA-DONE` the run
+  log's only marker). Rounded vector: `LmrHistDiv` 430 -> **699**,
+  `LmrHistClamp` 2 -> **3** (theta 698.66, 2.73). Reading per the
+  pre-registration: not stuck, the clamp not 0 so the term is not inert by
+  the fit's own word and the SPRT is owed; the divisor under the p90 of
+  1442 puts the fit on the census seed's side -- about 1.6 times the p75,
+  with a wider clamp. The same agent lands the fitted defaults now
+  (goldens, `MANUAL.md` rows, bench, ablation, self-play, evidence copies
+  `S098_v1_spsa_*`); then a light fast check, the gate, the commit, the
+  candidate pinned into `adocs/data/S098_v1_sprt.sh` and **the SPRT
+  overnight** against `1db5b8e`'s tree (the commit before verdict 1), `{0, 5}`
+  nElo, up to 20 h worst case. `plan_current/`: S098 (verdict 1 fitted,
+  landing pending).
+
 - **S098 verdict 1's lane is running, launched 2026-09-15 11:49 by the
   coordinator** (`adocs/data/S098_v1_spsa.sh`; wrapper pid in
   `.tuning/spsa_s098v1.pid`, driver `python3 tools/spsa_driver.py run
