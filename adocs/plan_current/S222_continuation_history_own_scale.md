@@ -384,3 +384,310 @@ after the S091 sentence:
 
 For the **absent, search** row: `continuation history (reverted at S024,
 returns as S222)` leaves the list.
+
+## Phase three, 2026-09-15: the fit lands, the census is re-run, the SPRT is pre-registered
+
+Built by a fresh Opus 5 subagent on the idle machine (DEC-185, DEC-199). The
+step stays in `plan_current/` and `done:` is still empty: what completes this
+step is the SPRT's verdict, and that run is the coordinator's.
+
+### The fit, and which pre-registered reading it lands in
+
+The lane ran **2026-09-14 18:05:58 to 2026-09-15 02:43:29 -- 8 h 37 m 31 s
+against the 8 h 30 m estimate**, 1.5 % over, 24.84 s an iteration against
+S085's measured 24.05. 1250 iterations x 24 pairs = 30000 pairs = **60000
+games** on `books/UHO_4060_v3.epd`, W 21663 L 21536 D 16801, `SPSA-DONE`.
+Evidence: `adocs/data/S222_spsa_trajectory.tsv`, `S222_spsa_run.json`,
+`S222_spsa.log`.
+
+The vector is the driver's own rounded JSON block at the end of that log and
+no number in it was re-rounded by hand (`final_vector` rounds at the UCI
+boundary, which is where the run itself sent every value):
+
+| axis | incumbent | fitted | theta before rounding |
+|---|---|---|---|
+| `ContHistBonus` | 15 | **17** | 17.46 |
+| `ContHistMalus` | 15 | **18** | 18.06 |
+| `ContHistWeight` | 25 | **26** | 25.69 |
+| `QuietHistoryMax` | 8192 | **8831** | 8831.48 |
+| `HistoryBonusQuad` | 1 | **6** | 6.33 |
+| `HistoryBonusLin` | 0 | **19** | 18.82 |
+| `HistoryBonusConst` | 0 | **2** | 1.63 |
+| `HistoryMalusQuad` | 1 | **0** | 0.18 |
+| `HistoryMalusLin` | 0 | **17** | 17.06 |
+| `HistoryMalusConst` | 0 | **36** | 35.96 |
+| `HistPruneCoeff` | 576 | **612** | 611.88 |
+
+**Not a stuck run.** Every axis moved off its seed, so S085's rule -- a rounded
+vector equal to the incumbent is recorded as one and owes no SPRT -- does not
+apply and the run is owed.
+
+**The weight ended near 25, which is the fifth of the lane's five
+pre-registered readings.** Neither of DEC-194's suspects is what the fit
+found: the continuation term was not over-weighted at an equal-authority sum
+and it was not starved of band. At 26 it spans `26 * 32767 / 100` = 8519
+against plain history's fitted 8831, the same near-equal authority the seed had
+at 8191 against 8192. **The "at or under 5" row is not triggered, so there is
+no pinned-zero attribution SPRT** and `adocs/data/S222_sprt_pinned.sh` is
+deliberately not written. One gainer SPRT `{0, 5}` decides the step.
+
+What did move is what had never been fitted: plain history's six coefficients
+and `QuietHistoryMax`. The fit splits the bonus from the malus for the first
+time and does it asymmetrically -- bonus `6d^2 + 19d + 2`, malus **linear** at
+`17d + 36` with its quadratic coefficient fitted to zero. That is a hypothesis
+and not a result until the SPRT says otherwise (DEC-019), and the two quadratic
+axes were the lane's coarsest by its own header's admission.
+
+### The three mid-run reads, taken over the whole trajectory
+
+The lane pre-registered them and said they are recorded whatever they say.
+
+- **`c_scale` decays as designed**: 2.055 -> 1.150 at a quarter -> 1.072 at a
+  half -> 1.000 at the end.
+- **`y` has real spread and is centred**: mean 0.102, standard deviation 6.05,
+  range -35 to +35, and only 7.0 % of iterations at exactly zero. Not the
+  "barely changing" trajectory the fishtest wiki calls useless.
+- **No axis lives at a bound.** The only one that touches one is
+  `HistoryMalusQuad`, at its floor of 0 for **18.8 %** of iterations, which is
+  also where it landed; `HistoryBonusLin` and `HistoryMalusLin` touch their
+  floors on 0.3 % and 0.2 %. S085's `RfpMinPly` sat at a bound for 72.5 % and
+  that run was still read.
+
+### What landed, and how each number got there
+
+`src/search_params.hpp`'s eleven X-macro rows carry the fitted values, written
+by a script that reads the driver's JSON rather than retyping it, and the built
+tune binary's own `uci` option lines were then compared back against that same
+JSON, all eleven equal. The four comment blocks that explain those defaults say
+the value is this project's SPSA fit of 2026-09-14 on `UHO_4060_v3.epd`
+(`adocs/data/S222_spsa_trajectory.tsv`) **and nothing else** -- no other
+engine's number is behind any of them, and the seeds they replace are named as
+the seeds they were (DEC-084 as amended by DEC-105). `HistPruneCoeff`'s block
+keeps its old midpoint derivation as history and adds the check that the fitted
+612 still sits inside that region at the fitted band, 138 to 1104.
+
+`tests/test_search_params.cpp`'s golden table was re-derived from the engine's
+own table rather than typed: the 44 rows were read back out of the built tune
+binary's `uci` reply, compared name by name and in order against the golden
+list, and only the numbers substituted, with every column width preserved. Its
+GOLDEN block names S222's eleven beside S085's ten. **A deviation from the
+brief worth stating**: the brief asked for that golden to be re-derived "with
+its own script", and the golden's own site says the opposite -- "there is no
+script and none is owed, because `src/search_params.hpp` is the derivation and
+a diff of the two is the re-derivation". The site's rule was followed and the
+mechanical route above taken as well, so both readings are satisfied; the site
+is unchanged.
+
+`MANUAL.md`'s eleven option rows were updated the same mechanical way, from the
+binary, and four descriptions that had gone stale were rewritten: the malus no
+longer "ships equal to the bonus", `ContHistWeight`'s row reads the fitted
+spans instead of the seed's, `HistPruneCoeff`'s row no longer calls 612 a
+midpoint, and `QuietHistoryMax`'s says where its value comes from.
+`tools/plan_prose_check.py --params` flagged exactly the eleven table rows
+before the edit and passes after it.
+
+### Measurements
+
+`chesso bench`: **5950740 -> 5685915**, -264825 nodes, **-4.5 %**. The commit
+carries `Bench: 5685915`. Nothing was added to the search in this phase; a
+differently graded history orders quiets differently, and every count
+downstream of the order moves with it.
+
+`tools/search_bench.py`, phases one and two -> fitted:
+
+| depth | midgame | kiwipete | tactical |
+|---|---|---|---|
+| 9 | 74825 -> 51189, `c3d5` | 147048 -> 146616, `e2a6` | 25019 -> 39389, `d7c8q` |
+| 12 | 184125 -> 143205, `c3d5` | 577720 -> 570238, `e2a6` | 97318 -> 148060, `d7c8q` |
+
+The three positions disagree in direction -- two shrink, tactical grows by
+half -- which is the ordinary signature of a reordering and another reason the
+verdict is games. **Kiwipete's best move at depth 12 moves back to `e2a6`**,
+where it sat before phase two moved it to `d5e6`; the other two are unchanged
+at both depths. Node counts move by construction, so INV-6 is not available and
+the SPRT is the only thing that can decide this step.
+
+`tests/test_search.cpp` "ordering keeps the tree small" reads **17321** against
+17332 at phase two and 17451 at the parent, 0.7 % inside a band of
+`[3490, 69804]`, so its golden pair is not re-derived (DEC-142's own rule:
+re-derive when the count leaves the middle half).
+
+Debug self-play (DEC-141 clause 1): four rounds at 4+0.04, `noob_3moves.epd`,
+concurrency 8 -- **8 games in 20 s, 0 `Assertion`, 0 `disconnect`**, on both the
+`level=trace engine=true` log and the tee'd stdout.
+
+Gate, both builds, `CLANG_FORMAT_MAJOR=22`: **39 of 39 in `build`, 39 of 39 in
+`build-tune`, `./clang-format.sh --check` clean**. `tools/gate_extra.sh` is the
+coordinator's; this phase changes eleven integers and four comment blocks in
+`src/`, so the second tier's mutation pass and sanitizer run are re-run on the
+landing commit by the coordinator, as phases one and two's were on `96fdc19`.
+
+### The census on the fitted build, and the control that attributes it
+
+`adocs/data/S024_census_run.py run` over its own 400 positions at depth 10,
+Hash 16, on a Release build of this phase's `src/search_params.hpp` with
+S024's five throwaway counters patched back in, built in a detached worktree
+that was removed after the run. Output and the instrumentation diff:
+`adocs/data/S222_census.txt`. **S024's own `adocs/data/S024_census.tsv` was not
+touched** -- the script writes that path, so it was run from the worktree's
+copy and never from this tree's.
+
+| share | S024, 2026-09-12 | S222 fitted | S222 at the incumbent vector |
+|---|---|---|---|
+| writes with a previous move | 97.56 % | **96.62 %** | 96.66 % |
+| quiet reads consulting the term | 96.19 % | **95.15 %** | 95.14 % |
+| of those, reading non-zero | 27.14 % | **19.15 %** | 18.94 % |
+
+The third figure fell eight points against S024 and **the fit is not what moved
+it**, which is a measurement here and not an explanation: the same instrumented
+binary was rebuilt with `bdd82cc`'s incumbent vector and the same 400 positions
+re-run, and it reads 18.94 % -- so the fitted vector finds a non-zero entry
+slightly *more* often, by 0.21 points, and the whole fall belongs to the tree.
+That tree is a third of the size S024's census measured, 30474552 nodes against
+112638096 over the same positions, because S109's pruning block and S091's
+capture rules landed between the two. Per-position spread 2.04 % to 38.88 %,
+median 17.12 %, so no handful of positions carries the average. The reading is
+S024's: the table is consulted on nearly every quiet score and returns a real
+number on a substantial share of those, so a verdict on the fitted vector is
+not a verdict on inert wiring.
+
+### The lane script's double marker, fixed
+
+`adocs/data/S222_spsa.sh` ran `spsa_driver.py check` before the run and the
+driver ends that stage with `SPSA-DONE` too -- one of its exit paths, and
+DEC-061 asks every exit path for a marker -- so the run log carried one marker
+before the first game and two at the end, and the watcher armed on the night
+had to be told to count to two. Counting is what WATCHERS says a watcher must
+not do. `check` now writes `${OUT}.check.log` and only its non-marker lines are
+echoed into the run log, so the probe evidence still lands where it is read and
+the first `SPSA-(DONE|FAILED)` in that log is the run's. A dated comment says
+why, and **the header's pre-registration text is untouched**: it is the record
+of the run that happened. Verified by running the script's own check path with
+its run stage stubbed -- 0 markers in the run log, all eleven probe lines
+present, the marker in the check log. The same run re-confirmed that all eleven
+axes still reach the search from the fitted defaults, 11 of 11.
+
+### The SPRT, pre-registered
+
+`adocs/data/S222_sprt.sh`, modelled on `adocs/data/S091_sprt.sh`, written
+before a game is played. `{0, 5}` nElo at `8+0.08`, `Hash 16`, concurrency 12,
+`books/noob_3moves.epd` -- **not the lane's `UHO_4060_v3.epd`**, which is the
+whole point of the two books (DEC-209 clause 1). Worst case 41861 games at the
+interval's midpoint and 25591 on a bound: **19.5 h and 11.9 h** at the 2150
+games an hour the five runs since S212 average, 19.8 h and 12.1 h at
+`.moltke.local.md`'s 2110. Abort on time forfeits over 1.0 % on either side
+(`tools/forfeit_report.py`); a crash or disconnect voids it and `fastchess.sh`
+says so itself. **Open findings this run is taken while open: none** -- S211,
+S213, S224, S225, S228, S229 and S230 all completed 2026-09-12 to 2026-09-14
+and `adocs/plan.md`'s Open list carries no filler behind this entry.
+
+`REF` defaulted to `bdd82cc`, the commit before this phase's landing, when
+this section was written; **the coordinator re-pinned it to `d785b89`, the
+tree before S222, before any game was played (DEC-210)**: the phase-two
+landing took the SPRT path for INV-6 and was never a verdict, so measured
+against it the table itself would stay unpriced, and the step's accepts --
+"against the commit before it" -- means the commit before S222. `CAND`
+defaults to `HEAD`, because the landing commit does not exist when the file is
+written; the coordinator pins it to the sha after committing, and
+`fastchess.sh`'s banner prints both shas with their dates before the first
+game.
+
+The three outcomes are written in that file. The one with work in it is H0:
+
+- **H1** -- keep the whole vector, table and history scale together. The
+  stopping figure is upward-biased and the claim is "at least 5 nElo"
+  (DEC-063). The step's H1 clause then opens the two-ply table as its own step,
+  behind S098.
+- **H0** -- the scale was not the cause. The lane fitted it on its own axes,
+  found the weight where the seed put it, and the vector built on it does not
+  gain: that is the lane's fifth pre-registered reading and the step's accepts
+  then binds, so **the technique leaves the plan with a decision that says
+  why** (S005, S006, S015 are the precedent that a zero is recorded as a zero
+  and may still be kept). **But the other eight axes have no verdict of their
+  own.** The six plain-history coefficients, `QuietHistoryMax` and
+  `HistPruneCoeff` were fitted in the same vector; an H0 over the sum says the
+  eleven together do not clear 5 nElo, not that any one of them costs. **The
+  reading proposed to the coordinator, who decides: keep the eight, revert the
+  three.** The three continuation axes are inert once the table is gone and go
+  with it; the eight are a fit of parameters this engine already shipped, over
+  60000 of its own games, and reverting them to their seeds would be reverting
+  a measurement to a guess on no evidence. What that costs is named and not
+  hidden: the eight were fitted *with* the table present, so they are
+  conditioned on a tree that would no longer exist, and keeping them without a
+  verdict is a change of unknown sign. Two ways to close it, either acceptable:
+  a second gainer SPRT of the eight alone against the pre-S222 commit, another
+  night; or revert all eleven and let S127 -- which refits the whole parameter
+  set after the block -- take them on the tree that ships. **What is not
+  acceptable is keeping the eight and quoting this run as evidence for them.**
+- **No verdict** -- recorded as zero, decided with the reason stated. The
+  eight-axis question is open in the same terms.
+
+### Documents
+
+- `MANUAL.md`: eleven option defaults, four descriptions.
+- `DEV_MANUAL.md`: the bench ledger gains `S222` phase three's `5685915` with
+  what moved it; the S222 lane paragraph gains the run's measured 8 h 37 m and
+  the check-log plumbing.
+- `adocs/data/README.md`: six rows -- `S222_spsa.sh` (which phase two left
+  without one), `S222_spsa_run.json`, `S222_spsa_trajectory.tsv`,
+  `S222_spsa.log`, `S222_census.txt`, `S222_sprt.sh`.
+- `tests/test_search_params.cpp`: the eleven golden defaults.
+- `README.md`: human-owned, untouched.
+- `adocs/specs.md`, `adocs/plan.md`, `adocs/status.md`, `adocs/decisions.md`:
+  not edited (hard limit). Wording proposed below.
+
+### Proposed `specs.md` amendment, for the coordinator
+
+The search row's S222 passage ends "the defaults above are first settings and
+S222's own SPSA lane ... fits them together with `QuietHistoryMax`, plain
+history's six never-fitted coefficients and `HistPruneCoeff` before the gainer
+SPRT decides the step." That clause is now history. Replacing it:
+
+> The defaults above were first settings and **S222's own SPSA lane fitted
+> them on 2026-09-14/15** -- `tools/spsa_s222.json`, `adocs/data/S222_spsa.sh`,
+> eleven axes, 1250 iterations over 60000 games at 2+0.02 on
+> `UHO_4060_v3.epd` so tuning and verification share no openings, 8 h 37 m,
+> `adocs/data/S222_spsa_trajectory.tsv`. Every axis moved, so the run is not
+> stuck and the SPRT is owed: `ContHistBonus` 15 -> 17, `ContHistMalus`
+> 15 -> 18, `ContHistWeight` 25 -> 26, `QuietHistoryMax` 8192 -> 8831,
+> `HistoryBonusQuad` 1 -> 6, `HistoryBonusLin` 0 -> 19, `HistoryBonusConst`
+> 0 -> 2, `HistoryMalusQuad` 1 -> 0, `HistoryMalusLin` 0 -> 17,
+> `HistoryMalusConst` 0 -> 36, `HistPruneCoeff` 576 -> 612 -- plain history's
+> six coefficients and its band fitted for the first time in this project's
+> history, and the bonus and malus split asymmetrically, the bonus quadratic
+> at `6d^2 + 19d + 2` and the malus linear at `17d + 36`. **The weight landed
+> near its seed**, which is the lane's own pre-registered reading that neither
+> of DEC-194's suspects -- the doubled share, the shared bound -- is what the
+> fit found, and the "at or under 5" row that would have owed a second
+> attribution run is not triggered. `bench` 5950740 -> 5685915. The census on
+> the fitted build reads 96.62 / 95.15 / 19.15 % against S024's 97.56 / 96.19 /
+> 27.14, with a same-tree control at the incumbent vector at 18.94 % that
+> attributes the fall to S109's and S091's pruning and not to the fit
+> (`adocs/data/S222_census.txt`). One gainer SPRT `{0, 5}` at the harness
+> regime against the commit before the landing decides the step
+> (`adocs/data/S222_sprt.sh`).
+
+**Ruled by the coordinator before any game, DEC-210, 2026-09-15**: the
+proposal above -- keep the eight, revert the three -- is refused. Under H0 the
+whole vector reverts with the table to the measured baseline `d785b89`,
+because a tree carrying the eight without the three has been played by no run
+and a change of unknown sign is not shipped on the argument that a fit beats a
+guess; the eight axes' fit becomes a step of its own (a lane without the
+table, then one SPRT), seeded from `adocs/data/S222_spsa_trajectory.tsv`.
+`adocs/data/S222_sprt.sh`'s header carries that reading in place of the
+proposal.
+
+### Proposed decision, for the coordinator
+
+A `DEC` is owed for two choices made here that a future reader would otherwise
+re-derive: **(1)** that the eleven-axis fit lands as one vector under one
+verdict rather than being attributed axis by axis, with S085's twelve-axis
+precedent and the reason attribution is unavailable -- every axis prices the
+same quiet ordering score; and **(2)** the H0 reading above, that the eight
+never-before-fitted axes have no verdict of their own and what may and may not
+be concluded about them. Both are stated in `adocs/data/S222_sprt.sh` before a
+game is played, which is where the record has to be; the decision entry is the
+coordinator's to write. **Written as DEC-210 on 2026-09-15**: (1) as proposed,
+one vector under one verdict; (2) against the proposal, the whole vector
+reverting under H0 and the eight axes filed as their own step; and the
+reference re-pinned to the tree before S222.

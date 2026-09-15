@@ -57,8 +57,13 @@
      this value. The ceiling is INT16_MAX because the entry is an int16_t      \
      (src/data_structures.hpp), and it doubles as the overflow guard the       \
      update needs: the intermediate reaches MAX^2, and 32767^2 is 1.07e9,      \
-     inside int32 with room. Nothing here is a guess at where the good values  \
-     are -- S127 sweeps it.                                                    \
+     inside int32 with room. 8831 is **this project's own SPSA fit** and       \
+     nothing else: S222's history lane of 2026-09-14, 1250 iterations over     \
+     60000 games at 2+0.02 on books/UHO_4060_v3.epd, recorded in               \
+     adocs/data/S222_spsa_trajectory.tsv. It replaces the 8192 this axis       \
+     shipped as a power of two, which nothing had ever fitted -- S085          \
+     predates S093 and named no history axis (DEC-198). S127 refits it after   \
+     the block.                                                                \
                                                                                \
      The band above is the countermove's 700000 and the bands clear each other \
      by 100 (src/evaluation.cpp:33-37), so the ceiling has six orders of       \
@@ -72,7 +77,7 @@
      node count. Replaces ORDER_HISTORY_MAX, whose 600000 was a saturation     \
      ceiling on an unbounded accumulator; gravity bounds the table instead.    \
      S093, 2026-08-20_plan_review-F14. */                                      \
-  X(QUIET_HISTORY_MAX, "QuietHistoryMax", 8192, 1, 32767)                      \
+  X(QUIET_HISTORY_MAX, "QuietHistoryMax", 8831, 1, 32767)                      \
                                                                                \
   /* The bonus a quiet move that caused a cutoff is credited with, and the     \
      malus every quiet tried before it at that node is charged, both as        \
@@ -84,20 +89,33 @@
      {0, 300, -250} here if the quadratic misfits. The bonus and the malus     \
      carry separate coefficients because splitting them is the published       \
      follow-up -- Weiss measured a split formula plus SPSA at +5.78 +/- 4.09   \
-     LTC (PR #695), Lynx moved to x^2+x+c split (PR #1818) -- but they ship    \
-     equal. This step does not claim the split; it leaves S127 the axes.       \
+     LTC (PR #695), Lynx moved to x^2+x+c split (PR #1818) -- and until S222   \
+     they shipped equal because nothing here had measured the split.           \
+                                                                               \
+     **All six values below are this project's own SPSA fit** and no other     \
+     engine's numbers are behind any of them: S222's history lane of           \
+     2026-09-14, 1250 iterations over 60000 games at 2+0.02 on                 \
+     books/UHO_4060_v3.epd, recorded in adocs/data/S222_spsa_trajectory.tsv.   \
+     The seeds they replace were {1, 0, 0} on both halves. The fit does split  \
+     them, and in a shape nothing predicted: the bonus stays quadratic at      \
+     6d^2 + 19d + 2 and the malus comes back **linear**, 17d + 36, with its    \
+     quadratic coefficient fitted to zero. That is a hypothesis and not a      \
+     result until the lane's own gainer SPRT decides the vector it sits in     \
+     (DEC-019, `adocs/data/S222_sprt.sh`); the two quadratic axes were also    \
+     the lane's coarsest, `c_end` at its floor of 1 over a useful region of a  \
+     handful of integers, which the lane's header states rather than hides.    \
                                                                                \
      QUAD and LIN are non-negative because a negative one turns the bonus into \
      a penalty as depth grows, which inverts the mechanism rather than tuning  \
      it. Their ceilings are the overflow bound: at MAX_DEPTH 126 the three     \
      terms sum to under 1.7e7, four orders inside int32. CONST spans the       \
      entry's own type because the published linear form needs it negative. */  \
-  X(HISTORY_BONUS_QUAD,  "HistoryBonusQuad",  1, 0, 1024)                      \
-  X(HISTORY_BONUS_LIN,   "HistoryBonusLin",   0, 0, 4096)                      \
-  X(HISTORY_BONUS_CONST, "HistoryBonusConst", 0, -32768, 32767)                \
-  X(HISTORY_MALUS_QUAD,  "HistoryMalusQuad",  1, 0, 1024)                      \
-  X(HISTORY_MALUS_LIN,   "HistoryMalusLin",   0, 0, 4096)                      \
-  X(HISTORY_MALUS_CONST, "HistoryMalusConst", 0, -32768, 32767)                \
+  X(HISTORY_BONUS_QUAD,  "HistoryBonusQuad",   6, 0, 1024)                     \
+  X(HISTORY_BONUS_LIN,   "HistoryBonusLin",   19, 0, 4096)                     \
+  X(HISTORY_BONUS_CONST, "HistoryBonusConst",  2, -32768, 32767)               \
+  X(HISTORY_MALUS_QUAD,  "HistoryMalusQuad",   0, 0, 1024)                     \
+  X(HISTORY_MALUS_LIN,   "HistoryMalusLin",   17, 0, 4096)                     \
+  X(HISTORY_MALUS_CONST, "HistoryMalusConst", 36, -32768, 32767)               \
                                                                                \
   /* ONE-PLY CONTINUATION HISTORY, S222, and its own scale. The table is        \
      `cont_hist` in src/data_structures.hpp, keyed on the previous move's       \
@@ -162,12 +180,20 @@
      25 * 32767 / 100 = 8191 against plain history's shipped 8192, so the two   \
      terms start with equal authority -- which is exactly the equal-weight sum  \
      S024 measured and the null the first suspect is tested against. All three  \
-     are first settings and S222's own SPSA lane fits them, together with       \
-     QuietHistoryMax and plain history's six coefficients, which nothing has    \
-     ever fitted (DEC-198). */                                                  \
-  X(CONT_HIST_BONUS,   "ContHistBonus",   15, 0, 1000)                         \
-  X(CONT_HIST_MALUS,   "ContHistMalus",   15, 0, 1000)                         \
-  X(CONT_HIST_WEIGHT,  "ContHistWeight",  25, 0, 2000)                         \
+     were the first settings, and **S222's own SPSA lane has since fitted all   \
+     three** together with QuietHistoryMax and plain history's six              \
+     coefficients (DEC-198): 2026-09-14, 1250 iterations over 60000 games at    \
+     2+0.02 on books/UHO_4060_v3.epd, adocs/data/S222_spsa_trajectory.tsv,      \
+     15 -> 17, 15 -> 18 and 25 -> 26. The values below are that fit and         \
+     nothing else. The weight barely moved, which is the lane's own             \
+     pre-registered reading that neither of DEC-194's suspects is what the      \
+     fit found: at 26 the continuation term spans 26 * 32767 / 100 = 8519       \
+     against plain history's fitted 8831, so the two still carry very nearly    \
+     equal authority. What the SPRT judges is the whole eleven-axis vector      \
+     and not this line. */                                                      \
+  X(CONT_HIST_BONUS,   "ContHistBonus",   17, 0, 1000)                         \
+  X(CONT_HIST_MALUS,   "ContHistMalus",   18, 0, 1000)                         \
+  X(CONT_HIST_WEIGHT,  "ContHistWeight",  26, 0, 2000)                         \
                                                                                \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \
@@ -374,12 +400,21 @@
      a killer scores 900000 there and a countermove 700000, so reading the      \
      ordering score would silently exempt both and nothing else.                \
                                                                                \
-     HP_COEFF is **(c) the midpoint** of a per-lmr-depth region declared on     \
-     chesso's own history scale: `M/64` to `M/8` with `M` = QuietHistoryMax,    \
-     that is 128 to 1024, midpoint (128 + 1024) / 2 = 576. The region is        \
-     declared and not taken from anywhere: below M/64 the threshold is inside   \
-     the noise a single malus writes, above M/8 it reaches an eighth of the     \
-     whole band in one ply.                                                     \
+     HP_COEFF is **this project's own SPSA fit**: S222's history lane of        \
+     2026-09-14, 1250 iterations over 60000 games at 2+0.02 on                  \
+     books/UHO_4060_v3.epd, adocs/data/S222_spsa_trajectory.tsv, and nothing    \
+     else is behind it. It was in that lane because it reads the same scale     \
+     the lane moves (DEC-205) and it still reads the raw plain entry, not the   \
+     sum; S098 owns moving the rule onto the sum.                               \
+                                                                               \
+     What it replaces was **(c) the midpoint** of a per-lmr-depth region        \
+     declared on chesso's own history scale: `M/64` to `M/8` with `M` =         \
+     QuietHistoryMax, that is 128 to 1024 at the 8192 that then shipped,        \
+     midpoint 576. The region is declared and not taken from anywhere: below    \
+     M/64 the threshold is inside the noise a single malus writes, above M/8    \
+     it reaches an eighth of the whole band in one ply. The fitted 612 is       \
+     still inside that region at the fitted band -- 138 to 1104 at M = 8831 --  \
+     which is a check on the fit and not the derivation of the value.           \
                                                                                \
      HP_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16, declared by the same   \
      purpose as FutMaxLmrDepth. **Off is the cap at 0, and nothing else.**      \
@@ -388,7 +423,7 @@
      is negative. 16384 is the range top -- twice the band's own edge, so no    \
      entry sits below it at any lmr_depth of 1 or more -- and a range top is    \
      not an off value. */                                                       \
-  X(HP_COEFF,          "HistPruneCoeff",  576,    0, 16384)                    \
+  X(HP_COEFF,          "HistPruneCoeff",  612,    0, 16384)                    \
   X(HP_MAX_LMRDEPTH,   "HistPruneMaxLmrDepth", 8, 0, 16)                       \
                                                                                \
   /* QUIET SEE PRUNING. A quiet whose exchange evaluation loses more than a     \

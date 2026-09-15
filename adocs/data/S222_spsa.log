@@ -1,0 +1,35 @@
+S222 history lane
+  config   tools/spsa_s222.json
+  out      .tuning/spsa_s222_20260914_180558
+  engine   build-tune/src/chesso
+  head     34a3ff6 2026-09-14
+  dirty    0 tracked paths
+  binary   7e37a48e39bfb84af6514e6f5e9366640e59dc28134a94f588fa96c5023ea862
+setoption reaches the search: ContHistBonus 0 -> 63019 nodes, 1000 -> 86678 (depth 9, midgame)
+setoption reaches the search: ContHistMalus 0 -> 53126 nodes, 1000 -> 66740 (depth 9, midgame)
+setoption reaches the search: ContHistWeight 0 -> 74327 nodes, 2000 -> 72222 (depth 9, midgame)
+setoption reaches the search: QuietHistoryMax 1 -> 56700 nodes, 32767 -> 74825 (depth 9, midgame)
+setoption reaches the search: HistoryBonusQuad 0 -> 31609 nodes, 1024 -> 55155 (depth 9, midgame)
+setoption reaches the search: HistoryBonusLin 0 -> 74825 nodes, 4096 -> 52564 (depth 9, midgame)
+setoption reaches the search: HistoryBonusConst -32768 -> 44942 nodes, 32767 -> 49875 (depth 9, midgame)
+setoption reaches the search: HistoryMalusQuad 0 -> 47010 nodes, 1024 -> 19176 (depth 9, midgame)
+setoption reaches the search: HistoryMalusLin 0 -> 74825 nodes, 4096 -> 19451 (depth 9, midgame)
+setoption reaches the search: HistoryMalusConst -32768 -> 41762 nodes, 32767 -> 19451 (depth 9, midgame)
+setoption reaches the search: HistPruneCoeff 0 -> 44607 nodes, 16384 -> 74825 (depth 9, midgame)
+probed 11 of 11 parameters in 0.7 s
+11 parameters, 1250 iterations x 24 pairs = 30000 pairs, 60000 games
+SPSA-DONE
+{
+  "ContHistBonus": 17,
+  "ContHistMalus": 18,
+  "ContHistWeight": 26,
+  "HistPruneCoeff": 612,
+  "HistoryBonusConst": 2,
+  "HistoryBonusLin": 19,
+  "HistoryBonusQuad": 6,
+  "HistoryMalusConst": 36,
+  "HistoryMalusLin": 17,
+  "HistoryMalusQuad": 0,
+  "QuietHistoryMax": 8831
+}
+SPSA-DONE

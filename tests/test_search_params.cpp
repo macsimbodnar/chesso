@@ -34,7 +34,9 @@
 // A step that deliberately changes a value updates this list in the same
 // commit, which is the point: S068 and S039 each move exactly one number and
 // have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
-// not a value -- and the rule is the same for a vector as for a number.
+// not a value -- and the rule is the same for a vector as for a number. S222's
+// history lane moved eleven: QuietHistoryMax, plain history's six bonus and
+// malus coefficients, the three continuation axes and HistPruneCoeff.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -61,16 +63,16 @@ struct golden_param_t { const char* name; int value; int min; int max; };
 
 static const std::vector<golden_param_t> golden_defaults = {
   //                       default   min      max
-  {"QuietHistoryMax",        8192,     1,   32767},
-  {"HistoryBonusQuad",          1,     0,    1024},
-  {"HistoryBonusLin",           0,     0,    4096},
-  {"HistoryBonusConst",         0, -32768,   32767},
-  {"HistoryMalusQuad",          1,     0,    1024},
-  {"HistoryMalusLin",           0,     0,    4096},
-  {"HistoryMalusConst",         0, -32768,   32767},
-  {"ContHistBonus",            15,     0,    1000},
-  {"ContHistMalus",            15,     0,    1000},
-  {"ContHistWeight",           25,     0,    2000},
+  {"QuietHistoryMax",        8831,     1,   32767},
+  {"HistoryBonusQuad",          6,     0,    1024},
+  {"HistoryBonusLin",          19,     0,    4096},
+  {"HistoryBonusConst",         2, -32768,   32767},
+  {"HistoryMalusQuad",          0,     0,    1024},
+  {"HistoryMalusLin",          17,     0,    4096},
+  {"HistoryMalusConst",        36, -32768,   32767},
+  {"ContHistBonus",            17,     0,    1000},
+  {"ContHistMalus",            18,     0,    1000},
+  {"ContHistWeight",           26,     0,    2000},
   {"MaxQsearchDepth",          19,     1,      64},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
@@ -85,7 +87,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"FutBase",                 147,     0,   48000},
   {"FutSlope",                170,     0,    2000},
   {"FutMaxLmrDepth",            8,     0,      16},
-  {"HistPruneCoeff",          576,     0,   16384},
+  {"HistPruneCoeff",          612,     0,   16384},
   {"HistPruneMaxLmrDepth",      8,     0,      16},
   {"SeeQuietCoeff",            50,     0,   10000},
   {"SeeQuietMaxLmrDepth",       8,     0,      16},

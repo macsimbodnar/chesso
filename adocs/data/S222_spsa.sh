@@ -212,8 +212,28 @@ echo "  binary   $(sha256sum "$ENGINE" | cut -c1-64)"
 # DEC-200: every run writes its own config and passes `check` on the day, on an
 # idle machine. Every axis is probed at both of its own bounds and has to
 # search a different number of nodes, or it is refused by name.
-python3 tools/spsa_driver.py check "$CONFIG" --engine "$ENGINE" ||
-  { echo "SPSA-FAILED: check refused the config" >&2; exit 1; }
+#
+# **The check's own marker does not reach this log. 2026-09-15, S222 phase
+# three, and it is the only change made to this file after the run.** The
+# driver ends its `check` stage with `SPSA-DONE` too -- it is one of its exit
+# paths and DEC-061 asks every one of them for a marker -- so the 2026-09-14
+# run's log carried a marker before its first game and two at the end, and the
+# watcher armed on it had to be told to count to two instead of exiting on the
+# first. Counting is what WATCHERS says a watcher must not have to do. So
+# `check` writes its own file beside the log and only its non-marker lines are
+# echoed on: the probe evidence still lands in the run log where it is read,
+# and the first `SPSA-(DONE|FAILED)` in that log is now the run's. Everything
+# above this line is the pre-registration of the run that happened and is left
+# exactly as it was written.
+CHECK_LOG="${OUT}.check.log"
+echo "  check    $CHECK_LOG"
+if ! python3 tools/spsa_driver.py check "$CONFIG" --engine "$ENGINE" \
+     > "$CHECK_LOG" 2>&1; then
+  cat "$CHECK_LOG" >&2
+  echo "SPSA-FAILED: check refused the config" >&2
+  exit 1
+fi
+grep -v '^SPSA-DONE$' "$CHECK_LOG" || true
 
 mkdir -p "$OUT" || { echo "SPSA-FAILED: mkdir $OUT" >&2; exit 1; }
 

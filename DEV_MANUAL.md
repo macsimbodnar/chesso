@@ -574,12 +574,22 @@ parameters, 1250 x 24 pairs, 60000 games in 8 h 21 m, 0 forfeits, verified at
 `.tuning/`, `SPSA-DONE`/`SPSA-FAILED` as the last line either way. The script
 rebuilds `build-tune`, prints the binary's sha256 and runs `check` before it
 plays a game, which is DEC-200's rule that a config passes `check` on the day.
+`check`'s own output goes to `${OUT}.check.log` and only its non-marker lines
+are echoed into the run log, because the driver ends that stage with
+`SPSA-DONE` as well and a watcher must not have to count markers: the
+2026-09-14 run predates the fix and its log carries two, which is why
+`adocs/data/S222_spsa.log` ends the way it does.
 The axes are S222's three continuation parameters, `QuietHistoryMax`, plain
 history's six `HISTORY_BONUS_*`/`HISTORY_MALUS_*` coefficients — never fitted,
 S085 predates S093 — and `HistPruneCoeff`, which reads the same scale
 (DEC-205). No `Tm*` axis and no `TmHardPercent` (DEC-094, DEC-200). Estimated
 at **8 h 30 m** from S085's own measured 24.05 s an iteration on this machine,
-ceiling 17 h: a night run under DEC-155.
+ceiling 17 h: a night run under DEC-155. **It ran on 2026-09-14/15 in 8 h 37 m**
+— 1250 iterations, 60000 games, 24.84 s an iteration, 1.5 % over the estimate —
+and every one of the eleven axes moved off its seed. The trajectory,
+the frozen config and the run log are `adocs/data/S222_spsa_trajectory.tsv`,
+`S222_spsa_run.json` and `S222_spsa.log`; the vector they end on is what
+`src/search_params.hpp` ships and what `adocs/data/S222_sprt.sh` measures.
 
 Note which book each of the two plays. S085 tuned on `UHO_4060_v3.epd` and
 verified on `UHO_Lichess_4852_v1.epd`; S222's lane tunes on `UHO_4060_v3.epd`
@@ -2027,7 +2037,13 @@ calls noise: 3889177, 3908460, 3832251 and 3960101 before against 3771750,
 The two groups do not overlap — the slowest before-reading is above the fastest
 after-reading — and the means are 3897497 against 3757593, **3.6 % of nodes per
 second** for two extra dependent loads per scored quiet, one extra graded
-update per cutoff and a 1.125 MiB table. Quote it
+update per cutoff and a 1.125 MiB table. **At `S222` phase three, the fitted
+vector: `5685915`**, a further 4.5 % less. Nothing was added: the eleven
+history axes the lane fitted moved from their seeds to the values
+`src/search_params.hpp` now carries, and a differently graded history orders
+quiets differently, which moves every count downstream of it. Only games say
+whether the smaller tree is a better one (DEC-019), and
+`adocs/data/S222_sprt.sh` is the run that asks. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

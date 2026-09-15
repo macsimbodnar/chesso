@@ -11814,3 +11814,52 @@ Consequences: `tools/spsa_s222.json` names the book; the lane's
               the night after S091's SPRT. `specs.md`'s search row carries
               the passage. S098's file already reads S222 for the sum.
               `adocs/plan_todo/S230_*.md` exists behind S229.
+
+## DEC-210  2026-09-15  S222's SPRT is measured against the tree before S222, one vector under one verdict, and H0 reverts the whole of it
+Tags:         s222, sprt, pre-registration, continuation-history, history,
+              dec-194, dec-198, dec-209, dec-143, inv-6
+Context:      Phase three of S222 landed the lane's fitted vector (every axis
+              moved; `ContHistWeight` 26 against its seed 25, the lane's
+              "near 25" reading) and pre-registered the gainer SPRT with the
+              reference defaulting to `bdd82cc`, the commit before phase
+              three -- a tree that already carries the table at its unfitted
+              first settings. The phase-two landing `96fdc19` moved node
+              counts and took the SPRT path for INV-6, so it was never a
+              verdict and is not a baseline: measured against it, a whole
+              change of play -- the table itself -- would stay unpriced. The
+              script also proposed, for the H0 case, keeping the eight
+              never-fitted axes and reverting the three table axes.
+Decision:     By the coordinator under the owner's delegation. **(1) The
+              reference is the tree before S222**: `d785b89`, S091's landing,
+              whose `src/` is the parent of the phase-two landing (`b0df255`
+              and `f4f70c4` between them touch no source). The run therefore
+              prices S222 whole -- the table on its own fitted scale together
+              with plain history's six coefficients, `QuietHistoryMax` and
+              `HistPruneCoeff` fitted in the same vector -- which is what the
+              step's accepts asked ("against the commit before it") and what
+              DEC-194's H0 was measured against. **(2) One vector, one
+              verdict.** H1 keeps all eleven values and the table and opens
+              the two-ply step behind S098; H0 records the zero and reverts
+              `src/` to the measured baseline -- table, three axes and the
+              eight fitted values together -- because a vector no run has
+              played is not kept on an argument (MEASUREMENT: one change at a
+              time, decided by SPRT). **(3) The eight axes' fit is not lost
+              under H0**: it is filed as its own step -- plain history's six
+              coefficients, `QuietHistoryMax` and `HistPruneCoeff` fitted in
+              a lane without the table, then one SPRT of their own -- and the
+              trajectory already committed is its seed material.
+Rejected:     **`bdd82cc` as the reference** -- leaves phase two unpriced
+              and answers a narrower question than the step asks. **Keeping
+              the eight and reverting the three under H0** -- an unmeasured
+              tree shipped on the argument that a fit beats a guess; the fit
+              was taken with the table present and its sign without the table
+              is unknown, which the script itself named. **A second
+              attribution run at weight 26** -- the lane's pre-registration
+              owed one only at or under 5, and a reading chosen after the
+              number is what pre-registration exists to prevent.
+Consequences: `adocs/data/S222_sprt.sh` defaults `REF` to `d785b89` and its
+              header says why; `CAND` is pinned to the landing sha by the
+              coordinator after the commit, as S091's was. The H0 outcome in
+              that header reads as (2) and (3). `specs.md`'s S222 passage
+              names the reference. `.ref-builds/d785b89` already exists from
+              S091's run and its identity line is `Chesso d785b89 native`.
