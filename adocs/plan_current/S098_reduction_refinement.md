@@ -965,3 +965,74 @@ where the technique leaves the plan with a decision instead of a match.
 `adocs/data/S098_v1_sprt.sh`, `{0, 5}` nElo at the harness regime against the
 commit before this landing, which the coordinator re-pins once the fitted
 values land.
+
+### Fitted before the match, 2026-09-15
+
+The lane ran as pre-registered: **11:49:38 to 20:37:23, 8 h 47 m 45 s** for
+1250 iterations and 60000 games at `2+0.02` on `books/UHO_4060_v3.epd`, against
+the 8 h 37 m estimated from S222's measured 24.84 s an iteration -- 2 % over.
+`SPSA-DONE` is the run log's only marker, which is the check-log plumbing doing
+its job. Evidence: `adocs/data/S098_v1_spsa_trajectory.tsv`,
+`S098_v1_spsa_run.json`, `S098_v1_spsa.log`, `S098_v1_spsa_check.log`.
+
+**The vector: `LmrHistDiv` 430 -> 699, `LmrHistClamp` 2 -> 3**, the driver's own
+rounding of theta `[698.6584395515816, 2.7319152681598724]`. Read by the
+pre-registration's own rows, written before a game was played:
+
+- **not stuck** -- both axes differ from their seeds, so the SPRT is owed
+  (S085's rule would have excused it otherwise);
+- **the clamp is not 0**, so the term is not inert by the fit's own word and
+  the technique does not leave the plan on this reading;
+- **the divisor is at or below the p90 of 1442**, so the fit agrees with the
+  census seed's side of the question rather than the band seed's -- 699 is
+  about 1.6 times the p75 it started from, a narrower class of moves, with the
+  clamp widened from two plies to three.
+
+The trajectory beside the endpoint: `LmrHistDiv` never touched a bound in 1250
+iterations, ran 422 to 747 with a median of 648; `LmrHistClamp` sat at a bound
+on 39 of 1250 -- five settings being what they are, and the pre-registration
+expected that figure to be non-trivial; `y` is centred at -0.139 with a
+standard deviation of 5.78 over -21 to 16, real spread rather than the
+"barely changing" trajectory the fishtest wiki calls useless; `c_scale` decays
+2.054887 -> 1.000000 as designed.
+
+**What the fitted vector does to the tree.** A narrower class touched harder:
+fewer sites clear 699 than cleared 430, but one that clears three divisors now
+gets three plies back instead of two, and the second effect dominates.
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 706352 | 1185319 | 2153709 | 4036614 | 6296135 | 11046420 |
+| off | 607842 | 935536 | 1634008 | 2364815 | 3849812 | 5685915 |
+| delta | +16.21 % | +26.70 % | +31.81 % | +70.69 % | +63.54 % | +94.28 % |
+
+The off column is the parent's totals exactly at every depth, at all three
+settings this step has now measured, so the inert-by-rebuild property is
+untouched by the fit. **`Bench: 11046420`**, against the parent's 5685915 and
+the census seed's 9133516. `tools/search_bench.py`, parent -> 430 -> fitted:
+
+| | depth 9 | depth 12 |
+|---|---|---|
+| midgame | 51189 -> 27434 -> 77969 | 143205 -> 240137 -> 231052 |
+| kiwipete | 146616 -> 148084 -> 146770 | 570238 -> 772719 -> 618264 |
+| tactical | 39389 -> 30174 -> 40190 | 148060 -> 185931 -> 221800 |
+
+Best moves at the fitted vector are `c3d5` / `e2a6` / `d7c8q` at both depths --
+the parent's, and midgame's depth-9 move comes back from the `g5f6` the census
+seed read.
+
+**Re-derived with the vector**: `tests/test_search_params.cpp`'s two golden rows
+and `MANUAL.md`'s two option rows, both now saying the values are this
+project's own SPSA fit. **The driven cases needed no edit and that was the
+point of writing them against `LMR_HIST_DIV`** -- they plant the divisor rather
+than a number, so they followed the re-seed and this fit without a line moving,
+and `capture_mates` survived this change where it had not survived the last.
+**No line of `src/search.cpp` moved**, so all six `L` anchors and every other
+mutant anchor in the tree still resolve uniquely -- `git diff src/search.cpp`
+is empty against the landing. Debug self-play again, four rounds at 4+0.04:
+**8 games in 15 s, 0 `Assertion`, 0 `disconnect`**. Both fast suites **39/39**,
+`clang-format.sh --check` clean.
+
+**The SPRT prices 699 and 3**, not either seed: `adocs/data/S098_v1_sprt.sh`,
+`{0, 5}` nElo at the harness regime, `REF` still `1db5b8e` and `CAND` still
+`HEAD` for the coordinator to pin.

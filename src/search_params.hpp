@@ -320,35 +320,50 @@
      A band is what the tables *can* hold; a divisor has to be sized on what    \
      they *do* hold, and the two are three orders apart in this engine.         \
                                                                                \
-     LMR_HIST_CLAMP is **(b), a stated fraction of chesso's own reduction       \
-     table**. `search_lmr_reduction_probe(11, 63)` -- the census median         \
-     remaining depth RfpMaxDepth's comment records, at the table's last move    \
-     index -- is `0.52 + ln(11) * ln(63) / 1.82` = 5.98, stored floored as 5.   \
-     Half of that, rounded down, is 2: history may move a late reduction by at  \
-     most half of what depth and move number gave it. Re-derive the arithmetic  \
-     when LmrBase or LmrDivisor move. Fallback **(c)**: the midpoint of the     \
-     declared 0 to 4 is the same integer. **0 is the off value and it is a      \
-     true one** -- the clamp is the whole term, so at 0 the helper returns the  \
-     raw table for every sum and every divisor, which is what the S109          \
-     bisection protocol needs: one release rebuild separates "the term is       \
-     wrong" from "re-pointing S109's gate moved it". 4 is the range top for     \
-     the same reason 3 is SeeLmrExtra's: past it the term exceeds what the      \
-     table returns for the first reducible move at every depth this engine      \
-     reaches, so it replaces the ordering's estimate instead of adjusting it.   \
+     LMR_HIST_CLAMP 3 is **this project's own SPSA fit** and nothing else:     \
+     S098 verdict 1's two-axis lane of 2026-09-15, 1250 iterations over 60000   \
+     games at 2+0.02 on books/UHO_4060_v3.epd, recorded in                      \
+     adocs/data/S098_v1_spsa_trajectory.tsv; theta 2.7319, rounded by the       \
+     driver to 3. No engine's number is behind it, and the published records    \
+     that say history scaling is worth trying are records and not seeds         \
+     (DEC-084 as amended by DEC-105).                                           \
                                                                                \
-     LMR_HIST_DIV is **(b), a derivation over chesso's own measured            \
-     distribution of that sum** -- not over the band's arithmetic, which is     \
-     what it was seeded from first and what that seeding got wrong. The census  \
-     is adocs/data/S098_v1_hist_census.txt: the signed sum recorded at every    \
-     site the rule reads it -- one call of `lmr_adjusted_reduction` -- over the \
-     400 positions of adocs/data/S024_census_positions.txt, `go depth N`        \
-     through one UCI process. At depth 12, 5464717 sites, |sum| reads p50 174,  \
-     **p75 430**, p90 1442, p99 5362; at depth 10, 2105964 sites, p50 107, p75  \
-     258, p90 689, p99 4347. The rule is that the term reaches one full ply at  \
-     the 75th percentile at depth 12, so the divisor is **430** and a quarter   \
-     of the sites get a ply or more. At 430 with the clamp at 2 the shares at   \
-     depth 12 are 74.96 % of sites moved by nothing, 10.38 % by one ply and     \
-     14.66 % by two.                                                            \
+     The seed it started from was **(b)**, a stated fraction of chesso's own    \
+     reduction table: `search_lmr_reduction_probe(11, 63)` -- the census median \
+     remaining depth RfpMaxDepth's comment records, at the table's last move    \
+     index -- is `0.52 + ln(11) * ln(63) / 1.82` = 5.98, stored floored as 5,   \
+     and half of that rounded down is 2, history moving a late reduction by at  \
+     most half of what depth and move number gave it. The fit widened it to     \
+     three plies, which is past that half and is the lane's answer rather than  \
+     a derivation's.                                                            \
+                                                                               \
+     **0 is the off value and it is a true one** -- the clamp is the whole      \
+     term, so at 0 the helper returns the raw table for every sum and every     \
+     divisor, which is what the S109 bisection protocol needs: one release      \
+     rebuild separates "the term is wrong" from "re-pointing S109's gate moved  \
+     it". 4 is the range top for the same reason 3 is SeeLmrExtra's: past it    \
+     the term exceeds what the table returns for the first reducible move at    \
+     every depth this engine reaches, so it replaces the ordering's estimate    \
+     instead of adjusting it. The fit landing one under that top is worth       \
+     reading with the range in view and not as a coincidence.                   \
+                                                                               \
+     LMR_HIST_DIV 699 is **this project's own SPSA fit** and nothing else,     \
+     from the same lane and the same 60000 games: theta 698.6584, rounded by    \
+     the driver to 699. No engine's coefficient is behind it.                   \
+                                                                               \
+     The seed it started from was **(b)**, a derivation over chesso's own       \
+     measured distribution of that sum -- not over the band's arithmetic, which \
+     is what it was seeded from first and what that seeding got wrong. The      \
+     census is adocs/data/S098_v1_hist_census.txt: the signed sum recorded at   \
+     every site the rule reads it -- one call of `lmr_adjusted_reduction` --    \
+     over the 400 positions of adocs/data/S024_census_positions.txt, `go depth  \
+     N` through one UCI process. At depth 12, 5464717 sites, |sum| reads p50    \
+     174, **p75 430**, p90 1442, p99 5362; at depth 10, 2105964 sites, p50 107, \
+     p75 258, p90 689, p99 4347. The seed was the depth-12 p75, so the term     \
+     reached one full ply at the quartile. **The fit moved it to 699**, about   \
+     1.6 times that p75 and comfortably under the p90, so it agrees with the    \
+     census seed's side of the question and asks for the term on a narrower     \
+     class than a quarter of the sites.                                         \
                                                                                \
      **The first seed was 8675, half the saturated sum, and it was inert in     \
      play.** The same census puts |sum| >= 8675 at 0.006 % of sites at depth 10 \
@@ -358,32 +373,31 @@
      lives at depths 10 to 14, so a verdict taken there would have priced the   \
      seed and not the technique.                                                \
                                                                                \
-     **One pass, and that bounds what the percentile means.** The census was    \
-     taken on the tree at 8675 -- its own header's bench signature is the       \
-     proof -- and 430 grows that tree by 60 %, so the distribution of |sum| at  \
-     reduction sites on the tree that ships is not the one 430 is the 75th      \
-     percentile of. A fixed point would need the census and the re-seed         \
-     iterated to agreement, and this value is one step of that iteration and    \
-     not its limit. DEC-212 supersedes it rather than repeating it: both this   \
-     and the clamp are fitted against games in their own SPSA lane              \
-     (tools/spsa_s098v1.json) before the verdict's SPRT is taken.               \
+     **The census was one pass, and the fit is what closes that.** The census  \
+     ran on the tree at 8675 -- its own header's bench signature is the proof   \
+     -- so 430 was the 75th percentile of a tree the term then changed, and a   \
+     fixed point would have needed the two iterated to agreement. The lane      \
+     makes the question moot for the verdict rather than answering it: SPSA     \
+     played 60000 games on the tree each candidate value actually produces, so  \
+     699 is chosen against play and not against a distribution measured         \
+     somewhere else. What the SPRT prices is 699, and the census is now the     \
+     record of where the lane started and why it was owed (DEC-212).            \
                                                                                \
      The floor is arithmetic -- the value is a divisor. The range top is twice  \
      the saturated sum, HistPruneCoeff's shape, and it is a second off value:   \
-     no sum the band admits can produce a non-zero quotient there. The clamp    \
-     now binds on real sites rather than only at the band's edge, which is why  \
-     it stays 2 and is not the scale: the 99th percentile reaches two plies     \
-     twelve times over. The helper is still asserted clamped over sums from     \
-     outside the band, in tests/test_search.cpp "the history term never moves   \
-     the reduction by more than its clamp", because the tune build sweeps the   \
-     divisor down, S127 refits it and a two-ply continuation table would widen  \
-     the band the range top is computed from.                                   \
+     no sum the band admits can produce a non-zero quotient there. The helper   \
+     is asserted clamped over sums from outside the band, in                    \
+     tests/test_search.cpp "the history term never moves the reduction by more  \
+     than its clamp", because what the clamp guarantees is a bound for any      \
+     input at any divisor -- and both numbers move: the tune build sweeps them, \
+     S127 refits them after the block, and a two-ply continuation table would   \
+     widen the band the range top is computed from.                             \
                                                                                \
-     Both are first settings and S127 sweeps them; no engine's coefficient is   \
-     behind either, and the published records that say history scaling is       \
-     worth trying are records and not seeds (DEC-084 as amended by DEC-105). */ \
-  X(LMR_HIST_DIV,      "LmrHistDiv",      430,    1, 34700)                    \
-  X(LMR_HIST_CLAMP,    "LmrHistClamp",    2,      0, 4)                        \
+     S127 refits both with the whole set. The vector below is the lane's and    \
+     is a hypothesis until the gainer SPRT says otherwise (DEC-019);            \
+     adocs/data/S098_v1_sprt.sh is the run that asks. */                        \
+  X(LMR_HIST_DIV,      "LmrHistDiv",      699,    1, 34700)                    \
+  X(LMR_HIST_CLAMP,    "LmrHistClamp",    3,      0, 4)                        \
                                                                                \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \
      of them gated on the **reduction-adjusted** depth                          \

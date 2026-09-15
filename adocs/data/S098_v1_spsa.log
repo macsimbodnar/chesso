@@ -1,0 +1,19 @@
+S098 verdict 1 history-scale lane
+  config   tools/spsa_s098v1.json
+  out      .tuning/spsa_s098v1_20260915_114938
+  engine   build-tune/src/chesso
+  head     63cb263 2026-09-15
+  dirty    0 tracked paths
+  binary   ae08962096bceb87986d71ffc74d21304c537467867b7fef10df0830ed93a661
+  check    .tuning/spsa_s098v1_20260915_114938.check.log
+setoption reaches the search: LmrHistDiv 1 -> 32857 nodes, 34700 -> 51189 (depth 9, midgame)
+setoption reaches the search: LmrHistClamp 0 -> 51189 nodes, 4 -> 27458 (depth 9, midgame)
+probed 2 of 2 parameters in 0.1 s
+WARNING: LmrHistClamp: range 4 is narrower than the first iteration's 2c = 4.1, so theta+c and theta-c both clamp to the bounds and the early gradient is noise
+2 parameters, 1250 iterations x 24 pairs = 30000 pairs, 60000 games
+WARNING: LmrHistClamp: range 4 is narrower than the first iteration's 2c = 4.1, so theta+c and theta-c both clamp to the bounds and the early gradient is noise
+{
+  "LmrHistClamp": 3,
+  "LmrHistDiv": 699
+}
+SPSA-DONE

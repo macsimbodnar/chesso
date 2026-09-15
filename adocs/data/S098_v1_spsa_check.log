@@ -1,0 +1,6 @@
+setoption reaches the search: LmrHistDiv 1 -> 32857 nodes, 34700 -> 51189 (depth 9, midgame)
+setoption reaches the search: LmrHistClamp 0 -> 51189 nodes, 4 -> 27458 (depth 9, midgame)
+probed 2 of 2 parameters in 0.1 s
+WARNING: LmrHistClamp: range 4 is narrower than the first iteration's 2c = 4.1, so theta+c and theta-c both clamp to the bounds and the early gradient is noise
+2 parameters, 1250 iterations x 24 pairs = 30000 pairs, 60000 games
+SPSA-DONE

@@ -2052,28 +2052,31 @@ history axes the lane fitted moved from their seeds to the values
 quiets differently, which moves every count downstream of it. Only games say
 whether the smaller tree is a better one (DEC-019), and
 `adocs/data/S222_sprt.sh` is the run that asks — it asked, and H1. **At `S098`
-verdict 1, the history-scaled reduction: `9133516`**, 60.6 % more and by a long
-way the largest single move this ledger records — the first entry that grows the
-tree rather than shrinking it. A quiet the history tables like is searched a ply
+verdict 1, the history-scaled reduction at its fitted scale: `11046420`**,
+94.3 % more and by a long way the largest single move this ledger records — the
+first entry that grows the tree rather than shrinking it. A quiet the history tables like is searched a ply
 or two deeper than the table alone would have searched it, the four
 shallow-depth rules price it at that deeper reduced depth too, and an un-reduced
 late quiet opens a whole subtree where the same term's other direction saves
 very little on an already-reduced one. `tools/search_bench.py` at depth 9 reads
-27434 / 148084 / 30174 against the parent's 51189 / 146616 / 39389, midgame's
-best move moving `c3d5` → `g5f6`; at depth 12, 240137 / 772719 / 185931 against
-143205 / 570238 / 148060 with all three best moves unchanged.
+77969 / 146770 / 40190 against the parent's 51189 / 146616 / 39389; at depth
+12, 231052 / 618264 / 221800 against 143205 / 570238 / 148060, all three best
+moves the parent's at both depths.
 
-**The first landing of that same rule read `5968045`, +4.96 %, and the
-difference between the two numbers is a seed and not a rule.** `LmrHistDiv` was
+**The first landing of that same rule read `5968045`, +4.96 %, the census
+seed's `9133516`, +60.6 %, and the difference between the three numbers is a
+scale and not a rule.** `LmrHistDiv` was
 first seeded at half the saturated history band, 8675, which the step's own
 census then measured as reached by 0.011 % of the sites the rule reads
 (`adocs/data/S098_v1_hist_census.txt`); re-seeded to that census's 75th
 percentile, 430, before any game was played. A `bench <depth>` sweep on the tune
-build at `LmrHistClamp 0` against the shipped 2 is what showed it, and is worth
-keeping as the shape of an inert setting beside a live one — at 8675: +0.00,
-+0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14; at 430: +0.60,
-+28.04, +23.61, +41.47, +35.75, +60.63. **The off column is the parent's totals
-exactly at both seeds and every depth**, which is the inert-by-rebuild property
+build at `LmrHistClamp 0` against the shipped clamp is what showed it, and is
+worth keeping as the shape of an inert setting beside a live one — at 8675 with
+clamp 2: +0.00, +0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14;
+at 430 with clamp 2: +0.60, +28.04, +23.61, +41.47, +35.75, +60.63; at the
+fitted 699 with clamp 3 (DEC-212's lane): +16.21, +26.70, +31.81, +70.69,
++63.54, +94.28. **The off column is the parent's totals exactly at all three
+settings and every depth**, which is the inert-by-rebuild property
 measured over the whole engine rather than argued. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is

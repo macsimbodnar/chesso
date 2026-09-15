@@ -32,15 +32,17 @@
 # Lynx #613 +11.40 +/-7.30 in this engine's own band, Weiss #451 +14.11 +/-7.57
 # above it -- are records and never seeds.
 #
-#   LmrHistClamp  2      **(b)**, a stated fraction of chesso's own reduction
-#                        table: `search_lmr_reduction_probe(11, 63)` at the
-#                        census median depth and the last move index is
+#   LmrHistClamp  3      **this project's own SPSA fit**, theta 2.7319 rounded
+#                        by the driver. Seeded at 2, which was **(b)**, a
+#                        stated fraction of chesso's own reduction table:
+#                        `search_lmr_reduction_probe(11, 63)` at the census
+#                        median depth and the last move index is
 #                        `0.52 + ln(11) * ln(63) / 1.82` = 5.98, stored floored
-#                        as 5, and half of that rounded down is 2. History may
-#                        move a late reduction by at most half of what depth
-#                        and move number gave it. Fallback **(c)**: the
-#                        midpoint of the declared 0 to 4 is the same integer.
-#   LmrHistDiv    430    **(b)**, a derivation over chesso's own **measured**
+#                        as 5, and half of that rounded down is 2. The fit
+#                        widened it past that half to three plies.
+#   LmrHistDiv    699    **this project's own SPSA fit**, theta 698.6584
+#                        rounded by the driver. Seeded at 430, which was
+#                        **(b)**, a derivation over chesso's own **measured**
 #                        distribution of that sum, and not over the band's
 #                        arithmetic. `adocs/data/S098_v1_hist_census.txt`:
 #                        the signed sum recorded at every site the rule reads
@@ -48,11 +50,26 @@
 #                        `adocs/data/S024_census_positions.txt`. At depth 12,
 #                        5464717 sites, |sum| reads p50 174, **p75 430**, p90
 #                        1442, p99 5362; at depth 10, 2105964 sites, 107 /
-#                        258 / 689 / 4347. The divisor is the depth-12 p75, so
-#                        the term reaches one full ply at the quartile and a
-#                        quarter of the sites get a ply or more.
+#                        258 / 689 / 4347. The seed was the depth-12 p75, so
+#                        the term reached one full ply at the quartile; the fit
+#                        moved it to about 1.6 times that and comfortably under
+#                        the p90, a narrower class of moves.
 #
-# Both are first settings and S127 sweeps them.
+# S127 refits both with the whole set after the block.
+#
+# **BOTH VALUES ARE THE LANE'S, NOT EITHER SEED'S, AND THAT IS DEC-212.**
+# `adocs/data/S098_v1_spsa.sh` ran 2026-09-15, 11:49:38 to 20:37:23 -- 1250
+# iterations, 60000 games at `2+0.02` on `books/UHO_4060_v3.epd`, 8 h 47 m 45 s
+# against an 8 h 37 m estimate, `SPSA-DONE` its log's only marker. Read by that
+# file's own pre-registered rows: **not stuck** (both axes moved off their
+# seeds, so this SPRT is owed), **the clamp is not 0** (so the term is not
+# inert by the fit's own word and the technique does not leave the plan on that
+# reading), and **the divisor is at or below the census p90 of 1442** (so the
+# fit agrees with the census seed's side rather than the band seed's).
+# `LmrHistDiv` never touched a bound in 1250 iterations, running 422 to 747;
+# `LmrHistClamp` sat at a bound on 39 of them, five settings being what they
+# are. An SPSA vector is a hypothesis and never a result (DEC-019): **this run
+# is what decides it.**
 #
 # **THE DIVISOR WAS RE-SEEDED BEFORE ANY GAME WAS PLAYED, AND THIS IS WHY.**
 # It was first seeded at 8675 -- half the saturated sum, the band's own
@@ -67,30 +84,32 @@
 # real sites -- 14.66 % of them at depth 12 -- rather than only at the band's
 # edge, and the 99th percentile reaches two plies twelve times over.
 #
-# **ONE PASS, AND THIS FILE SAYS SO BEFORE THE GAMES RATHER THAN AFTER.** That
-# census ran on the tree at 8675 -- its own header's bench signature, 5968045,
-# is the proof -- and 430 grows that tree by 60 %, so the distribution of
-# |sum| at reduction sites on the tree this run plays is **not** the one 430 is
-# the 75th percentile of. A fixed point would need the census and the re-seed
-# iterated to agreement, which was not done: 430 is one step of that iteration
-# and not its limit. DEC-212 supersedes the iteration rather than repeating it
-# -- both constants are fitted against games in their own SPSA lane,
-# `adocs/data/S098_v1_spsa.sh`, before this run is taken, and the coordinator
-# re-pins this file to the fitted defaults. What is written above is the seed
-# the lane starts from and the reason it exists.
+# **THE CENSUS WAS ONE PASS, AND THE LANE IS WHAT CLOSES THAT.** It ran on the
+# tree at 8675 -- its own header's bench signature, 5968045, is the proof -- so
+# 430 was the 75th percentile of a tree the term then changed by 60 %, and a
+# fixed point would have needed the two iterated to agreement. That iteration
+# was not run and is not owed: SPSA played 60000 games on the tree each
+# candidate value actually produces, so **699 is chosen against play and not
+# against a distribution measured somewhere else**. The census stays on the
+# record as where the lane started and why it was owed, and the percentiles
+# above are read as that and not as a derivation of what ships.
 #
 # WHAT THE TREE DOES, MEASURED BEFORE THE GAMES. Node counts at a fixed depth
 # are not Elo and nothing here reads them as Elo (DEC-019); they are here so
 # that "the term changes the search" is a measurement and not a claim.
 #
-#   chesso bench (depth 14)   5685915 -> 9133516, +60.63 %
+#   chesso bench (depth 14)   5685915 -> 11046420, +94.28 %
 #   tools/search_bench.py, depth 9, parent -> candidate
-#     midgame      51189 ->  27434   kiwipete  146616 -> 148084
-#     tactical     39389 ->  30174   midgame's best move moves c3d5 -> g5f6;
-#                                    kiwipete and tactical keep e2a6 / d7c8q
+#     midgame      51189 ->  77969   kiwipete  146616 -> 146770
+#     tactical     39389 ->  40190   best moves c3d5 / e2a6 / d7c8q, the
+#                                    parent's, at both depths
 #   tools/search_bench.py, depth 12, parent -> candidate
-#     midgame     143205 -> 240137   kiwipete  570238 -> 772719
-#     tactical    148060 -> 185931   all three best moves unchanged at 12
+#     midgame     143205 -> 231052   kiwipete  570238 -> 618264
+#     tactical    148060 -> 221800
+#
+#   At the census seed, 430, the same three read 27434 / 148084 / 30174 and
+#   240137 / 772719 / 185931 with midgame's depth-9 move at g5f6; the fit takes
+#   that move back to the parent's c3d5 while growing the tree further.
 #
 # **The tree grows, and by a lot.** A quarter of the sites the rule reads now
 # get a ply or two back, and an un-reduced late quiet opens a subtree where an
@@ -100,21 +119,24 @@
 # strength (S073) -- `bench <depth>` at the shipped clamp against the same
 # binary at `LmrHistClamp 0`:
 #
-#   depth   9        10        11        12        13        14
-#   on      611512   1197881   2019830   3345622   5226045   9133516
-#   off     607842    935536   1634008   2364815   3849812   5685915
-#   delta   +0.60 %  +28.04 %  +23.61 %  +41.47 %  +35.75 %  +60.63 %
+#   depth   9         10        11        12        13        14
+#   on      706352    1185319   2153709   4036614   6296135   11046420
+#   off     607842     935536   1634008   2364815   3849812    5685915
+#   delta   +16.21 %  +26.70 %  +31.81 %  +70.69 %  +63.54 %   +94.28 %
 #
-# At the first seed that same table read +0.00 / +0.00 / +0.00 / -0.02 /
-# -1.33 / +4.96 %, which is the whole case for the re-seed. **The off column is
-# the parent's totals exactly, at every depth and at both seeds**, which is the
+# At the band seed that same table read +0.00 / +0.00 / +0.00 / -0.02 / -1.33 /
+# +4.96 %, and at the census seed +0.60 / +28.04 / +23.61 / +41.47 / +35.75 /
+# +60.63 %. The fit narrows the class the term touches -- 699 against 430 --
+# and widens what it gives each one, three plies against two, and the second
+# dominates. **The off column is the parent's totals exactly, at every depth
+# and at all three settings**, which is the
 # inert-by-rebuild property asserted over the whole engine and not only over
 # the helper: the off rebuild restores S109's gate and the reduction together,
 # so the bisection below separates "the term is wrong" from "re-pointing the
 # gate moved it".
 #
-# **What the SPRT is being asked, given that.** A 60 % larger tree at a fixed
-# depth is roughly two thirds of a ply given up in the same time, so this run
+# **What the SPRT is being asked, given that.** A 94 % larger tree at a fixed
+# depth is roughly a ply given up in the same time, so this run
 # is not a free-side test of a refinement: it asks whether searching the quiets
 # the history tables like at close to their full depth is worth what it costs
 # in depth everywhere else. That is the question the technique poses, and it is
@@ -204,11 +226,12 @@
 #                     leg 1  the sign. The direction is pinned by a case and a
 #                            mutant, so this leg is the cheap confirmation and
 #                            not the suspect.
-#                     leg 2  the divisor's scale, **upward this time**. The
-#                            seed is the census's p75 and it buys a ply for a
-#                            quarter of the sites at the price of a 60 %
-#                            larger tree; a larger divisor is the same rule
-#                            applied to a narrower class, and the census gives
+#                     leg 2  the divisor's scale, **upward this time**. What
+#                            this run prices is the lane's own 699, which
+#                            already walked up from the census's p75 while the
+#                            clamp widened; a larger divisor still is the same
+#                            rule applied to a narrower class, and the census
+#                            gives
 #                            the next value to try without another run -- p90
 #                            at depth 12 is 1442, which is the tenth of sites
 #                            rather than the quarter and which **inherits the
