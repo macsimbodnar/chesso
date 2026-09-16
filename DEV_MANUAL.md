@@ -1845,8 +1845,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 7, 9, 9 and the mutants beside them — `no S091 mutant, since S098`, `C02 and C05`, `no S091 mutant, since S222`, `C02 and C07`, re-derived twice at S098 as the reduction moved under them | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 46 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 7, 7, 9, 11 and the mutants beside them — `C02 and C05`, `C02`, `R02`, `R02`. The depths are S230's again after S098's term was removed; the labels are not, and that is `d0a6667`'s doing and not S098's: S222's fitted vector reordered every quiet after S230 measured and nothing re-derived them then | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 44 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2052,44 +2052,37 @@ history axes the lane fitted moved from their seeds to the values
 quiets differently, which moves every count downstream of it. Only games say
 whether the smaller tree is a better one (DEC-019), and
 `adocs/data/S222_sprt.sh` is the run that asks — it asked, and H1. **At `S098`
-verdict 1 leg 2, the history-scaled reduction at the census's p90,
-`LmrHistDiv` 1442: `9268371`**, 63.0 % more than the parent. It is a bisection
-leg and not a landing on its own merits: the fitted scale below lost its SPRT,
-and a larger divisor reaches fewer moves, so the tree comes back toward the
-parent's — 11046420 at 699, 9268371 at 1442.
-`tools/search_bench.py` at depth 9 reads 60840 / 146616 / 42517 against the
-parent's 51189 / 146616 / 39389; at depth 12, 243165 / 641165 / 199344 against
-143205 / 570238 / 148060, all three best moves the parent's at both depths.
-`adocs/data/S098_v1_leg2_sprt.sh` prices it and its H0 removes the term.
+verdict 1, the history-scaled reduction and its removal: back to `5685915`**,
+exactly S222's number, and that equality is the entry. The rule scaled the late
+move reduction by the move's own history and re-pointed S109's gate to the same
+helper; it measured zero at every scale it was given and left the tree
+(DEC-213), so the tree this line sits on is the tree before it, bench signature
+and `tools/search_bench.py` counts and best moves alike — which is INV-6's own
+proof that the removal is a revert and not a rewrite, and why no SPRT is owed
+for it.
 
-**The fitted scale before it read `11046420`**, 94.3 % more and by a long way
-the largest single move this ledger records — the
-first entry that grows the tree rather than shrinking it, and **its SPRT said
-no**: `nElo -3.70 +/- 6.34` over 11524 games, H0 accepted
-(`adocs/data/S098_v1_sprt.log`). A quiet the history tables like is searched a ply
-or two deeper than the table alone would have searched it, the four
-shallow-depth rules price it at that deeper reduced depth too, and an un-reduced
-late quiet opens a whole subtree where the same term's other direction saves
-very little on an already-reduced one. `tools/search_bench.py` at depth 9 reads
-77969 / 146770 / 40190 against the parent's 51189 / 146616 / 39389; at depth
-12, 231052 / 618264 / 221800 against 143205 / 570238 / 148060, all three best
-moves the parent's at both depths.
-
-**The first landing of that same rule read `5968045`, +4.96 %, the census
-seed's `9133516`, +60.6 %, and the difference between the four numbers is a
-scale and not a rule.** `LmrHistDiv` was
-first seeded at half the saturated history band, 8675, which the step's own
-census then measured as reached by 0.011 % of the sites the rule reads
-(`adocs/data/S098_v1_hist_census.txt`); re-seeded to that census's 75th
-percentile, 430, before any game was played. A `bench <depth>` sweep on the tune
-build at `LmrHistClamp 0` against the shipped clamp is what showed it, and is
-worth keeping as the shape of an inert setting beside a live one — at 8675 with
-clamp 2: +0.00, +0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14;
-at 430 with clamp 2: +0.60, +28.04, +23.61, +41.47, +35.75, +60.63; at the
-fitted 699 with clamp 3 (DEC-212's lane): +16.21, +26.70, +31.81, +70.69,
-+63.54, +94.28; at leg 2's 1442 with clamp 3: +4.07, +14.80, +14.30, +27.87,
-+30.36, +63.01. **The off column is the parent's totals exactly at all four
-settings and every depth**, which is the inert-by-rebuild property
+**What the four settings cost, kept because the shape is worth more than the
+verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,
+where the term read `5968045`, +4.96 %; the step's own census then measured
+that value as reached by 0.011 % of the sites the rule reads
+(`adocs/data/S098_v1_hist_census.txt`) and it was re-seeded to the census's
+75th percentile, 430, at `9133516`, +60.6 %; DEC-212 then fitted both constants
+in their own SPSA lane over 60000 games, which returned 699 and a clamp of 3 at
+`11046420`, +94.3 % — **the largest single move this ledger has ever recorded,
+and it lost**: `nElo -3.70 +/- 6.34` over 11524 games, H0
+(`adocs/data/S098_v1_sprt.log`). The pre-registered second bisection leg took
+the divisor to the census p90, 1442, at `9268371`, +63.0 %, and lost again:
+`nElo -2.94 +/- 5.95` over 13078 games, H0
+(`adocs/data/S098_v1_leg2_sprt.log`). A `bench <depth>` sweep on the tune build
+at `LmrHistClamp 0` against the shipped clamp is what made the first seed's
+inertness visible, and the four rows are worth keeping side by side as the
+shape of an inert setting beside three live ones — at 8675 with clamp 2: +0.00,
++0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14; at 430 with
+clamp 2: +0.60, +28.04, +23.61, +41.47, +35.75, +60.63; at the fitted 699 with
+clamp 3: +16.21, +26.70, +31.81, +70.69, +63.54, +94.28; at 1442 with clamp 3:
++4.07, +14.80, +14.30, +27.87, +30.36, +63.01. **The off column was the
+parent's totals exactly at all four settings and every depth**, which is the
+inert-by-rebuild property
 measured over the whole engine rather than argued. Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is

@@ -1175,8 +1175,11 @@ int score_move(const game_t* game,
     return ORDER_COUNTER;
   }
 
-  // The quiet ordering band, and it is the raw history sum: the same number
-  // late move reduction divides (S098), so the ordering and the reduction
-  // cannot disagree about what this move's history is.
+  // The quiet ordering band, and it is the raw history sum, factored out into
+  // src/evaluation.hpp so that this is not the only place that arithmetic
+  // exists. S098 read it there too and its term measured zero and left
+  // (DEC-213); the factoring stayed, because it is behaviour-neutral and
+  // because the next consumer of a move's history should read the number this
+  // function returns rather than write its own copy.
   return quiet_history_sum(game, state, move, prev_move);
 }

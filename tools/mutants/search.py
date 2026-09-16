@@ -78,6 +78,28 @@ m("M08_lmr_checks", S, "search/reduction",
    '                            !is_in_check && !capture_gives_check;'),
   origin="2026-09-04_test_review")
 
+# **An immigrant, and its id comes with it.** L06 was written in
+# tools/mutants/S098_lmr_history.py, which DEC-213 deleted when that step's
+# history-scaled reduction measured zero at three scales and left the tree. The
+# term went; the root exemption it was written beside did not -- `ply > 0` in
+# `may_reduce` is S013's own bug, older than the term by the whole of this
+# search's history, and the case that holds it outlived its file. So the mutant
+# moves here, where the other two `may_reduce` guards already live, and keeps
+# its id: ids are never reused, and a renumbering would make the case's own
+# label and the trajectory of that step disagree.
+m("L06_lmr_root", S, "search/reduction",
+  'the root exemption is dropped, so the mating move at the root is searched '
+  'shallower than the root is deep -- S013\'s own bug, which "a mate found at '
+  'the root is never reduced" asserts with every other condition of '
+  '`may_reduce` satisfied',
+  ('    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
+   '                            !is_in_check && !is_check_move &&\n'
+   '                            !capture_gives_check;',
+   '    const bool may_reduce = depth >= 3 && legal_moves_counter > 3 &&\n'
+   '                            !is_in_check && !is_check_move &&\n'
+   '                            !capture_gives_check;'),
+  origin="S098")
+
 m("M09_lmr_no_research", S, "search/reduction",
   'reduced search beating alpha is believed, no re-search',
   ('if (!state->aborted && reduction > 0 && score > alpha) {',

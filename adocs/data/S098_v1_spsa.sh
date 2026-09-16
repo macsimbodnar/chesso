@@ -180,7 +180,10 @@ set -uo pipefail
 cd /home/max/ws/chesso || { echo "SPSA-FAILED: cd" >&2; exit 1; }
 
 OUT="${OUT:-.tuning/spsa_s098v1_$(date +%Y%m%d_%H%M%S)}"
-CONFIG="${CONFIG:-tools/spsa_s098v1.json}"
+# The config was tools/spsa_s098v1.json when this ran (2026-09-15) and moved to
+# adocs/data/ on 2026-09-16 when DEC-213 removed the two parameters it names;
+# the file is the record of a completed run and no longer passes `check`.
+CONFIG="${CONFIG:-adocs/data/S098_v1_spsa_config.json}"
 ENGINE="build-tune/src/chesso"
 
 echo "S098 verdict 1 history-scale lane"

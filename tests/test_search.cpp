@@ -3286,31 +3286,42 @@ TEST_SUITE("search: draws")
     // d12`, `d9 d10 d11 d12`, `d9 d10 d11 d12` -- and the first three came
     // back unchanged.
     //
-    // **Re-derived twice at S098 verdict 1, seven sweeps each time, and what
-    // the two derivations show is how little a label here is worth.** That
-    // step scales the reduction by the move's history and gates S109's four
-    // rules on the adjusted depth, so it is "any change to reduction" twice
-    // over and the re-derivation was owed; it was then run again when the step
-    // re-seeded `LmrHistDiv` from its own census, because that moved the tree
-    // a second time. Between the two the depths of rows 1 and 4 moved, row 2
-    // kept its depth throughout, and the labels moved under all of them.
+    // **Re-derived three times at S098, and the third is the one these rows
+    // carry.** That step scaled the reduction by the move's history, which is
+    // "any change to reduction", so each of its three settings owed a
+    // re-derivation and got one; then its term measured zero at all three and
+    // left the tree (DEC-213), and the sweep was run once more on the tree the
+    // removal leaves. These four rows are that last sweep.
     //
-    // **The rule that picks each row below**, applied uniformly rather than by
-    // eye: take the lowest depth in the shipped profile at which some mutant
-    // loses the mate; if no depth separates any mutant, take the lowest depth
-    // in the shipped profile and say so in the label. What it must never be is
-    // a depth picked because the row passes there -- DEC-209 clause 4 is that
-    // ruling, and it is why row 1 below now says that nothing separates it
-    // rather than being moved until something does.
+    // **The rule that picks each row**, applied uniformly rather than by eye:
+    // take the lowest depth in the shipped profile at which some mutant loses
+    // the mate; if no depth separates any mutant, take the lowest depth in the
+    // profile and say so in the label. What it must never be is a depth picked
+    // because the row passes there -- DEC-209 clause 4 is that ruling.
     //
-    // Shipped profiles at the landing: `d9 d10 d11 d12`, `d7 d9 d10 d11 d12`,
-    // `d9 d10 d11 d12`, `d9 d10 d11 d12`. **R01's incidental kill, which is
-    // the whole of what S230 went mining for two days before this, is gone**,
-    // and so is C05's on row 4; row 4 separates C02 and C07 at depth 9
-    // instead, and rows 1 and 3 separate nothing at any depth from 3 to 12.
-    // Stated rather than papered over, and it is not a hole: all six S091
-    // mutants were run through the **whole fast suite** on this tree and every
-    // one died, R01 at its own direct guard "a capture that gives check is not
+    // Shipped profiles here: `d7 d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12`,
+    // `d9 d10 d11 d12`, `d10 d11 d12`, which put the four depths back at
+    // S230's 7, 7, 9 and 11.
+    //
+    // **The labels are not S230's, and that is not S098's doing.** S230
+    // measured them on 2026-09-14; `d0a6667` -- S222's fitted eleven-axis
+    // vector, its own H1 -- landed after that and reordered every quiet, and
+    // nothing re-derived these labels when it did. So they were already stale
+    // at the tree S098 started from, and what is written below is the first
+    // measurement taken since: row 2 loses C05 and R02, row 3 gains R02 where
+    // S230 found no separator, and row 4 trades C02 and R01 for R02.
+    //
+    // **R01's incidental kill, which is the whole of what S230 went mining
+    // for, is not back** -- no row separates it at the depth the rule picks.
+    // One measured fact is worth leaving here rather than acting on: **row 2
+    // at depth 8 separates C02, C05, R01 and R02**, four mutants and the
+    // richest reading this table has ever had, and the rule takes 7 because 7
+    // is lower and separates C02. Moving it would be choosing a depth after
+    // seeing which one scores better, which is a decision and not a
+    // re-derivation; it is recorded so that decision can be made with the
+    // number in front of it. It is not a hole either way: all six S091 mutants
+    // were run through the **whole fast suite** on this tree and every one
+    // died, R01 at its own direct guard "a capture that gives check is not
     // reduced" and nowhere else. A row's label is an incidental second kill
     // measured in a tree that moves under every ordering change; the direct
     // guards are what the rules rest on.
@@ -3318,19 +3329,17 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S098"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
+         "C02 and C05"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
-         "C02 and C05"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5, "C02"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4,
-         "no S091 mutant, since S222"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4, "R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3350,14 +3359,15 @@ TEST_SUITE("search: draws")
         //
         // The depth is the measurement DEC-209 clause 4 defines, over 3 to 12.
         // At S230 it read shipped `d9 d10 d11 d12`, under R01 `d9 d10 d12`,
-        // under C02 no mate at 11, and the row was taken at 11. **At S098 the
-        // shipped profile is `d9 d10 d11 d12` again and 11 separates nothing**
-        // -- C02 and R01 both report `#+5` there -- while at 9 the mate is
-        // lost by C02 and by C07. So the row is read at 9, its lowest
-        // separating depth by the rule above, and R01 is no longer among what
-        // it kills.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
-         5, "C02 and C07"},
+        // under C02 no mate at 11, and the row was taken at 11. **On the tree
+        // S098's removal leaves, the shipped profile is `d10 d11 d12`** -- the
+        // depth 9 reading S230 measured is gone, which `d0a6667` and not S098
+        // is the cause of -- and 11 is the lowest depth that separates
+        // anything: R02 reads `d10 d12` and loses the mate there, while C02
+        // and R01 both report `#+5`. The depth is S230's; what it kills is
+        // not.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 11,
+         5, "R02"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -5495,24 +5505,9 @@ TEST_SUITE("search: pruning and reduction guards")
 
   // src/search.cpp's own lmr_depth, which is not exported: the reduction probe
   // is, and this is the one line built on it.
-  // negamax_at()'s own `lmr_depth_of`, restated here rather than shared, the
-  // way this suite restates every other number it holds the engine to: what
-  // the reduction leaves below this move, clamped at zero.
-  //
-  // **Since S098 that reduction is the history-adjusted one**, so the
-  // restatement carries the term. `hist_sum` defaults to 0 because that is
-  // what a node with cold tables reads and what every case here but two drives
-  // with; the two that plant a history entry pass the value they planted, or
-  // they would be asserting a precondition at a depth the engine does not use.
-  static int lmr_depth_of(int depth, int move_number, int hist_sum = 0)
+  static int lmr_depth_of(int depth, int move_number)
   {
-    int shift = hist_sum / LMR_HIST_DIV;
-
-    if (shift > LMR_HIST_CLAMP) { shift = LMR_HIST_CLAMP; }
-    if (shift < -LMR_HIST_CLAMP) { shift = -LMR_HIST_CLAMP; }
-
-    const int left =
-        depth - (search_lmr_reduction_probe(depth, move_number) - shift);
+    const int left = depth - search_lmr_reduction_probe(depth, move_number);
 
     return (left > 0) ? left : 0;
   }
@@ -5620,11 +5615,8 @@ TEST_SUITE("search: pruning and reduction guards")
     state.quiet_history[game.board.active_color][e1][e2] =
         static_cast<int16_t>(-QUIET_HISTORY_MAX);
 
-    // At the sum the node reads for it, which is the plant: S098 scales the
-    // reduction this gate is derived from by that same number, so a bottom-of-
-    // the-band entry buys the move a deeper reduction and a shallower gate.
-    const int lmr_depth = lmr_depth_of(
-        PRUNE_DRIVE_DEPTH, static_cast<int>(legal_count), -QUIET_HISTORY_MAX);
+    const int lmr_depth =
+        lmr_depth_of(PRUNE_DRIVE_DEPTH, static_cast<int>(legal_count));
 
     REQUIRE(lmr_depth < HP_MAX_LMRDEPTH);
     REQUIRE(-QUIET_HISTORY_MAX < -HP_COEFF * lmr_depth);
@@ -5671,23 +5663,23 @@ TEST_SUITE("search: pruning and reduction guards")
     // two sit in the order and nothing else: the exchange evaluation does not
     // read the history table.
     //
-    // **Two and one, and at S098 they had to be.** The plant was the band's
-    // own edge until this rule's gate started reading history too: since S098
-    // the reduced depth every rule of the block is priced at is
-    // `depth - clamp(hist_sum / LmrHistDiv, +/-LmrHistClamp)` plies shallower
-    // than the table alone, so a saturated entry moved this case's *margin*
-    // as well as its order -- `SeeQuietCoeff * lmr_depth * lmr_depth` at one
-    // lmr depth more is a bar the hanging bishop clears, and the case went red
-    // on a rule that had not changed. Two and one order the two moves exactly
-    // as the band's edge did -- every other quiet here sits at zero -- and
-    // divide to nothing, so the sentence above is true again: the plant moves
-    // where the two sit and nothing else.
+    // **Two and one, and they are the band's edge on purpose no longer.** The
+    // plant was `QuietHistoryMax` and one below it until S098 made this rule's
+    // gate read history as well as its order: the reduced depth every rule of
+    // the block is priced at became `clamp(hist_sum / LmrHistDiv, ...)` plies
+    // shallower than the table alone, a saturated entry moved this case's
+    // *margin* as much as its order, and the case went red on a rule that had
+    // not changed. That term measured zero at three scales and left the tree
+    // (DEC-213), so the gate reads the raw table again and either plant would
+    // work -- but two and one are kept, because they order these two moves
+    // exactly as the band's edge did (every other quiet here sits at zero)
+    // while being too small for any threshold to notice. The sentence above is
+    // then true by construction and not by the current rule set: the plant
+    // moves where the two sit and nothing else.
     state.quiet_history[game.board.active_color][d2][h6] =
         static_cast<int16_t>(2);
     state.quiet_history[game.board.active_color][a2][a3] =
         static_cast<int16_t>(1);
-
-    REQUIRE_EQ(2 / LMR_HIST_DIV, 0);
 
     negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
                    0, false);
@@ -6503,486 +6495,6 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // ------------------------------------------------------------------
-  // THE HISTORY TERM, S098 verdict 1: `r -= clamp(hist_sum / LMR_HIST_DIV,
-  // +/-LMR_HIST_CLAMP)` on top of the table, at the two sites that read a
-  // reduction -- the reduction itself and the shallow-depth block's gate.
-  //
-  // Three cases over the helper, which is where the properties that hold for
-  // every (depth, move number, sum) live, and four driven ones, which is where
-  // "the search actually reduces this move less" lives. The driven ones are
-  // DEC-141 clause 2 for this rule and tools/mutants/S098_lmr_history.py names
-  // the mutant each of them kills.
-
-  // The position the driven history cases use, and the one "a quiet move that
-  // gives check is not reduced" already drives. Four captures are ordered
-  // ahead of every quiet here, which is what this case set needs: a quiet the
-  // history tables promote to the head of its own class is still past the
-  // reduction block's own `legal_moves_counter > 3` and still reducible, so
-  // the reduction that is read is not confounded by the move-number bound.
-  //
-  // Not read off the board (CLAUDE.md). python-chess at S098: `is_valid()
-  // True`, `is_check() False`, 45 legal moves of which 4 are captures and none
-  // a promotion, and exactly one quiet move -- Bd7+ -- gives check. Stockfish
-  // at depth 20 through `chess.engine.SimpleEngine` (TOOLCHAIN.md's safe form,
-  // never a printf pipe): `+52` in 655869 nodes, pv g5f6 b6c6 f6h4 c6c5 b1d2
-  // f8g7 e1g1 a7a5. An ordinary middlegame, which is what this case set wants:
-  // nothing about the position is forcing, so what the reduction does to a
-  // late quiet here is the rule and not the position.
-  static const std::string HISTORY_POS =
-      "1r2kb1r/pbn1pp1p/1q1p1n1p/1pP3Q1/4P3/P1P2NPB/RP3P1P/1N2K2R w Kk - 6 17";
-
-  // The drive depth for those cases, chosen so that every observation is
-  // unambiguous at both ends. At 6 the reduction is clamped to
-  // `child_depth - 1` = 4 and the raw table returns 2 at the first quiet
-  // slots, so 2 - 1 and 2 + 1 both sit strictly inside [0, 4]: a reduction
-  // that reads 1 or 3 is the history term and cannot be a clamp.
-  static constexpr int HISTORY_DRIVE_DEPTH = 6;
-
-  // The widest sum quiet_history_sum() can return, computed from the shipped
-  // symbols rather than written out -- plain history's whole band plus the
-  // weighted continuation band, 8831 + 26 * 32767 / 100 = 17350 today. A
-  // function and not a constant because the tune build's parameters are
-  // variables in another translation unit, where a namespace-scope initialiser
-  // would depend on static initialisation order.
-  static int saturated_history_sum()
-  { return QUIET_HISTORY_MAX + CONT_HIST_WEIGHT * CONT_HIST_BOUND / 100; }
-
-
-  // **A property case and not a mutant's killer** (DEC-142's clause: where a
-  // golden stands in for a property, the property gets a case of its own). No
-  // mutant in tools/mutants/S098_lmr_history.py reddens this one, and that is
-  // the point of it -- what it holds is the thing that stays true when the
-  // term is switched off, which is what a bisection rebuild depends on and
-  // what no case about the term being *on* can show.
-  TEST_CASE("the history term is inert at a sum of zero")
-  {
-    // The property the whole step rests on, over the whole table rather than
-    // at the one pair a position happens to reach: with no history to read,
-    // both sites return exactly what they returned before S098. It is what
-    // makes the off-value rebuild restore S109's gate and the reduction
-    // together, which is the bisection protocol a failing verdict uses.
-    int offenders = 0;
-    std::string first;
-
-    for (int depth = 1; depth < 64; ++depth) {
-      for (int move_number = 1; move_number < 64; ++move_number) {
-        const int raw = search_lmr_reduction_probe(depth, move_number);
-        const int adjusted =
-            search_lmr_adjusted_reduction_probe(depth, move_number, 0);
-        const int gate = search_lmr_depth_probe(depth, move_number, 0);
-        const int expected_gate = (depth - raw > 0) ? depth - raw : 0;
-
-        if (adjusted == raw && gate == expected_gate) { continue; }
-
-        if (offenders == 0) {
-          first = "depth " + std::to_string(depth) + " move " +
-                  std::to_string(move_number) + ": raw " + std::to_string(raw) +
-                  ", adjusted " + std::to_string(adjusted) + ", gate " +
-                  std::to_string(gate) + " against " +
-                  std::to_string(expected_gate);
-        }
-
-        offenders++;
-      }
-    }
-
-    REQUIRE_MESSAGE(offenders == 0, first);
-  }
-
-
-  // Mutation: L02_lmr_history_no_clamp -- the clamp is dropped, so a sum far
-  // outside the band the tables can hold today moves the reduction by as many
-  // plies as the division returns. L01_lmr_history_sign too, through the
-  // direction half.
-  //
-  //   search: pruning and reduction guards
-  //    the history term never moves the reduction by more than its clamp
-  //   REQUIRE( offenders == 0 )
-  //   values: REQUIRE( 7938 == 0 ) under L02, REQUIRE( 31752 == 0 ) under L01
-  TEST_CASE("the history term never moves the reduction by more than its clamp")
-  {
-    // **Sums well past `LmrHistClamp * LmrHistDiv`, on purpose, and outside
-    // the band the tables can hold as well.** The clamp is what makes the term
-    // bounded for *any* input at *any* divisor, and that is the property
-    // asserted here rather than anything about the values that ship: the tune
-    // build sweeps the divisor, DEC-212's lane fits it, S127 refits it again,
-    // and a two-ply continuation table would widen the sum the divisor divides.
-    // A case that fed only the sums today's tables produce at today's divisor
-    // would be asserting the clamp against one setting of two numbers that are
-    // both seeds.
-    const int sat = saturated_history_sum();
-
-    REQUIRE(sat > 0);
-    REQUIRE(LMR_HIST_CLAMP > 0);
-
-    const std::vector<int> sums = {-100 * sat, -sat - 1, -sat,     -sat / 2,
-                                   -1,         0,        1,        sat / 2,
-                                   sat,        sat + 1,  100 * sat};
-
-    int offenders = 0;
-    std::string first;
-
-    for (int depth = 1; depth < 64; ++depth) {
-      for (int move_number = 1; move_number < 64; ++move_number) {
-        const int raw = search_lmr_reduction_probe(depth, move_number);
-
-        for (const int sum : sums) {
-          const int adjusted =
-              search_lmr_adjusted_reduction_probe(depth, move_number, sum);
-          const int moved = adjusted - raw;
-
-          const bool inside =
-              (moved <= LMR_HIST_CLAMP) && (moved >= -LMR_HIST_CLAMP);
-          // Positive history shrinks the reduction and negative history grows
-          // it -- the direction a sign slip inverts, asserted here for every
-          // pair and by the driven cases below where it costs rating.
-          const bool directed = (sum >= 0) ? (moved <= 0) : (moved >= 0);
-
-          if (inside && directed) { continue; }
-
-          if (offenders == 0) {
-            first = "depth " + std::to_string(depth) + " move " +
-                    std::to_string(move_number) + " sum " +
-                    std::to_string(sum) + ": raw " + std::to_string(raw) +
-                    ", adjusted " + std::to_string(adjusted);
-          }
-
-          offenders++;
-        }
-      }
-    }
-
-    REQUIRE_MESSAGE(offenders == 0, first);
-
-    // And the clamp is *reached* at the band's own edge, which is what the
-    // divisor's derivation claims: a saturated sum is worth the whole clamp.
-    // Read at the census median depth and the table's last move index, where
-    // the raw table has room for the whole of it in both directions.
-    const int raw = search_lmr_reduction_probe(CONT_HIST_REF_DEPTH, 63);
-
-    REQUIRE(raw > LMR_HIST_CLAMP);
-
-    CHECK_EQ(search_lmr_adjusted_reduction_probe(CONT_HIST_REF_DEPTH, 63, sat),
-             raw - LMR_HIST_CLAMP);
-    CHECK_EQ(search_lmr_adjusted_reduction_probe(CONT_HIST_REF_DEPTH, 63, -sat),
-             raw + LMR_HIST_CLAMP);
-  }
-
-
-  // Mutation: L03_lmr_gate_unscaled -- the shallow-depth block's gate goes
-  // back to the raw table while the reduction keeps the term, so the four
-  // rules price a move against a depth it is not searched at.
-  //
-  //   search: pruning and reduction guards
-  //    the shallow-depth gate reads the adjusted reduction
-  //   REQUIRE( offenders == 0 )
-  //   values: REQUIRE( 15840 == 0 )
-  TEST_CASE("the shallow-depth gate reads the adjusted reduction")
-  {
-    // S109 gates four rules on `lmr_depth` -- what the reduction leaves below
-    // this move -- and since S098 the reduction is the adjusted one, so the
-    // gate follows it. The two numbers are one number; this is the case that
-    // says so, and the alternative it excludes is the silent one: a gate that
-    // keeps pricing a quiet at the table's guess while the search reduces it
-    // by something else.
-    const int sat = saturated_history_sum();
-    const std::vector<int> sums = {-sat, -sat / 2, 0, sat / 2, sat};
-
-    int offenders = 0;
-    std::string first;
-
-    for (int depth = 1; depth < 64; ++depth) {
-      for (int move_number = 1; move_number < 64; ++move_number) {
-        for (const int sum : sums) {
-          const int adjusted =
-              search_lmr_adjusted_reduction_probe(depth, move_number, sum);
-          const int expected = (depth - adjusted > 0) ? depth - adjusted : 0;
-          const int gate = search_lmr_depth_probe(depth, move_number, sum);
-
-          if (gate == expected) { continue; }
-
-          if (offenders == 0) {
-            first = "depth " + std::to_string(depth) + " move " +
-                    std::to_string(move_number) + " sum " +
-                    std::to_string(sum) + ": gate " + std::to_string(gate) +
-                    " against " + std::to_string(expected);
-          }
-
-          offenders++;
-        }
-      }
-    }
-
-    REQUIRE_MESSAGE(offenders == 0, first);
-
-    // And it moves, in the direction the rules need: a quiet the tables like
-    // is gated at a deeper reduced depth than one they have written off. Read
-    // where the raw table has room for the whole clamp at both ends, so
-    // neither reading is the floor at zero.
-    const int raw = search_lmr_reduction_probe(CONT_HIST_REF_DEPTH, 63);
-
-    REQUIRE(raw > LMR_HIST_CLAMP);
-    REQUIRE(CONT_HIST_REF_DEPTH - raw - LMR_HIST_CLAMP > 0);
-
-    CHECK(search_lmr_depth_probe(CONT_HIST_REF_DEPTH, 63, sat) >
-          search_lmr_depth_probe(CONT_HIST_REF_DEPTH, 63, -sat));
-  }
-
-
-  // The three driven cases share a target: the first move past the reduction
-  // block's move-number bound that is a quiet, that the exchange evaluation
-  // clears -- so S091's extra ply is not also acting on it -- and that gives
-  // no check, which has an exemption of its own. Found by driving the node
-  // with both history tables empty and reading the probe; which move gives
-  // check comes from the engine's own is_check() after its own make_move(),
-  // never from a move list read by eye (CLAUDE.md).
-  struct history_fixture_t : guard_fixture_t
-  {
-    // Drives HISTORY_POS cold and returns that move, having asserted the
-    // control every case below compares against: with no history to read the
-    // reduction is exactly the raw table's.
-    move_t cold_target()
-    {
-      load(HISTORY_POS, 1);
-
-      REQUIRE(!is_check(&game));
-
-      move_t buffer[MAX_MOVES];
-      const size_t legal_count = legal_moves(&game, buffer);
-
-      negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, HISTORY_DRIVE_DEPTH, 1,
-                     &game, &state, 0, true);
-
-      // The whole loop ran, so no move was skipped and no cutoff hid one.
-      REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
-
-      int k = -1;
-
-      for (int i = 3; i < probe.move_count; ++i) {
-        const move_t move = probe.moves[i];
-
-        if (MOVE_CAPTURE(move) != 0) { continue; }
-        if (MOVE_PROMOTED(move) != TO_NONE) { continue; }
-        if (!see_ge(&game.board, move, 0)) { continue; }
-
-        REQUIRE(make_move(&game, move));
-        const bool gives_check = is_check(&game);
-        unmake_move(&game);
-
-        if (gives_check) { continue; }
-
-        k = i;
-        break;
-      }
-
-      REQUIRE_MESSAGE(k >= 3,
-                      "no quiet past the third move clears the exchange "
-                      "evaluation without giving check, so the cases below "
-                      "would be reading some other rule's decision");
-
-      // The control. Both tables are empty here, so the sum is zero and the
-      // helper returns the raw table -- and the raw table has to be reducing
-      // this move at all, or "less" and "more" below mean nothing.
-      const int raw = search_lmr_reduction_probe(HISTORY_DRIVE_DEPTH, k + 1);
-
-      REQUIRE(raw > 0);
-      REQUIRE_EQ(probe.reduction[k], raw);
-
-      return probe.moves[k];
-    }
-
-    // Where this drive searched `move`, or -1. Read rather than assumed,
-    // because a history plant moves a quiet inside its own class and every
-    // assertion below is taken at the index the move actually got.
-    int index_of(move_t move) const { return searched_index(probe, move); }
-  };
-
-
-  // Mutation: L01_lmr_history_sign and L04_lmr_reduction_unscaled.
-  //
-  //   search: pruning and reduction guards
-  //    a quiet the history tables like is reduced less
-  //   REQUIRE_EQ( probe.reduction[k], raw - 1 )
-  //   values: REQUIRE_EQ( 3, 1 ) under L01, REQUIRE_EQ( 2, 1 ) under L04
-  TEST_CASE_FIXTURE(history_fixture_t,
-                    "a quiet the history tables like is reduced less")
-  {
-    const move_t target = cold_target();
-
-    // **One divisor's worth of history, and the plant is written as the
-    // divisor rather than as a number.** What is under test is that a ply is
-    // bought, not how much history a ply costs -- LmrHistDiv is a seed the
-    // census re-derived once already and S127 will sweep, so a case that
-    // planted the band's edge would read a different number of plies at every
-    // setting and would have gone red at the re-seed for no defect.
-    //
-    // A butterfly entry alone: the continuation half of the sum needs a
-    // previous move to index and this drive passes none, exactly as the root
-    // and the node after a null move do.
-    load(HISTORY_POS, 1);
-
-    // The plant has to be representable in the table it goes into, which at a
-    // divisor above the gravity bound it would not be.
-    REQUIRE(LMR_HIST_DIV <= QUIET_HISTORY_MAX);
-
-    state.quiet_history[game.board.active_color][MOVE_FROM(target)]
-                       [MOVE_TO(target)] = static_cast<int16_t>(LMR_HIST_DIV);
-
-    const int sum = quiet_history_sum(&game, &state, target, 0);
-
-    REQUIRE_EQ(sum, LMR_HIST_DIV);
-    REQUIRE_EQ(sum / LMR_HIST_DIV, 1);
-
-    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, HISTORY_DRIVE_DEPTH, 1,
-                   &game, &state, 0, true);
-
-    const int k = index_of(target);
-
-    // The history that bought the ply also promoted the move inside its own
-    // class, so the index moved -- and the raw table is read at the index the
-    // move actually got, not at the one it had before.
-    REQUIRE(k >= 3);
-
-    // The node read the number this case set, and read it before make_move
-    // where the butterfly table is still indexed by the side that plays it.
-    REQUIRE_EQ(probe.hist_sum[k], LMR_HIST_DIV);
-
-    const int raw = search_lmr_reduction_probe(HISTORY_DRIVE_DEPTH, k + 1);
-
-    // Preconditions: the table is reducing it, and one ply less is a number
-    // the clamps do not decide -- `reduction < 0` is clamped to 0 and anything
-    // over `child_depth - 1` to that, so an observation at either edge would
-    // not separate the term from the clamp.
-    REQUIRE(raw > 0);
-    REQUIRE(raw - 1 < HISTORY_DRIVE_DEPTH - 2);
-
-    REQUIRE_EQ(probe.reduction[k], raw - 1);
-  }
-
-
-  // Mutation: L01_lmr_history_sign and L04_lmr_reduction_unscaled.
-  //
-  //   search: pruning and reduction guards
-  //    a quiet the history tables have written off is reduced more
-  //   REQUIRE_EQ( probe.reduction[k], raw + 1 )
-  //   values: REQUIRE_EQ( 1, 3 ) under L01, REQUIRE_EQ( 2, 3 ) under L04
-  TEST_CASE_FIXTURE(history_fixture_t,
-                    "a quiet the history tables have written off is reduced "
-                    "more")
-  {
-    const move_t target = cold_target();
-
-    // One divisor's worth of malus, for the reason the case above plants the
-    // divisor: the assertion is about a ply, not about a quantity of history.
-    //
-    // **Every quiet gets it and not just this one.** A single negative entry
-    // would send the move to the end of its own class, where the reduction is
-    // clamped against `child_depth - 1` and the extra ply could not be told
-    // from the clamp; with the whole class equal the order is the generator's
-    // again and the move stays where it was.
-    load(HISTORY_POS, 1);
-
-    REQUIRE(LMR_HIST_DIV <= QUIET_HISTORY_MAX);
-
-    move_t buffer[MAX_MOVES];
-    const size_t legal_count = legal_moves(&game, buffer);
-
-    for (size_t i = 0; i < legal_count; ++i) {
-      if (MOVE_CAPTURE(buffer[i]) != 0) { continue; }
-      if (MOVE_PROMOTED(buffer[i]) != TO_NONE) { continue; }
-
-      state.quiet_history[game.board.active_color][MOVE_FROM(buffer[i])]
-                         [MOVE_TO(buffer[i])] =
-          static_cast<int16_t>(-LMR_HIST_DIV);
-    }
-
-    const int sum = quiet_history_sum(&game, &state, target, 0);
-
-    REQUIRE_EQ(sum, -LMR_HIST_DIV);
-    REQUIRE_EQ(sum / LMR_HIST_DIV, -1);
-
-    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, HISTORY_DRIVE_DEPTH, 1,
-                   &game, &state, 0, true);
-
-    const int k = index_of(target);
-
-    REQUIRE(k >= 3);
-    REQUIRE_EQ(probe.hist_sum[k], -LMR_HIST_DIV);
-
-    const int raw = search_lmr_reduction_probe(HISTORY_DRIVE_DEPTH, k + 1);
-
-    // The precondition the position and the depth were chosen for: one ply
-    // more is still strictly inside the clamp against `child_depth - 1`, so
-    // what is read is the term and not the clamp.
-    REQUIRE(raw + 1 < HISTORY_DRIVE_DEPTH - 1);
-
-    REQUIRE_EQ(probe.reduction[k], raw + 1);
-  }
-
-
-  // Mutation: L05_lmr_history_banded -- the reduction divides score_move()'s
-  // return instead of the raw sum, so a killer's 900000 buys the whole clamp
-  // and the move is reduced by two plies less for a reason that is not its
-  // history.
-  //
-  //   search: pruning and reduction guards
-  //    the reduction reads the raw history and not the ordering band
-  //   REQUIRE_EQ( probe.hist_sum[k], 0 )
-  //   values: REQUIRE_EQ( 900000, 0 )
-  TEST_CASE_FIXTURE(history_fixture_t,
-                    "the reduction reads the raw history and not the ordering "
-                    "band")
-  {
-    const move_t target = cold_target();
-
-    // The same move, with no history at all and a killer slot instead. That is
-    // 900000 from score_move() and 0 from quiet_history_sum(), and the
-    // reduction has to read the second: the killer band is a statement about
-    // where the move is ordered, not about how often it has worked, and
-    // dividing it by a history divisor saturates the clamp on every killer in
-    // the tree. S093 named the hazard and S109's history pruning reads the raw
-    // entry for the same reason.
-    load(HISTORY_POS, 1);
-
-    state.killer_moves[0][1] = target;
-
-    // The ordering score of that same move, which is the killer band and not a
-    // history at all. The precondition is stated as a relation rather than as
-    // the band's own number, the way test_evaluation's band case derives its
-    // clearance from the position instead of quoting the comment: whatever
-    // score_move() returns here, dividing it by the history divisor has to
-    // saturate the clamp, or the mutant would be invisible.
-    const int banded = score_move(&game, &state, target, 0, 1, 0);
-
-    REQUIRE_EQ(quiet_history_sum(&game, &state, target, 0), 0);
-    REQUIRE(banded / LMR_HIST_DIV > LMR_HIST_CLAMP);
-
-    negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, HISTORY_DRIVE_DEPTH, 1,
-                   &game, &state, 0, true);
-
-    const int k = index_of(target);
-
-    REQUIRE(k >= 3);
-
-    // What the node read is the raw sum, which is zero here, and not the band.
-    REQUIRE_EQ(probe.hist_sum[k], 0);
-
-    const int raw = search_lmr_reduction_probe(HISTORY_DRIVE_DEPTH, k + 1);
-
-    // The precondition: the clamp applied to this reduction would be a
-    // different number even after the floor at zero, so a reduction equal to
-    // the raw table is the read being right and not a clamp hiding a wrong
-    // one.
-    REQUIRE(raw > 0);
-    REQUIRE(LMR_HIST_CLAMP > 0);
-    REQUIRE(((raw - LMR_HIST_CLAMP > 0) ? raw - LMR_HIST_CLAMP : 0) != raw);
-    REQUIRE(raw < HISTORY_DRIVE_DEPTH - 1);
-
-    REQUIRE_EQ(probe.reduction[k], raw);
-  }
-
-
   // The accepts' own clause, and S013's bug from the other side: "a mate found
   // at the root is never reduced, asserted with the precondition that would
   // otherwise reduce it". The precondition is the whole case -- the root
@@ -6993,7 +6505,14 @@ TEST_SUITE("search: pruning and reduction guards")
   // Not read off the board (CLAUDE.md). The position is the one "pruning does
   // not hide a forced mate" mines for the same class -- the mating key is a
   // late, quiet, hanging rook move, Re8, onto a square the black queen attacks
-  // with nothing defending it and giving no check. Re-confirmed here by the
+  // with nothing defending it and giving no check.
+  //
+  // **The term S098 verdict 1 built is gone (DEC-213) and this case is not**:
+  // what it holds is the root exemption itself, `ply > 0` in `may_reduce`,
+  // which is S013's bug and predates that term by the whole of this search's
+  // history. The case was written beside it and outlives it.
+  //
+  // Re-confirmed here by the
   // oracle at S098, re-run and not quoted: stockfish depth 20 through
   // `chess.engine.SimpleEngine` (TOOLCHAIN.md's safe form, never a printf
   // pipe) reports `#+2` in 1918 nodes, pv e5e8 g8e8 g4g7; python-chess reports
@@ -7002,7 +6521,9 @@ TEST_SUITE("search: pruning and reduction guards")
   // square the key goes to, and the only two quiet moves that give check are
   // Bg7+ and Qg7+ -- not the key.
   //
-  // Mutation: L06_lmr_root -- `ply > 0` dropped from `may_reduce`.
+  // Mutation: L06_lmr_root, which lives in tools/mutants/search.py since
+  // DEC-213 deleted the file it was written in -- `ply > 0` dropped from
+  // `may_reduce`.
   //
   //   search: pruning and reduction guards
   //    a mate found at the root is never reduced
@@ -7048,9 +6569,11 @@ TEST_SUITE("search: pruning and reduction guards")
       unmake_move(&game);
       REQUIRE_MESSAGE(!gives_check, title);
 
-      // Low-history, which is the class the reduction is hardest on. The
-      // tables are cold here, so the sum this node reads is zero and the term
-      // gives the move nothing back.
+      // Low-history, which is the class the reduction is hardest on: the key
+      // is a move the ordering has no reason to promote. The tables are cold
+      // here, so the sum is zero. No reduction reads that sum any more
+      // (DEC-213); the assertion stays as what it always was, a statement that
+      // this key is the hard case and not one the ordering rescues.
       REQUIRE_MESSAGE(quiet_history_sum(&game, &state, key, 0) == 0, title);
 
       // The root's own window and the root's own ply: `search()` enters
@@ -7083,15 +6606,8 @@ TEST_SUITE("search: pruning and reduction guards")
 
       // And the reduction that would be applied is a real one, which is what
       // makes a zero below evidence about the root exemption and not about a
-      // table that returns zero here anyway. Read at the history the node
-      // itself read, from the probe: the drive's own children write the
-      // butterfly table as the loop runs -- the key causes a cutoff below --
-      // so a sum taken after the drive is not the sum this decision was taken
-      // on, and the cold zero asserted above is only the value the node
-      // started from.
-      REQUIRE_MESSAGE(search_lmr_adjusted_reduction_probe(
-                          depth, k + 1, probe.hist_sum[k]) > 0,
-                      title);
+      // table that returns zero here anyway.
+      REQUIRE_MESSAGE(search_lmr_reduction_probe(depth, k + 1) > 0, title);
 
       REQUIRE_MESSAGE(probe.reduction[k] == 0, title);
     }

@@ -616,17 +616,9 @@ struct search_node_probe_t
   // `reduction` is what came off the first search of the move, and 0 is what a
   // guard that refused the reduction leaves there. `researched` is the
   // full-depth repeat a reduced move that beat alpha is owed.
-  //
-  // `hist_sum` is the history the node read for that move when it decided --
-  // `quiet_history_sum` pre-make, 0 on a move no history table has an entry
-  // for. It is recorded because the node's own children write those tables as
-  // the loop runs, so a sum a test reads after the drive is not the sum the
-  // decision was taken on, and a case about a reduction that *should* have
-  // happened has to say which number the rule was looking at. S098.
   int move_count = 0;
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];
-  int hist_sum[MAX_MOVES];
   bool researched[MAX_MOVES];
 
   // Late move pruning set its flag at this node, so the quiet stage ended

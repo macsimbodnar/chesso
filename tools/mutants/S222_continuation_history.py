@@ -59,10 +59,11 @@ m("H04_cont_hist_unread", E, "search/ordering",
   'the quiet history sum stops adding the continuation term, so the table is '
   'written at every cutoff and orders nothing -- the shape a census would call '
   'exercised and a verdict would call inert. The anchor moved out of '
-  'score_move and out of the .cpp at S098, which factored the sum into '
-  'quiet_history_sum in src/evaluation.hpp so the ordering and the reduction '
-  'read one number and both inline it; the mutant now takes the term away '
-  'from both, which is the same bug reaching one site further',
+  'score_move and out of the .cpp at S098 verdict 1, which factored the sum '
+  'into quiet_history_sum in src/evaluation.hpp for a second reader, the '
+  'history-scaled reduction, that measured zero and left again (DEC-213); '
+  'the factoring stayed, score_move is its one production reader, and the '
+  'mutant takes the term away from it there',
   ('  if (prev_move != 0) {\n'
    '    score +=\n'
    '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '

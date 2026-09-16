@@ -531,8 +531,8 @@ before any game.
 
 ### The rule, and where it is clamped
 
-`src/search.cpp` `lmr_adjusted_reduction` is the raw table plus one signed
-term:
+`lmr_adjusted_reduction`, which lived in `src/search.cpp` until DEC-213
+removed it, was the raw table plus one signed term:
 
 ```
 r = lmr_reduction(depth, move_number) - clamp(hist_sum / LMR_HIST_DIV,
@@ -587,9 +587,10 @@ not seeds, and section 5 above already lists them as anti-seeds.
 **At the shipped divisor the clamp is reached and never exceeded**, by
 construction. It is kept, and the reason is stated rather than assumed: the
 tune build sweeps the divisor down, S127 refits it, and a two-ply continuation
-table widens the band the saturated sum is computed from. `tests/test_search.cpp`
-"the history term never moves the reduction by more than its clamp" feeds the
-helper sums from outside the band for exactly that reason.
+table widens the band the saturated sum is computed from. The case "the
+history term never moves the reduction by more than its clamp", in
+`tests/test_search.cpp` until the removal took it with the term, fed the helper
+sums from outside the band for exactly that reason.
 
 ### What the term actually does, measured before any game
 
@@ -927,7 +928,7 @@ depth-12 p75) grows `bench` by 60.63 %. Both are DEC-105 (b); nothing but a run
 can say which scale is the technique's, and an SPRT at either would price a
 seed. DEC-212 is the ruling.
 
-`tools/spsa_s098v1.json` and `adocs/data/S098_v1_spsa.sh`. **Two axes and no
+`tools/spsa_s098v1.json` (moved to `adocs/data/S098_v1_spsa_config.json` on 2026-09-16, when the removal left it naming parameters the tree no longer has) and `adocs/data/S098_v1_spsa.sh`. **Two axes and no
 others**: `LmrHistDiv` 430 and `LmrHistClamp` 2, at S085's regime -- 1250
 iterations x 24 pairs = 60000 games at `2+0.02` on `books/UHO_4060_v3.epd`,
 which is not the harness book (DEC-209 clause 1). `LmrBase` and `LmrDivisor`
@@ -1103,3 +1104,98 @@ revert of a known shape. Debug self-play four rounds at 4+0.04: **8 games in
 22 s, 0 `Assertion`, 0 `disconnect`**. Both fast suites **39/39**,
 `clang-format.sh --check` clean; no line of `src/search.cpp` moved, so every
 mutant anchor still resolves.
+
+### Leg 2's SPRT and the removal, 2026-09-16
+
+`adocs/data/S098_v1_leg2_sprt.sh` ran 03:09:34 to 09:20:06 (**6 h 10 m 32 s**),
+candidate `73fbf05` -- `LmrHistDiv` 1442 and `LmrHistClamp` 3 -- against the
+same `1db5b8e`. **H0 accepted. LLR -2.95, `Elo -2.34 +/- 4.73`, `nElo -2.94
++/- 5.95` over 13078 games**, W 4187 L 4275 D 4616, `Ptnml(0-2) [667, 1518,
+2240, 1464, 650]`, 0 forfeits either side, `Incomplete mating PV` 4 candidate
+and 1 reference, pair variance 0.3154 over 6539 pairs, 2119 games an hour.
+Evidence `adocs/data/S098_v1_leg2_sprt.log` and `_pairs.txt`.
+
+**Both legs are spent and the term is recorded as a zero.** Three scales were
+measured and none cleared the gainer pair: 8675, inert by node count before a
+game was played; 699, chosen by SPSA over 60000 games and beaten at -3.70 nElo;
+1442, the census's p90 and beaten at -2.94. Both runs put the interval below
+zero rather than across it. The technique has a sub-3000 record (Lynx #613,
++11.40) and this engine does not reproduce it, which is DEC-019's seventh
+instance and the fourth technique to arrive priced and measure nothing here.
+
+**The removal, in the shape the leg's own header pre-registered it.**
+`src/search.cpp`, `src/search.hpp`, `src/search_params.hpp` and
+`src/data_structures.hpp` are restored to `1db5b8e` byte for byte -- the
+helper, both probes, `NO_HISTORY_SUM`, the probe's `hist_sum` field and the two
+parameters are gone, and S109's `lmr_depth_of` reads the raw table again. The
+six cases that held the term, the two golden rows and the two `MANUAL.md` rows
+went with it, and `tools/mutants/S098_lmr_history.py` is deleted. `git diff
+1db5b8e -- src/` is **two files, `evaluation.cpp` -31 and `evaluation.hpp`
++66**, and that is the one difference the pre-registration allowed:
+`quiet_history_sum` stays, `inline` in the header, with one reader in
+`score_move`. It is behaviour-neutral and the bench proves it.
+
+**Two things outlived the term and both earn their place.** The case "a mate
+found at the root is never reduced" holds the root exemption -- `ply > 0` in
+`may_reduce`, S013's own bug -- which predates the history term by the whole of
+this search's history; it now reads `search_lmr_reduction_probe` and asserts
+what it always asserted. Its mutant `L06_lmr_root` moved to
+`tools/mutants/search.py`, where the other two `may_reduce` guards live,
+**keeping its id** because ids are never reused; re-observed there, it reddens
+eight cases across four binaries including its own guard.
+
+**The tree is the reference's, and that is INV-6's proof rather than a claim.**
+`Bench: 5685915`, exactly. `tools/search_bench.py` depth 9: 51189 / 146616 /
+39389, `c3d5` / `e2a6` / `d7c8q`; depth 12: 143205 / 570238 / 148060. Identical
+node counts and best moves, so no SPRT is owed for the removal. Both fast
+suites **39/39**, `clang-format.sh --check` clean, Debug self-play **8 games in
+14 s, 0 `Assertion`, 0 `disconnect`**, and every anchor in the eight remaining
+mutant files resolves uniquely -- S222's `H04` included, which points at
+`quiet_history_sum` where it now lives.
+
+**`capture_mates` re-derived once more, and it found something that is not
+S098's.** The depths return to S230's **7, 7, 9, 11** by the rule written at
+the table -- the lowest shipped depth that separates a mutant. The **labels do
+not**: measured here they are `C02 and C05`, `C02`, `R02`, `R02`, against
+S230's `C02 and C05`, `C02, C05 and R02`, none and `C02 and R01`. The cause is
+`d0a6667`, S222's fitted eleven-axis vector, which landed after S230 measured
+and reordered every quiet with nothing re-deriving these labels; they were
+already stale at the tree S098 started from. **R01's incidental kill is not
+back** at the rule's depths -- and one measured fact is left at the table
+rather than acted on: row 2 at depth 8 separates C02, C05, R01 and R02, four
+mutants and the richest reading this table has ever had, where the rule takes 7
+because 7 is lower. Moving it is a decision, not a re-derivation. The "quiet
+SEE pruning" plant stays at 2 and 1: its premise -- the plant moves where the
+two quiets sit and nothing else -- holds on this tree for any plant, and small
+values keep it true by construction rather than by the current rule set.
+
+### Proposed for verdict 2's seeding, for the coordinator to decide
+
+Verdict 1 cost four settings, two SPRTs and a night's lane to learn that the
+term does not pay here, and the expensive part was not the SPRTs: it was that
+**the first seed was inert and nothing said so until a census was taken**. Two
+readings of that, and they point different ways.
+
+The step's own protocol already handles verdict 2 better than it handled
+verdict 1: the four node-type terms each sit behind their own off-valued
+constant, so a failing verdict bisects by release rebuild instead of four
+SPRTs (DEC-063), and each is a **+/-1 ply count with no scale to get wrong** --
+`LMR_CUTNODE`, `LMR_NOT_IMPROVING`, `LMR_TT_CAPTURE`, `LMR_PV` are 0, 1 or 2
+and the midpoint is the seed. There is no 8675-against-430 question to have:
+the entire range is three values wide.
+
+So the proposal is **the off-value protocol as written, with one thing
+borrowed from DEC-212**: before the SPRT, a cheap census of how often each of
+the four conditions fires at a reduction site -- the same instrumented
+throwaway worktree `adocs/data/S098_v1_hist_census.py` already builds, pointed
+at `cut_node`, `!improving`, a capturing TT move and `is_pv` instead of the
+history sum. It costs a build and 35 seconds, it is the measurement that would
+have caught verdict 1's inert seed before the machine spent 20 hours, and for a
+term with no scale it answers the only question a seed can get wrong here:
+whether the condition is ever true. **A lane is not proposed**: DEC-212 exists
+because one constant had two defensible derivations three orders apart, and a
+0-to-2 ply count has neither the range nor the resolution to need SPSA -- it
+would spend a night choosing between three integers. If the census shows a
+condition firing at under a per cent of sites, that term ships at 0 and is said
+to be inert rather than measured, which is the cheaper half of what verdict 1
+learned the expensive way.

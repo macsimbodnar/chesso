@@ -191,79 +191,18 @@ int search_lmr_reduction_probe(int depth, int move_number)
 { return lmr_reduction(depth, move_number); }
 
 
-// What the raw table above is worth once this move's history is taken into
-// account, S098 verdict 1. The table guesses from depth and move number alone;
-// the history tables have an opinion about this exact move, and a quiet they
-// like is one the ordering has put late for the wrong reason.
-//
-//   r -= clamp(hist_sum / LMR_HIST_DIV, +/-LMR_HIST_CLAMP)
-//
-// `hist_sum` is `quiet_history_sum` -- the raw butterfly entry plus S222's
-// weighted continuation entry, the same number score_move returns for a quiet
-// that is neither killer, countermove nor table move. **Positive history
-// shrinks the reduction.** A sign slip here reduces the good quiets and has no
-// symptom but lost rating, which is why the direction is a case and not a
-// comment ("a quiet the history tables like is reduced less").
-//
-// **Unclamped against the depth on purpose.** The call sites clamp, exactly as
-// negamax_at() clamped the raw table before this function existed: the
-// reduction to [0, child_depth - 1] so the child keeps one real ply, the S109
-// gate to 0 from below. Two sites, two different clamps, one shared estimate.
-//
-// **With LMR_HIST_CLAMP at 0 this returns the raw table for every sum.** That
-// is the property the whole step rests on: a release rebuild at the off value
-// restores S109's gate and the reduction exactly as they were, so a failing
-// verdict bisects into "the term is wrong" and "re-pointing the gate moved it"
-// with one rebuild and no SPRT on the tune build (S073, DEC-063).
-static inline int lmr_adjusted_reduction(int depth,
-                                         int move_number,
-                                         int hist_sum)
-{
-  int shift = hist_sum / LMR_HIST_DIV;
-
-  if (shift > LMR_HIST_CLAMP) { shift = LMR_HIST_CLAMP; }
-  if (shift < -LMR_HIST_CLAMP) { shift = -LMR_HIST_CLAMP; }
-
-  return lmr_reduction(depth, move_number) - shift;
-}
-
-
-int search_lmr_adjusted_reduction_probe(int depth,
-                                        int move_number,
-                                        int hist_sum)
-{ return lmr_adjusted_reduction(depth, move_number, hist_sum); }
-
-
-// The history a move has when there is none to read: the sum passed at the two
-// sites below that decide before a move is picked or about a move no history
-// table has an entry for. Named rather than written as a bare 0, because the
-// number is a statement -- "this site reads the raw table" -- and not a value.
-static constexpr int NO_HISTORY_SUM = 0;
-
-
 // The depth the shallow-depth rules are gated on: what late move reduction
 // would leave below this move, and not the node's own remaining depth. A move
 // the ordering put late is already searched shallower than the node is deep, so
 // the margin it is pruned against should be the shallow one. Clamped at zero --
 // the reduction can exceed the depth on a very late move at a shallow node, and
 // a negative margin multiplier would invert every rule below it. S109.
-//
-// **Through the adjusted reduction since S098**, so the gate and the reduction
-// read one number: a quiet whose history buys it a ply back is gated at the
-// depth it is actually going to be searched at, and not at the table's guess.
-// S109 is not re-verdicted for it -- its own file and plan.md both say S098's
-// SPRT prices the interaction and S127 refits its thresholds against the new
-// distribution.
-static inline int lmr_depth_of(int depth, int move_number, int hist_sum)
+static inline int lmr_depth_of(int depth, int move_number)
 {
-  const int left = depth - lmr_adjusted_reduction(depth, move_number, hist_sum);
+  const int left = depth - lmr_reduction(depth, move_number);
 
   return (left > 0) ? left : 0;
 }
-
-
-int search_lmr_depth_probe(int depth, int move_number, int hist_sum)
-{ return lmr_depth_of(depth, move_number, hist_sum); }
 
 
 // The move count late move pruning stops generating quiets past, in hundredths
@@ -1403,15 +1342,9 @@ static int negamax_at(int alpha0,
     // checking move inside it -- so what the rule saves is the subtrees and not
     // the move list, and every quiet it skips costs one make, one unmake and
     // one attack scan.
-    //
-    // The gate is the raw table here and the only one of the four that is.
-    // This decision is taken before `pick_next_move`, so there is no move yet
-    // to read a history entry for -- the rule is about the count and not about
-    // a move -- and NO_HISTORY_SUM is what makes that explicit rather than
-    // implicit. S098.
     if (!skip_quiets && may_prune) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number, NO_HISTORY_SUM);
+      const int lmr_depth = lmr_depth_of(depth, move_number);
 
       if (lmr_depth < LMP_MAX_LMRDEPTH &&
           100 * move_number > lmp_threshold_x100(lmr_depth, improving)) {
@@ -1450,20 +1383,6 @@ static int negamax_at(int alpha0,
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_quiet = !is_capture && !MOVE_PROMOTED(moves[i]);
 
-    // This move's raw history, read **here** and used twice: by the
-    // shallow-depth block's gate below and by the reduction after make_move.
-    // Here because the butterfly table is indexed by the side to move and
-    // after make_move that is the other side -- a read down there would score
-    // the move against the opponent's half of the table, silently. S098.
-    //
-    // Quiets only, and that is the move class the reduction table itself
-    // covers: a capture is not reduced by late move reduction at all, and
-    // neither table has an entry for one, so the cell at its (from, to) belongs
-    // to some quiet move and is not this move's history in any sense.
-    const int hist_sum =
-        is_quiet ? quiet_history_sum(game, state, moves[i], prev_move)
-                 : NO_HISTORY_SUM;
-
     // The three per-move rules. Their inputs are all properties of **this**
     // position -- the node's own static score, the history table and the
     // exchange evaluation -- so the decision is taken before make_move, where
@@ -1475,7 +1394,7 @@ static int negamax_at(int alpha0,
 
     if (may_prune && is_quiet) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number, hist_sum);
+      const int lmr_depth = lmr_depth_of(depth, move_number);
 
       // A node in check has no static score and `pruning_node` excludes one,
       // so the margin below never reads the sentinel.
@@ -1543,11 +1462,7 @@ static int negamax_at(int alpha0,
     // promotion mate is the shape the hazard likes best.
     if (may_prune && is_capture) {
       const int move_number = legal_moves_counter + 1;
-
-      // The raw table, for the reason the read above is quiets-only: a capture
-      // has no history entry of its own, and reading the quiet cell at its
-      // (from, to) would gate this rule on some other move's history. S098.
-      const int lmr_depth = lmr_depth_of(depth, move_number, NO_HISTORY_SUM);
+      const int lmr_depth = lmr_depth_of(depth, move_number);
 
       if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&
           !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {
@@ -1664,11 +1579,7 @@ static int negamax_at(int alpha0,
 
     if (may_reduce) {
       if (!is_capture && !MOVE_PROMOTED(moves[i])) {
-        // The table, adjusted by what the history tables think of this exact
-        // move: `hist_sum` was read before make_move, above, and the same
-        // number gated the shallow-depth rules. S098 verdict 1.
-        reduction = lmr_adjusted_reduction(
-            depth, static_cast<int>(legal_moves_counter), hist_sum);
+        reduction = lmr_reduction(depth, static_cast<int>(legal_moves_counter));
       }
 
       // S091. A move that loses material is one the ordering already put late
@@ -1689,7 +1600,6 @@ static int negamax_at(int alpha0,
 
         probe->moves[k] = moves[i];
         probe->reduction[k] = reduction;
-        probe->hist_sum[k] = hist_sum;
         probe->researched[k] = false;
         probe->move_count = legal_moves_counter;
       }

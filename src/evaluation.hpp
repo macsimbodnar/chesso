@@ -342,21 +342,32 @@ int game_phase(const board_t* board);
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus
-// S222's weighted continuation entry -- and the one path both consumers read
-// it through: score_move's quiet band below, and late move reduction's history
-// scaling in src/search.cpp lmr_adjusted_reduction (S098). Raw, never
-// score_move's return: a killer scores 900000 there and a countermove 700000,
-// and a consumer that divides one of those by a history divisor is reading a
-// band constant. Pre-make, like every caller -- `active_color` indexes the
-// table with the side that plays the move.
+// S222's weighted continuation entry -- and the one path a consumer reads it
+// through. Raw, never score_move's return: a killer scores 900000 there and a
+// countermove 700000, and a consumer that divides one of those by a history
+// divisor is reading a band constant, which is S093's own hazard. Pre-make,
+// like every caller -- `active_color` indexes the table with the side that
+// plays the move.
+//
+// **One production reader today, score_move's quiet band below** (a test case
+// reads it too). It was factored out for
+// S098's history-scaled reduction, which read the same number so that the
+// ordering and the reduction could not disagree about it; that term measured
+// zero at three scales and left the tree (DEC-213). What is left is the
+// factoring, kept deliberately: it is behaviour-neutral, and a rule that wants
+// a move's history -- S127's refits, a later reduction or pruning term --
+// reads this rather than writing a second copy of the arithmetic that would be
+// free to drift, the way continuation_entry is one index so a write and a read
+// cannot disagree.
 //
 // **Defined here rather than in the .cpp, and that is a measurement.** There is
 // no LTO in this build, so a definition in evaluation.cpp is a call per quiet
-// scored *and* a call per quiet searched: ten interleaved bench pairs read
-// 3815942 nodes per second against 3632322 with it out of line, -4.81 %, the
-// two groups not overlapping. Inline here the arithmetic folds into both call
-// sites. Behaviour-neutral by construction and proved by the signature: the
-// bench total is the same number either way.
+// scored: ten interleaved bench pairs read 3815942 nodes per second against
+// 3632322 with it out of line, -4.81 %, the two groups not overlapping. Inline
+// here the arithmetic folds into its call site. Behaviour-neutral by
+// construction and proved by the signature: the bench total is the same number
+// either way, and the removal above is what proves it again -- this tree's
+// total is the reference's exactly.
 inline int quiet_history_sum(const game_t* game,
                              const search_state_t* state,
                              move_t move,

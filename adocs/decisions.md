@@ -12002,3 +12002,42 @@ Consequences: The removal commit carries `Bench: 5685915`. The step file's
               both runs and the removal; `adocs/plan.md`'s ledger holds rows
               sixteen and seventeen; `specs.md`'s search row records the
               zero in one sentence. Verdict 2's brief follows.
+
+## DEC-214  2026-09-16  S098 verdict 2's four node-type terms take the step's off-value protocol with a firing census first, not a lane
+Tags:         s098, lmr, node-type, seeds, sprt, dec-212, dec-213, dec-063
+Context:      DEC-212 fitted verdict 1's two constants in a lane because
+              the divisor was a scale and the seed alone decided whether
+              the term was inert or grew the tree by 60 %. Verdict 2's four
+              terms -- `LMR_CUTNODE`, `LMR_NOT_IMPROVING`, `LMR_TT_CAPTURE`
+              and the PV term -- are ply counts of 0 to 2 behind their own
+              off-valued constants, each a per-node condition with no scale
+              to get wrong; the step's section 6 already bisects a failing
+              verdict by release rebuild at the off values, weakest records
+              first. What verdict 1 actually cost was not its runs but that
+              its first seed was inert and nothing said so until a census
+              was taken (DEC-212).
+Decision:     By the coordinator under the owner's delegation, on the
+              verdict-1 agent's proposal. **(1) No lane for verdict 2**:
+              SPSA over four small integers spends a night on nothing a
+              release rebuild cannot say. **(2) A firing census first**: the
+              throwaway instrumented worktree `adocs/data/S098_v1_hist_census.py`
+              built is pointed at the four conditions -- `cut_node`,
+              `!improving`, a capturing TT move, `is_pv` -- and counts how
+              often each is true at a reduction site over S024's 400
+              positions at depths 10 and 12, before any match. A condition
+              true at under one per cent of sites ships at 0 and is recorded
+              as inert rather than measured; the others take their seeds
+              from the step's section 4 (DEC-105 forms stated). **(3) One
+              SPRT for the four**, `{0, 5}` at the harness regime against
+              the tree DEC-213 left, as the step's accepts wrote; H0 bisects
+              by off values, `{ttcapture, PV}` before `{cutnode, improving}`,
+              two legs at most; the `cut_node` alternation is re-checked
+              before any delta is blamed on a term.
+Rejected:     **A lane over the four** -- integers with no scale. **Skipping
+              the census** -- verdict 1's inert first seed is the record of
+              what that costs. **Four SPRTs, one per term** -- DEC-063:
+              +1-class effects are not separable at the pair's cost.
+Consequences: Verdict 2's brief carries the census as its first step and
+              the SPRT pre-registration names the census's shares beside
+              each seed. DEC-212's lane pattern stays the rule for a scale
+              parameter and not for a count.
