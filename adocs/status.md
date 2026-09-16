@@ -7,6 +7,33 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 2 read H1, 2026-09-16 12:55: `Elo 29.05 +/- 11.52` at
+  `8+0.08` over 1990 games in 56 m 09 s** (LLR 2.95, `nElo 38.70 +/- 15.26`,
+  W 712 L 546 D 732, `Ptnml [60, 200, 358, 268, 109]`, LOS 100.00 %, 2126
+  games an hour; 0 forfeits either side over the PGN's 1991 games, 1397
+  adjudications and 594 natural ends; `Incomplete mating PV` 14 candidate
+  against 9 reference; 995 pairs at variance 0.2805, beside S219's 0.2905 and
+  S212's 0.2939). Candidate `a771260` against `50fd965`, the tree verdict 1's
+  removal left. **The four node-type terms stay at 1 ply each**; the claim is
+  at least 5 nElo, the stopping estimate being upward-biased (DEC-063); no
+  bisection was needed. Evidence `adocs/data/S098_v2_sprt.log` and
+  `S098_v2_sprt_pairs.txt` with README rows; the specs search row carries the
+  passage with the verdict; the ledger holds it as row eighteen (mean 4 h 27
+  m, median 4 h 18 m, 180253 games in 80.27 hours); the step file has the
+  coordinator's SPRT section. **Verdict 3, the re-search rule, starts now by a
+  fresh Opus 5 agent against `a771260`** (DEC-199): the step's section 3 --
+  the zero-window re-search after a reduced fail-high goes one ply deeper when
+  the reduced score clears the fail-soft best by a margin and a real reduction
+  was taken, one ply shallower when it beat alpha by under a second margin,
+  capped at `child_depth + 1` and floored at 1, the full-window re-search
+  untouched -- under DEC-214's protocol: off-valued constants with DEC-105
+  seeds, a firing census over S024's 400 positions before any match, a lane
+  only if the census says a seed is inert or the scale cannot be derived from
+  the tree's own numbers, one gainer SPRT `{0, 5}` pre-registered before the
+  games, and the mutant evidence blocks quoted verbatim from kept ctest logs
+  (verdict 2's fast-check finding). Brief `.tuning/coord/S098_v3_brief.md`.
+  `plan_current/`: S098 (verdict 1 zero, verdict 2 H1, verdict 3 in work).
+
 - **S098 verdict 2 is running, launched 2026-09-16 11:59: `a771260` (the
   node-type terms) against `50fd965`, the tree verdict 1's removal left,
   SPRT {0, 5} at `8+0.08` on `noob_3moves.epd`, concurrency 12.** The

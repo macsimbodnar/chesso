@@ -1580,3 +1580,36 @@ applied. `adocs/data/S098_v2_sprt.sh` has `REF` pinned at `50fd965`, the commit
 before this landing, and `CAND` at `HEAD` to pin once the landing commit exists;
 its open-findings paragraph says no finding is open, re-read on this tree rather
 than copied from verdict 1's.
+
+### Verdict 2's SPRT, 2026-09-16 (the coordinator's)
+
+The landing committed as `a771260` after the fast check and its repair: six of
+the nine `T` evidence blocks quoted red values never observed and were re-quoted
+verbatim from the captured ctest logs, three cells of the mutant table above
+named the wrong set of killers and were corrected, the census sentence now says
+the counted site is the late-quiet reduction read and not every call of
+`lmr_adjusted_reduction`, and the header's `decisions:` and `touches:` were
+completed. Gate `GATE-DONE 5469072`, 39 of 39 in both builds. `CAND` pinned as
+`a771260` in `8be3f13`.
+
+`adocs/data/S098_v2_sprt.sh` ran 11:59:32 to 12:55:41 (`adocs/data/S098_v2_sprt.log`,
+`adocs/data/S098_v2_sprt_pairs.txt`): banner `candidate a771260`, `reference
+50fd965`, both identity lines right, seed `20260916115932`, `8+0.08`, Hash 16,
+concurrency 12, `noob_3moves.epd`, bounds `{0, 5}`.
+
+**H1 accepted: `Elo 29.05 +/- 11.52`, `nElo 38.70 +/- 15.26`, LLR 2.95 against
+(-2.94, 2.94), W 712 L 546 D 732 over 1990 games, `Ptnml(0-2) [60, 200, 358,
+268, 109]`, LOS 100.00 %, 56 m 09 s at 2126 games an hour.** 0 time forfeits on
+either side over the 1991 games the PGN holds (1397 adjudications, 594 natural
+ends); `Incomplete mating PV` 14 candidate against 9 reference, recorded and
+not a stop; 995 complete pairs at pair-score variance 0.2805, beside S219's
+0.2905 and S212's 0.2939 on this book.
+
+Read against the pre-registration's H1 line: **all four terms stay at 1 ply
+each**, the claim written is at least 5 nElo and not the stopping estimate
+(DEC-063), S127 refits the four beside `LmrBase`, `LmrDivisor` and S109's
+thresholds after the block, and **verdict 3 (the re-search rule, section 3)
+opens against `a771260`**. The specs search row carries the passage proposed
+above with the verdict appended; the ledger holds the run as its eighteenth
+row. Nothing of the bisection was needed. No `done:` stamp: the step completes
+after verdict 3.
