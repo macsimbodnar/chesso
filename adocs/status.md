@@ -7,6 +7,52 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 2 is running, launched 2026-09-16 11:59: `a771260` (the
+  node-type terms) against `50fd965`, the tree verdict 1's removal left,
+  SPRT {0, 5} at `8+0.08` on `noob_3moves.epd`, concurrency 12.** The
+  landing: `negamax_at` carries `cut_node` beside `is_pv` by the published
+  rules (root PV; a PV node's first child PV and the rest CUT; a CUT node's
+  first child ALL and the rest CUT; an ALL node's children CUT; the
+  zero-window re-search keeps the scout's label; the full-window re-search
+  under a PV parent is PV; the null-move child is the parent's opposite)
+  with a Debug assertion that no node is both; four terms behind
+  off-valued constants `LmrCutNode`, `LmrNotImproving`, `LmrTtCapture`,
+  `LmrPv` (1 each, range 0 to 2, DEC-105 (c)), applied before the clamps
+  and read by S109's gate too. The firing census came first (DEC-214):
+  21.12 / 52.75 / 24.83 / 26.72 % of 5478549 reduction sites at depth 12,
+  none inert (`adocs/data/S098_v2_node_census.txt`); bench 5685915 to
+  5469072 (-3.81 %), the off tree the parent's exactly on the tune build;
+  nine mutants T01 to T09 killed (`tools/mutants/S098_node_type.py`);
+  `capture_mates` re-derived (depths 9, 8, 11, 9); Debug self-play 8
+  games 0 `Assertion`; `gate_extra` GATE-EXTRA-DONE 5 stages 1076 s,
+  started 11:06 (`.tuning/gate_extra_2026-09-16_s098v2.log`). Fast check:
+  verified to the node; one real finding fixed before the commit -- six
+  of the nine mutant evidence blocks in `tests/test_search.cpp` quoted red
+  values never observed, re-quoted verbatim from the captured ctest logs
+  (`.tuning/coord/S098v2_mutlogs/`), and three step-file cells naming the
+  wrong set of killers corrected -- plus the census site sentence (the
+  counted site is the late-quiet reduction read, not every call of
+  `lmr_adjusted_reduction`) and the step header's `decisions:` and
+  `touches:`. Gate GATE-DONE 5469072, 39/39 in both builds. Pin `8be3f13`.
+  The run: `adocs/data/S098_v2_sprt.sh` writes `.tuning/sprt_s098_v2.log`,
+  output `.tuning/sprt_s098_v2_20260916_115932/`, pid in
+  `.tuning/sprt_s098_v2.pid`; banner and both identity lines checked
+  (`cand-a771260`, `ref-50fd965`); persistent watcher on the marker,
+  process death and a 39 h ceiling. Worst case 41861 games, 19.7 h at
+  the last two runs' 2119 to 2124 games an hour (about 07:40 tomorrow);
+  25591 games, 12.0 h with the truth on a bound (about midnight). Started
+  at noon rather than at night because DEC-155's condition is unmet:
+  nothing else can run meanwhile -- verdict 3 waits on this verdict, and
+  S231 sits behind S098 in Open and would interleave with a possible
+  bisection. **Nothing else runs on the machine until the marker**
+  (MACHINE). Reader `.tuning/coord/read_s098v2.sh`. Then, per the script's
+  header: H1, the four terms stay and verdict 3 (the re-search rule) is
+  briefed against `a771260`; H0, the `cut_node` alternation cases are
+  re-checked, then leg 1 puts `LmrTtCapture` and `LmrPv` to 0 by release
+  rebuild and leg 2 the other pair; no verdict inside two legs, a zero and
+  the removal in DEC-194's shape. `plan_current/`: S098 (verdict 1 zero,
+  verdict 2 under SPRT).
+
 - **S098 verdict 1 is closed as a zero and removed, 2026-09-16 10:04, commit
   `30a3be2`; verdict 2 (node type) starts now by a fresh Opus 5 agent
   (DEC-199, DEC-214).** The removal returned the reference's tree: `src/`
@@ -3706,10 +3752,11 @@ Updated: 2026-09-16, by hand.
   check came back clean, including the two removals S193 claimed were the clamp
   and the no-op filter restated, both verified against `src/`.
 
-- Extra gate: last **GATE-EXTRA-DONE 2026-09-15 11:49, 5 stages 1072 s**, on
-  S098 verdict 1's tree `eb0bcd6` (log `.tuning/gate_extra_2026-09-15_S098v1.log`;
-  debug 323 s, sanitize 690 s, perft 58 s; the agent's own run at the first
-  seed read 1075 s); before it the same day 03:59 on S222's phase-three
+- Extra gate: last **GATE-EXTRA-DONE 2026-09-16 11:24, 5 stages 1076 s**, on
+  S098 verdict 2's tree, committed as `a771260` (log
+  `.tuning/gate_extra_2026-09-16_s098v2.log`); before it
+  2026-09-15 11:49 on verdict 1's tree `eb0bcd6` (1072 s; debug 323 s,
+  sanitize 690 s, perft 58 s), the same day 03:59 on S222's phase-three
   tree `0effd18` (1073 s), 2026-09-14 14:33 on
   S222's landing `96fdc19` (1101 s), the same day on S091's `b0df255` (1055 s), 2026-09-13 on S223's
   tree (1059 s), S210's `da0cfed` (1042 s) and S109's `1952c56` (859 s). DEC-141 clause 3 is the cadence -- before a step
