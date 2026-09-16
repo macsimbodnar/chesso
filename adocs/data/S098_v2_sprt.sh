@@ -193,6 +193,8 @@ set -uo pipefail
 cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 
 # THE PAIR. **REF is pinned here and CAND is the coordinator's to pin**, and
+# **Pinned 2026-09-16: CAND is `a771260`, "Land S098 verdict 2: late move
+# reduction adjusted by node type"; REF stays `50fd965`.**
 # both are written as defaults rather than left blank so the file is runnable
 # and what it will measure is on the record before it is.
 #
@@ -209,7 +211,7 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 [[ -x ./fastchess.sh ]] || { echo "SPRT-RUN-FAILED: no executable ./fastchess.sh" >&2; exit 1; }
 shopt -s execfail
 exec env REF="${REF:-50fd965}" \
-     CAND="${CAND:-HEAD}" \
+     CAND="${CAND:-a771260}" \
      OUT="/home/max/ws/chesso/.tuning/sprt_s098_v2_$(date +%Y%m%d_%H%M%S)" \
      ./fastchess.sh
 echo "SPRT-RUN-FAILED: exec env ./fastchess.sh" >&2; exit 127
