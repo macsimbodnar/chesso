@@ -1,0 +1,50 @@
+# S098 verdict 2: the four node-type conditions where the reduction
+# reads them. DEC-214, taken before any match.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S098_v2_node_census.py census
+# The script's docstring is the method; it holds the instrumentation
+# patch, so this file is reproducible from the repository alone.
+# 400 positions of adocs/data/S024_census_positions.txt, one
+# persistent UCI process, ucinewgame between positions, go depth N.
+# A site is the reduction call site in negamax_at, the late-quiet
+# reduction read -- not every call of lmr_adjusted_reduction, which
+# the three lmr_depth_of gates also make: a quiet past the third
+# legal move at depth 3 or more with neither side in check, which is
+# late move reduction's own eligibility.
+#
+# TAKEN ON THE OFF TREE. The four constants are patched to 0 in the
+# throwaway worktree, so the shares belong to the tree the SPRT's
+# reference searches. Instrumented bench signature: 5685915, equal to the
+# total the commit before this landing prints, which says both that
+# the write-only counters do not move the tree and that verdict 2's
+# plumbing is inert at its off values in the Release build.
+#
+# A condition true at under one per cent of sites ships at 0 and is
+# recorded as inert rather than measured (DEC-214).
+depth 10
+  positions: 400   nodes: 30474552   wall: 9.1 s
+  sites: 2103446   of them with a non-zero raw reduction: 2103446 (100.00 %)
+  cut_node                     373162 of 2103446 sites   17.74 %   LmrCutNode
+  !improving                  1109068 of 2103446 sites   52.73 %   LmrNotImproving
+  a capturing TT move          533643 of 2103446 sites   25.37 %   LmrTtCapture
+  is_pv                        761221 of 2103446 sites   36.19 %   LmrPv
+  the joint distribution, plies at the midpoint seeds (PV subtracts):
+    -1 ply:       318116   15.12 %
+    +0 ply:       603464   28.69 %
+    +1 ply:       815650   38.78 %
+    +2 ply:       341530   16.24 %
+    +3 ply:        24686    1.17 %
+
+depth 12
+  positions: 400   nodes: 76439049   wall: 22.8 s
+  sites: 5478549   of them with a non-zero raw reduction: 5478549 (100.00 %)
+  cut_node                    1157343 of 5478549 sites   21.12 %   LmrCutNode
+  !improving                  2890113 of 5478549 sites   52.75 %   LmrNotImproving
+  a capturing TT move         1360447 of 5478549 sites   24.83 %   LmrTtCapture
+  is_pv                       1463906 of 5478549 sites   26.72 %   LmrPv
+  the joint distribution, plies at the midpoint seeds (PV subtracts):
+    -1 ply:       580822   10.60 %
+    +0 ply:      1526030   27.85 %
+    +1 ply:      2298058   41.95 %
+    +2 ply:       994156   18.15 %
+    +3 ply:        79483    1.45 %

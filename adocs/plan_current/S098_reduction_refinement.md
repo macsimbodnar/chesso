@@ -1,9 +1,9 @@
 id:         S098
 goal:       the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
-touches:    src/search.cpp late move reduction, src/search_params.hpp, tests/test_search.cpp
+touches:    src/search.cpp late move reduction, src/search.hpp, src/data_structures.hpp, src/search_params.hpp, tests/test_search.cpp
 excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md` "the improving flag, was first in the pending order"; no `decisions.md` entry records that merge) and which is an input here
-decisions:  DEC-071, DEC-105, DEC-134, DEC-198
+decisions:  DEC-071, DEC-105, DEC-134, DEC-198, DEC-213, DEC-214
 closes:
 blocks:
 paused_by:
@@ -1199,3 +1199,384 @@ would spend a night choosing between three integers. If the census shows a
 condition firing at under a per cent of sites, that term ships at 0 and is said
 to be inert rather than measured, which is the cheaper half of what verdict 1
 learned the expensive way.
+
+## Verdict 2 landed, 2026-09-16: the node-type adjustments
+
+Implemented by an Opus 5 subagent briefed by the coordinator (DEC-185,
+DEC-199). **No `done:` stamp: the step completes after verdict 3.** The SPRT is
+the coordinator's and is pre-registered as `adocs/data/S098_v2_sprt.sh` before
+any game.
+
+### The rule, and where it is clamped
+
+`src/search.cpp` `lmr_adjusted_reduction` is the raw table plus one integer the
+node computes once:
+
+```
+r = lmr_reduction(depth, move_number)
+    + LMR_CUTNODE        at a node predicted to fail high
+    + LMR_NOT_IMPROVING  where improving_at() is false
+    + LMR_TT_CAPTURE     where the entry's own move is a capture
+    - LMR_PV             at a principal variation node
+```
+
+`src/search.cpp` `lmr_node_adjustment` is that sum, and every input is a
+property of the **node** rather than of the move -- which is why it is computed
+once above the move loop and read by both consumers instead of recomputed per
+move.
+
+The helper is **unclamped**, and the two call sites clamp exactly as they
+clamped the raw table before it existed:
+
+| site | clamp | what it reads |
+|---|---|---|
+| the reduction in `src/search.cpp` `negamax_at` | `[0, child_depth - 1]`, S091's extra ply added first | the node's own adjustment |
+| the shallow-depth gate `src/search.cpp` `lmr_depth_of` | at 0 from below | the same adjustment, so the gate and the reduction are one number |
+
+**S109's `lmr_depth` reads the adjusted value and S109 is not re-verdicted**:
+its file and `adocs/plan.md` both say S098's SPRT prices the interaction and
+S127 refits its thresholds. The PV term never reaches that gate -- a PV node is
+not a pruning node -- so of the four only three can move what is pruned, and
+`lmr_depth_of` therefore never sees a negative adjustment in the engine.
+
+**The PV term is the subtraction and not a second move-number bound.** Section 3
+left the choice open and named both published forms; the subtraction is taken
+because it composes with the other three inside one integer, where a separate
+`LMR_MIN_MOVES_PV` threshold would be a second mechanism with an interaction of
+its own to price. Recorded here as the decision section 3 asked for.
+
+### The prediction, and the one place the two published lists disagree
+
+`negamax_at` carries `bool cut_node` beside `is_pv`, so the pair names three
+labels and only three -- PV `(true, false)`, CUT `(false, true)`, ALL
+`(false, false)` -- and `assert(!(is_pv && cut_node))` at the top of the node
+says the fourth pair is not one of them. The rules are five named functions
+rather than expressions inlined at their recursions, because a wrong prediction
+is silent and a named function is something a case can walk
+(`src/search.cpp` `search_child_label_probe`):
+
+| function | the rule, and whose |
+|---|---|
+| `first_child` | "The first child of a PV-node is a PV-node"; "The first child of a CUT-node is an ALL-node"; "Children of ALL-nodes are CUT-nodes" (Garms) |
+| `scouted_child` | "The further children are searched by a scout search as CUT-nodes" (Garms); "Children of PV-nodes that are searched with a zero-window scout search are Cut-nodes" (Kannan) |
+| `zero_window_research` | the same, for the full-depth repeat a reduced move that beat alpha is owed: it is still a zero window and so still a scout |
+| `full_window_research` | "PVS re-search is done as PV-node" (Garms); Kannan's "re-searched because the scout search failed high, are PV-nodes" |
+| `null_move_child` | **Kannan**, and this is the disagreement |
+
+The root is a PV node, which is both lists' first rule and what `is_pv` already
+carried.
+
+**The null-move child, re-read at implementation rather than taken from a
+summary, as section 3 asked.** The page carries two lists and they do not agree.
+Garms: "The node after a null move is a CUT-node", unconditionally. Kannan: "The
+first child of a Cut-node, and other candidate cutoff moves (nullmove, killers,
+captures, checks, ...) is an All-node", with "Children of All-nodes are
+Cut-nodes" covering the other parent. **This engine follows Kannan**, so the
+label is the parent's opposite -- ALL under a CUT parent, CUT under an ALL
+parent -- and the window is the second argument for it: the parent passes
+`(-beta, -beta + 1)` hoping the child comes back at or below `-beta`, which is
+the child failing low, which is an All-node. The block never runs at a PV node,
+so no third case arises.
+
+### The firing census, taken before anything was seeded, DEC-214
+
+`adocs/data/S098_v2_node_census.py` and `.txt`. The method is verdict 1's, down
+to the positions and the driver: a detached worktree carrying this working
+tree's `src/` with write-only counters patched in at the one site the reduction
+is consulted, driven over the 400 positions of
+`adocs/data/S024_census_positions.txt` through S024's own `Engine` at
+`go depth 10` and `go depth 12`. One site is the reduction call site in
+`negamax_at`, the late-quiet reduction read -- not every call of
+`lmr_adjusted_reduction`, which the three `lmr_depth_of` gates also make -- a
+quiet past the third legal move at depth 3 or more with neither side in check.
+
+**Two differences from verdict 1's, and the second is worth more than the
+first.** It counts four booleans rather than a distribution, because a 0-to-2
+ply count has no scale to get wrong. And **the patch also sets the four
+constants to 0**, so the shares belong to the tree the SPRT's reference searches
+-- which gives the signature check an exact number to hold rather than a
+comparison against whatever `build/` happens to contain: the instrumented
+Release binary must print **5685915**, the total the commit before this landing
+prints. It does, which says both that the counters do not move the tree and that
+the whole of verdict 2's plumbing is inert at its off values in the Release
+build.
+
+| | depth 10 | depth 12 |
+|---|---|---|
+| sites | 2103446 | 5478549 |
+| `cut_node` | 17.74 % | **21.12 %** |
+| `!improving` | 52.73 % | **52.75 %** |
+| a capturing TT move | 25.37 % | **24.83 %** |
+| `is_pv` | 36.19 % | **26.72 %** |
+
+**No term ships at 0.** DEC-214's inert threshold is one per cent and the lowest
+share is twenty times it, so all four are measured and none is recorded as
+inert. The joint distribution is the other half of the reading: at the midpoint
+seeds the four sum to nothing on 27.85 % of depth-12 sites, +1 on 41.95 %, +2 on
+18.15 %, +3 on 1.45 % and **-1 on 10.60 %**, which is the PV term's own share.
+So this is a rule that moves about seven reduction sites in ten -- the opposite
+of what verdict 1's first seed turned out to be, and the whole reason DEC-214
+put the census in front of the match.
+
+### The four constants, their seeds and their DEC-105 forms
+
+| constant | default | range | form |
+|---|---|---|---|
+| `LMR_CUTNODE` | 1 | 0 to 2 | **(c)** the midpoint of the declared range |
+| `LMR_NOT_IMPROVING` | 1 | 0 to 2 | **(c)** the same |
+| `LMR_TT_CAPTURE` | 1 | 0 to 2 | **(c)** the same |
+| `LMR_PV` | 1 | 0 to 2 | **(c)** the same, subtracted |
+
+The range is 0 to 2 by **stated purpose** and not by a guess at where the good
+values are: 0 is off and inside the range, which is what the bisection needs; 1
+is the published class of adjustment; and at 2 the term alone already equals
+what the table returns for the first reducible move at the median depth --
+`search_lmr_reduction_probe(11, 4)` is 2 -- past which the term replaces the
+ordering's own estimate instead of adjusting it, which is a different rule and
+not a setting of this one. A ply count has no unit to derive a **(b)** from and
+no publication about the technique states one, so **(c)** is the only form
+available and the midpoint of 0 to 2 is the integer 1. Section 4 wrote these
+four as **(c) midpoint** before the step began and nothing here changes that.
+
+No engine's ply count seeds any of them, wherever it is republished (DEC-084 as
+amended by DEC-105). The records that say the direction is worth trying --
+cutnode +1 at +9.34 with a second ply at -17.62, `!improving` +1 at +4.64, a
+capturing hash move at +1.87 to +3.33, the PV decrement at +3.78 -- are records
+and not seeds, section 5 already lists them as anti-seeds, and all but the last
+sit at or above the 3119 to 3138 band this engine is below (DEC-176).
+
+### What the terms do to the tree, measured before any game
+
+`Bench: 5469072`, against the parent's 5685915: **-3.81 %**. The by-depth
+ablation on the tune build, the shipped seeds against all four at 0 -- node
+counts, never strength (S073):
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 475717 | 841594 | 1344741 | 2453847 | 3447081 | 5469072 |
+| off | 607842 | 935536 | 1634008 | 2364815 | 3849812 | 5685915 |
+| delta | -21.74 % | -10.04 % | -17.70 % | **+3.77 %** | -10.46 % | -3.81 % |
+
+**The off column is the parent's totals exactly at every depth**, which is the
+property the bisection rests on, measured rather than argued -- and asserted a
+second way by the census script, whose instrumented Release binary is built at
+the off values and refuses to take a census unless it prints 5685915.
+
+**The on row is not monotone and that is the finding, not a wobble.** Three
+terms lengthen the reduction and one shortens it, so which effect wins at a
+given depth is a property of that depth's tree rather than of the rule: the tree
+is 10 to 22 per cent smaller at depths 9, 10, 11 and 13, and 3.8 % **larger** at
+12. `tools/search_bench.py` says the same from the other side.
+
+| | depth 9, parent -> this | depth 12, parent -> this |
+|---|---|---|
+| midgame | 51189 -> 22078 | 143205 -> 205096 |
+| kiwipete | 146616 -> 104682 | 570238 -> 646466 |
+| tactical | 39389 -> 29842 | 148060 -> 149330 |
+
+All three smaller at depth 9, two of three larger at depth 12. Best moves are
+`c3d5` / `e2a6` / `d7c8q` at depth 12 -- the parent's -- and at depth 9 midgame
+moves `c3d5` -> `g5f6` while the other two do not. Recorded and not explained: a
+move at a fixed depth is a chess judgement no agent here makes (CHESS). Node
+counts move by construction, so INV-6 takes the SPRT path.
+
+### Tests, red first, with the printouts
+
+Eight cases in `tests/test_search.cpp`, in the "search: pruning and reduction
+guards" suite. The red observation was taken on the shipped code with the four
+constants at **0** -- their off values -- which is both a red-first observation
+and the inert-at-off property the bisection rests on. Verbatim, Release build:
+
+```
+TEST CASE:  a node expected to fail high reduces its late quiets by LmrCutNode more
+FATAL ERROR: REQUIRE( LMR_CUTNODE > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+TEST CASE:  a node that is not improving reduces its late quiets by LmrNotImproving more
+FATAL ERROR: REQUIRE( LMR_NOT_IMPROVING > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+TEST CASE:  a node whose table move is a capture reduces its late quiets by LmrTtCapture more
+FATAL ERROR: REQUIRE( LMR_TT_CAPTURE > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+TEST CASE:  a principal variation node reduces its late quiets by LmrPv less
+FATAL ERROR: REQUIRE( LMR_PV > 0 ) is NOT correct!
+  values: REQUIRE( 0 >  0 )
+
+[doctest] test cases:   40 |   36 passed | 4 failed | 87 skipped
+```
+
+That guard is a real precondition and not a formality: at the off value the two
+drives agree by construction, so a wiring that read no condition at all would
+pass the comparison below it.
+
+The other four cases -- the walk of the prediction rules, the sum of the four
+terms, the labels the sites hand their children, and the null-move child's label
+-- are **property cases about the prediction, which is live at any constant**,
+so they hold at the off values and are red under their own mutants instead. That
+is the shape verdict 1's root case took, and it is stated here rather than left
+to be noticed.
+
+**How the four term cases are built, because the construction is the evidence.**
+Each drives one position twice and compares the reduction of one late quiet. Two
+properties make the two drives comparable and both are asserted rather than
+assumed:
+
+- the position is `3r2k1/5pb1/7p/p4B1P/2r3P1/8/1P1n1B2/1R2R1K1 w - - 3 36`, row
+  1 of `adocs/data/S024_census_positions.txt` -- this project's own self-play --
+  and it has **no captures and no promotions**, so `negamax_at` generates and
+  scores the whole quiet stage before it searches anything and the move order
+  cannot depend on what a child wrote into the history table;
+- the window is inside the mate band, `[MATE_MIN, MATE_MIN + 1)`, which switches
+  the shallow-depth block, null move pruning and reverse futility off at the
+  node and through its whole subtree. A pruned quiet is not counted as a legal
+  move, so a rule that fired in one drive and not the other would move every
+  index after it.
+
+`aligned_reduced_index` then requires the two drives to have searched the same
+moves in the same order before it returns an index, so a difference read there
+is the term and not the ordering. The transposition-table case needs one more
+thing and it is that case's own precondition: the entry it plants carries a
+capture **the position does not contain**, because a table move the list holds
+is ordered first and would move every index after it, and the term asks what
+class the entry's move is and nothing else.
+
+The accepts' root case, "a mate found at the root is never reduced", is green
+unchanged, and so are both mate cases -- "pruning does not hide a forced mate"
+and "pruning does not hide a mate against the material leader".
+
+### The mutants, and the case that killed each
+
+`tools/mutants/S098_node_type.py`, prefix `T` -- the next free one, since `N` is
+S191's -- nine mutants, **every one run by hand against the working tree and
+observed**. The pass could not go through `tools/mutation_check.py`, which
+requires a linked worktree with a clean `src/` at `HEAD` and reverts with
+`git checkout --`, and this verdict is not committed yet. Each was applied,
+built, run through the **whole fast suite** in the Release build and reverted
+from a byte snapshot whose sha256 was compared after; a hand-driven pass reverts
+the source and not the build, so each revert is followed by a `touch` and a
+rebuild before anything reads the binary again.
+
+| mutant | what it breaks | killed by |
+|---|---|---|
+| `T01_first_child_label` | the first child of an ALL node is labelled ALL, so the alternation stops alternating | "the node type of every child is the one the published rules predict" `CHECK( same_type(child_of(CHILD_FIRST, CUT_NODE), ALL_NODE) )` false, and "pruning does not hide a forced mate" at `capture_mates` row 4 |
+| `T02_cutnode_inverted` | the ply is added at every node that is **not** a cut node | "a node expected to fail high ..." `REQUIRE_EQ( 2, 4 )`, the LmrNotImproving and LmrTtCapture cases on their own clamp preconditions, and "the node-type adjustment is the sum of its four terms" -- the LmrPv case stays green |
+| `T03_improving_inverted` | the ply is added when the side to move **is** improving | "a node that is not improving ..." `REQUIRE_EQ( 2, 4 )`, the LmrCutNode and LmrTtCapture cases on their own clamp preconditions, "the node-type adjustment ...", and "a mate found at the root is never reduced" on its own `k >= 3` precondition |
+| `T04_ttcapture_inverted` | the ply is added where the table move is **not** a capture | "a node whose table move is a capture ..." `REQUIRE_EQ( 2, 4 )`, the LmrCutNode and LmrNotImproving cases on their own clamp preconditions, and "the node-type adjustment ..." |
+| `T05_pv_added` | the PV term is added instead of subtracted | "a principal variation node reduces its late quiets by LmrPv less" `REQUIRE_EQ( 3, 1 )`, "the node-type adjustment ..." `CHECK_EQ( 1, -1 )`, and `test_mate_carry` "a mate score carried across searches keeps a line that reaches it" `CHECK( 13 <= 9 )` |
+| `T06_adjusted_reduction_ignores_node` | the shared helper drops the adjustment, so both consumers read the raw table | all four term cases and "the node-type adjustment ..." over its whole grid |
+| `T07_site_first_child` | the recursion labels its first child by the scout rule, so a PV node scouts its own line | "the node labels its first child by the first-child rule and the rest by the scout rule" `CHECK_EQ( false, true )`, and three binaries: `test_search` "the reported line runs the full depth" `REQUIRE( 1 == 4 )`, `test_mate_breadth` `REQUIRE( 140 >= 143 )`, `test_mate_carry` `CHECK( 27 <= 9 )` |
+| `T08_null_child_label` | the null-move child keeps the parent's own type | "the child after a null move is labelled the type the parent is not" `CHECK_EQ( true, false )`, and the walk's two null-move rows |
+| `T09_pv_and_cut_together` | the full-window re-search labels its child both PV and CUT, the pair the Debug assert forbids | "the node type of every child ..." `CHECK_FALSE( is_the_fourth_pair )` true, and its three `CHILD_FULL_RESEARCH` rows |
+
+Each reddened `test_search` and nothing else, except `T05` (two binaries) and
+`T07` (three). **`assert` is dead in both gated builds**, which is why `T09`'s
+Release kill is the walk case and the assert is the second net; the Debug
+self-play below is where it would fire.
+
+Eight of the nine were observed on the tree before `clang-format.sh` ran and the
+formatting moved no anchor of theirs; `T06`'s anchor is the one the formatter
+collapsed onto one line, so it was **re-observed on the tree that lands** and
+killed by the same six cases.
+
+**One mutant of another step's file moved and was re-observed too.**
+`tools/mutants/S222_continuation_history.py` `H03_null_child_keeps_prev` anchors
+on the null-move recursion, which gained two arguments here; the anchor is
+updated, the mutation itself is unchanged, and it still dies at "the node after
+a null move has no previous move to index" and nowhere else. A note at the
+mutant says so. Every anchor in all ten registry files resolves exactly once on
+the tree that lands, checked by script.
+
+### `capture_mates` re-derived, and R01's kill is back
+
+DEC-142: a golden is re-derived by its own script whenever **either** end moves,
+and adjusting the reduction by the node's type is the same clause of the same
+rule verdict 1 moved. Seven sweeps of `adocs/data/S230_mine_r01_row.py depths`
+over `adocs/data/S230_table_fens.txt`, depths 3 to 12, once on this tree and
+once per mutant of `tools/mutants/S091_capture_see.py` applied by hand and
+reverted from a byte snapshot.
+
+Shipped profiles: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`, `d11 d12`,
+`d9 d10 d11 d12`. The rule written at the table -- the lowest shipped depth that
+separates a mutant, else the lowest shipped depth with the label saying nothing
+separates -- then gives:
+
+| row | depth, was -> is | label, was -> is |
+|---|---|---|
+| 1 | 7 -> **9** | `C02 and C05` -> **no S091 mutant, since S098 verdict 2** |
+| 2 | 7 -> **8** | `C02` -> **C02, C05, C07 and R01** |
+| 3 | 9 -> **11** | `R02` -> **C07 and R02** |
+| 4 | 11 -> **9** | `R02` -> `R02` |
+
+Three depths moved and no mate distance did. That is the expected shape rather
+than the hazard: three of the four terms lengthen the reduction, so a mate the
+ordering does not put first arrives an iteration or two later, and the hazard is
+a mate that never arrives. Every row still reports its own inside the swept
+range, and so do both dedicated mate cases, `test_mate_carry` and
+`test_mate_breadth`.
+
+**R01's incidental kill is back**, which is what S230 went mining for and what
+the tree verdict 1 left had lost: row 2 at depth 8 separates C02, C05, C07 and
+R01 at once. The previous pass recorded that this row *would* say that at 8 and
+took 7 because 7 was lower and separated something; on this tree 7 reports no
+mate at all, so the rule itself takes 8 and the decision it left open never has
+to be made.
+
+### The suite, the signature and the second tier
+
+- Fast suite, Release: **39/39**. Fast suite, tune build: **39/39**.
+  `./clang-format.sh --check` clean.
+- `Bench: 5469072`.
+- `tools/search_bench.py` depths 9 and 12 above.
+- Debug self-play, DEC-141 clause 1, four rounds at 4+0.04 with the Debug
+  binaries and `level=trace engine=true`: **8 games in 23 s, 0 `Assertion` in
+  both the log and the tee'd stdout, 0 `disconnect`**. The new
+  `assert(!(is_pv && cut_node))` never fired.
+- `tests/test_search_params.cpp`'s golden gains four rows and its count moves
+  44 -> 48, re-derived the way its own GOLDEN note says -- by diffing it against
+  `src/search_params.hpp`, which is its derivation.
+- `MANUAL.md`'s tune-option table gains `LmrCutNode`, `LmrNotImproving`,
+  `LmrTtCapture` and `LmrPv`; `DEV_MANUAL.md`'s bench ledger gains this verdict
+  with the non-monotone ablation, and its DEC-142 golden list moves
+  `golden_defaults` 44 -> 48 and carries the new `capture_mates` row.
+  `tests/test_uci_surface.cpp` needed no edit: it generates the option lines
+  from `search_param_info` and requires `MANUAL.md` to document each name, which
+  it now does -- and it was observed red in the tune build before those rows were
+  written.
+- `tools/gate_extra.sh`, DEC-141 clause 3, before this verdict completes:
+  **GATE-EXTRA-DONE 5 stages 1076 s**, all five green -- prose, citations, the
+  Debug binaries (317 s), the sanitizer build (700 s) and deep perft (58 s). The
+  prose and citation stages were re-run after this section was written, since
+  they had been taken before it existed.
+
+### Proposed for `adocs/specs.md`, for the coordinator to apply
+
+The search row's late-move-reduction sentence gains, beside the verdict 1
+sentence already there:
+
+> **Late move reduction is adjusted by the node's type since S098 verdict 2**:
+> `negamax_at` carries `cut_node` beside `is_pv`, so the pair names CPW's three
+> node types by Garms's prediction rules, with Kannan's reading of the null-move
+> child where the two published lists disagree; the reduction becomes
+> `r + LmrCutNode + LmrNotImproving + LmrTtCapture - LmrPv`, each behind its own
+> constant with 0 as an off value inside its range, clamped where the raw table
+> was clamped, and **S109's shallow-depth gate reads the same adjusted number**,
+> so the gate and the reduction are one value. At all four off values the helper
+> returns the raw table and the engine is the one before the step, bench
+> signature included.
+
+### Files
+
+Changed: `src/search.cpp`, `src/search.hpp`, `src/search_params.hpp`,
+`src/data_structures.hpp`, `tests/test_search.cpp`,
+`tests/test_search_params.cpp`, `tools/mutants/S222_continuation_history.py`,
+`MANUAL.md`, `DEV_MANUAL.md`, `adocs/data/README.md`, this file. Created:
+`adocs/data/S098_v2_node_census.py`, `adocs/data/S098_v2_node_census.txt`,
+`adocs/data/S098_v2_sprt.sh`, `tools/mutants/S098_node_type.py`.
+
+**For the coordinator.** The `adocs/specs.md` sentence above is proposed, not
+applied. `adocs/data/S098_v2_sprt.sh` has `REF` pinned at `50fd965`, the commit
+before this landing, and `CAND` at `HEAD` to pin once the landing commit exists;
+its open-findings paragraph says no finding is open, re-read on this tree rather
+than copied from verdict 1's.

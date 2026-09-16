@@ -43,16 +43,21 @@ m("H02_cont_hist_no_prev_guard", S, "search/ordering",
    '  const bool has_prev = true;'),
   origin="S222")
 
+# The anchor gained two arguments at S098 verdict 2, which threads `cut_node`
+# through `negamax_at` and labels the null-move child by Kannan's rule rather
+# than passing a literal `false`. The mutation is unchanged -- the `0` becomes
+# `prev_move` and nothing else -- and it was re-observed at that step.
 m("H03_null_child_keeps_prev", S, "search/ordering",
   'the null-move child is handed the node\'s own previous move instead of 0, '
   'so everything it writes is keyed on a move that is two plies back and on '
   'the wrong side of the pass',
   ('        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
    'ply + 1,\n'
-   '                           game, state, 0, false);',
+   '                           game, state, 0, child.is_pv, child.cut_node);',
    '        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
    'ply + 1,\n'
-   '                           game, state, prev_move, false);'),
+   '                           game, state, prev_move, child.is_pv, '
+   'child.cut_node);'),
   origin="S222")
 
 m("H04_cont_hist_unread", E, "search/ordering",

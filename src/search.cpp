@@ -191,17 +191,195 @@ int search_lmr_reduction_probe(int depth, int move_number)
 { return lmr_reduction(depth, move_number); }
 
 
+// What the table above is worth once the **node's own type** is taken into
+// account, S098 verdict 2. Four signed plies, each behind its own constant
+// whose off value is 0, and every one of them a property of the node rather
+// than of the move -- which is why the whole adjustment is computed once per
+// node and passed in here as a single integer.
+//
+//   + LMR_CUTNODE        this node is predicted to fail high, so a late quiet
+//                        is even less likely to be the move that does it
+//   + LMR_NOT_IMPROVING  the side to move is worse off than it was two plies
+//                        ago; the later quiets are worth less of a look
+//   + LMR_TT_CAPTURE     the entry's move is a capture, so this node is
+//                        tactical and the quiet under the table is not what it
+//                        is about
+//   - LMR_PV             a principal variation node, whose line gets reported
+//                        and played
+//
+// Unclamped, exactly as the raw table is: the two call sites clamp, and they
+// clamp differently -- the reduction against the child's depth, the gate at
+// zero from below. A helper that clamped here would have to pick one.
+static inline int lmr_node_adjustment(bool cut_node,
+                                      bool improving,
+                                      bool tt_move_is_capture,
+                                      bool is_pv)
+{
+  int adjustment = 0;
+
+  if (cut_node) { adjustment += LMR_CUTNODE; }
+  if (!improving) { adjustment += LMR_NOT_IMPROVING; }
+  if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE; }
+  if (is_pv) { adjustment -= LMR_PV; }
+
+  return adjustment;
+}
+
+
+int search_lmr_node_adjustment_probe(bool cut_node,
+                                     bool improving,
+                                     bool tt_move_is_capture,
+                                     bool is_pv)
+{ return lmr_node_adjustment(cut_node, improving, tt_move_is_capture, is_pv); }
+
+
+// The reduction a move actually gets: the table's own guess at this (depth,
+// move number), moved by the node's type. With all four constants at 0 this is
+// the raw table and the engine is the one before S098 verdict 2, bench
+// signature included -- the property the bisection protocol rests on.
+static inline int lmr_adjusted_reduction(int depth,
+                                         int move_number,
+                                         int node_adjustment)
+{ return lmr_reduction(depth, move_number) + node_adjustment; }
+
+
+int search_lmr_adjusted_reduction_probe(int depth,
+                                        int move_number,
+                                        int node_adjustment)
+{ return lmr_adjusted_reduction(depth, move_number, node_adjustment); }
+
+
 // The depth the shallow-depth rules are gated on: what late move reduction
 // would leave below this move, and not the node's own remaining depth. A move
 // the ordering put late is already searched shallower than the node is deep, so
 // the margin it is pruned against should be the shallow one. Clamped at zero --
 // the reduction can exceed the depth on a very late move at a shallow node, and
 // a negative margin multiplier would invert every rule below it. S109.
-static inline int lmr_depth_of(int depth, int move_number)
+//
+// It reads the **same adjusted reduction the move is searched with** since S098
+// verdict 2: the gate and the reduction are one number, so a node type that
+// reduces harder also prunes earlier, and the off values restore S109's exact
+// gate in one release rebuild. `node_adjustment` is never negative at a call
+// site of this function -- the PV term is the only negative one and a PV node
+// is not a pruning node -- but nothing here depends on that, since the clamp
+// below is on the result.
+static inline int lmr_depth_of(int depth, int move_number, int node_adjustment)
 {
-  const int left = depth - lmr_reduction(depth, move_number);
+  const int left =
+      depth - lmr_adjusted_reduction(depth, move_number, node_adjustment);
 
   return (left > 0) ? left : 0;
+}
+
+
+// CPW's Node Types, and the whole of what this engine predicts about a child
+// before searching it. The pair the search carries names three labels and only
+// three:
+//
+//   PV   (is_pv, !cut_node)   on the principal variation
+//   CUT  (!is_pv, cut_node)   expected to fail high
+//   ALL  (!is_pv, !cut_node)  expected to fail low
+//
+// `is_pv && cut_node` is not a node type; negamax_at asserts it never happens.
+//
+// The rules are Onno Garms's, with Pradu Kannan's summary beside them on the
+// same page (https://www.chessprogramming.org/Node_Types). They agree
+// everywhere except the child after a null move, where this engine follows
+// Kannan -- see null_move_child below. A wrong prediction is silent: no crash,
+// no wrong node count, only rating, which is why each rule is a named function
+// a test can walk (search_child_label_probe) instead of an expression inlined
+// at its recursion.
+struct child_label_t
+{
+  bool is_pv;
+  bool cut_node;
+};
+
+
+// "The first child of a PV-node is a PV-node"; "The first child of a CUT-node
+// is an ALL-node"; "Children of ALL-nodes are CUT-nodes" (Garms). One
+// expression covers all three: only an ALL parent hands its first child the
+// CUT label.
+static constexpr child_label_t first_child(bool is_pv, bool cut_node)
+{ return {is_pv, !is_pv && !cut_node}; }
+
+
+// "The further children are searched by a scout search as CUT-nodes" and
+// "Further children of a CUT-node are CUT-nodes" (Garms); "Children of
+// PV-nodes that are searched with a zero-window scout search are Cut-nodes"
+// (Kannan). Every parent label gives the same answer, so the parent is not
+// read.
+static constexpr child_label_t scouted_child(bool, bool)
+{ return {false, true}; }
+
+
+// The zero-window repeat a reduced move that beat alpha is owed. Still a
+// scout -- the move has beaten alpha on a shallower search and nothing more --
+// so it keeps the scouted label. Kannan's "re-searched because the scout
+// search failed high, are PV-nodes" is the **full-window** re-search below and
+// not this one; conflating the two would label a zero-window child PV, which
+// is the one node type this engine has never searched with a zero window.
+static constexpr child_label_t zero_window_research(bool is_pv, bool cut_node)
+{ return scouted_child(is_pv, cut_node); }
+
+
+// The full-window re-search a move that beat alpha without reaching beta gets.
+// "PVS re-search is done as PV-node" (Garms); "Children of PV-nodes that have
+// to be re-searched because the scout search failed high, are PV-nodes"
+// (Kannan). At a PV parent that is PV, and `is_pv` already carried it before
+// this step; at any other parent -- reachable only from a probe driving a
+// non-PV node with a full window, since a zero window cannot produce
+// `alpha < score < beta` -- it is ALL, which is the label a node about to raise
+// alpha has.
+static constexpr child_label_t full_window_research(bool is_pv, bool)
+{ return {is_pv, false}; }
+
+
+// The child after a null move. **The two published lists disagree here and
+// this follows Kannan**, which is what S098's file names: the null move is one
+// of a Cut-node's "candidate cutoff moves", and Kannan's line makes those
+// children All-nodes, so a CUT parent's null child is ALL and -- by "Children
+// of All-nodes are Cut-nodes" -- an ALL parent's is CUT. Garms's list says
+// "The node after a null move is a CUT-node" unconditionally.
+//
+// Kannan's reading is also the one the window argues for: the parent passes
+// (-beta, -beta+1) hoping the child comes back at or below -beta, which is the
+// child failing low, which is an All-node. The null-move block never runs at a
+// PV node, so the pair returned is never (true, ...).
+static constexpr child_label_t null_move_child(bool, bool cut_node)
+{ return {false, !cut_node}; }
+
+
+void search_child_label_probe(int kind,
+                              bool parent_is_pv,
+                              bool parent_cut_node,
+                              bool* child_is_pv,
+                              bool* child_cut_node)
+{
+  child_label_t label = {false, false};
+
+  switch (kind) {
+    case CHILD_FIRST:
+      label = first_child(parent_is_pv, parent_cut_node);
+      break;
+    case CHILD_SCOUT:
+      label = scouted_child(parent_is_pv, parent_cut_node);
+      break;
+    case CHILD_ZW_RESEARCH:
+      label = zero_window_research(parent_is_pv, parent_cut_node);
+      break;
+    case CHILD_FULL_RESEARCH:
+      label = full_window_research(parent_is_pv, parent_cut_node);
+      break;
+    case CHILD_NULL_MOVE:
+      label = null_move_child(parent_is_pv, parent_cut_node);
+      break;
+    default:
+      break;
+  }
+
+  *child_is_pv = label.is_pv;
+  *child_cut_node = label.cut_node;
 }
 
 
@@ -871,10 +1049,18 @@ static int negamax_at(int alpha0,
                       game_t* game,
                       search_state_t* state,
                       move_t prev_move,
-                      bool is_pv)
+                      bool is_pv,
+                      bool cut_node)
 {
   assert(game != nullptr);
   assert(state != nullptr);
+
+  // The two flags name one of three node types and never a fourth: a node on
+  // the principal variation is not one that is expected to fail high. S098
+  // verdict 2, and it is an assert rather than a guard because a wrong
+  // prediction costs rating and nothing else -- there is no wrong answer to
+  // return here, only a plumbing bug to find in the Debug binary.
+  assert(!(is_pv && cut_node));
 
   // Every path out of this function must leave the PV row for this ply valid,
   // so it is cleared before the early exits. Leaving it stale let a parent
@@ -1187,16 +1373,21 @@ static int negamax_at(int alpha0,
       depth - 1 - null_reduction >= 1 && beta < MATE_MIN && beta > -MATE_MIN &&
       game_phase(&game->board) > 0) {
     const int reduction = null_reduction;
+    const child_label_t child = null_move_child(is_pv, cut_node);
 
     if constexpr (PROBING) {
-      if (probe != nullptr) { probe->null_move_made = true; }
+      if (probe != nullptr) {
+        probe->null_move_made = true;
+        probe->null_child_is_pv = child.is_pv;
+        probe->null_child_cut_node = child.cut_node;
+      }
     }
 
     make_null_move(game);
 
     const int null_score =
         -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
-                           game, state, 0, false);
+                           game, state, 0, child.is_pv, child.cut_node);
 
     unmake_null_move(game);
 
@@ -1237,8 +1428,26 @@ static int negamax_at(int alpha0,
 
   // S108 supplies it and this is its first in-search call site: the side to
   // move is better off here than it was the last time it moved. Late move
-  // pruning doubles its count when it is true.
+  // pruning doubles its count when it is true, and S098 verdict 2's second
+  // term reads it below.
   const bool improving = improving_at(state, ply, is_in_check);
+
+  // S098 verdict 2's four terms, summed once for the node. Every input is a
+  // property of this node and not of a move -- the predicted type, the
+  // improving flag, the class of the entry's own move -- so the sum is
+  // computed here and read by both consumers below: the reduction each late
+  // quiet is searched with, and the shallow-depth gate those quiets are pruned
+  // against. At the four off values it is 0 and both consumers see the raw
+  // table.
+  //
+  // `tt_move` is the entry's move, or the root hint where the entry is gone
+  // (ply 0, which neither consumer reaches). A capture there says the node is
+  // tactical; the quiet the table is about to reduce is not what it is about.
+  const bool tt_move_is_capture =
+      (tt_move != 0) && (MOVE_CAPTURE(tt_move) != 0);
+
+  const int node_adjustment =
+      lmr_node_adjustment(cut_node, improving, tt_move_is_capture, is_pv);
 
   // Set once by late move pruning and never cleared: past its count the quiet
   // stage is over for this node.
@@ -1344,7 +1553,7 @@ static int negamax_at(int alpha0,
     // one attack scan.
     if (!skip_quiets && may_prune) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number);
+      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
 
       if (lmr_depth < LMP_MAX_LMRDEPTH &&
           100 * move_number > lmp_threshold_x100(lmr_depth, improving)) {
@@ -1394,7 +1603,7 @@ static int negamax_at(int alpha0,
 
     if (may_prune && is_quiet) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number);
+      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
 
       // A node in check has no static score and `pruning_node` excludes one,
       // so the margin below never reads the sentinel.
@@ -1462,7 +1671,7 @@ static int negamax_at(int alpha0,
     // promotion mate is the shape the hazard likes best.
     if (may_prune && is_capture) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number);
+      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
 
       if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&
           !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {
@@ -1579,7 +1788,8 @@ static int negamax_at(int alpha0,
 
     if (may_reduce) {
       if (!is_capture && !MOVE_PROMOTED(moves[i])) {
-        reduction = lmr_reduction(depth, static_cast<int>(legal_moves_counter));
+        reduction = lmr_adjusted_reduction(
+            depth, static_cast<int>(legal_moves_counter), node_adjustment);
       }
 
       // S091. A move that loses material is one the ordering already put late
@@ -1594,6 +1804,13 @@ static int negamax_at(int alpha0,
       if (reduction < 0) { reduction = 0; }
     }
 
+    // The type this node predicts for the child it is about to search: the
+    // principal variation continues through the first legal move and every
+    // later move is scouted. S098 verdict 2.
+    const child_label_t child = (legal_moves_counter == 1)
+                                    ? first_child(is_pv, cut_node)
+                                    : scouted_child(is_pv, cut_node);
+
     if constexpr (PROBING) {
       if (probe != nullptr) {
         const int k = legal_moves_counter - 1;
@@ -1601,6 +1818,8 @@ static int negamax_at(int alpha0,
         probe->moves[k] = moves[i];
         probe->reduction[k] = reduction;
         probe->researched[k] = false;
+        probe->child_is_pv[k] = child.is_pv;
+        probe->child_cut_node[k] = child.cut_node;
         probe->move_count = legal_moves_counter;
       }
     }
@@ -1608,10 +1827,11 @@ static int negamax_at(int alpha0,
     if (legal_moves_counter == 1) {
       // The first legal move of a PV node continues the principal variation.
       score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
-                                 state, moves[i], is_pv);
+                                 state, moves[i], child.is_pv, child.cut_node);
     } else {
       score = -negamax_at<false>(-alpha - 1, -alpha, child_depth - reduction,
-                                 ply + 1, game, state, moves[i], false);
+                                 ply + 1, game, state, moves[i], child.is_pv,
+                                 child.cut_node);
 
       // A reduced search that beats alpha has proved only that the reduction
       // was wrong, not what the move is worth. Repeat it at full depth before
@@ -1623,8 +1843,11 @@ static int negamax_at(int alpha0,
           }
         }
 
-        score = -negamax_at<false>(-alpha - 1, -alpha, child_depth, ply + 1,
-                                   game, state, moves[i], false);
+        const child_label_t again = zero_window_research(is_pv, cut_node);
+
+        score =
+            -negamax_at<false>(-alpha - 1, -alpha, child_depth, ply + 1, game,
+                               state, moves[i], again.is_pv, again.cut_node);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the
@@ -1632,8 +1855,11 @@ static int negamax_at(int alpha0,
       // worth doing. Skipped when the search was abandoned mid-way, because
       // the score is meaningless then.
       if (!state->aborted && score > alpha && score < beta) {
+        const child_label_t on_the_line = full_window_research(is_pv, cut_node);
+
         score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
-                                   state, moves[i], is_pv);
+                                   state, moves[i], on_the_line.is_pv,
+                                   on_the_line.cut_node);
       }
     }
 
@@ -1765,10 +1991,11 @@ int negamax(int alpha0,
             game_t* game,
             search_state_t* state,
             move_t prev_move,
-            bool is_pv)
+            bool is_pv,
+            bool cut_node)
 {
   return negamax_at<false>(alpha0, beta, depth, ply, game, state, prev_move,
-                           is_pv);
+                           is_pv, cut_node);
 }
 
 
@@ -1781,10 +2008,11 @@ int negamax_probed(int alpha0,
                    game_t* game,
                    search_state_t* state,
                    move_t prev_move,
-                   bool is_pv)
+                   bool is_pv,
+                   bool cut_node)
 {
   return negamax_at<true>(alpha0, beta, depth, ply, game, state, prev_move,
-                          is_pv);
+                          is_pv, cut_node);
 }
 
 
@@ -2149,7 +2377,11 @@ search_t search(int depth,
   // iterative deepening each get the same root. S207.
   state->root_history_size = game->history.size;
 
-  int score = negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true);
+  // "The root node is a PV-node" -- CPW Node Types, the first rule of both
+  // published lists, and the one this search has always followed through
+  // `is_pv`. `cut_node` false is the other half of that label. S098.
+  int score =
+      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false);
 
   search_result.best_move = state->best_move;
 

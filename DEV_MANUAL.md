@@ -1845,8 +1845,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 7, 7, 9, 11 and the mutants beside them — `C02 and C05`, `C02`, `R02`, `R02`. The depths are S230's again after S098's term was removed; the labels are not, and that is `d0a6667`'s doing and not S098's: S222's fitted vector reordered every quiet after S230 measured and nothing re-derived them then | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 44 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 11, 9 and the mutants beside them — `no S091 mutant, since S098 verdict 2`, `C02, C05, C07 and R01`, `C07 and R02`, `R02`. Re-derived at S098 verdict 2, which adjusts the reduction by the node's type: three of the four depths moved and no mate distance did, because three of the four terms lengthen the reduction and a mate the ordering does not put first then arrives an iteration or two later. **R01's incidental kill is back**, at row 2's depth 8, which the tree this table sat on before had lost | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 48 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2083,7 +2083,25 @@ clamp 3: +16.21, +26.70, +31.81, +70.69, +63.54, +94.28; at 1442 with clamp 3:
 +4.07, +14.80, +14.30, +27.87, +30.36, +63.01. **The off column was the
 parent's totals exactly at all four settings and every depth**, which is the
 inert-by-rebuild property
-measured over the whole engine rather than argued. Quote it
+measured over the whole engine rather than argued.
+
+**At `S098` verdict 2, the node-type adjustments: `5469072`, −3.81 %.** Four
+signed plies on the reduction — `LmrCutNode`, `LmrNotImproving`, `LmrTtCapture`
+and `LmrPv`, the last subtracted — with S109's shallow-depth gate reading the
+same adjusted number. The by-depth ablation on the tune build, the shipped seeds
+against all four at 0, is the first one in this ledger that is **not monotone**:
+−21.74, −10.04, −17.70, **+3.77**, −10.46, −3.81 per cent over depths 9 to 14,
+with the off column the parent's totals exactly at every one of them. A signed
+rule does not cost the same in both directions — three terms lengthen the
+reduction and the PV term shortens it — so which effect wins at a given depth is
+a property of that depth's tree. `tools/search_bench.py` says the same from the
+other side: all three positions smaller at depth 9 (51189 → 22078,
+146616 → 104682, 39389 → 29842) and two of three larger at depth 12
+(143205 → 205096, 570238 → 646466, 148060 → 149330), with midgame's depth-9 best
+move moving `c3d5` → `g5f6` and every other best move the parent's. Whether a
+mostly smaller tree is a better one is `adocs/data/S098_v2_sprt.sh`'s to say.
+
+Quote it
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which

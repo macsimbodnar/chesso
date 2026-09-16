@@ -3286,12 +3286,14 @@ TEST_SUITE("search: draws")
     // d12`, `d9 d10 d11 d12`, `d9 d10 d11 d12` -- and the first three came
     // back unchanged.
     //
-    // **Re-derived three times at S098, and the third is the one these rows
-    // carry.** That step scaled the reduction by the move's history, which is
+    // **Re-derived four times at S098, and the fourth is the one these rows
+    // carry.** Verdict 1 scaled the reduction by the move's history, which is
     // "any change to reduction", so each of its three settings owed a
-    // re-derivation and got one; then its term measured zero at all three and
-    // left the tree (DEC-213), and the sweep was run once more on the tree the
-    // removal leaves. These four rows are that last sweep.
+    // re-derivation and got one; that term then measured zero at all three
+    // scales and left the tree (DEC-213). **Verdict 2 adjusts the reduction by
+    // the node's type**, which is the same clause of the same rule, so the
+    // seven sweeps were run once more -- the shipped tree and all six S091
+    // mutants -- and these four rows are that pass.
     //
     // **The rule that picks each row**, applied uniformly rather than by eye:
     // take the lowest depth in the shipped profile at which some mutant loses
@@ -3299,47 +3301,47 @@ TEST_SUITE("search: draws")
     // profile and say so in the label. What it must never be is a depth picked
     // because the row passes there -- DEC-209 clause 4 is that ruling.
     //
-    // Shipped profiles here: `d7 d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12`,
-    // `d9 d10 d11 d12`, `d10 d11 d12`, which put the four depths back at
-    // S230's 7, 7, 9 and 11.
+    // Shipped profiles here: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`,
+    // `d11 d12`, `d9 d10 d11 d12`, which put the four depths at 9, 8, 11 and
+    // 9. Three of the four moved and the mate distances did not: the terms
+    // lengthen the reduction at three node types out of four, so a mate that
+    // the ordering does not put first arrives an iteration or two later. That
+    // is what the sweep is for and it is not the hazard -- the hazard is a
+    // mate that never arrives, and every row still reports its own at a depth
+    // in this range, as do both dedicated mate cases, `test_mate_carry` and
+    // `test_mate_breadth`.
     //
-    // **The labels are not S230's, and that is not S098's doing.** S230
-    // measured them on 2026-09-14; `d0a6667` -- S222's fitted eleven-axis
-    // vector, its own H1 -- landed after that and reordered every quiet, and
-    // nothing re-derived these labels when it did. So they were already stale
-    // at the tree S098 started from, and what is written below is the first
-    // measurement taken since: row 2 loses C05 and R02, row 3 gains R02 where
-    // S230 found no separator, and row 4 trades C02 and R01 for R02.
+    // **R01's incidental kill is back**, which is the whole of what S230 went
+    // mining for two days ago and which the tree S098 started from had lost:
+    // row 2 at depth 8 separates C02, C05, C07 and R01 at once, the richest
+    // reading this table has had. The previous pass recorded that this row
+    // would say that at 8 and took 7 because 7 was lower and separated
+    // something; on this tree 7 reports no mate at all, so the rule itself
+    // takes 8 and the decision never has to be made. Row 1 is the other way
+    // round: no mutant loses its mate at any shipped depth, so the rule takes
+    // the lowest, 9, and the label says so.
     //
-    // **R01's incidental kill, which is the whole of what S230 went mining
-    // for, is not back** -- no row separates it at the depth the rule picks.
-    // One measured fact is worth leaving here rather than acting on: **row 2
-    // at depth 8 separates C02, C05, R01 and R02**, four mutants and the
-    // richest reading this table has ever had, and the rule takes 7 because 7
-    // is lower and separates C02. Moving it would be choosing a depth after
-    // seeing which one scores better, which is a decision and not a
-    // re-derivation; it is recorded so that decision can be made with the
-    // number in front of it. It is not a hole either way: all six S091 mutants
-    // were run through the **whole fast suite** on this tree and every one
-    // died, R01 at its own direct guard "a capture that gives check is not
-    // reduced" and nowhere else. A row's label is an incidental second kill
-    // measured in a tree that moves under every ordering change; the direct
-    // guards are what the rules rest on.
+    // A row's label is an incidental second kill measured in a tree that moves
+    // under every ordering change; the direct guards are what the rules rest
+    // on, and all six S091 mutants were run through the **whole fast suite**
+    // at verdict 1 with every one killed by its own named case.
     const std::vector<capture_mate_t> capture_mates = {
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
-         "C02 and C05"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
+         "no S091 mutant, since S098 verdict 2"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5, "C02"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 8, 5,
+         "C02, C05, C07 and R01"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 9, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
+         "C07 and R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3359,14 +3361,14 @@ TEST_SUITE("search: draws")
         //
         // The depth is the measurement DEC-209 clause 4 defines, over 3 to 12.
         // At S230 it read shipped `d9 d10 d11 d12`, under R01 `d9 d10 d12`,
-        // under C02 no mate at 11, and the row was taken at 11. **On the tree
-        // S098's removal leaves, the shipped profile is `d10 d11 d12`** -- the
-        // depth 9 reading S230 measured is gone, which `d0a6667` and not S098
-        // is the cause of -- and 11 is the lowest depth that separates
-        // anything: R02 reads `d10 d12` and loses the mate there, while C02
-        // and R01 both report `#+5`. The depth is S230's; what it kills is
-        // not.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 11,
+        // under C02 no mate at 11, and the row was taken at 11. On the tree
+        // verdict 1's removal left, the profile was `d10 d11 d12` and the rule
+        // took 11. **On this one the depth 9 reading is back** -- shipped
+        // `d9 d10 d11 d12` -- and 9 is the lowest depth that separates
+        // anything: R02 reads `d11 d12` and has no mate there, while the other
+        // five report `#+5`. The depth is S230's own again and what it kills
+        // is not.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
          5, "R02"},
     };
 
@@ -5503,11 +5505,21 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // src/search.cpp's own lmr_depth, which is not exported: the reduction probe
-  // is, and this is the one line built on it.
-  static int lmr_depth_of(int depth, int move_number)
+  // src/search.cpp's own lmr_depth, which is not exported: the two reduction
+  // probes are, and this is the one line built on them.
+  //
+  // `node_adjustment` is defaulted to 0 because that is what every call site
+  // below reads and each of them says why: they drive an ALL node at ply 1
+  // with an empty table, where S098 verdict 2's four conditions are all false
+  // -- `cut_node` by the drive, `improving` true because ply 1 has no ancestor
+  // two plies up, no capturing table move because there is no entry, and not a
+  // PV node. A case that drove any other node type here would have to pass the
+  // adjustment, and the engine's own gate would otherwise disagree with this
+  // line silently.
+  static int lmr_depth_of(int depth, int move_number, int node_adjustment = 0)
   {
-    const int left = depth - search_lmr_reduction_probe(depth, move_number);
+    const int left = depth - search_lmr_adjusted_reduction_probe(
+                                 depth, move_number, node_adjustment);
 
     return (left > 0) ? left : 0;
   }
@@ -6610,6 +6622,498 @@ TEST_SUITE("search: pruning and reduction guards")
       REQUIRE_MESSAGE(search_lmr_reduction_probe(depth, k + 1) > 0, title);
 
       REQUIRE_MESSAGE(probe.reduction[k] == 0, title);
+    }
+  }
+
+
+  // ------------------------------------------------------------------
+  // S098 verdict 2: the node type, its prediction, and the four terms.
+  // ------------------------------------------------------------------
+
+  // The three labels of CPW Node Types as the search carries them, named here
+  // so the walk below reads as the published rules and not as two booleans.
+  struct node_type_t
+  {
+    bool is_pv;
+    bool cut_node;
+  };
+
+  static constexpr node_type_t PV_NODE = {true, false};
+  static constexpr node_type_t CUT_NODE = {false, true};
+  static constexpr node_type_t ALL_NODE = {false, false};
+
+  static node_type_t child_of(int kind, node_type_t parent)
+  {
+    node_type_t child = {false, false};
+
+    search_child_label_probe(kind, parent.is_pv, parent.cut_node, &child.is_pv,
+                             &child.cut_node);
+
+    return child;
+  }
+
+  static bool same_type(node_type_t a, node_type_t b)
+  { return a.is_pv == b.is_pv && a.cut_node == b.cut_node; }
+
+
+  // Mutation: T01_first_child_label -- the first child of an ALL node is
+  // labelled ALL instead of CUT, which is the alternation broken.
+  //
+  //   search: pruning and reduction guards
+  //    the node type of every child is the one the published rules predict
+  //   CHECK( same_type(child_of(CHILD_FIRST, ALL_NODE), CUT_NODE) )
+  //   values: CHECK( false )
+  //
+  // Mutation: T09_pv_and_cut_together -- the full-window re-search labels its
+  // child both PV and CUT, which is the pair no node type names and the one
+  // the Debug assert in negamax_at exists for.
+  //
+  //   search: pruning and reduction guards
+  //    the node type of every child is the one the published rules predict
+  //   CHECK( same_type(child_of(CHILD_FULL_RESEARCH, PV_NODE), PV_NODE) )
+  //   values: CHECK( false )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "the node type of every child is the one the published rules predict")
+  {
+    // The walk is Onno Garms's list on
+    // https://www.chessprogramming.org/Node_Types, with Pradu Kannan's summary
+    // beside it there; the two agree on everything below except the child after
+    // a null move, where this engine follows Kannan and src/search.cpp
+    // `null_move_child` says why. Nothing here is reasoned about from the
+    // search: each line is one published rule.
+    //
+    // "The first child of a PV-node is a PV-node."
+    CHECK(same_type(child_of(CHILD_FIRST, PV_NODE), PV_NODE));
+
+    // "The first child of a CUT-node is an ALL-node."
+    CHECK(same_type(child_of(CHILD_FIRST, CUT_NODE), ALL_NODE));
+
+    // "Children of ALL-nodes are CUT-nodes", the first child included.
+    CHECK(same_type(child_of(CHILD_FIRST, ALL_NODE), CUT_NODE));
+
+    // "The further children are searched by a scout search as CUT-nodes";
+    // "Further children of a CUT-node are CUT-nodes"; "Children of ALL-nodes
+    // are CUT-nodes". Every parent, one answer.
+    CHECK(same_type(child_of(CHILD_SCOUT, PV_NODE), CUT_NODE));
+    CHECK(same_type(child_of(CHILD_SCOUT, CUT_NODE), CUT_NODE));
+    CHECK(same_type(child_of(CHILD_SCOUT, ALL_NODE), CUT_NODE));
+
+    // The zero-window repeat a reduced move that beat alpha is owed is still a
+    // scout, so it is still a CUT node. This is the one line the two lists
+    // could be read to disagree on -- Kannan's "re-searched because the scout
+    // search failed high, are PV-nodes" is the full-window re-search below --
+    // and the window is what settles it: a zero window cannot produce a PV.
+    CHECK(same_type(child_of(CHILD_ZW_RESEARCH, PV_NODE), CUT_NODE));
+    CHECK(same_type(child_of(CHILD_ZW_RESEARCH, CUT_NODE), CUT_NODE));
+    CHECK(same_type(child_of(CHILD_ZW_RESEARCH, ALL_NODE), CUT_NODE));
+
+    // "PVS re-search is done as PV-node." At any other parent -- which only a
+    // probe driving a non-PV node with a full window reaches -- it is the ALL
+    // label a node about to raise alpha has.
+    CHECK(same_type(child_of(CHILD_FULL_RESEARCH, PV_NODE), PV_NODE));
+    CHECK(same_type(child_of(CHILD_FULL_RESEARCH, CUT_NODE), ALL_NODE));
+    CHECK(same_type(child_of(CHILD_FULL_RESEARCH, ALL_NODE), ALL_NODE));
+
+    // The null-move child, Kannan: the pass is one of a Cut-node's "candidate
+    // cutoff moves" and those children are All-nodes; a child of an All-node
+    // is a Cut-node. The block never runs at a PV node, so that row is what
+    // the function answers and not a node this engine searches.
+    CHECK(same_type(child_of(CHILD_NULL_MOVE, CUT_NODE), ALL_NODE));
+    CHECK(same_type(child_of(CHILD_NULL_MOVE, ALL_NODE), CUT_NODE));
+
+    // And no rule ever produces the fourth pair, which is not a node type and
+    // which negamax_at asserts against in the Debug build.
+    for (int kind = CHILD_FIRST; kind <= CHILD_NULL_MOVE; ++kind) {
+      for (node_type_t parent : {PV_NODE, CUT_NODE, ALL_NODE}) {
+        const node_type_t child = child_of(kind, parent);
+        const bool is_the_fourth_pair = child.is_pv && child.cut_node;
+
+        CHECK_FALSE(is_the_fourth_pair);
+      }
+    }
+  }
+
+
+  // A node with no capture and no promotion among its legal moves, from this
+  // project's own self-play: row 1 of adocs/data/S024_census_positions.txt,
+  // game 72 at ply 64. python-chess reports `is_valid() True`,
+  // `is_check() False`, 34 legal moves, **0 captures and 0 promotions**, and
+  // 2 quiet moves that give check.
+  //
+  // The no-capture property is what the four term cases below are built on and
+  // it is not decoration. With no capture to generate, `negamax_at` generates
+  // and scores the whole quiet stage **before it searches anything**, so the
+  // order this node searches its moves in cannot depend on what a child wrote
+  // into the history table -- and two drives of it that differ only in the
+  // node's type therefore search the same moves at the same indices. Each case
+  // asserts that rather than trusting it, and the reduction difference is then
+  // the term and nothing else.
+  static const std::string QUIET_NODE_POS =
+      "3r2k1/5pb1/7p/p4B1P/2r3P1/8/1P1n1B2/1R2R1K1 w - - 3 36";
+
+  // Deep enough that the clamp to `child_depth - 1` is 4 and a one-ply term
+  // has room on either side of the table's own 1 to 3 here, shallow enough
+  // that the drive is milliseconds with the whole shallow-depth block switched
+  // off by the window below.
+  static constexpr int NODE_TYPE_DEPTH = 6;
+
+  // A window inside the mate band, which switches the shallow-depth block,
+  // null move pruning and reverse futility off at this node and in its whole
+  // subtree: `pruning_node` and both blocks require `beta < MATE_MIN`. That is
+  // the second half of what makes two drives comparable -- a pruned quiet is
+  // not counted as a legal move, so a rule that fired in one drive and not the
+  // other would move every index after it. Nothing beats an alpha of MATE_MIN
+  // short of a forced mate, so the node runs its whole move loop and every
+  // reduction recorded is the one the guards decided on.
+  static constexpr int BAND_ALPHA = MATE_MIN_LOCAL;
+  static constexpr int BAND_BETA = MATE_MIN_LOCAL + 1;
+
+
+  // One drive of QUIET_NODE_POS as one node type, with the probe's record
+  // copied out so two of them can be compared.
+  struct node_type_drive_t : guard_fixture_t
+  {
+    search_node_probe_t run(node_type_t type,
+                            size_t ply,
+                            move_t table_move,
+                            const int* improving_anchor)
+    {
+      load(QUIET_NODE_POS, static_cast<int>(ply));
+
+      REQUIRE(!is_check(&game));
+
+      if (table_move != 0) {
+        // Shallower than the node, so the entry orders and never answers:
+        // `tt_entry_answers` wants `entry->depth >= depth`. The evaluation
+        // field is left at TT_EVAL_NONE so the node computes its own.
+        tt_store_entry(&tt, &game.board, 1, 0, TT_ALPHA_NODE, table_move);
+      }
+
+      if (improving_anchor != nullptr) {
+        REQUIRE(ply >= 2);
+        state.static_evals[ply - 2] = *improving_anchor;
+      }
+
+      negamax_probed(BAND_ALPHA, BAND_BETA, NODE_TYPE_DEPTH, ply, &game, &state,
+                     0, type.is_pv, type.cut_node);
+
+      REQUIRE(probe.move_count > 3);
+
+      return probe;
+    }
+  };
+
+
+  // The two drives searched the same moves in the same order, which is the
+  // precondition every term case rests on. Returns the first index past the
+  // move-number bound whose move is quiet, gives no check, and which the raw
+  // table reduces by at least `floor` -- the index the term is then read at.
+  static int aligned_reduced_index(const search_node_probe_t& a,
+                                   const search_node_probe_t& b, int floor)
+  {
+    REQUIRE_EQ(a.move_count, b.move_count);
+
+    for (int i = 0; i < a.move_count; ++i) {
+      REQUIRE_EQ(a.moves[i], b.moves[i]);
+    }
+
+    for (int i = 3; i < a.move_count; ++i) {
+      if (MOVE_CAPTURE(a.moves[i]) != 0) { continue; }
+      if (MOVE_PROMOTED(a.moves[i]) != TO_NONE) { continue; }
+      if (search_lmr_reduction_probe(NODE_TYPE_DEPTH, i + 1) < floor) {
+        continue;
+      }
+
+      // A checking move is exempt by its own guard and would read 0 whatever
+      // the terms hold; a move the exchange evaluation writes off carries
+      // S091's extra ply, which is the same in both drives but eats the
+      // headroom the clamp leaves.
+      REQUIRE(make_move(&game, a.moves[i]));
+      const bool gives_check = is_check(&game);
+      unmake_move(&game);
+
+      if (gives_check) { continue; }
+      if (!see_ge(&game.board, a.moves[i], 0)) { continue; }
+
+      return i;
+    }
+
+    return -1;
+  }
+
+
+  // Mutation: T02_cutnode_inverted -- the cut-node term is added at every node
+  // that is **not** a cut node.
+  //
+  //   search: pruning and reduction guards
+  //    a node expected to fail high reduces its late quiets by LmrCutNode more
+  //   REQUIRE_EQ( cut.reduction[k], all.reduction[k] + LMR_CUTNODE )
+  //   values: REQUIRE_EQ( 2, 4 )
+  TEST_CASE_FIXTURE(
+      node_type_drive_t,
+      "a node expected to fail high reduces its late quiets by LmrCutNode more")
+  {
+    // Without this the case asserts nothing: at the off value the two drives
+    // agree by construction and a wiring that read no condition at all would
+    // pass. It is also the red-first observation this case was written from.
+    REQUIRE(LMR_CUTNODE > 0);
+
+    const search_node_probe_t all = run(ALL_NODE, 1, 0, nullptr);
+    const search_node_probe_t cut = run(CUT_NODE, 1, 0, nullptr);
+
+    const int k = aligned_reduced_index(all, cut, 1);
+
+    REQUIRE_MESSAGE(k >= 3,
+                    "no late quiet here is reduced by the table at all");
+
+    // The other three conditions are false in both drives, so the difference
+    // is this term alone: ply 1 has no ancestor two plies up and
+    // `improving_at` is true there, no entry was planted so there is no
+    // capturing table move, and neither drive is a PV node.
+    REQUIRE(improving_at(&state, 1, false));
+
+    // Inside the clamp at both settings -- `child_depth - 1` is 4 here -- so a
+    // difference of one ply is a difference and not a ceiling.
+    REQUIRE(cut.reduction[k] < NODE_TYPE_DEPTH - 2);
+
+    REQUIRE_EQ(cut.reduction[k], all.reduction[k] + LMR_CUTNODE);
+  }
+
+
+  // Mutation: T03_improving_inverted -- the term is added when the side to
+  // move **is** improving, which is the direction the published record tried
+  // first and closed.
+  //
+  //   search: pruning and reduction guards
+  //    a node that is not improving reduces its late quiets by LmrNotImproving
+  //    more
+  //   REQUIRE_EQ( worse.reduction[k], better.reduction[k] + LMR_NOT_IMPROVING )
+  //   values: REQUIRE_EQ( 2, 4 )
+  TEST_CASE_FIXTURE(node_type_drive_t,
+                    "a node that is not improving reduces its late quiets by "
+                    "LmrNotImproving more")
+  {
+    REQUIRE(LMR_NOT_IMPROVING > 0);
+
+    // Ply 2, because `improving_at` compares against the static evaluation two
+    // plies up and ply 1 has none. The anchor is planted on either side of
+    // this node's own static score, which is what the flag compares against.
+    REQUIRE(load_FEN(QUIET_NODE_POS, &game));
+
+    const int here = evaluate(&game.board);
+    const int worse_before = here - 1;
+    const int better_before = here + 1;
+
+    const search_node_probe_t better = run(ALL_NODE, 2, 0, &worse_before);
+    const search_node_probe_t worse = run(ALL_NODE, 2, 0, &better_before);
+
+    const int k = aligned_reduced_index(better, worse, 1);
+
+    REQUIRE_MESSAGE(k >= 3,
+                    "no late quiet here is reduced by the table at all");
+
+    REQUIRE(worse.reduction[k] < NODE_TYPE_DEPTH - 2);
+
+    REQUIRE_EQ(worse.reduction[k], better.reduction[k] + LMR_NOT_IMPROVING);
+  }
+
+
+  // Mutation: T04_ttcapture_inverted -- the term is added where the table move
+  // is **not** a capture, which includes every node that has no entry at all.
+  //
+  //   search: pruning and reduction guards
+  //    a node whose table move is a capture reduces its late quiets by
+  //    LmrTtCapture more
+  //   REQUIRE_EQ( tactical.reduction[k], plain.reduction[k] + LMR_TT_CAPTURE )
+  //   values: REQUIRE_EQ( 2, 4 )
+  TEST_CASE_FIXTURE(node_type_drive_t,
+                    "a node whose table move is a capture reduces its late "
+                    "quiets by LmrTtCapture more")
+  {
+    REQUIRE(LMR_TT_CAPTURE > 0);
+
+    // A well-formed capture that **this position does not contain**: there is
+    // no knight on b1 here, and the point of choosing one is the case's own
+    // precondition -- a table move the list holds would be ordered first and
+    // move every index after it, and then the difference read below would be
+    // the ordering and not the term. The term asks what class the entry's move
+    // is and nothing else, so a move no list here matches isolates it exactly.
+    const move_t tactical_entry =
+        NEW_MOVE(b1, c3, W_KNIGHT, TO_NONE, 1, 0, 0, 0);
+
+    REQUIRE(MOVE_CAPTURE(tactical_entry) != 0);
+
+    REQUIRE(load_FEN(QUIET_NODE_POS, &game));
+    {
+      move_t buffer[MAX_MOVES];
+      const size_t count = legal_moves(&game, buffer);
+
+      for (size_t i = 0; i < count; ++i) {
+        REQUIRE(buffer[i] != tactical_entry);
+      }
+    }
+
+    const search_node_probe_t plain = run(ALL_NODE, 1, 0, nullptr);
+    const search_node_probe_t tactical =
+        run(ALL_NODE, 1, tactical_entry, nullptr);
+
+    const int k = aligned_reduced_index(plain, tactical, 1);
+
+    REQUIRE_MESSAGE(k >= 3,
+                    "no late quiet here is reduced by the table at all");
+
+    REQUIRE(tactical.reduction[k] < NODE_TYPE_DEPTH - 2);
+
+    REQUIRE_EQ(tactical.reduction[k], plain.reduction[k] + LMR_TT_CAPTURE);
+  }
+
+
+  // Mutation: T05_pv_added -- the PV term is added instead of subtracted, so
+  // the lines that get reported are the ones searched shallowest.
+  //
+  //   search: pruning and reduction guards
+  //    a principal variation node reduces its late quiets by LmrPv less
+  //   REQUIRE_EQ( pv.reduction[k], all.reduction[k] - LMR_PV )
+  //   values: REQUIRE_EQ( 3, 1 )
+  TEST_CASE_FIXTURE(
+      node_type_drive_t,
+      "a principal variation node reduces its late quiets by LmrPv less")
+  {
+    REQUIRE(LMR_PV > 0);
+
+    const search_node_probe_t all = run(ALL_NODE, 1, 0, nullptr);
+    const search_node_probe_t pv = run(PV_NODE, 1, 0, nullptr);
+
+    // The floor is the term itself: a move the table reduces by less than
+    // LmrPv would be clamped at zero and the difference would be the clamp.
+    const int k = aligned_reduced_index(all, pv, LMR_PV);
+
+    REQUIRE_MESSAGE(k >= 3,
+                    "no late quiet here is reduced by at least LmrPv, so the "
+                    "clamp and not the term would decide");
+
+    REQUIRE_EQ(pv.reduction[k], all.reduction[k] - LMR_PV);
+  }
+
+
+  // Mutation: T06_adjusted_reduction_ignores_node -- the shared helper drops
+  // the adjustment, so both consumers read the raw table again and the four
+  // terms reach nothing.
+  //
+  //   search: pruning and reduction guards
+  //    the node-type adjustment is the sum of its four terms
+  //   CHECK_EQ( search_lmr_adjusted_reduction_probe(depth, move_number, 2),
+  //   raw + 2 )
+  //   values: CHECK_EQ( 1, 3 )
+  TEST_CASE("the node-type adjustment is the sum of its four terms")
+  {
+    // No condition true is no adjustment, whatever the four constants hold.
+    // This is the property the bisection protocol rests on: at the four off
+    // values every node looks like this one and the engine is the one before
+    // S098 verdict 2.
+    CHECK_EQ(search_lmr_node_adjustment_probe(false, true, false, false), 0);
+
+    // One condition at a time, each with its own sign. Three lengthen the
+    // reduction and the PV term shortens it; a sign slip on the last would
+    // search the reported lines shallowest and has no symptom but rating.
+    CHECK_EQ(search_lmr_node_adjustment_probe(true, true, false, false),
+             LMR_CUTNODE);
+    CHECK_EQ(search_lmr_node_adjustment_probe(false, false, false, false),
+             LMR_NOT_IMPROVING);
+    CHECK_EQ(search_lmr_node_adjustment_probe(false, true, true, false),
+             LMR_TT_CAPTURE);
+    CHECK_EQ(search_lmr_node_adjustment_probe(false, true, false, true),
+             -LMR_PV);
+
+    // And they sum rather than override each other.
+    CHECK_EQ(search_lmr_node_adjustment_probe(true, false, true, false),
+             LMR_CUTNODE + LMR_NOT_IMPROVING + LMR_TT_CAPTURE);
+
+    // The adjusted reduction is the table plus that sum, unclamped, over the
+    // whole region the reduction is consulted in.
+    for (int depth = 3; depth <= 20; ++depth) {
+      for (int move_number = 4; move_number <= 40; ++move_number) {
+        const int raw = search_lmr_reduction_probe(depth, move_number);
+
+        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number, 0),
+                 raw);
+        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number, 2),
+                 raw + 2);
+        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number, -1),
+                 raw - 1);
+      }
+    }
+  }
+
+
+  // Mutation: T07_site_first_child -- the first child is labelled the way
+  // every later child is, so a PV node's own line is scouted as a CUT node.
+  //
+  //   search: pruning and reduction guards
+  //    the node labels its first child by the first-child rule and the rest by
+  //    the scout rule
+  //   CHECK_EQ( node.child_is_pv[0], first.is_pv )
+  //   values: CHECK_EQ( false, true )
+  TEST_CASE_FIXTURE(node_type_drive_t,
+                    "the node labels its first child by the first-child rule "
+                    "and the rest by the scout rule")
+  {
+    // The rules as functions are held by the walk above; this is the other
+    // half, that the three recursion sites apply them to the right children.
+    // A site that used the wrong rule would be silent everywhere else -- the
+    // suite would stay green and only the rating would move.
+    for (node_type_t parent : {PV_NODE, CUT_NODE, ALL_NODE}) {
+      const search_node_probe_t node = run(parent, 1, 0, nullptr);
+      const node_type_t first = child_of(CHILD_FIRST, parent);
+      const node_type_t later = child_of(CHILD_SCOUT, parent);
+
+      CHECK_EQ(node.child_is_pv[0], first.is_pv);
+      CHECK_EQ(node.child_cut_node[0], first.cut_node);
+
+      for (int i = 1; i < node.move_count; ++i) {
+        CHECK_EQ(node.child_is_pv[i], later.is_pv);
+        CHECK_EQ(node.child_cut_node[i], later.cut_node);
+      }
+    }
+  }
+
+
+  // Mutation: T08_null_child_label -- the child after a null move keeps the
+  // parent's own type instead of the opposite one.
+  //
+  //   search: pruning and reduction guards
+  //    the child after a null move is labelled the type the parent is not
+  //   CHECK_EQ( probe.null_child_cut_node, !parent_cut )
+  //   values: CHECK_EQ( true, false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "the child after a null move is labelled the type the "
+                    "parent is not")
+  {
+    // The position "the node after a null move has no previous move to index"
+    // drives -- both sides castled behind an untouched pawn wall, which is a
+    // node the block passes at -- and the drive depth of every null-move case
+    // above: the one depth at which the block's own
+    // `depth - 1 - null_reduction >= 1` clears by exactly one ply.
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    // A CUT parent passes the move hoping to fail high, so the child is the
+    // node it hopes will fail low -- an ALL node, which is Kannan's own
+    // "candidate cutoff moves ... is an All-node". An ALL parent's null child
+    // is a CUT node by "Children of All-nodes are Cut-nodes".
+    for (bool parent_cut : {true, false}) {
+      load(fen, 1);
+
+      require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA,
+                                      PREV_MOVE);
+
+      negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1,
+                     &game, &state, PREV_MOVE, false, parent_cut);
+
+      REQUIRE(probe.null_move_made);
+
+      CHECK_FALSE(probe.null_child_is_pv);
+      CHECK_EQ(probe.null_child_cut_node, !parent_cut);
     }
   }
 }

@@ -606,6 +606,13 @@ struct search_node_probe_t
   // fails low is still a pass.
   bool null_move_made = false;
 
+  // The type this node predicted for the child it searched after the pass,
+  // valid only where `null_move_made` is true. Two published rules disagree
+  // about it (src/search.cpp `null_move_child`), so the one this engine
+  // applies is recorded rather than inferred. S098.
+  bool null_child_is_pv = false;
+  bool null_child_cut_node = false;
+
   // Reverse futility returned its bound instead of searching a move.
   bool rfp_cutoff = false;
 
@@ -616,10 +623,16 @@ struct search_node_probe_t
   // `reduction` is what came off the first search of the move, and 0 is what a
   // guard that refused the reduction leaves there. `researched` is the
   // full-depth repeat a reduced move that beat alpha is owed.
+  //
+  // `child_is_pv` and `child_cut_node` are the type this node predicted for
+  // that first search, so a case can read the alternation off the site that
+  // applies it and not only off the rule as a function. S098.
   int move_count = 0;
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];
   bool researched[MAX_MOVES];
+  bool child_is_pv[MAX_MOVES];
+  bool child_cut_node[MAX_MOVES];
 
   // Late move pruning set its flag at this node, so the quiet stage ended
   // early -- either ungenerated or unsearched from the first quiet on.

@@ -55,6 +55,17 @@ int quiescence(int alpha,
 // search() can place a test on directly. Already external linkage, so this
 // declaration changes no code the compiler emits. Nothing outside search.cpp
 // calls it. S103.
+//
+// `cut_node` is the other half of the node's predicted type since S098 verdict
+// 2: `is_pv` alone names PV against not-PV, and the pair names CPW's three --
+// PV is (true, false), CUT is (false, true), ALL is (false, false).
+//
+// It is defaulted on these two entry points and on nothing else. Inside
+// negamax_at every recursion states the label its own rule produces, because
+// that is the alternation; a test driving one node is choosing which node type
+// to ask its question at, and `false` is the choice every case made before this
+// step existed -- PV where `is_pv`, ALL otherwise, which is the label that adds
+// nothing to the reduction.
 int negamax(int alpha0,
             int beta,
             int depth,
@@ -62,7 +73,8 @@ int negamax(int alpha0,
             game_t* game,
             search_state_t* state,
             move_t prev_move,
-            bool is_pv);
+            bool is_pv,
+            bool cut_node = false);
 
 
 // The same node with `state->probe` honoured, so a test can watch this node's
@@ -80,7 +92,8 @@ int negamax_probed(int alpha0,
                    game_t* game,
                    search_state_t* state,
                    move_t prev_move,
-                   bool is_pv);
+                   bool is_pv,
+                   bool cut_node = false);
 
 // Completes a reported mate line so that it reaches the mate it claims, and
 // keeps a line that does reach one for the searches that follow.
@@ -153,6 +166,44 @@ void history_on_quiet_cutoff(search_state_t* state,
 // move says nothing unless the table would have reduced it, and that has to be
 // checkable in the build the gate ships as well as the one it tunes.
 int search_lmr_reduction_probe(int depth, int move_number);
+
+// The node-type adjustment S098 verdict 2 adds to that table, as a function of
+// the four conditions, so a case can hold the arithmetic and the signs
+// directly: three terms lengthen the reduction and the PV term shortens it,
+// and a sign slip there reduces exactly the nodes whose lines get reported.
+// Compiled in both builds for the reason above.
+int search_lmr_node_adjustment_probe(bool cut_node,
+                                     bool improving,
+                                     bool tt_move_is_capture,
+                                     bool is_pv);
+
+// The reduction the two consumers share: the raw table plus that adjustment,
+// unclamped, which is what makes "at the off values the engine is the one
+// before this step" a property a test can assert rather than a claim. S098.
+int search_lmr_adjusted_reduction_probe(int depth,
+                                        int move_number,
+                                        int node_adjustment);
+
+// Which child of a node is searched with which predicted type, one enumerator
+// per recursion site in negamax_at. A wrong prediction is silent -- no crash,
+// no wrong node count, only rating -- so the rules are named functions and
+// this is how a test walks them. CPW Node Types, Garms's list with Kannan's
+// summary beside it; src/search.cpp's child_label_t carries which is followed
+// where the two disagree. S098.
+enum child_kind_t
+{
+  CHILD_FIRST = 0,
+  CHILD_SCOUT,
+  CHILD_ZW_RESEARCH,
+  CHILD_FULL_RESEARCH,
+  CHILD_NULL_MOVE
+};
+
+void search_child_label_probe(int kind,
+                              bool parent_is_pv,
+                              bool parent_cut_node,
+                              bool* child_is_pv,
+                              bool* child_cut_node);
 
 // The late move pruning threshold the block computes, in hundredths of a move,
 // so a test can hold the doubling rule directly instead of inferring it from a

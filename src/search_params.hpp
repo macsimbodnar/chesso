@@ -304,12 +304,66 @@
   X(LMR_BASE,          "LmrBase",         52,     0, 400)                      \
   X(LMR_DIVISOR,       "LmrDivisor",      182,    1, 2000)                     \
                                                                                \
+  /* LATE MOVE REDUCTION BY NODE TYPE, S098 verdict 2. Four signed plies on     \
+     top of the table above, each behind its own constant and each with 0 as    \
+     an off value inside its range, so a failing verdict bisects by release     \
+     rebuild rather than by four SPRTs (DEC-063, DEC-214). All four are         \
+     properties of the **node** and not of the move, so the sum is computed     \
+     once at the node and read by both consumers: the reduction a late quiet    \
+     is searched with, and S109's shallow-depth gate, which is the same         \
+     number since this step (`lmr_depth_of` in src/search.cpp).                 \
+                                                                               \
+     The published record says which direction is worth trying and seeds        \
+     nothing (DEC-019, DEC-105): cutnode +1 measured +9.34 at Lynx in the       \
+     3119-3138 band and a second ply on top measured -17.62 there, !improving   \
+     +1 +4.64, a capturing hash move +1.87, and the PV decrement is Weiss's     \
+     +3.78 from 2019 -- records, all of them above or at this engine's band,    \
+     and no engine's ply count is a seed here wherever it is republished        \
+     (DEC-084 as amended by DEC-105).                                           \
+                                                                               \
+     **Every default below is DEC-105 (c), the midpoint of the declared         \
+     range**, and the range is 0 to 2 by stated purpose: 0 is off, 1 is the     \
+     published class of adjustment, and 2 is where the term alone equals what   \
+     the table returns for the first reducible move at the median depth --      \
+     `lmr_reduction(11, 4)` is 2 -- past which the term replaces the            \
+     ordering's estimate instead of adjusting it, which is a different rule.    \
+     A ply count has no unit to derive from and no publication states one.      \
+     S127 refits all four with LmrBase and LmrDivisor after the block.          \
+                                                                               \
+     LMR_CUTNODE applies where the node is predicted to fail high. The          \
+     prediction is CPW's (src/search.cpp `first_child` and the three functions  \
+     beside it); a wrong one costs rating and nothing else, which is what the   \
+     Debug assert and the alternation cases are for.                            \
+                                                                               \
+     LMR_NOT_IMPROVING applies where `improving_at` is false. The asymmetry is  \
+     the published shape -- reduce *more* when not improving, rather than less  \
+     when improving, which failed where it was tried.                           \
+                                                                               \
+     LMR_TT_CAPTURE applies where the entry's own move is a capture. The move   \
+     being reduced is quiet by the reduction's own eligibility, so this is a    \
+     statement about the node and not about the two moves' relation.            \
+                                                                               \
+     LMR_PV is **subtracted** at a principal variation node. The other          \
+     published form is a larger first-move bound at PV nodes; the subtraction   \
+     composes with the three terms above in one integer where a second bound    \
+     would not, and S098's file records the choice. It is the only negative     \
+     term, and it never reaches the shallow-depth gate: a PV node is not a      \
+     pruning node. */                                                          \
+  X(LMR_CUTNODE,       "LmrCutNode",      1,      0, 2)                        \
+  X(LMR_NOT_IMPROVING, "LmrNotImproving", 1,      0, 2)                        \
+  X(LMR_TT_CAPTURE,    "LmrTtCapture",    1,      0, 2)                        \
+  X(LMR_PV,            "LmrPv",           1,      0, 2)                        \
+                                                                               \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \
      of them gated on the **reduction-adjusted** depth                          \
-     `lmr_depth = max(0, depth - lmr_reduction(depth, move_number))` and not    \
-     on the node's own remaining depth: a move the ordering put late is         \
-     already searched shallower than the node is deep, so the margin it is      \
-     pruned against is the shallow one.                                         \
+     `lmr_depth = max(0, depth - lmr_adjusted_reduction(depth, move_number,     \
+     node_adjustment))` and not on the node's own remaining depth: a move the   \
+     ordering put late is already searched shallower than the node is deep, so  \
+     the margin it is pruned against is the shallow one. **The adjustment is    \
+     the node-type sum above since S098 verdict 2** -- the gate and the         \
+     reduction are one number -- and at the four off values it is 0 and this    \
+     is the raw table again, which is what restores S109's exact gate in one    \
+     release rebuild.                                                           \
                                                                                \
      **Every cap below reads `lmr_depth < CAP`, not `<=`.** `lmr_depth` can be  \
      0, so `<= 0` would still fire and no setting of the cap would switch its   \
