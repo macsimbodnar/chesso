@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 1's leg 2 is running, launched 2026-09-16 03:09 by the
+  coordinator** (`adocs/data/S098_v1_leg2_sprt.sh`, pid in
+  `.tuning/sprt_s098v1_leg2.pid`, log `.tuning/sprt_s098v1_leg2.log`, games
+  under `.tuning/sprt_s098_v1_leg2_20260916_030934/`): candidate `73fbf05`
+  -- `LmrHistDiv` 1442 (the census p90, a tenth of the rule's sites), clamp
+  3, bench 9268371 (+63 % on the reference, the best moves the reference's),
+  one value and a Release rebuild as section 6 wrote -- against reference
+  `1db5b8e`, the same tree verdict 1 was measured against, both answering
+  `id name Chesso <sha> native`; 8+0.08, hash 16, 12 of 12 cores,
+  `noob_3moves.epd`, seed 20260916030934, `elo0=0 elo1=5`. Worst case 41861
+  games, 19.7 h at the 2124 an hour the verdict measured; persistent
+  watcher with the pid and a 39 h ceiling; read with
+  `.tuning/coord/read_s098v1_leg2.sh`. **Nothing else runs on the machine
+  until the marker** (MACHINE). Then, as pre-registered: H1 keeps the term
+  at 1442 / 3 and verdict 2 follows on that tree; H0 spends the legs and
+  the term leaves the tree in DEC-194's shape (helper gone, both call sites
+  back to `lmr_reduction`, the two parameters, six cases and mutant file
+  with it, `quiet_history_sum` staying), recorded as a zero, verdict 2 then
+  measured against the tree that leaves. `plan_current/`: S098 (leg 2 under
+  SPRT).
+
 - **S098 verdict 1 read H0, 2026-09-16 02:44: `Elo -2.92 +/- 5.02` at `8+0.08`
   over 11524 games in 5 h 25 m 46 s** (LLR -2.96, `nElo -3.70 +/- 6.34`, W 3691
   L 3788 D 4045, `Ptnml [578, 1352, 1985, 1283, 564]`, 2124 games an hour on a
