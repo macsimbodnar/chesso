@@ -1,0 +1,57 @@
+=== markers
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s098_v1_leg2_20260916_030934
+=== banner
+candidate  73fbf05  2026-09-16
+reference  1db5b8e  2026-09-15
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260916030934
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s098_v1_leg2_20260916_030934
+id name    cand-73fbf05  Chesso 73fbf05 native
+id name    ref-1db5b8e  Chesso 1db5b8e native
+=== fastchess final block
+31443:LOS: 16.90 %, DrawRatio: 34.26 %, PairsRatio: 0.97
+31444:Games: 13076, Wins: 4187, Losses: 4274, Draws: 4615, Points: 6494.5 (49.67 %)
+31445:Ptnml(0-2): [667, 1517, 2240, 1464, 650], WL/DD Ratio: 1.74
+31446:LLR: -2.93 (-99.5%) (-2.94, 2.94) [0.00, 5.00]
+31451:Results of cand-73fbf05 vs ref-1db5b8e (8+0.08, 1t, 16MB, noob_3moves.epd):
+31452:Elo: -2.34 +/- 4.73, nElo: -2.94 +/- 5.95
+31453:LOS: 16.63 %, DrawRatio: 34.26 %, PairsRatio: 0.97
+31454:Games: 13078, Wins: 4187, Losses: 4275, Draws: 4616, Points: 6495.0 (49.66 %)
+31455:Ptnml(0-2): [667, 1518, 2240, 1464, 650], WL/DD Ratio: 1.74
+31456:LLR: -2.95 (-100.1%) (-2.94, 2.94) [0.00, 5.00]
+31458:SPRT ([0.00, 5.00]) completed - H0 was accepted
+31469:SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s098_v1_leg2_20260916_030934
+=== timing
+log created: 2026-09-16 03:09:34
+log last write: 2026-09-16 09:20:06
+=== games / terminations (/home/max/ws/chesso/.tuning/sprt_s098_v1_leg2_20260916_030934/games.pgn)
+games: 13079
+   9475 [Termination "adjudication"]
+   3604 [Termination "normal"]
+=== forfeits
+  cand-73fbf05     13079 games, 0 forfeits, 0.00 %
+  ref-1db5b8e      13079 games, 0 forfeits, 0.00 %
+=== Incomplete mating PV per side (run log)
+total 5
+  cand-73fbf05: 4
+  ref-1db5b8e: 1
+=== pairs (S105_pairs.py, candidate)
+=== /home/max/ws/chesso/.tuning/sprt_s098_v1_leg2_20260916_030934/games.pgn ===
+games            13079
+draws            4616, 35.3 %
+decisive         8463, 64.7 %
+plies per game   mean 115.2, median 102
+seconds per game mean 19.9, median 19
+seconds per ply  0.1726
+complete pairs   6539
+  pair score 0.0    667   10.2 %
+  pair score 0.5   1518   23.2 %
+  pair score 1.0   2240   34.3 %
+  pair score 1.5   1464   22.4 %
+  pair score 2.0    650    9.9 %
+white won both   685 of 6539, 10.5 %  (the pair Pohl's floor is about)
+pair score       mean 0.9933, variance 0.3154, sd 0.5616
+

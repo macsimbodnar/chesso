@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 1's leg 2 read H0, 2026-09-16 09:20: `Elo -2.34 +/- 4.73` at
+  `8+0.08` over 13078 games in 6 h 10 m 32 s** (LLR -2.95, `nElo -2.94 +/-
+  5.95`, W 4187 L 4275 D 4616, `Ptnml [667, 1518, 2240, 1464, 650]`, 2119
+  games an hour, 0 forfeits, `Incomplete mating PV` 4 and 1, pair variance
+  0.3154 over 6539 pairs; `adocs/data/S098_v1_leg2_sprt.log`,
+  `S098_v1_leg2_sprt_pairs.txt`). **Both legs spent: the history-scaled
+  reduction is a recorded zero at three scales and leaves the tree, DEC-213**
+  (helper gone, call sites back to `lmr_reduction`, the two parameters,
+  six cases and the mutant file with it, `quiet_history_sum` staying
+  inline; the removal returns the reference's tree exactly, bench 5685915,
+  INV-6 by identical counts, no SPRT owed). Ledger row seventeen (**mean
+  4 h 40 m, median 4 h
+  26 m**). The same agent performs the removal now; then a
+  light fast check, the gate, the commit, and **verdict 2 (node type)**
+  against the tree that leaves, its seeding decided on the agent's
+  proposal (off-value protocol or a lane first). `plan_current/`: S098
+  (verdict 1 zero, removal in work).
+
 - **S098 verdict 1's leg 2 is running, launched 2026-09-16 03:09 by the
   coordinator** (`adocs/data/S098_v1_leg2_sprt.sh`, pid in
   `.tuning/sprt_s098v1_leg2.pid`, log `.tuning/sprt_s098v1_leg2.log`, games

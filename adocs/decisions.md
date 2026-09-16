@@ -11950,3 +11950,55 @@ Consequences: `tools/spsa_s098v1.json` and `adocs/data/S098_v1_spsa.sh` are
               (REF the commit before verdict 1's landing, CAND the fitted
               landing). The step file's verdict-1 section records the two
               seeds, the census and the fit.
+
+## DEC-213  2026-09-16  S098 verdict 1 is a recorded zero at three scales and the history-scaled reduction leaves the tree; verdict 2 is measured against the tree that leaves
+Tags:         s098, lmr, history, sprt, bisection, dec-194, dec-212, dec-202, dec-019
+Context:      Verdict 1 of S098 -- `r -= clamp(hist_sum / LmrHistDiv,
+              +/-LmrHistClamp)` through one helper S109's gate shared --
+              was measured as DEC-212 laid out: a census-seeded landing
+              (430 / 2), a two-axis lane on `UHO_4060_v3.epd` that returned
+              699 / 3, one gainer SPRT `{0, 5}` at 8+0.08 against `1db5b8e`
+              (**H0**, `Elo -2.92 +/- 5.02`, 11524 games, 5 h 26 m), then
+              the pre-registered bisection: leg 1, the sign, pinned by two
+              direction cases and mutant L01 and costing no run; leg 2, the
+              divisor at the census p90 1442 with the clamp at 3 (**H0**,
+              `Elo -2.34 +/- 4.73`, 13078 games, 6 h 10 m). The band seed
+              8675 had already been shown inert below depth 12 by node
+              counts. Three scales, two runs, both intervals mostly below
+              zero, none clearing the pair.
+Decision:     By the coordinator under the owner's delegation, as the
+              pre-registration wrote it. **(1) Verdict 1 is recorded as a
+              zero** -- CLAUDE.md rule 8, S005/S006/S015 -- with the honest
+              phrasing that a small loss is the better-supported reading.
+              **(2) The term leaves the tree in DEC-194's shape**: the
+              helper gone, both call sites back to `lmr_reduction`, the two
+              parameters, their golden and manual rows, the six direct cases
+              and `tools/mutants/S098_lmr_history.py` deleted with it (the
+              deletion is this decision, per TESTS); `quiet_history_sum`
+              stays `inline` in its header, behaviour-neutral; the census,
+              the lane's trajectory and both runs' logs stay as evidence.
+              The removal returns the reference's tree exactly -- bench
+              5685915 and identical `search_bench` counts are INV-6's proof
+              -- so no SPRT is owed for it. **(3) Verdict 2 (node type) is
+              measured against the tree that leaves**, the step's section 6
+              order kept; how its four constants are seeded -- the step's
+              off-value protocol or a lane first -- is decided when its
+              brief is written, on the implementing agent's proposal.
+              **(4) The record DEC-202 asked for**: a scale fitted at 2+0.02
+              did not transfer to 8+0.08 -- the lane preferred a wider clamp
+              and a tree nearly twice the reference's, and 8+0.08 priced it
+              below zero. It is one data point, not a rule; the
+              longer-control reading at the block boundary is the place the
+              question is asked properly.
+Rejected:     **A third leg** -- the pre-registration allowed two, and a
+              third value chosen after two H0s is a search for a passing
+              number. **Keeping the term inert at clamp 0** -- dead code
+              guarding nothing; DEC-194 removed S024's table for the same
+              reason. **Re-running at the band seed 8675** -- inert by node
+              count below depth 12, and an inert term measured for twenty
+              hours teaches nothing (DEC-212's own rejection).
+Consequences: The removal commit carries `Bench: 5685915`. The step file's
+              verdict-1 section holds the two seeds, the census, the lane,
+              both runs and the removal; `adocs/plan.md`'s ledger holds rows
+              sixteen and seventeen; `specs.md`'s search row records the
+              zero in one sentence. Verdict 2's brief follows.
