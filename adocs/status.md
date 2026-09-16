@@ -7,6 +7,34 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 1 is closed as a zero and removed, 2026-09-16 10:04, commit
+  `30a3be2`; verdict 2 (node type) starts now by a fresh Opus 5 agent
+  (DEC-199, DEC-214).** The removal returned the reference's tree: `src/`
+  differs from `1db5b8e` only by `quiet_history_sum` inline in its header
+  (behaviour-neutral, `score_move`'s one production reader), bench 5685915
+  and `search_bench` identical to the reference's at both depths -- INV-6's
+  proof, no SPRT owed; the two parameters, their golden and manual rows,
+  the six direct cases and `tools/mutants/S098_lmr_history.py` are gone
+  (DEC-213 records the deletion), the root-exemption case stays reading
+  `search_lmr_reduction_probe` with its mutant `L06_lmr_root` moved into
+  `tools/mutants/search.py`; `capture_mates` re-derived on this tree: depths
+  back to 7, 7, 9, 11 with labels `C02 and C05` / `C02` / `R02` / `R02` --
+  stale since S222's fitted vector landed after S230, R01's incidental kill
+  not back, and row 2 at depth 8 would separate four mutants including R01
+  where the written rule takes 7 (left at the table as a fact; changing the
+  picking rule is a decision, not a re-derivation). The spent lane config
+  moved from `tools/` to `adocs/data/S098_v1_spsa_config.json` (it names
+  parameters the tree no longer has). The specs search row records the zero
+  in one sentence. Fast check over the removal: verified to the node, five
+  wording items fixed before the commit; 68 mutants across eight registries
+  all resolving. **Verdict 2, DEC-214**: `cut_node` plumbed per CPW's rules,
+  four terms behind off-valued constants (`LMR_CUTNODE`, `LMR_NOT_IMPROVING`,
+  `LMR_TT_CAPTURE`, the PV term), a firing census over S024's 400 positions
+  first (a condition true at under one per cent of reduction sites ships at
+  0 as inert), one gainer SPRT for the four against `30a3be2`, H0 bisecting by
+  off values. Brief `.tuning/coord/S098_v2_brief.md`. `plan_current/`: S098
+  (verdict 1 zero, verdict 2 in work).
+
 - **S098 verdict 1's leg 2 read H0, 2026-09-16 09:20: `Elo -2.34 +/- 4.73` at
   `8+0.08` over 13078 games in 6 h 10 m 32 s** (LLR -2.95, `nElo -2.94 +/-
   5.95`, W 4187 L 4275 D 4616, `Ptnml [667, 1518, 2240, 1464, 650]`, 2119
