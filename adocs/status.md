@@ -3754,7 +3754,8 @@ Updated: 2026-09-16, by hand.
 
 - Extra gate: last **GATE-EXTRA-DONE 2026-09-16 11:24, 5 stages 1076 s**, on
   S098 verdict 2's tree, committed as `a771260` (log
-  `.tuning/gate_extra_2026-09-16_s098v2.log`); before it
+  `.tuning/gate_extra_2026-09-16_s098v2.log`; debug 317 s, sanitize 700 s,
+  perft 58 s); before it
   2026-09-15 11:49 on verdict 1's tree `eb0bcd6` (1072 s; debug 323 s,
   sanitize 690 s, perft 58 s), the same day 03:59 on S222's phase-three
   tree `0effd18` (1073 s), 2026-09-14 14:33 on
