@@ -548,6 +548,7 @@ Read from each step's own completion stamp, not from a run log. The first nine r
 | S210 F22 | quiescence scores a dead position as a draw, `noob_3moves.epd` | 13 h 16 m 30 s | 28598 | `{-5, 0}` | H1, +0.01 +/- 3.17 |
 | S091 | capture SEE pruning in the main search and an extra reduction ply for a losing capture, `noob_3moves.epd` | 38 m 11 s | 1360 | `{0, 5}` | **H1**, +46.52 +/- 15.43 |
 | S222 | one-ply continuation history on its own fitted scale, with plain history's coefficients fitted beside it, one vector, `noob_3moves.epd` | 2 h 55 m 08 s | 6278 | `{0, 5}` | **H1**, +11.13 +/- 6.90 |
+| S098 v1 | late move reduction scaled by history at its fitted scale (divisor 699, clamp 3), `noob_3moves.epd` | 5 h 25 m 46 s | 11524 | `{0, 5}` | H0, -2.92 +/- 5.02 |
 
 **Mean 4 h 34 m, median 4 h 27 m** over the eleven; 116061 games in 50.27 hours,
 **2308.9 games an hour** across the set. Eight of the first nine sit between 2328 and
@@ -564,6 +565,8 @@ neither was a strength verdict.
 **With S091 the ledger holds fourteen: mean 4 h 37 m, median 4 h 18 m, 147383 games in 64.81 hours, 2274.1 an hour across the set.** S091's is the second 38-minute verdict in two days and the same shape as S109's: a gainer whose truth sat far above the interval, at 2137 an hour on the new book.
 
 **With S222 the ledger holds fifteen: mean 4 h 30 m, median 4 h 10 m, 153661 games in 67.73 hours, 2268.8 an hour across the set.** S222's is the first gainer since S105 whose truth sat above the interval without being far above it -- 6278 games, 2 h 55 m, at 2151 an hour.
+
+**With S098 verdict 1 the ledger holds sixteen: mean 4 h 34 m, median 4 h 18 m, 165185 games in 73.16 hours, 2257.9 an hour across the set.** The first H0 on a gainer since S024 v1 and the first verdict taken on a tree nearly twice the parent's size: 2124 games an hour, the slowest run on the new book, which is the larger tree's longer thinking and not the book.
 
 ### Priced by class, which is what the spread is
 

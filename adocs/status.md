@@ -5,7 +5,28 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-15, by hand.
+Updated: 2026-09-16, by hand.
+
+- **S098 verdict 1 read H0, 2026-09-16 02:44: `Elo -2.92 +/- 5.02` at `8+0.08`
+  over 11524 games in 5 h 25 m 46 s** (LLR -2.96, `nElo -3.70 +/- 6.34`, W 3691
+  L 3788 D 4045, `Ptnml [578, 1352, 1985, 1283, 564]`, 2124 games an hour on a
+  tree nearly twice the parent's, 0 forfeits either side, `Incomplete mating
+  PV` 7 candidate and 3 reference, pair variance 0.3125 over 5762 pairs;
+  `adocs/data/S098_v1_sprt.log`, `S098_v1_sprt_pairs.txt`). The fitted
+  history term (699 / 3, the lane's own optimum at 2+0.02) does not transfer
+  to 8+0.08: recorded as a zero, ledger row sixteen (**mean 4 h
+  34 m, median 4 h 18 m**). **The
+  pre-registered bisection runs**: leg 1, the sign, is pinned by the
+  direction cases and mutant L01 and costs no run; **leg 2 is `LmrHistDiv`
+  upward to the census p90, 1442, clamp 3**, one value and a Release
+  rebuild, prepared now by the same agent with its own pre-registration
+  (`adocs/data/S098_v1_leg2_sprt.sh`, REF `1db5b8e`, CAND the leg commit),
+  then run by the coordinator by day (nothing better waits for the machine,
+  DEC-155). H1 there keeps the term at 1442 / 3 and verdict 2 follows on
+  that tree; H0 spends the legs and the term leaves the tree (DEC-194's
+  shape: helper back to the raw table, parameters, cases and mutants with
+  it), verdict 2 then measured against the tree that leaves.
+  `plan_current/`: S098 (verdict 1 H0, leg 2 pending).
 
 - **S098 verdict 1's SPRT is running, launched 2026-09-15 21:19 by the
   coordinator** (`adocs/data/S098_v1_sprt.sh`, pid in `.tuning/sprt_s098v1.pid`,
