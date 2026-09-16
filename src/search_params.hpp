@@ -347,9 +347,25 @@
      instead of adjusting it. The fit landing one under that top is worth       \
      reading with the range in view and not as a coincidence.                   \
                                                                                \
-     LMR_HIST_DIV 699 is **this project's own SPSA fit** and nothing else,     \
-     from the same lane and the same 60000 games: theta 698.6584, rounded by    \
-     the driver to 699. No engine's coefficient is behind it.                   \
+     LMR_HIST_DIV 1442 is **verdict 1's pre-registered second bisection leg**  \
+     and not a fit, 2026-09-16. The SPRT of the fitted vector -- 699 and the    \
+     clamp at 3 -- read **H0 at `Elo -2.92 +/- 5.02`, `nElo -3.70 +/- 6.34`    \
+     over 11524 games** against the tree before verdict 1                       \
+     (adocs/data/S098_v1_sprt.log), so the term at that scale is recorded as a  \
+     zero. The pre-registration's H0 legs are the sign and then the divisor     \
+     upward; the sign is already pinned by the two direction cases and by       \
+     mutant L01, so this is leg 2. **1442 is the census's own 90th percentile   \
+     of |sum| at depth 12** -- the term then reaches a ply for a tenth of the   \
+     sites the rule sees rather than a quarter -- and it inherits that census's \
+     one-pass caveat below: it is a percentile of the tree at 8675 and not of   \
+     the tree this value builds. It is one value and a release rebuild,         \
+     measured against the same reference, which is what a bisection leg is.     \
+     adocs/data/S098_v1_leg2_sprt.sh is the run that prices it, and its H0      \
+     removes the term from the tree.                                            \
+                                                                               \
+     699 was **this project's own SPSA fit** and nothing else, from the two-    \
+     axis lane and its 60000 games: theta 698.6584, rounded by the driver. No   \
+     engine's coefficient was behind it and none is behind this leg.            \
                                                                                \
      The seed it started from was **(b)**, a derivation over chesso's own       \
      measured distribution of that sum -- not over the band's arithmetic, which \
@@ -396,7 +412,7 @@
      S127 refits both with the whole set. The vector below is the lane's and    \
      is a hypothesis until the gainer SPRT says otherwise (DEC-019);            \
      adocs/data/S098_v1_sprt.sh is the run that asks. */                        \
-  X(LMR_HIST_DIV,      "LmrHistDiv",      699,    1, 34700)                    \
+  X(LMR_HIST_DIV,      "LmrHistDiv",      1442,   1, 34700)                    \
   X(LMR_HIST_CLAMP,    "LmrHistClamp",    3,      0, 4)                        \
                                                                                \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \

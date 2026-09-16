@@ -2052,9 +2052,21 @@ history axes the lane fitted moved from their seeds to the values
 quiets differently, which moves every count downstream of it. Only games say
 whether the smaller tree is a better one (DEC-019), and
 `adocs/data/S222_sprt.sh` is the run that asks — it asked, and H1. **At `S098`
-verdict 1, the history-scaled reduction at its fitted scale: `11046420`**,
-94.3 % more and by a long way the largest single move this ledger records — the
-first entry that grows the tree rather than shrinking it. A quiet the history tables like is searched a ply
+verdict 1 leg 2, the history-scaled reduction at the census's p90,
+`LmrHistDiv` 1442: `9268371`**, 63.0 % more than the parent. It is a bisection
+leg and not a landing on its own merits: the fitted scale below lost its SPRT,
+and a larger divisor reaches fewer moves, so the tree comes back toward the
+parent's — 11046420 at 699, 9268371 at 1442.
+`tools/search_bench.py` at depth 9 reads 60840 / 146616 / 42517 against the
+parent's 51189 / 146616 / 39389; at depth 12, 243165 / 641165 / 199344 against
+143205 / 570238 / 148060, all three best moves the parent's at both depths.
+`adocs/data/S098_v1_leg2_sprt.sh` prices it and its H0 removes the term.
+
+**The fitted scale before it read `11046420`**, 94.3 % more and by a long way
+the largest single move this ledger records — the
+first entry that grows the tree rather than shrinking it, and **its SPRT said
+no**: `nElo -3.70 +/- 6.34` over 11524 games, H0 accepted
+(`adocs/data/S098_v1_sprt.log`). A quiet the history tables like is searched a ply
 or two deeper than the table alone would have searched it, the four
 shallow-depth rules price it at that deeper reduced depth too, and an un-reduced
 late quiet opens a whole subtree where the same term's other direction saves
@@ -2064,7 +2076,7 @@ very little on an already-reduced one. `tools/search_bench.py` at depth 9 reads
 moves the parent's at both depths.
 
 **The first landing of that same rule read `5968045`, +4.96 %, the census
-seed's `9133516`, +60.6 %, and the difference between the three numbers is a
+seed's `9133516`, +60.6 %, and the difference between the four numbers is a
 scale and not a rule.** `LmrHistDiv` was
 first seeded at half the saturated history band, 8675, which the step's own
 census then measured as reached by 0.011 % of the sites the rule reads
@@ -2075,7 +2087,8 @@ worth keeping as the shape of an inert setting beside a live one — at 8675 wit
 clamp 2: +0.00, +0.00, +0.00, −0.02, −1.33, +4.96 per cent over depths 9 to 14;
 at 430 with clamp 2: +0.60, +28.04, +23.61, +41.47, +35.75, +60.63; at the
 fitted 699 with clamp 3 (DEC-212's lane): +16.21, +26.70, +31.81, +70.69,
-+63.54, +94.28. **The off column is the parent's totals exactly at all three
++63.54, +94.28; at leg 2's 1442 with clamp 3: +4.07, +14.80, +14.30, +27.87,
++30.36, +63.01. **The off column is the parent's totals exactly at all four
 settings and every depth**, which is the inert-by-rebuild property
 measured over the whole engine rather than argued. Quote it
 with its commit, the way every other number on this page is quoted — it moves

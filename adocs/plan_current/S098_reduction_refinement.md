@@ -1036,3 +1036,70 @@ is empty against the landing. Debug self-play again, four rounds at 4+0.04:
 **The SPRT prices 699 and 3**, not either seed: `adocs/data/S098_v1_sprt.sh`,
 `{0, 5}` nElo at the harness regime, `REF` still `1db5b8e` and `CAND` still
 `HEAD` for the coordinator to pin.
+
+### Verdict 1's SPRT, 2026-09-16: H0
+
+`adocs/data/S098_v1_sprt.sh` ran as pre-registered, 2026-09-15 21:19:10 to
+2026-09-16 02:44:56 (**5 h 25 m 46 s**), candidate `0408447` -- the fitted
+scale, `LmrHistDiv` 699 and `LmrHistClamp` 3 -- against `1db5b8e`, the tree
+before verdict 1's landing, both identity lines printed before the first game.
+
+**H0 accepted. LLR -2.96 against (-2.94, 2.94), `Elo -2.92 +/- 5.02`, `nElo
+-3.70 +/- 6.34` over 11524 games**, W 3691 L 3788 D 4045, `Ptnml(0-2) [578,
+1352, 1985, 1283, 564]`, LOS 12.65 %, 2124 games an hour. **0 time forfeits on
+either side** over the 11526 games the PGN holds, so the abort rule never came
+near firing; `Incomplete mating PV` 7 candidate and 3 reference, recorded and
+not a stop. Pair score mean 0.9916, variance 0.3125 over 5762 pairs, beside
+S219's 0.2905 and S212's 0.2939 on this book. Evidence
+`adocs/data/S098_v1_sprt.log`, read in `adocs/data/S098_v1_sprt_pairs.txt`.
+
+**The reading is the one written before the games**: the history-scaled
+reduction at its own fitted scale does not gain 5 nElo over the tree before it,
+and is recorded as a zero. The interval sits below zero rather than straddling
+it, which is worth stating plainly: the point estimate is -2.92 Elo and the
+upper edge is +2.10, so this is not "no gain found" but "no gain, and a small
+loss is the better-supported reading". That the vector was a fit and not a seed
+is what makes the zero worth something -- SPSA played 60000 games choosing the
+scale, and the scale it chose does not pay for the tree it costs.
+
+### Leg 2, 2026-09-16
+
+The pre-registration's H0 bisection is two legs. **Leg 1, the sign, costs no
+run**: it is pinned by "a quiet the history tables like is reduced less", by
+"... written off is reduced more" and by mutant `L01_lmr_history_sign`, which
+both cases kill. **Leg 2 is the divisor upward**, and this is it:
+`LMR_HIST_DIV` **699 -> 1442**, `LMR_HIST_CLAMP` unchanged at 3, one value in
+`src/search_params.hpp` and a Release rebuild, measured against the same
+`1db5b8e`.
+
+1442 is the census's own 90th percentile of |sum| at depth 12, so the term
+reaches a full ply for a tenth of the sites the rule sees where 699 reached it
+for under a quarter. **It is a pre-registered bisection point and not a fit**
+-- the lane already fitted this axis over 60000 games and returned 699 -- and
+it inherits the census's one-pass caveat: a percentile of the tree at 8675, not
+of the tree it builds. `adocs/data/S098_v1_leg2_sprt.sh` prices it, and its H0
+clause is written out in full: **the two legs are then spent, the term is
+recorded as a zero and leaves the tree** in DEC-194's shape, down to what stays
+(`quiet_history_sum`, behaviour-neutral and read by `score_move`) and what the
+evidence keeps.
+
+**Measured at the leg's value**: `Bench: 9268371`, against the reference's
+5685915, the lane's seed 9133516 at 430 and the fitted 11046420 at 699 -- a
+larger divisor touches fewer moves and the tree comes back toward the
+reference's. `tools/search_bench.py`, reference -> leg: depth 9 midgame
+51189 -> 60840, kiwipete 146616 -> 146616, tactical 39389 -> 42517; depth 12
+143205 -> 243165, 570238 -> 641165, 148060 -> 199344. Best moves `c3d5` /
+`e2a6` / `d7c8q` at both depths, the reference's.
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 632553 | 1074018 | 1867606 | 3023865 | 5018624 | 9268371 |
+| off | 607842 | 935536 | 1634008 | 2364815 | 3849812 | 5685915 |
+| delta | +4.07 % | +14.80 % | +14.30 % | +27.87 % | +30.36 % | +63.01 % |
+
+The off column is the reference's totals exactly at every depth -- true now at
+all four settings this step has measured, which is what makes the H0 removal a
+revert of a known shape. Debug self-play four rounds at 4+0.04: **8 games in
+22 s, 0 `Assertion`, 0 `disconnect`**. Both fast suites **39/39**,
+`clang-format.sh --check` clean; no line of `src/search.cpp` moved, so every
+mutant anchor still resolves.

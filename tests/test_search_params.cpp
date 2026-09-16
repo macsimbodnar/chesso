@@ -81,7 +81,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                  52,     0,     400},
   {"LmrDivisor",              182,     1,    2000},
-  {"LmrHistDiv",              699,     1,   34700},
+  {"LmrHistDiv",             1442,     1,   34700},
   {"LmrHistClamp",              3,     0,       4},
   {"LmpBase",                 733,     0,   27000},
   {"LmpDepthCoeff",             0,     0,   27000},
