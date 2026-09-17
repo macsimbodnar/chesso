@@ -22,6 +22,56 @@ Updated: 2026-09-16, by hand.
   10 m, 184749 games in 82.38 hours); the step file has the coordinator's
   SPRT section and the leg-1 reading.
 
+- **S098 verdict 3's leg 1 is running, launched 2026-09-17 17:34: `8d60551`
+  (`LmrShallowerMargin` 0, the deeper path kept) against `efdbc9b`, the same
+  reference verdict 3 measured against, SPRT {0, 5} at `8+0.08`.** The leg is
+  one default and its comment in `src/search_params.hpp`; the branch stays in
+  `lmr_research_depth` and is simply never taken, which is what makes it one
+  Release rebuild and reversible. `bench` 4025871 to **4646334**, the total an
+  independent check predicted for this configuration before it was built, with
+  the tune build's off column the reference's totals exactly at all six depths.
+  **The ablation's sign change goes with the shallower path**: -0.01, -3.42,
+  -3.73, -1.92, -6.04, -15.04 % over depths 9 to 14, against verdict 3's
+  +12.61 % at depth 9; `search_bench` at depth 9 returns every best move to
+  the reference's, so verdict 3's one moved best move came back with the
+  shallower path's removal. No test was relaxed: three cases are renamed so
+  their titles are true at either margin and re-derived to assert what the
+  configuration implies, each with a counted precondition and a vacuity guard.
+  Eight mutants still die by named cases; **four are equivalent on this
+  configuration alone** and say so in the registry with the case and values
+  that kill them again at a margin of 47, qualified and never deleted.
+  `capture_mates` re-derived by its script to depths 9, 8, 11, 10. Debug
+  self-play 8 games 0 `Assertion`; `gate_extra` not owed, `src/` moving only
+  by the default. Gate GATE-DONE 4646334, 39/39 in both builds. Pin
+  `93182f0`. **The fast check cleared the one judgement call and found two
+  things, both repaired before the commit**: the case about a deeper
+  re-search leaving a deeper table entry had lost its reach, examining 24
+  sites where it should see 305, so its aggregate never reached the class its
+  comment documents -- restored, it reads `CHECK( 303 > 2 )` -- and a golden
+  label still named verdict 3 where leg 1 re-derived the table. The judgement
+  call itself: the case's old per-site claim was retired because a node that
+  returns through one of `negamax_at`'s early exits stores nothing, so the
+  slot keeps the reduced search's own entry; the checker instrumented both
+  exempt sites, found `child_depth 7, reduction 3, depth 7, table_depth 4` at
+  each -- unchanged sites, not deeper-path sites -- and confirmed the engine
+  is not failing to store a deeper entry where it should. The run:
+  `adocs/data/S098_v3_leg1_sprt.sh` writes `.tuning/sprt_s098_v3_leg1.log`,
+  output `.tuning/sprt_s098_v3_leg1_20260917_173422/`, pid in
+  `.tuning/sprt_s098_v3_leg1.pid`; banner and both identity lines checked
+  (`cand-8d60551`, `ref-efdbc9b`); persistent watcher on the marker, process
+  death and a 39 h ceiling. Worst case 41861 games, 19.7 h at verdict 3's
+  2128 games an hour. **Nothing else runs on the machine until the marker**
+  (MACHINE). Reader `.tuning/coord/read_s098v3_leg1.sh`. Then: H1 means the
+  deeper path alone gains and the shallower one was the loss, so the
+  shallower path leaves and S098 completes on the deeper path; H0 sends leg 2
+  (`LmrDeeperMinReduction` to its range top, the margin restored to 47), and
+  two H0s make the verdict a recorded zero with the rule leaving in DEC-194's
+  shape. One small item is parked either way:
+  `adocs/data/S098_v3_research_census.py` will not run on this tree, its
+  off-patch anchor being the line that carried 47; it refuses loudly and
+  cannot mis-measure, and it is repointed or removed with whatever shape the
+  rule ends in.
+
 - **The pre-registered bisection opens: leg 1 is `LmrShallowerMargin` to 0,
   keeping the deeper path.** The pre-registration's order, one path at a
   time, never the tune build (S073), two legs at most. The firing census
