@@ -7,6 +7,69 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 3 is running, launched 2026-09-17 13:48: `cb40afd` (the
+  re-search depth) against `efdbc9b`, the tree verdict 2's H1 approved,
+  SPRT {0, 5} at `8+0.08` on `noob_3moves.epd`, concurrency 12.** The
+  landing: `lmr_research_depth`, consulted at the one reduced fail-high
+  re-search site, returns `child_depth - 1` where the score beat alpha by
+  less than `LmrShallowerMargin` with a reduction of at least 2,
+  `child_depth + 1` where it cleared the node's own fail-soft best by
+  `LmrDeeperMargin` with a reduction of at least `LmrDeeperMinReduction`,
+  and `child_depth` otherwise; the shallower path wins where both could
+  fire, and the returned depth is always strictly greater than the reduced
+  depth, asserted in Debug. Three constants, `LmrDeeperMargin` 47 and
+  `LmrShallowerMargin` 47 as DEC-105 (c) midpoints of 0 to `PAWN`,
+  `LmrDeeperMinReduction` 2 as (b) over the census. The census (DEC-214)
+  came first and **corrected the step's own seeding before a game**: the
+  deeper margin at its range top is not an off value, so the path's off
+  switch is the reduction floor at its range top instead -- **DEC-215**
+  records the rule that follows, that an off value is proved on the tree
+  and not assumed from a range's end. Over 106610 re-search sites at depth
+  12 the shallower path fires on 47.77 % and the deeper on 4.60 % after
+  precedence, both above DEC-214's one per cent
+  (`adocs/data/S098_v3_research_census.txt`). `bench` 5469072 to 4025871,
+  -26.39 %, the off tree the parent's exactly at every depth; the ablation
+  **changes sign with depth** (+12.61, -0.65, +4.10, -18.40, -20.32,
+  -26.39 % over depths 9 to 14), the first in this ledger that does.
+  Twelve mutants killed (`tools/mutants/S098_research_rule.py`), one
+  cap-deletion mutant declared equivalent; `capture_mates` re-derived to
+  depths 9, 9, 10, 9 with R01's incidental kill going with row 2's depth;
+  Debug self-play 8 games 0 `Assertion`; `gate_extra` GATE-EXTRA-DONE 5
+  stages 1313 s. **The fast check found two real problems and both were
+  repaired before the commit**: an evidence block naming a mutant that did
+  not exist, whose quoted values were in no log -- and behind the label a
+  real gap, the site passing `alpha` where the rule measures from the
+  fail-soft best was killed by nothing in `test_search`, because a case
+  that replays the rule on the site's own inputs moves both sides together;
+  the rule now echoes the base it measured from, a case compares the echo
+  against the node's own best, and `D12_site_rebases_on_alpha` is the
+  twelfth mutant. The second: the census counted the deeper **condition**
+  and four documents published 6.89 % as the **path's** share, which after
+  precedence is 4.60 %; the script gained joint counters, was re-run on the
+  off tree at the same signature, and the four documents now separate
+  condition from path. All 21 quoted evidence lines and their 28 mutant
+  references re-verified against the kept logs by the coordinator as well.
+  The re-search case also loses "at full depth" from its title, which the
+  rule made untrue, and `adocs/specs.md`'s quotation of it moved in the
+  same commit. Gate GATE-DONE 4025871, 39/39 in both builds. Pin `ffa1f68`.
+  The run: `adocs/data/S098_v3_sprt.sh` writes `.tuning/sprt_s098_v3.log`,
+  output `.tuning/sprt_s098_v3_20260917_134841/`, pid in
+  `.tuning/sprt_s098_v3.pid`; banner and both identity lines checked
+  (`cand-cb40afd`, `ref-efdbc9b`); persistent watcher on the marker,
+  process death and a 39 h ceiling. Worst case 41861 games, 19.7 h at
+  verdict 2's 2126 games an hour; 25591 games, 12.0 h with the truth on a
+  bound. **Nothing else runs on the machine until the marker** (MACHINE).
+  Reader `.tuning/coord/read_s098v3.sh`. Then, per the script's header: H1
+  keeps both paths and **S098 completes**, all three verdicts read; H0
+  bisects by off value one path at a time, the shallower first, two legs at
+  most by Release rebuild; no verdict inside two legs is a zero and the
+  rule leaves in DEC-194's shape. The block is not at a boundary (S091
+  opened it and DEC-133's order runs on), so no drift point or
+  longer-control reading is owed at this completion; DEC-211's book re-read
+  is owed at this verdict, the tenth on `noob_3moves.epd`.
+  `plan_current/`: S098 (verdict 1 zero, verdict 2 H1, verdict 3 under
+  SPRT).
+
 - **S098 verdict 2 read H1, 2026-09-16 12:55: `Elo 29.05 +/- 11.52` at
   `8+0.08` over 1990 games in 56 m 09 s** (LLR 2.95, `nElo 38.70 +/- 15.26`,
   W 712 L 546 D 732, `Ptnml [60, 200, 358, 268, 109]`, LOS 100.00 %, 2126

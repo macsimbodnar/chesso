@@ -12041,3 +12041,50 @@ Consequences: Verdict 2's brief carries the census as its first step and
               the SPRT pre-registration names the census's shares beside
               each seed. DEC-212's lane pattern stays the rule for a scale
               parameter and not for a count.
+
+## DEC-215  2026-09-17  An off value is proved on the tree, not assumed from a range's end
+Tags:         s098, lmr, seeds, sprt, bisection, dec-214, dec-105, dec-194
+Context:      S098 verdict 3 introduced two margins and declared, in the
+              step's section 4 written a fortnight before the code, that
+              `LMR_DEEPER_MARGIN` at its range top would be an off value --
+              the re-search never returning far enough above the fail-soft
+              best to search deeper. The firing census DEC-214 requires
+              before a match said otherwise: at the range top the deeper
+              condition still fires on 2.86 % of depth-12 re-search sites,
+              because at a scout node that has not yet found a move the
+              fail-soft best sits below alpha, so `score > best + 94` is
+              satisfied by a low best rather than by a high score. An off
+              value that is not off costs two things at once: the
+              pre-registered bisection has no way to turn that path off
+              without moving the tree, and the verdict loses the equality it
+              rests on -- at the off values the engine must be the commit
+              before the landing, bench signature included.
+Decision:     By the coordinator under the owner's delegation, on the
+              verdict-3 agent's finding. **(1) A constant's off value is
+              proved, not declared**: the step says which input makes the
+              rule inert and shows the engine at those values printing the
+              parent's bench total, with the by-depth ablation's off column
+              equal to the parent's totals at every depth. **(2) Where a
+              range end is not off, the path gets a switch whose range end
+              is** -- verdict 3's deeper path is switched off by
+              `LmrDeeperMinReduction` at its range top, and the SPRT's
+              bisection legs name that constant rather than the margin.
+              **(3) The step file keeps the wrong sentence with the
+              correction beside it** rather than amending section 4 in
+              place: the file is about to become history in `plan_done/`,
+              and a seeding claim that the census overturned is worth more
+              on the record than a silently corrected one.
+Rejected:     **Shipping the deeper path with the margin as its only
+              switch** -- an H0 leg would move the tree it was meant to hold
+              still, and the leg's reading would not attribute. **Widening
+              the margin's range until its top is off** -- a range chosen so
+              that a tool has an off value is a range chosen for the tool
+              and not for the rule, and it would put the seed's midpoint
+              somewhere the census did not justify. **Treating the finding
+              as an implementation note** -- the same mistake is available
+              to every signed margin this plan still has to add, which is
+              what makes it a decision rather than a comment.
+Consequences: DEC-214's protocol gains this clause for every later verdict
+              that ships a rule behind off values; a census that reports a
+              path's firing share at its seed reports it at its off value
+              too, which is how this was caught.
