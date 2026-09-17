@@ -12088,3 +12088,55 @@ Consequences: DEC-214's protocol gains this clause for every later verdict
               that ships a rule behind off values; a census that reports a
               path's firing share at its seed reports it at its off value
               too, which is how this was caught.
+
+## DEC-216  2026-09-17  The tenth verdict's book reading: the new book costs about what the old one did and `noob_3moves.epd` stays
+Tags:         harness, book, ledger, measurement, dec-196, dec-211, dec-191, s219, s098
+Context:      DEC-211 read the book's cost from six verdicts and set the
+              next reading at the tenth on `noob_3moves.epd`. S098's four
+              runs -- verdict 1, its leg 2, verdict 2 and verdict 3 --
+              bring the count to ten. DEC-196's classes are fast, an
+              effect outside the interval, and slow, inside it or a null;
+              the six-verdict reading left the boundary between them
+              unstated, which this reading has to fix before it can add
+              four points.
+Decision:     By the coordinator under the owner's delegation. **(1) The
+              class rule is stated operationally: the truth's distance
+              from the nearest bound, 5 Elo or more is fast and less is
+              slow.** It reproduces every one of DEC-211's nine old-book
+              and six new-book assignments except `S024 v1` at 5.48, which
+              DEC-211 called slow and this rule calls fast by 0.48 -- the
+              one borderline point, and the reading is given both ways so
+              nothing rests on it. **(2) The reading: the new book costs
+              about what the old one did, and nothing says revert.** Old
+              book, nine: fast 4249 games a verdict over three, slow 14770
+              over six. New book, ten, by the rule: fast 4312 over seven
+              (S042 5741, S024 v1 8954, S109 1364, S091 1360, S222 6278,
+              S098 v2 1990, S098 v3 4496), slow 17733 over three (S210 F22
+              28598, S098 v1 11524, its leg 2 13078) -- ratios 1.02 and
+              1.20, both inside DEC-191's 0.97 to 1.29 bracket. Keeping
+              DEC-211's `S024 v1` in the slow class instead: fast 3538 and
+              slow 15539, ratios 0.83 and 1.05, the fast one below the
+              bracket, which is the new book being cheaper than the
+              bracket allowed for and not a reason to revert either.
+              **(3) What moved since the sixth reading is what was
+              measured, not the book**: three of the four new points are
+              S098 bisection legs, which are near-null by construction --
+              a leg exists to measure a piece of a rule -- so the slow
+              class grew because the plan spent a week on bisections, and
+              the per-game cost stayed flat at 2119 to 2128 games an hour
+              across all four, against 2305 to 2346 on the old book, a
+              ratio of about 1.09 on time per game and unchanged since
+              DEC-211. **(4) The book stays `noob_3moves.epd`; the next
+              reading is at the fifteenth verdict on it.**
+Rejected:     **Re-reading at every verdict** -- the ratio moves by less
+              than the noise of one run and the reading costs a document
+              edit each time. **Dropping the bisection legs from the
+              classes** -- they are verdicts the machine paid for and the
+              measurement is games per verdict, not games per idea.
+              **Reverting on the 1.20 slow ratio** -- it rests on three
+              points, two of them legs, and it is inside the bracket that
+              was agreed before any of them were run.
+Consequences: `adocs/plan.md`'s book paragraph cites this entry beside
+              DEC-191's bracket; the class rule in (1) is what a later
+              reading applies, so the boundary is no longer re-decided per
+              reading.

@@ -1011,7 +1011,7 @@ provisionally on the owner's leaning, and creates **S220**: the same two books
 at a quarter handicap, one night, to measure the trend toward zero and decide
 by a rule written first. S220 was priced at two nights (DEC-193) and **retired unrun on
 2026-09-12 by the owner, DEC-196**: the ledger's realized games per verdict is
-the free measurement, read at the fifth verdict on the new book. Budget from
+the free measurement, read at the fifth verdict on the new book. **Read at the sixth (DEC-211) and again at the tenth (DEC-216)**: the cost is about the old book's on both classes, the class boundary is now stated as 5 Elo from the nearest bound, and the next reading is at the fifteenth verdict. Budget from
 2110 games an hour, the A/A's figure on this book; the governor is recorded and
 never set (DEC-195).
 
