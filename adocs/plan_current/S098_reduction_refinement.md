@@ -2635,3 +2635,37 @@ Evidence kept outside the repository, under `.tuning/coord/`:
 sweeps), `S098v3_leg1_red_first.log` (the red observed before any test was
 touched), and the three drivers -- `run_mutants_v3_leg1.py`,
 `S230_leg1_sweeps.py` and `S098v3_leg1_evidence_check.py`.
+
+### Leg 1's SPRT, 2026-09-18 (the coordinator's)
+
+`adocs/data/S098_v3_leg1_sprt.sh` ran 2026-09-17 17:34:22 to 2026-09-18
+00:23:23 (`adocs/data/S098_v3_leg1_sprt.log`,
+`adocs/data/S098_v3_leg1_sprt_pairs.txt`): candidate `8d60551`, reference
+`efdbc9b` -- the same reference verdict 3 measured against, which is what makes
+the two runs comparable -- seed `20260917173422`, `8+0.08`, Hash 16,
+concurrency 12, `noob_3moves.epd`, bounds `{0, 5}`.
+
+**H1 accepted: `Elo 5.75 +/- 4.37`, `nElo 7.44 +/- 5.65`, LLR 2.97 against
+(-2.94, 2.94), W 4559 L 4319 D 5632 over 14510 games, `Ptnml(0-2) [603, 1695,
+2522, 1729, 706]`, LOS 99.51 %, 6 h 49 m 01 s at 2128 games an hour.** 0 time
+forfeits on either side over the 14510 games the PGN holds (10057
+adjudications, 4453 natural ends); 7255 complete pairs at pair-score variance
+0.2981, the highest of the S098 family and beside verdict 3's 0.2766. The
+`Incomplete mating PV` asymmetry verdict 3's run showed -- 8 candidate against
+0 reference -- is gone here at 28 against 21 over three times the games, which
+is consistent with the shallower re-search having been its cause and is
+recorded as an observation and not a diagnosis (CHESS).
+
+**Read against the pre-registration's H1 line: the deeper path alone gains at
+least 5 nElo and the shallower path was the loss, so the shallower path leaves
+and S098 completes on the deeper path.** The claim written is at least 5 nElo
+and not the stopping estimate (DEC-063). No second leg is taken: leg 2 exists
+only for the case where leg 1 also reads H0.
+
+**What the pair of runs says, and it is worth stating once.** The rule measured
+whole read `Elo -9.97 +/- 7.56` and one of its halves reads `+5.75 +/- 4.37`
+against the same reference. A rule can be a loss whose parts are not, and the
+two runs cost 8 h 56 m together -- less than the single longest verdict in the
+ledger. The bisection was pre-registered before either number existed, which is
+the only reason the second run reads as a measurement rather than as a search
+for a better answer (DEC-063).

@@ -552,6 +552,7 @@ Read from each step's own completion stamp, not from a run log. The first nine r
 | S098 v1 leg 2 | the same term at the census p90 (divisor 1442, clamp 3), the pre-registered bisection, `noob_3moves.epd` | 6 h 10 m 32 s | 13078 | `{0, 5}` | H0, -2.34 +/- 4.73 |
 | S098 v2 | late move reduction adjusted by node type: one ply more at a cut node, when not improving and when the table move is a capture, one less at a PV node, `noob_3moves.epd` | 56 m 09 s | 1990 | `{0, 5}` | **H1**, +29.05 +/- 11.52 |
 | S098 v3 | the re-search depth after a reduced fail-high: a ply shallower where the score barely beat alpha, a ply deeper where it cleared the node's own best by a margin, `noob_3moves.epd` | 2 h 06 m 45 s | 4496 | `{0, 5}` | H0, -9.97 +/- 7.56 |
+| S098 v3 leg 1 | the same rule with the shallower path switched off, the deeper path alone, the pre-registered bisection, `noob_3moves.epd` | 6 h 49 m 01 s | 14510 | `{0, 5}` | **H1**, +5.75 +/- 4.37 |
 
 **Mean 4 h 34 m, median 4 h 27 m** over the eleven; 116061 games in 50.27 hours,
 **2308.9 games an hour** across the set. Eight of the first nine sit between 2328 and
@@ -576,6 +577,8 @@ neither was a strength verdict.
 **With verdict 2 the ledger holds eighteen: mean 4 h 27 m, median 4 h 18 m, 180253 games in 80.27 hours, 2245.6 an hour across the set.** The node-type terms stopped in 1990 games and 56 minutes at 2126 an hour, the third gainer to stop inside an hour after S109 and S091, and the first S098 verdict to clear its bounds; the stopping estimate is upward-biased and the claim is at least 5 nElo (DEC-063).
 
 **With verdict 3 the ledger holds nineteen: mean 4 h 20 m, median 4 h 10 m, 184749 games in 82.38 hours, 2242.6 an hour across the set.** The first clearly negative gainer since S024 v1 and the fastest H0 of the three S098 verdicts -- 4496 games at 2128 an hour, the whole interval below zero, where verdict 1's two legs took 11524 and 13078 games to say a smaller thing. A rule that moves the tree by a quarter is measured quickly whichever way it goes.
+
+**With leg 1 the ledger holds twenty: mean 4 h 27 m, median 4 h 18 m, 199259 games in 89.20 hours, 2233.9 an hour across the set.** The bisection paid for itself here: one run said the two-path rule loses 9.97 and the next said one of its halves gains, and the pair cost 8 h 56 m together. A rule measured whole can be a loss whose parts are not, which is the case DEC-063's one-change-at-a-time discipline is usually protecting against and here was worth the extra leg.
 
 ### Priced by class, which is what the spread is
 

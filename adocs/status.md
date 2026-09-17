@@ -22,6 +22,33 @@ Updated: 2026-09-16, by hand.
   10 m, 184749 games in 82.38 hours); the step file has the coordinator's
   SPRT section and the leg-1 reading.
 
+- **S098 verdict 3's leg 1 read H1, 2026-09-18 00:23: `Elo 5.75 +/- 4.37` at
+  `8+0.08` over 14510 games in 6 h 49 m 01 s** (LLR 2.97, `nElo 7.44 +/-
+  5.65`, W 4559 L 4319 D 5632, `Ptnml [603, 1695, 2522, 1729, 706]`, LOS
+  99.51 %, 2128 games an hour; 0 forfeits either side, 10057 adjudications
+  and 4453 natural ends; 7255 pairs at variance 0.2981). Candidate `8d60551`
+  against `efdbc9b`, the same reference verdict 3 used. **The deeper path
+  alone gains and the shallower path was the loss**, which is the outcome the
+  pre-registration wrote before either run: the shallower path leaves and
+  S098 completes on the deeper path. The claim is at least 5 nElo (DEC-063),
+  not the stopping estimate; leg 2 is not taken. Verdict 3's `Incomplete
+  mating PV` asymmetry, 8 candidate against 0, is gone here at 28 against 21
+  over three times the games -- consistent with the shallower re-search
+  having caused it, recorded as an observation (CHESS). Evidence
+  `adocs/data/S098_v3_leg1_sprt.log` and `S098_v3_leg1_sprt_pairs.txt` with
+  README rows; the ledger holds it as row twenty (mean 4 h 27 m, median 4 h
+  18 m, 199259 games in 89.20 hours). **The removal is in work by a fresh
+  Opus 5 agent** (DEC-199): the shallower branch, `LmrShallowerMargin`, the
+  cases and mutants that exist only for it, in DEC-194's shape, proved
+  behaviour-neutral by INV-6 rather than by a match -- `bench` 4646334
+  unchanged, `search_bench` identical at both depths, the tune build's off
+  tree still 5469072 -- with `gate_extra` and the Debug self-play owed
+  because the step completes with it. Brief
+  `.tuning/coord/S098_v3_removal_brief.md`. Then the coordinator writes the
+  `done:` stamp and S098 closes. `plan_current/`: S098 (verdict 1 zero,
+  verdict 2 H1, verdict 3 H0 whole and H1 on its deeper half, removal in
+  work).
+
 - **S098 verdict 3's leg 1 is running, launched 2026-09-17 17:34: `8d60551`
   (`LmrShallowerMargin` 0, the deeper path kept) against `efdbc9b`, the same
   reference verdict 3 measured against, SPRT {0, 5} at `8+0.08`.** The leg is
