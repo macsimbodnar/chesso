@@ -2176,3 +2176,66 @@ exists; its open-findings paragraph says no finding is open, re-read on this
 tree. Two items need a decision that is not this file's: the wrong test title
 above, and whether section 4's off-value sentence for `LMR_DEEPER_MARGIN` is
 amended in place or left with this section's correction beside it.
+
+### Verdict 3's SPRT, 2026-09-17 (the coordinator's)
+
+The landing committed as `cb40afd` after the fast check and its repair. The
+check found two real problems and both were fixed before the commit. **One was
+a test gap wearing a label's clothes**: an evidence block named a mutant that
+does not exist and quoted values found in no log, and behind it the site
+passing `alpha` where the rule measures from the fail-soft best was killed by
+nothing in `test_search` -- a case that replays the rule on the site's own
+recorded inputs moves both sides together and cannot see a site-level fault.
+The rule now returns the base it measured from, a case compares that echo
+against the node's own `best_so_far`, and `D12_site_rebases_on_alpha` is the
+twelfth mutant. **The other was in the numbers four documents published**: the
+census counted the deeper *condition*, not the deeper *path*, and the two
+conditions overlap on 2.29 % of depth-12 sites, so the path's share after
+precedence is 4.60 % and not 6.89 %; the script gained joint counters, was
+re-run on the off tree at the same bench signature, and the census, the data
+README, this SPRT's pre-registration and the `DEV_MANUAL.md` entry now separate
+condition from path. All 21 quoted evidence lines and their 28 mutant
+references were then re-verified against the kept logs, by the agent and by the
+coordinator independently. `gate_extra` re-ran because `src/` changed:
+`GATE-EXTRA-DONE 5 stages 1313 s`. Gate `GATE-DONE 4025871`, 39 of 39 in both
+builds. `CAND` pinned as `cb40afd` in `ffa1f68`. DEC-215 records what the
+census caught about the off value.
+
+`adocs/data/S098_v3_sprt.sh` ran 13:48:41 to 15:55:26
+(`adocs/data/S098_v3_sprt.log`, `adocs/data/S098_v3_sprt_pairs.txt`): banner
+`candidate cb40afd`, `reference efdbc9b`, both identity lines right, seed
+`20260917134841`, `8+0.08`, Hash 16, concurrency 12, `noob_3moves.epd`, bounds
+`{0, 5}`.
+
+**H0 accepted: `Elo -9.97 +/- 7.56`, `nElo -13.40 +/- 10.16`, LLR -2.96 against
+(-2.94, 2.94), W 1282 L 1411 D 1803 over 4496 games, `Ptnml(0-2) [185, 595,
+794, 512, 162]`, LOS 0.48 %, 2 h 06 m 45 s at 2128 games an hour.** The whole
+interval sits below zero, so this is not a null but a measured loss. 0 time
+forfeits on either side over the 4497 games the PGN holds (3104 adjudications,
+1393 natural ends); 2248 complete pairs at pair-score variance 0.2766, beside
+verdict 2's 0.2805. **One asymmetry is on the record**: `Incomplete mating PV`
+8 on the candidate against 0 on the reference, where verdict 2's run split 14
+against 9 and verdict 1's 7 against 3. A re-search a ply shallower than the
+move's own depth is the obvious suspect for a mate line that arrives one ply
+short, and it is recorded as an observation and not as a diagnosis -- what the
+line is worth is a chess judgement and not this file's (CHESS).
+
+### The bisection, leg 1, as pre-registered
+
+H0 opens the two-leg bisection the pre-registration wrote before the games, one
+path at a time and never the tune build (S073). **Leg 1 is
+`LmrShallowerMargin` to 0, keeping the deeper path**, because the record's
+argument is about the guard: the guarded form is what measured positive
+elsewhere, the shallower path is the unguarded half by volume -- 47.77 % of
+re-search sites against the deeper path's 4.60 % -- and it is what the -26.39 %
+tree is mostly made of.
+
+**The firing census is re-read first, as the pre-registration demands** (a path
+that stopped firing is not a path that was measured, DEC-212). With the
+shallower path off, precedence no longer takes anything from the deeper path,
+so the deeper path fires at exactly its condition's share:
+**6.89 % of re-search sites at depth 12 and 5.85 % at depth 10**
+(`adocs/data/S098_v3_research_census.txt`), which is above DEC-214's one per
+cent by a factor of six. The leg measures a path that fires, and the tree it
+measures is the one the coordinator's fast check already benched at 4646334
+against the off tree's 5469072.

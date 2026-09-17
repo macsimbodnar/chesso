@@ -7,6 +7,43 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-16, by hand.
 
+- **S098 verdict 3 read H0, 2026-09-17 15:55: `Elo -9.97 +/- 7.56` at
+  `8+0.08` over 4496 games in 2 h 06 m 45 s** (LLR -2.96, `nElo -13.40 +/-
+  10.16`, W 1282 L 1411 D 1803, `Ptnml [185, 595, 794, 512, 162]`, LOS
+  0.48 %, 2128 games an hour; 0 forfeits either side over the PGN's 4497
+  games, 3104 adjudications and 1393 natural ends; 2248 pairs at variance
+  0.2766). Candidate `cb40afd` against `efdbc9b`. **The whole interval is
+  below zero, so this is a measured loss and not a null.** One asymmetry
+  recorded: `Incomplete mating PV` 8 candidate against 0 reference, where
+  verdict 2 split 14 against 9; a re-search a ply shallower is the obvious
+  suspect and that is an observation, not a diagnosis (CHESS). Evidence
+  `adocs/data/S098_v3_sprt.log` and `S098_v3_sprt_pairs.txt` with README
+  rows; the ledger holds it as row nineteen (mean 4 h 20 m, median 4 h
+  10 m, 184749 games in 82.38 hours); the step file has the coordinator's
+  SPRT section and the leg-1 reading.
+
+- **The pre-registered bisection opens: leg 1 is `LmrShallowerMargin` to 0,
+  keeping the deeper path.** The pre-registration's order, one path at a
+  time, never the tune build (S073), two legs at most. The firing census
+  was re-read first as it demands: with the shallower path off, precedence
+  takes nothing from the deeper path, so the deeper path fires at its
+  condition's share, 6.89 % of re-search sites at depth 12 and 5.85 % at
+  depth 10 -- six times DEC-214's floor, so the leg measures a path that
+  fires (DEC-212's lesson). The leg's tree is the one the fast check
+  benched at 4646334 against the off tree's 5469072. A fresh Opus 5 agent
+  lands the leg (DEC-199): the default moves in `src/search_params.hpp`,
+  and the cases whose precondition reads `LMR_SHALLOWER_MARGIN > 1` are the
+  work -- a case that asserts a path fires must assert the exempt
+  behaviour when the path is switched off by design, and it is re-derived
+  rather than relaxed (TESTS). Then the coordinator gates, commits, pins
+  and runs the leg's SPRT against `efdbc9b`, the same reference this
+  verdict used. If leg 1 reads H0 too, leg 2 puts `LmrDeeperMinReduction`
+  at its range top with the shallower margin restored; if both read H0 the
+  verdict is a recorded zero and the rule leaves in DEC-194's shape, a
+  revert to a bench signature this tree already knows (5469072).
+  `plan_current/`: S098 (verdict 1 zero, verdict 2 H1, verdict 3 H0 and
+  bisecting).
+
 - **S098 verdict 3 is running, launched 2026-09-17 13:48: `cb40afd` (the
   re-search depth) against `efdbc9b`, the tree verdict 2's H1 approved,
   SPRT {0, 5} at `8+0.08` on `noob_3moves.epd`, concurrency 12.** The

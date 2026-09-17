@@ -551,6 +551,7 @@ Read from each step's own completion stamp, not from a run log. The first nine r
 | S098 v1 | late move reduction scaled by history at its fitted scale (divisor 699, clamp 3), `noob_3moves.epd` | 5 h 25 m 46 s | 11524 | `{0, 5}` | H0, -2.92 +/- 5.02 |
 | S098 v1 leg 2 | the same term at the census p90 (divisor 1442, clamp 3), the pre-registered bisection, `noob_3moves.epd` | 6 h 10 m 32 s | 13078 | `{0, 5}` | H0, -2.34 +/- 4.73 |
 | S098 v2 | late move reduction adjusted by node type: one ply more at a cut node, when not improving and when the table move is a capture, one less at a PV node, `noob_3moves.epd` | 56 m 09 s | 1990 | `{0, 5}` | **H1**, +29.05 +/- 11.52 |
+| S098 v3 | the re-search depth after a reduced fail-high: a ply shallower where the score barely beat alpha, a ply deeper where it cleared the node's own best by a margin, `noob_3moves.epd` | 2 h 06 m 45 s | 4496 | `{0, 5}` | H0, -9.97 +/- 7.56 |
 
 **Mean 4 h 34 m, median 4 h 27 m** over the eleven; 116061 games in 50.27 hours,
 **2308.9 games an hour** across the set. Eight of the first nine sit between 2328 and
@@ -573,6 +574,8 @@ neither was a strength verdict.
 **With leg 2 the ledger holds seventeen: mean 4 h 40 m, median 4 h 26 m, 178263 games in 79.33 hours, 2247.0 an hour across the set.** Two H0s on one rule at two scales, 2124 and 2119 games an hour: the history-scaled reduction is recorded as a zero and leaves the tree (DEC-213).
 
 **With verdict 2 the ledger holds eighteen: mean 4 h 27 m, median 4 h 18 m, 180253 games in 80.27 hours, 2245.6 an hour across the set.** The node-type terms stopped in 1990 games and 56 minutes at 2126 an hour, the third gainer to stop inside an hour after S109 and S091, and the first S098 verdict to clear its bounds; the stopping estimate is upward-biased and the claim is at least 5 nElo (DEC-063).
+
+**With verdict 3 the ledger holds nineteen: mean 4 h 20 m, median 4 h 10 m, 184749 games in 82.38 hours, 2242.6 an hour across the set.** The first clearly negative gainer since S024 v1 and the fastest H0 of the three S098 verdicts -- 4496 games at 2128 an hour, the whole interval below zero, where verdict 1's two legs took 11524 and 13078 games to say a smaller thing. A rule that moves the tree by a quarter is measured quickly whichever way it goes.
 
 ### Priced by class, which is what the spread is
 
