@@ -395,12 +395,24 @@
      engine is the one before this verdict, bench signature included, which is  \
      what the release-rebuild bisection rests on (DEC-063, DEC-214).            \
                                                                                \
+     **LEG 1 OF THE H0 BISECTION, 2026-09-17: this constant ships at 0.**       \
+     Verdict 3's SPRT read H0 with the whole interval below zero -- `Elo -9.97  \
+     +/- 7.56` over 4496 games -- and adocs/data/S098_v3_sprt.sh pre-registered \
+     the bisection before those games, one path at a time: **leg 1 keeps the    \
+     deeper path at its seeds and switches the shallower path off**, at the off \
+     value proved above. The branch stays in `lmr_research_depth` and is simply \
+     never taken, which is what makes the leg one release rebuild and a         \
+     reversible one. **The range does not move**: 47 is the (c) seed the        \
+     constant returns to if leg 2 is taken, and a range is a property of the    \
+     rule rather than of the leg. adocs/data/S098_v3_leg1_sprt.sh is the leg's  \
+     own pre-registration.                                                      \
+                                                                               \
      LmrDeeperMinReduction's floor of 1 is arithmetic -- the site already       \
      requires a reduction of at least 1 -- and its ceiling is the off value     \
      above. S127 refits all three with LmrBase and LmrDivisor after the         \
      block. */                                                                  \
   X(LMR_DEEPER_MARGIN,        "LmrDeeperMargin",        47, 0, 94)             \
-  X(LMR_SHALLOWER_MARGIN,     "LmrShallowerMargin",     47, 0, 94)             \
+  X(LMR_SHALLOWER_MARGIN,     "LmrShallowerMargin",      0, 0, 94)             \
   X(LMR_DEEPER_MIN_REDUCTION, "LmrDeeperMinReduction",   2, 1, 126)            \
                                                                                \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \

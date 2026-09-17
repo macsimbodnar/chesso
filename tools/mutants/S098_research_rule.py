@@ -41,6 +41,28 @@ a sign or a bound, never a constant moved -- moving `LmrShallowerMargin` to 0
 or `LmrDeeperMinReduction` to its range top is the off value the bisection
 protocol uses and not a bug.
 
+**FOUR OF THE TWELVE ARE EQUIVALENT ON THE SHIPPED CONFIGURATION, AND THAT IS A
+FACT ABOUT THE CONFIGURATION AND NOT ABOUT THE BUGS.** Verdict 3's SPRT read H0
+and its pre-registered bisection's leg 1 ships `LmrShallowerMargin` at 0, where
+the shallower branch is never taken: the site requires `score > alpha` and the
+branch asks for `score < alpha + 0`. A mutant that only changes that branch
+therefore changes nothing any input reaches -- `D04`, `D07` -- and so does one
+that only reorders it against the deeper branch (`D05`) or moves a floor the
+remaining two outcomes never touch (`D10`). They are declared `equivalent`
+here, **qualified by the configuration and never deleted**: leg 2 of the same
+bisection restores the margin to 47, and each of the four is an ordinary
+killable mutant again the moment it does, with the case that killed it named in
+the step file. The declaration is what `tools/mutation_check.py` requires --
+equivalence is argued by a person, never inferred from a green suite -- and the
+tool's second oracle holds the argument to account: a bench signature that
+moved makes the verdict `survived` whatever this file declares, so each of the
+four is run and its signature read like any other.
+
+`D02` is the one that moves in the other direction. At a margin of 0 inverting
+the shallower condition makes the path fire at **every** site with a reduction
+of at least 2 rather than at none, so the case asserting the path fires nowhere
+is what kills it, and the kill is stronger than the one it had at 47.
+
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
 file, so nothing here is a driver of its own. `old` must occur exactly once in
 `file` -- an ambiguous anchor mutates a site nobody chose, and the tool refuses
@@ -86,16 +108,26 @@ m("D04_shallower_guard_dropped", S, "search/reduction",
   'the shallower path fires at a reduction of 1, where `child_depth - 1` **is** '
   'the reduced depth: the re-search becomes the reduced search run a second '
   'time, so a move that beat alpha is confirmed by the very search that was '
-  'not believed. The one bug the strict inequality exists against',
+  'not believed. The one bug the strict inequality exists against. '
+  '**EQUIVALENT while `LmrShallowerMargin` is 0** (leg 1): the condition the '
+  'guard sits on is false at every site, so dropping the guard admits '
+  'nothing. Killable again at leg 2\'s margin of 47, where '
+  '"LmrShallowerMargin decides whether a re-search that only just beat alpha '
+  'goes a ply shallower" reads it at a reduction of 1',
   ('  if (reduction >= 2 && score < alpha + LMR_SHALLOWER_MARGIN) {',
    '  if (score < alpha + LMR_SHALLOWER_MARGIN) {'),
-  origin="S098")
+  expected="equivalent", origin="S098")
 
 m("D05_precedence_swapped", S, "search/reduction",
   'the deeper path is tested first, so it wins the region where both '
   'conditions hold -- which is every scout node whose fail-soft best sits more '
   'than a margin below alpha, the common case and not a corner. The rule then '
-  'searches deepest exactly where the score only just cleared the window',
+  'searches deepest exactly where the score only just cleared the window. '
+  '**EQUIVALENT while `LmrShallowerMargin` is 0** (leg 1): the region where '
+  'both conditions hold is empty, so the two orders decide every site the '
+  'same way. Killable again at leg 2\'s margin of 47, where '
+  '"LmrShallowerMargin decides the region where both re-search paths could '
+  'fire" reads it',
   ('  if (reduction >= 2 && score < alpha + LMR_SHALLOWER_MARGIN) {\n'
    '    depth = child_depth - 1;\n'
    '  } else if (reduction >= LMR_DEEPER_MIN_REDUCTION &&\n'
@@ -108,7 +140,7 @@ m("D05_precedence_swapped", S, "search/reduction",
    '  } else if (reduction >= 2 && score < alpha + LMR_SHALLOWER_MARGIN) {\n'
    '    depth = child_depth - 1;\n'
    '  }'),
-  origin="S098")
+  expected="equivalent", origin="S098")
 
 m("D06_deeper_two_plies", S, "search/reduction",
   'the cap is raised and the deeper path becomes an even-deeper search, two '
@@ -127,12 +159,15 @@ m("D07_shallower_two_plies", S, "search/reduction",
   'the shallower path drops two plies, so at a reduction of 2 -- a third of '
   'all re-search sites by this step\'s own census -- the re-search is the '
   'reduced search repeated, and at a reduction of 3 it is shallower still than '
-  'the search that was not believed',
+  'the search that was not believed. **EQUIVALENT while `LmrShallowerMargin` '
+  'is 0** (leg 1): the branch it rewrites is never taken. Killable again at '
+  'leg 2\'s margin of 47, where the shallower path\'s own case and the '
+  'inequality case both read it',
   ('    depth = child_depth - 1;\n'
    '  } else if (reduction >= LMR_DEEPER_MIN_REDUCTION &&',
    '    depth = child_depth - 2;\n'
    '  } else if (reduction >= LMR_DEEPER_MIN_REDUCTION &&'),
-  origin="S098")
+  expected="equivalent", origin="S098")
 
 m("D08_site_ignores_the_rule", S, "search/reduction",
   'the recursion re-searches at `child_depth` and the rule is computed and '
@@ -172,10 +207,16 @@ m("D10_floor_dropped", S, "search/reduction",
   'captures and will report that a quiet move is fine. The reduced child '
   'reaching depth 0 is a bug the published record prices in the tens of Elo, '
   'and the engine reaches this corner only if a later step moves the '
-  "reduction's own clamp -- which is the case for keeping the floor at all",
+  "reduction's own clamp -- which is the case for keeping the floor at all. "
+  '**EQUIVALENT while `LmrShallowerMargin` is 0** (leg 1): the floor is '
+  'reached only through a shallower re-search at a child depth of 1, and the '
+  'two outcomes left -- `child_depth` and `child_depth + 1`, at a site whose '
+  'reduction of at least 1 forces `child_depth >= 2` -- never go below it. '
+  'Killable again at leg 2\'s margin of 47, where "the re-search depth stays '
+  'inside its cap, floor and inequality" drives the corner directly',
   ('  if (depth < 1) { depth = 1; }',
    '  if (depth < 0) { depth = 0; }'),
-  origin="S098")
+  expected="equivalent", origin="S098")
 
 m("D11_cap_one_ply_low", S, "search/reduction",
   'the cap is one ply low, so it clamps the deeper path away and the rule '

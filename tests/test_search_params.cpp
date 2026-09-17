@@ -86,7 +86,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"LmrTtCapture",              1,     0,       2},
   {"LmrPv",                     1,     0,       2},
   {"LmrDeeperMargin",          47,     0,      94},
-  {"LmrShallowerMargin",       47,     0,      94},
+  {"LmrShallowerMargin",        0,     0,      94},
   {"LmrDeeperMinReduction",     2,     1,     126},
   {"LmpBase",                 733,     0,   27000},
   {"LmpDepthCoeff",             0,     0,   27000},
