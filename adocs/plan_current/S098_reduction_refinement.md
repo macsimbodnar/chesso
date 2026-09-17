@@ -1,9 +1,9 @@
 id:         S098
 goal:       the late move reduction is scaled by history, by node type and by what the re-search returned, instead of by depth and move number alone
 accepts:    an SPRT verdict per adjustment, measured separately -- history scaling, node type and the re-search rule are three changes and one at a time is the rule; every constant introduced goes into src/search_params.hpp with a stated range (S073), including the reduction table's own shape if it becomes a formula; the "pruning does not hide a forced mate" case re-run after each adjustment, since S013 shipped an LMR that reduced the mating move at the root; a mate found at the root is never reduced, asserted with the precondition that would otherwise reduce it; the fast suite green
-touches:    src/search.cpp late move reduction, src/search.hpp, src/data_structures.hpp, src/search_params.hpp, tests/test_search.cpp
+touches:    src/search.cpp late move reduction, src/search.hpp, src/data_structures.hpp, src/search_params.hpp, tests/test_search.cpp, tests/test_search_params.cpp, tools/mutants/, adocs/data/, MANUAL.md, DEV_MANUAL.md
 excludes:   late move pruning, which is S109 -- S090 was retired into it by DEC-082, which measures the four shallow-depth rules as one step; the improving flag itself, which S108 supplies two entries earlier in the order (S092 retired into S108 by the 2026-08-19 review, `adocs/plan.md` "the improving flag, was first in the pending order"; no `decisions.md` entry records that merge) and which is an input here
-decisions:  DEC-071, DEC-105, DEC-134, DEC-198, DEC-213, DEC-214
+decisions:  DEC-019, DEC-063, DEC-071, DEC-084, DEC-105, DEC-134, DEC-141, DEC-142, DEC-143, DEC-176, DEC-185, DEC-194, DEC-198, DEC-199, DEC-202, DEC-209, DEC-212, DEC-213, DEC-214
 closes:
 blocks:
 paused_by:
@@ -1613,3 +1613,566 @@ opens against `a771260`**. The specs search row carries the passage proposed
 above with the verdict appended; the ledger holds the run as its eighteenth
 row. Nothing of the bisection was needed. No `done:` stamp: the step completes
 after verdict 3.
+
+## Verdict 3 landed, 2026-09-16: the re-search depth
+
+Implemented by an Opus 5 subagent briefed by the coordinator (DEC-185,
+DEC-199). **No `done:` stamp here either: the coordinator writes it when this
+verdict's SPRT is read.** The SPRT is the coordinator's and is pre-registered as
+`adocs/data/S098_v3_sprt.sh` before any game.
+
+### The rule, its precedence and the inequality it keeps
+
+`src/search.cpp` `lmr_research_depth` is the whole of it, and it is consulted at
+exactly one site -- the reduced fail-high re-search in `src/search.cpp`
+`negamax_at`, the block guarded by
+`!state->aborted && reduction > 0 && score > alpha`:
+
+```
+child_depth - 1   reduction >= 2 and score < alpha + LMR_SHALLOWER_MARGIN
+child_depth + 1   reduction >= LMR_DEEPER_MIN_REDUCTION
+                  and score > best_so_far + LMR_DEEPER_MARGIN
+child_depth       otherwise
+```
+
+`best` is `best_so_far` **before this move updates it** -- the fail-soft base
+and not alpha, which is the re-basing the published record made and kept. The
+full-window re-search below it still runs at `child_depth`, the alpha-raising
+path is untouched, and no history is updated from the re-search's outcome
+(routed onward, Scope concerns 2).
+
+**Precedence: the shallower path wins, and the reason is stated rather than
+picked.** Both conditions can hold, and only where `best` sits more than a
+margin below `alpha` -- which at a scout node is every node that has not yet
+found a move, since a zero-window node that raises alpha cuts off instead of
+continuing. In exactly that region `score > best + LMR_DEEPER_MARGIN` is
+satisfied by `best` being low and not by `score` being high, so the deeper
+condition's premise is degenerate precisely where the two meet, while
+`score < alpha + LMR_SHALLOWER_MARGIN` is a statement about the score against
+the node's own bound and is never degenerate. The degenerate one yields.
+`tests/test_search.cpp` "where both re-search paths could fire the shallower one
+wins" holds it and `D05_precedence_swapped` is the mutant it kills.
+
+**The re-search is never the reduced search repeated.** The returned depth is
+always strictly greater than `child_depth - reduction`, asserted in the Debug
+build and held over the rule's whole declared domain by
+`tests/test_search.cpp` "the re-search depth stays
+inside its cap, floor and inequality". The shallower path's `reduction >= 2` is what keeps it
+and it is **arithmetic, not a setting**: at a reduction of 1 the shallower depth
+*is* the reduced depth. The deeper path's guard is the tunable one and it is the
+published one.
+
+The cap at `child_depth + 1` and the floor at 1 are written and asserted, and
+what they are worth is recorded rather than implied: **neither binds at any
+input the engine itself produces**, since the three branches give `child_depth`
+and its two neighbours and the reduction is already clamped to
+`[0, child_depth - 1]` before it arrives. They are kept because S127 tunes the
+branch set and S097 extends `child_depth`, and because the floor **is**
+reachable from the wider domain the function declares -- a reduction of 2 at a
+child depth of 1 -- which is what makes `D10_floor_dropped` an ordinary mutant
+with an ordinary kill. The cap has no such input, which is why a mutant that
+only deletes it is declared equivalent below.
+
+### The firing census, taken before anything was seeded, DEC-214
+
+`adocs/data/S098_v3_research_census.py` and `.txt`. The method is verdict 2's
+down to the positions and the driver: a detached worktree carrying this working
+tree's `src/` with write-only counters patched in at the one site, driven over
+the 400 positions of `adocs/data/S024_census_positions.txt` through S024's own
+`Engine` at `go depth 10` and `go depth 12`. **It also patches the two off
+values in**, so the distribution is the tree the SPRT's reference searches and
+the signature check has an exact number to hold: the instrumented Release binary
+must print **5469072**, which it does.
+
+Verdict 2's census counted four booleans because a ply count has no scale.
+**These two margins are scales**, so this one keeps distributions: four
+histograms of one-unit bins over -8192 to 8192, two of them conditioned on
+`r >= 2`, which makes the firing share readable at any margin without re-running
+and makes a quantile inside the range exact.
+
+| | depth 10 | depth 12 |
+|---|---|---|
+| re-search sites | 44871 | 106610 |
+| with `r >= 2` | 48.38 % | **52.41 %** |
+| `score - best` p10/p25/p50/p75/p90 | 2 / 6 / 14 / 30 / 67 | 2 / 6 / 14 / 32 / 73 |
+| the same where `r >= 2` | 2 / 5 / 12 / 26 / 54 | 2 / 5 / 12 / 27 / 59 |
+| `score - alpha` p10/p25/p50/p75/p90 | 2 / 4 / 9 / 21 / 45 | 1 / 3 / 9 / 22 / 47 |
+| the same where `r >= 2` | 1 / 3 / 9 / 20 / 41 | 1 / 3 / 8 / 20 / 43 |
+| the deeper **condition** at the seed 47 | 5.85 % | 6.89 % |
+| the shallower **condition** at the seed 47 | 44.36 % | 47.77 % |
+| both conditions at once | 1.88 % | 2.29 % |
+| **the deeper path fires** (after precedence) | 3.97 % | **4.60 %** |
+| **the shallower path fires** | 44.36 % | **47.77 %** |
+| the re-search is unchanged | 51.66 % | 47.64 % |
+
+The reduction taken at a re-search site never exceeds 6 and is 1 on about half
+of them (51.62 % at depth 10, 47.59 % at depth 12).
+
+**A condition's share is not a path's share, and DEC-214's test is about the
+path.** The shallower path is tested first, so a site where both conditions hold
+belongs to it; the deeper path fires only on what is left. The three outcomes
+after precedence are counted **in the engine**, at the seeds the script reads out
+of `src/search_params.hpp` so they cannot drift, because the histograms are
+one-dimensional and cannot see the overlap. The first pass of this census had no
+joint counters and published the deeper *condition's* 6.89 % as the path's share
+in four documents; the Tier-1 fast check caught it and the census was re-run.
+
+**Both paths are in the seed rule's first case.** The rule was written before the
+run: the (c) seed 47 stands for a path firing at one per cent of sites or more;
+a path under one per cent is re-seeded by DEC-105 **(b)** at the quantile that
+makes it fire at about a tenth of sites; a path that cannot reach one per cent
+anywhere inside 0 to `PAWN` ships inert. The smaller **path** share is over four
+times the threshold, so **neither margin was re-seeded** and neither ships at its
+off value. What a (b) re-seed would have been is printed anyway, so the number is
+on record rather than reconstructed later: margin 34 for the deeper condition and
+3 for the shallower one at depth 12 -- conditions and not paths, since a re-seed
+moves the overlap too and the path share at a new margin needs another run.
+
+The tree says the same from the other side and independently of the census: a
+release rebuild at each off value benches **4646334** with the deeper path alone
+(`LmrShallowerMargin` 0, against the off tree's 5469072) and **4794294** with the
+shallower path alone (`LmrDeeperMinReduction` 126, against the shipped 4025871).
+Both paths move the tree on their own, which is what the H0 bisection needs of
+them. Measured by the coordinator's fast check and quoted here.
+
+**One thing the census corrected before a game was played, and it is a
+correction to this file's own section 4.** Section 4 says `LMR_DEEPER_MARGIN` is
+off at its range top. **It is not.** The fail-soft best sits at or below alpha at
+every site, so `score > best + 94` is still true on **2.86 %** of depth-12 sites
+(2.34 % at depth 10) -- a margin bounded by a pawn cannot switch off a condition
+whose base is unbounded below. The deeper path's off value is
+`LMR_DEEPER_MIN_REDUCTION` at **its** range top, 126, which is above every
+reduction the clamp to `[0, child_depth - 1]` admits. That is what the H0
+bisection's second leg uses and what the census script patches in.
+
+### The three constants, their seeds and their DEC-105 forms
+
+| constant | default | range | form |
+|---|---|---|---|
+| `LMR_DEEPER_MARGIN` | 47 | 0 to 94 | **(c)** the midpoint of a range stated by purpose: 0 to `PAWN`, whose top is the point past which the re-search depth would be decided on more material than a pawn of window. Compared against search scores, so the unit is `piece_value` in `src/eval_tables.hpp` (section 4's P6 paragraph) |
+| `LMR_SHALLOWER_MARGIN` | 47 | 0 to 94 | **(c)** the same. Off: 0, by arithmetic -- the site requires `score > alpha`, so no score is under `alpha + 0` |
+| `LMR_DEEPER_MIN_REDUCTION` | 2 | 1 to 126 | **(b)** a derivation over this engine's own site: the re-search exists only where `reduction > 0`, so 1 is a guard that says nothing and 2 is the smallest value at which it does -- the same integer the shallower path's strict inequality forces, so one threshold serves both. Floor 1 arithmetic, ceiling `MAX_DEPTH` and above every reachable reduction, which makes it the deeper path's off value |
+
+No engine's coefficient seeds any of them, wherever it is republished (DEC-084
+as amended by DEC-105). The records that say the direction is worth trying --
+the guarded form at +3.11 +/-2.35 and the bare form at -7.07 +/-7.65 in the
+3138-3224 band, one unmerged pass above it, one wholesale revert on the negative
+side -- are records and not seeds, and section 5 already lists them as
+anti-seeds. All three sit above this engine's band, so a zero is an expected
+outcome (DEC-176).
+
+### What the rule does to the tree, measured before any game
+
+`Bench: 4025871`, against the parent's 5469072: **-26.39 %**. The by-depth
+ablation on the tune build, the shipped seeds against `LmrShallowerMargin` 0 and
+`LmrDeeperMinReduction` 126 -- node counts, never strength (S073):
+
+| depth | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|
+| on | 535688 | 836148 | 1399862 | 2002440 | 2746511 | 4025871 |
+| off | 475717 | 841594 | 1344741 | 2453847 | 3447081 | 5469072 |
+| delta | +12.61 % | -0.65 % | +4.10 % | -18.40 % | -20.32 % | -26.39 % |
+
+**The off column is the parent's totals exactly at every depth**, which is the
+property the bisection rests on, measured rather than argued -- and asserted a
+second way by the census script, whose instrumented Release binary is built at
+the off values and refuses to take a census unless it prints 5469072.
+
+**The row changes sign and that is the finding.** Verdict 2's ablation was
+non-monotone; this one is *larger* at 9 and 11, flat at 10, and 18 to 26 per
+cent smaller at 12, 13 and 14. Both directions are the same two paths: the
+shallower path fires on nearly half of all re-search sites and saves a ply at
+each, while the deeper path spends one on 7 % and every ply it spends opens a
+subtree that grows with depth. So the rule costs where the tree is shallow and
+pays where a game at the harness control actually lives.
+
+`tools/search_bench.py` says the same from the other side and disagrees with
+`bench` about the sign at depth 9:
+
+| | depth 9, parent -> this | depth 12, parent -> this |
+|---|---|---|
+| midgame | 22078 -> 51048 | 205096 -> 115959 |
+| kiwipete | 104682 -> 104849 | 646466 -> 471175 |
+| tactical | 29842 -> 29842 | 149330 -> 134331 |
+
+The parent's numbers are `DEV_MANUAL.md`'s ledger row for verdict 2 and not a
+re-run. Best moves are `c3d5` / `e2a6` / `d7c8q` at **both** depths, and
+midgame's depth-9 move therefore comes back from the `g5f6` verdict 2 read.
+Recorded and not explained: a move at a fixed depth is a chess judgement no
+agent here makes (CHESS). Node counts move by construction, so INV-6 takes the
+SPRT path.
+
+### Tests, red first, with the printouts
+
+Nine cases in `tests/test_search.cpp`, in the "search: pruning and reduction
+guards" suite: two per path, the precedence, the re-basing, the cap/floor/
+inequality grid, the site replay, the site's table-depth witness and the site's
+base -- the last added by the Tier-1 repair below. The red
+observation was taken on the shipped code at `LmrShallowerMargin` 0 and
+`LmrDeeperMinReduction` 126 -- their off values -- which is both a red-first
+observation and the inert-at-off property the bisection rests on. Verbatim,
+Release build, `.tuning/coord/S098v3_mutlogs/red_at_off_values.log`:
+
+```
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7182:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  a re-search whose score clears the fail-soft best goes a ply deeper
+
+/home/max/ws/chesso/tests/test_search.cpp:7193: FATAL ERROR: REQUIRE( LMR_DEEPER_MIN_REDUCTION <= 3 ) is NOT correct!
+  values: REQUIRE( 126 <= 3 )
+
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7253:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  a re-search that only just beat alpha goes a ply shallower
+
+/home/max/ws/chesso/tests/test_search.cpp:7259: FATAL ERROR: REQUIRE( LMR_SHALLOWER_MARGIN > 1 ) is NOT correct!
+  values: REQUIRE( 0 >  1 )
+
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7307:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  the deeper margin is measured from the fail-soft best and not from the window
+
+/home/max/ws/chesso/tests/test_search.cpp:7311: FATAL ERROR: REQUIRE( LMR_DEEPER_MIN_REDUCTION <= 3 ) is NOT correct!
+  values: REQUIRE( 126 <= 3 )
+
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7356:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  where both re-search paths could fire the shallower one wins
+
+/home/max/ws/chesso/tests/test_search.cpp:7358: FATAL ERROR: REQUIRE( LMR_SHALLOWER_MARGIN > 1 ) is NOT correct!
+  values: REQUIRE( 0 >  1 )
+
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7702:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  a re-search that went a ply deeper left a table entry a ply deeper
+
+/home/max/ws/chesso/tests/test_search.cpp:7714: FATAL ERROR: REQUIRE( LMR_DEEPER_MIN_REDUCTION <= 6 ) is NOT correct!
+  values: REQUIRE( 126 <= 6 )
+
+===============================================================================
+/home/max/ws/chesso/tests/test_search.cpp:7761:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  both re-search depths are reached in a real search
+
+/home/max/ws/chesso/tests/test_search.cpp:7769: FATAL ERROR: REQUIRE( LMR_SHALLOWER_MARGIN > 1 ) is NOT correct!
+  values: REQUIRE( 0 >  1 )
+
+===============================================================================
+[doctest] test cases:     9 |     3 passed | 6 failed | 127 skipped
+[doctest] assertions: 28655 | 28649 passed | 6 failed |
+[doctest] Status: FAILURE!
+```
+
+**Six of the nine are red there and the three that are not are the property
+cases**: "the re-search depth stays inside its cap, floor and inequality", which
+is a statement about the rule at any constants including the off ones, "the node
+re-searches at the depth the rule returns", which compares the site against the
+rule and is satisfied when both say `child_depth`, and "the node measures the
+deeper margin from its own fail-soft best", which is about which variable the
+call hands over and is true whatever the margins hold. Those two are red under
+their own mutants instead, which is the shape verdict 1's root case and verdict
+2's four prediction cases took, and it is stated here rather than left to be
+noticed. The other six carry a `REQUIRE` naming the off value they need, and
+that guard is a real precondition and not a formality: at the off values every
+re-search runs at `child_depth`, so a wiring that read no condition at all would
+satisfy every comparison below it.
+
+**The two site cases are self-deriving and that is deliberate.** What they need
+is a node where a *reduced* move beat alpha, and whether a given window produces
+one is a property of the tree rather than something to assert by hand. They
+sweep alpha from -500 to +500 in steps of 10 over the first 30 positions of
+`adocs/data/S024_census_positions.txt`, driving each as a scout node at depth 8
+and collecting every re-search the probed node made -- so no number in either
+case is read off a run (DEC-142), and a rule that stops firing fails loudly
+rather than passing over an empty set. The firing case stops as soon as it has
+three of each. 0.7 s for both.
+
+**The probe carries what the site decided and the table carries what the tree
+did, and the second is the load-bearing one.** `search_node_probe_t` in
+`src/data_structures.hpp` gains `research_depth` and the three numbers that
+decided it (`research_score`, `research_alpha`, `research_best`), so a case can
+replay `lmr_research_depth` on the node's own inputs. That alone is not enough
+and the first mutant pass proved it: a recursion that computes the answer and
+then searches at `child_depth` anyway agrees with every replay of itself, and
+`D08_site_ignores_the_rule` **survived** the whole fast suite. The case "a
+re-search that went a ply deeper left a table entry a ply deeper" is what
+answers it -- after each drive it makes the move and reads the child's own
+transposition entry, which is stored at the depth the child ran at and which the
+table keeps at the deeper value within one search. D08 dies there, and 48 of 48
+sites in the sweep carry an entry.
+
+### The mutants, and the case that killed each
+
+`tools/mutants/S098_research_rule.py`, prefix `D` -- the next free one, since
+`T` is verdict 2's and `L` was verdict 1's, whose mutants left with the term --
+**twelve mutants, every one run by hand against the working tree and
+observed**.
+The pass could not go through `tools/mutation_check.py`, which requires a linked
+worktree with a clean `src/` at `HEAD` and reverts with `git checkout --`, and
+this verdict is not committed yet. Each was applied, built, run through the
+**whole fast suite** in the Release build and reverted from a byte snapshot
+whose sha256 was compared after; a hand-driven pass reverts the source and not
+the build, so each revert is followed by a `touch` and a rebuild before anything
+reads the binary again. The driver is `.tuning/coord/run_mutants_v3.py` and
+every ctest log is kept under `.tuning/coord/S098v3_mutlogs/`. **Every value quoted in the
+test file's evidence blocks is checked back against those logs by script** --
+21 `values:` lines carrying 28 mutant-id references, all observed. The first
+version of that script matched only lines with a trailing mutant id and missed
+a fabricated one; it now matches every `values:` line in the block and fails one
+that names no mutant. That is the repair verdict 2 needed, and this verdict
+needed half of it after all.
+
+| mutant | what it breaks | killed by, with the values it printed |
+|---|---|---|
+| `D01_deeper_inverted` | the deeper path fires where the score is *below* the best by the margin | "a re-search whose score clears the fail-soft best goes a ply deeper" `CHECK_EQ( 6, 7 )`; "a re-search that went a ply deeper left a table entry a ply deeper" `CHECK( 4 >= 6 )` and `REQUIRE( 0 >  0 )`; "both re-search depths are reached in a real search" `REQUIRE( 0 >  0 )`; "pruning does not hide a forced mate" `REQUIRE( false )`; "a reduced move that beats alpha is searched again" `REQUIRE( 0 >  0 )` |
+| `D02_shallower_inverted` | the shallower path fires where the score beat alpha by *more* than the margin | "a re-search that only just beat alpha goes a ply shallower" `CHECK_EQ( 6, 5 )`; "... clears the fail-soft best ..." `CHECK_EQ( 5, 7 )`; "where both re-search paths could fire the shallower one wins" `CHECK_EQ( 7, 5 )`; "... a table entry a ply deeper" `CHECK( 4 >= 7 )`; "pruning does not hide a forced mate" |
+| `D03_deeper_guard_dropped` | the deeper path fires at any reduction -- the bare form | "a re-search whose score clears the fail-soft best goes a ply deeper", on the guard's own sub-assertion, `CHECK_EQ( 7, 6 )` |
+| `D04_shallower_guard_dropped` | the shallower path fires at a reduction of 1, repeating the reduced search | "a re-search that only just beat alpha goes a ply shallower" `CHECK_EQ( 5, 6 )`; "the re-search depth stays inside its cap, floor and inequality" `CHECK( 1 >  1 )` |
+| `D05_precedence_swapped` | the deeper path is tested first and wins the region where both hold | "where both re-search paths could fire the shallower one wins" `CHECK_EQ( 7, 5 )`; "pruning does not hide a forced mate" |
+| `D06_deeper_two_plies` | the cap is raised and the deeper path becomes an even-deeper search | "... clears the fail-soft best ..." `CHECK_EQ( 8, 7 )`; "the re-search depth stays inside its cap, floor and inequality" `CHECK( 3 <= 2 )`; "pruning does not hide a forced mate" |
+| `D07_shallower_two_plies` | the shallower path drops two plies | "a re-search that only just beat alpha ..." `CHECK_EQ( 4, 5 )`; "where both re-search paths could fire ..." `CHECK_EQ( 4, 5 )`; "the re-search depth stays inside its cap, floor and inequality" `CHECK( 1 >  1 )`; "pruning does not hide a forced mate" |
+| `D08_site_ignores_the_rule` | the recursion re-searches at `child_depth` and the rule is thrown away | "a re-search that went a ply deeper left a table entry a ply deeper" `CHECK( 7 >= 8 )` and `REQUIRE( 0 >  0 )`; "pruning does not hide a forced mate". **It survived the first pass**, which is why that case exists |
+| `D12_site_rebases_on_alpha` | the **call** hands the rule the window where the fail-soft best belongs | "the node measures the deeper margin from its own fail-soft best" `CHECK_EQ( -500, -504 )`, and `test_mate_carry` `CHECK( 11 <= 9 )`. **It was green on the whole suite until the Tier-1 check found it**, which is why `research_base` and that case exist |
+| `D09_deeper_margin_off_alpha` | the deeper margin is measured from the window instead of the fail-soft best | "the deeper margin is measured from the fail-soft best and not from the window" `CHECK_EQ( 6, 7 )`, and `test_mate_carry` `CHECK( 11 <= 9 )` |
+| `D10_floor_dropped` | the floor is written at 0, so a shallower re-search can reach quiescence | "the re-search depth stays inside its cap, floor and inequality" `CHECK( 0 >= 1 )` and `CHECK_EQ( 0, 1 )` |
+| `D11_cap_one_ply_low` | the cap is a ply low and clamps the deeper path away | the same five cases D01 dies at, at `CHECK_EQ( 6, 7 )`, `CHECK( 4 >= 6 )` and `REQUIRE( 0 >  0 )` |
+
+**One mutant is declared equivalent and is not in the list.** Deleting
+`if (depth > child_depth + 1) { depth = child_depth + 1; }` on its own changes
+nothing: the three branches produce `child_depth` and its two neighbours, so
+nothing the rule can build reaches the cap. That is a clamp doing its job, and
+`D06` and `D11` are the killable forms of the same bug -- the bound moved up
+together with the branch that would then reach it, and the bound moved down
+alone. Declared here and in the registry's header, never inferred from a green
+suite (`tools/mutation_check.py`'s own rule).
+
+**The first pass is recorded because it changed the step.** Ten mutants, one
+survivor (`D08`) and one weak kill (`D09`, then a site-level mutant, dying only
+at `test_mate_carry`'s incidental golden). The survivor produced the
+table-depth case above; the weak kill produced the re-basing case and moved that
+mutant from the site into the rule, where a direct guard can reach it. Both are
+the second tier working as DEC-141 intends, and both would have shipped
+unnoticed on the mutant list alone.
+
+### `capture_mates` re-derived, and R01's kill is gone again
+
+DEC-142: a golden is re-derived by its own script whenever **either** end moves,
+and changing the depth a reduced move's re-search runs at is the same clause of
+the same rule verdicts 1 and 2 both moved. Seven sweeps of
+`adocs/data/S230_mine_r01_row.py depths` over `adocs/data/S230_table_fens.txt`,
+depths 3 to 12, once on this tree and once per mutant of
+`tools/mutants/S091_capture_see.py` applied by hand and reverted from a byte
+snapshot; the raw profiles are in `.tuning/coord/S230_v3/`.
+
+Shipped profiles: `d9 d10 d11 d12`, `d9 d10 d11 d12`, `d10 d12`,
+`d9 d10 d11 d12`. The rule written at the table -- the lowest shipped depth that
+separates a mutant, else the lowest shipped depth with the label saying nothing
+separates -- then gives:
+
+| row | depth, was -> is | label, was -> is |
+|---|---|---|
+| 1 | 9 -> 9 | `no S091 mutant` -> `no S091 mutant` |
+| 2 | 8 -> **9** | `C02, C05, C07 and R01` -> **`no S091 mutant`** |
+| 3 | 11 -> **10** | `C07 and R02` -> **`C02, C07 and R02`** |
+| 4 | 9 -> 9 | `R02` -> `R02` |
+
+Two depths moved and no mate distance did. **R01's incidental kill is gone
+again**, stated rather than papered over: it lived at row 2's depth 8, and on
+this tree the shipped build reports no mate there at all, so the rule takes 9
+and nothing separates. What replaces it is row 3, which separates three mutants
+at its new depth where it separated two before. The direct guards are what the
+rules rest on -- all six S091 mutants were run through the whole fast suite at
+verdict 1 with every one killed by its own named case -- and every row still
+reports its own mate inside the swept range, as do both dedicated mate cases,
+`test_mate_carry` and `test_mate_breadth`.
+
+### One existing case changed, and it was not relaxed
+
+`tests/test_search.cpp` "a mate found at the root is never reduced" went red on
+its own precondition, `REQUIRE( k >= 3 )` reading `REQUIRE( 2 >= 3 )` at depth 6
+and 10 at depths 3, 4 and 5. That is the case's own comment doing what it was
+written to do: the key's index at the root is not a constant of the position but
+of the tree, because the quiet stage is scored only once the captures run out,
+so the order depends on what the first capture's subtree wrote into the history
+table -- and this verdict changes every such subtree.
+
+The conclusion is now asserted at **every** depth and the precondition is
+counted: a drive whose key is not both past the move-number bound and reduced by
+the table proves nothing about the root exemption, so it is reported by name and
+not asserted through, and `REQUIRE(meaningful > 0)` refuses to let the case go
+vacuous at every depth at once. Coverage at depths 3, 4 and 5 is exactly what it
+was; depth 6 stops claiming something it can no longer establish. `L06_lmr_root`
+in `tools/mutants/search.py` is still killed by it.
+
+One title described what the engine did until this verdict: "a reduced move that
+beats alpha is searched again **at full depth**". It is now
+"a reduced move that beats alpha is searched again", renamed on the
+coordinator's decision at the Tier-1 check, in the title and in the
+`M09_lmr_no_research` block above it, with the long comment explaining the old
+one cut to a sentence. `adocs/specs.md` quotes the title and the coordinator
+moves it in the same commit. What the case asserts -- that the re-search happens
+at all -- is unchanged and still what `M09_lmr_no_research` breaks.
+
+### The suite, the signature and the second tier
+
+- Fast suite, Release: **39/39**. Fast suite, tune build: **39/39**.
+  `./clang-format.sh --check` clean.
+- `Bench: 4025871`.
+- `tools/search_bench.py` depths 9 and 12 above; every best move the parent's.
+- Debug self-play, DEC-141 clause 1, four rounds at 4+0.04 with the Debug
+  binaries and `level=trace engine=true`: **8 games in 17 s, 0 `Assertion` in
+  both the log and the tee'd stdout, 0 `disconnect`** on the repaired tree (8
+  games in 21 s and the same zeros before it). The five `assert`s in
+  `lmr_research_depth` -- the two preconditions and the three bounds -- never
+  fired.
+- `tests/test_search_params.cpp`'s golden gains three rows and its count moves
+  48 -> 51, re-derived the way its own GOLDEN note says, by diffing it against
+  `src/search_params.hpp`.
+- `MANUAL.md`'s tune-option table gains `LmrDeeperMargin`,
+  `LmrShallowerMargin` and `LmrDeeperMinReduction`; `DEV_MANUAL.md`'s bench
+  ledger gains this verdict with the sign-changing ablation, and its DEC-142
+  golden list moves `golden_defaults` 48 -> 51 and carries the new
+  `capture_mates` row. `tests/test_uci_surface.cpp` needed no edit: it generates
+  the option lines from `search_param_info` and requires `MANUAL.md` to document
+  each name, which it now does.
+- `tools/gate_extra.sh`, DEC-141 clause 3, before this verdict completes:
+  **GATE-EXTRA-DONE 5 stages 1313 s** on the tree that lands, all five green --
+  prose, citations, the Debug binaries (393 s), the sanitizer build (849 s) and
+  deep perft (70 s). It has run three times and the first is worth the sentence:
+  it went **red** on `test_plan_citation_freshness`, because this section cited a
+  test title the source wraps across two lines and the checker looks for the
+  phrase literally. The title was shortened to fit one source line -- "the
+  re-search depth stays inside its cap, floor and inequality" -- and the gate
+  re-run; the third run is the Tier-1 repair's, since it moved `src/`.
+- `tools/mutation_check.py` over every registry file: **89 mutants across 10
+  files, every anchor resolving exactly once** on the tree that lands, S222's
+  `H03` and `H04` and verdict 2's nine `T` anchors included. The tool's own pass
+  needs a linked worktree with a clean `src/` at `HEAD` and this verdict is not
+  committed, so what ran is the anchor half of its check, over every file rather
+  than only this step's.
+
+### The Tier-1 fast check and its repair, 2026-09-17
+
+The coordinator's fast check over this verdict's diff found two real problems
+and one stale artefact, and carried one decision of its own. All four were
+repaired in the same working tree.
+
+**1. A site-level bug the whole suite could not see, and a fabricated evidence
+line that hid it.** The `// Mutation:` block above "the node re-searches at the
+depth the rule returns" named `D09_site_rebases_on_alpha` -- a mutant the
+registry does not contain, since D09 had been rewritten into the rule -- and
+quoted `values: CHECK_EQ( 7, 8 )`, which appears in no log. **The value-checking
+script that reported "26 quoted values, 0 not observed" did not catch it**: it
+matched only `values:` lines carrying a trailing mutant id, and that line had
+none. It now matches **every** `values:` line in the verdict-3 block and fails a
+line that names no mutant at all.
+
+The block was not only mislabelled. The checker applied the bug it describes --
+the call in `negamax_at` passing `alpha` where `best_so_far` belongs -- and the
+fast suite **stayed green** while `bench` moved 4025871 to 4025922, so the
+mutant is not equivalent and the green suite was a proved gap. The cause is
+structural and is the one that made `D08` survive its own first pass: a case
+that replays the rule on the numbers the node recorded moves both sides of its
+comparison together, so no replay can see a call site handing over the wrong
+variable.
+
+The fix is in the rule. `lmr_research_depth` now returns `research_decision_t`
+-- the depth **and the base it measured the deeper margin from**, echoed back --
+and the probe records that echo in `research_base` beside `best_so_far` in
+`research_best`, written from two different places. The new case
+`tests/test_search.cpp` "the node measures the deeper margin from its own
+fail-soft best" compares them at every site and counts the sites where the two
+candidate bases differ, refusing to pass if none does. The bug is now
+`D12_site_rebases_on_alpha` in the registry, anchored on the call, and it dies
+there:
+
+```
+TEST CASE:  the node measures the deeper margin from its own fail-soft best
+ERROR: CHECK_EQ( site.base, site.best ) is NOT correct!
+  values: CHECK_EQ( -500, -504 )
+```
+
+The echo is behaviour-neutral by construction -- nothing outside the probe block
+reads it, so it folds away in `negamax_at<false>` -- and by measurement:
+`Bench: 4025871`, unchanged.
+
+**2. The census counted the deeper condition and four documents published it as
+the deeper path.** The rule tests deeper in the `else`, so the shallower path
+takes precedence, and at depth 12 the two conditions overlap on 2.29 % of sites.
+The script kept five one-dimensional histograms and no joint distribution, so it
+could not say what the path's share was -- and DEC-214's inert test is about the
+path. `adocs/data/S098_v3_research_census.py` now counts the three outcomes
+**after precedence** in the engine, at the seeds it reads out of
+`src/search_params.hpp` so they cannot drift, and the census was re-run on the
+off tree with the bench-equality guard intact (`5469072`). The true path shares
+are **4.60 % deeper and 47.77 % shallower at depth 12**, 3.97 % and 44.36 % at
+depth 10, with 47.64 % of sites unchanged; the condition shares stay printed
+beside them, labelled as conditions. The census file, this one,
+`adocs/data/README.md`, `adocs/data/S098_v3_sprt.sh` and `DEV_MANUAL.md` all
+carry the path shares now. The census file's claim that either path's share was
+readable at any margin without re-running is corrected: that is true of a
+condition and false of a path. Both paths clear the one-per-cent threshold, so
+the reading is unchanged and neither ships inert.
+
+**3. A stale snapshot.** `.tuning/coord/S230_v3/search.cpp.sha256` recorded the
+tree before this section's own comment rewrite -- nothing functional, and the
+checker re-ran the miner and got the recorded profiles byte for byte. Refreshed,
+so the `capture_mates` evidence can be audited without seven rebuilds, and
+`.tuning/coord/S230_v3/PROVENANCE.txt` beside it says what the refreshed tree
+differs from the swept one by -- that comment, and the repair's struct return,
+both behaviour-neutral and both benching 4025871 -- rather than letting the
+checksum imply the sweeps were taken on it.
+
+**4. The coordinator's edit, carried out here.** The case
+"a reduced move that beats alpha is searched again at full depth" is renamed to
+"a reduced move that beats alpha is searched again", in the title and in the
+`M09_lmr_no_research` block above it, with the explanation cut to one sentence.
+`adocs/specs.md`'s quotation of the title is the coordinator's, in the same
+commit.
+
+**What was re-run.** `src/search.cpp` changed, so the whole second tier was
+taken again on the tree that lands: the twelve-mutant pass, `tools/gate_extra.sh`,
+both fast suites, `clang-format.sh --check` and both prose checks. The list below
+is re-stated for the repaired tree rather than left at the first landing's.
+
+### Proposed for `adocs/specs.md`, for the coordinator to apply
+
+The search row's late-move-reduction sentence gains, beside the verdict 2
+sentence already there:
+
+> **The depth a reduced move's re-search runs at answers that search since S098
+> verdict 3**: `lmr_research_depth` takes `child_depth - 1` where the reduced
+> score beat alpha by less than `LmrShallowerMargin` with a reduction of at
+> least 2, `child_depth + 1` where it cleared the node's own fail-soft best by
+> `LmrDeeperMargin` with a reduction of at least `LmrDeeperMinReduction`, and
+> `child_depth` otherwise; the shallower path wins where both hold, the returned
+> depth is always strictly greater than the reduced depth, and the full-window
+> re-search is untouched. At `LmrShallowerMargin` 0 and `LmrDeeperMinReduction`
+> at its range top the re-search runs at `child_depth` everywhere and the engine
+> is the one before the verdict, bench signature included. `LmrDeeperMargin` at
+> its range top is **not** an off value: the fail-soft best sits below alpha at
+> every scout node, so the condition still fires there.
+
+### Files
+
+Changed: `src/search.cpp`, `src/search.hpp`, `src/search_params.hpp`,
+`src/data_structures.hpp`, `tests/test_search.cpp`,
+`tests/test_search_params.cpp`, `MANUAL.md`, `DEV_MANUAL.md`,
+`adocs/data/README.md`, this file. Created:
+`adocs/data/S098_v3_research_census.py`,
+`adocs/data/S098_v3_research_census.txt`, `adocs/data/S098_v3_sprt.sh`,
+`tools/mutants/S098_research_rule.py`.
+
+**For the coordinator.** The `adocs/specs.md` sentence above is proposed, not
+applied. `adocs/data/S098_v3_sprt.sh` has `REF` pinned at `efdbc9b`, `HEAD` at
+this landing -- whose `src/` is `a771260`'s byte for byte, so it is the tree
+verdict 2's H1 approved -- and `CAND` at `HEAD` to pin once the landing commit
+exists; its open-findings paragraph says no finding is open, re-read on this
+tree. Two items need a decision that is not this file's: the wrong test title
+above, and whether section 4's off-value sentence for `LMR_DEEPER_MARGIN` is
+amended in place or left with this section's correction beside it.

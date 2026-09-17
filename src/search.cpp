@@ -272,6 +272,104 @@ static inline int lmr_depth_of(int depth, int move_number, int node_adjustment)
 }
 
 
+// The depth the zero-window re-search of a reduced move runs at, S098
+// verdict 3. Until this verdict it was `child_depth` always; it now answers the
+// reduced search that produced it.
+//
+//   shallower  the move beat alpha by less than LMR_SHALLOWER_MARGIN, so the
+//              reduction was wrong by a hair and a whole extra ply of
+//              verification is more than the answer is worth
+//   deeper     the move cleared the node's own fail-soft best by
+//              LMR_DEEPER_MARGIN with a real reduction taken, so the reduction
+//              was wrong by a lot and this is the move the node is about
+//
+// `best` is `best_so_far` before this move -- the fail-soft base, not alpha.
+// The two are the same number only at a node that has already raised alpha;
+// everywhere else `best` sits below it, which is why the deeper margin is
+// measured from `best` and not from the window.
+//
+// PRECEDENCE: the shallower path wins where both conditions hold. They can
+// both hold, and only when `best` sits more than a margin below `alpha` -- at
+// a scout node that is every node that has not yet found a move, since a
+// zero-window node that raises alpha cuts off instead of continuing. In that
+// region `score > best + LMR_DEEPER_MARGIN` is satisfied by `best` being low
+// and not by `score` being high, so the deeper condition's premise is
+// degenerate exactly where the two meet; `score < alpha + LMR_SHALLOWER_MARGIN`
+// is a statement about the score against the node's own bound and is never
+// degenerate. The degenerate one yields.
+//
+// THE RE-SEARCH IS NEVER THE REDUCED SEARCH REPEATED: the returned depth is
+// always strictly greater than `child_depth - reduction`. That is what the
+// `reduction >= 2` on the shallower path is for and it is arithmetic, not a
+// setting -- at a reduction of 1 the shallower depth *is* the reduced depth.
+// The deeper path's own guard is the tunable one, LMR_DEEPER_MIN_REDUCTION,
+// and it is the published one: the bare form measured negative where the
+// guarded form measured positive (S098 section 1(d)).
+//
+// WHAT IT HANDS BACK, AND WHY IT IS TWO NUMBERS. The depth, and **the base it
+// measured the deeper margin from**, echoed straight back out. The second one
+// buys a test the first cannot: a case that replays this function on the
+// numbers the node recorded moves both sides of the comparison together, so it
+// is blind to a *call site* that hands over the wrong variable -- and the two
+// candidates here are both plain `int`s a line of code apart. The echo is what
+// a case reads to assert what the site actually passed instead of what it
+// should have passed. It is free in the shipping build: nothing outside the
+// probe block reads it, so the field folds away in `negamax_at<false>`.
+struct research_decision_t
+{
+  int depth;
+  int base;
+};
+
+
+// The cap at `child_depth + 1` and the floor at 1 never bind at any input the
+// engine itself produces: the three branches give `child_depth` and its two
+// neighbours, and the reduction reaching this function is already clamped to
+// `[0, child_depth - 1]`. They are kept anyway. S127 tunes the branch set and
+// S097 extends `child_depth`, and a clamp that has to be put back later is one
+// somebody has already shipped without; the floor is reachable from the wider
+// domain this function declares -- a reduction of 2 at a child depth of 1 --
+// which is where its own case drives it. All three bounds are asserted below
+// rather than only written.
+static inline research_decision_t lmr_research_depth(int child_depth,
+                                                     int reduction,
+                                                     int score,
+                                                     int alpha,
+                                                     int best)
+{
+  // The site's own precondition: this is the re-search a *reduced* move that
+  // beat alpha is owed, and both facts are what the inequality below rests on.
+  assert(reduction >= 1);
+  assert(score > alpha);
+
+  int depth = child_depth;
+
+  if (reduction >= 2 && score < alpha + LMR_SHALLOWER_MARGIN) {
+    depth = child_depth - 1;
+  } else if (reduction >= LMR_DEEPER_MIN_REDUCTION &&
+             score > best + LMR_DEEPER_MARGIN) {
+    depth = child_depth + 1;
+  }
+
+  if (depth > child_depth + 1) { depth = child_depth + 1; }
+  if (depth < 1) { depth = 1; }
+
+  assert(depth <= child_depth + 1);
+  assert(depth >= 1);
+  assert(depth > child_depth - reduction);
+
+  return {depth, best};
+}
+
+
+int search_lmr_research_depth_probe(int child_depth,
+                                    int reduction,
+                                    int score,
+                                    int alpha,
+                                    int best)
+{ return lmr_research_depth(child_depth, reduction, score, alpha, best).depth; }
+
+
 // CPW's Node Types, and the whole of what this engine predicts about a child
 // before searching it. The pair the search carries names three labels and only
 // three:
@@ -1834,20 +1932,43 @@ static int negamax_at(int alpha0,
                                  child.cut_node);
 
       // A reduced search that beats alpha has proved only that the reduction
-      // was wrong, not what the move is worth. Repeat it at full depth before
-      // believing anything.
+      // was wrong, not what the move is worth. Repeat it before believing
+      // anything -- at a depth that answers how wrong the reduction turned out
+      // to be, and no longer at `child_depth` always. S098 verdict 3.
+      //
+      // `best_so_far` is read before this move updates it, so it is the node's
+      // fail-soft best over the moves already searched. It is a real score and
+      // never MIN here: the reduction is non-zero only past the third legal
+      // move, so three moves have already written it.
       if (!state->aborted && reduction > 0 && score > alpha) {
+        assert(best_so_far > MIN);
+
+        const research_decision_t research = lmr_research_depth(
+            child_depth, reduction, score, alpha, best_so_far);
+
         if constexpr (PROBING) {
           if (probe != nullptr) {
-            probe->researched[legal_moves_counter - 1] = true;
+            const int k = legal_moves_counter - 1;
+
+            probe->researched[k] = true;
+            probe->research_depth[k] = research.depth;
+            probe->research_score[k] = score;
+            probe->research_alpha[k] = alpha;
+
+            // Two numbers that must agree and are read from different places
+            // on purpose: `best_so_far` straight off the node, and the base the
+            // rule says it used. A call that handed over the window instead
+            // shows up as a disagreement here and nowhere else.
+            probe->research_best[k] = best_so_far;
+            probe->research_base[k] = research.base;
           }
         }
 
         const child_label_t again = zero_window_research(is_pv, cut_node);
 
-        score =
-            -negamax_at<false>(-alpha - 1, -alpha, child_depth, ply + 1, game,
-                               state, moves[i], again.is_pv, again.cut_node);
+        score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, ply + 1,
+                                   game, state, moves[i], again.is_pv,
+                                   again.cut_node);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the

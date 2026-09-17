@@ -1845,8 +1845,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 11, 9 and the mutants beside them — `no S091 mutant, since S098 verdict 2`, `C02, C05, C07 and R01`, `C07 and R02`, `R02`. Re-derived at S098 verdict 2, which adjusts the reduction by the node's type: three of the four depths moved and no mate distance did, because three of the four terms lengthen the reduction and a mate the ordering does not put first then arrives an iteration or two later. **R01's incidental kill is back**, at row 2's depth 8, which the tree this table sat on before had lost | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 48 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 9, 10, 9 and the mutants beside them — `no S091 mutant, since S098 verdict 3`, `no S091 mutant, since S098 verdict 3`, `C02, C07 and R02`, `R02`. Re-derived at S098 verdict 3, which changes the depth a reduced move's re-search runs at: two of the four depths moved and no mate distance did. Row 2 goes 8 → 9 because the shipped build no longer reports that mate at 8 at all, and **R01's incidental kill goes with it** — it lived at that depth; row 3 goes 11 → 10 because its profile is `d10 d12` on this tree and 10 is the lower, and it separates three mutants there where it separated two before | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 51 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2100,6 +2100,31 @@ other side: all three positions smaller at depth 9 (51189 → 22078,
 (143205 → 205096, 570238 → 646466, 148060 → 149330), with midgame's depth-9 best
 move moving `c3d5` → `g5f6` and every other best move the parent's. Whether a
 mostly smaller tree is a better one is `adocs/data/S098_v2_sprt.sh`'s to say.
+
+**At `S098` verdict 3, the re-search depth: `4025871`, −26.39 %.** The
+zero-window repeat a reduced late move that beat alpha is owed no longer always
+runs at `child_depth`: it goes one ply shallower where the score beat alpha by
+less than `LmrShallowerMargin` with a reduction of at least 2, and one ply
+deeper where it cleared the node's own fail-soft best by `LmrDeeperMargin` with
+a reduction of at least `LmrDeeperMinReduction`. The by-depth ablation on the
+tune build, the shipped seeds against `LmrShallowerMargin` 0 and
+`LmrDeeperMinReduction` 126, is the second non-monotone row in this ledger and
+the first that **changes sign**: +12.61, −0.65, +4.10, −18.40, −20.32,
+−26.39 per cent over depths 9 to 14, with the off column the parent's totals
+exactly at every one of them. The rule costs at shallow depths and pays at the
+depths a game at the harness control reaches, because the shallower path fires
+on nearly half of all re-search sites and saves a ply at each while the deeper
+path spends one on 4.6 % of them and every ply it spends opens a subtree that
+grows with depth (`adocs/data/S098_v3_research_census.txt`; 4.6 % is the share
+of the **path after precedence**, the shallower path being tested first — its
+condition alone holds on 6.9 %). `tools/search_bench.py`
+disagrees with `bench` about the sign at depth 9 and that is the same crossover
+read from the other side: midgame **grows** 22078 → 51048 with its best move
+moving `g5f6` → `c3d5`, while kiwipete 104682 → 104849 and tactical
+29842 → 29842 do not move at all; at depth 12 all three shrink,
+205096 → 115959, 646466 → 471175, 149330 → 134331, with every best move the
+parent's. Whether the shallower tree is a better one is
+`adocs/data/S098_v3_sprt.sh`'s to say.
 
 Quote it
 with its commit, the way every other number on this page is quoted — it moves

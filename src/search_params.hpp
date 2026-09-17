@@ -354,6 +354,55 @@
   X(LMR_TT_CAPTURE,    "LmrTtCapture",    1,      0, 2)                        \
   X(LMR_PV,            "LmrPv",           1,      0, 2)                        \
                                                                                \
+  /* THE RE-SEARCH DEPTH, S098 verdict 3. A reduced late move that beat alpha   \
+     is owed a zero-window repeat, and until this step that repeat always ran   \
+     at `child_depth`. It now answers the reduced search instead: one ply       \
+     deeper where the reduced score cleared the node's fail-soft best by        \
+     LMR_DEEPER_MARGIN and a real reduction was taken, one ply shallower where  \
+     it beat alpha by less than LMR_SHALLOWER_MARGIN                            \
+     (`lmr_research_depth` in src/search.cpp). The full-window re-search is     \
+     untouched and still runs at `child_depth`.                                 \
+                                                                               \
+     UNITS. Both margins are compared against search scores, so they are in     \
+     chesso's material scale -- `piece_value` in src/eval_tables.hpp, where     \
+     PAWN is 94. Plies have no unit.                                            \
+                                                                               \
+     **Both margins are DEC-105 (c), the midpoint of a range stated by          \
+     purpose**: 0 to PAWN, whose top is the point past which the re-search      \
+     depth would be decided on more material than a pawn of window, and whose   \
+     midpoint is the integer 47. The published record says only that the        \
+     direction is worth trying and seeds nothing (DEC-019, DEC-084 as amended   \
+     by DEC-105): the bare form measured -7.07 and the guarded form +3.11 in    \
+     the 3138-3224 band, which is above this engine's, so a zero here is an     \
+     expected outcome (DEC-176).                                                \
+                                                                               \
+     LMR_DEEPER_MIN_REDUCTION is that guard and it is DEC-105 **(b)**, a        \
+     derivation over this engine's own site: the re-search exists only where    \
+     `reduction > 0`, so 1 is a guard that says nothing, and 2 is the smallest  \
+     value at which it does -- the same integer the shallower path's strict     \
+     inequality forces, so one threshold serves both rather than two.           \
+                                                                               \
+     THE OFF VALUES, and one of them is not where section 4 of the step file    \
+     expected it. `LmrShallowerMargin` is off at 0: `score < alpha + 0` is      \
+     false at a site that requires `score > alpha`. `LmrDeeperMargin` is        \
+     **not** off at its range top -- the fail-soft best sits below alpha at     \
+     every scout node, and the census measured `score > best + 94` still true   \
+     at 2.86 % of re-search sites at depth 12 -- so the                         \
+     deeper path's off value is `LmrDeeperMinReduction` at **its** range top,   \
+     which is above every reduction the clamp to `[0, child_depth - 1]`         \
+     admits (MAX_DEPTH is 126 and the reduction cannot exceed depth - 2). At    \
+     those two values the re-search runs at `child_depth` everywhere and the    \
+     engine is the one before this verdict, bench signature included, which is  \
+     what the release-rebuild bisection rests on (DEC-063, DEC-214).            \
+                                                                               \
+     LmrDeeperMinReduction's floor of 1 is arithmetic -- the site already       \
+     requires a reduction of at least 1 -- and its ceiling is the off value     \
+     above. S127 refits all three with LmrBase and LmrDivisor after the         \
+     block. */                                                                  \
+  X(LMR_DEEPER_MARGIN,        "LmrDeeperMargin",        47, 0, 94)             \
+  X(LMR_SHALLOWER_MARGIN,     "LmrShallowerMargin",     47, 0, 94)             \
+  X(LMR_DEEPER_MIN_REDUCTION, "LmrDeeperMinReduction",   2, 1, 126)            \
+                                                                               \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \
      of them gated on the **reduction-adjusted** depth                          \
      `lmr_depth = max(0, depth - lmr_adjusted_reduction(depth, move_number,     \

@@ -627,12 +627,32 @@ struct search_node_probe_t
   // `child_is_pv` and `child_cut_node` are the type this node predicted for
   // that first search, so a case can read the alternation off the site that
   // applies it and not only off the rule as a function. S098.
+  //
+  // `research_depth` is the depth that repeat actually ran at and the four
+  // numbers beside it are what decided it, all valid only where `researched`
+  // is true: the reduced search's score, the node's alpha at that moment and
+  // its fail-soft best before this move. Recorded rather than recomputed so a
+  // case can replay `lmr_research_depth` on the node's own inputs and compare
+  // -- a site that stopped consulting the rule reads as a disagreement and not
+  // as a number that happens to look plausible. S098 verdict 3.
   int move_count = 0;
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];
   bool researched[MAX_MOVES];
   bool child_is_pv[MAX_MOVES];
   bool child_cut_node[MAX_MOVES];
+  int research_depth[MAX_MOVES];
+  int research_score[MAX_MOVES];
+  int research_alpha[MAX_MOVES];
+  int research_best[MAX_MOVES];
+
+  // The base the rule reports having measured the deeper margin from, echoed
+  // out of `lmr_research_depth` rather than recomputed here. It must equal
+  // `research_best` at every site, and the two are written from different
+  // places so that a call handing the rule the window instead of the node's own
+  // best score is a disagreement a case can read. A replay cannot see that bug:
+  // it moves both sides of its comparison together. S098 verdict 3.
+  int research_base[MAX_MOVES];
 
   // Late move pruning set its flag at this node, so the quiet stage ended
   // early -- either ungenerated or unsearched from the first quiet on.

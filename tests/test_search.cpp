@@ -3290,10 +3290,13 @@ TEST_SUITE("search: draws")
     // carry.** Verdict 1 scaled the reduction by the move's history, which is
     // "any change to reduction", so each of its three settings owed a
     // re-derivation and got one; that term then measured zero at all three
-    // scales and left the tree (DEC-213). **Verdict 2 adjusts the reduction by
-    // the node's type**, which is the same clause of the same rule, so the
-    // seven sweeps were run once more -- the shipped tree and all six S091
-    // mutants -- and these four rows are that pass.
+    // scales and left the tree (DEC-213). Verdict 2 adjusted the reduction by
+    // the node's type and the seven sweeps ran again. **Verdict 3 changes the
+    // depth the reduced move's re-search runs at**, which is the same rule
+    // read from the other end -- a re-search a ply deeper or shallower is a
+    // different tree below every reduced move -- so the seven sweeps were run
+    // once more, the shipped tree and all six S091 mutants, and these four
+    // rows are that pass (`.tuning/coord/S230_v3/`).
     //
     // **The rule that picks each row**, applied uniformly rather than by eye:
     // take the lowest depth in the shipped profile at which some mutant loses
@@ -3301,25 +3304,24 @@ TEST_SUITE("search: draws")
     // profile and say so in the label. What it must never be is a depth picked
     // because the row passes there -- DEC-209 clause 4 is that ruling.
     //
-    // Shipped profiles here: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`,
-    // `d11 d12`, `d9 d10 d11 d12`, which put the four depths at 9, 8, 11 and
-    // 9. Three of the four moved and the mate distances did not: the terms
-    // lengthen the reduction at three node types out of four, so a mate that
-    // the ordering does not put first arrives an iteration or two later. That
-    // is what the sweep is for and it is not the hazard -- the hazard is a
-    // mate that never arrives, and every row still reports its own at a depth
-    // in this range, as do both dedicated mate cases, `test_mate_carry` and
-    // `test_mate_breadth`.
+    // Shipped profiles here: `d9 d10 d11 d12`, `d9 d10 d11 d12`, `d10 d12`,
+    // `d9 d10 d11 d12`, which put the four depths at 9, 9, 10 and 9. Two of
+    // the four moved and no mate distance did: row 2 from 8 to 9 because the
+    // shipped build no longer reports that mate at 8 at all, and row 3 from 11
+    // to 10 because its profile is `d10 d12` on this tree and 10 is the lower.
+    // A re-search that runs a ply shallower on nearly half of its sites is a
+    // shallower tree below every reduced move, so a mate the ordering does not
+    // put first arrives an iteration later; that is what the sweep is for and
+    // it is not the hazard. The hazard is a mate that never arrives, and every
+    // row still reports its own inside the swept range, as do both dedicated
+    // mate cases, `test_mate_carry` and `test_mate_breadth`.
     //
-    // **R01's incidental kill is back**, which is the whole of what S230 went
-    // mining for two days ago and which the tree S098 started from had lost:
-    // row 2 at depth 8 separates C02, C05, C07 and R01 at once, the richest
-    // reading this table has had. The previous pass recorded that this row
-    // would say that at 8 and took 7 because 7 was lower and separated
-    // something; on this tree 7 reports no mate at all, so the rule itself
-    // takes 8 and the decision never has to be made. Row 1 is the other way
-    // round: no mutant loses its mate at any shipped depth, so the rule takes
-    // the lowest, 9, and the label says so.
+    // **R01's incidental kill is gone again**, and stated rather than papered
+    // over: it lived at row 2's depth 8, which is no longer a depth the
+    // shipped build reports that mate at, so the rule takes 9 and nothing
+    // separates there. Rows 1 and 2 both read "no S091 mutant" on this tree.
+    // What replaces it is row 3, which separates **three** mutants at its new
+    // depth where it separated two before.
     //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
@@ -3330,18 +3332,18 @@ TEST_SUITE("search: draws")
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
         {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S098 verdict 2"},
+         "no S091 mutant, since S098 verdict 3"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 8, 5,
-         "C02, C05, C07 and R01"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 9, 5,
+         "no S091 mutant, since S098 verdict 3"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
-         "C07 and R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+         "C02, C07 and R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3363,11 +3365,12 @@ TEST_SUITE("search: draws")
         // At S230 it read shipped `d9 d10 d11 d12`, under R01 `d9 d10 d12`,
         // under C02 no mate at 11, and the row was taken at 11. On the tree
         // verdict 1's removal left, the profile was `d10 d11 d12` and the rule
-        // took 11. **On this one the depth 9 reading is back** -- shipped
-        // `d9 d10 d11 d12` -- and 9 is the lowest depth that separates
-        // anything: R02 reads `d11 d12` and has no mate there, while the other
-        // five report `#+5`. The depth is S230's own again and what it kills
-        // is not.
+        // took 11. At verdict 2 the depth 9 reading came back and R02 was what
+        // it separated. **Verdict 3 leaves both where they were**: shipped
+        // `d9 d10 d11 d12` again, and 9 is still the lowest depth that
+        // separates anything -- R02 reads `d10 d11 d12` and has no mate at 9,
+        // while the other five report `#+5`. This is the only one of the four
+        // rows that has not moved under either verdict.
         {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
          5, "R02"},
     };
@@ -5317,12 +5320,11 @@ TEST_SUITE("search: pruning and reduction guards")
   // Mutation: M09_lmr_no_research -- the re-search is never run.
   //
   //   search: pruning and reduction guards
-  //    a reduced move that beats alpha is searched again at full depth
+  //    a reduced move that beats alpha is searched again
   //   REQUIRE( researched > 0 )
   //   values: REQUIRE( 0 > 0 )
-  TEST_CASE_FIXTURE(
-      guard_fixture_t,
-      "a reduced move that beats alpha is searched again at full depth")
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a reduced move that beats alpha is searched again")
   {
     // A middlegame-into-endgame position from this engine's own self-play,
     // row 234 of adocs/data/S024_census_positions.txt. **It replaced perft
@@ -5375,9 +5377,9 @@ TEST_SUITE("search: pruning and reduction guards")
                     "no move at this node was reduced, so the re-search rule "
                     "decided nothing here");
 
-    // A reduced search that beats alpha has proved the reduction wrong and
-    // nothing else. Believing its score is how a move gets played on a search
-    // that was never run at the depth its score claims.
+    // This case asserts that the re-search happens at all, which is what M09
+    // removes; the depth it runs at is held by the rule's own cases at the end
+    // of this suite.
     REQUIRE(researched > 0);
   }
 
@@ -6547,6 +6549,10 @@ TEST_SUITE("search: pruning and reduction guards")
     const std::string mate_by_a_hanging_quiet =
         "6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43";
 
+    // How many of the four drives established the precondition that would
+    // otherwise reduce the key. Asserted non-zero below.
+    int meaningful = 0;
+
     for (int depth = 3; depth <= 6; ++depth) {
       const std::string title = "depth " + std::to_string(depth);
 
@@ -6600,29 +6606,49 @@ TEST_SUITE("search: pruning and reduction guards")
 
       const int k = searched_index(probe, key);
 
+      REQUIRE_MESSAGE(k >= 0, (title + ": the root never searched the key"));
+      REQUIRE_MESSAGE(depth >= 3, title);
+
       // Late enough, and deep enough: the last two conditions of `may_reduce`
       // that are not `ply > 0`.
       //
       // The index is read and not assumed, and it is not a constant of the
       // position either: the quiet stage is generated and scored only once the
       // captures run out, so the order the root searches its quiets in depends
-      // on what the first capture's subtree wrote into the history table. It
-      // is 10 at every depth here on the shipped build; a change that moves it
-      // inside the first three moves fails loudly rather than passing for the
-      // wrong reason.
-      REQUIRE_MESSAGE(k >= 3,
-                      (title + ": the key was ordered inside the first three "
-                               "moves, where the move-number bound refuses "
-                               "the reduction anyway"));
-      REQUIRE_MESSAGE(depth >= 3, title);
+      // on what the first capture's subtree wrote into the history table --
+      // which every change to the search moves. It was 10 at all four depths
+      // until S098 verdict 3; on the tree that verdict leaves it is 10 at
+      // depths 3, 4 and 5 and **2 at depth 6**, where `legal_moves_counter > 3`
+      // refuses the reduction for a reason that is not the root.
+      //
+      // So the drive is counted rather than asserted through: a depth whose
+      // key is not both late enough and reduced by the table proves nothing
+      // about the root exemption, and passing it through the assertion below
+      // would be the case passing for the wrong reason -- which is exactly
+      // what the `k >= 3` here was written to prevent. It is reported, and the
+      // case refuses to go vacuous at every depth at once.
+      const bool the_bound_would_reduce_it =
+          k >= 3 && search_lmr_reduction_probe(depth, k + 1) > 0;
 
-      // And the reduction that would be applied is a real one, which is what
-      // makes a zero below evidence about the root exemption and not about a
-      // table that returns zero here anyway.
-      REQUIRE_MESSAGE(search_lmr_reduction_probe(depth, k + 1) > 0, title);
+      if (the_bound_would_reduce_it) {
+        meaningful++;
+      } else {
+        MESSAGE(title << ": the key is at index " << k
+                      << ", where the move-number bound and not the root "
+                         "exemption is what refuses the reduction");
+      }
 
       REQUIRE_MESSAGE(probe.reduction[k] == 0, title);
     }
+
+    // Without this the case is a tautology the day the ordering promotes the
+    // key at every depth: every drive would assert a zero the move-number
+    // bound already guarantees, and the root exemption would stop being
+    // tested at all.
+    REQUIRE_MESSAGE(meaningful > 0,
+                    "the key was ordered inside the first three moves at every "
+                    "depth, so no drive here establishes the precondition that "
+                    "would otherwise reduce it");
   }
 
 
@@ -7115,5 +7141,657 @@ TEST_SUITE("search: pruning and reduction guards")
       CHECK_FALSE(probe.null_child_is_pv);
       CHECK_EQ(probe.null_child_cut_node, !parent_cut);
     }
+  }
+  // ---- S098 verdict 3: the depth the re-search runs at -------------------
+  //
+  // The rule is `lmr_research_depth` in src/search.cpp and it is a pure
+  // function of five numbers the site has, so the five cases below hold it
+  // through `search_lmr_research_depth_probe` before any of them looks at a
+  // search: the two paths, the precedence between them, the strict inequality
+  // against the reduced depth, the cap and the floor. The two cases after them
+  // hold the **site**, and they are separate on purpose -- a recursion that
+  // stopped consulting the rule would leave every function case green.
+
+  // A child depth with room on both sides: the shallower path lands on 5 and
+  // the deeper one on 7, both clear of the floor, and the reductions the census
+  // measured at real sites (1 to 6) all fit inside it.
+  static constexpr int RESEARCH_CHILD_DEPTH = 6;
+
+
+  // Mutation: D01_deeper_inverted -- the deeper path fires where the reduced
+  // score is *below* the fail-soft best by the margin.
+  // Mutation: D03_deeper_guard_dropped -- the path fires at any reduction, the
+  // bare form the published record measured negative.
+  // Mutation: D06_deeper_two_plies -- the cap is raised and the path becomes
+  // an even-deeper search.
+  // Mutation: D11_cap_one_ply_low -- the cap is a ply low, so the path is
+  // clamped away.
+  //
+  //   search: pruning and reduction guards
+  //    a re-search whose score clears the fail-soft best goes a ply deeper
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
+  //   score, alpha, best), RESEARCH_CHILD_DEPTH + 1 )
+  //   values: CHECK_EQ( 6, 7 )        D01, and D11 reads the same
+  //   values: CHECK_EQ( 5, 7 )        D02, which takes this path too
+  //   values: CHECK_EQ( 8, 7 )        D06
+  //
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
+  //   LMR_DEEPER_MIN_REDUCTION - 1, score, alpha, best),
+  //   RESEARCH_CHILD_DEPTH )
+  //   values: CHECK_EQ( 7, 6 )        D03
+  TEST_CASE(
+      "a re-search whose score clears the fail-soft best goes a ply "
+      "deeper")
+  {
+    // The deeper path's off value is `LmrDeeperMinReduction` at its range top
+    // -- above every reduction the clamp to `[0, child_depth - 1]` admits --
+    // and **not** the margin at its own top, which the census measured still
+    // firing on 2.86 % of sites. Without this guard the case asserts nothing
+    // there: the rule returns `child_depth` and so would a wiring that read no
+    // condition at all. It is also the red-first observation this case was
+    // written from.
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
+
+    const int best = 0;
+    const int alpha = 0;
+
+    // Over the deeper margin and not under the shallower one, so exactly one
+    // path is eligible here and the precedence between them is not what is
+    // being read -- that has its own case below.
+    const int score = (LMR_DEEPER_MARGIN + 1 > LMR_SHALLOWER_MARGIN)
+                          ? LMR_DEEPER_MARGIN + 1
+                          : LMR_SHALLOWER_MARGIN;
+
+    REQUIRE(score > alpha);
+    REQUIRE(score > best + LMR_DEEPER_MARGIN);
+    REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
+
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH + 1);
+
+    // The guard is the whole of what the published record separates -- the
+    // bare form measured negative where the guarded form measured positive --
+    // so a reduction below it re-searches at `child_depth` and no deeper on
+    // the same numbers.
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION >= 2);
+
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
+                                             LMR_DEEPER_MIN_REDUCTION - 1,
+                                             score, alpha, best),
+             RESEARCH_CHILD_DEPTH);
+
+    // And the margin is a threshold rather than a direction: a score exactly
+    // on it does not clear it.
+    const int on_the_margin = best + LMR_DEEPER_MARGIN;
+
+    if (on_the_margin > alpha &&
+        on_the_margin >= alpha + LMR_SHALLOWER_MARGIN) {
+      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
+                                               on_the_margin, alpha, best),
+               RESEARCH_CHILD_DEPTH);
+    }
+  }
+
+
+  // Mutation: D02_shallower_inverted -- the shallower path fires where the
+  // score beat alpha by *more* than the margin instead of less.
+  // Mutation: D04_shallower_guard_dropped -- the path fires at a reduction of
+  // 1, where it repeats the reduced search.
+  // Mutation: D07_shallower_two_plies -- the path drops two plies.
+  //
+  //   search: pruning and reduction guards
+  //    a re-search that only just beat alpha goes a ply shallower
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2,
+  //   score, alpha, best), RESEARCH_CHILD_DEPTH - 1 )
+  //   values: CHECK_EQ( 6, 5 )        D02
+  //   values: CHECK_EQ( 4, 5 )        D07
+  //
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 1,
+  //   score, alpha, best), RESEARCH_CHILD_DEPTH )
+  //   values: CHECK_EQ( 5, 6 )        D04
+  TEST_CASE("a re-search that only just beat alpha goes a ply shallower")
+  {
+    // `LmrShallowerMargin` 0 is this path's off value and 1 is the same thing
+    // by arithmetic: the site requires `score > alpha`, so no score is under
+    // `alpha + 1`. Red at the off value, which is where this case was written
+    // from, and a real precondition rather than a formality.
+    REQUIRE(LMR_SHALLOWER_MARGIN > 1);
+
+    // The deeper margin has to be able to separate the two paths for this case
+    // to be about one of them; at 0 every score above the best clears it.
+    REQUIRE(LMR_DEEPER_MARGIN > 0);
+
+    const int alpha = 0;
+    const int score = alpha + 1;
+    const int best = alpha;
+
+    REQUIRE(score < alpha + LMR_SHALLOWER_MARGIN);
+    REQUIRE_FALSE(score > best + LMR_DEEPER_MARGIN);
+
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH - 1);
+
+    // The `reduction >= 2` on this path is arithmetic and not a setting: at a
+    // reduction of 1 the shallower depth **is** the reduced depth, so the
+    // re-search would be the reduced search run a second time. It stays at
+    // `child_depth` instead.
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 1, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH);
+
+    // A threshold again: a score exactly on the margin is not under it.
+    const int on_the_margin = alpha + LMR_SHALLOWER_MARGIN;
+
+    if (LMR_SHALLOWER_MARGIN <= LMR_DEEPER_MARGIN) {
+      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2,
+                                               on_the_margin, alpha, best),
+               RESEARCH_CHILD_DEPTH);
+    }
+  }
+
+
+  // Mutation: D09_deeper_margin_off_alpha -- the deeper margin is measured
+  // from the window instead of from the node's own best score so far, which is
+  // the published re-basing undone.
+  // Mutation: D01_deeper_inverted, D06_deeper_two_plies and
+  // D11_cap_one_ply_low, which move the same answer for their own reasons.
+  //
+  //   search: pruning and reduction guards
+  //    the deeper margin is measured from the fail-soft best and not from the
+  //    window
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
+  //   score, alpha, best), RESEARCH_CHILD_DEPTH + 1 )
+  //   values: CHECK_EQ( 6, 7 )        D09
+  TEST_CASE(
+      "the deeper margin is measured from the fail-soft best and not "
+      "from the window")
+  {
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
+    REQUIRE(LMR_SHALLOWER_MARGIN > 0);
+
+    // The two bases can only disagree while the deeper margin is not the
+    // narrower of the two -- otherwise the shallower path takes every score
+    // that could separate them, and it takes it whichever base is used.
+    REQUIRE(LMR_DEEPER_MARGIN >= LMR_SHALLOWER_MARGIN);
+    REQUIRE(LMR_DEEPER_MARGIN > 0);
+
+    const int alpha = 0;
+
+    // One point below alpha, which is the whole of the difference between the
+    // two bases and is not a corner: `best` is at or below alpha at every site
+    // the rule sees, since alpha is raised to the best score the moment one
+    // beats it.
+    const int best = alpha - 1;
+
+    // Exactly on the deeper margin measured from the **window**, so a rule
+    // reading alpha as its base does not clear it, while the shipped rule --
+    // measuring from `best` -- clears it by the one point that separates the
+    // two bases.
+    const int score = alpha + LMR_DEEPER_MARGIN;
+
+    REQUIRE(score > alpha);
+    REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
+    REQUIRE_FALSE(score > alpha + LMR_DEEPER_MARGIN);
+    REQUIRE(score > best + LMR_DEEPER_MARGIN);
+
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH + 1);
+  }
+
+
+  // Mutation: D05_precedence_swapped -- the deeper path is tested first, so it
+  // wins the region where both conditions hold.
+  // Mutation: D02_shallower_inverted and D07_shallower_two_plies, which move
+  // the same answer for their own reasons.
+  //
+  //   search: pruning and reduction guards
+  //    where both re-search paths could fire the shallower one wins
+  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
+  //   score, alpha, best), RESEARCH_CHILD_DEPTH - 1 )
+  //   values: CHECK_EQ( 7, 5 )        D05, and D02 reads the same
+  //   values: CHECK_EQ( 4, 5 )        D07
+  TEST_CASE("where both re-search paths could fire the shallower one wins")
+  {
+    REQUIRE(LMR_SHALLOWER_MARGIN > 1);
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
+
+    const int alpha = 0;
+    const int score = alpha + 1;
+
+    // The region where both conditions hold, and the only one: the fail-soft
+    // best more than the deeper margin below alpha. It is not a corner -- at a
+    // scout node `best` is below alpha at every site, because a zero-window
+    // node that raises alpha cuts off instead of continuing, so this is what
+    // every node that has not yet found a move looks like.
+    const int best = alpha - (LMR_DEEPER_MARGIN + 100);
+
+    REQUIRE(score > best + LMR_DEEPER_MARGIN);
+    REQUIRE(score < alpha + LMR_SHALLOWER_MARGIN);
+
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH - 1);
+  }
+
+
+  // Mutation: D04_shallower_guard_dropped and D07_shallower_two_plies -- the
+  // re-search becomes the reduced search repeated, from either side of the
+  // guard that keeps it from being one.
+  // Mutation: D06_deeper_two_plies -- the cap is raised and the depth passes
+  // it.
+  // Mutation: D10_floor_dropped -- the floor is written at 0 instead of 1, so
+  // a shallower re-search at a child depth of 1 reaches quiescence, which is
+  // the depth-0 re-search the published record prices in the tens of Elo.
+  //
+  //   search: pruning and reduction guards
+  //    the re-search depth stays inside its cap, floor and inequality
+  //   CHECK( depth > child_depth - reduction )
+  //   values: CHECK( 1 >  1 )         D04 and D07
+  //
+  //   CHECK( depth <= child_depth + 1 )
+  //   values: CHECK( 3 <= 2 )         D06
+  //
+  //   CHECK( depth >= 1 )
+  //   values: CHECK( 0 >= 1 )         D10
+  //
+  //   CHECK_EQ( search_lmr_research_depth_probe(1, 2, 1, 0, 0), 1 )
+  //   values: CHECK_EQ( 0, 1 )        D10
+  TEST_CASE("the re-search depth stays inside its cap, floor and inequality")
+  {
+    // The whole input domain the rule declares, and deliberately wider than
+    // the one the engine reaches: the site clamps the reduction to
+    // `[0, child_depth - 1]` and never asks for a reduction of 2 at a child
+    // depth of 1, but the floor and the cap are what a later step changing
+    // either clamp runs into, and an unreachable clamp is still a clamp
+    // somebody can reach. The rule's own preconditions -- a reduction of at
+    // least 1 and a score above alpha -- are respected because they are what
+    // it asserts in the Debug build.
+    int checked = 0;
+
+    for (int child_depth = 1; child_depth <= 10; ++child_depth) {
+      for (int reduction = 1; reduction <= 10; ++reduction) {
+        for (int alpha : {-1000, 0, 1000}) {
+          for (int over_alpha : {1, 2, LMR_SHALLOWER_MARGIN + 1, 200}) {
+            const int score = alpha + over_alpha;
+
+            for (int best : {alpha - 1000, alpha - 1, alpha, score}) {
+              const int depth = search_lmr_research_depth_probe(
+                  child_depth, reduction, score, alpha, best);
+
+              // The whole point of the rule: whatever it chooses, it is a
+              // search the reduced one did not already do.
+              CHECK(depth > child_depth - reduction);
+
+              // The cap and the floor.
+              CHECK(depth <= child_depth + 1);
+              CHECK(depth >= 1);
+
+              checked++;
+            }
+          }
+        }
+      }
+    }
+
+    REQUIRE(checked > 0);
+
+    // The one corner where the floor does the work rather than the branch: a
+    // child depth of 1 with the shallower path eligible lands on 0 before the
+    // floor puts it back, which is the depth-0 re-search the published record
+    // prices at -25 Elo. Behind an `if` and not a `REQUIRE`, because this case
+    // is a property of the rule at any constants -- including the off values,
+    // where the shallower path cannot fire and there is no corner to have.
+    if (LMR_SHALLOWER_MARGIN > 1) {
+      CHECK_EQ(search_lmr_research_depth_probe(1, 2, 1, 0, 0), 1);
+    }
+  }
+
+
+  // Every re-search the probed node made, as the site recorded it, together
+  // with the depth the **table** says that child was actually searched to.
+  //
+  // `table_depth` is the second oracle and it is the load-bearing one: the
+  // probe records what the rule answered, so a recursion that computed the
+  // answer and then searched at `child_depth` anyway would agree with itself
+  // for ever. The child's own entry does not -- it is stored at the depth the
+  // child ran at, and the table keeps the deeper entry within one search, so a
+  // re-search that really went a ply deeper leaves an entry a ply deeper.
+  struct research_site_t
+  {
+    int child_depth;
+    int reduction;
+    int depth;
+    int score;
+    int alpha;
+    int best;
+    int base;
+    move_t move;
+    int table_depth;
+  };
+
+
+  // The positions the two site cases below drive, read rather than pinned:
+  // adocs/data/S024_census_positions.txt, this project's own self-play and the
+  // same 400 the firing census drove, so nothing in either case is a number
+  // read off a run (DEC-142) and the two are over the same board positions.
+  //
+  // Same reader as read_defender_set() above: skip blanks and comments, split
+  // on tabs, the FEN is the third field.
+  static std::vector<std::string> read_census_positions()
+  {
+    const std::string path = std::string(CHESSO_SOURCE_DIR) +
+                             "/adocs/data/S024_census_positions.txt";
+
+    std::ifstream file(path);
+    REQUIRE_MESSAGE(file.good(), ("Cannot open " + path));
+
+    std::vector<std::string> fens;
+    std::string line;
+
+    while (std::getline(file, line)) {
+      if (line.empty() || line[0] == '#') { continue; }
+
+      std::vector<std::string> field;
+      std::istringstream stream(line);
+      std::string cell;
+
+      while (std::getline(stream, cell, '\t')) {
+        field.push_back(cell);
+      }
+
+      if (field.size() >= 3) { fens.push_back(field[2]); }
+    }
+
+    return fens;
+  }
+
+
+  // Drives each position as a scout node over a sweep of alphas and collects
+  // every re-search the probed node made.
+  //
+  // A sweep and not one window, and no hand-picked position: what these cases
+  // need is a node where a **reduced** move beat alpha, and whether a given
+  // window produces one is a property of the tree rather than something to
+  // assert by hand. Sweeping alpha across the position's own score and taking
+  // what comes back makes them self-deriving, and makes them fail loudly when
+  // the rule stops firing, which is what they are for.
+  //
+  // A scout node because that is what the engine mostly searches and because
+  // it is where the two paths separate: a zero-window node that raises alpha
+  // cuts off instead of continuing, so `best_so_far` sits at or below alpha at
+  // every site and the deeper path is reachable at all.
+  struct research_drive_t : guard_fixture_t
+  {
+    // Deep enough that the table's own reduction reaches 2 and 3 on the late
+    // quiets -- the census measured `r >= 2` at about half of all re-search
+    // sites -- and shallow enough that the whole sweep is under a second.
+    static constexpr int DRIVE_DEPTH = 8;
+
+    // How far down the file the sweep may go. Not a golden: the scan stops as
+    // soon as it has what it was asked for, and this is only the point at
+    // which "the rule never fired" is reported instead of searched for.
+    static constexpr size_t POSITIONS = 30;
+
+    int deeper = 0;
+    int unchanged = 0;
+    int shallower = 0;
+
+    std::vector<research_site_t> scan(int want_each)
+    {
+      const std::vector<std::string> fens = read_census_positions();
+
+      REQUIRE(fens.size() >= POSITIONS);
+
+      std::vector<research_site_t> sites;
+
+      for (size_t p = 0; p < POSITIONS; ++p) {
+        for (int alpha = -500; alpha <= 500; alpha += 10) {
+          load(fens[p], 1);
+
+          negamax_probed(alpha, alpha + 1, DRIVE_DEPTH, 1, &game, &state, 0,
+                         false, true);
+
+          for (int k = 0; k < probe.move_count; ++k) {
+            if (!probe.researched[k]) { continue; }
+
+            // The child's own entry, read while the table this drive filled is
+            // still standing. -1 where the child left none, which a case below
+            // reports rather than passing over.
+            int table_depth = -1;
+
+            REQUIRE(make_move(&game, probe.moves[k]));
+
+            const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+
+            if (entry != nullptr) { table_depth = entry->depth; }
+
+            unmake_move(&game);
+
+            const research_site_t site = {DRIVE_DEPTH - 1,
+                                          probe.reduction[k],
+                                          probe.research_depth[k],
+                                          probe.research_score[k],
+                                          probe.research_alpha[k],
+                                          probe.research_best[k],
+                                          probe.research_base[k],
+                                          probe.moves[k],
+                                          table_depth};
+
+            sites.push_back(site);
+
+            if (site.depth == site.child_depth + 1) {
+              deeper++;
+            } else if (site.depth == site.child_depth - 1) {
+              shallower++;
+            } else {
+              unchanged++;
+            }
+          }
+        }
+
+        if (want_each > 0 && deeper >= want_each && shallower >= want_each) {
+          break;
+        }
+      }
+
+      return sites;
+    }
+  };
+
+
+  // Mutation: D06_deeper_two_plies -- the cap is raised and the site's own
+  // recorded depth passes it.
+  //
+  //   search: pruning and reduction guards
+  //    the node re-searches at the depth the rule returns
+  //   CHECK( site.depth <= site.child_depth + 1 )
+  //   values: CHECK( 9 <= 8 )        D06
+  //
+  // **What this case cannot see, stated because it was measured.** It replays
+  // the rule on the numbers the node recorded, so a *call site* that hands the
+  // rule the wrong variable moves both sides of the comparison together and
+  // reads as agreement. The Tier-1 check applied exactly that bug -- the call
+  // passing `alpha` where the fail-soft best belongs -- and the whole fast
+  // suite stayed green while the bench moved. The case after this one is what
+  // answers it, and `research_base` exists for it.
+  TEST_CASE_FIXTURE(research_drive_t,
+                    "the node re-searches at the depth the rule returns")
+  {
+    const std::vector<research_site_t> sites = scan(0);
+
+    REQUIRE_MESSAGE(!sites.empty(),
+                    "no reduced move beat alpha anywhere in the sweep, so "
+                    "nothing here is evidence about the re-search depth");
+
+    for (const research_site_t& site : sites) {
+      CHECK_EQ(site.depth, search_lmr_research_depth_probe(
+                               site.child_depth, site.reduction, site.score,
+                               site.alpha, site.base));
+
+      CHECK(site.depth > site.child_depth - site.reduction);
+      CHECK(site.depth <= site.child_depth + 1);
+      CHECK(site.depth >= 1);
+    }
+  }
+
+
+  // Mutation: D12_site_rebases_on_alpha -- the call hands the rule the node's
+  // window where the fail-soft best belongs, which is the published re-basing
+  // undone at the site instead of inside the rule.
+  //
+  //   search: pruning and reduction guards
+  //    the node measures the deeper margin from its own fail-soft best
+  //   CHECK_EQ( site.base, site.best )
+  //   values: CHECK_EQ( -500, -504 )   D12
+  TEST_CASE_FIXTURE(
+      research_drive_t,
+      "the node measures the deeper margin from its own fail-soft best")
+  {
+    // The two numbers are read from different places and that is the whole of
+    // the case: `best` is `best_so_far` taken straight off the node, `base` is
+    // what `lmr_research_depth` reports having measured the deeper margin
+    // from. A replay cannot separate them -- it would feed the rule whichever
+    // one the site recorded and agree with itself -- so the rule echoes its own
+    // base back out and this compares the two.
+    const std::vector<research_site_t> sites = scan(0);
+
+    REQUIRE_MESSAGE(!sites.empty(),
+                    "no reduced move beat alpha anywhere in the sweep, so "
+                    "nothing here is evidence about the base");
+
+    int separating = 0;
+
+    for (const research_site_t& site : sites) {
+      CHECK_EQ(site.base, site.best);
+
+      // The precondition, counted rather than assumed: the case says nothing
+      // at a site whose fail-soft best already equals its window, because the
+      // wrong variable is then the right number. `best <= alpha` holds at every
+      // site -- alpha is raised to the best score the moment one beats it -- so
+      // what is needed is a site where it is strictly below.
+      if (site.best != site.alpha) { separating++; }
+    }
+
+    REQUIRE_MESSAGE(separating > 0,
+                    "every site in the sweep had its fail-soft best equal to "
+                    "its window, so handing the rule either one would look the "
+                    "same and this case establishes nothing");
+  }
+
+
+  // Mutation: D08_site_ignores_the_rule -- the recursion re-searches at
+  // `child_depth` and the rule is computed and thrown away, which is the whole
+  // step wired up and switched off in one line.
+  //
+  // Mutation: D01_deeper_inverted, D02_shallower_inverted and
+  // D11_cap_one_ply_low, which move the depth the site asks for without
+  // moving the tree under it in the same direction.
+  //
+  //   search: pruning and reduction guards
+  //    a re-search that went a ply deeper left a table entry a ply deeper
+  //   CHECK( site.table_depth >= site.depth )
+  //   values: CHECK( 7 >= 8 )         D08
+  //   values: CHECK( 4 >= 6 )         D01 and D11
+  //   values: CHECK( 4 >= 7 )         D02
+  //
+  //   REQUIRE( witnessed > 0 )
+  //   values: REQUIRE( 0 >  0 )       D01, D08 and D11
+  TEST_CASE_FIXTURE(
+      research_drive_t,
+      "a re-search that went a ply deeper left a table entry a ply deeper")
+  {
+    // The probe is the node's own word and the table is the tree's, and only
+    // the second one can say a recursion ignored the rule: a site that
+    // computes the depth and then searches at `child_depth` anyway agrees with
+    // every replay of itself. The child's entry does not agree -- it is stored
+    // at the depth the child ran at, and the table keeps the deeper entry
+    // within one search ("within one search the deeper entry keeps the slot"),
+    // so the only way an entry reaches `child_depth + 1` is a search that ran
+    // there.
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 6);
+
+    const std::vector<research_site_t> sites = scan(3);
+
+    int witnessed = 0;
+    int entryless = 0;
+
+    for (const research_site_t& site : sites) {
+      if (site.table_depth < 0) {
+        entryless++;
+        continue;
+      }
+
+      // The child was searched at least as deep as the rule asked for. It can
+      // be deeper -- the full-window re-search below, or a transposition -- and
+      // that is not what this case is about.
+      CHECK(site.table_depth >= site.depth);
+
+      if (site.depth == site.child_depth + 1 &&
+          site.table_depth >= site.child_depth + 1) {
+        witnessed++;
+      }
+    }
+
+    // The precondition: without a site that actually went deeper the
+    // comparison above holds over the shallower and unchanged ones alone,
+    // where `child_depth` already satisfies it.
+    REQUIRE_MESSAGE(witnessed > 0,
+                    "no re-search in the sweep went a ply deeper, so the table "
+                    "says nothing here about whether the site reads the rule");
+
+    // Reported rather than passed over: a child that stored no entry is a
+    // child that answered from the table or was cut off above its store, and
+    // this case is blind to those.
+    MESSAGE("re-search sites with no child entry: " << entryless << " of "
+                                                    << sites.size());
+  }
+
+
+  // Mutation: D01_deeper_inverted and D11_cap_one_ply_low -- the deeper path
+  // stops reaching a real search at all, from the two ends it can be broken
+  // from: the condition and the cap.
+  //
+  //   search: pruning and reduction guards
+  //    both re-search depths are reached in a real search
+  //   REQUIRE( deeper > 0 )
+  //   values: REQUIRE( 0 >  0 )       D01 and D11
+  TEST_CASE_FIXTURE(research_drive_t,
+                    "both re-search depths are reached in a real search")
+  {
+    // The precondition the two counts below are read against: at the off
+    // values every re-search runs at `child_depth` and both are 0, which is
+    // the inert-by-rebuild property the bisection rests on and the red-first
+    // observation this case was written from. The second bound is the largest
+    // reduction the census saw at a real site.
+    REQUIRE(LMR_SHALLOWER_MARGIN > 1);
+    REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 6);
+
+    const std::vector<research_site_t> sites = scan(3);
+
+    REQUIRE_MESSAGE(!sites.empty(),
+                    "no reduced move beat alpha anywhere in the sweep, so "
+                    "nothing here is evidence about the re-search depth");
+
+    for (const research_site_t& site : sites) {
+      if (site.depth == site.child_depth + 1) {
+        // The guard, read off the site rather than off the rule.
+        CHECK(site.reduction >= LMR_DEEPER_MIN_REDUCTION);
+      } else if (site.depth == site.child_depth - 1) {
+        // The arithmetic guard, same.
+        CHECK(site.reduction >= 2);
+      } else {
+        CHECK_EQ(site.depth, site.child_depth);
+      }
+    }
+
+    // Both paths reach a real search. A rule that fires nowhere is one an SPRT
+    // would price at exactly zero for a reason that is not the technique,
+    // which is what verdict 1 cost the plan (DEC-212, DEC-214).
+    REQUIRE(deeper > 0);
+    REQUIRE(shallower > 0);
+    CHECK(unchanged >= 0);
   }
 }

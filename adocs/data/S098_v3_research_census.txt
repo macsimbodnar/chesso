@@ -1,0 +1,102 @@
+# S098 verdict 3: the reduced fail-high re-search sites and what the
+# two margins would fire at. DEC-214, taken before any match.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S098_v3_research_census.py census
+# The script's docstring is the method; it holds the instrumentation
+# patch, so this file is reproducible from the repository alone.
+# 400 positions of adocs/data/S024_census_positions.txt, one
+# persistent UCI process, ucinewgame between positions, go depth N.
+# A site is one execution of the reduced fail-high re-search block in
+# negamax_at -- `!state->aborted && reduction > 0 && score > alpha`,
+# the zero-window repeat a reduced late move that beat alpha is owed
+# and the only place lmr_research_depth is consulted. `best` is
+# best_so_far before the move updates it.
+#
+# TAKEN ON THE OFF TREE. LmrShallowerMargin 0 and
+# LmrDeeperMinReduction at its range top are patched into the
+# throwaway worktree, so the distribution belongs to the tree the
+# SPRT's reference searches. Instrumented bench signature: 5469072, equal
+# to the total the commit before this landing prints, which says both
+# that the write-only counters do not move the tree and that verdict
+# 3 is inert at its off values in the Release build.
+#
+# THE SEED RULE, written before the run: the (c) seed 47 stands for a
+# path firing at one per cent of sites or more; a path under one per
+# cent is re-seeded by DEC-105 (b) at the quantile that makes it fire
+# at about a tenth of sites; a path that cannot reach one per cent
+# anywhere inside 0 to PAWN ships at its off value as inert.
+#
+# A CONDITION'S SHARE IS NOT A PATH'S SHARE. The shallower path is
+# tested first, so a site where both conditions hold belongs to it and
+# the deeper path fires only on what is left. DEC-214's inert test is
+# about the path, so the three outcomes after precedence are counted
+# in the engine at the shipped seeds and the conditions are printed
+# beside them, labelled as conditions. The histograms are
+# one-dimensional and cannot see the overlap, so a re-seed needs
+# another run of this script.
+depth 10
+  positions: 400   nodes: 29815830   wall: 10.7 s
+  re-search sites: 44871
+  with r >= 2:     21709  (48.38 %)
+  the reduction taken, share of sites:
+    r = 1          23162   51.62 %
+    r = 2          15102   33.66 %
+    r = 3           5335   11.89 %
+    r = 4           1189    2.65 %
+    r = 5             83    0.18 %
+  score - best   (all sites)    p10 2  p25 6  p50 14  p75 30  p90 67
+  score - best   (r >= 2)       p10 2  p25 5  p50 12  p75 26  p90 54
+  score - alpha  (all sites)    p10 2  p25 4  p50 9  p75 21  p90 45
+  score - alpha  (r >= 2)       p10 1  p25 3  p50 9  p75 20  p90 41
+  the three outcomes of the rule at the shipped seeds, after
+  precedence -- this is the firing share of each PATH:
+    shallower         19907 of 44871 sites   44.36 %
+    deeper             1782 of 44871 sites    3.97 %
+    unchanged         23182 of 44871 sites   51.66 %
+  the two conditions before precedence, and their overlap:
+    shallower  r >= 2 and score < alpha + seed          19907   44.36 %
+    deeper     r >= min and score > best + seed          2625    5.85 %
+    both hold                                             843    1.88 %
+  the deeper condition at the range top, which section 4 expected to
+  be an off value:
+    deeper     r >= 2 and score > best + 94          1051    2.34 %
+  the margin that makes each CONDITION hold at about a tenth of
+  sites, which is the DEC-105 (b) re-seed if the (c) seed is inert.
+  A condition and not a path: a re-seed moves the overlap too, so the
+  path share at a new margin needs another run of this script.
+    deeper     margin  31 fires at 9.64 % of sites
+    shallower  margin   4 fires at 12.70 % of sites
+
+depth 12
+  positions: 400   nodes: 69976421   wall: 25.0 s
+  re-search sites: 106610
+  with r >= 2:     55873  (52.41 %)
+  the reduction taken, share of sites:
+    r = 1          50737   47.59 %
+    r = 2          36981   34.69 %
+    r = 3          14535   13.63 %
+    r = 4           3884    3.64 %
+    r = 5            457    0.43 %
+    r = 6             16    0.02 %
+  score - best   (all sites)    p10 2  p25 6  p50 14  p75 32  p90 73
+  score - best   (r >= 2)       p10 2  p25 5  p50 12  p75 27  p90 59
+  score - alpha  (all sites)    p10 1  p25 3  p50 9  p75 22  p90 47
+  score - alpha  (r >= 2)       p10 1  p25 3  p50 8  p75 20  p90 43
+  the three outcomes of the rule at the shipped seeds, after
+  precedence -- this is the firing share of each PATH:
+    shallower         50924 of 106610 sites   47.77 %
+    deeper             4901 of 106610 sites    4.60 %
+    unchanged         50785 of 106610 sites   47.64 %
+  the two conditions before precedence, and their overlap:
+    shallower  r >= 2 and score < alpha + seed          50924   47.77 %
+    deeper     r >= min and score > best + seed          7345    6.89 %
+    both hold                                            2444    2.29 %
+  the deeper condition at the range top, which section 4 expected to
+  be an off value:
+    deeper     r >= 2 and score > best + 94          3048    2.86 %
+  the margin that makes each CONDITION hold at about a tenth of
+  sites, which is the DEC-105 (b) re-seed if the (c) seed is inert.
+  A condition and not a path: a re-seed moves the overlap too, so the
+  path share at a new margin needs another run of this script.
+    deeper     margin  34 fires at 9.99 % of sites
+    shallower  margin   3 fires at 10.67 % of sites
