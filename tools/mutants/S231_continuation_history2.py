@@ -73,12 +73,16 @@ m("I04_cont_hist2_unread", E, "search/ordering",
   'the quiet history sum stops adding the two-ply term, so the second table is '
   'written at every cutoff and orders nothing -- the shape a census would call '
   'exercised and a verdict would call inert, which is exactly the reading '
-  'DEC-194 had to take a census to rule out for the first table',
+  'DEC-194 had to take a census to rule out for the first table. The (void) '
+  'is not decoration: S231 made prev_move2 a parameter of this function, so a '
+  'mutant that deletes its only use orphans it and -Werror=unused-parameter '
+  'refuses the build -- which reads as `stillborn` and proves nothing. This '
+  'is the class the tool\'s own docstring describes',
   ('  if (prev_move2 != 0) {\n'
    '    score +=\n'
    '        (CONT_HIST2_WEIGHT * continuation2_entry(state, prev_move2, move)) '
    '/\n'
    '        100;\n'
-   '  }\n\n',
-   ''),
+   '  }\n',
+   '  (void)prev_move2;\n'),
   origin="S231")

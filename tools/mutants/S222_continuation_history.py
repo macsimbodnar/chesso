@@ -70,12 +70,15 @@ m("H04_cont_hist_unread", E, "search/ordering",
   'into quiet_history_sum in src/evaluation.hpp for a second reader, the '
   'history-scaled reduction, that measured zero and left again (DEC-213); '
   'the factoring stayed, score_move is its one production reader, and the '
-  'mutant takes the term away from it there',
+  'mutant takes the term away from it there. **The (void) arrived at S231**, '
+  'which added a second guarded term to this function: with the one-ply block '
+  'deleted `prev_move` is orphaned and -Werror=unused-parameter refuses the '
+  'build, so without it this mutant is stillborn and proves nothing. It was '
+  'observed stillborn before the (void) was added, not assumed',
   ('  if (prev_move != 0) {\n'
    '    score +=\n'
    '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '
    '/ 100;\n'
-   '  }\n'
-   '\n',
-   ''),
+   '  }\n',
+   '  (void)prev_move;\n'),
   origin="S222")

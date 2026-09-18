@@ -253,6 +253,79 @@ working tree, every anchor unique.
 | `I03_null_child_drops_prev2` | the null child is handed 0 as its two-ply key instead of the move before the pass -- the opposite reading of the null move to the one this step took, and a silent one |
 | `I04_cont_hist2_unread` | the read term leaves `quiet_history_sum`, so the table is written at every cutoff and orders nothing: exercised and inert, the shape DEC-194 needed a census to rule out for the first table |
 
+**All four killed, on a linked worktree at `b83fb1d`, and each verdict is the
+tool's own** (`.tuning/mutation_s231.log`, `.tuning/mutation_s231_retry.log`,
+`.ref-builds/mut/build/mutation/results.tsv`). `MUTATION-RUN-DONE`, score
+100 %.
+
+| mutant | verdict | fast | bench | killed by, named | s |
+|---|---|---|---|---|---|
+| `I01_cont_hist2_malus_sign` | killed | 1/39 | moved | "a quiet cutoff two plies into the tree grades the two-ply continuation table", `CHECK( continuation2_entry(&state, prev_move2, move) < 0 )` and two more | 131.7 |
+| `I02_cont_hist2_no_prev2_guard` | killed | 1/39 | **same** | five cases at once -- "a quiet move that gives check enters the ordering tables", "a quiet cutoff maluses the quiets tried before it", "a quiet cutoff with a previous move grades the continuation table", "the cutoff move is credited and the quiets before it are charged", each `CHECK_EQ( continuation2_entries(state), 0 )`, and "the node two plies after a null move has no move two plies back to index", `CHECK_EQ( under_null_key, 0 )` | 129.0 |
+| `I03_null_child_drops_prev2` | killed | 1/39 | moved | **only** "pruning does not hide a forced mate", `REQUIRE( result.mate_found )` | 127.9 |
+| `I04_cont_hist2_unread` | killed | 2/39 | moved | "the declared history ceiling clears the band above it", `REQUIRE_EQ( s_history, live_span )`, and the mate case | 151.3 |
+
+**I02's row is the one the step is built for.** Its bench signature is
+*unchanged* -- the dropped guard writes the `(W_PAWN, a8)` cell on no bench
+position -- so nothing but a sentinel that scans a table or a row can see it,
+which is exactly the argument the guards section makes and now a measurement
+rather than an argument. Five cases catch it.
+
+**I03's row is a gap and is recorded as one rather than dressed up.** The only
+case that kills it is `capture_mates`, and that table's own depths are a
+measurement that moves under every ordering change -- DEC-209 clause 4 is the
+ruling that an incidental kill there is not a guard. So the reading of the null
+move that this step chose, and that `I03` breaks, **has no direct guard test**:
+the case written for the null move (`under_null_key`) asserts the *negative*
+two plies after the pass, which `I03` leaves true. A direct guard needs a drive
+in which the null child is the only writer of the two-ply table, which needs
+the null search to fail high so the drive node returns before its own move
+loop; the drive this step has does not, measured (`probe.move_count` 14 at
+every depth 5 to 11 in that position), so the null child's write cannot be
+told from an ordinary ply-2 node's. **Proposed to the coordinator as filler
+behind the next strength step**, not fixed here: one change at a time, and the
+mutant does die today.
+
+**Running them also found a real defect in S222's registry, which is the most
+useful thing this pass did.** `I04` came back **stillborn** on its first run --
+it does not compile, because deleting the two-ply read orphans the
+`prev_move2` parameter and `-Werror=unused-parameter` refuses the build. That
+is the class the tool's own docstring describes and the fix is the `(void)` it
+prescribes.
+
+**The same argument applies one table over, and that is the finding: S222's
+`H04_cont_hist_unread` was silently disarmed by this step.** Adding a second
+guarded term to `quiet_history_sum` means that deleting the *first* one now
+orphans `prev_move` in exactly the same way, so `H04` stopped compiling the
+moment S231 landed.
+
+**Which of the three ways a mutant can go dead this was, stated precisely,
+because it decides the repair.** Not the first: the code `H04` targets is
+still there, character for character -- the one-ply read is exactly where it
+was. Not the second: no case lost its reach, and the proof is that once the
+mutant builds again it dies by **two** named cases and not one. It is the
+third and least visible way -- **the mutant stopped being buildable, so it
+never ran at all**, and `stillborn` is not a failure the suite reports as a
+hole. It would have sat there looking like part of the registry indefinitely.
+
+**So it is not an equivalence and the S098 leg-1 qualification precedent does
+not apply here.** That precedent is for a mutant that builds, runs and changes
+nothing observable on one configuration; this one changed plenty and was never
+given the chance to. Nothing is deleted and nothing is qualified: both mutants
+gain the `(void)` of the parameter they orphan, and both were then **re-run
+and observed**, not assumed --
+
+| mutant | verdict | fast | bench | killed by, named | s |
+|---|---|---|---|---|---|
+| `H04_cont_hist_unread` (S222's, repaired) | killed | 2/39 | moved | "the declared history ceiling clears the band above it", `REQUIRE_EQ( s_history, live_span )`, and "pruning does not hide a forced mate" | 152.8 |
+| `I04_cont_hist2_unread` | killed | 2/39 | moved | the same two | 151.3 |
+
+Both registries' notes now say when the `(void)` arrived and why, so the next
+step that adds a term to this function finds the trap written down instead of
+walking into it. **This is the second edit this step makes to another step's
+mutant file and it is a repair, not a drive-by: without it S222's registry is
+broken by S231's code.**
+
 ### Two fixtures re-derived, both by their own scripts, neither relaxed
 
 The two-ply table reorders every quiet move, which is "any change to ordering",
@@ -489,7 +562,16 @@ shows, read from a third place.
 ### What is still owed, and by whom
 
 - **`tools/mutation_check.py` over the four mutants**, on a linked worktree at
-  the commit that carries this work.
+  the commit that carries this work. **One trap found doing it, worth knowing
+  before the next run:** the tool refuses at "the unmutated worktree is red"
+  unless `CLANG_FORMAT_MAJOR=22` is exported into it, because
+  `test_clang_format_script` is part of the fast suite it runs and this machine
+  cannot supply the pinned major 23 (DEC-146, `.moltke.local.md`). `nohup`
+  does not carry an exported variable from an interactive shell into a
+  detached child on its own, so the invocation is
+  `nohup env CLANG_FORMAT_MAJOR=22 python3 tools/mutation_check.py ...`. The
+  refusal is correct behaviour -- a red baseline would make every mutant look
+  killed -- and it cost one baseline build to find.
 - **Debug self-play, DEC-141 clause 1**, which is a match and therefore the
   coordinator's. The exact command is in the report.
 - **`tools/gate_extra.sh`**, owed before the step *completes* -- phase three,
