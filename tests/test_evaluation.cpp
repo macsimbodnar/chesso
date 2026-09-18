@@ -971,17 +971,22 @@ TEST_SUITE("evaluation: score_move ordering")
 
     const move_t tt_move = a_capture;
 
+    // 0 for the move two plies back: this case orders the bands at one plain
+    // history value and the two-ply term would add nothing to a cold table
+    // anyway. The band the three terms make together is the next case's
+    // subject. S231.
     const int s_tt =
-        score_move(&game, &state, tt_move, tt_move, ply, prev_move);
+        score_move(&game, &state, tt_move, tt_move, ply, prev_move, 0);
     const int s_capture =
-        score_move(&game, &state, a_capture, 0, ply, prev_move);
+        score_move(&game, &state, a_capture, 0, ply, prev_move, 0);
     const int s_killer0 =
-        score_move(&game, &state, quiets[0], 0, ply, prev_move);
+        score_move(&game, &state, quiets[0], 0, ply, prev_move, 0);
     const int s_killer1 =
-        score_move(&game, &state, quiets[1], 0, ply, prev_move);
+        score_move(&game, &state, quiets[1], 0, ply, prev_move, 0);
     const int s_counter =
-        score_move(&game, &state, quiets[2], 0, ply, prev_move);
-    const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
+        score_move(&game, &state, quiets[2], 0, ply, prev_move, 0);
+    const int s_history =
+        score_move(&game, &state, plain, 0, ply, prev_move, 0);
 
     REQUIRE(s_tt > s_capture);
     REQUIRE(s_capture > s_killer0);
@@ -1015,17 +1020,21 @@ TEST_SUITE("evaluation: score_move ordering")
   // it demands is derived from the bands in this position rather than quoted
   // from the comment that states it. 2026-08-20_plan_review-F14.
   //
-  // **Two tables since S222, and the widest band the ranges admit.** The quiet
-  // score is plain history plus ContHistWeight per cent of a continuation
-  // entry, each bounded by its own table's bound, so the band is no longer one
-  // declared maximum but a sum -- and the weight is settable over UCI on the
-  // tune build, which means the clearance has to hold at the *declared
-  // maximum* of the weight and not only at the value this build compiled. Both
-  // are asserted: the compiled band is what the driven entries have to produce
-  // exactly, which is what catches a score_move() that stopped adding the
-  // second term, and the widest band is what has to clear the countermove
-  // band. The arithmetic at the ceilings is 32767 + 2000 * 32767 / 100 =
-  // 688107 against 700000, a clearance of 11893.
+  // **Two tables since S222 and three terms since S231, and the widest band
+  // the ranges admit.** The quiet score is plain history plus ContHistWeight
+  // per cent of the one-ply continuation entry plus ContHist2Weight per cent of
+  // the two-ply one, every entry bounded by CONT_HIST_BOUND, so the band is not
+  // one declared maximum but a sum of three -- and both weights are settable
+  // over UCI on the tune build, which means the clearance has to hold at the
+  // *declared maxima* of both and not only at the values this build compiled.
+  // Both are asserted: the compiled band is what the driven entries have to
+  // produce exactly, which is what catches a score_move() that stopped adding
+  // one of the terms, and the widest band is what has to clear the countermove
+  // band. The arithmetic at the ceilings is
+  // 32767 + 1000 * 32767 / 100 + 1000 * 32767 / 100 = 688107 against 700000, a
+  // clearance of 11893 -- the same number S222's single 2000 ceiling gave,
+  // because the clearance is a property of the weights' total and S231 halved
+  // each ceiling rather than widening the band.
   TEST_CASE_FIXTURE(eval_fixture_t,
                     "the declared history ceiling clears the band above it")
   {
@@ -1057,6 +1066,8 @@ TEST_SUITE("evaluation: score_move ordering")
     int declared_max = -1;
     int declared_weight_max = -1;
     int live_weight = -1;
+    int declared_weight2_max = -1;
+    int live_weight2 = -1;
 
     for (size_t i = 0; i < search_param_count(); ++i) {
       if (std::string("QuietHistoryMax") == search_param_info(i).name) {
@@ -1067,22 +1078,32 @@ TEST_SUITE("evaluation: score_move ordering")
         declared_weight_max = search_param_info(i).max_value;
         live_weight = search_param_value(i);
       }
+
+      if (std::string("ContHist2Weight") == search_param_info(i).name) {
+        declared_weight2_max = search_param_info(i).max_value;
+        live_weight2 = search_param_value(i);
+      }
     }
 
     REQUIRE(declared_max > 0);
     REQUIRE(declared_weight_max > 0);
     REQUIRE(live_weight >= 0);
+    REQUIRE(declared_weight2_max > 0);
+    REQUIRE(live_weight2 >= 0);
 
-    // S222. The quiet band is a sum of two tables now, each with a bound of
-    // its own, and the second one is weighted on the way in. These are the two
+    // S222, and a third term at S231. The quiet band is a sum of three now --
+    // plain history and the two continuation tables, each continuation entry
+    // bounded by CONT_HIST_BOUND and weighted on the way in. These are the two
     // widths: what the band can be at the values this build compiled, and what
     // it can be at the widest the declared ranges admit -- which is the number
-    // the clearance has to hold against, because the tune build can set the
+    // the clearance has to hold against, because the tune build can set either
     // weight anywhere inside its range and no value there may reach the band
     // above.
-    const int live_span = declared_max + (live_weight * CONT_HIST_BOUND) / 100;
-    const int widest_span =
-        declared_max + (declared_weight_max * CONT_HIST_BOUND) / 100;
+    const int live_span = declared_max + (live_weight * CONT_HIST_BOUND) / 100 +
+                          (live_weight2 * CONT_HIST_BOUND) / 100;
+    const int widest_span = declared_max +
+                            (declared_weight_max * CONT_HIST_BOUND) / 100 +
+                            (declared_weight2_max * CONT_HIST_BOUND) / 100;
 
     REQUIRE(widest_span >= live_span);
 
@@ -1095,6 +1116,13 @@ TEST_SUITE("evaluation: score_move ordering")
     const move_t prev_move = quiets[3];
     state.counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] = quiets[2];
 
+    // The move two plies back, S231's key. Only an index here, never played,
+    // and it has to be a different cell from `prev_move`'s or the case would be
+    // driving one row of one table and calling it two.
+    const move_t prev_move2 = quiets[2];
+    REQUIRE((MOVE_PIECE(prev_move2) != MOVE_PIECE(prev_move) ||
+             MOVE_TO(prev_move2) != MOVE_TO(prev_move)));
+
     // The declared ceiling and not the shipping default. history_gravity_update
     // holds every entry inside whatever QuietHistoryMax is set to, so the two
     // worst cases the range admits are an entry sitting exactly on each bound.
@@ -1102,30 +1130,35 @@ TEST_SUITE("evaluation: score_move ordering")
     int16_t& entry = state.quiet_history[game.board.active_color]
                                         [MOVE_FROM(plain)][MOVE_TO(plain)];
 
-    // Both tables at once, which is the worst case the sum admits and the only
-    // one worth pinning: the continuation cell is the self-referencing one,
-    // `plain` being the previous move here as well as the move being scored,
-    // and CONT_HIST_BOUND is a definition rather than a range so the entry has
-    // exactly one extreme to be driven to. S222.
+    // All three tables at once, which is the worst case the sum admits and the
+    // only one worth pinning: the one-ply continuation cell is the
+    // self-referencing one, `plain` being the previous move here as well as the
+    // move being scored, and CONT_HIST_BOUND is a definition rather than a
+    // range so each entry has exactly one extreme to be driven to. S222, and
+    // the two-ply cell beside it at S231.
     int16_t& cont_entry = continuation_entry(&state, prev_move, plain);
+    int16_t& cont2_entry = continuation2_entry(&state, prev_move2, plain);
 
     entry = static_cast<int16_t>(declared_max);
     cont_entry = static_cast<int16_t>(CONT_HIST_BOUND);
+    cont2_entry = static_cast<int16_t>(CONT_HIST_BOUND);
 
-    const int s_capture =
-        score_move(&game, &state, king_takes_pawn, 0, ply, prev_move);
+    const int s_capture = score_move(&game, &state, king_takes_pawn, 0, ply,
+                                     prev_move, prev_move2);
     const int s_killer0 =
-        score_move(&game, &state, quiets[0], 0, ply, prev_move);
+        score_move(&game, &state, quiets[0], 0, ply, prev_move, prev_move2);
     const int s_killer1 =
-        score_move(&game, &state, quiets[1], 0, ply, prev_move);
+        score_move(&game, &state, quiets[1], 0, ply, prev_move, prev_move2);
     const int s_counter =
-        score_move(&game, &state, quiets[2], 0, ply, prev_move);
-    const int s_history = score_move(&game, &state, plain, 0, ply, prev_move);
+        score_move(&game, &state, quiets[2], 0, ply, prev_move, prev_move2);
+    const int s_history =
+        score_move(&game, &state, plain, 0, ply, prev_move, prev_move2);
 
     entry = static_cast<int16_t>(-declared_max);
     cont_entry = static_cast<int16_t>(-CONT_HIST_BOUND);
+    cont2_entry = static_cast<int16_t>(-CONT_HIST_BOUND);
     const int s_history_malused =
-        score_move(&game, &state, plain, 0, ply, prev_move);
+        score_move(&game, &state, plain, 0, ply, prev_move, prev_move2);
 
     // Precondition 1. The clearance the bands are built on, read off this
     // position: the cheapest capture stands exactly 100 above the first killer.
@@ -1141,29 +1174,33 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(s_killer0 > s_killer1);
     REQUIRE(s_killer1 > s_counter);
 
-    // Precondition 3. Both bounds are what reach the score, at both edges. A
+    // Precondition 3. Every bound is what reaches the score, at both edges. A
     // history entry is returned unmodified, so a case that asserted the
     // clearance without this would pass on a score_move() that quietly capped
     // the value itself -- or that clamped the malused half back to zero, which
     // would make the floor assertion below vacuous. Since S222 it is also what
-    // holds the second term in the sum: without it a score_move() that stopped
-    // adding the continuation term would pass every clearance below, because
-    // dropping a term only ever makes the band narrower.
+    // holds the second term in the sum, and since S231 the third: without it a
+    // score_move() that stopped adding either continuation term would pass
+    // every clearance below, because dropping a term only ever makes the band
+    // narrower. This is the one assertion in the case that is exact in both
+    // weights at once, which is why it is the one every unread-term mutant
+    // dies on.
     REQUIRE_EQ(s_history, live_span);
     REQUIRE_EQ(s_history_malused, -live_span);
 
-    // And the sum has to be carried in `int`. Two entries at their own bounds
-    // already exceed the type they are stored in, and the weight multiplies
-    // one of them by up to twenty on top -- so an accumulation in int16_t
-    // would wrap negative and every clearance below would pass for the wrong
-    // reason. S222.
+    // And the sum has to be carried in `int`. Three entries at their own bounds
+    // already exceed the type they are stored in many times over, and the two
+    // weights multiply two of them by up to ten each on top -- so an
+    // accumulation in int16_t would wrap negative and every clearance below
+    // would pass for the wrong reason. S222, S231.
     CHECK(widest_span > 32767);
 
     CHECK_MESSAGE(
         s_counter - widest_span >= 100,
         ("The widest quiet band the declared ranges admit, QuietHistoryMax's " +
          std::to_string(declared_max) + " plus ContHistWeight's " +
-         std::to_string(declared_weight_max) + " per cent of " +
+         std::to_string(declared_weight_max) + " and ContHist2Weight's " +
+         std::to_string(declared_weight2_max) + " per cent of " +
          std::to_string(CONT_HIST_BOUND) + ", is " +
          std::to_string(widest_span) + " against the countermove band's " +
          std::to_string(s_counter) + ", a clearance of " +
@@ -1230,8 +1267,8 @@ TEST_SUITE("evaluation: score_move ordering")
 
     const search_state_t state = {};
 
-    REQUIRE(score_move(&game, &state, promotion, 0, 0, 0) >
-            score_move(&game, &state, quiet, 0, 0, 0));
+    REQUIRE(score_move(&game, &state, promotion, 0, 0, 0, 0) >
+            score_move(&game, &state, quiet, 0, 0, 0, 0));
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "queen promotion outranks knight promotion")
@@ -1254,7 +1291,7 @@ TEST_SUITE("evaluation: score_move ordering")
 
     const search_state_t state = {};
 
-    REQUIRE(score_move(&game, &state, to_queen, 0, 0, 0) >
-            score_move(&game, &state, to_knight, 0, 0, 0));
+    REQUIRE(score_move(&game, &state, to_queen, 0, 0, 0, 0) >
+            score_move(&game, &state, to_knight, 0, 0, 0, 0));
   }
 }

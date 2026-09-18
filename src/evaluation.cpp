@@ -1150,7 +1150,8 @@ int score_move(const game_t* game,
                move_t move,
                move_t tt_move,
                size_t ply,
-               move_t prev_move)
+               move_t prev_move,
+               move_t prev_move2)
 {
   if (tt_move != 0 && move == tt_move) { return ORDER_TT_MOVE; }
 
@@ -1181,5 +1182,5 @@ int score_move(const game_t* game,
   // (DEC-213); the factoring stayed, because it is behaviour-neutral and
   // because the next consumer of a move's history should read the number this
   // function returns rather than write its own copy.
-  return quiet_history_sum(game, state, move, prev_move);
+  return quiet_history_sum(game, state, move, prev_move, prev_move2);
 }

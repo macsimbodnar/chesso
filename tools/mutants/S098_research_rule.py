@@ -111,11 +111,11 @@ m("D08_site_ignores_the_rule", S, "search/reduction",
   ('        score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, '
    'ply + 1,\n'
    '                                   game, state, moves[i], again.is_pv,\n'
-   '                                   again.cut_node);',
+   '                                   again.cut_node, prev_move);',
    '        score = -negamax_at<false>(-alpha - 1, -alpha, child_depth, '
    'ply + 1,\n'
    '                                   game, state, moves[i], again.is_pv,\n'
-   '                                   again.cut_node);'),
+   '                                   again.cut_node, prev_move);'),
 
   origin="S098")
 

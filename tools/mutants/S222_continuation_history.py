@@ -45,19 +45,21 @@ m("H02_cont_hist_no_prev_guard", S, "search/ordering",
 
 # The anchor gained two arguments at S098 verdict 2, which threads `cut_node`
 # through `negamax_at` and labels the null-move child by Kannan's rule rather
-# than passing a literal `false`. The mutation is unchanged -- the `0` becomes
-# `prev_move` and nothing else -- and it was re-observed at that step.
+# than passing a literal `false`, and a third at S231, which threads the move
+# two plies back and re-wrapped the call. The mutation is unchanged through all
+# of it -- the `0` in the previous-move position becomes `prev_move` and
+# nothing else -- and it was re-observed at each step. Note that the `0` this
+# anchor names is the **previous move**, the seventh argument; S231's own
+# `I03_null_child_drops_prev2` is about the tenth and they are different
+# mutants of the same call.
 m("H03_null_child_keeps_prev", S, "search/ordering",
   'the null-move child is handed the node\'s own previous move instead of 0, '
   'so everything it writes is keyed on a move that is two plies back and on '
   'the wrong side of the pass',
-  ('        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
-   'ply + 1,\n'
-   '                           game, state, 0, child.is_pv, child.cut_node);',
-   '        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
-   'ply + 1,\n'
-   '                           game, state, prev_move, child.is_pv, '
-   'child.cut_node);'),
+  ('        -beta, -beta + 1, depth - 1 - reduction, ply + 1, game, state, 0,\n'
+   '        child.is_pv, child.cut_node, prev_move);',
+   '        -beta, -beta + 1, depth - 1 - reduction, ply + 1, game, state,\n'
+   '        prev_move, child.is_pv, child.cut_node, prev_move);'),
   origin="S222")
 
 m("H04_cont_hist_unread", E, "search/ordering",
@@ -74,7 +76,6 @@ m("H04_cont_hist_unread", E, "search/ordering",
    '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '
    '/ 100;\n'
    '  }\n'
-   '\n'
-   '  return score;',
-   '  return score;'),
+   '\n',
+   ''),
   origin="S222")

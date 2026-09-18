@@ -8,6 +8,21 @@ technique -- the step file's own pre-registration, "## Measurement, verdict
     ~/.venv/chess/bin/python adocs/data/S024_census_run.py sample
     ~/.venv/chess/bin/python adocs/data/S024_census_run.py run ENGINE
 
+S222 RE-RAN THIS DRIVER ON ITS FITTED BUILD (adocs/data/S222_census.txt) AND
+S231 RE-RUNS IT AGAIN WITH THE TWO-PLY TABLE COUNTED. The instrumentation
+itself is throwaway -- five counters at S024, **eight since S231** -- patched
+into a Release build in a detached worktree and removed with it, so this file
+carries the counter contract and not the patch. `parse_go_output` accepts a
+five-counter line and an eight-counter one and refuses anything else, the
+three new counters being appended: a run of S024's own patch still reads the
+way it always did, and the two-ply shares are reported only when the binary
+counted them rather than printed as three zeroes that would read as an inert
+table. The eight, in order, are listed at CENSUS_FIELDS_ONE_PLY below.
+
+This script writes CENSUS_TSV, which is S024's own committed artefact, so a
+re-run is taken from a worktree copy of the script and never from the main
+tree -- what S222 did and what S231 does.
+
 WHERE THE POSITIONS COME FROM. No fixed 400-position corpus file exists in
 this repository. `src/search.cpp`'s null-move mate-band comment ("over 400
 corpus positions at depth 10 the band is reached on 0 of 301620...") and
@@ -223,16 +238,40 @@ class Engine:
         self.p.wait(timeout=30)
 
 
+# How many counters the census line carries, and what each shape means. S024
+# instrumented five; S231 added the two-ply table and instruments eight, the
+# three new ones **appended** so that a five-counter line stays exactly what it
+# always was and S024's and S222's runs remain reproducible from their own
+# instrumentation:
+#
+#   0 writes_total        history_on_quiet_cutoff() calls
+#   1 writes_with_prev    those with prev_move != 0
+#   2 reads_total         quiet score_move() evaluations
+#   3 reads_with_prev     those where the one-ply term is consulted
+#   4 reads_nonzero       those where the one-ply entry is non-zero
+#   5 writes_with_prev2   writes with prev_move2 != 0            (S231)
+#   6 reads_with_prev2    reads where the two-ply term is consulted   (S231)
+#   7 reads_nonzero2      those where the two-ply entry is non-zero   (S231)
+#
+# Any other count is a wrong or half-applied instrumentation patch and the run
+# refuses rather than reporting a share it has misread.
+CENSUS_FIELDS_ONE_PLY = 5
+CENSUS_FIELDS_TWO_PLY = 8
+
+TWO_PLY_KEYS = ("writes_with_prev2", "reads_with_prev2", "reads_nonzero2")
+
+
 def parse_go_output(lines):
-    """The last regular info line's node count, and the census line's five
-    counters. Depth 10 is requested; the last info line before bestmove is
-    the one search_bench.py and the engine's own protocol treat as the
-    search's total (chesso.cpp: "[nodes] is the whole search's count")."""
+    """The last regular info line's node count, and the census line's counters.
+
+    Depth 10 is requested; the last info line before bestmove is the one
+    search_bench.py and the engine's own protocol treat as the search's total
+    (chesso.cpp: "[nodes] is the whole search's count")."""
     nodes = None
     census = None
     for line in lines:
         if line.startswith("info string cont_hist_census"):
-            census = [int(x) for x in line.split()[3:8]]
+            census = [int(x) for x in line.split()[3:]]
         elif line.startswith("info") and " nodes " in line:
             nodes = int(line.split(" nodes ")[1].split()[0])
 
@@ -241,6 +280,12 @@ def parse_go_output(lines):
     if census is None:
         sys.exit("no cont_hist_census line in: %r -- wrong binary? "
                  "(needs the S024 census instrumentation)" % (lines,))
+    if len(census) not in (CENSUS_FIELDS_ONE_PLY, CENSUS_FIELDS_TWO_PLY):
+        sys.exit("cont_hist_census carries %d counters, expected %d (S024's "
+                 "one-ply instrumentation) or %d (S231's, with the two-ply "
+                 "table counted): %r"
+                 % (len(census), CENSUS_FIELDS_ONE_PLY,
+                    CENSUS_FIELDS_TWO_PLY, census))
 
     return nodes, census
 
@@ -261,16 +306,23 @@ def run(engine_path):
         elapsed = time.time() - t0
 
         nodes, census = parse_go_output(lines)
-        writes_total, writes_with_prev, reads_total, reads_with_prev, \
-            reads_nonzero = census
-
-        rows.append({
+        row = {
             "idx": i + 1, "game_index": pos["game_index"], "ply": pos["ply"],
             "fen": pos["fen"], "nodes": nodes, "elapsed_s": elapsed,
-            "writes_total": writes_total, "writes_with_prev": writes_with_prev,
-            "reads_total": reads_total, "reads_with_prev": reads_with_prev,
-            "reads_nonzero": reads_nonzero,
-        })
+            "writes_total": census[0], "writes_with_prev": census[1],
+            "reads_total": census[2], "reads_with_prev": census[3],
+            "reads_nonzero": census[4],
+        }
+
+        # S231. Absent from a five-counter line and 0 there, so a run of
+        # S024's own instrumentation reports the two-ply shares as zero rather
+        # than failing; a run of S231's reports them for real.
+        for key, value in zip(TWO_PLY_KEYS, census[CENSUS_FIELDS_ONE_PLY:]):
+            row[key] = value
+        for key in TWO_PLY_KEYS:
+            row.setdefault(key, 0)
+
+        rows.append(row)
 
         engine.ucinewgame()
 
@@ -284,7 +336,7 @@ def run(engine_path):
     totals = {
         key: sum(r[key] for r in rows)
         for key in ("nodes", "writes_total", "writes_with_prev", "reads_total",
-                    "reads_with_prev", "reads_nonzero")
+                    "reads_with_prev", "reads_nonzero") + TWO_PLY_KEYS
     }
 
     with open(CENSUS_TSV, "w") as out:
@@ -295,23 +347,27 @@ def run(engine_path):
                  "depth %d, Hash %d MB, ucinewgame between positions.\n"
                  % (DEPTH, HASH_MB))
         out.write("# writes = calls of history_on_quiet_cutoff(); "
-                 "writes_with_prev = those with prev_move != 0.\n")
+                 "writes_with_prev = those with prev_move != 0; "
+                 "writes_with_prev2 = those with prev_move2 != 0 (S231).\n")
         out.write("# reads = quiet-move score_move() evaluations; "
-                 "reads_with_prev = those where the continuation term is "
-                 "consulted; reads_nonzero = those where it is non-zero.\n")
-        out.write("\t".join(["idx", "game_index", "ply", "fen", "nodes",
-                            "elapsed_s", "writes_total", "writes_with_prev",
-                            "reads_total", "reads_with_prev",
-                            "reads_nonzero"]) + "\n")
+                 "reads_with_prev = those where the one-ply continuation term "
+                 "is consulted; reads_nonzero = those where it is non-zero; "
+                 "reads_with_prev2 and reads_nonzero2 are the same two for the "
+                 "two-ply table (S231), and are 0 when the binary carries "
+                 "S024's five-counter instrumentation.\n")
+        columns = ["idx", "game_index", "ply", "fen", "nodes", "elapsed_s",
+                   "writes_total", "writes_with_prev", "reads_total",
+                   "reads_with_prev", "reads_nonzero"] + list(TWO_PLY_KEYS)
+        out.write("\t".join(columns) + "\n")
         for r in rows:
-            out.write("\t".join(str(r[k]) for k in [
-                "idx", "game_index", "ply", "fen", "nodes", "elapsed_s",
-                "writes_total", "writes_with_prev", "reads_total",
-                "reads_with_prev", "reads_nonzero"]) + "\n")
-        out.write("# totals\t\t\t\t%d\t%.3f\t%d\t%d\t%d\t%d\t%d\n" % (
+            out.write("\t".join(str(r[k]) for k in columns) + "\n")
+        out.write("# totals\t\t\t\t%d\t%.3f\t%d\t%d\t%d\t%d\t%d\t%d\t%d"
+                 "\t%d\n" % (
             totals["nodes"], wall, totals["writes_total"],
             totals["writes_with_prev"], totals["reads_total"],
-            totals["reads_with_prev"], totals["reads_nonzero"]))
+            totals["reads_with_prev"], totals["reads_nonzero"],
+            totals["writes_with_prev2"], totals["reads_with_prev2"],
+            totals["reads_nonzero2"]))
 
     shares = [r["reads_nonzero"] / r["reads_with_prev"]
              if r["reads_with_prev"] else 0.0 for r in rows]
@@ -336,6 +392,34 @@ def run(engine_path):
          "min %.4f%%  median %.4f%%  max %.4f%%"
          % (100.0 * shares[0], 100.0 * statistics.median(shares),
             100.0 * shares[-1]))
+
+    # S231. The same three shares for the two-ply table, printed only when the
+    # binary counted it -- a five-counter run would otherwise report three
+    # zeroes that read as an inert table rather than as an uninstrumented one.
+    if totals["reads_with_prev2"] or totals["writes_with_prev2"]:
+        print("writes_with_prev2: %d  of writes_total: %d  share: %.4f%%"
+             % (totals["writes_with_prev2"], totals["writes_total"],
+                100.0 * totals["writes_with_prev2"] / totals["writes_total"]
+                if totals["writes_total"] else 0.0))
+        print("reads_with_prev2: %d  of reads_total: %d  share: %.4f%%"
+             % (totals["reads_with_prev2"], totals["reads_total"],
+                100.0 * totals["reads_with_prev2"] / totals["reads_total"]
+                if totals["reads_total"] else 0.0))
+        print("reads_nonzero2: %d  of reads_with_prev2: %d  share: %.4f%%"
+             % (totals["reads_nonzero2"], totals["reads_with_prev2"],
+                100.0 * totals["reads_nonzero2"] / totals["reads_with_prev2"]
+                if totals["reads_with_prev2"] else 0.0))
+
+        shares2 = sorted(r["reads_nonzero2"] / r["reads_with_prev2"]
+                        if r["reads_with_prev2"] else 0.0 for r in rows)
+        print("per-position reads_nonzero2/reads_with_prev2 share: "
+             "min %.4f%%  median %.4f%%  max %.4f%%"
+             % (100.0 * shares2[0], 100.0 * statistics.median(shares2),
+                100.0 * shares2[-1]))
+    else:
+        print("two-ply table: not counted by this binary (five-counter "
+             "instrumentation, S024's own)")
+
     print("\nS024-CENSUS-DONE")
     return 0
 

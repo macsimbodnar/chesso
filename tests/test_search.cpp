@@ -494,6 +494,29 @@ TEST_SUITE("search: move ordering state")
     return used;
   }
 
+  // The same count over the two-ply table. A second scanner rather than one
+  // that takes a pointer, so a case naming the wrong table names the wrong
+  // function -- the reason continuation2_entry is a second index and not an
+  // argument. S231.
+  static size_t continuation2_entries(const search_state_t& state)
+  {
+    size_t used = 0;
+
+    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist2[prev_piece][prev_to][piece][to] != 0) {
+              used++;
+            }
+          }
+        }
+      }
+    }
+
+    return used;
+  }
+
   // test_evaluation checks that score_move ranks a killer above a counter
   // above a history entry. Nothing there checks that the search ever writes
   // one, and a search that fills none of these tables plays the same moves,
@@ -539,6 +562,7 @@ TEST_SUITE("search: move ordering state")
     size_t history_entries = 0;
     size_t counters = 0;
     size_t cont_hist_entries = 0;
+    size_t cont_hist2_entries = 0;
 
     for (int piece = W_PAWN; piece <= B_KING; ++piece) {
       for (int square = 0; square < 64; ++square) {
@@ -552,6 +576,10 @@ TEST_SUITE("search: move ordering state")
           for (int to = 0; to < 64; ++to) {
             if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
               cont_hist_entries++;
+            }
+
+            if (state.cont_hist2[prev_piece][prev_to][piece][to] != 0) {
+              cont_hist2_entries++;
             }
           }
         }
@@ -602,6 +630,13 @@ TEST_SUITE("search: move ordering state")
     // driven call: every node below the root has a previous move, so a table
     // still empty after a depth-8 search is a table nothing writes.
     REQUIRE(cont_hist_entries > 0);
+
+    // S231, and the same statement one ply deeper: every node from ply 2 down
+    // has a move two plies back, so a depth-8 search that leaves this table
+    // empty has plumbing that never reaches it -- the shape a mutant which
+    // hands each child its own two-ply key instead of its parent's produces,
+    // and which no wrong node count would announce.
+    REQUIRE(cont_hist2_entries > 0);
   }
 
   // A quiet move that gives check was excluded from all three tables until
@@ -680,6 +715,16 @@ TEST_SUITE("search: move ordering state")
     // the positive half of the sentinel pair -- the two cases below drive the
     // same update with no previous move and require the table untouched.
     REQUIRE(continuation_entry(&state, prev_move, killer) != 0);
+
+    // S231, and this drive is ply 1 of the engine's own tree: a previous move
+    // and no move two plies back, negamax()'s `prev_move2` left at its default.
+    // So the two-ply table must be untouched while the one-ply cell above
+    // moved -- which is the counted precondition that makes this assertion
+    // non-vacuous. The whole table is scanned rather than one cell, because a
+    // dropped guard writes the (W_PAWN, a8) cell that 0 decodes to and crashes
+    // nothing. Every node below this one is quiescence, which writes no
+    // history at all, so this node is the only writer in the drive.
+    CHECK_EQ(continuation2_entries(state), 0);
   }
 
 
@@ -785,7 +830,7 @@ TEST_SUITE("search: move ordering state")
     const move_t cutoff = quiets[0];
     const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
 
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, 0);
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, 0, 0);
 
     CHECK(state.quiet_history[side][MOVE_FROM(cutoff)][MOVE_TO(cutoff)] > 0);
 
@@ -795,6 +840,13 @@ TEST_SUITE("search: move ordering state")
     // writes four cells here and crashes nothing, which is why this is a scan
     // of the whole table and not a look at one entry.
     CHECK_EQ(continuation_entries(state), 0);
+
+    // S231, the same sentinel for the two-ply table, and at ply 0 it is the
+    // same call: no previous move means no move two plies back either. The
+    // plain history assertion above is the counted precondition -- the update
+    // ran and wrote five butterfly cells -- so neither scan can pass by the
+    // call having done nothing.
+    CHECK_EQ(continuation2_entries(state), 0);
 
     // Every quiet tried before the cutoff, not all but the last one. Lynx
     // shipped exactly that off-by-one -- sparing the last tried quiet to
@@ -863,7 +915,7 @@ TEST_SUITE("search: move ordering state")
     const move_t cutoff = quiets[0];
     const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
 
-    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, prev_move);
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, prev_move, 0);
 
     // The cutoff move is credited in its own cell.
     CHECK(continuation_entry(&state, prev_move, cutoff) > 0);
@@ -888,6 +940,106 @@ TEST_SUITE("search: move ordering state")
     // Exactly four cells moved, and they are the four this case names. A
     // whole-table count rather than four reads, so an update that also wrote
     // somewhere nobody looked fails here.
+    CHECK_EQ(continuation_entries(state), 4);
+
+    // S231, the second sentinel of the pair and the one only ply 1 produces:
+    // the call above passed a previous move and **no** move two plies back, so
+    // the one-ply table has four cells and the two-ply table has none. The four
+    // above are the counted precondition; without them a guard that wrote
+    // nothing anywhere would pass this line.
+    CHECK_EQ(continuation2_entries(state), 0);
+  }
+
+
+  // S231. The two-ply table's own grading, held against the table the way the
+  // case above holds the one-ply one: the same fail-high with **both** keys
+  // supplied, which is every node from ply 2 down in the engine's own tree.
+  // Driven by the call, because the two spans, the second key's separate index
+  // and the guard are all decided there.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a quiet cutoff two plies into the tree grades the two-ply "
+                    "continuation table")
+  {
+    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t quiets[4] = {};
+    size_t quiet_count = 0;
+
+    for (size_t i = 0; i < count && quiet_count < 4; ++i) {
+      if (!MOVE_CAPTURE(moves[i]) && MOVE_PROMOTED(moves[i]) == TO_NONE) {
+        quiets[quiet_count++] = moves[i];
+      }
+    }
+
+    REQUIRE_EQ(quiet_count, 4);
+
+    const color_t side = game.board.active_color;
+
+    // The move this node replies to, and the move this side played two plies
+    // back. Black for the first, so its (piece, to) pair cannot collide with
+    // any of the four White quiets below; White for the second, because that is
+    // what a move two plies back is at a node where White is to move -- the
+    // parity that makes this table a follow-up table rather than a reply one.
+    const move_t prev_move = NEW_MOVE(e7, e5, B_PAWN, TO_NONE, 0, 1, 0, 0);
+    const move_t prev_move2 = NEW_MOVE(g1, f3, W_KNIGHT, TO_NONE, 0, 0, 0, 0);
+
+    // Precondition: four distinct two-ply cells under that key, on the same
+    // reasoning the case above uses for the one-ply one -- two quiets sharing a
+    // (piece, to) pair share a cell and the bonus and the malus would be
+    // arguing over one number.
+    for (size_t a = 0; a < 4; ++a) {
+      for (size_t b = a + 1; b < 4; ++b) {
+        const bool same_cell = MOVE_PIECE(quiets[a]) == MOVE_PIECE(quiets[b]) &&
+                               MOVE_TO(quiets[a]) == MOVE_TO(quiets[b]);
+        REQUIRE_FALSE(same_cell);
+      }
+    }
+
+    // Precondition: the two keys are different cells. Without this the case
+    // could not tell a two-ply table keyed on the move two plies back from one
+    // keyed on the previous move, which is exactly the mis-keying a wrong
+    // argument at the write site produces.
+    REQUIRE((MOVE_PIECE(prev_move2) != MOVE_PIECE(prev_move) ||
+             MOVE_TO(prev_move2) != MOVE_TO(prev_move)));
+
+    search_state_t state = {};
+
+    const move_t cutoff = quiets[0];
+    const move_t tried[3] = {quiets[1], quiets[2], quiets[3]};
+
+    history_on_quiet_cutoff(&state, side, cutoff, tried, 3, 8, prev_move,
+                            prev_move2);
+
+    // The cutoff move is credited in its own two-ply cell.
+    CHECK(continuation2_entry(&state, prev_move2, cutoff) > 0);
+
+    // And every quiet tried before it is charged in its own, over the same span
+    // the butterfly and one-ply maluses are charged over.
+    for (const move_t move : tried) {
+      CHECK_MESSAGE(
+          continuation2_entry(&state, prev_move2, move) < 0,
+          ("A quiet tried before the cutoff scores " +
+           std::to_string(continuation2_entry(&state, prev_move2, move)) +
+           " in the two-ply continuation table and not a malus."));
+    }
+
+    // The table is keyed on the move two plies back and not on the previous
+    // move. A write that passed the wrong one of the two would fill this row
+    // instead, and every assertion above would still pass.
+    CHECK_EQ(continuation2_entry(&state, prev_move, cutoff), 0);
+
+    // Another key's row is untouched, the one-ply case's own check: an index
+    // that dropped the key would make every row the same row.
+    const move_t other_prev2 = NEW_MOVE(b1, c3, W_KNIGHT, TO_NONE, 0, 0, 0, 0);
+    REQUIRE(MOVE_TO(other_prev2) != MOVE_TO(prev_move2));
+    CHECK_EQ(continuation2_entry(&state, other_prev2, cutoff), 0);
+
+    // Four cells in each table and no more, which is also what says the two
+    // tables are two: one call, two keys, two disjoint sets of four.
+    CHECK_EQ(continuation2_entries(state), 4);
     CHECK_EQ(continuation_entries(state), 4);
   }
 
@@ -1019,6 +1171,11 @@ TEST_SUITE("search: move ordering state")
     // shows up here as three cells written under the (W_PAWN, a8) index that
     // move 0 decodes to.
     CHECK_EQ(continuation_entries(state), 0);
+
+    // S231, and at ply 0 the same drive is the two-ply sentinel too: no
+    // previous move and no move two plies back. The three butterfly cells
+    // asserted above are the counted precondition.
+    CHECK_EQ(continuation2_entries(state), 0);
   }
 
   // Filling the tables is not the point: searching a smaller tree is. A
@@ -3336,6 +3493,25 @@ TEST_SUITE("search: draws")
     // covers, so no label names it. Row 2 is the one that came back from
     // nothing to four mutants, and rows 3 and 4 keep two and one.
     //
+    // **Re-derived again at S231, the seven sweeps taken once more.** The
+    // two-ply continuation table reorders every quiet move, which is "any
+    // change to ordering", and the row this case failed on was row 2 at
+    // depth 8. The whole pass was re-taken rather than that row re-picked --
+    // shipped plus all six S091 mutants, depths 3 to 12, over
+    // `adocs/data/S230_table_fens.txt` and driven by
+    // `adocs/data/S230_mine_r01_row.py depths`, evidence in
+    // `.tuning/coord/S231_capture_mates/` -- and the same rule applied by the
+    // same script rather than by eye. Shipped profiles here: `d8 d9 d10 d11
+    // d12`, `d9 d10 d11 d12`, `d10 d11 d12`, `d9 d10 d11 d12`, which put the
+    // four depths at 8, 9, 10 and 9. **All four moved and no mate distance
+    // did.** Rows 1 and 2 very nearly swapped: row 1 reports its mate at 8
+    // now, where four mutants lose it, and row 2 no longer does at all, so it
+    // is the row that separates nothing and its label says so. Row 3 comes
+    // back from 11 to 10 with C05 joining R02 and C07 dropping out; row 4
+    // from 10 to 9, R02 losing the mate at 9 where it kept it before. R01 is
+    // separated by no row at any depth of this pass either, which is the
+    // fourth consecutive pass that has read that way.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -3344,19 +3520,19 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S098 verdict 3's bisection leg 1"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 8, 5,
+         "C02, C05, C07 and R02"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 8, 5,
-         "C02, C05, C07 and R02"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 9, 5,
+         "no S091 mutant, since S231"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
-         "C07 and R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+         "C05 and R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3386,8 +3562,11 @@ TEST_SUITE("search: draws")
         // is `d9 d10 d11 d12` still, R02 now reads `d9 d11 d12` and loses the
         // mate at **10** rather than at 9, so the rule takes 10 and the label
         // is R02 as before. Nothing else separates this row at any of its
-        // depths.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
+        // depths. **S231 moves it back to 9 and keeps the mutant again**: the
+        // shipped profile is `d9 d10 d11 d12` once more, R02 reads
+        // `d8 d10 d11` here and so has no mate at the profile's first depth,
+        // and nothing else separates the row at any of them.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
          5, "R02"},
     };
 
@@ -4741,6 +4920,151 @@ TEST_SUITE("search: pruning and reduction guards")
     }
 
     CHECK_EQ(white_movers_under_prev, 0);
+
+    // S231, the same drive read for the two-ply table, which the plumbing has
+    // to leave alone two plies after the pass. 0 is the (W_PAWN, a8) cell here
+    // too, and no White pawn of this position can reach a8 -- all eight are
+    // still on the second rank and a8 is six moves away. The case below drives
+    // that node directly with the exact counted precondition; this is the same
+    // statement taken through the real null-move block, so a recursion that
+    // handed the wrong key down fails here as well.
+    size_t under_null_key = 0;
+
+    for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+      for (int to = 0; to < 64; ++to) {
+        if (state.cont_hist2[W_PAWN][a8][piece][to] != 0) { under_null_key++; }
+      }
+    }
+
+    // The precondition for it: the two-ply table was written somewhere in this
+    // drive, so an empty row is a guarded row and not an unused table.
+    size_t two_ply_written = 0;
+
+    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist2[prev_piece][prev_to][piece][to] != 0) {
+              two_ply_written++;
+            }
+          }
+        }
+      }
+    }
+
+    REQUIRE(two_ply_written > 0);
+    CHECK_EQ(under_null_key, 0);
+  }
+
+
+  // S231. The two-ply table's own null-move sentinel, and the node it is about
+  // is one ply lower than S222's: the pass hands its child a 0 previous move,
+  // and **that child hands the 0 on as its own child's two-ply key**, so the
+  // node two plies after a pass is the one with no move two plies back. All
+  // three guarded classes -- ply 0, ply 1 and this one -- pass 0, and 0 is the
+  // legitimate (W_PAWN, a8) cell, so a dropped guard is a wrong-cell write with
+  // no crash and no sanitizer finding.
+  //
+  // **The node one ply after the pass is deliberately not in that list**, and
+  // the case above is where that reading is visible: under the pass the side to
+  // move is the side whose move two plies back it is, so the parity this table
+  // rests on survives and the key is a real move. That node writes this table
+  // and skips the one-ply one; this node does the opposite.
+  //
+  // The drive is the null child itself, reached by making the pass by hand and
+  // then calling `negamax` with exactly the arguments `negamax_at` gives its
+  // null child -- 0 for the previous move, this node's own previous move for
+  // the two-ply key. The case above drives the block; this one drives what the
+  // block produces, because the class it is about is two plies down and no
+  // probe records a ply it is not attached to.
+  //
+  // **What makes the assertion non-vacuous is the colour of the one-ply key.**
+  // After the pass White is to move at the driven node, so a node whose
+  // previous move is a *White* move is at ply 3, 5, 7 ... and at this depth --
+  // 3 from ply 2 -- real search nodes exist at plies 2, 3 and 4 and everything
+  // at ply 5 is quiescence, which writes no history at all. So a one-ply cell
+  // keyed on a White mover can only have been written by a ply-3 node, which is
+  // exactly the class two plies after the pass, and the count of them is the
+  // precondition. The driven node itself writes no one-ply cell, its own
+  // previous move being 0, so none of them is its.
+  //
+  // Mutation: I02_cont_hist2_no_prev2_guard -- the guard on the move two plies
+  // back is dropped.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "the node two plies after a null move has no move two "
+                    "plies back to index")
+  {
+    // The same position as the case above, and for the same two reasons: no
+    // capture exists for either colour, so a fail-high below the pass has to
+    // come from a quiet and the history tables are what record it; and the
+    // rooks keep the phase off zero.
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    // Deep enough that the node two plies after the pass is a real search node
+    // with a move loop of its own, shallow enough that ply 5 is quiescence --
+    // which is what makes the White-keyed count above belong to ply 3 alone.
+    constexpr int DRIVE_DEPTH = 3;
+
+    load(fen, 2);
+
+    // Precondition: the pass restores the side that played PREV_MOVE, which is
+    // the parity the whole reading rests on.
+    REQUIRE_EQ(game.board.active_color, BLACK);
+    make_null_move(&game);
+    REQUIRE_EQ(game.board.active_color, WHITE);
+
+    // Precondition: no capture for the side that moves after the pass, so a
+    // cutoff below it has to be a quiet. A capture cutoff writes no history at
+    // all and every count below would be zero for the wrong reason.
+    move_t captures[MAX_MOVES];
+    REQUIRE_EQ(generate_captures(game_tables(), &game.board, captures), 0);
+
+    // Precondition: every White pawn is still on its own rank, so no White pawn
+    // can legitimately key either table on (W_PAWN, a8). Reaching a8 takes a
+    // White pawn six moves and this drive gives White two, so the only way that
+    // cell can be written here is the bug.
+    int pawns_at_home = 0;
+    for (int file = 0; file < 8; ++file) {
+      if (GET_BIT(game.board.bitboards[W_PAWN], a2 + file)) { pawns_at_home++; }
+    }
+    REQUIRE_EQ(pawns_at_home, 8);
+
+    // The null child's own call, argument for argument.
+    negamax(ORDINARY_BETA - 1, ORDINARY_BETA, DRIVE_DEPTH, 2, &game, &state, 0,
+            false, PREV_MOVE);
+
+    unmake_null_move(&game);
+
+    size_t white_keyed_one_ply = 0;
+
+    for (int prev_piece = W_PAWN; prev_piece <= W_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist[prev_piece][prev_to][piece][to] != 0) {
+              white_keyed_one_ply++;
+            }
+          }
+        }
+      }
+    }
+
+    // The counted precondition. Every one of these is a quiet cutoff at a node
+    // two plies after the pass, by the colour argument above, so the assertion
+    // below is made over a class this drive actually reached.
+    REQUIRE_MESSAGE(white_keyed_one_ply > 0,
+                    "no node two plies after the pass had a quiet cutoff, so "
+                    "the guard decided nothing in this drive");
+
+    size_t under_null_key = 0;
+
+    for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+      for (int to = 0; to < 64; ++to) {
+        if (state.cont_hist2[W_PAWN][a8][piece][to] != 0) { under_null_key++; }
+      }
+    }
+
+    CHECK_EQ(under_null_key, 0);
   }
 
 
@@ -5348,10 +5672,31 @@ TEST_SUITE("search: pruning and reduction guards")
     // below: with the shallow-depth block live in the children, no late quiet
     // at that node comes back from its reduced search worth more than the
     // ordering thought, so `reduced` read 40 and `researched` read 0 at every
-    // depth from 4 to 8. This one re-searches at every one of those depths --
+    // depth from 4 to 8. This one re-searched at every one of those depths --
     // 3 to 5 of its 26 reduced moves -- and it was found by scanning the 400
     // committed census positions rather than picked. python-chess reports
     // `is_valid() True` and `is_check() False`.
+    //
+    // GOLDEN (DEC-142): the position and the depth, both measurements and
+    // neither a property of the position. Re-derived by
+    // `adocs/data/S231_research_witness.py`, which drives this node line for
+    // line over the same 400 committed positions and applies a rule stated
+    // before its own sweep: keep this position if it still re-searches
+    // somewhere in depths 4 to 8 and take the lowest such depth, otherwise
+    // take the first position of the corpus that re-searches at every one of
+    // them. Moves legitimately on: any change to ordering, reduction or
+    // pruning. Margin: exact -- `researched > 0` is the assertion.
+    //
+    // **S231 moved the depth from 6 to 4, measured both ways.** The two-ply
+    // continuation table reorders every quiet move, and on this position
+    // `researched` over depths 4 to 8 went from 7, 2, 4, 3, 2 at the parent to
+    // 7, 2, **0**, 4, 3 here -- depth 6 is the one depth of the five that
+    // emptied, and it was the one this case pinned. The parent's figures were
+    // taken in this tree with `ContHist2Weight` at 0, which is the parent's
+    // engine to the node (`bench` 4646334 either way). The rule's answer is
+    // depth 4, where 7 of 23 reduced moves are searched again -- the largest
+    // count in the swept range and not the smallest, which is what a depth
+    // picked to scrape past would look like.
     const std::string fen =
         "6k1/1p1b1pb1/1r1p2p1/3Pp2p/1B1p4/3P1BP1/2P2PKP/1R6 w - - 2 28";
 
@@ -5363,7 +5708,8 @@ TEST_SUITE("search: pruning and reduction guards")
 
     // Deep enough for the reduction table to return more than zero on a late
     // move and for a late move to be worth more than the ordering thought.
-    const int depth = 6;
+    // Re-derived at S231 by the script named above; 6 until then.
+    const int depth = 4;
 
     load(fen, 1);
 
@@ -6608,7 +6954,7 @@ TEST_SUITE("search: pruning and reduction guards")
       // here, so the sum is zero. No reduction reads that sum any more
       // (DEC-213); the assertion stays as what it always was, a statement that
       // this key is the hard case and not one the ordering rescues.
-      REQUIRE_MESSAGE(quiet_history_sum(&game, &state, key, 0) == 0, title);
+      REQUIRE_MESSAGE(quiet_history_sum(&game, &state, key, 0, 0) == 0, title);
 
       // The root's own window and the root's own ply: `search()` enters
       // negamax_at() at ply 0 with is_pv true and the full window, and the

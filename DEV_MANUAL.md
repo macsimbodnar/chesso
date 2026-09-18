@@ -591,11 +591,38 @@ the frozen config and the run log are `adocs/data/S222_spsa_trajectory.tsv`,
 `S222_spsa_run.json` and `S222_spsa.log`; the vector they end on is what
 `src/search_params.hpp` ships and what `adocs/data/S222_sprt.sh` measures.
 
-Note which book each of the two plays. S085 tuned on `UHO_4060_v3.epd` and
-verified on `UHO_Lichess_4852_v1.epd`; S222's lane tunes on `UHO_4060_v3.epd`
-and its SPRT verifies on `noob_3moves.epd`, which is what `fastchess.sh` has
-played since DEC-189. The rule is the same one in both: never tune on the
-openings the verification plays.
+**S231's continuation lane is the third, and narrower still**:
+`tools/spsa_s231.json`, **six axes** at exactly the same regime, with
+`adocs/data/S231_spsa.sh` as the pre-registration and the runner —
+`nohup adocs/data/S231_spsa.sh > .tuning/spsa_s231.log 2>&1 &`. The axes are
+the two continuation tables' three each: `ContHistBonus`, `ContHistMalus`,
+`ContHistWeight`, `ContHist2Bonus`, `ContHist2Malus`, `ContHist2Weight`, each
+starting at its incumbent. Plain history's six coefficients, `QuietHistoryMax`
+and `HistPruneCoeff` are **not** in it — S222's lane fitted them and S127
+refits everything after the block — while the one-ply three **are**, because
+the two tables share one quiet band and a lane that pinned one pair would be
+fitting a ratio it had fixed by hand. Estimated at **8 h 45 m** from S222's own
+**measured** 8 h 37 m 31 s for this exact shape on this machine, ceiling 18 h:
+a night run under DEC-155, and the axis count does not enter because SPSA plays
+two evaluations an iteration whatever the dimension. Seed 231. Its header
+carries six pre-registered readings, and two of them differ from S222's on
+purpose: a stuck lane still owes the SPRT, because the reference is the tree
+before the step and what the run prices is the second table itself; and an H0
+reverts cleanly, because no axis in this lane would be left without a verdict.
+
+One thing to know before running `check` on an old config: `ContHistWeight`'s
+declared maximum was halved from 2000 to 1000 at S231, when a second weighted
+term joined the quiet band and the band-clearance ceiling became a property of
+the two weights' sum. `tools/spsa_s222.json` still declares 0 to 2000 and
+`check` compares a config's bounds against the binary's, so it would now be
+refused by name. That is correct — it is the frozen record of a run already
+taken, not a template — and it is not edited.
+
+Note which book each of the three plays. S085 tuned on `UHO_4060_v3.epd` and
+verified on `UHO_Lichess_4852_v1.epd`; S222's and S231's lanes tune on
+`UHO_4060_v3.epd` and their SPRTs verify on `noob_3moves.epd`, which is what
+`fastchess.sh` has played since DEC-189. The rule is the same one in all of
+them: never tune on the openings the verification plays.
 
 **Tune and verify on different openings and a different control.**
 `adocs/eval_tuning_strategy.md` par.7. `books/fetch_book.sh` pins a second
@@ -2059,7 +2086,19 @@ helper; it measured zero at every scale it was given and left the tree
 (DEC-213), so the tree this line sits on is the tree before it, bench signature
 and `tools/search_bench.py` counts and best moves alike — which is INV-6's own
 proof that the removal is a revert and not a rewrite, and why no SPRT is owed
-for it.
+for it. **At `S231`, the two-ply continuation table: `5443203`**, 17.2 % *more*
+— the first ordering change in this ledger to move the number that way. A
+second history term reorders every quiet again and the tree it leaves is bigger
+on these eight positions; whether it is a worse tree is the SPRT's to say and
+not this number's (DEC-019), and the lane that fits the two tables' six axes
+runs before that verdict. Its nps cost is the first table's again: 3736998,
+3728551, 3717272, 3875452, 3670493 and 3707966 before against 3717778, 3564005,
+3576959, 3576527, 3555427 and 3577747 after, six interleaved pairs, **−3.84 %
+paired with a standard error of 0.95 %** — one more dependent load per scored
+quiet, one more graded update per cutoff and a second 1.125 MiB table, which is
+S222's 3.6 % shape repeated. Taken at a load average of 2.0 on twelve threads
+rather than on an idle machine, which is why it is quoted with its interval and
+not as a point.
 
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,

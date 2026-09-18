@@ -161,15 +161,27 @@
      write nothing and the read term is identically 0. 1000 is where one update \
      at the reference depth already closes the whole band, past which the clamp \
      inside history_gravity_update makes every larger value the same engine.    \
-     ContHistWeight's 2000 is the band-clearance ceiling, and it is the one-way \
-     door CLAUDE.md names: the quiet band is now                                \
-     [-(QuietHistoryMax + w*CONT_HIST_BOUND/100), +the same], and it has to     \
-     stand 100 clear of the countermove band at 700000. At both declared        \
-     maxima that is 32767 + 655340 = 688107, a clearance of 11893; at 2100 it   \
-     would be 720901 and the band would swallow the countermove and both        \
-     killers. Asserted, not argued, in tests/test_evaluation.cpp "the declared  \
-     history ceiling clears the band above it".                                 \
-                                                                               \
+     ContHistWeight's 1000 is the band-clearance ceiling, and it is the         \
+     one-way door CLAUDE.md names. **It was 2000 until S231 halved it, and the  \
+     halving is arithmetic and not a judgement about where good values lie.**   \
+     The quiet band is [-(QuietHistoryMax + (w1 + w2)*CONT_HIST_BOUND/100),     \
+     +the same] once the two-ply table of S231 adds a second weighted term to   \
+     the same sum, and it has to stand 100 clear of the countermove band at     \
+     700000. The clearance is a property of the two weights' *total*, so with   \
+     two tables sharing one band the ceiling each may declare is half of what   \
+     one table could: at 1000 and 1000 the widest band the ranges admit is      \
+     32767 + 327670 + 327670 = 688107, a clearance of **11893 -- the same       \
+     number the single 2000 ceiling gave**, because 2000 and 1000 + 1000 span   \
+     the same 655340. At 1050 each it would be 720901 and the band would        \
+     swallow the countermove and both killers. The fitted 26 is nowhere near    \
+     either edge and is untouched. Asserted at both weights' declared maxima,   \
+     not argued, in tests/test_evaluation.cpp "the declared history ceiling     \
+     clears the band above it". Consequence worth knowing: tools/spsa_s222.json \
+     declares this axis 0 to 2000 and is the frozen record of a run already     \
+     taken -- `spsa_driver.py check` compares a config's bounds against the     \
+     binary's and would now refuse it by name, which is correct and is not a    \
+     reason to edit a finished run's input.                                     \
+                                                                                \
      Seeds, DEC-084 as amended by DEC-105. No engine's constant is behind any   \
      of them, and S024's reuse of plain history's numbers is not evidence for   \
      these. Both shares are **(b), a derivation over chesso's own history       \
@@ -191,9 +203,66 @@
      against plain history's fitted 8831, so the two still carry very nearly    \
      equal authority. What the SPRT judges is the whole eleven-axis vector      \
      and not this line. */                                                      \
-  X(CONT_HIST_BONUS,   "ContHistBonus",   17, 0, 1000)                         \
-  X(CONT_HIST_MALUS,   "ContHistMalus",   18, 0, 1000)                         \
-  X(CONT_HIST_WEIGHT,  "ContHistWeight",  26, 0, 2000)                         \
+  X(CONT_HIST_BONUS,   "ContHistBonus",   17, 0, 1000)                          \
+  X(CONT_HIST_MALUS,   "ContHistMalus",   18, 0, 1000)                          \
+  X(CONT_HIST_WEIGHT,  "ContHistWeight",  26, 0, 1000)                          \
+                                                                                \
+  /* TWO-PLY CONTINUATION HISTORY, S231, and its own scale again. The table is  \
+     `cont_hist2` in src/data_structures.hpp, keyed on the (piece, to) of the   \
+     move **two** plies back and this move's; written at every quiet cutoff     \
+     beside the one-ply table and summed into the same quiet ordering score     \
+     with a weight of its own. S222's H1 (DEC-210) is what it was waiting on.   \
+                                                                                \
+     **Three axes and not four, for DEC-209's reason unchanged.** The gauge     \
+     argument is about one table and applies to this one word for word: bonus,  \
+     malus, bound and weight reach the tree only through (bonus/bound,          \
+     malus/bound, weight*bound), so a fourth axis would random-walk. The bound  \
+     is therefore the same definition `CONT_HIST_BOUND` and **no second bound   \
+     is added** -- the two tables are stored in the same type and bounded by    \
+     the same ceiling, and what separates their scales is the two weights.      \
+                                                                                \
+     The unit is ContHistBonus's unit: thousandths of the table's own band at   \
+     CONT_HIST_REF_DEPTH, so the two pairs of shares are directly comparable    \
+     and the lane can move one against the other. Ranges by stated purpose and  \
+     identical to the one-ply axes' for that reason: 0 is a true off value on   \
+     all three (nothing is written and the ordering term is identically 0),     \
+     1000 closes one whole band in a single update at the reference depth for   \
+     the two shares, and 1000 on the weight is the **shared** band-clearance    \
+     ceiling ContHistWeight's block above derives -- two weights over one band, \
+     half the ceiling each, the same 11893 clearance as before.                 \
+                                                                                \
+     Seeds, DEC-084 as amended by DEC-105, all three **(b), a derivation over   \
+     chesso's own numbers**: no engine's constant is behind any of them and     \
+     none was read off a table, a wiki page or a release note.                  \
+                                                                                \
+       ContHist2Bonus 17 and ContHist2Malus 18 are the one-ply table's own      \
+       fitted shares. The two tables are written at the same call site, over    \
+       the same two spans, at the same reference depth, into bands of the same  \
+       width -- so "start at the same rate as the table it sits beside" is the  \
+       derivation S222 itself used against plain history, with the rate now     \
+       this project's own SPSA fit of 2026-09-14 rather than a shipped seed.    \
+       The lane moves all six shares together.                                  \
+                                                                                \
+       ContHist2Weight 26 is equal authority with the term beside it: at 26 the \
+       two-ply term spans 26 * 32767 / 100 = 8519, which is exactly what the    \
+       one-ply term spans at its fitted 26, against plain history's fitted      \
+       QuietHistoryMax of 8831. So the quiet band ships as 8831 / 8519 / 8519   \
+       over its three terms. **Deliberately not 0.** An SPSA axis that starts   \
+       at a bound is a known pathology here -- S085's RfpMinPly sat at one for  \
+       72.5 % of that run's iterations -- and the lane exists to fit this       \
+       weight, so shipping the table switched off would waste the night.        \
+       Whether equal authority is the right value is the lane's question; what  \
+       is fixed here is that the seed is derived and stated.                    \
+                                                                                \
+     All three are first settings and none has been fitted yet: S231's own      \
+     narrow lane (tools/spsa_s231.json, adocs/data/S231_spsa.sh) fits them      \
+     together with the one-ply table's three, and one gainer SPRT against the   \
+     tree before S231's first landing decides the step -- one vector under one  \
+     verdict, DEC-210's reading. S127 still refits every axis after the block.  \
+     */                                                                         \
+  X(CONT_HIST2_BONUS,  "ContHist2Bonus",  17, 0, 1000)                         \
+  X(CONT_HIST2_MALUS,  "ContHist2Malus",  18, 0, 1000)                         \
+  X(CONT_HIST2_WEIGHT, "ContHist2Weight", 26, 0, 1000)                         \
                                                                                \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \
