@@ -22,6 +22,38 @@ Updated: 2026-09-16, by hand.
   10 m, 184749 games in 82.38 hours); the step file has the coordinator's
   SPRT section and the leg-1 reading.
 
+- **S098 is done, 2026-09-18 02:26, and `plan_current/` is empty.** Three
+  verdicts, five SPRTs, 45598 games in 21 h 28 m of matches at 2124 an hour,
+  plus one 8 h 48 m SPSA lane. What the step leaves in the engine: **the four
+  node-type terms** (`LmrCutNode`, `LmrNotImproving`, `LmrTtCapture`,
+  `LmrPv`), measured at `Elo 29.05 +/- 11.52`, and **the deeper half of the
+  re-search rule** (`LmrDeeperMargin`, `LmrDeeperMinReduction`), measured at
+  `Elo 5.75 +/- 4.37` after the pair it was half of read `-9.97 +/- 7.56`.
+  What it removed: the history-scaled reduction (zero at three scales,
+  DEC-213) and the shallower re-search path, the latter behaviour-neutrally
+  with INV-6's three proofs -- `bench` 4646334 unchanged, `search_bench`
+  identical at depths 9 and 12, the tune build at the rule's off value back
+  at the reference's 5469072. `bench` over the step: 5685915 -> 4646334.
+  **DEC-217** records the closure and what was rejected; **DEC-215** the rule
+  the census caught, that an off value is proved on the tree and never
+  assumed from a range's end. Commits `30a3be2`, `a771260`, `cb40afd`,
+  `8d60551`, `95f8951` and the records between them. Four Tier-1 fast checks
+  earned their keep: two fabricated evidence blocks, one real test gap (a
+  site-level fault no replay-based case could see, now killed by
+  `D12_site_rebases_on_alpha`), one aggregate that had lost its reach, and a
+  census that counted a condition where four documents published a path.
+  **Nothing is owed at this completion**: the block is not at a boundary
+  (S091 opened it, DEC-133's order runs on), so no drift point and no
+  DEC-202 longer-control reading; DEC-211's book re-read was owed at this
+  verdict count and is **DEC-216**, taken 2026-09-17 -- the book stays.
+  **Next in Open is S231**, the two-ply continuation history table S222's H1
+  opened, and it is **not started**: the owner's instruction of 2026-09-17
+  was to complete the open work and start no new plan step. The machine is
+  idle. One item is parked for whoever opens the next step:
+  `adocs/data/S098_v3_research_census.py` is retired and refuses to run by a
+  structural check on its own patch anchors, four of its six quantities
+  having lost their referent with the shallower path.
+
 - **S098 verdict 3's leg 1 read H1, 2026-09-18 00:23: `Elo 5.75 +/- 4.37` at
   `8+0.08` over 14510 games in 6 h 49 m 01 s** (LLR 2.97, `nElo 7.44 +/-
   5.65`, W 4559 L 4319 D 5632, `Ptnml [603, 1695, 2522, 1729, 706]`, LOS

@@ -8,7 +8,51 @@ closes:
 blocks:
 paused_by:
 author:     an Opus 5 subagent briefed by the coordinator for verdict 1 (DEC-185, DEC-199); the SPRTs are the coordinator's; started 2026-09-15 08:03 on the idle machine
-done:
+done:       2026-09-18. **Three verdicts, five SPRTs, 45598 games in 21 h 28 m
+            of matches at 2124 an hour, plus one 8 h 48 m SPSA lane.** Verdict 1,
+            the reduction scaled by the move's history, measured zero at three
+            scales -- the band seed inert by node count, the lane's fitted
+            699 / 3 at `Elo -2.92 +/- 5.02` over 11524 games, the census p90
+            1442 / 3 at `Elo -2.34 +/- 4.73` over 13078 -- and left the tree in
+            DEC-194's shape (`30a3be2`, DEC-213). Verdict 2, the four node-type
+            terms behind off-valued constants after a firing census, read **H1
+            at `Elo 29.05 +/- 11.52` over 1990 games** and ships (`a771260`,
+            DEC-214). Verdict 3, the re-search depth answering the reduced
+            search, read **H0 whole at `Elo -9.97 +/- 7.56` over 4496 games**
+            with the entire interval below zero (`cb40afd`), and its
+            pre-registered bisection's leg 1 -- the shallower path off, the
+            deeper path kept -- read **H1 at `Elo 5.75 +/- 4.37` over 14510
+            games** against the same reference (`8d60551`), so the deeper half
+            ships and the shallower half was removed behaviour-neutrally
+            (`95f8951`, DEC-217): `bench` 4646334 unchanged, `search_bench`
+            identical in every count and best move at depths 9 and 12, the tune
+            build at the rule's off value back at the reference's 5469072.
+            `bench` over the step: 5685915 -> 4646334. **`accepts:` is
+            satisfied clause by clause**: an SPRT verdict per adjustment
+            measured separately, one change at a time; every constant in
+            `src/search_params.hpp` with a stated range and a DEC-105 form,
+            seven introduced and four surviving (`LmrCutNode`,
+            `LmrNotImproving`, `LmrTtCapture`, `LmrPv`, `LmrDeeperMargin`,
+            `LmrDeeperMinReduction` -- six, `LmrHistDiv`, `LmrHistClamp` and
+            `LmrShallowerMargin` having left with their rules); the mate cases
+            re-run after each adjustment and green; "a mate found at the root is
+            never reduced" asserted at every depth with its precondition counted
+            after it fell vacuous at one of them; the fast suite green in both
+            builds at every landing. Second tier per DEC-141: Debug self-play at
+            each landing, 0 `Assertion`; `gate_extra` 5 stages, last 1108 s;
+            twelve mutants written for the re-search rule and seven surviving
+            its removal, nine for the node-type rule, every anchor resolving
+            once across ten registries. **What the step surfaced and routed
+            onward**: S127 refits the six survivors beside `LmrBase`,
+            `LmrDivisor` and S109's thresholds; post-re-search history updates
+            and a two-ply deeper variant stay later steps' material; S231 is
+            S222's two-ply table and unrelated. Four Tier-1 fast checks found
+            two fabricated evidence blocks, one real test gap (a site-level
+            fault a replay-based case could not see, now killed by
+            `D12_site_rebases_on_alpha`), one aggregate that had lost its reach,
+            and a census that counted a condition where it published a path;
+            all were repaired before their commits. Decisions: DEC-212, DEC-213,
+            DEC-214, DEC-215, DEC-217.
 
 ## Why it comes after the history steps
 
