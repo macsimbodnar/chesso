@@ -274,37 +274,41 @@ static inline int lmr_depth_of(int depth, int move_number, int node_adjustment)
 
 // The depth the zero-window re-search of a reduced move runs at, S098
 // verdict 3. Until this verdict it was `child_depth` always; it now answers the
-// reduced search that produced it.
+// reduced search that produced it, and it answers it **only upward**:
 //
-//   shallower  the move beat alpha by less than LMR_SHALLOWER_MARGIN, so the
-//              reduction was wrong by a hair and a whole extra ply of
-//              verification is more than the answer is worth
 //   deeper     the move cleared the node's own fail-soft best by
-//              LMR_DEEPER_MARGIN with a real reduction taken, so the reduction
-//              was wrong by a lot and this is the move the node is about
+//              LMR_DEEPER_MARGIN with a reduction of at least
+//              LMR_DEEPER_MIN_REDUCTION, so the reduction was wrong by a lot
+//              and this is the move the node is about
+//   otherwise  `child_depth`, which is where the re-search ran before this
+//              step and where it still runs at everything else
+//
+// THE OTHER HALF WAS MEASURED HERE AND IS GONE. Verdict 3 shipped a second
+// path beside this one -- a ply *off* the re-search where the reduced score
+// beat alpha by less than a margin of its own -- and the pair measured
+// `Elo -9.97 +/- 7.56` over 4496 games, the whole interval below zero. The
+// pre-registered bisection's leg 1 switched that path off against the same
+// reference and read `Elo 5.75 +/- 4.37`, `nElo 7.44 +/- 5.65` over 14510
+// games, so the deeper path alone is what gains and the shallower one was the
+// loss. It left with its margin, with the `reduction >= 2` guard that existed
+// only to keep it off a depth the reduced search had already run, and with the
+// floor at 1, which nothing else could reach.
 //
 // `best` is `best_so_far` before this move -- the fail-soft base, not alpha.
 // The two are the same number only at a node that has already raised alpha;
 // everywhere else `best` sits below it, which is why the deeper margin is
-// measured from `best` and not from the window.
-//
-// PRECEDENCE: the shallower path wins where both conditions hold. They can
-// both hold, and only when `best` sits more than a margin below `alpha` -- at
-// a scout node that is every node that has not yet found a move, since a
-// zero-window node that raises alpha cuts off instead of continuing. In that
-// region `score > best + LMR_DEEPER_MARGIN` is satisfied by `best` being low
-// and not by `score` being high, so the deeper condition's premise is
-// degenerate exactly where the two meet; `score < alpha + LMR_SHALLOWER_MARGIN`
-// is a statement about the score against the node's own bound and is never
-// degenerate. The degenerate one yields.
+// measured from `best` and not from the window. It is also why the path fires
+// at all: at a scout node that has not yet found a move `best` is far below
+// the window, and the census measured the condition true on 6.89 % of
+// re-search sites at depth 12.
 //
 // THE RE-SEARCH IS NEVER THE REDUCED SEARCH REPEATED: the returned depth is
-// always strictly greater than `child_depth - reduction`. That is what the
-// `reduction >= 2` on the shallower path is for and it is arithmetic, not a
-// setting -- at a reduction of 1 the shallower depth *is* the reduced depth.
-// The deeper path's own guard is the tunable one, LMR_DEEPER_MIN_REDUCTION,
-// and it is the published one: the bare form measured negative where the
-// guarded form measured positive (S098 section 1(d)).
+// always strictly greater than `child_depth - reduction`, and with the
+// shallower path gone that is arithmetic -- the rule returns `child_depth` or
+// one more, and the site's own reduction is at least 1. The guard that remains
+// is the tunable one, LMR_DEEPER_MIN_REDUCTION, and it is the published one:
+// the bare form measured negative where the guarded form measured positive
+// (S098 section 1(d)).
 //
 // WHAT IT HANDS BACK, AND WHY IT IS TWO NUMBERS. The depth, and **the base it
 // measured the deeper margin from**, echoed straight back out. The second one
@@ -322,37 +326,50 @@ struct research_decision_t
 };
 
 
-// The cap at `child_depth + 1` and the floor at 1 never bind at any input the
-// engine itself produces: the three branches give `child_depth` and its two
-// neighbours, and the reduction reaching this function is already clamped to
-// `[0, child_depth - 1]`. They are kept anyway. S127 tunes the branch set and
-// S097 extends `child_depth`, and a clamp that has to be put back later is one
-// somebody has already shipped without; the floor is reachable from the wider
-// domain this function declares -- a reduction of 2 at a child depth of 1 --
-// which is where its own case drives it. All three bounds are asserted below
-// rather than only written.
+// The cap at `child_depth + 1` never binds at any input the engine itself
+// produces: the rule answers `child_depth` or one more and nothing else. It is
+// kept anyway -- S127 tunes the branch set and S097 extends `child_depth`, and
+// a bound that has to be put back later is one somebody has already shipped
+// without. A mutant that deletes it alone is equivalent for that reason and is
+// declared so rather than written; the killable forms are the bound moved up
+// with the branch that would then reach it and the bound moved down on its own,
+// which is what tools/mutants/S098_research_rule.py holds.
+//
+// **The floor at 1 left with the shallower path.** It could only ever bind
+// below `child_depth`, and nothing goes there any more; the assertion below
+// keeps the bound as a claim about the result, where it is now a consequence of
+// the preconditions rather than something a clamp has to produce.
+//
+// `alpha` is the node's own window and it is read by nothing here since the
+// shallower path left: what the rule compares against is the fail-soft best,
+// which is the published re-basing and the one thing D09 exists to hold. The
+// parameter stays for two reasons and both are load-bearing. It is the
+// precondition this function asserts -- a re-search happens only where the
+// reduced score beat the window -- and it is the wrong variable the deeper
+// margin could be measured from, so a rule that reads it instead of `best` is a
+// bug a case can drive rather than one no signature admits.
 static inline research_decision_t lmr_research_depth(int child_depth,
                                                      int reduction,
                                                      int score,
-                                                     int alpha,
+                                                     [[maybe_unused]] int alpha,
                                                      int best)
 {
-  // The site's own precondition: this is the re-search a *reduced* move that
-  // beat alpha is owed, and both facts are what the inequality below rests on.
+  // The site's own preconditions: this is the re-search a *reduced* move that
+  // beat alpha is owed, at the child of a node deep enough to have reduced --
+  // `child_depth` is `depth - 1` and the reduction is eligible only from depth
+  // 3. All three are what the bounds below rest on.
+  assert(child_depth >= 1);
   assert(reduction >= 1);
   assert(score > alpha);
 
   int depth = child_depth;
 
-  if (reduction >= 2 && score < alpha + LMR_SHALLOWER_MARGIN) {
-    depth = child_depth - 1;
-  } else if (reduction >= LMR_DEEPER_MIN_REDUCTION &&
-             score > best + LMR_DEEPER_MARGIN) {
+  if (reduction >= LMR_DEEPER_MIN_REDUCTION &&
+      score > best + LMR_DEEPER_MARGIN) {
     depth = child_depth + 1;
   }
 
   if (depth > child_depth + 1) { depth = child_depth + 1; }
-  if (depth < 1) { depth = 1; }
 
   assert(depth <= child_depth + 1);
   assert(depth >= 1);

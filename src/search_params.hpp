@@ -356,63 +356,57 @@
                                                                                \
   /* THE RE-SEARCH DEPTH, S098 verdict 3. A reduced late move that beat alpha   \
      is owed a zero-window repeat, and until this step that repeat always ran   \
-     at `child_depth`. It now answers the reduced search instead: one ply       \
-     deeper where the reduced score cleared the node's fail-soft best by        \
-     LMR_DEEPER_MARGIN and a real reduction was taken, one ply shallower where  \
-     it beat alpha by less than LMR_SHALLOWER_MARGIN                            \
-     (`lmr_research_depth` in src/search.cpp). The full-window re-search is     \
-     untouched and still runs at `child_depth`.                                 \
+     at `child_depth`. It now answers the reduced search instead, and **only    \
+     upward**: one ply deeper where the reduced score cleared the node's        \
+     fail-soft best by LMR_DEEPER_MARGIN with a reduction of at least           \
+     LMR_DEEPER_MIN_REDUCTION (`lmr_research_depth` in src/search.cpp), and at  \
+     `child_depth` everywhere else. The full-window re-search is untouched and  \
+     still runs at `child_depth`.                                               \
                                                                                \
-     UNITS. Both margins are compared against search scores, so they are in     \
-     chesso's material scale -- `piece_value` in src/eval_tables.hpp, where     \
-     PAWN is 94. Plies have no unit.                                            \
+     UNITS. The margin is compared against search scores, so it is in chesso's  \
+     material scale -- `piece_value` in src/eval_tables.hpp, where PAWN is 94.  \
+     Plies have no unit.                                                        \
                                                                                \
-     **Both margins are DEC-105 (c), the midpoint of a range stated by          \
+     **LMR_DEEPER_MARGIN is DEC-105 (c), the midpoint of a range stated by      \
      purpose**: 0 to PAWN, whose top is the point past which the re-search      \
      depth would be decided on more material than a pawn of window, and whose   \
      midpoint is the integer 47. The published record says only that the        \
      direction is worth trying and seeds nothing (DEC-019, DEC-084 as amended   \
      by DEC-105): the bare form measured -7.07 and the guarded form +3.11 in    \
-     the 3138-3224 band, which is above this engine's, so a zero here is an     \
-     expected outcome (DEC-176).                                                \
+     the 3138-3224 band, which is above this engine's.                          \
                                                                                \
      LMR_DEEPER_MIN_REDUCTION is that guard and it is DEC-105 **(b)**, a        \
      derivation over this engine's own site: the re-search exists only where    \
      `reduction > 0`, so 1 is a guard that says nothing, and 2 is the smallest  \
-     value at which it does -- the same integer the shallower path's strict     \
-     inequality forces, so one threshold serves both rather than two.           \
+     value at which it does.                                                    \
                                                                                \
-     THE OFF VALUES, and one of them is not where section 4 of the step file    \
-     expected it. `LmrShallowerMargin` is off at 0: `score < alpha + 0` is      \
-     false at a site that requires `score > alpha`. `LmrDeeperMargin` is        \
-     **not** off at its range top -- the fail-soft best sits below alpha at     \
-     every scout node, and the census measured `score > best + 94` still true   \
-     at 2.86 % of re-search sites at depth 12 -- so the                         \
-     deeper path's off value is `LmrDeeperMinReduction` at **its** range top,   \
+     THE OFF VALUE, and it is not where section 4 of the step file expected it. \
+     `LmrDeeperMargin` is **not** off at its range top -- the fail-soft best    \
+     sits below alpha at every scout node, and the census measured              \
+     `score > best + 94` still true at 2.86 % of re-search sites at depth 12 -- \
+     so the rule's off value is `LmrDeeperMinReduction` at **its** range top,   \
      which is above every reduction the clamp to `[0, child_depth - 1]`         \
      admits (MAX_DEPTH is 126 and the reduction cannot exceed depth - 2). At    \
-     those two values the re-search runs at `child_depth` everywhere and the    \
-     engine is the one before this verdict, bench signature included, which is  \
-     what the release-rebuild bisection rests on (DEC-063, DEC-214).            \
+     that value the re-search runs at `child_depth` everywhere and the engine   \
+     is the one before this verdict, bench signature included, which is what    \
+     the release-rebuild bisection rested on (DEC-063, DEC-214, DEC-215).       \
                                                                                \
-     **LEG 1 OF THE H0 BISECTION, 2026-09-17: this constant ships at 0.**       \
-     Verdict 3's SPRT read H0 with the whole interval below zero -- `Elo -9.97  \
-     +/- 7.56` over 4496 games -- and adocs/data/S098_v3_sprt.sh pre-registered \
-     the bisection before those games, one path at a time: **leg 1 keeps the    \
-     deeper path at its seeds and switches the shallower path off**, at the off \
-     value proved above. The branch stays in `lmr_research_depth` and is simply \
-     never taken, which is what makes the leg one release rebuild and a         \
-     reversible one. **The range does not move**: 47 is the (c) seed the        \
-     constant returns to if leg 2 is taken, and a range is a property of the    \
-     rule rather than of the leg. adocs/data/S098_v3_leg1_sprt.sh is the leg's  \
-     own pre-registration.                                                      \
+     **THE SHALLOWER HALF WAS MEASURED AND REMOVED, 2026-09-18.** A second      \
+     path shipped beside this one until the bisection read it: a ply *off* the  \
+     re-search where the score beat alpha by less than an LmrShallowerMargin of \
+     its own. The pair measured `Elo -9.97 +/- 7.56` over 4496 games, the whole \
+     interval below zero; leg 1 switched the shallower path off against the     \
+     same reference and read H1, `Elo 5.75 +/- 4.37` and `nElo 7.44 +/- 5.65`   \
+     over 14510 games. adocs/data/S098_v3_leg1_sprt.sh pre-registered that      \
+     reading as the one where the path leaves, so the constant, its branch and  \
+     the `reduction >= 2` guard written only for it are gone rather than left   \
+     at an off value. The removal is behaviour-neutral at the shipped           \
+     configuration and proved so by the signature, not asserted.                \
                                                                                \
      LmrDeeperMinReduction's floor of 1 is arithmetic -- the site already       \
      requires a reduction of at least 1 -- and its ceiling is the off value     \
-     above. S127 refits all three with LmrBase and LmrDivisor after the         \
-     block. */                                                                  \
+     above. S127 refits both with LmrBase and LmrDivisor after the block. */    \
   X(LMR_DEEPER_MARGIN,        "LmrDeeperMargin",        47, 0, 94)             \
-  X(LMR_SHALLOWER_MARGIN,     "LmrShallowerMargin",      0, 0, 94)             \
   X(LMR_DEEPER_MIN_REDUCTION, "LmrDeeperMinReduction",   2, 1, 126)            \
                                                                                \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \

@@ -58,6 +58,19 @@ Quantiles are exact inside the range because the bins are one unit wide; a
 quantile that falls in an overflow bucket is printed as such and never
 interpolated.
 
+**THIS SCRIPT NO LONGER RUNS, AND IT REFUSES RATHER THAN MIS-MEASURING
+(2026-09-18).** The shallower path was removed from `lmr_research_depth` after
+S098 verdict 3's SPRT read a measured loss and its pre-registered bisection's
+leg 1 read H1 with that path off. Four of the six quantities below -- the
+shallower condition, the shallower path, the overlap and the precedence between
+the two -- no longer exist, and the off patch's own anchor line does not either.
+`refuse_if_the_rule_moved()` is checked before a worktree is created and exits
+with what changed; the published output in `adocs/data/S098_v3_research_census.txt`
+stays as the evidence DEC-214 was answered with, taken on the tree that shipped
+both paths, and it is not reproducible from this tree. A later step that needs
+a census of the surviving rule writes one from this method with the shallower
+counters and the joint counters dropped.
+
 **THE CENSUS IS TAKEN ON THE OFF TREE**, which is why the patch below also
 writes the two off values into the worktree's copy of src/search_params.hpp:
 `LmrShallowerMargin` 0 and `LmrDeeperMinReduction` at its range top. The tree
@@ -595,7 +608,72 @@ def summarise(depth, positions, nodes, wall, counts, reduction, hists):
     return "\n".join(lines)
 
 
+# What this script measured and the tree no longer has. Checked before a
+# worktree is created, so the refusal costs nothing and names its own reason
+# instead of surfacing as an anchor that is not unique.
+
+RETIRED_MESSAGE = """\
+this census cannot run on this tree and will not pretend to.
+
+It measures a two-path rule: at every reduced fail-high re-search site it
+counts the shallower condition (`reduction >= 2 && score < alpha +
+LmrShallowerMargin`), the deeper condition, their overlap and the three
+outcomes after the precedence between them, and it takes all of that on an off
+tree it builds by patching both off values into src/search_params.hpp.
+
+**The shallower path was removed on 2026-09-18** after S098 verdict 3's SPRT
+read a measured loss (`Elo -9.97 +/- 7.56` over 4496 games) and its
+pre-registered bisection's leg 1 read H1 with that path switched off
+(`Elo 5.75 +/- 4.37` over 14510 games). LmrShallowerMargin, its branch, its
+guard and the precedence between the two paths are all gone, so four of the
+six quantities this script publishes no longer exist and the fifth -- the
+deeper path's share after precedence -- is now the same number as the deeper
+condition's, which the output already carries.
+
+adocs/data/S098_v3_research_census.txt stays as the evidence it was: it was
+taken on the tree that shipped both paths and it is what DEC-214 was answered
+with. It is not reproducible from this tree and this script says so rather
+than producing a census of a rule that half exists.
+
+A later step that needs a firing census of the surviving rule writes one: the
+instrumentation, the driver and the S024 positions here are the method, and
+what it has to drop is the shallower counters, the joint counters and the
+LmrShallowerMargin half of OFF_PATCH."""
+
+
+def refuse_if_the_rule_moved():
+    """Loud and early, per this script's own contract (DEC-214, DEC-142).
+
+    A census that silently measured something else would be worse than no
+    census, and the failure mode is real: the off patch's anchors are literal
+    lines of src/search_params.hpp, so a removed constant surfaces as "anchor is
+    not unique" with no hint of what actually changed.
+
+    **Keyed on the patch and not on the macro's name.** The first form of this
+    guard asked whether `LMR_SHALLOWER_MARGIN` appeared anywhere in the header,
+    which a comment recalling the removed constant would satisfy -- and the
+    census would then re-arm and run with four of its six quantities pointing at
+    nothing. What is checked instead is every OFF_PATCH anchor, by the same rule
+    `apply_patch` applies to it: each `old` must occur exactly once. The guard
+    then fails exactly when the patch would fail, for the same reason, before a
+    worktree exists and with the reason named.
+    """
+    path = os.path.join(REPO, "src", "search_params.hpp")
+    text = open(path).read()
+    missing = [(old, text.count(old)) for old, _new in OFF_PATCH
+               if text.count(old) != 1]
+    if missing:
+        lines = ["S098_v3_research_census: " + RETIRED_MESSAGE, "",
+                 "The off patch cannot be applied. src/search_params.hpp has to "
+                 "carry each of",
+                 "these anchors exactly once and does not:"]
+        for old, count in missing:
+            lines.append("  %d occurrences of  %s" % (count, old.strip()))
+        sys.exit("\n".join(lines))
+
+
 def cmd_census(args):
+    refuse_if_the_rule_moved()
     work = os.path.join(REPO, ".ref-builds", "s098v3census")
     engine = build_instrumented(work, not args.on_tree)
     total = signature(engine, args.expect_bench)

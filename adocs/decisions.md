@@ -12140,3 +12140,58 @@ Consequences: `adocs/plan.md`'s book paragraph cites this entry beside
               DEC-191's bracket; the class rule in (1) is what a later
               reading applies, so the boundary is no longer re-decided per
               reading.
+
+## DEC-217  2026-09-18  S098 closes on three verdicts: the history scale is out, the node-type terms stay, and only the deeper half of the re-search rule ships
+Tags:         s098, lmr, sprt, bisection, dec-063, dec-194, dec-212, dec-213, dec-214, dec-215, s127
+Context:      S098 asked three questions about the late move reduction and
+              each was measured on its own, one change at a time. Verdict
+              1, the reduction scaled by the move's history, read H0 at two
+              fitted scales after a lane and a census and left the tree
+              (DEC-213). Verdict 2, the four node-type terms, read H1 at
+              `Elo 29.05 +/- 11.52` over 1990 games and stays. Verdict 3,
+              the re-search depth answering the reduced search, read H0
+              whole at `Elo -9.97 +/- 7.56` over 4496 games with the entire
+              interval below zero, and its pre-registered bisection's leg 1
+              -- the shallower path switched off, the deeper path kept --
+              read H1 at `Elo 5.75 +/- 4.37` over 14510 games against the
+              same reference. A rule that loses as a pair and gains as one
+              of its halves is the case the bisection was written for, and
+              it was written before either number existed.
+Decision:     By the coordinator under the owner's delegation. **(1) The
+              deeper half ships and the shallower half leaves the tree in
+              DEC-194's shape**: `LmrShallowerMargin`, the reduction guard
+              written only for that path and the depth floor only it could
+              reach go with it, and the removal is behaviour-neutral at the
+              shipped configuration with INV-6's three proofs rather than
+              an SPRT -- `bench` 4646334 unchanged, `search_bench`
+              identical in every count and best move at depths 9 and 12,
+              the tune build at the rule's off value back at the
+              reference's 5469072. **(2) S098 closes with its three
+              verdicts spent**, its `accepts:` satisfied one verdict at a
+              time as written. **(3) What the step surfaced and did not
+              take is routed onward, not smuggled in**: S127 refits
+              `LmrDeeperMargin`, `LmrDeeperMinReduction` and verdict 2's
+              four terms beside `LmrBase`, `LmrDivisor` and S109's
+              thresholds; post-re-search history updates and a two-ply
+              deeper variant remain later steps' material, as the step's
+              scope section already routed them.
+Rejected:     **Keeping the shallower path at a smaller margin** -- leg 1
+              measured that path *off*, not re-seeded, so a smaller margin
+              is an unmeasured third configuration and would need its own
+              run; the census's re-seed quantile is on file if a later step
+              wants it. **Leaving the branch as dead code behind a zero
+              default** -- a live range invites S127 to tune a path that
+              was measured to lose, and dead code with a tunable switch is
+              worse than no code. **Re-running the pair at the longer
+              control before closing** -- DEC-202 binds that reading to the
+              block boundary and this step is not one; S091 opened the
+              current block and DEC-133's order runs on. **Reading leg 1's
+              +5.75 as the effect size** -- a stopping estimate is
+              upward-biased and what may be written is at least 5 nElo
+              (DEC-063).
+Consequences: `adocs/specs.md`'s search row carries the rule's final shape
+              and the two numbers that decided it; the ledger holds all
+              four S098 runs; `tools/mutants/S098_research_rule.py` keeps
+              seven mutants and `adocs/data/S098_v3_research_census.py`
+              refuses to run, four of its six quantities having lost their
+              referent.

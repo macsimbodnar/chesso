@@ -187,12 +187,14 @@ int search_lmr_adjusted_reduction_probe(int depth,
 // The depth the zero-window re-search of a reduced move runs at, as a pure
 // function of the five numbers the site has: the child's depth, the reduction
 // taken, the reduced search's score, the node's alpha and its fail-soft best
-// before the move. It exists so a case can hold the cap, the floor, the strict
-// inequality against the reduced depth and the precedence between the two paths
-// directly, including at inputs the engine's own clamps never produce -- a
-// clamp that cannot be reached from the search is still a clamp a later step
-// can reach. Its preconditions are the site's: a reduction of at least one and
-// a score above alpha. S098 verdict 3.
+// before the move. It exists so a case can hold the cap, the lower bound, the
+// strict inequality against the reduced depth and the one condition the rule
+// still has directly, including at inputs the engine's own clamps never produce
+// -- a clamp that cannot be reached from the search is still a clamp a later
+// step can reach. Its preconditions are the site's: a child depth of at least
+// one, a reduction of at least one and a score above alpha. S098 verdict 3, and
+// the shallower path it also carried was removed after the bisection measured
+// it.
 int search_lmr_research_depth_probe(int child_depth,
                                     int reduction,
                                     int score,

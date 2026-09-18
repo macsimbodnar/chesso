@@ -3296,10 +3296,20 @@ TEST_SUITE("search: draws")
     // read from the other end -- a re-search a ply deeper or shallower is a
     // different tree below every reduced move -- so the seven sweeps ran once
     // more. **Verdict 3's SPRT then read H0 and its pre-registered bisection's
-    // leg 1 switched the shallower path off** (`LmrShallowerMargin` 0), which
-    // moves the same rule again and owes the same seven sweeps: the shipped
-    // tree and all six S091 mutants, and these four rows are that pass
+    // leg 1 switched the shallower path off**, which moves the same rule again
+    // and owes the same seven sweeps: the shipped tree and all six S091
+    // mutants, and these four rows are that pass
     // (`.tuning/coord/S230_v3_leg1/`).
+    //
+    // **The leg then read H1 and the shallower path was removed outright, and
+    // these rows were not re-swept.** DEC-142 asks for a re-derivation when
+    // either end of a golden moves, and neither end did: the removal deletes a
+    // branch no input reached at the value the leg shipped, so the tree is the
+    // one these depths were mined on -- `bench` 4646334 and every
+    // `tools/search_bench.py` count and best move identical at depths 9 and 12,
+    // which is INV-6's own proof and not an argument. Seven rebuilds that
+    // cannot change an answer are not evidence. The labels stay leg 1's because
+    // leg 1's sweep is where they were measured.
     //
     // **The rule that picks each row**, applied uniformly rather than by eye:
     // take the lowest depth in the shipped profile at which some mutant loses
@@ -7153,14 +7163,22 @@ TEST_SUITE("search: pruning and reduction guards")
   // The rule is `lmr_research_depth` in src/search.cpp and it is a pure
   // function of five numbers the site has, so the five cases below hold it
   // through `search_lmr_research_depth_probe` before any of them looks at a
-  // search: the two paths, the precedence between them, the strict inequality
-  // against the reduced depth, the cap and the floor. The two cases after them
-  // hold the **site**, and they are separate on purpose -- a recursion that
-  // stopped consulting the rule would leave every function case green.
+  // search: the one path it still has, the region that path actually fires in,
+  // the base the margin is measured from, what it answers everywhere else, and
+  // the strict inequality and the cap. The four cases after them hold the
+  // **site**, and they are separate on purpose -- a recursion that stopped
+  // consulting the rule would leave every function case green.
+  //
+  // **The shallower path left after the bisection's leg 1 read H1**
+  // (`Elo 5.75 +/- 4.37` over 14510 games, against `Elo -9.97 +/- 7.56` for
+  // the pair), so the arms these cases carried for it are gone and each one
+  // now asserts a single configuration. Nothing was relaxed in the removal:
+  // the arm that stayed is the arm this tree was already compiling.
 
-  // A child depth with room on both sides: the shallower path lands on 5 and
-  // the deeper one on 7, both clear of the floor, and the reductions the census
-  // measured at real sites (1 to 6) all fit inside it.
+  // A child depth with room above it: the deeper path lands on 7, the
+  // reductions the census measured at real sites (1 to 6) all fit inside it,
+  // and it is far enough from 1 that the lower bound is never what a check
+  // here reads.
   static constexpr int RESEARCH_CHILD_DEPTH = 6;
 
 
@@ -7172,54 +7190,42 @@ TEST_SUITE("search: pruning and reduction guards")
   // an even-deeper search.
   // Mutation: D11_cap_one_ply_low -- the cap is a ply low, so the path is
   // clamped away.
-  // Mutation: D02_shallower_inverted, which takes this path too.
   //
-  // Re-observed at S098 verdict 3's bisection leg 1, on the tree that ships
-  // `LmrShallowerMargin` 0; the logs are under
-  // .tuning/coord/S098v3_leg1_mutlogs/.
+  // Re-observed on the tree the shallower path left; the logs are under
+  // .tuning/coord/S098v3_removal_mutlogs/.
   //
   //   search: pruning and reduction guards
   //    a re-search whose score clears the fail-soft best goes a ply deeper
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
   //   score, alpha, best), RESEARCH_CHILD_DEPTH + 1 )
   //   values: CHECK_EQ( 6, 7 )        D01, and D11 reads the same
-  //   values: CHECK_EQ( 5, 7 )        D02
   //   values: CHECK_EQ( 8, 7 )        D06
   //
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
   //   LMR_DEEPER_MIN_REDUCTION - 1, score, alpha, best),
   //   RESEARCH_CHILD_DEPTH )
   //   values: CHECK_EQ( 7, 6 )        D03
-  //
-  //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
-  //   on_the_margin, alpha, best), RESEARCH_CHILD_DEPTH )
-  //   values: CHECK_EQ( 5, 6 )        D02
   TEST_CASE(
       "a re-search whose score clears the fail-soft best goes a ply "
       "deeper")
   {
-    // The deeper path's off value is `LmrDeeperMinReduction` at its range top
-    // -- above every reduction the clamp to `[0, child_depth - 1]` admits --
-    // and **not** the margin at its own top, which the census measured still
-    // firing on 2.86 % of sites. Without this guard the case asserts nothing
-    // there: the rule returns `child_depth` and so would a wiring that read no
-    // condition at all. It is also the red-first observation this case was
-    // written from.
+    // The rule's off value is `LmrDeeperMinReduction` at its range top -- above
+    // every reduction the clamp to `[0, child_depth - 1]` admits -- and **not**
+    // the margin at its own top, which the census measured still firing on
+    // 2.86 % of sites. Without this guard the case asserts nothing there: the
+    // rule returns `child_depth` and so would a wiring that read no condition
+    // at all. It is also the red-first observation this case was written from.
     REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
 
     const int best = 0;
     const int alpha = 0;
 
-    // Over the deeper margin and not under the shallower one, so exactly one
-    // path is eligible here and the precedence between them is not what is
-    // being read -- that has its own case below.
-    const int score = (LMR_DEEPER_MARGIN + 1 > LMR_SHALLOWER_MARGIN)
-                          ? LMR_DEEPER_MARGIN + 1
-                          : LMR_SHALLOWER_MARGIN;
+    // One point over the deeper margin measured from the fail-soft best, which
+    // is the whole of what the surviving path asks for.
+    const int score = LMR_DEEPER_MARGIN + 1;
 
     REQUIRE(score > alpha);
     REQUIRE(score > best + LMR_DEEPER_MARGIN);
-    REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
 
     CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3, score,
                                              alpha, best),
@@ -7237,11 +7243,11 @@ TEST_SUITE("search: pruning and reduction guards")
              RESEARCH_CHILD_DEPTH);
 
     // And the margin is a threshold rather than a direction: a score exactly
-    // on it does not clear it.
+    // on it does not clear it. The `if` is the rule's own precondition and not
+    // a configuration guard -- a score at or below alpha is not a site.
     const int on_the_margin = best + LMR_DEEPER_MARGIN;
 
-    if (on_the_margin > alpha &&
-        on_the_margin >= alpha + LMR_SHALLOWER_MARGIN) {
+    if (on_the_margin > alpha) {
       CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
                                                on_the_margin, alpha, best),
                RESEARCH_CHILD_DEPTH);
@@ -7249,47 +7255,34 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // Mutation: D02_shallower_inverted -- the shallower path fires where the
-  // score beat alpha by *more* than the margin instead of less, which at a
-  // margin of 0 turns "fires nowhere" into "fires at every site with a
-  // reduction of at least 2". The off arm below is what reads it.
-  // Mutation: D01_deeper_inverted, which fires the deeper path over the same
-  // inputs the off arm asserts are left alone.
+  // Mutation: D01_deeper_inverted -- the deeper path fires where the score is
+  // *below* the fail-soft best by the margin, which is every input this case
+  // sweeps, so a rule that deepens here is exactly the inverted one.
   //
-  // **The arm the constant does not compile is the arm no mutant dies in, and
-  // that is the point of writing both.** At `LmrShallowerMargin` 0 the branch
-  // this case is about is unreachable, so `D04_shallower_guard_dropped` and
-  // `D07_shallower_two_plies` are equivalent **on this configuration** and
-  // declared so in tools/mutants/S098_research_rule.py; at leg 2's margin of
-  // 47 this case's other arm is what kills them, at `CHECK_EQ( 5, 6 )` and
-  // `CHECK_EQ( 4, 5 )` where verdict 3 observed them.
+  // **This case is what the shallower path's own case became.** Until the
+  // removal it carried two arms, one per configuration of `LmrShallowerMargin`;
+  // the arm that survived is the arm this tree was already compiling, and it
+  // says what the rule does with a score that does not clear the fail-soft
+  // best -- **nothing**. The three mutants the other arm killed left with the
+  // branch they broke (`D02`, `D04`, `D07`).
   //
   //   search: pruning and reduction guards
-  //    LmrShallowerMargin decides whether a re-search that only just beat
-  //    alpha goes a ply shallower
+  //    a re-search that did not clear the fail-soft best is left at its own
+  //    depth
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2,
   //   score, alpha, best), RESEARCH_CHILD_DEPTH )
-  //   values: CHECK_EQ( 5, 6 )        D02
   //   values: CHECK_EQ( 7, 6 )        D01
   //
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
   //   reduction, swept, alpha, best), RESEARCH_CHILD_DEPTH )
-  //   values: CHECK_EQ( 5, 6 )        D02
   //   values: CHECK_EQ( 7, 6 )        D01
   TEST_CASE(
-      "LmrShallowerMargin decides whether a re-search that only just beat "
-      "alpha goes a ply shallower")
+      "a re-search that did not clear the fail-soft best is left at its own "
+      "depth")
   {
-    // `LmrShallowerMargin` 0 is this path's off value and 1 is the same thing
-    // by arithmetic: the site requires `score > alpha`, so no score is under
-    // `alpha + 1`. **The constant decides which arm below is the engine's and
-    // both arms assert**: at a margin that admits the path the case reads the
-    // path firing, at one that does not it reads the path firing nowhere. Both
-    // are trees this project has measured -- verdict 3 shipped 47 and its
-    // bisection's leg 1 ships 0 -- and neither arm is a skip.
-    //
-    // The deeper margin has to be able to separate the two paths for this case
-    // to be about one of them; at 0 every score above the best clears it.
+    // The margin has to be able to separate the two outcomes for this case to
+    // read one of them; at 0 every score above the best clears it and there is
+    // nothing left over to assert about.
     REQUIRE(LMR_DEEPER_MARGIN > 0);
 
     const int alpha = 0;
@@ -7299,72 +7292,40 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(score > alpha);
     REQUIRE_FALSE(score > best + LMR_DEEPER_MARGIN);
 
-    if (LMR_SHALLOWER_MARGIN > 1) {
-      REQUIRE(score < alpha + LMR_SHALLOWER_MARGIN);
+    CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2, score,
+                                             alpha, best),
+             RESEARCH_CHILD_DEPTH);
 
-      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2, score,
-                                               alpha, best),
-               RESEARCH_CHILD_DEPTH - 1);
+    // Swept over the reductions the census saw at real sites and over scores
+    // from one point above alpha up to the margin itself, and **counted**, so
+    // a sweep that stopped examining anything fails here rather than passing
+    // quietly. The rule has one path left and it does not take any of these.
+    int examined = 0;
 
-      // The `reduction >= 2` on this path is arithmetic and not a setting: at
-      // a reduction of 1 the shallower depth **is** the reduced depth, so the
-      // re-search would be the reduced search run a second time. It stays at
-      // `child_depth` instead.
-      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 1, score,
-                                               alpha, best),
-               RESEARCH_CHILD_DEPTH);
+    for (int reduction = 2; reduction <= 6; ++reduction) {
+      for (int over_alpha : {1, 2, LMR_DEEPER_MARGIN, 200}) {
+        const int swept = alpha + over_alpha;
 
-      // A threshold again: a score exactly on the margin is not under it.
-      const int on_the_margin = alpha + LMR_SHALLOWER_MARGIN;
+        // Only where the deeper path does not take the site, so what is read
+        // is the rule declining rather than the rule firing.
+        if (swept > best + LMR_DEEPER_MARGIN) { continue; }
 
-      if (LMR_SHALLOWER_MARGIN <= LMR_DEEPER_MARGIN) {
-        CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2,
-                                                 on_the_margin, alpha, best),
+        CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
+                                                 reduction, swept, alpha, best),
                  RESEARCH_CHILD_DEPTH);
+        examined++;
       }
-    } else {
-      // The off arm. It asserts the consequence rather than skipping the
-      // case: no input the site can produce takes the shallower path, because
-      // `score < alpha + LMR_SHALLOWER_MARGIN` is false wherever `score >
-      // alpha` holds -- which the site requires and the rule asserts. Swept
-      // over the reductions the census saw at real sites and over scores from
-      // one point above alpha to well past both margins, and **counted**, so
-      // an arm that stopped examining anything fails here rather than passing
-      // quietly.
-      REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
-
-      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 2, score,
-                                               alpha, best),
-               RESEARCH_CHILD_DEPTH);
-
-      int examined = 0;
-
-      for (int reduction = 2; reduction <= 6; ++reduction) {
-        for (int over_alpha : {1, 2, LMR_DEEPER_MARGIN, 200}) {
-          const int swept = alpha + over_alpha;
-
-          // Only where the deeper path does not take the site, so what is read
-          // is the absence of the shallower path and not the precedence
-          // between the two.
-          if (swept > best + LMR_DEEPER_MARGIN) { continue; }
-
-          CHECK_EQ(search_lmr_research_depth_probe(
-                       RESEARCH_CHILD_DEPTH, reduction, swept, alpha, best),
-                   RESEARCH_CHILD_DEPTH);
-          examined++;
-        }
-      }
-
-      REQUIRE(examined > 0);
     }
+
+    REQUIRE(examined > 0);
   }
 
 
   // Mutation: D09_deeper_margin_off_alpha -- the deeper margin is measured
   // from the window instead of from the node's own best score so far, which is
   // the published re-basing undone.
-  // Mutation: D01_deeper_inverted, D02_shallower_inverted, D06_deeper_two_plies
-  // and D11_cap_one_ply_low, which move the same answer for their own reasons.
+  // Mutation: D01_deeper_inverted, D06_deeper_two_plies and
+  // D11_cap_one_ply_low, which move the same answer for their own reasons.
   //
   //   search: pruning and reduction guards
   //    the deeper margin is measured from the fail-soft best and not from the
@@ -7372,7 +7333,6 @@ TEST_SUITE("search: pruning and reduction guards")
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3,
   //   score, alpha, best), RESEARCH_CHILD_DEPTH + 1 )
   //   values: CHECK_EQ( 6, 7 )        D09, D01 and D11 read the same
-  //   values: CHECK_EQ( 5, 7 )        D02
   //   values: CHECK_EQ( 8, 7 )        D06
   TEST_CASE(
       "the deeper margin is measured from the fail-soft best and not "
@@ -7380,19 +7340,10 @@ TEST_SUITE("search: pruning and reduction guards")
   {
     REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
 
-    // The two bases can only disagree while the deeper margin is not the
-    // narrower of the two -- otherwise the shallower path takes every score
-    // that could separate them, and it takes it whichever base is used.
-    REQUIRE(LMR_DEEPER_MARGIN >= LMR_SHALLOWER_MARGIN);
+    // The margin has to be able to separate the two bases at all: at 0 every
+    // score above either of them clears the condition and the case reads
+    // nothing.
     REQUIRE(LMR_DEEPER_MARGIN > 0);
-
-    // `LMR_SHALLOWER_MARGIN > 0` stood here until leg 1 and is gone rather
-    // than loosened: it asserted that the shallower path was switched on,
-    // which this case never needed. What it needs is that the shallower path
-    // does not take **this** score, and that is stated directly below, at any
-    // margin, by the `REQUIRE_FALSE` on the shallower condition itself. The
-    // score the case drives is above both margins measured from alpha, so the
-    // statement holds at 47 and at 0 for the same arithmetic reason.
 
     const int alpha = 0;
 
@@ -7409,7 +7360,6 @@ TEST_SUITE("search: pruning and reduction guards")
     const int score = alpha + LMR_DEEPER_MARGIN;
 
     REQUIRE(score > alpha);
-    REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
     REQUIRE_FALSE(score > alpha + LMR_DEEPER_MARGIN);
     REQUIRE(score > best + LMR_DEEPER_MARGIN);
 
@@ -7419,102 +7369,85 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // Mutation: D01_deeper_inverted, D02_shallower_inverted, D06_deeper_two_plies
-  // and D11_cap_one_ply_low -- each of them moves what the rule answers over
-  // the region this case walks.
+  // Mutation: D01_deeper_inverted, D06_deeper_two_plies,
+  // D09_deeper_margin_off_alpha and D11_cap_one_ply_low -- each of them moves
+  // what the rule answers over the region this case walks.
   //
-  // **`D05_precedence_swapped` is the mutant this case exists for and it is
-  // equivalent on this configuration**, declared so in
-  // tools/mutants/S098_research_rule.py: at `LmrShallowerMargin` 0 the region
-  // where both conditions hold is empty, so testing the two branches in either
-  // order decides every site the same way. At leg 2's margin of 47 this case's
-  // other arm kills it at `CHECK_EQ( 7, 5 )`, where verdict 3 observed it. The
-  // off arm is not idle meanwhile -- it asserts the region is empty and that
-  // the deeper path takes every site in it, which is what the four mutants
-  // above die on.
+  // **This case is what the precedence case became.** It was written for
+  // `D05_precedence_swapped` and for the region where both paths could fire;
+  // that region left with the shallower path and so did the mutant. What it
+  // walks now is the same region under its own description, and it is the
+  // region the surviving path actually fires in: the fail-soft best far below
+  // the window, where a score that barely beat alpha still clears `best` by a
+  // margin. The census measures that as 6.89 % of re-search sites, and it is
+  // the whole reason the deeper path is reachable at a scout node at all.
   //
   //   search: pruning and reduction guards
-  //    LmrShallowerMargin decides the region where both re-search paths could
-  //    fire
+  //    a score that barely beat alpha goes a ply deeper when the fail-soft
+  //    best is far below it
   //   CHECK_EQ( search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH,
   //   reduction, score, alpha, low_best), RESEARCH_CHILD_DEPTH + 1 )
   //   values: CHECK_EQ( 6, 7 )        D01, D09 and D11 read the same
-  //   values: CHECK_EQ( 5, 7 )        D02
   //   values: CHECK_EQ( 8, 7 )        D06
   TEST_CASE(
-      "LmrShallowerMargin decides the region where both re-search paths could "
-      "fire")
+      "a score that barely beat alpha goes a ply deeper when the fail-soft "
+      "best is far below it")
   {
     REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 3);
 
     const int alpha = 0;
     const int score = alpha + 1;
 
-    // The region where both conditions could hold, and the only one: the
-    // fail-soft best more than the deeper margin below alpha. It is not a
-    // corner -- at a scout node `best` is below alpha at every site, because a
-    // zero-window node that raises alpha cuts off instead of continuing, so
-    // this is what every node that has not yet found a move looks like.
+    // The region, and it is not a corner: at a scout node `best` is below
+    // alpha at every site, because a zero-window node that raises alpha cuts
+    // off instead of continuing, so this is what every node that has not yet
+    // found a move looks like. A score one point over the window is the
+    // weakest fail-high the site can hand over, and the rule deepens it
+    // anyway, because what it measures against is what the node already has.
     const int best = alpha - (LMR_DEEPER_MARGIN + 100);
 
+    REQUIRE(score > alpha);
     REQUIRE(score > best + LMR_DEEPER_MARGIN);
+    REQUIRE_FALSE(score > alpha + LMR_DEEPER_MARGIN);
 
-    if (LMR_SHALLOWER_MARGIN > 1) {
-      // The region exists and the precedence is what decides it: the shallower
-      // path is tested first and wins.
-      REQUIRE(score < alpha + LMR_SHALLOWER_MARGIN);
+    int in_the_region = 0;
 
-      CHECK_EQ(search_lmr_research_depth_probe(RESEARCH_CHILD_DEPTH, 3, score,
-                                               alpha, best),
-               RESEARCH_CHILD_DEPTH - 1);
-    } else {
-      // **The region is empty, and that is asserted rather than assumed.** At
-      // a margin of 0 "both could fire" cannot arise: the shallower condition
-      // is false wherever the site's own `score > alpha` holds, so the region
-      // the precedence was written for is empty and every site in it belongs
-      // to the deeper path alone. The case reads exactly that -- the region's
-      // own shape, swept and counted, with the shallower condition asserted
-      // false at each point and the deeper path taking the site.
-      REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
+    for (int reduction = LMR_DEEPER_MIN_REDUCTION; reduction <= 6;
+         ++reduction) {
+      for (int under_alpha : {LMR_DEEPER_MARGIN + 1, LMR_DEEPER_MARGIN + 100,
+                              LMR_DEEPER_MARGIN + 1000}) {
+        const int low_best = alpha - under_alpha;
 
-      int in_the_region = 0;
+        // The region's defining pair, both read at this point rather than
+        // argued from the one above: over the margin from `best`, under it
+        // from the window.
+        REQUIRE(score > low_best + LMR_DEEPER_MARGIN);
+        REQUIRE_FALSE(score > alpha + LMR_DEEPER_MARGIN);
 
-      for (int reduction = LMR_DEEPER_MIN_REDUCTION; reduction <= 6;
-           ++reduction) {
-        for (int under_alpha : {LMR_DEEPER_MARGIN + 1, LMR_DEEPER_MARGIN + 100,
-                                LMR_DEEPER_MARGIN + 1000}) {
-          const int low_best = alpha - under_alpha;
-
-          // The region's defining pair, both read at this point rather than
-          // argued from the one above.
-          REQUIRE(score > low_best + LMR_DEEPER_MARGIN);
-          REQUIRE_FALSE(score < alpha + LMR_SHALLOWER_MARGIN);
-
-          CHECK_EQ(search_lmr_research_depth_probe(
-                       RESEARCH_CHILD_DEPTH, reduction, score, alpha, low_best),
-                   RESEARCH_CHILD_DEPTH + 1);
-          in_the_region++;
-        }
+        CHECK_EQ(search_lmr_research_depth_probe(
+                     RESEARCH_CHILD_DEPTH, reduction, score, alpha, low_best),
+                 RESEARCH_CHILD_DEPTH + 1);
+        in_the_region++;
       }
-
-      REQUIRE(in_the_region > 0);
     }
+
+    REQUIRE(in_the_region > 0);
   }
 
 
   // Mutation: D06_deeper_two_plies -- the cap is raised and the depth passes
   // it.
   //
-  // **Three mutants this case used to kill are equivalent on this
-  // configuration**, declared so in tools/mutants/S098_research_rule.py and
-  // not deleted: at `LmrShallowerMargin` 0 the rule returns `child_depth` or
-  // `child_depth + 1` and nothing else, so neither the strict inequality
-  // (`D04_shallower_guard_dropped`, `D07_shallower_two_plies`) nor the floor
-  // (`D10_floor_dropped`) is reachable by any input. At leg 2's margin of 47
-  // this case kills all three again, at the `CHECK( 1 > 1 )`,
-  // `CHECK( 0 >= 1 )` and `CHECK_EQ( 0, 1 )` verdict 3 observed -- which is
-  // why the floor corner below stays behind its `if` rather than being
-  // dropped.
+  // **Three mutants this case used to kill left the registry with the branch
+  // they broke.** `D04_shallower_guard_dropped` and `D07_shallower_two_plies`
+  // were the strict inequality's, and `D10_floor_dropped` was the floor's:
+  // with the shallower path gone the rule answers `child_depth` or
+  // `child_depth + 1` and nothing else, so no input reaches either. The floor
+  // clamp went with them and the corner that drove it went with the clamp; the
+  // bound below stays because the rule still declares and asserts it, now as a
+  // consequence of its own preconditions rather than as something a clamp has
+  // to produce. It is a bound no mutant on the registry can move, and that is
+  // said here rather than left for a reader to work out.
   //
   //   search: pruning and reduction guards
   //    the re-search depth stays inside its cap, floor and inequality
@@ -7524,18 +7457,21 @@ TEST_SUITE("search: pruning and reduction guards")
   {
     // The whole input domain the rule declares, and deliberately wider than
     // the one the engine reaches: the site clamps the reduction to
-    // `[0, child_depth - 1]` and never asks for a reduction of 2 at a child
-    // depth of 1, but the floor and the cap are what a later step changing
-    // either clamp runs into, and an unreachable clamp is still a clamp
-    // somebody can reach. The rule's own preconditions -- a reduction of at
-    // least 1 and a score above alpha -- are respected because they are what
-    // it asserts in the Debug build.
+    // `[0, child_depth - 1]` and never asks for a reduction of 10 at a child
+    // depth of 1, but the cap is what a later step moving that clamp runs
+    // into, and an unreachable clamp is still a clamp somebody can reach. The
+    // rule's own preconditions -- a child depth of at least 1, a reduction of
+    // at least 1 and a score above alpha -- are respected because they are
+    // what it asserts in the Debug build.
     int checked = 0;
 
     for (int child_depth = 1; child_depth <= 10; ++child_depth) {
       for (int reduction = 1; reduction <= 10; ++reduction) {
         for (int alpha : {-1000, 0, 1000}) {
-          for (int over_alpha : {1, 2, LMR_SHALLOWER_MARGIN + 1, 200}) {
+          // One point over the window, two, one point over the margin the rule
+          // reads, and far past everything: the four score classes the one
+          // surviving condition can tell apart.
+          for (int over_alpha : {1, 2, LMR_DEEPER_MARGIN + 1, 200}) {
             const int score = alpha + over_alpha;
 
             for (int best : {alpha - 1000, alpha - 1, alpha, score}) {
@@ -7546,7 +7482,7 @@ TEST_SUITE("search: pruning and reduction guards")
               // search the reduced one did not already do.
               CHECK(depth > child_depth - reduction);
 
-              // The cap and the floor.
+              // The cap, and the lower bound the rule still declares.
               CHECK(depth <= child_depth + 1);
               CHECK(depth >= 1);
 
@@ -7558,16 +7494,6 @@ TEST_SUITE("search: pruning and reduction guards")
     }
 
     REQUIRE(checked > 0);
-
-    // The one corner where the floor does the work rather than the branch: a
-    // child depth of 1 with the shallower path eligible lands on 0 before the
-    // floor puts it back, which is the depth-0 re-search the published record
-    // prices at -25 Elo. Behind an `if` and not a `REQUIRE`, because this case
-    // is a property of the rule at any constants -- including the off values,
-    // where the shallower path cannot fire and there is no corner to have.
-    if (LMR_SHALLOWER_MARGIN > 1) {
-      CHECK_EQ(search_lmr_research_depth_probe(1, 2, 1, 0, 0), 1);
-    }
   }
 
 
@@ -7641,9 +7567,9 @@ TEST_SUITE("search: pruning and reduction guards")
   // the rule stops firing, which is what they are for.
   //
   // A scout node because that is what the engine mostly searches and because
-  // it is where the two paths separate: a zero-window node that raises alpha
-  // cuts off instead of continuing, so `best_so_far` sits at or below alpha at
-  // every site and the deeper path is reachable at all.
+  // it is where the rule bites: a zero-window node that raises alpha cuts off
+  // instead of continuing, so `best_so_far` sits at or below alpha at every
+  // site and the deeper path is reachable at all.
   struct research_drive_t : guard_fixture_t
   {
     // Deep enough that the table's own reduction reaches 2 and 3 on the late
@@ -7658,17 +7584,24 @@ TEST_SUITE("search: pruning and reduction guards")
 
     int deeper = 0;
     int unchanged = 0;
+
+    // Sites the rule sent **below** `child_depth`. It has had no way to do
+    // that since the shallower path left, so this is the removal's own
+    // invariant and the case at the foot of this block asserts it is 0 rather
+    // than dropping the counter: a path that comes back is a path a count
+    // catches.
     int shallower = 0;
 
-    // `want_each` is the early stop and it waits for **both** outcomes, which
-    // at a margin that switches the shallower path off means it never fires
-    // and the sweep runs the whole file. That is deliberate and it was briefly
-    // not: S098 verdict 3's leg 1 first taught the stop rule to skip an
-    // outcome the constants had switched off, which ended the sweep at the
-    // third deeper site and left the case below reading 24 sites where the
-    // file holds 305. A case whose reach moves with a constant reads a
-    // different sample than the one it was written against, so a case that
-    // needs the whole file asks for it with `scan(0)` instead.
+    // `want_each` is the early stop and it waits for the one outcome the rule
+    // still has. **Every case below asks for the whole file with `scan(0)`**,
+    // which is what all three already read: until the removal the stop waited
+    // for both outcomes and the shallower one never came, so the sweep ran to
+    // the end anyway and every case saw the same 305 sites. Keeping that
+    // population is the point -- S098 verdict 3's leg 1 briefly taught the
+    // stop rule to skip an outcome the constants had switched off, which
+    // ended the sweep at the third deeper site and left the case below reading
+    // 24 sites where the file holds 305. A case whose reach moves with a
+    // constant reads a different sample than the one it was written against.
     std::vector<research_site_t> scan(int want_each)
     {
       const std::vector<std::string> fens = read_census_positions();
@@ -7722,9 +7655,7 @@ TEST_SUITE("search: pruning and reduction guards")
           }
         }
 
-        if (want_each > 0 && deeper >= want_each && shallower >= want_each) {
-          break;
-        }
+        if (want_each > 0 && deeper >= want_each) { break; }
       }
 
       return sites;
@@ -7817,14 +7748,13 @@ TEST_SUITE("search: pruning and reduction guards")
   // step wired up and switched off in one line. **This case is the only one in
   // the suite that kills it**, on leg 1's tree as on verdict 3's.
   //
-  // Mutation: D02_shallower_inverted, D06_deeper_two_plies and
-  // D11_cap_one_ply_low, which stop the site reaching `child_depth + 1` for
-  // their own reasons.
+  // Mutation: D06_deeper_two_plies and D11_cap_one_ply_low, which stop the
+  // site reaching `child_depth + 1` for their own reasons.
   //
   //   search: pruning and reduction guards
   //    a re-search that went a ply deeper left a table entry a ply deeper
   //   REQUIRE( witnessed > 0 )
-  //   values: REQUIRE( 0 >  0 )       D02, D06, D08 and D11
+  //   values: REQUIRE( 0 >  0 )       D06, D08 and D11
   TEST_CASE_FIXTURE(
       research_drive_t,
       "a re-search that went a ply deeper left a table entry a ply deeper")
@@ -7918,31 +7848,28 @@ TEST_SUITE("search: pruning and reduction guards")
 
   // Mutation: D11_cap_one_ply_low -- the deeper path is clamped away and stops
   // reaching a real search at all.
-  // Mutation: D02_shallower_inverted -- at a margin of 0 the shallower path
-  // takes every site with a reduction of at least 2, so the deeper one reaches
-  // none.
   // Mutation: D06_deeper_two_plies -- the site lands two plies deeper, which
-  // is neither of the three outcomes this case classifies.
+  // is neither of the two outcomes this case classifies.
   //
   //   search: pruning and reduction guards
-  //    every re-search depth the margins admit is reached in a real search
+  //    every re-search depth the rule admits is reached in a real search
   //   REQUIRE( deeper > 0 )
-  //   values: REQUIRE( 0 >  0 )       D02, D06 and D11
+  //   values: REQUIRE( 0 >  0 )       D06 and D11
   //
   //   CHECK_EQ( site.depth, site.child_depth )
   //   values: CHECK_EQ( 9, 7 )        D06
   TEST_CASE_FIXTURE(research_drive_t,
-                    "every re-search depth the margins admit is reached in a "
+                    "every re-search depth the rule admits is reached in a "
                     "real search")
   {
     // The bound the counts below are read against: the largest reduction the
-    // census saw at a real site. At the off values every re-search runs at
-    // `child_depth`, which is the inert-by-rebuild property the bisection
-    // rests on, and **which of the two paths is admitted is what the two
-    // arms at the foot of this case assert**, one per configuration.
+    // census saw at a real site. At `LmrDeeperMinReduction`'s range top -- the
+    // rule's off value -- every re-search runs at `child_depth`, which is the
+    // inert-by-rebuild property the bisection rested on, and this case would
+    // then be reading a rule that fires nowhere.
     REQUIRE(LMR_DEEPER_MIN_REDUCTION <= 6);
 
-    const std::vector<research_site_t> sites = scan(3);
+    const std::vector<research_site_t> sites = scan(0);
 
     REQUIRE_MESSAGE(!sites.empty(),
                     "no reduced move beat alpha anywhere in the sweep, so "
@@ -7952,28 +7879,22 @@ TEST_SUITE("search: pruning and reduction guards")
       if (site.depth == site.child_depth + 1) {
         // The guard, read off the site rather than off the rule.
         CHECK(site.reduction >= LMR_DEEPER_MIN_REDUCTION);
-      } else if (site.depth == site.child_depth - 1) {
-        // The arithmetic guard, same.
-        CHECK(site.reduction >= 2);
       } else {
+        // The only other answer the rule has. A site below `child_depth` fails
+        // here and is counted as `shallower` below, which is the same
+        // statement read from its other end.
         CHECK_EQ(site.depth, site.child_depth);
       }
     }
 
-    // Every path the margins admit reaches a real search. A rule that fires
+    // The path the rule admits reaches a real search. A rule that fires
     // nowhere is one an SPRT would price at exactly zero for a reason that is
     // not the technique, which is what verdict 1 cost the plan (DEC-212,
-    // DEC-214) -- so the path this configuration ships is asserted to fire,
-    // and the path it switches off is asserted to fire **nowhere**, which is
-    // the other half of the same rule and just as measurable.
+    // DEC-214) -- so the one path this engine ships is asserted to fire, and
+    // the one it removed is asserted to fire **nowhere**, which is the other
+    // half of the same rule and just as measurable.
     REQUIRE(deeper > 0);
-
-    if (LMR_SHALLOWER_MARGIN > 1) {
-      REQUIRE(shallower > 0);
-    } else {
-      CHECK_EQ(shallower, 0);
-    }
-
+    CHECK_EQ(shallower, 0);
     CHECK(unchanged >= 0);
 
     MESSAGE("re-search sites by outcome: deeper " << deeper << ", unchanged "

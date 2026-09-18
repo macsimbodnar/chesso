@@ -622,19 +622,25 @@ struct search_node_probe_t
   //
   // `reduction` is what came off the first search of the move, and 0 is what a
   // guard that refused the reduction leaves there. `researched` is the
-  // full-depth repeat a reduced move that beat alpha is owed.
+  // zero-window repeat a reduced move that beat alpha is owed -- at
+  // `child_depth` or a ply past it since S098 verdict 3, and no longer always
+  // at the depth the move would otherwise have got.
   //
   // `child_is_pv` and `child_cut_node` are the type this node predicted for
   // that first search, so a case can read the alternation off the site that
   // applies it and not only off the rule as a function. S098.
   //
-  // `research_depth` is the depth that repeat actually ran at and the four
-  // numbers beside it are what decided it, all valid only where `researched`
-  // is true: the reduced search's score, the node's alpha at that moment and
-  // its fail-soft best before this move. Recorded rather than recomputed so a
-  // case can replay `lmr_research_depth` on the node's own inputs and compare
-  // -- a site that stopped consulting the rule reads as a disagreement and not
-  // as a number that happens to look plausible. S098 verdict 3.
+  // `research_depth` is the depth that repeat actually ran at and the three
+  // numbers beside it are the inputs it was decided on, all valid only where
+  // `researched` is true: the reduced search's score, the node's alpha at that
+  // moment and its fail-soft best before this move. Recorded rather than
+  // recomputed so a case can replay `lmr_research_depth` on the node's own
+  // inputs and compare -- a site that stopped consulting the rule reads as a
+  // disagreement and not as a number that happens to look plausible. S098
+  // verdict 3. `research_alpha` is kept although the rule compares against
+  // nothing but the fail-soft best: it is the site's own precondition and it is
+  // the variable the margin could be measured from by mistake, which is the bug
+  // the field below exists to catch.
   int move_count = 0;
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];

@@ -1845,8 +1845,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 11, 10 and the mutants beside them — `no S091 mutant, since S098 verdict 3's bisection leg 1`, `C02, C05, C07 and R02`, `C07 and R02`, `R02`. Re-derived at S098 verdict 3's bisection leg 1, which switches the shallower re-search path off and so moves the same rule again: three of the four depths moved and no mate distance did. Row 2 goes 9 → 8 because the shipped build reports that mate at 8 again and four mutants lose it there; row 3 goes 10 → 11 because its profile is `d11 d12` on this tree; row 4 goes 9 → 10 because R02 keeps the mate at 9 here and loses it at 10. **R01 is still separated by no row at any depth** | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 51 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 11, 10 and the mutants beside them — `no S091 mutant, since S098 verdict 3's bisection leg 1`, `C02, C05, C07 and R02`, `C07 and R02`, `R02`. Re-derived at S098 verdict 3's bisection leg 1, which switches the shallower re-search path off and so moves the same rule again: three of the four depths moved and no mate distance did. Row 2 goes 9 → 8 because the shipped build reports that mate at 8 again and four mutants lose it there; row 3 goes 10 → 11 because its profile is `d11 d12` on this tree; row 4 goes 9 → 10 because R02 keeps the mate at 9 here and loses it at 10. **R01 is still separated by no row at any depth**. **Not re-derived when the shallower path was removed on 2026-09-18**: the removal deletes a branch no input reached at the value leg 1 shipped, so neither end of the golden moved — `bench` 4646334 and every `search_bench` count and best move identical — and seven rebuilds that cannot change an answer are not evidence | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search_params.cpp` `golden_defaults` | 50 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2149,7 +2149,26 @@ depths**, which puts back the one verdict 3 moved (midgame's depth-9 `g5f6` →
 `c3d5`). Whether the deeper path alone is a better engine is
 `adocs/data/S098_v3_leg1_sprt.sh`'s to say.
 
-Quote it
+**At `S098` verdict 3's shallower path removed: `4646334`, unchanged.** Leg 1
+read **H1** — `Elo 5.75 +/- 4.37`, `nElo 7.44 +/- 5.65`, LLR 2.97 over 14510
+games in 6 h 49 m — which is the outcome its pre-registration named as the one
+where the path leaves, so `LmrShallowerMargin`, the branch it switched off, the
+`reduction >= 2` guard written only for that branch and the floor at 1 that
+only that branch could reach are gone from `lmr_research_depth`, with five
+mutants and one golden row. **The removal is behaviour-neutral at the shipped
+configuration and that is what makes it free of an SPRT** (INV-6): the constant
+already shipped at 0, so no input reached the branch, and the three instruments
+say so rather than the argument. `bench` is `4646334`, leg 1's total to the
+node. `tools/search_bench.py` reproduces leg 1 exactly at both depths — 21995 /
+104682 / 29842 at depth 9 with `g5f6` / `e2a6` / `d7c8q`, and 155612 / 683624 /
+152138 at depth 12 with `c3d5` / `e2a6` / `d7c8q`. On the tune build at
+`LmrDeeperMinReduction` 126, which with the shallower path gone is the whole
+rule's off value, the total is `5469072` — the `efdbc9b` reference's own
+signature, so the off tree is still exactly the engine before the verdict.
+There is no ablation row to add: the removal does not move the tree, and the
+by-depth row the tune build prints is leg 1's above.
+
+A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
 the example worth remembering: it redrew the Zobrist keys, which changes which
