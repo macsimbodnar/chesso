@@ -1,9 +1,9 @@
 id:         S231
 goal:       a two-ply continuation history table -- keyed on the move two plies back and this move -- beside S222's one-ply table, on its own scale, fitted in a narrow SPSA lane and decided by one gainer SPRT, because S222's H1 (DEC-210) is what the two-ply table was waiting on
-accepts:    `cont_hist2[12][64][12][64]` (or the shape the implementing agent states) on `search_state_t`, keyed on the (piece, to) of the move two plies back and this move's, written at every quiet cutoff beside the one-ply table and summed into the quiet ordering score with its own `ContHist2Weight`, `ContHist2Bonus` and `ContHist2Malus` declared in `src/search_params.hpp` the way S222's are (the bound a definition, three axes -- DEC-209's parameterisation); the guard on the move two plies back existing (**ply 0, ply 1 and the node two plies after a null move pass none -- amended 2026-09-18 by DEC-219 from "the two nodes after a null move", which was true only read one table at a time; the node one ply after a pass does carry a two-ply key, because the pass consumes a ply and the table's parity survives it**), each guard with a sentinel case and a mutant `tools/mutation_check.py` kills; the band-clearance case re-stated for both weights at their declared maxima; **the fit first**: one narrow SPSA lane over the three new axes together with S222's three, on `UHO_4060_v3.epd`, pre-registered in its own script's header with the estimate from the measured throughput, its result recorded whatever it is; **then one gainer SPRT `{0, 5}`** nElo at the harness regime against the commit before the step's first landing -- DEC-210's reading: one vector under one verdict, H0 reverts the whole step -- pre-registered per DEC-143 with the fitted values named; `bench` line; Debug self-play; `adocs/data/S024_census_run.py` re-run with the second table counted; H1 keeps it, H0 records the zero and the two-ply idea leaves the plan with a decision saying why
+accepts:    `cont_hist2[12][64][12][64]` (or the shape the implementing agent states) on `search_state_t`, keyed on the (piece, to) of the move two plies back and this move's, written at every quiet cutoff beside the one-ply table and summed into the quiet ordering score with its own `ContHist2Weight`, `ContHist2Bonus` and `ContHist2Malus` declared in `src/search_params.hpp` the way S222's are (the bound a definition, three axes -- DEC-209's parameterisation); the guard on the move two plies back existing (**ply 0, ply 1 and the node two plies after a null move pass none -- amended 2026-09-18 by DEC-219 from "the two nodes after a null move", which was true only read one table at a time; the node one ply after a pass does carry a two-ply key, because the pass consumes a ply and the table's parity survives it**), each guard with a sentinel case and a mutant `tools/mutation_check.py` kills; the band-clearance case re-stated for both weights at their declared maxima; **the fit first**: one narrow SPSA lane over the three new axes together with S222's three, on `UHO_4060_v3.epd`, pre-registered in its own script's header with the estimate from the measured throughput, its result recorded whatever it is; **then one gainer SPRT `{0, 5}`** nElo at the harness regime against the commit before the step's first landing -- DEC-210's reading: one vector under one verdict, H0 reverts the whole step -- pre-registered per DEC-143 with the fitted values named; `bench` line; Debug self-play; `adocs/data/S024_census_run.py` re-run with the second table counted; H1 keeps it, H0 records the zero and the two-ply idea leaves the plan with a decision saying why; after H1, the killer slots and then the countermove table are each measured for removal at `{-5, 0}`, one at a time, or the step states why not (DEC-222)
 touches:    src/search.cpp, src/evaluation.cpp score_move, src/data_structures.hpp, src/search_params.hpp, tests/, tools/mutants/, tools/, adocs/data/
 excludes:   a third ply; any change to S222's table or values except through the shared lane; S098's reading of the sum (S098 owns it); any constant from another engine (DEC-084, DEC-105)
-decisions:  DEC-210, DEC-209, DEC-194, DEC-198, DEC-143, DEC-141, DEC-084, DEC-105, DEC-218, DEC-219
+decisions:  DEC-210, DEC-209, DEC-194, DEC-198, DEC-143, DEC-141, DEC-084, DEC-105, DEC-218, DEC-219, DEC-222
 closes:
 blocks:
 paused_by:
@@ -614,3 +614,22 @@ For the **search** row, after the S222 passage:
 > (`tools/spsa_s231.json`, `adocs/data/S231_spsa.sh`) fits all six continuation
 > axes before one gainer SPRT `{0, 5}` nElo against `3a649c0` decides the step
 > -- one vector under one verdict, DEC-210's reading.
+
+## Owed after the verdict, DEC-222: two removal verdicts
+
+Once this step's gainer SPRT reads H1 and the fitted stack is in, the ordering
+slots the history sum displaces are measured for removal, one at a time, each
+a `{-5, 0}` non-regression whose truth sits on the bound -- 25,591 expected
+games (DEC-143), eleven to twelve hours, a night each. First the killer slots
+(`src/data_structures.hpp` `killer_moves`, two per ply: S149 and S159 already
+stopped investing in them, and the open-source record shows the same removal at +0.50 over 47,676 games once its history stack was in), then the
+countermove table (`src/data_structures.hpp` `counter_moves`, which the
+one-ply continuation table subsumes in the published record, no number). A
+removal that reads H0 stays in the tree and is recorded as such. The
+selection rule (DEC-222): a removal is scheduled when it saves measurable
+nodes per second or memory, or unblocks a later step, never as a sweep -- here
+the saving is a store per cutoff and two reads per quiet, measured with
+`hyperfine` before the run and stated in the pre-registration. If this step's
+SPRT reads H0 the removals are not owed and the reason is that the stack they
+were to be measured against did not ship.
+
