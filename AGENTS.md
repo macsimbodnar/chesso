@@ -129,6 +129,16 @@ migration that way (DEC-109).
   with `Bench: <nodes>`, the total `chesso bench` prints, or `No functional
   change` when the total is the parent's; `tools/gate.sh` checks it, and a
   mismatch is a red gate. From S189's completing commit on. DEC-140.
+  **A commit that closes an SPRT verdict -- H1, H0 or no verdict -- carries the
+  run's result block before `Bench:`** (DEC-220), in fastchess's own line names:
+  `SPRT | cand <sha> vs ref <sha>, <tc>, Hash=<n>, <book>, {elo0, elo1} nElo`;
+  `Elo | <x> +/- <y>, nElo <x> +/- <y>`; `LLR | <l> (<a>, <b>) -> H1|H0|none`;
+  `Games | N: <n> W: <w> L: <l> D: <d>, Ptnml [<5>]`; `Wall | <h> h <m> m, <g>
+  games/h, forfeits <f>`; `Log | adocs/data/<file>`. `tools/gate.sh` refuses a
+  block whose shas do not match the named log's result line and `tools/ledger.py`
+  regenerates `plan.md`'s ledger table from `git log` -- both land with S233; the
+  block is written from 2026-09-19 on, and the verdicts before it are seeded once
+  from the table, never rewritten.
 - TESTS: the suite is green before a step is marked done, in **both** builds —
   `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`
   (`-j8`, the core count of the machine `.moltke.local.md` describes). The tune
@@ -198,6 +208,12 @@ migration that way (DEC-109).
   they are republished (DEC-084 as amended by DEC-105). Running another
   engine's *binary* as a tool creates no derivative work and is encouraged.
   DEC-016.
+  **Clean room (DEC-221):** an agent that has read another engine's source
+  describes the technique in prose and does not implement it; the implementer's
+  brief carries the prose and forbids opening that source, and the stamp says
+  so. A study of a copyleft engine is anonymised in the tree -- no name, path,
+  commit hash or pull-request number of that repository -- with the key in
+  `.moltke.local.md`.
 - MEASUREMENT: **a change that alters play is decided by SPRT, not by
   argument.** A change claimed behaviour-neutral proves it instead with
   identical node counts and best moves from `tools/search_bench.py` (INV-6).
