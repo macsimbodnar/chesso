@@ -12195,3 +12195,135 @@ Consequences: `adocs/specs.md`'s search row carries the rule's final shape
               seven mutants and `adocs/data/S098_v3_research_census.py`
               refuses to run, four of its six quantities having lost their
               referent.
+
+## DEC-218  2026-09-18  Two weighted history terms share one band-clearance ceiling: `ContHistWeight`'s declared maximum halves to 1000, and `spsa_s222.json` is left refusable on purpose
+Tags:         search, ordering, continuation-history, history, move-ordering,
+              bands, s231, s222, s127, spsa, one-way-door, dec-209, dec-084,
+              dec-105
+Context:      The quiet ordering band has to stand 100 clear of the
+              countermove band at 700000 -- CLAUDE.md's named one-way door,
+              whose symptom is lost rating and not a wrong node count, and
+              which `tests/test_evaluation.cpp` "the declared history ceiling
+              clears the band above it" asserts at the **declared** maxima
+              because a tuner may set any value inside a declared range.
+              S222 left that ceiling at `QuietHistoryMax` 32767 plus
+              `ContHistWeight` 2000 spanning `2000 * 32767 / 100 = 655340`:
+              688107 against 700000, a clearance of 11893. S231 adds a second
+              weighted term to the same sum. At S222's declared ceiling the
+              one-ply term alone leaves 11793 of the 667133 available, which
+              is no usable range for a second weight, so the two could not
+              both keep a 2000 ceiling and the door had to be re-apportioned
+              before the table could exist.
+Decision:     By the coordinator under the delegation, on the implementing
+              agent's verified arithmetic, 2026-09-18, in `b83fb1d`.
+              **(1) `ContHistWeight`'s declared maximum halves, 2000 -> 1000,
+              and `ContHist2Weight` is declared 0 to 1000**, because the
+              clearance is a property of the *sum* of the weighted terms and
+              not of either one: 1000 + 1000 spans the same 655340 that 2000
+              alone did, the widest band the ranges now admit is
+              `32767 + 327670 + 327670 = 688107` and the asserted clearance is
+              **11893, the identical number S222 asserted**. That ceiling was
+              never a claim about where good values lie -- `search_params.hpp`
+              calls it "the band-clearance ceiling" in as many words -- so
+              with two tables sharing the band the per-axis share of it is
+              arithmetic and not a judgement. The compiled default and every
+              fitted value are untouched, which is what S231's `excludes:`
+              protects; only the declared bound moves, and the clearance case
+              now drives all three tables to their maxima at once.
+              **(2) The consequence is correct and is not repaired**:
+              `tools/spsa_s222.json` declares that axis 0 to 2000,
+              `tools/spsa_driver.py check` compares a config's bounds against
+              the binary's and would now refuse that config by name. It is the
+              frozen record of a finished run and not a template -- the same
+              standing `adocs/data/S085_spsa_run.json`'s one-sided `extra` has
+              carried since DEC-174 -- and it is said at the axis in
+              `src/search_params.hpp`, in `adocs/data/S231_spsa.sh`'s header
+              and in `DEV_MANUAL.md`, so a later reader meets the refusal as a
+              record and not as a defect.
+Rejected:     **Moving the countermove band up to make room** -- the ordering
+              bands clear each other by 100 and CLAUDE.md names that as the
+              hazard whose symptom is a strength regression; re-laying the
+              bands is a change of its own with its own verdict, not a thing
+              done inside a step that adds a table. **Giving the second
+              weight the 35-point range the first one's ceiling leaves** --
+              an axis whose whole range is a tenth of its own seed cannot be
+              fitted, and the lane exists to fit it. **Asserting the
+              constraint on the sum instead of per axis** -- SPSA moves each
+              axis independently and no joint constraint can be expressed in
+              a per-axis range, so the invariant would hold in the test and
+              not in the tuner. **Retro-editing `spsa_s222.json` to the new
+              bound** -- it would then no longer describe the run that was
+              taken, and a frozen input that has been edited is not evidence.
+Consequences: Three declared maxima now enter one clearance assertion, and a
+              fourth weighted history term would have to re-apportion them
+              again rather than add to them -- the ceiling is a fixed budget
+              of 667133 shared by every weighted term over the quiet band, and
+              that is the sentence a later step reads first. S127's full refit
+              inherits `ContHistWeight` bounded at 1000; its fitted 26 is two
+              and a half per cent of that and nothing in the S222 record
+              suggests the lost half of the range was reachable. Any future
+              lane over `ContHistWeight` writes its own config rather than
+              reusing S222's.
+
+## DEC-219  2026-09-18  The null move consumes a ply and the two-ply key's parity survives it: only the node *two* plies after a pass carries no key, and S231's `accepts:` is amended to say so
+Tags:         search, ordering, continuation-history, null-move, guards, s231,
+              s222, plan, accepts, dec-141, dec-210
+Context:      S231's `accepts:` was written before the code existed and asked
+              for a guard on "the move two plies back existing (ply 0, ply 1
+              and the two nodes after a null move pass none)". The shipped
+              code guards ply 0, ply 1 and the node **two** plies after a
+              pass, and passes a real key at the node **one** ply after it.
+              **The line admits two readings and that is the whole problem.**
+              Read one table at a time it is true, which is the reading the
+              step file argues: the node one ply after the pass passes none to
+              the *one-ply* table, its `prev_move` being 0 and S222's own guard
+              catching it, and the node two plies after passes none to the
+              *two-ply* table. Read as a statement about the two-ply table
+              alone -- which is the table this step adds and the sentence's
+              subject -- it is false. The implementing agent argued the
+              deviation in the step file, in `b83fb1d`'s message and in three
+              code comments, so nothing was silent; the Tier-1 fast check
+              confirmed the code does what those comments say and read the
+              contract line the second way.
+              The arithmetic, checked independently by the coordinator: at a
+              node at ply p with side S to move, the move at ply p-1 was the
+              opponent's and the move at ply p-2 was S's own, which is what
+              makes `prev_move2` a follow-up key rather than a countermove
+              key. When S passes at ply p, the child at ply p+1 has the
+              opponent O to move and receives the move at ply p-1 -- which is
+              O's own last move. **The follow-up parity is exactly preserved**,
+              because a pass consumes a ply like any other move. Its child, two
+              plies after the pass, receives the null itself and is guarded.
+Decision:     By the coordinator under the delegation, 2026-09-18. **The code
+              is right and the contract line is amended to the wording that
+              admits one reading**, rather than the code being bent to the
+              worse of its two readings: S231's `accepts:` now reads "ply 0, ply 1 and the node two
+              plies after a null move pass none", and the step is judged
+              against that. A guard at the node one ply after a pass would
+              throw away a correctly-keyed follow-up entry at every node below
+              every null move in the tree, which is a loss of information and
+              not a safety property. AGENTS.md's rule is what is being followed
+              here -- when the plan meets reality and loses, record a decision
+              and amend the plan, never deviate silently -- and the amendment
+              is recorded before the lane that tunes this table starts, so no
+              measurement is taken against a contract the tree does not meet.
+Rejected:     **Changing the code to match the sentence** -- it would guard a
+              key whose parity is correct, cost the table its entries under
+              every null move, and the only argument for it is that a line
+              written before the code said so. **Leaving `accepts:` as it
+              stood because one reading of it is true** -- `accepts:` is what
+              the SPRT's verdict is read against, a contract that needs a
+              paragraph of exegesis to come out true is not one, and whoever
+              decides whether the step met it will not be holding that
+              paragraph.
+              **Folding this into S231's completion stamp** -- the stamp is
+              written after the verdict and this had to be settled before the
+              run that produces it.
+Consequences: The positive half of the reading -- that the node one ply after a
+              pass does key the table -- is a behaviour with a guard test and a
+              mutant of its own from the finding-1 fix onward, where before the
+              fix it was exercised by nothing: the drive written for it passed
+              its key into `negamax`'s `cut_node` slot by a positional-argument
+              slip and silently drove `prev_move2 = 0`. Any later table keyed
+              more than one ply back inherits this reading and states it at its
+              own guard rather than re-deriving it.

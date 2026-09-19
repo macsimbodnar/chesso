@@ -5,7 +5,112 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-16, by hand.
+Updated: 2026-09-19, by hand.
+
+- **S231's phase one is landed and recorded, 2026-09-19, and the machine is
+  idle with the lane ready to launch.** The two-ply continuation history table
+  is in the tree on first settings; **nothing about it is measured yet** and
+  what decides it is the lane and then one gainer SPRT `{0, 5}` nElo against
+  **`3a649c0`**, the tree before the step's first landing -- one vector under
+  one verdict (DEC-210), H0 reverts `src/` to `3a649c0` whole. Three commits:
+  `b83fb1d` the table, `4c727b2` re-arming an S222 mutant this step disarmed,
+  `af8b9f0` the fast check's one real finding repaired. `bench` 4646334 ->
+  **5443203**, +17.2 %, at **-3.84 % +/- 0.95 % of nodes per second** over six
+  interleaved pairs at load 2.0 -- S222's own 3.6 % shape repeated. The
+  plumbing is behaviour-neutral when the term is off, checked independently by
+  the coordinator on the tune binary: `ContHist2Weight` 0 benches **4646334**,
+  `3a649c0`'s total to the node, and 5443203 at the shipped 26.
+  **What the step ships:** `cont_hist2[12][64][12][64]` on `search_state_t`
+  beside S222's table, one index helper `continuation2_entry`, keyed on the
+  (piece, to) of the move two plies back; the key travels as a trailing
+  `prev_move2` parameter of `negamax_at` and **not** as a per-ply stack,
+  because every node already hands its own `prev_move` down as its child's
+  `prev_move2` and a stack would add a store per move made and a load per node
+  (the field beside it measured 1.49 % of nps for one read per node, S191).
+  Three axes and not four, DEC-209's gauge argument unchanged; seeds are this
+  project's own numbers -- the two shares from the one-ply table's fitted 17
+  and 18, the weight at 26 for equal authority, 8519 against 8519 against plain
+  history's 8831.
+  **Two decisions were recorded before the lane, not after. DEC-218:** the
+  band-clearance ceiling is a fixed budget of 667133 shared by every weighted
+  term over the quiet band, so `ContHistWeight`'s declared maximum halves 2000
+  -> 1000 and `ContHist2Weight` is declared 0 to 1000 -- 1000 + 1000 spans the
+  same 655340 that 2000 alone did, the widest band is 32767 + 327670 + 327670 =
+  **688107** and the clearance is **11893, the identical number S222 asserted**;
+  the fitted 26 is untouched and only the declared bound moves. Its second
+  clause: `tools/spsa_s222.json` is now refusable by `spsa_driver.py check` and
+  that is **not repaired**, being the frozen record of a finished run.
+  **DEC-219:** S231's `accepts:` said "the two nodes after a null move pass
+  none", which is true only read one table at a time; the code guards ply 0,
+  ply 1 and the node **two** plies after a pass, and the node one ply after it
+  does carry a key because the pass consumes a ply and the parity survives it
+  -- the coordinator checked the parity independently, the code is right, and
+  the contract line is amended to the wording that admits one reading.
+  `specs.md`'s search row carries the S231 passage and one sentence of the S222
+  passage that had become false was corrected.
+  **The Tier-1 fast check earned its keep again and found one real defect**,
+  repaired in `af8b9f0` before anything was measured: the case written to guard
+  the null-move reading called `negamax` with nine positional arguments against
+  a signature whose ninth is `bool cut_node`, so `PREV_MOVE` converted to
+  `true` and `prev_move2` took its default of 0 with no diagnostic. The
+  positive half of the reading was therefore asserted by nothing while reading
+  as covered. It is now two cases -- the positive half driven with the block's
+  own window and reduced depth, reading its labels off
+  `search_child_label_probe` rather than repeating the rule, asserting the cells
+  land under `PREV_MOVE`'s key **and nowhere else**; the negative half keeping
+  the old drive's instrument, which is right for a class one ply below. Every
+  argument of both names its slot: the trap is two trailing defaulted
+  parameters of different types and **it is still there for the next caller**.
+  The check verified clean, with evidence: all eight `prev_move2` sites in
+  `src/search.cpp`; the clearance case really reading all three *declared*
+  maxima rather than hardcoding; `capture_mates` decoded cell by cell over
+  seven profiles with no mate distance moved; the re-search witness's stated
+  rule mechanically selecting depth 4 from the data it prints; every mutant
+  anchor occurring exactly once in current `src/`.
+  **Debug self-play, DEC-141 clause 1: 8 games, 0 `Assertion`, 0 disconnects**
+  at 4+0.04 on the Debug binaries, trace log 159682 lines and 1198 bestmoves so
+  the log really captured engine stderr.
+  **Mutation, re-run by the coordinator at the committed
+  tree `af8b9f0` and not inherited from the draft it was first run against:
+  4 of 4 killed, 792 s** (`.tuning/mutation_s231_af8b9f0.log`). I01 by the
+  two-ply grading case, I02 by five cases on `continuation2_entries(state) == 0`
+  and the renamed null sentinel, I04 by the band-clearance case's
+  `REQUIRE_EQ( s_history, live_span )`. **The positive-half case kills no
+  mutant and that is the structural fact below, not a weakness in the case.**
+  **One gap is open and is not a pass**: `I03_null_child_drops_prev2` dies only
+  by `pruning does not hide a forced mate`, an indirect case, and the reason is
+  structural rather than an oversight -- the mutant breaks the argument
+  `negamax_at` passes at its own recursion, and a drive that supplies that
+  argument itself cannot observe it. Closing it needs a drive through the
+  parent that observes the child's writes. Recorded at the case's own site and
+  in the step file; filler behind the next strength step (BUGS as scoped by
+  DEC-171: not reachable in play, not able to move a reported score).
+  **One number to carry:** `search_state_t` is now **2446920 bytes, 2.33 MiB**
+  measured, and the deepest test holds two at once for 4.7 MiB of an 8 MiB
+  stack. Half the headroom went in one step, so **the next table on this struct
+  has to be a pointer**.
+  **What is owed, in order.** (1) **The lane**, which is the next action and is
+  a night run under DEC-155: `nohup adocs/data/S231_spsa.sh >
+  .tuning/spsa_s231.log 2>&1 &`, six axes (`ContHist{,2}Bonus/Malus/Weight`) and
+  no others, seed 231, S085's regime verbatim, `books/UHO_4060_v3.epd` so
+  tuning and verification share no openings, adjudication including
+  `twosided=true`; **estimate 8 h 45 m from S222's measured 8 h 37 m 31 s for
+  the identical shape on this machine, ceiling 18 h**; abort on forfeits over
+  1.0 % either side, on `SPSA-FAILED`, or on the machine losing mains or
+  gaining a second load, and on nothing else. The pre-registered readings are
+  in the script's header and were reviewed before it could be launched -- the
+  one with a consequence is `ContHist2Weight` at or under 5, which owes a
+  second SPRT of the fitted vector against itself with that weight pinned at 0.
+  (2) **Phase three**, a fresh agent: the fitted defaults into
+  `src/search_params.hpp`, `adocs/data/S024_census_run.py` re-run on the fitted
+  build with the second table counted (the driver is already extended to eight
+  counters and accepts the five-counter shape so S024's and S222's runs stay
+  reproducible), `tools/gate_extra.sh`, and the SPRT's own pre-registration
+  naming the fitted values (DEC-143). (3) **The SPRT** against `3a649c0`.
+  `gate_extra` last ran 2026-09-16 (`.tuning/gate_extra_2026-09-16_s098v2.log`)
+  so the weekly is not overdue; it is owed at completion regardless.
+  **Machine:** governor `performance` (recorded, never set -- DEC-195), desktop
+  on mains, 12 threads, idle. No watcher is armed and no run is in flight.
 
 - **S098 verdict 3 read H0, 2026-09-17 15:55: `Elo -9.97 +/- 7.56` at
   `8+0.08` over 4496 games in 2 h 06 m 45 s** (LLR -2.96, `nElo -13.40 +/-

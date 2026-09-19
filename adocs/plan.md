@@ -1080,7 +1080,7 @@ free (DEC-207).
 
 ## Open
 
-1. S231  a two-ply continuation history table beside S222's one-ply one, on its own scale, fitted in the shared lane and decided by one gainer SPRT against the tree before it (DEC-210) -- opened by S222's H1, behind S098 which reads the sum
+1. S231  **in `plan_current/`, phase one landed 2026-09-18/19** -- a two-ply continuation history table beside S222's one-ply one, on its own scale, fitted in a narrow lane of its own and decided by one gainer SPRT against `3a649c0`, the tree before its first landing (DEC-210) -- opened by S222's H1; S098, which reads the sum, is done. The table, its three axes, its guards, its mutants and its lane's pre-registration are in the tree and nothing is measured yet: the lane is the next action, then the fitted defaults and the SPRT. DEC-218 and DEC-219 were recorded before the lane
 2. S095  reduce a node whose table entry carries no move instead of searching it at full depth
 3. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
 4. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
