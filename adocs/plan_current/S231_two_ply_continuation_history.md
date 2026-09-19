@@ -633,3 +633,40 @@ the saving is a store per cutoff and two reads per quiet, measured with
 SPRT reads H0 the removals are not owed and the reason is that the stack they
 were to be measured against did not ship.
 
+
+## The lane, launched 2026-09-19 18:41 (coordinator)
+
+Launched by the coordinator at 18:41:56 CEST on the idle workstation, exactly
+as the header says: `nohup adocs/data/S231_spsa.sh > .tuning/spsa_s231.log
+2>&1 &`, pid 3430959 written to `.tuning/spsa_s231.pid`, output directory
+`.tuning/spsa_s231_20260919_184156`. HEAD `0c3f0eb`, 0 dirty tracked paths;
+the tune binary rebuilt by the script hashes `844e184b3819760a...` (first 16 of
+the sha256 the banner prints). Load 2.27 before launch on twelve threads with
+no match or engine process alive, desktop on mains, governor `performance` as
+found -- recorded and not set (DEC-195). `check` passed 6 of 6 in 0.4 s with
+every node count identical to phase one's check on 2026-09-18 (`ContHist2Weight`
+at 0 still 21995, the parent's depth-9 count), so the config and the binary
+agree to the node.
+
+**Open findings this run is taken while open**, as the header asks the launch
+note to name (BUGS, DEC-171): no defect reachable in play, on the UCI surface
+or able to move a reported score is open. S231's own `I03_null_child_drops_prev2`
+gap -- the mutant dies only by an indirect case, structurally -- is a test gap
+and filler behind the next strength step. The 2026-09-19 study review's
+findings concern the analysis document and the plan's order, not the engine's code, and
+are being turned into DEC-220 to DEC-222 and S232 to S238.
+
+**Estimate 8 h 45 m, so an expected end near 03:27 on 2026-09-20; ceiling 18 h,
+12:42.** Watcher armed in the coordinator's session (`Monitor`, persistent):
+polls the whole log every 60 s, never a follow, four exits -- the first
+`SPSA-(DONE|FAILED)` line, the pid gone without a marker, the 18 h ceiling, and
+a manual stop that is a belt -- and announces the two mid-run reads at
+iterations 313 and 625 off `trajectory.tsv`. Abort rule unchanged from the
+header: forfeits over 1.0 % either side, `SPSA-FAILED`, mains or a second load.
+
+**Beside it, agent-only work and no machine**: S233 (the DEC-220 result block in
+the gate, and the ledger script) runs in a fresh Opus 5 subagent while the lane
+holds the machine, because this step's own verdict commit is the first one that
+block is owed in -- PLAN's "strictly necessary" clause, as `status.md` recorded
+before launch. Its brief forbids every build, test run and match until the lane
+ends; the Tier-1 gate over its result is the coordinator's, after `SPSA-DONE`.

@@ -7,6 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-19, by hand.
 
+- **S231's SPSA lane is running, launched 2026-09-19 18:41:56 by the
+  coordinator; expected end near 03:27 on 2026-09-20, ceiling 12:42.** Pid
+  3430959 (`.tuning/spsa_s231.pid`), log `.tuning/spsa_s231.log`, output
+  `.tuning/spsa_s231_20260919_184156`, HEAD `0c3f0eb` clean, governor
+  `performance` as found (DEC-195, recorded not set), load 2.27 before launch
+  and no engine alive. `check` passed 6 of 6 with node counts identical to
+  phase one's. Watcher armed (`Monitor`, persistent, 60 s poll of the whole
+  log, four exits, mid-run reads announced at iterations 313 and 625). Open
+  findings named in the step file's launch section: none reachable in play;
+  S231's I03 mutant gap is filler. **Meanwhile S233 is in work by a fresh
+  Opus 5 subagent** (brief `.tuning/coord/S233_brief.md`): agent-only, no
+  build, no test run and no match until `SPSA-DONE`; the coordinator runs the
+  Tier-1 gate over its result after the lane and commits. Then S232 the same
+  way. After `SPSA-DONE`: read the trajectory against the header's six
+  pre-registered readings, then phase three by a fresh agent (fitted defaults,
+  census re-run, `gate_extra`, the SPRT's pre-registration naming the fitted
+  values), then the gainer SPRT `{0, 5}` against `3a649c0`, whose closing
+  commit is the first to carry DEC-220's block.
+
 - **The 2026-09-19 analysis of literature and open-source resources was
   adversarially reviewed and the owner ruled on nine items the same day; nothing is measured
   and the machine is idle.** Report `adocs/audit/2026-09-19_study_review.md`
