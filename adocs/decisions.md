@@ -12327,3 +12327,165 @@ Consequences: The positive half of the reading -- that the node one ply after a
               slip and silently drove `prev_move2 = 0`. Any later table keyed
               more than one ply back inherits this reading and states it at its
               own guard rather than re-deriving it.
+
+## DEC-220  2026-09-19  A commit that closes an SPRT verdict carries the run's result block, the gate checks it, and the ledger is regenerated from the log
+Tags:         workflow, git, sprt, measurement, ledger, dec-140, dec-143
+Context:      The 2026-09-19 study (`adocs/data/2026-09-19_search_technique_study.md`)
+              found an open-source record kept as a measurement ledger because
+              every merged change there carries its harness result block -- Elo with
+              interval, control, threads, hash, LLR with bounds, games with
+              W/L/D, pentanomial -- into the message of every merged change,
+              796 of its commits. Chesso records a verdict four times by
+              hand: a "Record" commit in prose (73 of them), the step file,
+              `status.md`, and `plan.md`'s ledger table followed by eight
+              running-total paragraphs whose means, medians and games per
+              hour are re-typed at every verdict -- the class of number the
+              2026-09-04 plan review found stale (its F03). fastchess's final
+              block is in every `adocs/data/S*_sprt.log`, and `tools/gate.sh`
+              already reads the commit message for the `Bench:` line
+              (DEC-140). Chesso cannot copy the practice exactly: the
+              candidate of an SPRT is a committed sha (DEC-020 made
+              attribution depend on it, the banner pins both), the verdict
+              arrives hours later, and history is never amended, so the block
+              cannot ride the landing commit.
+Decision:     By the owner, 2026-09-19, on the review's recommendation. A
+              commit that closes an SPRT verdict -- H1, H0 or no verdict, every
+              one -- carries, after its body and before `Bench:`, the result
+              block of the run it closes in fastchess's own line names:
+              `SPRT | cand <sha> vs ref <sha>, <tc>, Hash=<n>, <book>, {elo0,
+              elo1} nElo`; `Elo | <x> +/- <y>, nElo <x> +/- <y>`; `LLR | <l>
+              (<a>, <b>) -> H1|H0|none`; `Games | N: <n> W: <w> L: <l> D: <d>,
+              Ptnml [<5>]`; `Wall | <h> h <m> m, <g> games/h, forfeits <f>`;
+              `Log | adocs/data/<file>`. `tools/gate.sh` refuses a block whose
+              two shas do not match the `Results of cand-<sha> vs ref-<sha>`
+              line of the named log, and `tools/ledger.py` regenerates
+              `plan.md`'s ledger table from `git log`, the running-total
+              paragraphs retiring to its output. S233 lands the gate clause
+              and the script; the block is written from this date on, and the
+              twenty verdicts before it are seeded once from `plan.md`'s table
+              and never rewritten into history. The COMMITS rule carries the
+              clause.
+Rejected:     Putting the block in the landing commit as that record does --
+              impossible without amending, which GIT forbids, or without
+              testing an uncommitted tree, which DEC-020 forbids. A per-change
+              STC-plus-LTC regime -- that record's project runs it on far more hardware
+              and even so only 218 of 796 commits carry both; chesso's longer
+              control runs at 545 games an hour against about 2130 and
+              DEC-202's block-boundary estimate is the affordable form. A
+              separate ledger file maintained by hand -- it is what `plan.md`
+              has and what goes stale.
+Consequences: The next verdict-closing commit is S231's and S233 lands before
+              it. Every verdict, not only passes, is in the log in one shape,
+              which is what keeps chesso's own ledger from acquiring the
+              passes-only bias the study had to work around. Step stamps and
+              `status.md` keep their prose; the commit is the machine-readable
+              record.
+
+## DEC-221  2026-09-19  A technique taken from the analysis of literature and open-source resources is implemented from its description
+Tags:         provenance, copying, workflow, dec-016, dec-104, dec-105, dec-134
+Context:      The 2026-09-19 analysis of literature and open-source resources
+              (`adocs/data/2026-09-19_search_technique_study.md`, reviewed in
+              `adocs/audit/2026-09-19_study_review.md`) proposed a set of
+              search techniques with their published effect sizes. COPYING
+              already forbids taking source, tables or constants from any
+              project (DEC-016, DEC-104, DEC-105, DEC-134); what the rules did
+              not say is what an implementer of one of those techniques works
+              from, and a technique that arrives as a description is only as
+              original as the implementer's reading of it.
+Decision:     By the owner, 2026-09-19. A technique taken from the analysis is
+              implemented from its description -- the analysis's prose or a
+              publication about the technique -- with its constants seeded in
+              DEC-134's three forms, and the implementer's brief carries that
+              description rather than pointing at any project's code. The
+              completion stamp says so. The COPYING rule carries the sentence.
+Rejected:     Adapting permissively licensed code where a licence consents
+              (DEC-104 allows it) -- for the techniques of this analysis the
+              owner prefers implementation from description, so that the
+              originality claim is the implementer's own. Leaving it implicit
+              -- DEC-014 says the plan is to read the documented state of the
+              art and implement it here, and stating the mechanism once is
+              cheaper than re-deriving it per step.
+Consequences: Every brief for S095 (as re-formed), S234 to S238 and any later
+              step drawn from the analysis carries the clause; the study and
+              its review describe techniques and measurements, never code.
+
+## DEC-222  2026-09-19  The plan after the study review: S095 re-formed, S132 up, seven steps created, S188 and the reserve unchanged, SPSA a cadence, removals folded into landing steps
+Tags:         planning, search, sprt, measurement, spsa, dec-133, dec-176, dec-082, dec-143, dec-213
+Context:      The 2026-09-19 study proposed eight plan changes and its
+              adversarial review (`adocs/audit/2026-09-19_study_review.md`,
+              17 findings, two reviewers) re-priced them: the study's cost
+              rule does not transfer (F01 -- chesso's own published-to-measured
+              transfers read 0, 0, wrong sign, 0.10 and 0.33, and a verdict
+              costs what DEC-143 says), its top recommendation misread the
+              reserve's reason (F02 -- DEC-133's and DEC-176 (c)'s), the
+              open-source record later replaced internal iterative reduction
+              (F05), S099 still seeds from Stockfish commit prose (F06), the
+              SPSA sessions are SMP and LTC-verified (F07), a free removal
+              costs the full `{-5, 0}` walk (F08), S188's proposed pair would
+              ship an extension on a zero (F11), and DEC-082 does not reach
+              the history-update block (F12). The owner ruled item by item.
+Decision:     By the owner, 2026-09-19. (1) **The correction-history family
+              stays where DEC-133 and DEC-176 (c) put it.** S232 reseeds S099,
+              S110 and S111 in DEC-134's forms; then S099 runs as the probe
+              DEC-133 already permits, on the next idle night, S110 and S111
+              gated on its verdict; the two consumers the study found --
+              correction applied in quiescence, correction magnitude as a
+              margin and reduction input -- get steps only on S099's H1. (2)
+              **S095 keeps its id and changes form**: one more ply of
+              reduction in `lmr_node_adjustment` when the entry carries no
+              move, one verdict; the node-level cut stays available if that
+              reads H0. (3) **S188 keeps DEC-133's shape**, one `{0, 5}` SPRT
+              whatever it returns, with a prior of small-or-zero, the
+              worst-case walk and an abort rule in its pre-registration; the
+              third removal record's form is unknown. (4) **S132 moves to
+              directly after S097**: its two techniques are the best
+              Elo-per-game rows in the whole ledger the analysis read. (5) **Four
+              one-verdict steps from the inventory** -- S234 static estimate
+              tightened by the table score, S235 fail-middle at the
+              reverse-futility return, S237 hindsight reductions, S238 cutoff
+              count -- each seeded in DEC-134's forms, each describing the
+              form the open-source record carries today, each briefed under
+              DEC-221's from-the-description clause; N7 waits for a threat map shared with S101,
+              N8 for S023 and S025, and the history-update family is four
+              candidates, not a DEC-082 block. (6) **S236, one block**: the
+              reduction accumulated in fixed point and S098 verdict 1's
+              history term returned as a fraction of a ply, whose parts are
+              inert alone (DEC-082 holds), bisected on H0; placed before S237
+              and S238 because each wants a fraction of a ply. (7)
+              **Removals fold into the step that makes them redundant**, one
+              at a time, each a `{-5, 0}` night: S231 owes the killer slots
+              and then the countermove table after its H1; the selection rule
+              is that a removal is scheduled when it saves measurable nodes
+              per second or memory or unblocks a later step, never as a
+              sweep. (8) **SPSA is a cadence**: one lane per completed block
+              over the axes that block added, in chesso's lane size (eight to
+              nine hours), verified by an independent `{0, 5}` SPRT at 8+0.08
+              read beside DEC-202's block-boundary estimate, with the
+              recorded risk that a real longer-control gain can read zero
+              there; S127 is the cadence's last run. (9) **Every hour figure
+              the study quoted is withdrawn**; a chesso verdict is priced by
+              DEC-143 alone. The Open order after this entry: S231, S232,
+              S233, S095, S097, S132, S188, S236, S234, S235, S237, S238,
+              then the previous order with S132 removed from its old place.
+Rejected:     Promoting S099, S110 and S111 into the main order on cost
+              grounds -- the cost does not transfer (F01) and the placement
+              rule is the owner's own, confirmed eight days earlier; the probe
+              costs one night and answers what a promotion would need anyway.
+              Retiring S188 -- the owner reopened it deliberately and the new
+              datum does not establish the form. Running S188 at `{-5, 0}` --
+              ships an extension on a zero. A simplification lane of reserve
+              steps -- each removal is a night and the redundancy claim is
+              exactly what the landing step has just measured. Verifying SPSA
+              vectors at 32+0.32 by SPRT -- four times the cost per game.
+              Creating N7 and N8 now -- neither has anything to attach to.
+              Bundling N9 to N12 under DEC-082 -- its precondition is parts
+              inert in isolation, and these measured positive separately.
+Consequences: Seven step files (S232 to S238) and four amended ones (S095,
+              S127, S188, S231); `plan.md`'s Open list and a new section; the
+              verdict count in "What this costs" rises by seven. S232 and S233
+              are document and tooling steps a subagent takes while S231's
+              lane holds the machine (PLAN: strictly necessary -- S232 gates
+              the probe night, S233 gates the shape of the next verdict's
+              commit). The study is corrected in place with a dated section
+              (`adocs/data/2026-09-19_search_technique_study.md`) and its
+              parser is committed beside it.
