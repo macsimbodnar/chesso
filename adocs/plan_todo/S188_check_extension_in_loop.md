@@ -21,7 +21,7 @@ check extensions for +4.1/+4.5 and Stormphrax removed them too". The
 extends a checking move inside the move loop, which is where the wiki's
 Ethereal page lists the technique. Stormphrax's commit #67 (2024-03-04)
 removed check extensions outright and carries a bench and no Elo; Stormphrax
-is a network engine far above the band. Of the hand-crafted engines the plan
+comes from a record far above the band. Of the hand-crafted engines the plan
 reads as existence proofs, Weiss 1.2 at 3055 and Stash both carry the in-loop
 form. Chesso has no extension of any kind; the reduction exempts a checking
 move and nothing extends one.
