@@ -3,7 +3,7 @@ goal:       an SPSA run over the whole search parameter set as it stands after t
 accepts:    the run is over the full set in src/search_params.hpp, which by then includes every margin, threshold and blend weight the search block added; the objective is games and the verdict is an **independent** SPRT against the incumbent, not the SPSA's own score; the run is detached with a terminal marker and a watcher that exits on it (AGENTS.md section 12); the shipped values are what the run returned, and any that agree with a published seed are noted as confirmations (DEC-084)
 touches:    tools/, src/search_params.hpp
 excludes:   the driver itself, which is S084; the first run over the pre-block set, which is S085
-decisions:  DEC-084, DEC-041, DEC-139
+decisions:  DEC-084, DEC-041, DEC-139, DEC-222, DEC-202
 closes:
 blocks:
 paused_by:
@@ -54,3 +54,18 @@ the hard timer fires only on an iteration overrunning its start by more than
 comment, and `check` is the gate the config passes before the run starts. Its
 value is decided by a direct SPRT, the way S089 decided the time manager, or by
 a step that first makes it bind at the probe's control.
+
+## Amended 2026-09-19: the last run of a cadence, DEC-222
+
+SPSA is no longer one step. DEC-222 adds a cadence: one lane per completed
+block, over the axes that block added, sized like S222's and S231's -- eight
+to nine hours on this machine, a night under DEC-155 -- never the 28k-to-200k
+game sessions the 2026-09-19 study found in the engine it read. Each lane's
+vector is verified by an independent `{0, 5}` SPRT at 8+0.08 against the
+incumbent (S085's shape), read beside DEC-202's block-boundary 1000-pair
+estimate at 32+0.32, with the recorded risk that a real longer-control gain
+can read zero or negative at 8+0.08: five of that engine's seven
+dual-control sessions did (review F07). This step is unchanged in content --
+the full set, after the search block -- and becomes the last run of that
+cadence rather than the only one.
+

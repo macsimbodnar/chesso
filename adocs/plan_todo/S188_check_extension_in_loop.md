@@ -3,7 +3,7 @@ goal:       a move that gives check is extended by one ply inside the move loop,
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the extension applies inside the move loop to a move that gives check, never at the root and never past a stated depth cap, and the total extension along a line is bounded by the extension budget and depth guard S097 lands, so a sequence of checks cannot exceed the cap -- each condition asserted by a test in `tests/test_search.cpp` that fails when the precondition is removed; the late-move-reduction exemption for a checking move at `src/search.cpp` `is_check_move` stays as it is and the step states how the two interact; the mate cases in the fast suite pass -- `tests/test_search.cpp` "pruning does not hide a forced mate", "a side in check may not stand pat", "mate is recognised at depth zero" -- and the S145 mate sets are re-run with the found counts compared against the pre-change figures; every constant lives in `src/search_params.hpp` with a range and is seeded in a DEC-105 form (the wiki's one-ply form or the range midpoint), never from another engine's value; `MANUAL.md` and `DEV_MANUAL.md` checked; fast suite green in both builds
 touches:    src/search.cpp, src/search_params.hpp, tests/test_search.cpp
 excludes:   extensions not triggered by a check -- singular, negative, double -- which are S097 and later; a check extension before the move loop, the form Ethereal removed; any change to which moves the reduction exempts; the retired S096's id, which is not reused
-decisions:  DEC-087, DEC-133, DEC-105
+decisions:  DEC-087, DEC-133, DEC-105, DEC-222, DEC-143
 closes:
 blocks:
 paused_by:
@@ -46,3 +46,20 @@ requires each to be observed load-bearing -- remove it, watch the test go red
 
 A few lines of code and one verdict at the ledger's price, about five hours of
 machine at DEC-063's pairs.
+
+## Prior, recorded 2026-09-19 (DEC-222)
+
+The 2026-09-19 study review (`adocs/audit/2026-09-19_study_review.md`, F11)
+adds a third removal record and prices the run. Three engines have removed a
+check extension: Ethereal's was the pre-move-loop form (above); Stormphrax's
+message states neither form nor Elo; the engine the study read removed one on
+2025-04-17 at -0.26 +/- 1.49 over 58,032 games on a non-regression pair, its
+message not stating the form, and its 2024 history had moved the extension
+inside the loop and back before it within a fortnight. So the prior is small
+or zero, and no record establishes the in-loop form measured at zero. The
+pair stays `{0, 5}` as DEC-133 decided: a `{-5, 0}` pair, which the study
+proposed, accepts H1 on a truth of zero and would ship an extension that does
+nothing after the full walk. The pre-registration states the prior, the
+worst-case walk of 41,861 games (DEC-143, about 20 hours), and an abort rule;
+a verdict of zero is recorded as zero and the extension leaves the tree.
+

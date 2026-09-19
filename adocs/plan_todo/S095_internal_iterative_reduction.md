@@ -1,13 +1,31 @@
 id:         S095
-goal:       reduce a node whose table entry carries no move instead of searching it at full depth
-accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the depth threshold and the reduction amount are constants in src/search_params.hpp with stated ranges (S073); the reduction applies only where the entry genuinely has no move, with a test asserting the precondition -- a node whose entry does have a move must not be reduced, and the test fails if the precondition is absent; a position with a forced mate inside the reduced depth added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the guard removed; the fast suite green
-touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp
-excludes:   internal iterative deepening, the older and more expensive form, unless the step measures both and says which it kept
-decisions:  DEC-071, DEC-105, DEC-134
+goal:       a node whose table entry carries no move reduces its later quiet moves by one more ply through the node adjustment, instead of the node itself being searched a ply shallower -- re-formed 2026-09-19 by DEC-222
+accepts:    an SPRT verdict against a named commit at `{0, 5}` nElo, recorded whatever it is (INV-6); one term in `lmr_node_adjustment` beside the four S098 verdict-2 terms, its constant in src/search_params.hpp with range 0..2, off value 0, seeded at form (c); at the off value the tree is the parent's exactly, bench signature identical, proved on the tree and not assumed from the range's end (DEC-215); the term applies only where the entry genuinely has no move, with a test asserting the precondition -- a node whose entry does have a move gets no extra ply, and the test fails if the precondition is absent; a position with a forced mate that the extra ply would hide added to the "pruning does not hide a forced mate" case in tests/test_search.cpp, observed red with the term unguarded; a mutant killed (tools/mutation_check.py); Debug self-play and tools/gate_extra.sh before completion (DEC-141); the fast suite green in both builds
+touches:    src/search.cpp negamax, src/search_params.hpp, tests/test_search.cpp, tools/mutants/
+excludes:   the node-level depth cut this step was first written for -- available as a later step if this form reads H0; internal iterative deepening, the older and more expensive form
+decisions:  DEC-071, DEC-105, DEC-134, DEC-222, DEC-221, DEC-215, DEC-141
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-09-19: the form changes, DEC-222
+
+The step was written as a node-level depth cut: a node whose entry carries no
+move is searched a ply shallower. The 2026-09-19 study review
+(`adocs/audit/2026-09-19_study_review.md`, F05) found that the engine whose
+ledger priced this step at +5.11 later measured the node-level cut against a
+term inside its reduction -- one more ply of reduction on the node's later
+moves when the entry has no move -- and kept the term, removing the cut as a
+free simplification over 195,882 games. The owner chose the surviving form.
+Chesso has the site already: `src/search.cpp` `lmr_node_adjustment` holds
+S098 verdict 2's four node terms, each a constant in the 0..2 range with 0
+off, and the no-table-move fact is one comparison on `tt_move` at the call
+site. The step keeps its id; the sections below describe the original form
+and stand as record -- section 4's two constants are superseded by the one
+term above, seeded at form (c) like the four beside it. If this form reads H0
+the node-level cut is available as a later step with its own file.
+
 
 ## What it replaces
 
@@ -137,6 +155,8 @@ pulled back for "poor scaling at longer time controls" (SF 55cb235, 8b32e48,
      the stamp.
 
 ### 4. Constants and seeds
+
+**Superseded 2026-09-19 (DEC-222): the two constants below belong to the node-level form; the re-formed step has one term in `lmr_node_adjustment`, range 0..2, off 0, seeded at form (c). Kept as record.**
 
 Both in `src/search_params.hpp` (the `CHESSO_SEARCH_PARAMS` X-macro) with
 stated ranges; each is a **seed — must be fitted/SPSA'd here** (S127). Under

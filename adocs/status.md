@@ -7,6 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-19, by hand.
 
+- **The 2026-09-19 study of a reference engine's test ledger was adversarially
+  reviewed and the owner ruled on nine items the same day; nothing is measured
+  and the machine is idle.** Report `adocs/audit/2026-09-19_study_review.md`
+  (17 findings, two reviewers: the coordinator re-deriving every figure from
+  the clone, a cold Opus 5 reviewer on the reasoning); the study corrected in
+  place and renamed `adocs/data/2026-09-19_search_technique_study.md`, its
+  parser committed as `2026-09-19_technique_ledger.py`. **Anonymised
+  (DEC-221):** no engine name, repository path, commit hash or pull-request
+  number of that repository anywhere in the tree; the key is in
+  `.moltke.local.md`. **What the
+  review found that changes the plan:** the study's cost rule does not
+  transfer (a chesso verdict costs what DEC-143 says -- chesso's own
+  published-to-measured transfers read 0, 0, wrong sign, 0.10, 0.33); its top
+  recommendation misread the reserve's reason (DEC-133's, confirmed by
+  DEC-176 (c)); the engine later replaced internal iterative reduction; S099
+  still seeded from Stockfish commit prose against DEC-134; the SPSA and
+  simplification prices were an order of magnitude low. **Decisions:**
+  DEC-220 (the SPRT result block in every verdict-closing commit, gate-checked,
+  ledger regenerated -- S233 lands the tooling before S231's verdict closes),
+  DEC-221 (copyleft engine read for technique only, clean room, anonymity),
+  DEC-222 (the plan: S095 re-formed as an LMR term, S132 to
+  directly after S097, S232 reseeds S099/S110/S111 before S099 runs as
+  DEC-133's probe on the next idle night, S236 fixed-point block before the
+  four inventory steps S234/S235/S237/S238, S188's prior recorded with its pair
+  unchanged, S127 the last run of a per-block SPSA cadence verified at
+  8+0.08, S231 owes the killer and countermove removals after its H1). Open
+  order: S231, S232, S233, S095, S097, S132, S188, S236, S234, S235, S237,
+  S238, then as before. **Next actions:** S231's lane, unchanged, a night run;
+  S232 and S233 are document and tooling steps a fresh subagent can take while
+  the lane holds the machine (PLAN: strictly necessary -- S232 gates the probe
+  night, S233 gates the shape of the next verdict's commit). `specs.md`
+  checked: no behaviour changed, no edit. `DEV_MANUAL.md` and `MANUAL.md`
+  checked: the block's format and the gate clause are S233's to document when
+  the code path exists (DOCS).
+
 - **S231's phase one is landed and recorded, 2026-09-19, and the machine is
   idle with the lane ready to launch.** The two-ply continuation history table
   is in the tree on first settings; **nothing about it is measured yet** and
