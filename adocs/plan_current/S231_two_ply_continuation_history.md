@@ -180,9 +180,12 @@ declared 0..1000.**
       = 688107          against 700000, a clearance of 11893
 
 which is **exactly the number the single 2000 ceiling gave**, because 2000 and
-1000 + 1000 span the same 655340. At 1050 each the band would be 720901 and
-would swallow the countermove and both killers, which is the same edge S222's
-comment names at 2100.
+1000 + 1000 span the same 655340. At 1050 each the band would be **720873** --
+`32767 + 344053 + 344053`, each weighted term through its own integer division
+because that is how `quiet_history_sum` takes it, and not the 720874 that
+combining the two weights first and dividing once would give -- and would
+swallow the countermove and both killers, which is the same edge S222's comment
+names at 2100.
 
 That ceiling was never a statement about where good values lie --
 `search_params.hpp` calls it "the band-clearance ceiling" and nothing else --

@@ -4957,36 +4957,182 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // S231. The two-ply table's own null-move sentinel, and the node it is about
-  // is one ply lower than S222's: the pass hands its child a 0 previous move,
-  // and **that child hands the 0 on as its own child's two-ply key**, so the
-  // node two plies after a pass is the one with no move two plies back. All
-  // three guarded classes -- ply 0, ply 1 and this one -- pass 0, and 0 is the
-  // legitimate (W_PAWN, a8) cell, so a dropped guard is a wrong-cell write with
-  // no crash and no sanitizer finding.
+  // S231. The two-ply table under the null move is two statements, not one,
+  // and they are one ply apart.
   //
-  // **The node one ply after the pass is deliberately not in that list**, and
-  // the case above is where that reading is visible: under the pass the side to
-  // move is the side whose move two plies back it is, so the parity this table
-  // rests on survives and the key is a real move. That node writes this table
-  // and skips the one-ply one; this node does the opposite.
+  // The pass consumes a ply and plays no move, so the parity this table rests
+  // on survives it: under the pass the side to move is the side whose move two
+  // plies back it is. `negamax_at` therefore hands its null child a 0 previous
+  // move **and its own previous move as the two-ply key** -- the node one ply
+  // after the pass does have a move two plies back and keys on it. That child
+  // hands the 0 on as its own child's two-ply key, so the node **two** plies
+  // after the pass is the one with nothing to index. 0 is the legitimate
+  // (W_PAWN, a8) cell and not an out-of-range index, so a dropped guard is a
+  // wrong-cell write with no crash and no sanitizer finding: only a scan of a
+  // row or of the whole table sees it.
   //
-  // The drive is the null child itself, reached by making the pass by hand and
-  // then calling `negamax` with exactly the arguments `negamax_at` gives its
-  // null child -- 0 for the previous move, this node's own previous move for
-  // the two-ply key. The case above drives the block; this one drives what the
-  // block produces, because the class it is about is two plies down and no
-  // probe records a ply it is not attached to.
+  // The positive half is the case below, the negative half the one after it.
+  // Both drive the null child itself, made by hand and called with the
+  // arguments `negamax_at` gives it; they differ in what they read and
+  // therefore in the window and the depth, which each case states.
+  //
+  // Every argument of both drives names its slot, and that is not decoration.
+  // Until S231's finding 1 there was one case here and it drove neither node:
+  // nine positional arguments went to a signature whose ninth is
+  // `bool cut_node`, so `PREV_MOVE` converted to `true` and the two-ply key
+  // took its default of 0 with no diagnostic. The trap is two trailing
+  // defaulted parameters of different types and it is still there.
+
+
+  // The positive half. Driven with the null child's own window -- the parent's
+  // (-beta, -beta + 1) -- and its own reduced depth, which is what makes the
+  // driven node fail high on its first quiet and cut off there. Everything
+  // this drive writes to the two-ply table is that one node's: at depth 1
+  // every child is searched at depth 0 or less, which is quiescence and writes
+  // no history at all, and this engine has no extension that could lift a
+  // child back to a search node.
+  //
+  // Measured in this tree: one cell under PREV_MOVE's key, one two-ply cell in
+  // the whole table, and one White quiet-history cell -- the cutoff that wrote
+  // them, and the counted precondition below.
+  //
+  // Mutation: the mutant this case is written against is
+  // I03_null_child_drops_prev2, and a direct drive of the child does not reach
+  // it -- what that mutant breaks is the argument `negamax_at` passes at its
+  // own recursion, which this case supplies itself. The step file records that
+  // gap and what would close it.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "the node one ply after a null move keys the two-ply "
+                    "table on the move before the pass")
+  {
+    // The same position as the two cases above, and for the same two reasons:
+    // no capture exists for either colour, so a fail-high below the pass has
+    // to come from a quiet and the history tables are what record it; and the
+    // rooks keep the phase off zero.
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    load(fen, 2);
+
+    // Precondition: the pass restores the side that played PREV_MOVE, which is
+    // the parity the whole reading rests on.
+    REQUIRE_EQ(game.board.active_color, BLACK);
+    make_null_move(&game);
+    REQUIRE_EQ(game.board.active_color, WHITE);
+
+    // Precondition: no capture for the side that moves after the pass, so the
+    // cutoff below has to be a quiet. A capture cutoff writes no continuation
+    // history at all and every count below would be zero for the wrong reason.
+    move_t captures[MAX_MOVES];
+    REQUIRE_EQ(generate_captures(game_tables(), &game.board, captures), 0);
+
+    // Precondition: every White pawn is still on its own rank, so no White
+    // pawn can legitimately key either table on (W_PAWN, a8). Reaching a8
+    // takes a White pawn six moves; this drive gives White one, and below it
+    // a quiescence that makes captures only and writes no history at all.
+    int pawns_at_home = 0;
+    for (int file = 0; file < 8; ++file) {
+      if (GET_BIT(game.board.bitboards[W_PAWN], a2 + file)) { pawns_at_home++; }
+    }
+    REQUIRE_EQ(pawns_at_home, 8);
+
+    // The depth the null-move block gives its child from NULL_DRIVE_DEPTH,
+    // computed from the block's own arithmetic rather than written down: one
+    // real ply, which is the least the block will search.
+    const int null_child_depth =
+        NULL_DRIVE_DEPTH - 1 -
+        (NULL_MOVE_BASE + NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR);
+    REQUIRE_EQ(null_child_depth, 1);
+
+    // The type the block predicts for the child of an ALL parent, read off the
+    // engine's own rule rather than repeated here, so a change to the rule
+    // reaches this drive. The pair is never (true, ...): the block does not
+    // run at a PV node.
+    bool child_is_pv = true;
+    bool child_cut_node = false;
+    search_child_label_probe(CHILD_NULL_MOVE, false, false, &child_is_pv,
+                             &child_cut_node);
+    REQUIRE(!child_is_pv);
+
+    // The null child's own call, argument for argument, every slot named. The
+    // window is the parent's (-beta, -beta + 1) with the parent's beta at
+    // ORDINARY_BETA, the previous move is the 0 the pass hands down, and the
+    // two-ply key is the passing node's own previous move.
+    negamax(/*alpha0=*/-ORDINARY_BETA, /*beta=*/-ORDINARY_BETA + 1,
+            /*depth=*/null_child_depth, /*ply=*/2, &game, &state,
+            /*prev_move=*/0, /*is_pv=*/child_is_pv,
+            /*cut_node=*/child_cut_node, /*prev_move2=*/PREV_MOVE);
+
+    unmake_null_move(&game);
+
+    // The counted precondition, read off a table the two-ply key cannot reach:
+    // a quiet cutoff happened in this drive at all. Without it every count
+    // below is zero because nothing was searched, which is not the statement
+    // this case makes.
+    size_t white_quiet_cells = 0;
+
+    for (int from = 0; from < 64; ++from) {
+      for (int to = 0; to < 64; ++to) {
+        if (state.quiet_history[WHITE][from][to] != 0) { white_quiet_cells++; }
+      }
+    }
+
+    REQUIRE_MESSAGE(white_quiet_cells > 0,
+                    "the driven node had no quiet cutoff, so nothing here is "
+                    "evidence about the key it would have written under");
+
+    size_t under_prev_key = 0;
+    size_t two_ply_written = 0;
+
+    for (int prev_piece = W_PAWN; prev_piece <= B_KING; ++prev_piece) {
+      for (int prev_to = 0; prev_to < 64; ++prev_to) {
+        for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+          for (int to = 0; to < 64; ++to) {
+            if (state.cont_hist2[prev_piece][prev_to][piece][to] != 0) {
+              two_ply_written++;
+
+              if (prev_piece == MOVE_PIECE(PREV_MOVE) &&
+                  prev_to == MOVE_TO(PREV_MOVE)) {
+                under_prev_key++;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // The statement: the cells landed under the move two plies back.
+    CHECK(under_prev_key > 0);
+
+    // And nowhere else, which is what keeps the line above from passing on a
+    // cell some other node wrote under some other key -- the (W_PAWN, a8)
+    // sentinel included.
+    CHECK_EQ(two_ply_written, under_prev_key);
+  }
+
+
+  // The negative half: the node two plies after the pass has no move two plies
+  // back, so it writes no two-ply cell at all. That node is not the driven one
+  // -- it is a child of the driven one, at ply 3 -- and no probe records a ply
+  // it is not attached to, so this case reads the table instead.
+  //
+  // The drive is the same null child with the same previous move and the same
+  // two-ply key, and a different instrument: an ordinary zero window one point
+  // below ORDINARY_BETA, at depth 3. The null child's own window is what the
+  // case above uses and it is the wrong instrument here, because the node
+  // fails high on its first quiet and searches nothing below itself -- and
+  // below itself is where this case's class lives.
   //
   // **What makes the assertion non-vacuous is the colour of the one-ply key.**
   // After the pass White is to move at the driven node, so a node whose
   // previous move is a *White* move is at ply 3, 5, 7 ... and at this depth --
   // 3 from ply 2 -- real search nodes exist at plies 2, 3 and 4 and everything
   // at ply 5 is quiescence, which writes no history at all. So a one-ply cell
-  // keyed on a White mover can only have been written by a ply-3 node, which is
-  // exactly the class two plies after the pass, and the count of them is the
-  // precondition. The driven node itself writes no one-ply cell, its own
-  // previous move being 0, so none of them is its.
+  // keyed on a White mover can only have been written by a ply-3 node, which
+  // is exactly the class two plies after the pass, and the count of them is
+  // the precondition. The driven node itself writes no one-ply cell, its own
+  // previous move being 0, so none of them is its. Measured in this tree: 3 of
+  // them at depth 3, 3 at depth 4, and 0 at depths 1 and 2, which is why the
+  // depth is 3.
   //
   // Mutation: I02_cont_hist2_no_prev2_guard -- the guard on the move two plies
   // back is dropped.
@@ -5019,19 +5165,29 @@ TEST_SUITE("search: pruning and reduction guards")
     move_t captures[MAX_MOVES];
     REQUIRE_EQ(generate_captures(game_tables(), &game.board, captures), 0);
 
-    // Precondition: every White pawn is still on its own rank, so no White pawn
-    // can legitimately key either table on (W_PAWN, a8). Reaching a8 takes a
-    // White pawn six moves and this drive gives White two, so the only way that
-    // cell can be written here is the bug.
+    // Precondition: every White pawn is still on its own rank, so no White
+    // pawn can legitimately key either table on (W_PAWN, a8). Reaching a8
+    // takes a White pawn six moves and this drive gives White two.
     int pawns_at_home = 0;
     for (int file = 0; file < 8; ++file) {
       if (GET_BIT(game.board.bitboards[W_PAWN], a2 + file)) { pawns_at_home++; }
     }
     REQUIRE_EQ(pawns_at_home, 8);
 
-    // The null child's own call, argument for argument.
-    negamax(ORDINARY_BETA - 1, ORDINARY_BETA, DRIVE_DEPTH, 2, &game, &state, 0,
-            false, PREV_MOVE);
+    // The same labels the case above drives with, off the same rule.
+    bool child_is_pv = true;
+    bool child_cut_node = false;
+    search_child_label_probe(CHILD_NULL_MOVE, false, false, &child_is_pv,
+                             &child_cut_node);
+    REQUIRE(!child_is_pv);
+
+    // The null child's previous move and two-ply key, every slot named; the
+    // window and the depth are this case's instrument and not the block's, for
+    // the reason the comment above gives.
+    negamax(/*alpha0=*/ORDINARY_BETA - 1, /*beta=*/ORDINARY_BETA,
+            /*depth=*/DRIVE_DEPTH, /*ply=*/2, &game, &state, /*prev_move=*/0,
+            /*is_pv=*/child_is_pv, /*cut_node=*/child_cut_node,
+            /*prev_move2=*/PREV_MOVE);
 
     unmake_null_move(&game);
 

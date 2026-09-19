@@ -172,11 +172,13 @@
      one table could: at 1000 and 1000 the widest band the ranges admit is      \
      32767 + 327670 + 327670 = 688107, a clearance of **11893 -- the same       \
      number the single 2000 ceiling gave**, because 2000 and 1000 + 1000 span   \
-     the same 655340. At 1050 each it would be 720901 and the band would        \
-     swallow the countermove and both killers. The fitted 26 is nowhere near    \
-     either edge and is untouched. Asserted at both weights' declared maxima,   \
-     not argued, in tests/test_evaluation.cpp "the declared history ceiling     \
-     clears the band above it". Consequence worth knowing: tools/spsa_s222.json \
+     the same 655340. At 1050 each it would be 720873 -- 32767 + 344053 +       \
+     344053, each weighted term through its own integer division as             \
+     quiet_history_sum takes it -- and the band would swallow the countermove   \
+     and both killers. The fitted 26 is nowhere near either edge and is         \
+     untouched. Asserted at both weights' declared maxima, not argued, in       \
+     tests/test_evaluation.cpp "the declared history ceiling clears the band    \
+     above it". Consequence worth knowing: tools/spsa_s222.json                 \
      declares this axis 0 to 2000 and is the frozen record of a run already     \
      taken -- `spsa_driver.py check` compares a config's bounds against the     \
      binary's and would now refuse it by name, which is correct and is not a    \
