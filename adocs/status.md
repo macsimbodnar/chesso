@@ -5,7 +5,23 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-20, by hand.
+Updated: 2026-09-21, by hand.
+
+- **S095's verdict is H1, 2026-09-21 01:39:17: `Elo 5.92 +/- 4.50`, `nElo
+  7.51 +/- 5.70`, LLR 2.96 over 14252 games in 6 h 40 m at 2138 an hour, 0
+  forfeits, `Ptnml [632, 1674, 2388, 1683, 749]`, LOS 99.51 %.** The
+  pre-registered H1 reading binds: the fifth reduction term stays at its seed
+  (`LmrNoTtMove` 1) for S127 to fit; the claim is at least 5 nElo (DEC-063);
+  the node-level cut is not taken up. `Incomplete mating PV` 10 candidate
+  against 17 reference, an observation. Evidence `adocs/data/S095_sprt.log`,
+  `S095_sprt_pairs.txt` (variance 0.3068). This is the second verdict-closing
+  commit under DEC-220. **Next, in order:** S095's completion (stamp,
+  `plan_done/`, ledger regenerated, specs sentence, the pending count 46 to
+  56 -> 45 to 55); then "machine free" to S097's agent for its verification
+  phase (builds, both suites, the node-explosion table, reds observed,
+  seventeen mutants), its fast check, V1's landing with `Bench:`, Debug
+  self-play and `gate_extra`, and V1's SPRT `{0, 5}` against the commit it
+  lands on. Machine idle from 01:39; no watcher armed.
 
 - **S095 is landed and its gainer SPRT is running, launched 2026-09-20
   18:58:48: `3961c13` (the fifth reduction term, `LmrNoTtMove` 1) against

@@ -667,3 +667,28 @@ rerun read **`GATE-EXTRA-DONE 5 stages 1034 s`** (18:40 to 18:57,
 perft green. **`CAND` pinned to `3961c13`**, the landing commit, in
 `adocs/data/S095_sprt.sh`; `REF` is `b25452a`, whose `src/` is `3a649c0`'s.
 The SPRT is the coordinator's next action.
+
+## The verdict: H1, 2026-09-21 01:39:17 (coordinator)
+
+**`SPRT-RUN-DONE` at 01:39:17 after 6 h 39 m 58 s and 14252 games: H1
+accepted, LLR 2.96 against (-2.94, 2.94), `Elo 5.92 +/- 4.50`, `nElo 7.51
++/- 5.70`**, W 4530 L 4287 D 5435, `Ptnml(0-2) [632, 1674, 2388, 1683, 749]`,
+LOS 99.51 %, draw ratio 33.51 %, pairs ratio 1.05; 2138.0 games an hour. 0
+time forfeits on either side over the PGN's 14254 games (9965 adjudications,
+4289 natural ends). `Incomplete mating PV` 10 candidate against 17 reference:
+an asymmetry in the reference's disfavour, recorded as an observation and not
+a diagnosis (CHESS). `S105_pairs.py`: 7126 complete pairs, pair score mean
+1.0163, variance 0.3068, sd 0.5539. Evidence `adocs/data/S095_sprt.log` and
+`adocs/data/S095_sprt_pairs.txt`. Slow class by the ledger's rule: the nElo
+interval [1.81, 13.21] reaches the pair, and the run walked six and a half
+hours to the bound.
+
+**The pre-registered H1 reading applies** (`adocs/data/S095_sprt.sh`): the term
+gains at least 5 nElo over the tree without it -- the stopping estimate is
+upward-biased and the claim is "at least 5 nElo", never the point estimate
+(DEC-063). `LmrNoTtMove` stays at its seed of 1 for S127 to fit; the node-level
+cut the step was first written for is not taken up (DEC-222 clause 2 chose the
+surviving form and it survived here too). The two mate-carry ceilings raised
+under DEC-225 stay with the term that raised them. This commit closes the
+verdict and carries DEC-220's block, checked by `tools/gate.sh` against the
+log; the completion follows.
