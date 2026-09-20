@@ -36,9 +36,7 @@
 // have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
 // not a value -- and the rule is the same for a vector as for a number. S222's
 // history lane moved eleven: QuietHistoryMax, plain history's six bonus and
-// malus coefficients, the three continuation axes and HistPruneCoeff. S231's
-// moved six, the two continuation tables' three each, three of them for the
-// second time.
+// malus coefficients, the three continuation axes and HistPruneCoeff.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -51,7 +49,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 53 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 50 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -72,12 +70,9 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"HistoryMalusQuad",          0,     0,    1024},
   {"HistoryMalusLin",          17,     0,    4096},
   {"HistoryMalusConst",        36, -32768,   32767},
-  {"ContHistBonus",            18,     0,    1000},
-  {"ContHistMalus",            17,     0,    1000},
-  {"ContHistWeight",           24,     0,    1000},
-  {"ContHist2Bonus",           18,     0,    1000},
-  {"ContHist2Malus",           20,     0,    1000},
-  {"ContHist2Weight",          24,     0,    1000},
+  {"ContHistBonus",            17,     0,    1000},
+  {"ContHistMalus",            18,     0,    1000},
+  {"ContHistWeight",           26,     0,    2000},
   {"MaxQsearchDepth",          19,     1,      64},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},

@@ -342,12 +342,12 @@ int game_phase(const board_t* board);
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus
-// S222's weighted one-ply continuation entry plus S231's weighted two-ply one
-// -- and the one path a consumer reads it through. Raw, never score_move's
-// return: a killer scores 900000 there and a countermove 700000, and a consumer
-// that divides one of those by a history divisor is reading a band constant,
-// which is S093's own hazard. Pre-make, like every caller -- `active_color`
-// indexes the table with the side that plays the move.
+// S222's weighted continuation entry -- and the one path a consumer reads it
+// through. Raw, never score_move's return: a killer scores 900000 there and a
+// countermove 700000, and a consumer that divides one of those by a history
+// divisor is reading a band constant, which is S093's own hazard. Pre-make,
+// like every caller -- `active_color` indexes the table with the side that
+// plays the move.
 //
 // **One production reader today, score_move's quiet band below** (a test case
 // reads it too). It was factored out for
@@ -371,8 +371,7 @@ int capture_score(const board_t* board, move_t move);
 inline int quiet_history_sum(const game_t* game,
                              const search_state_t* state,
                              move_t move,
-                             move_t prev_move,
-                             move_t prev_move2)
+                             move_t prev_move)
 {
   // Signed since S093: a quiet that was tried and did not cut off carries a
   // malus, so this band runs [-QuietHistoryMax, +QuietHistoryMax] rather than
@@ -385,41 +384,25 @@ inline int quiet_history_sum(const game_t* game,
   // S222. The one-ply continuation term, on a scale of its own: its entry is
   // bounded by CONT_HIST_BOUND rather than by QuietHistoryMax, and
   // ContHistWeight is what decides how much of the quiet band it may span
-  // against plain history's own.
+  // against plain history's own. Summed in `int`, which the sum needs: two
+  // int16_t entries at their bounds already exceed int16_t, and the weight
+  // multiplies one of them by up to twenty.
   //
   // Guarded on there being a previous move to index at all -- the root ply and
   // the node right after a null move pass 0, and 0 is the (W_PAWN, a8) cell
   // and not an absent one.
+  //
+  // With both terms at their extremes the band this returns widens to
+  // [-(QuietHistoryMax + ContHistWeight * CONT_HIST_BOUND / 100), +the same],
+  // and the clearance against the countermove band above is asserted at both
+  // declared maxima in tests/test_evaluation.cpp "the declared history ceiling
+  // clears the band above it" -- the one-way door CLAUDE.md names, whose
+  // symptom would be lost rating and not a wrong node count.
   if (prev_move != 0) {
     score +=
         (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) / 100;
   }
 
-  // S231. The two-ply term beside it, on a weight of its own, guarded on its
-  // own key: ply 0, ply 1 and the node two plies after a null move all pass 0
-  // here, and 0 is a real cell for this index too.
-  if (prev_move2 != 0) {
-    score +=
-        (CONT_HIST2_WEIGHT * continuation2_entry(state, prev_move2, move)) /
-        100;
-  }
-
-  // THE HEADROOM, three terms and two multiplying weights. Summed in `int`,
-  // which the sum needs and which int16_t could not carry: the plain entry
-  // reaches QuietHistoryMax's declared 32767 and each weighted entry reaches
-  // its weight's declared 1000 per cent of CONT_HIST_BOUND, so the widest this
-  // returns is 32767 + 327670 + 327670 = 688107 -- twenty-one times the type
-  // the entries are stored in, and four orders inside int32.
-  //
-  // That number is also the one-way door CLAUDE.md names: with all three terms
-  // at their extremes the band this returns is [-688107, +688107] and it has
-  // to stand 100 clear of the countermove band at 700000. Asserted at every
-  // declared maximum at once, not argued, in tests/test_evaluation.cpp "the
-  // declared history ceiling clears the band above it"; the symptom of getting
-  // it wrong is lost rating and not a wrong node count. The two weights'
-  // ceilings are halves of what one weight alone could declare for exactly
-  // this reason -- src/search_params.hpp's ContHistWeight block has the
-  // arithmetic.
   return score;
 }
 
@@ -429,5 +412,4 @@ int score_move(const game_t* game,
                move_t move,
                move_t tt_move,
                size_t ply,
-               move_t prev_move,
-               move_t prev_move2);
+               move_t prev_move);

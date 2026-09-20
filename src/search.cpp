@@ -95,8 +95,7 @@ void history_on_quiet_cutoff(search_state_t* state,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
                              int depth,
-                             move_t prev_move,
-                             move_t prev_move2)
+                             move_t prev_move)
 {
   const int bonus = HISTORY_BONUS_QUAD * depth * depth +
                     HISTORY_BONUS_LIN * depth + HISTORY_BONUS_CONST;
@@ -109,14 +108,6 @@ void history_on_quiet_cutoff(search_state_t* state,
   const bool has_prev = prev_move != 0;
   const int cont_bonus = continuation_grade(CONT_HIST_BONUS, depth);
   const int cont_malus = continuation_grade(CONT_HIST_MALUS, depth);
-
-  // S231, the same guard over the move two plies back and its own shares. The
-  // grading function is reused rather than copied, so the two tables cannot
-  // drift apart in how a depth becomes a bonus; what differs is the two
-  // coefficients it is called with.
-  const bool has_prev2 = prev_move2 != 0;
-  const int cont2_bonus = continuation_grade(CONT_HIST2_BONUS, depth);
-  const int cont2_malus = continuation_grade(CONT_HIST2_MALUS, depth);
 
   // The maluses first, so that when two moves in the span share a butterfly
   // cell with the cutoff move -- two promotions from the same square, say --
@@ -136,14 +127,6 @@ void history_on_quiet_cutoff(search_state_t* state,
           continuation_entry(state, prev_move, quiets_tried[i]), -cont_malus,
           CONT_HIST_BOUND);
     }
-
-    // And to the (prev_move2, quiets_tried[i]) cell of the two-ply table, on
-    // its own shares. S231.
-    if (has_prev2) {
-      history_gravity_update(
-          continuation2_entry(state, prev_move2, quiets_tried[i]), -cont2_malus,
-          CONT_HIST_BOUND);
-    }
   }
 
   history_gravity_update(
@@ -153,11 +136,6 @@ void history_on_quiet_cutoff(search_state_t* state,
   if (has_prev) {
     history_gravity_update(continuation_entry(state, prev_move, cutoff_move),
                            cont_bonus, CONT_HIST_BOUND);
-  }
-
-  if (has_prev2) {
-    history_gravity_update(continuation2_entry(state, prev_move2, cutoff_move),
-                           cont2_bonus, CONT_HIST_BOUND);
   }
 }
 
@@ -1178,19 +1156,6 @@ int quiescence(int alpha,
 // parameter `negamax_at<false>` holds no probe code at all, and the recursion
 // below is always `<false>` because a probe records exactly one ply and every
 // child is at another one. S191.
-//
-// `prev_move2` is the move played two plies back, the key of S231's two-ply
-// continuation table, and it is a parameter rather than a per-ply move stack
-// on `search_state_t` **because a parameter costs no read**. Every node
-// already holds its own `prev_move` in a register or a stack slot and hands it
-// down as its child's `prev_move2`, so the two-ply key is produced by the
-// argument the recursion was already building; a stack would add a store per
-// move made and a load per node on top of it, and the field beside these was
-// measured at 1.49 % of nodes per second for exactly one read per node
-// (`search_state_t::probe`, src/data_structures.hpp). It is also the shape
-// that gets the null move right for free: the pass hands its child a 0
-// `prev_move`, and that child hands the 0 on as its own child's `prev_move2`,
-// which is the guarded case two plies after a pass.
 template <bool PROBING>
 static int negamax_at(int alpha0,
                       int beta,
@@ -1200,8 +1165,7 @@ static int negamax_at(int alpha0,
                       search_state_t* state,
                       move_t prev_move,
                       bool is_pv,
-                      bool cut_node,
-                      move_t prev_move2)
+                      bool cut_node)
 {
   assert(game != nullptr);
   assert(state != nullptr);
@@ -1536,9 +1500,9 @@ static int negamax_at(int alpha0,
 
     make_null_move(game);
 
-    const int null_score = -negamax_at<false>(
-        -beta, -beta + 1, depth - 1 - reduction, ply + 1, game, state, 0,
-        child.is_pv, child.cut_node, prev_move);
+    const int null_score =
+        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
+                           game, state, 0, child.is_pv, child.cut_node);
 
     unmake_null_move(game);
 
@@ -1652,8 +1616,7 @@ static int negamax_at(int alpha0,
   }
 
   for (size_t i = 0; i < moves_count; ++i) {
-    scores[i] =
-        score_move(game, state, moves[i], tt_move, ply, prev_move, prev_move2);
+    scores[i] = score_move(game, state, moves[i], tt_move, ply, prev_move);
   }
 
   int score = 0;
@@ -1730,8 +1693,7 @@ static int negamax_at(int alpha0,
 #endif
 
       for (size_t j = moves_count; j < moves_count + added; ++j) {
-        scores[j] = score_move(game, state, moves[j], tt_move, ply, prev_move,
-                               prev_move2);
+        scores[j] = score_move(game, state, moves[j], tt_move, ply, prev_move);
       }
 
       moves_count += added;
@@ -1979,13 +1941,12 @@ static int negamax_at(int alpha0,
 
     if (legal_moves_counter == 1) {
       // The first legal move of a PV node continues the principal variation.
-      score =
-          -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game, state,
-                             moves[i], child.is_pv, child.cut_node, prev_move);
+      score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
+                                 state, moves[i], child.is_pv, child.cut_node);
     } else {
       score = -negamax_at<false>(-alpha - 1, -alpha, child_depth - reduction,
                                  ply + 1, game, state, moves[i], child.is_pv,
-                                 child.cut_node, prev_move);
+                                 child.cut_node);
 
       // A reduced search that beats alpha has proved only that the reduction
       // was wrong, not what the move is worth. Repeat it before believing
@@ -2024,7 +1985,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, ply + 1,
                                    game, state, moves[i], again.is_pv,
-                                   again.cut_node, prev_move);
+                                   again.cut_node);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the
@@ -2036,7 +1997,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
                                    state, moves[i], on_the_line.is_pv,
-                                   on_the_line.cut_node, prev_move);
+                                   on_the_line.cut_node);
       }
     }
 
@@ -2071,7 +2032,7 @@ static int negamax_at(int alpha0,
         // ordered the node.
         history_on_quiet_cutoff(state, game->board.active_color, moves[i],
                                 quiets_tried, quiets_tried_count, depth,
-                                prev_move, prev_move2);
+                                prev_move);
 
 #ifdef CHESSO_TUNE
         // The one observation S109's late move pruning constants were fitted
@@ -2169,11 +2130,10 @@ int negamax(int alpha0,
             search_state_t* state,
             move_t prev_move,
             bool is_pv,
-            bool cut_node,
-            move_t prev_move2)
+            bool cut_node)
 {
   return negamax_at<false>(alpha0, beta, depth, ply, game, state, prev_move,
-                           is_pv, cut_node, prev_move2);
+                           is_pv, cut_node);
 }
 
 
@@ -2187,11 +2147,10 @@ int negamax_probed(int alpha0,
                    search_state_t* state,
                    move_t prev_move,
                    bool is_pv,
-                   bool cut_node,
-                   move_t prev_move2)
+                   bool cut_node)
 {
   return negamax_at<true>(alpha0, beta, depth, ply, game, state, prev_move,
-                          is_pv, cut_node, prev_move2);
+                          is_pv, cut_node);
 }
 
 
@@ -2560,7 +2519,7 @@ search_t search(int depth,
   // published lists, and the one this search has always followed through
   // `is_pv`. `cut_node` false is the other half of that label. S098.
   int score =
-      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false, 0);
+      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false);
 
   search_result.best_move = state->best_move;
 

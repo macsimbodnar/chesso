@@ -810,41 +810,6 @@ struct search_state_t
   // costs a silent wrong-cell write and not a crash. S222, and S024 before it.
   int16_t cont_hist[12][64][12][64];
 
-  // Two-ply continuation history -- follow-up history, the second half of the
-  // same published device. [the (piece, to) of the move **two** plies back]
-  // [this move's], graded at every quiet cutoff beside cont_hist and summed
-  // into the quiet ordering score in score_move on a weight of its own.
-  // Reached only through continuation2_entry() below, for the same reason
-  // cont_hist has exactly one index.
-  //
-  // What the second key buys is the parity: at a node where side S is to move,
-  // the move one ply back was the opponent's and the move two plies back was
-  // S's own, so this table pairs a side's previous move with its next one
-  // where cont_hist pairs a reply with what it is replying to.
-  //
-  // Another 1.125 MiB, on cont_hist's reasoning throughout -- int16_t bounded
-  // by the same CONT_HIST_BOUND, a value member so the zeroed rebuild at the
-  // top of every iterative_deepening_search() clears it with the other four
-  // tables and `ucinewgame` needs no clear of its own. This struct is now
-  // 2.4 MiB and the heap ownership S222's fast check imposed is what keeps
-  // that legal: every instance built off the main thread is its builder's
-  // unique_ptr -- iterative_deepening_search()'s one per `go`,
-  // run_search()'s one per datagen worker -- because 512 KiB is what a macOS
-  // std::thread gets by default. The tests build theirs on the main thread.
-  //
-  // Guarded on the move two plies back existing, which is three node classes
-  // and not one: ply 0, ply 1, and the node two plies after a null move, the
-  // last because the pass hands its child a 0 previous move and that child
-  // hands the 0 on as its own child's two-ply key. All three pass 0, 0 decodes
-  // to the legitimate (W_PAWN, a8) cell, and a dropped guard is therefore a
-  // silent wrong-cell write and not a crash. S231.
-  //
-  // The node one ply after a null move is not in that list and that is the
-  // reading, not an oversight: under the pass the side to move is the side
-  // whose move two plies back it is, so the parity above still holds and the
-  // key is a real move. It writes this table and skips cont_hist.
-  int16_t cont_hist2[12][64][12][64];
-
   // Where a proved mate line is left for the searches that come after this
   // one. Null unless a caller supplies one, which keeps every direct caller of
   // search() -- every test that builds a search_state_t of its own -- on
@@ -880,29 +845,4 @@ inline int16_t continuation_entry(const search_state_t* state,
 {
   return state->cont_hist[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)]
                          [MOVE_PIECE(move)][MOVE_TO(move)];
-}
-
-
-// The one index into cont_hist2, on continuation_entry's own reasoning: the
-// write in history_on_quiet_cutoff and the read in quiet_history_sum share it,
-// so neither can disagree with the other about which pair comes first.
-//
-// A second function rather than a table argument on the first, so that a call
-// site naming the wrong table is a call site naming the wrong *function* and
-// reads as one. `prev_move2` is the move two plies back and nothing else: the
-// caller does the guarding, exactly as it does for cont_hist. S231.
-inline int16_t& continuation2_entry(search_state_t* state,
-                                    move_t prev_move2,
-                                    move_t move)
-{
-  return state->cont_hist2[MOVE_PIECE(prev_move2)][MOVE_TO(prev_move2)]
-                          [MOVE_PIECE(move)][MOVE_TO(move)];
-}
-
-inline int16_t continuation2_entry(const search_state_t* state,
-                                   move_t prev_move2,
-                                   move_t move)
-{
-  return state->cont_hist2[MOVE_PIECE(prev_move2)][MOVE_TO(prev_move2)]
-                          [MOVE_PIECE(move)][MOVE_TO(move)];
 }

@@ -66,14 +66,6 @@ int quiescence(int alpha,
 // to ask its question at, and `false` is the choice every case made before this
 // step existed -- PV where `is_pv`, ALL otherwise, which is the label that adds
 // nothing to the reduction.
-// `prev_move2` is the move two plies back, S231's two-ply continuation key,
-// and it is defaulted here and on `negamax_probed` for `cut_node`'s reason:
-// inside `negamax_at` every recursion states the key its own rule produces,
-// because that is the plumbing, and a test driving one node is choosing what
-// two-ply context to ask its question in. 0 is the choice every case made
-// before this step existed -- no two-ply entry, which is also what ply 0 and
-// ply 1 pass in the engine's own tree -- so every existing caller keeps
-// exactly the behaviour it had.
 int negamax(int alpha0,
             int beta,
             int depth,
@@ -82,8 +74,7 @@ int negamax(int alpha0,
             search_state_t* state,
             move_t prev_move,
             bool is_pv,
-            bool cut_node = false,
-            move_t prev_move2 = 0);
+            bool cut_node = false);
 
 
 // The same node with `state->probe` honoured, so a test can watch this node's
@@ -102,8 +93,7 @@ int negamax_probed(int alpha0,
                    search_state_t* state,
                    move_t prev_move,
                    bool is_pv,
-                   bool cut_node = false,
-                   move_t prev_move2 = 0);
+                   bool cut_node = false);
 
 // Completes a reported mate line so that it reaches the mate it claims, and
 // keeps a line that does reach one for the searches that follow.
@@ -160,20 +150,13 @@ void history_gravity_update(int16_t& entry, int bonus);
 // there is no previous move to index -- ply 0, or the node right after a null
 // move -- and the table is left alone rather than crediting or charging its
 // (W_PAWN, a8) cell. S222.
-//
-// `prev_move2` does the same for the two-ply table (`continuation2_entry`) on
-// its own two shares, under its own guard and with the same meaning for 0:
-// ply 0, ply 1 and the node two plies after a null move pass none. Required
-// rather than defaulted, so a call site has to say which two-ply context it
-// grades in. S231.
 void history_on_quiet_cutoff(search_state_t* state,
                              color_t side,
                              move_t cutoff_move,
                              const move_t* quiets_tried,
                              size_t quiets_tried_count,
                              int depth,
-                             move_t prev_move,
-                             move_t prev_move2);
+                             move_t prev_move);
 
 // The reduction the built table holds for a (depth, move number) pair. It
 // exists for two tests. S073's: LMR_BASE and LMR_DIVISOR are read once, when

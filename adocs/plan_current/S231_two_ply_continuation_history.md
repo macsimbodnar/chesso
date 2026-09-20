@@ -1158,3 +1158,244 @@ proved by `bench` 4646334 to the node; the S192 node-budget golden is
 re-derived on the reverted tree in that commit; S095's stashed, uncompiled work
 is re-applied on the reverted tree afterwards. This commit is the first to
 carry DEC-220's result block, and `tools/gate.sh` checked it against the log.
+
+## H0, 2026-09-20: the revert
+
+Carried out by a fresh Opus 5 subagent on the idle machine, briefed by the
+coordinator (`.tuning/coord/S231_h0_revert_brief.md`, DEC-185, DEC-199). The
+coordinator stages and commits; nothing below was staged here. Shape: DEC-194's
+own revert, `ecdfadb` -- `src/` and the test files return to the pre-step
+content, the step's mutant script goes, the evidence stays under `adocs/data/`,
+the manuals say so, and a decision records why.
+
+### What returned, what went, what stayed
+
+`git log 3a649c0..HEAD` was read per file before a byte moved: every change to
+each of the files below since `3a649c0` belongs to one of S231's four commits
+(`b83fb1d`, `4c727b2`, `af8b9f0`, `55891bb`), so **no hunk of another step's
+was caught in the revert** and none had to be kept back.
+
+| path | what happened | why |
+|---|---|---|
+| all of `src/` -- `data_structures.hpp`, `evaluation.cpp`, `evaluation.hpp`, `search.cpp`, `search.hpp`, `search_params.hpp` | **returned to `3a649c0`'s content, byte for byte** | the pre-registered H0 reading: one vector under one verdict, so the table, its three axes, the halved `ContHistWeight` ceiling and the one-ply three all go together. The one-ply three land on 17 / 18 / 26, which are `3a649c0`'s and S222's own fitted values, so no axis is stranded |
+| `tests/test_evaluation.cpp`, `tests/test_search_params.cpp` | returned to `3a649c0`'s content | the band case at three tables goes back to two; the golden option table goes 53 rows to 50 |
+| `tests/test_search.cpp` | returned to `3a649c0`'s content, **then one golden re-derived** (below) | the two-ply cases, the null-child case, the re-derived `capture_mates` depths and the depth-4 research witness were all S231's and all go |
+| `tools/mutants/S222_continuation_history.py` | returned to `3a649c0`'s content | `4c727b2`'s `(void) prev_move;` in `H04_cont_hist_unread` existed **only** because S231 gave `quiet_history_sum` a second guarded term. With that term gone the orphan is gone, and the pair source-plus-registry is exactly the one S222's own mutation run observed `H04` killed on |
+| `tools/mutants/S098_research_rule.py` | returned to `3a649c0`'s content | its only change since was S231 widening `D08_site_ignores_the_rule`'s anchor for the new `prev_move` argument |
+| `tools/mutants/S231_continuation_history2.py` | **deleted** | the four mutants target code that no longer exists; DEC-194 deleted S024's the same way |
+| `MANUAL.md` | returned to `3a649c0`'s content | the three `ContHist2*` rows leave and `ContHistWeight`'s row is `3a649c0`'s again: range 0 to 2000, defaults 17 / 18 / 26 |
+| `tests/CMakeLists.txt`, `tests/test_gate_script.sh`, `tests/test_ledger.py` | **untouched** | S233's, landed in `1b7c9be` between S231's phases |
+| everything under `adocs/data/` -- the lane, the census, the SPRT, the two fit scripts, the research witness | **untouched, every row of `adocs/data/README.md` kept** | DEC-194's precedent: the evidence of a measurement outlives the code it measured. `tools/spsa_s231.json` stays for the same reason S222's does -- the frozen record of a run already taken, not a template |
+
+### The proofs
+
+**`chesso bench` on the reverted Release build: `4646334`** -- `3a649c0`'s own
+total to the node, which is the whole-revert proof and what the commit's
+`Bench:` line carries. The `3a649c0` worktree's own binary, rebuilt today,
+prints the same `4646334`.
+
+**`tools/search_bench.py`, reverted tree against a `3a649c0` worktree build,
+interleaved -- identical counts and identical best moves at both depths, every
+position** (INV-6's form of the same proof):
+
+| depth | midgame | kiwipete | tactical |
+|---|---|---|---|
+| 9 | 21995, `g5f6` | 104682, `e2a6` | 29842, `d7c8q` |
+| 12 | 155612, `c3d5` | 683624, `e2a6` | 152138, `d7c8q` |
+
+Those six counts are also exactly the parent column phase one recorded before
+the table landed.
+
+**The gate, both builds, `CLANG_FORMAT_MAJOR=22` (DEC-146): 40 of 40 in
+`build`, 40 of 40 in `build-tune`, `./clang-format.sh --check` clean.**
+`tools/plan_prose_check.py --params`, `--citations` (0 flagged over 50 files)
+and `--touches` (0 flagged) all pass.
+
+**`tools/mutation_check.py`'s own `validate` over the remaining registry, run
+against the reverted tree: 84 mutants over 10 files, every anchor occurring
+exactly once in the file it names, no duplicate id.** The four S231 mutants are
+gone with their file; S222's four (`H01` to `H04`) are back in the form
+`3a649c0` carries. No full mutation pass was taken and none is owed: the tree
+it would run on is `3a649c0`'s `src/` byte for byte, which had its own.
+
+**Second tier, DEC-141: no Debug self-play and no `tools/gate_extra.sh` are
+owed here, and the reason is the same one.** `src/` is not "equivalent to" the
+tree that already passed both -- it is that tree, byte for byte, and the only
+delta in the whole commit beyond it is two integers and a comment in one test
+case. `gate_extra` last read `GATE-EXTRA-DONE 5 stages 1123 s` on `55891bb`
+this morning, so the weekly is in hand to 2026-09-27 either way.
+
+### The one edit beyond `3a649c0`: the node-budget golden, re-derived
+
+`adocs/data/S192_node_budget.py` on the reverted Release build:
+
+    count         16256 nodes, depth 5 on KIWIPETE_POS, cold table
+    budget        65024  (4x the count)
+    floor         3251  (the count over 5)
+
+So the golden pair in `tests/test_search.cpp` "ordering keeps the tree small"
+goes **69804 and 3490 -> 65024 and 3251**, applied at the case's own site with
+the script named there as its re-derivation (DEC-142), the GOLDEN block's
+history line gaining the 2026-09-20 reading, and the failure message's
+"derived from 17451" becoming "derived from 16256". `DEV_MANUAL.md`'s golden
+index carries the new pair and the same script. This closes the finding
+`adocs/data/S231_sprt.sh` named before a game was played: the trigger had been
+standing for three steps while two step files recorded it as not fired.
+
+**Two things were found doing it and neither is repaired here.**
+
+1. **The parent's recorded count does not reproduce.** Phase one recorded
+   17321 for `3a649c0`. On a tree whose `src/` and whose case text are
+   `3a649c0`'s byte for byte the script reads **16256**, twice in a row, and
+   **16256 again from the tune build** -- so it is not a build-configuration
+   artefact. 16256 is also the number phase one recorded for its *own* tree.
+   One of those two labels is wrong and this revert cannot say which without
+   rebuilding phase one's tree, which is out of its scope. What ships is
+   derived from the tree that ships, measured today.
+2. **The script's drift line cannot read "inside" for a freshly derived
+   band, and that is arithmetic rather than drift.** A band of
+   `[count / 5, 4 x count]` puts the count at `0.8 / 3.8` = 21.05 % of its own
+   span, below the lower quartile, so `middle half [18694, 49581]: the count
+   is OUTSIDE it` is what the script prints **on the pair it has just
+   derived** -- verified after the edit, with `shipping` now equal to the
+   derived pair and the count at 5.00x the floor and 0.25 of the budget. Three
+   step files in a row have read that line as a verdict on the band. It is a
+   defect in the trigger, not in the tree: reach none into play, none onto the
+   UCI surface, none into any reported score, move or line. **Proposed to the
+   coordinator as filler behind the next strength step** (BUGS as scoped by
+   DEC-171), one change at a time -- either the ratios or the line, not both,
+   and not inside this commit.
+
+### Documents
+
+- `MANUAL.md`: reverted whole, which is exactly the change owed -- three rows
+  out, `ContHistWeight` back to 0 to 2000 at 26. `plan_prose_check --params`
+  passes against the reverted header.
+- `DEV_MANUAL.md`: the bench ledger's S231 entry gains the revert and its
+  `4646334`, read as the ledger's second equality after S098 verdict 1's
+  `5685915` and as the whole-revert proof; the S231 lane paragraph stays as
+  history and gains the verdict, the fact that the six fitted values are not
+  in the engine, and the fact that **`ContHistWeight` is declared 0 to 2000
+  again** -- so `tools/spsa_s222.json` passes `spsa_driver.py check` once more,
+  where the halving refused it by name for two days. The golden index's row
+  for this case carries the new pair.
+- `adocs/data/README.md`: no row leaves, none added.
+- `README.md`: human-owned, untouched.
+- `adocs/specs.md`, `adocs/plan.md`, `adocs/status.md`, `adocs/decisions.md`:
+  not edited (hard limit). Wording proposed below.
+
+### Proposed `specs.md` amendment, for the coordinator
+
+The whole S231 passage in the search row -- the one added on 2026-09-18 and
+amended by phase three -- becomes history. Replacing it:
+
+> **A two-ply continuation history table was measured here between 2026-09-18
+> and 2026-09-20 and is not in the engine (S231).** It was
+> `cont_hist2[12][64][12][64]` on `search_state_t`, keyed on the (piece, to) of
+> the move two plies back and this move's, written at every quiet cutoff beside
+> the one-ply table and summed into `score_move`'s quiet return on a weight of
+> its own; its three axes were fitted together with the one-ply three in a
+> six-axis SPSA lane over 60000 games, and the gainer SPRT `{0, 5}` nElo
+> against `3a649c0` -- one vector under one verdict, DEC-210's reading --
+> **accepted H0 on 2026-09-20 at `nElo -3.40 +/- 6.20` over 12070 games**
+> (`adocs/data/S231_sprt.log`). The pre-registered reading returned `src/` to
+> `3a649c0` whole, so `ContHistWeight` is declared 0 to 2000 again and the
+> one-ply three are S222's own fitted 17 / 18 / 26. The census on the fitted
+> build read the two-ply term consulted on 95.72 % of quiet scores and non-zero
+> on 27.51 % of those, against the one-ply table's 19.89 %
+> (`adocs/data/S231_census.txt`), so the zero is about the technique as built
+> here and not about inert wiring. The lane and the verdict are kept as
+> evidence; `bench` is `4646334`, the reference's own total to the node.
+
+The S222 passage's band sentence returns to one weight, which is what phase one
+flagged as false in two clauses and what the revert makes true again:
+
+> "`ContHistWeight` decides how much of the quiet band the term spans, so the
+> band is `[-(QuietHistoryMax + ContHistWeight x 32767 / 100), +the same]` and
+> still clears the countermove band by 100 at both declared maxima -- 688107
+> against 700000, asserted at both edges."
+
+That is `3a649c0`'s own wording and `tests/test_evaluation.cpp` "the declared
+history ceiling clears the band above it" asserts it again unchanged.
+
+### Proposed decision, for the coordinator
+
+Agents do not write `adocs/decisions.md`; this is the proposal the step's
+`accepts` asks for -- "H0 records the zero and the two-ply idea leaves the plan
+with a decision saying why".
+
+> **The two-ply continuation history table leaves the plan, on its own
+> measurement.** S231's gainer SPRT `{0, 5}` nElo against `3a649c0` accepted H0
+> at `LLR -2.95`, `Elo -2.65 +/- 4.82`, `nElo -3.40 +/- 6.20` over 12070 games
+> with 0 time forfeits. The nElo interval is [-9.60, +2.80] and its centre sits
+> below zero, which is the shape DEC-194 did not keep.
+>
+> **Why the verdict is about the technique and not about the wiring**, which is
+> the question DEC-194 needed a census to answer for the first table and which
+> `I04_cont_hist2_unread` was written for: on the fitted build the move two
+> plies back exists at 94.24 % of quiet cutoffs, the term is consulted on
+> 95.72 % of quiet `score_move()` evaluations, and **27.51 % of those
+> consultations read a non-zero entry against the one-ply table's 19.89 % on
+> the same run**, with a same-tree control at the incumbent vector putting
+> every share within four tenths of a point
+> (`adocs/data/S231_census.txt`). The table was exercised, it had more to say
+> than the table beside it, and it still bought nothing. Nor was it unfitted:
+> its own narrow lane moved all six continuation axes over 60000 games and no
+> axis touched a bound.
+>
+> **Recorded as a zero and kept as a zero** -- S005, S006 and S015 are the
+> precedent that a measured zero is recorded as one, and DEC-194 the precedent
+> for not keeping a change whose interval sits below the bound. The idea does
+> not return without a reason the record does not already contain; the
+> published treatment of it as "the second half of the one-ply idea" is exactly
+> the kind of figure DEC-019 says decides what to try and never what to
+> conclude, and this is the fourth time it has not transferred.
+>
+> **What is not owed as a consequence**: DEC-222's two removal verdicts, the
+> killer slots and the countermove table, because the history stack they were
+> to be measured against did not ship. **What is untouched**: the one-ply
+> table's own H1 (DEC-210), because this run measured the pair against a tree
+> that already carried it.
+>
+> **What it cost and what it bought**: one lane night (8 h 40 m), one verdict
+> (5 h 38 m), 72070 games, about two agent-days; a measured zero on a published
+> idea, the finding that the seeded equal authority grew the tree 17 % where
+> the fit took it 5 % below the reference with neither transferring to Elo, and
+> one golden whose re-derivation trigger had been standing unread for three
+> steps.
+
+### Proposed commit text, for the coordinator
+
+`tools/gate.sh`'s block check is triggered by an `SPRT |` line and this commit
+carries none: the verdict was closed by `b06a5c8`, which carries DEC-220's
+block. This one owes `Bench:` alone, and the gate verifies it against the
+built binary.
+
+```
+Revert S231's two-ply continuation history on H0, DEC-194's shape
+
+The gainer SPRT against 3a649c0 on noob_3moves.epd accepted H0 at LLR
+-2.95, nElo -3.40 +/- 6.20 over 12070 games with no forfeits, recorded in
+b06a5c8, and the pre-registered reading binds: one vector under one
+verdict, so the table, its three axes, the halved ContHistWeight ceiling
+and the one-ply three go together. The one-ply three land on S222's own
+fitted 17 / 18 / 26, which is what 3a649c0 carries, so no axis is left
+without a verdict.
+
+The census on the fitted build read the two-ply term non-zero on 27.51 %
+of quiet scores against the one-ply table's 19.89 %, with a same-tree
+control, so the zero is about the technique as built here and not about
+inert wiring. src, the three test files and the two mutant registries
+return to 3a649c0's content byte for byte; S231's own mutant script goes;
+the lane, the census and the SPRT evidence stay under adocs/data.
+
+One golden moves with the tree and is the only edit beyond 3a649c0:
+"ordering keeps the tree small" re-derived by adocs/data/S192_node_budget.py
+from a count of 16256, the pair 69804 and 3490 becoming 65024 and 3251.
+That trigger had been standing since S222 while two step files recorded it
+as not fired, which is the finding S231_sprt.sh named before a game was
+played.
+
+Bench: 4646334
+```
+

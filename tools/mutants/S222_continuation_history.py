@@ -45,21 +45,19 @@ m("H02_cont_hist_no_prev_guard", S, "search/ordering",
 
 # The anchor gained two arguments at S098 verdict 2, which threads `cut_node`
 # through `negamax_at` and labels the null-move child by Kannan's rule rather
-# than passing a literal `false`, and a third at S231, which threads the move
-# two plies back and re-wrapped the call. The mutation is unchanged through all
-# of it -- the `0` in the previous-move position becomes `prev_move` and
-# nothing else -- and it was re-observed at each step. Note that the `0` this
-# anchor names is the **previous move**, the seventh argument; S231's own
-# `I03_null_child_drops_prev2` is about the tenth and they are different
-# mutants of the same call.
+# than passing a literal `false`. The mutation is unchanged -- the `0` becomes
+# `prev_move` and nothing else -- and it was re-observed at that step.
 m("H03_null_child_keeps_prev", S, "search/ordering",
   'the null-move child is handed the node\'s own previous move instead of 0, '
   'so everything it writes is keyed on a move that is two plies back and on '
   'the wrong side of the pass',
-  ('        -beta, -beta + 1, depth - 1 - reduction, ply + 1, game, state, 0,\n'
-   '        child.is_pv, child.cut_node, prev_move);',
-   '        -beta, -beta + 1, depth - 1 - reduction, ply + 1, game, state,\n'
-   '        prev_move, child.is_pv, child.cut_node, prev_move);'),
+  ('        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
+   'ply + 1,\n'
+   '                           game, state, 0, child.is_pv, child.cut_node);',
+   '        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
+   'ply + 1,\n'
+   '                           game, state, prev_move, child.is_pv, '
+   'child.cut_node);'),
   origin="S222")
 
 m("H04_cont_hist_unread", E, "search/ordering",
@@ -70,15 +68,13 @@ m("H04_cont_hist_unread", E, "search/ordering",
   'into quiet_history_sum in src/evaluation.hpp for a second reader, the '
   'history-scaled reduction, that measured zero and left again (DEC-213); '
   'the factoring stayed, score_move is its one production reader, and the '
-  'mutant takes the term away from it there. **The (void) arrived at S231**, '
-  'which added a second guarded term to this function: with the one-ply block '
-  'deleted `prev_move` is orphaned and -Werror=unused-parameter refuses the '
-  'build, so without it this mutant is stillborn and proves nothing. It was '
-  'observed stillborn before the (void) was added, not assumed',
+  'mutant takes the term away from it there',
   ('  if (prev_move != 0) {\n'
    '    score +=\n'
    '        (CONT_HIST_WEIGHT * continuation_entry(state, prev_move, move)) '
    '/ 100;\n'
-   '  }\n',
-   '  (void)prev_move;\n'),
+   '  }\n'
+   '\n'
+   '  return score;',
+   '  return score;'),
   origin="S222")

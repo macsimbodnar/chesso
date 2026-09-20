@@ -617,13 +617,20 @@ The readings it landed in are "the vector moves" and "`ContHist2Weight` ends
 near 26", so no pinned-zero attribution run is owed and
 `adocs/data/S231_sprt_pinned.sh` does not exist.
 
-One thing to know before running `check` on an old config: `ContHistWeight`'s
-declared maximum was halved from 2000 to 1000 at S231, when a second weighted
-term joined the quiet band and the band-clearance ceiling became a property of
-the two weights' sum. `tools/spsa_s222.json` still declares 0 to 2000 and
-`check` compares a config's bounds against the binary's, so it would now be
-refused by name. That is correct — it is the frozen record of a run already
-taken, not a template — and it is not edited.
+**That lane's vector then lost its SPRT and the tree it fitted is gone.** The
+gainer `{0, 5}` nElo run against `3a649c0` accepted **H0** on 2026-09-20 at
+`nElo -3.40 +/- 6.20` over 12070 games (`adocs/data/S231_sprt.log`), so the
+pre-registered reading applied and `src/` went back to `3a649c0` whole — the
+second table, its three axes and the one-ply three with them, the last back to
+S222's own fitted 17 / 18 / 26, which is what `3a649c0` carries. `tools/spsa_s231.json`
+and the lane's evidence stay as the record of a night that was spent; the six
+fitted values are not in the engine. **So `ContHistWeight` is declared 0 to
+2000 again**: the halving to 1000 was arithmetic about a quiet band with two
+weighted terms in it, and the band has one again. `tools/spsa_s222.json`
+declares 0 to 2000 and `spsa_driver.py check` compares a config's bounds
+against the binary's, so that config passes `check` once more; it was refused
+by name for the two days S231's tree was in, which is worth knowing if a log
+from those two days is ever read.
 
 Note which book each of the three plays. S085 tuned on `UHO_4060_v3.epd` and
 verified on `UHO_Lichess_4852_v1.epd`; S222's and S231's lanes tune on
@@ -1902,7 +1909,7 @@ case so coverage survives a re-derivation.**
 
 A golden is a number the suite asserts that was read from a measurement rather
 than derived from a rule — a static score of 563, a floor of 143 mates, a node
-budget of 69804. They are the suite's best detectors: the 2026-09-04
+budget of 65024. They are the suite's best detectors: the 2026-09-04
 fault-injection pass killed 31 of 32 mutants and the goldens did much of the
 killing. Their cost is that every legitimate change to the same code moves them
 too, so each search step and each refit reddens several and someone re-derives a
@@ -1930,7 +1937,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` "a side in check may not stand pat" | 198 | the same script, case "black in check, Re8" |
 | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
-| `test_search.cpp` "ordering keeps the tree small" | 69804 and 3490 | `python3 adocs/data/S192_node_budget.py` |
+| `test_search.cpp` "ordering keeps the tree small" | 65024 and 3251 | `python3 adocs/data/S192_node_budget.py`. Re-derived 2026-09-20 on S231's reverted tree from a count of 16256, the first time the script was run rather than the band read by eye: the pair it replaces, 69804 and 3490, was derived from 17451 at S091 and the count had sat below the middle half of it since S222 |
 | `test_mate_carry.cpp` `short_line_ceiling` | 5, 11, 0, 1, 8, 2 | `adocs/data/S203_case_sweep.sh --ceilings` over the two recorded grids |
 | `test_engine.cpp` "OwnBook draws a book move for the start key, and the seed replays it" | 13 entries, total weight 34700, `e2e4` heaviest at 12956 for the start key | `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin` |
 | `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
@@ -2169,7 +2176,16 @@ the two-ply table grew is smaller than the tree it grew from once the fit has
 had it. Nothing was added: six continuation defaults moved to the values
 `adocs/data/S231_spsa_trajectory.tsv` ends on, and the seeded equal authority
 was what had been growing the tree. Whether the smaller tree is a better one is
-`adocs/data/S231_sprt.sh`'s to say and not this number's (DEC-019).
+`adocs/data/S231_sprt.sh`'s to say and not this number's (DEC-019). **It said
+no: back to `4646334`, `3a649c0`'s own total to the node.** The gainer SPRT
+accepted H0 at `nElo -3.40 +/- 6.20` over 12070 games and the pre-registered
+reading reverted `src/` whole, so this entry is the ledger's second equality
+rather than a new number — and it is the whole-revert proof, the same argument
+S098 verdict 1's `5685915` makes one line up: identical bench signature and
+identical `tools/search_bench.py` counts and best moves at depths 9 and 12
+against a `3a649c0` worktree build, which is INV-6's form of it. Two ordering
+trees smaller than this one and one 17 % larger were measured getting here and
+none of the three was worth Elo.
 
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,
