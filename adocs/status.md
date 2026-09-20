@@ -29,8 +29,15 @@ Updated: 2026-09-20, by hand.
   SPRT's H1 clause and DEC-063's "at least 5 nElo" wording apply. **H0:**
   `src/` reverts to `3a649c0` whole and the two-ply idea leaves the plan with
   a decision. **No verdict:** a zero, decided with the reason stated. Nothing
-  else runs on the machine until the marker; agent-only preparation of the
-  next steps' briefs (S095 first) is the coordinator's meanwhile.
+  else runs on the machine until the marker. **S095 started 2026-09-20 ~05:00
+  by a fresh Opus 5 agent in code-writing mode** (brief
+  `.tuning/coord/S095_brief.md`, from the description per DEC-221): the fifth term of
+  `lmr_node_adjustment` for a node whose entry carries no move, `LmrNoTtMove`
+  0..2 seeded 1 at form (c), its guard test, mate row, mutant and
+  `adocs/data/S095_sprt.sh`; **no build, test or binary until the coordinator
+  says "machine free"** after S231's marker (PLAN: the machine would
+  otherwise sit idle between S231's verdict work and its next run). Two
+  reports: what was written, then what was verified.
 
 - **S231's phase three is landed, 2026-09-20 -- the lane's fitted vector is
   the defaults, `bench` 5443203 -> 4393575, and the SPRT against `3a649c0` is
