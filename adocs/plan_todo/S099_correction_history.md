@@ -65,12 +65,27 @@ credited to Caissa; passed STC <0.00,2.00> over 128672 games and LTC
 +30.30 +/-12.17** -- the update rule's form is worth more than the original
 term was, in the engine that invented it.
 
-**Update rule, published FORM** (CPW): an exponential moving average per
+**Update rule, published FORM** (CPW, attribution corrected below): an
+exponential moving average per
 entry, `entry = (entry*(SCALE - w) + scaled_diff*w) / SCALE`, clamped to
-`+/-CORRHIST_MAX`, with weight `w = min(depth*depth + 2*depth + 1, 128)`;
-`diff = search_score - static_eval`. The SF commit message states the same
-shape in prose: update proportional to `(best_value - static_eval)` times a
-linear function of depth, per-update change capped at half the table maximum.
+`+/-CORRHIST_MAX`, with the weight a capped function of depth;
+`diff = search_score - static_eval`.
+
+**Attribution corrected 2026-09-19, S232.** The 2026-08-19 pass wrote that
+update rule and its weight `w = min(depth*depth + 2*depth + 1, 128)` as
+"CPW". It is not the wiki's own derivation: the page introduces the block it
+sits in with "A version as seen in Alexandria is shown below", so what the
+wiki republishes there is another engine's source (re-fetched 2026-09-19).
+The *shape* -- an EMA per entry, the weight rising with depth and capped --
+is the published form and is what this step takes; the cap **128** is
+Alexandria's constant, kept here as record and never a seed, which is
+DEC-105's PeSTO case exactly (DEC-134). Section 4 seeds the cap from
+chesso's own recorded median depth instead. The SF commit message states a *different*
+shape in prose -- update proportional to `(best_value - static_eval)` times a
+**linear** function of depth, per-update change capped at half the table
+maximum -- which the page introduces as the history-gravity form, "as
+introduced by Stockfish"; chesso takes the EMA shape and the two are a sweep
+at the owning step, not a seed either way.
 
 **Update gating, published** (CPW, verified against the SF message): update
 only when **not in check**; only when the **best move is absent or quiet**
@@ -84,7 +99,8 @@ to +/-150cp + skip mate-score training". This is the commit family the Hazard
 section anticipated.
 
 **Application, published**: `corrected = raw_eval + entry / GRAIN`, and the
-corrected value is **clamped inside the non-decisive band** (CPW gives
+corrected value is **clamped inside the non-decisive band** (the wiki's
+reproduced EMA code gives
 `-MATE_FOUND+1 .. MATE_FOUND-1`; the SF form clamps inside the tablebase
 range; Rogatia 2026-07-29 widens to "clear of the decisive range, not just the
 mate range"). The correction touches the **static eval only**: never a TT
@@ -203,22 +219,110 @@ the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
 
 ### 4. Constants and seeds
 
-- Update weight `w = min(depth*depth + 2*depth + 1, 128)` -- CPW. **Seed --
-  must be fitted/SPSA'd here.**
-- Per-update cap = half the entry clamp; applied correction = `entry / 32`
-  with the max adjustment ~32 internal units (implying an entry clamp near
-  1024 in SF's scale) -- SF commit message prose. **Seed -- must be fitted
-  here**, and SF internal units are not centipawns: take "max correction of
-  roughly a third of a pawn" as the shape, not the number.
-- EMA `SCALE`, `GRAIN`, entry clamp, table entry count: **no publishable
-  seed** -- CPW names them without values and no PR states them in prose. Own
-  choices: SCALE 256 (>= max weight), GRAIN 256, clamp sized so the applied
-  maximum lands in the 32-64 cp class, 16384 entries per stm side, all
-  power-of-two, all in src/search_params.hpp with stated ranges (S073), all
-  swept.
-- CPW also republishes SF's literal `66 * cv / 512` application snippet.
-  That is verbatim engine source quoted on a wiki: under DEC-084's intent it
-  is not taken as a seed. The generic form above is what is taken.
+**Reseeded 2026-09-19 by S232**, under DEC-105 as DEC-134 states it. The
+2026-08-19 pass seeded this section from Stockfish commit-message prose and
+from an Alexandria code block the wiki republishes; the 2026-09-19 study
+review found it (finding F06 of that report) and DEC-222 (1) ordered the
+rewrite before the probe night. Every seed below is one of three forms and
+says which: **(a)** a value from a publication *about the technique*, with
+its URL; **(b)** a derivation over chesso's own data or scale, run by this
+step at its start; **(c)** the range midpoint or the off value, stated as
+such. Each constant lands in the `CHESSO_SEARCH_PARAMS` X-macro with a stated
+range (S073) and each is a **seed -- fitted or SPSA'd here** (S127). No
+engine's shipped weight, cap, grain, clamp or size seeds anything, wherever
+it is republished; those records stay in section 1 and, as anti-seeds, at the
+end of this section.
+
+**Units, once for this file.** The correction is added to `evaluate()`'s
+output, so its magnitude is in chesso's own material scale and in nobody
+else's internal units: `src/eval_tables.hpp` `PAWN` is **94** at this step's
+HEAD, not 100. The header's own comment says the split between a piece's
+value and its tables is degenerate, so the material term alone is the unit.
+The arithmetic below is written out rather than reduced to a number, so the
+seeds re-derive themselves when the scale is refit or the census moves --
+re-read both at this step's HEAD before seeding anything.
+
+- **Weight cap** **144** -- **(b), arithmetic over a constant chesso already
+  ships.** The weight rises with depth and saturates, and the cap is where it
+  saturates: at chesso's own median remaining depth, so a node at the typical
+  depth gets full weight and a shallower one less. That median is already a
+  named constant in this tree -- `src/data_structures.hpp`
+  `CONT_HIST_REF_DEPTH`, **11**, which S222 put there as exactly this kind of
+  unit and which S085's own table measured as the median depth its 2+0.02
+  tuning control reaches. The shape stays `min((depth + 1)^2, cap)`, so the
+  cap is `(CONT_HIST_REF_DEPTH + 1)^2` = `(11 + 1)^2` = **144**; read the
+  constant at this step's HEAD rather than the 11 written here, so the seed
+  follows it. **One caveat, and the procedure that settles it.** 11 is the
+  median at the *tuning* control and the 8+0.08 verdict control reaches
+  deeper, so a step that wants its own number re-measures the median at
+  8+0.08 over the 300 positions of the S021 stratified pick and re-does the
+  arithmetic -- a procedure this step may run at its start, not a value read
+  anywhere. Range 1 to the EMA scale below: at the scale the entry is just
+  the newest observation and the table has no memory, which is the off value
+  of the averaging. The sweep decides, and whether the shape is the quadratic
+  or the linear-in-depth one section 1 records is a sweep here too, not a
+  seed either way.
+- **EMA scale** **256** -- **(b), arithmetic over the cap above.** The update
+  divides by the scale and the weight may never exceed it, so the scale is
+  the smallest power of two at or above the cap: 144 -> **256**. It is not
+  swept independently: the pair sets one quantity, the maximum EMA rate
+  `cap / scale`, and that is what S127 moves.
+- **Maximum applied correction** **47** -- **(c), the midpoint of a range
+  declared by purpose, in chesso's own scale.** The range is 0 to one pawn: 0
+  is off, and a correction larger than a pawn rewrites the material balance
+  instead of correcting the static score. One pawn is `PAWN` = 94 above, so
+  the midpoint is **47**. This is the only quantity on the apply path with
+  Elo content in it and the one S127 sweeps; the two constants below are its
+  fixed-point spelling and carry no freedom of their own.
+- **Grain** **256** -- **(c), the midpoint of a range declared by purpose,
+  stated as such.** Nothing derives this one and no publication states it: it
+  is the entry's fixed-point resolution, and once the applied maximum above
+  is fixed it carries no Elo of its own. The range is 64 to 1024 in powers of
+  two, because the division is a shift -- at 64 the stored error is quantised
+  to a sixty-fourth of a chesso material unit, at 1024 the worst-case product
+  below grows fourfold to buy resolution the EMA cannot use. On a
+  power-of-two axis the midpoint is the geometric one, `sqrt(64 * 1024)` =
+  **256**, and that is the seed.
+- **Entry clamp** **12032** -- **(b), arithmetic over the two seeds above:**
+  applied maximum x grain = `47 * 256`. The entry holds the running error in
+  fixed point and `entry / grain` is what is added, so clamp and grain move
+  together and only the applied maximum is tunable; the arithmetic is written
+  out so the clamp re-derives when either end moves. Worst case the update
+  forms `clamp * scale` = 12032 x 256 = 3080192, inside int32 by a factor of
+  about 700, so the representation does not bind the choice.
+- **Table entry count per side to move** -- **(b), a census this step runs at
+  its start**, with a **(c)** fallback. Once (a) of the sketch has landed the
+  pawn key, instrument it under `CHESSO_TUNE` only, run `go depth 12` over
+  the 300 positions of the S021 stratified pick and record the distinct pawn
+  keys visited per position. Size the table at the next power of two above
+  the 95th percentile, so a search rarely fills it and collisions stay rare,
+  and record the percentile table in this step's stamp. If the census cannot
+  run before the table is declared, take **(c)**: the exponent range is 2^10
+  to 2^20 by purpose -- 2^10 is small enough that every search overfills it,
+  2^20 is 4 MiB a side and past what a table read at every node should cost
+  -- midpoint exponent 15, so **32768** entries a side.
+
+**Anti-seeds -- records, not seeds.** DEC-019 lets a record say which
+direction is worth trying; DEC-105 forbids any of these numbers starting a
+sweep, which is why every bullet above rests on chesso's own arithmetic or on
+a range declared by purpose. The records, each of them another engine's
+constant however it is republished: Alexandria's weight cap **128**, and its
+scale, grain, clamp and size symbols, in the code block the wiki reproduces;
+Stockfish's application snippet `66 * cv / 512`, literal engine source quoted
+on a wiki, which is DEC-105's PeSTO case; and that engine's commit-message
+prose -- an applied correction of `entry / 32`, a maximum adjustment of about
+**32** internal units implying an entry clamp near **1024** in its own scale,
+a per-update change capped at half the table maximum, and "max correction of
+roughly a third of a pawn", which is a unit statement in that engine's scale
+and not in chesso's. Section 1's commit record adds PiChess's "clamp corrhist
+correction to +/-150cp". **None of these is a seed, a fallback, or a sanity
+check on the seeds above**, and the per-update cap does not even belong to
+the shape chesso takes -- it is the history-gravity form's, not the EMA's.
+The 2026-08-19 pass carried them in this section under the hedge "take the
+shape, not the number"; the hedge is exactly what F06 found insufficient,
+because the numbers were still on the page an implementer reads.
+
+seeds re-derived 2026-09-19 under DEC-105 (DEC-134)
 
 ### 5. Pitfalls
 
@@ -286,7 +390,12 @@ the accepts' mate-bound test; the INV-5 mirror test; cleared on ucinewgame.
 ### 8. References
 
 - https://www.chessprogramming.org/Static_Evaluation_Correction_History --
-  origin credit, EMA form, weight formula, gating list, apply clamp, family.
+  origin credit, EMA form, gating list, apply clamp, family, and the
+  time-control sentence. Re-fetched 2026-09-19 (S232): the weight formula and
+  the apply clamp are inside code blocks the page attributes to Alexandria
+  and to Stockfish, so they are those engines' source republished and not the
+  wiki's own -- section 1's corrected attribution and section 4's anti-seeds.
+  The gating list and the time-control sentence *are* the page's own prose.
 - https://api.github.com/search/commits?q=repo:Witek902/Caissa+correction --
   aff75594 pawn term +1.74; 6dd05529 material; 190abaa7 SF-style +20.1/+30.3;
   6e71545 continuation (credits Motor); 39a3b7f gating tweak; 54aef4a

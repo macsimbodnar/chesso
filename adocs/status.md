@@ -25,8 +25,9 @@ Updated: 2026-09-20, by hand.
   builds, format clean** (`.tuning/coord/gate_2026-09-20_s233_s232.log`).
   **S233 done** (stamp, `plan_done/`, DEC-223 for the ledger's class rule);
   the ledger and its figures in `plan.md` are now `tools/ledger.py`'s output.
-  **Next, in order:** S232's completion commit (docs only, F06 to closed);
-  then phase three of S231 by a fresh Opus 5 agent from
+  **S232 is done and committed too** (docs only; F06 closed; S099 may run
+  as DEC-133's probe on an idle night). **Next, in order:** phase three of
+  S231 by a fresh Opus 5 agent from
   `.tuning/coord/S231_phase3_brief.md` (filled with the fit): the six
   defaults, goldens, `bench` and `search_bench`, the census on the fitted
   build, `adocs/data/S231_sprt.sh` pre-registered with `REF=3a649c0`; then
