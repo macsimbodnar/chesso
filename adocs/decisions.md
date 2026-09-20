@@ -12592,3 +12592,55 @@ Consequences: S231 completes on the zero: stamp, `plan_done/`, the Open list
               search row: the S231 passage becomes history and the S222
               band sentence returns to one weight. S095, in progress in
               code-writing mode, rebases onto the reverted tree.
+
+## DEC-225  2026-09-20  S095 raises two mate-carry ceilings off its own grid; the guarantee beside them did not move
+Tags:         testing, mate, search, dec-122, dec-142, dec-162, s202
+Context:      `tests/test_mate_carry.cpp` bounds DEC-122's expected residue --
+              a mate line published shorter than the distance its score
+              claims, the class S202 owns closing -- by a per-case ceiling,
+              each the worst cell of the recorded sweep grid by
+              `adocs/data/S203_case_sweep.sh --ceilings` (S204, DEC-162), and
+              its own comment says a step that raises one is relaxing a test
+              and needs a decision; S109 raised three on that rule when its
+              pruning block took 74 % of the tree. S095's fifth reduction
+              term -- one more ply on a node whose table entry carries no
+              move -- reduces more, and on its landing tree the 108-cell grid
+              (`adocs/data/S095_sweep_block.txt`, taken by the script in 22
+              minutes, never read off the failing run) answers E_mate_minus9
+              11 against the shipped 9 and B_mate6_shallow 15 against 11,
+              the other four unchanged. At E's own cell the tree reports 22
+              mate lines with 11 short where S109's reported 13 with 9: the
+              count rose and the share fell from 69 % to 50 %. The guarantee
+              beside the ceilings -- `unreached.empty()`, a line published at
+              its claimed length ends in checkmate -- holds on all six cases at
+              their own budgets and strides in both builds; the sweep script
+              reports short lines only and cannot speak for it. Two facts a
+              reader should have: E's new 11 is the very count the failing run
+              reported at the cell the case drives, so that ceiling has no
+              headroom left; and B's 11 -> 15 loosens an assertion that was
+              green at its own cell, because the rule is the worst cell of the
+              grid at the row's stride and not the cell the case drives.
+Decision:     By the coordinator, 2026-09-20, under the owner's delegation of
+              engine and test questions; the owner may overrule. The two
+              ceilings move to what the script answers over the four recorded
+              grids -- S204's two, S109's and S095's -- E to 11 and B to 15,
+              in S095's landing commit, with the grid committed as the fourth
+              recorded sweep and named in the golden's re-derivation line.
+              What rose is the residue DEC-122 calls expected, not the
+              promise; S202 still owns closing the class and the ceilings
+              come down when it does.
+Rejected:     Leaving the ceilings and not landing the term -- a test that
+              counts a residue the plan already schedules a step for is not a
+              reason to forgo a strength measurement; the SPRT decides the
+              term. Re-pinning from the failing run's own cell -- the file
+              forbids it by name and the worst cell is what the rule takes.
+              Raising only E and not B because B is green at its own cell --
+              the rule is the worst cell of the grid at the row's stride,
+              stated once and applied to every row; B's worst cell is 15 at
+              1200000 nodes, stride 1, whatever its own cell reads.
+Consequences: `short_line_ceiling` returns 5, 15, 0, 2, 11, 5;
+              `DEV_MANUAL.md`'s golden list and the test's tabled worst cells
+              say so; S202's step file gains nothing new to close -- the class
+              is the same, larger by two lines on one case. If S095's SPRT
+              reads H0 and the term leaves, the ceilings return with the
+              revert to the tree they described.

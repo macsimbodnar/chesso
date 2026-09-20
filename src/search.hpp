@@ -168,14 +168,20 @@ void history_on_quiet_cutoff(search_state_t* state,
 int search_lmr_reduction_probe(int depth, int move_number);
 
 // The node-type adjustment S098 verdict 2 adds to that table, as a function of
-// the four conditions, so a case can hold the arithmetic and the signs
-// directly: three terms lengthen the reduction and the PV term shortens it,
+// the five conditions, so a case can hold the arithmetic and the signs
+// directly: four terms lengthen the reduction and the PV term shortens it,
 // and a sign slip there reduces exactly the nodes whose lines get reported.
 // Compiled in both builds for the reason above.
+//
+// `no_tt_move` is S095's, appended so the four older inputs keep their
+// positions: the node's table entry carries no move -- no entry, or one
+// quiescence wrote without a move -- and a late quiet there is reduced by
+// LMR_NO_TT_MOVE more.
 int search_lmr_node_adjustment_probe(bool cut_node,
                                      bool improving,
                                      bool tt_move_is_capture,
-                                     bool is_pv);
+                                     bool is_pv,
+                                     bool no_tt_move);
 
 // The reduction the two consumers share: the raw table plus that adjustment,
 // unclamped, which is what makes "at the off values the engine is the one

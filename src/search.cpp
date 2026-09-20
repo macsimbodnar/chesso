@@ -192,10 +192,10 @@ int search_lmr_reduction_probe(int depth, int move_number)
 
 
 // What the table above is worth once the **node's own type** is taken into
-// account, S098 verdict 2. Four signed plies, each behind its own constant
-// whose off value is 0, and every one of them a property of the node rather
-// than of the move -- which is why the whole adjustment is computed once per
-// node and passed in here as a single integer.
+// account, S098 verdict 2 and S095. Five signed plies, each behind its own
+// constant whose off value is 0, and every one of them a property of the node
+// rather than of the move -- which is why the whole adjustment is computed once
+// per node and passed in here as a single integer.
 //
 //   + LMR_CUTNODE        this node is predicted to fail high, so a late quiet
 //                        is even less likely to be the move that does it
@@ -206,6 +206,15 @@ int search_lmr_reduction_probe(int depth, int move_number)
 //                        is about
 //   - LMR_PV             a principal variation node, whose line gets reported
 //                        and played
+//   + LMR_NO_TT_MOVE     the entry carries no move at all -- no entry, or one
+//                        only quiescence ever wrote -- so nothing has searched
+//                        this node properly yet and it is cheaper than its
+//                        depth claims. S095
+//
+// The fifth input is appended rather than slotted in beside the other additive
+// terms: the four before it keep their positions, and a caller that transposed
+// two bools would be a bug no type can catch. The sum does not care about the
+// order.
 //
 // Unclamped, exactly as the raw table is: the two call sites clamp, and they
 // clamp differently -- the reduction against the child's depth, the gate at
@@ -213,7 +222,8 @@ int search_lmr_reduction_probe(int depth, int move_number)
 static inline int lmr_node_adjustment(bool cut_node,
                                       bool improving,
                                       bool tt_move_is_capture,
-                                      bool is_pv)
+                                      bool is_pv,
+                                      bool no_tt_move)
 {
   int adjustment = 0;
 
@@ -221,6 +231,7 @@ static inline int lmr_node_adjustment(bool cut_node,
   if (!improving) { adjustment += LMR_NOT_IMPROVING; }
   if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE; }
   if (is_pv) { adjustment -= LMR_PV; }
+  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE; }
 
   return adjustment;
 }
@@ -229,8 +240,12 @@ static inline int lmr_node_adjustment(bool cut_node,
 int search_lmr_node_adjustment_probe(bool cut_node,
                                      bool improving,
                                      bool tt_move_is_capture,
-                                     bool is_pv)
-{ return lmr_node_adjustment(cut_node, improving, tt_move_is_capture, is_pv); }
+                                     bool is_pv,
+                                     bool no_tt_move)
+{
+  return lmr_node_adjustment(cut_node, improving, tt_move_is_capture, is_pv,
+                             no_tt_move);
+}
 
 
 // The reduction a move actually gets: the table's own guess at this (depth,
@@ -1547,13 +1562,13 @@ static int negamax_at(int alpha0,
   // term reads it below.
   const bool improving = improving_at(state, ply, is_in_check);
 
-  // S098 verdict 2's four terms, summed once for the node. Every input is a
-  // property of this node and not of a move -- the predicted type, the
-  // improving flag, the class of the entry's own move -- so the sum is
-  // computed here and read by both consumers below: the reduction each late
-  // quiet is searched with, and the shallow-depth gate those quiets are pruned
-  // against. At the four off values it is 0 and both consumers see the raw
-  // table.
+  // S098 verdict 2's four terms and S095's fifth, summed once for the node.
+  // Every input is a property of this node and not of a move -- the predicted
+  // type, the improving flag, the class of the entry's own move, whether there
+  // is an entry move at all -- so the sum is computed here and read by both
+  // consumers below: the reduction each late quiet is searched with, and the
+  // shallow-depth gate those quiets are pruned against. At the five off values
+  // it is 0 and both consumers see the raw table.
   //
   // `tt_move` is the entry's move, or the root hint where the entry is gone
   // (ply 0, which neither consumer reaches). A capture there says the node is
@@ -1561,8 +1576,17 @@ static int negamax_at(int alpha0,
   const bool tt_move_is_capture =
       (tt_move != 0) && (MOVE_CAPTURE(tt_move) != 0);
 
-  const int node_adjustment =
-      lmr_node_adjustment(cut_node, improving, tt_move_is_capture, is_pv);
+  // S095's condition, and it is the same variable read the other way: no entry
+  // at all, or an entry whose move field is empty, which since S094 means only
+  // quiescence has ever resolved this position. Both are "the table has no
+  // move to order by", which is the published condition and the union of the
+  // two the record measured separately. At ply 0 the root hint can make this
+  // false with the entry gone; neither consumer runs at ply 0, so the hint
+  // decides nothing here either.
+  const bool no_tt_move = tt_move == 0;
+
+  const int node_adjustment = lmr_node_adjustment(
+      cut_node, improving, tt_move_is_capture, is_pv, no_tt_move);
 
   // Set once by late move pruning and never cleared: past its count the quiet
   // stage is over for this node.

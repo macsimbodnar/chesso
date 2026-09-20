@@ -343,11 +343,14 @@ static bool line_ends_in_mate(const std::string& fen,
 }
 
 
-// GOLDEN (DEC-142): the most short mating PVs a case may report -- 5, 11, 0, 1,
-// 8 and 2, one per replayed game of adocs/data/S170_cases.tsv at its own budget
-// and stride.
+// GOLDEN (DEC-142): the most short mating PVs a case may report -- 5, 15, 0, 2,
+// 11 and 5, one per replayed game of adocs/data/S170_cases.tsv at its own
+// budget and stride. (The line read "5, 11, 0, 1, 8 and 2" until S095 and had
+// been stale since S109 moved three of them; it is the function below that
+// ships, and these six are now the same numbers.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
+// adocs/data/S109_sweep_block.txt adocs/data/S095_sweep_block.txt
 // (the rule and the worst cells are tabled below). Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); S202 closing
 // lowers the ceilings. Margin: 0 -- each ceiling is the worst cell of the
@@ -372,21 +375,22 @@ static bool line_ends_in_mate(const std::string& fen,
 // short-line count any cell of the recorded grid shows for that case, at the
 // stride its TSV row carries, over every recorded sweep. Re-derive it with
 //
-//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3
+//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3 F4
 //
 // as one command line, where F1 and F2 are `adocs/data/S204_sweep_head.txt` and
 // `adocs/data/S204_sweep_killer_iter_clear.txt`, the two grids S204 recorded,
-// and F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded,
+// F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded, and F4 is
+// `adocs/data/S095_sweep_block.txt`, the grid S095 recorded,
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
 //
-//   case                       ceiling  worst cell
+//   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  5  3000000, with the killer clear
-//   B_mate6_shallow                 11  1000000, with the killer clear
-//   C_mate7_depth11                  0  none: 0 short in all 27 of its cells
+//   B_mate6_shallow                 15  1200000 on the S095 grid, 15 of 52
+//   C_mate7_depth11                  0  none: 0 short in all 36 stride-1 cells
 //   D_mate_minus6_depth10            2  1500000 with the S109 block
-//   E_mate_minus9                    9  1500000 with the S109 block
+//   E_mate_minus9                   11  1500000 on the S095 grid, 11 of 22
 //   F_mate6_inherited_no_line        5  1000000 with the S109 block
 //
 // C's zero is earned rather than chosen, which is the difference this file now
@@ -406,13 +410,37 @@ static bool line_ends_in_mate(const std::string& fen,
 // its claimed length ends in checkmate -- which is 0 across the whole of this
 // grid as it was across S204's. So what rose is the residue DEC-122 already
 // calls expected, not the promise. S202 still owns closing the class.
+//
+// **Two of them rose at S095 and that is the decision the step owes
+// (DEC-225).** That step adds a ply of reduction at every node whose table
+// entry carries no move, which in a replay from a cold table is most of them,
+// and a line the search never stored is a line the walk cannot certify -- the
+// same mechanism S109's paragraph above describes, one rule further on. E goes
+// 9 to 11 and B 11 to 15, both read off this step's own grid
+// (`adocs/data/S095_sweep_block.txt`, 108 cells) by the script above and
+// **never off the failing run that found them**; the other four are unmoved
+// and the rule's answer over all four grids is 5, 15, 0, 2, 11, 5.
+//
+// The number that matters for the reading is not the count alone. At E's own
+// cell -- stride 1, 1500000 nodes, which is the cell this case drives -- the
+// tree reports **22 mate lines with 11 short** where S109's grid reported 13
+// with 9: the count rises past the ceiling and the share of short lines
+// **falls, 69 % to 50 %**. B's worst cell is 15 of 52 at 1200000 against 11 of
+// its own at S204's 1000000.
+//
+// What did not move is again the guarantee beside them: `unreached.empty()`
+// holds on all six cases at their own budgets and strides in both builds, so
+// no line published at its claimed length fails to end in mate. That clause is
+// the case's and not the grid's -- `adocs/data/S170_replay.py` reports short
+// lines and does not walk a full-length one to its mate -- so it is asserted
+// where the case asserts it and is not claimed of the 108 cells.
 static size_t short_line_ceiling(const std::string& name)
 {
   if (name == "A_mate8_shallow") { return 5; }
-  if (name == "B_mate6_shallow") { return 11; }
+  if (name == "B_mate6_shallow") { return 15; }
   if (name == "C_mate7_depth11") { return 0; }
   if (name == "D_mate_minus6_depth10") { return 2; }
-  if (name == "E_mate_minus9") { return 9; }
+  if (name == "E_mate_minus9") { return 11; }
   if (name == "F_mate6_inherited_no_line") { return 5; }
 
   FAIL("unknown case " << name);

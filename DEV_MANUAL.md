@@ -1938,14 +1938,15 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
 | `test_search.cpp` "ordering keeps the tree small" | 65024 and 3251 | `python3 adocs/data/S192_node_budget.py`. Re-derived 2026-09-20 on S231's reverted tree from a count of 16256, the first time the script was run rather than the band read by eye: the pair it replaces, 69804 and 3490, was derived from 17451 at S091 and the count had sat below the middle half of it since S222 |
-| `test_mate_carry.cpp` `short_line_ceiling` | 5, 11, 0, 1, 8, 2 | `adocs/data/S203_case_sweep.sh --ceilings` over the two recorded grids |
+| `test_mate_carry.cpp` `short_line_ceiling` | 5, 15, 0, 2, 11, 5 — the cell was 5, 11, 0, 1, 8, 2 and had been stale since S109 moved three of them; **S095 moved two more, E 9 → 11 and B 11 → 15 (DEC-225)**, read off the grid that step recorded and never off the run that went red | `adocs/data/S203_case_sweep.sh --ceilings adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt adocs/data/S109_sweep_block.txt adocs/data/S095_sweep_block.txt`, the four recorded grids as one command line |
 | `test_engine.cpp` "OwnBook draws a book move for the start key, and the seed replays it" | 13 entries, total weight 34700, `e2e4` heaviest at 12956 for the start key | `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin` |
 | `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 143 | `python3 adocs/data/S156_mined_floor_sweep.py` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
-| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 11, 10 and the mutants beside them — `no S091 mutant, since S098 verdict 3's bisection leg 1`, `C02, C05, C07 and R02`, `C07 and R02`, `R02`. Re-derived at S098 verdict 3's bisection leg 1, which switches the shallower re-search path off and so moves the same rule again: three of the four depths moved and no mate distance did. Row 2 goes 9 → 8 because the shipped build reports that mate at 8 again and four mutants lose it there; row 3 goes 10 → 11 because its profile is `d11 d12` on this tree; row 4 goes 9 → 10 because R02 keeps the mate at 9 here and loses it at 10. **R01 is still separated by no row at any depth**. **Not re-derived when the shallower path was removed on 2026-09-18**: the removal deletes a branch no input reached at the value leg 1 shipped, so neither end of the golden moved — `bench` 4646334 and every `search_bench` count and best move identical — and seven rebuilds that cannot change an answer are not evidence | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
-| `test_search_params.cpp` `golden_defaults` | 50 defaults and their ranges | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `capture_mates` depths and mutant labels | 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
+| `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **11**, the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
+| `test_search_params.cpp` `golden_defaults` | 51 defaults and their ranges — 50 until S095 added `LmrNoTtMove` | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2186,6 +2187,17 @@ identical `tools/search_bench.py` counts and best moves at depths 9 and 12
 against a `3a649c0` worktree build, which is INV-6's form of it. Two ordering
 trees smaller than this one and one 17 % larger were measured getting here and
 none of the three was worth Elo.
+
+**At `S095`: `4579468`**, 1.4 % less than the revert's `4646334` — one more
+ply of late move reduction at every node whose table entry carries no move,
+which in a cold-table bench is most of them. The term
+is inert at its off value and that is proved on the tree rather than argued:
+the tune build at `LmrNoTtMove` 0 and a Release rebuild with the X-macro
+default forced to 0 both print `4646334`. Whether the smaller tree is a
+better one is `adocs/data/S095_sprt.sh`'s to say and not this number's
+(DEC-019); `tools/search_bench.py` disagrees in sign across its three
+positions at both depths and moves kiwipete's best move at depth 12, which
+is the ordinary signature of a reordering.
 
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,

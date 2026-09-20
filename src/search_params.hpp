@@ -354,6 +354,44 @@
   X(LMR_TT_CAPTURE,    "LmrTtCapture",    1,      0, 2)                        \
   X(LMR_PV,            "LmrPv",           1,      0, 2)                        \
                                                                                \
+  /* THE ENTRY THAT CARRIES NO MOVE, S095. A fifth term on the same sum, a      \
+     ply added where the node's table entry holds no move at all -- which is    \
+     `tt_move == 0` at the one call site, and that is the union of two facts:   \
+     there is no entry, or there is one whose move field is empty. Since S094   \
+     the second is quiescence's doing and nobody else's: `quiescence` in        \
+     src/search.cpp stores on stand-pat beta, on mate and on a fail-low, all    \
+     at TT_DEPTH_QS and all without a move, while `negamax`'s own store         \
+     asserts it always carries one. So "no move" reads as "only quiescence has  \
+     ever resolved this position", which is the unimportance signal the         \
+     published technique prices -- and a late quiet at a node nothing has ever  \
+     searched properly is worth one ply less than the table's guess.            \
+                                                                               \
+     THE FORM IS THIS ENGINE'S CHOICE, not the record's. The technique is       \
+     documented as a cut of the **node's own depth** before the pruning block;  \
+     the study of 2026-09-19 found an engine that shipped that cut, later       \
+     measured it against a term inside its reduction, and kept the term. This   \
+     is the term, at a site chesso already had, and which form is worth         \
+     anything here is this step's SPRT to say. The record decides what to try   \
+     and never what to conclude (DEC-019), and it seeds nothing (DEC-105).      \
+                                                                               \
+     **DEC-105 (c), the midpoint of the declared range.** The range is 0 to 2   \
+     on the four terms' own stated purpose above: 0 is off, 1 is the published  \
+     class of adjustment, and 2 is where the term alone equals what the table   \
+     returns for the first reducible move at the median depth. The arithmetic   \
+     midpoint of 0..2 is 1 and that is the seed. That every traced              \
+     introduction of the older node-level form also shipped one ply is a        \
+     coincidence of that arithmetic and **is not the provenance**: a ply count  \
+     another engine ships is that engine's tuned output and is never a seed     \
+     here, wherever it is republished (DEC-084 as amended by DEC-105,           \
+     DEC-134). S127 refits it beside the four after the block.                  \
+                                                                               \
+     THE OFF VALUE is 0 and the site makes it inert by construction -- the      \
+     term is a single addend, so at 0 the sum is the four-term sum and both     \
+     consumers see exactly what they saw before this step. It is proved on the  \
+     tree and not declared from the range's end (DEC-215): the tune build at    \
+     `LmrNoTtMove` 0 benches the parent's total to the node. */                 \
+  X(LMR_NO_TT_MOVE,    "LmrNoTtMove",     1,      0, 2)                        \
+                                                                               \
   /* THE RE-SEARCH DEPTH, S098 verdict 3. A reduced late move that beat alpha   \
      is owed a zero-window repeat, and until this step that repeat always ran   \
      at `child_depth`. It now answers the reduced search instead, and **only    \

@@ -36,7 +36,9 @@
 // have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
 // not a value -- and the rule is the same for a vector as for a number. S222's
 // history lane moved eleven: QuietHistoryMax, plain history's six bonus and
-// malus coefficients, the three continuation axes and HistPruneCoeff.
+// malus coefficients, the three continuation axes and HistPruneCoeff. A step
+// that **adds** one adds a row here in the same commit, which is what S095's
+// LmrNoTtMove is doing below.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -49,7 +51,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 50 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 51 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -85,6 +87,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"LmrNotImproving",           1,     0,       2},
   {"LmrTtCapture",              1,     0,       2},
   {"LmrPv",                     1,     0,       2},
+  {"LmrNoTtMove",               1,     0,       2},
   {"LmrDeeperMargin",          47,     0,      94},
   {"LmrDeeperMinReduction",     2,     1,     126},
   {"LmpBase",                 733,     0,   27000},
