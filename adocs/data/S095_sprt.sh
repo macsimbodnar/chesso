@@ -231,9 +231,12 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 #
 #   git -C /home/max/ws/chesso rev-parse --short HEAD     # the landing, CAND
 #
-# Pinned <date>: CAND is `<sha>` "<subject>".
+# **Pinned 2026-09-20: CAND is `3961c13`, "Reduce a late quiet one ply more
+# where the entry has no move"** -- the landing commit; the two document
+# commits after it (`f949069`, the plan's cost sentence; the pin itself)
+# leave `src/` untouched, so the tree that plays is the landing's.
 REF="${REF:-b25452a}"
-CAND="${CAND:-PIN_ME}"
+CAND="${CAND:-3961c13}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

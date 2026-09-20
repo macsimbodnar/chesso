@@ -657,3 +657,13 @@ guards.
 (`.tuning/gate_extra_2026-09-20_s095.log`), watcher armed with four exits and a
 90-minute ceiling; its marker is recorded below before `CAND` is pinned and the
 SPRT starts.
+
+**`tools/gate_extra.sh` on the landing tree: the first run stopped at its prose
+stage** -- `plan.md`'s pending-count sentence named S231, now complete, inside
+a sentence about what the pending order owes (the tense rule the fast suite
+does not run); the sentence was re-worded without the id (`f949069`) and the
+rerun read **`GATE-EXTRA-DONE 5 stages 1034 s`** (18:40 to 18:57,
+`.tuning/gate_extra_2026-09-20_s095b/`): prose, citations, debug, sanitize and
+perft green. **`CAND` pinned to `3961c13`**, the landing commit, in
+`adocs/data/S095_sprt.sh`; `REF` is `b25452a`, whose `src/` is `3a649c0`'s.
+The SPRT is the coordinator's next action.
