@@ -7,6 +7,38 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-20, by hand.
 
+- **S095 is landed and its gainer SPRT is running, launched 2026-09-20
+  18:58:48: `3961c13` (the fifth reduction term, `LmrNoTtMove` 1) against
+  `b25452a` (the tree with S098's four terms and without the fifth), `{0, 5}`
+  nElo at 8+0.08 on `noob_3moves.epd`, seed 20260920185845, output
+  `.tuning/sprt_s095_20260920_185845`, pid 3309613.** The landing
+  (`3961c13`, `bench` 4646334 -> 4579468): one added term in
+  `lmr_node_adjustment` where the node's table entry carries no move, seeded
+  at DEC-105 (c), its off value proved on the tree with the full bench
+  signature (DEC-215); two direct cases with the precondition asserted inside
+  the drive, a mined mate row observed red with the guard opened, mutants J01
+  to J03 killed; goldens re-derived by their scripts -- `capture_mates`'
+  depths, `golden_defaults` 51 rows, and two mate-carry short-line ceilings
+  raised off a fourth recorded grid (E 9 -> 11, B 11 -> 15) under **DEC-225**.
+  Second tier on the landing: fast check (trivial fixes, applied), Debug
+  self-play 8 games with 0 `Assertion`, the six S091 mutants re-verified 6 of
+  6, `gate_extra` 5 stages green after one prose-stage fix (`f949069`).
+  Watcher armed with four exits, hourly progress and a 40 h ceiling; worst
+  case 41861 games at the midpoint (19.8 h at 2110 an hour), 25591 on a bound
+  (12.1 h). **When the marker fires:** the verdict-closing commit with
+  DEC-220's block (`.tuning/coord/sprt_block.py` over the copied log; subject
+  "Record S095's <verdict> for the no-table-move reduction term"), the
+  forfeit report and `S105_pairs.py` reading, the ledger regenerated; **H1**
+  keeps the term at its seed for S127 to fit and completes S095; **H0**
+  removes the term as a behaviour-neutral revert (the off value already proves
+  the parent's tree) and frees the node-level cut as a later step; **no
+  verdict** is a zero decided with the reason stated. **Also today:** the
+  2026-09-19 analysis is described throughout the tree as an analysis of
+  literature and open-source resources (`b25452a`), the history rewritten and
+  force-pushed by the owner; the records that cited pre-rewrite commits were
+  pointed at the live ones (`815954c`), the SPRT labels left as the binaries'
+  own. Machine held by the match; nothing else runs until the marker.
+
 - **S231 is done, 2026-09-20, on a measured zero, and `plan_current/` is
   empty.** Built, fitted, measured, reverted: the two-ply continuation
   history table (phase one `b83fb1d`/`af8b9f0`), its six-axis lane (60000

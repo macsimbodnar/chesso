@@ -1138,7 +1138,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S095  a node whose table entry carries no move reduces its later quiet moves by one more ply through the node adjustment, instead of the node itself being searched a ply shallower -- the form the open-source record kept after measuring both (DEC-222)
+1. S095  **in `plan_current/`, landed 2026-09-20, SPRT running** -- a node whose table entry carries no move reduces its later quiet moves by one more ply through the node adjustment, instead of the node itself being searched a ply shallower -- the form the open-source record kept after measuring both (DEC-222). `LmrNoTtMove` 1 (0..2, DEC-105 (c)) landed in `3961c13` with the off value proved on the tree, `bench` 4646334 -> 4579468; the gainer SPRT `{0, 5}` against `b25452a` runs from 18:58 (`adocs/data/S095_sprt.sh`); H1 keeps it for S127 to fit, H0 removes it and frees the node-level cut as a later step
 2. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
 3. S132  the soft time limit scales with the share of the root's nodes the best move consumed, spending less when the choice is not in doubt
 4. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
