@@ -624,3 +624,36 @@ and dropping three lines is the default outcome at zero (S005/S006/S015).
   — negative result: no IID/IIR commit traced.
 - - https://rebel13.nl/prodeo/prodeo-3.0.html — unreachable this pass (HTTP
   526); not used.
+
+## Second tier on the landing commit `3961c13`, 2026-09-20 (coordinator)
+
+**Fast check** by a cold reviewer over the landing diff: trivial fixes, one of
+them blocking -- DEC-225 had to land with the ceiling raise -- plus a stale
+golden count (50 -> 51, not 53 -> 54), three kill-attribution comments in
+`tests/test_search.cpp` that the re-derived `capture_mates` rows had outdated,
+and one over-claim in the mate row's comment (a fatal `REQUIRE` stops the case
+at that row, so "nowhere else in the case" was more than the run could show).
+All applied before the landing; the reviewer reproduced the off value with the
+full bench signature (eight `bestmove` replies identical to the reference
+binary's), the mate row's red, the ceilings from the script over the four
+grids, and the S098 verdict-2 cases' six mutants still killed by their own
+direct assertions.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games in 14 s, 0 `Assertion`, 0 `disconnect`**, 114230
+trace lines with 986 `bestmove` lines (`.tuning/coord/s095_debug_selfplay/`).
+
+**The six S091 mutants re-verified on the landing**, because this step took
+rows 1 and 2 of `capture_mates` from separating them to separating nothing
+and moved two S091 drive depths in the same commit:
+`tools/mutation_check.py tools/mutants .ref-builds/mut --only C02 C05 C06 C07
+R01 R02` -- **6 of 6 killed**, each by the fast suite at 1 or 2 red cases with
+the bench signature moved (`.tuning/coord/S095_mutation_s091.log`, 122 to
+127 s each). The coverage the capture table lost is carried by the direct
+guards.
+
+`tools/gate_extra.sh` launched detached on `3961c13` at 18:21
+(`.tuning/gate_extra_2026-09-20_s095.log`), watcher armed with four exits and a
+90-minute ceiling; its marker is recorded below before `CAND` is pinned and the
+SPRT starts.

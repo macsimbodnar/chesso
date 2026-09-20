@@ -501,8 +501,8 @@ The pending order owes **roughly 46 to 56 SPRT verdicts** once multi-verdict
 steps are counted honestly (S097 and S022 two each, the evaluation groups
 per-term; five more since 2026-09-19 by DEC-222 -- S236's block, S234, S235,
 S237 and S238), the three the reduction rebuild took having been spent on
-2026-09-18 and S231's one on 2026-09-20 -- H0, so the two removals DEC-222
-attached to its H1 are not owed (DEC-224) -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
+2026-09-18 and the two-ply table's one on 2026-09-20 (DEC-224; the two
+removals DEC-222 attached to an H1 there are not owed) -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
 **Struck 2026-09-11 by S182** (`2026-09-04_plan_review-F03`, DEC-136):
