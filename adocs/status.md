@@ -38,6 +38,12 @@ Updated: 2026-09-20, by hand.
   force-pushed by the owner; the records that cited pre-rewrite commits were
   pointed at the live ones (`815954c`), the SPRT labels left as the binaries'
   own. Machine held by the match; nothing else runs until the marker.
+  **S097 started 2026-09-20 ~19:15 by a fresh Opus 5 agent in code-writing
+  mode** (brief `.tuning/coord/S097_brief.md`): the verification search with
+  its gates, the singular extension (V1) and the multicut behind an off
+  constant (V2), tests, mutants and two pre-registrations, written from the
+  step file's description (DEC-221); no build, test or binary until the
+  coordinator says "machine free" after S095's marker. Two reports.
 
 - **S231 is done, 2026-09-20, on a measured zero, and `plan_current/` is
   empty.** Built, fitted, measured, reverted: the two-ply continuation
