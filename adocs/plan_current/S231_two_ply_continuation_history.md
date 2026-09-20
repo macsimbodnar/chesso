@@ -1113,3 +1113,48 @@ crash or disconnect (`SPRT-RUN-INVALID`), mains, a second load; nothing runs
 beside it until the marker. Open findings named in the header: S231's I03
 mutant gap and the S192 node-budget golden outside its middle half, both
 test-side, neither reachable in play.
+
+## The verdict: H0, 2026-09-20 10:23:54 (coordinator)
+
+**`SPRT-RUN-DONE` at 10:23:54 after 5 h 37 m 42 s and 12070 games: H0
+accepted, LLR -2.95 against (-2.94, 2.94), `Elo -2.65 +/- 4.82`, `nElo -3.40
++/- 6.20`**, W 3654 L 3746 D 4670, `Ptnml(0-2) [556, 1464, 2097, 1352, 566]`,
+LOS 14.08 %, draw ratio 34.75 %, pairs ratio 0.95; 2144.5 games an hour on a
+tree 5.4 % smaller than the reference's. 0 time forfeits on either side over
+the PGN's 12071 games (8364 adjudications, 3707 natural ends); `Incomplete
+mating PV` 1 candidate against 1 reference, no asymmetry. `S105_pairs.py`: 6035
+complete pairs, pair score mean 0.9967, variance 0.3105, sd 0.5572, 115.4 plies
+and 19.6 s a game. Evidence `adocs/data/S231_sprt.log` and
+`adocs/data/S231_sprt_pairs.txt`. Slow class: the truth sat inside the pair and
+the run walked to the bound, as DEC-063 says a `{0, 5}` pair does to a zero.
+
+**The pre-registered H0 reading applies and binds** (`adocs/data/S231_sprt.sh`,
+written before a game was played): S231 whole -- the two-ply table on its
+fitted scale together with the one-ply three fitted beside it -- does not gain
+5 nElo over the tree before it. The nElo interval is [-9.60, +2.80] and the Elo
+interval [-7.47, +2.17]: the centre sits below zero and the top does not reach
+the bound, which is the shape DEC-194 did not keep. The census on the fitted
+build read the two-ply table non-zero on 27.51 % of quiet scores with a
+same-tree control, so the zero is about the technique as built here and not
+about inert wiring -- DEC-194's own argument, S005, S006 and S015 the precedent
+for recording a zero as a zero. **Consequences, all pre-registered:** `src/`
+returns to `3a649c0` whole -- table, three new axes, and the one-ply three back
+to 17 / 18 / 26, which are exactly `3a649c0`'s and S222's fitted values, so no
+axis is stranded without a verdict; the two-ply idea leaves the plan with a
+decision that says why; the two removal verdicts of DEC-222 are **not owed**,
+because the stack they were to be measured against did not ship. The one-ply
+table keeps its own H1 (DEC-210) untouched: this run measured the pair against
+the tree that already carries it.
+
+**What this costs the plan and what it bought:** one lane night (8 h 40 m),
+one verdict (5 h 38 m), 72070 games, about two agent-days; a measured zero on
+the published record's "second half of the same idea", and the finding that the
+seeded equal authority had grown the tree by 17 % where the fit took it 5 %
+below the reference -- neither of which transferred to Elo. DEC-019's rule
+holds again: a figure decides what to try, never what to conclude.
+
+The revert is a fresh agent's job (`.tuning/coord/S231_h0_revert_brief.md`),
+proved by `bench` 4646334 to the node; the S192 node-budget golden is
+re-derived on the reverted tree in that commit; S095's stashed, uncompiled work
+is re-applied on the reverted tree afterwards. This commit is the first to
+carry DEC-220's result block, and `tools/gate.sh` checked it against the log.
