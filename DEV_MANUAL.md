@@ -609,6 +609,13 @@ carries six pre-registered readings, and two of them differ from S222's on
 purpose: a stuck lane still owes the SPRT, because the reference is the tree
 before the step and what the run prices is the second table itself; and an H0
 reverts cleanly, because no axis in this lane would be left without a verdict.
+**It ran 2026-09-19 18:41:56 to 2026-09-20 03:22:41 — 8 h 40 m 45 s against
+that 8 h 45 m estimate, 25.00 s an iteration**, 60000 games, W 20794 L 20774
+D 18432, 0 time forfeits on either side. All six axes moved: 17 → 18, 18 → 17,
+26 → 24, 17 → 18, 18 → 20, 26 → 24, and none touched a bound on any iteration.
+The readings it landed in are "the vector moves" and "`ContHist2Weight` ends
+near 26", so no pinned-zero attribution run is owed and
+`adocs/data/S231_sprt_pinned.sh` does not exist.
 
 One thing to know before running `check` on an old config: `ContHistWeight`'s
 declared maximum was halved from 2000 to 1000 at S231, when a second weighted
@@ -2156,7 +2163,13 @@ paired with a standard error of 0.95 %** — one more dependent load per scored
 quiet, one more graded update per cutoff and a second 1.125 MiB table, which is
 S222's 3.6 % shape repeated. Taken at a load average of 2.0 on twelve threads
 rather than on an idle machine, which is why it is quoted with its interval and
-not as a point.
+not as a point. **At `S231` phase three, the lane's fitted vector: `4393575`**,
+19.3 % less than phase one and 5.4 % *below* `3a649c0`'s own 4646334 — the tree
+the two-ply table grew is smaller than the tree it grew from once the fit has
+had it. Nothing was added: six continuation defaults moved to the values
+`adocs/data/S231_spsa_trajectory.tsv` ends on, and the seeded equal authority
+was what had been growing the tree. Whether the smaller tree is a better one is
+`adocs/data/S231_sprt.sh`'s to say and not this number's (DEC-019).
 
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,

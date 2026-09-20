@@ -1,0 +1,90 @@
+{
+  "config": {
+    "_adjudication": "fastchess.sh's line verbatim, including twosided=true (S212, DEC-174). adocs/data/S085_spsa_run.json's one-sided extra is the record of what S085 ran and is not a template.",
+    "_book": "books/UHO_4060_v3.epd and not the harness book. adocs/eval_tuning_strategy.md par.7 and DEV_MANUAL's 'Tune search parameters with SPSA' both say a run must not tune on the openings its verification plays, and since DEC-189 fastchess.sh verifies on books/noob_3moves.epd -- so this lane tunes on the second UHO-class book books/fetch_book.sh pins for exactly that purpose, as S222's lane did (DEC-209 clause 1). 30000 rounds against 242201 openings, so the book never wraps.",
+    "_not_here": "No Tm* axis. DEC-094 kept the nine time-management parameters out of S085 because a run tunes at a control its verification does not share, and DEC-200 additionally found TmHardPercent reachable by no node-count probe at all -- so it is excluded from every config, this one included. No second bound either: the two tables share CONT_HIST_BOUND as a definition, because a bound and a weight over one table are one degree of freedom and an axis on the gauge random-walks (DEC-209 clause 2, applied to the second table unchanged).",
+    "_seed": "231, this step's own id. Traceable and not tuned: S222 used 222 for the same reason, and a seed chosen for its trajectory is a result chosen after the number.",
+    "_what": "S231's narrow continuation-history lane. The three two-ply axes this step adds together with S222's three one-ply ones -- six axes, one night, at S085's regime. adocs/data/S231_spsa.sh is the pre-registration and the runner; this file is the frozen input. What the SPRT after it judges is the whole six-axis vector and not any one of them (DEC-210's reading, one vector under one verdict).",
+    "_why_these_six_and_nothing_else": "The step's accepts names exactly these: the three new axes together with S222's three. The two tables share one quiet band and one reference depth, so their scales are only meaningful against each other and a lane that moved one pair while pinning the other would be fitting a ratio it had fixed by hand. Plain history's six coefficients and QuietHistoryMax are deliberately NOT here: S222's lane fitted them on 2026-09-14 over 60000 of this project's own games and S127 refits everything after the block, so re-fitting them inside this lane would spend the night's resolution on axes that already have a fit and would widen the vector the SPRT has to carry. HistPruneCoeff is out for the same reason and for DEC-209 clause 3's: it reads the raw plain entry, not the sum, and moving its input is another step's change.",
+    "a_ratio": 0.1,
+    "alpha": 0.602,
+    "gamma": 0.101,
+    "iterations": 1250,
+    "match": {
+      "book": "books/UHO_4060_v3.epd",
+      "book_format": "epd",
+      "book_size": 242201,
+      "concurrency": 12,
+      "engine": "build-tune/src/chesso",
+      "extra": [
+        "-draw",
+        "movenumber=40",
+        "movecount=8",
+        "score=10",
+        "-resign",
+        "movecount=3",
+        "score=400",
+        "twosided=true"
+      ],
+      "hash": 16,
+      "tc": "2+0.02",
+      "threads": 1
+    },
+    "pairs_per_iter": 24,
+    "params": [
+      {
+        "c_end": 2,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHistBonus",
+        "start": 17,
+        "why": "S222's one-ply share, in thousandths of that table's band at remaining depth 11. Starts at its own fitted value, not at its seed: S222's lane fitted it 15 -> 17 over 60000 games and the incumbent is what an SPSA run starts from. c_end 2 is S222's, a ninth of the start and 1/500 of the range."
+      },
+      {
+        "c_end": 2,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHistMalus",
+        "start": 18,
+        "why": "The same unit for the one-ply malus, at its fitted 18. In the lane because the two tables' shares are only meaningful against each other."
+      },
+      {
+        "c_end": 4,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHistWeight",
+        "start": 26,
+        "why": "How much of the quiet band the one-ply term spans, at its fitted 26. **The range is 0 to 1000 and not S222's 0 to 2000**: two weighted terms now share one band and the band-clearance ceiling is a property of their total, so each declares half of it -- 1000 and 1000 span the same 655340 that 2000 alone did, and the clearance against the countermove band is the same 11893 (src/search_params.hpp carries the arithmetic, tests/test_evaluation.cpp asserts it). The fitted value is nowhere near either edge and is untouched. c_end 4 is S222's."
+      },
+      {
+        "c_end": 2,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHist2Bonus",
+        "start": 17,
+        "why": "S231's own. The two-ply table's bonus share, in the same unit at the same reference depth, seeded at the one-ply table's fitted 17 because the two are written at the same call site over the same spans into bands of the same width -- a derivation over this project's own fitted number and no other engine's (DEC-084 as amended by DEC-105). Same c_end as the axis it was seeded from."
+      },
+      {
+        "c_end": 2,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHist2Malus",
+        "start": 18,
+        "why": "The same for the malus, seeded at the one-ply table's fitted 18. Separate from the bonus because the split is what the one-ply lane found asymmetric on plain history and nothing here has measured it for either continuation table."
+      },
+      {
+        "c_end": 4,
+        "max": 1000,
+        "min": 0,
+        "name": "ContHist2Weight",
+        "start": 26,
+        "why": "The axis this lane exists for: how much of the quiet band the two-ply term spans. Seeded at 26, which spans 26 * 32767 / 100 = 8519 -- exactly what the one-ply term spans at its fitted 26, against plain history's fitted QuietHistoryMax of 8831, so the three terms start at 8831 / 8519 / 8519 and the two tables start with equal authority. **Deliberately not seeded at 0**: an axis that starts at a bound is a known pathology here, S085's RfpMinPly sat at one for 72.5 % of that run's iterations, and a lane whose whole subject is this weight cannot afford to start it switched off. c_end 4, the weight axis's own."
+      }
+    ],
+    "r_end": 0.004,
+    "seed": 231
+  },
+  "digest": "86e1ca1218e656c0",
+  "flip_sign": false,
+  "sim": null
+}

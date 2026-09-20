@@ -7,6 +7,43 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-20, by hand.
 
+- **S231's phase three is landed, 2026-09-20 -- the lane's fitted vector is
+  the defaults, `bench` 5443203 -> 4393575, and the SPRT against `3a649c0` is
+  the next machine action.** Built by a fresh Opus 5 agent from
+  `.tuning/coord/S231_phase3_brief.md`: six defaults written from the
+  driver's rounded JSON by `adocs/data/S231_apply_fit.py` and read back out
+  of the tune binary by `S231_verify_fit.py` (53 rows, 0 disagreements);
+  goldens re-derived mechanically; MANUAL and DEV_MANUAL rows from the
+  binary; `specs.md`'s S231 passage amended by the coordinator; the lane's
+  log, trajectory and config copied into `adocs/data/` with README rows.
+  Readings: the vector moved, `ContHist2Weight` 24 is the "near 26" row (the
+  fifth of six), no pinned-zero run, `adocs/data/S231_sprt_pinned.sh`
+  deliberately not written; at 24 each the two terms span 7864 apiece
+  against plain history's 8831. The tree is 19.3 % smaller than phase one's
+  and **5.4 % below `3a649c0`'s own 4646334** -- a node count, not Elo
+  (DEC-019). Census on the fitted build (`adocs/data/S231_census.txt`): one-ply
+  96.53 / 95.30 / 19.89 %, two-ply 94.24 / 95.72 / 27.51 %, every share within
+  0.4 points of a same-tree control at the incumbent vector, so neither table
+  is inert wiring. `search_bench` depth 12 kiwipete's best move moves
+  `e2a6` -> `d5e6`; the other five position/depth cells keep their move.
+  Gate: 40 of 40 in both builds, format clean; fast check by a cold reviewer
+  reproduced every load-bearing number by running it, three prose slips
+  fixed. **One finding recorded, deferred deliberately (BUGS as scoped by
+  DEC-171):** the "ordering keeps the tree small" count (16246) has sat
+  outside the middle half of its band `[3490, 69804]` since S222, where two
+  step files said otherwise; re-deriving a golden inside the commit an SPRT
+  is about to judge, whose H0 reverts `src/`, would leave it describing a
+  tree that may not ship, so it is re-derived by `adocs/data/S192_node_budget.py`
+  on the tree the verdict leaves, in the verdict's own commit, and is named
+  in the SPRT's pre-registration meanwhile. **Owed on the landing commit, by
+  the coordinator, before the SPRT starts:** Debug self-play (DEC-141 clause
+  1, `.tuning/coord/S231_debug_selfplay.sh`) and `tools/gate_extra.sh`
+  (weekly last ran 2026-09-16; owed at completion regardless); then `CAND`
+  pinned to the landing sha in `adocs/data/S231_sprt.sh` and the run
+  launched detached with a watcher (`SPRT-RUN-(DONE|FAILED|INVALID)`, ceiling
+  40 h): worst case 41861 games at the midpoint / 25591 on a bound, 19.8 h /
+  12.1 h at 2110 games an hour.
+
 - **S231's lane is done, 2026-09-20 03:22:41 -- `SPSA-DONE`, 8 h 40 m 45 s
   against the 8 h 45 m estimate, 25.00 s an iteration, 60000 games, W 20794
   L 20774 D 18432, 0 forfeits either side -- and S233 is complete and

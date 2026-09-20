@@ -1,0 +1,27 @@
+S231 continuation-history lane
+  config   tools/spsa_s231.json
+  out      .tuning/spsa_s231_20260919_184156
+  engine   build-tune/src/chesso
+  head     0c3f0eb 2026-09-19
+  dirty    0 tracked paths
+  load     2.27 1.75 1.31 3/1436 3430968
+  governor performance
+  binary   844e184b3819760a6f6f9999976cc66ab9745fdbfdfa13ad508018627331a3c9
+  check    .tuning/spsa_s231_20260919_184156.check.log
+setoption reaches the search: ContHistBonus 0 -> 57385 nodes, 1000 -> 42747 (depth 9, midgame)
+setoption reaches the search: ContHistMalus 0 -> 43938 nodes, 1000 -> 41575 (depth 9, midgame)
+setoption reaches the search: ContHistWeight 0 -> 64438 nodes, 1000 -> 42209 (depth 9, midgame)
+setoption reaches the search: ContHist2Bonus 0 -> 43971 nodes, 1000 -> 40135 (depth 9, midgame)
+setoption reaches the search: ContHist2Malus 0 -> 22002 nodes, 1000 -> 41681 (depth 9, midgame)
+setoption reaches the search: ContHist2Weight 0 -> 21995 nodes, 1000 -> 38200 (depth 9, midgame)
+probed 6 of 6 parameters in 0.4 s
+6 parameters, 1250 iterations x 24 pairs = 30000 pairs, 60000 games
+{
+  "ContHist2Bonus": 18,
+  "ContHist2Malus": 20,
+  "ContHist2Weight": 24,
+  "ContHistBonus": 18,
+  "ContHistMalus": 17,
+  "ContHistWeight": 24
+}
+SPSA-DONE
