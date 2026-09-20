@@ -45,10 +45,10 @@ the p90 sum a half-ply.
 
 ## From the description (DEC-221)
 
-The technique reached this step as prose from the 2026-09-19 analysis of
-literature and open-source resources and its review; the implementer works
-from that prose and a publication about the technique, seeds every constant
-in DEC-134's forms, and the completion stamp says so.
+The implementing agent's brief carries this file, the analysis's section 3.3
+in prose and DEC-213's record; the technique is implemented from that
+description, every constant seeded in DEC-134's forms, and the stamp says so.
+
 ## Cost
 
 One verdict at DEC-143's price, 12 to 20 hours; on H0 two legs more.

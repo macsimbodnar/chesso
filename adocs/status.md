@@ -34,7 +34,6 @@ Updated: 2026-09-20, by hand.
   verify, mine the mate row, kill the mutants; fast check; landing commit
   with `Bench:`; Debug self-play and `gate_extra` (S095 touches the search);
   its SPRT `{0, 5}` against the landing's parent tonight (12 to 20 h).
-  
 
 - **S231's verdict is H0, 2026-09-20 10:23:54: `Elo -2.65 +/- 4.82`, `nElo
   -3.40 +/- 6.20`, LLR -2.95 over 12070 games in 5 h 37 m 42 s at 2144.5 an
@@ -193,12 +192,13 @@ Updated: 2026-09-20, by hand.
   -> 96 %, 18 GB free); `3a649c0` will be rebuilt by `fastchess.sh`.
 
 - **The 2026-09-19 analysis of literature and open-source resources was
-  adversarially reviewed and the owner ruled on nine items the same day; nothing is measured
-  and the machine is idle.** Report `adocs/audit/2026-09-19_study_review.md`
-  (17 findings, two reviewers: the coordinator re-deriving every figure from
-  the open-source record, a cold Opus 5 reviewer on the reasoning); the study corrected in
-  place and renamed `adocs/data/2026-09-19_search_technique_study.md`, its
-  parser committed as `2026-09-19_technique_ledger.py`. **What the
+  adversarially reviewed and the owner ruled on nine items the same day;
+  nothing is measured and the machine is idle.** Report
+  `adocs/audit/2026-09-19_study_review.md` (17 findings, two reviewers: the
+  coordinator re-deriving every figure from the open-source record, a cold
+  Opus 5 reviewer on the reasoning); the study corrected in place and renamed
+  `adocs/data/2026-09-19_search_technique_study.md`, its parser committed as
+  `2026-09-19_technique_ledger.py`. **What the
   review found that changes the plan:** the study's cost rule does not
   transfer (a chesso verdict costs what DEC-143 says -- chesso's own
   published-to-measured transfers read 0, 0, wrong sign, 0.10, 0.33); its top

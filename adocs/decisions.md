@@ -12332,10 +12332,10 @@ Consequences: The positive half of the reading -- that the node one ply after a
 Tags:         workflow, git, sprt, measurement, ledger, dec-140, dec-143
 Context:      The 2026-09-19 study (`adocs/data/2026-09-19_search_technique_study.md`)
               found an open-source record kept as a measurement ledger because
-              every merged change there carries its harness result block -- Elo with
-              interval, control, threads, hash, LLR with bounds, games with
-              W/L/D, pentanomial -- into the message of every merged change,
-              796 of its commits. Chesso records a verdict four times by
+              every merged change there carries its harness result block --
+              Elo with interval, control, threads, hash, LLR with bounds,
+              games with W/L/D, pentanomial -- in the commit message, 796 of
+              its commits. Chesso records a verdict four times by
               hand: a "Record" commit in prose (73 of them), the step file,
               `status.md`, and `plan.md`'s ledger table followed by eight
               running-total paragraphs whose means, medians and games per
@@ -12368,8 +12368,8 @@ Decision:     By the owner, 2026-09-19, on the review's recommendation. A
 Rejected:     Putting the block in the landing commit as that record does --
               impossible without amending, which GIT forbids, or without
               testing an uncommitted tree, which DEC-020 forbids. A per-change
-              STC-plus-LTC regime -- that record's project runs it on far more hardware
-              and even so only 218 of 796 commits carry both; chesso's longer
+              STC-plus-LTC regime -- that record's project runs it on far more
+              hardware and even so only 218 of 796 commits carry both; chesso's longer
               control runs at 545 games an hour against about 2130 and
               DEC-202's block-boundary estimate is the affordable form. A
               separate ledger file maintained by hand -- it is what `plan.md`

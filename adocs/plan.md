@@ -1122,13 +1122,14 @@ findings, two reviewers) moved the order in five places and no more, by the
 owner's rulings of the same day. **S132** rises from entry 12 to directly after
 S097: its two techniques are the best Elo-per-game rows in the whole ledger
 the study read. **S095** keeps its id and changes form: one more ply of
-reduction in the node adjustment when the entry carries no move, the form the open-source record kept after measuring both. **S232** reseeds S099, S110 and S111 in
+reduction in the node adjustment when the entry carries no move, the form the
+open-source record kept after measuring both. **S232** reseeds S099, S110 and S111 in
 DEC-134's forms before S099 runs as the probe DEC-133 already permits, on the
 next idle night; the reserve is otherwise untouched (DEC-176 (c) stands).
 **S233** lands DEC-220's gate clause and the ledger script. **S236** moves the
 reduction to fixed point and re-tests S098 verdict 1's term as a fraction of a
 ply, one block bisected on H0; **S234, S235, S237, S238** are four one-verdict
-steps from the study's inventory, each seeded in DEC-134's forms and briefed
+steps from the analysis's inventory, each seeded in DEC-134's forms and briefed
 under DEC-221's from-the-description clause. S188 keeps its pair with its prior written down;
 S127 becomes the last run of a per-block SPSA cadence verified at 8+0.08; S231
 owes two removal verdicts after its H1, a night each. **Every hour figure the

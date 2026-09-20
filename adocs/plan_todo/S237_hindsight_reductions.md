@@ -12,8 +12,8 @@ done:
 ## Why this exists
 
 Depth is decided at the parent and never revisited. The 2026-09-19 study
-(`adocs/data/2026-09-19_search_technique_study.md`, row N5) found the engine
-it read correcting it one ply down: the child reads its parent's reduction
+(`adocs/data/2026-09-19_search_technique_study.md`, row N5) found the
+open-source record correcting it one ply down: the child reads its parent's reduction
 beside the static-evaluation delta across the move and gives a ply back or up,
 measured at +6.03 over 8590 games. Its review (`adocs/audit/2026-09-19_study_review.md`,
 F09) records that the record later simplified two variants away while keeping
@@ -40,10 +40,10 @@ each stated at its site.
 
 ## From the description (DEC-221)
 
-The technique reached this step as prose from the 2026-09-19 analysis of
-literature and open-source resources and its review; the implementer works
-from that prose and a publication about the technique, seeds every constant
-in DEC-134's forms, and the completion stamp says so.
+The implementing agent's brief carries this file and the analysis's row N5 in
+prose and nothing else; the technique is implemented from that description,
+every constant seeded in DEC-134's forms, and the stamp says so.
+
 ## Cost
 
 One verdict at DEC-143's price, 12 to 20 hours, plus the census hour.

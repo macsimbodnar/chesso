@@ -621,7 +621,8 @@ slots the history sum displaces are measured for removal, one at a time, each
 a `{-5, 0}` non-regression whose truth sits on the bound -- 25,591 expected
 games (DEC-143), eleven to twelve hours, a night each. First the killer slots
 (`src/data_structures.hpp` `killer_moves`, two per ply: S149 and S159 already
-stopped investing in them, and the open-source record shows the same removal at +0.50 over 47,676 games once its history stack was in), then the
+stopped investing in them, and the open-source record shows the same removal
+at +0.50 over 47,676 games once a history stack was in), then the
 countermove table (`src/data_structures.hpp` `counter_moves`, which the
 one-ply continuation table subsumes in the published record, no number). A
 removal that reads H0 stays in the tree and is recorded as such. The

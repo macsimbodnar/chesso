@@ -40,10 +40,10 @@ end is off, seeded at form (c), the midpoint, and stated as such.
 
 ## From the description (DEC-221)
 
-The technique reached this step as prose from the 2026-09-19 analysis of
-literature and open-source resources and its review; the implementer works
-from that prose and a publication about the technique, seeds every constant
-in DEC-134's forms, and the completion stamp says so.
+The implementing agent's brief carries this file and the analysis's row N1 in
+prose and nothing else; the technique is implemented from that description,
+every constant seeded in DEC-134's forms, and the stamp says so.
+
 ## Cost
 
 One verdict at DEC-143's price: 25591 games on a bound, 41861 at the midpoint,
