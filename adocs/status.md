@@ -13,9 +13,9 @@ Updated: 2026-09-20, by hand.
   games, 8 h 40 m, every axis moved, `ContHist2Weight` 26 -> 24), phase
   three's landing of the fit (`55891bb`, `bench` 4393575), the gainer SPRT
   against `3a649c0` -- **H0, `Elo -2.65 +/- 4.82`, `nElo -3.40 +/- 6.20`,
-  12070 games in 5 h 37 m, 0 forfeits** (`b06a5c8`, the first commit under
+  12070 games in 5 h 37 m, 0 forfeits** (`5d37716`, the first commit under
   DEC-220's block, gate-checked) -- and the whole revert to `3a649c0`
-  (`9c5a38f`, `bench` 4646334 to the node, `search_bench` identical, the
+  (`326f274`, `bench` 4646334 to the node, `search_bench` identical, the
   S192 node-budget golden re-derived by its script to 65024 / 3251).
   **DEC-224** records why the idea leaves: the census had the table read
   non-zero on 27.51 % of quiet scores, so the zero is the technique's; the

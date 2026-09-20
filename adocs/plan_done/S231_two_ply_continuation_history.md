@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     an Opus 5 subagent briefed by the coordinator for phase one (DEC-185, DEC-199); the SPSA lane night and the SPRT are the coordinator's; started 2026-09-18 11:20 on the idle machine
-done:       2026-09-20 10:57 -- built, fitted, measured and reverted on a zero. Phase one (`b83fb1d`, `4c727b2`, `af8b9f0`): `cont_hist2[12][64][12][64]` on `search_state_t`, keyed on the (piece, to) of the move two plies back and this move's, written at every quiet cutoff beside the one-ply table and summed into the quiet score on `ContHist2Weight`, with `ContHist2Bonus` and `ContHist2Malus` declared as S222's are (three axes, DEC-209); the guards at ply 0, ply 1 and the node two plies after a null move (DEC-219's wording), each with a sentinel case and a mutant, 4 of 4 killed by `tools/mutation_check.py`; the band-clearance case restated for both weights at their declared maxima (DEC-218). The fit first: the six-axis lane on `UHO_4060_v3.epd` (`adocs/data/S231_spsa.sh`, pre-registered), 60000 games in 8 h 40 m 45 s, 0 forfeits, every axis moved and none touched a bound, `ContHist2Weight` 26 -> 24 in the pre-registered near-26 reading; phase three (`55891bb`) landed the six defaults from the driver's JSON, `bench` 5443203 -> 4393575, the census re-run with the second table counted (`adocs/data/S231_census.txt`: two-ply 94.24 / 95.72 / 27.51 % with a same-tree control). Then one gainer SPRT `{0, 5}` nElo at the harness regime against `3a649c0`, pre-registered with the fitted values named (`adocs/data/S231_sprt.sh`): **H0, `Elo -2.65 +/- 4.82`, `nElo -3.40 +/- 6.20`, LLR -2.95, 12070 games in 5 h 37 m, 0 forfeits** (`b06a5c8`, the first commit carrying DEC-220's block, gate-checked against `adocs/data/S231_sprt.log`). The zero is recorded as a zero and the two-ply idea leaves the plan with DEC-224; `src/` returned to `3a649c0` whole in `9c5a38f`, `bench` 4646334 to the node and `search_bench` identical at depths 9 and 12 against a `3a649c0` worktree, so the one-ply three are S222's fitted 17 / 18 / 26 again and nothing is stranded; the killer and countermove removals DEC-222 attached to an H1 are not owed. Debug self-play 8 games and 0 `Assertion` at phase one and again on `55891bb`; `gate_extra` 5 stages green on `55891bb` 2026-09-20 (the weekly). Goldens: `test_search_params` re-derived from the tune binary at each landing; the S192 node-budget golden re-derived by its script on the reverted tree (69804 / 3490 -> 65024 / 3251), the trigger having stood since S222. Fast checks on phase one, phase three and the record, each earning its keep; the revert verified byte-identical by the coordinator. Tier-1 gate at completion: 40 of 40 in both builds and format clean at `9c5a38f`. Two findings left as filler, test-side, no reach into play: phase one recorded 17321 for `3a649c0`'s node-budget count where the byte-identical tree reads 16256; `adocs/data/S192_node_budget.py`'s drift line reads OUTSIDE for a band it has just derived. S231's I03 mutant gap went with the code.
+done:       2026-09-20 10:57 -- built, fitted, measured and reverted on a zero. Phase one (`b83fb1d`, `4c727b2`, `af8b9f0`): `cont_hist2[12][64][12][64]` on `search_state_t`, keyed on the (piece, to) of the move two plies back and this move's, written at every quiet cutoff beside the one-ply table and summed into the quiet score on `ContHist2Weight`, with `ContHist2Bonus` and `ContHist2Malus` declared as S222's are (three axes, DEC-209); the guards at ply 0, ply 1 and the node two plies after a null move (DEC-219's wording), each with a sentinel case and a mutant, 4 of 4 killed by `tools/mutation_check.py`; the band-clearance case restated for both weights at their declared maxima (DEC-218). The fit first: the six-axis lane on `UHO_4060_v3.epd` (`adocs/data/S231_spsa.sh`, pre-registered), 60000 games in 8 h 40 m 45 s, 0 forfeits, every axis moved and none touched a bound, `ContHist2Weight` 26 -> 24 in the pre-registered near-26 reading; phase three (`55891bb`) landed the six defaults from the driver's JSON, `bench` 5443203 -> 4393575, the census re-run with the second table counted (`adocs/data/S231_census.txt`: two-ply 94.24 / 95.72 / 27.51 % with a same-tree control). Then one gainer SPRT `{0, 5}` nElo at the harness regime against `3a649c0`, pre-registered with the fitted values named (`adocs/data/S231_sprt.sh`): **H0, `Elo -2.65 +/- 4.82`, `nElo -3.40 +/- 6.20`, LLR -2.95, 12070 games in 5 h 37 m, 0 forfeits** (`5d37716`, the first commit carrying DEC-220's block, gate-checked against `adocs/data/S231_sprt.log`). The zero is recorded as a zero and the two-ply idea leaves the plan with DEC-224; `src/` returned to `3a649c0` whole in `326f274`, `bench` 4646334 to the node and `search_bench` identical at depths 9 and 12 against a `3a649c0` worktree, so the one-ply three are S222's fitted 17 / 18 / 26 again and nothing is stranded; the killer and countermove removals DEC-222 attached to an H1 are not owed. Debug self-play 8 games and 0 `Assertion` at phase one and again on `55891bb`; `gate_extra` 5 stages green on `55891bb` 2026-09-20 (the weekly). Goldens: `test_search_params` re-derived from the tune binary at each landing; the S192 node-budget golden re-derived by its script on the reverted tree (69804 / 3490 -> 65024 / 3251), the trigger having stood since S222. Fast checks on phase one, phase three and the record, each earning its keep; the revert verified byte-identical by the coordinator. Tier-1 gate at completion: 40 of 40 in both builds and format clean at `326f274`. Two findings left as filler, test-side, no reach into play: phase one recorded 17321 for `3a649c0`'s node-budget count where the byte-identical tree reads 16256; `adocs/data/S192_node_budget.py`'s drift line reads OUTSIDE for a band it has just derived. S231's I03 mutant gap went with the code.
 ## Why this exists
 
 S222's accepts: "H1 keeps it and opens the two-ply table as its own follow-up
@@ -899,7 +899,7 @@ reported score, move or line. It is a test band.
 Hash 16, on a Release build of this phase's `src/search_params.hpp` with the
 **eight** throwaway counters patched in -- S024's five and S231's three
 appended, in `CENSUS_FIELDS`' own order. Built in a detached worktree at
-`abe251b` with the fitted header copied in, its own `build/`, removed after the
+`cccdf41` with the fitted header copied in, its own `build/`, removed after the
 run; the script was run from the worktree's copy, so **this tree's
 `adocs/data/S024_census.tsv` was never touched** -- what S222 did. Output, both
 summaries, the fitted run's 400 rows and the instrumentation diff verbatim:
@@ -925,7 +925,7 @@ something to say here. That is a fact about this tree's shape and not a claim
 about strength: what a table returns is not what it is worth (DEC-019).
 
 **The control attributes all of it to the tree and none to the fit.** The same
-instrumented binary was rebuilt with `abe251b`'s own incumbent header
+instrumented binary was rebuilt with `cccdf41`'s own incumbent header
 (17/18/26 twice) and the same 400 positions re-run: every share is within four
 tenths of a point of the fitted run's, the one-ply non-zero share 0.34 points
 *higher* at the incumbent vector and the two-ply one 0.20 points lower. What
@@ -1090,7 +1090,7 @@ condition at this control and were not counted.
 (`.tuning/gate_extra_2026-09-20_s231p3.log`, stages prose, citations, debug,
 sanitize, perft), watcher armed with four exits and a 90-minute ceiling; its
 marker is recorded below before the SPRT starts. `CAND` pinned to `55891bb` in
-`adocs/data/S231_sprt.sh` (`f949759`), `REF` `3a649c0` as the file always said.
+`adocs/data/S231_sprt.sh` (`ecfc74d`), `REF` `3a649c0` as the file always said.
 
 **`tools/gate_extra.sh` on `55891bb`: `GATE-EXTRA-DONE 5 stages 1123 s`**
 (04:26 to 04:45, `.tuning/gate_extra_2026-09-20_s231p3/`), prose, citations,
@@ -1184,7 +1184,7 @@ was caught in the revert** and none had to be kept back.
 | `tools/mutants/S098_research_rule.py` | returned to `3a649c0`'s content | its only change since was S231 widening `D08_site_ignores_the_rule`'s anchor for the new `prev_move` argument |
 | `tools/mutants/S231_continuation_history2.py` | **deleted** | the four mutants target code that no longer exists; DEC-194 deleted S024's the same way |
 | `MANUAL.md` | returned to `3a649c0`'s content | the three `ContHist2*` rows leave and `ContHistWeight`'s row is `3a649c0`'s again: range 0 to 2000, defaults 17 / 18 / 26 |
-| `tests/CMakeLists.txt`, `tests/test_gate_script.sh`, `tests/test_ledger.py` | **untouched** | S233's, landed in `1b7c9be` between S231's phases |
+| `tests/CMakeLists.txt`, `tests/test_gate_script.sh`, `tests/test_ledger.py` | **untouched** | S233's, landed in `d15b4f9` between S231's phases |
 | everything under `adocs/data/` -- the lane, the census, the SPRT, the two fit scripts, the research witness | **untouched, every row of `adocs/data/README.md` kept** | DEC-194's precedent: the evidence of a measurement outlives the code it measured. `tools/spsa_s231.json` stays for the same reason S222's does -- the frozen record of a run already taken, not a template |
 
 ### The proofs
@@ -1367,7 +1367,7 @@ with a decision saying why".
 ### Proposed commit text, for the coordinator
 
 `tools/gate.sh`'s block check is triggered by an `SPRT |` line and this commit
-carries none: the verdict was closed by `b06a5c8`, which carries DEC-220's
+carries none: the verdict was closed by `5d37716`, which carries DEC-220's
 block. This one owes `Bench:` alone, and the gate verifies it against the
 built binary.
 
@@ -1376,7 +1376,7 @@ Revert S231's two-ply continuation history on H0, DEC-194's shape
 
 The gainer SPRT against 3a649c0 on noob_3moves.epd accepted H0 at LLR
 -2.95, nElo -3.40 +/- 6.20 over 12070 games with no forfeits, recorded in
-b06a5c8, and the pre-registered reading binds: one vector under one
+5d37716, and the pre-registered reading binds: one vector under one
 verdict, so the table, its three axes, the halved ContHistWeight ceiling
 and the one-ply three go together. The one-ply three land on S222's own
 fitted 17 / 18 / 26, which is what 3a649c0 carries, so no axis is left

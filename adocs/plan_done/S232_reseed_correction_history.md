@@ -63,7 +63,7 @@ rather than paraphrasing it.
 
 ## Every seed touched
 
-"Today" is the value at HEAD `8ceb1d6`; "origin" is what the file itself
+"Today" is the value at HEAD `fa171c9`; "origin" is what the file itself
 claimed before this step; "replacement" is the DEC-105 form and its value or
 procedure. Rows marked (F06) are the ones the 2026-09-19 study review named.
 
