@@ -7,6 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-20, by hand.
 
+- **S231's gainer SPRT is running, launched 2026-09-20 04:45:41: `55891bb`
+  (the fitted vector) against `3a649c0` (the tree before the two-ply table),
+  `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260920044538, output
+  `.tuning/sprt_s231_20260920_044538`, pid 894939.** Before it, on the landing
+  commit: Debug self-play 8 games, 0 `Assertion`, 0 `disconnect`;
+  `gate_extra` 5 stages in 1123 s, green (the weekly run; next due by
+  2026-09-27). Watcher armed with four exits and a 40 h ceiling. Expected
+  worst case 41861 games at the midpoint (19.8 h at 2110 an hour) or 25591 on
+  a bound (12.1 h); the ledger's fast class stops in one to three hours.
+  **When the marker fires:** read the result block, the forfeit report and
+  `adocs/data/S105_pairs.py` over the PGN; copy the log and pairs reading into
+  `adocs/data/` with README rows; write the verdict-closing commit **with
+  DEC-220's six-line block** (subject in the form "Record S231's H1 for the
+  two-ply continuation history", `SPRT | cand 55891bb vs ref 3a649c0, ...`,
+  `Log | adocs/data/S231_sprt.log`; the gate checks the shas against the
+  log), re-derive the S192 node-budget golden on the tree the verdict leaves,
+  regenerate the ledger with `tools/ledger.py` into `plan.md`. **H1:** the
+  step then owes the killer-slot removal and the countermove removal, one
+  `{-5, 0}` night each with a `hyperfine` reading before each (DEC-222); the
+  SPRT's H1 clause and DEC-063's "at least 5 nElo" wording apply. **H0:**
+  `src/` reverts to `3a649c0` whole and the two-ply idea leaves the plan with
+  a decision. **No verdict:** a zero, decided with the reason stated. Nothing
+  else runs on the machine until the marker; agent-only preparation of the
+  next steps' briefs (S095 first) is the coordinator's meanwhile.
+
 - **S231's phase three is landed, 2026-09-20 -- the lane's fitted vector is
   the defaults, `bench` 5443203 -> 4393575, and the SPRT against `3a649c0` is
   the next machine action.** Built by a fresh Opus 5 agent from

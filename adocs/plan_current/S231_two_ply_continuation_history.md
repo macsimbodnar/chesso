@@ -1074,3 +1074,42 @@ script was not run. If the coordinator wants that written down rather than left
 to the filler step, the entry is one line -- *a golden with a script is read by
 running the script, never by eye* -- and it is DEC-142 restated rather than
 amended. Agents do not write `adocs/decisions.md`; this is a proposal.
+
+## Second tier on the landing commit `55891bb`, 2026-09-20 (coordinator)
+
+**Debug self-play, DEC-141 clause 1**, on the Release-fitted tree's Debug
+build: four rounds of `fastchess` at 4+0.04 on `books/noob_3moves.epd`,
+concurrency 8, `-log level=trace engine=true` (the form that captures engine
+stderr), outputs under `.tuning/coord/s231_p3_debug_selfplay/` -- **8 games in
+15 s, 0 `Assertion`, 0 `disconnect`**, trace log 104707 lines with 930
+`bestmove` lines so the log really carried the engines' output. Script
+`.tuning/coord/S231_debug_selfplay.sh`. Time forfeits are not the failure
+condition at this control and were not counted.
+
+`tools/gate_extra.sh` launched detached at 04:26 on `55891bb`
+(`.tuning/gate_extra_2026-09-20_s231p3.log`, stages prose, citations, debug,
+sanitize, perft), watcher armed with four exits and a 90-minute ceiling; its
+marker is recorded below before the SPRT starts. `CAND` pinned to `55891bb` in
+`adocs/data/S231_sprt.sh` (`f949759`), `REF` `3a649c0` as the file always said.
+
+**`tools/gate_extra.sh` on `55891bb`: `GATE-EXTRA-DONE 5 stages 1123 s`**
+(04:26 to 04:45, `.tuning/gate_extra_2026-09-20_s231p3/`), prose, citations,
+debug, sanitize and perft all green; this is also the weekly run, so the next
+is due by 2026-09-27.
+
+**The SPRT, launched 2026-09-20 04:45:41 (coordinator).** `nohup
+adocs/data/S231_sprt.sh > .tuning/sprt_s231.log 2>&1 &`, pid 894939 in
+`.tuning/sprt_s231.pid`, output `.tuning/sprt_s231_20260920_044538`. The
+banner: `cand-55891bb  Chesso 55891bb native` against `ref-3a649c0  Chesso
+3a649c0 native`, 8+0.08, Hash 16, concurrency 12 of 12, `noob_3moves.epd`,
+seed 20260920044538, bounds elo0=0 elo1=5 alpha=beta=0.05 -- exactly the
+pre-registration. Load 1.4 before launch with no engine alive, mains (the
+only power-supply entry is a Logitech peripheral's), 17 GB free. Watcher
+armed (`Monitor`, persistent): every new `LLR:` line, the first
+`SPRT-RUN-(DONE|FAILED|INVALID)`, the pid gone without a marker, a 40-hour
+ceiling (2026-09-21 20:45) -- at least twice the 19.8 h worst case at 2110
+games an hour. Abort rule as pre-registered: forfeits over 1.0 % either side,
+crash or disconnect (`SPRT-RUN-INVALID`), mains, a second load; nothing runs
+beside it until the marker. Open findings named in the header: S231's I03
+mutant gap and the S192 node-budget golden outside its middle half, both
+test-side, neither reachable in play.
